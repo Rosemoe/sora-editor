@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="wrap_content"
+	android:layout_height="match_parent"
+	android:orientation="horizontal"
+	android:gravity="center_vertical">
+
+	<HorizontalScrollView
+		android:layout_height="match_parent"
+		android:layout_width="wrap_content">
+
+		<LinearLayout
+			android:layout_height="match_parent"
+			android:layout_width="wrap_content"
+			android:orientation="horizontal"
+			android:gravity="center_vertical">
+
+			<Button
+				style="?android:attr/buttonBarButtonStyle"
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="Select All"
+				android:textColor="#FF000000"
+				android:textSize="12sp"
+				android:id="@+id/panel_btn_select_all"/>
+
+			<Button
+				style="?android:attr/buttonBarButtonStyle"
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="Copy"
+				android:textColor="#FF000000"
+				android:textSize="12sp"
+				android:id="@+id/panel_btn_copy"/>
+
+			<Button
+				style="?android:attr/buttonBarButtonStyle"
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="Paste"
+				android:textColor="#FF000000"
+				android:textSize="12sp"
+				android:id="@+id/panel_btn_paste"/>
+
+			<Button
+				style="?android:attr/buttonBarButtonStyle"
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="Cut"
+				android:textColor="#FF000000"
+				android:textSize="12sp"
+				android:id="@+id/panel_btn_cut"/>
+
+		</LinearLayout>
+
+	</HorizontalScrollView>
+
+</LinearLayout>
+
