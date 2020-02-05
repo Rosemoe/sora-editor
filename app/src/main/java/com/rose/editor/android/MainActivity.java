@@ -1,23 +1,25 @@
 package com.rose.editor.android;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.widget.Toast;
 
+import com.rose.editor.langs.s5droid.S5droidAutoComplete;
 import com.rose.editor.langs.s5droid.S5droidLanguage;
 import com.rose.editor.simpleclass.NavigationLabel;
 import com.rose.editor.utils.CrashHandler;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     private RoseEditor editor;
 
@@ -26,35 +28,38 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         CrashHandler.getInstance().init(this);
         setContentView(R.layout.activity_main);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{Manifest.permission_group.STORAGE}, 9998);
+        }
+        S5droidAutoComplete.init(this);
         editor = (RoseEditor) findViewById(R.id.editor);
         editor.setEditorLanguage(new S5droidLanguage());
-        editor.setText("/*\n * Test\n*/\n//test\n方法 测试方法_求和(参数1 为 整数型,参数2 为 整数型) 为 整数型\n   (返回 参数1 + 参数2);\n结束 方法");
+        editor.setText("/*\n * Test\n*/\n//test\n方法 测试方法_求和(参数1 为 整数型,参数2 为 整数型) 为 整数型\n   返回 (参数1 + 参数2);\n结束 方法");
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        SubMenu sub = menu.addSubMenu(0,9999,0,"Cursor");
+        SubMenu sub = menu.addSubMenu(0,9999,0,"光标");
         //sub.add(0,10,0,"Go to line");
-        sub.add(0,2,0,"Go to End");
-        sub.add(0,3,0,"Move Up");
-        sub.add(0,4,0,"Move Down");
-        sub.add(0,5,0,"Home");
-        sub.add(0,6,0,"End");
-        sub.add(0,7,0,"Move Left");
-        sub.add(0,8,0,"Move Right");
-        sub = menu.addSubMenu(0,99999,0,"ComposeText");
-        sub.add(0,0,0,"Undo");
-        sub.add(0,1,0,"Redo");
-        menu.add(0,9,0,"Navigation");
-        menu.add(0,10,0,"Format");
+        sub.add(0,2,0,"跳转到最后");
+        sub.add(0,3,0,"上移");
+        sub.add(0,4,0,"下移");
+        sub.add(0,5,0,"行头");
+        sub.add(0,6,0,"行尾");
+        sub.add(0,7,0,"左移");
+        sub.add(0,8,0,"右移");
+        sub = menu.addSubMenu(0,99999,0,"文本操作");
+        sub.add(0,0,0,"撤销");
+        sub.add(0,1,0,"重做");
+        menu.add(0,9,0,"代码导航");
+        menu.add(0,10,0,"格式化");
         return super.onCreateOptionsMenu(menu);
     }
 
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item)
+    public boolean onOptionsItemSelected(MenuItem item)
     {
         long st = System.nanoTime();
         try {
@@ -89,14 +94,14 @@ public class MainActivity extends AppCompatActivity {
                 case 9: {
                     final List<NavigationLabel> labels = editor.getTextColor().getNavigation();
                     if (labels == null) {
-                        Toast.makeText(this, "Naviagtion not prepared", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "导航未准备完成", Toast.LENGTH_SHORT).show();
                     } else {
                         CharSequence[] items = new CharSequence[labels.size()];
                         for (int i = 0; i < labels.size(); i++) {
                             items[i] = labels.get(i).label;
                         }
                         new AlertDialog.Builder(this)
-                                .setTitle("Navigation")
+                                .setTitle("代码导航")
                                 .setSingleChoiceItems(items, 0, new DialogInterface.OnClickListener() {
 
                                     @Override
@@ -106,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
                                     }
 
                                 })
-                                .setPositiveButton("Cancel", null)
+                                .setPositiveButton("关闭", null)
                                 .show();
                     }
                     break;
@@ -122,12 +127,12 @@ public class MainActivity extends AppCompatActivity {
                 sb.append('\n').append(o);
             }
             new AlertDialog.Builder(this)
-                    .setTitle("Error occured!")
+                    .setTitle("错误")
                     .setMessage(sb)
-                    .setPositiveButton("Ok",null)
+                    .setPositiveButton("好",null)
                     .show();
         }
-        Toast.makeText(this,"Action finished in " + (System.nanoTime() - st) / 1e6 + " ms",Toast.LENGTH_SHORT).show();
+        Toast.makeText(this,"操作在" + (System.nanoTime() - st) / 1e6 + " ms 内完成.",Toast.LENGTH_SHORT).show();
 
         return super.onOptionsItemSelected(item);
     }

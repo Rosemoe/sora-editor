@@ -108,7 +108,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     private Matrix mMatrix;
     private Rect mViewRect;
     private ColorScheme mColors;
-    private String mLnTip = "Line:";
+    private String mLnTip = "行:";
     private EditorLanguage mLanguage;
     private long mLastMakeVisible = 0;
     private AutoCompletePanel mACPanel;
@@ -283,8 +283,8 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         mTextActionPanel = new TextComposePanel(this);
         mTextActionPanel.setHeight((int)(mDpUnit * 60));
         mTextActionPanel.setWidth((int)(mDpUnit * 230));
-        setEditorLanguage(null);
         StringBuilder sb = new StringBuilder();
+        setEditorLanguage(null);
         setText(null);
     }
 
@@ -1615,6 +1615,14 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         }
 
         invalidate();
+    }
+
+    /**
+     * Whether there is clip
+     * @return whether clip in clip board
+     */
+    public boolean hasClip() {
+        return (mClipboardManager.getTextFromClipboard() != null);
     }
 
     /**

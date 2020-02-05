@@ -39,7 +39,7 @@ public class TextComposePanel extends BasePanel implements View.OnClickListener
     }
 
     private void updateBtnState() {
-        if(mEditor.hasClipData()) {
+        if(mEditor.hasClip()) {
             paste.setEnabled(true);
         }else{
             paste.setEnabled(false);

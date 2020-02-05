@@ -185,8 +185,8 @@ public final class Cursor {
     }
 
     /**
-     * Commit text at cureent state
-     * @param text Text commited by InputConnection
+     * Commit text at current state
+     * @param text Text commit by InputConnection
      */
     public void onCommitText(CharSequence text) {
         if(isSelected()) {
@@ -226,7 +226,7 @@ public final class Cursor {
      */
     private String create(int p) {
         int tab = 0;
-        int space = 0;
+        int space;
         if(mLang.useTab()) {
             tab = p / tabWidth;
             space = p % tabWidth;

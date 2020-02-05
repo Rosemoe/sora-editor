@@ -5,6 +5,7 @@ import android.content.Context;
 import com.rose.editor.android.AutoCompletePanel;
 import com.rose.editor.interfaces.AutoCompleteProvider;
 import com.rose.editor.android.ResultItem;
+import com.rose.editor.langs.internal.Pinyin;
 import com.rose.editor.simpleclass.NavigationLabel;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -54,11 +55,11 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
         }
     }
 
-    private static void addMethodAndEvent(Context context, String assestName) {
+    private static void addMethodAndEvent(Context context, String assetsName) {
         List<String> list1 = new ArrayList<>();
         List<String> list2 = new ArrayList<>();
         try {
-            String text = readAssets(context, assestName);
+            String text = readAssets(context, assetsName);
             Pattern p1 = Pattern.compile("】(.|[\r\n])*?【");
             Matcher m1 = p1.matcher(text);
             while(m1.find()) {
@@ -71,7 +72,7 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
             }
             for(int i = 0; i < list2.size(); i++) {
                 String[] strs = list1.get(i).split("@");
-                if(assestName.contains("function")) {
+                if(assetsName.contains("function")) {
                     addPackage(list2.get(i), strs);
                 } else {
                     addEvent(list2.get(i), strs);
@@ -189,8 +190,8 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
             lowCase = split[0];
             String[] keywords = isInCodeBlock ? keywordsInner : keywordsOutside;
             for(String keyword : keywords) {
-                if(keyword.toLowerCase().startsWith(lowCase)) {
-                    kws.add(new ResultItem(keyword,"S5droid Keyword"));
+                if(whetherAdd(lowCase,keyword.toLowerCase())) {
+                    kws.add(new ResultItem(keyword,"结绳关键字"));
                 }
             }
 
@@ -198,14 +199,14 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
             findForPrefix(split[0],tree.root,tree.root,line,fields);
 
             for(String s : sClasses) {
-                if(s.toLowerCase().startsWith(split[0]) && !s.equals("文本型")){
-                    classes.add(new ResultItem(s,"S5droid Library"));
+                if(whetherAdd(split[0],s) && !s.equals("文本型")){
+                    classes.add(new ResultItem(s,"结绳核心类库"));
                 }
             }
 
             for(String s : mComponentNames) {
-                if(s.toLowerCase().startsWith(split[0]) && !s.equals("文本型")){
-                    classes.add(new ResultItem(s,"Layout Var - " + getComponentVariantType(s)));
+                if(whetherAdd(split[0],s) && !s.equals("文本型")){
+                    classes.add(new ResultItem(s,"布局设计变量 - " + getComponentVariantType(s)));
                 }
             }
 
@@ -220,8 +221,8 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
                             continue;
                         }
                         String name = (String)tk.getTokenString();
-                        if(name.toLowerCase().startsWith(lowCase)){
-                            methods.add(new ResultItem(name + "();", navi.label + "", ResultItem.TYPE_LOCAL_METHOD).mask(ResultItem.MASK_SHIFT_LEFT_TWICE));
+                        if(whetherAdd(lowCase,name.toLowerCase())){
+                            methods.add(new ResultItem(name + "()", navi.label + "", ResultItem.TYPE_LOCAL_METHOD).mask(ResultItem.MASK_SHIFT_LEFT_TWICE));
                         }
                     }else{
                         break;
@@ -233,7 +234,7 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
             for(String func : funcs) {
                 int p = func.indexOf("(");
                 String funcName = func.substring(0, p);
-                if(funcName.startsWith(split[0])) {
+                if(whetherAdd(split[0],funcName)) {
                     int q = func.lastIndexOf(")");
                     int mask = 0;
                     String suffix = "()";
@@ -261,7 +262,7 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
                 for(String func : funcs) {
                     int p = func.indexOf("(");
                     String funcName = func.substring(0, p);
-                    if(funcName.startsWith(split[1])) {
+                    if(whetherAdd(split[1],funcName)) {
                         int q = func.lastIndexOf(")");
                         int mask = 0;
                         String suffix = "()";
@@ -292,7 +293,7 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
                             int p = func.indexOf("(");
                             if(p != -1){
                                 String funcName = func.substring(0, p);
-                                if(funcName.startsWith(split[1])) {
+                                if(whetherAdd(split[1],funcName)) {
                                     int q = func.lastIndexOf(")");
                                     int mask = 0;
                                     String suffix = "()";
@@ -322,7 +323,7 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
                             continue;
                         }
                         String funcName = func.substring(0, p);
-                        if(funcName.startsWith(split[1])) {
+                        if(whetherAdd(split[1],funcName)) {
                             int q = func.lastIndexOf(")");
                             int mask = 0;
                             String suffix = "()";
@@ -354,10 +355,22 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
         return kws;
     }
 
+    /**
+     * Whether this item matches prefix
+     * @param a User's input
+     * @param b This item
+     * @return Whether should be added
+     */
+    private static boolean whetherAdd(String a, String b) {
+        b = b.toLowerCase();
+        a = a.toLowerCase();
+        return (b.toLowerCase().contains(a) || Pinyin.getFirstPinyinForWords(b).contains(a) || Pinyin.getPinyinForWords(b).contains(a));
+    }
+
     private void findForPrefix(String match, S5droidTree.Node node,final S5droidTree.Node root, int line,List<ResultItem> tips) {
         if(!node.isBlock) {
-            if(node.varName.toLowerCase().startsWith(match) && (node.parent == root || node.startLine < line)){
-                tips.add(new ResultItem(node.varName,"Var - " + node.varType));
+            if(whetherAdd(match,node.varName.toLowerCase()) && (node.parent == root || node.startLine < line)){
+                tips.add(new ResultItem(node.varName,"变量 - " + node.varType));
             }
             return;
         }
