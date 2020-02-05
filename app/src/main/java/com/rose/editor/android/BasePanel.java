@@ -77,7 +77,7 @@ public class BasePanel extends PopupWindow
             return;
         }
         super.showAtLocation(mEditor,
-                Gravity.LEFT | Gravity.TOP,
+                Gravity.START| Gravity.TOP,
                 mLocation[0] + mLeft, mLocation[1] + mTop);
     }
 

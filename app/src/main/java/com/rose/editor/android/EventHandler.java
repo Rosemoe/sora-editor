@@ -12,8 +12,7 @@ import android.content.res.Resources;
  * Handles touch event of editor
  * @author Rose
  */
-class EventHandler implements GestureDetector.OnGestureListener,GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
-
+final class EventHandler implements GestureDetector.OnGestureListener,GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
     private RoseEditor mEditor;
     private OverScroller mScroller;
     private long mLastScroll = 0;
@@ -32,6 +31,10 @@ class EventHandler implements GestureDetector.OnGestureListener,GestureDetector.
 
     private float maxSize,minSize;
 
+    /**
+     * Create a event handler for the given editor
+     * @param editor Host editor
+     */
     public EventHandler(RoseEditor editor){
         mEditor = editor;
         mScroller = new OverScroller(editor.getContext());
@@ -39,10 +42,17 @@ class EventHandler implements GestureDetector.OnGestureListener,GestureDetector.
         minSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,5,Resources.getSystem().getDisplayMetrics());
     }
 
+    /**
+     * Whether we should draw scroll bars
+     * @return whether draw scroll bars
+     */
     public boolean shouldDrawScrollBar() {
         return System.currentTimeMillis() - mLastScroll < HIDE_DELAY || mHolding || mHolding2;
     }
 
+    /**
+     * Hide the insert handle at once
+     */
     public void hideInsertHandle() {
         if(!shouldDrawInsertHandle()){
             return;
@@ -51,22 +61,41 @@ class EventHandler implements GestureDetector.OnGestureListener,GestureDetector.
         mEditor.invalidate();
     }
 
+    /**
+     * Whether the vertical scroll bar is touched
+     * @return Whether touched
+     */
     public boolean holdVerticalScrollBar() {
         return mHolding;
     }
 
+    /**
+     * Whether the horizontal scroll bar is touched
+     * @return Whether touched
+     */
     public boolean holdHorizontalScrollBar() {
         return mHolding2;
     }
 
+    /**
+     * Whether insert handle is touched
+     * @return Whether touched
+     */
     public boolean holdInsertHandle() {
         return mHolding3;
     }
 
+    /**
+     * Whether the editor should draw insert handler
+     * @return Whether to draw
+     */
     public boolean shouldDrawInsertHandle() {
         return System.currentTimeMillis() - mLastSetSelection < HIDE_DELAY || mHolding3;
     }
 
+    /**
+     * Notify the editor later to hide scroll bars
+     */
     public void notifyScrolled() {
         mLastScroll = System.currentTimeMillis();
         mEditor.postDelayed(new Runnable(){
@@ -80,6 +109,9 @@ class EventHandler implements GestureDetector.OnGestureListener,GestureDetector.
         },HIDE_DELAY_HANDLE + 10);
     }
 
+    /**
+     * Notify the editor later to hide insert handle
+     */
     public void notifyLater() {
         mLastSetSelection = System.currentTimeMillis();
         mEditor.postDelayed(new Runnable(){
@@ -93,18 +125,35 @@ class EventHandler implements GestureDetector.OnGestureListener,GestureDetector.
         },HIDE_DELAY + 10);
     }
 
+    /**
+     * Called by editor
+     * Whether this class is handling motions by user
+     * @return Whether handling
+     */
     protected boolean handlingMotions() {
         return holdHorizontalScrollBar() || holdVerticalScrollBar() || holdInsertHandle() || type != -1;
     }
 
+    /**
+     * Get scroller for editor
+     * @return Scroller using
+     */
     protected OverScroller getScroller(){
         return mScroller;
     }
 
+    /**
+     * Reset scroll state
+     */
     protected void reset(){
         mScroller.startScroll(0,0,0,0,0);
     }
 
+    /**
+     * Handle events apart from detectors
+     * @param e The event editor received
+     * @return Whether this touch event is handled by this class
+     */
     public boolean onTouchEvent(MotionEvent e){
         switch(e.getAction()) {
             case MotionEvent.ACTION_DOWN:
@@ -213,6 +262,10 @@ class EventHandler implements GestureDetector.OnGestureListener,GestureDetector.
         return false;
     }
 
+    /**
+     * Scroll the view smoothly
+     * @param deltaY The delta y
+     */
     private void smoothScrollBy(float deltaY) {
         float finalY = mScroller.getCurrY() + deltaY;
         if(finalY < 0) {
@@ -295,12 +348,12 @@ class EventHandler implements GestureDetector.OnGestureListener,GestureDetector.
         //Find word edges
         int startLine = line,endLine = line;
         int startColumn = column;
-        while(startColumn > 0 && !isSeparator(mEditor.getText().charAt(line,startColumn - 1))) {
+        while(startColumn > 0 && isIdentifierPart(mEditor.getText().charAt(line,startColumn - 1))) {
             startColumn--;
         }
         int maxColumn = mEditor.getText().getColumnCount(line);
         int endColumn = column;
-        while(endColumn < maxColumn && !isSeparator(mEditor.getText().charAt(line,endColumn))) {
+        while(endColumn < maxColumn && isIdentifierPart(mEditor.getText().charAt(line,endColumn))) {
             endColumn++;
         }
         if(startColumn == endColumn) {
@@ -322,8 +375,13 @@ class EventHandler implements GestureDetector.OnGestureListener,GestureDetector.
         mEditor.setSelectionRegion(startLine,startColumn,endLine,endColumn);
     }
 
-    private static boolean isSeparator(char ch) {
-        return !Character.isJavaIdentifierPart(ch);
+    /**
+     * Whether this character is a part of word
+     * @param ch Character to check
+     * @return Whether a part of word
+     */
+    private static boolean isIdentifierPart(char ch) {
+        return Character.isJavaIdentifierPart(ch);
     }
 
     @Override
@@ -410,7 +468,9 @@ class EventHandler implements GestureDetector.OnGestureListener,GestureDetector.
     @Override
     public boolean onDoubleTapEvent(MotionEvent e) { return false; }
 
-
+    /**
+     * This is a helper for EventHandler to control handles
+     */
     private class SelectionHandle {
 
         public static final int LEFT = 0;
@@ -421,12 +481,22 @@ class EventHandler implements GestureDetector.OnGestureListener,GestureDetector.
         public float startX;
         public float startY;
 
+        /**
+         * Create a handle
+         * @param type Type :left,right,both
+         * @param sx Offset x
+         * @param sy Offset y
+         */
         public SelectionHandle(int type,float sx,float sy) {
             this.type = type;
             startX = sx;
             startY = sy;
         }
 
+        /**
+         * Handle the event
+         * @param e Event sent by EventHandler
+         */
         public void applyPosition(MotionEvent e) {
             float currX = mScroller.getCurrX() + e.getX();
             float currY = mScroller.getCurrY() + e.getY();

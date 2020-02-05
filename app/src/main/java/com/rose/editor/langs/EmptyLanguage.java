@@ -1,6 +1,6 @@
 package com.rose.editor.langs;
 
-import com.rose.editor.android.ResultItem;
+import com.rose.editor.simpleclass.ResultItem;
 import com.rose.editor.common.TextColorProvider;
 import com.rose.editor.common.TextColorProvider.AnalyzeThread.Delegate;
 import com.rose.editor.interfaces.CodeAnalyzer;

@@ -1,6 +1,5 @@
 package com.rose.editor.android;
 
-
 import android.util.SparseIntArray;
 
 /**

@@ -1,6 +1,9 @@
-package com.rose.editor.android;
+package com.rose.editor.simpleclass;
 
-
+/**
+ * The class used to save auto complete result items
+ * @author Rose
+ */
 public class ResultItem {
 
     public static final int TYPE_KEYWORD = 0;

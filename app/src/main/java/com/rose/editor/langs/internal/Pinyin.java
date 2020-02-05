@@ -1,6 +1,7 @@
 package com.rose.editor.langs.internal;
 
 /**
+ * Chinese characters to its spells
  * @author Scave
  */
 public class Pinyin {

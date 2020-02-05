@@ -2,7 +2,7 @@ package com.rose.editor.langs.internal;
 
 /**
  * @author Rose
- * TrieTree
+ * TrieTree to query values quickly
  */
 public class TrieTree<T> {
 

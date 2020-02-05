@@ -25,7 +25,7 @@ public interface ContentListener {
      * @param startColumn The insertion position column on line
      * @param endLine The line position of the last character in inserted content
      * @param endColumn The column position after the last character in inserted content
-     * @param insertedContent
+     * @param insertedContent The content inserted
      */
     void afterInsert(Content content,int startLine,int startColumn,int endLine,int endColumn,CharSequence insertedContent);
 

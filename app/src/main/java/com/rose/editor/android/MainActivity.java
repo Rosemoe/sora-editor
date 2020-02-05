@@ -1,6 +1,5 @@
 package com.rose.editor.android;
 
-
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;

@@ -8,6 +8,10 @@ import com.rose.editor.interfaces.Indexer;
  */
 final class NoCacheIndexer extends CachedIndexer implements Indexer{
 
+    /**
+     * Create a indexer without cache
+     * @param content Target content
+     */
     public NoCacheIndexer(Content content) {
         super(content);
         //Disable dynamic indexing
@@ -20,7 +24,9 @@ final class NoCacheIndexer extends CachedIndexer implements Indexer{
     }
 
     @Override
-    protected void _throw() { }
+    protected void _throw() {
+        //Override this to make super class not throw exception after text changes
+    }
 
 }
 

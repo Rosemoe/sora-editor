@@ -1,6 +1,7 @@
 package com.rose.editor.interfaces;
 
 /**
+ * Language for editor
  * @author Rose
  */
 public interface EditorLanguage

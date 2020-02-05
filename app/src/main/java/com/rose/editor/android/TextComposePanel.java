@@ -1,10 +1,8 @@
 package com.rose.editor.android;
 
-
 import android.view.View;
 import android.widget.Button;
 import android.view.LayoutInflater;
-import android.content.ClipboardManager;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.util.TypedValue;
@@ -19,6 +17,10 @@ public class TextComposePanel extends BasePanel implements View.OnClickListener
     private RoseEditor mEditor;
     private Button selectAll,cut,copy,paste;
 
+    /**
+     * Create a panel for the given editor
+     * @param editor Target editor
+     */
     public TextComposePanel(RoseEditor editor) {
         super(editor);
         mEditor = editor;
@@ -38,6 +40,9 @@ public class TextComposePanel extends BasePanel implements View.OnClickListener
         setContentView(root);
     }
 
+    /**
+     * Update the state of paste button
+     */
     private void updateBtnState() {
         if(mEditor.hasClip()) {
             paste.setEnabled(true);

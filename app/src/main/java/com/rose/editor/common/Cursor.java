@@ -1,6 +1,5 @@
 package com.rose.editor.common;
 
-
 import com.rose.editor.interfaces.EditorLanguage;
 import com.rose.editor.simpleclass.CharPosition;
 

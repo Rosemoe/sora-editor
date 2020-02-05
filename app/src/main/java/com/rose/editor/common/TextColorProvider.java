@@ -1,6 +1,5 @@
 package com.rose.editor.common;
 
-
 import com.rose.editor.android.ColorScheme;
 import com.rose.editor.interfaces.CodeAnalyzer;
 import com.rose.editor.simpleclass.BlockLine;
@@ -100,6 +99,11 @@ public class TextColorProvider {
          */
         public class Delegate{
 
+            /**
+             * Whether new input is set
+             * If it returns true,you should stop your tokenizing at once
+             * @return Whether re-analyze required
+             */
             public boolean shouldReAnalyze(){
                 return waiting;
             }

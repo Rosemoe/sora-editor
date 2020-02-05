@@ -21,11 +21,14 @@ import android.widget.Toast;
 import com.rose.editor.common.Cursor;
 import com.rose.editor.common.TextColorProvider;
 import com.rose.editor.interfaces.AutoCompleteProvider;
+import com.rose.editor.simpleclass.ResultItem;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 /**
+ * Auto complete panel for editing code quicker
  * @author Rose
  */
 public class AutoCompletePanel extends BasePanel
@@ -37,12 +40,28 @@ public class AutoCompletePanel extends BasePanel
     private ProgressBar mPb;
     private GradientDrawable mBg;
 
-    private MatchThread mThread;
+    private int mCurrent = 0;
     private long mRequestTime;
     private String mLastPrefix;
+    private MatchThread mThread;
     private AutoCompleteProvider mProvider;
-    private final static String TIP = "Loading...";
 
+    private final static String TIP = "Loading...";
+    public final static Comparator<ResultItem> RES_COMP = new Comparator<ResultItem>(){
+
+        @Override
+        public int compare(ResultItem p1, ResultItem p2)
+        {
+            return p1.label.compareTo(p2.label);
+        }
+
+
+    };
+
+    /**
+     * Create a panel instance for the given editor
+     * @param editor Target editor
+     */
     public AutoCompletePanel(RoseEditor editor) {
         super(editor);
         mEditor = editor;
@@ -85,24 +104,36 @@ public class AutoCompletePanel extends BasePanel
         });
     }
 
+    /**
+     * Set a auto completion items provider
+     * @param p New provider.can not be null
+     */
     public void setProvider(AutoCompleteProvider p){
         mProvider = p;
     }
 
+    /**
+     * Apply colors for self
+     */
     public void applyColor() {
         ColorScheme colors = mEditor.getColorScheme();
         mBg.setStroke(1, colors.getColor(ColorScheme.AUTO_COMP_PANEL_CORNER));
         mBg.setColor(colors.getColor(ColorScheme.AUTO_COMP_PANEL_BG));
     }
 
+    /**
+     * Change layout to loading/idle
+     * @param state Whether loading
+     */
     public void setLoading(boolean state) {
         mTip.setVisibility(/*state ? View.VISIBLE : */View.GONE);
         mPb.setVisibility(/*state ? View.VISIBLE : */View.GONE);
         mListView.setVisibility(/*(!state) ? */View.VISIBLE/* : View.GONE*/);
     }
 
-    private int mCurrent = 0;
-
+    /**
+     * Move selection down
+     */
     public void moveDown() {
         if(mCurrent + 1 >= mListView.getAdapter().getCount()) {
             return;
@@ -112,6 +143,9 @@ public class AutoCompletePanel extends BasePanel
         ensurePosition();
     }
 
+    /**
+     * Move selection up
+     */
     public void moveUp() {
         if(mCurrent - 1 < 0) {
             return;
@@ -121,14 +155,24 @@ public class AutoCompletePanel extends BasePanel
         ensurePosition();
     }
 
+    /**
+     * Make current selection visible
+     */
     private void ensurePosition() {
         mListView.smoothScrollToPosition(mCurrent);
     }
 
+    /**
+     * Select current position
+     */
     public void select() {
         select(mCurrent);
     }
 
+    /**
+     * Select the given position
+     * @param pos Index of auto complete item
+     */
     public void select(int pos) {
         ResultItem item = ((ItemAdapter) mListView.getAdapter()).getItem(pos);
         Cursor cursor = mEditor.getCursor();
@@ -146,6 +190,10 @@ public class AutoCompletePanel extends BasePanel
         hide();
     }
 
+    /**
+     * Set prefix for auto complete analysis
+     * @param prefix The user's input code's prefix
+     */
     public void setPrefix(String prefix) {
         setLoading(true);
         mLastPrefix = prefix;
@@ -154,21 +202,19 @@ public class AutoCompletePanel extends BasePanel
         mThread.start();
     }
 
+    /**
+     * Get prefix set
+     * @return The previous prefix
+     */
     public String getPrefix() {
         return mLastPrefix;
     }
 
-    public final static Comparator<ResultItem> RES_COMP = new Comparator<ResultItem>(){
-
-        @Override
-        public int compare(ResultItem p1, ResultItem p2)
-        {
-            return p1.label.compareTo(p2.label);
-        }
-
-
-    };
-
+    /**
+     * Display result of analysis
+     * @param results Items of analysis
+     * @param requestTime The time that this thread starts
+     */
     private void displayResults(final List<ResultItem> results, long requestTime) {
         if(mRequestTime != requestTime) {
             return;
@@ -177,17 +223,20 @@ public class AutoCompletePanel extends BasePanel
             @Override
             public void run() {
                 setLoading(false);
-                if(results.isEmpty()) {
+                if(results == null || results.isEmpty()) {
                     hide();
                     return;
                 }
                 mCurrent = 0;
                 mListView.setAdapter(new ItemAdapter(results));
-
             }
         });
     }
 
+    /**
+     * Adapter to display results
+     * @author Rose
+     */
     private class ItemAdapter extends BaseAdapter {
 
         private List<ResultItem> mItems;
@@ -246,6 +295,10 @@ public class AutoCompletePanel extends BasePanel
 
     }
 
+    /**
+     * Analysis thread
+     * @author Rose
+     */
     private class MatchThread extends Thread {
 
         private long mTime;
@@ -265,7 +318,12 @@ public class AutoCompletePanel extends BasePanel
 
         @Override
         public void run() {
-            displayResults(mLocalProvider.getAutoCompleteItems(mPrefix,mInner,mColors,mLine), mTime);
+            try {
+                displayResults(mLocalProvider.getAutoCompleteItems(mPrefix, mInner, mColors, mLine), mTime);
+            }catch (Exception e) {
+                e.printStackTrace();
+                displayResults(new ArrayList<ResultItem>(),mTime);
+            }
         }
 
 

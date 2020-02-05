@@ -1,6 +1,5 @@
 package com.rose.editor.android;
 
-
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;

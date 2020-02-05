@@ -1,6 +1,5 @@
 package com.rose.editor.interfaces;
 
-
 import com.rose.editor.simpleclass.SingleLineSpan;
 
 /**

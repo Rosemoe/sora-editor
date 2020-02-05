@@ -1,6 +1,5 @@
 package com.rose.editor.common;
 
-
 import java.util.ArrayList;
 import java.util.List;
 

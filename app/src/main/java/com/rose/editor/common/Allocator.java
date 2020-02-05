@@ -1,6 +1,5 @@
 package com.rose.editor.common;
 
-
 import com.rose.editor.simpleclass.BlockLine;
 import com.rose.editor.simpleclass.NavigationLabel;
 import com.rose.editor.simpleclass.Span;

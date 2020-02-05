@@ -1,6 +1,5 @@
 package com.rose.editor.common;
 
-
 import com.rose.editor.interfaces.Indexer;
 import com.rose.editor.simpleclass.CharPosition;
 
@@ -17,7 +16,7 @@ public class LexIndexer implements Indexer
 
     /**
      * Create a new Indexer for forward linear char getting
-     * @param content
+     * @param content Target content
      */
     public LexIndexer(Content content){
         this.content = content;
