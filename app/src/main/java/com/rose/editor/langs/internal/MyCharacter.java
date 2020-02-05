@@ -1,5 +1,7 @@
 package com.rose.editor.langs.internal;
 
+import java.util.Arrays;
+
 /**
  * @author Rose
  * Get whether Identifier part/start quickly
@@ -10,48 +12,47 @@ package com.rose.editor.langs.internal;
  */
 public class MyCharacter {
 
-    public static boolean[] state1,state2;
+    /**
+     * Compressed bit set for isJavaIdentifierStart()
+     */
+    private static int[] state_start;
+    /**
+     * Compressed bit set for isJavaIdentifierPart()
+     */
+    private static int[] state_part;
 
-    public static boolean[] state3,state4;
+    private static boolean get(int[] values,int bitIndex) {
+        return ((values[bitIndex / 32] & (1 << (bitIndex % 32))) != 0);
+    }
+
+    private static void set(int[] values,int bitIndex) {
+        values[bitIndex / 32] |= (1 << (bitIndex % 32));
+    }
 
     public static void initMap() {
-        if(state1 != null) {
+        if(state_start != null) {
             return;
         }
-
-        state1 = new boolean[35000];
-        state2 = new boolean[65536 - 35000];
-        for(int i = 0;i < 35000;i++) {
-            state1[i] = Character.isJavaIdentifierPart((char)i);
-        }
-        for(int i = 35000;i <= 65535;i++) {
-            state2[i - 35000] = Character.isJavaIdentifierPart((char)i);
-        }
-
-        state3 = new boolean[35000];
-        state4 = new boolean[65536 - 35000];
-        for(int i = 0;i < 35000;i++) {
-            state3[i] = Character.isJavaIdentifierStart((char)i);
-        }
-        for(int i = 35000;i <= 65535;i++) {
-            state4[i - 35000] = Character.isJavaIdentifierStart((char)i);
+        state_part = new int[2048];
+        state_start = new int[2048];
+        Arrays.fill(state_part,0);
+        Arrays.fill(state_start,0);
+        for(int i = 0;i <= 65535;i++) {
+            if(Character.isJavaIdentifierPart((char) i)) {
+                set(state_part,i);
+            }
+            if(Character.isJavaIdentifierStart((char) i)) {
+                set(state_start,i);
+            }
         }
     }
 
     public static boolean isJavaIdentifierPart(int key) {
-        if(key < 35000) {
-            return state1[key];
-        }else {
-            return state2[key - 35000];
-        }
+        return get(state_part,key);
     }
 
     public static boolean isJavaIdentifierStart(int key) {
-        if(key < 35000) {
-            return state3[key];
-        }else {
-            return state4[key - 35000];
-        }
+        return get(state_start,key);
     }
 
 }
