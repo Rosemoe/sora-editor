@@ -1,5 +1,5 @@
 # RoseCodeEditor  
-A professional code editor on Android device with higlight and auto completion.  
+A professional code editor on Android device with highlight and auto completion.  
 ## Strong Abilities  
 * Highligh yours code
 * A strong auto complete window
