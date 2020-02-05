@@ -2,9 +2,9 @@ package com.rose.editor.langs.s5droid;
 
 import static com.rose.editor.langs.s5droid.Tokens.*;
 
-import com.rose.editor.model.BlockLine;
+import com.rose.editor.simpleclass.BlockLine;
 import com.rose.editor.common.LineNumberHelper;
-import com.rose.editor.model.NavigationLabel;
+import com.rose.editor.simpleclass.NavigationLabel;
 import com.rose.editor.common.TextColorProvider.AnalyzeThread.Delegate;
 import com.rose.editor.common.TextColorProvider.TextColors;
 import com.rose.editor.android.ColorScheme;

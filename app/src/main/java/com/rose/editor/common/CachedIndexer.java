@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.rose.editor.interfaces.ContentListener;
 import com.rose.editor.interfaces.Indexer;
-import com.rose.editor.model.CharPosition;
+import com.rose.editor.simpleclass.CharPosition;
 
 /**
  * Indexer Impl for Content

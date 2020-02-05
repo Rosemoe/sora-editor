@@ -1,7 +1,7 @@
 package com.rose.editor.interfaces;
 
 
-import com.rose.editor.model.SingleLineSpan;
+import com.rose.editor.simpleclass.SingleLineSpan;
 
 /**
  * The interface for Content

@@ -1,9 +1,7 @@
-package com.rose.editor.model;
+package com.rose.editor.simpleclass;
 
 import com.rose.editor.common.Content;
 import com.rose.editor.interfaces.ContentAction;
-import com.rose.editor.model.DeleteAction;
-import com.rose.editor.model.InsertAction;
 
 /**
  * Replace action model for UndoManager

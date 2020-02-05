@@ -1,14 +1,14 @@
-package com.rose.editor.model;
+package com.rose.editor.simpleclass;
 
 
 import com.rose.editor.common.Content;
 import com.rose.editor.interfaces.ContentAction;
 
 /**
- * Insert action model for UndoManager
+ * Delete action model for UndoManager
  * @author Rose
  */
-public final class InsertAction implements ContentAction {
+public final class DeleteAction implements ContentAction {
 
     public int startLine,endLine,startColumn,endColumn;
 
@@ -16,19 +16,19 @@ public final class InsertAction implements ContentAction {
 
     @Override
     public void undo(Content content) {
-        content.delete(startLine, startColumn, endLine, endColumn);
-    }
-
-    @Override
-    public void redo(Content content) {
         content.insert(startLine, startColumn, text);
     }
 
     @Override
+    public void redo(Content content) {
+        content.delete(startLine, startColumn, endLine, endColumn);
+    }
+
+    @Override
     public boolean canMerge(ContentAction action) {
-        if(action instanceof InsertAction) {
-            InsertAction ac = (InsertAction) action;
-            return (ac.startColumn == endColumn && ac.startLine == endLine);
+        if(action instanceof DeleteAction) {
+            DeleteAction ac = (DeleteAction)action;
+            return (ac.endColumn == startColumn && ac.endLine == startLine);
         }
         return false;
     }
@@ -38,9 +38,9 @@ public final class InsertAction implements ContentAction {
         if(!canMerge(action)) {
             throw new IllegalArgumentException();
         }
-        InsertAction ac = (InsertAction) action;
-        this.endColumn = ac.endColumn;
-        this.endLine = ac.endLine;
+        DeleteAction ac = (DeleteAction)action;
+        this.startColumn = ac.startColumn;
+        this.startLine = ac.startLine;
         StringBuilder sb;
         if(text instanceof StringBuilder) {
             sb = (StringBuilder) text;
@@ -48,13 +48,13 @@ public final class InsertAction implements ContentAction {
             sb = new StringBuilder(text);
             text = sb;
         }
-        sb.append(ac.text);
+        sb.insert(0, ac.text);
     }
 
     @Override
     public String toString()
     {
-        return "{InsertAction : Start = " + startLine + "," + startColumn +
+        return "{DeleteAction : Start = " + startLine + "," + startColumn +
                 " End = " + endLine + "," + endColumn + "\nContent = " + text +"}";
     }
 

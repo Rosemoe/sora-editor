@@ -7,8 +7,8 @@ import java.util.List;
 import com.rose.editor.interfaces.ContentListener;
 import com.rose.editor.interfaces.ITextContent;
 import com.rose.editor.interfaces.Indexer;
-import com.rose.editor.model.CharPosition;
-import com.rose.editor.model.SingleLineSpan;
+import com.rose.editor.simpleclass.CharPosition;
+import com.rose.editor.simpleclass.SingleLineSpan;
 
 /**
  * Implementation of ITextContent

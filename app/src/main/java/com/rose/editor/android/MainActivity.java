@@ -12,7 +12,7 @@ import android.view.SubMenu;
 import android.widget.Toast;
 
 import com.rose.editor.langs.s5droid.S5droidLanguage;
-import com.rose.editor.model.NavigationLabel;
+import com.rose.editor.simpleclass.NavigationLabel;
 import com.rose.editor.utils.CrashHandler;
 
 import java.util.List;

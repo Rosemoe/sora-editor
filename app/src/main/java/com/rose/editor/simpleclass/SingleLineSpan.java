@@ -1,4 +1,4 @@
-package com.rose.editor.model;
+package com.rose.editor.simpleclass;
 
 
 import com.rose.editor.common.Content;

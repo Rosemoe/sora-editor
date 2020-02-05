@@ -1,6 +1,6 @@
 package com.rose.editor.interfaces;
 
-import com.rose.editor.model.CharPosition;
+import com.rose.editor.simpleclass.CharPosition;
 
 /**
  * A helper class for ITextContent to transform (line,column) and index

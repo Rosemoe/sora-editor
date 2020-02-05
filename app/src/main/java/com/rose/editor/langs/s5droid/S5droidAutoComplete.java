@@ -5,7 +5,7 @@ import android.content.Context;
 import com.rose.editor.android.AutoCompletePanel;
 import com.rose.editor.interfaces.AutoCompleteProvider;
 import com.rose.editor.android.ResultItem;
-import com.rose.editor.model.NavigationLabel;
+import com.rose.editor.simpleclass.NavigationLabel;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;

@@ -2,7 +2,7 @@ package com.rose.editor.common;
 
 
 import com.rose.editor.interfaces.EditorLanguage;
-import com.rose.editor.model.CharPosition;
+import com.rose.editor.simpleclass.CharPosition;
 
 /**
  * @author Rose

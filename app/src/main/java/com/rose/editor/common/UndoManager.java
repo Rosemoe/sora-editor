@@ -6,10 +6,10 @@ import java.util.List;
 
 import com.rose.editor.interfaces.ContentAction;
 import com.rose.editor.interfaces.ContentListener;
-import com.rose.editor.model.DeleteAction;
-import com.rose.editor.model.InsertAction;
-import com.rose.editor.model.MultiAction;
-import com.rose.editor.model.ReplaceAction;
+import com.rose.editor.simpleclass.DeleteAction;
+import com.rose.editor.simpleclass.InsertAction;
+import com.rose.editor.simpleclass.MultiAction;
+import com.rose.editor.simpleclass.ReplaceAction;
 
 /**
  * Helper class for Content to take down modification

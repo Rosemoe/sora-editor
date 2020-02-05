@@ -3,9 +3,9 @@ package com.rose.editor.common;
 
 import com.rose.editor.android.ColorScheme;
 import com.rose.editor.interfaces.CodeAnalyzer;
-import com.rose.editor.model.BlockLine;
-import com.rose.editor.model.NavigationLabel;
-import com.rose.editor.model.Span;
+import com.rose.editor.simpleclass.BlockLine;
+import com.rose.editor.simpleclass.NavigationLabel;
+import com.rose.editor.simpleclass.Span;
 
 import java.util.ArrayList;
 import java.util.List;
