@@ -1,7 +1,6 @@
 package com.rose.editor.langs.s5droid;
 
 
-import java.io.IOException;
 import java.util.Stack;
 
 import static com.rose.editor.langs.s5droid.Tokens.*;
@@ -174,7 +173,7 @@ public class S5dFormatter {
                     len--;
                 }
                 sb.append(content.substring(0,len));
-                lexer.pushback(content.length() - len);
+                lexer.pushBack(content.length() - len);
                 continue;
             }
 

@@ -73,9 +73,9 @@ public class S5dTextTokenizer {
         this.skipComment = skip;
     }
 
-    public void pushback(int length) {
+    public void pushBack(int length) {
         if (length > getTokenLength()) {
-            throw new IllegalArgumentException("pushback length too large");
+            throw new IllegalArgumentException("pushBack length too large");
         }
         offset -= length;
         index -= length;
