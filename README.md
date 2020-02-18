@@ -1,5 +1,7 @@
 # RoseCodeEditor / CodeEditor  
 A professional code editor on Android device with highlight and auto completion.  
+不想看英文请:[中文版](/README_zh.md).   
+总之项目里面全都是英文啦(除了少部分扯淡的话)...
 ## Strong Abilities  
 * Highligh yours code
 * A strong auto complete window
