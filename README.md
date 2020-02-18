@@ -28,8 +28,13 @@ To include this project into your project:
 **  src/java/com/rose/editor/android/TextComposePanel.java  
 * Now you have finished all the steps!
 ## How to customize your language for editor
-* Make a lexer for the language (Use JFlex or ANTLR,etc. you can also modify my Tokenizer)
-* Implement CodeAnalyzer:
+* Make a lexer for the language (Use JFlex or ANTLR,etc. you can also modify my Tokenizer)   
+[ANTLR Website](https://www.antlr.org/)   
+[ANTLR4 Repository](https://github.com/antlr/antlr4)   
+[Grammars for ANTLR4](https://github.com/antlr/grammars-v4)   
+[JFLex Website](https://jflex.de/)   
+[JFLex Repository](https://github.com/jflex-de/jflex)   
+* Implement a CodeAnalyzer:
 ```Java
 public class XxxCodeAnalyzer {
 	public void analyze(CharSequence content, TextColorProvider.TextColors colors, TextColorProvider.AnalyzeThread.Delegate delegate);{
@@ -46,7 +51,7 @@ public class XxxCodeAnalyzer {
 }
 ```
 * Create a AutoCompleteProvider:
-You have two choice:
+You have two choices:
 A.Implement a AutoCompleteProvider by your self
 ```Java
 public class XxxAutoComplete {
