@@ -18,8 +18,8 @@
 具体的操作有：
 * 把` src/assets/ ` 下的文件拷贝到你的项目(如果你不想使用S5droid语言,可以直接去下一个步骤)
 * 把` src/res/layout `下的文件拷贝到你的项目(除了src/res/layout/activity_main.xml)
-* 把` src/java/ `下的文件拷贝到你的项目(除了src/com/rose/editor/android/MainActivity.java)
-* 修改这些文件的:"import com.rose.editor.android.R" 为 "import yourPackageName.R" :
-** src/java/com/rose/editor/android/AutoCompletePanel.java
-** src/java/com/rose/editor/android/TextComposePanel.java
+* 把` src/java/ `下的文件拷贝到你的项目(除了src/com/rose/editor/android/MainActivity.java)   
+* 修改这些文件的:"import com.rose.editor.android.R" 为 "import yourPackageName.R" :   
+** src/java/com/rose/editor/android/AutoCompletePanel.java   
+** src/java/com/rose/editor/android/TextComposePanel.java   
 * 现在,你已完成所有步骤!赶紧试试吧!
