@@ -3,18 +3,19 @@ A professional code editor on Android device with highlight and auto completion.
 不想看英文请:[中文版](/README_zh.md).   
 总之项目里面全都是英文啦(除了少部分扯淡的话)...
 ## Strong Abilities  
-* Highligh yours code
-* A strong auto complete window
-* Auto indent your code
-* Spot code blocks with vertical lines
+* Highlight yours code
+* A strong automatically complete window
+* Automatically indent your code
+* Show region of code blocks with vertical lines
 * Format your code
-* Scale by thumb
-* Select texts with two handles
+* Scale text size by gesture
+* Select text
+* Scroll freely
 ## Language Supported  
 * S5droid
 * Java(Building)
 ## Extra Module Inside
-* A man-made lexer for S5droid (Quite fast than JFLex)
+* A man-made lexer(Quite fast than JFLex)
 ## How to use this Editor  
 Gradle not supported because of my poor knowledge about it.  
 To include this project into your project:  
