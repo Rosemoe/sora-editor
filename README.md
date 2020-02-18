@@ -12,10 +12,11 @@ A professional code editor on Android device with highlight and auto completion.
 * Select text
 * Scroll freely
 ## Language Supported  
-* S5droid
-* Java(Building)
+* S5droid(context sensitive auto completion,highlight,code block line,navigation)
+* Java(Basic Support:highlight,code block line,identifier and keyword auto completion)
 ## Extra Module Inside
 * A man-made lexer(Quite fast than JFLex)
+Language:Java,S5droid
 ## How to use this Editor  
 Gradle not supported because of my poor knowledge about it.  
 To include this project into your project:  
