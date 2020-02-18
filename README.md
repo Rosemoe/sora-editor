@@ -1,4 +1,4 @@
-# RoseCodeEditor  
+# RoseCodeEditor / CodeEditor  
 A professional code editor on Android device with highlight and auto completion.  
 ## Strong Abilities  
 * Highligh yours code
@@ -11,6 +11,8 @@ A professional code editor on Android device with highlight and auto completion.
 ## Language Supported  
 * S5droid
 * Java(Building)
+## Extra Module Inside
+* A man-made lexer for S5droid (Quite fast than JFLex)
 ## How to use this Editor  
 Gradle not supported because of my poor knowledge about it.  
 To include this project into your project:  
