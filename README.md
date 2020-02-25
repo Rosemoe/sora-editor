@@ -50,9 +50,9 @@ public class XxxCodeAnalyzer {
 	}
 }
 ```
-* Create a AutoCompleteProvider:
-You have two choices:
-A.Implement a AutoCompleteProvider by your self
+* Create a AutoCompleteProvider:   
+You have two choices:   
+A.Implement a AutoCompleteProvider by your self   
 ```Java
 public class XxxAutoComplete {
 	public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextColorProvider.TextColors colors, int line); {
@@ -67,17 +67,17 @@ public class XxxAutoComplete {
 	}
 }
 ```
-B.Use a simple AutoCompleteProvider implementation -- IdentifierAutoComplete
-This can only match your given word case insensitively by using startsWith().
-And you should use IdentifierAutoComplete.Identifiers as extra data from CodeAnalyzer or there will not be any effect.
-Sample:
+B.Use a simple AutoCompleteProvider implementation -- IdentifierAutoComplete   
+This can only match your given word case insensitively by using startsWith().   
+And you should use IdentifierAutoComplete.Identifiers as extra data from CodeAnalyzer or there will not be any effect.   
+Sample:   
 ```Java
 IdentifierAutoComplete autoComplete = new IdentifierAutoComplete();
 String[] keywords = new String[]{"public","private","protected"};
 //True if your all of keywords are in small case
 autoComplete.setKeywords(keywords,true);
 ```
-And in your CodeAnalyzer:
+And in your CodeAnalyzer:   
 ```Java
 public class XxxCodeAnalyzer {
 	public void analyze(CharSequence content, TextColorProvider.TextColors colors, TextColorProvider.AnalyzeThread.Delegate delegate);{
@@ -101,12 +101,12 @@ public class XxxCodeAnalyzer {
 	}
 }
 ```
-Note that repeat identifier will not be added.
-And you must call begin() before you call addIdentifier().
-Remember to call finish() after all addIdentifier() actions done.(This will free some space)
-* Implement your formatter (Optional) 
-Use lexer/tokenizer to create a formatter for your language.
-* Implement EditorLanguage:
+Note that repeat identifier will not be added.    
+And you must call begin() before you call addIdentifier().   
+Remember to call finish() after all addIdentifier() actions done.(This will free some space)   
+* Implement your formatter (Optional)    
+Use lexer/tokenizer to create a formatter for your language.   
+* Implement EditorLanguage:   
 ```Java
 public class MyLanguage implements EditorLanguage {
 
@@ -150,9 +150,9 @@ public class MyLanguage implements EditorLanguage {
 	}
 }
 ```
-* Apply your language
-It's very simple:
+* Apply your language   
+It's very simple:   
 ```Java
 editor.setEditorLanguage(yourLanguage);
 ```
-All things after will be done in a minute by editor
+All things after will be done in a minute by editor   
