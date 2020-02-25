@@ -77,8 +77,6 @@ public class S5dTextTokenizer {
         if (length > getTokenLength()) {
             throw new IllegalArgumentException("pushBack length too large");
         }
-        offset -= length;
-        index -= length;
         this.length -= length;
     }
 
