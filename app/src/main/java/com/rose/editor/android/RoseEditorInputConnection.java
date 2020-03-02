@@ -3,10 +3,6 @@ package com.rose.editor.android;
 import android.view.inputmethod.BaseInputConnection;
 
 import com.rose.editor.common.Cursor;
-import android.view.inputmethod.CompletionInfo;
-import android.widget.Toast;
-import android.view.inputmethod.InputContentInfo;
-import android.os.Bundle;
 
 /**
  * Connection between input method and editor

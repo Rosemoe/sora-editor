@@ -548,7 +548,8 @@ public class S5dTextTokenizer {
         keywords.put("步进", FORWARD);
         keywords.put("私有",PRIVATE);
         keywords.put("类",CLASS);
-        
+        keywords.put("枚举",ENUM);
+        keywords.put("继承",EXTENDS);
 
         MyCharacter.initMap();
     }

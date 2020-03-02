@@ -284,7 +284,6 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         mTextActionPanel.setWidth((int)(mDpUnit * 230));
         setEditorLanguage(null);
         setText(null);
-        mSpaceWidth = mPaint.measureText(" ");
     }
 
     /**
@@ -468,6 +467,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
      */
     public void setTextSizePx(float size) {
         mPaint.setTextSize(size);
+        mSpaceWidth = mPaint.measureText(" ");
         invalidate();
     }
 
