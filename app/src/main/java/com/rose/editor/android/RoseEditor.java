@@ -1730,7 +1730,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
      * @return max scroll x
      */
     public int getScrollMaxX(){
-        return (int)Math.max(0, mMaxPaintX - getWidth() * 1.6f);
+        return (int)Math.max(0, mMaxPaintX - getWidth() / 2f);
     }
 
     /**
