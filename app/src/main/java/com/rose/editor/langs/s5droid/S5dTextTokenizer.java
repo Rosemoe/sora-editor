@@ -502,131 +502,53 @@ public class S5dTextTokenizer {
     }
 
     protected static void doStaticInit() {
-        // 初始化关键字表
+        // Initialize TrieTree for keywords
         keywords = new TrieTree<>();
 
         keywords.put("变量循环", FORLOOP);
-        keywords.put("For", FORLOOP);
-
         keywords.put("判断循环", WHILELOOP);
-        keywords.put("While", WHILELOOP);
-
         keywords.put("长整数型", LONGV);
-        keywords.put("Long", LONGV);
-
         keywords.put("双精度型", DOUBLEV);
-        keywords.put("Double", DOUBLEV);
-
         keywords.put("浮点数型", FLOATV);
-        keywords.put("Float", FLOATV);
-
         keywords.put("逻辑型", BOOLEANV);
-        keywords.put("Bool", BOOLEANV);
-
         keywords.put("整数型", INTV);
-        keywords.put("Integer", INTV);
-
         keywords.put("文本型", STRINGV);
-        keywords.put("String", STRINGV);
-
         keywords.put("对象", OBJECT);
-        keywords.put("Object", OBJECT);
-
         keywords.put("变量", VARIANT);
-        keywords.put("Var", VARIANT);
-
         keywords.put("否则", ELSE);
-        keywords.put("Else", ELSE);
-
         keywords.put("如果", IF);
-        keywords.put("If", IF);
-
         keywords.put("静态", STATIC);
-        keywords.put("Static", STATIC);
-
         keywords.put("分支", CASE);
-        keywords.put("Case", CASE);
-
         keywords.put("判断", SWITCH);
-        keywords.put("Switch", SWITCH);
-
         keywords.put("循环", LOOP);
-        keywords.put("Loop", LOOP);
-
-        keywords.put("Fun", METHOD);
         keywords.put("方法",METHOD);
-
         keywords.put("事件", EVENT);
-        keywords.put("Event", EVENT);
-
         keywords.put("结束", END);
-        keywords.put("End", END);
-
         keywords.put("返回", RETURN);
-        keywords.put("Return", RETURN);
-
         keywords.put("创建", NEW);
-        keywords.put("New", NEW);
-
         keywords.put("空", NULL);
-        keywords.put("Nil", NULL);
-
         keywords.put("真", TRUE);
-        keywords.put("True", TRUE);
-
         keywords.put("假", FALSE);
-        keywords.put("False", FALSE);
-
         keywords.put("至", TO);
-        keywords.put("To", TO);
-
         keywords.put("则", THEN);
-        keywords.put("Then", THEN);
-
         keywords.put("为", AS);
-        keywords.put("As", AS);
-
         keywords.put("与", ANDK);
-        keywords.put("And", ANDK);
-
         keywords.put("或", ORK);
-        keywords.put("Or", ORK);
-
         keywords.put("字符型", CHARV);
-        keywords.put("Char", CHARV);
-
         keywords.put("从属于", INSTANCEOF);
-        keywords.put("Instanceof", INSTANCEOF);
-
         keywords.put("跳过", CONTINUE);
-        keywords.put("Continue", CONTINUE);
-
         keywords.put("跳出", BREAK);
-        keywords.put("Break", BREAK);
-
         keywords.put("断言", ASSERT);
-        keywords.put("Assert", ASSERT);
-
         keywords.put("本对象", THIS);
-        keywords.put("This", THIS);
-
         keywords.put("容错", SIMPLE_TRY);
-        keywords.put("Try", TRY);
-
         keywords.put("捕捉", CATCH);
-        keywords.put("Catch", CATCH);
-
         keywords.put("容错处理", TRY);
-        keywords.put("TryDo" ,TRY);
-
         keywords.put("否则如果", ELSEIF);
-        keywords.put("Elseif", ELSE);
-
         keywords.put("步退", BACK);
-        keywords.put("Back",BACK);
-
         keywords.put("步进", FORWARD);
-        keywords.put("Forward",FORWARD);
+        keywords.put("私有",PRIVATE);
+        keywords.put("类",CLASS);
+        
 
         MyCharacter.initMap();
     }

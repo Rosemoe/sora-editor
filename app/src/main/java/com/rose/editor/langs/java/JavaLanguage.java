@@ -46,7 +46,7 @@ public class JavaLanguage implements EditorLanguage {
             }
         }
         advance = Math.max(0,advance);
-        return advance;
+        return advance * 4;
     }
 
     @Override

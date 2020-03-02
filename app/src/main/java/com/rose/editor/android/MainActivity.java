@@ -17,6 +17,7 @@ import com.rose.editor.simpleclass.NavigationLabel;
 import com.rose.editor.utils.CrashHandler;
 
 import java.util.List;
+import com.rose.editor.langs.java.JavaLanguage;
 
 public class MainActivity extends Activity {
 
@@ -32,8 +33,8 @@ public class MainActivity extends Activity {
         }
         S5droidAutoComplete.init(this);
         editor = (RoseEditor) findViewById(R.id.editor);
-        editor.setEditorLanguage(new S5droidLanguage());
-        editor.setText("/*\n * Test\n*/\n//test\n方法 测试方法_求和(参数1 为 整数型,参数2 为 整数型) 为 整数型\n   返回 (参数1 + 参数2);\n结束 方法");
+        editor.setEditorLanguage(new JavaLanguage());
+        editor.setText("public static class");
     }
 
     @Override

@@ -488,7 +488,12 @@ public class JavaTextTokenizer {
 
     }
     */
-    protected final static String[] sKeywords = {
+    protected static String[] sKeywords;
+
+    private static Tokens[] sTokens;
+
+    protected static void doStaticInit() {
+        sKeywords = new String[]{
             "assert","abstract","boolean","byte","char","class","do",
             "double","final","float","for","if","int","long","new",
             "public","private","protected","package","return","static",
@@ -497,9 +502,8 @@ public class JavaTextTokenizer {
             "finally","while","case","default","const","enum","extends",
             "implements","import","instanceof","interface","native",
             "this","throw","throws"
-    };
-
-    private final static Tokens[] sTokens = {
+        };
+        sTokens = new Tokens[]{
             ABSTRACT, ASSERT, BOOLEAN, BYTE, CHAR, CLASS, DO,
             DOUBLE, FINAL, FLOAT, FOR, IF, INT, LONG, NEW,
             PUBLIC, PRIVATE, PROTECTED, PACKAGE, RETURN, STATIC,
@@ -508,9 +512,7 @@ public class JavaTextTokenizer {
             FINALLY, WHILE, CASE, DEFAULT, CONST, ENUM, EXTENDS,
             IMPLEMENTS, IMPORT, INSTANCEOF, INTERFACE, NATIVE,
             THIS, THROW, THROWS
-    };
-
-    protected static void doStaticInit() {
+        };
         // 初始化关键字表
         keywords = new TrieTree<>();
         for(int i = 0;i < sKeywords.length;i++) {

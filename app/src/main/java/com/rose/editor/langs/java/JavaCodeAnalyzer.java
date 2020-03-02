@@ -105,6 +105,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                 case  THROW:
                 case  THROWS:
                     colors.addIfNeeded(index,line,column, ColorScheme.KEYWORD);
+                    break;
                 case LBRACE: {
                     colors.addIfNeeded(index, line, column, ColorScheme.OPERATOR);
                     if(stack.isEmpty()) {

@@ -282,9 +282,9 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         mTextActionPanel = new TextComposePanel(this);
         mTextActionPanel.setHeight((int)(mDpUnit * 60));
         mTextActionPanel.setWidth((int)(mDpUnit * 230));
-        StringBuilder sb = new StringBuilder();
         setEditorLanguage(null);
         setText(null);
+        mSpaceWidth = mPaint.measureText(" ");
     }
 
     /**
@@ -758,9 +758,6 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
      */
     private void drawScrollBarTrackVertical(Canvas canvas,int width) {
         if(mEventHandler.holdVerticalScrollBar()) {
-            int page = getHeight();
-            float all = getLineHeight() * getLineCount() + getHeight() / 2;
-            float length = page / all * getHeight();
             mRect.right = getWidth();
             mRect.left = getWidth() - mDpUnit * width;
             mRect.top = 0;

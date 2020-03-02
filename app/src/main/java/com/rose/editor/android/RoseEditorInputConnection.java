@@ -3,6 +3,10 @@ package com.rose.editor.android;
 import android.view.inputmethod.BaseInputConnection;
 
 import com.rose.editor.common.Cursor;
+import android.view.inputmethod.CompletionInfo;
+import android.widget.Toast;
+import android.view.inputmethod.InputContentInfo;
+import android.os.Bundle;
 
 /**
  * Connection between input method and editor
@@ -16,7 +20,6 @@ class RoseEditorInputConnection extends BaseInputConnection {
 
     private int length = -1;
 
-    private StringBuilder commit = new StringBuilder();
     protected int composingLine = -1;
     protected int composingStart = -1;
     protected int composingEnd = -1;
@@ -35,7 +38,6 @@ class RoseEditorInputConnection extends BaseInputConnection {
      * Reset the state of this connection
      */
     protected void reset(){
-        commit = new StringBuilder();
         composingEnd = composingStart = composingLine = -1;
         actionCode = -1;
         length = -1;
@@ -63,8 +65,7 @@ class RoseEditorInputConnection extends BaseInputConnection {
         }
         if(mEditor.isEditable()){
             if(composingLine != -1){
-                commit.append(text);
-                return true;
+                finishComposingText();
             }
             getCursor().onCommitText(text);
             actionCode = 0;
@@ -98,12 +99,11 @@ class RoseEditorInputConnection extends BaseInputConnection {
         if(!mEditor.isEditable()){
             return false;
         }
-        if(text == null){
+        if(text == null || text.length() == 0){
             finishComposingText();
             return true;
         }
         if(composingLine == -1){
-            commit = new StringBuilder();
             if(getCursor().isSelected())
                 getCursor().onDeleteKeyPressed();
             composingLine = mEditor.getCursor().getRightLine();
@@ -121,13 +121,17 @@ class RoseEditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean finishComposingText(){
+        if(composingLine == -1){
+            return false;
+        }
+        getCursor().setLeft(composingLine,composingStart);
+        getCursor().setRight(composingLine,composingEnd);
+        if(composingStart != composingEnd){
+            getCursor().onDeleteKeyPressed();
+        }
         composingStart = -1;
         composingEnd = -1;
         composingLine = -1;
-        if(commit.length() != 0){
-            getCursor().onCommitText(commit);
-            commit = new StringBuilder();
-        }
         return true;
     }
 
