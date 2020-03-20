@@ -195,22 +195,23 @@ public final class Cursor {
                 char first = text.charAt(0);
                 if(first == '\n') {
                     String line = _content.getLineString(getLeftLine());
-                    int p = 0;
+                    int p = 0,count = 0;;
                     while(p < getLeftColumn()) {
                         if(isWhitespace(line.charAt(p))){
-                            if(p == '\t') {
-                                p += tabWidth;
+                            if(line.charAt(p) == '\t') {
+                                count += tabWidth;
                             }else{
-                                p++;
+                                count++;
                             }
+                            p++;
                         }else{
                             break;
                         }
                     }
                     String sub = line.substring(0,getLeftColumn());
-                    p += mLang.getIndentAdvance(sub);
+                    count += mLang.getIndentAdvance(sub);
                     StringBuilder sb = new StringBuilder(text);
-                    sb.insert(1,create(p));
+                    sb.insert(1,create(count));
                     text = sb;
                 }
             }

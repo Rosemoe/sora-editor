@@ -1757,6 +1757,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         mText.insert(0,0,mLanguage.format(content));
         mText.endBatchEdit();
         getScroller().forceFinished(true);
+        mACPanel.hide();
         mCancelForFormatting = false;
         setSelection(line,column);
     }
