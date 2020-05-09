@@ -1,3 +1,18 @@
+/*
+ Copyright 2020 Rose2073
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
 package com.rose.editor.android;
 
 import android.content.res.Resources;
@@ -177,6 +192,7 @@ public class AutoCompletePanel extends BasePanel
         ResultItem item = ((ItemAdapter) mListView.getAdapter()).getItem(pos);
         Cursor cursor = mEditor.getCursor();
         if(!cursor.isSelected()) {
+            mEditor.contentChanged();
             mEditor.getText().delete(cursor.getLeftLine(), cursor.getLeftColumn() - mLastPrefix.length(), cursor.getLeftLine(), cursor.getLeftColumn());
             cursor.onCommitText(item.commit);
             if((item.mask & ResultItem.MASK_SHIFT_LEFT_TWICE) != 0){

@@ -1,3 +1,18 @@
+/*
+  Copyright 2020 Rose2073
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+*/
 package com.rose.editor.android;
 
 import android.annotation.SuppressLint;
@@ -158,6 +173,18 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
      */
     protected void cancelAnimation() {
         mLastMakeVisible = System.currentTimeMillis();
+    }
+    
+    protected void updateSelection() {
+        mInputMethodManager.updateSelection(this, mCursor.getLeft(), mCursor.getRight(), mCursor.getLeft(), mCursor.getRight());
+    }
+    
+    /**
+     * This means some text is changed by user outside the input method application
+     */
+    protected void contentChanged() {
+        mConnection.invalid();
+        mInputMethodManager.restartInput(this);
     }
 
     /**
@@ -1521,6 +1548,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
             mConnection.commitText("\t", 0);
         }
     }
+    
 
     /**
      * Update the information of cursor
@@ -1528,7 +1556,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
      * @return The offset x of right cursor on view
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    protected float updateCursorInfo() {
+    protected float updateCursorAnchor() {
         CursorAnchorInfo.Builder builder = mAnchorInfoBuilder;
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder.reset();
@@ -2262,7 +2290,8 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         if(mHighlightCurrentBlock){
             mCursorPosition = findCursorBlock();
         }
-        updateCursorInfo();
+        updateCursorAnchor();
+        updateSelection();
         makeCharVisible(line,column);
         mTextActionPanel.hide();
     }
@@ -2325,7 +2354,8 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         }
         mCursor.setLeft(lineLeft, columnLeft);
         mCursor.setRight(lineRight, columnRight);
-        updateCursorInfo();
+        updateCursorAnchor();
+        updateSelection();
         if(makeRightVisible)
             makeCharVisible(lineRight,columnRight);
         else
@@ -2503,6 +2533,10 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     private void moveLineOn() {
         getScroller().startScroll(getOffsetX(),getOffsetY(),0,getLineHeight(),0);
     }
+    
+    private void updateCursor() {
+        
+    }
 
     //------------------------Internal Callbacks------------------------------
 
@@ -2517,6 +2551,13 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
             return;
         }
         invalidate();
+    }
+    
+    /**
+     * Get the InputMehtodManager using
+     */
+    protected InputMethodManager getInputMethodManager() {
+        return mInputMethodManager;
     }
 
     /**
@@ -2563,6 +2604,8 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
             return null;
         }
         outAttrs.inputType = EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
+        outAttrs.initialSelStart = getCursor() != null ? getCursor().getLeft() : 0;
+        outAttrs.initialSelStart = getCursor() != null ? getCursor().getRight() : 0;
         mConnection.reset();
         return mConnection;
     }
@@ -2773,7 +2816,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
             String prefix = line.substring(endColumn,end);
             mACPanel.setPrefix(prefix);
         }
-        float panelX = updateCursorInfo() + mDpUnit * 20;
+        float panelX = updateCursorAnchor() + mDpUnit * 20;
         float panelY = getLineBottom(mCursor.getRightLine()) - getOffsetY() + getLineHeight() / 2;
         float restY = getHeight() - panelY;
         if(restY > mDpUnit * 200) {
@@ -2826,7 +2869,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
             }
         }
         if(!mWait){
-            updateCursorInfo();
+            updateCursorAnchor();
             makeRightVisible();
             mSpanner.analyze(mText);
             mEventHandler.hideInsertHandle();

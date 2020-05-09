@@ -1,7 +1,6 @@
 # RoseCodeEditor / CodeEditor  
 A professional code editor on Android device with highlight and auto completion.  
-不想看英文请:[中文版](/README_zh.md).   
-总之项目里面全都是英文啦(除了少部分扯淡的话)...
+[中文版README](/README_zh.md).   
 ## Strong Abilities  
 * Highlight yours code
 * A strong automatically complete window
@@ -18,7 +17,7 @@ A professional code editor on Android device with highlight and auto completion.
 * A man-made lexer(Quite fast than JFLex)
 Language:Java,S5droid
 ## How to use this Editor  
-Gradle not supported because of my poor knowledge about it.  
+This project hasn't deploy to any place such as jcenter.    
 To include this project into your project:  
 * Copy files in src/assets/ to your project(If you do not want to use S5droid language,please go on to next step)  
 * Copy files in src/res/layout to your project(Except src/res/layout/activity_main.xml)   

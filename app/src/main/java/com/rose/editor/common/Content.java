@@ -1,7 +1,32 @@
+/*
+ Copyright 2020 Rose2073
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
 package com.rose.editor.common;
+
+import android.annotation.TargetApi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.PrimitiveIterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.function.IntConsumer;
+import java.util.function.Supplier;
+import java.util.stream.IntStream;
+import java.util.stream.StreamSupport;
 
 import com.rose.editor.interfaces.ContentListener;
 import com.rose.editor.interfaces.ITextContent;
@@ -201,6 +226,14 @@ public class Content implements ITextContent {
         _textLength += text.length();
         this.dispatchAfterInsert(line, column, workLine, workIndex, text);
     }
+    
+    public void delete(int start, int end) {
+        CharPosition startPos = getIndexer().getCharPosition(start);
+        CharPosition endPos = getIndexer().getCharPosition(end);
+        if(start != end) {
+            delete(startPos.line, startPos.column, endPos.line, endPos.column);
+        }
+    }
 
     @Override
     public void delete(int startLine, int columnOnStartLine, int endLine, int columnOnEndLine) {
@@ -317,6 +350,7 @@ public class Content implements ITextContent {
         return _undoMgr.canRedo();
     }
 
+    @Deprecated
     public void enableLexMode(){
         _indexer = new LexIndexer(this);
         _lex = true;
@@ -600,5 +634,22 @@ public class Content implements ITextContent {
                     "Column " + column + " out of bounds.line: " + line + " ,column count:" + len);
         }
     }
+
+    //The following methods works on higher Android API with language level 8
+    //AIDE does not support this and if we copy default implementation code with some modification, it does not works as well.
+    //So we had to add a empty implementation
+
+    @Override
+    @TargetApi(24)
+    public IntStream chars() {
+        return null;
+    }
+
+    @Override
+    @TargetApi(24)
+    public IntStream codePoints() {
+        return null;
+    }
+
 
 }
