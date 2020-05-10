@@ -22,7 +22,7 @@ import android.util.SparseIntArray;
  * @author Rose
  */
 public final class ColorScheme {
-    //Add you colors above(starts from 28) and change END_COLOR_INDEX below
+    //Add you colors above(starts from 30) and change END_COLOR_INDEX below
     //-------------------------------------------
     public static final int AUTO_COMP_PANEL_CORNER = 24;
     public static final int AUTO_COMP_PANEL_BG = 23;
@@ -38,6 +38,8 @@ public final class ColorScheme {
     /*
      * These are highlight colors
      */
+    public static final int ANNOTATION = 28;
+    public static final int FUNCTION_NAME = 29;
     /**
      * This is a special color.
      * This color tells the editor it is a hex color expression.
@@ -74,7 +76,7 @@ public final class ColorScheme {
      * Max color id
      * NOTE:color id must be a series such as 1,2,3,4,5
      */
-    private static final int END_COLOR_INDEX = 27;
+    private static final int END_COLOR_INDEX = 29;
 
     /**
      * The default colors for each color id
@@ -93,7 +95,7 @@ public final class ColorScheme {
             0x883f51b5,
             0xffb71c1c,
             0xff9e9e9e,
-            0xff009688,
+            0xdd0096ff,
             0xff2196f3,
             0xaaec407a,
             0xffec407a,
@@ -102,12 +104,14 @@ public final class ColorScheme {
             0xdd000000,
             0xffffffff,
             0xff009688,
-            0xeedddddd,
+            0xccdddddd,
             0xffffffff,
             0xffec407a,
-            0xff009688,
+            0xffe91e63,
             0xffff9800,
-            0xff4caf50
+            0xff4caf50,
+            0xffec407a,
+            0xffaaaaff
     };
 
     /**

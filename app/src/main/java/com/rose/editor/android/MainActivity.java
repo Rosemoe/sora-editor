@@ -67,6 +67,8 @@ public class MainActivity extends Activity {
         sub = menu.addSubMenu(0,99999,0,"Text Actions");
         sub.add(0,0,0,"Undo");
         sub.add(0,1,0,"Redo");
+        sub.add(0,11,0,"Copy");
+        sub.add(0,12,0,"Paste");
         menu.add(0,9,0,"Code Navigation");
         menu.add(0,10,0,"Format");
         return super.onCreateOptionsMenu(menu);
@@ -133,6 +135,12 @@ public class MainActivity extends Activity {
                 }
                 case 10:
                     editor.formatCode();
+                    break;
+                case 11:
+                    editor.copyText();
+                    break;
+                case 12:
+                    editor.pasteText();
                     break;
             }
         }catch(Exception t){

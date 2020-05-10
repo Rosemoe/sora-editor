@@ -292,7 +292,7 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
     }
 
     @Override
-    public boolean onSingleTapConfirmed(MotionEvent e) {
+    public boolean onSingleTapUp(MotionEvent e) {
         mEditor.showSoftInput();
         mEditor.getInputMethodManager().viewClicked(mEditor);
         mScroller.forceFinished(true);
@@ -478,13 +478,16 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
     public void onShowPress(MotionEvent e) { }
 
     @Override
-    public boolean onSingleTapUp(MotionEvent e) { return true; }
+    public boolean onSingleTapConfirmed(MotionEvent e) { return true; }
 
     @Override
-    public boolean onDoubleTap(MotionEvent e) { return false; }
+    public boolean onDoubleTap(MotionEvent e) { 
+        onLongPress(e);
+        return true;
+    }
 
     @Override
-    public boolean onDoubleTapEvent(MotionEvent e) { return false; }
+    public boolean onDoubleTapEvent(MotionEvent e) { return true; }
 
     /**
      * This is a helper for EventHandler to control handles

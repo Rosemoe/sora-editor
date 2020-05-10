@@ -26,19 +26,22 @@ import com.rose.editor.simpleclass.NavigationLabel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import com.rose.editor.langs.internal.TrieTree;
 
 /**
  * Note:Navigation not supported
  * @author Rose
  */
 public class JavaCodeAnalyzer implements CodeAnalyzer {
+    
+    private final static Object OBJECT = new Object();
 
     @Override
     public void analyze(CharSequence content, TextColorProvider.TextColors colors, TextColorProvider.AnalyzeThread.Delegate delegate) {
         StringBuilder text = content instanceof StringBuilder ? (StringBuilder)content : new StringBuilder(content);
         JavaTextTokenizer tokenizer = new JavaTextTokenizer(text);
         tokenizer.setCalculateLineColumn(false);
-        Tokens token;
+        Tokens token, previous = Tokens.UNKNOWN;
         int index = 0,line = 0,column = 0;
         LineNumberHelper helper = new LineNumberHelper(text);
         IdentifierAutoComplete.Identifiers identifiers = new IdentifierAutoComplete.Identifiers();
@@ -46,8 +49,12 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
         Stack<BlockLine> stack = new Stack<>();
         List<NavigationLabel> labels = new ArrayList<>();
         int maxSwitch = 1,currSwitch = 0;
+        TrieTree<Object> classNames = new TrieTree<>();
+        boolean classNamePrevious = false;
+        classNames.put("String",OBJECT);
         while(!delegate.shouldReAnalyze()) {
             try{
+                // directNextToekn() does not skip any token
                 token = tokenizer.directNextToken();
             }catch (RuntimeException e) {
                 if(e instanceof IndexOutOfBoundsException) {
@@ -55,34 +62,72 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                 }
                 token = Tokens.CHARACTER_LITERAL;
             }
+            // Backup values because looking ahead in function name match will change them
+            int thisIndex = tokenizer.getIndex();
+            int thisLength = tokenizer.getTokenLength();
             switch(token) {
                 case WHITESPACE:
                 case NEWLINE:
                     break;
                 case IDENTIFIER:
-                    colors.addIfNeeded(index,line,column,ColorScheme.TEXT_NORMAL);
                     identifiers.addIdentifier(text.substring(tokenizer.getIndex(),tokenizer.getTokenLength() + tokenizer.getIndex()));
+                    
+                    if(previous == Tokens.AT) {
+                        colors.addIfNeeded(index,line,column,ColorScheme.ANNOTATION);
+                        break;
+                    }
+                    //Here we have to get next toekn to see if it is function
+                    Tokens next = tokenizer.directNextToken(); 
+                    if(next == Tokens.LPAREN) {
+                        colors.addIfNeeded(index,line,column,ColorScheme.FUNCTION_NAME);
+                        tokenizer.pushBack(tokenizer.getTokenLength());
+                        break;
+                    }
+                    //Push back the next token
+                    tokenizer.pushBack(tokenizer.getTokenLength());
+                    if(previous == Tokens.CLASS) {
+                        colors.addIfNeeded(index,line,column,ColorScheme.IDENTIFIER_NAME);
+                        classNames.put(text,thisIndex,thisLength,OBJECT);
+                        break;
+                    }
+                    if(classNames.get(text,thisIndex,thisLength) == OBJECT) {
+                        colors.addIfNeeded(index,line,column,ColorScheme.IDENTIFIER_NAME);
+                        classNamePrevious = true;
+                        break;
+                    }
+                    if(classNamePrevious) {
+                        colors.addIfNeeded(index,line,column,ColorScheme.IDENTIFIER_VAR);
+                        classNamePrevious = false;
+                        break;
+                    }
+                    colors.addIfNeeded(index,line,column,ColorScheme.TEXT_NORMAL);
                     break;
                 case CHARACTER_LITERAL:
                 case STRING:
                 case FLOATING_POINT_LITERAL:
                 case INTEGER_LITERAL:
+                    classNamePrevious = false;
                     colors.addIfNeeded(index,line,column,ColorScheme.LITERAL);
                     break;
-                case ABSTRACT:
-                case ASSERT:
+                case  INT:
+                case  LONG:
                 case  BOOLEAN:
                 case  BYTE:
                 case  CHAR:
+                case  FLOAT:
+                case  DOUBLE:
+                case  SHORT:
+                case VOID:
+                    classNamePrevious = true;
+                    colors.addIfNeeded(index,line,column, ColorScheme.KEYWORD);
+                    break;
+                case ABSTRACT:
+                case ASSERT:
                 case  CLASS:
                 case  DO:
-                case  DOUBLE:
                 case  FINAL:
-                case  FLOAT:
                 case  FOR:
                 case  IF:
-                case  INT:
-                case  LONG:
                 case  NEW:
                 case  PUBLIC:
                 case  PRIVATE:
@@ -90,7 +135,6 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                 case  PACKAGE:
                 case  RETURN:
                 case  STATIC:
-                case  SHORT:
                 case  SUPER:
                 case  SWITCH:
                 case  ELSE:
@@ -101,7 +145,6 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                 case  CONTINUE:
                 case  BREAK:
                 case  TRANSIENT:
-                case  VOID:
                 case  TRY:
                 case  CATCH:
                 case  FINALLY:
@@ -119,9 +162,11 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                 case  THIS:
                 case  THROW:
                 case  THROWS:
+                    classNamePrevious = false;
                     colors.addIfNeeded(index,line,column, ColorScheme.KEYWORD);
                     break;
                 case LBRACE: {
+                    classNamePrevious = false;
                     colors.addIfNeeded(index, line, column, ColorScheme.OPERATOR);
                     if(stack.isEmpty()) {
                         if(currSwitch > maxSwitch) {
@@ -137,6 +182,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                     break;
                 }
                 case RBRACE: {
+                    classNamePrevious = false;
                     colors.addIfNeeded(index, line, column, ColorScheme.OPERATOR);
                     if(!stack.isEmpty()) {
                         BlockLine block = stack.pop();
@@ -149,12 +195,20 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                     break;
                 }
                 default:
+                    if(token == Tokens.LBRACK || (token == Tokens.RBRACK && previous == Tokens.LBRACK)) {
+                        colors.addIfNeeded(index,line,column,ColorScheme.OPERATOR);
+                        break;
+                    }
+                    classNamePrevious = false;
                     colors.addIfNeeded(index,line,column,ColorScheme.OPERATOR);
             }
-            helper.update(tokenizer.getTokenLength());
-            index = tokenizer.getIndex() + tokenizer.getTokenLength();
+            helper.update(thisLength);
+            index = thisIndex + thisLength;
             line = helper.getLine();
             column = helper.getColumn();
+            if(token != Tokens.WHITESPACE && token != Tokens.NEWLINE) {
+                previous = token;
+            }
         }
         identifiers.finish();
         colors.mExtra = identifiers;

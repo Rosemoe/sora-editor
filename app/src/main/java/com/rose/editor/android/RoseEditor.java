@@ -282,8 +282,8 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         mDividerMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, Resources.getSystem().getDisplayMetrics());
         mDividerWidth = mDividerMargin;
         mUnderlineWidth = mDividerMargin;
-        mInsertSelWidth = mDividerWidth / 2;
-        mDpUnit = mInsertSelWidth;
+        mInsertSelWidth = mDividerWidth;
+        mDpUnit = mDividerWidth / 2;
         mLineNumberAlign = Paint.Align.RIGHT;
         mTypefaceLineNumber = Typeface.MONOSPACE;
         mTypefaceText = Typeface.DEFAULT;
@@ -540,6 +540,8 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         drawText(canvas, offsetX, color.getColor(ColorScheme.TEXT_NORMAL));
         drawComposingTextUnderline(canvas,offsetX, color.getColor(ColorScheme.UNDERLINE));
 
+        drawBlockLines(canvas,offsetX);
+        
         if(!mCursor.isSelected()){
             drawSelectionInsert(canvas, offsetX, color.getColor(ColorScheme.SELECTION_INSERT));
             if(mEventHandler.shouldDrawInsertHandle()) {
@@ -553,7 +555,6 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
             mRightHandle.setEmpty();
         }
 
-        drawBlockLines(canvas,offsetX);
         drawScrollBars(canvas);
 
         //These are for debug
@@ -2534,9 +2535,6 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         getScroller().startScroll(getOffsetX(),getOffsetY(),0,getLineHeight(),0);
     }
     
-    private void updateCursor() {
-        
-    }
 
     //------------------------Internal Callbacks------------------------------
 

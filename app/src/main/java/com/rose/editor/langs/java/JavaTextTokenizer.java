@@ -209,6 +209,8 @@ public class JavaTextTokenizer {
                     return scanOperatorTwo('=', EQ, EQEQ);
                 case '.':
                     return DOT;
+                case '@':
+                    return AT;
                 case '{':
                     return LBRACE;
                 case '}':
