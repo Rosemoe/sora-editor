@@ -223,6 +223,12 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                 previous = token;
             }
         }
+		if(stack.isEmpty()) {
+			if(currSwitch > maxSwitch) {
+				maxSwitch = currSwitch;
+			}
+			currSwitch = 0;
+		}
         identifiers.finish();
         colors.mExtra = identifiers;
         colors.setSuppressSwitch(maxSwitch + 10);

@@ -447,16 +447,12 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
             if(newSize < minSize || newSize > maxSize) {
                 return false;
             }
-            int currX = mScroller.getCurrX();
-            int currY = mScroller.getCurrY();
-            float focusX = detector.getFocusX();
-            float focusY = detector.getFocusY();
-            float leftScaled = (currX + focusX) * detector.getScaleFactor() - focusX;
-            float topScaled = (currY + focusY) * detector.getScaleFactor() - focusY;
-            leftScaled = Math.max(0,leftScaled);
-            topScaled = Math.max(0,topScaled);
-            mScroller.startScroll((int)leftScaled,(int)topScaled,0,0,0);
+            int firstVisible = mEditor.getFirstVisibleLine();
+			float top = mScroller.getCurrY() - firstVisible * mEditor.getLineHeight();
+			int height = mEditor.getLineHeight();
             mEditor.setTextSizePx(newSize);
+			float newY = firstVisible * mEditor.getLineHeight() + top * mEditor.getLineHeight() / height;
+			mScroller.startScroll((int)mScroller.getCurrX(),(int)newY,0,0,0);
             return true;
         }
         return false;

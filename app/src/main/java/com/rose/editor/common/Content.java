@@ -502,7 +502,8 @@ public class Content implements ITextContent {
         StringBuilder sb = new StringBuilder();
         sb.ensureCapacity(_textLength + 10);
         boolean first = true;
-        for (StringBuilder line : _lines) {
+        for (int i = 0;i < getLineCount();i++) {
+			StringBuilder line = _lines.get(i);
             if (!first) {
                 sb.append('\n');
             } else {
@@ -638,7 +639,7 @@ public class Content implements ITextContent {
     //The following methods works on higher Android API with language level 8
     //AIDE does not support this and if we copy default implementation code with some modification, it does not works as well.
     //So we had to add a empty implementation
-
+/*
     @Override
     @TargetApi(24)
     public IntStream chars() {
@@ -650,6 +651,6 @@ public class Content implements ITextContent {
     public IntStream codePoints() {
         return null;
     }
-
+*/
 
 }
