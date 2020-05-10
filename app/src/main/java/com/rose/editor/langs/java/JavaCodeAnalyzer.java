@@ -49,8 +49,11 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
         Stack<BlockLine> stack = new Stack<>();
         List<NavigationLabel> labels = new ArrayList<>();
         int maxSwitch = 1,currSwitch = 0;
+        //Tree to save class names and query
         TrieTree<Object> classNames = new TrieTree<>();
+        //Whether previous token is class name
         boolean classNamePrevious = false;
+        //Add default class name
         classNames.put("String",OBJECT);
         while(!delegate.shouldReAnalyze()) {
             try{
@@ -60,6 +63,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                 if(e instanceof IndexOutOfBoundsException) {
                     break;
                 }
+                //When a spelling input is in process, this will happen because of format mismatch
                 token = Tokens.CHARACTER_LITERAL;
             }
             // Backup values because looking ahead in function name match will change them
@@ -70,14 +74,18 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                 case NEWLINE:
                     break;
                 case IDENTIFIER:
+                    //Add a identifier to auto complete
                     identifiers.addIdentifier(text.substring(tokenizer.getIndex(),tokenizer.getTokenLength() + tokenizer.getIndex()));
-                    
+                    //The previous so this will be the annotation's type name
                     if(previous == Tokens.AT) {
                         colors.addIfNeeded(index,line,column,ColorScheme.ANNOTATION);
                         break;
                     }
                     //Here we have to get next toekn to see if it is function
+                    //We can only get the next token in stream.
+                    //If more tokens required, we have to use a stack in tokenizer
                     Tokens next = tokenizer.directNextToken(); 
+                    //The next is LPAREN,so this is funtion name or type name
                     if(next == Tokens.LPAREN) {
                         colors.addIfNeeded(index,line,column,ColorScheme.FUNCTION_NAME);
                         tokenizer.pushBack(tokenizer.getTokenLength());
@@ -85,17 +93,22 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                     }
                     //Push back the next token
                     tokenizer.pushBack(tokenizer.getTokenLength());
+                    //This is a class definition
                     if(previous == Tokens.CLASS) {
                         colors.addIfNeeded(index,line,column,ColorScheme.IDENTIFIER_NAME);
+                        //Add class name
                         classNames.put(text,thisIndex,thisLength,OBJECT);
                         break;
                     }
+                    //Has class name
                     if(classNames.get(text,thisIndex,thisLength) == OBJECT) {
                         colors.addIfNeeded(index,line,column,ColorScheme.IDENTIFIER_NAME);
+                        //Mark it
                         classNamePrevious = true;
                         break;
                     }
                     if(classNamePrevious) {
+                        //Var name
                         colors.addIfNeeded(index,line,column,ColorScheme.IDENTIFIER_VAR);
                         classNamePrevious = false;
                         break;
