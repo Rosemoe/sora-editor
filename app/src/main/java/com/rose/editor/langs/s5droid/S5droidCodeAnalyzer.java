@@ -155,11 +155,6 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
             try {
                 token = tokenizer.directNextToken();
             } catch (RuntimeException e) {
-                if (e instanceof IndexOutOfBoundsException) {
-                    //Error occured in Tokenizer
-                    //Could not continue
-                    break;
-                }
                 //May be inputing spells
                 token = CHARACTER_LITERAL;
             }
