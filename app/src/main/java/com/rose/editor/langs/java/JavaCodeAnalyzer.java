@@ -60,9 +60,6 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                 // directNextToekn() does not skip any token
                 token = tokenizer.directNextToken();
             }catch (RuntimeException e) {
-                if(e instanceof IndexOutOfBoundsException) {
-                    break;
-                }
                 //When a spelling input is in process, this will happen because of format mismatch
                 token = Tokens.CHARACTER_LITERAL;
             }
