@@ -1,8 +1,9 @@
 # RoseCodeEditor / CodeEditor  
 A professional code editor on Android device with highlight and auto completion.  
+***Work In Progress*** This project is still developing slowly because of school. It will update more frequently after July.   
 [中文版README](/README_zh.md).   
 ## Strong Abilities  
-* Highlight yours code
+* Highlight your code
 * A strong automatically complete window
 * Automatically indent your code
 * Show region of code blocks with vertical lines
@@ -14,7 +15,7 @@ A professional code editor on Android device with highlight and auto completion.
 * S5droid(context sensitive auto completion,highlight,code block line,navigation)
 * Java(Basic Support:highlight,code block line,identifier and keyword auto completion)
 ## Extra Module Inside
-* A man-made lexer(Quite fast than JFLex)
+* A man-made lexer
 Language:Java,S5droid
 ## How to use this Editor  
 This project hasn't deploy to any place such as jcenter.    
@@ -27,7 +28,7 @@ To include this project into your project:
 **  src/java/com/rose/editor/android/TextComposePanel.java  
 * Now you have finished all the steps!
 ## How to customize your language for editor
-* Make a lexer for the language (Use JFlex or ANTLR,etc. you can also modify my Tokenizer)   
+* Make a lexer for the language (Use JFlex or ANTLR to analyze code and highlight. JFlex is recommended)   
 [ANTLR Website](https://www.antlr.org/)   
 [ANTLR4 Repository](https://github.com/antlr/antlr4)   
 [Grammars for ANTLR4](https://github.com/antlr/grammars-v4)   
