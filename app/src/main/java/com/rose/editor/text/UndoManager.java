@@ -30,28 +30,28 @@ import com.rose.editor.struct.ReplaceAction;
  */
 final class UndoManager implements ContentListener {
 
-    private final Content _c;
-    private boolean _undoEnabled;
-    private int _maxStackSize;
-    private final List<ContentAction> _undoStack;
-    private InsertAction _insertAction;
-    private DeleteAction _deleteAction;
-    private boolean _replace;
-    private int _undoPos;
-    private boolean _ignore;
+    private final Content mContent;
+    private boolean mUndoEnabled;
+    private int mMaxStackSize;
+    private final List<ContentAction> mActionStack;
+    private InsertAction mInsertAction;
+    private DeleteAction mDeleteAction;
+    private boolean mReplaceMark;
+    private int mStackPointer;
+    private boolean mIgnoreModification;
 
     /**
      * Create UndoManager with the target content
      * @param content The Content going to attach
      */
     protected UndoManager(Content content) {
-        _c = content;
-        _undoStack = new ArrayList<>();
-        _replace = false;
-        _insertAction = null;
-        _deleteAction = null;
-        _undoPos = 0;
-        _ignore = false;
+        mContent = content;
+        mActionStack = new ArrayList<>();
+        mReplaceMark = false;
+        mInsertAction = null;
+        mDeleteAction = null;
+        mStackPointer = 0;
+        mIgnoreModification = false;
     }
 
     /**
@@ -60,10 +60,10 @@ final class UndoManager implements ContentListener {
      */
     public void undo(Content content) {
         if(canUndo()) {
-            _ignore = true;
-            _undoStack.get(_undoPos - 1).undo(content);
-            _undoPos--;
-            _ignore = false;
+            mIgnoreModification = true;
+            mActionStack.get(mStackPointer - 1).undo(content);
+            mStackPointer--;
+            mIgnoreModification = false;
         }
     }
 
@@ -73,10 +73,10 @@ final class UndoManager implements ContentListener {
      */
     public void redo(Content content) {
         if(canRedo()) {
-            _ignore = true;
-            _undoStack.get(_undoPos).redo(content);
-            _undoPos++;
-            _ignore = false;
+            mIgnoreModification = true;
+            mActionStack.get(mStackPointer).redo(content);
+            mStackPointer++;
+            mIgnoreModification = false;
         }
     }
 
@@ -85,7 +85,7 @@ final class UndoManager implements ContentListener {
      * @return Whether can undo
      */
     public boolean canUndo() {
-        return isUndoEnabled() && (_undoPos > 0);
+        return isUndoEnabled() && (mStackPointer > 0);
     }
 
     /**
@@ -93,7 +93,7 @@ final class UndoManager implements ContentListener {
      * @return Whether can redo
      */
     public boolean canRedo() {
-        return isUndoEnabled() && (_undoPos < _undoStack.size());
+        return isUndoEnabled() && (mStackPointer < mActionStack.size());
     }
 
     /**
@@ -101,7 +101,7 @@ final class UndoManager implements ContentListener {
      * @param enabled Enable or disable
      */
     public void setUndoEnabled(boolean enabled) {
-        _undoEnabled = enabled;
+        mUndoEnabled = enabled;
         if (!enabled) {
             cleanStack();
         }
@@ -112,7 +112,7 @@ final class UndoManager implements ContentListener {
      * @return Whether enabled
      */
     public boolean isUndoEnabled() {
-        return _undoEnabled;
+        return mUndoEnabled;
     }
 
     /**
@@ -124,7 +124,7 @@ final class UndoManager implements ContentListener {
             throw new IllegalArgumentException(
                     "max size can not be zero or smaller.Did you want to disable undo module by calling set_undoEnabled(false)?");
         }
-        _maxStackSize = maxSize;
+        mMaxStackSize = maxSize;
         cleanStack();
     }
 
@@ -133,7 +133,7 @@ final class UndoManager implements ContentListener {
      * @return max stack size
      */
     public int getMaxUndoStackSize() {
-        return _maxStackSize;
+        return mMaxStackSize;
     }
 
     /**
@@ -141,13 +141,13 @@ final class UndoManager implements ContentListener {
      * This is to limit stack size
      */
     private void cleanStack() {
-        if(!_undoEnabled) {
-            _undoStack.clear();
-            _undoPos = 0;
+        if(!mUndoEnabled) {
+            mActionStack.clear();
+            mStackPointer = 0;
         }else {
-            while(_undoPos > 1 && _undoStack.size() > _maxStackSize) {
-                _undoStack.remove(0);
-                _undoPos--;
+            while(mStackPointer > 1 && mActionStack.size() > mMaxStackSize) {
+                mActionStack.remove(0);
+                mStackPointer--;
             }
         }
     }
@@ -157,8 +157,8 @@ final class UndoManager implements ContentListener {
      * If we are not at the end(Undo action executed),remove those actions
      */
     private void cleanBeforePush() {
-        while(_undoPos < _undoStack.size()) {
-            _undoStack.remove(_undoStack.size() - 1);
+        while(mStackPointer < mActionStack.size()) {
+            mActionStack.remove(mActionStack.size() - 1);
         }
     }
 
@@ -172,35 +172,35 @@ final class UndoManager implements ContentListener {
             return;
         }
         cleanBeforePush();
-        if(_c.isInBatchEdit()) {
-            if(_undoStack.isEmpty()) {
+        if(mContent.isInBatchEdit()) {
+            if(mActionStack.isEmpty()) {
                 MultiAction a = new MultiAction();
                 a.addAction(action);
-                _undoStack.add(a);
-                _undoPos++;
+                mActionStack.add(a);
+                mStackPointer++;
             }else {
-                ContentAction a = _undoStack.get(_undoStack.size() - 1);
+                ContentAction a = mActionStack.get(mActionStack.size() - 1);
                 if(a instanceof MultiAction) {
                     MultiAction ac = (MultiAction)a;
                     ac.addAction(action);
                 }else {
                     MultiAction ac = new MultiAction();
                     ac.addAction(action);
-                    _undoStack.add(ac);
-                    _undoPos++;
+                    mActionStack.add(ac);
+                    mStackPointer++;
                 }
             }
         }else {
-            if(_undoStack.isEmpty()) {
-                _undoStack.add(action);
-                _undoPos++;
+            if(mActionStack.isEmpty()) {
+                mActionStack.add(action);
+                mStackPointer++;
             }else {
-                ContentAction last = _undoStack.get(_undoStack.size() - 1);
+                ContentAction last = mActionStack.get(mActionStack.size() - 1);
                 if(last.canMerge(action)) {
                     last.merge(action);
                 }else {
-                    _undoStack.add(action);
-                    _undoPos++;
+                    mActionStack.add(action);
+                    mStackPointer++;
                 }
             }
         }
@@ -209,49 +209,49 @@ final class UndoManager implements ContentListener {
 
     @Override
     public void beforeReplace(Content content) {
-        if(_ignore) {
+        if(mIgnoreModification) {
             return;
         }
-        _replace = true;
+        mReplaceMark = true;
     }
 
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn,
                             CharSequence insertedContent) {
-        if(_ignore) {
+        if(mIgnoreModification) {
             return;
         }
-        _insertAction = new InsertAction();
-        _insertAction.startLine = startLine;
-        _insertAction.startColumn = startColumn;
-        _insertAction.endLine = endLine;
-        _insertAction.endColumn = endColumn;
-        _insertAction.text = insertedContent;
-        if(_replace) {
+        mInsertAction = new InsertAction();
+        mInsertAction.startLine = startLine;
+        mInsertAction.startColumn = startColumn;
+        mInsertAction.endLine = endLine;
+        mInsertAction.endColumn = endColumn;
+        mInsertAction.text = insertedContent;
+        if(mReplaceMark) {
             ReplaceAction rep = new ReplaceAction();
-            rep._delete = _deleteAction;
-            rep._insert = _insertAction;
+            rep._delete = mDeleteAction;
+            rep._insert = mInsertAction;
             _push(rep);
         }else {
-            _push(_insertAction);
+            _push(mInsertAction);
         }
-        _replace = false;
+        mReplaceMark = false;
     }
 
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn,
                             CharSequence deletedContent) {
-        if(_ignore) {
+        if(mIgnoreModification) {
             return;
         }
-        _deleteAction = new DeleteAction();
-        _deleteAction.endColumn = endColumn;
-        _deleteAction.startColumn = startColumn;
-        _deleteAction.endLine = endLine;
-        _deleteAction.startLine = startLine;
-        _deleteAction.text = deletedContent;
-        if(!_replace) {
-            _push(_deleteAction);
+        mDeleteAction = new DeleteAction();
+        mDeleteAction.endColumn = endColumn;
+        mDeleteAction.startColumn = startColumn;
+        mDeleteAction.endLine = endLine;
+        mDeleteAction.startLine = startLine;
+        mDeleteAction.text = deletedContent;
+        if(!mReplaceMark) {
+            _push(mDeleteAction);
         }
     }
 

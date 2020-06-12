@@ -33,10 +33,10 @@ class CodeEditorInputConnection extends BaseInputConnection {
 
     private final CodeEditor mEditor;
 
-    protected int composingLine = -1;
-    protected int composingStart = -1;
-    protected int composingEnd = -1;
-    private boolean invalid;
+    protected int mComposingLine = -1;
+    protected int mComposingStart = -1;
+    protected int mComposingEnd = -1;
+    private boolean mInvalid;
 
     /**
      * Create a connection for the given editor
@@ -45,12 +45,12 @@ class CodeEditorInputConnection extends BaseInputConnection {
     public CodeEditorInputConnection(CodeEditor targetView) {
         super(targetView, true);
         mEditor = targetView;
-        invalid = false;
+        mInvalid = false;
     }
 
     protected void invalid() {
-        invalid = true;
-        composingEnd = composingStart = composingLine = -1;
+        mInvalid = true;
+        mComposingEnd = mComposingStart = mComposingLine = -1;
         mEditor.invalidate();
     }
 
@@ -58,8 +58,8 @@ class CodeEditorInputConnection extends BaseInputConnection {
      * Reset the state of this connection
      */
     protected void reset() {
-        composingEnd = composingStart = composingLine = -1;
-        invalid = false;
+        mComposingEnd = mComposingStart = mComposingLine = -1;
+        mInvalid = false;
     }
 
     /**
@@ -140,7 +140,7 @@ class CodeEditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean commitText(CharSequence text, int newCursorPosition) {
-        if (!mEditor.isEditable() || invalid) {
+        if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
         // NOTE: Text styles are ignored by editor
@@ -153,20 +153,20 @@ class CodeEditorInputConnection extends BaseInputConnection {
     }
 
     private void deleteComposingText() {
-        if (composingLine == -1) {
+        if (mComposingLine == -1) {
             return;
         }
         try {
-            mEditor.getText().delete(composingLine, composingStart, composingLine, composingEnd);
+            mEditor.getText().delete(mComposingLine, mComposingStart, mComposingLine, mComposingEnd);
         } catch(IndexOutOfBoundsException e){
             e.printStackTrace();
         }
-        composingLine = composingStart = composingEnd = -1;
+        mComposingLine = mComposingStart = mComposingEnd = -1;
     }
 
     @Override
     public boolean deleteSurroundingText(int beforeLength, int afterLength) {
-        if (!mEditor.isEditable() || invalid) {
+        if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
         if(beforeLength == afterLength && beforeLength == 0) {
@@ -218,41 +218,41 @@ class CodeEditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setComposingText(CharSequence text, int newCursorPosition) {
-        if (!mEditor.isEditable() || invalid) {
+        if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
-        if (composingLine == -1) {
+        if (mComposingLine == -1) {
             // Create composing info
             deleteSelected();
-            composingLine = getCursor().getLeftLine();
-            composingStart = getCursor().getLeftColumn();
-            composingEnd = composingStart + text.length();
+            mComposingLine = getCursor().getLeftLine();
+            mComposingStart = getCursor().getLeftColumn();
+            mComposingEnd = mComposingStart + text.length();
             getCursor().onCommitText(text);
         } else {
             // Already have composing text
             // Delete first
-            if (composingStart != composingEnd) {
-                mEditor.getText().delete(composingLine, composingStart, composingLine, composingEnd);
+            if (mComposingStart != mComposingEnd) {
+                mEditor.getText().delete(mComposingLine, mComposingStart, mComposingLine, mComposingEnd);
             }
             // Reset range
-            composingEnd = composingStart + text.length();
-            mEditor.getText().insert(composingLine, composingStart, text);
+            mComposingEnd = mComposingStart + text.length();
+            mEditor.getText().insert(mComposingLine, mComposingStart, text);
         }
         return true;
     }
 
     @Override
     public boolean finishComposingText() {
-        if (!mEditor.isEditable() || invalid) {
+        if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
-        composingLine = composingStart = composingEnd = -1;
+        mComposingLine = mComposingStart = mComposingEnd = -1;
         return true;
     }
 
     @Override
     public boolean setSelection(int start, int end) {
-        if (!mEditor.isEditable() || invalid) {
+        if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
         if (start > end) {
@@ -277,7 +277,7 @@ class CodeEditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setComposingRegion(int start, int end) {
-        if (!mEditor.isEditable() || invalid) {
+        if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
         try {
@@ -298,9 +298,9 @@ class CodeEditorInputConnection extends BaseInputConnection {
             if(startPos.line != endPos.line) {
                 return false;
             }
-            composingLine = startPos.line;
-            composingStart = startPos.column;
-            composingEnd = endPos.column;
+            mComposingLine = startPos.line;
+            mComposingStart = startPos.column;
+            mComposingEnd = endPos.column;
             mEditor.invalidate();
         } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();

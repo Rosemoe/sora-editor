@@ -24,24 +24,24 @@ import com.rose.editor.struct.CharPosition;
  */
 public final class Cursor {
 
-    private Content _content;
-    private CachedIndexer _indexer;
-    private CharPosition _left,_right;
-    private CharPosition _cache0,_cache1,_cache2;
-    private boolean autoIndent;
-    private EditorLanguage mLang;
-    private int tabWidth;
+    private Content mContent;
+    private CachedIndexer mIndexer;
+    private CharPosition mLeft, mRight;
+    private CharPosition cache0, cache1, cache2;
+    private boolean mAutoIndentEnabled;
+    private EditorLanguage mLanguage;
+    private int mTabWidth;
 
     /**
      * Create a new Cursor for Content
      * @param content Target content
      */
     public Cursor(Content content) {
-        _content = content;
-        _indexer = new CachedIndexer(content);
-        _left = new CharPosition().zero();
-        _right = new CharPosition().zero();
-        tabWidth = 4;
+        mContent = content;
+        mIndexer = new CachedIndexer(content);
+        mLeft = new CharPosition().zero();
+        mRight = new CharPosition().zero();
+        mTabWidth = 4;
     }
 
     /**
@@ -60,7 +60,7 @@ public final class Cursor {
      * @param column The column position
      */
     public void setLeft(int line,int column) {
-        _left = _indexer.getCharPosition(line, column).fromThis();
+        mLeft = mIndexer.getCharPosition(line, column).fromThis();
     }
 
     /**
@@ -69,7 +69,7 @@ public final class Cursor {
      * @param column The column position
      */
     public void setRight(int line,int column) {
-        _right = _indexer.getCharPosition(line, column).fromThis();
+        mRight = mIndexer.getCharPosition(line, column).fromThis();
     }
 
     /**
@@ -77,7 +77,7 @@ public final class Cursor {
      * @return line of left cursor
      */
     public int getLeftLine() {
-        return _left.getLine();
+        return mLeft.getLine();
     }
 
     /**
@@ -85,7 +85,7 @@ public final class Cursor {
      * @return column of left cursor
      */
     public int getLeftColumn() {
-        return _left.getColumn();
+        return mLeft.getColumn();
     }
 
     /**
@@ -93,7 +93,7 @@ public final class Cursor {
      * @return line of right cursor
      */
     public int getRightLine() {
-        return _right.getLine();
+        return mRight.getLine();
     }
 
     /**
@@ -101,7 +101,7 @@ public final class Cursor {
      * @return column of right cursor
      */
     public int getRightColumn() {
-        return _right.getColumn();
+        return mRight.getColumn();
     }
 
     /**
@@ -114,7 +114,7 @@ public final class Cursor {
         if(line >= getLeftLine() && line <= getRightLine()) {
             boolean yes = true;
             if(line == getLeftLine()) {
-                yes = yes && column >= getLeftColumn();
+                yes = column >= getLeftColumn();
             }
             if(line == getRightLine()) {
                 yes = yes && column < getRightColumn();
@@ -129,7 +129,7 @@ public final class Cursor {
      * @return index of left cursor
      */
     public int getLeft() {
-        return _left.index;
+        return mLeft.index;
     }
 
     /**
@@ -137,7 +137,7 @@ public final class Cursor {
      * @return index of right cursor
      */
     public int getRight() {
-        return _right.index;
+        return mRight.index;
     }
 
     /**
@@ -147,7 +147,7 @@ public final class Cursor {
      * @param line First visible line
      */
     public void updateCache(int line) {
-        _indexer.getCharIndex(line,0);
+        mIndexer.getCharIndex(line,0);
     }
 
     /**
@@ -155,7 +155,7 @@ public final class Cursor {
      * @return Using Indexer
      */
     public CachedIndexer getIndexer() {
-        return _indexer;
+        return mIndexer;
     }
 
     /**
@@ -171,7 +171,7 @@ public final class Cursor {
      * @param enabled Auto Indent state
      */
     public void setAutoIndent(boolean enabled) {
-        autoIndent = enabled;
+        mAutoIndentEnabled = enabled;
     }
 
     /**
@@ -179,7 +179,7 @@ public final class Cursor {
      * @return Enabled or disabled
      */
     public boolean isAutoIndent() {
-        return autoIndent;
+        return mAutoIndentEnabled;
     }
 
     /**
@@ -187,7 +187,7 @@ public final class Cursor {
      * @param lang The target language
      */
     public void setLanguage(EditorLanguage lang) {
-        mLang = lang;
+        mLanguage = lang;
     }
 
     /**
@@ -195,7 +195,7 @@ public final class Cursor {
      * @param width tab width
      */
     public void setTabWidth(int width){
-        tabWidth = width;
+        mTabWidth = width;
     }
 
     /**
@@ -204,17 +204,17 @@ public final class Cursor {
      */
     public void onCommitText(CharSequence text) {
         if(isSelected()) {
-            _content.replace(getLeftLine(), getLeftColumn(), getRightLine(), getRightColumn(), text);
+            mContent.replace(getLeftLine(), getLeftColumn(), getRightLine(), getRightColumn(), text);
         }else {
-            if(autoIndent && text.length() != 0) {
+            if(mAutoIndentEnabled && text.length() != 0) {
                 char first = text.charAt(0);
                 if(first == '\n') {
-                    String line = _content.getLineString(getLeftLine());
+                    String line = mContent.getLineString(getLeftLine());
                     int p = 0,count = 0;
                     while(p < getLeftColumn()) {
                         if(isWhitespace(line.charAt(p))){
                             if(line.charAt(p) == '\t') {
-                                count += tabWidth;
+                                count += mTabWidth;
                             }else{
                                 count++;
                             }
@@ -224,13 +224,13 @@ public final class Cursor {
                         }
                     }
                     String sub = line.substring(0,getLeftColumn());
-                    count += mLang.getIndentAdvance(sub);
+                    count += mLanguage.getIndentAdvance(sub);
                     StringBuilder sb = new StringBuilder(text);
-                    sb.insert(1,create(count));
+                    sb.insert(1, createIndent(count));
                     text = sb;
                 }
             }
-            _content.insert(getLeftLine(), getLeftColumn(), text);
+            mContent.insert(getLeftLine(), getLeftColumn(), text);
         }
     }
 
@@ -239,12 +239,12 @@ public final class Cursor {
      * @param p Target width effect
      * @return Generated space string
      */
-    private String create(int p) {
+    private String createIndent(int p) {
         int tab = 0;
         int space;
-        if(mLang.useTab()) {
-            tab = p / tabWidth;
-            space = p % tabWidth;
+        if(mLanguage.useTab()) {
+            tab = p / mTabWidth;
+            space = p % mTabWidth;
         }else{
             space = p;
         }
@@ -272,17 +272,17 @@ public final class Cursor {
      */
     public void onDeleteKeyPressed() {
         if(isSelected()) {
-            _content.delete(getLeftLine(), getLeftColumn(), getRightLine(), getRightColumn());
+            mContent.delete(getLeftLine(), getLeftColumn(), getRightLine(), getRightColumn());
         }else {
             int col = getLeftColumn(),len = 1;
             //Do not put cursor inside a emotion character
             if(col > 1) {
-                char before = _content.charAt(getLeftLine(),col - 2);
+                char before = mContent.charAt(getLeftLine(),col - 2);
                 if(isEmoji(before)) {
                     len = 2;
                 }
             }
-            _content.delete(getLeftLine(), getLeftColumn() - len, getLeftLine(), getLeftColumn());
+            mContent.delete(getLeftLine(), getLeftColumn() - len, getLeftLine(), getLeftColumn());
         }
     }
 
@@ -302,7 +302,7 @@ public final class Cursor {
      * @param length Text to insert length
      */
     void beforeInsert(int startLine, int startColumn, int length) {
-        _cache0 = _indexer.getCharPosition(startLine,startColumn).fromThis();
+        cache0 = mIndexer.getCharPosition(startLine,startColumn).fromThis();
     }
 
     /**
@@ -313,15 +313,15 @@ public final class Cursor {
      * @param endColumn End column
      */
     void beforeDelete(int startLine, int startColumn, int endLine, int endColumn) {
-        _cache1 = _indexer.getCharPosition(startLine, startColumn).fromThis();
-        _cache2 = _indexer.getCharPosition(endLine, endColumn).fromThis();
+        cache1 = mIndexer.getCharPosition(startLine, startColumn).fromThis();
+        cache2 = mIndexer.getCharPosition(endLine, endColumn).fromThis();
     }
 
     /**
      * Internal call back before replace
      */
     void beforeReplace() {
-        _indexer.beforeReplace(_content);
+        mIndexer.beforeReplace(mContent);
     }
 
     /**
@@ -334,13 +334,13 @@ public final class Cursor {
      */
     void afterInsert(int startLine, int startColumn, int endLine, int endColumn,
                      CharSequence insertedContent) {
-        _indexer.afterInsert(_content, startLine, startColumn, endLine, endColumn, insertedContent);
-        int beginIdx = _cache0.getIndex();
+        mIndexer.afterInsert(mContent, startLine, startColumn, endLine, endColumn, insertedContent);
+        int beginIdx = cache0.getIndex();
         if(getLeft() >= beginIdx) {
-            _left = _indexer.getCharPosition(getLeft() + insertedContent.length()).fromThis();
+            mLeft = mIndexer.getCharPosition(getLeft() + insertedContent.length()).fromThis();
         }
         if(getRight() >= beginIdx) {
-            _right = _indexer.getCharPosition(getRight() + insertedContent.length()).fromThis();
+            mRight = mIndexer.getCharPosition(getRight() + insertedContent.length()).fromThis();
         }
     }
 
@@ -354,30 +354,30 @@ public final class Cursor {
      */
     void afterDelete(int startLine, int startColumn, int endLine, int endColumn,
                      CharSequence deletedContent) {
-        _indexer.afterDelete(_content, startLine, startColumn, endLine, endColumn, deletedContent);
-        int beginIdx = _cache1.getIndex();
-        int endIdx = _cache2.getIndex();
+        mIndexer.afterDelete(mContent, startLine, startColumn, endLine, endColumn, deletedContent);
+        int beginIdx = cache1.getIndex();
+        int endIdx = cache2.getIndex();
         int left = getLeft();
         int right = getRight();
         if(beginIdx > right) {
             return;
         }
         if(endIdx <= left) {
-            _left = _indexer.getCharPosition(left - (endIdx - beginIdx)).fromThis();
-            _right = _indexer.getCharPosition(right - (endIdx - beginIdx)).fromThis();
-        }else if(endIdx > left && endIdx < right) {
+            mLeft = mIndexer.getCharPosition(left - (endIdx - beginIdx)).fromThis();
+            mRight = mIndexer.getCharPosition(right - (endIdx - beginIdx)).fromThis();
+        }else if(/* endIdx > left && */ endIdx < right) {
             if(beginIdx <= left) {
-                _left = _indexer.getCharPosition(beginIdx).fromThis();
-                _right = _indexer.getCharPosition(right - (endIdx - Math.max(beginIdx,left))).fromThis();
+                mLeft = mIndexer.getCharPosition(beginIdx).fromThis();
+                mRight = mIndexer.getCharPosition(right - (endIdx - Math.max(beginIdx,left))).fromThis();
             }else{
-                _right = _indexer.getCharPosition(right - (endIdx - beginIdx)).fromThis();
+                mRight = mIndexer.getCharPosition(right - (endIdx - beginIdx)).fromThis();
             }
         }else{
             if(beginIdx <= left) {
-                _left = _indexer.getCharPosition(beginIdx).fromThis();
-                _right = _left.fromThis();
+                mLeft = mIndexer.getCharPosition(beginIdx).fromThis();
+                mRight = mLeft.fromThis();
             }else{
-                _right = _indexer.getCharPosition(left + (right - beginIdx)).fromThis();
+                mRight = mIndexer.getCharPosition(left + (right - beginIdx)).fromThis();
             }
         }
 		/*

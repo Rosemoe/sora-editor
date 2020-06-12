@@ -933,11 +933,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param color The color of underline
      */
     private void drawComposingTextUnderline(Canvas canvas,float offsetX,int color){
-        if(mConnection != null && mConnection.composingLine != -1){
-            int offY = getLineBottom(mConnection.composingLine) - getOffsetY();
-            prepareLine(mConnection.composingLine);
-            offsetX += measureText(mChars,0,mConnection.composingStart);
-            float width = measureText(mChars,mConnection.composingStart,mConnection.composingEnd - mConnection.composingStart);
+        if(mConnection != null && mConnection.mComposingLine != -1){
+            int offY = getLineBottom(mConnection.mComposingLine) - getOffsetY();
+            prepareLine(mConnection.mComposingLine);
+            offsetX += measureText(mChars,0,mConnection.mComposingStart);
+            float width = measureText(mChars,mConnection.mComposingStart,mConnection.mComposingEnd - mConnection.mComposingStart);
             mRect.top = offY - mUnderlineWidth;
             mRect.bottom = offY;
             mRect.left = offsetX;
@@ -2847,7 +2847,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
         mMinModifiedLine = mMinModifiedLine == -1 ? startLine : Math.min(startLine,mMinModifiedLine);
-        if(mConnection.composingLine == -1 && mACPanel.isShowing()) {
+        if(mConnection.mComposingLine == -1 && mACPanel.isShowing()) {
             if(startLine != endLine || startColumn != endColumn - 1) {
                 mACPanel.hide();
             }
@@ -2875,7 +2875,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         postInvalidate();
         mMinModifiedLine = -1;
-        mLastAnalyzeThreadTime = System.currentTimeMillis() - provider.st;
+        mLastAnalyzeThreadTime = System.currentTimeMillis() - provider.mThreadStartTime;
     }
 
 }
