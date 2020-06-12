@@ -29,14 +29,14 @@ import android.content.res.Resources;
  */
 public class TextComposePanel extends BasePanel implements View.OnClickListener
 {
-    private RoseEditor mEditor;
+    private CodeEditor mEditor;
     private Button selectAll,cut,copy,paste;
 
     /**
      * Create a panel for the given editor
      * @param editor Target editor
      */
-    public TextComposePanel(RoseEditor editor) {
+    public TextComposePanel(CodeEditor editor) {
         super(editor);
         mEditor = editor;
         View root = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_panel,null);

@@ -48,8 +48,8 @@ public class Pinyin {
         if(chs.equals("调试输出")) {
             return "tssc";
         }
-        String key = "";
-        String value = "";
+        String key;
+        String value;
         StringBuilder buffer = new StringBuilder();
         for (int i = 0; i < chs.length(); i++) {
             key = chs.substring(i, i + 1);
@@ -96,8 +96,8 @@ public class Pinyin {
         if(chs.equals("调试输出")) {
             return "tiaoshishuchu";
         }
-        String key = "";
-        String value = "";
+        String key;
+        String value;
         StringBuilder buffer = new StringBuilder();
         for (int i = 0; i < chs.length(); i++) {
             key = chs.substring(i, i + 1);

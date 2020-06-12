@@ -15,11 +15,11 @@
  */
 package com.rose.editor.langs;
 
-import com.rose.editor.simpleclass.ResultItem;
-import com.rose.editor.common.TextColorProvider;
-import com.rose.editor.common.TextColorProvider.AnalyzeThread.Delegate;
+import com.rose.editor.struct.ResultItem;
+import com.rose.editor.text.TextAnalyzer;
+import com.rose.editor.text.TextAnalyzer.AnalyzeThread.Delegate;
 import com.rose.editor.interfaces.CodeAnalyzer;
-import com.rose.editor.common.TextColorProvider.TextColors;
+import com.rose.editor.text.TextAnalyzer.TextColors;
 import com.rose.editor.interfaces.AutoCompleteProvider;
 import com.rose.editor.interfaces.EditorLanguage;
 
@@ -61,7 +61,7 @@ public class EmptyLanguage implements EditorLanguage
         return new AutoCompleteProvider(){
 
             @Override
-            public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextColorProvider.TextColors colors, int line)
+            public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzer.TextColors colors, int line)
             {
                 return new ArrayList<>();
             }

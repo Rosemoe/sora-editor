@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-package com.rose.editor.common;
+package com.rose.editor.utils;
 
 /**
  * A line number calculator for spanner
@@ -22,11 +22,11 @@ package com.rose.editor.common;
 public class LineNumberHelper
 {
 
-    private CharSequence mTarget;
+    private final CharSequence mTarget;
     private int mOffset;
     private int mLine;
     private int mColumn;
-    private int mLength;
+    private final int mLength;
 
     /**
      * Create a new helper for the given text and set offset to start

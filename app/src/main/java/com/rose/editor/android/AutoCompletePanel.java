@@ -33,10 +33,10 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.rose.editor.common.Cursor;
-import com.rose.editor.common.TextColorProvider;
+import com.rose.editor.text.Cursor;
+import com.rose.editor.text.TextAnalyzer;
 import com.rose.editor.interfaces.AutoCompleteProvider;
-import com.rose.editor.simpleclass.ResultItem;
+import com.rose.editor.struct.ResultItem;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -48,7 +48,7 @@ import java.util.List;
  */
 public class AutoCompletePanel extends BasePanel
 {
-    private RoseEditor mEditor;
+    private CodeEditor mEditor;
     private LinearLayout mLayout;
     private ListView mListView;
     private TextView mTip;
@@ -77,7 +77,7 @@ public class AutoCompletePanel extends BasePanel
      * Create a panel instance for the given editor
      * @param editor Target editor
      */
-    public AutoCompletePanel(RoseEditor editor) {
+    public AutoCompletePanel(CodeEditor editor) {
         super(editor);
         mEditor = editor;
         mLayout = new LinearLayout(mEditor.getContext());
@@ -320,7 +320,7 @@ public class AutoCompletePanel extends BasePanel
         private long mTime;
         private String mPrefix;
         private boolean mInner;
-        private TextColorProvider.TextColors mColors;
+        private TextAnalyzer.TextColors mColors;
         private int mLine;
         private final AutoCompleteProvider mLocalProvider = mProvider;
 

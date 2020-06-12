@@ -17,21 +17,21 @@ package com.rose.editor.android;
 
 import android.view.inputmethod.BaseInputConnection;
 
-import com.rose.editor.common.Cursor;
-import android.widget.Toast;
+import com.rose.editor.text.Cursor;
+
 import android.text.Editable;
 import android.text.TextUtils;
-import com.rose.editor.simpleclass.CharPosition;
-import com.rose.editor.common.Content;
+import com.rose.editor.struct.CharPosition;
+import com.rose.editor.text.Content;
 import android.text.SpannableStringBuilder;
 
 /**
  * Connection between input method and editor
  * @author Rose
  */
-class RoseEditorInputConnection extends BaseInputConnection {
+class CodeEditorInputConnection extends BaseInputConnection {
 
-    private RoseEditor mEditor;
+    private final CodeEditor mEditor;
 
     protected int composingLine = -1;
     protected int composingStart = -1;
@@ -42,7 +42,7 @@ class RoseEditorInputConnection extends BaseInputConnection {
      * Create a connection for the given editor
      * @param targetView Host editor
      */
-    public RoseEditorInputConnection(RoseEditor targetView) {
+    public CodeEditorInputConnection(CodeEditor targetView) {
         super(targetView, true);
         mEditor = targetView;
         invalid = false;

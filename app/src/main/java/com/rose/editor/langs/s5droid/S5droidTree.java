@@ -25,7 +25,7 @@ import java.util.ArrayList;
  */
 public class S5droidTree
 {
-    public Node root;
+    public final Node root;
 
     private Node curr;
 

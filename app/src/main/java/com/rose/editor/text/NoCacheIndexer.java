@@ -13,9 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-package com.rose.editor.common;
-
-import com.rose.editor.interfaces.Indexer;
+package com.rose.editor.text;
 
 /**
  * Indexer without cache
@@ -39,7 +37,7 @@ final class NoCacheIndexer extends CachedIndexer implements Indexer{
     }
 
     @Override
-    protected void _throw() {
+    protected void throwIfHas() {
         //Override this to make super class not throw exception after text changes
     }
 

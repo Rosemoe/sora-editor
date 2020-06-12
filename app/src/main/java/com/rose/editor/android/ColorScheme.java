@@ -117,7 +117,7 @@ public final class ColorScheme {
     /**
      * Host editor object
      */
-    private RoseEditor mEditor;
+    private CodeEditor mEditor;
 
     /**
      * Real color saver
@@ -128,7 +128,7 @@ public final class ColorScheme {
      * Create a new ColorScheme for the given editor
      * @param editor Host editor
      */
-    ColorScheme(RoseEditor editor){
+    ColorScheme(CodeEditor editor){
         mEditor = editor;
         if(editor == null){
             throw new IllegalArgumentException();

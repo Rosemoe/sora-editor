@@ -13,49 +13,38 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-package com.rose.editor.common;
+package com.rose.editor.text;
 
 import android.annotation.TargetApi;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.PrimitiveIterator;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.function.IntConsumer;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
-import java.util.stream.StreamSupport;
 
-import com.rose.editor.interfaces.ContentListener;
-import com.rose.editor.interfaces.ITextContent;
-import com.rose.editor.interfaces.Indexer;
-import com.rose.editor.simpleclass.CharPosition;
-import com.rose.editor.simpleclass.SingleLineSpan;
+import com.rose.editor.struct.CharPosition;
 
 /**
- * Implementation of ITextContent
- * This class saves the text content of editor
+ * This class saves the text content for editor
  * @author Rose
  */
-public class Content implements ITextContent {
+public class Content implements CharSequence {
 
-    public final static int DEFAULT_MAX_UNDO_STACK_SIZE = 50;
+    public final static int DEFAULT_MAX_UNDO_STACK_SIZE = 100;
     public final static int DEFAULT_LIST_CAPACITY = 100;
 
-    private static int LIST_CAPACITY = Content.DEFAULT_LIST_CAPACITY;
+    private static int sInitialListCapacity;
 
-    private List<StringBuilder> _lines;
-    private int _textLength;
-    private int _nestedBatchEdit;
+    static {
+        setInitialLineCapacity(DEFAULT_LIST_CAPACITY);
+    }
 
-    private List<ContentListener> _listeners;
-    private Indexer _indexer;
-    private SingleLineSpan _composingSpan = new SingleLineSpan();
-    private UndoManager _undoMgr;
-    private Cursor _cursor = null;
-    private boolean _lex = false;
+    private List<StringBuilder> mLines;
+    private int mTextLength;
+    private int mNestedBatchEdit;
+    private List<ContentListener> mListeners;
+    private Indexer mIndexer;
+    private UndoManager mUndoManager;
+    private Cursor mCursor;
 
     /**
      * Set the default capacity of text line list
@@ -63,9 +52,9 @@ public class Content implements ITextContent {
      */
     public static void setInitialLineCapacity(int capacity) {
         if(capacity <= 0) {
-            throw new IllegalArgumentException("capcity can not be under or equal zero");
+            throw new IllegalArgumentException("capacity can not be under or equal zero");
         }
-        LIST_CAPACITY = capacity;
+        sInitialListCapacity = capacity;
     }
 
     /**
@@ -73,7 +62,7 @@ public class Content implements ITextContent {
      * @return Default capacity
      */
     public static int getInitialLineCapacity() {
-        return Content.LIST_CAPACITY;
+        return Content.sInitialListCapacity;
     }
 
 
@@ -93,14 +82,14 @@ public class Content implements ITextContent {
         if (src == null) {
             src = "";
         }
-        _textLength = 0;
-        _nestedBatchEdit = 0;
-        _lines = new ArrayList<>(getInitialLineCapacity());
-        _lines.add(new StringBuilder());
-        _listeners = new ArrayList<>();
-        _undoMgr = new UndoManager(this);
+        mTextLength = 0;
+        mNestedBatchEdit = 0;
+        mLines = new ArrayList<>(getInitialLineCapacity());
+        mLines.add(new StringBuilder());
+        mListeners = new ArrayList<>();
+        mUndoManager = new UndoManager(this);
         setMaxUndoStackSize(Content.DEFAULT_MAX_UNDO_STACK_SIZE);
-        _indexer = new NoCacheIndexer(this);
+        mIndexer = new NoCacheIndexer(this);
         if (src.length() == 0) {
             setUndoEnabled(true);
             return;
@@ -113,13 +102,13 @@ public class Content implements ITextContent {
     @Override
     public char charAt(int index) {
         checkIndex(index);
-        CharPosition p = _indexer.getCharPosition(index);
+        CharPosition p = mIndexer.getCharPosition(index);
         return charAt(p.line, p.column);
     }
 
     @Override
     public int length() {
-        return _textLength;
+        return mTextLength;
     }
 
     @Override
@@ -127,71 +116,73 @@ public class Content implements ITextContent {
         if(start > end) {
             throw new StringIndexOutOfBoundsException("start > end");
         }
-        CharPosition s = _indexer.getCharPosition(start);
-        CharPosition e = _indexer.getCharPosition(end);
+        CharPosition s = mIndexer.getCharPosition(start);
+        CharPosition e = mIndexer.getCharPosition(end);
         return subContent(s.getLine(), s.getColumn(), e.getColumn(), e.getColumn());
     }
 
-    @Override
-    public Content makeCopy() {
-        Content c = new Content();
-        c._lines.remove(0);
-        ((ArrayList<StringBuilder>)c._lines).ensureCapacity(getLineCount());
-        for (int i = 0; i < getLineCount(); i++) {
-            StringBuilder line = _lines.get(i);
-            c._lines.add(new StringBuilder(line.length()).append(line));
-        }
-        c._textLength = this._textLength;
-        return c;
-    }
-
-    @Override
+    /**
+     * Get the character at the given position
+     * If (column == getColumnCount(line)),it returns '\n'
+     * IndexOutOfBoundsException is thrown
+     * @param line The line position of character
+     * @param column The column position of character
+     * @return The character at the given position
+     */
     public char charAt(int line, int column) {
         checkLineAndColumn(line, column, true);
         if(column == getColumnCount(line)) {
             return '\n';
         }
-        return _lines.get(line).charAt(column);
+        return mLines.get(line).charAt(column);
     }
 
-    @Override
+    /**
+     * Get how many lines there are
+     * @return Line count
+     */
     public int getLineCount() {
-        return _lines.size();
+        return mLines.size();
     }
 
-    @Override
+    /**
+     * Get how many characters is on the given line
+     * If (line < 0 or line >= getLineCount()),it will throw a IndexOutOfBoundsException
+     * @param line The line to get
+     * @return Character count on line
+     */
     public int getColumnCount(int line) {
         checkLine(line);
-        return _lines.get(line).length();
+        return mLines.get(line).length();
     }
 
-    @Override
-    public char[] getLineChars(int line) {
-        checkLine(line);
-        StringBuilder sb = _lines.get(line);
-        char[] dest = new char[sb.length()];
-        for (int i = 0; i < sb.length(); i++) {
-            dest[i] = sb.charAt(i);
-        }
-        return dest;
-    }
-
-    @Override
+    /**
+     * Get the given line text without '\n' character
+     * @param line The line to get
+     * @return New String object of this line
+     */
     public String getLineString(int line) {
         checkLine(line);
-        return _lines.get(line).toString();
+        return mLines.get(line).toString();
     }
 
-    public StringBuilder directGet(int line) {
-        return _lines.get(line);
-    }
-
-    @Override
+    /**
+     * Transform the (line,column) position to index
+     * This task will usually completed by {@link Indexer}
+     * @param line Line of index
+     * @param column Column on line of index
+     * @return Transformed index for the given arguments
+     */
     public int getCharIndex(int line, int column) {
-        return _indexer.getCharIndex(line, column);
+        return mIndexer.getCharIndex(line, column);
     }
 
-    @Override
+    /**
+     * Insert content to this object
+     * @param line The insertion's line position
+     * @param column The insertion's column position
+     * @param text The text you want to insert at the position
+     */
     public void insert(int line, int column, CharSequence text) {
         checkLineAndColumn(line, column, true);
         if (text == null) {
@@ -199,22 +190,22 @@ public class Content implements ITextContent {
         }
 
         //-----Notify------
-        if(_cursor != null)
-            _cursor.beforeInsert(line,column,text.length());
+        if(mCursor != null)
+            mCursor.beforeInsert(line,column,text.length());
 
         int workLine = line;
         int workIndex = column;
         if(workIndex == -1){
             workIndex = 0;
         }
-        StringBuilder currLine = _lines.get(workLine);
+        StringBuilder currLine = mLines.get(workLine);
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
             if (c == '\n') {
                 StringBuilder newLine = new StringBuilder();
                 newLine.append(currLine, workIndex, currLine.length());
                 currLine.delete(workIndex, currLine.length());
-                _lines.add(workLine + 1, newLine);
+                mLines.add(workLine + 1, newLine);
                 currLine = newLine;
                 workIndex = 0;
                 workLine++;
@@ -223,10 +214,15 @@ public class Content implements ITextContent {
                 workIndex++;
             }
         }
-        _textLength += text.length();
+        mTextLength += text.length();
         this.dispatchAfterInsert(line, column, workLine, workIndex, text);
     }
-    
+
+    /**
+     * Delete character in [start,end)
+     * @param start Start position in content
+     * @param end End position in content
+     */
     public void delete(int start, int end) {
         CharPosition startPos = getIndexer().getCharPosition(start);
         CharPosition endPos = getIndexer().getCharPosition(end);
@@ -235,43 +231,48 @@ public class Content implements ITextContent {
         }
     }
 
-    @Override
+    /**
+     * Delete text in the given region
+     * @param startLine The start line position
+     * @param columnOnStartLine The start column position
+     * @param endLine The end line position
+     * @param columnOnEndLine The end column position
+     */
     public void delete(int startLine, int columnOnStartLine, int endLine, int columnOnEndLine) {
         StringBuilder changedContent = new StringBuilder();
         if (startLine == endLine) {
             checkLineAndColumn(endLine, columnOnEndLine, true);
             checkLineAndColumn(startLine, columnOnStartLine == -1 ? 0 : columnOnStartLine, true);
             int beginIdx = columnOnStartLine;
-            int endIdx = columnOnEndLine;
             if (columnOnStartLine == -1) {
                 beginIdx = 0;
             }
-            if (beginIdx > endIdx) {
+            if (beginIdx > columnOnEndLine) {
                 throw new IllegalArgumentException("start > end");
             }
-            StringBuilder curr = _lines.get(startLine);
+            StringBuilder curr = mLines.get(startLine);
             int len = curr.length();
-            if (beginIdx < 0 || endIdx < 0 || beginIdx > len || endIdx > len) {
+            if (beginIdx < 0 || beginIdx > len || columnOnEndLine > len) {
                 throw new StringIndexOutOfBoundsException("column start or column end is out of bounds");
             }
 
             //-----Notify------
-            if(_cursor != null)
+            if(mCursor != null)
                 if(columnOnStartLine != -1)
-                    _cursor.beforeDelete(startLine,columnOnStartLine,endLine,columnOnEndLine);
+                    mCursor.beforeDelete(startLine,columnOnStartLine,endLine,columnOnEndLine);
                 else
-                    _cursor.beforeDelete(startLine == 0 ? 0 : startLine - 1,startLine == 0 ? 0 : getColumnCount(startLine - 1),endLine,columnOnEndLine);
+                    mCursor.beforeDelete(startLine == 0 ? 0 : startLine - 1,startLine == 0 ? 0 : getColumnCount(startLine - 1),endLine,columnOnEndLine);
 
-            changedContent.append(curr, beginIdx, endIdx);
-            curr.delete(beginIdx, endIdx);
-            _textLength -= columnOnEndLine - columnOnStartLine;
+            changedContent.append(curr, beginIdx, columnOnEndLine);
+            curr.delete(beginIdx, columnOnEndLine);
+            mTextLength -= columnOnEndLine - columnOnStartLine;
             if (columnOnStartLine == -1) {
                 if (startLine == 0) {
-                    _textLength++;
+                    mTextLength++;
                 } else {
-                    StringBuilder previous = _lines.get(startLine - 1);
+                    StringBuilder previous = mLines.get(startLine - 1);
                     previous.append(curr);
-                    _lines.remove(startLine);
+                    mLines.remove(startLine);
                     changedContent.insert(0, '\n');
                     startLine--;
                     columnOnStartLine = getColumnCount(startLine);
@@ -282,26 +283,26 @@ public class Content implements ITextContent {
             checkLineAndColumn(endLine, columnOnEndLine, true);
 
             //-----Notify------
-            if(_cursor != null)
-                _cursor.beforeDelete(startLine,columnOnStartLine,endLine,columnOnEndLine);
+            if(mCursor != null)
+                mCursor.beforeDelete(startLine,columnOnStartLine,endLine,columnOnEndLine);
 
             int currEnd = endLine;
             while (currEnd - 1 != startLine) {
-                StringBuilder line = _lines.remove(currEnd - 1);
-                _textLength -= line.length() + 1;
+                StringBuilder line = mLines.remove(currEnd - 1);
+                mTextLength -= line.length() + 1;
                 changedContent.append('\n').append(line);
                 currEnd--;
             }
-            StringBuilder start = _lines.get(startLine);
-            StringBuilder end = _lines.get(currEnd);
-            _textLength -= start.length() - columnOnStartLine;
+            StringBuilder start = mLines.get(startLine);
+            StringBuilder end = mLines.get(currEnd);
+            mTextLength -= start.length() - columnOnStartLine;
             changedContent.insert(0, start, columnOnStartLine, start.length());
             start.delete(columnOnStartLine, start.length());
-            _textLength -= columnOnEndLine;
+            mTextLength -= columnOnEndLine;
             changedContent.append('\n').append(end, 0, columnOnEndLine);
             end.delete(0, columnOnEndLine);
-            _textLength--;
-            _lines.remove(currEnd);
+            mTextLength--;
+            mLines.remove(currEnd);
             start.append(end);
         } else {
             throw new IllegalArgumentException("start line > end line");
@@ -309,7 +310,15 @@ public class Content implements ITextContent {
         this.dispatchAfterDelete(startLine, columnOnStartLine, endLine, columnOnEndLine, changedContent);
     }
 
-    @Override
+    /**
+     * Replace the text in the given region
+     * This action will completed by calling {@link Content#delete(int, int, int, int)} and {@link Content#insert(int, int, CharSequence)}
+     * @param startLine The start line position
+     * @param columnOnStartLine The start column position
+     * @param endLine The end line position
+     * @param columnOnEndLine The end column position
+     * @param text The text to replace old text
+     */
     public void replace(int startLine, int columnOnStartLine, int endLine, int columnOnEndLine, CharSequence text) {
         if (text == null) {
             throw new IllegalArgumentException("text can not be null");
@@ -319,99 +328,130 @@ public class Content implements ITextContent {
         insert(startLine, columnOnStartLine, text);
     }
 
-    @Override
+    /**
+     * When you are going to use {@link CharSequence#charAt(int)} frequently,you are required to call
+     * this method.Because the way Content save text,it is usually slow to transform index to
+     * (line,column) from the start of text when the text is big.
+     * By calling this method,you will be able to get faster because calling this will
+     * cause the ITextContent object use a Indexer with cache.
+     * The performance is highly improved while linearly getting characters.
+     * @param initialIndex The Indexer with cache will take it into this index to its cache
+     */
     public void beginStreamCharGetting(int initialIndex) {
-        _indexer = new CachedIndexer(this);
-        _indexer.getCharPosition(initialIndex);
+        mIndexer = new CachedIndexer(this);
+        mIndexer.getCharPosition(initialIndex);
     }
 
-    @Override
+    /**
+     * When you finished calling {@link CharSequence#charAt(int)} frequently,you can call this method
+     * to free the Indexer with cache.
+     * This is not forced.
+     */
     public void endStreamCharGetting() {
-        _indexer = new NoCacheIndexer(this);
+        mIndexer = new NoCacheIndexer(this);
     }
 
-    @Override
+    /**
+     * Undo the last modification
+     * NOTE:When there are too much modification,old modification will be deleted from UndoManager
+     */
     public void undo() {
-        _undoMgr.undo(this);
+        mUndoManager.undo(this);
     }
 
-    @Override
+    /**
+     * Redo the last modification
+     */
     public void redo() {
-        _undoMgr.redo(this);
+        mUndoManager.redo(this);
     }
 
-    @Override
+    /**
+     * Whether we can undo
+     * @return Whether we can undo
+     */
     public boolean canUndo() {
-        return _undoMgr.canUndo();
+        return mUndoManager.canUndo();
     }
 
-    @Override
+    /**
+     * Whether we can redo
+     * @return Whether we can redo
+     */
     public boolean canRedo() {
-        return _undoMgr.canRedo();
+        return mUndoManager.canRedo();
     }
 
-    @Deprecated
-    public void enableLexMode(){
-        _indexer = new LexIndexer(this);
-        _lex = true;
-    }
-
-    @Override
+    /**
+     * Set whether enable the UndoManager.
+     * If false,any modification will not be taken down and previous modification that
+     * is already in UndoManager will be removed.Does not make changes to content.
+     * @param enabled New state for UndoManager
+     */
     public void setUndoEnabled(boolean enabled) {
-        _undoMgr.setUndoEnabled(enabled);
+        mUndoManager.setUndoEnabled(enabled);
     }
 
-    @Override
+    /**
+     * Get whether UndoManager is enabled
+     * @return Whether UndoManager is enabled
+     */
     public boolean isUndoEnabled() {
-        return _undoMgr.isUndoEnabled();
+        return mUndoManager.isUndoEnabled();
     }
 
-    @Override
+    /**
+     * Set the max size of stack in UndoManager
+     * @param maxSize New max size
+     */
     public void setMaxUndoStackSize(int maxSize) {
-        _undoMgr.setMaxUndoStackSize(maxSize);
+        mUndoManager.setMaxUndoStackSize(maxSize);
     }
 
-    @Override
+    /**
+     * Get current max stack size of UndoManager
+     * @return current max stack size
+     */
     public int getMaxUndoStackSize() {
-        return _undoMgr.getMaxUndoStackSize();
+        return mUndoManager.getMaxUndoStackSize();
     }
 
-    @Override
+    /**
+     * A delegate method.
+     * Notify the UndoManager to begin batch edit(enter a new layer).
+     * NOTE: batch edit in Android can be nested.
+     * @return Whether in batch edit
+     */
     public boolean beginBatchEdit() {
-        _nestedBatchEdit++;
+        mNestedBatchEdit++;
         return isInBatchEdit();
     }
 
-    @Override
+    /**
+     * A delegate method.
+     * Notify the UndoManager to end batch edit(exit current layer).
+     * @return Whether in batch edit
+     */
     public boolean endBatchEdit() {
-        _nestedBatchEdit--;
-        if (_nestedBatchEdit < 0) {
-            _nestedBatchEdit = 0;
+        mNestedBatchEdit--;
+        if (mNestedBatchEdit < 0) {
+            mNestedBatchEdit = 0;
         }
         return isInBatchEdit();
     }
 
-    @Override
+    /**
+     * Returns whether we are in batch edit
+     * @return Whether in batch edit
+     */
     public boolean isInBatchEdit() {
-        return _nestedBatchEdit > 0;
+        return mNestedBatchEdit > 0;
     }
 
-    @Override
-    public void setComposingSpan(int line,int begin, int end) {
-        _composingSpan.set(line, begin, end);
-    }
-
-    @Override
-    public SingleLineSpan getComposingSpan() {
-        return _composingSpan;
-    }
-
-    @Override
-    public void removeComposingSpan() {
-        _composingSpan.unset();
-    }
-
-    @Override
+    /**
+     * Add a new {@link ContentListener} to the Content
+     * @param listener The listener to add
+     */
     public void addContentListener(ContentListener listener) {
         if (listener == null) {
             throw new IllegalArgumentException("listener can not be null");
@@ -419,39 +459,52 @@ public class Content implements ITextContent {
         if(listener instanceof Indexer) {
             throw new IllegalArgumentException("Permission denied");
         }
-        if (!_listeners.contains(listener)) {
-            _listeners.add(listener);
+        if (!mListeners.contains(listener)) {
+            mListeners.add(listener);
         }
     }
 
-    @Override
+    /**
+     * Remove the given listener of this Content
+     * @param listener The listener to remove
+     */
     public void removeContentListener(ContentListener listener) {
         if(listener instanceof Indexer) {
             throw new IllegalArgumentException("Permission denied");
         }
-        _listeners.remove(listener);
+        mListeners.remove(listener);
     }
 
-    @Override
+    /**
+     * Get the using {@link Indexer} object
+     * @return Indexer for this object
+     */
     public Indexer getIndexer() {
-        return _indexer;
+        return mIndexer;
     }
 
-    @Override
+    /**
+     * Quick method to get sub string of this object
+     * @param startLine The start line position
+     * @param startColumn The start column position
+     * @param endLine The end line position
+     * @param endColumn The end column position
+     * @return sub sequence of this Content
+     */
     public Content subContent(int startLine,int startColumn,int endLine,int endColumn) {
         Content c = new Content();
         c.setUndoEnabled(false);
         if(startLine == endLine) {
-            c.insert(0, 0, _lines.get(startLine).substring(startColumn,endColumn));
+            c.insert(0, 0, mLines.get(startLine).substring(startColumn,endColumn));
         }else if(startLine < endLine){
-            c.insert(0, 0, _lines.get(startLine).substring(startColumn));
+            c.insert(0, 0, mLines.get(startLine).substring(startColumn));
             for(int i = startLine + 1;i < endLine;i++) {
-                c._lines.add(new StringBuilder(_lines.get(i)));
-                c._textLength += _lines.get(i).length() + 1;
+                c.mLines.add(new StringBuilder(mLines.get(i)));
+                c.mTextLength += mLines.get(i).length() + 1;
             }
-            StringBuilder end = _lines.get(endLine);
-            c._lines.add(new StringBuilder().append(end,0,endColumn));
-            c._textLength += endColumn + 1;
+            StringBuilder end = mLines.get(endLine);
+            c.mLines.add(new StringBuilder().append(end,0,endColumn));
+            c.mTextLength += endColumn + 1;
         }else {
             throw new IllegalArgumentException("start > end");
         }
@@ -467,7 +520,7 @@ public class Content implements ITextContent {
                 return false;
             }
             for (int i = 0; i < this.getLineCount(); i++) {
-                if (!equals(_lines.get(i), content._lines.get(i))) {
+                if (!equals(mLines.get(i), content.mLines.get(i))) {
                     return false;
                 }
             }
@@ -481,7 +534,7 @@ public class Content implements ITextContent {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
-        for (StringBuilder line : _lines) {
+        for (StringBuilder line : mLines) {
             if (!first) {
                 sb.append('\n');
             } else {
@@ -500,10 +553,10 @@ public class Content implements ITextContent {
      */
     public StringBuilder toStringBuilder() {
         StringBuilder sb = new StringBuilder();
-        sb.ensureCapacity(_textLength + 10);
+        sb.ensureCapacity(mTextLength + 10);
         boolean first = true;
         for (int i = 0;i < getLineCount();i++) {
-			StringBuilder line = _lines.get(i);
+			StringBuilder line = mLines.get(i);
             if (!first) {
                 sb.append('\n');
             } else {
@@ -519,10 +572,10 @@ public class Content implements ITextContent {
      * @return Cursor
      */
     public Cursor getCursor() {
-        if(_cursor == null) {
-            _cursor = new Cursor(this);
+        if(mCursor == null) {
+            mCursor = new Cursor(this);
         }
-        return _cursor;
+        return mCursor;
     }
 
     /**
@@ -547,14 +600,13 @@ public class Content implements ITextContent {
      * Dispatch events to listener before replacement
      */
     private void dispatchBeforeReplace() {
-        _undoMgr.beforeReplace(this);
-        if(_cursor != null)
-            _cursor.beforeReplace();
-        if(_indexer instanceof ContentListener) {
-            ((ContentListener)_indexer).beforeReplace(this);
+        mUndoManager.beforeReplace(this);
+        if(mCursor != null)
+            mCursor.beforeReplace();
+        if(mIndexer instanceof ContentListener) {
+            ((ContentListener) mIndexer).beforeReplace(this);
         }
-        _composingSpan.beforeReplace(this);
-        for (ContentListener lis : _listeners) {
+        for (ContentListener lis : mListeners) {
             lis.beforeReplace(this);
         }
     }
@@ -568,14 +620,13 @@ public class Content implements ITextContent {
      * @param e Text deleted
      */
     private void dispatchAfterDelete(int a, int b, int c, int d, CharSequence e) {
-        _undoMgr.afterDelete(this, a, b, c, d, e);
-        if(_cursor != null)
-            _cursor.afterDelete(a, b, c, d, e);
-        if(_indexer instanceof ContentListener) {
-            ((ContentListener)_indexer).afterDelete(this, a, b, c, d, e);
+        mUndoManager.afterDelete(this, a, b, c, d, e);
+        if(mCursor != null)
+            mCursor.afterDelete(a, b, c, d, e);
+        if(mIndexer instanceof ContentListener) {
+            ((ContentListener) mIndexer).afterDelete(this, a, b, c, d, e);
         }
-        _composingSpan.afterDelete(this, a, b, c, d, e);
-        for (ContentListener lis : _listeners) {
+        for (ContentListener lis : mListeners) {
             lis.afterDelete(this, a, b, c, d, e);
         }
     }
@@ -589,14 +640,13 @@ public class Content implements ITextContent {
      * @param e Text deleted
      */
     private void dispatchAfterInsert(int a, int b, int c, int d, CharSequence e) {
-        _undoMgr.afterInsert(this, a, b, c, d, e);
-        if(_cursor != null)
-            _cursor.afterInsert(a, b, c, d, e);
-        if(_indexer instanceof ContentListener) {
-            ((ContentListener)_indexer).afterInsert(this, a, b, c, d, e);
+        mUndoManager.afterInsert(this, a, b, c, d, e);
+        if(mCursor != null)
+            mCursor.afterInsert(a, b, c, d, e);
+        if(mIndexer instanceof ContentListener) {
+            ((ContentListener) mIndexer).afterInsert(this, a, b, c, d, e);
         }
-        _composingSpan.afterInsert(this, a, b, c, d, e);
-        for (ContentListener lis : _listeners) {
+        for (ContentListener lis : mListeners) {
             lis.afterInsert(this, a, b, c, d, e);
         }
     }
@@ -629,7 +679,7 @@ public class Content implements ITextContent {
      */
     protected void checkLineAndColumn(int line, int column, boolean allowEqual) {
         checkLine(line);
-        int len = _lines.get(line).length();
+        int len = mLines.get(line).length();
         if (column > len || (!allowEqual && column == len)) {
             throw new StringIndexOutOfBoundsException(
                     "Column " + column + " out of bounds.line: " + line + " ,column count:" + len);
@@ -639,7 +689,7 @@ public class Content implements ITextContent {
     //The following methods works on higher Android API with language level 8
     //AIDE does not support this and if we copy default implementation code with some modification, it does not works as well.
     //So we had to add a empty implementation
-/*
+
     @Override
     @TargetApi(24)
     public IntStream chars() {
@@ -651,6 +701,6 @@ public class Content implements ITextContent {
     public IntStream codePoints() {
         return null;
     }
-*/
+
 
 }

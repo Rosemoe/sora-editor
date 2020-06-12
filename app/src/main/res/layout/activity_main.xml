@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.rose.editor.android.RoseEditor
+    <com.rose.editor.android.CodeEditor
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/editor"/>

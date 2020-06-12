@@ -16,13 +16,13 @@
 package com.rose.editor.langs.s5droid;
 
 import com.rose.editor.android.ColorScheme;
-import com.rose.editor.common.LineNumberHelper;
-import com.rose.editor.common.TextColorProvider.AnalyzeThread.Delegate;
-import com.rose.editor.common.TextColorProvider.TextColors;
+import com.rose.editor.utils.LineNumberHelper;
+import com.rose.editor.text.TextAnalyzer.AnalyzeThread.Delegate;
+import com.rose.editor.text.TextAnalyzer.TextColors;
 import com.rose.editor.interfaces.CodeAnalyzer;
 import com.rose.editor.langs.internal.TrieTree;
-import com.rose.editor.simpleclass.BlockLine;
-import com.rose.editor.simpleclass.NavigationLabel;
+import com.rose.editor.struct.BlockLine;
+import com.rose.editor.struct.NavigationLabel;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -151,7 +151,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
         int idx = 0, line = 0, column = 0, length;
         LineNumberHelper helper = new LineNumberHelper(content);
         boolean markHex = false;
-        while (!delegate.shouldReAnalyze()) {
+        while (delegate.shouldAnalyze()) {
             try {
                 token = tokenizer.directNextToken();
             } catch (RuntimeException e) {

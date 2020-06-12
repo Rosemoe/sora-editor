@@ -39,12 +39,12 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import com.rose.editor.langs.EmptyLanguage;
-import com.rose.editor.simpleclass.BlockLine;
-import com.rose.editor.common.Content;
-import com.rose.editor.common.Cursor;
-import com.rose.editor.simpleclass.Span;
-import com.rose.editor.common.TextColorProvider;
-import com.rose.editor.interfaces.ContentListener;
+import com.rose.editor.struct.BlockLine;
+import com.rose.editor.text.Content;
+import com.rose.editor.text.Cursor;
+import com.rose.editor.struct.Span;
+import com.rose.editor.text.TextAnalyzer;
+import com.rose.editor.text.ContentListener;
 import com.rose.editor.utils.IClipboard;
 import com.rose.editor.utils.Clipboard;
 
@@ -54,13 +54,15 @@ import android.view.inputmethod.CursorAnchorInfo;
 import android.graphics.Matrix;
 
 import com.rose.editor.interfaces.EditorLanguage;
-import com.rose.editor.interfaces.Indexer;
+import com.rose.editor.text.Indexer;
 import android.widget.OverScroller;
 import android.graphics.Color;
 
 /**
- * RoseEditor is a editor that can highlight texts region by doing basic grammar analyzing
+ * CodeEditor is a editor that can highlight texts region by doing basic grammar analyzing
  * Actually it can adapt to Android level 11
+ * Me in GitHub: Rose2073
+ * This project in GitHub: https://github.com/Rose2073/CodeEditor
  *
  * Thanks following people for advice on UI:
  * NTX
@@ -70,9 +72,9 @@ import android.graphics.Color;
  *
  * @author Rose
  */
-public class RoseEditor extends View implements ContentListener,TextColorProvider.Callback {
+public class CodeEditor extends View implements ContentListener, TextAnalyzer.Callback {
 
-    private static final String LOG_TAG = "RoseEditor";
+    private static final String LOG_TAG = "CodeEditor";
 
     /**
      * The default size when creating the editor object.Unit is sp.
@@ -115,14 +117,14 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
 
     private Cursor mCursor;
     private Content mText;
-    private TextColorProvider mSpanner;
+    private TextAnalyzer mSpanner;
 
     private Paint mPaint;
     private char[] mChars;
     private Matrix mMatrix;
     private Rect mViewRect;
     private ColorScheme mColors;
-    private String mLnTip = "行:";
+    private String mLnTip = "Line:";
     private EditorLanguage mLanguage;
     private long mLastMakeVisible = 0;
     private AutoCompletePanel mACPanel;
@@ -131,7 +133,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     private GestureDetector mBasicDetector;
     private TextComposePanel mTextActionPanel;
     private ScaleGestureDetector mScaleDetector;
-    private RoseEditorInputConnection mConnection;
+    private CodeEditorInputConnection mConnection;
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;
 
     /**
@@ -141,35 +143,35 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
 
     //For debug
     private StringBuilder mErrorBuilder = new StringBuilder();
-    private long m;
+    private long mLastAnalyzeThreadTime;
 
     /**
      * Create a new editor
      * @param context Your activity
      */
-    public RoseEditor(Context context) {
+    public CodeEditor(Context context) {
         super(context);
         prepare();
     }
 
-    public RoseEditor(Context context, AttributeSet attrs) {
+    public CodeEditor(Context context, AttributeSet attrs) {
         super(context, attrs);
         prepare();
     }
 
-    public RoseEditor(Context context, AttributeSet attrs, int defStyleAttr) {
+    public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         prepare();
     }
 
     @TargetApi(21)
-    public RoseEditor(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         prepare();
     }
 
     /**
-     * Cancel the next animation for {@link RoseEditor#makeCharVisible(int, int)}
+     * Cancel the next animation for {@link CodeEditor#makeCharVisible(int, int)}
      */
     protected void cancelAnimation() {
         mLastMakeVisible = System.currentTimeMillis();
@@ -221,7 +223,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
 
     /**
      * Returns whether highlight current code block
-     * @see RoseEditor#setHighlightCurrentBlock(boolean)
+     * @see CodeEditor#setHighlightCurrentBlock(boolean)
      * @return This module enabled / disabled
      */
     public boolean isHighlightCurrentBlock(){
@@ -246,7 +248,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     /**
-     * @see RoseEditor#setPaintLabel(boolean)
+     * @see CodeEditor#setPaintLabel(boolean)
      * @return Enabled / disabled
      */
     public boolean isPaintLabel(){
@@ -304,7 +306,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         mHighlightCurrentBlock = true;
         setFocusable(true);
         setFocusableInTouchMode(true);
-        mConnection = new RoseEditorInputConnection(this);
+        mConnection = new CodeEditorInputConnection(this);
         mACPanel = new AutoCompletePanel(this);
         mTextActionPanel = new TextComposePanel(this);
         mTextActionPanel.setHeight((int)(mDpUnit * 60));
@@ -326,7 +328,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         if(mSpanner != null) {
             mSpanner.setCallback(null);
         }
-        mSpanner = new TextColorProvider(lang.createAnalyzer());
+        mSpanner = new TextAnalyzer(lang.createAnalyzer());
         mSpanner.setCallback(this);
         if(mText != null) {
             mSpanner.analyze(mText);
@@ -364,7 +366,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
 
     /**
      * Getter
-     * @see RoseEditor#setBlockLineWidth(float)
+     * @see CodeEditor#setBlockLineWidth(float)
      * @return The width in dp unit
      */
     public float getBlockLineWidth() {
@@ -391,7 +393,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     /**
-     * @see RoseEditor#setDisplayLnPanel(boolean)
+     * @see CodeEditor#setDisplayLnPanel(boolean)
      * @return Enabled / disabled
      */
     public boolean isDisplayLnPanel(){
@@ -419,7 +421,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     /**
-     * @see RoseEditor#setLnTip(String)
+     * @see CodeEditor#setLnTip(String)
      * @return The prefix
      */
     public String getLnTip() {
@@ -437,7 +439,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     /**
-     * @see RoseEditor#setAutoIndent(boolean)
+     * @see CodeEditor#setAutoIndent(boolean)
      * @return Enabled / disabled
      */
     public boolean isAutoIndent() {
@@ -500,8 +502,8 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
 
     /**
      * Get text size in pixel unit
-     * @see RoseEditor#setTextSize(float)
-     * @see RoseEditor#setTextSizePx(float)
+     * @see CodeEditor#setTextSize(float)
+     * @see CodeEditor#setTextSizePx(float)
      * @return Text size in pixel unit
      */
     public float getTextSizePx() {
@@ -513,7 +515,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
      * @param canvas Canvas you want to draw
      */
     private void drawView(Canvas canvas){
-        //long start = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
 
         getCursor().updateCache(getFirstVisibleLine());
 
@@ -558,8 +560,8 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         drawScrollBars(canvas);
 
         //These are for debug
-        //long end = System.currentTimeMillis();
-        //canvas.drawText("Draw:" + (end - start) + "ms" + "Last highlight:" + m + "ms", 0, getLineBaseLine(11), mPaint);
+        long timeUsage = System.currentTimeMillis() - startTime;
+        canvas.drawText("onDraw() " + timeUsage + "ms, Highlight:" + mLastAnalyzeThreadTime + "ms", 0, getLineBaseLine(11), mPaint);
     }
 
     //These are building
@@ -638,7 +640,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         int jCount = 0;
         int maxCount = Integer.MAX_VALUE;
         if(mSpanner != null) {
-            TextColorProvider.TextColors colors = mSpanner.getColors();
+            TextAnalyzer.TextColors colors = mSpanner.getColors();
             if(colors != null) {
                 maxCount = colors.getSuppressSwitch();
             }
@@ -702,7 +704,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         int jCount = 0;
         int maxCount = Integer.MAX_VALUE;
         if(mSpanner != null) {
-            TextColorProvider.TextColors colors = mSpanner.getColors();
+            TextAnalyzer.TextColors colors = mSpanner.getColors();
             if(colors != null) {
                 maxCount = colors.getSuppressSwitch();
             }
@@ -801,7 +803,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
      */
     private void drawScrollBarVertical(Canvas canvas,int width) {
         int page = getHeight();
-        float all = getLineHeight() * getLineCount() + getHeight() / 2;
+        float all = getLineHeight() * getLineCount() + getHeight() / 2f;
         float length = page / all * getHeight();
         float topY;
         if(length < mDpUnit * 30) {
@@ -842,7 +844,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         mRect.right = rightX;
         mRect.left = rightX - expand * 2 - textWidth;
         drawColor(canvas,mColors.getColor(ColorScheme.LINE_NUMBER_PANEL),mRect);
-        float baseline = centerY - getLineHeight()/2 + getLineBaseLine(0);
+        float baseline = centerY - getLineHeight() / 2f + getLineBaseLine(0);
         float centerX = (mRect.left + mRect.right) / 2;
         mPaint.setColor(mColors.getColor(ColorScheme.LINE_NUMBER_PANEL_TEXT));
         Paint.Align align = mPaint.getTextAlign();
@@ -971,7 +973,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
      * @param defaultColor Default color for no spans
      */
     private void drawText(Canvas canvas, float offsetX, int defaultColor){
-        TextColorProvider.TextColors colors = mSpanner == null ? null : mSpanner.getColors();
+        TextAnalyzer.TextColors colors = mSpanner == null ? null : mSpanner.getColors();
         if(colors == null || colors.getSpans().isEmpty()) {
             drawTextDirect(canvas, offsetX, defaultColor, getFirstVisibleLine());
         }else{
@@ -1044,7 +1046,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
      * @param offsetX Start x of text region
      * @param colors Spans
      */
-    private void drawTextBySpans(Canvas canvas, float offsetX, TextColorProvider.TextColors colors){
+    private void drawTextBySpans(Canvas canvas, float offsetX, TextAnalyzer.TextColors colors){
         mPaint.setTypeface(mTypefaceText);
         ColorScheme cs = mColors;
         List<Span> spans = colors.getSpans();
@@ -1694,7 +1696,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
      */
     public int getPointLine(float yPos){
         int r = (int)yPos / getLineHeight();
-        return r < 0 ? 0 : r;
+        return Math.max(r, 0);
     }
 
     /**
@@ -1841,7 +1843,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     /**
-     * @see RoseEditor#setUndoEnabled(boolean)
+     * @see CodeEditor#setUndoEnabled(boolean)
      * @return Enabled/Disabled
      */
     public boolean isUndoEnabled(){
@@ -1861,7 +1863,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     /**
-     * @see RoseEditor#setDrag(boolean)
+     * @see CodeEditor#setDrag(boolean)
      * @return Whether drag
      */
     public boolean isDrag(){
@@ -1881,7 +1883,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     /**
-     * @see RoseEditor#setDividerMargin(float)
+     * @see CodeEditor#setDividerMargin(float)
      * @return Margin of divider line
      */
     public float getDividerMargin() {
@@ -1901,7 +1903,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     /**
-     * @see RoseEditor#setDividerWidth(float)
+     * @see CodeEditor#setDividerWidth(float)
      * @return Width of divider line
      */
     public float getDividerWidth() {
@@ -1933,7 +1935,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     /**
-     * @see RoseEditor#setTypefaceLineNumber(Typeface)
+     * @see CodeEditor#setTypefaceLineNumber(Typeface)
      * @return Typeface of line number
      */
     public Typeface getTypefaceLineNumber() {
@@ -1941,7 +1943,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     /**
-     * @see RoseEditor#setTypefaceText(Typeface)
+     * @see CodeEditor#setTypefaceText(Typeface)
      * @return Typeface of text
      */
     public Typeface getTypefaceText() {
@@ -1961,7 +1963,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     /**
-     * @see RoseEditor#setLineNumberAlign(Paint.Align)
+     * @see CodeEditor#setLineNumberAlign(Paint.Align)
      * @return Line number align
      */
     public Paint.Align getLineNumberAlign(){
@@ -2025,11 +2027,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
      */
     public int getFirstVisibleLine(){
         int j = Math.min(getOffsetY() / getLineHeight(), getLineCount() - 1);
-        if(j < 0){
-            return 0;
-        }else{
-            return j;
-        }
+        return Math.max(j, 0);
     }
 
     /**
@@ -2038,11 +2036,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
      */
     public int getLastVisibleLine(){
         int l = Math.min((getOffsetY() + getHeight()) / getLineHeight(), getLineCount() - 1);
-        if(l < 0){
-            return 0;
-        }else{
-            return l;
-        }
+        return Math.max(l, 0);
     }
 
     /**
@@ -2117,7 +2111,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     /**
-     * @see RoseEditor#setEditable(boolean)
+     * @see CodeEditor#setEditable(boolean)
      * @return Whether editable
      */
     public boolean isEditable(){
@@ -2133,7 +2127,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     /**
-     * @see RoseEditor#setCanScale(boolean)
+     * @see CodeEditor#setCanScale(boolean)
      * @return Whether allow to scale
      */
     public boolean canScale(){
@@ -2305,7 +2299,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     /**
-     * Set selection region with a call to {@link RoseEditor#makeRightVisible()}
+     * Set selection region with a call to {@link CodeEditor#makeRightVisible()}
      * @param lineLeft Line left
      * @param columnLeft Column Left
      * @param lineRight Line right
@@ -2434,10 +2428,10 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
         if(mSpanner != null){
             mSpanner.setCallback(null);
         }
-        mSpanner = new TextColorProvider(mLanguage.createAnalyzer());
+        mSpanner = new TextAnalyzer(mLanguage.createAnalyzer());
         mSpanner.setCallback(this);
 
-        TextColorProvider.TextColors colors = mSpanner.getColors();
+        TextAnalyzer.TextColors colors = mSpanner.getColors();
         colors.getSpans().clear();
         mSpanner.analyze(getText());
 
@@ -2452,7 +2446,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     /**
-     * @see RoseEditor#setText(CharSequence)
+     * @see CodeEditor#setText(CharSequence)
      * @return Text displaying
      */
     public Content getText(){
@@ -2509,7 +2503,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
      * Get spans
      * @return spans
      */
-    public TextColorProvider.TextColors getTextColor(){
+    public TextAnalyzer.TextColors getTextColor(){
         return mSpanner.getColors();
     }
 
@@ -2815,7 +2809,7 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
             mACPanel.setPrefix(prefix);
         }
         float panelX = updateCursorAnchor() + mDpUnit * 20;
-        float panelY = getLineBottom(mCursor.getRightLine()) - getOffsetY() + getLineHeight() / 2;
+        float panelY = getLineBottom(mCursor.getRightLine()) - getOffsetY() + getLineHeight() / 2f;
         float restY = getHeight() - panelY;
         if(restY > mDpUnit * 200) {
             restY = mDpUnit * 200;
@@ -2875,13 +2869,13 @@ public class RoseEditor extends View implements ContentListener,TextColorProvide
     }
 
     @Override
-    public void onAnalysisDone(TextColorProvider provider, TextColorProvider.TextColors colors) {
+    public void onAnalyzeDone(TextAnalyzer provider, TextAnalyzer.TextColors colors) {
         if(mHighlightCurrentBlock){
             mCursorPosition = findCursorBlock();
         }
         postInvalidate();
         mMinModifiedLine = -1;
-        m = System.currentTimeMillis() - provider.st;
+        mLastAnalyzeThreadTime = System.currentTimeMillis() - provider.st;
     }
 
 }

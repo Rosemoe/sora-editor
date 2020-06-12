@@ -16,12 +16,12 @@
 package com.rose.editor.langs.java;
 
 import com.rose.editor.android.ColorScheme;
-import com.rose.editor.common.LineNumberHelper;
-import com.rose.editor.common.TextColorProvider;
+import com.rose.editor.utils.LineNumberHelper;
+import com.rose.editor.text.TextAnalyzer;
 import com.rose.editor.interfaces.CodeAnalyzer;
 import com.rose.editor.langs.IdentifierAutoComplete;
-import com.rose.editor.simpleclass.BlockLine;
-import com.rose.editor.simpleclass.NavigationLabel;
+import com.rose.editor.struct.BlockLine;
+import com.rose.editor.struct.NavigationLabel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +37,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
     private final static Object OBJECT = new Object();
 
     @Override
-    public void analyze(CharSequence content, TextColorProvider.TextColors colors, TextColorProvider.AnalyzeThread.Delegate delegate) {
+    public void analyze(CharSequence content, TextAnalyzer.TextColors colors, TextAnalyzer.AnalyzeThread.Delegate delegate) {
         StringBuilder text = content instanceof StringBuilder ? (StringBuilder)content : new StringBuilder(content);
         JavaTextTokenizer tokenizer = new JavaTextTokenizer(text);
         tokenizer.setCalculateLineColumn(false);
@@ -55,7 +55,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
         boolean classNamePrevious = false;
         //Add default class name
         classNames.put("String",OBJECT);
-        while(!delegate.shouldReAnalyze()) {
+        while(delegate.shouldAnalyze()) {
             try{
                 // directNextToekn() does not skip any token
                 token = tokenizer.directNextToken();
@@ -224,8 +224,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
 			if(currSwitch > maxSwitch) {
 				maxSwitch = currSwitch;
 			}
-			currSwitch = 0;
-		}
+        }
         identifiers.finish();
         colors.mExtra = identifiers;
         colors.setSuppressSwitch(maxSwitch + 10);

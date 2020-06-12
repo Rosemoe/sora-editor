@@ -13,17 +13,15 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-package com.rose.editor.common;
+package com.rose.editor.text;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.rose.editor.interfaces.ContentAction;
-import com.rose.editor.interfaces.ContentListener;
-import com.rose.editor.simpleclass.DeleteAction;
-import com.rose.editor.simpleclass.InsertAction;
-import com.rose.editor.simpleclass.MultiAction;
-import com.rose.editor.simpleclass.ReplaceAction;
+import com.rose.editor.struct.DeleteAction;
+import com.rose.editor.struct.InsertAction;
+import com.rose.editor.struct.MultiAction;
+import com.rose.editor.struct.ReplaceAction;
 
 /**
  * Helper class for Content to take down modification
@@ -32,10 +30,10 @@ import com.rose.editor.simpleclass.ReplaceAction;
  */
 final class UndoManager implements ContentListener {
 
-    private Content _c;
+    private final Content _c;
     private boolean _undoEnabled;
     private int _maxStackSize;
-    private List<ContentAction> _undoStack;
+    private final List<ContentAction> _undoStack;
     private InsertAction _insertAction;
     private DeleteAction _deleteAction;
     private boolean _replace;

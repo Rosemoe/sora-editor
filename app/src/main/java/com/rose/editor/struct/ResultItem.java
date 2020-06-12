@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-package com.rose.editor.simpleclass;
+package com.rose.editor.struct;
 
 /**
  * The class used to save auto complete result items

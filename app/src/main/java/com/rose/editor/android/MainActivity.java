@@ -27,8 +27,7 @@ import android.view.SubMenu;
 import android.widget.Toast;
 
 import com.rose.editor.langs.s5droid.S5droidAutoComplete;
-import com.rose.editor.langs.s5droid.S5droidLanguage;
-import com.rose.editor.simpleclass.NavigationLabel;
+import com.rose.editor.struct.NavigationLabel;
 import com.rose.editor.utils.CrashHandler;
 
 import java.util.List;
@@ -36,7 +35,7 @@ import com.rose.editor.langs.java.JavaLanguage;
 
 public class MainActivity extends Activity {
 
-    private RoseEditor editor;
+    private CodeEditor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +46,7 @@ public class MainActivity extends Activity {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 9998);
         }
         S5droidAutoComplete.init(this);
-        editor = (RoseEditor) findViewById(R.id.editor);
+        editor = (CodeEditor) findViewById(R.id.editor);
         editor.setEditorLanguage(new JavaLanguage());
         editor.setText("public class Main {\n\n\tpublic static void main(String[] args) {\n\t\t\n\t}\n\n}");
     }

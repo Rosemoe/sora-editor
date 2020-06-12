@@ -22,7 +22,7 @@ import android.content.Context;
 
 public class ClipboardIceCream implements IClipboard {
 
-    private ClipboardManager mClip;
+    private final ClipboardManager mClip;
 
     @TargetApi(15)
     public ClipboardIceCream(Context context) {

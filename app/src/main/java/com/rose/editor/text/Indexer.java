@@ -13,9 +13,9 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-package com.rose.editor.interfaces;
+package com.rose.editor.text;
 
-import com.rose.editor.simpleclass.CharPosition;
+import com.rose.editor.struct.CharPosition;
 
 /**
  * A helper class for ITextContent to transform (line,column) and index

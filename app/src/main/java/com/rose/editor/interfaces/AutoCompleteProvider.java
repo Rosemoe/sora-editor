@@ -17,8 +17,8 @@ package com.rose.editor.interfaces;
 
 import java.util.List;
 
-import com.rose.editor.simpleclass.ResultItem;
-import com.rose.editor.common.TextColorProvider;
+import com.rose.editor.struct.ResultItem;
+import com.rose.editor.text.TextAnalyzer;
 
 /**
  * Interface for auto completion analysis
@@ -35,7 +35,7 @@ public interface AutoCompleteProvider
      * @param line The line of cursor
      * @return Analyzed items
      */
-    List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextColorProvider.TextColors colors, int line);
+    List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzer.TextColors colors, int line);
 
 }
 

@@ -19,9 +19,9 @@ import android.content.Context;
 
 import com.rose.editor.android.AutoCompletePanel;
 import com.rose.editor.interfaces.AutoCompleteProvider;
-import com.rose.editor.simpleclass.ResultItem;
+import com.rose.editor.struct.ResultItem;
 import com.rose.editor.langs.internal.Pinyin;
-import com.rose.editor.simpleclass.NavigationLabel;
+import com.rose.editor.struct.NavigationLabel;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import com.rose.editor.common.TextColorProvider;
+import com.rose.editor.text.TextAnalyzer;
 
 /**
  * @author Rose
@@ -170,7 +170,7 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
     };
 
     @Override
-    public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextColorProvider.TextColors colors, int line)
+    public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzer.TextColors colors, int line)
     {
         List<NavigationLabel> mCustomMethods = colors.getNavigation();
         S5dTextTokenizer tk = new S5dTextTokenizer("");

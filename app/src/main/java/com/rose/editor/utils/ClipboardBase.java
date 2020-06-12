@@ -20,7 +20,7 @@ import android.text.ClipboardManager;
 
 public class ClipboardBase implements IClipboard {
 
-    private ClipboardManager mClip;
+    private final ClipboardManager mClip;
 
     public ClipboardBase(Context context) {
         mClip = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);

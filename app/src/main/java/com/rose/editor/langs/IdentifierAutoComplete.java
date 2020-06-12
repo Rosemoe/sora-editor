@@ -16,9 +16,9 @@
 package com.rose.editor.langs;
 
 import com.rose.editor.android.AutoCompletePanel;
-import com.rose.editor.common.TextColorProvider;
+import com.rose.editor.text.TextAnalyzer;
 import com.rose.editor.interfaces.AutoCompleteProvider;
-import com.rose.editor.simpleclass.ResultItem;
+import com.rose.editor.struct.ResultItem;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -71,7 +71,7 @@ public class IdentifierAutoComplete implements AutoCompleteProvider {
     }
 
     @Override
-    public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextColorProvider.TextColors colors, int line) {
+    public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzer.TextColors colors, int line) {
         List<ResultItem> keywords = new ArrayList<>();
         final String[] keywordArray = mKeywords;
         final boolean lowCase = mKeywordsAreLowCase;

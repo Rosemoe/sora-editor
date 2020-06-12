@@ -28,7 +28,7 @@ import android.content.res.Resources;
  * @author Rose
  */
 final class EventHandler implements GestureDetector.OnGestureListener,GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
-    private RoseEditor mEditor;
+    private CodeEditor mEditor;
     private OverScroller mScroller;
     private long mLastScroll = 0;
     private long mLastSetSelection = 0;
@@ -50,7 +50,7 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
      * Create a event handler for the given editor
      * @param editor Host editor
      */
-    public EventHandler(RoseEditor editor){
+    public EventHandler(CodeEditor editor){
         mEditor = editor;
         mScroller = new OverScroller(editor.getContext());
         maxSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,32,Resources.getSystem().getDisplayMetrics());
@@ -226,7 +226,7 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
                 if(mHolding) {
                     float movedDis = e.getY() - downY;
                     downY = e.getY();
-                    float all = mEditor.getLineHeight() * mEditor.getLineCount() + mEditor.getHeight() / 2;
+                    float all = mEditor.getLineHeight() * mEditor.getLineCount() + mEditor.getHeight() / 2f;
                     float dy = movedDis / mEditor.getHeight() * all;
                     onScroll(null,null,0,dy);
                     return true;
@@ -452,7 +452,7 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
 			int height = mEditor.getLineHeight();
             mEditor.setTextSizePx(newSize);
 			float newY = firstVisible * mEditor.getLineHeight() + top * mEditor.getLineHeight() / height;
-			mScroller.startScroll((int)mScroller.getCurrX(),(int)newY,0,0,0);
+			mScroller.startScroll(mScroller.getCurrX(),(int)newY,0,0,0);
             return true;
         }
         return false;

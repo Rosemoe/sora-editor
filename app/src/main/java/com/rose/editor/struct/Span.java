@@ -13,9 +13,9 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-package com.rose.editor.simpleclass;
+package com.rose.editor.struct;
 
-import com.rose.editor.common.Content;
+import com.rose.editor.text.Content;
 
 /**
  * The span model

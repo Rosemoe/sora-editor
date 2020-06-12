@@ -13,26 +13,32 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-package com.rose.editor.langs.msg;
+package com.rose.editor.struct;
 
 /**
+ * Code block info model
  * @author Rose
- *
  */
-public interface MessageListener {
+public class BlockLine {
 
     /**
-     * Whether the error provider should cancel the error
-     * Or it may be with advice
-     * @param msg
-     * @return Whether cancel
+     * Start line of code block
      */
-    boolean onHandleCancelableError(Message msg);
+    public int startLine;
 
     /**
-     * You are notified that the given message has been added to list just now
-     * @param msg
+     * Start column of code block
      */
-    void onNewMessage(Message msg);
+    public int startColumn;
+
+    /**
+     * End line of code block
+     */
+    public int endLine;
+
+    /**
+     * End column of code block
+     */
+    public int endColumn;
 
 }

@@ -206,7 +206,7 @@ public class JavaTextTokenizer {
             /* Scan secondly symbols */
             switch (ch) {
                 case '=':
-                    return scanOperatorTwo('=', EQ, EQEQ);
+                    return scanOperatorTwo(EQ);
                 case '.':
                     return DOT;
                 case '@':
@@ -218,11 +218,11 @@ public class JavaTextTokenizer {
                 case '/':
                     return scanDIV();
                 case '*':
-                    return scanOperatorTwo('=', MULT, MULTEQ);
+                    return scanOperatorTwo(MULT);
                 case '-':
-                    return scanOperatorTwo('=', '-', MINUS, MINUSEQ, MINUSMINUS);
+                    return scanOperatorTwo(MINUS);
                 case '+':
-                    return scanOperatorTwo('=', '+', PLUS, PLUSEQ, PLUSPLUS);
+                    return scanOperatorTwo(PLUS);
                 case '[':
                     return LBRACK;
                 case ']':
@@ -236,13 +236,13 @@ public class JavaTextTokenizer {
                 case '?':
                     return QUESTION;
                 case '&':
-                    return scanOperatorTwo('&', '=', AND, ANDAND, ANDEQ);
+                    return scanOperatorTwo(AND);
                 case '|':
-                    return scanOperatorTwo('|', '=', OR, OROR, OREQ);
+                    return scanOperatorTwo(OR);
                 case '^':
-                    return scanOperatorTwo('=', XOR, XOREQ);
+                    return scanOperatorTwo(XOR);
                 case '%':
-                    return scanOperatorTwo('=', MOD, MODEQ);
+                    return scanOperatorTwo(MOD);
                 case '\'':
                     scanCharLiteral();
                     return CHARACTER_LITERAL;
@@ -288,15 +288,10 @@ public class JavaTextTokenizer {
             for (int i = 0; i < 4; i++) {
                 throwIfNeeded();
                 if (!isDigit(charAt(offset + length))) {
-                    //error("这不是合法的十六进制字符表达式 : '" + charAt(offset + length) + "'",
-                     //       new StringAdvice("修改字符为0-9,a-f,A-F范围内的"));
                     return;
                 }
                 length++;
             }
-        } else {
-           // error("非法转义字符,这个字符不能被转义 : ' " + charAt(offset + length) + " '",
-                   // new StringAdvice("修改字符为\\ ，t，f，n，r，0，\"，' ，b等"));
         }
     }
 
@@ -316,9 +311,7 @@ public class JavaTextTokenizer {
                 throwIfNeeded();
             }
         }
-        if (offset + length == bufferLen) {
-           // error("未结束的字符串表达式:字符串表达式在行末没有结束", new StringAdvice("在此处添加' \" '"));
-        } else {
+        if (offset + length != bufferLen) {
             length++;
         }
     }
@@ -330,19 +323,16 @@ public class JavaTextTokenizer {
             length++;
             scanTrans();
         } else if (ch == '\'') {
-           // error("非法字符常量表达式:没有内容", new StringAdvice("添加一个字符或使用十六进制表达式表示一个字符"));
+           length++;
+           return;
         } else {
             if (ch == '\n') {
-                //error("非法字符常量表达式:字符常量表达式在行末没有结束", new StringAdvice("在此处添加 ' ' '"));
                 return;
             }
             length++;
         }
         throwIfNeeded();
-        if (charAt() != '\'') {
-           // error("非法字符常量表达式:非法的结束,期待的是' ' ',但获得的是' " + charAt() + " '",
-               //     new StringAdvice("在本字符前插入' ' '"));
-        } else {
+        if (charAt() == '\'') {
             length++;
         }
     }
@@ -368,7 +358,6 @@ public class JavaTextTokenizer {
         ch = charAt();
         if (ch == '.') {
             if (flag) {
-               // error("非十进制的整数不能有小数点", new StringAdvice("将其换为十进制形式"));
                 return INTEGER_LITERAL;
             }
             if(offset + length + 1 == bufferLen) {
@@ -434,19 +423,14 @@ public class JavaTextTokenizer {
         } else if (ch == '*') {
             length++;
             char pre, curr = '?';
-            boolean breakFromLoop = false;
             while (offset + length < bufferLen) {
                 pre = curr;
                 curr = charAt();
                 if (curr == '/' && pre == '*') {
                     length++;
-                    breakFromLoop = true;
                     break;
                 }
                 length++;
-            }
-            if (!breakFromLoop) {
-               // error("注释在文件末没有结束", new StringAdvice("在文件最后加上' */'"));
             }
             return LONG_COMMENT;
         } else {
@@ -462,11 +446,7 @@ public class JavaTextTokenizer {
         return GT;
     }
 
-    protected Tokens scanOperatorTwo(char ex1, char ex2, Tokens ifWrong, Tokens ifRight1, Tokens ifRight2) {
-        return ifWrong;
-    }
-
-    protected Tokens scanOperatorTwo(char expected, Tokens ifWrong, Tokens ifRight) {
+    protected Tokens scanOperatorTwo(Tokens ifWrong) {
         return ifWrong;
     }
 
@@ -483,28 +463,7 @@ public class JavaTextTokenizer {
         currToken = WHITESPACE;
         bufferLen = src.length();
     }
-    /*
-    protected void error(String msg, Advice advice) {
-        TokenizeError e = new TokenizeError(msg, advice);
-        e.makePositionDesc();
-        log.addMessage(e);
-    }
 
-    public class TokenizeError extends Message {
-
-        public TokenizeError(String msg) {
-            this(msg, null);
-        }
-
-        public TokenizeError(String msg, Advice adv) {
-            super(Message.LEVEL_ERROR, msg, adv);
-        }
-
-        private void makePositionDesc() {
-        }
-
-    }
-    */
     protected static String[] sKeywords;
 
     private static Tokens[] sTokens;

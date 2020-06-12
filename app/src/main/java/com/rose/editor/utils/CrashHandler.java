@@ -46,7 +46,7 @@ public class CrashHandler implements UncaughtExceptionHandler {
     private Thread.UncaughtExceptionHandler mDefaultHandler;
     private static CrashHandler INSTANCE = new CrashHandler();
     private Context mContext;
-    private Map<String, String> infos = new LinkedHashMap<String, String>();
+    private Map<String, String> infos = new LinkedHashMap<>();
 
     private DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
 
@@ -67,7 +67,6 @@ public class CrashHandler implements UncaughtExceptionHandler {
     public void uncaughtException(Thread thread, Throwable ex) {
         if (!handleException(ex) && mDefaultHandler != null) {
             mDefaultHandler.uncaughtException(thread, ex);
-        } else {
         }
     }
 
@@ -125,11 +124,11 @@ public class CrashHandler implements UncaughtExceptionHandler {
 
     private String saveCrashInfo2File(Throwable ex) {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : infos.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
-            sb.append(key + "=" + value + "\n");
+            sb.append(key).append("=").append(value).append("\n");
         }
 
         Writer writer = new StringWriter();

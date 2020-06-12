@@ -13,17 +13,17 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-package com.rose.editor.simpleclass;
+package com.rose.editor.struct;
 
 
-import com.rose.editor.common.Content;
-import com.rose.editor.interfaces.ContentAction;
+import com.rose.editor.text.Content;
+import com.rose.editor.text.ContentAction;
 
 /**
- * Delete action model for UndoManager
+ * Insert action model for UndoManager
  * @author Rose
  */
-public final class DeleteAction implements ContentAction {
+public final class InsertAction implements ContentAction {
 
     public int startLine,endLine,startColumn,endColumn;
 
@@ -31,19 +31,19 @@ public final class DeleteAction implements ContentAction {
 
     @Override
     public void undo(Content content) {
-        content.insert(startLine, startColumn, text);
-    }
-
-    @Override
-    public void redo(Content content) {
         content.delete(startLine, startColumn, endLine, endColumn);
     }
 
     @Override
+    public void redo(Content content) {
+        content.insert(startLine, startColumn, text);
+    }
+
+    @Override
     public boolean canMerge(ContentAction action) {
-        if(action instanceof DeleteAction) {
-            DeleteAction ac = (DeleteAction)action;
-            return (ac.endColumn == startColumn && ac.endLine == startLine);
+        if(action instanceof InsertAction) {
+            InsertAction ac = (InsertAction) action;
+            return (ac.startColumn == endColumn && ac.startLine == endLine);
         }
         return false;
     }
@@ -53,9 +53,9 @@ public final class DeleteAction implements ContentAction {
         if(!canMerge(action)) {
             throw new IllegalArgumentException();
         }
-        DeleteAction ac = (DeleteAction)action;
-        this.startColumn = ac.startColumn;
-        this.startLine = ac.startLine;
+        InsertAction ac = (InsertAction) action;
+        this.endColumn = ac.endColumn;
+        this.endLine = ac.endLine;
         StringBuilder sb;
         if(text instanceof StringBuilder) {
             sb = (StringBuilder) text;
@@ -63,13 +63,13 @@ public final class DeleteAction implements ContentAction {
             sb = new StringBuilder(text);
             text = sb;
         }
-        sb.insert(0, ac.text);
+        sb.append(ac.text);
     }
 
     @Override
     public String toString()
     {
-        return "{DeleteAction : Start = " + startLine + "," + startColumn +
+        return "{InsertAction : Start = " + startLine + "," + startColumn +
                 " End = " + endLine + "," + endColumn + "\nContent = " + text +"}";
     }
 

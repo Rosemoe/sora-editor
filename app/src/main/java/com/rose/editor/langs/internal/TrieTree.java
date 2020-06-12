@@ -21,7 +21,7 @@ package com.rose.editor.langs.internal;
  */
 public class TrieTree<T> {
 
-    public Node<T> root;
+    public final Node<T> root;
     private int maxLen;
 
     public TrieTree() {
@@ -74,7 +74,7 @@ public class TrieTree<T> {
 
     public static class Node<T> {
 
-        public HashCharMap<Node<T>> map;
+        public final HashCharMap<Node<T>> map;
 
         public T token;
 
@@ -90,9 +90,9 @@ public class TrieTree<T> {
      */
     public static class HashCharMap<V> {
 
-        private LinkedPair<V>[] columns;
+        private final LinkedPair<V>[] columns;
 
-        private LinkedPair<V>[] ends;
+        private final LinkedPair<V>[] ends;
 
         private final static int CAPACITY = 64;
 

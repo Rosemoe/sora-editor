@@ -13,10 +13,10 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-package com.rose.editor.common;
+package com.rose.editor.text;
 
 import com.rose.editor.interfaces.EditorLanguage;
-import com.rose.editor.simpleclass.CharPosition;
+import com.rose.editor.struct.CharPosition;
 
 /**
  * @author Rose
@@ -210,7 +210,7 @@ public final class Cursor {
                 char first = text.charAt(0);
                 if(first == '\n') {
                     String line = _content.getLineString(getLeftLine());
-                    int p = 0,count = 0;;
+                    int p = 0,count = 0;
                     while(p < getLeftColumn()) {
                         if(isWhitespace(line.charAt(p))){
                             if(line.charAt(p) == '\t') {
@@ -248,14 +248,14 @@ public final class Cursor {
         }else{
             space = p;
         }
-        String s = "";
+        StringBuilder s = new StringBuilder();
         for(int i = 0;i < tab;i++) {
-            s += '\t';
+            s.append('\t');
         }
         for(int i = 0;i < space;i++) {
-            s += ' ';
+            s.append(' ');
         }
-        return s;
+        return s.toString();
     }
 
     /**
