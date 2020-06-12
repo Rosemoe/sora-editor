@@ -55,6 +55,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
         boolean classNamePrevious = false;
         //Add default class name
         classNames.put("String",OBJECT);
+        classNames.put("Object",OBJECT);
         while(delegate.shouldAnalyze()) {
             try{
                 // directNextToekn() does not skip any token
@@ -62,6 +63,9 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
             }catch (RuntimeException e) {
                 //When a spelling input is in process, this will happen because of format mismatch
                 token = Tokens.CHARACTER_LITERAL;
+            }
+            if(token == Tokens.EOF) {
+                break;
             }
             // Backup values because looking ahead in function name match will change them
             int thisIndex = tokenizer.getIndex();
