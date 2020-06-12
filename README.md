@@ -1,16 +1,18 @@
-# RoseCodeEditor / CodeEditor  
+# CodeEditor
 A professional code editor on Android device with highlight and auto completion.  
-***Work In Progress*** This project is still developing slowly because of school. It will update more frequently after July.   
+***Work In Progress*** This project is still developing slowly because of school. It will update more frequently after July.
+Issues are welcome.
 [中文版README](/README_zh.md).   
-## Strong Abilities  
-* Highlight your code
-* A strong automatically complete window
-* Automatically indent your code
-* Show region of code blocks with vertical lines
-* Format your code
-* Scale text size by gesture
+## Features Implemented Currently
+* Syntax highlight
+* Automatic completion
+* Automatic Indent
+* Code block lines
+* Format code
+* Scale text
 * Select text
-* Scroll freely
+* Scroll freely, Scrollbars
+* Undo/redo actions
 ## Language Supported  
 * S5droid(context sensitive auto completion,highlight,code block line,navigation)
 * Java(Basic Support:highlight,code block line,identifier and keyword auto completion)
@@ -20,7 +22,7 @@ Language:Java,S5droid
 ## How to use this Editor  
 This project hasn't deploy to any place such as jcenter.    
 To include this project into your project:  
-* Copy files in src/assets/ to your project(If you do not want to use S5droid language,please go on to next step)  
+* Copy files in src/assets/ to your project(If you do not want to use S5droid language,please go on to the next step)
 * Copy files in src/res/layout to your project(Except src/res/layout/activity_main.xml)   
 * Copy files in src/java/ to your project(Except src/com/rose/editor/android/MainActivity.java)    
 * Change these files "import com.rose.editor.android.R" to "import yourPackageName.R" :  
@@ -37,7 +39,8 @@ To include this project into your project:
 * Implement a CodeAnalyzer:
 ```Java
 public class XxxCodeAnalyzer {
-	public void analyze(CharSequence content, TextColorProvider.TextColors colors, TextColorProvider.AnalyzeThread.Delegate delegate);{
+
+	public void analyze(CharSequence content, TextAnalyzer.TextColors colors, TextAnalyzer.AnalyzeThread.Delegate delegate) {
 		//Analyze code here(Use your Lexer)
 		//Use colors.addIfNeeded() to add a new span if required
 		//Use colors.add() to add a new span forcely
@@ -45,17 +48,19 @@ public class XxxCodeAnalyzer {
 		//Use colors.setNavigation() to specify navigation list
 		//Assign colors.mExtra to pass your information to AutoCompleteProvider module
 		
-		//Note that you should stop when delegate.shouldReAnalyze() returns true.
+		//Note that you should stop when delegate.shouldAnalyze() returns false.
 		//...
 	}
+
 }
 ```
-* Create a AutoCompleteProvider:   
+* Create an AutoCompleteProvider:
 You have two choices:   
 A.Implement a AutoCompleteProvider by your self   
 ```Java
 public class XxxAutoComplete {
-	public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextColorProvider.TextColors colors, int line); {
+
+	public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextColorProvider.TextColors colors, int line) {
 		//Match items here
 		//How to match is up to you (contains/startsWith/toLowerCase...)
 		//You can get information from last analysis by colors.mExtra
@@ -65,6 +70,7 @@ public class XxxAutoComplete {
 		//You are unexpected to return null(May cause crash)
 		return ...;
 	}
+
 }
 ```
 B.Use a simple AutoCompleteProvider implementation -- IdentifierAutoComplete   
@@ -80,7 +86,8 @@ autoComplete.setKeywords(keywords,true);
 And in your CodeAnalyzer:   
 ```Java
 public class XxxCodeAnalyzer {
-	public void analyze(CharSequence content, TextColorProvider.TextColors colors, TextColorProvider.AnalyzeThread.Delegate delegate);{
+
+	public void analyze(CharSequence content, TextAnalyzerr.TextColors colors, TextAnalyzer.AnalyzeThread.Delegate delegate) {
 		XxxTokenizer tokenizer = ...;
 		...
 		IdentifierAutoComplete.Identifiers identifiers = new IdentifierAutoComplete.Identifiers();
@@ -99,6 +106,7 @@ public class XxxCodeAnalyzer {
 		colors.mExtra = identifiers;
 		...
 	}
+
 }
 ```
 Note that repeat identifier will not be added.    
