@@ -175,7 +175,7 @@ public class AutoCompletePanel extends BasePanel
      * Make current selection visible
      */
     private void ensurePosition() {
-        mListView.smoothScrollToPosition(mCurrent);
+        mListView.setSelection(mCurrent);
     }
 
     /**
@@ -226,6 +226,12 @@ public class AutoCompletePanel extends BasePanel
     public String getPrefix() {
         return mLastPrefix;
     }
+    
+    private int maxHeight;
+    
+    public void setMaxHeight(int height) {
+        maxHeight = height;
+    }
 
     /**
      * Display result of analysis
@@ -246,6 +252,10 @@ public class AutoCompletePanel extends BasePanel
                 }
                 mCurrent = 0;
                 mListView.setAdapter(new ItemAdapter(results));
+                float newHeight = mEditor.getDpUnit() * 30 * results.size();
+                if(isShowing()) {
+                    update(getWidth(), (int)Math.min(newHeight,maxHeight));
+                }
             }
         });
     }

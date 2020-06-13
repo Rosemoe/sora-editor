@@ -133,7 +133,7 @@ public class MainActivity extends Activity {
                     break;
                 }
                 case 10:
-                    editor.formatCode();
+                    editor.formatCodeAsync();
                     break;
                 case 11:
                     editor.copyText();

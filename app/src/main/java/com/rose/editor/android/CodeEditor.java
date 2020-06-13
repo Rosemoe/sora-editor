@@ -58,6 +58,8 @@ import com.rose.editor.text.Indexer;
 import android.widget.OverScroller;
 import android.graphics.Color;
 import android.widget.EdgeEffect;
+import com.rose.editor.text.FormatThread;
+import android.view.accessibility.AccessibilityNodeInfo;
 
 /**
  * CodeEditor is a editor that can highlight texts region by doing basic grammar analyzing
@@ -73,7 +75,7 @@ import android.widget.EdgeEffect;
  *
  * @author Rose
  */
-public class CodeEditor extends View implements ContentListener, TextAnalyzer.Callback {
+public class CodeEditor extends View implements ContentListener, TextAnalyzer.Callback, FormatThread.FormatResultReceiver {
 
     private static final String LOG_TAG = "CodeEditor";
 
@@ -138,11 +140,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;
     private EdgeEffect mVerticalEdgeGlow;
     private EdgeEffect mHorizontalGlow;
-
-    /**
-     * Cancel invalidate() calls when formatting
-     */
-    private boolean mCancelForFormatting = false;
 
     //For debug
     private StringBuilder mErrorBuilder = new StringBuilder();
@@ -522,6 +519,20 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private void drawView(Canvas canvas){
         long startTime = System.currentTimeMillis();
 
+        if(mFormatThread != null) {
+            String text = "Formatting your code...";
+            float centerY = getHeight() / 2;
+            drawColor(canvas,mColors.getColor(ColorScheme.LINE_NUMBER_PANEL),mRect);
+            float baseline = centerY - getLineHeight() / 2f + getLineBaseLine(0);
+            float centerX = getWidth() / 2;
+            mPaint.setColor(mColors.getColor(ColorScheme.LINE_NUMBER_PANEL_TEXT));
+            Paint.Align align = mPaint.getTextAlign();
+            mPaint.setTextAlign(Paint.Align.CENTER);
+            canvas.drawText(text,centerX,baseline,mPaint);
+            mPaint.setTextAlign(align);
+            return;
+        }
+        
         getCursor().updateCache(getFirstVisibleLine());
 
         ColorScheme color = mColors;
@@ -571,6 +582,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         long timeUsage = System.currentTimeMillis() - startTime;
         final boolean debug = false;
         if(debug) {
+            mPaint.setColor(0xff000000);
             canvas.drawText("Draw " + timeUsage + "ms, Highlight " + mLastAnalyzeThreadTime + "ms", 0, getLineBaseLine(11), mPaint);
         }
     }
@@ -1831,7 +1843,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public void formatCode() {
         StringBuilder content = mText.toStringBuilder();
-        mCancelForFormatting = true;
         mText.beginBatchEdit();
         int line = mCursor.getLeftLine();
         int column = mCursor.getLeftColumn();
@@ -1840,8 +1851,33 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mText.endBatchEdit();
         getScroller().forceFinished(true);
         mACPanel.hide();
-        mCancelForFormatting = false;
-        setSelection(line,column);
+        setSelectionAround(line,column);
+        mSpanner.analyze(mText);
+    }
+    
+    private void setSelectionAround(int line, int column) {
+        if(line < getLineCount()) {
+            int columnCount = mText.getColumnCount(line);
+            if(column > columnCount) {
+                column = columnCount;
+            }
+            setSelection(line, column);
+        } else {
+            setSelection(getLineCount() - 1, mText.getColumnCount(getLineCount() - 1));
+        }
+    }
+    
+    private FormatThread mFormatThread;
+    
+    /**
+     * Format text Async
+     */
+    public void formatCodeAsync() {
+        if(mFormatThread != null) {
+            return;
+        }
+        mFormatThread = new FormatThread(mText, mLanguage, this);
+        mFormatThread.start();
     }
 
     /**
@@ -2572,13 +2608,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public int getBlockIndex() {
         return mCursorPosition;
     }
-
-    /**
-     * Move up a length of line
-     */
-    private void moveLineOn() {
-        getScroller().startScroll(getOffsetX(),getOffsetY(),0,getLineHeight(),0);
-    }
     
 
     //------------------------Internal Callbacks------------------------------
@@ -2629,11 +2658,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     @Override
-    public void invalidate() {
-        if(mCancelForFormatting) {
-            return;
-        }
-        super.invalidate();
+    public AccessibilityNodeInfo createAccessibilityNodeInfo() {
+        AccessibilityNodeInfo node = super.createAccessibilityNodeInfo();
+        
+        return node;
     }
 
     @Override
@@ -2776,7 +2804,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             warn = true;
         }
         if(warn){
-            Log.i(LOG_TAG, "onMeasure():Rose editor does not support wrap_content mode when measuring.It will just fill the whole space.");
+            Log.i(LOG_TAG, "onMeasure():Code editor does not support wrap_content mode when measuring.It will just fill the whole space.");
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
@@ -2868,22 +2896,27 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             String prefix = line.substring(endColumn,end);
             mACPanel.setPrefix(prefix);
         }
+        applyNewPanelPosition();
+        mACPanel.show();
+        makeRightVisible();
+        mSpanner.analyze(mText);
+        mEventHandler.hideInsertHandle();
+    }
+    
+    private void applyNewPanelPosition() {
         float panelX = updateCursorAnchor() + mDpUnit * 20;
         float panelY = getLineBottom(mCursor.getRightLine()) - getOffsetY() + getLineHeight() / 2f;
         float restY = getHeight() - panelY;
         if(restY > mDpUnit * 200) {
-            restY = -2;
+            restY = mDpUnit * 200;
         }else if(restY < mDpUnit * 100) {
-            int first = getFirstVisibleLine();
+            float offset = 0;
             while(restY < mDpUnit * 100) {
                 restY += getLineHeight();
                 panelY -= getLineHeight();
-                first++;
-                moveLineOn();
+                offset += getLineHeight();
             }
-            if(mACPanel.isShowing()) {
-                mACPanel.hide();
-            }
+            getScroller().startScroll(getOffsetX(),getOffsetY(),(int)offset,0,0);
         }
         if(mACPanel.getY() != panelY) {
             mACPanel.hide();
@@ -2895,13 +2928,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mACPanel.setWidth(getWidth() * 7 / 8);
             mACPanel.setExtendedX(getWidth() / 8f / 2f);
         }else{
-            mACPanel.setWidth(getWidth() / 2);
+            mACPanel.setWidth(getWidth() / 3);
         }
         mACPanel.setHeight((int)restY);
-        mACPanel.show();
-        makeRightVisible();
-        mSpanner.analyze(mText);
-        mEventHandler.hideInsertHandle();
+        mACPanel.setMaxHeight((int)restY);
+        mACPanel.updatePosition();
     }
 
     @Override
@@ -2916,6 +2947,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 mACPanel.hide();
             }else{
                 prefix = prefix.substring(0,prefix.length() - 1);
+                applyNewPanelPosition();
                 mACPanel.setPrefix(prefix);
             }
         }
@@ -2924,6 +2956,38 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             makeRightVisible();
             mSpanner.analyze(mText);
             mEventHandler.hideInsertHandle();
+        }
+    }
+
+    @Override
+    public void onFormatFail(final Throwable throwable) {
+        post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getContext(),throwable.toString(),Toast.LENGTH_SHORT).show();
+        }});
+        mFormatThread = null;
+    }
+
+    @Override
+    public void onFormatSucceed(CharSequence originalText, final CharSequence newText) {
+        if(originalText == mText) {
+            mFormatThread = null;
+            post(new Runnable() {
+                @Override
+                public void run() {
+                    mText.beginBatchEdit();
+                    int line = mCursor.getLeftLine();
+                    int column = mCursor.getLeftColumn();
+                    mText.delete(0,0,getLineCount() - 1,mText.getColumnCount(getLineCount() - 1));
+                    mText.insert(0,0,newText);
+                    mText.endBatchEdit();
+                    getScroller().forceFinished(true);
+                    mACPanel.hide();
+                    setSelectionAround(line,column);
+                    mSpanner.analyze(mText);
+                }
+            });
         }
     }
 

@@ -67,6 +67,27 @@ public class BasePanel extends PopupWindow
     public float getY() {
         return mBackupTop;
     }
+    
+    public void updatePosition() {
+        int width = mEditor.getWidth();
+        if(mLeft > width - getWidth()) {
+            mLeft = width - getWidth();
+        }
+        int height = mEditor.getHeight();
+        if(mTop > height - getHeight()) {
+            mTop = height - getHeight();
+        }
+        if(mTop < 0) {
+            mTop = 0;
+        }
+        if(mLeft < 0) {
+            mLeft = 0;
+        }
+        mEditor.getLocationInWindow(mLocation);
+        if(isShowing()){
+            update(mLocation[0] + mLeft,mLocation[1] + mTop,getWidth(),getHeight());
+        }
+    }
 
     /**
      * Show the panel or update its position(If already shown)
