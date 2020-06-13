@@ -1,7 +1,7 @@
 # CodeEditor
 A professional code editor on Android device with highlight and auto completion.  
 ***Work In Progress*** This project is still developing slowly because of school. It will update more frequently after July.
-Issues are welcome.
+Issues are welcome.   
 [中文版README](/README_zh.md).   
 ## Features Implemented Currently
 * Syntax highlight
@@ -16,6 +16,9 @@ Issues are welcome.
 ## Language Supported  
 * S5droid(context sensitive auto completion,highlight,code block line,navigation)
 * Java(Basic Support:highlight,code block line,identifier and keyword auto completion)
+## Screenshots  
+![View Outline](/images/outline.jpg)
+![Auto Complete](/images/auto-completion.jpg)   
 ## Extra Module Inside
 * A man-made lexer
 Language:Java,S5droid
