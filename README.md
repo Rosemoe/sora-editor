@@ -90,7 +90,7 @@ And in your CodeAnalyzer:
 ```Java
 public class XxxCodeAnalyzer {
 
-	public void analyze(CharSequence content, TextAnalyzerr.TextColors colors, TextAnalyzer.AnalyzeThread.Delegate delegate) {
+	public void analyze(CharSequence content, TextAnalyzer.TextColors colors, TextAnalyzer.AnalyzeThread.Delegate delegate) {
 		XxxTokenizer tokenizer = ...;
 		...
 		IdentifierAutoComplete.Identifiers identifiers = new IdentifierAutoComplete.Identifiers();
