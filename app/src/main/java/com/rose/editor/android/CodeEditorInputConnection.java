@@ -24,6 +24,9 @@ import android.text.TextUtils;
 import com.rose.editor.struct.CharPosition;
 import com.rose.editor.text.Content;
 import android.text.SpannableStringBuilder;
+import android.R;
+import android.widget.Toast;
+import android.os.Bundle;
 
 /**
  * Connection between input method and editor
@@ -79,8 +82,12 @@ class CodeEditorInputConnection extends BaseInputConnection {
     }
 
     @Override
-    public void closeConnection() {
+    public synchronized void closeConnection() {
         super.closeConnection();
+        Content content = mEditor.getText();
+        while(content.isInBatchEdit()) {
+            content.endBatchEdit();
+        }
         mEditor.onCloseConnection();
     }
 
@@ -169,6 +176,7 @@ class CodeEditorInputConnection extends BaseInputConnection {
             getCursor().onDeleteKeyPressed();
             return true;
         }
+        beginBatchEdit();
         int rangeEnd = getCursor().getLeft();
         int rangeStart = rangeEnd - beforeLength;
         if (rangeStart < 0) {
@@ -181,6 +189,7 @@ class CodeEditorInputConnection extends BaseInputConnection {
             rangeEnd = mEditor.getText().length();
         }
         mEditor.getText().delete(rangeStart, rangeEnd);
+        endBatchEdit();
         return true;
     }
 
@@ -192,12 +201,12 @@ class CodeEditorInputConnection extends BaseInputConnection {
     }
 
     @Override
-    public boolean beginBatchEdit() {
+    public synchronized boolean beginBatchEdit() {
         return mEditor.getText().beginBatchEdit();
     }
 
     @Override
-    public boolean endBatchEdit() {
+    public synchronized boolean endBatchEdit() {
         boolean inBatch = mEditor.getText().endBatchEdit();
         if (!inBatch) {
             mEditor.updateSelection();
@@ -303,6 +312,45 @@ class CodeEditorInputConnection extends BaseInputConnection {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public boolean performPrivateCommand(String action, Bundle data) {
+        return false;
+    }
+
+    @Override
+    public boolean performEditorAction(int actionCode) {
+        return super.performEditorAction(actionCode);
+    }
+
+    @Override
+    public boolean performContextMenuAction(int id) {
+        switch(id) {
+            case R.id.selectAll:
+                mEditor.selectAll();
+                return true;
+            case R.id.cut:
+                mEditor.copyText();
+                if(getCursor().isSelected()){
+                    getCursor().onDeleteKeyPressed();
+                }
+                return true;
+            case R.id.paste:
+            case R.id.pasteAsPlainText:
+                mEditor.pasteText();
+                return true;
+            case R.id.copy:
+                mEditor.copyText();
+                return true;
+            case R.id.undo:
+                mEditor.undo();
+                return true;
+            case R.id.redo:
+                mEditor.redo();
+                return true;
+        }
+        return false;
     }
 
     @Override

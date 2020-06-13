@@ -56,6 +56,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
         //Add default class name
         classNames.put("String",OBJECT);
         classNames.put("Object",OBJECT);
+        boolean first = true;
         while(delegate.shouldAnalyze()) {
             try{
                 // directNextToekn() does not skip any token
@@ -73,6 +74,9 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
             switch(token) {
                 case WHITESPACE:
                 case NEWLINE:
+                    if(first) {
+                        colors.addNormalIfNull();
+                    }
                     break;
                 case IDENTIFIER:
                     //Add a identifier to auto complete
@@ -216,6 +220,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                     classNamePrevious = false;
                     colors.addIfNeeded(index,line,column,ColorScheme.OPERATOR);
             }
+            first = false;
             helper.update(thisLength);
             index = thisIndex + thisLength;
             line = helper.getLine();

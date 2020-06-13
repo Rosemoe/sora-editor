@@ -83,7 +83,7 @@ public class AutoCompletePanel extends BasePanel
         mLayout = new LinearLayout(mEditor.getContext());
         mLayout.setGravity(Gravity.CENTER);
         mLayout.setOrientation(LinearLayout.VERTICAL);
-        mLayout.setPadding(5, 5, 5, 5);
+        //mLayout.setPadding(5, 5, 5, 5);
         mListView = new ListView(mEditor.getContext());
         mLayout.addView(mListView, new LinearLayout.LayoutParams(-1, -1));
         mPb = new ProgressBar(mEditor.getContext());
@@ -98,10 +98,11 @@ public class AutoCompletePanel extends BasePanel
         ((LinearLayout.LayoutParams)mPb.getLayoutParams()).bottomMargin = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics());
         setContentView(mLayout);
         GradientDrawable gd = new GradientDrawable();
-        gd.setCornerRadius(4);
+        gd.setCornerRadius(1);
         mLayout.setBackgroundDrawable(gd);
         mBg = gd;
         applyColor();
+        mListView.setDividerHeight(0);
         setLoading(true);
         mListView.setOnItemClickListener(new ListView.OnItemClickListener(){
 

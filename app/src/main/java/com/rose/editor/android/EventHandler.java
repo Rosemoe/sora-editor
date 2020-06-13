@@ -228,7 +228,7 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
                     downY = e.getY();
                     float all = mEditor.getLineHeight() * mEditor.getLineCount() + mEditor.getHeight() / 2f;
                     float dy = movedDis / mEditor.getHeight() * all;
-                    onScroll(null,null,0,dy);
+                    scrollBy(0,dy);
                     return true;
                 }
                 if(mHolding2) {
@@ -236,7 +236,7 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
                     downX = e.getX();
                     float all = mEditor.getScrollMaxX() + mEditor.getWidth();
                     float dx = movedDis / mEditor.getWidth() * all;
-                    onScroll(null,null,dx,0);
+                    scrollBy(dx,0);
                     return true;
                 }
                 if(mHolding3) {
@@ -289,6 +289,21 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
             finalY = mEditor.getScrollMaxY();
         }
         mScroller.startScroll(mScroller.getCurrX(),mScroller.getCurrY(),0,(int)(finalY - mScroller.getCurrY()));
+    }
+    
+    private void scrollBy(float distanceX, float distanceY) {
+        mEditor.getTextActionPanel().hide();
+        int endX = mScroller.getCurrX() + (int)distanceX;
+        int endY = mScroller.getCurrY() + (int)distanceY;
+        endX = Math.max(endX,0);
+        endY = Math.max(endY,0);
+        endY = Math.min(endY,mEditor.getScrollMaxY());
+        endX = Math.min(endX,mEditor.getScrollMaxX());
+        mScroller.startScroll(mScroller.getCurrX(),
+                              mScroller.getCurrY(),
+                              endX - mScroller.getCurrX(),
+                              endY - mScroller.getCurrY(),0);
+        mEditor.invalidate();
     }
 
     @Override
@@ -413,28 +428,35 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
         endY = Math.min(endY,mEditor.getScrollMaxY());
         endX = Math.min(endX,mEditor.getScrollMaxX());
         boolean notifyY = true;
+        boolean notifyX = true;
         if(!mEditor.getVerticalEdgeEffect().isFinished()) {
             endY = mScroller.getCurrY();
             mEditor.getVerticalEdgeEffect().onPull((topOrBottom ? distanceY : -distanceY) / mEditor.getMeasuredHeight());
             notifyY = false;
         }
+        if(!mEditor.getHorizontalEdgeEffect().isFinished()) {
+            endX = mScroller.getCurrX();
+            mEditor.getHorizontalEdgeEffect().onPull((leftOrRight ? distanceX : -distanceX) / mEditor.getMeasuredWidth());
+            notifyX = false;
+        }
         mScroller.startScroll(mScroller.getCurrX(),
                 mScroller.getCurrY(),
                 endX - mScroller.getCurrX(),
                 endY - mScroller.getCurrY(),0);
-        if(notifyY && mScroller.getCurrY() <= 0) {
+        final float minOverPull = mEditor.getDpUnit() * 10;
+        if(notifyY && mScroller.getCurrY() + distanceY < -minOverPull) {
             mEditor.getVerticalEdgeEffect().onPull(-distanceY / mEditor.getMeasuredHeight());
             topOrBottom = false;
         }
-        if(notifyY && mScroller.getCurrY() + distanceY >= mEditor.getScrollMaxY()) {
+        if(notifyY && mScroller.getCurrY() + distanceY > mEditor.getScrollMaxY() + minOverPull) {
             mEditor.getVerticalEdgeEffect().onPull(distanceY / mEditor.getMeasuredHeight());
             topOrBottom = true;
         }
-        if(mScroller.getCurrX() <= 0) {
+        if(notifyX && mScroller.getCurrX() + distanceX < -minOverPull) {
             mEditor.getHorizontalEdgeEffect().onPull(-distanceX / mEditor.getMeasuredWidth());
             leftOrRight = false;
         }
-        if(mScroller.getCurrX() + distanceX >= mEditor.getScrollMaxX()) {
+        if(notifyX && mScroller.getCurrX() + distanceX > mEditor.getScrollMaxX() + minOverPull) {
             mEditor.getHorizontalEdgeEffect().onPull(distanceX / mEditor.getMeasuredWidth());
             leftOrRight = true;
         }
@@ -452,10 +474,8 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
                 mEditor.getScrollMaxX(),
                 0,
                 mEditor.getScrollMaxY(),
-                0,
-                0);
-        //mEditor.getVerticalEdgeEffect().onAbsorb((int)Math.abs(velocityY));
-        //topOrBottom = velocityY > 0;
+                (int)(30 * mEditor.getDpUnit()),
+                (int)(30 * mEditor.getDpUnit()));
         mEditor.invalidate();
         float minVe = mEditor.getDpUnit() * 2000;
         if(Math.abs(velocityX) >= minVe || Math.abs(velocityY) >= minVe) {

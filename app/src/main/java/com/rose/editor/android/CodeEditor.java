@@ -288,6 +288,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mUnderlineWidth = mDividerMargin;
         mInsertSelWidth = mDividerWidth;
         mDpUnit = mDividerWidth / 2;
+        mDividerMargin = mDpUnit * 5;
         mLineNumberAlign = Paint.Align.RIGHT;
         mTypefaceLineNumber = Typeface.MONOSPACE;
         mTypefaceText = Typeface.DEFAULT;
@@ -549,11 +550,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         drawBlockLines(canvas,offsetX);
         
         if(!mCursor.isSelected()){
-            drawSelectionInsert(canvas, offsetX, color.getColor(ColorScheme.SELECTION_INSERT));
+            drawCursor(canvas, mCursor.getLeftLine(), mCursor.getLeftColumn(), offsetX, color.getColor(ColorScheme.SELECTION_INSERT));
             if(mEventHandler.shouldDrawInsertHandle()) {
                 drawHandle(canvas,mCursor.getLeftLine(),mCursor.getLeftColumn(),mInsertHandle);
             }
         }else if(!mTextActionPanel.isShowing()){
+            drawCursor(canvas, mCursor.getLeftLine(), mCursor.getLeftColumn(), offsetX, color.getColor(ColorScheme.SELECTION_INSERT));
+            drawCursor(canvas, mCursor.getRightLine(), mCursor.getRightColumn(), offsetX, color.getColor(ColorScheme.SELECTION_INSERT));
             drawHandle(canvas,mCursor.getLeftLine(),mCursor.getLeftColumn(),mLeftHandle);
             drawHandle(canvas,mCursor.getRightLine(),mCursor.getRightColumn(),mRightHandle);
         }else{
@@ -566,10 +569,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         //These are for debug
         long timeUsage = System.currentTimeMillis() - startTime;
-        final boolean debug = true;
+        final boolean debug = false;
         if(debug) {
-            canvas.drawText("onDraw() " + timeUsage + "ms, Highlight:" + mLastAnalyzeThreadTime + "ms", 0, getLineBaseLine(11), mPaint);
+            canvas.drawText("Draw " + timeUsage + "ms, Highlight " + mLastAnalyzeThreadTime + "ms", 0, getLineBaseLine(11), mPaint);
         }
+    }
+    
+    public void setEdgeEffectColor(int color) {
+        mVerticalEdgeGlow.setColor(color);
+        mHorizontalGlow.setColor(color);
+    }
+    
+    public int getEdgeEffectColor() {
+        return mVerticalEdgeGlow.getColor();
     }
     
     protected EdgeEffect getVerticalEdgeEffect() {
@@ -596,9 +608,29 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         if(!mHorizontalGlow.isFinished()) {
             canvas.save();
-            canvas.rotate(mEventHandler.leftOrRight ? 270 : 90);
+            boolean right = mEventHandler.leftOrRight;
+            if(right) {
+                canvas.rotate(90);
+                canvas.translate(0,-getMeasuredWidth());
+            } else {
+                canvas.translate(0,getMeasuredHeight());
+                canvas.rotate(-90);
+            }
             postDraw = mHorizontalGlow.draw(canvas) || postDraw;
             canvas.restore();
+        }
+        OverScroller scroller = getScroller();
+        if(scroller.isOverScrolled()) {
+            if(mVerticalEdgeGlow.isFinished() && (scroller.getCurrY() < 0 || scroller.getCurrY() > getScrollMaxY())) {
+                mEventHandler.topOrBottom = scroller.getCurrY() > getScrollMaxY();
+                mVerticalEdgeGlow.onAbsorb((int)scroller.getCurrVelocity());
+                postDraw = true;
+            }
+            if(mHorizontalGlow.isFinished() && (scroller.getCurrX() < 0 || scroller.getCurrX() > getScrollMaxX())) {
+                mEventHandler.leftOrRight = scroller.getCurrX() > getScrollMaxX();
+                mHorizontalGlow.onAbsorb((int)scroller.getCurrVelocity());
+                postDraw = true;
+            }
         }
         if(postDraw) {
             postInvalidateOnAnimation();
@@ -614,7 +646,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param resultRect The rect of handle this method drew
      */
     private void drawHandle(Canvas canvas,int line,int column,RectF resultRect) {
-        float radius = mDpUnit * 12;
+        float radius = mDpUnit * 10;
         float top = getLineBottom(line) - getOffsetY();
         float bottom = top + radius * 2;
         prepareLine(line);
@@ -788,17 +820,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         mVerticalScrollBar.setEmpty();
         mHorizontalScrollBar.setEmpty();
-        if(getScrollMaxY() > getHeight()/2) {
-            drawScrollBarTrackVertical(canvas,10);
+        if(getScrollMaxY() > getHeight() / 2) {
+            drawScrollBarTrackVertical(canvas, 10);
         }
-        if(getScrollMaxX() > getWidth()*3/4) {
-            drawScrollBarTrackHorizontal(canvas,10);
+        if(getScrollMaxX() > getWidth() * 3 / 4) {
+            drawScrollBarTrackHorizontal(canvas, 10);
         }
-        if(getScrollMaxY() > getHeight()/2) {
-            drawScrollBarVertical(canvas,10);
+        if(getScrollMaxY() > getHeight() / 2) {
+            drawScrollBarVertical(canvas, 10);
         }
-        if(getScrollMaxX() > getWidth()*3/4) {
-            drawScrollBarHorizontal(canvas,10);
+        if(getScrollMaxX() > getWidth() * 3 / 4) {
+            drawScrollBarHorizontal(canvas, 10);
         }
     }
 
@@ -858,7 +890,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             return;
         }
         float expand = mDpUnit * 3;
-        String text = mLnTip + ((2 + getFirstVisibleLine() + getLastVisibleLine() / 2));
+        String text = mLnTip + ((2 + getFirstVisibleLine() + getLastVisibleLine()) / 2);
         float textWidth = mPaint.measureText(text);
         mRect.top = centerY - getLineHeight() / 2f - expand;
         mRect.bottom = centerY + getLineHeight() / 2f + expand;
@@ -973,10 +1005,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param offsetX Start x of text region
      * @param color Color of cursor
      */
-    private void drawSelectionInsert(Canvas canvas, float offsetX, int color){
-        int line = mCursor.getLeftLine();
+    private void drawCursor(Canvas canvas,int line, int column, float offsetX, int color){
         if(isLineVisible(line)){
-            int column = mCursor.getLeftColumn();
             prepareLine(line);
             float width = measureText(mChars, 0, column);
             mRect.top = getLineTop(line) - getOffsetY();
@@ -2468,7 +2498,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * @see CodeEditor#setText(CharSequence)
-     * @return Text displaying
+     * @return Text displaying, the result is read-only. You should not make changes to this obejct as it is used internally
      */
     public Content getText(){
         return mText;
@@ -2626,10 +2656,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        boolean handling = mEventHandler.handlingMotions();
         boolean res = mEventHandler.onTouchEvent(event);
         boolean res2 = false;
         boolean res3 = mScaleDetector.onTouchEvent(event);
-        if(!mEventHandler.handlingMotions()) {
+        if(!handling) {
             res2 = mBasicDetector.onTouchEvent(event);
         }
         if(event.getAction() == MotionEvent.ACTION_UP) {
@@ -2718,13 +2749,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                                 return true;
                         }
                     }else if(!event.isCtrlPressed() && !event.isAltPressed()) {
-                        char[] c = new char[1];
                         if(event.isPrintingKey()) {
-                            c[0] = (char) event.getUnicodeChar(event.getMetaState());
+                            getCursor().onCommitText(new String(Character.toChars(event.getUnicodeChar(event.getMetaState()))));
+                            cursorChangeExternal();
                         }else{
                             return super.onKeyDown(keyCode, event);
                         }
-                        getCursor().onCommitText(new String(c));
                         return true;
                     }
             }
@@ -2842,7 +2872,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         float panelY = getLineBottom(mCursor.getRightLine()) - getOffsetY() + getLineHeight() / 2f;
         float restY = getHeight() - panelY;
         if(restY > mDpUnit * 200) {
-            restY = mDpUnit * 200;
+            restY = -2;
         }else if(restY < mDpUnit * 100) {
             int first = getFirstVisibleLine();
             while(restY < mDpUnit * 100) {
@@ -2887,7 +2917,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }else{
                 prefix = prefix.substring(0,prefix.length() - 1);
                 mACPanel.setPrefix(prefix);
-
             }
         }
         if(!mWait){
