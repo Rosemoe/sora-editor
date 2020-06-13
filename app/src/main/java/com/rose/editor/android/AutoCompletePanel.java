@@ -192,7 +192,6 @@ public class AutoCompletePanel extends BasePanel
         ResultItem item = ((ItemAdapter) mListView.getAdapter()).getItem(pos);
         Cursor cursor = mEditor.getCursor();
         if(!cursor.isSelected()) {
-            mEditor.contentChanged();
             mEditor.getText().delete(cursor.getLeftLine(), cursor.getLeftColumn() - mLastPrefix.length(), cursor.getLeftLine(), cursor.getLeftColumn());
             cursor.onCommitText(item.commit);
             if((item.mask & ResultItem.MASK_SHIFT_LEFT_TWICE) != 0){
@@ -202,6 +201,7 @@ public class AutoCompletePanel extends BasePanel
             if((item.mask & ResultItem.MASK_SHIFT_LEFT_ONCE) != 0) {
                 mEditor.moveSelectionLeft();
             }
+            mEditor.cursorChangeExternal();
         }
         hide();
     }

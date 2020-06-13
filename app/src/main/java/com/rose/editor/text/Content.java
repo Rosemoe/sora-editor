@@ -118,7 +118,7 @@ public class Content implements CharSequence {
         }
         CharPosition s = mIndexer.getCharPosition(start);
         CharPosition e = mIndexer.getCharPosition(end);
-        return subContent(s.getLine(), s.getColumn(), e.getColumn(), e.getColumn());
+        return subContent(s.getLine(), s.getColumn(), e.getLine(), e.getColumn());
     }
 
     /**

@@ -99,7 +99,7 @@ class CodeEditorInputConnection extends BaseInputConnection {
         if (start < 0) {
             start = 0;
         }
-        if (end > origin.length() - 1) {
+        if (end >= origin.length()) {
             end = origin.length() - 1;
         }
         if (end < start) {
@@ -114,11 +114,7 @@ class CodeEditorInputConnection extends BaseInputConnection {
     }
 
     private CharSequence getTextRegion(int start, int end, int flags) {
-        try {
-            return getTextRegionInternal(start, end, flags);
-        } catch (IndexOutOfBoundsException|IllegalArgumentException e) {
-            return flags == GET_TEXT_WITH_STYLES ? new SpannableStringBuilder() : "";
-        }
+        return getTextRegionInternal(start, end, flags);
     }
 
     @Override

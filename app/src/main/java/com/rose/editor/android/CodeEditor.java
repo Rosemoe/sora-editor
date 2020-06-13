@@ -57,6 +57,7 @@ import com.rose.editor.interfaces.EditorLanguage;
 import com.rose.editor.text.Indexer;
 import android.widget.OverScroller;
 import android.graphics.Color;
+import android.widget.EdgeEffect;
 
 /**
  * CodeEditor is a editor that can highlight texts region by doing basic grammar analyzing
@@ -135,6 +136,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private ScaleGestureDetector mScaleDetector;
     private CodeEditorInputConnection mConnection;
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;
+    private EdgeEffect mVerticalEdgeGlow;
+    private EdgeEffect mHorizontalGlow;
 
     /**
      * Cancel invalidate() calls when formatting
@@ -181,10 +184,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mInputMethodManager.updateSelection(this, mCursor.getLeft(), mCursor.getRight(), mCursor.getLeft(), mCursor.getRight());
     }
     
-    /**
-     * This means some text is changed by user outside the input method application
-     */
-    protected void contentChanged() {
+    protected void cursorChangeExternal() {
+        updateSelection();
+        updateCursorAnchor();
         mConnection.invalid();
         mInputMethodManager.restartInput(this);
     }
@@ -311,6 +313,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mTextActionPanel = new TextComposePanel(this);
         mTextActionPanel.setHeight((int)(mDpUnit * 60));
         mTextActionPanel.setWidth((int)(mDpUnit * 230));
+        mVerticalEdgeGlow = new EdgeEffect(this.getContext());
+        mHorizontalGlow = new EdgeEffect(this.getContext());
         setEditorLanguage(null);
         setText(null);
     }
@@ -558,31 +562,48 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
 
         drawScrollBars(canvas);
+        drawEdgeEffect(canvas);
 
         //These are for debug
         long timeUsage = System.currentTimeMillis() - startTime;
-        canvas.drawText("onDraw() " + timeUsage + "ms, Highlight:" + mLastAnalyzeThreadTime + "ms", 0, getLineBaseLine(11), mPaint);
+        final boolean debug = true;
+        if(debug) {
+            canvas.drawText("onDraw() " + timeUsage + "ms, Highlight:" + mLastAnalyzeThreadTime + "ms", 0, getLineBaseLine(11), mPaint);
+        }
+    }
+    
+    protected EdgeEffect getVerticalEdgeEffect() {
+        return mVerticalEdgeGlow;
+    }
+    
+    protected EdgeEffect getHorizontalEdgeEffect() {
+        return mHorizontalGlow;
     }
 
-    //These are building
-	/*
-	private void drawOverScrollEdge(Canvas canvas){
-		if(!getScroller().isOverScrolled()) {
-			return;
-		}
-		int stateX = getOverScrollState(getScrollMaxX(),getOffsetX());
-		if(stateX != 0) {
-
-		}
-	}
-	private int getOverScrollState(int max,int curr) {
-		if(curr < 0) {
-			return 1;
-		}else if(curr > max) {
-			return 2;
-		}
-		return 0;
-	}*/
+    private void drawEdgeEffect(Canvas canvas) {
+        boolean postDraw = false;
+        if(!mVerticalEdgeGlow.isFinished()) {
+            boolean bottom = mEventHandler.topOrBottom;
+            if(bottom) {
+                canvas.save();
+                canvas.translate(-getMeasuredWidth(), getMeasuredHeight());
+                canvas.rotate(180,getMeasuredWidth(),0);
+            }
+            postDraw = mVerticalEdgeGlow.draw(canvas);
+            if(bottom) {
+                canvas.restore();
+            }
+        }
+        if(!mHorizontalGlow.isFinished()) {
+            canvas.save();
+            canvas.rotate(mEventHandler.leftOrRight ? 270 : 90);
+            postDraw = mHorizontalGlow.draw(canvas) || postDraw;
+            canvas.restore();
+        }
+        if(postDraw) {
+            postInvalidateOnAnimation();
+        }
+    }
 
     /**
      * Draw a handle.
@@ -2611,6 +2632,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if(!mEventHandler.handlingMotions()) {
             res2 = mBasicDetector.onTouchEvent(event);
         }
+        if(event.getAction() == MotionEvent.ACTION_UP) {
+            mVerticalEdgeGlow.onRelease();
+            mHorizontalGlow.onRelease();
+        }
+        invalidate();
         return (res3 || res2 || res);
     }
 
@@ -2742,6 +2768,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         super.onSizeChanged(w, h, oldWidth, oldHeight);
         mViewRect.right = w;
         mViewRect.bottom = h;
+        getVerticalEdgeEffect().setSize(w,h);
+        getHorizontalEdgeEffect().setSize(h,w);
+        getVerticalEdgeEffect().finish();
+        getHorizontalEdgeEffect().finish();
     }
 
     @Override

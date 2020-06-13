@@ -349,7 +349,6 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
         }else{
             notifyLater();
             mEditor.setSelection(line,column);
-            mEditor.contentChanged();
             mEditor.hideAutoCompletePanel();
         }
         return true;
@@ -390,7 +389,6 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
             }
         }
         mEditor.setSelectionRegion(startLine,startColumn,endLine,endColumn);
-        mEditor.contentChanged();
     }
 
     /**
@@ -402,6 +400,9 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
         return Character.isJavaIdentifierPart(ch);
     }
 
+    protected boolean topOrBottom; //true for bottom
+    protected boolean leftOrRight; //true for right
+    
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
         mEditor.getTextActionPanel().hide();
@@ -411,10 +412,32 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
         endY = Math.max(endY,0);
         endY = Math.min(endY,mEditor.getScrollMaxY());
         endX = Math.min(endX,mEditor.getScrollMaxX());
+        boolean notifyY = true;
+        if(!mEditor.getVerticalEdgeEffect().isFinished()) {
+            endY = mScroller.getCurrY();
+            mEditor.getVerticalEdgeEffect().onPull((topOrBottom ? distanceY : -distanceY) / mEditor.getMeasuredHeight());
+            notifyY = false;
+        }
         mScroller.startScroll(mScroller.getCurrX(),
                 mScroller.getCurrY(),
                 endX - mScroller.getCurrX(),
                 endY - mScroller.getCurrY(),0);
+        if(notifyY && mScroller.getCurrY() <= 0) {
+            mEditor.getVerticalEdgeEffect().onPull(-distanceY / mEditor.getMeasuredHeight());
+            topOrBottom = false;
+        }
+        if(notifyY && mScroller.getCurrY() + distanceY >= mEditor.getScrollMaxY()) {
+            mEditor.getVerticalEdgeEffect().onPull(distanceY / mEditor.getMeasuredHeight());
+            topOrBottom = true;
+        }
+        if(mScroller.getCurrX() <= 0) {
+            mEditor.getHorizontalEdgeEffect().onPull(-distanceX / mEditor.getMeasuredWidth());
+            leftOrRight = false;
+        }
+        if(mScroller.getCurrX() + distanceX >= mEditor.getScrollMaxX()) {
+            mEditor.getHorizontalEdgeEffect().onPull(distanceX / mEditor.getMeasuredWidth());
+            leftOrRight = true;
+        }
         mEditor.invalidate();
         return true;
     }
@@ -429,8 +452,10 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
                 mEditor.getScrollMaxX(),
                 0,
                 mEditor.getScrollMaxY(),
-                20,
-                20);
+                0,
+                0);
+        //mEditor.getVerticalEdgeEffect().onAbsorb((int)Math.abs(velocityY));
+        //topOrBottom = velocityY > 0;
         mEditor.invalidate();
         float minVe = mEditor.getDpUnit() * 2000;
         if(Math.abs(velocityX) >= minVe || Math.abs(velocityY) >= minVe) {
