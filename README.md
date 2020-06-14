@@ -1,6 +1,7 @@
 # CodeEditor
 A professional code editor on Android device with highlight and auto completion.  
 ***Work In Progress*** This project is still developing slowly because of school. It will update more frequently after July.   
+See Projects/CodeEditor to get more information about what I am working on.    
 Issues are welcome.   
 ## Features Implemented Currently
 * Syntax highlight
