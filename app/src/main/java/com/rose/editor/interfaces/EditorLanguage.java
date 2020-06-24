@@ -17,22 +17,31 @@ package com.rose.editor.interfaces;
 
 /**
  * Language for editor
+ *
+ * A Language helps editor to highlight text and provide auto-completion.
+ * Implement this interface when you want to add new language support for editor.
+ *
+ * <strong>NOTE:</strong> A language must not be single instance.
+ * One language instance should always serves for only one editor.
+ * It means that you should not give a language object to other editor instances
+ * after it has been applied to one editor.
+ * This is to provide better connection between auto completion provider and code analyzer.
  * @author Rose
  */
 public interface EditorLanguage
 {
 
     /**
-     * Create a CodeAnalyzer
-     * @return CodeAnalyzer created
+     * Get CodeAnalyzer of this language object
+     * @return CodeAnalyzer
      */
-    CodeAnalyzer createAnalyzer();
+    CodeAnalyzer getAnalyzer();
 
     /**
-     * Create a AutoCompleteProvider
-     * @return AutoCompleteProvider created
+     * Get AutoCompleteProvider of this language object
+     * @return AutoCompleteProvider
      */
-    AutoCompleteProvider createAutoComplete();
+    AutoCompleteProvider getAutoCompleteProvider();
 
     /**
      * Called by editor to check whether this is a character for auto completion

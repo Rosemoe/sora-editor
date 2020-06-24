@@ -17,7 +17,6 @@ package com.rose.editor.langs.s5droid;
 
 import android.content.Context;
 
-import com.rose.editor.android.AutoCompletePanel;
 import com.rose.editor.interfaces.AutoCompleteProvider;
 import com.rose.editor.struct.ResultItem;
 import com.rose.editor.langs.internal.Pinyin;
@@ -192,7 +191,7 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
                             kws.add(new ResultItem(eventName + "()" , split[0] + ":" + eventName + "()", event, ResultItem.TYPE_LOCAL_METHOD));
                         }
                     }
-                    Collections.sort(kws, AutoCompletePanel.RES_COMP);
+                    Collections.sort(kws, ResultItem.COMPARATOR_BY_NAME);
                 }
             }
             return kws;
@@ -360,10 +359,10 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
                 }
             }
         }
-        Collections.sort(kws, AutoCompletePanel.RES_COMP);
-        Collections.sort(classes,AutoCompletePanel.RES_COMP);
-        Collections.sort(fields, AutoCompletePanel.RES_COMP);
-        Collections.sort(methods, AutoCompletePanel.RES_COMP);
+        Collections.sort(kws, ResultItem.COMPARATOR_BY_NAME);
+        Collections.sort(classes, ResultItem.COMPARATOR_BY_NAME);
+        Collections.sort(fields, ResultItem.COMPARATOR_BY_NAME);
+        Collections.sort(methods, ResultItem.COMPARATOR_BY_NAME);
         kws.addAll(fields);
         kws.addAll(classes);
         kws.addAll(methods);

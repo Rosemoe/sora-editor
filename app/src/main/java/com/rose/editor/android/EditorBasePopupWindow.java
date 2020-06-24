@@ -22,7 +22,7 @@ import android.widget.PopupWindow;
  * Editor base panel class
  * @author Rose
  */
-public class BasePanel extends PopupWindow
+class EditorBasePopupWindow extends PopupWindow
 {
     private CodeEditor mEditor;
     private int[] mLocation;
@@ -34,7 +34,7 @@ public class BasePanel extends PopupWindow
      * Create a panel for editor
      * @param editor Target editor
      */
-    public BasePanel(CodeEditor editor){
+    public EditorBasePopupWindow(CodeEditor editor){
         if(editor == null) {
             throw new IllegalArgumentException();
         }

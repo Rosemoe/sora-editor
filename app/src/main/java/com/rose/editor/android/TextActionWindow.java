@@ -27,7 +27,7 @@ import android.content.res.Resources;
  * This will show when selecting text
  * @author Rose
  */
-public class TextComposePanel extends BasePanel implements View.OnClickListener
+public class TextActionWindow extends EditorBasePopupWindow implements View.OnClickListener
 {
     private CodeEditor mEditor;
     private Button selectAll,cut,copy,paste;
@@ -36,7 +36,7 @@ public class TextComposePanel extends BasePanel implements View.OnClickListener
      * Create a panel for the given editor
      * @param editor Target editor
      */
-    public TextComposePanel(CodeEditor editor) {
+    public TextActionWindow(CodeEditor editor) {
         super(editor);
         mEditor = editor;
         View root = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_panel,null);

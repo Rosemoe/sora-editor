@@ -22,45 +22,43 @@ import android.util.SparseIntArray;
  * @author Rose
  */
 public final class ColorScheme {
-    //Add you colors above(starts from 30) and change END_COLOR_INDEX below
-    //-------------------------------------------
-    public static final int AUTO_COMP_PANEL_CORNER = 24;
-    public static final int AUTO_COMP_PANEL_BG = 23;
-    public static final int LINE_BLOCK_LABEL = 22;
-    public static final int BLOCK_LINE_CURRENT = 21;
-    public static final int LINE_NUMBER_PANEL_TEXT = 20;
-    public static final int LINE_NUMBER_PANEL = 19;
-    public static final int SCROLL_BAR_TRACK = 18;
-    public static final int BLOCK_LINE = 17;
-    public static final int SCROLL_BAR_THUMB_DOWN = 16;
-    public static final int SCROLL_BAR_THUMB = 15;
-    //----------------------------------
-    /*
-     * These are highlight colors
-     */
-    public static final int ANNOTATION = 28;
-    public static final int FUNCTION_NAME = 29;
+    public static final int ANNOTATION = 29;
+    public static final int FUNCTION_NAME = 28;
+
     /**
      * This is a special color.
      * This color tells the editor it is a hex color expression.
      * And editor will try to recognize the hex color expression and draw an
      * underline for this expression.
      * Language used it now is only S5droid.
-     * To adapt more languages please modify RoseEditor.java
+     * To adapt more languages please modify CodeEditor.java
      */
     public static final int HEX_COLOR = 27;
+
     public static final int IDENTIFIER_NAME = 26;
     public static final int IDENTIFIER_VAR = 25;
-    public static final int LITERAL = 14;
-    public static final int OPERATOR = 13;
-    public static final int COMMENT = 12;
-    public static final int KEYWORD = 11;
+    public static final int LITERAL = 24;
+    public static final int OPERATOR = 23;
+    public static final int COMMENT = 22;
+    public static final int KEYWORD = 21;
+
     //----------------------------------
-    public static final int SELECTED_TEXT_BACKGROUND = 10;
-    public static final int UNDERLINE = 9;
-    public static final int CURRENT_LINE = 8;
-    public static final int SELECTION_HANDLE = 7;
-    public static final int SELECTION_INSERT = 6;
+
+    public static final int AUTO_COMP_PANEL_CORNER = 20;
+    public static final int AUTO_COMP_PANEL_BG = 19;
+    public static final int LINE_BLOCK_LABEL = 18;
+    public static final int LINE_NUMBER_PANEL_TEXT = 17;
+    public static final int LINE_NUMBER_PANEL = 16;
+    public static final int BLOCK_LINE_CURRENT = 15;
+    public static final int BLOCK_LINE = 14;
+    public static final int SCROLL_BAR_TRACK = 13;
+    public static final int SCROLL_BAR_THUMB_PRESSED = 12;
+    public static final int SCROLL_BAR_THUMB = 11;
+    public static final int UNDERLINE = 10;
+    public static final int CURRENT_LINE = 9;
+    public static final int SELECTION_HANDLE = 8;
+    public static final int SELECTION_INSERT = 7;
+    public static final int SELECTED_TEXT_BACKGROUND = 6;
     public static final int TEXT_NORMAL = 5;
     public static final int WHOLE_BACKGROUND = 4;
     public static final int LINE_NUMBER_BACKGROUND = 3;
@@ -68,51 +66,14 @@ public final class ColorScheme {
     public static final int LINE_DIVIDER = 1;
 
     /**
-     * Min color id
-     * NOTE:color id must start with 1
+     * Min pre-defined color id
      */
     private static final int START_COLOR_INDEX = 1;
-    /**
-     * Max color id
-     * NOTE:color id must be a series such as 1,2,3,4,5
-     */
-    private static final int END_COLOR_INDEX = 29;
 
     /**
-     * The default colors for each color id
+     * Max pre-defined color id
      */
-    private static final int[] DEFAULT_COLORS = new int[]{
-            0,
-            0xff3f51bf,
-            0xff444444,
-            0xffeeeeee,
-            0,
-            0xff222222,
-            0xff000000,
-            0xffec407a,
-            0x33ec407a,
-            0xff000000,
-            0x303f51b5,
-            0xffb71c1c,
-            0xff9e9e9e,
-            0xdd0096ff,
-            0xff2196f3,
-            0xaaec407a,
-            0xffec407a,
-            0xffdddddd, //block lines normal
-            0xeeeeeeee,
-            0xdd000000,
-            0xffffffff,
-            0xff999999, //block lines current
-            0x88dddddd,
-            0xffffffff,
-            0xffffffff,
-            0xffe91e63,
-            0xffff9800,
-            0xff4caf50,
-            0xffec407a,
-            0xffaaaaff
-    };
+    private static final int END_COLOR_INDEX = 29;
 
     /**
      * Host editor object
@@ -128,7 +89,7 @@ public final class ColorScheme {
      * Create a new ColorScheme for the given editor
      * @param editor Host editor
      */
-    ColorScheme(CodeEditor editor){
+    ColorScheme(CodeEditor editor) {
         mEditor = editor;
         if(editor == null){
             throw new IllegalArgumentException();
@@ -140,7 +101,7 @@ public final class ColorScheme {
     /**
      * Apply default colors
      */
-    public void applyDefault(){
+    public void applyDefault() {
         for(int i = START_COLOR_INDEX;i <= END_COLOR_INDEX;i++){
             applyDefault(i);
         }
@@ -150,12 +111,92 @@ public final class ColorScheme {
      * Apply default color for the given type
      * @param type The type
      */
-    public void applyDefault(int type){
-        if(type >= START_COLOR_INDEX && type <= END_COLOR_INDEX){
-            putColor(type,DEFAULT_COLORS[type]);
-        }else{
-            throw new IllegalArgumentException("Unexpected type:" + type);
+    public void applyDefault(int type) {
+        int color;
+        switch(type) {
+            case LINE_DIVIDER:
+                color = 0xff3f51bf;
+                break;
+            case LINE_NUMBER:
+                color = 0xff444444;
+                break;
+            case LINE_NUMBER_BACKGROUND:
+                color = 0xffeeeeee;
+                break;
+            case WHOLE_BACKGROUND:
+                color = 0;
+                break;
+            case TEXT_NORMAL:
+                color = 0xff222222;
+                break;
+            case SELECTION_INSERT:
+            case UNDERLINE:
+                color = 0xff000000;
+                break;
+            case SELECTION_HANDLE:
+            case ANNOTATION:
+                color = 0xffec407a;
+                break;
+            case CURRENT_LINE:
+                color = 0x33ec407a;
+                break;
+            case SELECTED_TEXT_BACKGROUND:
+                color = 0x253f51b5;
+                break;
+            case KEYWORD:
+                color = 0x303f51b5;
+                break;
+            case COMMENT:
+                color = 0xffb71c1c;
+                break;
+            case OPERATOR:
+                color = 0xff9e9e9e;
+                break;
+            case LITERAL:
+                color = 0xdd0096ff;
+                break;
+            case SCROLL_BAR_THUMB:
+                color = 0xff2196f3;
+                break;
+            case SCROLL_BAR_THUMB_PRESSED:
+                color = 0xaaec407a;
+                break;
+            case BLOCK_LINE:
+                color = 0xffdddddd;
+                break;
+            case SCROLL_BAR_TRACK:
+                color = 0xeeeeeeee;
+                break;
+            case LINE_NUMBER_PANEL:
+                color = 0xdd000000;
+                break;
+            case LINE_NUMBER_PANEL_TEXT:
+            case AUTO_COMP_PANEL_BG:
+            case AUTO_COMP_PANEL_CORNER:
+                color = 0xffffffff;
+                break;
+            case BLOCK_LINE_CURRENT:
+                color = 0xff999999;
+                break;
+            case LINE_BLOCK_LABEL:
+                color = 0x88dddddd;
+                break;
+            case IDENTIFIER_VAR:
+                color = 0xffe91e63;
+                break;
+            case IDENTIFIER_NAME:
+                color = 0xffff9800;
+                break;
+            case HEX_COLOR:
+                color = 0xff4caf50;
+                break;
+            case FUNCTION_NAME:
+                color = 0xffaaaaff;
+                break;
+            default:
+                throw new IllegalArgumentException("Unexpected type:" + type);
         }
+        putColor(type, color);
     }
 
     /**
@@ -163,7 +204,7 @@ public final class ColorScheme {
      * @param type The type
      * @param color New color
      */
-    public void putColor(int type,int color){
+    public void putColor(int type,int color) {
         //Do not change if the old value is the same as new value
         //  due to avoid unnecessary invalidate() calls
         int old = getColor(type);
@@ -182,7 +223,7 @@ public final class ColorScheme {
      * @param type The type
      * @return The color for type
      */
-    public int getColor(int type){
+    public int getColor(int type) {
         return mColors.get(type);
     }
 

@@ -25,6 +25,8 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.os.Build;
+import android.os.Bundle;
+import android.text.InputType;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -106,7 +108,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mHighlightCurrentBlock;
     private boolean mVerticalScrollBarEnabled;
     private boolean mHorizontalScrollBarEnabled;
-    private boolean mVerticalScrollBarSizeEnlarged;
     private RectF mRect;
     private RectF mLeftHandle;
     private RectF mRightHandle;
@@ -130,16 +131,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private String mLnTip = "Line:";
     private EditorLanguage mLanguage;
     private long mLastMakeVisible = 0;
-    private AutoCompletePanel mACPanel;
+    private AutoCompleteWindow mACPanel;
     private EventHandler mEventHandler;
     private Paint.Align mLineNumberAlign;
     private GestureDetector mBasicDetector;
-    private TextComposePanel mTextActionPanel;
+    private TextActionWindow mTextActionPanel;
     private ScaleGestureDetector mScaleDetector;
     private CodeEditorInputConnection mConnection;
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;
     private EdgeEffect mVerticalEdgeGlow;
     private EdgeEffect mHorizontalGlow;
+    private FormatThread mFormatThread;
 
     //For debug
     private StringBuilder mErrorBuilder = new StringBuilder();
@@ -307,8 +309,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setFocusable(true);
         setFocusableInTouchMode(true);
         mConnection = new CodeEditorInputConnection(this);
-        mACPanel = new AutoCompletePanel(this);
-        mTextActionPanel = new TextComposePanel(this);
+        mACPanel = new AutoCompleteWindow(this);
+        mTextActionPanel = new TextActionWindow(this);
         mTextActionPanel.setHeight((int)(mDpUnit * 60));
         mTextActionPanel.setWidth((int)(mDpUnit * 230));
         mVerticalEdgeGlow = new EdgeEffect(this.getContext());
@@ -330,14 +332,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if(mSpanner != null) {
             mSpanner.setCallback(null);
         }
-        mSpanner = new TextAnalyzer(lang.createAnalyzer());
+        mSpanner = new TextAnalyzer(lang.getAnalyzer());
         mSpanner.setCallback(this);
         if(mText != null) {
             mSpanner.analyze(mText);
         }
         if(mACPanel != null) {
             mACPanel.hide();
-            mACPanel.setProvider(lang.createAutoComplete());
+            mACPanel.setProvider(lang.getAutoCompleteProvider());
         }
         if(mCursor != null){
             mCursor.setLanguage(mLanguage);
@@ -403,10 +405,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Get TextComposePanel instance of this editor
-     * @return TextComposePanel
+     * Get TextActionWindow instance of this editor
+     * @return TextActionWindow
      */
-    protected TextComposePanel getTextActionPanel() {
+    protected TextActionWindow getTextActionPanel() {
         return mTextActionPanel;
     }
 
@@ -521,10 +523,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         if(mFormatThread != null) {
             String text = "Formatting your code...";
-            float centerY = getHeight() / 2;
+            float centerY = getHeight() / 2f;
             drawColor(canvas,mColors.getColor(ColorScheme.LINE_NUMBER_PANEL),mRect);
             float baseline = centerY - getLineHeight() / 2f + getLineBaseLine(0);
-            float centerX = getWidth() / 2;
+            float centerX = getWidth() / 2f;
             mPaint.setColor(mColors.getColor(ColorScheme.LINE_NUMBER_PANEL_TEXT));
             Paint.Align align = mPaint.getTextAlign();
             mPaint.setTextAlign(Paint.Align.CENTER);
@@ -586,14 +588,31 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             canvas.drawText("Draw " + timeUsage + "ms, Highlight " + mLastAnalyzeThreadTime + "ms", 0, getLineBaseLine(11), mPaint);
         }
     }
-    
+
+    /**
+     * Set the color of EdgeEffect
+     * If current device does not support this attribute, it will do nothing without throwing exception
+     * @param color The color of EdgeEffect
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public void setEdgeEffectColor(int color) {
-        mVerticalEdgeGlow.setColor(color);
-        mHorizontalGlow.setColor(color);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mVerticalEdgeGlow.setColor(color);
+            mHorizontalGlow.setColor(color);
+        }
     }
-    
+
+    /**
+     * Get the color of EdgeEffect
+     * Zero is returned when current device does not support this attribute.
+     * @return The color of EdgeEffect. 0 for unknown.
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public int getEdgeEffectColor() {
-        return mVerticalEdgeGlow.getColor();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return mVerticalEdgeGlow.getColor();
+        }
+        return 0;
     }
     
     protected EdgeEffect getVerticalEdgeEffect() {
@@ -645,7 +664,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
         if(postDraw) {
-            postInvalidateOnAnimation();
+            postInvalidate();
         }
     }
 
@@ -872,12 +891,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         float length = page / all * getHeight();
         float topY;
         if(length < mDpUnit * 30) {
-            mVerticalScrollBarSizeEnlarged = true;
             length = mDpUnit * 30;
             topY = (getOffsetY() + page / 2f) / all * (getHeight() - length);
         }else{
             topY = getOffsetY() / all * getHeight();
-            mVerticalScrollBarSizeEnlarged = false;
         }
         if(mEventHandler.holdVerticalScrollBar()) {
             float centerY = topY + length / 2f;
@@ -888,7 +905,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mRect.top = topY;
         mRect.bottom = topY + length;
         mVerticalScrollBar.set(mRect);
-        drawColor(canvas,mColors.getColor(mEventHandler.holdVerticalScrollBar() ? ColorScheme.SCROLL_BAR_THUMB_DOWN : ColorScheme.SCROLL_BAR_THUMB),mRect);
+        drawColor(canvas,mColors.getColor(mEventHandler.holdVerticalScrollBar() ? ColorScheme.SCROLL_BAR_THUMB_PRESSED : ColorScheme.SCROLL_BAR_THUMB),mRect);
     }
 
     /**
@@ -948,7 +965,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mRect.right = leftX + length;
         mRect.left = leftX;
         mHorizontalScrollBar.set(mRect);
-        drawColor(canvas,mColors.getColor(mEventHandler.holdHorizontalScrollBar() ? ColorScheme.SCROLL_BAR_THUMB_DOWN : ColorScheme.SCROLL_BAR_THUMB),mRect);
+        drawColor(canvas,mColors.getColor(mEventHandler.holdHorizontalScrollBar() ? ColorScheme.SCROLL_BAR_THUMB_PRESSED : ColorScheme.SCROLL_BAR_THUMB),mRect);
     }
 
     /**
@@ -1842,13 +1859,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Format text
      */
     public void formatCode() {
+        //Check thread
+        invalidate();
         StringBuilder content = mText.toStringBuilder();
-        mText.beginBatchEdit();
         int line = mCursor.getLeftLine();
         int column = mCursor.getLeftColumn();
-        mText.delete(0,0,getLineCount() - 1,mText.getColumnCount(getLineCount() - 1));
-        mText.insert(0,0,mLanguage.format(content));
-        mText.endBatchEdit();
+        mText.replace(0,0,getLineCount() - 1,mText.getColumnCount(getLineCount() - 1), mLanguage.format(content));
         getScroller().forceFinished(true);
         mACPanel.hide();
         setSelectionAround(line,column);
@@ -1866,8 +1882,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             setSelection(getLineCount() - 1, mText.getColumnCount(getLineCount() - 1));
         }
     }
-    
-    private FormatThread mFormatThread;
     
     /**
      * Format text Async
@@ -2469,6 +2483,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             if(text != null && mConnection != null){
                 mConnection.commitText(text, 0);
             }
+            cursorChangeExternal();
         }catch(Exception e){
             e.printStackTrace();
             Toast.makeText(getContext(),e.toString(),Toast.LENGTH_SHORT).show();
@@ -2489,6 +2504,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }catch(Exception e){
             e.printStackTrace();
             Toast.makeText(getContext(),e.toString(),Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Copy text to clipboard and delete them
+     */
+    public void cutText() {
+        copyText();
+        if(mCursor.isSelected()) {
+            mCursor.onDeleteKeyPressed();
+            cursorChangeExternal();
         }
     }
 
@@ -2515,7 +2541,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if(mSpanner != null){
             mSpanner.setCallback(null);
         }
-        mSpanner = new TextAnalyzer(mLanguage.createAnalyzer());
+        mSpanner = new TextAnalyzer(mLanguage.getAnalyzer());
         mSpanner.setCallback(this);
 
         TextAnalyzer.TextColors colors = mSpanner.getColors();
@@ -2660,8 +2686,63 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     public AccessibilityNodeInfo createAccessibilityNodeInfo() {
         AccessibilityNodeInfo node = super.createAccessibilityNodeInfo();
-        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            node.setEditable(isEditable());
+            node.setTextSelection(mCursor.getLeft(), mCursor.getRight());
+        }
+        node.setScrollable(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            node.setInputType(InputType.TYPE_CLASS_TEXT);
+            node.setMultiLine(true);
+        }
+        node.setText(getText().toStringBuilder());
+        node.setLongClickable(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_COPY);
+            node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CUT);
+            node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_PASTE);
+            node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_TEXT);
+            node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);
+            node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD);
+        } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                node.addAction(AccessibilityNodeInfo.ACTION_COPY);
+                node.addAction(AccessibilityNodeInfo.ACTION_CUT);
+                node.addAction(AccessibilityNodeInfo.ACTION_PASTE);
+            }
+            node.addAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+            node.addAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+        }
         return node;
+    }
+
+    @Override
+    public boolean performAccessibilityAction(int action, Bundle arguments) {
+        switch (action) {
+            case AccessibilityNodeInfo.ACTION_COPY:
+                copyText();
+                return true;
+            case AccessibilityNodeInfo.ACTION_CUT:
+                copyText();
+                mCursor.onDeleteKeyPressed();
+                return true;
+            case AccessibilityNodeInfo.ACTION_PASTE:
+                pasteText();
+                return true;
+            case AccessibilityNodeInfo.ACTION_SET_TEXT:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    setText(arguments.getCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE));
+                    return true;
+                }
+                return false;
+            case AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD:
+                movePageDown();
+                return true;
+            case AccessibilityNodeInfo.ACTION_SCROLL_FORWARD:
+                movePageUp();
+                return true;
+        }
+        return super.performAccessibilityAction(action, arguments);
     }
 
     @Override
@@ -2761,10 +2842,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                                 copyText();
                                 return true;
                             case KeyEvent.KEYCODE_X:
-                                copyText();
-                                if(mCursor.isSelected()){
-                                    mCursor.onDeleteKeyPressed();
-                                }
+                                cutText();
                                 return true;
                             case KeyEvent.KEYCODE_A:
                                 selectAll();
@@ -2788,6 +2866,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyShortcut(int keyCode, KeyEvent event) {
+        return super.onKeyShortcut(keyCode, event);
     }
 
     @Override

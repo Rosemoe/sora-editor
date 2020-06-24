@@ -15,11 +15,22 @@
  */
 package com.rose.editor.struct;
 
+import java.util.Comparator;
+
 /**
  * The class used to save auto complete result items
  * @author Rose
  */
 public class ResultItem {
+
+    public final static Comparator<ResultItem> COMPARATOR_BY_NAME = new Comparator<ResultItem>(){
+
+        @Override
+        public int compare(ResultItem p1, ResultItem p2) {
+            return p1.label.compareTo(p2.label);
+        }
+
+    };
 
     public static final int TYPE_KEYWORD = 0;
     public static final int TYPE_LOCAL_METHOD = 1;
@@ -37,7 +48,7 @@ public class ResultItem {
     public static final int MASK_SHIFT_LEFT_ONCE = 1;
     public static final int MASK_SHIFT_LEFT_TWICE = 1 << 1;
 
-    public ResultItem(String str,String desc){
+    public ResultItem(String str, String desc){
         type = TYPE_KEYWORD;
         commit = label = str;
         this.desc = desc;

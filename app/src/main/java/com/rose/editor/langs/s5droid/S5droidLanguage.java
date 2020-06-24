@@ -45,13 +45,13 @@ public class S5droidLanguage implements EditorLanguage
     public S5droidCodeAnalyzer colorP;
 
     @Override
-    public CodeAnalyzer createAnalyzer()
+    public CodeAnalyzer getAnalyzer()
     {
         return colorP = new S5droidCodeAnalyzer();
     }
 
     @Override
-    public AutoCompleteProvider createAutoComplete()
+    public AutoCompleteProvider getAutoCompleteProvider()
     {
         return completeP = new S5droidAutoComplete();
     }

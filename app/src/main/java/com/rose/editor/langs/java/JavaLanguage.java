@@ -29,12 +29,12 @@ import com.rose.editor.langs.internal.MyCharacter;
 public class JavaLanguage implements EditorLanguage {
 
     @Override
-    public CodeAnalyzer createAnalyzer() {
+    public CodeAnalyzer getAnalyzer() {
         return new JavaCodeAnalyzer();
     }
 
     @Override
-    public AutoCompleteProvider createAutoComplete() {
+    public AutoCompleteProvider getAutoCompleteProvider() {
         IdentifierAutoComplete autoComplete = new IdentifierAutoComplete();
         autoComplete.setKeywords(JavaTextTokenizer.sKeywords,true);
         return autoComplete;

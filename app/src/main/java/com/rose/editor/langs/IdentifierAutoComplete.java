@@ -15,7 +15,6 @@
  */
 package com.rose.editor.langs;
 
-import com.rose.editor.android.AutoCompletePanel;
 import com.rose.editor.text.TextAnalyzer;
 import com.rose.editor.interfaces.AutoCompleteProvider;
 import com.rose.editor.struct.ResultItem;
@@ -47,7 +46,7 @@ public class IdentifierAutoComplete implements AutoCompleteProvider {
 
         public void addIdentifier(String identifier) {
             if(cache == null) {
-                throw new IllegalStateException("begin() have not been called");
+                throw new IllegalStateException("begin() has not been called");
             }
             if(cache.put(identifier,SIGN) == SIGN) {
                 return;
@@ -91,16 +90,18 @@ public class IdentifierAutoComplete implements AutoCompleteProvider {
                 }
             }
         }
-        Collections.sort(keywords, AutoCompletePanel.RES_COMP);
+        Collections.sort(keywords, ResultItem.COMPARATOR_BY_NAME);
         Object extra = colors.mExtra;
         Identifiers userIdentifiers = (extra instanceof Identifiers) ? (Identifiers)extra : null;
         if(userIdentifiers != null) {
             List<ResultItem> words = new ArrayList<>();
             for(String word : userIdentifiers.getIdentifiers()) {
                 if(word.toLowerCase().startsWith(match)) {
-                    keywords.add(new ResultItem(word,"Identifier",ResultItem.TYPE_LOCAL_METHOD));
+                    words.add(new ResultItem(word,"Identifier",ResultItem.TYPE_LOCAL_METHOD));
                 }
             }
+            Collections.sort(words, ResultItem.COMPARATOR_BY_NAME);
+            keywords.addAll(words);
         }
         return keywords;
     }

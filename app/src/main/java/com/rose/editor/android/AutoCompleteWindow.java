@@ -46,7 +46,7 @@ import java.util.List;
  * Auto complete panel for editing code quicker
  * @author Rose
  */
-public class AutoCompletePanel extends BasePanel
+public class AutoCompleteWindow extends EditorBasePopupWindow
 {
     private CodeEditor mEditor;
     private LinearLayout mLayout;
@@ -62,22 +62,12 @@ public class AutoCompletePanel extends BasePanel
     private AutoCompleteProvider mProvider;
 
     private final static String TIP = "Loading...";
-    public final static Comparator<ResultItem> RES_COMP = new Comparator<ResultItem>(){
-
-        @Override
-        public int compare(ResultItem p1, ResultItem p2)
-        {
-            return p1.label.compareTo(p2.label);
-        }
-
-
-    };
 
     /**
      * Create a panel instance for the given editor
      * @param editor Target editor
      */
-    public AutoCompletePanel(CodeEditor editor) {
+    public AutoCompleteWindow(CodeEditor editor) {
         super(editor);
         mEditor = editor;
         mLayout = new LinearLayout(mEditor.getContext());

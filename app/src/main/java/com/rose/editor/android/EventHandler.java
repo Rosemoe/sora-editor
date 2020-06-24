@@ -314,7 +314,7 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
         int line = mEditor.getPointLineOnScreen(e.getY());
         int column = mEditor.getPointColumnOnScreen(line,e.getX());
         if(mEditor.getCursor().isSelected() && mEditor.getCursor().isInSelectedRegion(line,column) && !(mEditor.isOverMaxY(e.getY()) || mEditor.isOverMaxX(line,e.getX()))) {
-            TextComposePanel panel = mEditor.getTextActionPanel();
+            TextActionWindow panel = mEditor.getTextActionPanel();
             if(panel.isShowing()) {
                 panel.hide();
             }else{
@@ -366,6 +366,7 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
             mEditor.setSelection(line,column);
             mEditor.hideAutoCompletePanel();
         }
+        mEditor.performClick();
         return true;
     }
 

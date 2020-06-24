@@ -41,7 +41,7 @@ public class EmptyLanguage implements EditorLanguage
 
 
     @Override
-    public CodeAnalyzer createAnalyzer()
+    public CodeAnalyzer getAnalyzer()
     {
         return new CodeAnalyzer(){
 
@@ -56,7 +56,7 @@ public class EmptyLanguage implements EditorLanguage
     }
 
     @Override
-    public AutoCompleteProvider createAutoComplete()
+    public AutoCompleteProvider getAutoCompleteProvider()
     {
         return new AutoCompleteProvider(){
 
