@@ -39,7 +39,6 @@ import com.rose.editor.interfaces.AutoCompleteProvider;
 import com.rose.editor.struct.ResultItem;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 /**

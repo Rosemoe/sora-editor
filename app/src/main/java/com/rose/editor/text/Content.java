@@ -138,6 +138,17 @@ public class Content implements CharSequence {
     }
 
     /**
+     * Get character of given line
+     *
+     * @param dest Destination array
+     * @param line Requested line
+     */
+    public void copyChars(char[] dest, int line) {
+        StringBuilder lineStr = mLines.get(line);
+        lineStr.getChars(0, lineStr.length(), dest, 0);
+    }
+
+    /**
      * Get how many lines there are
      * @return Line count
      */

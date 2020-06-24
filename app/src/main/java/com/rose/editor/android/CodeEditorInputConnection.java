@@ -24,8 +24,6 @@ import android.text.TextUtils;
 import com.rose.editor.struct.CharPosition;
 import com.rose.editor.text.Content;
 import android.text.SpannableStringBuilder;
-import android.R;
-import android.widget.Toast;
 import android.os.Bundle;
 
 /**
@@ -77,7 +75,7 @@ class CodeEditorInputConnection extends BaseInputConnection {
     @Override
     public Editable getEditable() {
         // This action is not supported by editor
-        // We handle all the requests ourself
+        // We handle all the requests by ourselves
         return null;
     }
 
@@ -88,6 +86,7 @@ class CodeEditorInputConnection extends BaseInputConnection {
         while(content.isInBatchEdit()) {
             content.endBatchEdit();
         }
+        mComposingLine = mComposingEnd = mComposingStart = -1;
         mEditor.onCloseConnection();
     }
 
@@ -327,26 +326,26 @@ class CodeEditorInputConnection extends BaseInputConnection {
     @Override
     public boolean performContextMenuAction(int id) {
         switch(id) {
-            case R.id.selectAll:
+            case android.R.id.selectAll:
                 mEditor.selectAll();
                 return true;
-            case R.id.cut:
+            case android.R.id.cut:
                 mEditor.copyText();
                 if(getCursor().isSelected()){
                     getCursor().onDeleteKeyPressed();
                 }
                 return true;
-            case R.id.paste:
-            case R.id.pasteAsPlainText:
+            case android.R.id.paste:
+            case android.R.id.pasteAsPlainText:
                 mEditor.pasteText();
                 return true;
-            case R.id.copy:
+            case android.R.id.copy:
                 mEditor.copyText();
                 return true;
-            case R.id.undo:
+            case android.R.id.undo:
                 mEditor.undo();
                 return true;
-            case R.id.redo:
+            case android.R.id.redo:
                 mEditor.redo();
                 return true;
         }

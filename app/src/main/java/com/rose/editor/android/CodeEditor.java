@@ -64,7 +64,15 @@ import com.rose.editor.text.FormatThread;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 /**
- * CodeEditor is a editor that can highlight texts region by doing basic grammar analyzing
+ * CodeEditor is a editor that can highlight texts region by doing basic syntax analyzing
+ * Features:
+ * Highlight
+ * Auto-completion
+ * Scroll freely
+ * EdgeEffects
+ * Code Format
+ * Shortcuts
+ *
  * Actually it can adapt to Android level 11
  * Me in GitHub: Rose2073
  * This project in GitHub: https://github.com/Rose2073/CodeEditor
@@ -173,7 +181,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Cancel the next animation for {@link CodeEditor#makeCharVisible(int, int)}
+     * Cancel the next animation for {@link CodeEditor#ensurePositionVisible(int, int)}
      */
     protected void cancelAnimation() {
         mLastMakeVisible = System.currentTimeMillis();
@@ -1391,9 +1399,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param curr Current index
      * @return New position
      */
-    private int seekTo(List<Span> spans, int line,int curr){
+    private int seekTo(List<Span> spans, int line, int curr) {
         if(curr == 0){
-            return seekTo(spans,line);
+            return seekTo(spans, line);
         }
         while(curr < spans.size()) {
             Span span = spans.get(curr);
@@ -1609,6 +1617,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             canvas.drawRect(rect, mPaint);
         }
     }
+
     /**
      * Draw rect on screen
      * Will not do any thing if color is zero
@@ -1631,14 +1640,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mConnection.commitText("\t", 0);
         }
     }
-    
 
     /**
      * Update the information of cursor
      * Such as the position of cursor on screen(For input method that can go to any position on screen like PC input method)
      * @return The offset x of right cursor on view
      */
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     protected float updateCursorAnchor() {
         CursorAnchorInfo.Builder builder = mAnchorInfoBuilder;
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -1664,6 +1671,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder.setInsertionMarkerLocation(x, getLineTop(l) - getOffsetY(), getLineBaseLine(l) - getOffsetY(), getLineBottom(l) - getOffsetY(), visible ? CursorAnchorInfo.FLAG_HAS_VISIBLE_REGION : CursorAnchorInfo.FLAG_HAS_INVISIBLE_REGION);
             mInputMethodManager.updateCursorAnchorInfo(this, builder.build());
+        } else {
+            mInputMethodManager.updateCursor(this, (int) x, getLineTop(l) - getOffsetY(), (int) (x + mInsertSelWidth), getLineBottom(l) - getOffsetY());
         }
         return x;
     }
@@ -1672,7 +1681,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Make the right line visible
      */
     public void makeRightVisible() {
-        makeCharVisible(getCursor().getRightLine(),getCursor().getRightColumn());
+        ensurePositionVisible(getCursor().getRightLine(), getCursor().getRightColumn());
     }
 
     /**
@@ -1680,7 +1689,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param line Line of char
      * @param column Column of char
      */
-    public void makeCharVisible(int line,int column) {
+    public void ensurePositionVisible(int line, int column) {
         float y = getLineHeight() * line;
         float minY = getOffsetY();
         float maxY = minY + getHeight();
@@ -1827,7 +1836,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Get max scroll y
-     * @return max scrol y
+     * @return max scroll y
      */
     public int getScrollMaxY(){
         return Math.max(0, getLineHeight() * getLineCount() - getHeight() / 2);
@@ -1845,7 +1854,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Set tab width
      * @param w tab width compared to space
      */
-    public void setTabWidth(int w){
+    public void setTabWidth(int w) {
         if(w < 1){
             throw new IllegalArgumentException("width can not be under 1");
         }
@@ -1856,8 +1865,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Format text
+     * Format text in this thread
+     * <strong>Note:</strong>Current thread must be UI thread
+     * @deprecated Use {@link CodeEditor#formatCodeAsync()} instead
      */
+    @Deprecated
     public void formatCode() {
         //Check thread
         invalidate();
@@ -1870,7 +1882,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setSelectionAround(line,column);
         mSpanner.analyze(mText);
     }
-    
+
+    /**
+     * Set selection around the given position
+     * It will try to set selection as near as possible (Exactly the position if that position exists)
+     */
     private void setSelectionAround(int line, int column) {
         if(line < getLineCount()) {
             int columnCount = mText.getColumnCount(line);
@@ -2388,7 +2404,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         updateCursorAnchor();
         updateSelection();
-        makeCharVisible(line,column);
+        ensurePositionVisible(line, column);
         mTextActionPanel.hide();
     }
 
@@ -2452,10 +2468,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mCursor.setRight(lineRight, columnRight);
         updateCursorAnchor();
         updateSelection();
-        if(makeRightVisible)
-            makeCharVisible(lineRight,columnRight);
-        else
+        if (makeRightVisible) {
+            ensurePositionVisible(lineRight, columnRight);
+        } else {
             invalidate();
+        }
     }
 
     /**
@@ -2550,7 +2567,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         mMaxPaintX = 0;
         mMinModifiedLine = -1;
-        //requestLayout();
+        requestLayout();
 
         if(mInputMethodManager != null) {
             mInputMethodManager.restartInput(this);
@@ -2652,17 +2669,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
     
     /**
-     * Get the InputMehtodManager using
+     * Get the InputMethodManager using
      */
     protected InputMethodManager getInputMethodManager() {
         return mInputMethodManager;
     }
 
     /**
-     * Called by RoseEditorInputConnection
+     * Called by CodeEditorInputConnection
      */
     protected void onCloseConnection(){
-
+        invalidate();
     }
 
     //------------------------Overrides---------------------------------------
@@ -2776,7 +2793,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mVerticalEdgeGlow.onRelease();
             mHorizontalGlow.onRelease();
         }
-        invalidate();
+        if (!mVerticalEdgeGlow.isFinished() || !mHorizontalGlow.isFinished()) {
+            postInvalidate();
+        }
         return (res3 || res2 || res);
     }
 

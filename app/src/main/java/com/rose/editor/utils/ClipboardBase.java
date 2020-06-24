@@ -18,6 +18,7 @@ package com.rose.editor.utils;
 import android.content.Context;
 import android.text.ClipboardManager;
 
+@SuppressWarnings("deprecation")
 public class ClipboardBase implements IClipboard {
 
     private final ClipboardManager mClip;
