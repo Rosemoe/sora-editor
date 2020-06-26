@@ -105,13 +105,14 @@ public class MainActivity extends Activity {
         menu.add(0,10,0,"Format");
         menu.add(0, 14, 0,"Switch language");
         menu.add(0,15,0,"Search");
+        menu.add(0,16,0,"Search (Action Mode)");
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-        long st = System.nanoTime();
+        //long st = System.nanoTime();
         try {
             switch (item.getItemId()) {
                 case 0:
@@ -217,6 +218,9 @@ public class MainActivity extends Activity {
                         editor.getSearcher().stopSearch();
                     }
                     break;
+                case 16:
+                    editor.beginSearchMode();
+                    break;
             }
         }catch(Exception t){
             StringBuilder sb = new StringBuilder();
@@ -230,7 +234,7 @@ public class MainActivity extends Activity {
                     .setPositiveButton("Cancel",null)
                     .show();
         }
-        Toast.makeText(this,"Action done in " + (System.nanoTime() - st) / 1e6 + " ms.",Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this,"Action done in " + (System.nanoTime() - st) / 1e6 + " ms.",Toast.LENGTH_SHORT).show();
 
         return super.onOptionsItemSelected(item);
     }

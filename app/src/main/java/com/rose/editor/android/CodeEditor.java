@@ -61,6 +61,13 @@ import android.widget.OverScroller;
 import android.widget.EdgeEffect;
 import com.rose.editor.text.FormatThread;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.ActionMode;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.EditText;
+import android.widget.SearchView;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 
 /**
  * CodeEditor is a editor that can highlight texts region by doing basic syntax analyzing
@@ -2019,6 +2026,97 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public boolean isDrag(){
         return mDrag;
+    }
+    
+    private ActionMode mStartedActionMode;
+    
+    public void beginSearchMode() {
+        if(mStartedActionMode != null) {
+            mStartedActionMode.finish();
+            mStartedActionMode = null;
+        }
+        ActionMode.Callback callback = new ActionMode.Callback() {
+
+            @Override
+            public boolean onCreateActionMode(ActionMode p1, Menu p2) {
+                p2.add(0,0,0,"Last");
+                p2.add(0,1,0,"Next");
+                p2.add(0,2,0,"Replace");
+                p2.add(0,3,0,"Replace All");
+                SearchView sv = new SearchView(getContext());
+                sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+
+                        @Override
+                        public boolean onQueryTextSubmit(String text) {
+                            getSearcher().gotoNext();
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onQueryTextChange(String text) {
+                            getSearcher().search(text);
+                            return false;
+                        }
+                    
+                });
+                p1.setCustomView(sv);
+                sv.performClick();
+                sv.setQueryHint("Text to search");
+                sv.setIconifiedByDefault(false);
+                sv.setIconified(false);
+                return true;
+            }
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode p1, Menu p2) {
+                return true;
+            }
+
+            @Override
+            public boolean onActionItemClicked(final ActionMode am, MenuItem p2) {
+                switch(p2.getItemId()) {
+                    case 0:
+                        getSearcher().gotoLast();
+                        break;
+                    case 1:
+                        getSearcher().gotoNext();
+                        break;
+                    case 2:
+                    case 3:
+                        final boolean replaceAll = p2.getItemId() == 3;
+                        final EditText et = new EditText(getContext());
+                        et.setHint("Replacement");
+                        new AlertDialog.Builder(getContext())
+                        .setTitle(replaceAll ? "Replace All" : "Replace")
+                        .setView(et)
+                        .setNegativeButton("Cancel", null)
+                            .setPositiveButton("Replace", new AlertDialog.OnClickListener() {
+
+                                @Override
+                                public void onClick(DialogInterface p1, int p2) {
+                                    if(replaceAll) {
+                                        getSearcher().replaceAll(et.getText().toString());
+                                    } else {
+                                        getSearcher().replaceThis(et.getText().toString());
+                                    }
+                                    am.finish();
+                                    p1.dismiss();
+                                }
+                            
+                        })
+                        .show();
+                        break;
+                }
+                return false;
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode p1) {
+                getSearcher().stopSearch();
+            }
+
+        };
+        mStartedActionMode = startActionMode(callback);
     }
 
     /**

@@ -108,6 +108,7 @@ public class EditorSearcher {
         }
         if(tip) {
             Toast.makeText(mEditor.getContext(),"Not found in this direction", Toast.LENGTH_SHORT).show();
+            mEditor.jumpToLine(0);
         }
     }
 
