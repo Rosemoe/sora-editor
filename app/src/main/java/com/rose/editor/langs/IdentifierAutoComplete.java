@@ -24,6 +24,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Identifier auto-completion
+ * You can use it to provide identifiers
+ * <strong>Note:</strong> To use this, you must use {@link Identifiers} as {@link com.rose.editor.text.TextAnalyzer.TextColors#mExtra}
+ */
 public class IdentifierAutoComplete implements AutoCompleteProvider {
 
     private String[] mKeywords;

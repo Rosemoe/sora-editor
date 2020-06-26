@@ -73,7 +73,7 @@ public class UniversalLanguage implements EditorLanguage,CodeAnalyzer {
         } catch (Exception e) {
             advance = 0;
         }
-        return advance;
+        return Math.max(0, advance);
     }
 
     @Override

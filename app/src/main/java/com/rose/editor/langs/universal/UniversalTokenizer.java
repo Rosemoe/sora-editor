@@ -214,23 +214,22 @@ public class UniversalTokenizer {
         if(offset + length == bufferLen) {
             return;
         }
-        char ch = charAt();
-        if (ch == '\\') {
-            length++;
-            scanTrans();
-        } else if (ch == '\'') {
-            length++;
-            return;
-        } else {
-            if (ch == '\n') {
-                return;
+        char ch;
+        while (offset + length < bufferLen && (ch = charAt(offset + length)) != '\'') {
+            if (ch == '\\') {
+                length++;
+                scanTrans();
+            } else {
+                if (ch == '\n') {
+                    return;
+                }
+                length++;
+                if(offset + length == bufferLen) {
+                    return;
+                }
             }
-            length++;
         }
-        if(offset + length == bufferLen) {
-            return;
-        }
-        if (charAt() == '\'') {
+        if (offset + length != bufferLen) {
             length++;
         }
     }
