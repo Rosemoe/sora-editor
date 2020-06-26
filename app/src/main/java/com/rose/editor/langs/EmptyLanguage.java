@@ -41,33 +41,13 @@ public class EmptyLanguage implements EditorLanguage
 
 
     @Override
-    public CodeAnalyzer getAnalyzer()
-    {
-        return new CodeAnalyzer(){
-
-            @Override
-            public void analyze(CharSequence content, TextColors colors, Delegate delegate)
-            {
-                colors.addNormalIfNull();
-            }
-
-
-        };
+    public CodeAnalyzer getAnalyzer() {
+        return new EmptyCodeAnalyzer();
     }
 
     @Override
-    public AutoCompleteProvider getAutoCompleteProvider()
-    {
-        return new AutoCompleteProvider(){
-
-            @Override
-            public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzer.TextColors colors, int line)
-            {
-                return new ArrayList<>();
-            }
-
-
-        };
+    public AutoCompleteProvider getAutoCompleteProvider() {
+        return new EmptyAutoCompleteProvider();
     }
 
     @Override
@@ -88,5 +68,22 @@ public class EmptyLanguage implements EditorLanguage
         return false;
     }
 
+    public static class EmptyAutoCompleteProvider implements AutoCompleteProvider {
+
+        @Override
+        public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextColors colors, int line) {
+            return new ArrayList<>();
+        }
+
+    }
+
+    private static class EmptyCodeAnalyzer implements CodeAnalyzer {
+
+        @Override
+        public void analyze(CharSequence content, TextColors colors, Delegate delegate) {
+            colors.addNormalIfNull();
+        }
+
+    }
 }
 
