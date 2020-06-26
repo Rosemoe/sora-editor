@@ -138,6 +138,15 @@ public class Content implements CharSequence {
     }
 
     /**
+     * Get raw data line
+     * @param line Line
+     * @return Raw StringBuilder used by Content
+     */
+    public StringBuilder getRawData(int line) {
+        return mLines.get(line);
+    }
+
+    /**
      * Get character of given line
      *
      * @param dest Destination array

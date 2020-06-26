@@ -22,9 +22,14 @@ import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.rose.editor.langs.desc.CDescription;
@@ -42,6 +47,8 @@ import com.rose.editor.langs.java.JavaLanguage;
 public class MainActivity extends Activity {
 
     private CodeEditor editor;
+    private LinearLayout panel;
+    private EditText search,replace;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +60,25 @@ public class MainActivity extends Activity {
         }
         S5droidAutoComplete.init(this);
         editor = (CodeEditor) findViewById(R.id.editor);
+        panel = (LinearLayout) findViewById(R.id.search_panel);
+        search = (EditText) findViewById(R.id.search_editor);
+        replace = (EditText) findViewById(R.id.replace_editor);
+
+        search.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                editor.getSearcher().search(s.toString());
+            }
+        });
+
         editor.setEditorLanguage(new JavaLanguage());
         editor.setText("public class Main {\n\n\tpublic static void main(String[] args) {\n\t\t\n\t}\n\n}");
     }
@@ -78,9 +104,9 @@ public class MainActivity extends Activity {
         menu.add(0,9,0,"Code Navigation");
         menu.add(0,10,0,"Format");
         menu.add(0, 14, 0,"Switch language");
+        menu.add(0,15,0,"Search");
         return super.onCreateOptionsMenu(menu);
     }
-
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
@@ -179,6 +205,17 @@ public class MainActivity extends Activity {
                             .setNegativeButton("Cancel", null)
                             .show();
                     break;
+                case 15:
+                    if(panel.getVisibility() == View.GONE) {
+                        replace.setText("");
+                        search.setText("");
+                        editor.getSearcher().stopSearch();
+                        panel.setVisibility(View.VISIBLE);
+                    } else {
+                        panel.setVisibility(View.GONE);
+                        editor.getSearcher().stopSearch();
+                    }
+                    break;
             }
         }catch(Exception t){
             StringBuilder sb = new StringBuilder();
@@ -195,5 +232,37 @@ public class MainActivity extends Activity {
         Toast.makeText(this,"Action done in " + (System.nanoTime() - st) / 1e6 + " ms.",Toast.LENGTH_SHORT).show();
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void gotoNext(View view) {
+        try {
+            editor.getSearcher().gotoNext();
+        }catch (IllegalStateException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void gotoLast(View view) {
+        try {
+            editor.getSearcher().gotoLast();
+        }catch (IllegalStateException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void replace(View view) {
+        try {
+            editor.getSearcher().replaceThis(replace.getText().toString());
+        }catch (IllegalStateException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void replaceAll(View view) {
+        try {
+            editor.getSearcher().replaceAll(replace.getText().toString());
+        }catch (IllegalStateException e) {
+            e.printStackTrace();
+        }
     }
 }

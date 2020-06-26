@@ -35,6 +35,7 @@ public final class ColorScheme {
 
     //-------------View colors---------------------
 
+    public static final int MATCHED_TEXT_BACKGROUND = 29;
     public static final int AUTO_COMP_PANEL_CORNER = 20;
     public static final int AUTO_COMP_PANEL_BG = 19;
     public static final int LINE_BLOCK_LABEL = 18;
@@ -64,7 +65,7 @@ public final class ColorScheme {
     /**
      * Max pre-defined color id
      */
-    private static final int END_COLOR_INDEX = 28;
+    private static final int END_COLOR_INDEX = 29;
 
     /**
      * Host editor object
@@ -180,6 +181,9 @@ public final class ColorScheme {
                 break;
             case FUNCTION_NAME:
                 color = 0xffaaaaff;
+                break;
+            case MATCHED_TEXT_BACKGROUND:
+                color = 0xffaaaa00;
                 break;
             default:
                 throw new IllegalArgumentException("Unexpected type:" + type);

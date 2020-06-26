@@ -149,6 +149,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private EdgeEffect mVerticalEdgeGlow;
     private EdgeEffect mHorizontalGlow;
     private FormatThread mFormatThread;
+    private EditorSearcher mSearcher;
 
     //For debug
     private StringBuilder mErrorBuilder = new StringBuilder();
@@ -271,6 +272,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private void prepare(){
         mPaint = new Paint();
         mMatrix = new Matrix();
+        mSearcher = new EditorSearcher(this);
         //Only Android.LOLLIPOP and upper level device can use this builder
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mAnchorInfoBuilder = new CursorAnchorInfo.Builder();
@@ -563,6 +565,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if(mCursor.isSelected()){
             drawSelectedTextBackground(canvas,offsetX, color.getColor(ColorScheme.SELECTED_TEXT_BACKGROUND));
         }
+        drawMatchedTextBackground(canvas, offsetX);
 
         drawText(canvas, offsetX, color.getColor(ColorScheme.TEXT_NORMAL));
         drawComposingTextUnderline(canvas,offsetX, color.getColor(ColorScheme.UNDERLINE));
@@ -593,6 +596,49 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if(debug) {
             mPaint.setColor(0xff000000);
             canvas.drawText("Draw " + timeUsage + "ms, Highlight " + mLastAnalyzeThreadTime + "ms", 0, getLineBaseLine(11), mPaint);
+        }
+    }
+
+    /**
+     * Draw matched text background(EditorSearcher)
+     */
+    private void drawMatchedTextBackground(Canvas canvas, float offset) {
+        final String searchText = getSearcher().mSearchText;
+        if(searchText == null) {
+            return;
+        }
+        int searchTextLength = searchText.length();
+        if(searchTextLength == 0) {
+            return;
+        }
+        int color = mColors.getColor(ColorScheme.MATCHED_TEXT_BACKGROUND);
+        outer:for(int i = getFirstVisibleLine();i <= getLastVisibleLine();i++) {
+            boolean prepared = false;
+            StringBuilder raw = mText.getRawData(i);
+            int index = 0;
+            while(index < raw.length()) {
+                index = raw.indexOf(searchText, index);
+                if(index != -1) {
+                    if(!prepared) {
+                        prepareLine(i);
+                        prepared = true;
+                    }
+                    float left = offset + measureText(mChars, 0, index);
+                    float right = left + measureText(mChars, index, searchTextLength);
+                    if(right > 0 && left < getWidth()) {
+                        mRect.top = getLineTop(i) - getOffsetY();
+                        mRect.bottom = mRect.top + getLineHeight();
+                        mRect.left = left;
+                        mRect.right = right;
+                        drawColor(canvas, color, mRect);
+                    } else if(right >= getWidth()) {
+                        continue outer;
+                    }
+                    index += searchTextLength;
+                } else {
+                    break;
+                }
+            }
         }
     }
 
@@ -1845,6 +1891,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
+     * Get EditorSearcher
+     * @return EditorSearcher
+     */
+    public EditorSearcher getSearcher() {
+        return mSearcher;
+    }
+
+    /**
      * Format text in this thread
      * <strong>Note:</strong>Current thread must be UI thread
      * @deprecated Use {@link CodeEditor#formatCodeAsync()} instead
@@ -1867,7 +1921,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Set selection around the given position
      * It will try to set selection as near as possible (Exactly the position if that position exists)
      */
-    private void setSelectionAround(int line, int column) {
+    protected void setSelectionAround(int line, int column) {
         if(line < getLineCount()) {
             int columnCount = mText.getColumnCount(line);
             if(column > columnCount) {
@@ -2762,6 +2816,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if(!isEnabled()) {
+            return false;
+        }
         boolean handling = mEventHandler.handlingMotions();
         boolean res = mEventHandler.onTouchEvent(event);
         boolean res2 = false;

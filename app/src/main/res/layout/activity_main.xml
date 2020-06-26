@@ -1,7 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:id="@+id/search_panel"
+        android:visibility="gone">
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                style="?android:buttonBarStyle">
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Last"
+                    android:onClick="gotoLast"
+                    style="?android:buttonBarButtonStyle"/>
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Next"
+                    android:onClick="gotoNext"
+                    style="?android:buttonBarButtonStyle"/>
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Replace"
+                    android:onClick="replace"
+                    style="?android:buttonBarButtonStyle"/>
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Replace All"
+                    android:onClick="replaceAll"
+                    style="?android:buttonBarButtonStyle"/>
+
+
+            </LinearLayout>
+
+        </HorizontalScrollView>
+
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/search_editor"
+            android:hint="Text to search"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/replace_editor"
+            android:hint="Replacement"/>
+
+    </LinearLayout>
 
     <com.rose.editor.android.CodeEditor
         android:layout_width="match_parent"
