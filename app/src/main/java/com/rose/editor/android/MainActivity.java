@@ -27,7 +27,12 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.widget.Toast;
 
+import com.rose.editor.langs.desc.CDescription;
+import com.rose.editor.langs.desc.CppDescription;
+import com.rose.editor.langs.desc.JavaScriptDescription;
 import com.rose.editor.langs.s5droid.S5droidAutoComplete;
+import com.rose.editor.langs.s5droid.S5droidLanguage;
+import com.rose.editor.langs.universal.UniversalLanguage;
 import com.rose.editor.struct.NavigationLabel;
 import com.rose.editor.utils.CrashHandler;
 
@@ -69,8 +74,10 @@ public class MainActivity extends Activity {
         sub.add(0,1,0,"Redo");
         sub.add(0,11,0,"Copy");
         sub.add(0,12,0,"Paste");
+        sub.add(0,13,0,"Cut");
         menu.add(0,9,0,"Code Navigation");
         menu.add(0,10,0,"Format");
+        menu.add(0, 14, 0,"Switch language");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -141,6 +148,36 @@ public class MainActivity extends Activity {
                     break;
                 case 12:
                     editor.pasteText();
+                    break;
+                case 13:
+                    editor.cutText();
+                    break;
+                case 14:
+                    new AlertDialog.Builder(this)
+                            .setTitle("Switch language")
+                            .setSingleChoiceItems(new String[]{"C","C++","Java","JavaScript","S5d"}, 0, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    switch (which) {
+                                        case 0:
+                                            editor.setEditorLanguage(new UniversalLanguage(new CDescription()));
+                                            break;
+                                        case 1:
+                                            editor.setEditorLanguage(new UniversalLanguage(new CppDescription()));
+                                            break;
+                                        case 2:
+                                            editor.setEditorLanguage(new JavaLanguage());
+                                            break;
+                                        case 3:
+                                            editor.setEditorLanguage(new UniversalLanguage(new JavaScriptDescription()));
+                                            break;
+                                        case 4:
+                                            editor.setEditorLanguage(new S5droidLanguage());
+                                    }
+                                }
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .show();
                     break;
             }
         }catch(Exception t){

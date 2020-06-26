@@ -21,8 +21,11 @@ import com.rose.editor.interfaces.CodeAnalyzer;
 import com.rose.editor.interfaces.EditorLanguage;
 import com.rose.editor.langs.IdentifierAutoComplete;
 import com.rose.editor.langs.internal.MyCharacter;
+import com.rose.editor.struct.BlockLine;
 import com.rose.editor.text.TextAnalyzer;
 import com.rose.editor.utils.LineNumberHelper;
+
+import java.util.Stack;
 
 import static com.rose.editor.langs.universal.UniversalTokens.EOF;
 
@@ -97,6 +100,7 @@ public class UniversalLanguage implements EditorLanguage,CodeAnalyzer {
         identifiers.begin();
         try {
             UniversalTokens token;
+            Stack<BlockLine> stack = new Stack<>();
             while((token = tokenizer.nextToken()) != EOF) {
                 int index = tokenizer.getOffset();
                 int line = helper.getLine();
@@ -118,6 +122,22 @@ public class UniversalLanguage implements EditorLanguage,CodeAnalyzer {
                         break;
                     case OPERATOR:
                         colors.addIfNeeded(index, line, column, ColorScheme.OPERATOR);
+                        if(mLanguage.isSupportBlockLine()) {
+                            String op = text.substring(index, index + tokenizer.getTokenLength());
+                            if (mLanguage.isBlockStart(op)) {
+                                BlockLine blockLine = colors.obtainNewBlock();
+                                blockLine.startLine = line;
+                                blockLine.startColumn = column;
+                                stack.add(blockLine);
+                            } else if (mLanguage.isBlockEnd(op)) {
+                                if (!stack.isEmpty()) {
+                                    BlockLine blockLine = stack.pop();
+                                    blockLine.endLine = line;
+                                    blockLine.endColumn = column;
+                                    colors.addBlockLine(blockLine);
+                                }
+                            }
+                        }
                         break;
                     case WHITESPACE:
                     case NEWLINE:

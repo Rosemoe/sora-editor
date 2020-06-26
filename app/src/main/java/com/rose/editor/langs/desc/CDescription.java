@@ -80,4 +80,19 @@ public class CDescription implements LanguageDescription {
         }
         return 0;
     }
+
+    @Override
+    public boolean isSupportBlockLine() {
+        return true;
+    }
+
+    @Override
+    public boolean isBlockStart(String operator) {
+        return operator.equals("{");
+    }
+
+    @Override
+    public boolean isBlockEnd(String operator) {
+        return operator.equals("}");
+    }
 }

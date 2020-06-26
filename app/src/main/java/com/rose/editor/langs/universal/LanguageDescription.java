@@ -62,4 +62,16 @@ public interface LanguageDescription {
      */
     int getOperatorAdvance(String operator);
 
+    boolean isSupportBlockLine();
+
+    /**
+     * Whether this is block start
+     */
+    boolean isBlockStart(String operator);
+
+    /**
+     * Whether this is block end
+     */
+    boolean isBlockEnd(String operator);
+
 }
