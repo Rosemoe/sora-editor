@@ -164,7 +164,7 @@ public class TextAnalyzer {
          * @param span The span
          */
         public void add(Span span) {
-            mSpans.add(span);
+            mSpans.add(mLast = span);
         }
 
         /**

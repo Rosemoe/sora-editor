@@ -1235,7 +1235,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         drawText(canvas, mChars, st, ed - st, off, y);
                         if(span.underlineColor != 0) {
                             mRect.bottom = getLineBottom(i) - getOffsetY() - mDpUnit * 1;
-                            mRect.top = mRect.bottom - mDpUnit * 4;
+                            mRect.top = mRect.bottom - mDpUnit * 3;
                             mRect.left = off;
                             mRect.right = off + width;
                             drawColor(canvas, span.underlineColor, mRect);

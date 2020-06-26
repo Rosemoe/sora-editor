@@ -83,6 +83,7 @@ public class Span {
      * @return Self
      */
     public Span setUnderlineColor(int color) {
+        underlineColor = color;
         return this;
     }
 

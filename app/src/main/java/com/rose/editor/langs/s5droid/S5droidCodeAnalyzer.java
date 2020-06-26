@@ -234,7 +234,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                     //Here we can use addIfNeeded() because
                     //the integer literal will not be two.
                     if (checkHexColor(content, idx, length)) {
-                        colors.add(new Span(idx, line, column, ColorScheme.LITERAL).setUnderlineColor(tryParseColor(tokenizer.getTokenString(),true)));
+                        colors.add(new Span(idx, line, column, ColorScheme.LITERAL).setUnderlineColor(tryParseColor(tokenizer.getTokenString(), true)));
                         //Optimize NEWLINE and WHITESPACE
                         markHex = true;
                     } else {
