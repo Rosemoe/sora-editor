@@ -157,6 +157,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private EdgeEffect mHorizontalGlow;
     private FormatThread mFormatThread;
     private EditorSearcher mSearcher;
+    private ActionMode mStartedActionMode;
 
     //For debug
     private StringBuilder mErrorBuilder = new StringBuilder();
@@ -2028,8 +2029,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         return mDrag;
     }
     
-    private ActionMode mStartedActionMode;
-    
     public void beginSearchMode() {
         if(mStartedActionMode != null) {
             mStartedActionMode.finish();
@@ -2113,6 +2112,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             @Override
             public void onDestroyActionMode(ActionMode p1) {
                 getSearcher().stopSearch();
+                mStartedActionMode = null;
             }
 
         };

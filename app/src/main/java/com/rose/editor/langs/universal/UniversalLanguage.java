@@ -99,6 +99,9 @@ public class UniversalLanguage implements EditorLanguage,CodeAnalyzer {
         autoComplete.setKeywords(mLanguage.getKeywords(), false);
         IdentifierAutoComplete.Identifiers identifiers = new IdentifierAutoComplete.Identifiers();
         identifiers.begin();
+        int maxSwitch = 0;
+        int layer = 0;
+        int currSwitch = 0;
         try {
             UniversalTokens token;
             Stack<BlockLine> stack = new Stack<>();
@@ -130,12 +133,24 @@ public class UniversalLanguage implements EditorLanguage,CodeAnalyzer {
                                 blockLine.startLine = line;
                                 blockLine.startColumn = column;
                                 stack.add(blockLine);
+                                if(layer == 0) {
+                                    currSwitch = 1;
+                                } else {
+                                    currSwitch++;
+                                }
+                                layer++;
                             } else if (mLanguage.isBlockEnd(op)) {
                                 if (!stack.isEmpty()) {
                                     BlockLine blockLine = stack.pop();
                                     blockLine.endLine = line;
                                     blockLine.endColumn = column;
                                     colors.addBlockLine(blockLine);
+                                    if(layer == 1) {
+                                        if(currSwitch > maxSwitch) {
+                                            maxSwitch = currSwitch;
+                                        }
+                                    }
+                                    layer --;
                                 }
                             }
                         }
@@ -155,6 +170,10 @@ public class UniversalLanguage implements EditorLanguage,CodeAnalyzer {
         identifiers.finish();
         colors.mExtra = identifiers;
         tokenizer.setInput(null);
+        if(currSwitch > maxSwitch) {
+            maxSwitch = currSwitch;
+        }
+        colors.setSuppressSwitch(maxSwitch + 50);
     }
 
 }
