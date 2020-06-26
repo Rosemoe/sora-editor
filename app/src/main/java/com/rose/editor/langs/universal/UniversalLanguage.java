@@ -28,6 +28,7 @@ import com.rose.editor.utils.LineNumberHelper;
 import java.util.Stack;
 
 import static com.rose.editor.langs.universal.UniversalTokens.EOF;
+import java.io.IOException;
 
 /**
  * Universal Language support
@@ -141,6 +142,9 @@ public class UniversalLanguage implements EditorLanguage,CodeAnalyzer {
                         break;
                     case WHITESPACE:
                     case NEWLINE:
+                        break;
+                    case UNKNOWN:
+                        colors.add(index, line, column, ColorScheme.ANNOTATION);
                         break;
                 }
                 helper.update(tokenizer.getTokenLength());

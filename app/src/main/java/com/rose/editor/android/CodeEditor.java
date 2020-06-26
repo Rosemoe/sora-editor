@@ -562,10 +562,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         drawLineNumbers(canvas, offsetX, lineNumberWidth, color.getColor(ColorScheme.LINE_NUMBER));
         offsetX += lineNumberWidth + mDividerMargin * 2 + mDividerWidth;
 
+        drawMatchedTextBackground(canvas, offsetX);
         if(mCursor.isSelected()){
             drawSelectedTextBackground(canvas,offsetX, color.getColor(ColorScheme.SELECTED_TEXT_BACKGROUND));
         }
-        drawMatchedTextBackground(canvas, offsetX);
 
         drawText(canvas, offsetX, color.getColor(ColorScheme.TEXT_NORMAL));
         drawComposingTextUnderline(canvas,offsetX, color.getColor(ColorScheme.UNDERLINE));

@@ -18,36 +18,31 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                style="?android:buttonBarStyle">
+                android:orientation="horizontal">
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Last"
-                    android:onClick="gotoLast"
-                    style="?android:buttonBarButtonStyle"/>
+                    android:onClick="gotoLast"/>
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Next"
-                    android:onClick="gotoNext"
-                    style="?android:buttonBarButtonStyle"/>
+                    android:onClick="gotoNext"/>
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Replace"
-                    android:onClick="replace"
-                    style="?android:buttonBarButtonStyle"/>
+                    android:onClick="replace"/>
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Replace All"
-                    android:onClick="replaceAll"
-                    style="?android:buttonBarButtonStyle"/>
+                    android:onClick="replaceAll"/>
 
 
             </LinearLayout>

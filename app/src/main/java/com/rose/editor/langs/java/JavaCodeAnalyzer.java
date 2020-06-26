@@ -212,6 +212,10 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                     }
                     break;
                 }
+                case LINE_COMMENT:
+                case LONG_COMMENT:
+                    colors.addIfNeeded(index,line,column,ColorScheme.COMMENT);
+                    break;
                 default:
                     if(token == Tokens.LBRACK || (token == Tokens.RBRACK && previous == Tokens.LBRACK)) {
                         colors.addIfNeeded(index,line,column,ColorScheme.OPERATOR);

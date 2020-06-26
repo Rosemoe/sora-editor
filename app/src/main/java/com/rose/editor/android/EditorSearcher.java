@@ -41,10 +41,12 @@ public class EditorSearcher {
             String selectedText = text.subContent(cursor.getLeftLine(), cursor.getLeftColumn(), cursor.getRightLine(), cursor.getRightColumn()).toString();
             if(selectedText.equals(mSearchText)) {
                 cursor.onCommitText(newText);
+                mEditor.hideAutoCompletePanel();
+                gotoNext(false);
                 return true;
             }
         }
-        gotoNext();
+        gotoNext(false);
         return false;
     }
 
@@ -85,25 +87,31 @@ public class EditorSearcher {
 
         }.start();
     }
+    
+    public void gotoNext() {
+        gotoNext(true);
+    }
 
-    public void gotoLast() {
+    private void gotoNext(boolean tip) {
         checkState();
         Content text = mEditor.getText();
         Cursor cursor = text.getCursor();
         int line = cursor.getRightLine();
         int column = cursor.getRightColumn();
         for(int i = line;i < text.getLineCount();i++) {
-            int idx = column + 1 >= text.getColumnCount(i) ? -1 : text.getRawData(i).indexOf(mSearchText, column + 1);
+            int idx = column >= text.getColumnCount(i) ? -1 : text.getRawData(i).indexOf(mSearchText, column);
             if(idx != -1) {
                 mEditor.setSelectionRegion(i, idx, i, idx + mSearchText.length());
                 return;
             }
             column = -1;
         }
-        Toast.makeText(mEditor.getContext(),"Not found in this direction", Toast.LENGTH_SHORT).show();
+        if(tip) {
+            Toast.makeText(mEditor.getContext(),"Not found in this direction", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    public void gotoNext() {
+    public void gotoLast() {
         checkState();
         Content text = mEditor.getText();
         Cursor cursor = text.getCursor();
@@ -112,10 +120,10 @@ public class EditorSearcher {
         for(int i = line;i >= 0;i--) {
             int idx = column - 1 < 0 ? -1 : text.getRawData(i).lastIndexOf(mSearchText, column - 1);
             if(idx != -1) {
-                mEditor.setSelectionRegion(i, idx - mSearchText.length(), i, idx);
+                mEditor.setSelectionRegion(i, idx, i, idx + mSearchText.length());
                 return;
             }
-            column = -1;
+            column = i - 1 >=0 ? text.getColumnCount(i - 1) : 0;
         }
         Toast.makeText(mEditor.getContext(),"Not found in this direction", Toast.LENGTH_SHORT).show();
     }

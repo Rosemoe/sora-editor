@@ -200,6 +200,7 @@ public class MainActivity extends Activity {
                                         case 4:
                                             editor.setEditorLanguage(new S5droidLanguage());
                                     }
+                                    dialog.dismiss();
                                 }
                             })
                             .setNegativeButton("Cancel", null)

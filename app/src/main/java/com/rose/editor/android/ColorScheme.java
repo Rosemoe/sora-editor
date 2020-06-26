@@ -133,16 +133,16 @@ public final class ColorScheme {
                 color = 0x33ec407a;
                 break;
             case SELECTED_TEXT_BACKGROUND:
-                color = 0x253f51b5;
-                break;
-            case KEYWORD:
                 color = 0x303f51b5;
                 break;
+            case KEYWORD:
+                color = 0xeeee0000;
+                break;
             case COMMENT:
-                color = 0xffb71c1c;
+                color = 0xffaaaaaa;
                 break;
             case OPERATOR:
-                color = 0xff9e9e9e;
+                color = 0xff219167;
                 break;
             case LITERAL:
                 color = 0xdd0096ff;
@@ -183,7 +183,7 @@ public final class ColorScheme {
                 color = 0xffaaaaff;
                 break;
             case MATCHED_TEXT_BACKGROUND:
-                color = 0xffaaaa00;
+                color = 0xaaffff00;
                 break;
             default:
                 throw new IllegalArgumentException("Unexpected type:" + type);

@@ -43,6 +43,8 @@ public class UniversalTokenizer {
         for(String keyword : mLanguage.getKeywords()) {
             mKeywords.put(keyword, true);
         }
+        setSkipComment(false);
+        setSkipWhitespace(false);
     }
 
     public void setInput(CharSequence input) {
@@ -96,8 +98,10 @@ public class UniversalTokenizer {
     public UniversalTokens nextTokenDirect() {
         offset += length;
         if (offset >= bufferLen) {
+            length = 0;
             return EOF;
         }
+        length = 0;
         char ch = charAt();
         length = 1;
         if (ch == '\n') {
@@ -116,7 +120,7 @@ public class UniversalTokenizer {
             return WHITESPACE;
         } else {
             if(offset + length < bufferLen) {
-                char nextChar = charAt(offset + length);
+                char nextChar = charAt();
                 if(mLanguage.isLineCommentStart(ch, nextChar)) {
                     while(offset + length < bufferLen && charAt() != '\n') {
                         length++;
