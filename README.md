@@ -11,19 +11,21 @@ Issues are welcome.
 * Format code
 * Scale text
 * Select text
-* Scroll freely, Scrollbars
+* Scroll freely, Scrollbars (with EdgeEffect)
 * Undo/redo actions
+* Search and replace text
+* Common Shortcuts
 ## Language Supported  
-* S5droid(context sensitive auto completion,highlight,code block line,navigation)
-* Java(Basic Support:highlight,code block line,identifier and keyword auto completion)
+* Java,JavaScript,C,C++(Basic Support:highlight,code block line,identifier and keyword auto completion)
+* S5droid(context sensitive auto completion,highlight,code block line,navigation)   
 ## Screenshots  
 ![View Outline](/images/outline.jpg)
 ![Auto Complete](/images/auto-completion.jpg)   
 ## Extra Module Inside
-* A man-made lexer
-Language:Java,S5droid
+* A man-made lexer for Java,S5droid   
+* A simple style-able syntax lexer (Including comments, keywords and operators)
 ## How to use this Editor  
-This project hasn't deploy to any place such as jcenter.    
+This project hasn't deploy to any place such as jitpack.    
 To include this project into your project:  
 * Copy files in src/assets/ to your project(If you do not want to use S5droid language,please go on to the next step)
 * Copy files in src/res/layout to your project(Except src/res/layout/activity_main.xml)   
@@ -33,12 +35,21 @@ To include this project into your project:
 **  src/java/com/rose/editor/android/TextComposePanel.java  
 * Now you have finished all the steps!
 ## How to customize your language for editor
+### A Simple Method   
+You just have to implement a `LanguageDescription`!   
+See the interface in `/app/src/main/java/com/rose/editor/langs/universal/LanguageDescription` to get more information about it.    
+There is also some implementations in `/app/src/main/java/com/rose/editor/langs/desc/`. You can view them and learn how to implement one by yourself.   
+This way supports: Highlight(Keywords,Comments,Operators,Literals), Code block lines   
+This method is quite simple for everyone, but it will have some limits that are annoying.   
+If you want to get advanced features of CodeEditor, you'd better use the followig method.   
+### Advanced Method - For experts   
 * Make a lexer for the language (Use JFlex or ANTLR to analyze code and highlight. JFlex is recommended)   
 [ANTLR Website](https://www.antlr.org/)   
 [ANTLR4 Repository](https://github.com/antlr/antlr4)   
 [Grammars for ANTLR4](https://github.com/antlr/grammars-v4)   
 [JFLex Website](https://jflex.de/)   
 [JFLex Repository](https://github.com/jflex-de/jflex)   
+You may obtain a example flex for Java in ThisRepo/jflex/
 * Implement a CodeAnalyzer:
 ```Java
 public class XxxCodeAnalyzer {
@@ -121,12 +132,12 @@ Use lexer/tokenizer to create a formatter for your language.
 ```Java
 public class MyLanguage implements EditorLanguage {
 
-	public CodeAnalyzer createAnalyzer() {
+	public CodeAnalyzer getAnalyzer() {
 		//NonNull or crash
 		return new XxxCodeAnalyzer();
 	}
 	
-	public AutoCompleteProvider createAutoComplete() {
+	public AutoCompleteProvider getAutoCompleteProvider() {
 		//NonNull or crash
 		return new XxxAutoComplete();
 		//Or
