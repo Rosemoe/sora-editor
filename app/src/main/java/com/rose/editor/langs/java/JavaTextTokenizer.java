@@ -119,7 +119,7 @@ public class JavaTextTokenizer {
     }
 
     public String yyDesc() {
-        return " 行：" + line + " 列：" + column;
+        return " Line：" + line + " Column：" + column;
     }
 
     private char charAt(int i) {
@@ -279,7 +279,7 @@ public class JavaTextTokenizer {
 
     protected void scanTrans() {
         throwIfNeeded();
-        char ch = charAt(offset + length);
+        char ch = charAt();
         if (ch == '\\' || ch == 't' || ch == 'f' || ch == 'n' || ch == 'r' || ch == '0' || ch == '\"' || ch == '\''
                 || ch == 'b') {
             length++;
@@ -477,7 +477,7 @@ public class JavaTextTokenizer {
             "goto","continue","break","transient","void","try","catch",
             "finally","while","case","default","const","enum","extends",
             "implements","import","instanceof","interface","native",
-            "this","throw","throws"
+            "this","throw","throws", "true", "false"
         };
         sTokens = new Tokens[]{
             ABSTRACT, ASSERT, BOOLEAN, BYTE, CHAR, CLASS, DO,
@@ -487,9 +487,8 @@ public class JavaTextTokenizer {
             GOTO, CONTINUE, BREAK, TRANSIENT, VOID, TRY, CATCH,
             FINALLY, WHILE, CASE, DEFAULT, CONST, ENUM, EXTENDS,
             IMPLEMENTS, IMPORT, INSTANCEOF, INTERFACE, NATIVE,
-            THIS, THROW, THROWS
+            THIS, THROW, THROWS, TRUE, FALSE
         };
-        // 初始化关键字表
         keywords = new TrieTree<>();
         for(int i = 0;i < sKeywords.length;i++) {
             keywords.put(sKeywords[i],sTokens[i]);

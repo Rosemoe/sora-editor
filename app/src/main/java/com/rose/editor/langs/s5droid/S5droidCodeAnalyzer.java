@@ -15,7 +15,10 @@
  */
 package com.rose.editor.langs.s5droid;
 
+import android.graphics.Color;
+
 import com.rose.editor.android.ColorScheme;
+import com.rose.editor.struct.Span;
 import com.rose.editor.utils.LineNumberHelper;
 import com.rose.editor.text.TextAnalyzer.AnalyzeThread.Delegate;
 import com.rose.editor.text.TextAnalyzer.TextColors;
@@ -110,23 +113,23 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
     /*
         States:
         0:Idle
-        1:'Var' occured
-        2:Var Name occured
-        3:'As' Occured
-        4:Type occured,waiting to finish
-        5:'.'occured while waiting,continue.
+        1:'Var' occurred
+        2:Var Name occurred
+        3:'As' Occurred
+        4:Type occurred,waiting to finish
+        5:'.'occurred while waiting,continue.
         -------------------------------------
-        6:'Event' occured for code block beginning
-        12:'Method' occured
-        13:idt occured(method)
-        16:first idt occured
-        14:':'occured
-        15:second idt occured
-        7:'(' occured
-        8:Var name occured
-        9:'As' occured
-        10:Var type ocuured ,waiting to finish by ',' or ')'
-        11:'.' occured while waiting,continue
+        6:'Event' occurred for code block beginning
+        12:'Method' occurred
+        13:idt occurred(method)
+        16:first idt occurred
+        14:':'occurred
+        15:second idt occurred
+        7:'(' occurred
+        8:Var name occurred
+        9:'As' occurred
+        10:Var type ocurred ,waiting to finish by ',' or ')'
+        11:'.' occurred while waiting,continue
     */
     @Override
     public void analyze(CharSequence contentOrigin, TextColors colors, Delegate delegate) {
@@ -217,10 +220,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                     state = 0;
                     type.setLength(0);
                     if (checkHexColorForString(content, idx, length)) {
-                        //Must not use addIfNeeded()
-                        //Or if when there are two color strings,the color will not be recoginzed
-                        //Because of the check in editor
-                        colors.add(idx, line, column, ColorScheme.HEX_COLOR);
+                        colors.add(new Span(idx, line, column, ColorScheme.LITERAL).setUnderlineColor(tryParseColor(tokenizer.getTokenString(), false)));
                         //Optimize NEWLINE and WHITESPACE
                         markHex = true;
                     } else {
@@ -234,7 +234,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                     //Here we can use addIfNeeded() because
                     //the integer literal will not be two.
                     if (checkHexColor(content, idx, length)) {
-                        colors.addIfNeeded(idx, line, column, ColorScheme.HEX_COLOR);
+                        colors.add(new Span(idx, line, column, ColorScheme.LITERAL).setUnderlineColor(tryParseColor(tokenizer.getTokenString(),true)));
                         //Optimize NEWLINE and WHITESPACE
                         markHex = true;
                     } else {
@@ -509,5 +509,23 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
         colors.mExtra = tree;
         blocks.clear();
     }
+
+    private static int tryParseColor(CharSequence color, boolean type) {
+        String colorStr;
+        try {
+            if(type) {
+                //Number
+                colorStr = "#" + color.subSequence(2, color.length());
+            } else {
+                //String
+                color = color.subSequence(1, color.length() - 1);
+                colorStr = color instanceof String ? (String)color : color.toString();
+            }
+            return Color.parseColor(colorStr);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
 }
 

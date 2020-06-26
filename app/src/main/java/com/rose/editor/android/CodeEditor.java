@@ -58,7 +58,6 @@ import android.graphics.Matrix;
 import com.rose.editor.interfaces.EditorLanguage;
 import com.rose.editor.text.Indexer;
 import android.widget.OverScroller;
-import android.graphics.Color;
 import android.widget.EdgeEffect;
 import com.rose.editor.text.FormatThread;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -143,7 +142,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private EventHandler mEventHandler;
     private Paint.Align mLineNumberAlign;
     private GestureDetector mBasicDetector;
-    private TextActionWindow mTextActionPanel;
+    private TextActionWindow mTextActionWindow;
     private ScaleGestureDetector mScaleDetector;
     private CodeEditorInputConnection mConnection;
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;
@@ -318,9 +317,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setFocusableInTouchMode(true);
         mConnection = new CodeEditorInputConnection(this);
         mACPanel = new AutoCompleteWindow(this);
-        mTextActionPanel = new TextActionWindow(this);
-        mTextActionPanel.setHeight((int)(mDpUnit * 60));
-        mTextActionPanel.setWidth((int)(mDpUnit * 230));
+        mTextActionWindow = new TextActionWindow(this);
+        mTextActionWindow.setHeight((int)(mDpUnit * 60));
+        mTextActionWindow.setWidth((int)(mDpUnit * 230));
         mVerticalEdgeGlow = new EdgeEffect(this.getContext());
         mHorizontalGlow = new EdgeEffect(this.getContext());
         setEditorLanguage(null);
@@ -416,8 +415,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Get TextActionWindow instance of this editor
      * @return TextActionWindow
      */
-    protected TextActionWindow getTextActionPanel() {
-        return mTextActionPanel;
+    protected TextActionWindow getTextActionWindow() {
+        return mTextActionWindow;
     }
 
     /**
@@ -445,16 +444,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * a NEWLINE
      * @param enabled Enabled / disabled
      */
-    public void setAutoIndent(boolean enabled) {
+    public void setAutoIndentEnabled(boolean enabled) {
         mAutoIndent = enabled;
         mCursor.setAutoIndent(enabled);
     }
 
     /**
-     * @see CodeEditor#setAutoIndent(boolean)
+     * @see CodeEditor#setAutoIndentEnabled(boolean)
      * @return Enabled / disabled
      */
-    public boolean isAutoIndent() {
+    public boolean isAutoIndentEnabled() {
         return mAutoIndent;
     }
 
@@ -575,7 +574,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             if(mEventHandler.shouldDrawInsertHandle()) {
                 drawHandle(canvas,mCursor.getLeftLine(),mCursor.getLeftColumn(),mInsertHandle);
             }
-        }else if(!mTextActionPanel.isShowing()){
+        }else if(!mTextActionWindow.isShowing()){
             drawCursor(canvas, mCursor.getLeftLine(), mCursor.getLeftColumn(), offsetX, color.getColor(ColorScheme.SELECTION_INSERT));
             drawCursor(canvas, mCursor.getRightLine(), mCursor.getRightColumn(), offsetX, color.getColor(ColorScheme.SELECTION_INSERT));
             drawHandle(canvas,mCursor.getLeftLine(),mCursor.getLeftColumn(),mLeftHandle);
@@ -622,15 +621,27 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         return 0;
     }
-    
+
+    /**
+     * Get EdgeEffect for vertical direction
+     * @return EdgeEffect
+     */
     protected EdgeEffect getVerticalEdgeEffect() {
         return mVerticalEdgeGlow;
     }
-    
+
+    /**
+     * Get EdgeEffect for horizontal direction
+     * @return EdgeEffect
+     */
     protected EdgeEffect getHorizontalEdgeEffect() {
         return mHorizontalGlow;
     }
 
+    /**
+     * Draw effect of edges
+     * @param canvas The canvas to draw
+     */
     private void drawEdgeEffect(Canvas canvas) {
         boolean postDraw = false;
         if(!mVerticalEdgeGlow.isFinished()) {
@@ -1168,13 +1179,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     if(off + width > 0 && off < getWidth()) {
                         mPaint.setColor(cs.getColor(span.colorId));
                         drawText(canvas, mChars, st, ed - st, off, y);
-                        if(span.colorId == ColorScheme.HEX_COLOR) {
-                            int color = parseColor(st,ed);
+                        if(span.underlineColor != 0) {
                             mRect.bottom = getLineBottom(i) - getOffsetY() - mDpUnit * 1;
                             mRect.top = mRect.bottom - mDpUnit * 4;
                             mRect.left = off;
                             mRect.right = off + width;
-                            drawColor(canvas,color,mRect);
+                            drawColor(canvas, span.underlineColor, mRect);
                         }
                     }
                     off += width;
@@ -1189,44 +1199,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }catch(IndexOutOfBoundsException e){
                 drawTextDirect(canvas, offsetX, mColors.getColor(ColorScheme.TEXT_NORMAL), i);
                 break;
-            }
-        }
-    }
-
-    /**
-     * Parse color string literal to integer
-     * @param start Start in mChars
-     * @param end End in mChars
-     * @return The color parsed.If error,it is zero.
-     */
-    private int parseColor(int start,int end) {
-        char ch = mChars[start];
-        if(ch != '"' && ch != '0') {
-            return 0;
-        }
-        boolean type = ch == '0';
-        if(type) {
-            String v = new String(mChars,start + 2,end - start - 2);
-            try{
-                //Copied from Color.java
-                long color = Long.parseLong(v, 16);
-                if (end - start == 8) {
-                    // Set the alpha value
-                    color |= 0x00000000ff000000;
-                }
-                return (int)color;
-            }catch(RuntimeException e){
-                return 0;
-            }
-        }else{
-            if(end - start != 11 && end - start != 9) {
-                return 0;
-            }
-            String v = new String(mChars,start + 1,end - start - 2);
-            try{
-                return Color.parseColor(v);
-            }catch(RuntimeException e){
-                return 0;
             }
         }
     }
@@ -1276,8 +1248,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 int ed = Math.min(getSpanEnd(index,spans),line_ed);
                 float advance = off > getWidth() ? 0 : measureText(mChars,st - line_st,ed - st);
                 if(off + advance > 0 && off < getWidth()) {
-                    mPaint.setColor(mColors.getColor(spans.get(index).colorId));
+                    Span span = spans.get(index);
+                    mPaint.setColor(mColors.getColor(span.colorId));
                     drawText(canvas,mChars,st - line_st,ed - st,off,getLineBaseLine(line) - getOffsetY());
+                    if(span.underlineColor != 0) {
+                        mRect.bottom = getLineBottom(line) - getOffsetY() - mDpUnit * 1;
+                        mRect.top = mRect.bottom - mDpUnit * 4;
+                        mRect.left = off;
+                        mRect.right = off + advance;
+                        drawColor(canvas, span.underlineColor, mRect);
+                    }
                 }
                 off += advance;
                 st = ed;
@@ -2405,7 +2385,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         updateCursorAnchor();
         updateSelection();
         ensurePositionVisible(line, column);
-        mTextActionPanel.hide();
+        mTextActionWindow.hide();
     }
 
     /**

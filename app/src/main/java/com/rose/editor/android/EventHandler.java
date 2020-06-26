@@ -292,7 +292,7 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
     }
     
     private void scrollBy(float distanceX, float distanceY) {
-        mEditor.getTextActionPanel().hide();
+        mEditor.getTextActionWindow().hide();
         int endX = mScroller.getCurrX() + (int)distanceX;
         int endY = mScroller.getCurrY() + (int)distanceY;
         endX = Math.max(endX,0);
@@ -314,7 +314,7 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
         int line = mEditor.getPointLineOnScreen(e.getY());
         int column = mEditor.getPointColumnOnScreen(line,e.getX());
         if(mEditor.getCursor().isSelected() && mEditor.getCursor().isInSelectedRegion(line,column) && !(mEditor.isOverMaxY(e.getY()) || mEditor.isOverMaxX(line,e.getX()))) {
-            TextActionWindow panel = mEditor.getTextActionPanel();
+            TextActionWindow panel = mEditor.getTextActionWindow();
             if(panel.isShowing()) {
                 panel.hide();
             }else{
@@ -421,7 +421,7 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
     
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        mEditor.getTextActionPanel().hide();
+        mEditor.getTextActionWindow().hide();
         int endX = mScroller.getCurrX() + (int)distanceX;
         int endY = mScroller.getCurrY() + (int)distanceY;
         endX = Math.max(endX,0);
@@ -617,7 +617,7 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
                     }
                 }
             }
-            mEditor.getTextActionPanel().hide();
+            mEditor.getTextActionWindow().hide();
         }
 
     }

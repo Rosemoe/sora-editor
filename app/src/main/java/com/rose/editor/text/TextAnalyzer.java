@@ -133,11 +133,11 @@ public class TextAnalyzer {
          */
         public void addIfNeeded(int start, int colorId, Content c) {
             if (mLast == null) {
-                mSpans.add(mLast = mAllocator.obtain(start, colorId).wrap(c));
+                mSpans.add(mLast = mAllocator.obtain(start, colorId).setupLineColumn(c));
                 return;
             }
             if (mLast.colorId != colorId) {
-                mSpans.add(mLast = mAllocator.obtain(start, colorId).wrap(c));
+                mSpans.add(mLast = mAllocator.obtain(start, colorId).setupLineColumn(c));
             }
         }
 
@@ -157,6 +157,14 @@ public class TextAnalyzer {
             if (mLast.colorId != colorId) {
                 mSpans.add(mLast = mAllocator.obtain(start, line, column, colorId));
             }
+        }
+
+        /**
+         * Add a span directly
+         * @param span The span
+         */
+        public void add(Span span) {
+            mSpans.add(span);
         }
 
         /**
@@ -213,7 +221,7 @@ public class TextAnalyzer {
          */
         public void addNormalIfNull() {
             if (mLast == null) {
-                mSpans.add(mLast = mAllocator.obtain(0, ColorScheme.TEXT_NORMAL).wrap());
+                mSpans.add(mLast = mAllocator.obtain(0, ColorScheme.TEXT_NORMAL).applyZero());
             }
         }
 

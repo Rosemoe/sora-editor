@@ -22,19 +22,10 @@ import android.util.SparseIntArray;
  * @author Rose
  */
 public final class ColorScheme {
-    public static final int ANNOTATION = 29;
-    public static final int FUNCTION_NAME = 28;
+    //-----------------Highlight colors-----------
 
-    /**
-     * This is a special color.
-     * This color tells the editor it is a hex color expression.
-     * And editor will try to recognize the hex color expression and draw an
-     * underline for this expression.
-     * Language used it now is only S5droid.
-     * To adapt more languages please modify CodeEditor.java
-     */
-    public static final int HEX_COLOR = 27;
-
+    public static final int ANNOTATION = 28;
+    public static final int FUNCTION_NAME = 27;
     public static final int IDENTIFIER_NAME = 26;
     public static final int IDENTIFIER_VAR = 25;
     public static final int LITERAL = 24;
@@ -42,7 +33,7 @@ public final class ColorScheme {
     public static final int COMMENT = 22;
     public static final int KEYWORD = 21;
 
-    //----------------------------------
+    //-------------View colors---------------------
 
     public static final int AUTO_COMP_PANEL_CORNER = 20;
     public static final int AUTO_COMP_PANEL_BG = 19;
@@ -73,7 +64,7 @@ public final class ColorScheme {
     /**
      * Max pre-defined color id
      */
-    private static final int END_COLOR_INDEX = 29;
+    private static final int END_COLOR_INDEX = 28;
 
     /**
      * Host editor object
@@ -186,9 +177,6 @@ public final class ColorScheme {
                 break;
             case IDENTIFIER_NAME:
                 color = 0xffff9800;
-                break;
-            case HEX_COLOR:
-                color = 0xff4caf50;
                 break;
             case FUNCTION_NAME:
                 color = 0xffaaaaff;

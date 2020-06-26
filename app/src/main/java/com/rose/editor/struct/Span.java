@@ -27,25 +27,39 @@ public class Span {
 
     public int colorId;
 
+    public int underlineColor = 0;
+
     /**
      * Create a span with brief position
      * @param i Index
      * @param l Line
      * @param c Column
-     * @param cid Color ID
+     * @param colorId Color ID
      */
-    public Span(int i, int l, int c, int cid){
-        colorId = cid;
+    public Span(int i, int l, int c, int colorId) {
+        this.colorId = colorId;
         startIndex = i;
         line = l;
         column = c;
     }
 
     /**
+     * Create a new span from the given start index and color ID
+     * This is not a recommended way.
+     * You should call {@link Span#setupLineColumn(Content)} later
+     * @param start The start index
+     * @param colorId Type of span
+     */
+    public Span(int start, int colorId) {
+        startIndex = start;
+        this.colorId = colorId;
+    }
+
+    /**
      * Make self zero
      * @return self
      */
-    public Span wrap(){
+    public Span applyZero() {
         line = column = 0;
         return this;
     }
@@ -55,7 +69,7 @@ public class Span {
      * @param c Target content
      * @return self
      */
-    public Span wrap(Content c){
+    public Span setupLineColumn(Content c) {
         CharPosition pos = c.getIndexer().getCharPosition(startIndex);
         line = pos.line;
         column = pos.column;
@@ -63,13 +77,13 @@ public class Span {
     }
 
     /**
-     * Create a new span from the given start index and color ID
-     * @param start The start index
-     * @param colorId Type of span
+     * Set a underline for this region
+     * Zero for no underline
+     * @param color Color for this underline (not color id of {@link com.rose.editor.android.ColorScheme})
+     * @return Self
      */
-    public Span(int start, int colorId){
-        startIndex = start;
-        this.colorId = colorId;
+    public Span setUnderlineColor(int color) {
+        return this;
     }
 
     /**
