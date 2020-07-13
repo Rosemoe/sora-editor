@@ -1,5 +1,12 @@
 <component name="CopyrightManager">
-  <settings default="Rose">
+  <settings default="Apache">
+    <module2copyright>
+      <element module="Project Source Files" copyright="Apache" />
+    </module2copyright>
+    <LanguageOptions name="JAVA">
+      <option name="fileTypeOverride" value="3" />
+      <option name="addBlankAfter" value="false" />
+    </LanguageOptions>
     <LanguageOptions name="__TEMPLATE__">
       <option name="separateBefore" value="true" />
       <option name="separateAfter" value="true" />

@@ -1,17 +1,17 @@
 /*
- Copyright 2020 Rose2073
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+ *   Copyright 2020 Rose2073
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package com.rose.editor.android;
 
@@ -27,9 +27,10 @@ import android.content.res.Resources;
  * Handles touch event of editor
  * @author Rose
  */
+@SuppressWarnings("CanBeFinal")
 final class EventHandler implements GestureDetector.OnGestureListener,GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
-    private CodeEditor mEditor;
-    private OverScroller mScroller;
+    private final CodeEditor mEditor;
+    private final OverScroller mScroller;
     private long mLastScroll = 0;
     private long mLastSetSelection = 0;
     private boolean mHolding = false;
@@ -432,12 +433,12 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
         boolean notifyX = true;
         if(!mEditor.getVerticalEdgeEffect().isFinished()) {
             endY = mScroller.getCurrY();
-            mEditor.getVerticalEdgeEffect().onPull((topOrBottom ? distanceY : -distanceY) / mEditor.getMeasuredHeight());
+            mEditor.getVerticalEdgeEffect().onPull((topOrBottom ? distanceY : -distanceY) / mEditor.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth())));
             notifyY = false;
         }
         if(!mEditor.getHorizontalEdgeEffect().isFinished()) {
             endX = mScroller.getCurrX();
-            mEditor.getHorizontalEdgeEffect().onPull((leftOrRight ? distanceX : -distanceX) / mEditor.getMeasuredWidth());
+            mEditor.getHorizontalEdgeEffect().onPull((leftOrRight ? distanceX : -distanceX) / mEditor.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight())));
             notifyX = false;
         }
         mScroller.startScroll(mScroller.getCurrX(),
@@ -446,19 +447,19 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
                 endY - mScroller.getCurrY(),0);
         final float minOverPull = mEditor.getDpUnit() * 10;
         if(notifyY && mScroller.getCurrY() + distanceY < -minOverPull) {
-            mEditor.getVerticalEdgeEffect().onPull(-distanceY / mEditor.getMeasuredHeight());
+            mEditor.getVerticalEdgeEffect().onPull(-distanceY / mEditor.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth())));
             topOrBottom = false;
         }
         if(notifyY && mScroller.getCurrY() + distanceY > mEditor.getScrollMaxY() + minOverPull) {
-            mEditor.getVerticalEdgeEffect().onPull(distanceY / mEditor.getMeasuredHeight());
+            mEditor.getVerticalEdgeEffect().onPull(distanceY / mEditor.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth())));
             topOrBottom = true;
         }
         if(notifyX && mScroller.getCurrX() + distanceX < -minOverPull) {
-            mEditor.getHorizontalEdgeEffect().onPull(-distanceX / mEditor.getMeasuredWidth());
+            mEditor.getHorizontalEdgeEffect().onPull(-distanceX / mEditor.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight())));
             leftOrRight = false;
         }
         if(notifyX && mScroller.getCurrX() + distanceX > mEditor.getScrollMaxX() + minOverPull) {
-            mEditor.getHorizontalEdgeEffect().onPull(distanceX / mEditor.getMeasuredWidth());
+            mEditor.getHorizontalEdgeEffect().onPull(distanceX / mEditor.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight())));
             leftOrRight = true;
         }
         mEditor.invalidate();
@@ -534,6 +535,7 @@ final class EventHandler implements GestureDetector.OnGestureListener,GestureDet
     /**
      * This is a helper for EventHandler to control handles
      */
+    @SuppressWarnings("CanBeFinal")
     private class SelectionHandle {
 
         public static final int LEFT = 0;

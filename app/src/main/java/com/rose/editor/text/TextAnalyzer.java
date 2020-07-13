@@ -1,17 +1,17 @@
 /*
- Copyright 2020 Rose2073
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+ *   Copyright 2020 Rose2073
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package com.rose.editor.text;
 
@@ -39,7 +39,7 @@ public class TextAnalyzer {
     private Callback mCallback;
     private AnalyzeThread mThread;
     private CodeAnalyzer mCodeAnalyzer;
-    private Allocator mAllocator = new Allocator();
+    private final Allocator mAllocator = new Allocator();
 
     /**
      * Create a new manager for the given codeAnalyzer
@@ -105,10 +105,12 @@ public class TextAnalyzer {
     public static class TextColors {
 
         public Object mExtra;
+        @SuppressWarnings("CanBeFinal")
         private List<Span> mSpans;
+        @SuppressWarnings("CanBeFinal")
         private List<BlockLine> mLines;
         private List<NavigationLabel> mLabels;
-        private Allocator mAllocator;
+        private final Allocator mAllocator;
         private Span mLast;
         private int mSuppressSwitch = Integer.MAX_VALUE;
 
@@ -296,11 +298,11 @@ public class TextAnalyzer {
 
         private List<Span> cache;
 
-        private int max = 1024 * 128;
+        private final int max = 1024 * 128;
         private List<BlockLine> cache2;
-        private int max2 = 1024 * 8;
+        private final int max2 = 1024 * 8;
         private List<NavigationLabel> cache3;
-        private int max3 = 1024 * 8;
+        private final int max3 = 1024 * 8;
 
         public void addSource(List<Span> src) {
             if (src == null) {
@@ -393,7 +395,7 @@ public class TextAnalyzer {
 
         private boolean waiting = false;
         private Content content;
-        private CodeAnalyzer codeAnalyzer;
+        private final CodeAnalyzer codeAnalyzer;
 
         /**
          * Create a new thread

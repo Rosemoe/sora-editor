@@ -1,17 +1,17 @@
 /*
- Copyright 2020 Rose2073
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+ *   Copyright 2020 Rose2073
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package com.rose.editor.android;
 
@@ -29,8 +29,11 @@ import android.content.res.Resources;
  */
 public class TextActionWindow extends EditorBasePopupWindow implements View.OnClickListener
 {
-    private CodeEditor mEditor;
-    private Button selectAll,cut,copy,paste;
+    private final CodeEditor mEditor;
+    private final Button selectAll;
+    private final Button cut;
+    private final Button copy;
+    private final Button paste;
 
     /**
      * Create a panel for the given editor
@@ -40,10 +43,10 @@ public class TextActionWindow extends EditorBasePopupWindow implements View.OnCl
         super(editor);
         mEditor = editor;
         View root = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_panel,null);
-        selectAll = (Button) root.findViewById(R.id.panel_btn_select_all);
-        cut =  (Button)root.findViewById(R.id.panel_btn_cut);
-        copy = (Button) root.findViewById(R.id.panel_btn_copy);
-        paste = (Button) root.findViewById(R.id.panel_btn_paste);
+        selectAll = root.findViewById(R.id.panel_btn_select_all);
+        cut =  root.findViewById(R.id.panel_btn_cut);
+        copy = root.findViewById(R.id.panel_btn_copy);
+        paste = root.findViewById(R.id.panel_btn_paste);
         selectAll.setOnClickListener(this);
         cut.setOnClickListener(this);
         copy.setOnClickListener(this);

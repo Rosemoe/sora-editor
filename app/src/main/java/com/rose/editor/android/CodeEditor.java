@@ -1,18 +1,18 @@
 /*
-  Copyright 2020 Rose2073
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-*/
+ *   Copyright 2020 Rose2073
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
 package com.rose.editor.android;
 
 import android.annotation.SuppressLint;
@@ -40,6 +40,8 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
+import com.rose.editor.android.edge.EdgeEffect;
+import com.rose.editor.android.edge.EdgeEffectFactory;
 import com.rose.editor.langs.EmptyLanguage;
 import com.rose.editor.struct.BlockLine;
 import com.rose.editor.text.Content;
@@ -58,7 +60,6 @@ import android.graphics.Matrix;
 import com.rose.editor.interfaces.EditorLanguage;
 import com.rose.editor.text.Indexer;
 import android.widget.OverScroller;
-import android.widget.EdgeEffect;
 import com.rose.editor.text.FormatThread;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.ActionMode;
@@ -70,7 +71,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 
 /**
- * CodeEditor is a editor that can highlight texts region by doing basic syntax analyzing
+ * CodeEditor is a editor that can highlight text regions by doing basic syntax analyzing
  * Features:
  * Highlight
  * Auto-completion
@@ -160,7 +161,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private ActionMode mStartedActionMode;
 
     //For debug
-    private StringBuilder mErrorBuilder = new StringBuilder();
+    private final StringBuilder mErrorBuilder = new StringBuilder();
     private long mLastAnalyzeThreadTime;
 
     /**
@@ -330,8 +331,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mTextActionWindow = new TextActionWindow(this);
         mTextActionWindow.setHeight((int)(mDpUnit * 60));
         mTextActionWindow.setWidth((int)(mDpUnit * 230));
-        mVerticalEdgeGlow = new EdgeEffect(this.getContext());
-        mHorizontalGlow = new EdgeEffect(this.getContext());
+        mVerticalEdgeGlow = EdgeEffectFactory.create(getContext());
+        mHorizontalGlow = EdgeEffectFactory.create(getContext());
         setEditorLanguage(null);
         setText(null);
     }

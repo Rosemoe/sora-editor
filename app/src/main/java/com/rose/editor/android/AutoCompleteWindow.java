@@ -1,17 +1,17 @@
 /*
- Copyright 2020 Rose2073
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+ *   Copyright 2020 Rose2073
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package com.rose.editor.android;
 
@@ -47,12 +47,12 @@ import java.util.List;
  */
 public class AutoCompleteWindow extends EditorBasePopupWindow
 {
-    private CodeEditor mEditor;
-    private LinearLayout mLayout;
-    private ListView mListView;
-    private TextView mTip;
-    private ProgressBar mPb;
-    private GradientDrawable mBg;
+    private final CodeEditor mEditor;
+    private final LinearLayout mLayout;
+    private final ListView mListView;
+    private final TextView mTip;
+    private final ProgressBar mPb;
+    private final GradientDrawable mBg;
 
     private int mCurrent = 0;
     private long mRequestTime;
@@ -253,6 +253,7 @@ public class AutoCompleteWindow extends EditorBasePopupWindow
      * Adapter to display results
      * @author Rose
      */
+    @SuppressWarnings("CanBeFinal")
     private class ItemAdapter extends BaseAdapter {
 
         private List<ResultItem> mItems;
@@ -317,11 +318,11 @@ public class AutoCompleteWindow extends EditorBasePopupWindow
      */
     private class MatchThread extends Thread {
 
-        private long mTime;
-        private String mPrefix;
-        private boolean mInner;
-        private TextAnalyzer.TextColors mColors;
-        private int mLine;
+        private final long mTime;
+        private final String mPrefix;
+        private final boolean mInner;
+        private final TextAnalyzer.TextColors mColors;
+        private final int mLine;
         private final AutoCompleteProvider mLocalProvider = mProvider;
 
         public MatchThread(long requestTime, String prefix) {

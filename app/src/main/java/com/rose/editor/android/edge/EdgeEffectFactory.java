@@ -13,29 +13,19 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.rose.editor.utils;
+package com.rose.editor.android.edge;
 
 import android.content.Context;
-import android.text.ClipboardManager;
+import android.os.Build;
 
-@SuppressWarnings("deprecation")
-public class ClipboardBase implements IClipboard {
+public class EdgeEffectFactory {
 
-    private final ClipboardManager mClip;
-
-    public ClipboardBase(Context context) {
-        mClip = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-    }
-
-    @Override
-    public CharSequence getTextFromClipboard() {
-        return (mClip != null ? mClip.getText() : null);
-    }
-
-    @Override
-    public void setTextToClipboard(CharSequence text) {
-        if(mClip != null) {
-            mClip.setText(text);
+    public static EdgeEffect create(Context context) {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return new PlatformEdgeEffect(context);
+        } else {
+            return new MaterialEdgeEffect();
         }
     }
+
 }

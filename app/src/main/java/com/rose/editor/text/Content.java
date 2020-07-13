@@ -1,25 +1,47 @@
 /*
- Copyright 2020 Rose2073
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+ *   Copyright 2020 Rose2073
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package com.rose.editor.text;
 
 import android.annotation.TargetApi;
+import android.os.Build;
 
 import java.util.ArrayList;
+import java.util.IntSummaryStatistics;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+import java.util.PrimitiveIterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.function.BiConsumer;
+import java.util.function.IntBinaryOperator;
+import java.util.function.IntConsumer;
+import java.util.function.IntFunction;
+import java.util.function.IntPredicate;
+import java.util.function.IntToDoubleFunction;
+import java.util.function.IntToLongFunction;
+import java.util.function.IntUnaryOperator;
+import java.util.function.ObjIntConsumer;
+import java.util.function.Supplier;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import com.rose.editor.struct.CharPosition;
 
@@ -713,14 +735,106 @@ public class Content implements CharSequence {
     @Override
     @TargetApi(24)
     public IntStream chars() {
-        return null;
+        return  StreamSupport.intStream(new Supplier<Spliterator.OfInt>() {
+                                            @Override
+                                            public Spliterator.OfInt get() {
+                                                return Spliterators.spliterator(
+                                                        new CharIterator(),
+                                                        Content.this.length(),
+                                                        Spliterator.ORDERED);
+                                            }
+                                        },
+                Spliterator.SUBSIZED | Spliterator.SIZED | Spliterator.ORDERED,
+                false);
     }
 
     @Override
     @TargetApi(24)
     public IntStream codePoints() {
-        return null;
+        return StreamSupport.intStream(new Supplier<Spliterator.OfInt>() {
+                                                  @Override
+                                                  public Spliterator.OfInt get() {
+                                                      return Spliterators.spliteratorUnknownSize(
+                                                              new CodePointIterator(),
+                                                              Spliterator.ORDERED);
+                                                  }
+                                              },
+                Spliterator.ORDERED,
+                false);
     }
 
+    @TargetApi(Build.VERSION_CODES.N)
+    class CharIterator implements PrimitiveIterator.OfInt {
+        int cur = 0;
+
+        public boolean hasNext() {
+            return cur < length();
+        }
+
+        public int nextInt() {
+            if (hasNext()) {
+                return charAt(cur++);
+            } else {
+                throw new NoSuchElementException();
+            }
+        }
+
+        @Override
+        public void forEachRemaining(IntConsumer block) {
+            for (; cur < length(); cur++) {
+                block.accept(charAt(cur));
+            }
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.N)
+    class CodePointIterator implements PrimitiveIterator.OfInt {
+        int cur = 0;
+
+        @Override
+        public void forEachRemaining(IntConsumer block) {
+            final int length = length();
+            int i = cur;
+            try {
+                while (i < length) {
+                    char c1 = charAt(i++);
+                    if (!Character.isHighSurrogate(c1) || i >= length) {
+                        block.accept(c1);
+                    } else {
+                        char c2 = charAt(i);
+                        if (Character.isLowSurrogate(c2)) {
+                            i++;
+                            block.accept(Character.toCodePoint(c1, c2));
+                        } else {
+                            block.accept(c1);
+                        }
+                    }
+                }
+            } finally {
+                cur = i;
+            }
+        }
+
+        public boolean hasNext() {
+            return cur < length();
+        }
+
+        public int nextInt() {
+            final int length = length();
+
+            if (cur >= length) {
+                throw new NoSuchElementException();
+            }
+            char c1 = charAt(cur++);
+            if (Character.isHighSurrogate(c1) && cur < length) {
+                char c2 = charAt(cur);
+                if (Character.isLowSurrogate(c2)) {
+                    cur++;
+                    return Character.toCodePoint(c1, c2);
+                }
+            }
+            return c1;
+        }
+    }
 
 }
