@@ -7,6 +7,7 @@ And it also have to do more tests on different devices.
 If you find any exception please send it to me.
 See Projects/CodeEditor to get more information about what I am working on.    
 Issues and pull requests are welcome.
+If you are unable to compile this project or crash while using sample app, try to rollback to any previous version.
 ## Features Implemented Currently
 * Syntax highlight
 * Automatic completion
