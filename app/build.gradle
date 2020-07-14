@@ -21,6 +21,10 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(path: ':editor')
+    implementation project(path: ':language-java')
+    implementation project(path: ':language-s5d')
+    implementation project(path: ':language-universal')
     //If you want to compile the project on AIDE
     //You should delete these lines
     testImplementation 'junit:junit:4.12'

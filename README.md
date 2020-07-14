@@ -1,8 +1,12 @@
 # CodeEditor
 A professional code editor on Android device with highlight and auto completion.  
-***Work In Progress*** This project is still developing slowly because of school. It will update more frequently after July.   
+***Work In Progress*** This project is still developing slowly because of school.
+***Note:*** This project is moving fast.
+Any method or field can be changed and moved or even deleted.
+And it also have to do more tests on different devices.
+If you find any exception please send it to me.
 See Projects/CodeEditor to get more information about what I am working on.    
-Issues are welcome.   
+Issues and pull requests are welcome.
 ## Features Implemented Currently
 * Syntax highlight
 * Automatic completion
@@ -31,8 +35,8 @@ To include this project into your project:
 * Copy files in src/res/layout to your project(Except src/res/layout/activity_main.xml)   
 * Copy files in src/java/ to your project(Except src/com/rose/editor/android/MainActivity.java)    
 * Change these files "import com.rose.editor.android.R" to "import yourPackageName.R" :  
-**  src/java/com/rose/editor/android/AutoCompletePanel.java  
-**  src/java/com/rose/editor/android/TextComposePanel.java  
+**  EditorAutoCompleteWindow.java
+**  EditorTextActionWindow.java
 * Now you have finished all the steps!
 ## How to customize your language for editor
 ### A Simple Method   

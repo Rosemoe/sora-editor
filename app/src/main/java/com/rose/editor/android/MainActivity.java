@@ -32,17 +32,18 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.rose.editor.langs.desc.CDescription;
-import com.rose.editor.langs.desc.CppDescription;
-import com.rose.editor.langs.desc.JavaScriptDescription;
-import com.rose.editor.langs.s5droid.S5droidAutoComplete;
-import com.rose.editor.langs.s5droid.S5droidLanguage;
-import com.rose.editor.langs.universal.UniversalLanguage;
-import com.rose.editor.struct.NavigationLabel;
-import com.rose.editor.utils.CrashHandler;
+import io.github.rosemoe.editor.langs.desc.CDescription;
+import io.github.rosemoe.editor.langs.desc.CppDescription;
+import io.github.rosemoe.editor.langs.desc.JavaScriptDescription;
+import io.github.rosemoe.editor.langs.s5droid.S5droidAutoComplete;
+import io.github.rosemoe.editor.langs.s5droid.S5droidLanguage;
+import io.github.rosemoe.editor.langs.universal.UniversalLanguage;
+import io.github.rosemoe.editor.struct.NavigationLabel;
+import io.github.rosemoe.editor.utils.CrashHandler;
 
 import java.util.List;
-import com.rose.editor.langs.java.JavaLanguage;
+import io.github.rosemoe.editor.langs.java.JavaLanguage;
+import io.github.rosemoe.editor.widget.CodeEditor;
 
 public class MainActivity extends Activity {
 

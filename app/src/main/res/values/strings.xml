@@ -15,5 +15,5 @@
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
 <resources>
-    <string name="app_name">RoseEditor</string>
+    <string name="app_name">CodeEditor</string>
 </resources>

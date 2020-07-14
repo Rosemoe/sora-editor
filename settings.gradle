@@ -1,2 +1,7 @@
+include ':language-universal'
+include ':language-java'
+include ':language-s5d'
+include ':language-base'
+include ':editor'
 include ':app'
 rootProject.name='CodeEditor'
