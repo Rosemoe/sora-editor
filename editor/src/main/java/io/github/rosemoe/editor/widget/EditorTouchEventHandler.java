@@ -433,12 +433,14 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         boolean notifyX = true;
         if(!mEditor.getVerticalEdgeEffect().isFinished()) {
             endY = mScroller.getCurrY();
-            mEditor.getVerticalEdgeEffect().onPull((topOrBottom ? distanceY : -distanceY) / mEditor.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth())));
+            float displacement = Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth()));
+            mEditor.getVerticalEdgeEffect().onPull((topOrBottom ? distanceY : -distanceY) / mEditor.getMeasuredHeight(), topOrBottom ? displacement : 1 - displacement);
             notifyY = false;
         }
         if(!mEditor.getHorizontalEdgeEffect().isFinished()) {
             endX = mScroller.getCurrX();
-            mEditor.getHorizontalEdgeEffect().onPull((leftOrRight ? distanceX : -distanceX) / mEditor.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight())));
+            float displacement = Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight()));
+            mEditor.getHorizontalEdgeEffect().onPull((leftOrRight ? distanceX : -distanceX) / mEditor.getMeasuredWidth(), leftOrRight ? 1 - displacement : displacement);
             notifyX = false;
         }
         mScroller.startScroll(mScroller.getCurrX(),
@@ -451,11 +453,11 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             topOrBottom = false;
         }
         if(notifyY && mScroller.getCurrY() + distanceY > mEditor.getScrollMaxY() + minOverPull) {
-            mEditor.getVerticalEdgeEffect().onPull(distanceY / mEditor.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth())));
+            mEditor.getVerticalEdgeEffect().onPull(distanceY / mEditor.getMeasuredHeight(), 1 - Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth())));
             topOrBottom = true;
         }
         if(notifyX && mScroller.getCurrX() + distanceX < -minOverPull) {
-            mEditor.getHorizontalEdgeEffect().onPull(-distanceX / mEditor.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight())));
+            mEditor.getHorizontalEdgeEffect().onPull(-distanceX / mEditor.getMeasuredWidth(), 1 - Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight())));
             leftOrRight = false;
         }
         if(notifyX && mScroller.getCurrX() + distanceX > mEditor.getScrollMaxX() + minOverPull) {

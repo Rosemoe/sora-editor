@@ -25,8 +25,6 @@ dependencies {
     implementation project(path: ':language-java')
     implementation project(path: ':language-s5d')
     implementation project(path: ':language-universal')
-    //If you want to compile the project on AIDE
-    //You should delete these lines
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
