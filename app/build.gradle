@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 29
-    buildToolsVersion "29.0.3"
+    buildToolsVersion "30.0.1"
     defaultConfig {
         applicationId "com.rose.editor.android"
         minSdkVersion 14
@@ -23,7 +23,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     //If you want to compile the project on AIDE
     //You should delete these lines
-    //testImplementation 'junit:junit:4.12'
-    //androidTestImplementation 'androidx.test.ext:junit:1.1.0'
-    //androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }

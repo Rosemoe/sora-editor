@@ -767,10 +767,17 @@ public class Content implements CharSequence {
     class CharIterator implements PrimitiveIterator.OfInt {
         int cur = 0;
 
+        @Override
         public boolean hasNext() {
             return cur < length();
         }
 
+        @Override
+        public Integer next() {
+            return nextInt();
+        }
+
+        @Override
         public int nextInt() {
             if (hasNext()) {
                 return charAt(cur++);
@@ -815,10 +822,17 @@ public class Content implements CharSequence {
             }
         }
 
+        @Override
+        public Integer next() {
+            return nextInt();
+        }
+
+        @Override
         public boolean hasNext() {
             return cur < length();
         }
 
+        @Override
         public int nextInt() {
             final int length = length();
 
