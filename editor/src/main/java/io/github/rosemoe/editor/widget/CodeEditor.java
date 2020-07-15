@@ -41,6 +41,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import io.github.rosemoe.editor.R;
+import io.github.rosemoe.editor.interfaces.EditorEventListener;
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
 import io.github.rosemoe.editor.langs.EmptyLanguage;
 import io.github.rosemoe.editor.text.Content;
@@ -159,6 +160,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private FormatThread mFormatThread;
     private EditorSearcher mSearcher;
     private ActionMode mStartedActionMode;
+    private EditorEventListener mListener;
 
     //For debug
     private final StringBuilder mErrorBuilder = new StringBuilder();
@@ -187,6 +189,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         prepare();
+    }
+
+    public void setEventListener(EditorEventListener eventListener) {
+        this.mListener = eventListener;
     }
 
     /**
@@ -553,7 +559,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mPaint.setTextAlign(align);
             return;
         }
-        
+
         getCursor().updateCache(getFirstVisibleLine());
 
         EditorColorScheme color = mColors;
@@ -605,7 +611,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         final boolean debug = false;
         if(debug) {
             mPaint.setColor(0xff000000);
-            canvas.drawText("Draw " + timeUsage + "ms, Highlight " + mLastAnalyzeThreadTime + "ms", 0, getLineBaseLine(11), mPaint);
+            canvas.drawText("Draw " + timeUsage + ", Highlight " + mLastAnalyzeThreadTime, 0, getLineBaseLine(11), mPaint);
         }
     }
 
@@ -1903,10 +1909,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Format text in this thread
      * <strong>Note:</strong>Current thread must be UI thread
+     * @return Whether the format is successful
      * @deprecated Use {@link CodeEditor#formatCodeAsync()} instead
      */
     @Deprecated
-    public void formatCode() {
+    public boolean formatCode() {
+        if(mListener != null && mListener.onRequestFormat(this, false)) {
+            return false;
+        }
         //Check thread
         invalidate();
         StringBuilder content = mText.toStringBuilder();
@@ -1917,6 +1927,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mACPanel.hide();
         setSelectionAround(line,column);
         mSpanner.analyze(mText);
+        return true;
     }
 
     /**
@@ -1937,13 +1948,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     
     /**
      * Format text Async
+     * @return Whether the format task is scheduled
      */
-    public void formatCodeAsync() {
-        if(mFormatThread != null) {
-            return;
+    public synchronized boolean formatCodeAsync() {
+        if(mFormatThread != null || (mListener != null && mListener.onRequestFormat(this, true))) {
+            return false;
         }
         mFormatThread = new FormatThread(mText, mLanguage, this);
         mFormatThread.start();
+        return true;
     }
 
     /**
@@ -2695,6 +2708,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mMinModifiedLine = -1;
         requestLayout();
 
+        if(mListener != null) {
+            mListener.onNewTextSet(this);
+        }
         if(mInputMethodManager != null) {
             mInputMethodManager.restartInput(this);
         }
@@ -3074,6 +3090,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     public void beforeReplace(Content content) {
         mWait = true;
+        if(mListener != null) {
+            mListener.beforeReplace(this, content);
+        }
     }
     //There is problems in this
     //I will fix it soon
@@ -3106,13 +3125,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             makeRightVisible();
             mSpanner.analyze(mText);
             mEventHandler.hideInsertHandle();
+            if(mListener != null) {
+                mListener.afterInsert(this, mText, startLine, startColumn, endLine, endColumn, insertedContent);
+            }
             return;
-        }else{
+        } else {
             int end = endColumn;
             while(endColumn > 0) {
                 if(mLanguage.isAutoCompleteChar(content.charAt(endLine,endColumn - 1))) {
                     endColumn--;
-                }else{
+                } else {
                     break;
                 }
             }
@@ -3122,6 +3144,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 makeRightVisible();
                 mSpanner.analyze(mText);
                 mEventHandler.hideInsertHandle();
+                if(mListener != null) {
+                    mListener.afterInsert(this, mText, startLine, startColumn, endLine, endColumn, insertedContent);
+                }
                 return;
             }
             String prefix = line.substring(endColumn,end);
@@ -3132,6 +3157,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         makeRightVisible();
         mSpanner.analyze(mText);
         mEventHandler.hideInsertHandle();
+        if(mListener != null) {
+            mListener.afterInsert(this, mText, startLine, startColumn, endLine, endColumn, insertedContent);
+        }
     }
     
     private void applyNewPanelPosition() {
@@ -3188,22 +3216,31 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mSpanner.analyze(mText);
             mEventHandler.hideInsertHandle();
         }
+        if(mListener != null) {
+            mListener.afterDelete(this, mText, startLine, startColumn, endLine, endColumn, deletedContent);
+        }
     }
 
     @Override
     public void onFormatFail(final Throwable throwable) {
-        post(new Runnable() {
+        if(mListener != null && !mListener.onFormatFail(this, throwable)) {
+            post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(getContext(),throwable.toString(),Toast.LENGTH_SHORT).show();
-        }});
+                    Toast.makeText(getContext(), throwable.toString(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
         mFormatThread = null;
     }
 
     @Override
     public void onFormatSucceed(CharSequence originalText, final CharSequence newText) {
-        if(originalText == mText) {
-            mFormatThread = null;
+        if(mListener != null) {
+            mListener.onFormatSucceed(this);
+        }
+        mFormatThread = null;
+        if(originalText != mText) {
             post(new Runnable() {
                 @Override
                 public void run() {
