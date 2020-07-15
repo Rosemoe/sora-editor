@@ -32,18 +32,14 @@ If you are unable to compile this project or crash while using sample app, try t
 ## How to use this Editor  
 This project hasn't deploy to any place such as jitpack.    
 To include this project into your project:  
-* Copy files in src/assets/ to your project(If you do not want to use S5droid language,please go on to the next step)
-* Copy files in src/res/layout to your project(Except src/res/layout/activity_main.xml)   
-* Copy files in src/java/ to your project(Except src/com/rose/editor/android/MainActivity.java)    
-* Change these files "import com.rose.editor.android.R" to "import yourPackageName.R" :  
-**  EditorAutoCompleteWindow.java
-**  EditorTextActionWindow.java
-* Now you have finished all the steps!
+* Copy `editor` module into your project and add it to your module's dependency.   
+* Copy `language-base` if you want to use languages we have created. Otherwise, you have done the process.   
+* Copy `language-java`,`language`s5d`,`language-universal` into your project if required.   
 ## How to customize your language for editor
 ### A Simple Method   
 You just have to implement a `LanguageDescription`!   
-See the interface in `/app/src/main/java/com/rose/editor/langs/universal/LanguageDescription` to get more information about it.    
-There is also some implementations in `/app/src/main/java/com/rose/editor/langs/desc/`. You can view them and learn how to implement one by yourself.   
+See the interface in `/language-universal/src/main/java/io/github/rosemoe/editor/langs/universal/LanguageDescription` to get more information about it.    
+There is also some implementations in `/language-universal/src/main/java/io/github/rosemoe/editor/langs/desc/`. You can view them and learn how to implement one by yourself.   
 This way supports: Highlight(Keywords,Comments,Operators,Literals), Code block lines   
 This method is quite simple for everyone, but it will have some limits that are annoying.   
 If you want to get advanced features of CodeEditor, you'd better use the followig method.   
