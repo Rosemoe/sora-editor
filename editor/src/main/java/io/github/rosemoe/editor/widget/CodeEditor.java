@@ -1,5 +1,5 @@
 /*
- *   Copyright 2020 Rose2073
+ *   Copyright 2020 Rosemoe
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -82,8 +82,8 @@ import android.content.DialogInterface;
  * Shortcuts
  *
  * Actually it can adapt to Android level 11
- * Me in GitHub: Rose2073
- * This project in GitHub: https://github.com/Rose2073/CodeEditor
+ * Me in GitHub: Rosemoe
+ * This project in GitHub: https://github.com/Rosemoe/CodeEditor
  *
  * Thanks following people for advice on UI:
  * NTX
