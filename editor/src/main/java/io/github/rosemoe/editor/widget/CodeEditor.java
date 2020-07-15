@@ -130,8 +130,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private RectF mInsertHandle;
     private RectF mVerticalScrollBar;
     private RectF mHorizontalScrollBar;
-    private Typeface mTypefaceText;
-    private Typeface mTypefaceLineNumber;
     private IClipboard mClipboardManager;
     private InputMethodManager mInputMethodManager;
 
@@ -140,6 +138,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private TextAnalyzer mSpanner;
 
     private Paint mPaint;
+    private Paint mPaintOther;
     private char[] mChars;
     private Matrix mMatrix;
     private Rect mViewRect;
@@ -281,6 +280,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void prepare(){
         mPaint = new Paint();
+        mPaintOther = new Paint();
         mMatrix = new Matrix();
         mSearcher = new EditorSearcher(this);
         //Only Android.LOLLIPOP and upper level device can use this builder
@@ -288,6 +288,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mAnchorInfoBuilder = new CursorAnchorInfo.Builder();
         }
         mPaint.setAntiAlias(true);
+        mPaintOther.setAntiAlias(true);
+        mPaintOther.setTypeface(Typeface.MONOSPACE);
         setTextSize(DEFAULT_TEXT_SIZE);
         mColors = new EditorColorScheme(this);
         mEventHandler = new EditorTouchEventHandler(this);
@@ -308,8 +310,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mDpUnit = mDividerWidth / 2;
         mDividerMargin = mDpUnit * 5;
         mLineNumberAlign = Paint.Align.RIGHT;
-        mTypefaceLineNumber = Typeface.MONOSPACE;
-        mTypefaceText = Typeface.DEFAULT;
         mChars = new char[256];
         mEditable = true;
         mScale = true;
@@ -383,7 +383,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     protected float getOffset(int line,int column) {
         prepareLine(line);
-        mPaint.setTypeface(mTypefaceText);
         return measureText(mChars,0,column) + measureLineNumber() + mDividerMargin * 2 + mDividerWidth - getOffsetX();
     }
 
@@ -519,6 +518,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public void setTextSizePx(float size) {
         mPaint.setTextSize(size);
+        mPaintOther.setTextSize(size);
         mSpaceWidth = mPaint.measureText(" ");
         invalidate();
     }
@@ -1152,8 +1152,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param count Count of characters
      * @return The width measured
      */
-    private float measureText(char[] src, int index, int count){
-        mPaint.setTypeface(mTypefaceText);
+    private float measureText(char[] src, int index, int count) {
         float extraWidth;
         int tabCount = 0;
         for(int i = 0;i < count;i++){
@@ -1199,7 +1198,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param colors Spans
      */
     private void drawTextBySpans(Canvas canvas, float offsetX, TextAnalyzer.TextColors colors){
-        mPaint.setTypeface(mTypefaceText);
         EditorColorScheme cs = mColors;
         List<Span> spans = colors.getSpans();
         int first = getFirstVisibleLine();
@@ -1456,7 +1454,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     private void drawTextDirect(Canvas canvas, float offsetX, int color, int startLine){
         mPaint.setColor(color);
-        mPaint.setTypeface(mTypefaceText);
         int last = getLastVisibleLine();
         for(int i = startLine;i <= last;i++){
             if(mText.getColumnCount(i) == 0){
@@ -1548,28 +1545,27 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param width The width of line number region
      * @param color Color of line number
      */
-    private void drawLineNumbers(Canvas canvas, float offsetX, float width, int color){
+    private void drawLineNumbers(Canvas canvas, float offsetX, float width, int color) {
         if(width + offsetX <= 0){
             return;
         }
         int first = getFirstVisibleLine();
         int last = getLastVisibleLine();
-        mPaint.setTextAlign(mLineNumberAlign);
-        mPaint.setColor(color);
-        mPaint.setTypeface(mTypefaceLineNumber);
+        mPaintOther.setTextAlign(mLineNumberAlign);
+        mPaintOther.setColor(color);
         for(int i = first;i <= last;i++){
+            float y = (getLineBottom(i) + getLineTop(i)) / 2f - (mPaintOther.getFontMetricsInt().descent - mPaintOther.getFontMetricsInt().ascent) / 2f - mPaintOther.getFontMetricsInt().ascent - getOffsetY();
             switch(mLineNumberAlign){
                 case LEFT:
-                    canvas.drawText(Integer.toString(i + 1), offsetX, getLineBaseLine(i) - getOffsetY(), mPaint);
+                    canvas.drawText(Integer.toString(i + 1), offsetX, y, mPaintOther);
                     break;
                 case RIGHT:
-                    canvas.drawText(Integer.toString(i + 1), offsetX + width, getLineBaseLine(i) - getOffsetY(), mPaint);
+                    canvas.drawText(Integer.toString(i + 1), offsetX + width, y, mPaintOther);
                     break;
                 case CENTER:
-                    canvas.drawText(Integer.toString(i + 1), offsetX + width / 2f, getLineBaseLine(i) - getOffsetY(), mPaint);
+                    canvas.drawText(Integer.toString(i + 1), offsetX + width / 2f, y, mPaintOther);
             }
         }
-        mPaint.setTextAlign(Paint.Align.LEFT);
     }
 
     /**
@@ -1626,14 +1622,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return width of line number region
      */
     private float measureLineNumber(){
-        mPaint.setTypeface(mTypefaceLineNumber);
         int count = 0;
         int lineCount = getLineCount();
         while(lineCount > 0){
             count++;
             lineCount /= 10;
         }
-        float single = mPaint.measureText("0");
+        float single = mPaintOther.measureText("0");
         return single * count * 1.01f;
     }
 
@@ -2166,7 +2161,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if(typefaceLineNumber == null){
             typefaceLineNumber = Typeface.MONOSPACE;
         }
-        this.mTypefaceLineNumber = typefaceLineNumber;
+        mPaintOther.setTypeface(typefaceLineNumber);
         invalidate();
     }
 
@@ -2178,7 +2173,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if(typefaceText == null){
             typefaceText = Typeface.DEFAULT;
         }
-        this.mTypefaceText = typefaceText;
+        mPaint.setTypeface(typefaceText);
         invalidate();
     }
 
@@ -2187,7 +2182,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return Typeface of line number
      */
     public Typeface getTypefaceLineNumber() {
-        return mTypefaceLineNumber;
+        return mPaintOther.getTypeface();
     }
 
     /**
@@ -2195,7 +2190,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return Typeface of text
      */
     public Typeface getTypefaceText() {
-        return mTypefaceText;
+        return mPaint.getTypeface();
     }
 
     /**
