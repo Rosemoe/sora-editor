@@ -28,8 +28,7 @@
 		android:src="@android:drawable/ic_delete"
 		android:layout_marginLeft="4dp"
 		android:layout_marginRight="4dp"
-		android:id="@+id/result_item_image"
-		android:contentDescription="TODO" />
+		android:id="@+id/result_item_image" />
 
 	<LinearLayout
 		android:layout_height="wrap_content"

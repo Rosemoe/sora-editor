@@ -40,6 +40,7 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
+import io.github.rosemoe.editor.R;
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
 import io.github.rosemoe.editor.langs.EmptyLanguage;
 import io.github.rosemoe.editor.text.Content;
@@ -1162,9 +1163,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         if(count > 0 && isEmoji(src[index + count - 1])) {
             count--;
-            if(count < 0) {
-                count = 0;
-            }
         }
         extraWidth = mSpaceWidth * (getTabWidth() - 1);
         return mPaint.measureText(src, index, count) + tabCount * extraWidth;
@@ -2039,10 +2037,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
             @Override
             public boolean onCreateActionMode(ActionMode p1, Menu p2) {
-                p2.add(0,0,0,"Last");
-                p2.add(0,1,0,"Next");
-                p2.add(0,2,0,"Replace");
-                p2.add(0,3,0,"Replace All");
+                p2.add(0,0,0,R.string.next).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_ALWAYS);
+                p2.add(0,1,0, R.string.last).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
+                p2.add(0,2,0,R.string.replace).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
+                p2.add(0,3,0,R.string.replaceAll).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
                 SearchView sv = new SearchView(getContext());
                 sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 
@@ -2075,22 +2073,22 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             @Override
             public boolean onActionItemClicked(final ActionMode am, MenuItem p2) {
                 switch(p2.getItemId()) {
-                    case 0:
+                    case 1:
                         getSearcher().gotoLast();
                         break;
-                    case 1:
+                    case 0:
                         getSearcher().gotoNext();
                         break;
                     case 2:
                     case 3:
                         final boolean replaceAll = p2.getItemId() == 3;
                         final EditText et = new EditText(getContext());
-                        et.setHint("Replacement");
+                        et.setHint(R.string.replacement);
                         new AlertDialog.Builder(getContext())
-                        .setTitle(replaceAll ? "Replace All" : "Replace")
+                        .setTitle(replaceAll ? R.string.replaceAll : R.string.replace)
                         .setView(et)
-                        .setNegativeButton("Cancel", null)
-                            .setPositiveButton("Replace", new AlertDialog.OnClickListener() {
+                        .setNegativeButton(R.string.cancel, null)
+                            .setPositiveButton(R.string.replace, new AlertDialog.OnClickListener() {
 
                                 @Override
                                 public void onClick(DialogInterface p1, int p2) {

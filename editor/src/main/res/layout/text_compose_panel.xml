@@ -36,7 +36,7 @@
 				style="?android:attr/buttonBarButtonStyle"
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
-				android:text="Select All"
+				android:text="@string/selectAll"
 				android:textColor="#FF000000"
 				android:textSize="12sp"
 				android:id="@+id/panel_btn_select_all"/>
@@ -45,7 +45,7 @@
 				style="?android:attr/buttonBarButtonStyle"
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
-				android:text="Copy"
+				android:text="@string/copy"
 				android:textColor="#FF000000"
 				android:textSize="12sp"
 				android:id="@+id/panel_btn_copy"/>
@@ -54,7 +54,7 @@
 				style="?android:attr/buttonBarButtonStyle"
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
-				android:text="Paste"
+				android:text="@string/paste"
 				android:textColor="#FF000000"
 				android:textSize="12sp"
 				android:id="@+id/panel_btn_paste"/>
@@ -63,7 +63,7 @@
 				style="?android:attr/buttonBarButtonStyle"
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
-				android:text="Cut"
+				android:text="@string/cut"
 				android:textColor="#FF000000"
 				android:textSize="12sp"
 				android:id="@+id/panel_btn_cut"/>
