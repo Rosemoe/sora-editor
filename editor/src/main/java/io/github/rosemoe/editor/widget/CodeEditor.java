@@ -1483,10 +1483,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if(length >= mChars.length){
             mChars = new char[length + 100];
         }
-
+        /*
         for(int i = 0;i < length;i++){
             mChars[i] = mText.charAt(line, i);
-        }
+        }*/
+        mText.getLineChars(line, mChars);
     }
 
     /**

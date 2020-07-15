@@ -194,6 +194,10 @@ public class Content implements CharSequence {
         return mLines.get(line).toString();
     }
 
+    public void getLineChars(int line, char[] dest) {
+        mLines.get(line).getChars(0, getColumnCount(line), dest, 0);
+    }
+
     /**
      * Transform the (line,column) position to index
      * This task will usually completed by {@link Indexer}
