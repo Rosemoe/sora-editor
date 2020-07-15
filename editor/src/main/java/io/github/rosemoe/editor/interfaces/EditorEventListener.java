@@ -15,9 +15,12 @@
  */
 package io.github.rosemoe.editor.interfaces;
 
-import io.github.rosemoe.editor.text.Content;
 import io.github.rosemoe.editor.widget.CodeEditor;
 
+/**
+ * Listener for editor
+ * @author Rose
+ */
 public interface EditorEventListener {
 
     /**

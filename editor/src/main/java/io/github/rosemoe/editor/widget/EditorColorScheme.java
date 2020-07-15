@@ -119,6 +119,7 @@ public final class EditorColorScheme {
                 color = 0;
                 break;
             case TEXT_NORMAL:
+            case OPERATOR:
                 color = 0xff222222;
                 break;
             case SELECTION_INSERT:
@@ -141,9 +142,6 @@ public final class EditorColorScheme {
             case COMMENT:
                 color = 0xffaaaaaa;
                 break;
-            case OPERATOR:
-                color = 0xff219167;
-                break;
             case LITERAL:
                 color = 0xdd0096ff;
                 break;
@@ -157,7 +155,7 @@ public final class EditorColorScheme {
                 color = 0xffdddddd;
                 break;
             case SCROLL_BAR_TRACK:
-                color = 0xeeeeeeee;
+                color = 0xaaeeeeee;
                 break;
             case LINE_NUMBER_PANEL:
                 color = 0xdd000000;

@@ -135,6 +135,6 @@ public enum Tokens {
     AT,
 
     TRUE,
-    FALSE
-
+    FALSE,
+    NULL,
 }

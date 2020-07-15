@@ -180,6 +180,9 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                 case  THIS:
                 case  THROW:
                 case  THROWS:
+                case TRUE:
+                case FALSE:
+                case NULL:
                     classNamePrevious = false;
                     colors.addIfNeeded(index,line,column, EditorColorScheme.KEYWORD);
                     break;
