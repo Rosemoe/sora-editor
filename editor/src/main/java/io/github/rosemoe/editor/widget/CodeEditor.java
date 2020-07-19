@@ -2069,7 +2069,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 });
                 p1.setCustomView(sv);
                 sv.performClick();
-                sv.setQueryHint("Text to search");
+                sv.setQueryHint(getContext().getString(R.string.text_to_search));
                 sv.setIconifiedByDefault(false);
                 sv.setIconified(false);
                 return true;

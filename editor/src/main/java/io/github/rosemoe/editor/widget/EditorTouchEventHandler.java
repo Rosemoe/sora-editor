@@ -470,6 +470,9 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
 
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        if(mEditor.isDrag()) {
+            return false;
+        }
         mScroller.fling(mScroller.getCurrX(),
                 mScroller.getCurrY(),
                 (int)-velocityX,

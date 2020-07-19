@@ -27,5 +27,6 @@
     <item name="replaceAll" type="string">Replace All</item>
     <item name="replacement" type="string">Replacement</item>
     <item name="cancel" type="string">Cancel</item>
+    <item name="text_to_search" type="string">Text to search</item>
 
 </resources>
