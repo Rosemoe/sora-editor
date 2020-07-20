@@ -43,7 +43,7 @@ public final class DeleteAction implements ContentAction {
     public boolean canMerge(ContentAction action) {
         if(action instanceof DeleteAction) {
             DeleteAction ac = (DeleteAction)action;
-            return (ac.endColumn == startColumn && ac.endLine == startLine);
+            return (ac.endColumn == startColumn && ac.endLine == startLine && ac.text.length() + text.length() < 10000);
         }
         return false;
     }

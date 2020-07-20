@@ -43,7 +43,7 @@ public final class InsertAction implements ContentAction {
     public boolean canMerge(ContentAction action) {
         if(action instanceof InsertAction) {
             InsertAction ac = (InsertAction) action;
-            return (ac.startColumn == endColumn && ac.startLine == endLine);
+            return (ac.startColumn == endColumn && ac.startLine == endLine && ac.text.length() + text.length() < 10000);
         }
         return false;
     }
