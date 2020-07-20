@@ -123,7 +123,7 @@ class EditorInputConnection extends BaseInputConnection {
             }
             return text;
         }
-        return sub.toString();
+        return sub.toStringBuilder();
     }
 
     private CharSequence getTextRegion(int start, int end, int flags) {
@@ -137,7 +137,14 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public CharSequence getSelectedText(int flags) {
-        return getTextRegion(getCursor().getLeft(), getCursor().getRight(), flags);
+        //This text should be limited because when the user try to select all text
+        //it can be quite large text and costs time, which will finally cause ANR
+        int left = getCursor().getLeft();
+        int right = getCursor().getRight();
+        if(right - left > 1000) {
+            right = left + 1000;
+        }
+        return getTextRegion(left, right, flags);
     }
 
     @Override
@@ -149,7 +156,7 @@ class EditorInputConnection extends BaseInputConnection {
     @Override
     public CharSequence getTextAfterCursor(int length, int flags) {
         int end = getCursor().getRight();
-        return getTextRegion(end + 1, end + length + 1, flags);
+        return getTextRegion(end, end + length, flags);
     }
 
     @Override
@@ -290,8 +297,6 @@ class EditorInputConnection extends BaseInputConnection {
         CharPosition endPos = content.getIndexer().getCharPosition(end);
         getCursor().setLeft(startPos.line, startPos.column);
         getCursor().setRight(endPos.line, endPos.column);
-        mEditor.updateSelection();
-        mEditor.updateCursorAnchor();
         mEditor.invalidate();
         return true;
     }

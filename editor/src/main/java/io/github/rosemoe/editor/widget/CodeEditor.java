@@ -213,6 +213,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mInputMethodManager.restartInput(this);
     }
 
+    protected void updateCursor() {
+        updateCursorAnchor();
+        updateSelection();
+    }
+
     /**
      * Get the rect of left selection handle painted on view
      * @return Rect of left handle
@@ -3122,6 +3127,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mMinModifiedLine = mMinModifiedLine == -1 ? startLine : Math.min(startLine,mMinModifiedLine);
         //}
         mWait = false;
+        updateCursor();
         if(endColumn == 0 || startLine != endLine) {
             mACPanel.hide();
             makeRightVisible();
@@ -3198,6 +3204,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
+        updateCursor();
         mMinModifiedLine = mMinModifiedLine == -1 ? startLine : Math.min(startLine,mMinModifiedLine);
         if(mConnection.mComposingLine == -1 && mACPanel.isShowing()) {
             if(startLine != endLine || startColumn != endColumn - 1) {
