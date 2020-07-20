@@ -15,6 +15,9 @@
  */
 package io.github.rosemoe.editor.widget;
 
+import android.text.NoCopySpan;
+import android.text.Spanned;
+import android.util.Log;
 import android.view.inputmethod.BaseInputConnection;
 
 import io.github.rosemoe.editor.text.Content;
@@ -34,7 +37,6 @@ import android.os.Bundle;
 class EditorInputConnection extends BaseInputConnection {
 
     private final CodeEditor mEditor;
-
     protected int mComposingLine = -1;
     protected int mComposingStart = -1;
     protected int mComposingEnd = -1;
@@ -114,14 +116,23 @@ class EditorInputConnection extends BaseInputConnection {
         }
         Content sub = (Content)origin.subSequence(start, end);
         if (flags == GET_TEXT_WITH_STYLES) {
-            // TODO
-            return new SpannableStringBuilder(sub);
+            sub.beginStreamCharGetting(0);
+            SpannableStringBuilder text = new SpannableStringBuilder(sub);
+            if(mComposingLine != -1) {
+                text.setSpan(new ComposingText(), getCursor().getIndexer().getCharIndex(mComposingLine, mComposingStart), getCursor().getIndexer().getCharIndex(mComposingLine, mComposingEnd), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+            return text;
         }
         return sub.toString();
     }
 
     private CharSequence getTextRegion(int start, int end, int flags) {
-        return getTextRegionInternal(start, end, flags);
+        try {
+            return getTextRegionInternal(start, end, flags);
+        } catch (IndexOutOfBoundsException e) {
+            Log.w("EditorInputConnection", e);
+            return "";
+        }
     }
 
     @Override
@@ -138,7 +149,7 @@ class EditorInputConnection extends BaseInputConnection {
     @Override
     public CharSequence getTextAfterCursor(int length, int flags) {
         int end = getCursor().getRight();
-        return getTextRegion(end, end + length, flags);
+        return getTextRegion(end + 1, end + length + 1, flags);
     }
 
     @Override
@@ -175,6 +186,9 @@ class EditorInputConnection extends BaseInputConnection {
         if(beforeLength == afterLength && beforeLength == 0) {
             getCursor().onDeleteKeyPressed();
             return true;
+        }
+        if(beforeLength < 0 || afterLength < 0) {
+            return false;
         }
         beginBatchEdit();
         int rangeEnd = getCursor().getLeft();
@@ -276,6 +290,8 @@ class EditorInputConnection extends BaseInputConnection {
         CharPosition endPos = content.getIndexer().getCharPosition(end);
         getCursor().setLeft(startPos.line, startPos.column);
         getCursor().setRight(endPos.line, endPos.column);
+        mEditor.updateSelection();
+        mEditor.updateCursorAnchor();
         mEditor.invalidate();
         return true;
     }
@@ -308,7 +324,7 @@ class EditorInputConnection extends BaseInputConnection {
             mComposingEnd = endPos.column;
             mEditor.invalidate();
         } catch (IndexOutOfBoundsException e) {
-            e.printStackTrace();
+            Log.w("EditorInputConnection", e);
             return false;
         }
         return true;
@@ -358,5 +374,9 @@ class EditorInputConnection extends BaseInputConnection {
         mEditor.updateCursorAnchor();
         return true;
     }
+
+}
+
+class ComposingText implements NoCopySpan {
 
 }

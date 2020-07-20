@@ -110,7 +110,7 @@ public class Content implements CharSequence {
     @Override
     public char charAt(int index) {
         checkIndex(index);
-        CharPosition p = mIndexer.getCharPosition(index);
+        CharPosition p = getIndexer().getCharPosition(index);
         return charAt(p.line, p.column);
     }
 
@@ -124,8 +124,8 @@ public class Content implements CharSequence {
         if(start > end) {
             throw new StringIndexOutOfBoundsException("start > end");
         }
-        CharPosition s = mIndexer.getCharPosition(start);
-        CharPosition e = mIndexer.getCharPosition(end);
+        CharPosition s = getIndexer().getCharPosition(start);
+        CharPosition e = getIndexer().getCharPosition(end);
         return subContent(s.getLine(), s.getColumn(), e.getLine(), e.getColumn());
     }
 
@@ -206,7 +206,7 @@ public class Content implements CharSequence {
      * @return Transformed index for the given arguments
      */
     public int getCharIndex(int line, int column) {
-        return mIndexer.getCharIndex(line, column);
+        return getIndexer().getCharIndex(line, column);
     }
 
     /**
@@ -223,7 +223,7 @@ public class Content implements CharSequence {
 
         //-----Notify------
         if(mCursor != null)
-            mCursor.beforeInsert(line,column,text.length());
+            mCursor.beforeInsert(line,column);
 
         int workLine = line;
         int workIndex = column;
@@ -256,6 +256,8 @@ public class Content implements CharSequence {
      * @param end End position in content
      */
     public void delete(int start, int end) {
+        checkIndex(start);
+        checkIndex(end);
         CharPosition startPos = getIndexer().getCharPosition(start);
         CharPosition endPos = getIndexer().getCharPosition(end);
         if(start != end) {
@@ -512,6 +514,9 @@ public class Content implements CharSequence {
      * @return Indexer for this object
      */
     public Indexer getIndexer() {
+        if(mIndexer.getClass() != CachedIndexer.class && mCursor != null) {
+            return mCursor.getIndexer();
+        }
         return mIndexer;
     }
 

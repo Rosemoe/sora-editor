@@ -25,7 +25,7 @@ import io.github.rosemoe.editor.struct.CharPosition;
  * With cache
  * @author Rose
  */
-class CachedIndexer implements Indexer,ContentListener{
+public class CachedIndexer implements Indexer,ContentListener{
 
     private final Content mContent;
     private final CharPosition mZeroPoint = new CharPosition().zero();
@@ -36,8 +36,6 @@ class CachedIndexer implements Indexer,ContentListener{
     private int mMaxCacheSize = 50;
     private boolean mHandleEvent = true;
     private boolean mHasException = false;
-    private boolean mLexMode = false;
-    private final CharPosition mLexModeCache = new CharPosition().zero();
 
     /**
      * If the querying index is larger than the switch
@@ -46,18 +44,6 @@ class CachedIndexer implements Indexer,ContentListener{
      */
     public void setSwitchIndex(int s){
         mSwitchIndex = s;
-    }
-
-    /**
-     * Enabled lex mode to make it quicker
-     * @deprecated New way to speed up has been created
-     */
-    @Deprecated
-    public void beginLexMode() {
-        mLexMode = true;
-        mMaxCacheSize = 1;
-        push(mLexModeCache);
-        mEndPoint.zero();
     }
 
     /**
@@ -173,7 +159,7 @@ class CachedIndexer implements Indexer,ContentListener{
         if(workIndex > index) {
             workColumn -= workIndex - index;
         }
-        CharPosition pos = mLexMode ? mLexModeCache : new CharPosition();
+        CharPosition pos = new CharPosition();
         pos.column = workColumn;
         pos.line = workLine;
         pos.index = index;
@@ -295,10 +281,10 @@ class CachedIndexer implements Indexer,ContentListener{
      * @param pos New cache
      */
     private void push(CharPosition pos) {
-        mCachePositions.add(pos);
         if(mMaxCacheSize <= 0) {
             return;
         }
+        mCachePositions.add(pos);
         while(mCachePositions.size() > mMaxCacheSize) {
             mCachePositions.remove(0);
         }
@@ -363,11 +349,8 @@ class CachedIndexer implements Indexer,ContentListener{
             res = findIndexForward(pos, index);
         }else {
             res = findIndexBackward(pos, index);
-            if(mLexMode){
-                return res;
-            }
         }
-        if(!mLexMode && Math.abs(index - pos.index) >= mSwitchIndex) {
+        if(Math.abs(index - pos.index) >= mSwitchIndex) {
             push(res);
         }
         return res;
@@ -405,9 +388,6 @@ class CachedIndexer implements Indexer,ContentListener{
                             CharSequence insertedContent) {
         if(isHandleEvent()) {
             for(CharPosition pos : mCachePositions) {
-                /*if(pos.line < startLine) {
-                    //There is nothing to do with this CharPosition
-                }else */
                 if(pos.line == startLine){
                     if (pos.column >= startColumn) {
                         pos.index += insertedContent.length();
@@ -417,8 +397,6 @@ class CachedIndexer implements Indexer,ContentListener{
                 }else if(pos.line > startLine) {
                     pos.index += insertedContent.length();
                     pos.line += endLine - startLine;
-                    //pos.column = pos.column;//may be an error here...
-                    //Rose tip !!!!!!!!!!!!
                 }
             }
         }
@@ -429,32 +407,23 @@ class CachedIndexer implements Indexer,ContentListener{
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn,
                             CharSequence deletedContent) {
         if(isHandleEvent()) {
-            List<CharPosition> garbbages = new ArrayList<>();
+            List<CharPosition> garbage = new ArrayList<>();
             for(CharPosition pos : mCachePositions) {
-                /*if(pos.line < startLine) {
-
-                }else */
                 if(pos.line == startLine) {
                     if(pos.column >= startColumn)
-                        garbbages.add(pos);
+                        garbage.add(pos);
                 }else if(pos.line > startLine) {
-                    garbbages.add(pos);
-					/*
                     if(pos.line < endLine) {
-                        garbbages.add(pos);
+                        garbage.add(pos);
                     }else if(pos.line == endLine) {
-                        garbbages.add(pos);
-                        //Here should be a wonderful change...
+                        garbage.add(pos);
                     }else {
                         pos.index -= deletedContent.length();
                         pos.line -= endLine - startLine;
-                        //pos.column = pos.column;//This may be an error
-                        //Rose tip !!!!!!!!!!!!
-                    }*/
+                    }
                 }
             }
-            mCachePositions.removeAll(garbbages);
-            garbbages.clear();
+            mCachePositions.removeAll(garbage);
         }
         detectException();
     }

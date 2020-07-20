@@ -560,7 +560,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             return;
         }
 
-        getCursor().updateCache(getFirstVisibleLine());
+        getCursor().updateCache(Math.max(getFirstVisibleLine(), 0));
 
         EditorColorScheme color = mColors;
         drawColor(canvas, color.getColor(EditorColorScheme.WHOLE_BACKGROUND), mViewRect);
@@ -2583,7 +2583,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             return;
         }
         if(start > end){
-            throw new IllegalArgumentException("start > end");
+            throw new IllegalArgumentException("start > end:start = " + start + " end = " + end + " lineLeft = " + lineLeft + " columnLeft = " + columnLeft + " lineRight = " + lineRight + " columnRight = " + columnRight);
         }
         if(columnLeft > 0) {
             int column = columnLeft - 1;

@@ -19,7 +19,7 @@ package io.github.rosemoe.editor.text;
  * Indexer without cache
  * @author Rose
  */
-final class NoCacheIndexer extends CachedIndexer implements Indexer{
+public final class NoCacheIndexer extends CachedIndexer implements Indexer{
 
     /**
      * Create a indexer without cache
@@ -34,11 +34,6 @@ final class NoCacheIndexer extends CachedIndexer implements Indexer{
         if(super.isHandleEvent()) {
             super.setHandleEvent(false);
         }
-    }
-
-    @Override
-    protected void throwIfHas() {
-        //Override this to make super class not throw exception after text changes
     }
 
 }
