@@ -122,6 +122,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mPaintLabel;
     private boolean mUndoEnabled;
     private boolean mDisplayLnPanel;
+    private boolean mOverScrollEnabled;
     private boolean mHighlightCurrentBlock;
     private boolean mVerticalScrollBarEnabled;
     private boolean mHorizontalScrollBarEnabled;
@@ -159,7 +160,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private EdgeEffect mHorizontalGlow;
     private FormatThread mFormatThread;
     private EditorSearcher mSearcher;
-    private ActionMode mStartedActionMode;
     private EditorEventListener mListener;
 
     //For debug
@@ -326,6 +326,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mScale = true;
         mDrag = false;
         mWait = false;
+        mOverScrollEnabled = true;
         mPaintLabel = true;
         mDisplayLnPanel = true;
         mBlockLineWidth = 2;
@@ -2025,7 +2026,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Set whether drag mode
-     * drag:no fling
+     * drag:no fling scroll
      * @param drag Whether drag
      */
     public void setDrag(boolean drag){
@@ -2042,12 +2043,28 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public boolean isDrag(){
         return mDrag;
     }
-    
+
+    /**
+     * Whether over scroll is permitted.
+     * When over scroll is enabled, the user will be able to scroll out of displaying
+     * bounds if the user scroll fast enough.
+     * This is implemented by {@link OverScroller#fling(int, int, int, int, int, int, int, int, int, int)}
+     */
+    public void setOverScrollEnabled(boolean overScrollEnabled) {
+        mOverScrollEnabled = overScrollEnabled;
+}
+
+    /**
+     * @see CodeEditor#setOverScrollEnabled(boolean)
+     */
+    public boolean isOverScrollEnabled() {
+        return mOverScrollEnabled;
+    }
+
+    /**
+     * Start search action mode
+     */
     public void beginSearchMode() {
-        if(mStartedActionMode != null) {
-            mStartedActionMode.finish();
-            mStartedActionMode = null;
-        }
         ActionMode.Callback callback = new ActionMode.Callback() {
 
             @Override
@@ -2126,11 +2143,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             @Override
             public void onDestroyActionMode(ActionMode p1) {
                 getSearcher().stopSearch();
-                mStartedActionMode = null;
             }
 
         };
-        mStartedActionMode = startActionMode(callback);
+        startActionMode(callback);
     }
 
     /**
@@ -2921,7 +2937,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if(!isEditable() || !isEnabled()){
             return null;
         }
-        outAttrs.inputType = EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
+        outAttrs.inputType = EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
         outAttrs.initialSelStart = getCursor() != null ? getCursor().getLeft() : 0;
         outAttrs.initialSelStart = getCursor() != null ? getCursor().getRight() : 0;
         mConnection.reset();

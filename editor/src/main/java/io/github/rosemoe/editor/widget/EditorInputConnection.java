@@ -36,6 +36,8 @@ import android.os.Bundle;
  */
 class EditorInputConnection extends BaseInputConnection {
 
+    private final static String LOG_TAG = "EditorInputConnection";
+
     private final CodeEditor mEditor;
     protected int mComposingLine = -1;
     protected int mComposingStart = -1;
@@ -130,7 +132,7 @@ class EditorInputConnection extends BaseInputConnection {
         try {
             return getTextRegionInternal(start, end, flags);
         } catch (IndexOutOfBoundsException e) {
-            Log.w("EditorInputConnection", e);
+            Log.w(LOG_TAG, "Failed to get text region for IME", e);
             return "";
         }
     }
@@ -144,7 +146,7 @@ class EditorInputConnection extends BaseInputConnection {
         if(right - left > 1000) {
             right = left + 1000;
         }
-        return getTextRegion(left, right, flags);
+        return left == right ? null : getTextRegion(left, right, flags);
     }
 
     @Override
@@ -273,6 +275,7 @@ class EditorInputConnection extends BaseInputConnection {
             return false;
         }
         mComposingLine = mComposingStart = mComposingEnd = -1;
+        mEditor.invalidate();
         return true;
     }
 
@@ -329,7 +332,7 @@ class EditorInputConnection extends BaseInputConnection {
             mComposingEnd = endPos.column;
             mEditor.invalidate();
         } catch (IndexOutOfBoundsException e) {
-            Log.w("EditorInputConnection", e);
+            Log.w(LOG_TAG, "set composing region for IME failed", e);
             return false;
         }
         return true;
