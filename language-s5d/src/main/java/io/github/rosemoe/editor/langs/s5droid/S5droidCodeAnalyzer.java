@@ -22,7 +22,7 @@ import io.github.rosemoe.editor.widget.EditorColorScheme;
 import io.github.rosemoe.editor.struct.Span;
 import io.github.rosemoe.editor.text.LineNumberCalculator;
 import io.github.rosemoe.editor.text.TextAnalyzer.AnalyzeThread.Delegate;
-import io.github.rosemoe.editor.text.TextAnalyzer.TextColors;
+import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
 import io.github.rosemoe.editor.struct.BlockLine;
 import io.github.rosemoe.editor.struct.NavigationLabel;
@@ -132,7 +132,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
         11:'.' occurred while waiting,continue
     */
     @Override
-    public void analyze(CharSequence contentOrigin, TextColors colors, Delegate delegate) {
+    public void analyze(CharSequence contentOrigin, TextAnalyzeResult colors, Delegate delegate) {
         List<NavigationLabel> labels = new ArrayList<>();
         S5droidTree tree = new S5droidTree();
         TrieTree<Tokens> vars = new TrieTree<>();
@@ -158,7 +158,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
             try {
                 token = tokenizer.directNextToken();
             } catch (RuntimeException e) {
-                //May be inputing spells
+                //May be inputting spells
                 token = CHARACTER_LITERAL;
             }
             if (token == EOF) {
@@ -206,25 +206,25 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                     } else if (names.get(content, idx, length) == Tokens.VARIANT) {
                         color = EditorColorScheme.IDENTIFIER_NAME;
                     }
-                    colors.addIfNeeded(idx, line, column, color);
+                    colors.addIfNeeded(line, column, color);
                     break;
                 }
                 case CHARACTER_LITERAL:
                 case FLOATING_POINT_LITERAL: {
                     state = 0;
                     type.setLength(0);
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.LITERAL);
+                    colors.addIfNeeded(line, column, EditorColorScheme.LITERAL);
                     break;
                 }
                 case STRING: {
                     state = 0;
                     type.setLength(0);
                     if (checkHexColorForString(content, idx, length)) {
-                        colors.add(new Span(idx, line, column, EditorColorScheme.LITERAL).setUnderlineColor(tryParseColor(tokenizer.getTokenString(), false)));
+                        colors.add(line, new Span(column, EditorColorScheme.LITERAL).setUnderlineColor(tryParseColor(tokenizer.getTokenString(), false)));
                         //Optimize NEWLINE and WHITESPACE
                         markHex = true;
                     } else {
-                        colors.addIfNeeded(idx, line, column, EditorColorScheme.LITERAL);
+                        colors.addIfNeeded(line, column, EditorColorScheme.LITERAL);
                     }
                     break;
                 }
@@ -234,17 +234,17 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                     //Here we can use addIfNeeded() because
                     //the integer literal will not be two.
                     if (checkHexColor(content, idx, length)) {
-                        colors.add(new Span(idx, line, column, EditorColorScheme.LITERAL).setUnderlineColor(tryParseColor(tokenizer.getTokenString(), true)));
+                        colors.add(line, new Span(column, EditorColorScheme.LITERAL).setUnderlineColor(tryParseColor(tokenizer.getTokenString(), true)));
                         //Optimize NEWLINE and WHITESPACE
                         markHex = true;
                     } else {
-                        colors.addIfNeeded(idx, line, column, EditorColorScheme.LITERAL);
+                        colors.addIfNeeded(line, column, EditorColorScheme.LITERAL);
                     }
                     break;
                 }
                 case LONG_COMMENT:
                 case LINE_COMMENT: {
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.COMMENT);
+                    colors.addIfNeeded(line, column, EditorColorScheme.COMMENT);
                     break;
                 }
                 case FORLOOP:
@@ -264,7 +264,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                             currSwitch++;
                         }
                         if (token == METHOD || token == EVENT) {
-                            labels.add(colors.obtainLabel(line, content.substring(helper.findLineStart(), helper.findLineEnd()).trim()));
+                            labels.add(new NavigationLabel(line, content.substring(helper.findLineStart(), helper.findLineEnd()).trim()));
                             state = token == EVENT ? 6 : 12;
                         } else {
                             state = 0;
@@ -279,7 +279,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                         state = 0;
                         type.setLength(0);
                     }
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.KEYWORD);
+                    colors.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
                     break;
                 }
                 case ELSEIF:
@@ -298,7 +298,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                         blocks.add(block);
                         currSwitch += 2;
                     }
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.KEYWORD);
+                    colors.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
                     break;
                 }
                 case END: {
@@ -320,7 +320,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                             vars.put(sub.varName, null);
                         }
                     }
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.KEYWORD);
+                    colors.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
                     break;
                 }
                 case LONGV:
@@ -341,7 +341,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                         state = 0;
                         type.setLength(0);
                     }
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.KEYWORD);
+                    colors.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
                     break;
                 }
                 case LBRACK: {
@@ -351,7 +351,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                         state = 0;
                         type.setLength(0);
                     }
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.OPERATOR);
+                    colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                     break;
                 }
                 case RBRACK: {
@@ -361,13 +361,13 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                         state = 0;
                         type.setLength(0);
                     }
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.OPERATOR);
+                    colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                     break;
                 }
                 case VARIANT: {
                     state = 1;
                     varLine = line;
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.KEYWORD);
+                    colors.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
                     break;
                 }
                 case AS: {
@@ -379,7 +379,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                         state = 0;
                         type.setLength(0);
                     }
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.KEYWORD);
+                    colors.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
                     break;
                 }
                 case DOT: {
@@ -393,7 +393,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                         state = 0;
                         type.setLength(0);
                     }
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.OPERATOR);
+                    colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                     break;
                 }
                 case LPAREN: {
@@ -402,7 +402,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                     } else {
                         state = 0;
                     }
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.OPERATOR);
+                    colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                     break;
                 }
                 case COMMA: {
@@ -415,7 +415,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                     } else {
                         state = 0;
                     }
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.OPERATOR);
+                    colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                     break;
                 }
                 case RPAREN: {
@@ -426,7 +426,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                         }
                     }
                     state = 0;
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.OPERATOR);
+                    colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                     break;
                 }
                 case COLON: {
@@ -435,7 +435,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                     } else {
                         state = 0;
                     }
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.OPERATOR);
+                    colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                     break;
                 }
                 case STATIC:
@@ -460,7 +460,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                 case INSTANCEOF: {
                     state = 0;
                     type.setLength(0);
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.KEYWORD);
+                    colors.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
                     break;
                 }
                 case EQ:
@@ -469,17 +469,17 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                         tree.addVariant(varLine, name, type.toString());
                         type.setLength(0);
                     }
-                    colors.addIfNeeded(idx, line, column, EditorColorScheme.OPERATOR);
+                    colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                     break;
                 }
                 default: {
                     if (token != NEWLINE && token != WHITESPACE) {
                         state = 0;
                         type.setLength(0);
-                        colors.addIfNeeded(idx, line, column, EditorColorScheme.OPERATOR);
+                        colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                     } else {
                         if (markHex) {
-                            colors.addIfNeeded(idx, line, column, EditorColorScheme.OPERATOR);
+                            colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                             markHex = false;
                         }
                     }
@@ -493,6 +493,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
             line = helper.getLine();
             column = helper.getColumn();
         }
+        colors.determine(line);
         if (currSwitch > suppressSwitch) {
             suppressSwitch = currSwitch;
         }

@@ -17,7 +17,7 @@ package io.github.rosemoe.editor.interfaces;
 
 import java.util.List;
 
-import io.github.rosemoe.editor.text.TextAnalyzer;
+import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.struct.ResultItem;
 
 /**
@@ -35,7 +35,7 @@ public interface AutoCompleteProvider
      * @param line The line of cursor
      * @return Analyzed items
      */
-    List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzer.TextColors colors, int line);
+    List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzeResult colors, int line);
 
 }
 

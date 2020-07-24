@@ -28,7 +28,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import io.github.rosemoe.editor.text.TextAnalyzer;
+
+import io.github.rosemoe.editor.text.TextAnalyzeResult;
 
 /**
  * @author Rose
@@ -169,7 +170,7 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
     };
 
     @Override
-    public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzer.TextColors colors, int line)
+    public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzeResult colors, int line)
     {
         List<NavigationLabel> mCustomMethods = colors.getNavigation();
         S5dTextTokenizer tk = new S5dTextTokenizer("");

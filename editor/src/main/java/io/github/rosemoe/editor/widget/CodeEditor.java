@@ -49,6 +49,7 @@ import io.github.rosemoe.editor.text.ContentListener;
 import io.github.rosemoe.editor.text.Cursor;
 import io.github.rosemoe.editor.text.FormatThread;
 import io.github.rosemoe.editor.text.Indexer;
+import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.text.TextAnalyzer;
 import io.github.rosemoe.editor.widget.edge.EdgeEffect;
 import io.github.rosemoe.editor.widget.edge.EdgeEffectFactory;
@@ -57,6 +58,7 @@ import io.github.rosemoe.editor.struct.Span;
 import io.github.rosemoe.editor.widget.clipboard.IClipboard;
 import io.github.rosemoe.editor.widget.clipboard.Clipboard;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import android.view.inputmethod.CursorAnchorInfo;
@@ -105,7 +107,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     private int mTabWidth;
     private int mCursorPosition;
-    private int mMinModifiedLine;
     private float mDpUnit;
     private float mMaxPaintX;
     private float mSpaceWidth;
@@ -801,7 +802,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param offsetX The start x offset for text
      */
     private void drawBlockLines(Canvas canvas,float offsetX) {
-        List<BlockLine> blocks = mSpanner == null ? null : mSpanner.getColors().getBlocks();
+        List<BlockLine> blocks = mSpanner == null ? null : mSpanner.getResult().getBlocks();
         if(blocks == null || blocks.isEmpty()) {
             return;
         }
@@ -811,7 +812,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int jCount = 0;
         int maxCount = Integer.MAX_VALUE;
         if(mSpanner != null) {
-            TextAnalyzer.TextColors colors = mSpanner.getColors();
+            TextAnalyzeResult colors = mSpanner.getResult();
             if(colors != null) {
                 maxCount = colors.getSuppressSwitch();
             }
@@ -853,7 +854,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *          If cursor is not in any code block,just -1.
      */
     private int findCursorBlock() {
-        List<BlockLine> blocks = mSpanner == null ? null : mSpanner.getColors().getBlocks();
+        List<BlockLine> blocks = mSpanner == null ? null : mSpanner.getResult().getBlocks();
         if(blocks == null || blocks.isEmpty()) {
             return -1;
         }
@@ -875,7 +876,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int jCount = 0;
         int maxCount = Integer.MAX_VALUE;
         if(mSpanner != null) {
-            TextAnalyzer.TextColors colors = mSpanner.getColors();
+            TextAnalyzeResult colors = mSpanner.getResult();
             if(colors != null) {
                 maxCount = colors.getSuppressSwitch();
             }
@@ -1140,11 +1141,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param defaultColor Default color for no spans
      */
     private void drawText(Canvas canvas, float offsetX, int defaultColor){
-        TextAnalyzer.TextColors colors = mSpanner == null ? null : mSpanner.getColors();
-        if(colors == null || colors.getSpans().isEmpty()) {
+        TextAnalyzeResult colors = mSpanner == null ? null : mSpanner.getResult();
+        if(colors == null || colors.getSpanMap().isEmpty()) {
             drawTextDirect(canvas, offsetX, defaultColor, getFirstVisibleLine());
         }else{
-            drawTextBySpans(canvas, offsetX, colors);
+            drawTextLines(canvas, offsetX, colors);
         }
     }
 
@@ -1204,257 +1205,68 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Draw text by spans
-     * @param canvas Canvas to draw
-     * @param offsetX Start x of text region
-     * @param colors Spans
+     * Draw text lines
      */
-    private void drawTextBySpans(Canvas canvas, float offsetX, TextAnalyzer.TextColors colors){
+    private void drawTextLines(Canvas canvas, float offsetX, TextAnalyzeResult colors) {
         EditorColorScheme cs = mColors;
-        List<Span> spans = colors.getSpans();
+        List<List<Span>> spanMap = colors.getSpanMap();
         int first = getFirstVisibleLine();
         int last = getLastVisibleLine();
-        int index = 0,copy;
-        if(mMinModifiedLine != -1 && mMinModifiedLine <= first) {
-            index = binarySearchByIndex(spans,mText.getCharIndex(first,0));
-            drawTextBySpansModified(canvas,offsetX,first,last,index,spans);
-            return;
-        }
-        for(int i = first;i <= last;i++){
-            index = seekTo(spans, i, index);
-            if(mMinModifiedLine != -1 && mMinModifiedLine <= i) {
-                drawTextBySpansModified(canvas,offsetX,i,last,binarySearchByIndex(spans,mText.getCharIndex(i,0)),spans);
-                break;
+        for(int line = first;line <= last;line++) {
+            List<Span> spans = spanMap.size() > line ? spanMap.get(line) : new ArrayList<Span>();
+            if(spans.isEmpty()) {
+                spans.add(new Span(0, EditorColorScheme.TEXT_NORMAL));
             }
-            copy = index;
-            float off = offsetX;
-            prepareLine(i);
-            float y = getLineBaseLine(i) - getOffsetY();
-            try{
-                while(true){
-                    Span span = spans.get(copy),next = null;
-                    if(copy + 1 < spans.size()){
-                        next = spans.get(copy + 1);
-                    }
-                    int st = span.getLine() == i ? span.getColumn() : 0;
-                    int ed = next == null ? mText.getColumnCount(i) : (next.getLine() == i ? next.getColumn() : mText.getColumnCount(i));
-                    float width = measureText(mChars, st, ed - st);
-                    if(off + width > 0 && off < getWidth()) {
-                        mPaint.setColor(cs.getColor(span.colorId));
-                        drawText(canvas, mChars, st, ed - st, off, y);
-                        if(span.underlineColor != 0) {
-                            mRect.bottom = getLineBottom(i) - getOffsetY() - mDpUnit * 1;
-                            mRect.top = mRect.bottom - mDpUnit * 3;
-                            mRect.left = off;
-                            mRect.right = off + width;
-                            drawColor(canvas, span.underlineColor, mRect);
-                        }
-                    }
-                    off += width;
-                    if(off - offsetX > mMaxPaintX){
-                        mMaxPaintX = off - offsetX;
-                    }
-                    if(next == null || next.getLine() != i){
-                        break;
-                    }
-                    copy++;
-                }
-            }catch(IndexOutOfBoundsException e){
-                drawTextDirect(canvas, offsetX, mColors.getColor(EditorColorScheme.TEXT_NORMAL), i);
-                break;
-            }
+            drawTextLineWithSpans(canvas, offsetX, line, cs, spans);
         }
     }
 
     /**
-     * Get end index of span
-     * @param i Index in list
-     * @param spans Spans
-     * @return End index of span
+     * Draw single line
      */
-    private int getSpanEnd(int i,List<Span> spans) {
-        return (i + 1 == spans.size() ? mText.length() : spans.get(i + 1).startIndex);
-    }
-
-    /**
-     * Get end index of line
-     * @param i Line
-     * @param indexer Indexer to use
-     * @return End index of line
-     */
-    private int getLineEnd(int i, Indexer indexer) {
-        return (i + 1 == getLineCount() ? mText.length() + 1 : indexer.getCharIndex(i+1,0));
-    }
-
-    /**
-     * This method draw text by index in spans instead of line and column.
-     * It will be slower than by line but it is used to make the screen a little friendlier
-     * @param canvas Canvas to draw
-     * @param offsetX Start x of text region
-     * @param startLine First visible line
-     * @param endLine Last visible line
-     * @param index Start index in spans
-     * @param spans Spans
-     */
-    private void drawTextBySpansModified(Canvas canvas, float offsetX , int startLine, int endLine ,int index, List<Span> spans){
-        int maxIndex = spans.size() - 1;
-        Indexer indexer = getCursor().getIndexer();
-        int line = startLine;
-        int st = indexer.getCharIndex(line,0);
-        int line_st = st;
-        while(index <= maxIndex) {
-            prepareLine(line);
-            float off = offsetX;
-            int line_ed = getLineEnd(line,indexer) - 1;
-            while(st < line_ed){
-                while(index <= maxIndex && getSpanEnd(index,spans) < st) index++;
-                int ed = Math.min(getSpanEnd(index,spans),line_ed);
-                float advance = off > getWidth() ? 0 : measureText(mChars,st - line_st,ed - st);
-                if(off + advance > 0 && off < getWidth()) {
-                    Span span = spans.get(index);
-                    mPaint.setColor(mColors.getColor(span.colorId));
-                    drawText(canvas,mChars,st - line_st,ed - st,off,getLineBaseLine(line) - getOffsetY());
-                    if(span.underlineColor != 0) {
-                        mRect.bottom = getLineBottom(line) - getOffsetY() - mDpUnit * 1;
-                        mRect.top = mRect.bottom - mDpUnit * 4;
-                        mRect.left = off;
-                        mRect.right = off + advance;
-                        drawColor(canvas, span.underlineColor, mRect);
-                    }
-                }
-                off += advance;
-                st = ed;
-                if(ed < line_ed) {
-                    index++;
-                }else{
-                    break;
-                }
+    private void drawTextLineWithSpans(Canvas canvas, float offsetX, int line, EditorColorScheme cs, List<Span> spans) {
+        //TODO Optimize long text line
+        float baseline = getLineBaseLine(line) - getOffsetY();
+        prepareLine(line);
+        for(int spanIndex = 0;spanIndex < spans.size();spanIndex++) {
+            Span span = spans.get(spanIndex);
+            int startIndex = span.column;
+            int endIndex;
+            int columnCount = mText.getColumnCount(line);
+            if(spanIndex + 1 >= spans.size()) {
+                endIndex = columnCount;
+            } else {
+                endIndex = spans.get(spanIndex + 1).column;
             }
-            line++;
-            if(line > endLine) {
+            if(endIndex > columnCount) {
+                endIndex = columnCount;
+            }
+            if(startIndex > endIndex) {
+                //Invalid spans
                 break;
             }
-            st = line_st = indexer.getCharIndex(line,0);
-        }
-    }
-
-    /**
-     * Find for the start of line in spans
-     * @param spans Spans
-     * @param line Searching line
-     * @return Start span index in spans
-     */
-    private int binarySearch(List<Span> spans, int line) {
-        int left = 0,right = spans.size() - 1,mid,row;
-        int max = right;
-        while(left <= right){
-            mid = (left + right) / 2;
-            if(mid < 0) return 0;
-            if(mid > max) return max;
-            row = spans.get(mid).getLine();
-            if(row == line) {
-                return mid;
-            }else if(row < line){
-                left = mid + 1;
-            }else{
-                right = mid - 1;
+            if(endIndex - startIndex < 0) {
+                Log.i(LOG_TAG, "line = " + line + " start = " + startIndex + " end = " + endIndex + " colCnt = " + columnCount);
             }
-        }
-        return Math.max(0,Math.min(left,max));
-    }
-
-    /**
-     * Find for the start of index in spans
-     * @param spans Spans
-     * @param index Searching index
-     * @return Start span index in spans
-     */
-    private int binarySearchByIndex(List<Span> spans, int index){
-        int left = 0,right = spans.size() - 1,mid,row;
-        int max = right;
-        while(left <= right){
-            mid = (left + right) / 2;
-            if(mid < 0) return 0;
-            if(mid > max) return max;
-            row = spans.get(mid).startIndex;
-            if(row == index) {
-                return mid;
-            }else if(row < index){
-                left = mid + 1;
-            }else{
-                right = mid - 1;
+            float width = measureText(mChars, startIndex, endIndex - startIndex);
+            if(offsetX + width < 0) {
+                offsetX = offsetX + width;
+                continue;
             }
-        }
-        int result = Math.max(0,Math.min(left,max));
-        while(result > 0) {
-            if(spans.get(result).startIndex > index) {
-                result--;
-            }else{
+            mPaint.setColor(cs.getColor(span.colorId));
+            drawText(canvas, mChars, startIndex, endIndex - startIndex, offsetX, baseline);
+            if(span.underlineColor != 0) {
+                mRect.bottom = getLineBottom(line) - getOffsetY() - mDpUnit * 1;
+                mRect.top = mRect.bottom - mDpUnit * 3;
+                mRect.left = offsetX;
+                mRect.right = offsetX + width;
+                drawColor(canvas, span.underlineColor, mRect);
+            }
+            offsetX = offsetX + width;
+            if(offsetX > getWidth()) {
                 break;
             }
         }
-        while(result < right) {
-            if(getSpanEnd(result,spans) < index) {
-                result++;
-            }else{
-                break;
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Find the first span for line by binary search
-     * @param spans Spans
-     * @param line Searching line
-     * @return First span index
-     */
-    private int seekTo(List<Span> spans, int line){
-        int curr = binarySearch(spans,line);
-        if(curr >= spans.size()){
-            curr = spans.size() - 1;
-        }else if(curr < 0){
-            curr = 0;
-        }
-        while(curr > 0){
-            Span span = spans.get(curr);
-            if(span.getLine() >= line){
-                curr--;
-            }else{
-                break;
-            }
-        }
-        while(true) {
-            Span span = spans.get(curr);
-            if(span.getLine() < line && curr + 1 < spans.size() && (spans.get(curr + 1).getLine() < line||(spans.get(curr + 1).getLine() == line && spans.get(curr + 1).getColumn() == 0)) ) {
-                curr++;
-            }else{
-                break;
-            }
-        }
-        return Math.min(curr,spans.size() - 1);
-    }
-
-    /**
-     * Find first span for the given line
-     * @param spans Spans
-     * @param line Searching line
-     * @param curr Current index
-     * @return New position
-     */
-    private int seekTo(List<Span> spans, int line, int curr) {
-        if(curr == 0){
-            return seekTo(spans, line);
-        }
-        while(curr < spans.size()) {
-            Span span = spans.get(curr);
-            if(span.getLine() < line && curr + 1 < spans.size() && (spans.get(curr + 1).getLine() < line||(spans.get(curr + 1).getLine() == line && spans.get(curr + 1).getColumn() == 0))){
-                curr++;
-            }else{
-                break;
-            }
-        }
-        return curr;
     }
 
     /**
@@ -1489,10 +1301,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if(length >= mChars.length){
             mChars = new char[length + 100];
         }
-        /*
-        for(int i = 0;i < length;i++){
-            mChars[i] = mText.charAt(line, i);
-        }*/
         mText.getLineChars(line, mChars);
     }
 
@@ -1525,7 +1333,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if(pos == -1) {
             return;
         }
-        List<BlockLine> blocks = mSpanner == null ? null : mSpanner.getColors().getBlocks();
+        List<BlockLine> blocks = mSpanner == null ? null : mSpanner.getResult().getBlocks();
         BlockLine block = (blocks != null && blocks.size() > pos) ? blocks.get(pos) : null;
         if(block != null) {
             int left = mCursor.getLeftLine();
@@ -2723,12 +2531,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mSpanner = new TextAnalyzer(mLanguage.getAnalyzer());
         mSpanner.setCallback(this);
 
-        TextAnalyzer.TextColors colors = mSpanner.getColors();
-        colors.getSpans().clear();
+        TextAnalyzeResult colors = mSpanner.getResult();
+        colors.getSpanMap().clear();
         mSpanner.analyze(getText());
 
         mMaxPaintX = 0;
-        mMinModifiedLine = -1;
         requestLayout();
 
         if(mListener != null) {
@@ -2798,8 +2605,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Get spans
      * @return spans
      */
-    public TextAnalyzer.TextColors getTextColor(){
-        return mSpanner.getColors();
+    public TextAnalyzeResult getTextColor(){
+        return mSpanner.getResult();
     }
 
     /**
@@ -2939,7 +2746,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         outAttrs.inputType = EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
         outAttrs.initialSelStart = getCursor() != null ? getCursor().getLeft() : 0;
-        outAttrs.initialSelStart = getCursor() != null ? getCursor().getRight() : 0;
+        outAttrs.initialSelEnd = getCursor() != null ? getCursor().getRight() : 0;
         mConnection.reset();
         return mConnection;
     }
@@ -3117,31 +2924,171 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mListener.beforeReplace(this, content);
         }
     }
-    //There is problems in this
-    //I will fix it soon
-	/*
-	private void shiftSpansOnInsert(int line,int startColumn,int length) {
-		List<TextColorProvider.Span> spans = mSpanner.getColors().getSpans();
-		int spanStart = binarySearch(spans,line);
-		TextColorProvider.Span span;
-		spanStart = Math.max(0,spanStart - 2);
-		for(int i = spanStart;i < spans.size();i++) {
-			span = spans.get(i);
-			if(span.line == line && span.column >= startColumn) {
-				span.column += length;
-			}else if(span.line > line) {
-				break;
-			}
-		}
-	}*/
+
+    private static int findSpanIndexFor(List<Span> spans, int initialPosition, int targetCol) {
+        for(int i = initialPosition;i < spans.size();i++) {
+            if(spans.get(i).column >= targetCol) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private void shiftSpansOnSingleLineInsert(int line, int startCol, int endCol) {
+        List<List<Span>> spans = mSpanner.getResult().getSpanMap();
+        if(spans == null || spans.isEmpty()) {
+            return;
+        }
+        List<Span> spanList = spans.get(line);
+        int index = findSpanIndexFor(spanList, 0, startCol);
+        if(index == -1) {
+            return;
+        }
+        int originIndex = index;
+        // Shift spans after insert position
+        int delta = endCol - startCol;
+        while (index < spanList.size()) {
+            spanList.get(index++).column += delta;
+        }
+        // Add extra span for line start
+        if(originIndex == 0) {
+            Span first = spanList.get(0);
+            if(first.colorId == EditorColorScheme.TEXT_NORMAL && first.underlineColor == 0) {
+                first.column = 0;
+            } else {
+                spanList.add(0, new Span(0, EditorColorScheme.TEXT_NORMAL));
+            }
+        }
+    }
+
+    private void shiftSpansOnMultiLineInsert(int startLine, int startColumn, int endLine, int endColumn) {
+        List<List<Span>> map = mSpanner.getResult().getSpanMap();
+        // Find extended span
+        List<Span> startLineSpans = map.get(startLine);
+        int extendedSpanIndex = findSpanIndexFor(startLineSpans, 0, startColumn);
+        if(extendedSpanIndex == -1) {
+            extendedSpanIndex = startLineSpans.size() - 1;
+        }
+        if(startLineSpans.get(extendedSpanIndex).column > startColumn) {
+            extendedSpanIndex--;
+        }
+        Span extendedSpan;
+        if(extendedSpanIndex < 0 || extendedSpanIndex >= startLineSpans.size()) {
+            extendedSpan = new Span(0, EditorColorScheme.TEXT_NORMAL);
+        } else {
+            extendedSpan = startLineSpans.get(extendedSpanIndex);
+        }
+        // Create map link for new lines
+        for(int i = 0;i < endLine - startLine;i++) {
+            List<Span> list = new ArrayList<>();
+            list.add(extendedSpan.copy().setColumn(0));
+            map.add(startLine + 1, list);
+        }
+        // Add original spans to new line
+        List<Span> endLineSpans = map.get(endLine);
+        if(endColumn == 0 && extendedSpanIndex + 1 < startLineSpans.size()) {
+            endLineSpans.clear();
+        }
+        int delta = Integer.MIN_VALUE;
+        while (extendedSpanIndex + 1 < startLineSpans.size()) {
+            Span span = startLineSpans.remove(extendedSpanIndex + 1);
+            if(delta == Integer.MIN_VALUE) {
+                delta = span.column;
+            }
+            endLineSpans.add(span.setColumn(span.column - delta + endColumn));
+        }
+    }
+
+    private void shiftSpansOnSingleLineDelete(int line, int startCol, int endCol) {
+        List<List<Span>> spans = mSpanner.getResult().getSpanMap();
+        if(spans == null || spans.isEmpty()) {
+            return;
+        }
+        List<Span> spanList = spans.get(line);
+        int startIndex = findSpanIndexFor(spanList, 0, startCol);
+        if(startIndex == -1) {
+            //No span is to be updated
+            return;
+        }
+        int endIndex = findSpanIndexFor(spanList, startIndex, endCol);
+        if(endIndex == -1) {
+            endIndex = spanList.size();
+        }
+        // Remove spans inside delete text
+        int removeCount = endIndex - startIndex;
+        for(int i = 0;i < removeCount;i++) {
+            spanList.remove(startIndex);
+        }
+        // Shift spans
+        int delta = endCol - startCol;
+        while (startIndex < spanList.size()) {
+            spanList.get(startIndex).column -= delta;
+            startIndex++;
+        }
+        // Ensure there is span
+        if(spanList.isEmpty() || spanList.get(0).column != 0) {
+            spanList.add(0, new Span(0, EditorColorScheme.TEXT_NORMAL));
+        }
+        // Remove spans with length 0
+        for(int i = 0;i + 1 < spanList.size();i++) {
+            if(spanList.get(i).column >= spanList.get(i + 1).column) {
+                spanList.remove(i);
+                i--;
+            }
+        }
+    }
+
+    private void shiftSpansOnMultiLineDelete(int startLine, int startColumn, int endLine, int endColumn) {
+        List<List<Span>> map = mSpanner.getResult().getSpanMap();
+        int lineCount = endLine - startLine - 1;
+        // Remove unrelated lines
+        while(lineCount > 0) {
+            map.remove(startLine + 1);
+            lineCount--;
+        }
+        // Clean up start line
+        List<Span> startLineSpans = map.get(startLine);
+        int index = startLineSpans.size() - 1;
+        while(index > 0) {
+            if(startLineSpans.get(index).column >= startColumn) {
+                startLineSpans.remove(index);
+                index--;
+            } else {
+                break;
+            }
+        }
+        // Shift end line
+        List<Span> endLineSpans = map.get(startLine + 1);
+        while(endLineSpans.size() > 1) {
+            Span first = endLineSpans.get(0);
+            if(first.column >= endColumn) {
+                break;
+            } else {
+                int spanEnd = endLineSpans.get(1).column;
+                if(spanEnd <= endColumn) {
+                    endLineSpans.remove(first);
+                } else {
+                    break;
+                }
+            }
+        }
+        for(int i = 0;i < endLineSpans.size();i++) {
+            Span span = endLineSpans.get(i);
+            if(span.column < endColumn) {
+                span.column = 0;
+            } else {
+                span.column -= endColumn;
+            }
+        }
+    }
 
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
-        //if(startLine == endLine) {
-        //shiftSpansOnInsert(startLine,startColumn,endColumn - startColumn);
-        //}else{
-        mMinModifiedLine = mMinModifiedLine == -1 ? startLine : Math.min(startLine,mMinModifiedLine);
-        //}
+        if(startLine == endLine) {
+            shiftSpansOnSingleLineInsert(startLine, startColumn, endColumn);
+        } else {
+            shiftSpansOnMultiLineInsert(startLine, startColumn, endLine, endColumn);
+        }
         mWait = false;
         updateCursor();
         if(endColumn == 0 || startLine != endLine) {
@@ -3220,8 +3167,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
+        if(startLine == endLine) {
+            shiftSpansOnSingleLineDelete(startLine, startColumn, endColumn);
+        } else {
+            shiftSpansOnMultiLineDelete(startLine, startColumn, endLine, endColumn);
+        }
         updateCursor();
-        mMinModifiedLine = mMinModifiedLine == -1 ? startLine : Math.min(startLine,mMinModifiedLine);
         if(mConnection.mComposingLine == -1 && mACPanel.isShowing()) {
             if(startLine != endLine || startColumn != endColumn - 1) {
                 mACPanel.hide();
@@ -3285,12 +3236,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     @Override
-    public void onAnalyzeDone(TextAnalyzer provider, TextAnalyzer.TextColors colors) {
+    public void onAnalyzeDone(TextAnalyzer provider, TextAnalyzeResult colors) {
         if(mHighlightCurrentBlock){
             mCursorPosition = findCursorBlock();
         }
         postInvalidate();
-        mMinModifiedLine = -1;
         mLastAnalyzeThreadTime = System.currentTimeMillis() - provider.mThreadStartTime;
     }
 

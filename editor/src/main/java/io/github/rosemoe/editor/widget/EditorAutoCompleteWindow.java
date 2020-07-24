@@ -38,7 +38,7 @@ import io.github.rosemoe.editor.R;
 
 import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.editor.text.Cursor;
-import io.github.rosemoe.editor.text.TextAnalyzer;
+import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.struct.ResultItem;
 
 import java.util.ArrayList;
@@ -324,7 +324,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
         private final long mTime;
         private final String mPrefix;
         private final boolean mInner;
-        private final TextAnalyzer.TextColors mColors;
+        private final TextAnalyzeResult mColors;
         private final int mLine;
         private final AutoCompleteProvider mLocalProvider = mProvider;
 

@@ -18,7 +18,7 @@ package io.github.rosemoe.editor.langs;
 import io.github.rosemoe.editor.struct.ResultItem;
 import io.github.rosemoe.editor.text.TextAnalyzer.AnalyzeThread.Delegate;
 import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
-import io.github.rosemoe.editor.text.TextAnalyzer.TextColors;
+import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
 
@@ -70,7 +70,7 @@ public class EmptyLanguage implements EditorLanguage
     public static class EmptyAutoCompleteProvider implements AutoCompleteProvider {
 
         @Override
-        public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextColors colors, int line) {
+        public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzeResult colors, int line) {
             return new ArrayList<>();
         }
 
@@ -79,7 +79,7 @@ public class EmptyLanguage implements EditorLanguage
     private static class EmptyCodeAnalyzer implements CodeAnalyzer {
 
         @Override
-        public void analyze(CharSequence content, TextColors colors, Delegate delegate) {
+        public void analyze(CharSequence content, TextAnalyzeResult colors, Delegate delegate) {
             colors.addNormalIfNull();
         }
 

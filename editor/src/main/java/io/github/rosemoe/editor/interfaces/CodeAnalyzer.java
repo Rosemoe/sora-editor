@@ -16,6 +16,7 @@
 package io.github.rosemoe.editor.interfaces;
 
 import io.github.rosemoe.editor.text.Content;
+import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.text.TextAnalyzer;
 
 /**
@@ -32,6 +33,6 @@ public interface CodeAnalyzer {
      * @param colors Result dest
      * @param delegate Delegate between thread and analyzer
      */
-    void analyze(CharSequence content, TextAnalyzer.TextColors colors, TextAnalyzer.AnalyzeThread.Delegate delegate);
+    void analyze(CharSequence content, TextAnalyzeResult colors, TextAnalyzer.AnalyzeThread.Delegate delegate);
 
 }

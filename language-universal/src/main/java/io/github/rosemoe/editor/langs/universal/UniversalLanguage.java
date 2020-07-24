@@ -22,6 +22,7 @@ import io.github.rosemoe.editor.langs.IdentifierAutoComplete;
 import io.github.rosemoe.editor.langs.internal.MyCharacter;
 import io.github.rosemoe.editor.struct.BlockLine;
 import io.github.rosemoe.editor.text.LineNumberCalculator;
+import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.text.TextAnalyzer;
 import io.github.rosemoe.editor.widget.EditorColorScheme;
 
@@ -90,7 +91,7 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
     }
 
     @Override
-    public void analyze(CharSequence content, TextAnalyzer.TextColors colors, TextAnalyzer.AnalyzeThread.Delegate delegate) {
+    public void analyze(CharSequence content, TextAnalyzeResult colors, TextAnalyzer.AnalyzeThread.Delegate delegate) {
         StringBuilder text = content instanceof StringBuilder ? (StringBuilder)content : new StringBuilder(content);
         tokenizer.setInput(text);
         LineNumberCalculator helper = new LineNumberCalculator(text);
@@ -110,21 +111,21 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
                 int column = helper.getColumn();
                 switch (token) {
                     case KEYWORD:
-                        colors.addIfNeeded(index, line, column, EditorColorScheme.KEYWORD);
+                        colors.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
                         break;
                     case IDENTIFIER:
                         identifiers.addIdentifier(text.substring(index, index + tokenizer.getTokenLength()));
-                        colors.addIfNeeded(index, line, column, EditorColorScheme.TEXT_NORMAL);
+                        colors.addIfNeeded(line, column, EditorColorScheme.TEXT_NORMAL);
                         break;
                     case LITERAL:
-                        colors.addIfNeeded(index, line, column, EditorColorScheme.LITERAL);
+                        colors.addIfNeeded(line, column, EditorColorScheme.LITERAL);
                         break;
                     case LINE_COMMENT:
                     case LONG_COMMENT:
-                        colors.addIfNeeded(index, line, column, EditorColorScheme.COMMENT);
+                        colors.addIfNeeded(line, column, EditorColorScheme.COMMENT);
                         break;
                     case OPERATOR:
-                        colors.addIfNeeded(index, line, column, EditorColorScheme.OPERATOR);
+                        colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                         if(mLanguage.isSupportBlockLine()) {
                             String op = text.substring(index, index + tokenizer.getTokenLength());
                             if (mLanguage.isBlockStart(op)) {
@@ -156,9 +157,10 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
                         break;
                     case WHITESPACE:
                     case NEWLINE:
+                        colors.addNormalIfNull();
                         break;
                     case UNKNOWN:
-                        colors.add(index, line, column, EditorColorScheme.ANNOTATION);
+                        colors.addIfNeeded(line, column, EditorColorScheme.ANNOTATION);
                         break;
                 }
                 helper.update(tokenizer.getTokenLength());
@@ -166,6 +168,7 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        colors.determine(helper.getLine());
         identifiers.finish();
         colors.mExtra = identifiers;
         tokenizer.setInput(null);
