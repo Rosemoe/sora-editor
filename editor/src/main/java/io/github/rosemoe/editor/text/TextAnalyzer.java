@@ -15,6 +15,8 @@
  */
 package io.github.rosemoe.editor.text;
 
+import android.util.Log;
+
 import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
 import io.github.rosemoe.editor.struct.BlockLine;
 
@@ -27,14 +29,21 @@ import java.util.List;
  */
 public class TextAnalyzer {
 
+    private static int sThreadId = 0;
+    private synchronized static int nextThreadId() {
+        sThreadId++;
+        return sThreadId;
+    }
+
     /**
      * Debug:Start time
      */
-    public long mThreadStartTime;
+    public long mOpStartTime;
     private TextAnalyzeResult mResult;
     private Callback mCallback;
     private AnalyzeThread mThread;
     private CodeAnalyzer mCodeAnalyzer;
+    private final Object mLock = new Object();
 
     /**
      * Create a new manager for the given codeAnalyzer
@@ -59,22 +68,30 @@ public class TextAnalyzer {
         mCallback = cb;
     }
 
+    public void shutdown() {
+        final AnalyzeThread thread = mThread;
+        if(thread != null && thread.isAlive()) {
+            thread.interrupt();
+        }
+    }
+
     /**
      * Analyze the given text
      *
      * @param origin The source text
      */
     public void analyze(Content origin) {
-        final AnalyzeThread mT = this.mThread;
-        if (mT == null) {
-            this.mThread = new AnalyzeThread(mCodeAnalyzer, origin);
-            this.mThread.start();
+        AnalyzeThread thread = this.mThread;
+        if (thread == null || !thread.isAlive()) {
+            Log.d("TextAnalyzer", "Starting a new thread for analyzing");
+            thread = this.mThread = new AnalyzeThread(mLock, mCodeAnalyzer, origin);
+            thread.setName("Text Analyze Daemon - " + nextThreadId());
+            thread.setDaemon(true);
+            thread.start();
         } else {
-            if (mT.isAlive()) {
-                mT.restartWith(origin);
-            } else {
-                this.mThread = new AnalyzeThread(mCodeAnalyzer, origin);
-                this.mThread.start();
+            thread.restartWith(origin);
+            synchronized (mLock) {
+                mLock.notify();
             }
         }
     }
@@ -99,9 +116,10 @@ public class TextAnalyzer {
      */
     public class AnalyzeThread extends Thread {
 
-        private boolean waiting = false;
+        private volatile boolean waiting = false;
         private Content content;
         private final CodeAnalyzer codeAnalyzer;
+        private final Object lock;
 
         /**
          * Create a new thread
@@ -109,39 +127,55 @@ public class TextAnalyzer {
          * @param a       The CodeAnalyzer to call
          * @param content The Content to analyze
          */
-        public AnalyzeThread(CodeAnalyzer a, Content content) {
+        public AnalyzeThread(Object lock, CodeAnalyzer a, Content content) {
+            this.lock = lock;
             codeAnalyzer = a;
             this.content = content;
         }
 
         @Override
         public void run() {
-            TextAnalyzeResult colors = new TextAnalyzeResult();
-            Delegate d = new Delegate();
-            mThreadStartTime = System.currentTimeMillis();
-            do {
-                waiting = false;
-                StringBuilder c = content.toStringBuilder();
-                codeAnalyzer.analyze(c, colors, d);
-                if (waiting) {
-                    colors.mSpanMap.clear();
-                    colors.mLast = null;
-                    colors.mBlocks.clear();
-                    colors.mSuppressSwitch = Integer.MAX_VALUE;
-                    colors.mLabels = null;
-                    colors.mExtra = null;
-                }
-            } while (waiting);
-
-            List<BlockLine> blockLines = mResult.mBlocks;
-            mResult = colors;
-            colors.addNormalIfNull();
             try {
-                if (mCallback != null)
-                    mCallback.onAnalyzeDone(TextAnalyzer.this, colors);
-                ObjectAllocator.recycleBlockLine(blockLines);
-            } catch (NullPointerException e) {
-                e.printStackTrace();
+                do {
+                    TextAnalyzeResult colors = new TextAnalyzeResult();
+                    Delegate d = new Delegate();
+                    mOpStartTime = System.currentTimeMillis();
+                    do {
+                        waiting = false;
+                        StringBuilder c = content.toStringBuilder();
+                        codeAnalyzer.analyze(c, colors, d);
+                        if (waiting) {
+                            colors.mSpanMap.clear();
+                            colors.mLast = null;
+                            colors.mBlocks.clear();
+                            colors.mSuppressSwitch = Integer.MAX_VALUE;
+                            colors.mLabels = null;
+                            colors.mExtra = null;
+                        }
+                    } while (waiting);
+
+                    List<BlockLine> blockLines = mResult.mBlocks;
+                    mResult = colors;
+                    colors.addNormalIfNull();
+                    try {
+                        if (mCallback != null)
+                            mCallback.onAnalyzeDone(TextAnalyzer.this, colors);
+                        ObjectAllocator.recycleBlockLine(blockLines);
+                    } catch (NullPointerException e) {
+                        e.printStackTrace();
+                    }
+
+                    try {
+                        synchronized (lock) {
+                            lock.wait();
+                        }
+                    } catch (InterruptedException e) {
+                        Log.d("AnalyzeThread", "Analyze daemon is being interrupted -> Exit");
+                        break;
+                    }
+                } while (true);
+            } catch (Exception ex) {
+                Log.i("AnalyzeThread", "Analyze daemon got exception -> Exit", ex);
             }
         }
 

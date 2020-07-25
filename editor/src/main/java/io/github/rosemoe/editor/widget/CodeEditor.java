@@ -48,7 +48,6 @@ import io.github.rosemoe.editor.text.Content;
 import io.github.rosemoe.editor.text.ContentListener;
 import io.github.rosemoe.editor.text.Cursor;
 import io.github.rosemoe.editor.text.FormatThread;
-import io.github.rosemoe.editor.text.Indexer;
 import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.text.TextAnalyzer;
 import io.github.rosemoe.editor.widget.edge.EdgeEffect;
@@ -2528,6 +2527,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         if(mSpanner != null){
             mSpanner.setCallback(null);
+            mSpanner.shutdown();
         }
         mSpanner = new TextAnalyzer(mLanguage.getAnalyzer());
         mSpanner.setCallback(this);
@@ -3083,12 +3083,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
+    private boolean isSpanMapPrepared() {
+        List<List<Span>> map = mSpanner.getResult().getSpanMap();
+        return (map != null && map.size() != 0);
+    }
+
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
-        if(startLine == endLine) {
-            shiftSpansOnSingleLineInsert(startLine, startColumn, endColumn);
-        } else {
-            shiftSpansOnMultiLineInsert(startLine, startColumn, endLine, endColumn);
+        if(isSpanMapPrepared()) {
+            if (startLine == endLine) {
+                shiftSpansOnSingleLineInsert(startLine, startColumn, endColumn);
+            } else {
+                shiftSpansOnMultiLineInsert(startLine, startColumn, endLine, endColumn);
+            }
         }
         mWait = false;
         updateCursor();
@@ -3168,10 +3175,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
-        if(startLine == endLine) {
-            shiftSpansOnSingleLineDelete(startLine, startColumn, endColumn);
-        } else {
-            shiftSpansOnMultiLineDelete(startLine, startColumn, endLine, endColumn);
+        if(isSpanMapPrepared()) {
+            if (startLine == endLine) {
+                shiftSpansOnSingleLineDelete(startLine, startColumn, endColumn);
+            } else {
+                shiftSpansOnMultiLineDelete(startLine, startColumn, endLine, endColumn);
+            }
         }
         updateCursor();
         if(mConnection.mComposingLine == -1 && mACPanel.isShowing()) {
@@ -3242,7 +3251,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mCursorPosition = findCursorBlock();
         }
         postInvalidate();
-        mLastAnalyzeThreadTime = System.currentTimeMillis() - provider.mThreadStartTime;
+        mLastAnalyzeThreadTime = System.currentTimeMillis() - provider.mOpStartTime;
     }
 
 }

@@ -121,7 +121,11 @@ class EditorInputConnection extends BaseInputConnection {
             sub.beginStreamCharGetting(0);
             SpannableStringBuilder text = new SpannableStringBuilder(sub);
             if(mComposingLine != -1) {
-                text.setSpan(new ComposingText(), getCursor().getIndexer().getCharIndex(mComposingLine, mComposingStart), getCursor().getIndexer().getCharIndex(mComposingLine, mComposingEnd), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                try {
+                    text.setSpan(new ComposingText(), getCursor().getIndexer().getCharIndex(mComposingLine, mComposingStart) - start, getCursor().getIndexer().getCharIndex(mComposingLine, mComposingEnd) - start, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }catch (IndexOutOfBoundsException e) {
+                    //ignored
+                }
             }
             return text;
         }
