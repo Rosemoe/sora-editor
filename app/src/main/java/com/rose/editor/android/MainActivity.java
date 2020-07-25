@@ -32,6 +32,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import io.github.rosemoe.editor.langs.EmptyLanguage;
 import io.github.rosemoe.editor.langs.desc.CDescription;
 import io.github.rosemoe.editor.langs.desc.CppDescription;
 import io.github.rosemoe.editor.langs.desc.JavaScriptDescription;
@@ -183,7 +184,7 @@ public class MainActivity extends Activity {
                 case 14:
                     new AlertDialog.Builder(this)
                             .setTitle("Switch language")
-                            .setSingleChoiceItems(new String[]{"C","C++","Java","JavaScript","S5d"}, 0, new DialogInterface.OnClickListener() {
+                            .setSingleChoiceItems(new String[]{"C","C++","Java","JavaScript","S5d","None"}, 0, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     switch (which) {
@@ -201,6 +202,9 @@ public class MainActivity extends Activity {
                                             break;
                                         case 4:
                                             editor.setEditorLanguage(new S5droidLanguage());
+                                            break;
+                                        case 5:
+                                            editor.setEditorLanguage(new EmptyLanguage());
                                     }
                                     dialog.dismiss();
                                 }
@@ -230,7 +234,7 @@ public class MainActivity extends Activity {
                 sb.append('\n').append(o);
             }
             new AlertDialog.Builder(this)
-                    .setTitle("Error occured!")
+                    .setTitle("Error occurred!")
                     .setMessage(sb)
                     .setPositiveButton("Cancel",null)
                     .show();

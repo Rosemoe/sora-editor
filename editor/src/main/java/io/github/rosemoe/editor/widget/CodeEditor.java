@@ -1267,6 +1267,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 break;
             }
         }
+        mMaxPaintX = Math.max(mMaxPaintX, measureText(mChars, 0, mText.getColumnCount(line)));
     }
 
     /**

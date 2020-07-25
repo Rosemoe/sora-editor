@@ -481,8 +481,8 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 mEditor.getScrollMaxX(),
                 0,
                 mEditor.getScrollMaxY(),
-                (int)(30 * mEditor.getDpUnit()),
-                (int)(30 * mEditor.getDpUnit()));
+                mEditor.isOverScrollEnabled() ? (int)(30 * mEditor.getDpUnit()) : 0,
+                mEditor.isOverScrollEnabled() ? (int)(30 * mEditor.getDpUnit()) : 0);
         mEditor.invalidate();
         float minVe = mEditor.getDpUnit() * 2000;
         if(Math.abs(velocityX) >= minVe || Math.abs(velocityY) >= minVe) {
