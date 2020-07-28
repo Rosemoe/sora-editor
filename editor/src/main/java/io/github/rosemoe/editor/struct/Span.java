@@ -15,6 +15,11 @@
  */
 package io.github.rosemoe.editor.struct;
 
+import java.util.Collection;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import io.github.rosemoe.editor.text.Content;
 import io.github.rosemoe.editor.widget.EditorColorScheme;
 
@@ -32,10 +37,11 @@ public class Span {
 
     /**
      * Create a new span
+     * @see Span#obtain(int, int) 
      * @param column Start column of span
      * @param colorId Type of span
      */
-    public Span(int column, int colorId) {
+    private Span(int column, int colorId) {
         this.column = column;
         this.colorId = colorId;
     }
@@ -59,15 +65,47 @@ public class Span {
         return column;
     }
 
+    /**
+     * Set column of this span
+     */
     public Span setColumn(int column) {
         this.column = column;
         return this;
     }
 
+    /**
+     * Make a copy of this span
+     */
     public Span copy() {
-        Span copy = new Span(column, colorId);
+        Span copy = obtain(column, colorId);
         copy.setUnderlineColor(underlineColor);
         return copy;
     }
+
+    public boolean recycle() {
+        colorId = column = underlineColor = 0;
+        return cacheQueue.offer(this);
+    }
+
+    public static Span obtain(int column, int colorId) {
+        Span span = cacheQueue.poll();
+        if(span == null) {
+            return new Span(column, colorId);
+        } else {
+            span.column = column;
+            span.colorId = colorId;
+            return span;
+        }
+    }
+
+    public static void recycleAll(Collection<Span> spans) {
+        for(Span span : spans) {
+            if(!span.recycle()) {
+                return;
+            }
+        }
+    }
+
+    private static final BlockingQueue<Span> cacheQueue = new ArrayBlockingQueue<>(8192 * 2);
 
 }

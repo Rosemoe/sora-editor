@@ -361,6 +361,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         this.mLanguage = lang;
         if(mSpanner != null) {
+            mSpanner.shutdown();
             mSpanner.setCallback(null);
         }
         mSpanner = new TextAnalyzer(lang.getAnalyzer());
@@ -1215,13 +1216,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int last = getLastVisibleLine();
         for(int line = first;line <= last;line++) {
             List<Span> spans = spanMap.size() > line ? spanMap.get(line) : new ArrayList<Span>();
+            Span span = null;
             if(spans.isEmpty()) {
-                spans.add(new Span(0, EditorColorScheme.TEXT_NORMAL));
+                spans.add(span = Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
             }
             try {
                 drawTextLineWithSpans(canvas, offsetX, line, cs, spans);
             }catch (IndexOutOfBoundsException e) {
                 Log.w(LOG_TAG, "Exception in rendering line " + line, e);
+            }
+            if(span != null) {
+                span.recycle();
             }
         }
     }
@@ -3018,7 +3023,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             if(first.colorId == EditorColorScheme.TEXT_NORMAL && first.underlineColor == 0) {
                 first.column = 0;
             } else {
-                spanList.add(0, new Span(0, EditorColorScheme.TEXT_NORMAL));
+                spanList.add(0, Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
             }
         }
     }
@@ -3036,7 +3041,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         Span extendedSpan;
         if(extendedSpanIndex < 0 || extendedSpanIndex >= startLineSpans.size()) {
-            extendedSpan = new Span(0, EditorColorScheme.TEXT_NORMAL);
+            extendedSpan = Span.obtain(0, EditorColorScheme.TEXT_NORMAL);
         } else {
             extendedSpan = startLineSpans.get(extendedSpanIndex);
         }
@@ -3079,7 +3084,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         // Remove spans inside delete text
         int removeCount = endIndex - startIndex;
         for(int i = 0;i < removeCount;i++) {
-            spanList.remove(startIndex);
+            spanList.remove(startIndex).recycle();
         }
         // Shift spans
         int delta = endCol - startCol;
@@ -3089,12 +3094,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         // Ensure there is span
         if(spanList.isEmpty() || spanList.get(0).column != 0) {
-            spanList.add(0, new Span(0, EditorColorScheme.TEXT_NORMAL));
+            spanList.add(0, Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
         }
         // Remove spans with length 0
         for(int i = 0;i + 1 < spanList.size();i++) {
             if(spanList.get(i).column >= spanList.get(i + 1).column) {
-                spanList.remove(i);
+                spanList.remove(i).recycle();
                 i--;
             }
         }
@@ -3105,7 +3110,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int lineCount = endLine - startLine - 1;
         // Remove unrelated lines
         while(lineCount > 0) {
-            map.remove(startLine + 1);
+            Span.recycleAll(map.remove(startLine + 1));
             lineCount--;
         }
         // Clean up start line
@@ -3113,7 +3118,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int index = startLineSpans.size() - 1;
         while(index > 0) {
             if(startLineSpans.get(index).column >= startColumn) {
-                startLineSpans.remove(index);
+                startLineSpans.remove(index).recycle();
                 index--;
             } else {
                 break;
@@ -3129,6 +3134,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 int spanEnd = endLineSpans.get(1).column;
                 if(spanEnd <= endColumn) {
                     endLineSpans.remove(first);
+                    first.recycle();
                 } else {
                     break;
                 }

@@ -55,7 +55,7 @@ public class TextAnalyzeResult {
         if(mLast != null && mLast.colorId == colorId) {
             return;
         }
-        add(spanLine, new Span(column, colorId));
+        add(spanLine, Span.obtain(column, colorId));
     }
 
     /**
@@ -72,7 +72,7 @@ public class TextAnalyzeResult {
         } else if(spanLine > mapLine) {
             Span extendedSpan = mLast;
             if(extendedSpan == null) {
-                extendedSpan = new Span(0, EditorColorScheme.TEXT_NORMAL);
+                extendedSpan = Span.obtain(0, EditorColorScheme.TEXT_NORMAL);
             }
             while (mapLine < spanLine) {
                 List<Span> lineSpans = new ArrayList<>();
@@ -99,7 +99,7 @@ public class TextAnalyzeResult {
         int mapLine = mSpanMap.size() - 1;
         Span extendedSpan = mLast;
         if(mLast == null) {
-            extendedSpan = new Span(0, EditorColorScheme.TEXT_NORMAL);
+            extendedSpan = Span.obtain(0, EditorColorScheme.TEXT_NORMAL);
         }
         while (mapLine < line) {
             List<Span> lineSpans = new ArrayList<>();

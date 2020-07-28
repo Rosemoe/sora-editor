@@ -19,6 +19,7 @@ import android.util.Log;
 
 import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
 import io.github.rosemoe.editor.struct.BlockLine;
+import io.github.rosemoe.editor.struct.Span;
 
 import java.util.List;
 
@@ -72,6 +73,7 @@ public class TextAnalyzer {
         final AnalyzeThread thread = mThread;
         if(thread != null && thread.isAlive()) {
             thread.interrupt();
+            mThread = null;
         }
     }
 
@@ -80,12 +82,12 @@ public class TextAnalyzer {
      *
      * @param origin The source text
      */
-    public void analyze(Content origin) {
+    public synchronized void analyze(Content origin) {
         AnalyzeThread thread = this.mThread;
         if (thread == null || !thread.isAlive()) {
             Log.d("TextAnalyzer", "Starting a new thread for analyzing");
             thread = this.mThread = new AnalyzeThread(mLock, mCodeAnalyzer, origin);
-            thread.setName("Text Analyze Daemon - " + nextThreadId());
+            thread.setName("TextAnalyzeDaemon-" + nextThreadId());
             thread.setDaemon(true);
             thread.start();
         } else {
@@ -155,12 +157,14 @@ public class TextAnalyzer {
                     } while (waiting);
 
                     List<BlockLine> blockLines = mResult.mBlocks;
+                    List<List<Span>> spanMap = mResult.mSpanMap;
                     mResult = colors;
                     colors.addNormalIfNull();
                     try {
                         if (mCallback != null)
                             mCallback.onAnalyzeDone(TextAnalyzer.this, colors);
                         ObjectAllocator.recycleBlockLine(blockLines);
+                        SpanRecycler.getInstance().recycle(spanMap);
                     } catch (NullPointerException e) {
                         e.printStackTrace();
                     }
