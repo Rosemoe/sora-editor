@@ -160,6 +160,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private FormatThread mFormatThread;
     private EditorSearcher mSearcher;
     private EditorEventListener mListener;
+    private Paint.FontMetricsInt mTextMetrics;
+    private Paint.FontMetricsInt mLineNumberMetrics;
 
     //For debug
     private final StringBuilder mErrorBuilder = new StringBuilder();
@@ -530,6 +532,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaint.setTextSize(size);
         mPaintOther.setTextSize(size);
         mSpaceWidth = mPaint.measureText(" ");
+        mTextMetrics = mPaint.getFontMetricsInt();
+        mLineNumberMetrics = mPaintOther.getFontMetricsInt();
         invalidate();
     }
 
@@ -1429,7 +1433,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaintOther.setTextAlign(mLineNumberAlign);
         mPaintOther.setColor(color);
         for(int i = first;i <= last;i++){
-            float y = (getLineBottom(i) + getLineTop(i)) / 2f - (mPaintOther.getFontMetricsInt().descent - mPaintOther.getFontMetricsInt().ascent) / 2f - mPaintOther.getFontMetricsInt().ascent - getOffsetY();
+            float y = (getLineBottom(i) + getLineTop(i)) / 2f - (mLineNumberMetrics.descent - mLineNumberMetrics.ascent) / 2f - mLineNumberMetrics.ascent - getOffsetY();
             switch(mLineNumberAlign){
                 case LEFT:
                     canvas.drawText(Integer.toString(i + 1), offsetX, y, mPaintOther);
@@ -2056,6 +2060,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             typefaceLineNumber = Typeface.MONOSPACE;
         }
         mPaintOther.setTypeface(typefaceLineNumber);
+        mLineNumberMetrics = mPaintOther.getFontMetricsInt();
         invalidate();
     }
 
@@ -2068,6 +2073,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             typefaceText = Typeface.DEFAULT;
         }
         mPaint.setTypeface(typefaceText);
+        mTextMetrics = mPaint.getFontMetricsInt();
         invalidate();
     }
 
@@ -2191,7 +2197,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return baseline y offset
      */
     public int getLineBaseLine(int line){
-        return getLineHeight() * (line + 1) - mPaint.getFontMetricsInt().descent;
+        return getLineHeight() * (line + 1) - mTextMetrics.descent;
     }
 
     /**
@@ -2199,7 +2205,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return height of single line
      */
     public int getLineHeight(){
-        return mPaint.getFontMetricsInt().descent - mPaint.getFontMetricsInt().ascent;
+        return mTextMetrics.descent - mTextMetrics.ascent;
     }
 
     /**
