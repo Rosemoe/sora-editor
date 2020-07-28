@@ -23,7 +23,9 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.Spanned;
 import android.text.TextWatcher;
+import android.text.style.ForegroundColorSpan;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -57,6 +59,12 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         CrashHandler.getInstance().init(this);
         setContentView(R.layout.activity_main);
+        if(getActionBar() != null) {
+            Editable title = Editable.Factory.getInstance().newEditable("CodeEditor");
+            title.setSpan(new ForegroundColorSpan(0xffffffff), 0, title.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            getActionBar().setTitle(title);
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 9998);
         }

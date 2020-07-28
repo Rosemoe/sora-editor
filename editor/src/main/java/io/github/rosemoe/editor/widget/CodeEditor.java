@@ -112,7 +112,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private float mDividerWidth;
     private float mDividerMargin;
     private float mInsertSelWidth;
-    private float mUnderlineWidth;
     private float mBlockLineWidth;
     private boolean mWait;
     private boolean mDrag;
@@ -316,7 +315,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mHorizontalScrollBar = new RectF();
         mDividerMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, Resources.getSystem().getDisplayMetrics());
         mDividerWidth = mDividerMargin;
-        mUnderlineWidth = mDividerMargin;
         mInsertSelWidth = mDividerWidth;
         mDpUnit = mDividerWidth / 2;
         mDividerMargin = mDpUnit * 5;
@@ -1107,7 +1105,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             prepareLine(mConnection.mComposingLine);
             offsetX += measureText(mChars,0,mConnection.mComposingStart);
             float width = measureText(mChars,mConnection.mComposingStart,mConnection.mComposingEnd - mConnection.mComposingStart);
-            mRect.top = offY - mUnderlineWidth;
+            mRect.top = offY - getLineHeight() * 0.06f;
             mRect.bottom = offY;
             mRect.left = offsetX;
             mRect.right = offsetX + width;
@@ -1216,57 +1214,112 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             if(spans.isEmpty()) {
                 spans.add(new Span(0, EditorColorScheme.TEXT_NORMAL));
             }
-            drawTextLineWithSpans(canvas, offsetX, line, cs, spans);
+            try {
+                drawTextLineWithSpans(canvas, offsetX, line, cs, spans);
+            }catch (IndexOutOfBoundsException e) {
+                Log.w(LOG_TAG, "Exception in rendering line " + line, e);
+            }
         }
+    }
+
+    private float measureTextRegion(char[] src, int index, int count) {
+        float extraWidth;
+        int tabCount = 0;
+        for(int i = 0;i < count;i++){
+            if(src[index + i] == '\t'){
+                tabCount++;
+            }
+        }
+        extraWidth = mSpaceWidth * (getTabWidth() - 1);
+        return mPaint.measureText(src, index, count) + tabCount * extraWidth;
+    }
+
+    private float measureTextRelatively(char[] chars, int endIndex, int lastIndex, float lastMeasureResult) {
+        if(endIndex == lastIndex) {
+            return lastMeasureResult;
+        } else if(endIndex > lastIndex) {
+            return lastMeasureResult + measureTextRegion(chars, lastIndex, endIndex - lastIndex);
+        } else {
+            return lastMeasureResult - measureTextRegion(chars, endIndex, lastIndex - endIndex);
+        }
+    }
+
+    private int binaryFindCharIndex(float initialPosition, float targetOffset, int left, int right, char[] chars) {
+        float measureResult = 0;
+        int lastCommitMeasure = 0;
+        int min = left, max = right;
+        while(left < right) {
+            int mid = (left + right) / 2;
+            measureResult = measureTextRelatively(chars, mid, lastCommitMeasure, measureResult);
+            lastCommitMeasure = mid;
+            if(measureResult + initialPosition > targetOffset) {
+                right = mid - 1;
+            } else if(measureResult + initialPosition < targetOffset) {
+                left = mid + 1;
+            } else {
+                return mid;
+            }
+        }
+        return Math.max(min, Math.min(max, left));
     }
 
     /**
      * Draw single line
      */
     private void drawTextLineWithSpans(Canvas canvas, float offsetX, int line, EditorColorScheme cs, List<Span> spans) {
-        //TODO Optimize long text line
-        float baseline = getLineBaseLine(line) - getOffsetY();
         prepareLine(line);
-        for(int spanIndex = 0;spanIndex < spans.size();spanIndex++) {
+        int columnCount = mText.getColumnCount(line);
+        int minPaintChar = binaryFindCharIndex(offsetX, 0, 0, columnCount, mChars);
+        int maxPaintChar = binaryFindCharIndex(offsetX, getWidth(), minPaintChar, columnCount, mChars);
+        maxPaintChar = Math.min(maxPaintChar + 1, columnCount);
+        float baseline = getLineBaseLine(line) - getOffsetY();
+        int spanIndex = 0;
+        while(spanIndex < spans.size()) {
             Span span = spans.get(spanIndex);
-            int startIndex = span.column;
-            int endIndex;
-            int columnCount = mText.getColumnCount(line);
-            if(spanIndex + 1 >= spans.size()) {
-                endIndex = columnCount;
-            } else {
-                endIndex = spans.get(spanIndex + 1).column;
-            }
-            if(endIndex > columnCount) {
-                endIndex = columnCount;
-            }
-            if(startIndex > endIndex) {
-                //Invalid spans
+            if(span.column > minPaintChar) {
+                spanIndex--;
+                break;
+            } else if(span.column == minPaintChar) {
                 break;
             }
-            if(endIndex - startIndex < 0) {
-                Log.i(LOG_TAG, "line = " + line + " start = " + startIndex + " end = " + endIndex + " colCnt = " + columnCount);
+            spanIndex++;
+        }
+        if(spanIndex == spans.size() && spanIndex > 0) {
+            spanIndex--;
+        }
+        spanIndex = Math.max(0, spanIndex);
+        boolean firstPaint = true;
+        boolean continueFlag = true;
+        while(continueFlag && spanIndex < spans.size()) {
+            Span span = spans.get(spanIndex);
+            int startIndex = span.column;
+            if(firstPaint) {
+                firstPaint = false;
+                startIndex = minPaintChar;
+                offsetX += measureText(mChars, 0, startIndex);
+            }
+            int endIndex = spanIndex + 1 < spans.size() ? spans.get(spanIndex + 1).column : columnCount;
+            if(maxPaintChar <= endIndex) {
+                continueFlag = false;
+                endIndex = maxPaintChar;
             }
             float width = measureText(mChars, startIndex, endIndex - startIndex);
-            if(offsetX + width < 0) {
-                offsetX = offsetX + width;
-                continue;
-            }
             mPaint.setColor(cs.getColor(span.colorId));
             drawText(canvas, mChars, startIndex, endIndex - startIndex, offsetX, baseline);
             if(span.underlineColor != 0) {
                 mRect.bottom = getLineBottom(line) - getOffsetY() - mDpUnit * 1;
-                mRect.top = mRect.bottom - mDpUnit * 3;
+                mRect.top = mRect.bottom - getLineHeight() * 0.06f;
                 mRect.left = offsetX;
                 mRect.right = offsetX + width;
                 drawColor(canvas, span.underlineColor, mRect);
             }
-            offsetX = offsetX + width;
-            if(offsetX > getWidth()) {
-                break;
-            }
+            offsetX += width;
+            spanIndex++;
         }
-        mMaxPaintX = Math.max(mMaxPaintX, measureText(mChars, 0, mText.getColumnCount(line)));
+        float width = measureText(mChars, 0, columnCount);
+        if(width > mMaxPaintX) {
+            mMaxPaintX = width;
+        }
     }
 
     /**
@@ -1660,17 +1713,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if(line >= getLineCount()) {
             line = getLineCount() - 1;
         }
-        float w = 0;
-        int i = 0;
         prepareLine(line);
-        while(w < x && i < mText.getColumnCount(line)){
-            w += measureText(mChars, i, 1);
-            i++;
+        int max = mText.getColumnCount(line);
+        int index = binaryFindCharIndex(0, x, 0, max, mChars);
+        float offset = measureText(mChars, 0, index);
+        if(offset < x) {
+            index++;
         }
-        if(w < x){
-            i = mText.getColumnCount(line);
-        }
-        return i;
+        return Math.min(index, max);
     }
 
     /**
@@ -2782,15 +2832,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             switch(keyCode){
                 case KeyEvent.KEYCODE_DEL:
                 case KeyEvent.KEYCODE_FORWARD_DEL:
-                    if(mConnection != null)
-                        return mConnection.deleteSurroundingText(0, 0);
+                    if(mConnection != null) {
+                        mConnection.deleteSurroundingText(0, 0);
+                        cursorChangeExternal();
+                    }
                     return true;
                 case KeyEvent.KEYCODE_ENTER:
                     if(mACPanel.isShowing()) {
                         mACPanel.select();
                         return true;
                     }
-                    return mConnection.commitText("\n", 0);
+                    mConnection.commitText("\n", 0);
+                    cursorChangeExternal();
+                    return true;
                 case KeyEvent.KEYCODE_DPAD_DOWN:
                     moveSelectionDown();
                     return true;
@@ -2826,6 +2880,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     return true;
                 case KeyEvent.KEYCODE_SPACE:
                     getCursor().onCommitText(" ");
+                    cursorChangeExternal();
                     return true;
                 default:
                     if(event.isCtrlPressed() && !event.isAltPressed()){
@@ -3132,7 +3187,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mACPanel.setPrefix(prefix);
         }
         applyNewPanelPosition();
-        mACPanel.show();
+        //mACPanel.show();
         makeRightVisible();
         mSpanner.analyze(mText);
         mEventHandler.hideInsertHandle();

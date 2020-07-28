@@ -320,13 +320,12 @@ public class Content implements CharSequence {
             if(mCursor != null)
                 mCursor.beforeDelete(startLine,columnOnStartLine,endLine,columnOnEndLine);
 
-            int currEnd = endLine;
-            while (currEnd - 1 != startLine) {
-                StringBuilder line = mLines.remove(currEnd - 1);
+            for(int i = 0;i < endLine - startLine - 1;i++) {
+                StringBuilder line = mLines.remove(startLine + 1);
                 mTextLength -= line.length() + 1;
                 changedContent.append('\n').append(line);
-                currEnd--;
             }
+            int currEnd = startLine + 1;
             StringBuilder start = mLines.get(startLine);
             StringBuilder end = mLines.get(currEnd);
             mTextLength -= start.length() - columnOnStartLine;

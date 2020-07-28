@@ -65,6 +65,25 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
 
     private final static String TIP = "Loading...";
 
+    private boolean cancelShowUp = false;
+    @Override
+    public void hide() {
+        if(isShowing()) {
+            super.hide();
+        } else {
+            cancelShowUp = true;
+        }
+    }
+
+    @Override
+    public void show() {
+        if(cancelShowUp) {
+            cancelShowUp = false;
+            return;
+        }
+        super.show();
+    }
+
     /**
      * Create a panel instance for the given editor
      * @param editor Target editor
@@ -197,6 +216,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
             mEditor.cursorChangeExternal();
         }
         hide();
+        hide();
     }
 
     /**
@@ -242,6 +262,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
                     hide();
                     return;
                 }
+                show();
                 mCurrent = 0;
                 mListView.setAdapter(new ItemAdapter(results));
                 float newHeight = mEditor.getDpUnit() * 30 * results.size();

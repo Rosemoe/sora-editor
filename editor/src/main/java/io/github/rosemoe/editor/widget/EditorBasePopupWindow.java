@@ -126,13 +126,5 @@ class EditorBasePopupWindow extends PopupWindow
         }
     }
 
-    /**
-     * Toggle the state of display
-     */
-    public void toggleState() {
-        if(isShowing()) hide();
-        else show();
-    }
-
 }
 

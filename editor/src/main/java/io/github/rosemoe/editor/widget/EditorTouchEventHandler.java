@@ -294,6 +294,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     
     private void scrollBy(float distanceX, float distanceY) {
         mEditor.getTextActionWindow().hide();
+        mEditor.hideAutoCompletePanel();
         int endX = mScroller.getCurrX() + (int)distanceX;
         int endY = mScroller.getCurrY() + (int)distanceY;
         endX = Math.max(endX,0);
