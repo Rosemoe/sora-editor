@@ -17,10 +17,10 @@ package io.github.rosemoe.editor.text;
 
 /**
  * A line number calculator for spanner
+ *
  * @author Rose
  */
-public class LineNumberCalculator
-{
+public class LineNumberCalculator {
 
     private final CharSequence mTarget;
     private int mOffset;
@@ -30,6 +30,7 @@ public class LineNumberCalculator
 
     /**
      * Create a new helper for the given text and set offset to start
+     *
      * @param target Target text
      */
     public LineNumberCalculator(CharSequence target) {
@@ -40,17 +41,18 @@ public class LineNumberCalculator
 
     /**
      * Update line and column for the given advance
+     *
      * @param length Advance
      */
     public void update(int length) {
-        for(int i = 0;i < length;i++) {
-            if(mOffset + i == mLength) {
+        for (int i = 0; i < length; i++) {
+            if (mOffset + i == mLength) {
                 break;
             }
-            if(mTarget.charAt(mOffset + i) == '\n') {
+            if (mTarget.charAt(mOffset + i) == '\n') {
                 mLine++;
                 mColumn = 0;
-            }else{
+            } else {
                 mColumn++;
             }
         }
@@ -59,6 +61,7 @@ public class LineNumberCalculator
 
     /**
      * Get line start index
+     *
      * @return line start index
      */
     public int findLineStart() {
@@ -67,12 +70,13 @@ public class LineNumberCalculator
 
     /**
      * Get line end index
+     *
      * @return line end index
      */
     public int findLineEnd() {
         int i = 0;
-        for(;i + mOffset < mLength;i++) {
-            if(mTarget.charAt(mOffset + i) == '\n') {
+        for (; i + mOffset < mLength; i++) {
+            if (mTarget.charAt(mOffset + i) == '\n') {
                 break;
             }
         }
@@ -81,6 +85,7 @@ public class LineNumberCalculator
 
     /**
      * Get current line position
+     *
      * @return line
      */
     public int getLine() {
@@ -89,6 +94,7 @@ public class LineNumberCalculator
 
     /**
      * Get current column position
+     *
      * @return column
      */
     public int getColumn() {

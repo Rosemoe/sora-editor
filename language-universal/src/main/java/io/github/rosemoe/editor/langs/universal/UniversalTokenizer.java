@@ -20,6 +20,7 @@ import io.github.rosemoe.editor.langs.internal.TrieTree;
 
 /**
  * A class to tokenize for a limited style-able language
+ *
  * @author Rose
  */
 public class UniversalTokenizer {
@@ -38,7 +39,7 @@ public class UniversalTokenizer {
     public UniversalTokenizer(LanguageDescription languageDescription) {
         mLanguage = languageDescription;
         mKeywords = new TrieTree<>();
-        for(String keyword : mLanguage.getKeywords()) {
+        for (String keyword : mLanguage.getKeywords()) {
             mKeywords.put(keyword, true);
         }
         setSkipComment(false);
@@ -109,7 +110,7 @@ public class UniversalTokenizer {
             return UniversalTokens.NEWLINE;
         } else if (isWhitespace(ch)) {
             char chLocal;
-            while (offset + length < bufferLen && isWhitespace(chLocal = charAt(offset + length)) ) {
+            while (offset + length < bufferLen && isWhitespace(chLocal = charAt(offset + length))) {
                 if (chLocal == '\r' || chLocal == '\n') {
                     break;
                 }
@@ -117,17 +118,17 @@ public class UniversalTokenizer {
             }
             return UniversalTokens.WHITESPACE;
         } else {
-            if(offset + length < bufferLen) {
+            if (offset + length < bufferLen) {
                 char nextChar = charAt();
-                if(mLanguage.isLineCommentStart(ch, nextChar)) {
-                    while(offset + length < bufferLen && charAt() != '\n') {
+                if (mLanguage.isLineCommentStart(ch, nextChar)) {
+                    while (offset + length < bufferLen && charAt() != '\n') {
                         length++;
                     }
                     return UniversalTokens.LINE_COMMENT;
-                } else if(mLanguage.isLongCommentStart(ch, nextChar)) {
+                } else if (mLanguage.isLongCommentStart(ch, nextChar)) {
                     length++;
                     char pre2 = '\0', pre1 = '\0';
-                    while(!mLanguage.isLongCommentEnd(pre2, pre1) && offset + length < bufferLen) {
+                    while (!mLanguage.isLongCommentEnd(pre2, pre1) && offset + length < bufferLen) {
                         pre2 = pre1;
                         pre1 = charAt();
                         length++;
@@ -153,7 +154,7 @@ public class UniversalTokenizer {
             operatorBuffer[0] = ch;
             if (mLanguage.isOperator(operatorBuffer, 1)) {
                 boolean result = true;
-                while(offset + length < bufferLen && (result = mLanguage.isOperator(operatorBuffer, length))) {
+                while (offset + length < bufferLen && (result = mLanguage.isOperator(operatorBuffer, length))) {
                     operatorBuffer[length] = charAt();
                     length++;
                 }
@@ -167,7 +168,7 @@ public class UniversalTokenizer {
     }
 
     protected void scanTrans() {
-        if(offset + length == bufferLen) {
+        if (offset + length == bufferLen) {
             return;
         }
         char ch = charAt();
@@ -177,7 +178,7 @@ public class UniversalTokenizer {
         } else if (ch == 'u') {
             length++;
             for (int i = 0; i < 4; i++) {
-                if(offset + length == bufferLen) {
+                if (offset + length == bufferLen) {
                     return;
                 }
                 if (!isDigit(charAt(offset + length))) {
@@ -189,7 +190,7 @@ public class UniversalTokenizer {
     }
 
     protected void scanStringLiteral() {
-        if(offset + length == bufferLen) {
+        if (offset + length == bufferLen) {
             return;
         }
         char ch;
@@ -202,7 +203,7 @@ public class UniversalTokenizer {
                     return;
                 }
                 length++;
-                if(offset + length == bufferLen) {
+                if (offset + length == bufferLen) {
                     return;
                 }
             }
@@ -213,7 +214,7 @@ public class UniversalTokenizer {
     }
 
     protected void scanCharLiteral() {
-        if(offset + length == bufferLen) {
+        if (offset + length == bufferLen) {
             return;
         }
         char ch;
@@ -226,7 +227,7 @@ public class UniversalTokenizer {
                     return;
                 }
                 length++;
-                if(offset + length == bufferLen) {
+                if (offset + length == bufferLen) {
                     return;
                 }
             }
@@ -237,13 +238,13 @@ public class UniversalTokenizer {
     }
 
     protected void scanNumber() {
-        if(offset + length == bufferLen) {
+        if (offset + length == bufferLen) {
             return;
         }
         boolean flag = false;
         char ch = charAt(offset);
         if (ch == '0') {
-            if(charAt() == 'x') {
+            if (charAt() == 'x') {
                 length++;
             }
             flag = true;
@@ -251,7 +252,7 @@ public class UniversalTokenizer {
         while (offset + length < bufferLen && isDigit(charAt())) {
             length++;
         }
-        if(offset + length == bufferLen) {
+        if (offset + length == bufferLen) {
             return;
         }
         ch = charAt();
@@ -259,32 +260,32 @@ public class UniversalTokenizer {
             if (flag) {
                 return;
             }
-            if(offset + length + 1 == bufferLen) {
+            if (offset + length + 1 == bufferLen) {
                 return;
             }
             length++;
             while (offset + length < bufferLen && isDigit(charAt())) {
                 length++;
             }
-            if(offset + length == bufferLen) {
+            if (offset + length == bufferLen) {
                 return;
             }
             ch = charAt();
             if (ch == 'e' || ch == 'E') {
                 length++;
-                if(offset + length >= bufferLen) {
+                if (offset + length >= bufferLen) {
                     return;
                 }
                 if (charAt() == '-' || charAt() == '+') {
                     length++;
-                    if(offset + length >= bufferLen) {
+                    if (offset + length >= bufferLen) {
                         return;
                     }
                 }
                 while (offset + length < bufferLen && isPrimeDigit(charAt())) {
                     length++;
                 }
-                if(offset + length == bufferLen) {
+                if (offset + length == bufferLen) {
                     return;
                 }
                 ch = charAt();

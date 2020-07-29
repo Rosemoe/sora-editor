@@ -31,6 +31,7 @@ import java.util.List;
 public class TextAnalyzer {
 
     private static int sThreadId = 0;
+
     private synchronized static int nextThreadId() {
         sThreadId++;
         return sThreadId;
@@ -71,7 +72,7 @@ public class TextAnalyzer {
 
     public void shutdown() {
         final AnalyzeThread thread = mThread;
-        if(thread != null && thread.isAlive()) {
+        if (thread != null && thread.isAlive()) {
             thread.interrupt();
             mThread = null;
         }

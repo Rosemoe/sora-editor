@@ -19,6 +19,7 @@ import io.github.rosemoe.editor.widget.CodeEditor;
 
 /**
  * Listener for editor
+ *
  * @author Rose
  */
 public interface EditorEventListener {

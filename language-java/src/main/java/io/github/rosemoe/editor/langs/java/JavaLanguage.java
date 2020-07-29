@@ -24,6 +24,7 @@ import io.github.rosemoe.editor.langs.IdentifierAutoComplete;
 /**
  * Java language is much complex.
  * This is a basic support
+ *
  * @author Rose
  */
 public class JavaLanguage implements EditorLanguage {
@@ -36,7 +37,7 @@ public class JavaLanguage implements EditorLanguage {
     @Override
     public AutoCompleteProvider getAutoCompleteProvider() {
         IdentifierAutoComplete autoComplete = new IdentifierAutoComplete();
-        autoComplete.setKeywords(JavaTextTokenizer.sKeywords,true);
+        autoComplete.setKeywords(JavaTextTokenizer.sKeywords, true);
         return autoComplete;
     }
 
@@ -60,7 +61,7 @@ public class JavaLanguage implements EditorLanguage {
                     break;
             }
         }
-        advance = Math.max(0,advance);
+        advance = Math.max(0, advance);
         return advance * 4;
     }
 

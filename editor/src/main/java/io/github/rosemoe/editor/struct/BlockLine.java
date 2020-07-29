@@ -17,6 +17,7 @@ package io.github.rosemoe.editor.struct;
 
 /**
  * Code block info model
+ *
  * @author Rose
  */
 public class BlockLine {

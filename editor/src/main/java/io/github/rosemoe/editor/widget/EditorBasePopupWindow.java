@@ -20,10 +20,10 @@ import android.widget.PopupWindow;
 
 /**
  * Editor base panel class
+ *
  * @author Rose
  */
-class EditorBasePopupWindow extends PopupWindow
-{
+class EditorBasePopupWindow extends PopupWindow {
     private CodeEditor mEditor;
     private int[] mLocation;
     private int mTop;
@@ -32,10 +32,11 @@ class EditorBasePopupWindow extends PopupWindow
 
     /**
      * Create a panel for editor
+     *
      * @param editor Target editor
      */
-    public EditorBasePopupWindow(CodeEditor editor){
-        if(editor == null) {
+    public EditorBasePopupWindow(CodeEditor editor) {
+        if (editor == null) {
             throw new IllegalArgumentException();
         }
         mLocation = new int[2];
@@ -45,47 +46,50 @@ class EditorBasePopupWindow extends PopupWindow
 
     /**
      * Set the left position on the editor rect
+     *
      * @param x X on editor
      */
     public void setExtendedX(float x) {
-        mLeft = (int)x;
+        mLeft = (int) x;
     }
 
     /**
      * Set the top position on the editor rect
+     *
      * @param y Y on editor
      */
     public void setExtendedY(float y) {
-        mTop = (int)y;
+        mTop = (int) y;
         mBackupTop = y;
     }
 
     /**
      * Get last assigned y
+     *
      * @return last assigned y
      */
     public float getY() {
         return mBackupTop;
     }
-    
+
     public void updatePosition() {
         int width = mEditor.getWidth();
-        if(mLeft > width - getWidth()) {
+        if (mLeft > width - getWidth()) {
             mLeft = width - getWidth();
         }
         int height = mEditor.getHeight();
-        if(mTop > height - getHeight()) {
+        if (mTop > height - getHeight()) {
             mTop = height - getHeight();
         }
-        if(mTop < 0) {
+        if (mTop < 0) {
             mTop = 0;
         }
-        if(mLeft < 0) {
+        if (mLeft < 0) {
             mLeft = 0;
         }
         mEditor.getLocationInWindow(mLocation);
-        if(isShowing()){
-            update(mLocation[0] + mLeft,mLocation[1] + mTop,getWidth(),getHeight());
+        if (isShowing()) {
+            update(mLocation[0] + mLeft, mLocation[1] + mTop, getWidth(), getHeight());
         }
     }
 
@@ -94,26 +98,26 @@ class EditorBasePopupWindow extends PopupWindow
      */
     public void show() {
         int width = mEditor.getWidth();
-        if(mLeft > width - getWidth()) {
+        if (mLeft > width - getWidth()) {
             mLeft = width - getWidth();
         }
         int height = mEditor.getHeight();
-        if(mTop > height - getHeight()) {
+        if (mTop > height - getHeight()) {
             mTop = height - getHeight();
         }
-        if(mTop < 0) {
+        if (mTop < 0) {
             mTop = 0;
         }
-        if(mLeft < 0) {
+        if (mLeft < 0) {
             mLeft = 0;
         }
         mEditor.getLocationInWindow(mLocation);
-        if(isShowing()){
-            update(mLocation[0] + mLeft,mLocation[1] + mTop,getWidth(),getHeight());
+        if (isShowing()) {
+            update(mLocation[0] + mLeft, mLocation[1] + mTop, getWidth(), getHeight());
             return;
         }
         super.showAtLocation(mEditor,
-                Gravity.START| Gravity.TOP,
+                Gravity.START | Gravity.TOP,
                 mLocation[0] + mLeft, mLocation[1] + mTop);
     }
 
@@ -121,7 +125,7 @@ class EditorBasePopupWindow extends PopupWindow
      * Hide the panel (If shown)
      */
     public void hide() {
-        if(isShowing()){
+        if (isShowing()) {
             super.dismiss();
         }
     }

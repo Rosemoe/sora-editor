@@ -25,6 +25,7 @@ import io.github.rosemoe.editor.text.Cursor;
 
 import android.text.Editable;
 import android.text.TextUtils;
+
 import io.github.rosemoe.editor.struct.CharPosition;
 
 import android.text.SpannableStringBuilder;
@@ -32,6 +33,7 @@ import android.os.Bundle;
 
 /**
  * Connection between input method and editor
+ *
  * @author Rose
  */
 class EditorInputConnection extends BaseInputConnection {
@@ -46,6 +48,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     /**
      * Create a connection for the given editor
+     *
      * @param targetView Host editor
      */
     public EditorInputConnection(CodeEditor targetView) {
@@ -71,6 +74,7 @@ class EditorInputConnection extends BaseInputConnection {
     /**
      * Private use.
      * Get the Cursor of Content displaying by Editor
+     *
      * @return Cursor
      */
     private Cursor getCursor() {
@@ -88,7 +92,7 @@ class EditorInputConnection extends BaseInputConnection {
     public synchronized void closeConnection() {
         super.closeConnection();
         Content content = mEditor.getText();
-        while(content.isInBatchEdit()) {
+        while (content.isInBatchEdit()) {
             content.endBatchEdit();
         }
         mComposingLine = mComposingEnd = mComposingStart = -1;
@@ -116,14 +120,14 @@ class EditorInputConnection extends BaseInputConnection {
         if (end < start) {
             start = end = 0;
         }
-        Content sub = (Content)origin.subSequence(start, end);
+        Content sub = (Content) origin.subSequence(start, end);
         if (flags == GET_TEXT_WITH_STYLES) {
             sub.beginStreamCharGetting(0);
             SpannableStringBuilder text = new SpannableStringBuilder(sub);
-            if(mComposingLine != -1) {
+            if (mComposingLine != -1) {
                 try {
                     text.setSpan(new ComposingText(), getCursor().getIndexer().getCharIndex(mComposingLine, mComposingStart) - start, getCursor().getIndexer().getCharIndex(mComposingLine, mComposingEnd) - start, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                }catch (IndexOutOfBoundsException e) {
+                } catch (IndexOutOfBoundsException e) {
                     //ignored
                 }
             }
@@ -147,7 +151,7 @@ class EditorInputConnection extends BaseInputConnection {
         //it can be quite large text and costs time, which will finally cause ANR
         int left = getCursor().getLeft();
         int right = getCursor().getRight();
-        if(right - left > 1000) {
+        if (right - left > 1000) {
             right = left + 1000;
         }
         return left == right ? null : getTextRegion(left, right, flags);
@@ -185,7 +189,7 @@ class EditorInputConnection extends BaseInputConnection {
         }
         try {
             mEditor.getText().delete(mComposingLine, mComposingStart, mComposingLine, mComposingEnd);
-        } catch(IndexOutOfBoundsException e){
+        } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();
         }
         mComposingLine = mComposingStart = mComposingEnd = -1;
@@ -196,11 +200,11 @@ class EditorInputConnection extends BaseInputConnection {
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
-        if(beforeLength == afterLength && beforeLength == 0) {
+        if (beforeLength == afterLength && beforeLength == 0) {
             getCursor().onDeleteKeyPressed();
             return true;
         }
-        if(beforeLength < 0 || afterLength < 0) {
+        if (beforeLength < 0 || afterLength < 0) {
             return false;
         }
         beginBatchEdit();
@@ -328,7 +332,7 @@ class EditorInputConnection extends BaseInputConnection {
             }
             CharPosition startPos = content.getIndexer().getCharPosition(start);
             CharPosition endPos = content.getIndexer().getCharPosition(end);
-            if(startPos.line != endPos.line) {
+            if (startPos.line != endPos.line) {
                 return false;
             }
             mComposingLine = startPos.line;
@@ -354,13 +358,13 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean performContextMenuAction(int id) {
-        switch(id) {
+        switch (id) {
             case android.R.id.selectAll:
                 mEditor.selectAll();
                 return true;
             case android.R.id.cut:
                 mEditor.copyText();
-                if(getCursor().isSelected()){
+                if (getCursor().isSelected()) {
                     getCursor().onDeleteKeyPressed();
                 }
                 return true;

@@ -52,16 +52,16 @@ public class CDescription implements LanguageDescription {
 
     @Override
     public String[] getKeywords() {
-        return new String[] {
-                "auto","break","case","char","const","continue",
-                "default","do","double","else","enum","extern",
-                "float","for","goto","if","int","long",
-                "register","return","short","signed","sizeof",
-                "static","struct","switch","typedef","unsigned",
-                "unsigned","union","void","volatile","while",
-                "_Bool","_Complex","_Imaginary","inline","restrict",
-                "_Alignas","_Alignof","_Atomic","_Generic","_Noreurn",
-                "_Static_assert","_Thread_local"
+        return new String[]{
+                "auto", "break", "case", "char", "const", "continue",
+                "default", "do", "double", "else", "enum", "extern",
+                "float", "for", "goto", "if", "int", "long",
+                "register", "return", "short", "signed", "sizeof",
+                "static", "struct", "switch", "typedef", "unsigned",
+                "unsigned", "union", "void", "volatile", "while",
+                "_Bool", "_Complex", "_Imaginary", "inline", "restrict",
+                "_Alignas", "_Alignof", "_Atomic", "_Generic", "_Noreurn",
+                "_Static_assert", "_Thread_local"
         };
     }
 
@@ -72,7 +72,7 @@ public class CDescription implements LanguageDescription {
 
     @Override
     public int getOperatorAdvance(String operator) {
-        switch(operator) {
+        switch (operator) {
             case "{":
                 return 4;
             case "}":

@@ -21,6 +21,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
@@ -34,6 +35,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.lang.Thread.UncaughtExceptionHandler;
+
 import android.content.pm.PackageManager.NameNotFoundException;
 
 /**
@@ -59,7 +61,7 @@ public class CrashHandler implements UncaughtExceptionHandler {
     }
 
     public void init(Context context) {
-        mContext = context;
+        mContext = context.getApplicationContext();
         mDefaultHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(this);
     }
@@ -91,34 +93,34 @@ public class CrashHandler implements UncaughtExceptionHandler {
                 infos.put("versionCode", versionCode);
             }
         } catch (NameNotFoundException e) {
-            Log.e(TAG, "an error occured when collect package info", e);
+            Log.e(TAG, "an error occurred when collect package info", e);
         }
         Field[] fields = Build.class.getDeclaredFields();
         for (Field field : fields) {
             try {
                 field.setAccessible(true);
-                Object obj=field.get(null);
+                Object obj = field.get(null);
                 if (obj instanceof String[])
-                    infos.put(field.getName(), Arrays.toString((String[])obj));
+                    infos.put(field.getName(), Arrays.toString((String[]) obj));
                 else
                     infos.put(field.getName(), obj.toString());
                 Log.d(TAG, field.getName() + " : " + field.get(null));
             } catch (Exception e) {
-                Log.e(TAG, "an error occured when collect crash info", e);
+                Log.e(TAG, "an error occurred when collect crash info", e);
             }
         }
         fields = Build.VERSION.class.getDeclaredFields();
         for (Field field : fields) {
             try {
                 field.setAccessible(true);
-                Object obj=field.get(null);
+                Object obj = field.get(null);
                 if (obj instanceof String[])
-                    infos.put(field.getName(), Arrays.toString((String[])obj));
+                    infos.put(field.getName(), Arrays.toString((String[]) obj));
                 else
                     infos.put(field.getName(), obj.toString());
                 Log.d(TAG, field.getName() + " : " + field.get(null));
             } catch (Exception e) {
-                Log.e(TAG, "an error occured when collect crash info", e);
+                Log.e(TAG, "an error occurred when collect crash info", e);
             }
         }
     }
@@ -161,7 +163,7 @@ public class CrashHandler implements UncaughtExceptionHandler {
                 fos.close();
             }
         } catch (Exception e) {
-            Log.e(TAG, "an error occured while writing file...", e);
+            Log.e(TAG, "an error occurred while writing file...", e);
         }
     }
 }

@@ -21,10 +21,10 @@ import java.util.ArrayList;
 /**
  * S5droid code block tree
  * This is used to analyze auto complete
+ *
  * @author Rose
  */
-public class S5droidTree
-{
+public class S5droidTree {
     public final Node root;
 
     private Node curr;
@@ -43,13 +43,14 @@ public class S5droidTree
 
     /**
      * Enter a new code block
+     *
      * @param line start line of code block entering
      */
     public void enterCodeBlock(int line) {
         Node sub = new Node();
         sub.startLine = line;
         sub.endLine = 0;
-        if(sub.children == null){
+        if (sub.children == null) {
             sub.children = new ArrayList<>(16);
         }
         sub.isBlock = true;
@@ -60,6 +61,7 @@ public class S5droidTree
 
     /**
      * Exit current code block
+     *
      * @param line end line of code block exiting
      * @return The node of code block exited
      */
@@ -68,10 +70,10 @@ public class S5droidTree
         Node block = curr;
         boolean empty = curr.children.isEmpty();
         curr = curr.parent;
-        if(curr == null) {
+        if (curr == null) {
             curr = root;
         }
-        if(empty) {
+        if (empty) {
             curr.children.remove(block);
         }
         return block;
@@ -79,11 +81,12 @@ public class S5droidTree
 
     /**
      * Add a new variant in current code block
+     *
      * @param line The line position of variant
      * @param name The name of this variant
      * @param type The type of this variant
      */
-    public void addVariant(int line,String name,String type){
+    public void addVariant(int line, String name, String type) {
         Node var = new Node();
         var.startLine = line;
         var.endLine = line;

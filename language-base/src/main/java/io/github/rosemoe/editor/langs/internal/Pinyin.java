@@ -17,6 +17,7 @@ package io.github.rosemoe.editor.langs.internal;
 
 /**
  * Chinese characters to its spells
+ *
  * @author Scave
  */
 public class Pinyin {
@@ -45,7 +46,7 @@ public class Pinyin {
     }
 
     public static String getFirstPinyinForWords(String chs) {
-        if(chs.equals("调试输出")) {
+        if (chs.equals("调试输出")) {
             return "tssc";
         }
         String key;
@@ -65,8 +66,8 @@ public class Pinyin {
 
     public static String getFirstPinyinForCharacter(String str) {
         String py = getPinyinForCharacter(str);
-        if(py.length() > 1) {
-            py = py.substring(0,1);
+        if (py.length() > 1) {
+            py = py.substring(0, 1);
         }
         return py;
     }
@@ -93,7 +94,7 @@ public class Pinyin {
     }
 
     public static String getPinyinForWords(String chs) {
-        if(chs.equals("调试输出")) {
+        if (chs.equals("调试输出")) {
             return "tiaoshishuchu";
         }
         String key;

@@ -27,10 +27,10 @@ import io.github.rosemoe.editor.R;
 
 /**
  * This will show when selecting text
+ *
  * @author Rose
  */
-public class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnClickListener
-{
+public class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnClickListener {
     private final CodeEditor mEditor;
     private final Button selectAll;
     private final Button cut;
@@ -39,14 +39,15 @@ public class EditorTextActionWindow extends EditorBasePopupWindow implements Vie
 
     /**
      * Create a panel for the given editor
+     *
      * @param editor Target editor
      */
     public EditorTextActionWindow(CodeEditor editor) {
         super(editor);
         mEditor = editor;
-        View root = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_panel,null);
+        View root = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_panel, null);
         selectAll = root.findViewById(R.id.panel_btn_select_all);
-        cut =  root.findViewById(R.id.panel_btn_cut);
+        cut = root.findViewById(R.id.panel_btn_cut);
         copy = root.findViewById(R.id.panel_btn_copy);
         paste = root.findViewById(R.id.panel_btn_paste);
         selectAll.setOnClickListener(this);
@@ -64,18 +65,18 @@ public class EditorTextActionWindow extends EditorBasePopupWindow implements Vie
      * Update the state of paste button
      */
     private void updateBtnState() {
-        if(mEditor.hasClip()) {
+        if (mEditor.hasClip()) {
             paste.setEnabled(true);
-        }else{
+        } else {
             paste.setEnabled(false);
         }
     }
 
     @Override
-    public void show(){
+    public void show() {
         updateBtnState();
-        if(Build.VERSION.SDK_INT >= 21) {
-            setElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,4,Resources.getSystem().getDisplayMetrics()));
+        if (Build.VERSION.SDK_INT >= 21) {
+            setElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, Resources.getSystem().getDisplayMetrics()));
         }
         super.show();
     }

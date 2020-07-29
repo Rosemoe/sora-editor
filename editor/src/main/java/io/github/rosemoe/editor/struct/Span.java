@@ -25,6 +25,7 @@ import io.github.rosemoe.editor.widget.EditorColorScheme;
 
 /**
  * The span model
+ *
  * @author Rose
  */
 public class Span {
@@ -37,9 +38,10 @@ public class Span {
 
     /**
      * Create a new span
-     * @see Span#obtain(int, int) 
-     * @param column Start column of span
+     *
+     * @param column  Start column of span
      * @param colorId Type of span
+     * @see Span#obtain(int, int)
      */
     private Span(int column, int colorId) {
         this.column = column;
@@ -49,6 +51,7 @@ public class Span {
     /**
      * Set a underline for this region
      * Zero for no underline
+     *
      * @param color Color for this underline (not color id of {@link EditorColorScheme})
      * @return Self
      */
@@ -59,9 +62,10 @@ public class Span {
 
     /**
      * Get span start column
+     *
      * @return Start column
      */
-    public int getColumn(){
+    public int getColumn() {
         return column;
     }
 
@@ -89,7 +93,7 @@ public class Span {
 
     public static Span obtain(int column, int colorId) {
         Span span = cacheQueue.poll();
-        if(span == null) {
+        if (span == null) {
             return new Span(column, colorId);
         } else {
             span.column = column;
@@ -99,8 +103,8 @@ public class Span {
     }
 
     public static void recycleAll(Collection<Span> spans) {
-        for(Span span : spans) {
-            if(!span.recycle()) {
+        for (Span span : spans) {
+            if (!span.recycle()) {
                 return;
             }
         }

@@ -46,10 +46,10 @@ import java.util.List;
 
 /**
  * Auto complete panel for editing code quicker
+ *
  * @author Rose
  */
-public class EditorAutoCompleteWindow extends EditorBasePopupWindow
-{
+public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
     private final CodeEditor mEditor;
     private final LinearLayout mLayout;
     private final ListView mListView;
@@ -66,9 +66,10 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
     private final static String TIP = "Loading...";
 
     private boolean cancelShowUp = false;
+
     @Override
     public void hide() {
-        if(isShowing()) {
+        if (isShowing()) {
             super.hide();
         } else {
             cancelShowUp = true;
@@ -77,7 +78,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
 
     @Override
     public void show() {
-        if(cancelShowUp) {
+        if (cancelShowUp) {
             cancelShowUp = false;
             return;
         }
@@ -86,6 +87,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
 
     /**
      * Create a panel instance for the given editor
+     *
      * @param editor Target editor
      */
     public EditorAutoCompleteWindow(CodeEditor editor) {
@@ -106,7 +108,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
         mTip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
         mTip.setTextColor(0xff000000);
         mLayout.addView(mTip);
-        ((LinearLayout.LayoutParams)mPb.getLayoutParams()).bottomMargin = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics());
+        ((LinearLayout.LayoutParams) mPb.getLayoutParams()).bottomMargin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics());
         setContentView(mLayout);
         GradientDrawable gd = new GradientDrawable();
         gd.setCornerRadius(1);
@@ -115,14 +117,13 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
         applyColor();
         mListView.setDividerHeight(0);
         setLoading(true);
-        mListView.setOnItemClickListener(new ListView.OnItemClickListener(){
+        mListView.setOnItemClickListener(new ListView.OnItemClickListener() {
 
             @Override
-            public void onItemClick(AdapterView<?> p1, View p2, int p3, long p4)
-            {
-                try{
+            public void onItemClick(AdapterView<?> p1, View p2, int p3, long p4) {
+                try {
                     select(p3);
-                }catch(Exception e) {
+                } catch (Exception e) {
                     Toast.makeText(mEditor.getContext(), e.toString(), Toast.LENGTH_SHORT).show();
                 }
             }
@@ -133,9 +134,10 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
 
     /**
      * Set a auto completion items provider
+     *
      * @param p New provider.can not be null
      */
-    public void setProvider(AutoCompleteProvider p){
+    public void setProvider(AutoCompleteProvider p) {
         mProvider = p;
     }
 
@@ -150,6 +152,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
 
     /**
      * Change layout to loading/idle
+     *
      * @param state Whether loading
      */
     public void setLoading(boolean state) {
@@ -162,7 +165,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
      * Move selection down
      */
     public void moveDown() {
-        if(mCurrent + 1 >= mListView.getAdapter().getCount()) {
+        if (mCurrent + 1 >= mListView.getAdapter().getCount()) {
             return;
         }
         mCurrent++;
@@ -174,7 +177,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
      * Move selection up
      */
     public void moveUp() {
-        if(mCurrent - 1 < 0) {
+        if (mCurrent - 1 < 0) {
             return;
         }
         mCurrent--;
@@ -198,19 +201,20 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
 
     /**
      * Select the given position
+     *
      * @param pos Index of auto complete item
      */
     public void select(int pos) {
         ResultItem item = ((ItemAdapter) mListView.getAdapter()).getItem(pos);
         Cursor cursor = mEditor.getCursor();
-        if(!cursor.isSelected()) {
+        if (!cursor.isSelected()) {
             mEditor.getText().delete(cursor.getLeftLine(), cursor.getLeftColumn() - mLastPrefix.length(), cursor.getLeftLine(), cursor.getLeftColumn());
             cursor.onCommitText(item.commit);
-            if((item.mask & ResultItem.MASK_SHIFT_LEFT_TWICE) != 0){
+            if ((item.mask & ResultItem.MASK_SHIFT_LEFT_TWICE) != 0) {
                 mEditor.moveSelectionLeft();
                 mEditor.moveSelectionLeft();
             }
-            if((item.mask & ResultItem.MASK_SHIFT_LEFT_ONCE) != 0) {
+            if ((item.mask & ResultItem.MASK_SHIFT_LEFT_ONCE) != 0) {
                 mEditor.moveSelectionLeft();
             }
             mEditor.cursorChangeExternal();
@@ -221,6 +225,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
 
     /**
      * Set prefix for auto complete analysis
+     *
      * @param prefix The user's input code's prefix
      */
     public void setPrefix(String prefix) {
@@ -233,32 +238,34 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
 
     /**
      * Get prefix set
+     *
      * @return The previous prefix
      */
     public String getPrefix() {
         return mLastPrefix;
     }
-    
+
     private int maxHeight;
-    
+
     public void setMaxHeight(int height) {
         maxHeight = height;
     }
 
     /**
      * Display result of analysis
-     * @param results Items of analysis
+     *
+     * @param results     Items of analysis
      * @param requestTime The time that this thread starts
      */
     private void displayResults(final List<ResultItem> results, long requestTime) {
-        if(mRequestTime != requestTime) {
+        if (mRequestTime != requestTime) {
             return;
         }
         mEditor.post(new Runnable() {
             @Override
             public void run() {
                 setLoading(false);
-                if(results == null || results.isEmpty()) {
+                if (results == null || results.isEmpty()) {
                     hide();
                     return;
                 }
@@ -266,8 +273,8 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
                 mCurrent = 0;
                 mListView.setAdapter(new ItemAdapter(results));
                 float newHeight = mEditor.getDpUnit() * 30 * results.size();
-                if(isShowing()) {
-                    update(getWidth(), (int)Math.min(newHeight,maxHeight));
+                if (isShowing()) {
+                    update(getWidth(), (int) Math.min(newHeight, maxHeight));
                 }
             }
         });
@@ -275,6 +282,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
 
     /**
      * Adapter to display results
+     *
      * @author Rose
      */
     @SuppressWarnings("CanBeFinal")
@@ -287,45 +295,45 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
         public ItemAdapter(List<ResultItem> items) {
             mItems = items;
             bmps = new BitmapDrawable[2];
-            BitmapDrawable src = (BitmapDrawable)mEditor.getContext().getResources().getDrawable(R.mipmap.box_red);
+            BitmapDrawable src = (BitmapDrawable) mEditor.getContext().getResources().getDrawable(R.mipmap.box_red);
             Bitmap bmp = src.getBitmap();
-            bmps[0] = new BitmapDrawable(mEditor.getContext().getResources(),bmp);
+            bmps[0] = new BitmapDrawable(mEditor.getContext().getResources(), bmp);
             bmps[0].setColorFilter(0xff009688, PorterDuff.Mode.SRC_ATOP);
-            bmps[1] = new BitmapDrawable(mEditor.getContext().getResources(),bmp);
+            bmps[1] = new BitmapDrawable(mEditor.getContext().getResources(), bmp);
             bmps[1].setColorFilter(0xffec4071, PorterDuff.Mode.SRC_ATOP);
 
         }
 
         @Override
-        public int getCount(){
+        public int getCount() {
             return mItems.size();
         }
 
         @Override
-        public ResultItem getItem(int pos){
+        public ResultItem getItem(int pos) {
             return mItems.get(pos);
         }
 
         @Override
-        public long getItemId(int pos){
+        public long getItemId(int pos) {
             return getItem(pos).hashCode();
         }
 
         @Override
         @SuppressWarnings("all") /*to clear redundant cast warnings*/
-        public View getView(int pos, View view, ViewGroup parent){
-            if(view == null) {
+        public View getView(int pos, View view, ViewGroup parent) {
+            if (view == null) {
                 view = LayoutInflater.from(mEditor.getContext()).inflate(R.layout.result_item, parent, false);
             }
             ResultItem item = getItem(pos);
-            TextView tv = (TextView)view.findViewById(R.id.result_item_label);
+            TextView tv = (TextView) view.findViewById(R.id.result_item_label);
             tv.setText(item.label);
             tv = (TextView) view.findViewById(R.id.result_item_desc);
             tv.setText(item.desc);
             view.setTag(pos);
-            if(mCurrent == pos) {
+            if (mCurrent == pos) {
                 view.setBackgroundColor(0xffdddddd);
-            }else{
+            } else {
                 view.setBackgroundColor(0xffffffff);
             }
             ImageView iv = (ImageView) view.findViewById(R.id.result_item_image);
@@ -338,6 +346,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
 
     /**
      * Analysis thread
+     *
      * @author Rose
      */
     private class MatchThread extends Thread {
@@ -361,9 +370,9 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow
         public void run() {
             try {
                 displayResults(mLocalProvider.getAutoCompleteItems(mPrefix, mInner, mColors, mLine), mTime);
-            }catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
-                displayResults(new ArrayList<ResultItem>(),mTime);
+                displayResults(new ArrayList<ResultItem>(), mTime);
             }
         }
 

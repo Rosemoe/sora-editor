@@ -32,7 +32,7 @@ public class S5dTextTokenizer {
         doStaticInit();
     }
 
-    public static TrieTree getTree(){
+    public static TrieTree getTree() {
         return keywords;
     }
 
@@ -49,7 +49,7 @@ public class S5dTextTokenizer {
     private boolean skipComment;
 
     public S5dTextTokenizer(CharSequence src) {
-        if(src == null) {
+        if (src == null) {
             throw new IllegalArgumentException("src can not be null");
         }
         this.source = src;
@@ -176,7 +176,7 @@ public class S5dTextTokenizer {
             return Tokens.NEWLINE;
         } else if (isWhitespace(ch)) {
             char chLocal;
-            while (offset + length < bufferLen && isWhitespace(chLocal = charAt(offset + length)) ) {
+            while (offset + length < bufferLen && isWhitespace(chLocal = charAt(offset + length))) {
                 if (chLocal == '\r' || chLocal == '\n') {
                     break;
                 }
@@ -191,17 +191,17 @@ public class S5dTextTokenizer {
                 return scanNumber();
             }
             /* Scan usual symbols first */
-            if(ch == ';') {
+            if (ch == ';') {
                 return Tokens.SEMICOLON;
-            }else if(ch == '(') {
+            } else if (ch == '(') {
                 return Tokens.LPAREN;
-            }else if(ch == ')') {
+            } else if (ch == ')') {
                 return Tokens.RPAREN;
-            }else if(ch == ':') {
+            } else if (ch == ':') {
                 return Tokens.COLON;
-            }else if(ch == '<') {
+            } else if (ch == '<') {
                 return scanLT();
-            }else if(ch == '>') {
+            } else if (ch == '>') {
                 return scanGT();
             }
             /* Scan secondly symbols */
@@ -255,7 +255,7 @@ public class S5dTextTokenizer {
     }
 
     protected final void throwIfNeeded() {
-        if(offset + length == bufferLen) {
+        if (offset + length == bufferLen) {
             throw new RuntimeException("Token too long");
         }
     }
@@ -336,13 +336,13 @@ public class S5dTextTokenizer {
     }
 
     protected Tokens scanNumber() {
-        if(offset + length == bufferLen) {
+        if (offset + length == bufferLen) {
             return Tokens.INTEGER_LITERAL;
         }
         boolean flag = false;
         char ch = charAt(offset);
         if (ch == '0') {
-            if(charAt() == 'x') {
+            if (charAt() == 'x') {
                 length++;
             }
             flag = true;
@@ -350,7 +350,7 @@ public class S5dTextTokenizer {
         while (offset + length < bufferLen && isDigit(charAt())) {
             length++;
         }
-        if(offset + length == bufferLen) {
+        if (offset + length == bufferLen) {
             return Tokens.INTEGER_LITERAL;
         }
         ch = charAt();
@@ -358,7 +358,7 @@ public class S5dTextTokenizer {
             if (flag) {
                 return Tokens.INTEGER_LITERAL;
             }
-            if(offset + length + 1 == bufferLen) {
+            if (offset + length + 1 == bufferLen) {
                 return Tokens.INTEGER_LITERAL;
             }
             length++;
@@ -366,7 +366,7 @@ public class S5dTextTokenizer {
             while (offset + length < bufferLen && isDigit(charAt())) {
                 length++;
             }
-            if(offset + length == bufferLen) {
+            if (offset + length == bufferLen) {
                 return Tokens.FLOATING_POINT_LITERAL;
             }
             ch = charAt();
@@ -380,7 +380,7 @@ public class S5dTextTokenizer {
                 while (offset + length < bufferLen && isPrimeDigit(charAt())) {
                     length++;
                 }
-                if(offset + length == bufferLen) {
+                if (offset + length == bufferLen) {
                     return Tokens.FLOATING_POINT_LITERAL;
                 }
                 ch = charAt();
@@ -451,7 +451,7 @@ public class S5dTextTokenizer {
     }
 
     public void reset(CharSequence src) {
-        if(src == null) {
+        if (src == null) {
             throw new IllegalArgumentException();
         }
         this.source = src;

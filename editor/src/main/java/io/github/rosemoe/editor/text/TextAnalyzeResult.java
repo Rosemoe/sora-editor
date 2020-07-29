@@ -47,12 +47,12 @@ public class TextAnalyzeResult {
     /**
      * Add a new span if required (colorId is different from last)
      *
-     * @param spanLine    Line
-     * @param column  Column
-     * @param colorId Type
+     * @param spanLine Line
+     * @param column   Column
+     * @param colorId  Type
      */
     public void addIfNeeded(int spanLine, int column, int colorId) {
-        if(mLast != null && mLast.colorId == colorId) {
+        if (mLast != null && mLast.colorId == colorId) {
             return;
         }
         add(spanLine, Span.obtain(column, colorId));
@@ -62,16 +62,17 @@ public class TextAnalyzeResult {
      * Add a span directly
      * Note: the line should always >= the line of span last committed
      * if two spans are on the same line, you must add them in order by their column
+     *
      * @param spanLine The line position of span
-     * @param span The span
+     * @param span     The span
      */
     public void add(int spanLine, Span span) {
         int mapLine = mSpanMap.size() - 1;
-        if(spanLine == mapLine) {
+        if (spanLine == mapLine) {
             mSpanMap.get(spanLine).add(span);
-        } else if(spanLine > mapLine) {
+        } else if (spanLine > mapLine) {
             Span extendedSpan = mLast;
-            if(extendedSpan == null) {
+            if (extendedSpan == null) {
                 extendedSpan = Span.obtain(0, EditorColorScheme.TEXT_NORMAL);
             }
             while (mapLine < spanLine) {
@@ -81,7 +82,7 @@ public class TextAnalyzeResult {
                 mapLine++;
             }
             List<Span> lineSpans = mSpanMap.get(spanLine);
-            if(span.column == 0) {
+            if (span.column == 0) {
                 lineSpans.clear();
             }
             lineSpans.add(span);
@@ -98,7 +99,7 @@ public class TextAnalyzeResult {
     public void determine(int line) {
         int mapLine = mSpanMap.size() - 1;
         Span extendedSpan = mLast;
-        if(mLast == null) {
+        if (mLast == null) {
             extendedSpan = Span.obtain(0, EditorColorScheme.TEXT_NORMAL);
         }
         while (mapLine < line) {
@@ -141,7 +142,7 @@ public class TextAnalyzeResult {
      * Ensure the list not empty
      */
     public void addNormalIfNull() {
-        if(mSpanMap.isEmpty()) {
+        if (mSpanMap.isEmpty()) {
             List<Span> spanList = new ArrayList<>();
             mSpanMap.add(spanList);
         }

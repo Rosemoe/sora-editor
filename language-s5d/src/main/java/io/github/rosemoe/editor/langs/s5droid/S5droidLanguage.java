@@ -22,21 +22,18 @@ import io.github.rosemoe.editor.interfaces.EditorLanguage;
 /**
  * @author Rose
  */
-public class S5droidLanguage implements EditorLanguage
-{
+public class S5droidLanguage implements EditorLanguage {
 
     @Override
-    public CharSequence format(CharSequence text)
-    {
+    public CharSequence format(CharSequence text) {
         //Actually the text is always the type of StringBuilder
         //subSequence()'s result can be safely cast to String
         S5dFormatter f = new S5dFormatter(text);
-        try{
+        try {
             f.setStyle1(3);
             f.format();
             return f.getResult();
-        }
-        catch(RuntimeException e) {
+        } catch (RuntimeException e) {
             return text;
         }
     }
@@ -45,31 +42,27 @@ public class S5droidLanguage implements EditorLanguage
     public S5droidCodeAnalyzer colorP;
 
     @Override
-    public CodeAnalyzer getAnalyzer()
-    {
+    public CodeAnalyzer getAnalyzer() {
         return colorP = new S5droidCodeAnalyzer();
     }
 
     @Override
-    public AutoCompleteProvider getAutoCompleteProvider()
-    {
+    public AutoCompleteProvider getAutoCompleteProvider() {
         return completeP = new S5droidAutoComplete();
     }
 
     @Override
-    public boolean isAutoCompleteChar(char ch)
-    {
+    public boolean isAutoCompleteChar(char ch) {
         return Character.isJavaIdentifierPart(ch) || ch == '.' || ch == ':';
     }
 
     @Override
-    public int getIndentAdvance(String content)
-    {
+    public int getIndentAdvance(String content) {
         S5dTextTokenizer tk = new S5dTextTokenizer(content);
         Tokens token;
         int v = 0;
-        while((token = tk.directNextToken()) != Tokens.EOF) {
-            switch(token) {
+        while ((token = tk.directNextToken()) != Tokens.EOF) {
+            switch (token) {
                 case FORLOOP:
                 case WHILELOOP:
                 case IF:
@@ -92,8 +85,7 @@ public class S5droidLanguage implements EditorLanguage
     }
 
     @Override
-    public boolean useTab()
-    {
+    public boolean useTab() {
         return false;
     }
 

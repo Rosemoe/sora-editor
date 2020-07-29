@@ -32,12 +32,12 @@ public class ClipboardIceCream implements IClipboard {
     @Override
     @TargetApi(15)
     public CharSequence getTextFromClipboard() {
-        if(mClip == null) {
+        if (mClip == null) {
             return null;
         }
-        if(mClip.hasPrimaryClip()) {
+        if (mClip.hasPrimaryClip()) {
             ClipData data = mClip.getPrimaryClip();
-            if(data != null && data.getItemCount() > 0) {
+            if (data != null && data.getItemCount() > 0) {
                 return data.getItemAt(0).getText();
             }
         }
@@ -47,8 +47,8 @@ public class ClipboardIceCream implements IClipboard {
     @Override
     @TargetApi(15)
     public void setTextToClipboard(CharSequence text) {
-        if(mClip != null) {
-            mClip.setPrimaryClip(ClipData.newPlainText("Text",text));
+        if (mClip != null) {
+            mClip.setPrimaryClip(ClipData.newPlainText("Text", text));
         }
     }
 }

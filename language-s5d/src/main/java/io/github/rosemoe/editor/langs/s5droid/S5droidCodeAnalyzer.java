@@ -514,13 +514,13 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
     private static int tryParseColor(CharSequence color, boolean type) {
         String colorStr;
         try {
-            if(type) {
+            if (type) {
                 //Number
                 colorStr = "#" + color.subSequence(2, color.length());
             } else {
                 //String
                 color = color.subSequence(1, color.length() - 1);
-                colorStr = color instanceof String ? (String)color : color.toString();
+                colorStr = color instanceof String ? (String) color : color.toString();
             }
             return Color.parseColor(colorStr);
         } catch (Exception e) {

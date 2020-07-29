@@ -32,6 +32,7 @@ import static io.github.rosemoe.editor.langs.universal.UniversalTokens.EOF;
 
 /**
  * Universal Language support
+ *
  * @author Rose
  */
 public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
@@ -54,7 +55,7 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
     @Override
     public AutoCompleteProvider getAutoCompleteProvider() {
         IdentifierAutoComplete autoComplete = new IdentifierAutoComplete();
-        autoComplete.setKeywords(mLanguage.getKeywords(),true);
+        autoComplete.setKeywords(mLanguage.getKeywords(), true);
         return autoComplete;
     }
 
@@ -69,8 +70,8 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
         try {
             tokenizer2.setInput(content);
             UniversalTokens token;
-            while((token = tokenizer2.nextToken()) != EOF) {
-                if(token == UniversalTokens.OPERATOR) {
+            while ((token = tokenizer2.nextToken()) != EOF) {
+                if (token == UniversalTokens.OPERATOR) {
                     advance += mLanguage.getOperatorAdvance(tokenizer.getTokenString().toString());
                 }
             }
@@ -92,7 +93,7 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
 
     @Override
     public void analyze(CharSequence content, TextAnalyzeResult colors, TextAnalyzer.AnalyzeThread.Delegate delegate) {
-        StringBuilder text = content instanceof StringBuilder ? (StringBuilder)content : new StringBuilder(content);
+        StringBuilder text = content instanceof StringBuilder ? (StringBuilder) content : new StringBuilder(content);
         tokenizer.setInput(text);
         LineNumberCalculator helper = new LineNumberCalculator(text);
         IdentifierAutoComplete autoComplete = new IdentifierAutoComplete();
@@ -105,7 +106,7 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
         try {
             UniversalTokens token;
             Stack<BlockLine> stack = new Stack<>();
-            while((token = tokenizer.nextToken()) != EOF) {
+            while ((token = tokenizer.nextToken()) != EOF) {
                 int index = tokenizer.getOffset();
                 int line = helper.getLine();
                 int column = helper.getColumn();
@@ -126,14 +127,14 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
                         break;
                     case OPERATOR:
                         colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
-                        if(mLanguage.isSupportBlockLine()) {
+                        if (mLanguage.isSupportBlockLine()) {
                             String op = text.substring(index, index + tokenizer.getTokenLength());
                             if (mLanguage.isBlockStart(op)) {
                                 BlockLine blockLine = colors.obtainNewBlock();
                                 blockLine.startLine = line;
                                 blockLine.startColumn = column;
                                 stack.add(blockLine);
-                                if(layer == 0) {
+                                if (layer == 0) {
                                     currSwitch = 1;
                                 } else {
                                     currSwitch++;
@@ -145,12 +146,12 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
                                     blockLine.endLine = line;
                                     blockLine.endColumn = column;
                                     colors.addBlockLine(blockLine);
-                                    if(layer == 1) {
-                                        if(currSwitch > maxSwitch) {
+                                    if (layer == 1) {
+                                        if (currSwitch > maxSwitch) {
                                             maxSwitch = currSwitch;
                                         }
                                     }
-                                    layer --;
+                                    layer--;
                                 }
                             }
                         }
@@ -172,7 +173,7 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
         identifiers.finish();
         colors.mExtra = identifiers;
         tokenizer.setInput(null);
-        if(currSwitch > maxSwitch) {
+        if (currSwitch > maxSwitch) {
             maxSwitch = currSwitch;
         }
         colors.setSuppressSwitch(maxSwitch + 50);

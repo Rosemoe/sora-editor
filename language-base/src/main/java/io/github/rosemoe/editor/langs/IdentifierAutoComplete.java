@@ -34,7 +34,7 @@ public class IdentifierAutoComplete implements AutoCompleteProvider {
     private String[] mKeywords;
     private boolean mKeywordsAreLowCase;
 
-    public void setKeywords(String[] keywords,boolean lowCase) {
+    public void setKeywords(String[] keywords, boolean lowCase) {
         mKeywords = keywords;
         mKeywordsAreLowCase = true;
     }
@@ -46,14 +46,14 @@ public class IdentifierAutoComplete implements AutoCompleteProvider {
     public static class Identifiers {
 
         private final List<String> identifiers = new ArrayList<>();
-        private HashMap<String,Object> cache;
+        private HashMap<String, Object> cache;
         private final static Object SIGN = new Object();
 
         public void addIdentifier(String identifier) {
-            if(cache == null) {
+            if (cache == null) {
                 throw new IllegalStateException("begin() has not been called");
             }
-            if(cache.put(identifier,SIGN) == SIGN) {
+            if (cache.put(identifier, SIGN) == SIGN) {
                 return;
             }
             identifiers.add(identifier);
@@ -80,29 +80,29 @@ public class IdentifierAutoComplete implements AutoCompleteProvider {
         final String[] keywordArray = mKeywords;
         final boolean lowCase = mKeywordsAreLowCase;
         String match = prefix.toLowerCase();
-        if(keywordArray != null) {
-            if(lowCase) {
-                for(String kw : keywordArray) {
-                    if(kw.startsWith(match)) {
-                        keywords.add(new ResultItem(kw,"Keyword",ResultItem.TYPE_KEYWORD));
+        if (keywordArray != null) {
+            if (lowCase) {
+                for (String kw : keywordArray) {
+                    if (kw.startsWith(match)) {
+                        keywords.add(new ResultItem(kw, "Keyword", ResultItem.TYPE_KEYWORD));
                     }
                 }
-            }else{
-                for(String kw : keywordArray) {
-                    if(kw.toLowerCase().startsWith(match)) {
-                        keywords.add(new ResultItem(kw,"Keyword",ResultItem.TYPE_KEYWORD));
+            } else {
+                for (String kw : keywordArray) {
+                    if (kw.toLowerCase().startsWith(match)) {
+                        keywords.add(new ResultItem(kw, "Keyword", ResultItem.TYPE_KEYWORD));
                     }
                 }
             }
         }
         Collections.sort(keywords, ResultItem.COMPARATOR_BY_NAME);
         Object extra = colors.mExtra;
-        Identifiers userIdentifiers = (extra instanceof Identifiers) ? (Identifiers)extra : null;
-        if(userIdentifiers != null) {
+        Identifiers userIdentifiers = (extra instanceof Identifiers) ? (Identifiers) extra : null;
+        if (userIdentifiers != null) {
             List<ResultItem> words = new ArrayList<>();
-            for(String word : userIdentifiers.getIdentifiers()) {
-                if(word.toLowerCase().startsWith(match)) {
-                    words.add(new ResultItem(word,"Identifier",ResultItem.TYPE_LOCAL_METHOD));
+            for (String word : userIdentifiers.getIdentifiers()) {
+                if (word.toLowerCase().startsWith(match)) {
+                    words.add(new ResultItem(word, "Identifier", ResultItem.TYPE_LOCAL_METHOD));
                 }
             }
             Collections.sort(words, ResultItem.COMPARATOR_BY_NAME);

@@ -19,6 +19,7 @@ import android.util.SparseIntArray;
 
 /**
  * This class manages the color props of editor
+ *
  * @author Rose
  */
 public final class EditorColorScheme {
@@ -80,11 +81,12 @@ public final class EditorColorScheme {
 
     /**
      * Create a new ColorScheme for the given editor
+     *
      * @param editor Host editor
      */
     EditorColorScheme(CodeEditor editor) {
         mEditor = editor;
-        if(editor == null){
+        if (editor == null) {
             throw new IllegalArgumentException();
         }
         mColors = new SparseIntArray();
@@ -95,18 +97,19 @@ public final class EditorColorScheme {
      * Apply default colors
      */
     public void applyDefault() {
-        for(int i = START_COLOR_ID; i <= END_COLOR_ID; i++){
+        for (int i = START_COLOR_ID; i <= END_COLOR_ID; i++) {
             applyDefault(i);
         }
     }
 
     /**
      * Apply default color for the given type
+     *
      * @param type The type
      */
     public void applyDefault(int type) {
         int color;
-        switch(type) {
+        switch (type) {
             case LINE_DIVIDER:
                 color = 0xff3f51bf;
                 break;
@@ -195,18 +198,19 @@ public final class EditorColorScheme {
 
     /**
      * Apply a new color for the given type
-     * @param type The type
+     *
+     * @param type  The type
      * @param color New color
      */
-    public void putColor(int type,int color) {
+    public void putColor(int type, int color) {
         //Do not change if the old value is the same as new value
         //  due to avoid unnecessary invalidate() calls
         int old = getColor(type);
-        if(old == color){
+        if (old == color) {
             return;
         }
 
-        mColors.put(type,color);
+        mColors.put(type, color);
 
         //Notify the editor
         mEditor.onColorUpdated(type);
@@ -214,6 +218,7 @@ public final class EditorColorScheme {
 
     /**
      * Get color by type
+     *
      * @param type The type
      * @return The color for type
      */

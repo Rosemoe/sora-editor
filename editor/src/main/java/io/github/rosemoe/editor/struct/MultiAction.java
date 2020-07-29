@@ -24,6 +24,7 @@ import io.github.rosemoe.editor.text.ContentAction;
 
 /**
  * MultiAction saves several actions for UndoManager
+ *
  * @author Rose
  */
 public final class MultiAction implements ContentAction {
@@ -31,13 +32,13 @@ public final class MultiAction implements ContentAction {
     private final List<ContentAction> _actions = new ArrayList<>();
 
     public void addAction(ContentAction action) {
-        if(_actions.isEmpty()) {
+        if (_actions.isEmpty()) {
             _actions.add(action);
-        }else {
+        } else {
             ContentAction last = _actions.get(_actions.size() - 1);
-            if(last.canMerge(action)) {
+            if (last.canMerge(action)) {
                 last.merge(action);
-            }else {
+            } else {
                 _actions.add(action);
             }
         }
@@ -45,14 +46,14 @@ public final class MultiAction implements ContentAction {
 
     @Override
     public void undo(Content content) {
-        for(int i = _actions.size() - 1;i >= 0;i--) {
+        for (int i = _actions.size() - 1; i >= 0; i--) {
             _actions.get(i).undo(content);
         }
     }
 
     @Override
     public void redo(Content content) {
-        for(int i = 0;i < _actions.size();i++) {
+        for (int i = 0; i < _actions.size(); i++) {
             _actions.get(i).redo(content);
         }
     }

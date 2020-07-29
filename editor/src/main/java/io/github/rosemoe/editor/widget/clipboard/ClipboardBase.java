@@ -34,7 +34,7 @@ public class ClipboardBase implements IClipboard {
 
     @Override
     public void setTextToClipboard(CharSequence text) {
-        if(mClip != null) {
+        if (mClip != null) {
             mClip.setText(text);
         }
     }

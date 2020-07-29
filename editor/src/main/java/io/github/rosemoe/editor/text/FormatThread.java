@@ -14,16 +14,17 @@
  *   limitations under the License.
  */
 package io.github.rosemoe.editor.text;
+
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
 
 public class FormatThread extends Thread {
 
     private CharSequence mText;
-    
+
     private EditorLanguage mLanguage;
-    
+
     private FormatResultReceiver mReceiver;
-    
+
     public FormatThread(CharSequence text, EditorLanguage language, FormatResultReceiver receiver) {
         mText = text;
         mLanguage = language;
@@ -34,27 +35,27 @@ public class FormatThread extends Thread {
     public void run() {
         CharSequence result = null;
         try {
-            CharSequence chars = ((mText instanceof Content) ? (((Content)mText).toStringBuilder()) : new StringBuilder(mText));
+            CharSequence chars = ((mText instanceof Content) ? (((Content) mText).toStringBuilder()) : new StringBuilder(mText));
             result = mLanguage.format(chars);
         } catch (Throwable e) {
-            if(mReceiver != null) {
+            if (mReceiver != null) {
                 mReceiver.onFormatFail(e);
             }
         }
-        if(mReceiver != null) {
+        if (mReceiver != null) {
             mReceiver.onFormatSucceed(mText, result);
         }
         mReceiver = null;
         mLanguage = null;
         mText = null;
     }
-    
+
     public interface FormatResultReceiver {
-        
+
         void onFormatSucceed(CharSequence originalText, CharSequence newText);
-        
+
         void onFormatFail(Throwable throwable);
-        
+
     }
-    
+
 }

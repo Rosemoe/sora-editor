@@ -18,9 +18,10 @@ package io.github.rosemoe.editor.struct;
 
 /**
  * This a model of a character position in Content
+ *
  * @author Rose
  */
-public final class CharPosition{
+public final class CharPosition {
 
     //Packaged due to make changes
 
@@ -32,6 +33,7 @@ public final class CharPosition{
 
     /**
      * Get the index
+     *
      * @return index
      */
     public int getIndex() {
@@ -40,6 +42,7 @@ public final class CharPosition{
 
     /**
      * Get column
+     *
      * @return column
      */
     public int getColumn() {
@@ -48,6 +51,7 @@ public final class CharPosition{
 
     /**
      * Get line
+     *
      * @return line
      */
     public int getLine() {
@@ -56,6 +60,7 @@ public final class CharPosition{
 
     /**
      * Make this CharPosition zero and return self
+     *
      * @return self
      */
     public CharPosition zero() {
@@ -65,6 +70,7 @@ public final class CharPosition{
 
     /**
      * Make a copy of this CharPosition and return the copy
+     *
      * @return New CharPosition including info of this CharPosition
      */
     public CharPosition fromThis() {
@@ -77,7 +83,7 @@ public final class CharPosition{
 
     @Override
     public String toString() {
-        return "CharPosition(line = " + line + ",column = " + column + ",index = " + index +")";
+        return "CharPosition(line = " + line + ",column = " + column + ",index = " + index + ")";
     }
 
 }

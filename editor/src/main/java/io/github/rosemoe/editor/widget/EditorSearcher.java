@@ -23,6 +23,7 @@ import io.github.rosemoe.editor.text.Cursor;
 
 /**
  * Search text in editor
+ *
  * @author Rose
  */
 public class EditorSearcher {
@@ -35,13 +36,13 @@ public class EditorSearcher {
     }
 
     private void checkState() {
-        if(mSearchText == null) {
+        if (mSearchText == null) {
             throw new IllegalStateException("search text has not been set");
         }
     }
 
     public void search(String text) {
-        if(text != null && text.length() == 0) {
+        if (text != null && text.length() == 0) {
             text = null;
         }
         mSearchText = text;
@@ -53,9 +54,9 @@ public class EditorSearcher {
         checkState();
         Content text = mEditor.getText();
         Cursor cursor = text.getCursor();
-        if(cursor.isSelected()) {
+        if (cursor.isSelected()) {
             String selectedText = text.subContent(cursor.getLeftLine(), cursor.getLeftColumn(), cursor.getRightLine(), cursor.getRightColumn()).toString();
-            if(selectedText.equals(mSearchText)) {
+            if (selectedText.equals(mSearchText)) {
                 cursor.onCommitText(newText);
                 mEditor.hideAutoCompletePanel();
                 gotoNext(false);
@@ -87,12 +88,12 @@ public class EditorSearcher {
                 mEditor.post(new Runnable() {
                     @Override
                     public void run() {
-                        if(text2 == null) {
+                        if (text2 == null) {
                             Toast.makeText(mEditor.getContext(), String.valueOf(ex2), Toast.LENGTH_SHORT).show();
                         } else {
                             int line = mEditor.getCursor().getLeftLine();
                             int column = mEditor.getCursor().getLeftColumn();
-                            mEditor.getText().replace(0,0,mEditor.getLineCount() - 1,mEditor.getText().getColumnCount(mEditor.getLineCount() - 1), text2);
+                            mEditor.getText().replace(0, 0, mEditor.getLineCount() - 1, mEditor.getText().getColumnCount(mEditor.getLineCount() - 1), text2);
                             mEditor.setSelectionAround(line, column);
                             mEditor.invalidate();
                         }
@@ -103,7 +104,7 @@ public class EditorSearcher {
 
         }.start();
     }
-    
+
     public void gotoNext() {
         gotoNext(true);
     }
@@ -114,16 +115,16 @@ public class EditorSearcher {
         Cursor cursor = text.getCursor();
         int line = cursor.getRightLine();
         int column = cursor.getRightColumn();
-        for(int i = line;i < text.getLineCount();i++) {
+        for (int i = line; i < text.getLineCount(); i++) {
             int idx = column >= text.getColumnCount(i) ? -1 : text.getRawData(i).indexOf(mSearchText, column);
-            if(idx != -1) {
+            if (idx != -1) {
                 mEditor.setSelectionRegion(i, idx, i, idx + mSearchText.length());
                 return;
             }
             column = -1;
         }
-        if(tip) {
-            Toast.makeText(mEditor.getContext(),"Not found in this direction", Toast.LENGTH_SHORT).show();
+        if (tip) {
+            Toast.makeText(mEditor.getContext(), "Not found in this direction", Toast.LENGTH_SHORT).show();
             mEditor.jumpToLine(0);
         }
     }
@@ -134,15 +135,15 @@ public class EditorSearcher {
         Cursor cursor = text.getCursor();
         int line = cursor.getLeftLine();
         int column = cursor.getLeftColumn();
-        for(int i = line;i >= 0;i--) {
+        for (int i = line; i >= 0; i--) {
             int idx = column - 1 < 0 ? -1 : text.getRawData(i).lastIndexOf(mSearchText, column - 1);
-            if(idx != -1) {
+            if (idx != -1) {
                 mEditor.setSelectionRegion(i, idx, i, idx + mSearchText.length());
                 return;
             }
-            column = i - 1 >=0 ? text.getColumnCount(i - 1) : 0;
+            column = i - 1 >= 0 ? text.getColumnCount(i - 1) : 0;
         }
-        Toast.makeText(mEditor.getContext(),"Not found in this direction", Toast.LENGTH_SHORT).show();
+        Toast.makeText(mEditor.getContext(), "Not found in this direction", Toast.LENGTH_SHORT).show();
     }
 
     public void stopSearch() {

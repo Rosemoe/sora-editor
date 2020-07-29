@@ -45,6 +45,7 @@ import io.github.rosemoe.editor.struct.NavigationLabel;
 import io.github.rosemoe.editor.utils.CrashHandler;
 
 import java.util.List;
+
 import io.github.rosemoe.editor.langs.java.JavaLanguage;
 import io.github.rosemoe.editor.widget.CodeEditor;
 
@@ -52,14 +53,14 @@ public class MainActivity extends Activity {
 
     private CodeEditor editor;
     private LinearLayout panel;
-    private EditText search,replace;
+    private EditText search, replace;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         CrashHandler.getInstance().init(this);
         setContentView(R.layout.activity_main);
-        if(getActionBar() != null) {
+        if (getActionBar() != null) {
             Editable title = Editable.Factory.getInstance().newEditable("CodeEditor");
             title.setSpan(new ForegroundColorSpan(0xffffffff), 0, title.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             getActionBar().setTitle(title);
@@ -94,34 +95,32 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
-        SubMenu sub = menu.addSubMenu(0,9999,0,"Cursor Actions");
+    public boolean onCreateOptionsMenu(Menu menu) {
+        SubMenu sub = menu.addSubMenu(0, 9999, 0, "Cursor Actions");
         //sub.add(0,10,0,"Go to line");
-        sub.add(0,2,0,"Go To End");
-        sub.add(0,3,0,"Move Up");
-        sub.add(0,4,0,"Move Down");
-        sub.add(0,5,0,"Home");
-        sub.add(0,6,0,"End");
-        sub.add(0,7,0,"Move Left");
-        sub.add(0,8,0,"Move Right");
-        sub = menu.addSubMenu(0,99999,0,"Text Actions");
-        sub.add(0,0,0,"Undo");
-        sub.add(0,1,0,"Redo");
-        sub.add(0,11,0,"Copy");
-        sub.add(0,12,0,"Paste");
-        sub.add(0,13,0,"Cut");
-        menu.add(0,9,0,"Code Navigation");
-        menu.add(0,10,0,"Format");
-        menu.add(0, 14, 0,"Switch language");
-        menu.add(0,15,0,"Search");
-        menu.add(0,16,0,"Search (Action Mode)");
+        sub.add(0, 2, 0, "Go To End");
+        sub.add(0, 3, 0, "Move Up");
+        sub.add(0, 4, 0, "Move Down");
+        sub.add(0, 5, 0, "Home");
+        sub.add(0, 6, 0, "End");
+        sub.add(0, 7, 0, "Move Left");
+        sub.add(0, 8, 0, "Move Right");
+        sub = menu.addSubMenu(0, 99999, 0, "Text Actions");
+        sub.add(0, 0, 0, "Undo");
+        sub.add(0, 1, 0, "Redo");
+        sub.add(0, 11, 0, "Copy");
+        sub.add(0, 12, 0, "Paste");
+        sub.add(0, 13, 0, "Cut");
+        menu.add(0, 9, 0, "Code Navigation");
+        menu.add(0, 10, 0, "Format");
+        menu.add(0, 14, 0, "Switch language");
+        menu.add(0, 15, 0, "Search");
+        menu.add(0, 16, 0, "Search (Action Mode)");
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item)
-    {
+    public boolean onOptionsItemSelected(MenuItem item) {
         //long st = System.nanoTime();
         try {
             switch (item.getItemId()) {
@@ -192,7 +191,7 @@ public class MainActivity extends Activity {
                 case 14:
                     new AlertDialog.Builder(this)
                             .setTitle("Switch language")
-                            .setSingleChoiceItems(new String[]{"C","C++","Java","JavaScript","S5d","None"}, 0, new DialogInterface.OnClickListener() {
+                            .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "S5d", "None"}, 0, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     switch (which) {
@@ -221,7 +220,7 @@ public class MainActivity extends Activity {
                             .show();
                     break;
                 case 15:
-                    if(panel.getVisibility() == View.GONE) {
+                    if (panel.getVisibility() == View.GONE) {
                         replace.setText("");
                         search.setText("");
                         editor.getSearcher().stopSearch();
@@ -235,16 +234,16 @@ public class MainActivity extends Activity {
                     editor.beginSearchMode();
                     break;
             }
-        }catch(Exception t){
+        } catch (Exception t) {
             StringBuilder sb = new StringBuilder();
             sb.append(t.toString());
-            for(Object o : t.getStackTrace()){
+            for (Object o : t.getStackTrace()) {
                 sb.append('\n').append(o);
             }
             new AlertDialog.Builder(this)
                     .setTitle("Error occurred!")
                     .setMessage(sb)
-                    .setPositiveButton("Cancel",null)
+                    .setPositiveButton("Cancel", null)
                     .show();
         }
         //Toast.makeText(this,"Action done in " + (System.nanoTime() - st) / 1e6 + " ms.",Toast.LENGTH_SHORT).show();
@@ -255,7 +254,7 @@ public class MainActivity extends Activity {
     public void gotoNext(View view) {
         try {
             editor.getSearcher().gotoNext();
-        }catch (IllegalStateException e) {
+        } catch (IllegalStateException e) {
             e.printStackTrace();
         }
     }
@@ -263,7 +262,7 @@ public class MainActivity extends Activity {
     public void gotoLast(View view) {
         try {
             editor.getSearcher().gotoLast();
-        }catch (IllegalStateException e) {
+        } catch (IllegalStateException e) {
             e.printStackTrace();
         }
     }
@@ -271,7 +270,7 @@ public class MainActivity extends Activity {
     public void replace(View view) {
         try {
             editor.getSearcher().replaceThis(replace.getText().toString());
-        }catch (IllegalStateException e) {
+        } catch (IllegalStateException e) {
             e.printStackTrace();
         }
     }
@@ -279,7 +278,7 @@ public class MainActivity extends Activity {
     public void replaceAll(View view) {
         try {
             editor.getSearcher().replaceAll(replace.getText().toString());
-        }catch (IllegalStateException e) {
+        } catch (IllegalStateException e) {
             e.printStackTrace();
         }
     }

@@ -21,7 +21,7 @@ import android.os.Build;
 public class EdgeEffectFactory {
 
     public static EdgeEffect create(Context context) {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return new PlatformEdgeEffect(context);
         } else {
             return new MaterialEdgeEffect();

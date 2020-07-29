@@ -19,6 +19,7 @@ import android.graphics.Canvas;
 
 /**
  * Interface for EdgeEffect
+ *
  * @author Rose
  */
 public interface EdgeEffect {
@@ -47,9 +48,9 @@ public interface EdgeEffect {
      * @param deltaDistance Change in distance since the last call. Values may be 0 (no change) to
      *                      1.f (full length of the view) or negative values to express change
      *                      back toward the edge reached to initiate the effect.
-     * @param displacement The displacement from the starting side of the effect of the point
-     *                     initiating the pull. In the case of touch this is the finger position.
-     *                     Values may be from 0-1.
+     * @param displacement  The displacement from the starting side of the effect of the point
+     *                      initiating the pull. In the case of touch this is the finger position.
+     *                      Values may be from 0-1.
      */
     void onPull(float deltaDistance, float displacement);
 
@@ -82,6 +83,7 @@ public interface EdgeEffect {
 
     /**
      * Return the color of this edge effect in argb.
+     *
      * @return The color of this edge effect in argb
      */
     int getColor();
@@ -94,16 +96,16 @@ public interface EdgeEffect {
      *
      * @param canvas Canvas to draw into
      * @return true if drawing should continue beyond this frame to continue the
-     *         animation
+     * animation
      */
     boolean draw(Canvas canvas);
 
     /**
      * Set the size of this edge effect in pixels.
      *
-     * @param width Effect width in pixels
+     * @param width  Effect width in pixels
      * @param height Effect height in pixels
      */
     void setSize(int width, int height);
-    
+
 }

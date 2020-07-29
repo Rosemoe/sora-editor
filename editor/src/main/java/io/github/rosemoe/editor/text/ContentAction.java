@@ -17,24 +17,28 @@ package io.github.rosemoe.editor.text;
 
 /**
  * For saving modification better
+ *
  * @author Rose
  */
-public interface ContentAction{
+public interface ContentAction {
 
     /**
      * Undo this action
+     *
      * @param content On the given object
      */
     void undo(Content content);
 
     /**
      * Redo this action
+     *
      * @param content On the given object
      */
     void redo(Content content);
 
     /**
      * Get whether the target action can be merged with this action
+     *
      * @param action Target action to merge
      * @return Whether can merge
      */
@@ -42,6 +46,7 @@ public interface ContentAction{
 
     /**
      * Merge with target action
+     *
      * @param action Target action to merge
      */
     void merge(ContentAction action);

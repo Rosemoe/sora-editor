@@ -20,6 +20,7 @@ import io.github.rosemoe.editor.text.ContentAction;
 
 /**
  * Replace action model for UndoManager
+ *
  * @author Rose
  */
 public final class ReplaceAction implements ContentAction {

@@ -21,11 +21,12 @@ import io.github.rosemoe.editor.text.ContentAction;
 
 /**
  * Insert action model for UndoManager
+ *
  * @author Rose
  */
 public final class InsertAction implements ContentAction {
 
-    public int startLine,endLine,startColumn,endColumn;
+    public int startLine, endLine, startColumn, endColumn;
 
     public CharSequence text;
 
@@ -41,7 +42,7 @@ public final class InsertAction implements ContentAction {
 
     @Override
     public boolean canMerge(ContentAction action) {
-        if(action instanceof InsertAction) {
+        if (action instanceof InsertAction) {
             InsertAction ac = (InsertAction) action;
             return (ac.startColumn == endColumn && ac.startLine == endLine && ac.text.length() + text.length() < 10000);
         }
@@ -50,16 +51,16 @@ public final class InsertAction implements ContentAction {
 
     @Override
     public void merge(ContentAction action) {
-        if(!canMerge(action)) {
+        if (!canMerge(action)) {
             throw new IllegalArgumentException();
         }
         InsertAction ac = (InsertAction) action;
         this.endColumn = ac.endColumn;
         this.endLine = ac.endLine;
         StringBuilder sb;
-        if(text instanceof StringBuilder) {
+        if (text instanceof StringBuilder) {
             sb = (StringBuilder) text;
-        }else {
+        } else {
             sb = new StringBuilder(text);
             text = sb;
         }
@@ -67,10 +68,9 @@ public final class InsertAction implements ContentAction {
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "{InsertAction : Start = " + startLine + "," + startColumn +
-                " End = " + endLine + "," + endColumn + "\nContent = " + text +"}";
+                " End = " + endLine + "," + endColumn + "\nContent = " + text + "}";
     }
 
 }

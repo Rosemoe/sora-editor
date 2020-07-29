@@ -28,7 +28,7 @@ public class SpanRecycler {
     private static SpanRecycler INSTANCE;
 
     public static synchronized SpanRecycler getInstance() {
-        if(INSTANCE == null) {
+        if (INSTANCE == null) {
             INSTANCE = new SpanRecycler();
         }
         return INSTANCE;
@@ -42,7 +42,7 @@ public class SpanRecycler {
     }
 
     public void recycle(List<List<Span>> spans) {
-        if(recycleThread == null || !recycleThread.isAlive()) {
+        if (recycleThread == null || !recycleThread.isAlive()) {
             recycleThread = new RecycleThread();
             recycleThread.start();
         }
@@ -65,9 +65,9 @@ public class SpanRecycler {
                     try {
                         List<List<Span>> spanMap = taskQueue.take();
                         int count = 0;
-                        for(List<Span> spans : spanMap) {
+                        for (List<Span> spans : spanMap) {
                             int size = spans.size();
-                            for(int i = 0;i < size;i++) {
+                            for (int i = 0; i < size; i++) {
                                 spans.remove(size - 1 - i).recycle();
                                 count++;
                             }
@@ -78,7 +78,7 @@ public class SpanRecycler {
                         break;
                     }
                 }
-            }catch (Exception e) {
+            } catch (Exception e) {
                 Log.w(LOG_TAG, e);
             }
             Log.i(LOG_TAG, "Recycler exited");

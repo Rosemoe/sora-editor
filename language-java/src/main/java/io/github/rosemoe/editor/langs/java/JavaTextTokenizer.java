@@ -29,7 +29,7 @@ public class JavaTextTokenizer {
         doStaticInit();
     }
 
-    public static TrieTree getTree(){
+    public static TrieTree getTree() {
         return keywords;
     }
 
@@ -46,7 +46,7 @@ public class JavaTextTokenizer {
     private boolean skipComment;
 
     public JavaTextTokenizer(CharSequence src) {
-        if(src == null) {
+        if (src == null) {
             throw new IllegalArgumentException("src can not be null");
         }
         this.source = src;
@@ -173,7 +173,7 @@ public class JavaTextTokenizer {
             return Tokens.NEWLINE;
         } else if (isWhitespace(ch)) {
             char chLocal;
-            while (offset + length < bufferLen && isWhitespace(chLocal = charAt(offset + length)) ) {
+            while (offset + length < bufferLen && isWhitespace(chLocal = charAt(offset + length))) {
                 if (chLocal == '\r' || chLocal == '\n') {
                     break;
                 }
@@ -188,17 +188,17 @@ public class JavaTextTokenizer {
                 return scanNumber();
             }
             /* Scan usual symbols first */
-            if(ch == ';') {
+            if (ch == ';') {
                 return Tokens.SEMICOLON;
-            }else if(ch == '(') {
+            } else if (ch == '(') {
                 return Tokens.LPAREN;
-            }else if(ch == ')') {
+            } else if (ch == ')') {
                 return Tokens.RPAREN;
-            }else if(ch == ':') {
+            } else if (ch == ':') {
                 return Tokens.COLON;
-            }else if(ch == '<') {
+            } else if (ch == '<') {
                 return scanLT();
-            }else if(ch == '>') {
+            } else if (ch == '>') {
                 return scanGT();
             }
             /* Scan secondly symbols */
@@ -255,7 +255,7 @@ public class JavaTextTokenizer {
     }
 
     protected final void throwIfNeeded() {
-        if(offset + length == bufferLen) {
+        if (offset + length == bufferLen) {
             throw new RuntimeException("Token too long");
         }
     }
@@ -321,8 +321,8 @@ public class JavaTextTokenizer {
             length++;
             scanTrans();
         } else if (ch == '\'') {
-           length++;
-           return;
+            length++;
+            return;
         } else {
             if (ch == '\n') {
                 return;
@@ -336,13 +336,13 @@ public class JavaTextTokenizer {
     }
 
     protected Tokens scanNumber() {
-        if(offset + length == bufferLen) {
+        if (offset + length == bufferLen) {
             return Tokens.INTEGER_LITERAL;
         }
         boolean flag = false;
         char ch = charAt(offset);
         if (ch == '0') {
-            if(charAt() == 'x') {
+            if (charAt() == 'x') {
                 length++;
             }
             flag = true;
@@ -350,7 +350,7 @@ public class JavaTextTokenizer {
         while (offset + length < bufferLen && isDigit(charAt())) {
             length++;
         }
-        if(offset + length == bufferLen) {
+        if (offset + length == bufferLen) {
             return Tokens.INTEGER_LITERAL;
         }
         ch = charAt();
@@ -358,7 +358,7 @@ public class JavaTextTokenizer {
             if (flag) {
                 return Tokens.INTEGER_LITERAL;
             }
-            if(offset + length + 1 == bufferLen) {
+            if (offset + length + 1 == bufferLen) {
                 return Tokens.INTEGER_LITERAL;
             }
             length++;
@@ -366,7 +366,7 @@ public class JavaTextTokenizer {
             while (offset + length < bufferLen && isDigit(charAt())) {
                 length++;
             }
-            if(offset + length == bufferLen) {
+            if (offset + length == bufferLen) {
                 return Tokens.FLOATING_POINT_LITERAL;
             }
             ch = charAt();
@@ -380,7 +380,7 @@ public class JavaTextTokenizer {
                 while (offset + length < bufferLen && isPrimeDigit(charAt())) {
                     length++;
                 }
-                if(offset + length == bufferLen) {
+                if (offset + length == bufferLen) {
                     return Tokens.FLOATING_POINT_LITERAL;
                 }
                 ch = charAt();
@@ -451,7 +451,7 @@ public class JavaTextTokenizer {
     }
 
     public void reset(CharSequence src) {
-        if(src == null) {
+        if (src == null) {
             throw new IllegalArgumentException();
         }
         this.source = src;
@@ -470,28 +470,28 @@ public class JavaTextTokenizer {
 
     protected static void doStaticInit() {
         sKeywords = new String[]{
-            "assert","abstract","boolean","byte","char","class","do",
-            "double","final","float","for","if","int","long","new",
-            "public","private","protected","package","return","static",
-            "short","super","switch","else","volatile","synchronized","strictfp",
-            "goto","continue","break","transient","void","try","catch",
-            "finally","while","case","default","const","enum","extends",
-            "implements","import","instanceof","interface","native",
-            "this","throw","throws", "true", "false","null"
+                "assert", "abstract", "boolean", "byte", "char", "class", "do",
+                "double", "final", "float", "for", "if", "int", "long", "new",
+                "public", "private", "protected", "package", "return", "static",
+                "short", "super", "switch", "else", "volatile", "synchronized", "strictfp",
+                "goto", "continue", "break", "transient", "void", "try", "catch",
+                "finally", "while", "case", "default", "const", "enum", "extends",
+                "implements", "import", "instanceof", "interface", "native",
+                "this", "throw", "throws", "true", "false", "null"
         };
         sTokens = new Tokens[]{
-            Tokens.ABSTRACT, Tokens.ASSERT, Tokens.BOOLEAN, Tokens.BYTE, Tokens.CHAR, Tokens.CLASS, Tokens.DO,
-            Tokens.DOUBLE, Tokens.FINAL, Tokens.FLOAT, Tokens.FOR, Tokens.IF, Tokens.INT, Tokens.LONG, Tokens.NEW,
-            Tokens.PUBLIC, Tokens.PRIVATE, Tokens.PROTECTED, Tokens.PACKAGE, Tokens.RETURN, Tokens.STATIC,
-            Tokens.SHORT, Tokens.SUPER, Tokens.SWITCH, Tokens.ELSE, Tokens.VOLATILE, Tokens.SYNCHRONIZED, Tokens.STRICTFP,
-            Tokens.GOTO, Tokens.CONTINUE, Tokens.BREAK, Tokens.TRANSIENT, Tokens.VOID, Tokens.TRY, Tokens.CATCH,
-            Tokens.FINALLY, Tokens.WHILE, Tokens.CASE, Tokens.DEFAULT, Tokens.CONST, Tokens.ENUM, Tokens.EXTENDS,
-            Tokens.IMPLEMENTS, Tokens.IMPORT, Tokens.INSTANCEOF, Tokens.INTERFACE, Tokens.NATIVE,
-            Tokens.THIS, Tokens.THROW, Tokens.THROWS, Tokens.TRUE, Tokens.FALSE, Tokens.NULL
+                Tokens.ABSTRACT, Tokens.ASSERT, Tokens.BOOLEAN, Tokens.BYTE, Tokens.CHAR, Tokens.CLASS, Tokens.DO,
+                Tokens.DOUBLE, Tokens.FINAL, Tokens.FLOAT, Tokens.FOR, Tokens.IF, Tokens.INT, Tokens.LONG, Tokens.NEW,
+                Tokens.PUBLIC, Tokens.PRIVATE, Tokens.PROTECTED, Tokens.PACKAGE, Tokens.RETURN, Tokens.STATIC,
+                Tokens.SHORT, Tokens.SUPER, Tokens.SWITCH, Tokens.ELSE, Tokens.VOLATILE, Tokens.SYNCHRONIZED, Tokens.STRICTFP,
+                Tokens.GOTO, Tokens.CONTINUE, Tokens.BREAK, Tokens.TRANSIENT, Tokens.VOID, Tokens.TRY, Tokens.CATCH,
+                Tokens.FINALLY, Tokens.WHILE, Tokens.CASE, Tokens.DEFAULT, Tokens.CONST, Tokens.ENUM, Tokens.EXTENDS,
+                Tokens.IMPLEMENTS, Tokens.IMPORT, Tokens.INSTANCEOF, Tokens.INTERFACE, Tokens.NATIVE,
+                Tokens.THIS, Tokens.THROW, Tokens.THROWS, Tokens.TRUE, Tokens.FALSE, Tokens.NULL
         };
         keywords = new TrieTree<>();
-        for(int i = 0;i < sKeywords.length;i++) {
-            keywords.put(sKeywords[i],sTokens[i]);
+        for (int i = 0; i < sKeywords.length; i++) {
+            keywords.put(sKeywords[i], sTokens[i]);
         }
         MyCharacter.initMap();
     }

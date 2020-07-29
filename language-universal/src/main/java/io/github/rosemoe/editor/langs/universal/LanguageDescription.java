@@ -19,6 +19,7 @@ import io.github.rosemoe.editor.interfaces.EditorLanguage;
 
 /**
  * An interface to provide information for your language
+ *
  * @author Rose
  */
 @SuppressWarnings("SameReturnValue")
@@ -28,8 +29,9 @@ public interface LanguageDescription {
      * Check whether given characters is operator
      * Start offset in array is always 0.
      * You should only read characters within length
+     *
      * @param characters Character array
-     * @param length Length in array
+     * @param length     Length in array
      */
     boolean isOperator(char[] characters, int length);
 

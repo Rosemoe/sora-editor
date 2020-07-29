@@ -22,6 +22,7 @@ import android.os.Build;
 
 /**
  * System EdgeEffect
+ *
  * @author Rose
  */
 public class PlatformEdgeEffect implements EdgeEffect {

@@ -21,11 +21,12 @@ import io.github.rosemoe.editor.text.ContentAction;
 
 /**
  * Delete action model for UndoManager
+ *
  * @author Rose
  */
 public final class DeleteAction implements ContentAction {
 
-    public int startLine,endLine,startColumn,endColumn;
+    public int startLine, endLine, startColumn, endColumn;
 
     public CharSequence text;
 
@@ -41,8 +42,8 @@ public final class DeleteAction implements ContentAction {
 
     @Override
     public boolean canMerge(ContentAction action) {
-        if(action instanceof DeleteAction) {
-            DeleteAction ac = (DeleteAction)action;
+        if (action instanceof DeleteAction) {
+            DeleteAction ac = (DeleteAction) action;
             return (ac.endColumn == startColumn && ac.endLine == startLine && ac.text.length() + text.length() < 10000);
         }
         return false;
@@ -50,16 +51,16 @@ public final class DeleteAction implements ContentAction {
 
     @Override
     public void merge(ContentAction action) {
-        if(!canMerge(action)) {
+        if (!canMerge(action)) {
             throw new IllegalArgumentException();
         }
-        DeleteAction ac = (DeleteAction)action;
+        DeleteAction ac = (DeleteAction) action;
         this.startColumn = ac.startColumn;
         this.startLine = ac.startLine;
         StringBuilder sb;
-        if(text instanceof StringBuilder) {
+        if (text instanceof StringBuilder) {
             sb = (StringBuilder) text;
-        }else {
+        } else {
             sb = new StringBuilder(text);
             text = sb;
         }
@@ -67,10 +68,9 @@ public final class DeleteAction implements ContentAction {
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "{DeleteAction : Start = " + startLine + "," + startColumn +
-                " End = " + endLine + "," + endColumn + "\nContent = " + text +"}";
+                " End = " + endLine + "," + endColumn + "\nContent = " + text + "}";
     }
 
 }

@@ -17,6 +17,7 @@ package io.github.rosemoe.editor.langs.java;
 
 /**
  * Tokens for Java
+ *
  * @author Rose
  */
 public enum Tokens {

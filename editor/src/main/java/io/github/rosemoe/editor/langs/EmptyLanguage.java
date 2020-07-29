@@ -27,14 +27,13 @@ import java.util.List;
 
 /**
  * Empty language without any effect
+ *
  * @author Rose
  */
-public class EmptyLanguage implements EditorLanguage
-{
+public class EmptyLanguage implements EditorLanguage {
 
     @Override
-    public CharSequence format(CharSequence text)
-    {
+    public CharSequence format(CharSequence text) {
         return text;
     }
 
@@ -50,20 +49,17 @@ public class EmptyLanguage implements EditorLanguage
     }
 
     @Override
-    public boolean isAutoCompleteChar(char ch)
-    {
+    public boolean isAutoCompleteChar(char ch) {
         return false;
     }
 
     @Override
-    public int getIndentAdvance(String content)
-    {
+    public int getIndentAdvance(String content) {
         return 0;
     }
 
     @Override
-    public boolean useTab()
-    {
+    public boolean useTab() {
         return false;
     }
 

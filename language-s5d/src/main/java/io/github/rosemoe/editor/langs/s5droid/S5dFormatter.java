@@ -23,6 +23,7 @@ import java.util.Stack;
  * It provides a lots of code styles for users to choose
  * The ability of this class is based on the {@link S5dTextTokenizer} and {@link Tokens}
  * <strong>More detail about the styles please see the comment on fields!!!</strong>
+ *
  * @author Rose
  */
 public class S5dFormatter {
@@ -76,6 +77,7 @@ public class S5dFormatter {
 
     /**
      * Create a formatter from a String object
+     *
      * @param content The content of S5droid language code
      */
     public S5dFormatter(CharSequence content) {
@@ -85,10 +87,11 @@ public class S5dFormatter {
     /**
      * This will create a new formatter from the given S5dLexer
      * To ensure the target S5dLexer is at the start of content,we have made it private
+     *
      * @param lexer The lexer
      */
     private S5dFormatter(S5dTextTokenizer lexer) {
-        if(lexer == null) {
+        if (lexer == null) {
             throw new IllegalArgumentException("lexer can not be null");
         }
         this.lexer = lexer;
@@ -115,7 +118,7 @@ public class S5dFormatter {
     }
 
     public void setStyle1(int length) {
-        if(length < 0) {
+        if (length < 0) {
             throw new IllegalArgumentException("length can not be under zero");
         }
         style1 = length;
@@ -142,13 +145,13 @@ public class S5dFormatter {
      */
     @SuppressWarnings("incomplete-switch")
     public void format() {
-        if(isStarted()) {
+        if (isStarted()) {
             throw new IllegalStateException("format() has been called");
         }
         synchronized (this) {
             this.started = true;
             final FormatListener lis = this.listener;
-            if(lis != null) {
+            if (lis != null) {
                 lis.onStarted(this);
             }
         }
@@ -167,68 +170,68 @@ public class S5dFormatter {
         Tokens cacheToken = Tokens.NEWLINE;
         String cacheTokenContent = null;
 
-        while((currentToken = (cacheToken != Tokens.NEWLINE ? cacheToken : lexer.nextToken())) != Tokens.EOF) {
+        while ((currentToken = (cacheToken != Tokens.NEWLINE ? cacheToken : lexer.nextToken())) != Tokens.EOF) {
             //Do not call yytext() for too many times.It will cost more time to create new String
             String content;
-            if(cacheToken != Tokens.NEWLINE) {
+            if (cacheToken != Tokens.NEWLINE) {
                 content = cacheTokenContent;
                 //Reset cache state
                 cacheToken = Tokens.NEWLINE;
                 cacheTokenContent = "";
             } else {
-                content = (String)lexer.getTokenString();
+                content = (String) lexer.getTokenString();
             }
 
             //Just append it and do not update the tokens
-            if(currentToken == Tokens.LONG_COMMENT || currentToken == Tokens.LINE_COMMENT) {
+            if (currentToken == Tokens.LONG_COMMENT || currentToken == Tokens.LINE_COMMENT) {
                 int len = content.length();
-                while(Character.isWhitespace(content.charAt(len - 1))) {
+                while (Character.isWhitespace(content.charAt(len - 1))) {
                     len--;
                 }
-                sb.append(content.substring(0,len));
+                sb.append(content.substring(0, len));
                 lexer.pushBack(content.length() - len);
                 continue;
             }
 
             //Add space to operator and operator target
-            if(style0 && (lastToken != Tokens.LINE_COMMENT && lastToken != Tokens.LONG_COMMENT)) {
+            if (style0 && (lastToken != Tokens.LINE_COMMENT && lastToken != Tokens.LONG_COMMENT)) {
                 //Ensure the space will only be added once
-                if(isOperator(currentToken) && lastToken != Tokens.WHITESPACE && lastToken != Tokens.NEWLINE) {
+                if (isOperator(currentToken) && lastToken != Tokens.WHITESPACE && lastToken != Tokens.NEWLINE) {
                     sb.append(' ');
-                } else if(currentToken != Tokens.WHITESPACE && currentToken != Tokens.NEWLINE && !isSeparator(currentToken) && !isOperator(currentToken) && isOperator(lastToken)) {
+                } else if (currentToken != Tokens.WHITESPACE && currentToken != Tokens.NEWLINE && !isSeparator(currentToken) && !isOperator(currentToken) && isOperator(lastToken)) {
                     sb.append(' ');
-                } else if(lastToken == Tokens.COMP && currentToken != Tokens.WHITESPACE) {
+                } else if (lastToken == Tokens.COMP && currentToken != Tokens.WHITESPACE) {
                     sb.append(' ');
                 }
             }
 
             //Add tabs and spaces to new lines
-            if(currentToken == Tokens.NEWLINE) {
+            if (currentToken == Tokens.NEWLINE) {
                 sb.append('\n');
                 Tokens token;
-                while((token = lexer.nextToken()) == Tokens.WHITESPACE || token == Tokens.NEWLINE) {
+                while ((token = lexer.nextToken()) == Tokens.WHITESPACE || token == Tokens.NEWLINE) {
                     //Do not indent the black lines
                     //As well as clear useless spaces on empty line
-                    if(token == Tokens.NEWLINE) {
+                    if (token == Tokens.NEWLINE) {
                         sb.append('\n');
-                        if(style5) {
+                        if (style5) {
                             appendIndent(layer);
                         }
                     }
                 }
-                if(!style5) {
+                if (!style5) {
                     appendIndent(layer);
                 }
                 lastToken = Tokens.NEWLINE;
                 cacheToken = token;
-                cacheTokenContent = (String)lexer.getTokenString();
+                cacheTokenContent = (String) lexer.getTokenString();
                 continue;
             }
 
             //Make advances
             {
 
-                switch(currentToken) {
+                switch (currentToken) {
                     case EVENT:
                     case METHOD:
                     case IF:
@@ -236,19 +239,19 @@ public class S5dFormatter {
                     case WHILELOOP:
                     case FORLOOP:
                     case TRY:
-                        if(lastToken != Tokens.NEWLINE) {
+                        if (lastToken != Tokens.NEWLINE) {
                             sb.append('\n');
                             appendIndent(layer);
                         }
                         layer++;
-                        if(currentToken == Tokens.WHILELOOP || currentToken == Tokens.FORLOOP) {
+                        if (currentToken == Tokens.WHILELOOP || currentToken == Tokens.FORLOOP) {
                             stack.push(Tokens.LOOP);
-                        } else if(currentToken == Tokens.TRY) {
+                        } else if (currentToken == Tokens.TRY) {
                             stack.push(Tokens.SIMPLE_TRY);
                         } else {
                             stack.push(currentToken);
                         }
-                        if(currentToken == Tokens.SWITCH) {
+                        if (currentToken == Tokens.SWITCH) {
                             cases.add(0);
                             case2.add(0);
                         }
@@ -257,24 +260,24 @@ public class S5dFormatter {
                     case ELSEIF:
                     case CATCH:
                         layer--;
-                        if(lastToken != Tokens.NEWLINE) {
+                        if (lastToken != Tokens.NEWLINE) {
                             sb.append('\n');
                             appendIndent(layer);
-                        }else {
+                        } else {
                             trackToStartOfLine();
                             appendIndent(layer);
                         }
                         layer++;
                         break;
                     case CASE:
-                        if(!case2.isEmpty()) {
+                        if (!case2.isEmpty()) {
                             int top = case2.lastElement();
-                            if(top != 0) {
+                            if (top != 0) {
                                 layer--;
-                                if(lastToken != Tokens.NEWLINE) {
+                                if (lastToken != Tokens.NEWLINE) {
                                     sb.append('\n');
                                     appendIndent(layer);
-                                }else {
+                                } else {
                                     trackToStartOfLine();
                                     appendIndent(layer);
                                 }
@@ -282,43 +285,43 @@ public class S5dFormatter {
                             case2.pop();
                             case2.add(top + 1);
                             cases.add(cases.pop() + 1);
-                        }else {
+                        } else {
                             error("非法的分支定义" + lexer.yyDesc());
                         }
                 }
 
-                if(currentToken == Tokens.COLON && !cases.isEmpty()) {
+                if (currentToken == Tokens.COLON && !cases.isEmpty()) {
                     int colon = cases.lastElement();
-                    if(colon > 0) {
+                    if (colon > 0) {
                         layer++;
                         cases.pop();
                         cases.add(colon - 1);
                     }
                 }
 
-                if(currentToken == Tokens.END) {
+                if (currentToken == Tokens.END) {
                     StringBuilder local = new StringBuilder();
                     local.append(content);
                     Tokens token;
-                    while((token = lexer.nextToken()) == Tokens.WHITESPACE) {
-                        if(style4) {
+                    while ((token = lexer.nextToken()) == Tokens.WHITESPACE) {
+                        if (style4) {
                             local.append(lexer.getTokenString());
                         }
                     }
-                    if(!style4) {
+                    if (!style4) {
                         local.append(' ');
                     }
                     local.append(lexer.getTokenString());
                     //Pop layers
                     layer -= popTop(token);
 
-                    if(layer < 0) {
+                    if (layer < 0) {
                         layer = 0;
                     }
-                    if(lastToken != Tokens.NEWLINE) {
+                    if (lastToken != Tokens.NEWLINE) {
                         sb.append('\n');
                         appendIndent(layer);
-                    }else {
+                    } else {
                         trackToStartOfLine();
                         appendIndent(layer);
                     }
@@ -329,7 +332,7 @@ public class S5dFormatter {
                     continue;
                 }
 
-                if(layer < 0) {
+                if (layer < 0) {
                     layer = 0;
                 }
             }
@@ -340,14 +343,14 @@ public class S5dFormatter {
             lastToken = currentToken;
         }
 
-        while(!stack.isEmpty()) {
+        while (!stack.isEmpty()) {
             error("代码中有未结束的代码块:" + stack.pop() + lexer.yyDesc());
         }
 
         synchronized (this) {
             this.finished = true;
             final FormatListener lis = this.listener;
-            if(lis != null) {
+            if (lis != null) {
                 lis.onFinished(this);
             }
         }
@@ -355,34 +358,35 @@ public class S5dFormatter {
 
     /**
      * Pop the layer(s) for given token
+     *
      * @param token The token to pop
      * @return layer decrease count
      */
     private int popTop(Tokens token) {
-        if(stack.isEmpty()) {
+        if (stack.isEmpty()) {
             error("不能继续结束代码块了:预料之外的 : " + getBlockName(token) + lexer.yyDesc());
             return 0;
         }
         //This is will cancel the illegal code!!
         int count = 0;
         Tokens top = stack.lastElement();
-        if(top != token) {
+        if (top != token) {
             int index = stack.size() - 1;
-            while(index != -1) {
-                if(stack.elementAt(index) == token) {
+            while (index != -1) {
+                if (stack.elementAt(index) == token) {
                     break;
                 }
                 index--;
             }
-            if(index == -1) {
+            if (index == -1) {
                 count = 1;
                 error("预料之外的 : " + getBlockName(token) + ",应该在此处的是 " + getBlockName(top) + lexer.yyDesc());
             } else {
                 StringBuilder local = new StringBuilder("在 ").append(getBlockName(token)).append(" 结束前需要先结束:");
-                while(stack.size() > index) {
+                while (stack.size() > index) {
                     Tokens tokenPop;
                     local.append(getBlockName(tokenPop = stack.pop())).append(',');
-                    if(tokenPop == Tokens.SWITCH) {
+                    if (tokenPop == Tokens.SWITCH) {
                         cases.pop();
                         case2.pop();
                         count++;
@@ -390,7 +394,7 @@ public class S5dFormatter {
                     count++;
                 }
                 local.deleteCharAt(local.length() - 1);
-                while(local.charAt(local.length() - 1) != ',') {
+                while (local.charAt(local.length() - 1) != ',') {
                     local.deleteCharAt(local.length() - 1);
                 }
                 local.deleteCharAt(local.length() - 1);
@@ -400,7 +404,7 @@ public class S5dFormatter {
         } else {
             count = 1;
             stack.pop();
-            if(token == Tokens.SWITCH) {
+            if (token == Tokens.SWITCH) {
                 cases.pop();
                 case2.pop();
                 count++;
@@ -411,11 +415,12 @@ public class S5dFormatter {
 
     /**
      * Add error message
+     *
      * @param msg Message
      */
     private void error(String msg) {
-        if(style3) {
-            if(log == null) {
+        if (style3) {
+            if (log == null) {
                 log = new StringBuilder();
             }
             log.append(msg).append('\n');
@@ -428,18 +433,19 @@ public class S5dFormatter {
      */
     private void trackToStartOfLine() {
         char ch;
-        while(sb.length() > 0 && ((ch = sb.charAt(sb.length() - 1)) == ' ' || ch == '\t')) {
+        while (sb.length() > 0 && ((ch = sb.charAt(sb.length() - 1)) == ' ' || ch == '\t')) {
             sb.deleteCharAt(sb.length() - 1);
         }
     }
 
     /**
      * Whether this token is a separator
+     *
      * @param token The token to check
      * @return Whether a separator
      */
     private static boolean isSeparator(Tokens token) {
-        switch(token) {
+        switch (token) {
             case LPAREN:
             case RPAREN:
             case LBRACE:
@@ -457,6 +463,7 @@ public class S5dFormatter {
 
     /**
      * Whether this token is an operator
+     *
      * @param token Token to check
      * @return Whether a operator
      */
@@ -488,27 +495,28 @@ public class S5dFormatter {
 
     /**
      * Append spaces and tabs to the string builder for the given layer count
+     *
      * @param layer Current layer of code block
      */
     private void appendIndent(int layer) {
-        if(style1 == 0 || layer <= 0) {
+        if (style1 == 0 || layer <= 0) {
             return;
         }
         int count = layer * style1;
-        if(count == 0) {
+        if (count == 0) {
             return;
         }
-        if(style2) {
+        if (style2) {
             int tab = count / 4;
             int space = count % 4;
-            for(int i = 0;i < tab;i++) {
+            for (int i = 0; i < tab; i++) {
                 sb.append('\t');
             }
-            for(int i = 0;i < space;i++) {
+            for (int i = 0; i < space; i++) {
                 sb.append(' ');
             }
         } else {
-            for(int i = 0;i < count;i++) {
+            for (int i = 0; i < count; i++) {
                 sb.append(' ');
             }
         }
@@ -516,11 +524,12 @@ public class S5dFormatter {
 
     /**
      * Return the name of token
+     *
      * @param token Token to get name
      * @return Chinese name of the token
      */
     private static String getBlockName(Tokens token) {
-        switch(token) {
+        switch (token) {
             case SIMPLE_TRY:
                 return "容错处理";
             case IF:
@@ -540,6 +549,7 @@ public class S5dFormatter {
 
     /**
      * Whether the process finished
+     *
      * @return Whether finished
      */
     public synchronized boolean isFinished() {
@@ -548,6 +558,7 @@ public class S5dFormatter {
 
     /**
      * Whether the process once started
+     *
      * @return Whether started
      */
     public synchronized boolean isStarted() {
@@ -556,13 +567,14 @@ public class S5dFormatter {
 
     /**
      * Get the result of formation
+     *
      * @return The result of formation
      */
     public String getResult() {
-        if(!isStarted()) {
+        if (!isStarted()) {
             throw new IllegalStateException("The work have not started");
         }
-        if(!isFinished()) {
+        if (!isFinished()) {
             throw new IllegalStateException("The work have not finished");
         }
 
@@ -571,6 +583,7 @@ public class S5dFormatter {
 
     /**
      * Get count of error(s)
+     *
      * @return Error count
      */
     public int getErrorCount() {
@@ -579,6 +592,7 @@ public class S5dFormatter {
 
     /**
      * Whether there is error
+     *
      * @return Whether error occured in user's code
      */
     public boolean hasError() {
@@ -588,10 +602,11 @@ public class S5dFormatter {
     /**
      * Get messages
      * To use this,you'd better enable style3
+     *
      * @return errors
      */
     public String getErrorMessage() {
-        if(log != null) {
+        if (log != null) {
             log.insert(0, "错误数目:" + getErrorCount() + "\n");
         }
         return (log == null ? (hasError() ? "错误数目:" + getErrorCount() + "\n未启用详细信息" : "无错误") : log.toString());
@@ -599,6 +614,7 @@ public class S5dFormatter {
 
     /**
      * Listener for multiple process
+     *
      * @param listener New listener to add
      */
     public void setFormatListener(FormatListener listener) {
@@ -607,10 +623,11 @@ public class S5dFormatter {
 
     /**
      * Name for multiple process
+     *
      * @param name The name of formatter
      */
     public void setName(String name) {
-        if(name == null) {
+        if (name == null) {
             throw new IllegalArgumentException("Formatter must have a name");
         }
         this.name = name;
@@ -618,6 +635,7 @@ public class S5dFormatter {
 
     /**
      * Name for multiple process
+     *
      * @return The name of formatter
      */
     public String getName() {
@@ -626,20 +644,22 @@ public class S5dFormatter {
 
     /**
      * Interface class
-     * 	Listener for multiple process
-     * @author Rose
+     * Listener for multiple process
      *
+     * @author Rose
      */
     public interface FormatListener {
 
         /**
          * It is to notify you that the given formatter has started
+         *
          * @param formatter Formatter starting
          */
         void onStarted(S5dFormatter formatter);
 
         /**
          * It is to notify you that the given formatter has finished
+         *
          * @param formatter Formatter finished
          */
         void onFinished(S5dFormatter formatter);

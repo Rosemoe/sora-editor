@@ -124,7 +124,7 @@ public enum Tokens {
     CONTINUE,//跳过
     INSTANCEOF,//从属于
     CHARV,//字节型
-    
+
     ENUM,
     CLASS,
     EXTENDS,
