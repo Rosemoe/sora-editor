@@ -51,7 +51,6 @@ import java.util.List;
  */
 public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
     private final CodeEditor mEditor;
-    private final LinearLayout mLayout;
     private final ListView mListView;
     private final TextView mTip;
     private final ProgressBar mPb;
@@ -60,7 +59,6 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
     private int mCurrent = 0;
     private long mRequestTime;
     private String mLastPrefix;
-    private MatchThread mThread;
     private AutoCompleteProvider mProvider;
 
     private final static String TIP = "Loading...";
@@ -93,7 +91,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
     public EditorAutoCompleteWindow(CodeEditor editor) {
         super(editor);
         mEditor = editor;
-        mLayout = new LinearLayout(mEditor.getContext());
+        LinearLayout mLayout = new LinearLayout(mEditor.getContext());
         mLayout.setGravity(Gravity.CENTER);
         mLayout.setOrientation(LinearLayout.VERTICAL);
         //mLayout.setPadding(5, 5, 5, 5);
@@ -232,7 +230,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         setLoading(true);
         mLastPrefix = prefix;
         mRequestTime = System.currentTimeMillis();
-        mThread = new MatchThread(mRequestTime, prefix);
+        MatchThread mThread = new MatchThread(mRequestTime, prefix);
         mThread.start();
     }
 

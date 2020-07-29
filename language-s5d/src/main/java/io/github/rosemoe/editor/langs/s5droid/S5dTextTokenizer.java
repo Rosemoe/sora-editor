@@ -22,7 +22,7 @@ import io.github.rosemoe.editor.langs.internal.TrieTree;
 /**
  * @author Rose
  * S5droid code Tokenizer.
- * Simplified for highlight!!!
+ * Simplified for highlight
  */
 public class S5dTextTokenizer {
 
@@ -32,7 +32,7 @@ public class S5dTextTokenizer {
         doStaticInit();
     }
 
-    public static TrieTree getTree() {
+    public static TrieTree<Tokens> getTree() {
         return keywords;
     }
 
@@ -384,12 +384,9 @@ public class S5dTextTokenizer {
                     return Tokens.FLOATING_POINT_LITERAL;
                 }
                 ch = charAt();
-                if (ch == 'f' || ch == 'F' || ch == 'D'
-                        || ch == 'd') {
-                    length++;
-                }
-            } else if (ch == 'f' || ch == 'F'
-                    || ch == 'D' || ch == 'd') {
+            }
+            if (ch == 'f' || ch == 'F' || ch == 'D'
+                    || ch == 'd') {
                 length++;
             }
             return Tokens.FLOATING_POINT_LITERAL;

@@ -55,7 +55,7 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
     @Override
     public AutoCompleteProvider getAutoCompleteProvider() {
         IdentifierAutoComplete autoComplete = new IdentifierAutoComplete();
-        autoComplete.setKeywords(mLanguage.getKeywords(), true);
+        autoComplete.setKeywords(mLanguage.getKeywords());
         return autoComplete;
     }
 
@@ -97,7 +97,7 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
         tokenizer.setInput(text);
         LineNumberCalculator helper = new LineNumberCalculator(text);
         IdentifierAutoComplete autoComplete = new IdentifierAutoComplete();
-        autoComplete.setKeywords(mLanguage.getKeywords(), false);
+        autoComplete.setKeywords(mLanguage.getKeywords());
         IdentifierAutoComplete.Identifiers identifiers = new IdentifierAutoComplete.Identifiers();
         identifiers.begin();
         int maxSwitch = 0;

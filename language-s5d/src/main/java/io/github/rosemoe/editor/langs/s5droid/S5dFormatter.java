@@ -262,11 +262,10 @@ public class S5dFormatter {
                         layer--;
                         if (lastToken != Tokens.NEWLINE) {
                             sb.append('\n');
-                            appendIndent(layer);
                         } else {
                             trackToStartOfLine();
-                            appendIndent(layer);
                         }
+                        appendIndent(layer);
                         layer++;
                         break;
                     case CASE:
@@ -276,11 +275,10 @@ public class S5dFormatter {
                                 layer--;
                                 if (lastToken != Tokens.NEWLINE) {
                                     sb.append('\n');
-                                    appendIndent(layer);
                                 } else {
                                     trackToStartOfLine();
-                                    appendIndent(layer);
                                 }
+                                appendIndent(layer);
                             }
                             case2.pop();
                             case2.add(top + 1);
@@ -320,11 +318,10 @@ public class S5dFormatter {
                     }
                     if (lastToken != Tokens.NEWLINE) {
                         sb.append('\n');
-                        appendIndent(layer);
                     } else {
                         trackToStartOfLine();
-                        appendIndent(layer);
                     }
+                    appendIndent(layer);
 
                     sb.append(local);
 

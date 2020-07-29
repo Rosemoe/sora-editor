@@ -110,7 +110,7 @@ public class TextAnalyzer {
 
     public interface Callback {
 
-        void onAnalyzeDone(TextAnalyzer provider, TextAnalyzeResult colors);
+        void onAnalyzeDone(TextAnalyzer provider);
 
     }
 
@@ -163,7 +163,7 @@ public class TextAnalyzer {
                     colors.addNormalIfNull();
                     try {
                         if (mCallback != null)
-                            mCallback.onAnalyzeDone(TextAnalyzer.this, colors);
+                            mCallback.onAnalyzeDone(TextAnalyzer.this);
                         ObjectAllocator.recycleBlockLine(blockLines);
                         SpanRecycler.getInstance().recycle(spanMap);
                     } catch (NullPointerException e) {

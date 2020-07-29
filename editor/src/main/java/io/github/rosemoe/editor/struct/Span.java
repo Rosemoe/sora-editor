@@ -18,9 +18,7 @@ package io.github.rosemoe.editor.struct;
 import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
-import io.github.rosemoe.editor.text.Content;
 import io.github.rosemoe.editor.widget.EditorColorScheme;
 
 /**

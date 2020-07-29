@@ -67,7 +67,19 @@ public class MainActivity extends Activity {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 9998);
+            new AlertDialog.Builder(this)
+                    .setTitle("Permission needed")
+                    .setMessage("We need storage access to collect crash logs.\nCrash logs will be placed under /sdcard/#Logs/\nIf you do not want to save crash logs, feel free to deny the permission request.\nClick 'Permit' to start the request.")
+                    .setPositiveButton("Permit", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            MainActivity.this.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 9998);
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .setCancelable(false)
+                    .show();
+
         }
         S5droidAutoComplete.init(this);
         editor = findViewById(R.id.editor);

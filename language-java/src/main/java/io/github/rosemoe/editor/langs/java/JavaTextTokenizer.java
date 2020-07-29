@@ -29,7 +29,7 @@ public class JavaTextTokenizer {
         doStaticInit();
     }
 
-    public static TrieTree getTree() {
+    public static TrieTree<Tokens> getTree() {
         return keywords;
     }
 
@@ -384,12 +384,9 @@ public class JavaTextTokenizer {
                     return Tokens.FLOATING_POINT_LITERAL;
                 }
                 ch = charAt();
-                if (ch == 'f' || ch == 'F' || ch == 'D'
-                        || ch == 'd') {
-                    length++;
-                }
-            } else if (ch == 'f' || ch == 'F'
-                    || ch == 'D' || ch == 'd') {
+            }
+            if (ch == 'f' || ch == 'F' || ch == 'D'
+                    || ch == 'd') {
                 length++;
             }
             return Tokens.FLOATING_POINT_LITERAL;
@@ -466,8 +463,6 @@ public class JavaTextTokenizer {
 
     protected static String[] sKeywords;
 
-    private static Tokens[] sTokens;
-
     protected static void doStaticInit() {
         sKeywords = new String[]{
                 "assert", "abstract", "boolean", "byte", "char", "class", "do",
@@ -479,7 +474,7 @@ public class JavaTextTokenizer {
                 "implements", "import", "instanceof", "interface", "native",
                 "this", "throw", "throws", "true", "false", "null"
         };
-        sTokens = new Tokens[]{
+        Tokens[] sTokens = new Tokens[]{
                 Tokens.ABSTRACT, Tokens.ASSERT, Tokens.BOOLEAN, Tokens.BYTE, Tokens.CHAR, Tokens.CLASS, Tokens.DO,
                 Tokens.DOUBLE, Tokens.FINAL, Tokens.FLOAT, Tokens.FOR, Tokens.IF, Tokens.INT, Tokens.LONG, Tokens.NEW,
                 Tokens.PUBLIC, Tokens.PRIVATE, Tokens.PROTECTED, Tokens.PACKAGE, Tokens.RETURN, Tokens.STATIC,

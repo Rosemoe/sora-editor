@@ -17,6 +17,8 @@ package io.github.rosemoe.editor.widget;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
@@ -54,8 +56,6 @@ import io.github.rosemoe.editor.widget.edge.EdgeEffect;
 import io.github.rosemoe.editor.widget.edge.EdgeEffectFactory;
 import io.github.rosemoe.editor.struct.BlockLine;
 import io.github.rosemoe.editor.struct.Span;
-import io.github.rosemoe.editor.widget.clipboard.IClipboard;
-import io.github.rosemoe.editor.widget.clipboard.Clipboard;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +72,8 @@ import android.widget.EditText;
 import android.widget.SearchView;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+
+import static io.github.rosemoe.editor.BuildConfig.DEBUG;
 
 /**
  * CodeEditor is a editor that can highlight text regions by doing basic syntax analyzing
@@ -132,7 +134,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private RectF mInsertHandle;
     private RectF mVerticalScrollBar;
     private RectF mHorizontalScrollBar;
-    private IClipboard mClipboardManager;
+    private ClipboardManager mClipboardManager;
     private InputMethodManager mInputMethodManager;
 
     private Cursor mCursor;
@@ -163,10 +165,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private EditorEventListener mListener;
     private Paint.FontMetricsInt mTextMetrics;
     private Paint.FontMetricsInt mLineNumberMetrics;
-
     //For debug
     private final StringBuilder mErrorBuilder = new StringBuilder();
-    private long mLastAnalyzeThreadTime;
 
     /**
      * Create a new editor
@@ -351,7 +351,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mHighlightSelectedText = true;
         mBlockLineWidth = 2;
         mInputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        mClipboardManager = Clipboard.getClipboard(getContext());
+        mClipboardManager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         setUndoEnabled(true);
         mTabWidth = 4;
         mAutoIndent = true;
@@ -650,12 +650,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         drawScrollBars(canvas);
         drawEdgeEffect(canvas);
 
-        //These are for debug
         long timeUsage = System.currentTimeMillis() - startTime;
-        final boolean debug = false;
-        if (debug) {
-            mPaint.setColor(0xff000000);
-            canvas.drawText("Draw " + timeUsage + ", Highlight " + mLastAnalyzeThreadTime, 0, getLineBaseLine(11), mPaint);
+        if (DEBUG) {
+            Log.d(LOG_TAG, "Draw view cost time:" + timeUsage + "ms");
         }
     }
 
@@ -988,29 +985,28 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mVerticalScrollBar.setEmpty();
         mHorizontalScrollBar.setEmpty();
         if (getScrollMaxY() > getHeight() / 2) {
-            drawScrollBarTrackVertical(canvas, 10);
+            drawScrollBarTrackVertical(canvas);
         }
         if (getScrollMaxX() > getWidth() * 3 / 4) {
-            drawScrollBarTrackHorizontal(canvas, 10);
+            drawScrollBarTrackHorizontal(canvas);
         }
         if (getScrollMaxY() > getHeight() / 2) {
-            drawScrollBarVertical(canvas, 10);
+            drawScrollBarVertical(canvas);
         }
         if (getScrollMaxX() > getWidth() * 3 / 4) {
-            drawScrollBarHorizontal(canvas, 10);
+            drawScrollBarHorizontal(canvas);
         }
     }
 
     /**
      * Draw vertical scroll bar track
+     *  @param canvas Canvas to draw
      *
-     * @param canvas Canvas to draw
-     * @param width  The size of scroll bar,dp unit
      */
-    private void drawScrollBarTrackVertical(Canvas canvas, int width) {
+    private void drawScrollBarTrackVertical(Canvas canvas) {
         if (mEventHandler.holdVerticalScrollBar()) {
             mRect.right = getWidth();
-            mRect.left = getWidth() - mDpUnit * width;
+            mRect.left = getWidth() - mDpUnit * 10;
             mRect.top = 0;
             mRect.bottom = getHeight();
             drawColor(canvas, mColors.getColor(EditorColorScheme.SCROLL_BAR_TRACK), mRect);
@@ -1019,11 +1015,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Draw vertical scroll bar
+     *  @param canvas Canvas to draw
      *
-     * @param canvas Canvas to draw
-     * @param width  The size of scroll bar,dp unit
      */
-    private void drawScrollBarVertical(Canvas canvas, int width) {
+    private void drawScrollBarVertical(Canvas canvas) {
         int page = getHeight();
         float all = getLineHeight() * getLineCount() + getHeight() / 2f;
         float length = page / all * getHeight();
@@ -1039,7 +1034,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             drawLineInfoPanel(canvas, centerY, mRect.left - mDpUnit * 5);
         }
         mRect.right = getWidth();
-        mRect.left = getWidth() - mDpUnit * width;
+        mRect.left = getWidth() - mDpUnit * 10;
         mRect.top = topY;
         mRect.bottom = topY + length;
         mVerticalScrollBar.set(mRect);
@@ -1076,13 +1071,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Draw horizontal scroll bar track
+     *  @param canvas Canvas to draw
      *
-     * @param canvas Canvas to draw
-     * @param width  The size of scroll bar,dp unit
      */
-    private void drawScrollBarTrackHorizontal(Canvas canvas, int width) {
+    private void drawScrollBarTrackHorizontal(Canvas canvas) {
         if (mEventHandler.holdHorizontalScrollBar()) {
-            mRect.top = getHeight() - mDpUnit * width;
+            mRect.top = getHeight() - mDpUnit * 10;
             mRect.bottom = getHeight();
             mRect.right = getWidth();
             mRect.left = 0;
@@ -1092,16 +1086,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Draw horizontal scroll bar
+     *  @param canvas Canvas to draw
      *
-     * @param canvas Canvas to draw
-     * @param width  The size of scroll bar,dp unit
      */
-    private void drawScrollBarHorizontal(Canvas canvas, int width) {
+    private void drawScrollBarHorizontal(Canvas canvas) {
         int page = getWidth();
         float all = getScrollMaxX() + getWidth();
         float length = page / all * getWidth();
         float leftX = getOffsetX() / all * getWidth();
-        mRect.top = getHeight() - mDpUnit * width;
+        mRect.top = getHeight() - mDpUnit * 10;
         mRect.bottom = getHeight();
         mRect.right = leftX + length;
         mRect.left = leftX;
@@ -1783,7 +1776,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return whether clip in clip board
      */
     public boolean hasClip() {
-        return (mClipboardManager.getTextFromClipboard() != null);
+        return mClipboardManager.hasPrimaryClip();
     }
 
     /**
@@ -2104,7 +2097,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
             @Override
             public boolean onCreateActionMode(ActionMode p1, Menu p2) {
-                p2.add(0, 0, 0, R.string.next).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_ALWAYS);
+                p2.add(0, 0, 0, R.string.next).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
                 p2.add(0, 1, 0, R.string.last).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
                 p2.add(0, 2, 0, R.string.replace).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
                 p2.add(0, 3, 0, R.string.replaceAll).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
@@ -2717,7 +2710,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public void pasteText() {
         try {
-            CharSequence text = mClipboardManager.getTextFromClipboard();
+            if (!mClipboardManager.hasPrimaryClip() || mClipboardManager.getPrimaryClip() == null) {
+                return;
+            }
+            ClipData.Item data = mClipboardManager.getPrimaryClip().getItemAt(0);
+            CharSequence text = data.getText();
             if (text != null && mConnection != null) {
                 mConnection.commitText(text, 0);
             }
@@ -2734,10 +2731,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public void copyText() {
         try {
             if (mCursor.isSelected()) {
-                mClipboardManager.setTextToClipboard(getText().subContent(mCursor.getLeftLine(),
+                String clip = getText().subContent(mCursor.getLeftLine(),
                         mCursor.getLeftColumn(),
                         mCursor.getRightLine(),
-                        mCursor.getRightColumn()).toString());
+                        mCursor.getRightColumn()).toString();
+                mClipboardManager.setPrimaryClip(ClipData.newPlainText(clip, clip));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -3501,12 +3499,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     @Override
-    public void onAnalyzeDone(TextAnalyzer provider, TextAnalyzeResult colors) {
+    public void onAnalyzeDone(TextAnalyzer provider) {
         if (mHighlightCurrentBlock) {
             mCursorPosition = findCursorBlock();
         }
         postInvalidate();
-        mLastAnalyzeThreadTime = System.currentTimeMillis() - provider.mOpStartTime;
+        long lastAnalyzeThreadTime = System.currentTimeMillis() - provider.mOpStartTime;
+        if(DEBUG)
+            Log.d(LOG_TAG, "Highlight cost time:" + lastAnalyzeThreadTime);
     }
 
 }

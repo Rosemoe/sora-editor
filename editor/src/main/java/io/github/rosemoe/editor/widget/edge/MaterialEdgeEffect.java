@@ -42,8 +42,6 @@ public class MaterialEdgeEffect implements EdgeEffect {
     private static final float MAX_ALPHA = 0.15f;
     private static final float GLOW_ALPHA_START = .09f;
 
-    private static final float MAX_GLOW_SCALE = 2.f;
-
     private static final float PULL_GLOW_BEGIN = 0.f;
 
     // Minimum velocity that will be absorbed

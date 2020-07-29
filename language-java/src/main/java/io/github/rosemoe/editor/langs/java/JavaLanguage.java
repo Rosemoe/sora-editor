@@ -37,7 +37,7 @@ public class JavaLanguage implements EditorLanguage {
     @Override
     public AutoCompleteProvider getAutoCompleteProvider() {
         IdentifierAutoComplete autoComplete = new IdentifierAutoComplete();
-        autoComplete.setKeywords(JavaTextTokenizer.sKeywords, true);
+        autoComplete.setKeywords(JavaTextTokenizer.sKeywords);
         return autoComplete;
     }
 

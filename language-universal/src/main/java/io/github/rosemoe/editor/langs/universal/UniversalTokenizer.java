@@ -289,12 +289,9 @@ public class UniversalTokenizer {
                     return;
                 }
                 ch = charAt();
-                if (ch == 'f' || ch == 'F' || ch == 'D'
-                        || ch == 'd') {
-                    length++;
-                }
-            } else if (ch == 'f' || ch == 'F'
-                    || ch == 'D' || ch == 'd') {
+            }
+            if (ch == 'f' || ch == 'F' || ch == 'D'
+                    || ch == 'd') {
                 length++;
             }
         } else if (ch == 'l' || ch == 'L') {

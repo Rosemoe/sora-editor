@@ -32,9 +32,6 @@ import io.github.rosemoe.editor.R;
  */
 public class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnClickListener {
     private final CodeEditor mEditor;
-    private final Button selectAll;
-    private final Button cut;
-    private final Button copy;
     private final Button paste;
 
     /**
@@ -46,9 +43,9 @@ public class EditorTextActionWindow extends EditorBasePopupWindow implements Vie
         super(editor);
         mEditor = editor;
         View root = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_panel, null);
-        selectAll = root.findViewById(R.id.panel_btn_select_all);
-        cut = root.findViewById(R.id.panel_btn_cut);
-        copy = root.findViewById(R.id.panel_btn_copy);
+        Button selectAll = root.findViewById(R.id.panel_btn_select_all);
+        Button cut = root.findViewById(R.id.panel_btn_cut);
+        Button copy = root.findViewById(R.id.panel_btn_copy);
         paste = root.findViewById(R.id.panel_btn_paste);
         selectAll.setOnClickListener(this);
         cut.setOnClickListener(this);
