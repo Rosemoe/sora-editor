@@ -122,6 +122,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mUndoEnabled;
     private boolean mDisplayLnPanel;
     private boolean mOverScrollEnabled;
+    private boolean mHighlightSelectedText;
     private boolean mHighlightCurrentBlock;
     private boolean mVerticalScrollBarEnabled;
     private boolean mHorizontalScrollBarEnabled;
@@ -172,13 +173,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param context Your activity
      */
     public CodeEditor(Context context) {
-        super(context);
-        prepare();
+        this(context, null);
     }
 
     public CodeEditor(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        prepare();
+        this(context, attrs, 0);
     }
 
     public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -186,12 +185,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         prepare();
     }
 
-    @TargetApi(21)
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         prepare();
     }
 
+    /**
+     * Set event listener
+     * @see EditorEventListener
+     */
     public void setEventListener(EditorEventListener eventListener) {
         this.mListener = eventListener;
     }
@@ -202,11 +205,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     protected void cancelAnimation() {
         mLastMakeVisible = System.currentTimeMillis();
     }
-    
+
+    /**
+     * Send current selection position to input method
+     */
     protected void updateSelection() {
         mInputMethodManager.updateSelection(this, mCursor.getLeft(), mCursor.getRight(), mCursor.getLeft(), mCursor.getRight());
     }
-    
+
+    /**
+     * Notify input method that text has been changed for external reason
+     */
     protected void cursorChangeExternal() {
         updateSelection();
         updateCursorAnchor();
@@ -214,6 +223,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mInputMethodManager.restartInput(this);
     }
 
+    /**
+     * Send cursor position in text and on screen to input method
+     */
     protected void updateCursor() {
         updateCursorAnchor();
         updateSelection();
@@ -289,8 +301,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Prepare editor
      * Initialize variants
      */
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void prepare(){
+    private void prepare() {
         mPaint = new Paint();
         mPaintOther = new Paint();
         mMatrix = new Matrix();
@@ -329,6 +340,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mOverScrollEnabled = true;
         mPaintLabel = true;
         mDisplayLnPanel = true;
+        mHighlightSelectedText = true;
         mBlockLineWidth = 2;
         mInputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         mClipboardManager = Clipboard.getClipboard(getContext());
@@ -672,7 +684,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * If current device does not support this attribute, it will do nothing without throwing exception
      * @param color The color of EdgeEffect
      */
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public void setEdgeEffectColor(int color) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mVerticalEdgeGlow.setColor(color);
@@ -685,7 +696,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Zero is returned when current device does not support this attribute.
      * @return The color of EdgeEffect. 0 for unknown.
      */
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public int getEdgeEffectColor() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return mVerticalEdgeGlow.getColor();
@@ -1214,6 +1224,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         List<List<Span>> spanMap = colors.getSpanMap();
         int first = getFirstVisibleLine();
         int last = getLastVisibleLine();
+        boolean selected = mCursor.isSelected();
+        int leftLine = mCursor.getLeftLine();
+        int rightLine = mCursor.getRightLine();
+        int leftColumn = mCursor.getLeftColumn();
+        int rightColumn = mCursor.getRightColumn();
         for(int line = first;line <= last;line++) {
             List<Span> spans = spanMap.size() > line ? spanMap.get(line) : new ArrayList<Span>();
             Span span = null;
@@ -1221,7 +1236,20 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 spans.add(span = Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
             }
             try {
-                drawTextLineWithSpans(canvas, offsetX, line, cs, spans);
+                boolean hasSelectionOnLine = false;
+                int start = 0, end = 0;
+                if(isHighlightSelectedText() && selected && line >= leftLine && line <= rightLine) {
+                    hasSelectionOnLine = true;
+                    if(line == leftLine) {
+                        start = leftColumn;
+                    }
+                    if(line == rightLine) {
+                        end = rightColumn;
+                    } else {
+                        end = mText.getColumnCount(line);
+                    }
+                }
+                drawTextLineWithSpans(canvas, offsetX, line, cs, spans, hasSelectionOnLine, start, end);
             }catch (IndexOutOfBoundsException e) {
                 Log.w(LOG_TAG, "Exception in rendering line " + line, e);
             }
@@ -1275,7 +1303,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Draw single line
      */
-    private void drawTextLineWithSpans(Canvas canvas, float offsetX, int line, EditorColorScheme cs, List<Span> spans) {
+    private void drawTextLineWithSpans(Canvas canvas, float offsetX, int line, EditorColorScheme cs, List<Span> spans, boolean hasSelectionOnLine, int selectionStart, int selectionEnd) {
         prepareLine(line);
         int columnCount = mText.getColumnCount(line);
         int minPaintChar = binaryFindCharIndex(offsetX, 0, 0, columnCount, mChars);
@@ -1314,7 +1342,50 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
             float width = measureText(mChars, startIndex, endIndex - startIndex);
             mPaint.setColor(cs.getColor(span.colorId));
-            drawText(canvas, mChars, startIndex, endIndex - startIndex, offsetX, baseline);
+            if(hasSelectionOnLine) {
+                if(endIndex <= selectionStart || startIndex >= selectionEnd) {
+                    drawText(canvas, mChars, startIndex, endIndex - startIndex, offsetX, baseline);
+                } else {
+                    if (startIndex <= selectionStart) {
+                        if(endIndex >= selectionEnd) {
+                            //Three regions
+                            //startIndex - selectionStart
+                            drawText(canvas, mChars, startIndex, selectionStart - startIndex, offsetX, baseline);
+                            float deltaX = measureText(mChars, startIndex, selectionStart - startIndex);
+                            //selectionStart - selectionEnd
+                            mPaint.setColor(cs.getColor(EditorColorScheme.TEXT_SELECTED));
+                            drawText(canvas, mChars, selectionStart, selectionEnd - selectionStart, offsetX + deltaX, baseline);
+                            deltaX += measureText(mChars, selectionStart, selectionEnd - selectionStart);
+                            //selectionEnd - endIndex
+                            mPaint.setColor(cs.getColor(span.colorId));
+                            drawText(canvas, mChars, selectionEnd, endIndex - selectionEnd, offsetX + deltaX, baseline);
+                        } else {
+                            //Two regions
+                            //startIndex - selectionStart
+                            drawText(canvas, mChars, startIndex, selectionStart - startIndex, offsetX, baseline);
+                            //selectionStart - endIndex
+                            mPaint.setColor(cs.getColor(EditorColorScheme.TEXT_SELECTED));
+                            drawText(canvas, mChars, selectionStart, endIndex - selectionStart, offsetX + measureText(mChars, startIndex, selectionStart - startIndex), baseline);
+                        }
+                    } else {
+                        //selectionEnd > startIndex > selectionStart
+                        if (endIndex > selectionEnd) {
+                            //Two regions
+                            //selectionEnd - endIndex
+                            drawText(canvas, mChars, selectionEnd, endIndex - selectionEnd, offsetX + measureText(mChars, startIndex, selectionEnd - startIndex), baseline);
+                            //startIndex - selectionEnd
+                            mPaint.setColor(cs.getColor(EditorColorScheme.TEXT_SELECTED));
+                            drawText(canvas, mChars, startIndex, selectionEnd - startIndex, offsetX, baseline);
+                        } else {
+                            //One region
+                            mPaint.setColor(cs.getColor(EditorColorScheme.TEXT_SELECTED));
+                            drawText(canvas, mChars, startIndex, endIndex - startIndex, offsetX, baseline);
+                        }
+                    }
+                }
+            } else {
+                drawText(canvas, mChars, startIndex, endIndex - startIndex, offsetX, baseline);
+            }
             if(span.underlineColor != 0) {
                 mRect.bottom = getLineBottom(line) - getOffsetY() - mDpUnit * 1;
                 mRect.top = mRect.bottom - getLineHeight() * 0.06f;
@@ -1760,6 +1831,22 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
+     * Use color {@link EditorColorScheme#TEXT_SELECTED} to draw selected text
+     * instead of color specified by its span
+     */
+    public void setHighlightSelectedText(boolean highlightSelected) {
+        mHighlightSelectedText = highlightSelected;
+        invalidate();
+    }
+
+    /**
+     * @see CodeEditor#setHighlightSelectedText(boolean)
+     */
+    public boolean isHighlightSelectedText() {
+        return mHighlightSelectedText;
+    }
+
+    /**
      * Set tab width
      * @param w tab width compared to space
      */
@@ -2103,7 +2190,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param align Align for line number
      */
     public void setLineNumberAlign(Paint.Align align){
-        if(align == null){
+        if(align == null) {
             align = Paint.Align.LEFT;
         }
         mLineNumberAlign = align;

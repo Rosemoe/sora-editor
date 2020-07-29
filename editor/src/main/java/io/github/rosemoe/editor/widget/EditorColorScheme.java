@@ -35,6 +35,7 @@ public final class EditorColorScheme {
 
     //-------------View colors---------------------
 
+    public static final int TEXT_SELECTED = 30;
     public static final int MATCHED_TEXT_BACKGROUND = 29;
     public static final int AUTO_COMP_PANEL_CORNER = 20;
     public static final int AUTO_COMP_PANEL_BG = 19;
@@ -60,12 +61,12 @@ public final class EditorColorScheme {
     /**
      * Min pre-defined color id
      */
-    private static final int START_COLOR_INDEX = 1;
+    private static final int START_COLOR_ID = 1;
 
     /**
      * Max pre-defined color id
      */
-    private static final int END_COLOR_INDEX = 29;
+    private static final int END_COLOR_ID = 30;
 
     /**
      * Host editor object
@@ -94,7 +95,7 @@ public final class EditorColorScheme {
      * Apply default colors
      */
     public void applyDefault() {
-        for(int i = START_COLOR_INDEX;i <= END_COLOR_INDEX;i++){
+        for(int i = START_COLOR_ID; i <= END_COLOR_ID; i++){
             applyDefault(i);
         }
     }
@@ -134,7 +135,7 @@ public final class EditorColorScheme {
                 color = 0x33ec407a;
                 break;
             case SELECTED_TEXT_BACKGROUND:
-                color = 0x303f51b5;
+                color = 0xdd3f51b5;
                 break;
             case KEYWORD:
                 color = 0xeeee0000;
@@ -182,6 +183,9 @@ public final class EditorColorScheme {
                 break;
             case MATCHED_TEXT_BACKGROUND:
                 color = 0xaaffff00;
+                break;
+            case TEXT_SELECTED:
+                color = 0xffffffff;
                 break;
             default:
                 throw new IllegalArgumentException("Unexpected type:" + type);
