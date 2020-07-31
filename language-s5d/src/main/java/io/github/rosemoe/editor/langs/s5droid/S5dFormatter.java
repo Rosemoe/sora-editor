@@ -110,7 +110,7 @@ public class S5dFormatter {
     }
 
     /*
-     * These are style controling methods
+     * These are style controlling methods
      */
 
     public void setStyle0(boolean enabled) {
@@ -171,7 +171,6 @@ public class S5dFormatter {
         String cacheTokenContent = null;
 
         while ((currentToken = (cacheToken != Tokens.NEWLINE ? cacheToken : lexer.nextToken())) != Tokens.EOF) {
-            //Do not call yytext() for too many times.It will cost more time to create new String
             String content;
             if (cacheToken != Tokens.NEWLINE) {
                 content = cacheTokenContent;
@@ -590,7 +589,7 @@ public class S5dFormatter {
     /**
      * Whether there is error
      *
-     * @return Whether error occured in user's code
+     * @return Whether error occurred in user's code
      */
     public boolean hasError() {
         return getErrorCount() != 0;

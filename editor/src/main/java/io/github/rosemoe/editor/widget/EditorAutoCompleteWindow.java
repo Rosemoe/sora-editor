@@ -359,7 +359,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         public MatchThread(long requestTime, String prefix) {
             mTime = requestTime;
             mPrefix = prefix;
-            mColors = mEditor.getTextColor();
+            mColors = mEditor.getTextAnalyzeResult();
             mLine = mEditor.getCursor().getLeftLine();
             mInner = (!mEditor.isHighlightCurrentBlock()) || (mEditor.getBlockIndex() != -1);
         }

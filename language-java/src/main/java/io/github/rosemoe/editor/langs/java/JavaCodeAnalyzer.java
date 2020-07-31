@@ -61,7 +61,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
         boolean first = true;
         while (delegate.shouldAnalyze()) {
             try {
-                // directNextToekn() does not skip any token
+                // directNextToken() does not skip any token
                 token = tokenizer.directNextToken();
             } catch (RuntimeException e) {
                 //When a spelling input is in process, this will happen because of format mismatch
@@ -88,11 +88,11 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                         colors.addIfNeeded(line, column, EditorColorScheme.ANNOTATION);
                         break;
                     }
-                    //Here we have to get next toekn to see if it is function
+                    //Here we have to get next token to see if it is function
                     //We can only get the next token in stream.
                     //If more tokens required, we have to use a stack in tokenizer
                     Tokens next = tokenizer.directNextToken();
-                    //The next is LPAREN,so this is funtion name or type name
+                    //The next is LPAREN,so this is function name or type name
                     if (next == Tokens.LPAREN) {
                         colors.addIfNeeded(line, column, EditorColorScheme.FUNCTION_NAME);
                         tokenizer.pushBack(tokenizer.getTokenLength());

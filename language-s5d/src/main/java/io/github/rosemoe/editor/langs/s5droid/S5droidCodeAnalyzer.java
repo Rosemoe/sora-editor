@@ -128,7 +128,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
         7:'(' occurred
         8:Var name occurred
         9:'As' occurred
-        10:Var type ocurred ,waiting to finish by ',' or ')'
+        10:Var type occurred ,waiting to finish by ',' or ')'
         11:'.' occurred while waiting,continue
     */
     @Override

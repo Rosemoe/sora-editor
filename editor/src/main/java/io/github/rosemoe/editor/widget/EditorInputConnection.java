@@ -29,7 +29,6 @@ import android.text.TextUtils;
 import io.github.rosemoe.editor.struct.CharPosition;
 
 import android.text.SpannableStringBuilder;
-import android.os.Bundle;
 
 /**
  * Connection between input method and editor
@@ -104,6 +103,9 @@ class EditorInputConnection extends BaseInputConnection {
         return TextUtils.getCapsMode(mEditor.getText(), getCursor().getLeft(), reqModes);
     }
 
+    /**
+     * Get content region internally
+     */
     private CharSequence getTextRegionInternal(int start, int end, int flags) {
         Content origin = mEditor.getText();
         if (start > end) {
@@ -124,9 +126,26 @@ class EditorInputConnection extends BaseInputConnection {
         if (flags == GET_TEXT_WITH_STYLES) {
             sub.beginStreamCharGetting(0);
             SpannableStringBuilder text = new SpannableStringBuilder(sub);
+            // Apply composing span
             if (mComposingLine != -1) {
                 try {
-                    text.setSpan(new ComposingText(), getCursor().getIndexer().getCharIndex(mComposingLine, mComposingStart) - start, getCursor().getIndexer().getCharIndex(mComposingLine, mComposingEnd) - start, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    int originalComposingStart = getCursor().getIndexer().getCharIndex(mComposingLine, mComposingStart);
+                    int originalComposingEnd = getCursor().getIndexer().getCharIndex(mComposingLine, mComposingEnd);
+                    int transferredStart = originalComposingStart - start;
+                    if (transferredStart >= text.length()) {
+                        return text;
+                    }
+                    if (transferredStart < 0) {
+                        transferredStart = 0;
+                    }
+                    int transferredEnd = originalComposingEnd - start;
+                    if (transferredEnd <= 0) {
+                        return text;
+                    }
+                    if (transferredEnd >= text.length()) {
+                        transferredEnd = text.length();
+                    }
+                    text.setSpan(new ComposingText(), transferredStart, transferredEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 } catch (IndexOutOfBoundsException e) {
                     //ignored
                 }
@@ -183,6 +202,9 @@ class EditorInputConnection extends BaseInputConnection {
         return true;
     }
 
+    /**
+     * Delete composing region
+     */
     private void deleteComposingText() {
         if (mComposingLine == -1) {
             return;
@@ -344,16 +366,6 @@ class EditorInputConnection extends BaseInputConnection {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public boolean performPrivateCommand(String action, Bundle data) {
-        return false;
-    }
-
-    @Override
-    public boolean performEditorAction(int actionCode) {
-        return super.performEditorAction(actionCode);
     }
 
     @Override

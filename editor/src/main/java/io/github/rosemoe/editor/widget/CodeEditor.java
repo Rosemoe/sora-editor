@@ -50,6 +50,7 @@ import io.github.rosemoe.editor.text.Content;
 import io.github.rosemoe.editor.text.ContentListener;
 import io.github.rosemoe.editor.text.Cursor;
 import io.github.rosemoe.editor.text.FormatThread;
+import io.github.rosemoe.editor.text.SpanMapUpdater;
 import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.text.TextAnalyzer;
 import io.github.rosemoe.editor.widget.edge.EdgeEffect;
@@ -85,7 +86,6 @@ import static io.github.rosemoe.editor.BuildConfig.DEBUG;
  * Code Format
  * Shortcuts
  * <p>
- * Actually it can adapt to Android level 11
  * Me in GitHub: Rosemoe
  * This project in GitHub: https://github.com/Rosemoe/CodeEditor
  * <p>
@@ -154,7 +154,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private EditorTouchEventHandler mEventHandler;
     private Paint.Align mLineNumberAlign;
     private GestureDetector mBasicDetector;
-    private EditorTextActionWindow mTextActionWindow;
+    private EditorTextActionPresenter mTextActionPresenter;
     private ScaleGestureDetector mScaleDetector;
     private EditorInputConnection mConnection;
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;
@@ -168,11 +168,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     //For debug
     private final StringBuilder mErrorBuilder = new StringBuilder();
 
-    /**
-     * Create a new editor
-     *
-     * @param context Your activity
-     */
     public CodeEditor(Context context) {
         this(context, null);
     }
@@ -361,13 +356,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setFocusableInTouchMode(true);
         mConnection = new EditorInputConnection(this);
         mACPanel = new EditorAutoCompleteWindow(this);
-        mTextActionWindow = new EditorTextActionWindow(this);
-        mTextActionWindow.setHeight((int) (mDpUnit * 60));
-        mTextActionWindow.setWidth((int) (mDpUnit * 230));
         mVerticalEdgeGlow = EdgeEffectFactory.create(getContext());
         mHorizontalGlow = EdgeEffectFactory.create(getContext());
         setEditorLanguage(null);
         setText(null);
+        setTextActionMode(TextActionMode.ACTION_MODE);
     }
 
     /**
@@ -462,12 +455,26 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Get TextActionWindow instance of this editor
-     *
-     * @return TextActionWindow
+     * Set how will the editor present text actions
      */
-    protected EditorTextActionWindow getTextActionWindow() {
-        return mTextActionWindow;
+    public void setTextActionMode(TextActionMode mode) {
+        if (mCursor.isSelected()) {
+            setSelection(mCursor.getLeftLine(), mCursor.getLeftColumn());
+        }
+        if (mode == TextActionMode.ACTION_MODE) {
+            mTextActionPresenter = new EditorTextActionModeStarter(this);
+        } else {
+            mTextActionPresenter = new EditorTextActionWindow(this);
+        }
+    }
+
+    /**
+     * Get EditorTextActionPresenter instance of this editor
+     *
+     * @return EditorTextActionPresenter
+     */
+    protected EditorTextActionPresenter getTextActionPresenter() {
+        return mTextActionPresenter;
     }
 
     /**
@@ -637,7 +644,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             if (mEventHandler.shouldDrawInsertHandle()) {
                 drawHandle(canvas, mCursor.getLeftLine(), mCursor.getLeftColumn(), mInsertHandle);
             }
-        } else if (!mTextActionWindow.isShowing()) {
+        } else if (mTextActionPresenter.shouldShowCursor()) {
             drawCursor(canvas, mCursor.getLeftLine(), mCursor.getLeftColumn(), offsetX, color.getColor(EditorColorScheme.SELECTION_INSERT));
             drawCursor(canvas, mCursor.getRightLine(), mCursor.getRightColumn(), offsetX, color.getColor(EditorColorScheme.SELECTION_INSERT));
             drawHandle(canvas, mCursor.getLeftLine(), mCursor.getLeftColumn(), mLeftHandle);
@@ -2285,7 +2292,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Widht for insert cursor
+     * Width for insert cursor
      *
      * @param width Cursor width
      */
@@ -2617,7 +2624,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         updateCursorAnchor();
         updateSelection();
         ensurePositionVisible(line, column);
-        mTextActionWindow.hide();
+        if (mTextActionPresenter != null) {
+            mTextActionPresenter.onExit();
+        }
     }
 
     /**
@@ -2658,6 +2667,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (start > end) {
             throw new IllegalArgumentException("start > end:start = " + start + " end = " + end + " lineLeft = " + lineLeft + " columnLeft = " + columnLeft + " lineRight = " + lineRight + " columnRight = " + columnRight);
         }
+        boolean lastState = mCursor.isSelected();
         if (columnLeft > 0) {
             int column = columnLeft - 1;
             char ch = mText.charAt(lineLeft, column);
@@ -2686,6 +2696,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             ensurePositionVisible(lineRight, columnRight);
         } else {
             invalidate();
+        }
+        if (mCursor.isSelected()) {
+            mTextActionPresenter.onBeginTextSelect();
         }
     }
 
@@ -2799,7 +2812,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * @return Text displaying, the result is read-only. You should not make changes to this obejct as it is used internally
+     * @return Text displaying, the result is read-only. You should not make changes to this object as it is used internally
      * @see CodeEditor#setText(CharSequence)
      */
     public Content getText() {
@@ -2826,7 +2839,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Get the paint of the editor
-     * Users should not change text size and other arguments that are related to text measure by the object
+     * You should not change text size and other arguments that are related to text measuring by the object
      *
      * @return The paint which is used by the editor now
      */
@@ -2854,11 +2867,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Get spans
-     *
-     * @return spans
+     * Get analyze result.
+     * <strong>Do not make changes to it or read concurrently</strong>
      */
-    public TextAnalyzeResult getTextColor() {
+    public TextAnalyzeResult getTextAnalyzeResult() {
         return mSpanner.getResult();
     }
 
@@ -3012,12 +3024,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (!isEnabled()) {
             return false;
         }
-        boolean handling = mEventHandler.handlingMotions();
+        boolean handlingBefore = mEventHandler.handlingMotions();
         boolean res = mEventHandler.onTouchEvent(event);
+        boolean handling = mEventHandler.handlingMotions();
         boolean res2 = false;
-        boolean res3 = mScaleDetector.onTouchEvent(event);
-        if (!handling) {
+        boolean res3 = false;
+        if (!handling && !handlingBefore) {
             res2 = mBasicDetector.onTouchEvent(event);
+            res3 = mScaleDetector.onTouchEvent(event);
         }
         if (event.getAction() == MotionEvent.ACTION_UP) {
             mVerticalEdgeGlow.onRelease();
@@ -3178,164 +3192,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
-    private static int findSpanIndexFor(List<Span> spans, int initialPosition, int targetCol) {
-        for (int i = initialPosition; i < spans.size(); i++) {
-            if (spans.get(i).column >= targetCol) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private void shiftSpansOnSingleLineInsert(int line, int startCol, int endCol) {
-        List<List<Span>> spans = mSpanner.getResult().getSpanMap();
-        if (spans == null || spans.isEmpty()) {
-            return;
-        }
-        List<Span> spanList = spans.get(line);
-        int index = findSpanIndexFor(spanList, 0, startCol);
-        if (index == -1) {
-            return;
-        }
-        int originIndex = index;
-        // Shift spans after insert position
-        int delta = endCol - startCol;
-        while (index < spanList.size()) {
-            spanList.get(index++).column += delta;
-        }
-        // Add extra span for line start
-        if (originIndex == 0) {
-            Span first = spanList.get(0);
-            if (first.colorId == EditorColorScheme.TEXT_NORMAL && first.underlineColor == 0) {
-                first.column = 0;
-            } else {
-                spanList.add(0, Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
-            }
-        }
-    }
-
-    private void shiftSpansOnMultiLineInsert(int startLine, int startColumn, int endLine, int endColumn) {
-        List<List<Span>> map = mSpanner.getResult().getSpanMap();
-        // Find extended span
-        List<Span> startLineSpans = map.get(startLine);
-        int extendedSpanIndex = findSpanIndexFor(startLineSpans, 0, startColumn);
-        if (extendedSpanIndex == -1) {
-            extendedSpanIndex = startLineSpans.size() - 1;
-        }
-        if (startLineSpans.get(extendedSpanIndex).column > startColumn) {
-            extendedSpanIndex--;
-        }
-        Span extendedSpan;
-        if (extendedSpanIndex < 0 || extendedSpanIndex >= startLineSpans.size()) {
-            extendedSpan = Span.obtain(0, EditorColorScheme.TEXT_NORMAL);
-        } else {
-            extendedSpan = startLineSpans.get(extendedSpanIndex);
-        }
-        // Create map link for new lines
-        for (int i = 0; i < endLine - startLine; i++) {
-            List<Span> list = new ArrayList<>();
-            list.add(extendedSpan.copy().setColumn(0));
-            map.add(startLine + 1, list);
-        }
-        // Add original spans to new line
-        List<Span> endLineSpans = map.get(endLine);
-        if (endColumn == 0 && extendedSpanIndex + 1 < startLineSpans.size()) {
-            endLineSpans.clear();
-        }
-        int delta = Integer.MIN_VALUE;
-        while (extendedSpanIndex + 1 < startLineSpans.size()) {
-            Span span = startLineSpans.remove(extendedSpanIndex + 1);
-            if (delta == Integer.MIN_VALUE) {
-                delta = span.column;
-            }
-            endLineSpans.add(span.setColumn(span.column - delta + endColumn));
-        }
-    }
-
-    private void shiftSpansOnSingleLineDelete(int line, int startCol, int endCol) {
-        List<List<Span>> spans = mSpanner.getResult().getSpanMap();
-        if (spans == null || spans.isEmpty()) {
-            return;
-        }
-        List<Span> spanList = spans.get(line);
-        int startIndex = findSpanIndexFor(spanList, 0, startCol);
-        if (startIndex == -1) {
-            //No span is to be updated
-            return;
-        }
-        int endIndex = findSpanIndexFor(spanList, startIndex, endCol);
-        if (endIndex == -1) {
-            endIndex = spanList.size();
-        }
-        // Remove spans inside delete text
-        int removeCount = endIndex - startIndex;
-        for (int i = 0; i < removeCount; i++) {
-            spanList.remove(startIndex).recycle();
-        }
-        // Shift spans
-        int delta = endCol - startCol;
-        while (startIndex < spanList.size()) {
-            spanList.get(startIndex).column -= delta;
-            startIndex++;
-        }
-        // Ensure there is span
-        if (spanList.isEmpty() || spanList.get(0).column != 0) {
-            spanList.add(0, Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
-        }
-        // Remove spans with length 0
-        for (int i = 0; i + 1 < spanList.size(); i++) {
-            if (spanList.get(i).column >= spanList.get(i + 1).column) {
-                spanList.remove(i).recycle();
-                i--;
-            }
-        }
-    }
-
-    private void shiftSpansOnMultiLineDelete(int startLine, int startColumn, int endLine, int endColumn) {
-        List<List<Span>> map = mSpanner.getResult().getSpanMap();
-        int lineCount = endLine - startLine - 1;
-        // Remove unrelated lines
-        while (lineCount > 0) {
-            Span.recycleAll(map.remove(startLine + 1));
-            lineCount--;
-        }
-        // Clean up start line
-        List<Span> startLineSpans = map.get(startLine);
-        int index = startLineSpans.size() - 1;
-        while (index > 0) {
-            if (startLineSpans.get(index).column >= startColumn) {
-                startLineSpans.remove(index).recycle();
-                index--;
-            } else {
-                break;
-            }
-        }
-        // Shift end line
-        List<Span> endLineSpans = map.get(startLine + 1);
-        while (endLineSpans.size() > 1) {
-            Span first = endLineSpans.get(0);
-            if (first.column >= endColumn) {
-                break;
-            } else {
-                int spanEnd = endLineSpans.get(1).column;
-                if (spanEnd <= endColumn) {
-                    endLineSpans.remove(first);
-                    first.recycle();
-                } else {
-                    break;
-                }
-            }
-        }
-        for (int i = 0; i < endLineSpans.size(); i++) {
-            Span span = endLineSpans.get(i);
-            if (span.column < endColumn) {
-                span.column = 0;
-            } else {
-                span.column -= endColumn;
-            }
-        }
-    }
-
     private boolean isSpanMapPrepared() {
         List<List<Span>> map = mSpanner.getResult().getSpanMap();
         return (map != null && map.size() != 0);
@@ -3345,9 +3201,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
         if (isSpanMapPrepared()) {
             if (startLine == endLine) {
-                shiftSpansOnSingleLineInsert(startLine, startColumn, endColumn);
+                SpanMapUpdater.shiftSpansOnSingleLineInsert(mSpanner.getResult().getSpanMap(), startLine, startColumn, endColumn);
             } else {
-                shiftSpansOnMultiLineInsert(startLine, startColumn, endLine, endColumn);
+                SpanMapUpdater.shiftSpansOnMultiLineInsert(mSpanner.getResult().getSpanMap(), startLine, startColumn, endLine, endColumn);
             }
         }
         mWait = false;
@@ -3430,9 +3286,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
         if (isSpanMapPrepared()) {
             if (startLine == endLine) {
-                shiftSpansOnSingleLineDelete(startLine, startColumn, endColumn);
+                SpanMapUpdater.shiftSpansOnSingleLineDelete(mSpanner.getResult().getSpanMap(), startLine, startColumn, endColumn);
             } else {
-                shiftSpansOnMultiLineDelete(startLine, startColumn, endLine, endColumn);
+                SpanMapUpdater.shiftSpansOnMultiLineDelete(mSpanner.getResult().getSpanMap(), startLine, startColumn, endLine, endColumn);
             }
         }
         updateCursor();
@@ -3507,6 +3363,27 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         long lastAnalyzeThreadTime = System.currentTimeMillis() - provider.mOpStartTime;
         if(DEBUG)
             Log.d(LOG_TAG, "Highlight cost time:" + lastAnalyzeThreadTime);
+    }
+
+    protected interface EditorTextActionPresenter {
+
+        void onSelectedTextClicked(MotionEvent event);
+
+        void onUpdate();
+
+        void onBeginTextSelect();
+
+        void onExit();
+
+        boolean shouldShowCursor();
+
+    }
+
+    public enum TextActionMode {
+
+        POPUP_WINDOW,
+        ACTION_MODE
+
     }
 
 }

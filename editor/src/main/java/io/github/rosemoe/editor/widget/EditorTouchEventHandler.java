@@ -302,7 +302,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     }
 
     private void scrollBy(float distanceX, float distanceY) {
-        mEditor.getTextActionWindow().hide();
+        mEditor.getTextActionPresenter().onUpdate();
         mEditor.hideAutoCompletePanel();
         int endX = mScroller.getCurrX() + (int) distanceX;
         int endY = mScroller.getCurrY() + (int) distanceY;
@@ -325,53 +325,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         int line = mEditor.getPointLineOnScreen(e.getY());
         int column = mEditor.getPointColumnOnScreen(line, e.getX());
         if (mEditor.getCursor().isSelected() && mEditor.getCursor().isInSelectedRegion(line, column) && !(mEditor.isOverMaxY(e.getY()) || mEditor.isOverMaxX(line, e.getX()))) {
-            EditorTextActionWindow panel = mEditor.getTextActionWindow();
-            if (panel.isShowing()) {
-                panel.hide();
-            } else {
-                int first = mEditor.getFirstVisibleLine();
-                int last = mEditor.getLastVisibleLine();
-                int left = mEditor.getCursor().getLeftLine();
-                int right = mEditor.getCursor().getRightLine();
-                int toLineBottom;
-                if (right <= first) {
-                    toLineBottom = first;
-                } else if (right > last) {
-                    if (left <= first) {
-                        toLineBottom = (first + last) / 2;
-                    } else if (left >= last) {
-                        toLineBottom = last - 2;
-                    } else {
-                        if (left + 3 >= last) {
-                            toLineBottom = left - 2;
-                        } else {
-                            toLineBottom = left + 1;
-                        }
-                    }
-                } else {
-                    if (left <= first) {
-                        if (right + 3 >= last) {
-                            toLineBottom = right - 2;
-                        } else {
-                            toLineBottom = right + 1;
-                        }
-                    } else {
-                        if (left + 5 >= right) {
-                            toLineBottom = right + 1;
-                        } else {
-                            toLineBottom = (left + right) / 2;
-                        }
-                    }
-                }
-                toLineBottom = Math.max(0, toLineBottom);
-                int panelY = mEditor.getLineBottom(toLineBottom) - mEditor.getOffsetY();
-                float handleLeftX = mEditor.getOffset(left, mEditor.getCursor().getLeftColumn());
-                float handleRightX = mEditor.getOffset(right, mEditor.getCursor().getRightColumn());
-                int panelX = (int) ((handleLeftX + handleRightX) / 2f);
-                panel.setExtendedX(panelX);
-                panel.setExtendedY(panelY);
-                panel.show();
-            }
+            mEditor.getTextActionPresenter().onSelectedTextClicked(e);
         } else {
             notifyLater();
             mEditor.setSelection(line, column);
@@ -433,7 +387,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
 
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        mEditor.getTextActionWindow().hide();
+        mEditor.getTextActionPresenter().onUpdate();
         int endX = mScroller.getCurrX() + (int) distanceX;
         int endY = mScroller.getCurrY() + (int) distanceY;
         endX = Math.max(endX, 0);
@@ -645,7 +599,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     }
                 }
             }
-            mEditor.getTextActionWindow().hide();
+            mEditor.getTextActionPresenter().onUpdate();
         }
 
     }

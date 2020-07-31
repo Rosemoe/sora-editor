@@ -164,7 +164,7 @@ public class MainActivity extends Activity {
                     editor.moveSelectionRight();
                     break;
                 case 9: {
-                    final List<NavigationLabel> labels = editor.getTextColor().getNavigation();
+                    final List<NavigationLabel> labels = editor.getTextAnalyzeResult().getNavigation();
                     if (labels == null) {
                         Toast.makeText(this, "Code navigation not prepared or unsupported", Toast.LENGTH_SHORT).show();
                     } else {
