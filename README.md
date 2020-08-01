@@ -26,8 +26,10 @@ If you are unable to compile this project or crash while using sample app, try t
 * Java,JavaScript,C,C++(Basic Support:highlight,code block line,identifier and keyword auto completion)
 * S5droid(context sensitive auto completion,highlight,code block line,navigation)   
 ## Screenshots  
-![View Outline](/images/outline.jpg)
-![Auto Complete](/images/auto-completion.jpg)   
+![View Outline](/images/outline.png)
+![Auto Complete](/images/auto-completion.png)   
+![Select Text](/images/select-text.png)   
+![Search and Replace](/images/search-replace.png)   
 ## How to use this Editor now  
 This project hasn't been deployed to any place such as jitpack.    
 To include this project into your project:  

@@ -1163,7 +1163,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             prepareLine(mConnection.mComposingLine);
             offsetX += measureText(mChars, 0, mConnection.mComposingStart);
             float width = measureText(mChars, mConnection.mComposingStart, mConnection.mComposingEnd - mConnection.mComposingStart);
-            mRect.top = offY - getLineHeight() * 0.06f;
+            mRect.top = offY - getLineHeight() * 0.08f;
             mRect.bottom = offY;
             mRect.left = offsetX;
             mRect.right = offsetX + width;
@@ -1436,7 +1436,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
             if (span.underlineColor != 0) {
                 mRect.bottom = getLineBottom(line) - getOffsetY() - mDpUnit * 1;
-                mRect.top = mRect.bottom - getLineHeight() * 0.06f;
+                mRect.top = mRect.bottom - getLineHeight() * 0.08f;
                 mRect.left = offsetX;
                 mRect.right = offsetX + width;
                 drawColor(canvas, span.underlineColor, mRect);
@@ -2327,6 +2327,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
             mInputMethodManager.showSoftInput(this, 0);
         }
+        invalidate();
     }
 
     /**
