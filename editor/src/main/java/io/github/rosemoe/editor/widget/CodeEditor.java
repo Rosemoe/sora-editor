@@ -3193,14 +3193,25 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
-    private boolean isSpanMapPrepared() {
+    private boolean isSpanMapPrepared(boolean insert, int delta) {
         List<List<Span>> map = mSpanner.getResult().getSpanMap();
-        return (map != null && map.size() != 0);
+        if (map != null) {
+            if(insert) {
+                if(map.size() != getLineCount() - delta) {
+                    return false;
+                }
+            } else if(map.size() != getLineCount() + delta) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+        return true;
     }
 
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
-        if (isSpanMapPrepared()) {
+        if (isSpanMapPrepared(true, endLine - startLine)) {
             if (startLine == endLine) {
                 SpanMapUpdater.shiftSpansOnSingleLineInsert(mSpanner.getResult().getSpanMap(), startLine, startColumn, endColumn);
             } else {
@@ -3250,6 +3261,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mListener.afterInsert(this, mText, startLine, startColumn, endLine, endColumn, insertedContent);
         }
     }
+    
+    private void debug(CharSequence text) {
+        android.widget.Toast.makeText(getContext(), text,0).show();
+    }
 
     private void applyNewPanelPosition() {
         float panelX = updateCursorAnchor() + mDpUnit * 20;
@@ -3285,7 +3300,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
-        if (isSpanMapPrepared()) {
+        if (isSpanMapPrepared(false, endLine - startLine)) {
             if (startLine == endLine) {
                 SpanMapUpdater.shiftSpansOnSingleLineDelete(mSpanner.getResult().getSpanMap(), startLine, startColumn, endColumn);
             } else {
