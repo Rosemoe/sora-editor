@@ -110,7 +110,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private int mCursorPosition;
     private float mDpUnit;
     private float mMaxPaintX;
-    private float mSpaceWidth;
     private float mDividerWidth;
     private float mDividerMargin;
     private float mInsertSelWidth;
@@ -350,7 +349,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mInputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         mClipboardManager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         setUndoEnabled(true);
-        mTabWidth = 4;
         mAutoIndent = true;
         mCursorPosition = -1;
         mHighlightCurrentBlock = true;
@@ -363,6 +361,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setEditorLanguage(null);
         setText(null);
         setTextActionMode(TextActionMode.ACTION_MODE);
+        setTabWidth(4);
     }
 
     /**
@@ -574,7 +573,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public void setTextSizePx(float size) {
         mPaint.setTextSize(size);
         mPaintOther.setTextSize(size);
-        mSpaceWidth = mPaint.measureText(" ");
         mTextMetrics = mPaint.getFontMetricsInt();
         mLineNumberMetrics = mPaintOther.getFontMetricsInt();
         invalidate();
@@ -1231,17 +1229,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return The width measured
      */
     private float measureText(char[] src, int index, int count) {
-        float extraWidth;
         int tabCount = 0;
         for (int i = 0; i < count; i++) {
             if (src[index + i] == '\t') {
                 tabCount++;
             }
         }
-        if (count > 0 && isEmoji(src[index + count - 1])) {
-            count--;
-        }
-        extraWidth = mSpaceWidth * (getTabWidth() - 1);
+        float extraWidth = mPaint.measureText(" ") * getTabWidth() - mPaint.measureText("\t");
         return mPaint.measureText(src, index, count) + tabCount * extraWidth;
     }
 
@@ -1313,28 +1307,22 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
-    private float measureTextRegion(char[] src, int index, int count) {
-        float extraWidth;
-        int tabCount = 0;
-        for (int i = 0; i < count; i++) {
-            if (src[index + i] == '\t') {
-                tabCount++;
-            }
-        }
-        extraWidth = mSpaceWidth * (getTabWidth() - 1);
-        return mPaint.measureText(src, index, count) + tabCount * extraWidth;
-    }
-
+    /**
+      * Measure text with last result
+      */
     private float measureTextRelatively(char[] chars, int endIndex, int lastIndex, float lastMeasureResult) {
         if (endIndex == lastIndex) {
             return lastMeasureResult;
         } else if (endIndex > lastIndex) {
-            return lastMeasureResult + measureTextRegion(chars, lastIndex, endIndex - lastIndex);
+            return lastMeasureResult + measureText(chars, lastIndex, endIndex - lastIndex);
         } else {
-            return lastMeasureResult - measureTextRegion(chars, endIndex, lastIndex - endIndex);
+            return lastMeasureResult - measureText(chars, endIndex, lastIndex - endIndex);
         }
     }
 
+    /**
+      * Binary find index for position
+      */
     private int binaryFindCharIndex(float initialPosition, float targetOffset, int left, int right, char[] chars) {
         float measureResult = 0;
         int lastCommitMeasure = 0;
@@ -1760,6 +1748,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param column Column of char
      */
     public void ensurePositionVisible(int line, int column) {
+        // Ensure y position
         float y = getLineHeight() * line;
         float minY = getOffsetY();
         float maxY = minY + getHeight();
@@ -1767,24 +1756,28 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (y < minY) {
             targetY = y;
         } else if (y + getLineHeight() > maxY) {
-            targetY = y + getLineHeight() - getHeight();
+            targetY = y + getLineHeight() * 0.9f - getHeight();
         }
+        
         float prefix_width = measureLineNumber() + mDividerMargin * 2 + mDividerWidth;
         float minX = getOffsetX();
         float maxX = minX + getWidth();
+        
         float targetX = minX;
         prepareLine(line);
-        float x = prefix_width + measureText(mChars, 0, column);
-        float char_width = 2 * measureText(mChars, column, 1);
+        float x = prefix_width + (column == 0 ? 0 : measureText(mChars, 0, column - 1));
+        float char_width = (column == 0 ? 0 : measureText(mChars, column - 1, 1));
         if (x < minX) {
-            targetX = x;
+            targetX = x - char_width * 0.5f;
         } else if (x + char_width > maxX) {
-            targetX = x + char_width - getWidth();
+            targetX = x + char_width * 1.5f - getWidth();
         }
+        
         if (targetY == minY && targetX == minX) {
             invalidate();
             return;
         }
+        
         boolean animation = true;
         if (System.currentTimeMillis() - mLastMakeVisible < 100) {
             animation = false;

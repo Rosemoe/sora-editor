@@ -20,6 +20,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Looper;
 import android.util.Log;
 
 import java.io.File;
@@ -79,6 +80,16 @@ public class CrashHandler implements UncaughtExceptionHandler {
         }
         collectDeviceInfo(mContext);
         saveCrashInfo2File(ex);
+        if(Looper.myLooper() != null) {
+            while(true) {
+                try {
+                    Toast.makeText(mContext, "Exception in a thread with looper. see /#Logs/ to know more", Toast.LENGTH_SHORT).show();
+                    Looper.loop();
+                } catch(Throwable t) {
+                    saveCrashInfo2File(ex);
+                }
+            }
+        }
         return true;
     }
 
