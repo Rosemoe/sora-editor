@@ -1364,7 +1364,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int maxPaintChar = columnCount;
         
         //This switch is only enabled when the line is too long
-        if(columnCount > 1024) {
+        if(columnCount > 256) {
             minPaintChar = binaryFindCharIndex(offsetX, 0, 0, columnCount, mChars);
             maxPaintChar = binaryFindCharIndex(offsetX, getWidth(), minPaintChar, columnCount, mChars);
             maxPaintChar = Math.min(maxPaintChar + 2, columnCount);
@@ -3289,7 +3289,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
     
     private void debug(CharSequence text) {
-        android.widget.Toast.makeText(getContext(), text,0).show();
+        android.widget.Toast.makeText(getContext(), text, android.widget.Toast.LENGTH_SHORT).show();
     }
 
     private void applyNewPanelPosition() {
