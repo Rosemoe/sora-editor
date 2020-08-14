@@ -1577,7 +1577,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             String text = Integer.toString(i + 1);
             switch (mLineNumberAlign) {
                 case LEFT:
-                    canvas.drawText(text, offsetX, y, mPaintOther);
+                    canvas.drawText(text, offsetX + mDividerMargin, y, mPaintOther);
                     break;
                 case RIGHT:
                     canvas.drawText(text, offsetX + width, y, mPaintOther);
@@ -1656,7 +1656,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         for (String ch : charSet) {
             single = Math.max(single, mPaintOther.measureText(ch));
         }
-        return single * count;
+        return single * count + mDividerMargin;
     }
 
     /**
