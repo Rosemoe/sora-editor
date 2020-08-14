@@ -1064,7 +1064,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             return;
         }
         float expand = mDpUnit * 3;
-        String text = mLnTip + ((2 + getFirstVisibleLine() + getLastVisibleLine()) / 2);
+        int firstVisibleLine = getFirstVisibleLine();
+        int lineNumber = firstVisibleLine + getPointLine(centerY) + 1;
+        lineNumber = Math.min(lineNumber, getLineCount());
+        String text = mLnTip + lineNumber;
         float textWidth = mPaint.measureText(text);
         mRect.top = centerY - getLineHeight() / 2f - expand;
         mRect.bottom = centerY + getLineHeight() / 2f + expand;
@@ -1350,7 +1353,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int columnCount = mText.getColumnCount(line);
         int minPaintChar = 0;
         int maxPaintChar = columnCount;
-        
+
         //This switch is only enabled when the line is too long
         if(columnCount > 256) {
             minPaintChar = binaryFindCharIndex(offsetX, 0, 0, columnCount, mChars);
@@ -1358,7 +1361,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             maxPaintChar = Math.min(maxPaintChar + 2, columnCount);
             minPaintChar = Math.max(minPaintChar - 2, 0);
         }
-        
+
         float baseline = getLineBaseLine(line) - getOffsetY();
         int spanIndex = 0;
         while (spanIndex < spans.size()) {
@@ -1758,11 +1761,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else if (y + getLineHeight() > maxY) {
             targetY = y + getLineHeight() * 0.9f - getHeight();
         }
-        
+
         float prefix_width = measureLineNumber() + mDividerMargin * 2 + mDividerWidth;
         float minX = getOffsetX();
         float maxX = minX + getWidth();
-        
+
         float targetX = minX;
         prepareLine(line);
         float x = prefix_width + (column == 0 ? 0 : measureText(mChars, 0, column - 1));
@@ -1772,12 +1775,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else if (x + char_width > maxX) {
             targetX = x + char_width * 1.5f - getWidth();
         }
-        
+
         if (targetY == minY && targetX == minX) {
             invalidate();
             return;
         }
-        
+
         boolean animation = true;
         if (System.currentTimeMillis() - mLastMakeVisible < 100) {
             animation = false;
@@ -3280,7 +3283,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mListener.afterInsert(this, mText, startLine, startColumn, endLine, endColumn, insertedContent);
         }
     }
-    
+
     private void debug(CharSequence text) {
         android.widget.Toast.makeText(getContext(), text, android.widget.Toast.LENGTH_SHORT).show();
     }
