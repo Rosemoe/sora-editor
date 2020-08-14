@@ -15,8 +15,7 @@
  */
 package io.github.rosemoe.editor.util;
 
-import java.util.HashMap;
-import java.util.Map;
+import android.util.SparseIntArray;
 
 /**
   * A General implementation of big root heap
@@ -27,12 +26,12 @@ public class BinaryHeap {
     /**
       * Map from id to its position in heap array
       */
-    private Map<Integer, Integer> idToPosition;
+    private SparseIntArray idToPosition;
     
     /**
       * Id allocator
       */
-    private int idAllocator = Integer.MIN_VALUE;
+    private int idAllocator = 0;
     
     /**
       * Current node count in heap
@@ -49,7 +48,7 @@ public class BinaryHeap {
       * This heap maintains its max value in heap
       */
     public BinaryHeap() {
-        idToPosition = new HashMap<>();
+        idToPosition = new SparseIntArray();
         nodeCount = 0;
         nodes = new Node[129];
     }
@@ -149,11 +148,10 @@ public class BinaryHeap {
       * @throws IllegalArgumentException when the id is invalid
       */
     public void update(int id, int newValue) {
-        Integer positionWrapper = idToPosition.get(id);
-        if (positionWrapper == null) {
+        int position = idToPosition.get(id);
+        if (position == 0) {
             throw new IllegalArgumentException("trying to update with an invalid id");
         }
-        int position = positionWrapper.intValue();
         int origin = nodes[position].data;
         nodes[position].data = newValue;
         if (origin < newValue) {
@@ -169,23 +167,27 @@ public class BinaryHeap {
       * @throws IllegalArgumentException when the id is invalid
       */
     public void remove(int id) {
-        Integer positionWrapper = idToPosition.get(id);
-        if (positionWrapper == null) {
+        int position = idToPosition.get(id);
+        if (position == 0) {
             throw new IllegalArgumentException("trying to remove with an invalid id");
         }
-        int position = positionWrapper.intValue();
-        idToPosition.remove(nodes[position].id);
-        //Replaced removed node with last node
+        idToPosition.delete(id);
+        //Replace removed node with last node
         nodes[position] = nodes[nodeCount];
-        idToPosition.put(nodes[position].id, position);
-        nodeCount--;
+        //Release node
+        nodes[nodeCount--] = null;
+        //Do not update heap if it is just the last node
+        if (position == nodeCount + 1) {
+            return;
+        }
+        idToPosition.put(id, position);
         heapifyUp(position);
         heapifyDown(position);
     }
     
     /**
      * Print elements of this heap
-     * They are printed layer by layer
+     * They are printed layer by layer to system out
      */
     public void print() {
         int start = 1;

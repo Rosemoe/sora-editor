@@ -32,7 +32,7 @@ import java.util.stream.StreamSupport;
 import io.github.rosemoe.editor.struct.CharPosition;
 
 /**
- * This class saves the text content for editor
+ * This class saves the text content for editor and maintains line widths
  *
  * @author Rose
  */
@@ -47,13 +47,14 @@ public class Content implements CharSequence {
         setInitialLineCapacity(DEFAULT_LIST_CAPACITY);
     }
 
-    private List<StringBuilder> mLines;
+    private List<ContentLine> mLines;
     private int mTextLength;
     private int mNestedBatchEdit;
     private List<ContentListener> mListeners;
     private Indexer mIndexer;
     private UndoManager mUndoManager;
     private Cursor mCursor;
+    private LineRemoveListener mLineListener;
 
     /**
      * Set the default capacity of text line list
@@ -76,7 +77,6 @@ public class Content implements CharSequence {
         return Content.sInitialListCapacity;
     }
 
-
     /**
      * This constructor will create a Content object with no text
      */
@@ -97,7 +97,7 @@ public class Content implements CharSequence {
         mTextLength = 0;
         mNestedBatchEdit = 0;
         mLines = new ArrayList<>(getInitialLineCapacity());
-        mLines.add(new StringBuilder());
+        mLines.add(new ContentLine());
         mListeners = new ArrayList<>();
         mUndoManager = new UndoManager(this);
         setMaxUndoStackSize(Content.DEFAULT_MAX_UNDO_STACK_SIZE);
@@ -132,6 +132,10 @@ public class Content implements CharSequence {
         CharPosition e = getIndexer().getCharPosition(end);
         return subContent(s.getLine(), s.getColumn(), e.getLine(), e.getColumn());
     }
+    
+    public void setLineListener(LineRemoveListener lis) {
+        this.mLineListener = lis;
+    }
 
     /**
      * Get the character at the given position
@@ -154,9 +158,9 @@ public class Content implements CharSequence {
      * Get raw data line
      *
      * @param line Line
-     * @return Raw StringBuilder used by Content
+     * @return Raw ContentLine used by Content
      */
-    public StringBuilder getRawData(int line) {
+    public ContentLine getLine(int line) {
         return mLines.get(line);
     }
 
@@ -167,7 +171,7 @@ public class Content implements CharSequence {
      * @param line Requested line
      */
     public void copyChars(char[] dest, int line) {
-        StringBuilder lineStr = mLines.get(line);
+        ContentLine lineStr = mLines.get(line);
         lineStr.getChars(0, lineStr.length(), dest, 0);
     }
 
@@ -241,11 +245,11 @@ public class Content implements CharSequence {
         if (workIndex == -1) {
             workIndex = 0;
         }
-        StringBuilder currLine = mLines.get(workLine);
+        ContentLine currLine = mLines.get(workLine);
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
             if (c == '\n') {
-                StringBuilder newLine = new StringBuilder();
+                ContentLine newLine = new ContentLine();
                 newLine.append(currLine, workIndex, currLine.length());
                 currLine.delete(workIndex, currLine.length());
                 mLines.add(workLine + 1, newLine);
@@ -297,7 +301,7 @@ public class Content implements CharSequence {
             if (beginIdx > columnOnEndLine) {
                 throw new IllegalArgumentException("start > end");
             }
-            StringBuilder curr = mLines.get(startLine);
+            ContentLine curr = mLines.get(startLine);
             int len = curr.length();
             if (beginIdx < 0 || beginIdx > len || columnOnEndLine > len) {
                 throw new StringIndexOutOfBoundsException("column start or column end is out of bounds");
@@ -317,9 +321,12 @@ public class Content implements CharSequence {
                 if (startLine == 0) {
                     mTextLength++;
                 } else {
-                    StringBuilder previous = mLines.get(startLine - 1);
+                    ContentLine previous = mLines.get(startLine - 1);
                     previous.append(curr);
-                    mLines.remove(startLine);
+                    ContentLine rm = mLines.remove(startLine);
+                    if (mLineListener != null) {
+                        mLineListener.onRemove(this, rm);
+                    }
                     changedContent.insert(0, '\n');
                     startLine--;
                     columnOnStartLine = getColumnCount(startLine);
@@ -334,13 +341,16 @@ public class Content implements CharSequence {
                 mCursor.beforeDelete(startLine, columnOnStartLine, endLine, columnOnEndLine);
 
             for (int i = 0; i < endLine - startLine - 1; i++) {
-                StringBuilder line = mLines.remove(startLine + 1);
+                ContentLine line = mLines.remove(startLine + 1);
+                if (mLineListener != null) {
+                    mLineListener.onRemove(this, line);
+                }
                 mTextLength -= line.length() + 1;
                 changedContent.append('\n').append(line);
             }
             int currEnd = startLine + 1;
-            StringBuilder start = mLines.get(startLine);
-            StringBuilder end = mLines.get(currEnd);
+            ContentLine start = mLines.get(startLine);
+            ContentLine end = mLines.get(currEnd);
             mTextLength -= start.length() - columnOnStartLine;
             changedContent.insert(0, start, columnOnStartLine, start.length());
             start.delete(columnOnStartLine, start.length());
@@ -348,7 +358,10 @@ public class Content implements CharSequence {
             changedContent.append('\n').append(end, 0, columnOnEndLine);
             end.delete(0, columnOnEndLine);
             mTextLength--;
-            mLines.remove(currEnd);
+            ContentLine r = mLines.remove(currEnd);
+            if (mLineListener != null) {
+                mLineListener.onRemove(this, r);
+            }
             start.append(end);
         } else {
             throw new IllegalArgumentException("start line > end line");
@@ -559,15 +572,15 @@ public class Content implements CharSequence {
         Content c = new Content();
         c.setUndoEnabled(false);
         if (startLine == endLine) {
-            c.insert(0, 0, mLines.get(startLine).substring(startColumn, endColumn));
+            c.insert(0, 0, mLines.get(startLine).subSequence(startColumn, endColumn));
         } else if (startLine < endLine) {
-            c.insert(0, 0, mLines.get(startLine).substring(startColumn));
+            c.insert(0, 0, mLines.get(startLine).subSequence(startColumn, mLines.get(startLine).length()));
             for (int i = startLine + 1; i < endLine; i++) {
-                c.mLines.add(new StringBuilder(mLines.get(i)));
+                c.mLines.add(new ContentLine(mLines.get(i)));
                 c.mTextLength += mLines.get(i).length() + 1;
             }
-            StringBuilder end = mLines.get(endLine);
-            c.mLines.add(new StringBuilder().append(end, 0, endColumn));
+            ContentLine end = mLines.get(endLine);
+            c.mLines.add(new ContentLine().insert(0, end, 0, endColumn));
             c.mTextLength += endColumn + 1;
         } else {
             throw new IllegalArgumentException("start > end");
@@ -598,7 +611,7 @@ public class Content implements CharSequence {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
-        for (StringBuilder line : mLines) {
+        for (ContentLine line : mLines) {
             if (!first) {
                 sb.append('\n');
             } else {
@@ -621,7 +634,7 @@ public class Content implements CharSequence {
         sb.ensureCapacity(mTextLength + 10);
         boolean first = true;
         for (int i = 0; i < getLineCount(); i++) {
-            StringBuilder line = mLines.get(i);
+            ContentLine line = mLines.get(i);
             if (!first) {
                 sb.append('\n');
             } else {
@@ -645,13 +658,13 @@ public class Content implements CharSequence {
     }
 
     /**
-     * Test whether the two StringBuilder have the same content
+     * Test whether the two ContentLine have the same content
      *
-     * @param a StringBuilder
-     * @param b another StringBuilder
+     * @param a ContentLine
+     * @param b another ContentLine
      * @return Whether equals in content
      */
-    private static boolean equals(StringBuilder a, StringBuilder b) {
+    private static boolean equals(ContentLine a, ContentLine b) {
         if (a.length() != b.length()) {
             return false;
         }
@@ -761,7 +774,7 @@ public class Content implements CharSequence {
     //The following methods works on higher Android API with language level 8
     //AIDE does not support this and if we copy default implementation code with some modification, it does not works as well.
     //So we had to add a empty implementation
-
+/*
     @Override
     @TargetApi(24)
     public IntStream chars() {
@@ -879,6 +892,6 @@ public class Content implements CharSequence {
             }
             return c1;
         }
-    }
+    }*/
 
 }

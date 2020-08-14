@@ -17,11 +17,14 @@ package io.github.rosemoe.editor.widget;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -32,47 +35,43 @@ import android.text.InputType;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.ActionMode;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.inputmethod.CursorAnchorInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.OverScroller;
+import android.widget.SearchView;
 import android.widget.Toast;
-
 import io.github.rosemoe.editor.R;
 import io.github.rosemoe.editor.interfaces.EditorEventListener;
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
 import io.github.rosemoe.editor.langs.EmptyLanguage;
+import io.github.rosemoe.editor.struct.BlockLine;
+import io.github.rosemoe.editor.struct.Span;
 import io.github.rosemoe.editor.text.Content;
+import io.github.rosemoe.editor.text.ContentLine;
 import io.github.rosemoe.editor.text.ContentListener;
 import io.github.rosemoe.editor.text.Cursor;
 import io.github.rosemoe.editor.text.FormatThread;
+import io.github.rosemoe.editor.text.LineRemoveListener;
 import io.github.rosemoe.editor.text.SpanMapUpdater;
 import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.text.TextAnalyzer;
+import io.github.rosemoe.editor.util.BinaryHeap;
 import io.github.rosemoe.editor.widget.edge.EdgeEffect;
 import io.github.rosemoe.editor.widget.edge.EdgeEffectFactory;
-import io.github.rosemoe.editor.struct.BlockLine;
-import io.github.rosemoe.editor.struct.Span;
-
 import java.util.ArrayList;
 import java.util.List;
-
-import android.view.inputmethod.CursorAnchorInfo;
-import android.graphics.Matrix;
-
-import android.widget.OverScroller;
-import android.view.accessibility.AccessibilityNodeInfo;
-import android.view.ActionMode;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.EditText;
-import android.widget.SearchView;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 
 import static io.github.rosemoe.editor.BuildConfig.DEBUG;
 
@@ -81,8 +80,7 @@ import static io.github.rosemoe.editor.BuildConfig.DEBUG;
  * Features:
  * Highlight
  * Auto-completion
- * Scroll freely
- * EdgeEffects
+ * Scroll, EdgeEffect
  * Code Format
  * Shortcuts
  * <p>
@@ -97,7 +95,7 @@ import static io.github.rosemoe.editor.BuildConfig.DEBUG;
  *
  * @author Rose
  */
-public class CodeEditor extends View implements ContentListener, TextAnalyzer.Callback, FormatThread.FormatResultReceiver {
+public class CodeEditor extends View implements ContentListener, TextAnalyzer.Callback, FormatThread.FormatResultReceiver, LineRemoveListener {
 
     private static final String LOG_TAG = "CodeEditor";
 
@@ -109,11 +107,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private int mTabWidth;
     private int mCursorPosition;
     private float mDpUnit;
-    private float mMaxPaintX;
     private float mDividerWidth;
     private float mDividerMargin;
     private float mInsertSelWidth;
     private float mBlockLineWidth;
+    private double mMeasureScale;
     private boolean mWait;
     private boolean mDrag;
     private boolean mScale;
@@ -142,9 +140,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     private Paint mPaint;
     private Paint mPaintOther;
+    private Paint mPaintMeasure;
     private char[] mChars;
     private Matrix mMatrix;
     private Rect mViewRect;
+    private BinaryHeap mWidthMaintainer;
     private EditorColorScheme mColors;
     private String mLnTip = "Line:";
     private EditorLanguage mLanguage;
@@ -308,6 +308,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private void prepare() {
         mPaint = new Paint();
         mPaintOther = new Paint();
+        mPaintMeasure = new Paint();
         mMatrix = new Matrix();
         mSearcher = new EditorSearcher(this);
         //Only Android.LOLLIPOP and upper level device can use this builder
@@ -317,6 +318,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaint.setAntiAlias(true);
         mPaintOther.setAntiAlias(true);
         mPaintOther.setTypeface(Typeface.MONOSPACE);
+        mChars = new char[256];
         setTextSize(DEFAULT_TEXT_SIZE);
         mColors = new EditorColorScheme(this);
         mEventHandler = new EditorTouchEventHandler(this);
@@ -336,22 +338,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mDpUnit = mDividerWidth / 2;
         mDividerMargin = mDpUnit * 5;
         mLineNumberAlign = Paint.Align.RIGHT;
-        mChars = new char[256];
-        mEditable = true;
         mScale = true;
         mDrag = false;
         mWait = false;
-        mOverScrollEnabled = true;
-        mPaintLabel = true;
-        mDisplayLnPanel = true;
-        mHighlightSelectedText = true;
         mBlockLineWidth = 2;
         mInputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         mClipboardManager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         setUndoEnabled(true);
-        mAutoIndent = true;
         mCursorPosition = -1;
-        mHighlightCurrentBlock = true;
         setFocusable(true);
         setFocusableInTouchMode(true);
         mConnection = new EditorInputConnection(this);
@@ -362,6 +356,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setText(null);
         setTextActionMode(TextActionMode.ACTION_MODE);
         setTabWidth(4);
+        setAutoIndentEnabled(true);
+        setVerticalScrollBarEnabled(true);
+        setHighlightCurrentBlock(true);
+        setHighlightSelectedText(true);
+        setPaintLabel(true);
+        setDisplayLnPanel(true);
+        setOverScrollEnabled(true);
+        setHorizontalScrollBarEnabled(true);
+        setEditable(true);
     }
 
     /**
@@ -575,6 +578,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaintOther.setTextSize(size);
         mTextMetrics = mPaint.getFontMetricsInt();
         mLineNumberMetrics = mPaintOther.getFontMetricsInt();
+        computeMeasureScale();
         invalidate();
     }
 
@@ -587,6 +591,51 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public float getTextSizePx() {
         return mPaint.getTextSize();
+    }
+    
+    /**
+      * Measure all lines in content
+      * A {@link BinaryHeap} is created and saved at this time
+      */
+    private void measureAllLines() {
+        if (mText == null) {
+            return;
+        }
+        BinaryHeap widthMaintainer = new BinaryHeap();
+        widthMaintainer.ensureCapacity(getLineCount());
+        for (int i = 0;i < getLineCount();i++) {
+            ContentLine line = mText.getLine(i);
+            prepareLine(i);
+            int width = (int) measureText(mChars, 0, line.length(), mPaintMeasure);
+            line.setWidth(width);
+            line.setId(widthMaintainer.push(width));
+        }
+        mWidthMaintainer = widthMaintainer;
+    }
+    
+    /**
+      * Measure text lines from startLine to endLine
+      * This will be called when the text changes to update text regions' width
+      * A {@link BinaryHeap} is used to maintain this more quickly, but is created in {@link #measureAllLines()}
+      */
+    private void measureLines(int startLine, int endLine) {
+        while (startLine <= endLine && startLine < getLineCount()) {
+            prepareLine(startLine);
+            ContentLine line = mText.getLine(startLine);
+            int width = (int) measureText(mChars, 0, line.length(), mPaintMeasure);
+            if (line.getId() != -1) {
+                if (line.getWidth() == width) {
+                    startLine ++;
+                    continue;
+                }
+                mWidthMaintainer.update(line.getId(), width);
+                startLine ++;
+                continue;
+            }
+            line.setId(mWidthMaintainer.push(width));
+            line.setWidth(width);
+            startLine ++;
+        }
     }
 
     /**
@@ -679,7 +728,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         outer:
         for (int i = getFirstVisibleLine(); i <= getLastVisibleLine(); i++) {
             boolean prepared = false;
-            StringBuilder raw = mText.getRawData(i);
+            ContentLine raw = mText.getLine(i);
             int index = 0;
             while (index < raw.length()) {
                 index = raw.indexOf(searchText, index);
@@ -785,12 +834,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         OverScroller scroller = getScroller();
         if (scroller.isOverScrolled()) {
-            if (mVerticalEdgeGlow.isFinished() && (scroller.getCurrY() < 0 || scroller.getCurrY() > getScrollMaxY())) {
+            if (mVerticalEdgeGlow.isFinished() && (scroller.getCurrY() <= 0 || scroller.getCurrY() >= getScrollMaxY())) {
                 mEventHandler.topOrBottom = scroller.getCurrY() > getScrollMaxY();
                 mVerticalEdgeGlow.onAbsorb((int) scroller.getCurrVelocity());
                 postDraw = true;
             }
-            if (mHorizontalGlow.isFinished() && (scroller.getCurrX() < 0 || scroller.getCurrX() > getScrollMaxX())) {
+            if (mHorizontalGlow.isFinished() && (scroller.getCurrX() <= 0 || scroller.getCurrX() >= getScrollMaxX())) {
                 mEventHandler.leftOrRight = scroller.getCurrX() > getScrollMaxX();
                 mHorizontalGlow.onAbsorb((int) scroller.getCurrVelocity());
                 postDraw = true;
@@ -926,9 +975,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int jCount = 0;
         int maxCount = Integer.MAX_VALUE;
         if (mSpanner != null) {
-            TextAnalyzeResult colors = mSpanner.getResult();
-            if (colors != null) {
-                maxCount = colors.getSuppressSwitch();
+            TextAnalyzeResult result = mSpanner.getResult();
+            if (result != null) {
+                maxCount = result.getSuppressSwitch();
             }
         }
         for (int i = min; i <= max; i++) {
@@ -991,21 +1040,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         mVerticalScrollBar.setEmpty();
         mHorizontalScrollBar.setEmpty();
-        if (isVerticalScrollBarEnabled()) {
-            if (getScrollMaxY() > getHeight() / 2) {
-                drawScrollBarTrackVertical(canvas);
-            }
-            if (getScrollMaxY() > getHeight() / 2) {
-                drawScrollBarVertical(canvas);
-            }
+        if (isVerticalScrollBarEnabled() && getScrollMaxY() > getHeight() / 2) {
+            drawScrollBarTrackVertical(canvas);
+            drawScrollBarVertical(canvas);
         }
-        if (isHorizontalScrollBarEnabled()) {
-            if (getScrollMaxX() > getWidth() * 3 / 4) {
-                drawScrollBarTrackHorizontal(canvas);
-            }
-            if (getScrollMaxX() > getWidth() * 3 / 4) {
-                drawScrollBarHorizontal(canvas);
-            }
+        if (isHorizontalScrollBarEnabled() && getScrollMaxX() > getWidth() * 3 / 4) {
+            drawScrollBarTrackHorizontal(canvas);
+            drawScrollBarHorizontal(canvas);
         }
     }
 
@@ -1219,9 +1260,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private static boolean isEmoji(char ch) {
         return ch == 0xd83c || ch == 0xd83d;
     }
-
+    
     /**
-     * Measure text width
+     * Measure text width with editor's text paint
      *
      * @param src   Source characters array
      * @param index Start index in array
@@ -1229,14 +1270,27 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return The width measured
      */
     private float measureText(char[] src, int index, int count) {
+        return measureText(src, index, count, mPaint);
+    }
+
+    /**
+     * Measure text width
+     *
+     * @param src   Source characters array
+     * @param index Start index in array
+     * @param count Count of characters
+     * @param paint The paint
+     * @return The width measured
+     */
+    private float measureText(char[] src, int index, int count, Paint paint) {
         int tabCount = 0;
         for (int i = 0; i < count; i++) {
             if (src[index + i] == '\t') {
                 tabCount++;
             }
         }
-        float extraWidth = mPaint.measureText(" ") * getTabWidth() - mPaint.measureText("\t");
-        return mPaint.measureText(src, index, count) + tabCount * extraWidth;
+        float extraWidth = paint.measureText(" ") * getTabWidth() - paint.measureText("\t");
+        return paint.measureText(src, index, count) + tabCount * extraWidth;
     }
 
     /**
@@ -1452,10 +1506,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
             spanIndex++;
         }
-        float width = offsetX + getOffsetX() + measureText(mChars, endIndex, columnCount - endIndex);
-        if (width > mMaxPaintX) {
-            mMaxPaintX = width;
-        }
     }
 
     /**
@@ -1475,10 +1525,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
             prepareLine(i);
             drawText(canvas, mChars, 0, mText.getColumnCount(i), offsetX, getLineBaseLine(i) - getOffsetY());
-            float width = measureText(mChars, 0, mText.getColumnCount(i)) + offsetX;
-            if (width > mMaxPaintX) {
-                mMaxPaintX = width;
-            }
         }
     }
 
@@ -1657,6 +1703,26 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         return single * count;
     }
+    
+    /**
+      * Compute text measure scale for scroll max
+      * This will be called when the typeface or font size changes
+      * Text width of each line is computed when set text and when text changes
+      * {@link #getScrollMaxX()} will use measure scale to produce a result that is near the real width
+      */
+    private void computeMeasureScale() {
+        final float fontSize = mPaint.getTextSize();
+        // This value must be small to decrease the error
+        final float size = 8;
+        final String measureText = "abcdefghijklmnopqrstuvwxyz_%*?&%#    ";
+        measureText.getChars(0, measureText.length(), mChars, 0);
+        mPaintMeasure.setTextSize(fontSize);
+        double resFont = measureText(mChars, 0, measureText.length());
+        double fontScale = resFont / measureText(mChars, 0, measureText.length(), mPaintMeasure);
+        mPaintMeasure.setTextSize(size);
+        double sizeScale = fontSize / (double) size;
+        mMeasureScale = fontScale * sizeScale;
+    }
 
     /**
      * Draw rect on screen
@@ -1772,6 +1838,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else if (x + char_width > maxX) {
             targetX = x + char_width * 1.5f - getWidth();
         }
+        
+        targetX = Math.min(getScrollMaxX(), targetX);
+        targetY = Math.min(getScrollMaxY(), targetY);
         
         if (targetY == minY && targetX == minX) {
             invalidate();
@@ -1918,7 +1987,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return max scroll x
      */
     public int getScrollMaxX() {
-        return (int) Math.max(0, mMaxPaintX - getWidth() / 2f);
+        return (int) Math.max(0, (mWidthMaintainer == null ? 0 : mWidthMaintainer.top()) * mMeasureScale + measurePrefix() - getWidth() / 2f);
     }
 
     /**
@@ -2119,7 +2188,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Start search action mode
      */
     public void beginSearchMode() {
-        ActionMode.Callback callback = new ActionMode.Callback() {
+        class SearchActionMode implements ActionMode.Callback {
 
             @Override
             public boolean onCreateActionMode(ActionMode p1, Menu p2) {
@@ -2200,6 +2269,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
 
         };
+        ActionMode.Callback callback = new SearchActionMode();
         startActionMode(callback);
     }
 
@@ -2270,6 +2340,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         mPaint.setTypeface(typefaceText);
         mTextMetrics = mPaint.getFontMetricsInt();
+        computeMeasureScale();
         invalidate();
     }
 
@@ -2799,6 +2870,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         if (mText != null) {
             mText.removeContentListener(this);
+            mText.setLineListener(null);
         }
         mText = new Content(text);
         mCursor = mText.getCursor();
@@ -2807,6 +2879,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mEventHandler.reset();
         mText.addContentListener(this);
         mText.setUndoEnabled(mUndoEnabled);
+        mText.setLineListener(this);
 
         if (mSpanner != null) {
             mSpanner.setCallback(null);
@@ -2819,7 +2892,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         colors.getSpanMap().clear();
         mSpanner.analyze(getText());
 
-        mMaxPaintX = 0;
         requestLayout();
 
         if (mListener != null) {
@@ -2828,6 +2900,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (mInputMethodManager != null) {
             mInputMethodManager.restartInput(this);
         }
+        measureAllLines();
         invalidate();
     }
 
@@ -3238,6 +3311,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
         mWait = false;
+        measureLines(startLine, endLine);
         updateCursor();
         if (endColumn == 0 || startLine != endLine) {
             mACPanel.hide();
@@ -3327,6 +3401,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
         updateCursor();
+        measureLines(startLine, startLine + 1);
         if (mConnection.mComposingLine == -1 && mACPanel.isShowing()) {
             if (startLine != endLine || startColumn != endColumn - 1) {
                 mACPanel.hide();
@@ -3362,6 +3437,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             });
         }
         mFormatThread = null;
+    }
+
+    @Override
+    public void onRemove(Content content, ContentLine line) {
+        if (content == mText && line.getId() != -1) {
+            try {
+                mWidthMaintainer.remove(line.getId());
+            } catch(IllegalArgumentException e) {
+                //ignored
+            }
+        }
     }
 
     @Override

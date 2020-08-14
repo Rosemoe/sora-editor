@@ -121,14 +121,17 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
      */
     public void notifyScrolled() {
         mLastScroll = System.currentTimeMillis();
-        mEditor.postDelayed(new Runnable() {
+        class ScrollNotifier implements Runnable {
+            
             @Override
             public void run() {
                 if (System.currentTimeMillis() - mLastScroll >= HIDE_DELAY_HANDLE) {
                     mEditor.invalidate();
                 }
             }
-        }, HIDE_DELAY_HANDLE + 10);
+            
+        }
+        mEditor.postDelayed(new ScrollNotifier(), HIDE_DELAY_HANDLE);
     }
 
     /**
@@ -136,14 +139,17 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
      */
     public void notifyLater() {
         mLastSetSelection = System.currentTimeMillis();
-        mEditor.postDelayed(new Runnable() {
+        class InvalidateNotifier implements Runnable {
+            
             @Override
             public void run() {
                 if (System.currentTimeMillis() - mLastSetSelection >= HIDE_DELAY) {
                     mEditor.invalidate();
                 }
             }
-        }, HIDE_DELAY + 10);
+            
+        }
+        mEditor.postDelayed(new InvalidateNotifier(), HIDE_DELAY);
     }
 
     /**
@@ -412,20 +418,20 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 mScroller.getCurrY(),
                 endX - mScroller.getCurrX(),
                 endY - mScroller.getCurrY(), 0);
-        final float minOverPull = mEditor.getDpUnit() * 10;
-        if (notifyY && mScroller.getCurrY() + distanceY < -minOverPull) {
+        final float minOverPull = 0;
+        if (notifyY && mScroller.getCurrY() + distanceY <= -minOverPull) {
             mEditor.getVerticalEdgeEffect().onPull(-distanceY / mEditor.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth())));
             topOrBottom = false;
         }
-        if (notifyY && mScroller.getCurrY() + distanceY > mEditor.getScrollMaxY() + minOverPull) {
+        if (notifyY && mScroller.getCurrY() + distanceY >= mEditor.getScrollMaxY() + minOverPull) {
             mEditor.getVerticalEdgeEffect().onPull(distanceY / mEditor.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth())));
             topOrBottom = true;
         }
-        if (notifyX && mScroller.getCurrX() + distanceX < -minOverPull) {
+        if (notifyX && mScroller.getCurrX() + distanceX <= -minOverPull) {
             mEditor.getHorizontalEdgeEffect().onPull(-distanceX / mEditor.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight())));
             leftOrRight = false;
         }
-        if (notifyX && mScroller.getCurrX() + distanceX > mEditor.getScrollMaxX() + minOverPull) {
+        if (notifyX && mScroller.getCurrX() + distanceX >= mEditor.getScrollMaxX() + minOverPull) {
             mEditor.getHorizontalEdgeEffect().onPull(distanceX / mEditor.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight())));
             leftOrRight = true;
         }
@@ -446,8 +452,8 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 mEditor.getScrollMaxX(),
                 0,
                 mEditor.getScrollMaxY(),
-                mEditor.isOverScrollEnabled() ? (int) (30 * mEditor.getDpUnit()) : 0,
-                mEditor.isOverScrollEnabled() ? (int) (30 * mEditor.getDpUnit()) : 0);
+                mEditor.isOverScrollEnabled() ? (int) (20 * mEditor.getDpUnit()) : 0,
+                mEditor.isOverScrollEnabled() ? (int) (20 * mEditor.getDpUnit()) : 0);
         mEditor.invalidate();
         float minVe = mEditor.getDpUnit() * 2000;
         if (Math.abs(velocityX) >= minVe || Math.abs(velocityY) >= minVe) {
