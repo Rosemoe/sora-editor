@@ -1064,10 +1064,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             return;
         }
         float expand = mDpUnit * 3;
-        int firstVisibleLine = getFirstVisibleLine();
-        int lineNumber = firstVisibleLine + getPointLine(centerY) + 1;
-        lineNumber = Math.min(lineNumber, getLineCount());
-        String text = mLnTip + lineNumber;
+        int lineNumber = getFirstVisibleLine() + getPointLine(centerY) + 1;
+        String text = mLnTip + Math.min(lineNumber, getLineCount());
         float textWidth = mPaint.measureText(text);
         mRect.top = centerY - getLineHeight() / 2f - expand;
         mRect.bottom = centerY + getLineHeight() / 2f + expand;
