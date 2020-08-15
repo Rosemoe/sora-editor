@@ -133,6 +133,11 @@ public class Content implements CharSequence {
         return subContent(s.getLine(), s.getColumn(), e.getLine(), e.getColumn());
     }
     
+    /**
+     * Set a line listener
+     * @see LineRemoveListener
+     * @param lis the listener,maybe null
+     */
     public void setLineListener(LineRemoveListener lis) {
         this.mLineListener = lis;
     }

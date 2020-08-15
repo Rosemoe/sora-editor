@@ -89,8 +89,8 @@ public class EditorTextActionWindow extends EditorBasePopupWindow implements Vie
         if (panel.isShowing()) {
             panel.hide();
         } else {
-            int first = mEditor.getFirstVisibleLine();
-            int last = mEditor.getLastVisibleLine();
+            int first = mEditor.getFirstVisibleRow();
+            int last = mEditor.getLastVisibleRow();
             int left = mEditor.getCursor().getLeftLine();
             int right = mEditor.getCursor().getRightLine();
             int toLineBottom;
@@ -124,7 +124,7 @@ public class EditorTextActionWindow extends EditorBasePopupWindow implements Vie
                 }
             }
             toLineBottom = Math.max(0, toLineBottom);
-            int panelY = mEditor.getLineBottom(toLineBottom) - mEditor.getOffsetY();
+            int panelY = mEditor.getRowBottom(toLineBottom) - mEditor.getOffsetY();
             float handleLeftX = mEditor.getOffset(left, mEditor.getCursor().getLeftColumn());
             float handleRightX = mEditor.getOffset(right, mEditor.getCursor().getRightColumn());
             int panelX = (int) ((handleLeftX + handleRightX) / 2f);

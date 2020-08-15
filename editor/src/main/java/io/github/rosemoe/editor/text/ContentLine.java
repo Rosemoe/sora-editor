@@ -17,11 +17,18 @@ package io.github.rosemoe.editor.text;
 
 import android.text.TextUtils;
 
+import java.util.List;
+
 public class ContentLine implements CharSequence {
 
     private char[] value;
     
     private int length;
+    
+    /**
+     * Index of text line break
+     */
+    private List<Integer> breakList;
     
     /**
       * Id in BinaryHeap

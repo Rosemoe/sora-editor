@@ -212,8 +212,8 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     downX = e.getX();
                     offsetX = mScroller.getCurrX() + downX;
                     offsetY = mScroller.getCurrY() + downY;
-                    float startX = mScroller.getCurrX() + mEditor.getInsertHandleRect().centerX() - mEditor.measurePrefix();
-                    float startY = mScroller.getCurrY() + mEditor.getInsertHandleRect().top - mEditor.getLineHeight() / 5f;
+                    float startX = mScroller.getCurrX() + mEditor.getInsertHandleRect().centerX() - mEditor.measureTextRegionOffset();
+                    float startY = mScroller.getCurrY() + mEditor.getInsertHandleRect().top - mEditor.getRowHeight() / 5f;
 
                     insert = new SelectionHandle(SelectionHandle.BOTH, startX, startY);
                 }
@@ -229,11 +229,11 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     downX = e.getX();
                     offsetX = mScroller.getCurrX() + downX;
                     offsetY = mScroller.getCurrY() + downY;
-                    float startX = mScroller.getCurrX() + mEditor.getLeftHandleRect().centerX() - mEditor.measurePrefix();
-                    float startY = mScroller.getCurrY() + mEditor.getLeftHandleRect().top - mEditor.getLineHeight() / 5f;
+                    float startX = mScroller.getCurrX() + mEditor.getLeftHandleRect().centerX() - mEditor.measureTextRegionOffset();
+                    float startY = mScroller.getCurrY() + mEditor.getLeftHandleRect().top - mEditor.getRowHeight() / 5f;
                     this.left = new SelectionHandle(SelectionHandle.LEFT, startX, startY);
-                    startX = mScroller.getCurrX() + mEditor.getRightHandleRect().centerX() - mEditor.measurePrefix();
-                    startY = mScroller.getCurrY() + mEditor.getRightHandleRect().top - mEditor.getLineHeight() / 5f;
+                    startX = mScroller.getCurrX() + mEditor.getRightHandleRect().centerX() - mEditor.measureTextRegionOffset();
+                    startY = mScroller.getCurrY() + mEditor.getRightHandleRect().top - mEditor.getRowHeight() / 5f;
                     this.right = new SelectionHandle(SelectionHandle.RIGHT, startX, startY);
                 }
                 return true;
@@ -241,7 +241,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 if (mHolding) {
                     float movedDis = e.getY() - downY;
                     downY = e.getY();
-                    float all = mEditor.getLineHeight() * mEditor.getLineCount() + mEditor.getHeight() / 2f;
+                    float all = mEditor.getRowHeight() * mEditor.getLineCount() + mEditor.getHeight() / 2f;
                     float dy = movedDis / mEditor.getHeight() * all;
                     scrollBy(0, dy);
                     return true;
@@ -470,11 +470,11 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             if (newSize < minSize || newSize > maxSize) {
                 return false;
             }
-            int firstVisible = mEditor.getFirstVisibleLine();
-            float top = mScroller.getCurrY() - firstVisible * mEditor.getLineHeight();
-            int height = mEditor.getLineHeight();
+            int firstVisible = mEditor.getFirstVisibleRow();
+            float top = mScroller.getCurrY() - firstVisible * mEditor.getRowHeight();
+            int height = mEditor.getRowHeight();
             mEditor.setTextSizePx(newSize);
-            float newY = firstVisible * mEditor.getLineHeight() + top * mEditor.getLineHeight() / height;
+            float newY = firstVisible * mEditor.getRowHeight() + top * mEditor.getRowHeight() / height;
             mScroller.startScroll(mScroller.getCurrX(), (int) newY, 0, 0, 0);
             return true;
         }
@@ -554,11 +554,11 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             float targetX = (currX - offsetX) + startX;
             float targetY = (currY - offsetY) + startY;
             int line = mEditor.getPointLine(targetY);
-            if (line >= mEditor.getLastVisibleLine()) {
-                smoothScrollBy(mEditor.getLineHeight() * 8);
+            if (line >= mEditor.getLastVisibleRow()) {
+                smoothScrollBy(mEditor.getRowHeight() * 8);
             }
-            if (line <= mEditor.getFirstVisibleLine()) {
-                smoothScrollBy(-mEditor.getLineHeight() * 8);
+            if (line <= mEditor.getFirstVisibleRow()) {
+                smoothScrollBy(-mEditor.getRowHeight() * 8);
             }
             line = mEditor.getPointLine(targetY);
             if (line >= 0 && line < mEditor.getLineCount()) {

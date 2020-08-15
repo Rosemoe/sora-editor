@@ -77,16 +77,7 @@ import static io.github.rosemoe.editor.BuildConfig.DEBUG;
 
 /**
  * CodeEditor is a editor that can highlight text regions by doing basic syntax analyzing
- * Features:
- * Highlight
- * Auto-completion
- * Scroll, EdgeEffect
- * Code Format
- * Shortcuts
- * <p>
- * Me in GitHub: Rosemoe
  * This project in GitHub: https://github.com/Rosemoe/CodeEditor
- * <p>
  * Thanks following people for advice on UI:
  * NTX
  * 吾乃幼儿园扛把子
@@ -289,7 +280,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @return The width
      */
-    protected float measurePrefix() {
+    protected float measureTextRegionOffset() {
         return measureLineNumber() + mDividerMargin * 2 + mDividerWidth;
     }
 
@@ -416,7 +407,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     protected float getOffset(int line, int column) {
         prepareLine(line);
-        return measureText(mChars, 0, column) + measureLineNumber() + mDividerMargin * 2 + mDividerWidth - getOffsetX();
+        return measureText(mChars, 0, column) + measureTextRegionOffset() - getOffsetX();
     }
 
     /**
@@ -606,7 +597,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         for (int i = 0;i < getLineCount();i++) {
             ContentLine line = mText.getLine(i);
             prepareLine(i);
-            int width = (int) measureText(mChars, 0, line.length(), mPaintMeasure);
+            int width = (int) measureTextForTransferOnly(mChars, line.length());
             line.setWidth(width);
             line.setId(widthMaintainer.push(width));
         }
@@ -622,7 +613,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         while (startLine <= endLine && startLine < getLineCount()) {
             prepareLine(startLine);
             ContentLine line = mText.getLine(startLine);
-            int width = (int) measureText(mChars, 0, line.length(), mPaintMeasure);
+            int width = (int) measureTextForTransferOnly(mChars, line.length());
             if (line.getId() != -1) {
                 if (line.getWidth() == width) {
                     startLine ++;
@@ -637,6 +628,29 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             startLine ++;
         }
     }
+    
+    /**
+      * Measure text for BinaryHeap maintaining
+      */
+    private double measureTextForTransferOnly(char[] src, int length) {
+        Paint paint = mPaintMeasure;
+        int tabCount = 0;
+        int spaceCount = 0;
+        for (int i = 0; i < length; i++) {
+            char ch = src[i];
+            if (ch == '\t') {
+                tabCount++;
+            } else if (ch == ' ') {
+                spaceCount++;
+            }
+        }
+        // Space width has big error in.our measuring
+        // Here is to fix it, so we use original paint
+        double spaceWidth = mPaint.measureText(" ") / mMeasureScale;
+        double extraWidth = spaceWidth * getTabWidth() - paint.measureText("\t");
+        double spaceWidthDelta = spaceWidth - paint.measureText(" ");
+        return paint.measureText(src, 0, length) + tabCount * extraWidth + spaceWidthDelta * spaceCount;
+    }
 
     /**
      * Paint the view on given Canvas
@@ -650,7 +664,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             String text = "Formatting your code...";
             float centerY = getHeight() / 2f;
             drawColor(canvas, mColors.getColor(EditorColorScheme.LINE_NUMBER_PANEL), mRect);
-            float baseline = centerY - getLineHeight() / 2f + getLineBaseLine(0);
+            float baseline = centerY - getRowHeight() / 2f + getRowBaseline(0);
             float centerX = getWidth() / 2f;
             mPaint.setColor(mColors.getColor(EditorColorScheme.LINE_NUMBER_PANEL_TEXT));
             Paint.Align align = mPaint.getTextAlign();
@@ -660,7 +674,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             return;
         }
 
-        getCursor().updateCache(Math.max(getFirstVisibleLine(), 0));
+        getCursor().updateCache(getFirstVisibleRow());
 
         EditorColorScheme color = mColors;
         drawColor(canvas, color.getColor(EditorColorScheme.WHOLE_BACKGROUND), mViewRect);
@@ -726,7 +740,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         int color = mColors.getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND);
         outer:
-        for (int i = getFirstVisibleLine(); i <= getLastVisibleLine(); i++) {
+        for (int i = getFirstVisibleRow(); i <= getLastVisibleRow(); i++) {
             boolean prepared = false;
             ContentLine raw = mText.getLine(i);
             int index = 0;
@@ -740,8 +754,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     float left = offset + measureText(mChars, 0, index);
                     float right = left + measureText(mChars, index, searchTextLength);
                     if (right > 0 && left < getWidth()) {
-                        mRect.top = getLineTop(i) - getOffsetY();
-                        mRect.bottom = mRect.top + getLineHeight();
+                        mRect.top = getRowTop(i) - getOffsetY();
+                        mRect.bottom = mRect.top + getRowHeight();
                         mRect.left = left;
                         mRect.right = right;
                         drawColor(canvas, color, mRect);
@@ -861,10 +875,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     private void drawHandle(Canvas canvas, int line, int column, RectF resultRect) {
         float radius = mDpUnit * 10;
-        float top = getLineBottom(line) - getOffsetY();
+        float top = getRowBottom(line) - getOffsetY();
         float bottom = top + radius * 2;
         prepareLine(line);
-        float centerX = measureLineNumber() + mDividerMargin * 2 + mDividerWidth + measureText(mChars, 0, column) - getOffsetX();
+        float centerX = measureTextRegionOffset() + measureText(mChars, 0, column) - getOffsetX();
         float left = centerX - radius;
         float right = centerX + radius;
         if (right < 0 || left > getWidth() || bottom < 0 || top > getHeight()) {
@@ -903,8 +917,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (blocks == null || blocks.isEmpty()) {
             return;
         }
-        int first = getFirstVisibleLine();
-        int last = getLastVisibleLine();
+        int first = getFirstVisibleRow();
+        int last = getLastVisibleRow();
         boolean mark = false;
         int jCount = 0;
         int maxCount = Integer.MAX_VALUE;
@@ -926,8 +940,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     float offset2 = measureText(mChars, 0, block.startColumn);
                     float offset = Math.min(offset1, offset2);
                     float centerX = offset + offsetX;
-                    mRect.top = Math.max(0, getLineBottom(block.startLine) - getOffsetY());
-                    mRect.bottom = Math.min(getHeight(), getLineTop(block.endLine) - getOffsetY());
+                    mRect.top = Math.max(0, getRowBottom(block.startLine) - getOffsetY());
+                    mRect.bottom = Math.min(getHeight(), getRowTop(block.endLine) - getOffsetY());
                     mRect.left = centerX - mDpUnit * mBlockLineWidth / 2;
                     mRect.right = centerX + mDpUnit * mBlockLineWidth / 2;
                     drawColor(canvas, mColors.getColor(curr == cursorIdx ? EditorColorScheme.BLOCK_LINE_CURRENT : EditorColorScheme.BLOCK_LINE), mRect);
@@ -1072,7 +1086,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     private void drawScrollBarVertical(Canvas canvas) {
         int page = getHeight();
-        float all = getLineHeight() * getLineCount() + getHeight() / 2f;
+        float all = getRowHeight() * getLineCount() + getHeight() / 2f;
         float length = page / all * getHeight();
         float topY;
         if (length < mDpUnit * 30) {
@@ -1105,14 +1119,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             return;
         }
         float expand = mDpUnit * 3;
-        String text = mLnTip + ((2 + getFirstVisibleLine() + getLastVisibleLine()) / 2);
+        String text = mLnTip + (1 + getFirstVisibleRow());
         float textWidth = mPaint.measureText(text);
-        mRect.top = centerY - getLineHeight() / 2f - expand;
-        mRect.bottom = centerY + getLineHeight() / 2f + expand;
+        mRect.top = centerY - getRowHeight() / 2f - expand;
+        mRect.bottom = centerY + getRowHeight() / 2f + expand;
         mRect.right = rightX;
         mRect.left = rightX - expand * 2 - textWidth;
         drawColor(canvas, mColors.getColor(EditorColorScheme.LINE_NUMBER_PANEL), mRect);
-        float baseline = centerY - getLineHeight() / 2f + getLineBaseLine(0);
+        float baseline = centerY - getRowHeight() / 2f + getRowBaseline(0);
         float centerX = (mRect.left + mRect.right) / 2;
         mPaint.setColor(mColors.getColor(EditorColorScheme.LINE_NUMBER_PANEL_TEXT));
         Paint.Align align = mPaint.getTextAlign();
@@ -1166,11 +1180,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int endLine = mCursor.getRightLine();
         int leftLine = startLine;
         int rightLine = endLine;
-        if (startLine < getFirstVisibleLine()) {
-            startLine = getFirstVisibleLine();
+        if (startLine < getFirstVisibleRow()) {
+            startLine = getFirstVisibleRow();
         }
-        if (endLine > getLastVisibleLine()) {
-            endLine = getLastVisibleLine();
+        if (endLine > getLastVisibleRow()) {
+            endLine = getLastVisibleRow();
         }
         if (startLine < 0) {
             startLine = 0;
@@ -1186,8 +1200,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             if (line == rightLine) {
                 end = mCursor.getRightColumn();
             }
-            mRect.top = getLineTop(line) - getOffsetY();
-            mRect.bottom = mRect.top + getLineHeight();
+            mRect.top = getRowTop(line) - getOffsetY();
+            mRect.bottom = mRect.top + getRowHeight();
             prepareLine(line);
             mRect.left = offsetX + measureText(mChars, 0, start);
             mRect.right = mRect.left + measureText(mChars, start, end - start) + (end == start ? mDpUnit * 10 : 0);
@@ -1204,11 +1218,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     private void drawComposingTextUnderline(Canvas canvas, float offsetX, int color) {
         if (mConnection != null && mConnection.mComposingLine != -1) {
-            int offY = getLineBottom(mConnection.mComposingLine) - getOffsetY();
+            int offY = getRowBottom(mConnection.mComposingLine) - getOffsetY();
             prepareLine(mConnection.mComposingLine);
             offsetX += measureText(mChars, 0, mConnection.mComposingStart);
             float width = measureText(mChars, mConnection.mComposingStart, mConnection.mComposingEnd - mConnection.mComposingStart);
-            mRect.top = offY - getLineHeight() * 0.08f;
+            mRect.top = offY - getRowHeight() * 0.08f;
             mRect.bottom = offY;
             mRect.left = offsetX;
             mRect.right = offsetX + width;
@@ -1224,11 +1238,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param color   Color of cursor
      */
     private void drawCursor(Canvas canvas, int line, int column, float offsetX, int color) {
-        if (isLineVisible(line)) {
+        if (isRowVisible(line)) {
             prepareLine(line);
             float width = measureText(mChars, 0, column);
-            mRect.top = getLineTop(line) - getOffsetY();
-            mRect.bottom = getLineBottom(line) - getOffsetY();
+            mRect.top = getRowTop(line) - getOffsetY();
+            mRect.bottom = getRowBottom(line) - getOffsetY();
             mRect.left = offsetX + width;
             mRect.right = offsetX + width + mInsertSelWidth;
             drawColor(canvas, color, mRect);
@@ -1245,7 +1259,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private void drawText(Canvas canvas, float offsetX, int defaultColor) {
         TextAnalyzeResult colors = mSpanner == null ? null : mSpanner.getResult();
         if (colors == null || colors.getSpanMap().isEmpty()) {
-            drawTextDirect(canvas, offsetX, defaultColor, getFirstVisibleLine());
+            drawTextDirect(canvas, offsetX, defaultColor, getFirstVisibleRow());
         } else {
             drawTextLines(canvas, offsetX, colors);
         }
@@ -1324,8 +1338,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private void drawTextLines(Canvas canvas, float offsetX, TextAnalyzeResult colors) {
         EditorColorScheme cs = mColors;
         List<List<Span>> spanMap = colors.getSpanMap();
-        int first = getFirstVisibleLine();
-        int last = getLastVisibleLine();
+        int first = getFirstVisibleRow();
+        int last = getLastVisibleRow();
         boolean selected = mCursor.isSelected();
         int leftLine = mCursor.getLeftLine();
         int rightLine = mCursor.getRightLine();
@@ -1413,7 +1427,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             minPaintChar = Math.max(minPaintChar - 2, 0);
         }
         
-        float baseline = getLineBaseLine(line) - getOffsetY();
+        float baseline = getRowBaseline(line) - getOffsetY();
         int spanIndex = 0;
         while (spanIndex < spans.size()) {
             Span span = spans.get(spanIndex);
@@ -1493,8 +1507,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     drawText(canvas, mChars, startIndex, endIndex - startIndex, offsetX, baseline);
                 }
                 if (span.underlineColor != 0) {
-                    mRect.bottom = getLineBottom(line) - getOffsetY() - mDpUnit * 1;
-                    mRect.top = mRect.bottom - getLineHeight() * 0.08f;
+                    mRect.bottom = getRowBottom(line) - getOffsetY() - mDpUnit * 1;
+                    mRect.top = mRect.bottom - getRowHeight() * 0.08f;
                     mRect.left = offsetX;
                     mRect.right = offsetX + width;
                     drawColor(canvas, span.underlineColor, mRect);
@@ -1518,13 +1532,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     private void drawTextDirect(Canvas canvas, float offsetX, int color, int startLine) {
         mPaint.setColor(color);
-        int last = getLastVisibleLine();
+        int last = getLastVisibleRow();
         for (int i = startLine; i <= last; i++) {
             if (mText.getColumnCount(i) == 0) {
                 continue;
             }
             prepareLine(i);
-            drawText(canvas, mChars, 0, mText.getColumnCount(i), offsetX, getLineBaseLine(i) - getOffsetY());
+            drawText(canvas, mChars, 0, mText.getColumnCount(i), offsetX, getRowBaseline(i) - getOffsetY());
         }
     }
 
@@ -1549,11 +1563,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param line   Line index
      */
     private void drawLineBackground(Canvas canvas, int color, int line) {
-        if (!isLineVisible(line)) {
+        if (!isRowVisible(line)) {
             return;
         }
-        mRect.top = getLineTop(line) - getOffsetY();
-        mRect.bottom = getLineBottom(line) - getOffsetY();
+        mRect.top = getRowTop(line) - getOffsetY();
+        mRect.bottom = getRowBottom(line) - getOffsetY();
         mRect.left = 0;
         mRect.right = mViewRect.right;
         drawColor(canvas, color, mRect);
@@ -1612,20 +1626,20 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (width + offsetX <= 0) {
             return;
         }
-        int first = getFirstVisibleLine();
-        int last = getLastVisibleLine();
+        int first = getFirstVisibleRow();
+        int last = getLastVisibleRow();
         mPaintOther.setTextAlign(mLineNumberAlign);
         mPaintOther.setColor(color);
         for (int i = first; i <= last; i++) {
             // Line number center align to text center
-            float y = (getLineBottom(i) + getLineTop(i)) / 2f - (mLineNumberMetrics.descent - mLineNumberMetrics.ascent) / 2f - mLineNumberMetrics.ascent - getOffsetY();
+            float y = (getRowBottom(i) + getRowTop(i)) / 2f - (mLineNumberMetrics.descent - mLineNumberMetrics.ascent) / 2f - mLineNumberMetrics.ascent - getOffsetY();
             String text = Integer.toString(i + 1);
             switch (mLineNumberAlign) {
                 case LEFT:
-                    canvas.drawText(text, offsetX, y, mPaintOther);
+                    canvas.drawText(text, offsetX + mDividerMargin, y, mPaintOther);
                     break;
                 case RIGHT:
-                    canvas.drawText(text, offsetX + width, y, mPaintOther);
+                    canvas.drawText(text, offsetX + width + mDividerMargin, y, mPaintOther);
                     break;
                 case CENTER:
                     canvas.drawText(text, offsetX + (width + mDividerMargin) / 2f, y, mPaintOther);
@@ -1714,7 +1728,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         final float fontSize = mPaint.getTextSize();
         // This value must be small to decrease the error
         final float size = 8;
-        final String measureText = "abcdefghijklmnopqrstuvwxyz_%*?&%#    ";
+        // Mix characters of different language to get average scale factor
+        final String measureText = "abcdefghijkl=;,.()_%*?    测试文本いいいい";
         measureText.getChars(0, measureText.length(), mChars, 0);
         mPaintMeasure.setTextSize(fontSize);
         double resFont = measureText(mChars, 0, measureText.length());
@@ -1784,7 +1799,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int column = mCursor.getRightColumn();
         prepareLine(l);
         boolean visible = true;
-        float x = measureLineNumber() + mDividerMargin * 2 + mDividerWidth;
+        float x = measureTextRegionOffset();
         x = x + measureText(mChars, 0, column);
         x = x - getOffsetX();
         if (x < 0) {
@@ -1792,10 +1807,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             x = 0;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            builder.setInsertionMarkerLocation(x, getLineTop(l) - getOffsetY(), getLineBaseLine(l) - getOffsetY(), getLineBottom(l) - getOffsetY(), visible ? CursorAnchorInfo.FLAG_HAS_VISIBLE_REGION : CursorAnchorInfo.FLAG_HAS_INVISIBLE_REGION);
+            builder.setInsertionMarkerLocation(x, getRowTop(l) - getOffsetY(), getRowBaseline(l) - getOffsetY(), getRowBottom(l) - getOffsetY(), visible ? CursorAnchorInfo.FLAG_HAS_VISIBLE_REGION : CursorAnchorInfo.FLAG_HAS_INVISIBLE_REGION);
             mInputMethodManager.updateCursorAnchorInfo(this, builder.build());
         } else {
-            mInputMethodManager.updateCursor(this, (int) x, getLineTop(l) - getOffsetY(), (int) (x + mInsertSelWidth), getLineBottom(l) - getOffsetY());
+            mInputMethodManager.updateCursor(this, (int) x, getRowTop(l) - getOffsetY(), (int) (x + mInsertSelWidth), getRowBottom(l) - getOffsetY());
         }
         return x;
     }
@@ -1815,17 +1830,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public void ensurePositionVisible(int line, int column) {
         // Ensure y position
-        float y = getLineHeight() * line;
+        float y = getRowHeight() * line;
         float minY = getOffsetY();
         float maxY = minY + getHeight();
         float targetY = minY;
         if (y < minY) {
             targetY = y;
-        } else if (y + getLineHeight() > maxY) {
-            targetY = y + getLineHeight() * 0.9f - getHeight();
+        } else if (y + getRowHeight() > maxY) {
+            targetY = y + getRowHeight() * 0.9f - getHeight();
         }
         
-        float prefix_width = measureLineNumber() + mDividerMargin * 2 + mDividerWidth;
+        float prefix_width = measureTextRegionOffset();
         float minX = getOffsetX();
         float maxX = minX + getWidth();
         
@@ -1910,26 +1925,26 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return Whether over max X
      */
     public boolean isOverMaxX(int line, float posOnScreen) {
-        float xx = posOnScreen + getOffsetX() - mDividerMargin * 2 - mDividerWidth - measureLineNumber();
+        float xx = posOnScreen + getOffsetX() - measureTextRegionOffset();
         prepareLine(line);
         return xx > (measureText(mChars, 0, mText.getColumnCount(line)) + 2 * mDpUnit);
     }
 
     /**
-     * Get y position in scroll bounds's line's line
+     * Determine line index using vertical position in scroll coordinate
      *
-     * @param yPos Y in scroll bounds
+     * @param yPos Vertical position in scroll coordinate
      * @return line
      */
     public int getPointLine(float yPos) {
-        int r = (int) yPos / getLineHeight();
+        int r = (int) yPos / getRowHeight();
         return Math.max(r, 0);
     }
 
     /**
-     * Get Y position on screen's line
+     * Determine line index using vertical position on view
      *
-     * @param y Y on screen
+     * @param y Y on view
      * @return Line
      */
     public int getPointLineOnScreen(float y) {
@@ -1961,14 +1976,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Get column for x offset on screen
+     * Get column for x offset on view
      *
      * @param line Line
-     * @param x    X offset on screen
+     * @param x    X offset on view
      * @return Column in line
      */
     public int getPointColumnOnScreen(int line, float x) {
-        float xx = x + getOffsetX() - mDividerMargin * 2 - mDividerWidth - measureLineNumber();
+        float xx = x + getOffsetX() - measureTextRegionOffset();
         return getPointColumn(line, xx);
     }
 
@@ -1978,7 +1993,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return max scroll y
      */
     public int getScrollMaxY() {
-        return Math.max(0, getLineHeight() * getLineCount() - getHeight() / 2);
+        return Math.max(0, getRowHeight() * getLineCount() - getHeight() / 2);
     }
 
     /**
@@ -1987,7 +2002,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return max scroll x
      */
     public int getScrollMaxX() {
-        return (int) Math.max(0, (mWidthMaintainer == null ? 0 : mWidthMaintainer.top()) * mMeasureScale + measurePrefix() - getWidth() / 2f);
+        return (int) Math.max(0, (mWidthMaintainer == null ? 0 : mWidthMaintainer.top()) * mMeasureScale + measureTextRegionOffset() - getWidth() / 2f);
     }
 
     /**
@@ -2268,7 +2283,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 getSearcher().stopSearch();
             }
 
-        };
+        }
         ActionMode.Callback callback = new SearchActionMode();
         startActionMode(callback);
     }
@@ -2437,72 +2452,72 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Get first visible line on screen
+     * Get first visible row on screen
      *
-     * @return first visible line
+     * @return first visible row
      */
-    public int getFirstVisibleLine() {
-        int j = Math.min(getOffsetY() / getLineHeight(), getLineCount() - 1);
+    public int getFirstVisibleRow() {
+        int j = Math.min(getOffsetY() / getRowHeight(), getLineCount() - 1);
         return Math.max(j, 0);
     }
 
     /**
-     * Get last visible line on screen
+     * Get last visible row on screen
      *
-     * @return last visible line
+     * @return last visible row
      */
-    public int getLastVisibleLine() {
-        int l = Math.min((getOffsetY() + getHeight()) / getLineHeight(), getLineCount() - 1);
+    public int getLastVisibleRow() {
+        int l = Math.min((getOffsetY() + getHeight()) / getRowHeight(), getLineCount() - 1);
         return Math.max(l, 0);
     }
 
     /**
-     * Whether this line is visible on screen
+     * Whether this row is visible on screen
      *
-     * @param line Line to check
+     * @param row Row to check
      * @return Whether visible
      */
-    public boolean isLineVisible(int line) {
-        return (getFirstVisibleLine() <= line && line <= getLastVisibleLine());
+    public boolean isRowVisible(int row) {
+        return (getFirstVisibleRow() <= row && row <= getLastVisibleRow());
     }
 
     /**
      * Get baseline directly
      *
-     * @param line Line
+     * @param row Row
      * @return baseline y offset
      */
-    public int getLineBaseLine(int line) {
-        return getLineHeight() * (line + 1) - mTextMetrics.descent;
+    public int getRowBaseline(int row) {
+        return getRowHeight() * (row + 1) - mTextMetrics.descent;
     }
 
     /**
-     * Get line height
+     * Get row height
      *
-     * @return height of single line
+     * @return height of single row
      */
-    public int getLineHeight() {
+    public int getRowHeight() {
         return mTextMetrics.descent - mTextMetrics.ascent;
     }
 
     /**
-     * Get line top y offset
+     * Get row top y offset
      *
-     * @param line Line
+     * @param row Row
      * @return top y offset
      */
-    public int getLineTop(int line) {
-        return getLineHeight() * line;
+    public int getRowTop(int row) {
+        return getRowHeight() * row;
     }
 
     /**
-     * Get line bottom y offset
+     * Get row bottom y offset
      *
-     * @param line Line
+     * @param row Row
      * @return Bottom y offset
      */
-    public int getLineBottom(int line) {
-        return getLineHeight() * (line + 1);
+    public int getRowBottom(int row) {
+        return getRowHeight() * (row + 1);
     }
 
     /**
@@ -3313,6 +3328,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mWait = false;
         measureLines(startLine, endLine);
         updateCursor();
+        exitSelectModeIfNeeded();
         if (endColumn == 0 || startLine != endLine) {
             mACPanel.hide();
             makeRightVisible();
@@ -3358,19 +3374,25 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private void debug(CharSequence text) {
         android.widget.Toast.makeText(getContext(), text, android.widget.Toast.LENGTH_SHORT).show();
     }
+    
+    private void exitSelectModeIfNeeded() {
+        if(!mCursor.isSelected()) {
+            mTextActionPresenter.onExit();
+        }
+    }
 
     private void applyNewPanelPosition() {
         float panelX = updateCursorAnchor() + mDpUnit * 20;
-        float panelY = getLineBottom(mCursor.getRightLine()) - getOffsetY() + getLineHeight() / 2f;
+        float panelY = getRowBottom(mCursor.getRightLine()) - getOffsetY() + getRowHeight() / 2f;
         float restY = getHeight() - panelY;
         if (restY > mDpUnit * 200) {
             restY = mDpUnit * 200;
         } else if (restY < mDpUnit * 100) {
             float offset = 0;
             while (restY < mDpUnit * 100) {
-                restY += getLineHeight();
-                panelY -= getLineHeight();
-                offset += getLineHeight();
+                restY += getRowHeight();
+                panelY -= getRowHeight();
+                offset += getRowHeight();
             }
             getScroller().startScroll(getOffsetX(), getOffsetY(), (int) offset, 0, 0);
         }
@@ -3401,6 +3423,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
         updateCursor();
+        exitSelectModeIfNeeded();
         measureLines(startLine, startLine + 1);
         if (mConnection.mComposingLine == -1 && mACPanel.isShowing()) {
             if (startLine != endLine || startColumn != endColumn - 1) {
