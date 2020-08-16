@@ -16,13 +16,14 @@
 package io.github.rosemoe.editor.widget;
 
 import android.util.SparseIntArray;
+import java.util.Objects;
 
 /**
  * This class manages the color props of editor
  *
  * @author Rose
  */
-public final class EditorColorScheme {
+public class EditorColorScheme {
     //-----------------Highlight colors-----------
 
     public static final int ANNOTATION = 28;
@@ -62,22 +63,22 @@ public final class EditorColorScheme {
     /**
      * Min pre-defined color id
      */
-    private static final int START_COLOR_ID = 1;
+    protected static final int START_COLOR_ID = 1;
 
     /**
      * Max pre-defined color id
      */
-    private static final int END_COLOR_ID = 30;
+    protected static final int END_COLOR_ID = 30;
 
     /**
      * Host editor object
      */
-    private final CodeEditor mEditor;
+    private CodeEditor mEditor;
 
     /**
      * Real color saver
      */
-    private SparseIntArray mColors;
+    protected SparseIntArray mColors;
 
     /**
      * Create a new ColorScheme for the given editor
@@ -86,11 +87,26 @@ public final class EditorColorScheme {
      */
     EditorColorScheme(CodeEditor editor) {
         mEditor = editor;
-        if (editor == null) {
-            throw new IllegalArgumentException();
-        }
         mColors = new SparseIntArray();
         applyDefault();
+    }
+    
+    /**
+      * For sub classes
+      */
+    protected EditorColorScheme() {
+        mColors = new SparseIntArray();
+        applyDefault();
+    }
+    
+    /**
+      * Called by editor
+      */
+    void attachEditor(CodeEditor editor) {
+        if (mEditor != null) {
+            throw new IllegalStateException("A editor is already attached to this ColorScheme object");
+        }
+        mEditor = Objects.requireNonNull(editor);
     }
 
     /**
@@ -193,7 +209,7 @@ public final class EditorColorScheme {
             default:
                 throw new IllegalArgumentException("Unexpected type:" + type);
         }
-        putColor(type, color);
+        setColor(type, color);
     }
 
     /**
@@ -202,9 +218,9 @@ public final class EditorColorScheme {
      * @param type  The type
      * @param color New color
      */
-    public void putColor(int type, int color) {
+    public void setColor(int type, int color) {
         //Do not change if the old value is the same as new value
-        //  due to avoid unnecessary invalidate() calls
+        //due to avoid unnecessary invalidate() calls
         int old = getColor(type);
         if (old == color) {
             return;
@@ -213,7 +229,9 @@ public final class EditorColorScheme {
         mColors.put(type, color);
 
         //Notify the editor
-        mEditor.onColorUpdated(type);
+        if (mEditor != null) {
+            mEditor.onColorUpdated(type);
+        }
     }
 
     /**

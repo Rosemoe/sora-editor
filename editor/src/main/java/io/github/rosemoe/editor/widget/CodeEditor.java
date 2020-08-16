@@ -81,7 +81,7 @@ import android.view.inputmethod.ExtractedTextRequest;
  * CodeEditor is a editor that can highlight text regions by doing basic syntax analyzing
  * This project in GitHub: https://github.com/Rosemoe/CodeEditor
  * Thanks following people for advice on UI:
- * NTX,吾乃幼儿园扛把子,Xiue,Scave
+ * NTX (GitHub @nitianxia), 吾乃幼儿园扛把子 (GitHub @ketal178), Xiue(GitHub @Xiue233), Scave(GitHub @AndroidScave)
  * Note:
  * Row and line are different in this editor
  * When we say 'row', it means a line displayed on screen. It can be a part of a line in the text obnect.
@@ -3019,6 +3019,23 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public Paint getPaint() {
         return mPaint;
+    }
+    
+    /**
+      * Set a new color scheme for.editor
+      * It can be a subclass of {@link EditorColorScheme}
+      * The scheme object can only be applied to one editor.
+      * Otherwise, an IllegalStateException is thrown
+      *
+      * @param colors A non-null and free EditorColorScheme
+      */
+    public void setColorScheme(EditorColorScheme colors) {
+        colors.attachEditor(this);
+        mColors = colors;
+        if (mCompletionWindow != null) {
+            mCompletionWindow.applyColor();
+        }
+        invalidate();
     }
 
     /**
