@@ -138,7 +138,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
     public void setLoading(boolean state) {
         mTip.setVisibility(state ? View.VISIBLE : View.GONE);
         //mListView.setVisibility((!state) ? View.VISIBLE : View.GONE);
-        update();
+        //update();
     }
 
     /**

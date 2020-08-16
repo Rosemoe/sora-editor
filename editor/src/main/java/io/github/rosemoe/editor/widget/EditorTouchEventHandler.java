@@ -192,13 +192,13 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 if (rect.contains(e.getX(), e.getY())) {
                     mHolding = true;
                     downY = e.getY();
-                    mEditor.hideAutoCompletePanel();
+                    mEditor.hideAutoCompleteWindow();
                 }
                 rect = mEditor.getHorizontalScrollBarRect();
                 if (rect.contains(e.getX(), e.getY())) {
                     mHolding2 = true;
                     downX = e.getX();
-                    mEditor.hideAutoCompletePanel();
+                    mEditor.hideAutoCompleteWindow();
                 }
                 if (mHolding && mHolding2) {
                     mHolding2 = false;
@@ -309,7 +309,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
 
     private void scrollBy(float distanceX, float distanceY) {
         mEditor.getTextActionPresenter().onUpdate();
-        mEditor.hideAutoCompletePanel();
+        mEditor.hideAutoCompleteWindow();
         int endX = mScroller.getCurrX() + (int) distanceX;
         int endY = mScroller.getCurrY() + (int) distanceY;
         endX = Math.max(endX, 0);
@@ -335,7 +335,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         } else {
             notifyLater();
             mEditor.setSelection(line, column);
-            mEditor.hideAutoCompletePanel();
+            mEditor.hideAutoCompleteWindow();
         }
         mEditor.performClick();
         return true;
@@ -458,7 +458,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         float minVe = mEditor.getDpUnit() * 2000;
         if (Math.abs(velocityX) >= minVe || Math.abs(velocityY) >= minVe) {
             notifyScrolled();
-            mEditor.hideAutoCompletePanel();
+            mEditor.hideAutoCompleteWindow();
         }
         return false;
     }

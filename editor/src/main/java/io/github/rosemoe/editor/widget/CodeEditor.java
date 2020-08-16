@@ -3066,9 +3066,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Hide auto complete panel if shown
+     * Hide auto complete window if shown
      */
-    public void hideAutoCompletePanel() {
+    public void hideAutoCompleteWindow() {
         mCompletionWindow.hide();
     }
 
@@ -3396,6 +3396,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         return true;
     }
+    
+    private void postHideCompletionWindow() {
+        // We do this because if you hide it at onec, the editor seems to flash with unknown reason
+        postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mCompletionWindow.hide();
+            }
+        }, 50);
+    }
 
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
@@ -3407,6 +3417,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 SpanMapUpdater.shiftSpansOnMultiLineInsert(mSpanner.getResult().getSpanMap(), startLine, startColumn, endLine, endColumn);
             }
         }
+        // Notify input method
+        updateCursor();
+        mWait = false;
+        // Refresh lines
+        measureLines(startLine, endLine);
+        // Visibility & State shjft
+        exitSelectModeIfNeeded();
         // Auto completion
         if (mConnection.mComposingLine == -1 && endColumn != 0 && startLine == endLine) {
             int end = endColumn;
@@ -3423,19 +3440,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 mCompletionWindow.setPrefix(prefix);
                 mCompletionWindow.show();
             } else {
-                mCompletionWindow.hide();
+                postHideCompletionWindow();
             }
         } else {
-            mCompletionWindow.hide();
+            postHideCompletionWindow();
         }
-        mWait = false;
-        // Refresh lines
-        measureLines(startLine, endLine);
-        // Notify input method
-        updateCursor();
-        // Visibility & State shjft
-        exitSelectModeIfNeeded();
-        applyNewPanelPosition();
+        if (mCompletionWindow.isShowing()) {
+            applyNewPanelPosition();
+        }
+        updateCursorAnchor();
         makeRightVisible();
         // Notify to update highlight
         mSpanner.analyze(mText);
@@ -3444,10 +3457,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (mListener != null) {
             mListener.afterInsert(this, mText, startLine, startColumn, endLine, endColumn, insertedContent);
         }
-    }
-    
-    private void debug(CharSequence text) {
-        android.widget.Toast.makeText(getContext(), text, android.widget.Toast.LENGTH_SHORT).show();
     }
     
     private void exitSelectModeIfNeeded() {
@@ -3469,7 +3478,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 panelY -= getRowHeight();
                 offset += getRowHeight();
             }
-            getScroller().startScroll(getOffsetX(), getOffsetY(), (int) offset, 0, 0);
+            getScroller().startScroll(getOffsetX(), getOffsetY(), 0, (int) offset, 0);
         }
         mCompletionWindow.setExtendedX(panelX);
         mCompletionWindow.setExtendedY(panelY);
