@@ -291,23 +291,24 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         }
         return false;
     }
-
-    /**
-     * Scroll the view smoothly
-     *
-     * @param deltaY The delta y
-     */
-    private void smoothScrollBy(float deltaY) {
-        float finalY = mScroller.getCurrY() + deltaY;
-        if (finalY < 0) {
-            finalY = 0;
-        } else if (finalY > mEditor.getScrollMaxY()) {
-            finalY = mEditor.getScrollMaxY();
-        }
-        mScroller.startScroll(mScroller.getCurrX(), mScroller.getCurrY(), 0, (int) (finalY - mScroller.getCurrY()));
+    
+    protected void smoothScrollBy(float distanceX, float distanceY) {
+        mEditor.getTextActionPresenter().onUpdate();
+        mEditor.hideAutoCompleteWindow();
+        int endX = mScroller.getCurrX() + (int) distanceX;
+        int endY = mScroller.getCurrY() + (int) distanceY;
+        endX = Math.max(endX, 0);
+        endY = Math.max(endY, 0);
+        endY = Math.min(endY, mEditor.getScrollMaxY());
+        endX = Math.min(endX, mEditor.getScrollMaxX());
+        mScroller.startScroll(mScroller.getCurrX(),
+                              mScroller.getCurrY(),
+                              endX - mScroller.getCurrX(),
+                              endY - mScroller.getCurrY(), 0);
+        mEditor.invalidate();
     }
-
-    private void scrollBy(float distanceX, float distanceY) {
+    
+    protected void scrollBy(float distanceX, float distanceY) {
         mEditor.getTextActionPresenter().onUpdate();
         mEditor.hideAutoCompleteWindow();
         int endX = mScroller.getCurrX() + (int) distanceX;
@@ -555,10 +556,10 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             float targetY = (currY - offsetY) + startY;
             int line = mEditor.getPointLine(targetY);
             if (line >= mEditor.getLastVisibleRow()) {
-                smoothScrollBy(mEditor.getRowHeight() * 8);
+                scrollBy(0, mEditor.getRowHeight());
             }
-            if (line <= mEditor.getFirstVisibleRow()) {
-                smoothScrollBy(-mEditor.getRowHeight() * 8);
+            if (line <= mEditor.getFirstVisibleRow() - 1) {
+                scrollBy(0, -mEditor.getRowHeight());
             }
             line = mEditor.getPointLine(targetY);
             if (line >= 0 && line < mEditor.getLineCount()) {

@@ -105,6 +105,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private float mDividerMargin;
     private float mInsertSelWidth;
     private float mBlockLineWidth;
+    private float mLineInfoTextSize;
     private double mMeasureScale;
     private boolean mWait;
     private boolean mDrag;
@@ -353,6 +354,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaintOther.setTypeface(Typeface.MONOSPACE);
         mChars = new char[256];
         setTextSize(DEFAULT_TEXT_SIZE);
+        setLineInfoTextSize(mPaint.getTextSize());
         mColors = new EditorColorScheme(this);
         mEventHandler = new EditorTouchEventHandler(this);
         mBasicDetector = new GestureDetector(getContext(), mEventHandler);
@@ -1183,8 +1185,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (!mDisplayLnPanel) {
             return;
         }
-        float expand = mDpUnit * 3;
         String text = mLnTip + (1 + getFirstVisibleRow());
+        float backupSize = mPaint.getTextSize();
+        mPaint.setTextSize(getLineInfoTextSize());
+        Paint.FontMetricsInt backupMetrics = mTextMetrics;
+        mTextMetrics = mPaint.getFontMetricsInt();
+        float expand = mDpUnit * 3;
         float textWidth = mPaint.measureText(text);
         mRect.top = centerY - getRowHeight() / 2f - expand;
         mRect.bottom = centerY + getRowHeight() / 2f + expand;
@@ -1194,10 +1200,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         float baseline = centerY - getRowHeight() / 2f + getRowBaseline(0);
         float centerX = (mRect.left + mRect.right) / 2;
         mPaint.setColor(mColors.getColor(EditorColorScheme.LINE_NUMBER_PANEL_TEXT));
-        Paint.Align align = mPaint.getTextAlign();
         mPaint.setTextAlign(Paint.Align.CENTER);
         canvas.drawText(text, centerX, baseline, mPaint);
-        mPaint.setTextAlign(align);
+        mPaint.setTextAlign(Paint.Align.LEFT);
+        mPaint.setTextSize(backupSize);
+        mTextMetrics = backupMetrics;
     }
 
     /**
@@ -1701,10 +1708,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             String text = Integer.toString(i + 1);
             switch (mLineNumberAlign) {
                 case LEFT:
-                    canvas.drawText(text, offsetX + mDividerMargin, y, mPaintOther);
+                    canvas.drawText(text, offsetX, y, mPaintOther);
                     break;
                 case RIGHT:
-                    canvas.drawText(text, offsetX + width + mDividerMargin, y, mPaintOther);
+                    canvas.drawText(text, offsetX + width, y, mPaintOther);
                     break;
                 case CENTER:
                     canvas.drawText(text, offsetX + (width + mDividerMargin) / 2f, y, mPaintOther);
@@ -1878,6 +1885,23 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mInputMethodManager.updateCursor(this, (int) x, getRowTop(l) - getOffsetY(), (int) (x + mInsertSelWidth), getRowBottom(l) - getOffsetY());
         }
         return x;
+    }
+    
+    /**
+      * Set text size for line info panel
+      */
+    public void setLineInfoTextSize(float sizePx) {
+        if (sizePx <= 0) {
+            throw new IllegalArgumentException();
+        }
+        mLineInfoTextSize = sizePx;
+    }
+    
+    /**
+      * @see #setLineInfoTextSize(float)
+      */
+    public float getLineInfoTextSize() {
+        return mLineInfoTextSize;
     }
 
     /**
@@ -3363,6 +3387,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         getHorizontalEdgeEffect().setSize(h, w);
         getVerticalEdgeEffect().finish();
         getHorizontalEdgeEffect().finish();
+        mEventHandler.smoothScrollBy(getOffsetX() > getScrollMaxX() ? getScrollMaxX() - getOffsetX() : 0, getOffsetY() > getScrollMaxY() ? getScrollMaxY() - getOffsetY() : 0);
     }
 
     @Override
