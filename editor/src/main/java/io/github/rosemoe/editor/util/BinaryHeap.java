@@ -31,7 +31,7 @@ public class BinaryHeap {
     /**
       * Id allocator
       */
-    private int idAllocator = 0;
+    private int idAllocator = 1;
     
     /**
       * Current node count in heap
@@ -148,7 +148,7 @@ public class BinaryHeap {
       * @throws IllegalArgumentException when the id is invalid
       */
     public void update(int id, int newValue) {
-        int position = idToPosition.get(id);
+        int position = idToPosition.get(id, 0);
         if (position == 0) {
             throw new IllegalArgumentException("trying to update with an invalid id");
         }
@@ -167,7 +167,7 @@ public class BinaryHeap {
       * @throws IllegalArgumentException when the id is invalid
       */
     public void remove(int id) {
-        int position = idToPosition.get(id);
+        int position = idToPosition.get(id, 0);
         if (position == 0) {
             throw new IllegalArgumentException("trying to remove with an invalid id");
         }
@@ -180,7 +180,7 @@ public class BinaryHeap {
         if (position == nodeCount + 1) {
             return;
         }
-        idToPosition.put(id, position);
+        idToPosition.put(nodes[position].id, position);
         heapifyUp(position);
         heapifyDown(position);
     }
@@ -207,7 +207,7 @@ public class BinaryHeap {
     private void printRegion(int start, int count) {
         for(int i = 0;i < count;i++) {
             if(start + i <= nodeCount) {
-                System.out.print(nodes[start + i].data + ", ");
+                System.out.print((nodes[start+ i] != null ? nodes[start + i].data : -1) + ", ");
             } else {
                 break;
             }

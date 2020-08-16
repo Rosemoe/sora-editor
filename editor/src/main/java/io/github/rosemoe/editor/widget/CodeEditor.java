@@ -74,15 +74,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.github.rosemoe.editor.BuildConfig.DEBUG;
+import android.view.inputmethod.ExtractedText;
+import android.view.inputmethod.ExtractedTextRequest;
 
 /**
  * CodeEditor is a editor that can highlight text regions by doing basic syntax analyzing
  * This project in GitHub: https://github.com/Rosemoe/CodeEditor
  * Thanks following people for advice on UI:
- * NTX
- * 吾乃幼儿园扛把子
- * Xiue
- * Scave
+ * NTX,吾乃幼儿园扛把子,Xiue,Scave
+ * Note:
+ * Row and line are different in this editor
+ * When we say 'row', it means a line displayed on screen. It can be a part of a line in the text obnect.
+ * When we say 'line', it means a real line in the original text.
  *
  * @author Rose
  */
@@ -150,6 +153,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;
     private EdgeEffect mVerticalEdgeGlow;
     private EdgeEffect mHorizontalGlow;
+    private ExtractedTextRequest mExtracting;
     private FormatThread mFormatThread;
     private EditorSearcher mSearcher;
     private EditorEventListener mListener;
@@ -199,11 +203,50 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     protected void updateSelection() {
         mInputMethodManager.updateSelection(this, mCursor.getLeft(), mCursor.getRight(), mCursor.getLeft(), mCursor.getRight());
     }
+    
+    protected void updateExtractedText() {
+        if (mExtracting != null) {
+            mInputMethodManager.updateExtractedText(this, mExtracting.token, extractText(mExtracting));
+        }
+    }
+    
+    protected void setExtracting(ExtractedTextRequest request) {
+        mExtracting = request;
+    }
+    
+    protected ExtractedText extractText(ExtractedTextRequest request) {
+        Cursor cur = getCursor();
+        ExtractedText text = new ExtractedText();
+        int selBegin = cur.getLeft();
+        int selEnd = cur.getRight();
+        int startOffset;
+        if (request.hintMaxChars == 0) {
+            request.hintMaxChars = 512;
+        }
+        if (selEnd - selBegin > request.hintMaxChars) {
+            startOffset = selBegin;
+        } else {
+            int redundantLength = (request.hintMaxChars - (selEnd - selBegin)) / 2;
+            startOffset = selBegin - redundantLength;
+        }
+        startOffset = Math.max(0, startOffset);
+        CharSequence textRegion = mConnection.getTextRegion(startOffset, startOffset + request.hintMaxChars, request.flags);
+        text.text = textRegion;
+        text.startOffset = startOffset;
+        text.selectionStart = selBegin - startOffset;
+        text.selectionEnd = selEnd - startOffset;
+        if (selBegin != selEnd) {
+            text.flags |= ExtractedText.FLAG_SELECTING;
+        }
+        return text;
+    }
+    
 
     /**
      * Notify input method that text has been changed for external reason
      */
     protected void cursorChangeExternal() {
+        updateExtractedText();
         updateSelection();
         updateCursorAnchor();
         mConnection.invalid();
@@ -215,9 +258,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     protected void updateCursor() {
         updateCursorAnchor();
-        if(!mText.isInBatchEdit()) {
+        updateExtractedText();
+        //if(!mText.isInBatchEdit()) {
             updateSelection();
-        }
+        //}
     }
 
     /**
@@ -658,7 +702,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param canvas Canvas you want to draw
      */
     private void drawView(Canvas canvas) {
-        long startTime = System.currentTimeMillis();
+        //long startTime = System.currentTimeMillis();
 
         if (mFormatThread != null) {
             String text = "Formatting your code...";
@@ -720,10 +764,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         drawScrollBars(canvas);
         drawEdgeEffect(canvas);
 
-        long timeUsage = System.currentTimeMillis() - startTime;
+        /*long timeUsage = System.currentTimeMillis() - startTime;
         if (DEBUG) {
             Log.d(LOG_TAG, "Draw view cost time:" + timeUsage + "ms");
-        }
+        }*/
     }
 
     /**
@@ -946,8 +990,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     mRect.right = centerX + mDpUnit * mBlockLineWidth / 2;
                     drawColor(canvas, mColors.getColor(curr == cursorIdx ? EditorColorScheme.BLOCK_LINE_CURRENT : EditorColorScheme.BLOCK_LINE), mRect);
                 } catch (IndexOutOfBoundsException e) {
-                    e.printStackTrace();
-                    //Not handled.
+                    //Ignored
                     //Because the exception usually occurs when the content changed.
                 }
                 mark = true;
@@ -2728,7 +2771,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mCursorPosition = findCursorBlock();
         }
         updateCursorAnchor();
-        updateSelection();
+        updateCursor();
         ensurePositionVisible(line, column);
         if (mTextActionPresenter != null) {
             mTextActionPresenter.onExit();
@@ -2797,7 +2840,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mCursor.setLeft(lineLeft, columnLeft);
         mCursor.setRight(lineRight, columnRight);
         updateCursorAnchor();
-        updateSelection();
+        updateCursor();
         if (makeRightVisible) {
             ensurePositionVisible(lineRight, columnRight);
         } else {
@@ -3026,6 +3069,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Called by CodeEditorInputConnection
      */
     protected void onCloseConnection() {
+        setExtracting(null);
         invalidate();
     }
 
@@ -3037,11 +3081,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         try {
             drawView(canvas);
         } catch (Throwable t) {
-            StringBuilder sb = mErrorBuilder;
-            sb.setLength(0);
+            StringBuilder sb = new StringBuilder();
             sb.append(t.toString());
             for (Object o : t.getStackTrace()) {
-                sb.append('\n').append(o);
+                sb.append("\nCaused by:").append(o);
             }
             Toast.makeText(getContext(), sb, Toast.LENGTH_SHORT).show();
         }
@@ -3087,8 +3130,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 copyText();
                 return true;
             case AccessibilityNodeInfo.ACTION_CUT:
-                copyText();
-                mCursor.onDeleteKeyPressed();
+                cutText();
                 return true;
             case AccessibilityNodeInfo.ACTION_PASTE:
                 pasteText();
@@ -3122,7 +3164,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         outAttrs.inputType = EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
         outAttrs.initialSelStart = getCursor() != null ? getCursor().getLeft() : 0;
         outAttrs.initialSelEnd = getCursor() != null ? getCursor().getRight() : 0;
+        outAttrs.initialCapsMode = mConnection.getCursorCapsMode(0);
         mConnection.reset();
+        setExtracting(null);
         return mConnection;
     }
 
@@ -3144,9 +3188,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (event.getAction() == MotionEvent.ACTION_UP) {
             mVerticalEdgeGlow.onRelease();
             mHorizontalGlow.onRelease();
-        }
-        if (!mVerticalEdgeGlow.isFinished() || !mHorizontalGlow.isFinished()) {
-            postInvalidate();
         }
         return (res3 || res2 || res);
     }
@@ -3504,9 +3545,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mCursorPosition = findCursorBlock();
         }
         postInvalidate();
-        long lastAnalyzeThreadTime = System.currentTimeMillis() - provider.mOpStartTime;
-        if(DEBUG)
-            Log.d(LOG_TAG, "Highlight cost time:" + lastAnalyzeThreadTime);
+        //long lastAnalyzeThreadTime = System.currentTimeMillis() - provider.mOpStartTime;
+        //if(DEBUG)
+            //Log.d(LOG_TAG, "Highlight cost time:" + lastAnalyzeThreadTime);
     }
 
     protected interface EditorTextActionPresenter {

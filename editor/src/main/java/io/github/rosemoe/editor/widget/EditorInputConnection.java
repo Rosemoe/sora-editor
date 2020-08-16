@@ -15,7 +15,6 @@
  */
 package io.github.rosemoe.editor.widget;
 
-import android.text.NoCopySpan;
 import android.text.Spanned;
 import android.util.Log;
 import android.view.inputmethod.BaseInputConnection;
@@ -29,6 +28,10 @@ import android.text.TextUtils;
 import io.github.rosemoe.editor.struct.CharPosition;
 
 import android.text.SpannableStringBuilder;
+import android.os.Bundle;
+import android.view.KeyEvent;
+import android.view.inputmethod.ExtractedText;
+import android.view.inputmethod.ExtractedTextRequest;
 
 /**
  * Connection between input method and editor
@@ -116,8 +119,8 @@ class EditorInputConnection extends BaseInputConnection {
         if (start < 0) {
             start = 0;
         }
-        if (end >= origin.length()) {
-            end = origin.length() - 1;
+        if (end > origin.length()) {
+            end = origin.length();
         }
         if (end < start) {
             start = end = 0;
@@ -145,17 +148,17 @@ class EditorInputConnection extends BaseInputConnection {
                     if (transferredEnd >= text.length()) {
                         transferredEnd = text.length();
                     }
-                    text.setSpan(new ComposingText(), transferredStart, transferredEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    text.setSpan(Spanned.SPAN_COMPOSING, transferredStart, transferredEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 } catch (IndexOutOfBoundsException e) {
                     //ignored
                 }
             }
             return text;
         }
-        return sub.toStringBuilder();
+        return sub.toString();
     }
 
-    private CharSequence getTextRegion(int start, int end, int flags) {
+    protected CharSequence getTextRegion(int start, int end, int flags) {
         try {
             return getTextRegionInternal(start, end, flags);
         } catch (IndexOutOfBoundsException e) {
@@ -190,6 +193,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean commitText(CharSequence text, int newCursorPosition) {
+        Log.d(LOG_TAG, "commit text:text = " + text + ", newCur = " + newCursorPosition);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
@@ -279,6 +283,7 @@ class EditorInputConnection extends BaseInputConnection {
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
+        Log.d(LOG_TAG, "set composing text:text = " + text + ", newCur =" + newCursorPosition);
         if (mComposingLine == -1) {
             // Create composing info
             deleteSelected();
@@ -308,34 +313,43 @@ class EditorInputConnection extends BaseInputConnection {
         mEditor.invalidate();
         return true;
     }
+    
+    private int getWrappedIndex(int index) {
+        if (index < 0) {
+            return 0;
+        }
+        if (index > mEditor.getText().length()) {
+            return mEditor.getText().length();
+        }
+        return index;
+    }
 
     @Override
     public boolean setSelection(int start, int end) {
+        Log.d(LOG_TAG, " set selection:" + start + ".." + end);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
+        start = getWrappedIndex(start);
+        end = getWrappedIndex(end);
         if (start > end) {
             int tmp = start;
             start = end;
             end = tmp;
         }
-        if (start < 0) {
-            start = 0;
-        }
         Content content = mEditor.getText();
-        if (end > content.length()) {
-            end = content.length();
-        }
         CharPosition startPos = content.getIndexer().getCharPosition(start);
         CharPosition endPos = content.getIndexer().getCharPosition(end);
         getCursor().setLeft(startPos.line, startPos.column);
         getCursor().setRight(endPos.line, endPos.column);
+        mEditor.updateCursor();
         mEditor.invalidate();
         return true;
     }
 
     @Override
     public boolean setComposingRegion(int start, int end) {
+        Log.d(LOG_TAG, "set composing region:" + start + ".." + end);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
@@ -402,9 +416,17 @@ class EditorInputConnection extends BaseInputConnection {
         mEditor.updateCursorAnchor();
         return true;
     }
-
-}
-
-class ComposingText implements NoCopySpan {
+    
+    @Override
+    public ExtractedText getExtractedText(ExtractedTextRequest request, int flags) {
+        if ((flags & GET_EXTRACTED_TEXT_MONITOR) != 0) {
+            mEditor.setExtracting(request);
+        }
+        
+        return mEditor.extractText(request);
+    }
+    
+    
+    
 
 }
