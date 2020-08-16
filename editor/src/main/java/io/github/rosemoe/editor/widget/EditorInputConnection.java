@@ -193,7 +193,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean commitText(CharSequence text, int newCursorPosition) {
-        Log.d(LOG_TAG, "commit text:text = " + text + ", newCur = " + newCursorPosition);
+        //Log.d(LOG_TAG, "commit text:text = " + text + ", newCur = " + newCursorPosition);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
@@ -283,7 +283,7 @@ class EditorInputConnection extends BaseInputConnection {
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
-        Log.d(LOG_TAG, "set composing text:text = " + text + ", newCur =" + newCursorPosition);
+        //Log.d(LOG_TAG, "set composing text:text = " + text + ", newCur =" + newCursorPosition);
         if (mComposingLine == -1) {
             // Create composing info
             deleteSelected();
@@ -326,7 +326,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setSelection(int start, int end) {
-        Log.d(LOG_TAG, " set selection:" + start + ".." + end);
+        //Log.d(LOG_TAG, " set selection:" + start + ".." + end);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
@@ -337,6 +337,7 @@ class EditorInputConnection extends BaseInputConnection {
             start = end;
             end = tmp;
         }
+        mEditor.getAutoCompleteWindow().hide();
         Content content = mEditor.getText();
         CharPosition startPos = content.getIndexer().getCharPosition(start);
         CharPosition endPos = content.getIndexer().getCharPosition(end);
@@ -349,7 +350,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setComposingRegion(int start, int end) {
-        Log.d(LOG_TAG, "set composing region:" + start + ".." + end);
+        //Log.d(LOG_TAG, "set composing region:" + start + ".." + end);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }

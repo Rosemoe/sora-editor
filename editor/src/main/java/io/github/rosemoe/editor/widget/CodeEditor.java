@@ -143,7 +143,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private String mLnTip = "Line:";
     private EditorLanguage mLanguage;
     private long mLastMakeVisible = 0;
-    private EditorAutoCompleteWindow mACPanel;
+    private EditorAutoCompleteWindow mCompletionWindow;
     private EditorTouchEventHandler mEventHandler;
     private Paint.Align mLineNumberAlign;
     private GestureDetector mBasicDetector;
@@ -159,8 +159,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private EditorEventListener mListener;
     private Paint.FontMetricsInt mTextMetrics;
     private Paint.FontMetricsInt mLineNumberMetrics;
-    //For debug
-    private final StringBuilder mErrorBuilder = new StringBuilder();
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -172,13 +170,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        prepare();
+        initialize();
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        prepare();
+        initialize();
     }
 
     /**
@@ -196,24 +194,58 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     protected void cancelAnimation() {
         mLastMakeVisible = System.currentTimeMillis();
     }
+    
+    /**
+      * Get using EditorAutoCompleteWindow
+      */
+    protected EditorAutoCompleteWindow getAutoCompleteWindow() {
+        return mCompletionWindow;
+    }
+    
+    /**
+     * Get EditorTextActionPresenter instance of this editor
+     *
+     * @return EditorTextActionPresenter
+     */
+    protected EditorTextActionPresenter getTextActionPresenter() {
+        return mTextActionPresenter;
+    }
 
     /**
      * Send current selection position to input method
      */
     protected void updateSelection() {
-        mInputMethodManager.updateSelection(this, mCursor.getLeft(), mCursor.getRight(), mCursor.getLeft(), mCursor.getRight());
+        int candidatesStart = -1, candidatesEnd = -1;
+        if (mConnection.mComposingLine != -1) {
+            try {
+                candidatesStart = mText.getCharIndex(mConnection.mComposingLine, mConnection.mComposingStart);
+                candidatesEnd = mText.getCharIndex(mConnection.mComposingLine, mConnection.mComposingEnd);
+            } catch(IndexOutOfBoundsException e) {
+                //Ignored
+            }
+        }
+        mInputMethodManager.updateSelection(this, mCursor.getLeft(), mCursor.getRight(), candidatesStart, candidatesEnd);
     }
     
+    /**
+      * Update request result for monitorung request
+      */
     protected void updateExtractedText() {
         if (mExtracting != null) {
             mInputMethodManager.updateExtractedText(this, mExtracting.token, extractText(mExtracting));
         }
     }
     
+    /**
+      * Set request needed to update when editor updates selection
+      */
     protected void setExtracting(ExtractedTextRequest request) {
         mExtracting = request;
     }
     
+    /**
+      * Extract text in editor for input method
+      */
     protected ExtractedText extractText(ExtractedTextRequest request) {
         Cursor cur = getCursor();
         ExtractedText text = new ExtractedText();
@@ -241,7 +273,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         return text;
     }
     
-
     /**
      * Notify input method that text has been changed for external reason
      */
@@ -259,9 +290,18 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     protected void updateCursor() {
         updateCursorAnchor();
         updateExtractedText();
-        //if(!mText.isInBatchEdit()) {
+        if(!mText.isInBatchEdit()) {
             updateSelection();
-        //}
+        }
+    }
+    
+    /**
+     * Get the width of line number and divider line
+     *
+     * @return The width
+     */
+    protected float measureTextRegionOffset() {
+        return measureLineNumber() + mDividerMargin * 2 + mDividerWidth;
     }
 
     /**
@@ -281,66 +321,24 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     protected RectF getRightHandleRect() {
         return mRightHandle;
     }
-
+    
     /**
-     * Whether the editor should use a different color to draw
-     * the current code block line and this code block's start line and end line's
-     * background.
+     * Get the character's x offset on view
      *
-     * @param highlightCurrentBlock Enabled / Disabled this module
+     * @param line   The line position of character
+     * @param column The column position of character
+     * @return The x offset on screen
      */
-    public void setHighlightCurrentBlock(boolean highlightCurrentBlock) {
-        this.mHighlightCurrentBlock = highlightCurrentBlock;
-        if (!mHighlightCurrentBlock) {
-            mCursorPosition = -1;
-        } else {
-            mCursorPosition = findCursorBlock();
-        }
-        invalidate();
-    }
-
-    /**
-     * Returns whether highlight current code block
-     *
-     * @return This module enabled / disabled
-     * @see CodeEditor#setHighlightCurrentBlock(boolean)
-     */
-    public boolean isHighlightCurrentBlock() {
-        return mHighlightCurrentBlock;
-    }
-
-    /**
-     * Whether we should use a different color to draw current code block's start line and end line background
-     *
-     * @param paintLabel Enabled or disabled
-     */
-    public void setPaintLabel(boolean paintLabel) {
-        this.mPaintLabel = paintLabel;
-        invalidate();
-    }
-
-    /**
-     * Get the width of line number and divider line
-     *
-     * @return The width
-     */
-    protected float measureTextRegionOffset() {
-        return measureLineNumber() + mDividerMargin * 2 + mDividerWidth;
-    }
-
-    /**
-     * @return Enabled / disabled
-     * @see CodeEditor#setPaintLabel(boolean)
-     */
-    public boolean isPaintLabel() {
-        return mPaintLabel;
+    protected float getOffset(int line, int column) {
+        prepareLine(line);
+        return measureText(mChars, 0, column) + measureTextRegionOffset() - getOffsetX();
     }
 
     /**
      * Prepare editor
      * Initialize variants
      */
-    private void prepare() {
+    private void initialize() {
         mPaint = new Paint();
         mPaintOther = new Paint();
         mPaintMeasure = new Paint();
@@ -384,7 +382,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setFocusable(true);
         setFocusableInTouchMode(true);
         mConnection = new EditorInputConnection(this);
-        mACPanel = new EditorAutoCompleteWindow(this);
+        mCompletionWindow = new EditorAutoCompleteWindow(this);
         mVerticalEdgeGlow = EdgeEffectFactory.create(getContext());
         mHorizontalGlow = EdgeEffectFactory.create(getContext());
         setEditorLanguage(null);
@@ -400,6 +398,51 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setOverScrollEnabled(true);
         setHorizontalScrollBarEnabled(true);
         setEditable(true);
+    }
+    
+    /**
+     * Whether the editor should use a different color to draw
+     * the current code block line and this code block's start line and end line's
+     * background.
+     *
+     * @param highlightCurrentBlock Enabled / Disabled this module
+     */
+    public void setHighlightCurrentBlock(boolean highlightCurrentBlock) {
+        this.mHighlightCurrentBlock = highlightCurrentBlock;
+        if (!mHighlightCurrentBlock) {
+            mCursorPosition = -1;
+        } else {
+            mCursorPosition = findCursorBlock();
+        }
+        invalidate();
+    }
+
+    /**
+     * Returns whether highlight current code block
+     *
+     * @return This module enabled / disabled
+     * @see CodeEditor#setHighlightCurrentBlock(boolean)
+     */
+    public boolean isHighlightCurrentBlock() {
+        return mHighlightCurrentBlock;
+    }
+
+    /**
+     * Whether we should use a different color to draw current code block's start line and end line background
+     *
+     * @param paintLabel Enabled or disabled
+     */
+    public void setPaintLabel(boolean paintLabel) {
+        this.mPaintLabel = paintLabel;
+        invalidate();
+    }
+
+    /**
+     * @return Enabled / disabled
+     * @see CodeEditor#setPaintLabel(boolean)
+     */
+    public boolean isPaintLabel() {
+        return mPaintLabel;
     }
 
     /**
@@ -422,9 +465,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (mText != null) {
             mSpanner.analyze(mText);
         }
-        if (mACPanel != null) {
-            mACPanel.hide();
-            mACPanel.setProvider(lang.getAutoCompleteProvider());
+        if (mCompletionWindow != null) {
+            mCompletionWindow.hide();
+            mCompletionWindow.setProvider(lang.getAutoCompleteProvider());
         }
         if (mCursor != null) {
             mCursor.setLanguage(mLanguage);
@@ -440,18 +483,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public void setBlockLineWidth(float dp) {
         mBlockLineWidth = dp;
         invalidate();
-    }
-
-    /**
-     * Get the character's x offset on view
-     *
-     * @param line   The line position of character
-     * @param column The column position of character
-     * @return The x offset on screen
-     */
-    protected float getOffset(int line, int column) {
-        prepareLine(line);
-        return measureText(mChars, 0, column) + measureTextRegionOffset() - getOffsetX();
     }
 
     /**
@@ -505,15 +536,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else {
             mTextActionPresenter = new EditorTextActionWindow(this);
         }
-    }
-
-    /**
-     * Get EditorTextActionPresenter instance of this editor
-     *
-     * @return EditorTextActionPresenter
-     */
-    protected EditorTextActionPresenter getTextActionPresenter() {
-        return mTextActionPresenter;
     }
 
     /**
@@ -729,7 +751,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         drawLineNumberBackground(canvas, offsetX, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
 
         drawCurrentLineBackground(canvas, color.getColor(EditorColorScheme.CURRENT_LINE));
-        drawCurrentCodeBlockLabelBg(canvas);
+        drawCurrentBlockLabelLineBackground(canvas);
 
         drawDivider(canvas, offsetX + lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
 
@@ -964,7 +986,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int first = getFirstVisibleRow();
         int last = getLastVisibleRow();
         boolean mark = false;
-        int jCount = 0;
+        int invalidCount = 0;
         int maxCount = Integer.MAX_VALUE;
         if (mSpanner != null) {
             TextAnalyzeResult colors = mSpanner.getResult();
@@ -995,9 +1017,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 }
                 mark = true;
             } else if (mark) {
-                if (jCount >= maxCount)
+                if (invalidCount >= maxCount)
                     break;
-                jCount++;
+                invalidCount++;
             }
         }
     }
@@ -1029,7 +1051,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int max = blocks.size() - 1;
         int minDis = Integer.MAX_VALUE;
         int found = -1;
-        int jCount = 0;
+        int invalidCount = 0;
         int maxCount = Integer.MAX_VALUE;
         if (mSpanner != null) {
             TextAnalyzeResult result = mSpanner.getResult();
@@ -1046,8 +1068,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     found = i;
                 }
             } else if (minDis != Integer.MAX_VALUE) {
-                jCount++;
-                if (jCount >= maxCount) {
+                invalidCount++;
+                if (invalidCount >= maxCount) {
                     break;
                 }
             }
@@ -1092,11 +1114,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param canvas The canvas to draw
      */
     private void drawScrollBars(Canvas canvas) {
+        mVerticalScrollBar.setEmpty();
+        mHorizontalScrollBar.setEmpty();
         if (!mEventHandler.shouldDrawScrollBar()) {
             return;
         }
-        mVerticalScrollBar.setEmpty();
-        mHorizontalScrollBar.setEmpty();
         if (isVerticalScrollBarEnabled() && getScrollMaxY() > getHeight() / 2) {
             drawScrollBarTrackVertical(canvas);
             drawScrollBarVertical(canvas);
@@ -1302,7 +1324,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private void drawText(Canvas canvas, float offsetX, int defaultColor) {
         TextAnalyzeResult colors = mSpanner == null ? null : mSpanner.getResult();
         if (colors == null || colors.getSpanMap().isEmpty()) {
-            drawTextDirect(canvas, offsetX, defaultColor, getFirstVisibleRow());
+            drawTextNoHighlight(canvas, offsetX, defaultColor, getFirstVisibleRow());
         } else {
             drawTextLines(canvas, offsetX, colors);
         }
@@ -1410,7 +1432,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 }
                 drawTextLineWithSpans(canvas, offsetX, line, cs, spans, hasSelectionOnLine, start, end);
             } catch (IndexOutOfBoundsException e) {
-                Log.w(LOG_TAG, "Exception in rendering line " + line, e);
+                Log.w(LOG_TAG, "Exception in drawing line " + line, e);
             }
             if (span != null) {
                 span.recycle();
@@ -1573,7 +1595,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param color     Color to draw text
      * @param startLine The start line to paint
      */
-    private void drawTextDirect(Canvas canvas, float offsetX, int color, int startLine) {
+    private void drawTextNoHighlight(Canvas canvas, float offsetX, int color, int startLine) {
         mPaint.setColor(color);
         int last = getLastVisibleRow();
         for (int i = startLine; i <= last; i++) {
@@ -1621,7 +1643,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param canvas Canvas to draw
      */
-    private void drawCurrentCodeBlockLabelBg(Canvas canvas) {
+    private void drawCurrentBlockLabelLineBackground(Canvas canvas) {
         if (mCursor.isSelected() || !mPaintLabel) {
             return;
         }
@@ -2107,7 +2129,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int column = mCursor.getLeftColumn();
         mText.replace(0, 0, getLineCount() - 1, mText.getColumnCount(getLineCount() - 1), mLanguage.format(content));
         getScroller().forceFinished(true);
-        mACPanel.hide();
+        mCompletionWindow.hide();
         setSelectionAround(line, column);
         mSpanner.analyze(mText);
         return true;
@@ -2623,8 +2645,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * If the auto complete panel is shown,move the selection in panel to next
      */
     public void moveSelectionDown() {
-        if (mACPanel.isShowing()) {
-            mACPanel.moveDown();
+        if (mCompletionWindow.isShowing()) {
+            mCompletionWindow.moveDown();
             return;
         }
         Cursor c = getCursor();
@@ -2647,8 +2669,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * If Auto complete panel is shown,move the selection in panel to last
      */
     public void moveSelectionUp() {
-        if (mACPanel.isShowing()) {
-            mACPanel.moveUp();
+        if (mCompletionWindow.isShowing()) {
+            mCompletionWindow.moveUp();
             return;
         }
         Cursor c = getCursor();
@@ -2681,17 +2703,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 }
             }
             setSelection(line, column - 1);
-            if (mACPanel.isShowing()) {
-                String prefix = mACPanel.getPrefix();
+            if (mCompletionWindow.isShowing()) {
+                String prefix = mCompletionWindow.getPrefix();
                 if (prefix.length() > toLeft) {
                     prefix = prefix.substring(0, prefix.length() - toLeft);
-                    mACPanel.setPrefix(prefix);
+                    mCompletionWindow.setPrefix(prefix);
                 } else {
-                    mACPanel.hide();
+                    mCompletionWindow.hide();
                 }
             }
             if (column - 1 <= 0) {
-                mACPanel.hide();
+                mCompletionWindow.hide();
             }
         } else {
             if (line == 0) {
@@ -2720,12 +2742,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     column--;
                 }
             }
-            if (!emoji && mACPanel.isShowing()) {
+            if (!emoji && mCompletionWindow.isShowing()) {
                 if (!mLanguage.isAutoCompleteChar(ch)) {
-                    mACPanel.hide();
+                    mCompletionWindow.hide();
                 } else {
-                    String prefix = mACPanel.getPrefix() + ch;
-                    mACPanel.setPrefix(prefix);
+                    String prefix = mCompletionWindow.getPrefix() + ch;
+                    mCompletionWindow.setPrefix(prefix);
                 }
             }
             setSelection(line, column + 1);
@@ -2841,6 +2863,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mCursor.setRight(lineRight, columnRight);
         updateCursorAnchor();
         updateCursor();
+        mCompletionWindow.hide();
         if (makeRightVisible) {
             ensurePositionVisible(lineRight, columnRight);
         } else {
@@ -2856,7 +2879,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public void movePageDown() {
         mEventHandler.onScroll(null, null, 0, getHeight());
-        mACPanel.hide();
+        mCompletionWindow.hide();
     }
 
     /**
@@ -2864,7 +2887,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public void movePageUp() {
         mEventHandler.onScroll(null, null, 0, -getHeight());
-        mACPanel.hide();
+        mCompletionWindow.hide();
     }
 
     /**
@@ -3029,7 +3052,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Hide auto complete panel if shown
      */
     public void hideAutoCompletePanel() {
-        mACPanel.hide();
+        mCompletionWindow.hide();
     }
 
     /**
@@ -3051,8 +3074,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     protected void onColorUpdated(int type) {
         if (type == EditorColorScheme.AUTO_COMP_PANEL_BG || type == EditorColorScheme.AUTO_COMP_PANEL_CORNER) {
-            if (mACPanel != null)
-                mACPanel.applyColor();
+            if (mCompletionWindow != null)
+                mCompletionWindow.applyColor();
             return;
         }
         invalidate();
@@ -3204,8 +3227,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     }
                     return true;
                 case KeyEvent.KEYCODE_ENTER:
-                    if (mACPanel.isShowing()) {
-                        mACPanel.select();
+                    if (mCompletionWindow.isShowing()) {
+                        mCompletionWindow.select();
                         return true;
                     }
                     mConnection.commitText("\n", 0);
@@ -3359,6 +3382,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
+        // Update spans
         if (isSpanMapPrepared(true, endLine - startLine)) {
             if (startLine == endLine) {
                 SpanMapUpdater.shiftSpansOnSingleLineInsert(mSpanner.getResult().getSpanMap(), startLine, startColumn, endColumn);
@@ -3366,20 +3390,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 SpanMapUpdater.shiftSpansOnMultiLineInsert(mSpanner.getResult().getSpanMap(), startLine, startColumn, endLine, endColumn);
             }
         }
-        mWait = false;
-        measureLines(startLine, endLine);
-        updateCursor();
-        exitSelectModeIfNeeded();
-        if (endColumn == 0 || startLine != endLine) {
-            mACPanel.hide();
-            makeRightVisible();
-            mSpanner.analyze(mText);
-            mEventHandler.hideInsertHandle();
-            if (mListener != null) {
-                mListener.afterInsert(this, mText, startLine, startColumn, endLine, endColumn, insertedContent);
-            }
-            return;
-        } else {
+        // Auto completion
+        if (mConnection.mComposingLine == -1 && endColumn != 0 && startLine == endLine) {
             int end = endColumn;
             while (endColumn > 0) {
                 if (mLanguage.isAutoCompleteChar(content.charAt(endLine, endColumn - 1))) {
@@ -3388,25 +3400,30 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     break;
                 }
             }
-            String line = content.getLineString(endLine);
-            if (end == endColumn) {
-                mACPanel.hide();
-                makeRightVisible();
-                mSpanner.analyze(mText);
-                mEventHandler.hideInsertHandle();
-                if (mListener != null) {
-                    mListener.afterInsert(this, mText, startLine, startColumn, endLine, endColumn, insertedContent);
-                }
-                return;
+            if (end > endColumn) {       
+                String line = content.getLineString(endLine);
+                String prefix = line.substring(endColumn, end);
+                mCompletionWindow.setPrefix(prefix);
+                mCompletionWindow.show();
+            } else {
+                mCompletionWindow.hide();
             }
-            String prefix = line.substring(endColumn, end);
-            mACPanel.setPrefix(prefix);
+        } else {
+            mCompletionWindow.hide();
         }
+        mWait = false;
+        // Refresh lines
+        measureLines(startLine, endLine);
+        // Notify input method
+        updateCursor();
+        // Visibility & State shjft
+        exitSelectModeIfNeeded();
         applyNewPanelPosition();
-        //mACPanel.show();
         makeRightVisible();
+        // Notify to update highlight
         mSpanner.analyze(mText);
         mEventHandler.hideInsertHandle();
+        // Notify listener
         if (mListener != null) {
             mListener.afterInsert(this, mText, startLine, startColumn, endLine, endColumn, insertedContent);
         }
@@ -3437,21 +3454,21 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
             getScroller().startScroll(getOffsetX(), getOffsetY(), (int) offset, 0, 0);
         }
-        if (mACPanel.getY() != panelY) {
-            mACPanel.hide();
-        }
-        mACPanel.setExtendedX(panelX);
-        mACPanel.setExtendedY(panelY);
+        mCompletionWindow.setExtendedX(panelX);
+        mCompletionWindow.setExtendedY(panelY);
         if (getWidth() < 500 * mDpUnit) {
             //Open center mode
-            mACPanel.setWidth(getWidth() * 7 / 8);
-            mACPanel.setExtendedX(getWidth() / 8f / 2f);
+            mCompletionWindow.setWidth(getWidth() * 7 / 8);
+            mCompletionWindow.setExtendedX(getWidth() / 8f / 2f);
         } else {
-            mACPanel.setWidth(getWidth() / 3);
+            //Follow cursor mode
+            mCompletionWindow.setWidth(getWidth() / 3);
         }
-        mACPanel.setHeight((int) restY);
-        mACPanel.setMaxHeight((int) restY);
-        mACPanel.updatePosition();
+        if (!mCompletionWindow.isShowing()) {
+            mCompletionWindow.setHeight((int) restY);
+        }
+        mCompletionWindow.setMaxHeight((int) restY);
+        mCompletionWindow.updatePosition();
     }
 
     @Override
@@ -3466,17 +3483,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         updateCursor();
         exitSelectModeIfNeeded();
         measureLines(startLine, startLine + 1);
-        if (mConnection.mComposingLine == -1 && mACPanel.isShowing()) {
+        if (mConnection.mComposingLine == -1 && mCompletionWindow.isShowing()) {
             if (startLine != endLine || startColumn != endColumn - 1) {
-                mACPanel.hide();
+                mCompletionWindow.hide();
             }
-            String prefix = mACPanel.getPrefix();
-            if (prefix == null || prefix.length() - 1 == 0) {
-                mACPanel.hide();
+            String prefix = mCompletionWindow.getPrefix();
+            if (prefix == null || prefix.length() - 1 <= 0) {
+                mCompletionWindow.hide();
             } else {
                 prefix = prefix.substring(0, prefix.length() - 1);
                 applyNewPanelPosition();
-                mACPanel.setPrefix(prefix);
+                mCompletionWindow.setPrefix(prefix);
             }
         }
         if (!mWait) {
@@ -3531,7 +3548,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     mText.insert(0, 0, newText);
                     mText.endBatchEdit();
                     getScroller().forceFinished(true);
-                    mACPanel.hide();
+                    mCompletionWindow.hide();
                     setSelectionAround(line, column);
                     mSpanner.analyze(mText);
                 }
