@@ -188,7 +188,6 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         ResultItem item = ((ItemAdapter) mListView.getAdapter()).getItem(pos);
         Cursor cursor = mEditor.getCursor();
         if (!cursor.isSelected()) {
-            hide();
             cancelShowUp = true;
             mEditor.getText().delete(cursor.getLeftLine(), cursor.getLeftColumn() - mLastPrefix.length(), cursor.getLeftLine(), cursor.getLeftColumn());
             cursor.onCommitText(item.commit);
@@ -199,9 +198,9 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
             if ((item.mask & ResultItem.MASK_SHIFT_LEFT_ONCE) != 0) {
                 mEditor.moveSelectionLeft();
             }
-            mEditor.updateSelection();
             cancelShowUp = false;
         }
+        mEditor.postHideCompletionWindow();
     }
 
     /**

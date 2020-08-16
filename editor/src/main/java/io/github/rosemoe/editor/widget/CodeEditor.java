@@ -3397,7 +3397,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         return true;
     }
     
-    private void postHideCompletionWindow() {
+    protected void postHideCompletionWindow() {
         // We do this because if you hide it at onec, the editor seems to flash with unknown reason
         postDelayed(new Runnable() {
             @Override
@@ -3511,11 +3511,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         measureLines(startLine, startLine + 1);
         if (mConnection.mComposingLine == -1 && mCompletionWindow.isShowing()) {
             if (startLine != endLine || startColumn != endColumn - 1) {
-                mCompletionWindow.hide();
+                postHideCompletionWindow();
             }
             String prefix = mCompletionWindow.getPrefix();
             if (prefix == null || prefix.length() - 1 <= 0) {
-                mCompletionWindow.hide();
+                postHideCompletionWindow();
             } else {
                 prefix = prefix.substring(0, prefix.length() - 1);
                 applyNewPanelPosition();
