@@ -39,6 +39,7 @@ import java.util.Map;
 import java.lang.Thread.UncaughtExceptionHandler;
 
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.widget.Toast;
 
 /**
  * @author Unknown
