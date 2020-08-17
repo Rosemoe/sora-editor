@@ -45,7 +45,7 @@ import java.util.List;
 import android.widget.RelativeLayout;
 
 /**
- * Auto complete panel for editing code quicker
+ * Auto complete window for editing code quicker
  *
  * @author Rose
  */
