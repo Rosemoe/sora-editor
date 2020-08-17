@@ -106,7 +106,7 @@ public class MainActivity extends Activity {
         editor.setVerticalScrollBarEnabled(true);
         editor.setLineNumberAlign(android.graphics.Paint.Align.CENTER);
         editor.setEditorLanguage(new JavaLanguage());
-        editor.setText("public class Main {\n\n\tpublic static void main(String[] args) {\n\t\t\n\t}\n\n}");
+        editor.setText("/**\n * Test\n */\npublic class Main {\n\n\tpublic static void main(String[] args) {\n\t\tSystem.out.println(\"Hello\");\n\t}\n\n}\n");
     }
 
     @Override
