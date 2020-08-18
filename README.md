@@ -1,13 +1,13 @@
 # CodeEditor
 [![](https://jitpack.io/v/Rosemoe/CodeEditor.svg)](https://jitpack.io/#Rosemoe/CodeEditor)   
 A professional code editor on Android platform with good performance and nice features.   
-***Announcement*** Apart from my computer, all updates will probably be put off until August 22.     
-***Work In Progress*** This project is still developing slowly because of school.Bugs may be inside.   
+***Work In Progress*** This project is still developing slowly because of school. Bugs may be inside. It is ***not*** recommended to use this project for production use.   
 ***Note:***
-Code in branch `master` will be a stabler version which can run without a lot problems (but sometimes there might be some important problems that has been solved in `dev`).   
+Code in branch `master` will be a stable version which can run without a lot problems (but sometimes there might be some important problems that has been solved in `dev`).   
 Branch `dev` has newest features in editor and is developing.   
 Any non-public method or field can be changed and moved or even deleted at current period of developing.     
-If you find any exception please send it to me.   
+If master branch has bugs, you may try out dev branch.    
+If you find any bug or require enhancement please send it to me by issues or other ways.    
    
 See [Projects/CodeEditor](https://github.com/Rosemoe/CodeEditor/projects/1) to get more information about what I am working on.    
 ***Issues and pull requests are welcome.***   
