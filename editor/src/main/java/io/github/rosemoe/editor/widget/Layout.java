@@ -14,9 +14,9 @@ interface Layout extends LineRemoveListener, ContentListener {
     
     //RowIterator obtainRowIterator();
     
-    int computeHorizontalScrollLimit();
+    int getLayoutWidth();
     
-    int computeVerticalScrollLimit();
+    int getLayoutHeight();
     
     CharPosition getCharPositionForLayoutOffset(float xOffset, float yOffset);
     

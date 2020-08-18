@@ -76,6 +76,7 @@ import java.util.List;
 import static io.github.rosemoe.editor.BuildConfig.DEBUG;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
+import io.github.rosemoe.editor.text.FontCache;
 
 /**
  * CodeEditor is a editor that can highlight text regions by doing basic syntax analyzing
@@ -158,6 +159,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private FormatThread mFormatThread;
     private EditorSearcher mSearcher;
     private EditorEventListener mListener;
+    private FontCache mFontCache;
+    private FontCache mMeasureFontCache;
     private Paint.FontMetricsInt mTextMetrics;
     private Paint.FontMetricsInt mLineNumberMetrics;
 
@@ -340,6 +343,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Initialize variants
      */
     private void initialize() {
+        mFontCache = new FontCache();
+        mMeasureFontCache = new FontCache();
         mPaint = new Paint();
         mPaintOther = new Paint();
         mPaintMeasure = new Paint();
@@ -637,6 +642,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaintOther.setTextSize(size);
         mTextMetrics = mPaint.getFontMetricsInt();
         mLineNumberMetrics = mPaintOther.getFontMetricsInt();
+        mFontCache.clearCache();
         computeMeasureScale();
         invalidate();
     }
@@ -715,9 +721,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         // Space width has big error in.our measuring
         // Here is to fix it, so we use original paint
         double spaceWidth = mPaint.measureText(" ") / mMeasureScale;
-        double extraWidth = spaceWidth * getTabWidth() - paint.measureText("\t");
+        double extraWidth = spaceWidth * getTabWidth() - mMeasureFontCache.measureChar('\t', paint);
         double spaceWidthDelta = spaceWidth - paint.measureText(" ");
-        return paint.measureText(src, 0, length) + tabCount * extraWidth + spaceWidthDelta * spaceCount;
+        return mMeasureFontCache.measureText(src, 0, length, paint) + tabCount * extraWidth + spaceWidthDelta * spaceCount;
     }
 
     /**
@@ -1356,7 +1362,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return The width measured
      */
     private float measureText(char[] src, int index, int count) {
-        return measureText(src, index, count, mPaint);
+        int tabCount = 0;
+        for (int i = 0; i < count; i++) {
+            if (src[index + i] == '\t') {
+                tabCount++;
+            }
+        }
+        float extraWidth = mFontCache.measureChar(' ', mPaint) * getTabWidth() - mFontCache.measureChar('\t', mPaint);
+        return mFontCache.measureText(src, index, index + count, mPaint) + tabCount * extraWidth;
     }
 
     /**
@@ -1463,7 +1476,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
       * Binary find index for position
       */
-    private int binaryFindCharIndex(float initialPosition, float targetOffset, int left, int right, char[] chars) {
+    private float[] binaryFindCharIndex(float initialPosition, float targetOffset, int left, int right, char[] chars) {
         float measureResult = 0;
         int lastCommitMeasure = 0;
         int min = left, max = right;
@@ -1476,10 +1489,20 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             } else if (measureResult + initialPosition < targetOffset) {
                 left = mid + 1;
             } else {
-                return mid;
+                return new float[] {mid, measureResult};
             }
         }
-        return Math.max(min, Math.min(max, left));
+        int res = Math.max(min, Math.min(max, left));
+        return new float[] {res, measureTextRelatively(chars, res, lastCommitMeasure, measureResult)};
+    }
+    
+    private float[] orderedFindCharIndex(float initialPosition, float targetOffset, int left, int right, char[] chars) {
+        float width = 0f;
+        while (left < right && initialPosition + width < targetOffset) {
+            width += mFontCache.measureChar(chars[left], mPaint);
+            left ++;
+        }
+        return new float[] {left, width};
     }
 
     /**
@@ -1493,10 +1516,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         
         //This switch is only enabled when the line is too long
         if(columnCount > 256) {
-            minPaintChar = binaryFindCharIndex(offsetX, 0, 0, columnCount, mChars);
-            maxPaintChar = binaryFindCharIndex(offsetX, getWidth(), minPaintChar, columnCount, mChars);
-            maxPaintChar = Math.min(maxPaintChar + 2, columnCount);
-            minPaintChar = Math.max(minPaintChar - 2, 0);
+            float[] res = binaryFindCharIndex(offsetX, -50f, 0, columnCount, mChars);
+            minPaintChar = (int) res[0];
+            offsetX += res[1];
+            maxPaintChar = minPaintChar;
+            float offset2 = offsetX;
+            while (maxPaintChar < columnCount && offset2 < getWidth()) {
+                offset2 += mFontCache.measureChar(mChars[maxPaintChar], mPaint);
+                maxPaintChar ++;
+            }
         }
         
         float baseline = getRowBaseline(line) - getOffsetY();
@@ -1515,18 +1543,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             spanIndex--;
         }
         spanIndex = Math.max(0, spanIndex);
-        boolean firstPaint = true;
+        
         boolean continueFlag = true;
         int endIndex = 0;
         while (continueFlag && spanIndex < spans.size()) {
             Span span = spans.get(spanIndex);
             int startIndex = span.column;
-            if (firstPaint) {
-                firstPaint = false;
-                startIndex = minPaintChar;
-                offsetX += measureText(mChars, 0, startIndex);
-            }
             endIndex = spanIndex + 1 < spans.size() ? spans.get(spanIndex + 1).column : columnCount;
+            if (startIndex < minPaintChar) {
+                startIndex = minPaintChar;
+            }
             if (maxPaintChar <= endIndex) {
                 continueFlag = false;
                 endIndex = maxPaintChar;
@@ -2056,7 +2082,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         prepareLine(line);
         int max = mText.getColumnCount(line);
-        int index = binaryFindCharIndex(0, x, 0, max, mChars);
+        int index = (int) binaryFindCharIndex(0, x, 0, max, mChars)[0];
         float offset = measureText(mChars, 0, index);
         if (offset < x) {
             index++;
@@ -2443,6 +2469,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             typefaceText = Typeface.DEFAULT;
         }
         mPaint.setTypeface(typefaceText);
+        mFontCache.clearCache();
         mTextMetrics = mPaint.getFontMetricsInt();
         computeMeasureScale();
         invalidate();
@@ -3588,7 +3615,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mListener.onFormatSucceed(this);
         }
         mFormatThread = null;
-        if (originalText != mText) {
+        if (originalText == mText) {
             post(new Runnable() {
                 @Override
                 public void run() {
