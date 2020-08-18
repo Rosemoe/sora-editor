@@ -741,10 +741,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             float baseline = centerY - getRowHeight() / 2f + getRowBaseline(0);
             float centerX = getWidth() / 2f;
             mPaint.setColor(mColors.getColor(EditorColorScheme.LINE_NUMBER_PANEL_TEXT));
-            Paint.Align align = mPaint.getTextAlign();
             mPaint.setTextAlign(Paint.Align.CENTER);
             canvas.drawText(text, centerX, baseline, mPaint);
-            mPaint.setTextAlign(align);
+            mPaint.setTextAlign(Paint.Align.LEFT);
             return;
         }
 
@@ -777,15 +776,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         drawBlockLines(canvas, offsetX);
 
         if (!mCursor.isSelected()) {
-            drawCursor(canvas, mCursor.getLeftLine(), mCursor.getLeftColumn(), offsetX, color.getColor(EditorColorScheme.SELECTION_INSERT));
-            if (mEventHandler.shouldDrawInsertHandle()) {
-                drawHandle(canvas, mCursor.getLeftLine(), mCursor.getLeftColumn(), mInsertHandle);
-            }
+            mInsertHandle.setEmpty();
+            drawCursor(canvas, mCursor.getLeftLine(), mCursor.getLeftColumn(), offsetX, color.getColor(EditorColorScheme.SELECTION_INSERT), mEventHandler.shouldDrawInsertHandle() ? mInsertHandle : null);
         } else if (mTextActionPresenter.shouldShowCursor()) {
-            drawCursor(canvas, mCursor.getLeftLine(), mCursor.getLeftColumn(), offsetX, color.getColor(EditorColorScheme.SELECTION_INSERT));
-            drawCursor(canvas, mCursor.getRightLine(), mCursor.getRightColumn(), offsetX, color.getColor(EditorColorScheme.SELECTION_INSERT));
-            drawHandle(canvas, mCursor.getLeftLine(), mCursor.getLeftColumn(), mLeftHandle);
-            drawHandle(canvas, mCursor.getRightLine(), mCursor.getRightColumn(), mRightHandle);
+            drawCursor(canvas, mCursor.getLeftLine(), mCursor.getLeftColumn(), offsetX, color.getColor(EditorColorScheme.SELECTION_INSERT), mLeftHandle);
+            drawCursor(canvas, mCursor.getRightLine(), mCursor.getRightColumn(), offsetX, color.getColor(EditorColorScheme.SELECTION_INSERT), mRightHandle);
         } else {
             mLeftHandle.setEmpty();
             mRightHandle.setEmpty();
@@ -846,28 +841,21 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Set the color of EdgeEffect
-     * If current device does not support this attribute, it will do nothing without throwing exception
      *
      * @param color The color of EdgeEffect
      */
     public void setEdgeEffectColor(int color) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mVerticalEdgeGlow.setColor(color);
-            mHorizontalGlow.setColor(color);
-        }
+        mVerticalEdgeGlow.setColor(color);
+        mHorizontalGlow.setColor(color);
     }
 
     /**
      * Get the color of EdgeEffect
-     * Zero is returned when current device does not support this attribute.
      *
-     * @return The color of EdgeEffect. 0 for unknown.
+     * @return The color of EdgeEffect.
      */
     public int getEdgeEffectColor() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            return mVerticalEdgeGlow.getColor();
-        }
-        return 0;
+        return mVerticalEdgeGlow.getColor();
     }
 
     /**
@@ -947,12 +935,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param column     The column you want to attach handle center to its center x offset
      * @param resultRect The rect of handle this method drew
      */
-    private void drawHandle(Canvas canvas, int line, int column, RectF resultRect) {
+    private void drawHandle(Canvas canvas, int line, float centerX, RectF resultRect) {
         float radius = mDpUnit * 10;
         float top = getRowBottom(line) - getOffsetY();
         float bottom = top + radius * 2;
-        prepareLine(line);
-        float centerX = measureTextRegionOffset() + measureText(mChars, 0, column) - getOffsetX();
         float left = centerX - radius;
         float right = centerX + radius;
         if (right < 0 || left > getWidth() || bottom < 0 || top > getHeight()) {
@@ -1315,8 +1301,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param offsetX Start x of text region
      * @param color   Color of cursor
      */
-    private void drawCursor(Canvas canvas, int line, int column, float offsetX, int color) {
-        if (isRowVisible(line)) {
+    private void drawCursor(Canvas canvas, int line, int column, float offsetX, int color, RectF handle) {
+        if (isRowVisible(line) || (handle != null && (isRowVisible(line + 1) || line == getLineCount()))) {
             prepareLine(line);
             float width = measureText(mChars, 0, column);
             mRect.top = getRowTop(line) - getOffsetY();
@@ -1324,6 +1310,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mRect.left = offsetX + width;
             mRect.right = offsetX + width + mInsertSelWidth;
             drawColor(canvas, color, mRect);
+            if (handle != null) {
+                drawHandle(canvas, line, offsetX + width, handle);
+            }
         }
     }
 
