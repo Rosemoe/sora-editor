@@ -114,6 +114,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mEditable;
     private boolean mAutoIndent;
     private boolean mPaintLabel;
+    private boolean mWordwrap;
     private boolean mUndoEnabled;
     private boolean mDisplayLnPanel;
     private boolean mOverScrollEnabled;
@@ -163,6 +164,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private FontCache mMeasureFontCache;
     private Paint.FontMetricsInt mTextMetrics;
     private Paint.FontMetricsInt mLineNumberMetrics;
+    private Layout mLayout;
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -337,6 +339,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         prepareLine(line);
         return measureText(mChars, 0, column) + measureTextRegionOffset() - getOffsetX();
     }
+    
+    protected Paint getTextPaint() {
+        return mPaint;
+    }
 
     /**
      * Prepare editor
@@ -350,7 +356,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaintMeasure = new Paint();
         mMatrix = new Matrix();
         mSearcher = new EditorSearcher(this);
-        //Only Android.LOLLIPOP and upper level device can use this builder
+        //Only Android 21 and upper level device can use this builder
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mAnchorInfoBuilder = new CursorAnchorInfo.Builder();
         }
@@ -501,6 +507,27 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public float getBlockLineWidth() {
         return mBlockLineWidth;
     }
+    
+    /**
+      * Not supported now
+      */
+    public void setWordwrap(boolean wordwrap) {
+        if (true) {
+            throw new UnsupportedOperationException();
+        }
+        if (mWordwrap != wordwrap) {
+            mWordwrap = wordwrap;
+            createLayout();
+            invalidate();
+        }
+    }
+    
+    /**
+      * Always false
+      */
+    public boolean isWordwrap() {
+        return false;//mWordwrap;
+    }
 
     /**
      * Whether display vertical scroll bar when scrolling
@@ -643,7 +670,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mTextMetrics = mPaint.getFontMetricsInt();
         mLineNumberMetrics = mPaintOther.getFontMetricsInt();
         mFontCache.clearCache();
+        // createLayout();
         computeMeasureScale();
+        measureAllLines();
         invalidate();
     }
 
@@ -994,10 +1023,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             BlockLine block = blocks.get(curr);
             if (hasVisibleRegion(block.startLine, block.endLine, first, last)) {
                 try {
-                    prepareLine(block.endLine);
-                    float offset1 = measureText(mChars, 0, block.endColumn);
-                    prepareLine(block.startLine);
-                    float offset2 = measureText(mChars, 0, block.startColumn);
+                    CharSequence lineContent = mText.getLine(block.endLine);
+                    float offset1 = mFontCache.measureText(lineContent, 0, block.endColumn, mPaint);
+                    lineContent = mText.getLine(block.startLine);
+                    float offset2 = mFontCache.measureText(lineContent, 0, block.startColumn, mPaint);
                     float offset = Math.min(offset1, offset2);
                     float centerX = offset + offsetX;
                     mRect.top = Math.max(0, getRowBottom(block.startLine) - getOffsetY());
@@ -1485,14 +1514,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         return new float[] {res, measureTextRelatively(chars, res, lastCommitMeasure, measureResult)};
     }
     
-    private float[] orderedFindCharIndex(float initialPosition, float targetOffset, int left, int right, char[] chars) {
+    /*private float[] orderedFindCharIndex(float initialPosition, float targetOffset, int left, int right, char[] chars) {
         float width = 0f;
         while (left < right && initialPosition + width < targetOffset) {
             width += mFontCache.measureChar(chars[left], mPaint);
             left ++;
         }
         return new float[] {left, width};
-    }
+    }*/
 
     /**
      * Draw single line
@@ -1825,6 +1854,20 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         double sizeScale = fontSize / (double) size;
         mMeasureScale = fontScale * sizeScale;
     }
+    
+    /**
+      * Create layout for text
+      */
+    private void createLayout() {
+        if (mLayout != null) {
+            mLayout.destroyLayout();
+        }
+        if (mWordwrap) {
+            mLayout = new WordwrapLayout(this, mText);
+        } else {
+            mLayout = new LineBreakLayout(this, mText);
+        }
+    }
 
     /**
      * Draw rect on screen
@@ -2071,9 +2114,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         prepareLine(line);
         int max = mText.getColumnCount(line);
-        int index = (int) binaryFindCharIndex(0, x, 0, max, mChars)[0];
-        float offset = measureText(mChars, 0, index);
-        if (offset < x) {
+        float[] res = binaryFindCharIndex(0, x, 0, max, mChars);
+        int index = (int) res[0];
+        if (res[1] < x) {
             index++;
         }
         return Math.min(index, max);
@@ -2460,7 +2503,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaint.setTypeface(typefaceText);
         mFontCache.clearCache();
         mTextMetrics = mPaint.getFontMetricsInt();
+        //createLayout();
         computeMeasureScale();
+        measureAllLines();
         invalidate();
     }
 
@@ -3021,6 +3066,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (mInputMethodManager != null) {
             mInputMethodManager.restartInput(this);
         }
+        //createLayout();
         measureAllLines();
         invalidate();
     }
@@ -3458,12 +3504,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 SpanMapUpdater.shiftSpansOnMultiLineInsert(mSpanner.getResult().getSpanMap(), startLine, startColumn, endLine, endColumn);
             }
         }
+        measureLines(startLine, endLine);
         // Notify input method
         updateCursor();
         mWait = false;
-        // Refresh lines
-        measureLines(startLine, endLine);
-        // Visibility & State shjft
+        // Visibility & State shift
         exitSelectModeIfNeeded();
         // Auto completion
         if (mConnection.mComposingLine == -1 && endColumn != 0 && startLine == endLine) {
@@ -3547,9 +3592,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 SpanMapUpdater.shiftSpansOnMultiLineDelete(mSpanner.getResult().getSpanMap(), startLine, startColumn, endLine, endColumn);
             }
         }
+        measureLines(startLine, startLine + 1);
         updateCursor();
         exitSelectModeIfNeeded();
-        measureLines(startLine, startLine + 1);
         if (mConnection.mComposingLine == -1 && mCompletionWindow.isShowing()) {
             if (startLine != endLine || startColumn != endColumn - 1) {
                 postHideCompletionWindow();
@@ -3608,16 +3653,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             post(new Runnable() {
                 @Override
                 public void run() {
-                    mText.beginBatchEdit();
                     int line = mCursor.getLeftLine();
                     int column = mCursor.getLeftColumn();
-                    mText.delete(0, 0, getLineCount() - 1, mText.getColumnCount(getLineCount() - 1));
-                    mText.insert(0, 0, newText);
-                    mText.endBatchEdit();
+                    mText.replace(0, 0, getLineCount() - 1, mText.getColumnCount(getLineCount() - 1), newText);
                     getScroller().forceFinished(true);
                     mCompletionWindow.hide();
                     setSelectionAround(line, column);
-                    mSpanner.analyze(mText);
                 }
             });
         }
