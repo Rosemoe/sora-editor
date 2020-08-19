@@ -121,14 +121,17 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
      */
     public void notifyScrolled() {
         mLastScroll = System.currentTimeMillis();
-        mEditor.postDelayed(new Runnable() {
+        class ScrollNotifier implements Runnable {
+            
             @Override
             public void run() {
                 if (System.currentTimeMillis() - mLastScroll >= HIDE_DELAY_HANDLE) {
                     mEditor.invalidate();
                 }
             }
-        }, HIDE_DELAY_HANDLE + 10);
+            
+        }
+        mEditor.postDelayed(new ScrollNotifier(), HIDE_DELAY_HANDLE);
     }
 
     /**
@@ -136,14 +139,17 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
      */
     public void notifyLater() {
         mLastSetSelection = System.currentTimeMillis();
-        mEditor.postDelayed(new Runnable() {
+        class InvalidateNotifier implements Runnable {
+            
             @Override
             public void run() {
                 if (System.currentTimeMillis() - mLastSetSelection >= HIDE_DELAY) {
                     mEditor.invalidate();
                 }
             }
-        }, HIDE_DELAY + 10);
+            
+        }
+        mEditor.postDelayed(new InvalidateNotifier(), HIDE_DELAY);
     }
 
     /**
@@ -186,13 +192,13 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 if (rect.contains(e.getX(), e.getY())) {
                     mHolding = true;
                     downY = e.getY();
-                    mEditor.hideAutoCompletePanel();
+                    mEditor.hideAutoCompleteWindow();
                 }
                 rect = mEditor.getHorizontalScrollBarRect();
                 if (rect.contains(e.getX(), e.getY())) {
                     mHolding2 = true;
                     downX = e.getX();
-                    mEditor.hideAutoCompletePanel();
+                    mEditor.hideAutoCompleteWindow();
                 }
                 if (mHolding && mHolding2) {
                     mHolding2 = false;
@@ -206,8 +212,8 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     downX = e.getX();
                     offsetX = mScroller.getCurrX() + downX;
                     offsetY = mScroller.getCurrY() + downY;
-                    float startX = mScroller.getCurrX() + mEditor.getInsertHandleRect().centerX() - mEditor.measurePrefix();
-                    float startY = mScroller.getCurrY() + mEditor.getInsertHandleRect().top - mEditor.getLineHeight() / 5f;
+                    float startX = mScroller.getCurrX() + mEditor.getInsertHandleRect().centerX() - mEditor.measureTextRegionOffset();
+                    float startY = mScroller.getCurrY() + mEditor.getInsertHandleRect().top - mEditor.getRowHeight() / 5f;
 
                     insert = new SelectionHandle(SelectionHandle.BOTH, startX, startY);
                 }
@@ -223,11 +229,11 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     downX = e.getX();
                     offsetX = mScroller.getCurrX() + downX;
                     offsetY = mScroller.getCurrY() + downY;
-                    float startX = mScroller.getCurrX() + mEditor.getLeftHandleRect().centerX() - mEditor.measurePrefix();
-                    float startY = mScroller.getCurrY() + mEditor.getLeftHandleRect().top - mEditor.getLineHeight() / 5f;
+                    float startX = mScroller.getCurrX() + mEditor.getLeftHandleRect().centerX() - mEditor.measureTextRegionOffset();
+                    float startY = mScroller.getCurrY() + mEditor.getLeftHandleRect().top - mEditor.getRowHeight() / 5f;
                     this.left = new SelectionHandle(SelectionHandle.LEFT, startX, startY);
-                    startX = mScroller.getCurrX() + mEditor.getRightHandleRect().centerX() - mEditor.measurePrefix();
-                    startY = mScroller.getCurrY() + mEditor.getRightHandleRect().top - mEditor.getLineHeight() / 5f;
+                    startX = mScroller.getCurrX() + mEditor.getRightHandleRect().centerX() - mEditor.measureTextRegionOffset();
+                    startY = mScroller.getCurrY() + mEditor.getRightHandleRect().top - mEditor.getRowHeight() / 5f;
                     this.right = new SelectionHandle(SelectionHandle.RIGHT, startX, startY);
                 }
                 return true;
@@ -235,7 +241,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 if (mHolding) {
                     float movedDis = e.getY() - downY;
                     downY = e.getY();
-                    float all = mEditor.getLineHeight() * mEditor.getLineCount() + mEditor.getHeight() / 2f;
+                    float all = mEditor.getRowHeight() * mEditor.getLineCount() + mEditor.getHeight() / 2f;
                     float dy = movedDis / mEditor.getHeight() * all;
                     scrollBy(0, dy);
                     return true;
@@ -285,25 +291,26 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         }
         return false;
     }
-
-    /**
-     * Scroll the view smoothly
-     *
-     * @param deltaY The delta y
-     */
-    private void smoothScrollBy(float deltaY) {
-        float finalY = mScroller.getCurrY() + deltaY;
-        if (finalY < 0) {
-            finalY = 0;
-        } else if (finalY > mEditor.getScrollMaxY()) {
-            finalY = mEditor.getScrollMaxY();
-        }
-        mScroller.startScroll(mScroller.getCurrX(), mScroller.getCurrY(), 0, (int) (finalY - mScroller.getCurrY()));
-    }
-
-    private void scrollBy(float distanceX, float distanceY) {
+    
+    protected void smoothScrollBy(float distanceX, float distanceY) {
         mEditor.getTextActionPresenter().onUpdate();
-        mEditor.hideAutoCompletePanel();
+        mEditor.hideAutoCompleteWindow();
+        int endX = mScroller.getCurrX() + (int) distanceX;
+        int endY = mScroller.getCurrY() + (int) distanceY;
+        endX = Math.max(endX, 0);
+        endY = Math.max(endY, 0);
+        endY = Math.min(endY, mEditor.getScrollMaxY());
+        endX = Math.min(endX, mEditor.getScrollMaxX());
+        mScroller.startScroll(mScroller.getCurrX(),
+                              mScroller.getCurrY(),
+                              endX - mScroller.getCurrX(),
+                              endY - mScroller.getCurrY(), 0);
+        mEditor.invalidate();
+    }
+    
+    protected void scrollBy(float distanceX, float distanceY) {
+        mEditor.getTextActionPresenter().onUpdate();
+        mEditor.hideAutoCompleteWindow();
         int endX = mScroller.getCurrX() + (int) distanceX;
         int endY = mScroller.getCurrY() + (int) distanceY;
         endX = Math.max(endX, 0);
@@ -329,7 +336,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         } else {
             notifyLater();
             mEditor.setSelection(line, column);
-            mEditor.hideAutoCompletePanel();
+            mEditor.hideAutoCompleteWindow();
         }
         mEditor.performClick();
         return true;
@@ -412,20 +419,20 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 mScroller.getCurrY(),
                 endX - mScroller.getCurrX(),
                 endY - mScroller.getCurrY(), 0);
-        final float minOverPull = mEditor.getDpUnit() * 10;
-        if (notifyY && mScroller.getCurrY() + distanceY < -minOverPull) {
+        final float minOverPull = 0;
+        if (notifyY && mScroller.getCurrY() + distanceY <= -minOverPull) {
             mEditor.getVerticalEdgeEffect().onPull(-distanceY / mEditor.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth())));
             topOrBottom = false;
         }
-        if (notifyY && mScroller.getCurrY() + distanceY > mEditor.getScrollMaxY() + minOverPull) {
+        if (notifyY && mScroller.getCurrY() + distanceY >= mEditor.getScrollMaxY() + minOverPull) {
             mEditor.getVerticalEdgeEffect().onPull(distanceY / mEditor.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth())));
             topOrBottom = true;
         }
-        if (notifyX && mScroller.getCurrX() + distanceX < -minOverPull) {
+        if (notifyX && mScroller.getCurrX() + distanceX <= -minOverPull) {
             mEditor.getHorizontalEdgeEffect().onPull(-distanceX / mEditor.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight())));
             leftOrRight = false;
         }
-        if (notifyX && mScroller.getCurrX() + distanceX > mEditor.getScrollMaxX() + minOverPull) {
+        if (notifyX && mScroller.getCurrX() + distanceX >= mEditor.getScrollMaxX() + minOverPull) {
             mEditor.getHorizontalEdgeEffect().onPull(distanceX / mEditor.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight())));
             leftOrRight = true;
         }
@@ -446,13 +453,13 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 mEditor.getScrollMaxX(),
                 0,
                 mEditor.getScrollMaxY(),
-                mEditor.isOverScrollEnabled() ? (int) (30 * mEditor.getDpUnit()) : 0,
-                mEditor.isOverScrollEnabled() ? (int) (30 * mEditor.getDpUnit()) : 0);
+                mEditor.isOverScrollEnabled() ? (int) (20 * mEditor.getDpUnit()) : 0,
+                mEditor.isOverScrollEnabled() ? (int) (20 * mEditor.getDpUnit()) : 0);
         mEditor.invalidate();
         float minVe = mEditor.getDpUnit() * 2000;
         if (Math.abs(velocityX) >= minVe || Math.abs(velocityY) >= minVe) {
             notifyScrolled();
-            mEditor.hideAutoCompletePanel();
+            mEditor.hideAutoCompleteWindow();
         }
         return false;
     }
@@ -464,11 +471,11 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             if (newSize < minSize || newSize > maxSize) {
                 return false;
             }
-            int firstVisible = mEditor.getFirstVisibleLine();
-            float top = mScroller.getCurrY() - firstVisible * mEditor.getLineHeight();
-            int height = mEditor.getLineHeight();
+            int firstVisible = mEditor.getFirstVisibleRow();
+            float top = mScroller.getCurrY() - firstVisible * mEditor.getRowHeight();
+            int height = mEditor.getRowHeight();
             mEditor.setTextSizePx(newSize);
-            float newY = firstVisible * mEditor.getLineHeight() + top * mEditor.getLineHeight() / height;
+            float newY = firstVisible * mEditor.getRowHeight() + top * mEditor.getRowHeight() / height;
             mScroller.startScroll(mScroller.getCurrX(), (int) newY, 0, 0, 0);
             return true;
         }
@@ -548,11 +555,11 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             float targetX = (currX - offsetX) + startX;
             float targetY = (currY - offsetY) + startY;
             int line = mEditor.getPointLine(targetY);
-            if (line >= mEditor.getLastVisibleLine()) {
-                smoothScrollBy(mEditor.getLineHeight() * 8);
+            if (line >= mEditor.getLastVisibleRow()) {
+                scrollBy(0, mEditor.getRowHeight());
             }
-            if (line <= mEditor.getFirstVisibleLine()) {
-                smoothScrollBy(-mEditor.getLineHeight() * 8);
+            if (line <= mEditor.getFirstVisibleRow() - 1) {
+                scrollBy(0, -mEditor.getRowHeight());
             }
             line = mEditor.getPointLine(targetY);
             if (line >= 0 && line < mEditor.getLineCount()) {

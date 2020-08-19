@@ -144,6 +144,7 @@ public class TextAnalyzeResult {
     public void addNormalIfNull() {
         if (mSpanMap.isEmpty()) {
             List<Span> spanList = new ArrayList<>();
+            spanList.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
             mSpanMap.add(spanList);
         }
     }

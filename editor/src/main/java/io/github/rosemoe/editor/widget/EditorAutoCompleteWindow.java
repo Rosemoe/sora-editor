@@ -30,7 +30,6 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,9 +42,10 @@ import io.github.rosemoe.editor.struct.ResultItem;
 
 import java.util.ArrayList;
 import java.util.List;
+import android.widget.RelativeLayout;
 
 /**
- * Auto complete panel for editing code quicker
+ * Auto complete window for editing code quicker
  *
  * @author Rose
  */
@@ -53,7 +53,6 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
     private final CodeEditor mEditor;
     private final ListView mListView;
     private final TextView mTip;
-    private final ProgressBar mPb;
     private final GradientDrawable mBg;
 
     private int mCurrent = 0;
@@ -61,23 +60,13 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
     private String mLastPrefix;
     private AutoCompleteProvider mProvider;
 
-    private final static String TIP = "Loading...";
+    private final static String TIP = "Refreshing...";
 
-    private boolean cancelShowUp = false;
-
-    @Override
-    public void hide() {
-        if (isShowing()) {
-            super.hide();
-        } else {
-            cancelShowUp = true;
-        }
-    }
+    protected boolean cancelShowUp = false;
 
     @Override
     public void show() {
         if (cancelShowUp) {
-            cancelShowUp = false;
             return;
         }
         super.show();
@@ -91,26 +80,20 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
     public EditorAutoCompleteWindow(CodeEditor editor) {
         super(editor);
         mEditor = editor;
-        LinearLayout mLayout = new LinearLayout(mEditor.getContext());
-        mLayout.setGravity(Gravity.CENTER);
-        mLayout.setOrientation(LinearLayout.VERTICAL);
-        //mLayout.setPadding(5, 5, 5, 5);
+        RelativeLayout layout = new RelativeLayout(mEditor.getContext());
         mListView = new ListView(mEditor.getContext());
-        mLayout.addView(mListView, new LinearLayout.LayoutParams(-1, -1));
-        mPb = new ProgressBar(mEditor.getContext());
-        mPb.setLayoutParams(new LinearLayout.LayoutParams(-2, -2));
-        mLayout.addView(mPb);
+        layout.addView(mListView, new LinearLayout.LayoutParams(-1, -1));
         mTip = new TextView(mEditor.getContext());
         mTip.setText(TIP);
-        mTip.setGravity(Gravity.CENTER);
-        mTip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+        mTip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        mTip.setBackgroundColor(0xeeeeeeee);
         mTip.setTextColor(0xff000000);
-        mLayout.addView(mTip);
-        ((LinearLayout.LayoutParams) mPb.getLayoutParams()).bottomMargin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics());
-        setContentView(mLayout);
+        layout.addView(mTip);
+        ((RelativeLayout.LayoutParams) mTip.getLayoutParams()).addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        setContentView(layout);
         GradientDrawable gd = new GradientDrawable();
         gd.setCornerRadius(1);
-        mLayout.setBackgroundDrawable(gd);
+        layout.setBackgroundDrawable(gd);
         mBg = gd;
         applyColor();
         mListView.setDividerHeight(0);
@@ -125,7 +108,6 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
                     Toast.makeText(mEditor.getContext(), e.toString(), Toast.LENGTH_SHORT).show();
                 }
             }
-
 
         });
     }
@@ -154,9 +136,9 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
      * @param state Whether loading
      */
     public void setLoading(boolean state) {
-        mTip.setVisibility(/*state ? View.VISIBLE : */View.GONE);
-        mPb.setVisibility(/*state ? View.VISIBLE : */View.GONE);
-        mListView.setVisibility(/*(!state) ? */View.VISIBLE/* : View.GONE*/);
+        mTip.setVisibility(state ? View.VISIBLE : View.GONE);
+        //mListView.setVisibility((!state) ? View.VISIBLE : View.GONE);
+        //update();
     }
 
     /**
@@ -206,6 +188,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         ResultItem item = ((ItemAdapter) mListView.getAdapter()).getItem(pos);
         Cursor cursor = mEditor.getCursor();
         if (!cursor.isSelected()) {
+            cancelShowUp = true;
             mEditor.getText().delete(cursor.getLeftLine(), cursor.getLeftColumn() - mLastPrefix.length(), cursor.getLeftLine(), cursor.getLeftColumn());
             cursor.onCommitText(item.commit);
             if ((item.mask & ResultItem.MASK_SHIFT_LEFT_TWICE) != 0) {
@@ -215,10 +198,9 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
             if ((item.mask & ResultItem.MASK_SHIFT_LEFT_ONCE) != 0) {
                 mEditor.moveSelectionLeft();
             }
-            mEditor.cursorChangeExternal();
+            cancelShowUp = false;
         }
-        hide();
-        hide();
+        mEditor.postHideCompletionWindow();
     }
 
     /**
@@ -227,6 +209,9 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
      * @param prefix The user's input code's prefix
      */
     public void setPrefix(String prefix) {
+        if (cancelShowUp) {
+            return;
+        }
         setLoading(true);
         mLastPrefix = prefix;
         mRequestTime = System.currentTimeMillis();
@@ -267,7 +252,6 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
                     hide();
                     return;
                 }
-                show();
                 mCurrent = 0;
                 mListView.setAdapter(new ItemAdapter(results));
                 float newHeight = mEditor.getDpUnit() * 30 * results.size();

@@ -26,12 +26,13 @@ import io.github.rosemoe.editor.text.Cursor;
  *
  * @author Rose
  */
+@SuppressWarnings("deprecated")
 public class EditorSearcher {
 
     private final CodeEditor mEditor;
     protected String mSearchText;
 
-    protected EditorSearcher(CodeEditor editor) {
+    EditorSearcher(CodeEditor editor) {
         mEditor = editor;
     }
 
@@ -58,7 +59,7 @@ public class EditorSearcher {
             String selectedText = text.subContent(cursor.getLeftLine(), cursor.getLeftColumn(), cursor.getRightLine(), cursor.getRightColumn()).toString();
             if (selectedText.equals(mSearchText)) {
                 cursor.onCommitText(newText);
-                mEditor.hideAutoCompletePanel();
+                mEditor.hideAutoCompleteWindow();
                 gotoNext(false);
                 return true;
             }
@@ -116,12 +117,12 @@ public class EditorSearcher {
         int line = cursor.getRightLine();
         int column = cursor.getRightColumn();
         for (int i = line; i < text.getLineCount(); i++) {
-            int idx = column >= text.getColumnCount(i) ? -1 : text.getRawData(i).indexOf(mSearchText, column);
+            int idx = column >= text.getColumnCount(i) ? -1 : text.getLine(i).indexOf(mSearchText, column);
             if (idx != -1) {
                 mEditor.setSelectionRegion(i, idx, i, idx + mSearchText.length());
                 return;
             }
-            column = -1;
+            column = 0;
         }
         if (tip) {
             Toast.makeText(mEditor.getContext(), "Not found in this direction", Toast.LENGTH_SHORT).show();
@@ -136,7 +137,7 @@ public class EditorSearcher {
         int line = cursor.getLeftLine();
         int column = cursor.getLeftColumn();
         for (int i = line; i >= 0; i--) {
-            int idx = column - 1 < 0 ? -1 : text.getRawData(i).lastIndexOf(mSearchText, column - 1);
+            int idx = column - 1 < 0 ? -1 : text.getLine(i).lastIndexOf(mSearchText, column - 1);
             if (idx != -1) {
                 mEditor.setSelectionRegion(i, idx, i, idx + mSearchText.length());
                 return;
