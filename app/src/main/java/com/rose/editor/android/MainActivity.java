@@ -91,7 +91,8 @@ public class MainActivity extends Activity {
         replace = findViewById(R.id.replace_editor);
         editor.setOverScrollEnabled(false);
         editor.setEditorLanguage(new JavaLanguage());
-        //editor.setColorScheme(new SchemeDarcula());
+        editor.setWordwrap(true);
+        editor.setColorScheme(new SchemeDarcula());
         editor.setText("/**\n * Demo\n */\n@SuppressWarnings(/**/\"unused\")\n" +
                 "public class Main {\n\n\tpublic static void main(String[] args) {\n\t\t" +
                 "// Comment\n\t\tSystem.out.println(\"Hello\");\n\t}\n\n}\n");

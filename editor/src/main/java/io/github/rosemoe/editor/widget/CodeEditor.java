@@ -157,7 +157,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private FontCache mFontCache;
     private Paint.FontMetricsInt mTextMetrics;
     private Paint.FontMetricsInt mLineNumberMetrics;
-    private Layout mLayout;
+    Layout mLayout;
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -802,6 +802,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 }
                 lastVisibleChar++;
             }
+            lastVisibleChar = Math.min(lastVisibleChar, rowInf.endColumn);
 
             // Draw matched text background
             for (int position : matchedPositions) {
@@ -892,20 +893,18 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             // Draw cursors
             if (mCursor.isSelected()) {
                 if (mTextActionPresenter.shouldShowCursor()) {
-                    if (mCursor.getLeftLine() == line) {
+                    if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
                         float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar);
                         postDrawCursor.add(new CursorPaintAction(row, centerX, mLeftHandle));
                     }
-                    if (mCursor.getRightLine() == line) {
+                    if (mCursor.getRightLine() == line && isInside(mCursor.getRightColumn(), firstVisibleChar, lastVisibleChar, line)) {
                         float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getRightColumn() - firstVisibleChar);
                         postDrawCursor.add(new CursorPaintAction(row, centerX, mRightHandle));
                     }
                 }
-            } else if (mCursor.getLeftLine() == line) {
-                if (isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar)) {
-                    float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar);
-                    postDrawCursor.add(new CursorPaintAction(row, centerX, mEventHandler.shouldDrawInsertHandle() ? mInsertHandle : null));
-                }
+            } else if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
+                float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar);
+                postDrawCursor.add(new CursorPaintAction(row, centerX, mEventHandler.shouldDrawInsertHandle() ? mInsertHandle : null));
             }
 
         }
@@ -928,7 +927,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
-    private static boolean isInside(int index, int start, int end) {
+    private boolean isInside(int index, int start, int end, int line) {
+        // Due not to draw duplicate cursors for a single one
+        if (index == end && mText.getLine(line).length() != end) {
+            return false;
+        }
         return index >= start && index <= end;
     }
 
@@ -1294,7 +1297,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     private void drawScrollBarVertical(Canvas canvas) {
         int page = getHeight();
-        float all = getRowHeight() * getLineCount() + getHeight() / 2f;
+        float all = mLayout.getLayoutHeight() + getHeight() / 2f;
         float length = page / all * getHeight();
         float topY;
         if (length < mDpUnit * 30) {
@@ -1326,7 +1329,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (!mDisplayLnPanel) {
             return;
         }
-        String text = mLnTip + (1 + getFirstVisibleRow());
+        String text = mLnTip + (1 + getFirstVisibleLine());
         float backupSize = mPaint.getTextSize();
         mPaint.setTextSize(getLineInfoTextSize());
         Paint.FontMetricsInt backupMetrics = mTextMetrics;
@@ -3121,7 +3124,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         getHorizontalEdgeEffect().setSize(h, w);
         getVerticalEdgeEffect().finish();
         getHorizontalEdgeEffect().finish();
-        mEventHandler.smoothScrollBy(getOffsetX() > getScrollMaxX() ? getScrollMaxX() - getOffsetX() : 0, getOffsetY() > getScrollMaxY() ? getScrollMaxY() - getOffsetY() : 0);
+        if (isWordwrap() && w != oldWidth) {
+            createLayout();
+        } else {
+            mEventHandler.smoothScrollBy(getOffsetX() > getScrollMaxX() ? getScrollMaxX() - getOffsetX() : 0, getOffsetY() > getScrollMaxY() ? getScrollMaxY() - getOffsetY() : 0);
+        }
     }
 
     @Override

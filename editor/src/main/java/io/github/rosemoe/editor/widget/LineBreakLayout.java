@@ -55,7 +55,7 @@ class LineBreakLayout implements Layout {
         widthMaintainer.ensureCapacity(text.getLineCount());
         for (int i = 0; i < text.getLineCount(); i++) {
             ContentLine line = text.getLine(i);
-            int width = (int) fontCache.measureText(line, 0, line.length(), shadowPaint);
+            int width = (int) measureText(line, 0, line.length());
             line.setWidth(width);
             line.setId(widthMaintainer.push(width));
         }
@@ -67,7 +67,7 @@ class LineBreakLayout implements Layout {
         }
         while (startLine <= endLine && startLine < text.getLineCount()) {
             ContentLine line = text.getLine(startLine);
-            int width = (int) fontCache.measureText(line, 0, line.length(), shadowPaint);
+            int width = (int) measureText(line, 0, line.length());
             if (line.getId() != -1) {
                 if (line.getWidth() == width) {
                     startLine++;
@@ -81,6 +81,17 @@ class LineBreakLayout implements Layout {
             line.setWidth(width);
             startLine++;
         }
+    }
+
+    private float measureText(CharSequence text, int start, int end) {
+        int tabCount = 0;
+        for (int i = start; i < end; i++) {
+            if (text.charAt(i) == '\t') {
+                tabCount++;
+            }
+        }
+        float extraWidth = fontCache.measureChar(' ', shadowPaint) * editor.getTabWidth() - fontCache.measureChar('\t', shadowPaint);
+        return fontCache.measureText(text, start, end, shadowPaint) + tabCount * extraWidth;
     }
 
     private float[] orderedFindCharIndex(float targetOffset, CharSequence str) {
@@ -163,7 +174,7 @@ class LineBreakLayout implements Layout {
         CharSequence sequence = text.getLine(line);
         return new float[]{
                 editor.getRowHeight() * (line + 1),
-                fontCache.measureText(sequence, 0, column, shadowPaint)
+                measureText(sequence, 0, column)
         };
     }
 
