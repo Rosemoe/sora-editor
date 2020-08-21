@@ -19,8 +19,34 @@ import android.util.SparseIntArray;
 import java.util.Objects;
 
 /**
- * This class manages the color props of editor
+ * This class manages the colors of editor.
+ * You can use color ids that are not in pre-defined id pool due to new languages.
  *
+ * This is also the default color scheme of editor.
+ * Be careful to change this class, bevcause this can cause its
+ * subclasses behave differently and some subclasses did not apply
+ * their default colors to some color ids. So change to this can cause 
+ * sub themes to change as well.
+ *
+ * Typically, you can use this class to set color of editor directly
+ * with {@link #setColor(int,int)} in a thread with looper.
+ *
+ * However, we also accept you to extend this class to customize
+ * your own ColorScheme to use diffrent default colors.
+ * Subclasses is expected to override {@link #applyDefault()}
+ * to define colors, though other methods are not final.
+ * After overriding this method, you will have to call super class's
+ * applyDefault() and then a series of {@link setColor(int,int)} calls
+ * to apply your colors.
+ *
+ * Note that new colors can be added in newer version of editor,
+ * it is dangerous not to call super.applyDefault(), which can cause
+ * newer editor works wrongly.
+ *
+ * For more pre-defined color schemes, please turn to package io.github.rosemoe.editor.widget.schemes
+ *
+ * Thanks to liyujiang-gzu (GitHub @liyujiang-gzu) for contribution to color schemes
+ * 
  * @author Rose
  */
 public class EditorColorScheme {
@@ -78,7 +104,7 @@ public class EditorColorScheme {
     /**
      * Real color saver
      */
-    protected SparseIntArray mColors;
+    protected final SparseIntArray mColors;
 
     /**
      * Create a new ColorScheme for the given editor
@@ -94,7 +120,7 @@ public class EditorColorScheme {
     /**
       * For sub classes
       */
-    protected EditorColorScheme() {
+    public EditorColorScheme() {
         mColors = new SparseIntArray();
         applyDefault();
     }
@@ -123,59 +149,65 @@ public class EditorColorScheme {
      *
      * @param type The type
      */
-    public void applyDefault(int type) {
+    private void applyDefault(int type) {
         int color;
         switch (type) {
             case LINE_DIVIDER:
-                color = 0xff3f51bf;
+                color = 0xFFdddddd;
                 break;
             case LINE_NUMBER:
-                color = 0xff444444;
+                color = 0xFF808080;
                 break;
             case LINE_NUMBER_BACKGROUND:
-                color = 0xffeeeeee;
+                color = 0xfff0f0f0;
                 break;
             case WHOLE_BACKGROUND:
-                color = 0;
+                color = 0xffffffff;
+                break;
+            case OPERATOR:
+                color = 0xFF0066D6;
                 break;
             case TEXT_NORMAL:
-            case OPERATOR:
-                color = 0xff222222;
+                color = 0xFF333333;
                 break;
             case SELECTION_INSERT:
+                color = 0xFF03EBEB;
+                break;
             case UNDERLINE:
                 color = 0xff000000;
                 break;
             case SELECTION_HANDLE:
+                color = 0xff03ebff;
+                break;
             case ANNOTATION:
-                color = 0xffec407a;
+                color = 0xFF03A9F4;
                 break;
             case CURRENT_LINE:
-                color = 0x33ec407a;
+                color = 0x10000000;
                 break;
             case SELECTED_TEXT_BACKGROUND:
-                color = 0xdd3f51b5;
+                color = 0xFF9E9E9E;
                 break;
             case KEYWORD:
-                color = 0xeeee0000;
+                color = 0xFF2196F3;
                 break;
             case COMMENT:
-                color = 0xffaaaaaa;
+                color = 0xffa8a8a8;
                 break;
             case LITERAL:
-                color = 0xdd0096ff;
+                color = 0xFF008080;
                 break;
             case SCROLL_BAR_THUMB:
-                color = 0xff2196f3;
+                color = 0xffd8d8d8;
                 break;
             case SCROLL_BAR_THUMB_PRESSED:
-                color = 0xaaec407a;
+                color = 0xFF27292A;
                 break;
             case BLOCK_LINE:
                 color = 0xffdddddd;
                 break;
             case SCROLL_BAR_TRACK:
-                color = 0xaaeeeeee;
+                color = 0;
                 break;
             case LINE_NUMBER_PANEL:
                 color = 0xdd000000;
@@ -189,19 +221,15 @@ public class EditorColorScheme {
                 color = 0xff999999;
                 break;
             case LINE_BLOCK_LABEL:
-                color = 0x88dddddd;
+                color = 0;
                 break;
             case IDENTIFIER_VAR:
-                color = 0xffe91e63;
-                break;
             case IDENTIFIER_NAME:
-                color = 0xffff9800;
-                break;
             case FUNCTION_NAME:
-                color = 0xffaaaaff;
+                color = 0xff333333;
                 break;
             case MATCHED_TEXT_BACKGROUND:
-                color = 0xaaffff00;
+                color = 0xffffff00;
                 break;
             case TEXT_SELECTED:
                 color = 0xffffffff;

@@ -1,30 +1,34 @@
 # CodeEditor
 [![](https://jitpack.io/v/Rosemoe/CodeEditor.svg)](https://jitpack.io/#Rosemoe/CodeEditor)   
-A professional code editor on Android device with good performance and nice features.   
-***Work In Progress*** This project is still developing slowly because of school.Bugs may be inside.   
+A professional code editor on Android platform with good performance and nice features.   
+***Work In Progress*** This project is still developing slowly because of school. Bugs may be inside. It is ***not*** recommended to use this project for production use.   
 ***Note:***
-Code in branch `master` will be a stabler version which can run without a lot problems (but sometimes there might be some important problems that has been solved in `dev`).   
+Code in branch `master` will be a stable version which can run without a lot problems (but sometimes there might be some important problems that has been solved in `dev`).   
 Branch `dev` has newest features in editor and is developing.   
 Any non-public method or field can be changed and moved or even deleted at current period of developing.     
-If you find any exception please send it to me.   
+If master branch has bugs, you may try out dev branch.    
+If you find any bug or require enhancement please send it to me by issues or other ways.    
    
 See [Projects/CodeEditor](https://github.com/Rosemoe/CodeEditor/projects/1) to get more information about what I am working on.    
 ***Issues and pull requests are welcome.***   
-## Features Implemented Currently
-* Syntax highlight
-* Automatic completion
-* Automatic Indent
-* Code block lines
-* Format code
-* Scale text
-* Select text
-* Scroll freely, Scrollbars, EdgeEffect, OverScroll(Optional)
-* Undo/redo actions
-* Search and replace text
-* Common Shortcuts
+## Features
+- [x] Smooth Syntax highlight
+- [x] Auto Completion
+- [x] Auto Indent
+- [x] Code block lines
+- [x] Format code (Requires improvement)
+- [x] Scale Text
+- [x] Select Text
+- [x] Scroll, Scrollbars, EdgeEffect, OverScroll
+- [x] Undo/Redo
+- [x] Search and Replace
+- [x] Shortcuts
+- [ ] Auto wordwrap
+- [ ] Incremental Highlight Analysis
+- [ ] Compatible Regex-based Highlight support
 ## Language Supported  
 * Java,JavaScript,C,C++(Basic Support:highlight,code block line,identifier and keyword auto completion)
-* S5droid(context sensitive auto completion,highlight,code block line,navigation)   
+* S5droid(context sensitive auto completion,highlight,code block line,navigation)(going to be deprecated)   
 ## Screenshots  
 ![View Outline](/images/outline.png)
 ![Auto Complete](/images/auto-completion.png)   
@@ -44,7 +48,7 @@ allprojects {
 * Step 2. Add the dependency to your app
 ```Gradle
 dependencies {
-  implementation 'com.github.Rosemoe.CodeEditor:editor:0.1.0-beta'
+  implementation 'com.github.Rosemoe.CodeEditor:editor:<versionName>'
 }
 ```
 Available modules:     

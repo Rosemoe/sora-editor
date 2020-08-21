@@ -26,12 +26,13 @@ import io.github.rosemoe.editor.text.Cursor;
  *
  * @author Rose
  */
+@SuppressWarnings("deprecated")
 public class EditorSearcher {
 
     private final CodeEditor mEditor;
     protected String mSearchText;
 
-    protected EditorSearcher(CodeEditor editor) {
+    EditorSearcher(CodeEditor editor) {
         mEditor = editor;
     }
 
@@ -121,7 +122,7 @@ public class EditorSearcher {
                 mEditor.setSelectionRegion(i, idx, i, idx + mSearchText.length());
                 return;
             }
-            column = -1;
+            column = 0;
         }
         if (tip) {
             Toast.makeText(mEditor.getContext(), "Not found in this direction", Toast.LENGTH_SHORT).show();

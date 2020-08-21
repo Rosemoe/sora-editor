@@ -19,14 +19,8 @@ import io.github.rosemoe.editor.text.Content;
 import io.github.rosemoe.editor.struct.CharPosition;
 import io.github.rosemoe.editor.text.ContentLine;
 
-//Work in progress
-class LineBreakLayout implements Layout {
-
-    @Override
-    public RowIterator obtainRowIterator(int initialRow) {
-        // TODO: Implement this method
-        return null;
-    }
+//Word in progress
+public class WordwrapLayout implements Layout {
 
     @Override
     public void beforeReplace(Content content) {
@@ -60,6 +54,12 @@ class LineBreakLayout implements Layout {
     }
 
     @Override
+    public RowIterator obtainRowIterator(int initialRow) {
+        // TODO: Implement this method
+        return null;
+    }
+
+    @Override
     public int getLayoutWidth() {
         // TODO: Implement this method
         return 0;
@@ -67,14 +67,13 @@ class LineBreakLayout implements Layout {
 
     @Override
     public int getLayoutHeight() {
-        return text.getLineCount() * editor.getRowHeight();
+        // TODO: Implement this method
+        return 0;
     }
 
     @Override
     public CharPosition getCharPositionForLayoutOffset(float xOffset, float yOffset) {
-        int lineCount = text.getLineCount();
-        int line = Math.min(lineCount - 1, Math.max((int)(yOffset / editor.getRowHeight()), 0));
-        
+        // TODO: Implement this method
         return null;
     }
 
@@ -84,15 +83,13 @@ class LineBreakLayout implements Layout {
         return null;
     }
     
+    
     private final CodeEditor editor;
     private final Content text;
     
-    LineBreakLayout(CodeEditor editor, Content text) {
+    WordwrapLayout(CodeEditor editor, Content text) {
         this.editor = editor;
         this.text = text;
-        
     }
-    
-    
     
 }
