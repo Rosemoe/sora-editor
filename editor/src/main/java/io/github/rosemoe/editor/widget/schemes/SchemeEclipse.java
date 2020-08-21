@@ -19,28 +19,33 @@ import io.github.rosemoe.editor.widget.EditorColorScheme;
 
 /**
   * ColorScheme for editor
-  * picked from GitHub site
+  * picked from Eclipse IDE for Java Developers Version 2019-12 (4.14.0)
  * Thanks to liyujiang-gzu (GitHub @liyujiang-gzu)
   */
-public final class SchemeGitHub extends EditorColorScheme {
+public final class SchemeEclipse extends EditorColorScheme {
 
     @Override
     public void applyDefault() {
         super.applyDefault();
-        setColor(ANNOTATION, 0xff6f42c1);
-        setColor(FUNCTION_NAME, 0xff24292e);
-        setColor(IDENTIFIER_NAME, 0xff24292e);
-        setColor(IDENTIFIER_VAR, 0xff24292e);
-        setColor(LITERAL, 0xff032f62);
-        setColor(OPERATOR, 0xff005cc5);
-        setColor(COMMENT, 0xff6a737d);
-        setColor(KEYWORD, 0xffde3a49);
+        setColor(ANNOTATION, 0xff646464);
+        setColor(FUNCTION_NAME, 0xff000000);
+        setColor(IDENTIFIER_NAME, 0xff000000);
+        setColor(IDENTIFIER_VAR, 0xffb8633e);
+        setColor(LITERAL, 0xff2a00ff);
+        setColor(OPERATOR, 0xff3a0000);
+        setColor(COMMENT, 0xff3f7f5f);
+        setColor(KEYWORD, 0xff7f0074);
         setColor(WHOLE_BACKGROUND, 0xffffffff);
-        setColor(TEXT_NORMAL, 0xff24292e);
+        setColor(TEXT_NORMAL, 0xff000000);
         setColor(LINE_NUMBER_BACKGROUND, 0xffffffff);
-        setColor(LINE_NUMBER, 0xffbec0c1);
-        setColor(SELECTION_INSERT, 0xffc7edcc);
-        setColor(SELECTION_HANDLE, 0xffc7edcc);
+        setColor(LINE_NUMBER, 0xff787878);
+        setColor(SELECTED_TEXT_BACKGROUND, 0xff3399ff);
+        setColor(MATCHED_TEXT_BACKGROUND, 0xffd4d4d4);
+        setColor(CURRENT_LINE, 0xffe8f2fe);
+        setColor(SELECTION_INSERT, 0xff03ebeb);
+        setColor(SELECTION_HANDLE, 0xff03ebeb);
+        setColor(BLOCK_LINE, 0xffd8d8d8);
+        setColor(BLOCK_LINE_CURRENT, 0);
     }
     
 }

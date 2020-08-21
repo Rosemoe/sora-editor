@@ -29,11 +29,11 @@ public class SchemeVS2019 extends EditorColorScheme {
         super.applyDefault();
         setColor(ANNOTATION, 0xff4ec9b0);
         setColor(FUNCTION_NAME, 0xffdcdcdc);
-        setColor(IDENTIFIER_NAME, 0xffdcdcdc);
-        setColor(IDENTIFIER_VAR, 0xffdcdcdc);
+        setColor(IDENTIFIER_NAME, 0xff4ec9b0);
+        setColor(IDENTIFIER_VAR, 0xffdcdcaa);
         setColor(LITERAL, 0xffd69d85);
-        setColor(OPERATOR, 0xffb4b4b4);
-        setColor(COMMENT, 0xff608b4e);
+        setColor(OPERATOR, 0xffdcdcdc);
+        setColor(COMMENT, 0xff57a64a);
         setColor(KEYWORD, 0xff569cd6);
         setColor(WHOLE_BACKGROUND, 0xff1e1e1e);
         setColor(TEXT_NORMAL, 0xffdcdcdc);
@@ -47,8 +47,8 @@ public class SchemeVS2019 extends EditorColorScheme {
         setColor(CURRENT_LINE, 0xff464646);
         setColor(SELECTION_INSERT, 0xffffffff);
         setColor(SELECTION_HANDLE, 0xffffffff);
-        setColor(BLOCK_LINE, 0xff565656);
-        setColor(BLOCK_LINE_CURRENT, 0xdd565656);
+        setColor(BLOCK_LINE, 0xff717171);
+        setColor(BLOCK_LINE_CURRENT, 0);
     }
     
 }
