@@ -39,6 +39,7 @@ import java.util.Map;
 import java.lang.Thread.UncaughtExceptionHandler;
 
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.widget.Toast;
 
 /**
  * @author Unknown
@@ -162,12 +163,12 @@ public class CrashHandler implements UncaughtExceptionHandler {
             String time = formatter.format(new Date());
             String fileName = "crash-" + time + "-" + timestamp + ".log";
             if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-                String path = "/sdcard/#Logs/";
+                String path = Environment.getExternalStoragePublicDirectory("#Logs").getAbsolutePath();
                 File dir = new File(path);
                 if (!dir.exists())
                     dir.mkdirs();
 
-                FileOutputStream fos = new FileOutputStream(path + fileName);
+                FileOutputStream fos = new FileOutputStream(new File(path, fileName));
 //				FileOutputStream fos = mContext.openFileOutput(fileName, Context.MODE_PRIVATE);
                 fos.write(sb.toString().getBytes());
                 Log.e("crash", sb.toString());

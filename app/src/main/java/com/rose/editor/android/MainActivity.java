@@ -48,6 +48,12 @@ import java.util.List;
 
 import io.github.rosemoe.editor.langs.java.JavaLanguage;
 import io.github.rosemoe.editor.widget.CodeEditor;
+import io.github.rosemoe.editor.widget.EditorColorScheme;
+import io.github.rosemoe.editor.widget.schemes.SchemeDarcula;
+import io.github.rosemoe.editor.widget.schemes.SchemeEclipse;
+import io.github.rosemoe.editor.widget.schemes.SchemeGitHub;
+import io.github.rosemoe.editor.widget.schemes.SchemeNotepadXX;
+import io.github.rosemoe.editor.widget.schemes.SchemeVS2019;
 
 public class MainActivity extends Activity {
 
@@ -102,8 +108,13 @@ public class MainActivity extends Activity {
             }
         });
 
+        editor.setOverScrollEnabled(false);
+        editor.setVerticalScrollBarEnabled(true);
         editor.setEditorLanguage(new JavaLanguage());
-        editor.setText("public class Main {\n\n\tpublic static void main(String[] args) {\n\t\t\n\t}\n\n}");
+        editor.setColorScheme(new SchemeDarcula());
+        editor.setText("/**\n * Demo\n */\n@SuppressWarnings(/**/\"unused\")\n" +
+                "public class Main {\n\n\tpublic static void main(String[] args) {\n\t\t" +
+                "// Comment\n\t\tSystem.out.println(\"Hello\");\n\t}\n\n}\n");
     }
 
     @Override
@@ -128,6 +139,7 @@ public class MainActivity extends Activity {
         menu.add(0, 14, 0, "Switch language");
         menu.add(0, 15, 0, "Search");
         menu.add(0, 16, 0, "Search (Action Mode)");
+        menu.add(0, 17, 0, "Color Scheme");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -244,6 +256,40 @@ public class MainActivity extends Activity {
                     break;
                 case 16:
                     editor.beginSearchMode();
+                    break;
+                case 17:
+                    String[] thems = new String[]{"Default", "GitHub", "Eclipse",
+                            "Darcula", "VS2019", "NotepadXX"};
+                    new AlertDialog.Builder(this)
+                            .setTitle("Color Scheme")
+                            .setSingleChoiceItems(thems, -1, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    switch (which) {
+                                        case 0:
+                                            editor.setColorScheme(new EditorColorScheme());
+                                            break;
+                                        case 1:
+                                            editor.setColorScheme(new SchemeGitHub());
+                                            break;
+                                        case 2:
+                                            editor.setColorScheme(new SchemeEclipse());
+                                            break;
+                                        case 3:
+                                            editor.setColorScheme(new SchemeDarcula());
+                                            break;
+                                        case 4:
+                                            editor.setColorScheme(new SchemeVS2019());
+                                            break;
+                                        case 5:
+                                            editor.setColorScheme(new SchemeNotepadXX());
+                                            break;
+                                    }
+                                    dialog.dismiss();
+                                }
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .show();
                     break;
             }
         } catch (Exception t) {
