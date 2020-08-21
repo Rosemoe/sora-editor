@@ -23,6 +23,8 @@ import android.graphics.RectF;
 import android.util.TypedValue;
 import android.content.res.Resources;
 
+import io.github.rosemoe.editor.util.IntPair;
+
 /**
  * Handles touch event of editor
  *
@@ -212,7 +214,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     downX = e.getX();
                     offsetX = mScroller.getCurrX() + downX;
                     offsetY = mScroller.getCurrY() + downY;
-                    float startX = mScroller.getCurrX() + mEditor.getInsertHandleRect().centerX() - mEditor.measureTextRegionOffset();
+                    float startX = mScroller.getCurrX() + mEditor.getInsertHandleRect().centerX();
                     float startY = mScroller.getCurrY() + mEditor.getInsertHandleRect().top - mEditor.getRowHeight() / 5f;
 
                     insert = new SelectionHandle(SelectionHandle.BOTH, startX, startY);
@@ -229,10 +231,10 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     downX = e.getX();
                     offsetX = mScroller.getCurrX() + downX;
                     offsetY = mScroller.getCurrY() + downY;
-                    float startX = mScroller.getCurrX() + mEditor.getLeftHandleRect().centerX() - mEditor.measureTextRegionOffset();
+                    float startX = mScroller.getCurrX() + mEditor.getLeftHandleRect().centerX();
                     float startY = mScroller.getCurrY() + mEditor.getLeftHandleRect().top - mEditor.getRowHeight() / 5f;
                     this.left = new SelectionHandle(SelectionHandle.LEFT, startX, startY);
-                    startX = mScroller.getCurrX() + mEditor.getRightHandleRect().centerX() - mEditor.measureTextRegionOffset();
+                    startX = mScroller.getCurrX() + mEditor.getRightHandleRect().centerX();
                     startY = mScroller.getCurrY() + mEditor.getRightHandleRect().top - mEditor.getRowHeight() / 5f;
                     this.right = new SelectionHandle(SelectionHandle.RIGHT, startX, startY);
                 }
@@ -329,9 +331,10 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         mEditor.showSoftInput();
         mEditor.getInputMethodManager().viewClicked(mEditor);
         mScroller.forceFinished(true);
-        int line = mEditor.getPointLineOnScreen(e.getY());
-        int column = mEditor.getPointColumnOnScreen(line, e.getX());
-        if (mEditor.getCursor().isSelected() && mEditor.getCursor().isInSelectedRegion(line, column) && !(mEditor.isOverMaxY(e.getY()) || mEditor.isOverMaxX(line, e.getX()))) {
+        long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
+        int line = IntPair.getFirst(res);
+        int column = IntPair.getSecond(res);
+        if (mEditor.getCursor().isSelected() && mEditor.getCursor().isInSelectedRegion(line, column) && !mEditor.isOverMaxY(e.getY())) {
             mEditor.getTextActionPresenter().onSelectedTextClicked(e);
         } else {
             notifyLater();
@@ -347,8 +350,9 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         if (mEditor.getCursor().isSelected() || e.getPointerCount() != 1) {
             return;
         }
-        int line = mEditor.getPointLineOnScreen(e.getY());
-        int column = mEditor.getPointColumnOnScreen(line, e.getX());
+        long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
+        int line = IntPair.getFirst(res);
+        int column = IntPair.getSecond(res);
         //Find word edges
         int startLine = line, endLine = line;
         int startColumn = column;
@@ -453,7 +457,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 mEditor.getScrollMaxX(),
                 0,
                 mEditor.getScrollMaxY(),
-                mEditor.isOverScrollEnabled() ? (int) (20 * mEditor.getDpUnit()) : 0,
+                mEditor.isOverScrollEnabled() && !mEditor.isWordwrap() ? (int) (20 * mEditor.getDpUnit()) : 0,
                 mEditor.isOverScrollEnabled() ? (int) (20 * mEditor.getDpUnit()) : 0);
         mEditor.invalidate();
         float minVe = mEditor.getDpUnit() * 2000;
@@ -554,16 +558,16 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             float currY = mScroller.getCurrY() + e.getY();
             float targetX = (currX - offsetX) + startX;
             float targetY = (currY - offsetY) + startY;
-            int line = mEditor.getPointLine(targetY);
+            int line = IntPair.getFirst(mEditor.getPointPosition(0, targetY));
             if (line >= mEditor.getLastVisibleRow()) {
                 scrollBy(0, mEditor.getRowHeight());
             }
-            if (line <= mEditor.getFirstVisibleRow() - 1) {
+            if (line < mEditor.getFirstVisibleRow()) {
                 scrollBy(0, -mEditor.getRowHeight());
             }
-            line = mEditor.getPointLine(targetY);
+            line = IntPair.getFirst(mEditor.getPointPosition(0, targetY));
             if (line >= 0 && line < mEditor.getLineCount()) {
-                int column = mEditor.getPointColumn(line, targetX);
+                int column = IntPair.getSecond(mEditor.getPointPosition(targetX, targetY));
                 int lastLine = type == RIGHT ? mEditor.getCursor().getRightLine() : mEditor.getCursor().getLeftLine();
                 int lastColumn = type == RIGHT ? mEditor.getCursor().getLeftColumn() : mEditor.getCursor().getLeftColumn();
                 int anotherLine = type != RIGHT ? mEditor.getCursor().getRightLine() : mEditor.getCursor().getLeftLine();

@@ -15,5 +15,36 @@
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
 <resources>
-    <string name="app_name">CodeEditor</string>
+    <string name="app_name">CodeEditorSample</string>
+    <string name="dialog_permission_title">Permission needed</string>
+    <string name="dialog_permission_content">We need storage access to collect crash logs.\nCrash logs will be placed under /sdcard/#Logs/\nIf you do not want to save crash logs, feel free to deny the permission request.\nClick \'Permit\' to start the request.</string>
+    <string name="dialog_permission_permit">Permit</string>
+    <string name="layout_tv_last">Last</string>
+    <string name="layout_tv_next">Next</string>
+    <string name="layout_tv_replace">Replace</string>
+    <string name="layout_tv_replaceAll">Replace All</string>
+    <string name="text_to_search">Text to search</string>
+    <string name="replacement">Replacement</string>
+    <string name="cursor_actions">Cursor Actions</string>
+    <string name="go_to_end">Go To End</string>
+    <string name="move_up">Move Up</string>
+    <string name="move_down">Move Down</string>
+    <string name="move_left">Move Left</string>
+    <string name="move_right">Move Right</string>
+    <string name="home">Home</string>
+    <string name="end">End</string>
+    <string name="text_actions">Text Actions</string>
+    <string name="switch_color_scheme">Switch Color Scheme</string>
+    <string name="undo">Undo</string>
+    <string name="redo">Redo</string>
+    <string name="search_text">Search Text</string>
+    <string name="action_mode">Action Mode</string>
+    <string name="search_panel">Search Panel</string>
+    <string name="code_navigation">Code Navigation</string>
+    <string name="switch_language">Switch Language</string>
+    <string name="format">Format</string>
+    <string name="code_navi">Code Navigation</string>
+    <string name="navi_err_msg">Code navigation not prepared or unsupported</string>
+    <string name="color_scheme">Color Scheme</string>
+    <string name="err_crash_loop">Exception in a thread with looper. see /#Logs/ to know more</string>
 </resources>

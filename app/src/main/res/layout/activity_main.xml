@@ -39,25 +39,25 @@
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Last"
+                    android:text="@string/layout_tv_last"
                     android:onClick="gotoLast"/>
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Next"
+                    android:text="@string/layout_tv_next"
                     android:onClick="gotoNext"/>
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Replace"
+                    android:text="@string/layout_tv_replace"
                     android:onClick="replace"/>
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Replace All"
+                    android:text="@string/layout_tv_replaceAll"
                     android:onClick="replaceAll"/>
 
 
@@ -70,13 +70,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/search_editor"
-            android:hint="Text to search"/>
+            android:hint="@string/text_to_search" />
 
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/replace_editor"
-            android:hint="Replacement"/>
+            android:hint="@string/replacement" />
 
     </LinearLayout>
 

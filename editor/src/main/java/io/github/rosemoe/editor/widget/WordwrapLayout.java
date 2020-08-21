@@ -22,9 +22,17 @@ import io.github.rosemoe.editor.text.ContentLine;
 //Word in progress
 public class WordwrapLayout implements Layout {
 
+    private final CodeEditor editor;
+    private final Content text;
+
+    WordwrapLayout(CodeEditor editor, Content text) {
+        this.editor = editor;
+        this.text = text;
+    }
+
     @Override
     public void beforeReplace(Content content) {
-        
+        // Intentionally empty
     }
 
     @Override
@@ -72,24 +80,15 @@ public class WordwrapLayout implements Layout {
     }
 
     @Override
-    public CharPosition getCharPositionForLayoutOffset(float xOffset, float yOffset) {
+    public long getCharPositionForLayoutOffset(float xOffset, float yOffset) {
         // TODO: Implement this method
-        return null;
+        return 0;
     }
 
     @Override
     public float[] getCharLayoutOffset(int line, int column) {
         // TODO: Implement this method
         return null;
-    }
-    
-    
-    private final CodeEditor editor;
-    private final Content text;
-    
-    WordwrapLayout(CodeEditor editor, Content text) {
-        this.editor = editor;
-        this.text = text;
     }
     
 }

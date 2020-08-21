@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?><!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~   Copyright 2020 Rosemoe
+  ~
+  ~   Licensed under the Apache License, Version 2.0 (the "License");
+  ~   you may not use this file except in compliance with the License.
+  ~   You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~   Unless required by applicable law or agreed to in writing, software
+  ~   distributed under the License is distributed on an "AS IS" BASIS,
+  ~   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~   See the License for the specific language governing permissions and
+  ~   limitations under the License.
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="@string/cursor_actions">
+        <menu>
+            <item
+                android:id="@+id/goto_end"
+                android:title="@string/go_to_end" />
+            <item
+                android:id="@+id/move_up"
+                android:title="@string/move_up" />
+            <item
+                android:id="@+id/move_down"
+                android:title="@string/move_down" />
+            <item
+                android:id="@+id/move_left"
+                android:title="@string/move_left" />
+            <item
+                android:id="@+id/move_right"
+                android:title="@string/move_right" />
+            <item
+                android:id="@+id/home"
+                android:title="@string/home" />
+            <item
+                android:id="@+id/end"
+                android:title="@string/end" />
+        </menu>
+    </item>
+    <item android:title="@string/text_actions">
+        <menu>
+            <item
+                android:id="@+id/text_undo"
+                android:title="@string/undo" />
+            <item
+                android:id="@+id/text_redo"
+                android:title="@string/redo" />
+        </menu>
+    </item>
+    <item android:title="@string/search_text">
+        <menu>
+            <item
+                android:id="@+id/search_am"
+                android:title="@string/action_mode" />
+            <item
+                android:id="@+id/search_panel_st"
+                android:title="@string/search_panel" />
+        </menu>
+    </item>
+    <item
+        android:id="@+id/code_navigation"
+        android:title="@string/code_navigation" />
+    <item
+        android:id="@+id/code_format"
+        android:title="@string/format" />
+    <item
+        android:id="@+id/switch_language"
+        android:title="@string/switch_language" />
+    <item
+        android:id="@+id/switch_colors"
+        android:title="@string/switch_color_scheme" />
+</menu>

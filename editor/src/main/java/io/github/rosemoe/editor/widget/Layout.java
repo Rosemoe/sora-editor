@@ -15,9 +15,6 @@
  */
 package io.github.rosemoe.editor.widget;
 
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import io.github.rosemoe.editor.struct.CharPosition;
 import io.github.rosemoe.editor.text.LineRemoveListener;
 import io.github.rosemoe.editor.text.ContentListener;
 
@@ -40,7 +37,7 @@ public interface Layout extends LineRemoveListener, ContentListener {
     
     int getLayoutHeight();
     
-    CharPosition getCharPositionForLayoutOffset(float xOffset, float yOffset);
+    long getCharPositionForLayoutOffset(float xOffset, float yOffset);
     
     float[] getCharLayoutOffset(int line, int column);
     

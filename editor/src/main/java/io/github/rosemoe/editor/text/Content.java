@@ -15,19 +15,8 @@
  */
 package io.github.rosemoe.editor.text;
 
-import android.annotation.TargetApi;
-import android.os.Build;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.PrimitiveIterator;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.function.IntConsumer;
-import java.util.function.Supplier;
-import java.util.stream.IntStream;
-import java.util.stream.StreamSupport;
 
 import io.github.rosemoe.editor.struct.CharPosition;
 

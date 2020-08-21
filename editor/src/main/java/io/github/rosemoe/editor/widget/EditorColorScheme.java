@@ -16,7 +16,8 @@
 package io.github.rosemoe.editor.widget;
 
 import android.util.SparseIntArray;
-import java.util.Objects;
+
+import io.github.rosemoe.editor.util.Objects;
 
 /**
  * This class manages the colors of editor.
@@ -29,14 +30,14 @@ import java.util.Objects;
  * sub themes to change as well.
  *
  * Typically, you can use this class to set color of editor directly
- * with {@link #setColor(int,int)} in a thread with looper.
+ * with {@link #setColor(int, int)} in a thread with looper.
  *
  * However, we also accept you to extend this class to customize
  * your own ColorScheme to use diffrent default colors.
  * Subclasses is expected to override {@link #applyDefault()}
  * to define colors, though other methods are not final.
  * After overriding this method, you will have to call super class's
- * applyDefault() and then a series of {@link setColor(int,int)} calls
+ * applyDefault() and then a series of {@link #setColor(int, int)} calls
  * to apply your colors.
  *
  * Note that new colors can be added in newer version of editor,
@@ -67,7 +68,10 @@ public class EditorColorScheme {
     public static final int MATCHED_TEXT_BACKGROUND = 29;
     public static final int AUTO_COMP_PANEL_CORNER = 20;
     public static final int AUTO_COMP_PANEL_BG = 19;
+
+    @Deprecated
     public static final int LINE_BLOCK_LABEL = 18;
+
     public static final int LINE_NUMBER_PANEL_TEXT = 17;
     public static final int LINE_NUMBER_PANEL = 16;
     public static final int BLOCK_LINE_CURRENT = 15;
@@ -162,6 +166,10 @@ public class EditorColorScheme {
                 color = 0xfff0f0f0;
                 break;
             case WHOLE_BACKGROUND:
+            case LINE_NUMBER_PANEL_TEXT:
+            case AUTO_COMP_PANEL_BG:
+            case AUTO_COMP_PANEL_CORNER:
+            case TEXT_SELECTED:
                 color = 0xffffffff;
                 break;
             case OPERATOR:
@@ -175,6 +183,9 @@ public class EditorColorScheme {
                 break;
             case UNDERLINE:
                 color = 0xff000000;
+                break;
+            case LINE_BLOCK_LABEL:
+                color = 0;
                 break;
             case SELECTION_HANDLE:
                 color = 0xff03ebff;
@@ -212,16 +223,8 @@ public class EditorColorScheme {
             case LINE_NUMBER_PANEL:
                 color = 0xdd000000;
                 break;
-            case LINE_NUMBER_PANEL_TEXT:
-            case AUTO_COMP_PANEL_BG:
-            case AUTO_COMP_PANEL_CORNER:
-                color = 0xffffffff;
-                break;
             case BLOCK_LINE_CURRENT:
                 color = 0xff999999;
-                break;
-            case LINE_BLOCK_LABEL:
-                color = 0;
                 break;
             case IDENTIFIER_VAR:
             case IDENTIFIER_NAME:
@@ -230,9 +233,6 @@ public class EditorColorScheme {
                 break;
             case MATCHED_TEXT_BACKGROUND:
                 color = 0xffffff00;
-                break;
-            case TEXT_SELECTED:
-                color = 0xffffffff;
                 break;
             default:
                 throw new IllegalArgumentException("Unexpected type:" + type);

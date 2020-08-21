@@ -28,8 +28,6 @@ import android.text.TextUtils;
 import io.github.rosemoe.editor.struct.CharPosition;
 
 import android.text.SpannableStringBuilder;
-import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 

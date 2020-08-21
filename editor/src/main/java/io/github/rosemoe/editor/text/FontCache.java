@@ -15,7 +15,6 @@
  */
 package io.github.rosemoe.editor.text;
 
-import android.util.SparseArray;
 import android.graphics.Paint;
 import java.util.Arrays;
 

@@ -21,6 +21,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 
+import io.github.rosemoe.editor.util.IntPair;
+
 /**
  * Action Mode style text action panel for editor
  *
@@ -112,8 +114,9 @@ class EditorTextActionModeStarter implements CodeEditor.EditorTextActionPresente
 
     @Override
     public void onSelectedTextClicked(MotionEvent event) {
-        int line = mEditor.getPointLineOnScreen(event.getY());
-        int column = mEditor.getPointColumnOnScreen(line, event.getX());
+        long packed = mEditor.getPointPositionOnScreen(event.getX(), event.getY());
+        int line = IntPair.getFirst(packed);
+        int column = IntPair.getSecond(packed);
         mEditor.setSelection(line, column);
         mEditor.hideAutoCompleteWindow();
     }

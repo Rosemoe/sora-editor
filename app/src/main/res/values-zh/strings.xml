@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?><!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~   Copyright 2020 Rosemoe
+  ~
+  ~   Licensed under the Apache License, Version 2.0 (the "License");
+  ~   you may not use this file except in compliance with the License.
+  ~   You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~   Unless required by applicable law or agreed to in writing, software
+  ~   distributed under the License is distributed on an "AS IS" BASIS,
+  ~   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~   See the License for the specific language governing permissions and
+  ~   limitations under the License.
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+<resources>
+    <string name="dialog_permission_title">需要权限</string>
+    <string name="dialog_permission_content">我们需要存储空间权限来收集崩溃日志。\n这些日志将会被放在/sdcard./#Logs/中。\n如果您不想收集这些日志，请随意选择是否允许这一权限。\n单击“授权”以显示授权窗口。</string>
+    <string name="dialog_permission_permit">授权</string>
+    <string name="layout_tv_last">上个</string>
+    <string name="layout_tv_next">下个</string>
+    <string name="layout_tv_replace">替换</string>
+    <string name="layout_tv_replaceAll">全部</string>
+    <string name="text_to_search">查找文本</string>
+    <string name="replacement">替换到的文本</string>
+    <string name="cursor_actions">光标操作</string>
+    <string name="go_to_end">到全文末尾</string>
+    <string name="move_up">上移</string>
+    <string name="move_down">下移</string>
+    <string name="move_left">左移</string>
+    <string name="move_right">右移</string>
+    <string name="home">行首</string>
+    <string name="end">行末</string>
+    <string name="text_actions">文本操作</string>
+    <string name="switch_color_scheme">颜色风格</string>
+    <string name="undo">撤销</string>
+    <string name="redo">重做</string>
+    <string name="search_text">搜索文本</string>
+    <string name="action_mode">标题栏模式</string>
+    <string name="search_panel">搜索面板</string>
+    <string name="code_navigation">代码导航</string>
+    <string name="switch_language">调节程序语言</string>
+    <string name="format">格式化</string>
+    <string name="app_name">CodeEditorSample</string>
+    <string name="code_navi">代码导航</string>
+    <string name="navi_err_msg">代码导航没有准备好或者该语言不支持</string>
+    <string name="color_scheme">颜色风格</string>
+    <string name="err_crash_loop">在一个具有Looper的线程中发生了错误，检查/#Logs/以获得详细错误信息</string>
+</resources>
