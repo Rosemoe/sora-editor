@@ -461,7 +461,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else {
             int before = mCursorBlink.period;
             mCursorBlink.setPeriod(period);
-            if (before <= 0 && mCursorBlink.valid && isAttachedToWindow()) {
+            if (before <= 0 && mCursorBlink.valid && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && isAttachedToWindow())) {
                 post(mCursorBlink);
             }
         }
