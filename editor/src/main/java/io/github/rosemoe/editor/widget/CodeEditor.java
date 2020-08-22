@@ -423,7 +423,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mScale = true;
         mDrag = false;
         mWait = false;
-        mBlockLineWidth = mDpUnit * 1.5f;
+        mBlockLineWidth = mDpUnit;
         mInputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         mClipboardManager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         setUndoEnabled(true);
@@ -729,13 +729,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param size Text size in pixel unit
      */
     public void setTextSizePx(float size) {
+        setTextSizePxDirect(size);
+        if (isWordwrap()) {
+            createLayout();
+        }
+        invalidate();
+    }
+
+    void setTextSizePxDirect(float size) {
         mPaint.setTextSize(size);
         mPaintOther.setTextSize(size);
         mTextMetrics = mPaint.getFontMetricsInt();
         mLineNumberMetrics = mPaintOther.getFontMetricsInt();
         mFontCache.clearCache();
-        createLayout();
-        invalidate();
     }
 
     /**
@@ -768,14 +774,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         float offsetX = -getOffsetX() + lineNumberWidth + mDividerMargin * 2 + mDividerWidth;
         float textOffset = offsetX;
 
-        offsetX = -getOffsetX();
-        drawLineNumberBackground(canvas, offsetX, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
-        drawDivider(canvas, offsetX + lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
-
         if (isWordwrap()) {
             if (mCachedLineNumberWidth == 0) {
                 mCachedLineNumberWidth = (int) lineNumberWidth;
-            } else if (mCachedLineNumberWidth != (int) lineNumberWidth) {
+            } else if (mCachedLineNumberWidth != (int) lineNumberWidth && !mEventHandler.isScaling) {
                 mCachedLineNumberWidth = (int) lineNumberWidth;
                 createLayout();
             }
@@ -794,6 +796,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         List<Long> postDrawLineNumbers = new ArrayList<>();
         List<CursorPaintAction> postDrawCursor = new ArrayList<>();
         drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor);
+
+        offsetX = -getOffsetX();
+        drawLineNumberBackground(canvas, offsetX, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
+        drawDivider(canvas, offsetX + lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
 
         int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
         for (long packed : postDrawLineNumbers) {
@@ -1657,11 +1663,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Create layout for text
      */
-    private void createLayout() {
+    void createLayout() {
         if (mLayout != null) {
             mLayout.destroyLayout();
         }
         if (mWordwrap) {
+            mCachedLineNumberWidth = (int) measureLineNumber();
             mLayout = new WordwrapLayout(this, mText);
         } else {
             mLayout = new LineBreakLayout(this, mText);

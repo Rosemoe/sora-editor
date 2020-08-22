@@ -470,6 +470,8 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         return false;
     }
 
+    boolean isScaling = false;
+
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
         if (mEditor.canScale()) {
@@ -480,9 +482,11 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             int firstVisible = mEditor.getFirstVisibleRow();
             float top = mScroller.getCurrY() - firstVisible * mEditor.getRowHeight();
             int height = mEditor.getRowHeight();
-            mEditor.setTextSizePx(newSize);
+            mEditor.setTextSizePxDirect(newSize);
+            mEditor.invalidate();
             float newY = firstVisible * mEditor.getRowHeight() + top * mEditor.getRowHeight() / height;
             mScroller.startScroll(mScroller.getCurrX(), (int) newY, 0, 0, 0);
+            isScaling = true;
             return true;
         }
         return false;
@@ -496,6 +500,11 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
 
     @Override
     public void onScaleEnd(ScaleGestureDetector detector) {
+        isScaling = false;
+        if (mEditor.isWordwrap()) {
+            mEditor.createLayout();
+            mEditor.invalidate();
+        }
     }
 
     @Override
