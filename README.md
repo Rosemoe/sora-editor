@@ -3,13 +3,11 @@
 A professional code editor on Android platform with good performance and nice features.   
 ***Work In Progress*** This project is still developing slowly because of school. Bugs may be inside. It is ***not*** recommended to use this project for production use.   
 ***Note:***
-Code in branch `master` will be a stable version which can run without a lot problems (but sometimes there might be some important problems that has been solved in `dev`).   
-Branch `dev` has newest features in editor and is developing.   
-Any non-public method or field can be changed and moved or even deleted at current period of developing.     
-If master branch has bugs, you may try out dev branch.    
-If you find any bug or require enhancement please send it to me by issues or other ways.    
+Branch `dev` has newest features and bug patches in editor and is developing.   
+Any method or field can be changed, moved or even deleted at current period.     
+If you find any bug or require any enhancement, please send it to me by issues or other ways.    
    
-See [Projects/CodeEditor](https://github.com/Rosemoe/CodeEditor/projects/1) to get more information about what I am working on.    
+See [Projects](https://github.com/Rosemoe/CodeEditor/projects/) to get more information about what I am working on.    
 ***Issues and pull requests are welcome.***   
 ## Features
 - [x] Smooth Syntax highlight
@@ -25,7 +23,6 @@ See [Projects/CodeEditor](https://github.com/Rosemoe/CodeEditor/projects/1) to g
 - [x] Shortcuts
 - [x] Auto wordwrap
 - [ ] Incremental Highlight Analysis
-- [ ] Compatible Regex-based Highlight support
 ## Language Supported  
 * Java,JavaScript,C,C++(Basic Support:highlight,code block line,identifier and keyword auto completion)
 * S5droid(context sensitive auto completion,highlight,code block line,navigation)(going to be deprecated)   
