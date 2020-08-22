@@ -13,11 +13,8 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package io.github.rosemoe.editor.struct;
+package io.github.rosemoe.editor.text;
 
-
-import io.github.rosemoe.editor.text.Content;
-import io.github.rosemoe.editor.text.ContentAction;
 
 /**
  * Delete action model for UndoManager

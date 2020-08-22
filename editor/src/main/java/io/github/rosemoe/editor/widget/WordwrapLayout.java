@@ -15,38 +15,33 @@
  */
 package io.github.rosemoe.editor.widget;
 
-import android.graphics.Paint;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import io.github.rosemoe.editor.text.Content;
 import io.github.rosemoe.editor.text.ContentLine;
-import io.github.rosemoe.editor.text.FontCache;
 import io.github.rosemoe.editor.util.IntPair;
 
 /**
  * Wordwrap layout for editor
+ * <p>
+ * This layout will not let character displayed outside the editor's width
+ * <p>
+ * However, using this can be power-costing because we will have to recreate this layout in various
+ * conditions, such as when the line number increases and its width grows or when the text size has changed
  *
  * @author Rose
  */
-class WordwrapLayout implements Layout {
+class WordwrapLayout extends AbstractLayout {
 
-    private final CodeEditor editor;
-    private final Content text;
     private final List<RowRegion> rowTable;
     private final int width;
-    private final Paint shadowPaint;
-    private FontCache fontCache;
 
     WordwrapLayout(CodeEditor editor, Content text) {
-        this.editor = editor;
-        this.text = text;
+        super(editor, text);
         rowTable = new ArrayList<>();
         width = editor.getWidth() - (int) editor.measureTextRegionOffset() - (int) editor.getDpUnit() * 5;
-        fontCache = new FontCache();
-        shadowPaint = new Paint(editor.getTextPaint());
         breakAllLines();
     }
 
@@ -61,17 +56,6 @@ class WordwrapLayout implements Layout {
             }
             breakpoints.clear();
         }
-    }
-
-    private float measureText(CharSequence text, int start, int end) {
-        int tabCount = 0;
-        for (int i = start; i < end; i++) {
-            if (text.charAt(i) == '\t') {
-                tabCount++;
-            }
-        }
-        float extraWidth = fontCache.measureChar(' ', shadowPaint) * editor.getTabWidth() - fontCache.measureChar('\t', shadowPaint);
-        return fontCache.measureText(text, start, end, shadowPaint) + tabCount * extraWidth;
     }
 
     private int findRow(int line) {
@@ -190,7 +174,7 @@ class WordwrapLayout implements Layout {
 
     @Override
     public void destroyLayout() {
-
+        super.destroyLayout();
     }
 
     @Override
@@ -220,19 +204,6 @@ class WordwrapLayout implements Layout {
         RowRegion region = rowTable.get(row);
         int column = (int) orderedFindCharIndex(xOffset, text.getLine(region.line), region.startColumn, region.endColumn)[0];
         return IntPair.pack(region.line, column);
-    }
-
-    private float[] orderedFindCharIndex(float targetOffset, CharSequence str, int index, int end) {
-        float width = 0f;
-        while (index < end && width < targetOffset) {
-            float single = fontCache.measureChar(str.charAt(index), shadowPaint);
-            if (str.charAt(index) == '\t') {
-                single *= editor.getTabWidth();
-            }
-            width += single;
-            index++;
-        }
-        return new float[]{index, width};
     }
 
     @Override

@@ -15,13 +15,10 @@
  */
 package io.github.rosemoe.editor.widget;
 
-import android.graphics.Paint;
-
 import java.util.NoSuchElementException;
 
 import io.github.rosemoe.editor.text.Content;
 import io.github.rosemoe.editor.text.ContentLine;
-import io.github.rosemoe.editor.text.FontCache;
 import io.github.rosemoe.editor.util.BinaryHeap;
 import io.github.rosemoe.editor.util.IntPair;
 
@@ -31,19 +28,12 @@ import io.github.rosemoe.editor.util.IntPair;
  *
  * @author Rose
  */
-class LineBreakLayout implements Layout {
+class LineBreakLayout extends AbstractLayout {
 
-    private final CodeEditor editor;
-    private final Paint shadowPaint;
-    private Content text;
-    private FontCache fontCache;
     private BinaryHeap widthMaintainer;
 
     LineBreakLayout(CodeEditor editor, Content text) {
-        this.editor = editor;
-        this.text = text;
-        shadowPaint = new Paint(editor.getTextPaint());
-        fontCache = new FontCache();
+        super(editor, text);
         measureAllLines();
     }
 
@@ -83,32 +73,6 @@ class LineBreakLayout implements Layout {
         }
     }
 
-    private float measureText(CharSequence text, int start, int end) {
-        int tabCount = 0;
-        for (int i = start; i < end; i++) {
-            if (text.charAt(i) == '\t') {
-                tabCount++;
-            }
-        }
-        float extraWidth = fontCache.measureChar(' ', shadowPaint) * editor.getTabWidth() - fontCache.measureChar('\t', shadowPaint);
-        return fontCache.measureText(text, start, end, shadowPaint) + tabCount * extraWidth;
-    }
-
-    private float[] orderedFindCharIndex(float targetOffset, CharSequence str) {
-        float width = 0f;
-        int index = 0;
-        int length = str.length();
-        while (index < length && width < targetOffset) {
-            float single = fontCache.measureChar(str.charAt(index), shadowPaint);
-            if (str.charAt(index) == '\t') {
-                single *= editor.getTabWidth();
-            }
-            width += single;
-            index++;
-        }
-        return new float[]{index, width};
-    }
-
     @Override
     public RowIterator obtainRowIterator(int initialRow) {
         return new LineBreakLayoutRowItr(initialRow);
@@ -136,9 +100,8 @@ class LineBreakLayout implements Layout {
 
     @Override
     public void destroyLayout() {
+        super.destroyLayout();
         widthMaintainer = null;
-        fontCache = null;
-        text = null;
     }
 
     @Override

@@ -18,11 +18,6 @@ package io.github.rosemoe.editor.text;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.rosemoe.editor.struct.DeleteAction;
-import io.github.rosemoe.editor.struct.InsertAction;
-import io.github.rosemoe.editor.struct.MultiAction;
-import io.github.rosemoe.editor.struct.ReplaceAction;
-
 /**
  * Helper class for Content to take down modification
  * As well as provide Undo/Redo actions

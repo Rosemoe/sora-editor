@@ -25,7 +25,7 @@ import io.github.rosemoe.editor.text.Cursor;
 import android.text.Editable;
 import android.text.TextUtils;
 
-import io.github.rosemoe.editor.struct.CharPosition;
+import io.github.rosemoe.editor.text.CharPosition;
 
 import android.text.SpannableStringBuilder;
 import android.view.inputmethod.ExtractedText;

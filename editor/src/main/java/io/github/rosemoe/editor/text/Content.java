@@ -18,8 +18,6 @@ package io.github.rosemoe.editor.text;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.rosemoe.editor.struct.CharPosition;
-
 /**
  * This class saves the text content for editor and maintains line widths
  *

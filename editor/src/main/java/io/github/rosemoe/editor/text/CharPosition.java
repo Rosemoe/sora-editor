@@ -13,11 +13,11 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package io.github.rosemoe.editor.struct;
+package io.github.rosemoe.editor.text;
 
 
 /**
- * This a model of a character position in Content
+ * This a data class of a character position in {@link Content}
  *
  * @author Rose
  */

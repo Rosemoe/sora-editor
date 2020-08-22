@@ -319,6 +319,9 @@ public class ContentLine implements CharSequence, GetChars {
         return res;
     }
 
+    /**
+     * A quick method to append itself to a StringBuilder
+     */
     public void appendTo(StringBuilder sb) {
         sb.append(value, 0, length);
     }

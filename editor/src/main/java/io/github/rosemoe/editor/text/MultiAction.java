@@ -13,31 +13,49 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package io.github.rosemoe.editor.struct;
+package io.github.rosemoe.editor.text;
+
+
+import java.util.ArrayList;
+import java.util.List;
 
 import io.github.rosemoe.editor.text.Content;
 import io.github.rosemoe.editor.text.ContentAction;
 
 /**
- * Replace action model for UndoManager
+ * MultiAction saves several actions for UndoManager
  *
  * @author Rose
  */
-public final class ReplaceAction implements ContentAction {
+public final class MultiAction implements ContentAction {
 
-    public InsertAction _insert;
-    public DeleteAction _delete;
+    private final List<ContentAction> _actions = new ArrayList<>();
+
+    public void addAction(ContentAction action) {
+        if (_actions.isEmpty()) {
+            _actions.add(action);
+        } else {
+            ContentAction last = _actions.get(_actions.size() - 1);
+            if (last.canMerge(action)) {
+                last.merge(action);
+            } else {
+                _actions.add(action);
+            }
+        }
+    }
 
     @Override
     public void undo(Content content) {
-        _insert.undo(content);
-        _delete.undo(content);
+        for (int i = _actions.size() - 1; i >= 0; i--) {
+            _actions.get(i).undo(content);
+        }
     }
 
     @Override
     public void redo(Content content) {
-        _delete.redo(content);
-        _insert.redo(content);
+        for (int i = 0; i < _actions.size(); i++) {
+            _actions.get(i).redo(content);
+        }
     }
 
     @Override
@@ -51,4 +69,3 @@ public final class ReplaceAction implements ContentAction {
     }
 
 }
-

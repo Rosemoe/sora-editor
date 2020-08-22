@@ -18,8 +18,6 @@ package io.github.rosemoe.editor.text;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.rosemoe.editor.struct.CharPosition;
-
 /**
  * Indexer Impl for Content
  * With cache

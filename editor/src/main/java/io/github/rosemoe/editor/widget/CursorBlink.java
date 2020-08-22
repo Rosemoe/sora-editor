@@ -16,11 +16,11 @@
 package io.github.rosemoe.editor.widget;
 
 /**
- * This class is used to control cursor vivibility
+ * This class is used to control cursor visibility
  *
  * @author Rose
  */
-class CursorBlink implements Runnable {
+final class CursorBlink implements Runnable {
 
     long lastSelectionModificationTime = 0;
     int period;

@@ -18,17 +18,39 @@ package io.github.rosemoe.editor.util;
 /**
  * Pack two int into a long
  * Also unpack it
+ * This is convenient while passing data
+ *
+ * @author Rose
  */
 public class IntPair {
 
+    /**
+     * Pack two int into a long
+     *
+     * @param first  First of pair
+     * @param second Second of pair
+     * @return Packed value
+     */
     public static long pack(int first, int second) {
         return (((long) first) << 32L) + second;
     }
 
+    /**
+     * Get second of pair
+     *
+     * @param packedValue Packed value
+     * @return Second of pair
+     */
     public static int getSecond(long packedValue) {
         return (int) (packedValue << 32L >> 32L);
     }
 
+    /**
+     * Get first of pair
+     *
+     * @param packedValue Packed value
+     * @return First of pair
+     */
     public static int getFirst(long packedValue) {
         return (int) (packedValue >> 32L);
     }

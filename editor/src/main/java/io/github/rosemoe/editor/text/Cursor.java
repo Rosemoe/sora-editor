@@ -18,7 +18,6 @@ package io.github.rosemoe.editor.text;
 import android.util.Log;
 
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
-import io.github.rosemoe.editor.struct.CharPosition;
 
 /**
  * @author Rose

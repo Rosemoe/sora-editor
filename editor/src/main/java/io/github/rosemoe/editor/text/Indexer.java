@@ -15,8 +15,6 @@
  */
 package io.github.rosemoe.editor.text;
 
-import io.github.rosemoe.editor.struct.CharPosition;
-
 /**
  * A helper class for ITextContent to transform (line,column) and index
  *
