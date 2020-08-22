@@ -723,6 +723,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         float offsetX = -getOffsetX() + lineNumberWidth + mDividerMargin * 2 + mDividerWidth;
         float textOffset = offsetX;
 
+        if (mCachedLineNumberWidth == 0f) {
+            mCachedLineNumberWidth = (int) lineNumberWidth;
+        } else if (mCachedLineNumberWidth != (int)lineNumberWidth) {
+            mCachedLineNumberWidth = (int)lineNumberWidth;
+            createLayout();
+        }
+
         if (!mCursor.isSelected()) {
             mInsertHandle.setEmpty();
         }
@@ -3013,7 +3020,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         return true;
                     }
                     mConnection.commitText("\n", 0);
-                    cursorChangeExternal();
                     return true;
                 case KeyEvent.KEYCODE_DPAD_DOWN:
                     moveSelectionDown();
@@ -3177,6 +3183,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }, 50);
     }
 
+    private int mCachedLineNumberWidth;
+
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
         // Update spans
@@ -3187,7 +3195,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 SpanMapUpdater.shiftSpansOnMultiLineInsert(mSpanner.getResult().getSpanMap(), startLine, startColumn, endLine, endColumn);
             }
         }
+
         mLayout.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
+
         // Notify input method
         updateCursor();
         mWait = false;
@@ -3276,7 +3286,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 SpanMapUpdater.shiftSpansOnMultiLineDelete(mSpanner.getResult().getSpanMap(), startLine, startColumn, endLine, endColumn);
             }
         }
+
         mLayout.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
+
         updateCursor();
         exitSelectModeIfNeeded();
         if (mConnection.mComposingLine == -1 && mCompletionWindow.isShowing()) {

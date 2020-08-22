@@ -23,7 +23,7 @@ See [Projects/CodeEditor](https://github.com/Rosemoe/CodeEditor/projects/1) to g
 - [x] Undo/Redo
 - [x] Search and Replace
 - [x] Shortcuts
-- [ ] Auto wordwrap
+- [x] Auto wordwrap
 - [ ] Incremental Highlight Analysis
 - [ ] Compatible Regex-based Highlight support
 ## Language Supported  
@@ -31,9 +31,10 @@ See [Projects/CodeEditor](https://github.com/Rosemoe/CodeEditor/projects/1) to g
 * S5droid(context sensitive auto completion,highlight,code block line,navigation)(going to be deprecated)   
 ## Screenshots  
 ![View Outline](/images/outline.png)
-![Auto Complete](/images/auto-completion.png)   
-![Select Text](/images/select-text.png)   
-![Search and Replace](/images/search-replace.png)   
+![Auto Complete](/images/auto-completion.png)
+![Select Text](/images/select-text.png)
+![Search and Replace](/images/search-replace.png)
+![Wordwrap](/images/wordwrap.png)
 ## How to use this editor  
 * Step 1.Add the JitPack repository to your build file
 Add it in your root build.gradle at the end of repositories:

@@ -424,8 +424,9 @@ class EditorInputConnection extends BaseInputConnection {
         
         return mEditor.extractText(request);
     }
-    
-    
-    
 
+    @Override
+    public boolean reportFullscreenMode(boolean enabled) {
+        return false;
+    }
 }
