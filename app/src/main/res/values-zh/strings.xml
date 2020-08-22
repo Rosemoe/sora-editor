@@ -47,4 +47,5 @@
     <string name="navi_err_msg">代码导航没有准备好或者该语言不支持</string>
     <string name="color_scheme">颜色风格</string>
     <string name="err_crash_loop">在一个具有Looper的线程中发生了错误，检查/#Logs/以获得详细错误信息</string>
+    <string name="wordwrap">自动换行</string>
 </resources>

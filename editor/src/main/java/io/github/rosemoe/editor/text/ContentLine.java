@@ -15,16 +15,17 @@
  */
 package io.github.rosemoe.editor.text;
 
+import android.text.GetChars;
 import android.text.TextUtils;
 
 import java.util.List;
 
-public class ContentLine implements CharSequence {
+public class ContentLine implements CharSequence, GetChars {
 
     private char[] value;
-    
+
     private int length;
-    
+
     /**
      * Index of text line break
      */
@@ -317,14 +318,17 @@ public class ContentLine implements CharSequence {
         res.length = end - start;
         return res;
     }
-    
+
+    public void appendTo(StringBuilder sb) {
+        sb.append(value, 0, length);
+    }
+
     @Override
     public String toString() {
         return new String(value, 0, length);
     }
-    
-    public void getChars(int srcBegin, int srcEnd, char[] dst, int dstBegin)
-    {
+
+    public void getChars(int srcBegin, int srcEnd, char[] dst, int dstBegin) {
         if (srcBegin < 0)
             throw new StringIndexOutOfBoundsException(srcBegin);
         if ((srcEnd < 0) || (srcEnd > length))

@@ -723,11 +723,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         float offsetX = -getOffsetX() + lineNumberWidth + mDividerMargin * 2 + mDividerWidth;
         float textOffset = offsetX;
 
-        if (mCachedLineNumberWidth == 0f) {
-            mCachedLineNumberWidth = (int) lineNumberWidth;
-        } else if (mCachedLineNumberWidth != (int)lineNumberWidth) {
-            mCachedLineNumberWidth = (int)lineNumberWidth;
-            createLayout();
+        if (isWordwrap()) {
+            if (mCachedLineNumberWidth == 0) {
+                mCachedLineNumberWidth = (int) lineNumberWidth;
+            } else if (mCachedLineNumberWidth != (int) lineNumberWidth) {
+                mCachedLineNumberWidth = (int) lineNumberWidth;
+                createLayout();
+            }
+        } else {
+            mCachedLineNumberWidth = 0;
         }
 
         if (!mCursor.isSelected()) {
@@ -1086,12 +1090,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         OverScroller scroller = getScroller();
         if (scroller.isOverScrolled()) {
             if (mVerticalEdgeGlow.isFinished() && (scroller.getCurrY() <= 0 || scroller.getCurrY() >= getScrollMaxY())) {
-                mEventHandler.topOrBottom = scroller.getCurrY() >= getScrollMaxY();
+                mEventHandler.topOrBottom = scroller.getCurrY() > getScrollMaxY();
                 mVerticalEdgeGlow.onAbsorb((int) scroller.getCurrVelocity());
                 postDraw = true;
             }
             if (mHorizontalGlow.isFinished() && (scroller.getCurrX() <= 0 || scroller.getCurrX() >= getScrollMaxX())) {
-                mEventHandler.leftOrRight = scroller.getCurrX() >= getScrollMaxX();
+                mEventHandler.leftOrRight = scroller.getCurrX() > getScrollMaxX();
                 mHorizontalGlow.onAbsorb((int) scroller.getCurrVelocity());
                 postDraw = true;
             }
@@ -1607,6 +1611,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else {
             mLayout = new LineBreakLayout(this, mText);
         }
+        if (mEventHandler != null) {
+            mEventHandler.scrollBy(0, 0);
+        }
     }
 
     /**
@@ -1738,7 +1745,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             targetX = xOffset - charWidth * 0.2f;
         }
         if (xOffset + charWidth > getOffsetX() + getWidth()) {
-            targetX = xOffset + charWidth * 0.8f + getWidth();
+            targetX = xOffset + charWidth * 0.8f - getWidth();
         }
 
         targetX = Math.max(0, Math.min(getScrollMaxX(), targetX));
@@ -2849,7 +2856,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Hide auto complete window if shown
      */
     public void hideAutoCompleteWindow() {
-        mCompletionWindow.hide();
+        if (mCompletionWindow != null) {
+            mCompletionWindow.hide();
+        }
     }
 
     /**

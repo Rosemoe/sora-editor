@@ -47,4 +47,5 @@
     <string name="navi_err_msg">Code navigation not prepared or unsupported</string>
     <string name="color_scheme">Color Scheme</string>
     <string name="err_crash_loop">Exception in a thread with looper. see /#Logs/ to know more</string>
+    <string name="wordwrap">Wordwrap</string>
 </resources>

@@ -20,14 +20,17 @@ import android.graphics.Paint;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 
 import io.github.rosemoe.editor.text.Content;
 import io.github.rosemoe.editor.text.ContentLine;
 import io.github.rosemoe.editor.text.FontCache;
 import io.github.rosemoe.editor.util.IntPair;
 
-//Word in progress
+/**
+ * Wordwrap layout for editor
+ *
+ * @author Rose
+ */
 public class WordwrapLayout implements Layout {
 
     private final CodeEditor editor;
@@ -40,7 +43,7 @@ public class WordwrapLayout implements Layout {
     WordwrapLayout(CodeEditor editor, Content text) {
         this.editor = editor;
         this.text = text;
-        rowTable = new Vector<>();
+        rowTable = new ArrayList<>();
         width = editor.getWidth() - (int) editor.measureTextRegionOffset() - (int) editor.getDpUnit() * 5;
         fontCache = new FontCache();
         shadowPaint = new Paint(editor.getTextPaint());

@@ -57,12 +57,17 @@
                 android:title="@string/action_mode" />
             <item
                 android:id="@+id/search_panel_st"
+                android:checkable="true"
                 android:title="@string/search_panel" />
         </menu>
     </item>
     <item
         android:id="@+id/code_navigation"
         android:title="@string/code_navigation" />
+    <item
+        android:id="@+id/text_wordwrap"
+        android:checkable="true"
+        android:title="@string/wordwrap" />
     <item
         android:id="@+id/code_format"
         android:title="@string/format" />

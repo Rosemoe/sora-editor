@@ -627,14 +627,15 @@ public class Content implements CharSequence {
         StringBuilder sb = new StringBuilder();
         sb.ensureCapacity(mTextLength + 10);
         boolean first = true;
-        for (int i = 0; i < getLineCount(); i++) {
+        final int lines = getLineCount();
+        for (int i = 0; i < lines; i++) {
             ContentLine line = mLines.get(i);
             if (!first) {
                 sb.append('\n');
             } else {
                 first = false;
             }
-            sb.append(line);
+            line.appendTo(sb);
         }
         return sb;
     }

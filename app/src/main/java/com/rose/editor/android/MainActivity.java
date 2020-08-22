@@ -91,7 +91,6 @@ public class MainActivity extends Activity {
         replace = findViewById(R.id.replace_editor);
         editor.setOverScrollEnabled(false);
         editor.setEditorLanguage(new JavaLanguage());
-        editor.setWordwrap(true);
         editor.setColorScheme(new SchemeDarcula());
         editor.setText("/**\n * Demo\n */\n@SuppressWarnings(/**/\"unused\")\n" +
                 "public class Main {\n\n\tpublic static void main(String[] args) {\n\t\t" +
@@ -240,6 +239,10 @@ public class MainActivity extends Activity {
                         })
                         .setNegativeButton(android.R.string.cancel, null)
                         .show();
+                break;
+            case R.id.text_wordwrap:
+                item.setChecked(!item.isChecked());
+                editor.setWordwrap(item.isChecked());
                 break;
         }
         return super.onOptionsItemSelected(item);
