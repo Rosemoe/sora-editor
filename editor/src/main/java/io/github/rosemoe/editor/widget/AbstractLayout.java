@@ -56,7 +56,7 @@ abstract class AbstractLayout implements Layout {
         while (index < end && width < targetOffset) {
             float single = fontCache.measureChar(str.charAt(index), shadowPaint);
             if (str.charAt(index) == '\t') {
-                single *= editor.getTabWidth();
+                single = editor.getTabWidth() * fontCache.measureChar(' ', shadowPaint);
             }
             width += single;
             index++;
@@ -71,7 +71,7 @@ abstract class AbstractLayout implements Layout {
         while (index < length && width < targetOffset) {
             float single = fontCache.measureChar(str.charAt(index), shadowPaint);
             if (str.charAt(index) == '\t') {
-                single *= editor.getTabWidth();
+                single = editor.getTabWidth() * fontCache.measureChar(' ', shadowPaint);
             }
             width += single;
             index++;

@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
@@ -107,10 +108,11 @@ public class MainActivity extends Activity {
                 editor.getSearcher().search(editable.toString());
             }
         });
-
+        editor.setTypefaceText(Typeface.MONOSPACE);
         editor.setOverScrollEnabled(false);
         editor.setEditorLanguage(new JavaLanguage());
         editor.setColorScheme(new SchemeDarcula());
+        editor.setNonPrintablePaintingFlags(CodeEditor.PAINT_NON_PRINTABLE_LEADING);
         editor.setText("/**\n * Demo\n */\n@SuppressWarnings(/**/\"unused\")\n" +
                 "public class Main {\n\n\tpublic static void main(String[] args) {\n\t\t" +
                 "// Comment\n\t\tSystem.out.println(\"Hello\");\n\t}\n\n}\n");
@@ -183,7 +185,7 @@ public class MainActivity extends Activity {
             case R.id.switch_language:
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.switch_language)
-                        .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "S5droid", "None"}, 0, new DialogInterface.OnClickListener() {
+                        .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "S5droid", "None"}, -1, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 switch (which) {

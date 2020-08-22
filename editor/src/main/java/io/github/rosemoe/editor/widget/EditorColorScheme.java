@@ -64,6 +64,7 @@ public class EditorColorScheme {
 
     //-------------View colors---------------------
 
+    public static final int NON_PRINTABLE_CHAR = 31;
     public static final int TEXT_SELECTED = 30;
     public static final int MATCHED_TEXT_BACKGROUND = 29;
     public static final int AUTO_COMP_PANEL_CORNER = 20;
@@ -98,7 +99,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 30;
+    protected static final int END_COLOR_ID = 31;
 
     /**
      * Host editor object
@@ -233,6 +234,9 @@ public class EditorColorScheme {
                 break;
             case MATCHED_TEXT_BACKGROUND:
                 color = 0xffffff00;
+                break;
+            case NON_PRINTABLE_CHAR:
+                color = 0xffdddddd;
                 break;
             default:
                 throw new IllegalArgumentException("Unexpected type:" + type);

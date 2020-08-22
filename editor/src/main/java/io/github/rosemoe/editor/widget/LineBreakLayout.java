@@ -125,10 +125,6 @@ class LineBreakLayout extends AbstractLayout {
         int line = Math.min(lineCount - 1, Math.max((int) (yOffset / editor.getRowHeight()), 0));
         ContentLine str = text.getLine(line);
         float[] res = orderedFindCharIndex(xOffset, str);
-        if (res[1] < xOffset) {
-            res[0]++;
-        }
-        res[0] = Math.min(str.length(), res[0]);
         return IntPair.pack(line, (int) res[0]);
     }
 

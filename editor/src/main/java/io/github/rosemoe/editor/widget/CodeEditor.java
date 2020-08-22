@@ -105,10 +105,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     static final int ACTION_MODE_SEARCH_TEXT = 1;
     static final int ACTION_MODE_SELECT_TEXT = 2;
 
+    public static final int PAINT_NON_PRINTABLE_LEADING = 1;
+    public static final int PAINT_NON_PRINTABLE_INNER = 1 << 1;
+    public static final int PAINT_NON_PRINTABLE_TRAILING = 1 << 2;
+
     private static final String LOG_TAG = "CodeEditor";
 
     private int mTabWidth;
     private int mCursorPosition;
+    private int mNonPrintableOptions;
     private int mCachedLineNumberWidth;
     private float mDpUnit;
     private float mDividerWidth;
@@ -846,6 +851,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
         int lastPreparedLine = -1;
         int spanOffset = 0;
+        int leadingWhitespaceEnd = 0;
+        int trailingWhitespaceStart = 0;
+        float circleRadius = 0f;
+        if (mNonPrintableOptions != 0) {
+            float spaceWidth = mFontCache.measureChar(' ', mPaint);
+            float maxD = Math.min(getRowHeight(), spaceWidth);
+            maxD *= 0.18f;
+            circleRadius = maxD / 2;
+        }
 
         for (int row = getFirstVisibleRow(); row <= getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
@@ -862,6 +876,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 prepareLine(line);
                 computeMatchedPositions(line, matchedPositions);
                 spanOffset = 0;
+                if (mNonPrintableOptions != 0) {
+                    long positions = findLeadingAndTrailingWhitespacePos(line);
+                    leadingWhitespaceEnd = IntPair.getFirst(positions);
+                    trailingWhitespaceStart = IntPair.getSecond(positions);
+                }
             }
 
             // Get visible region on line
@@ -953,6 +972,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
             paintingOffset = backupOffset;
 
+            // Draw non-printable characters
+            if (circleRadius != 0f && leadingWhitespaceEnd != columnCount) {
+                if ((mNonPrintableOptions & PAINT_NON_PRINTABLE_LEADING) != 0) {
+                    drawNonPrintableChars(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, 0, leadingWhitespaceEnd, circleRadius);
+                }
+                if ((mNonPrintableOptions & PAINT_NON_PRINTABLE_INNER) != 0) {
+                    drawNonPrintableChars(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, leadingWhitespaceEnd, trailingWhitespaceStart, circleRadius);
+                }
+                if ((mNonPrintableOptions & PAINT_NON_PRINTABLE_TRAILING) != 0) {
+                    drawNonPrintableChars(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, trailingWhitespaceStart, columnCount, circleRadius);
+                }
+            }
+
             // Draw composing text underline
             if (line == mConnection.mComposingLine) {
                 int composingStart = mConnection.mComposingStart;
@@ -986,6 +1018,67 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
 
         }
+    }
+
+    /**
+     * Draw non-printable characters
+     */
+    private void drawNonPrintableChars(Canvas canvas, float offset, int row, int rowStart, int rowEnd, int min, int max, float circleRadius) {
+        int paintStart = Math.max(rowStart, Math.min(rowEnd, min));
+        int paintEnd = Math.max(rowStart, Math.min(rowEnd, max));
+        mPaintOther.setColor(mColors.getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
+        if (paintStart < paintEnd) {
+            float spaceWidth = mFontCache.measureChar(' ', mPaint);
+            float rowCenter = (getRowTop(row) + getRowBottom(row)) / 2f - getOffsetY();
+            offset += measureText(mBuffer, rowStart, paintStart - rowStart);
+            while (paintStart < paintEnd) {
+                char ch = mBuffer[paintStart];
+                float charWidth = measureText(mBuffer, paintStart, 1);
+                int paintCount = 0;
+                if (ch == ' ') {
+                    paintCount = 1;
+                } else if (ch == '\t') {
+                    paintCount = getTabWidth();
+                }
+                for (int i = 0; i < paintCount; i++) {
+                    float charStartOffset = offset + spaceWidth * i;
+                    float charEndOffset = charStartOffset + spaceWidth;
+                    float centerOffset = (charStartOffset + charEndOffset) / 2f;
+                    canvas.drawCircle(centerOffset, rowCenter, circleRadius, mPaintOther);
+                }
+                offset += charWidth;
+                paintStart++;
+            }
+        }
+    }
+
+    /**
+     * As the name is, we find where leading spaces end and trailing spaces start
+     * Before calling this, the line should be prepared
+     *
+     * @param line The line to search
+     */
+    private long findLeadingAndTrailingWhitespacePos(int line) {
+        int column = mText.getColumnCount(line);
+        int leading = 0;
+        int trailing = column;
+        while (leading < column && isWhitespace(mBuffer[leading])) {
+            leading++;
+        }
+        // Only them this action is needed
+        if (leading != column && (mNonPrintableOptions & (PAINT_NON_PRINTABLE_INNER | PAINT_NON_PRINTABLE_TRAILING)) != 0) {
+            while (trailing > 0 && isWhitespace(mBuffer[trailing - 1])) {
+                trailing--;
+            }
+        }
+        return IntPair.pack(leading, trailing);
+    }
+
+    /**
+     * A quick method to predicate whitespace character
+     */
+    private boolean isWhitespace(char ch) {
+        return ch == '\t' || ch == ' ';
     }
 
     /**
@@ -1511,8 +1604,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (!insert || mCursorBlink == null || mCursorBlink.visibility) {
             mRect.top = getRowTop(row) - getOffsetY();
             mRect.bottom = getRowBottom(row) - getOffsetY();
-            mRect.left = centerX;
-            mRect.right = centerX + mInsertSelWidth;
+            mRect.left = centerX - mInsertSelWidth / 2f;
+            mRect.right = centerX + mInsertSelWidth / 2f;
             drawColor(canvas, mColors.getColor(EditorColorScheme.SELECTION_INSERT), mRect);
         }
         if (handle != null) {
@@ -1588,10 +1681,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     private float[] findFirstVisibleChar(float initialPosition, int left, int right, char[] chars) {
         float width = 0f;
-        while (left < right && initialPosition + width < -40f) {
+        float target = mFontCache.measureChar(' ', mPaint) * getTabWidth() * 1.1f;
+        while (left < right && initialPosition + width < -target) {
             float single = mFontCache.measureChar(chars[left], mPaint);
             if (chars[left] == '\t') {
-                single *= getTabWidth();
+                single = mFontCache.measureChar(' ', mPaint) * getTabWidth();
             }
             width += single;
             left++;
@@ -1889,6 +1983,31 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             throw new IllegalArgumentException();
         }
         mLineInfoTextSize = sizePx;
+    }
+
+    /**
+     * Set non-printable painting flags
+     * Specify where they should be drawn
+     * Flags can be mixed
+     *
+     * @param flags Flags
+     * @see #PAINT_NON_PRINTABLE_LEADING
+     * @see #PAINT_NON_PRINTABLE_INNER
+     * @see #PAINT_NON_PRINTABLE_TRAILING
+     */
+    public void setNonPrintablePaintingFlags(int flags) {
+        this.mNonPrintableOptions = flags;
+        invalidate();
+    }
+
+    /**
+     * @see #setNonPrintablePaintingFlags(int)
+     * @see #PAINT_NON_PRINTABLE_LEADING
+     * @see #PAINT_NON_PRINTABLE_INNER
+     * @see #PAINT_NON_PRINTABLE_TRAILING
+     */
+    public int getNonPrintableFlags() {
+        return mNonPrintableOptions;
     }
 
     /**
