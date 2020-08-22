@@ -236,7 +236,7 @@ public class EditorColorScheme {
                 color = 0xffffff00;
                 break;
             case NON_PRINTABLE_CHAR:
-                color = 0xffdddddd;
+                color = 0xff505050;
                 break;
             default:
                 throw new IllegalArgumentException("Unexpected type:" + type);
