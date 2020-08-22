@@ -95,9 +95,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * The default size when creating the editor object. Unit is sp.
      */
     public static final int DEFAULT_TEXT_SIZE = 20;
+
+    static final int ACTION_MODE_NONE = 0;
+    static final int ACTION_MODE_SEARCH_TEXT = 1;
+    static final int ACTION_MODE_SELECT_TEXT = 2;
+
     private static final String LOG_TAG = "CodeEditor";
+
     private int mTabWidth;
     private int mCursorPosition;
+    private int mCachedLineNumberWidth;
     private float mDpUnit;
     private float mDividerWidth;
     private float mDividerMargin;
@@ -157,7 +164,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private FontCache mFontCache;
     private Paint.FontMetricsInt mTextMetrics;
     private Paint.FontMetricsInt mLineNumberMetrics;
+
     Layout mLayout;
+    int mStartedActionMode;
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -373,6 +382,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaintOther.setAntiAlias(true);
         mPaintOther.setTypeface(Typeface.MONOSPACE);
         mBuffer = new char[256];
+        mStartedActionMode = ACTION_MODE_NONE;
         setTextSize(DEFAULT_TEXT_SIZE);
         setLineInfoTextSize(mPaint.getTextSize());
         mColors = new EditorColorScheme(this);
@@ -817,7 +827,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
             // Draw matched text background
             for (int position : matchedPositions) {
-                drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, position, mSearcher.mSearchText.length(), mColors.getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND));
+                drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, position, position + mSearcher.mSearchText.length(), mColors.getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND));
             }
 
             float backupOffset = paintingOffset;
@@ -1090,12 +1100,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         OverScroller scroller = getScroller();
         if (scroller.isOverScrolled()) {
             if (mVerticalEdgeGlow.isFinished() && (scroller.getCurrY() <= 0 || scroller.getCurrY() >= getScrollMaxY())) {
-                mEventHandler.topOrBottom = scroller.getCurrY() > getScrollMaxY();
+                mEventHandler.topOrBottom = scroller.getCurrY() >= getScrollMaxY();
                 mVerticalEdgeGlow.onAbsorb((int) scroller.getCurrVelocity());
                 postDraw = true;
             }
             if (mHorizontalGlow.isFinished() && (scroller.getCurrX() <= 0 || scroller.getCurrX() >= getScrollMaxX())) {
-                mEventHandler.leftOrRight = scroller.getCurrX() > getScrollMaxX();
+                mEventHandler.leftOrRight = scroller.getCurrX() >= getScrollMaxX();
                 mHorizontalGlow.onAbsorb((int) scroller.getCurrVelocity());
                 postDraw = true;
             }
@@ -2056,6 +2066,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
             @Override
             public boolean onCreateActionMode(ActionMode p1, Menu p2) {
+                mStartedActionMode = ACTION_MODE_SEARCH_TEXT;
                 p2.add(0, 0, 0, R.string.next).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
                 p2.add(0, 1, 0, R.string.last).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
                 p2.add(0, 2, 0, R.string.replace).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
@@ -2129,6 +2140,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
             @Override
             public void onDestroyActionMode(ActionMode p1) {
+                mStartedActionMode = ACTION_MODE_NONE;
                 getSearcher().stopSearch();
             }
 
@@ -2648,7 +2660,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         mCursor.setLeft(lineLeft, columnLeft);
         mCursor.setRight(lineRight, columnRight);
-        updateCursorAnchor();
         updateCursor();
         mCompletionWindow.hide();
         if (makeRightVisible) {
@@ -2656,7 +2667,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else {
             invalidate();
         }
-        if (!lastState && mCursor.isSelected()) {
+        if (!lastState && mCursor.isSelected() && mStartedActionMode != ACTION_MODE_SEARCH_TEXT) {
             mTextActionPresenter.onBeginTextSelect();
         }
     }
@@ -3191,8 +3202,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }, 50);
     }
-
-    private int mCachedLineNumberWidth;
 
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {

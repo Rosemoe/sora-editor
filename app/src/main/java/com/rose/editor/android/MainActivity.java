@@ -24,6 +24,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.Spanned;
+import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -89,6 +90,24 @@ public class MainActivity extends Activity {
         panel = findViewById(R.id.search_panel);
         search = findViewById(R.id.search_editor);
         replace = findViewById(R.id.replace_editor);
+
+        search.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                editor.getSearcher().search(editable.toString());
+            }
+        });
+
         editor.setOverScrollEnabled(false);
         editor.setEditorLanguage(new JavaLanguage());
         editor.setColorScheme(new SchemeDarcula());
@@ -204,6 +223,9 @@ public class MainActivity extends Activity {
                 }
                 break;
             case R.id.search_am:
+                replace.setText("");
+                search.setText("");
+                editor.getSearcher().stopSearch();
                 editor.beginSearchMode();
                 break;
             case R.id.switch_colors:

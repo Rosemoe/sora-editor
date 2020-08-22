@@ -45,6 +45,7 @@ class EditorTextActionModeStarter implements CodeEditor.EditorTextActionPresente
         mActionMode = mEditor.startActionMode(new ActionMode.Callback() {
             @Override
             public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+                mEditor.mStartedActionMode = CodeEditor.ACTION_MODE_SELECT_TEXT;
                 actionMode.setTitle(android.R.string.selectTextMode);
                 TypedArray array = mEditor.getContext().getTheme().obtainStyledAttributes(new int[] {
                         android.R.attr.actionModeSelectAllDrawable,
@@ -100,6 +101,7 @@ class EditorTextActionModeStarter implements CodeEditor.EditorTextActionPresente
 
             @Override
             public void onDestroyActionMode(ActionMode actionMode) {
+                mEditor.mStartedActionMode = CodeEditor.ACTION_MODE_NONE;
                 mActionMode = null;
                 mEditor.setSelection(mEditor.getCursor().getLeftLine(), mEditor.getCursor().getLeftColumn());
             }
