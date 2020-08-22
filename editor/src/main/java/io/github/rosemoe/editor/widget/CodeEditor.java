@@ -738,9 +738,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public void setTextSizePx(float size) {
         setTextSizePxDirect(size);
-        if (isWordwrap()) {
-            createLayout();
-        }
+        createLayout();
         invalidate();
     }
 
