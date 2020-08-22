@@ -31,7 +31,7 @@ import io.github.rosemoe.editor.util.IntPair;
  *
  * @author Rose
  */
-public class WordwrapLayout implements Layout {
+class WordwrapLayout implements Layout {
 
     private final CodeEditor editor;
     private final Content text;

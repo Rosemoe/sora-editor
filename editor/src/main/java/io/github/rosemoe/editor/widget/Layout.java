@@ -19,22 +19,22 @@ import io.github.rosemoe.editor.text.LineRemoveListener;
 import io.github.rosemoe.editor.text.ContentListener;
 
 /**
-  * Layout is a manager class for editor to display text
-  * Different layout may display texts in different way
-  * Implementations of this interface should manage 'row's in editor.
-  *
-  * @author Rose
-  */
-public interface Layout extends LineRemoveListener, ContentListener {
-    
+ * Layout is a manager class for editor to display text
+ * Different layout may display texts in different way
+ * Implementations of this interface should manage 'row's in editor.
+ *
+ * @author Rose
+ */
+interface Layout extends LineRemoveListener, ContentListener {
+
     void destroyLayout();
-    
+
     int getLineNumberForRow(int row);
-    
+
     RowIterator obtainRowIterator(int initialRow);
-    
+
     int getLayoutWidth();
-    
+
     int getLayoutHeight();
     
     long getCharPositionForLayoutOffset(float xOffset, float yOffset);

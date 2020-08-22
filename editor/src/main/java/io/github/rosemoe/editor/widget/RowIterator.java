@@ -24,7 +24,7 @@ import java.util.NoSuchElementException;
  *
  * @author Rose
  */
-public interface RowIterator {
+interface RowIterator {
 
     /**
      * Return next Row object

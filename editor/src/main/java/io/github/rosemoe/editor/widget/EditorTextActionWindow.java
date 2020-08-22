@@ -32,7 +32,7 @@ import io.github.rosemoe.editor.R;
  *
  * @author Rose
  */
-public class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnClickListener, CodeEditor.EditorTextActionPresenter {
+class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnClickListener, CodeEditor.EditorTextActionPresenter {
     private final CodeEditor mEditor;
     private final Button paste;
 
