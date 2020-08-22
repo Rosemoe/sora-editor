@@ -192,7 +192,7 @@ public class WordwrapLayout implements Layout {
 
     @Override
     public int getLineNumberForRow(int row) {
-        return rowTable.get(row).line;
+        return row >= rowTable.size() ? rowTable.get(rowTable.size() - 1).line : rowTable.get(row).line;
     }
 
     @Override

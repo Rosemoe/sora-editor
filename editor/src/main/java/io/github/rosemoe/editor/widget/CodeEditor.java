@@ -1060,6 +1060,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 canvas.restore();
             }
         }
+        if (isWordwrap()) {
+            mHorizontalGlow.finish();
+        }
         if (!mHorizontalGlow.isFinished()) {
             canvas.save();
             boolean right = mEventHandler.leftOrRight;
@@ -1076,12 +1079,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         OverScroller scroller = getScroller();
         if (scroller.isOverScrolled()) {
             if (mVerticalEdgeGlow.isFinished() && (scroller.getCurrY() <= 0 || scroller.getCurrY() >= getScrollMaxY())) {
-                mEventHandler.topOrBottom = scroller.getCurrY() > getScrollMaxY();
+                mEventHandler.topOrBottom = scroller.getCurrY() >= getScrollMaxY();
                 mVerticalEdgeGlow.onAbsorb((int) scroller.getCurrVelocity());
                 postDraw = true;
             }
             if (mHorizontalGlow.isFinished() && (scroller.getCurrX() <= 0 || scroller.getCurrX() >= getScrollMaxX())) {
-                mEventHandler.leftOrRight = scroller.getCurrX() > getScrollMaxX();
+                mEventHandler.leftOrRight = scroller.getCurrX() >= getScrollMaxX();
                 mHorizontalGlow.onAbsorb((int) scroller.getCurrVelocity());
                 postDraw = true;
             }
@@ -1660,7 +1663,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         prepareLine(l);
         boolean visible = true;
         float x = measureTextRegionOffset();
-        x = x + measureText(mBuffer, 0, column);
+        x = x + mLayout.getCharLayoutOffset(l, column)[1];
         x = x - getOffsetX();
         if (x < 0) {
             visible = false;
@@ -1706,35 +1709,35 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param column Column of char
      */
     public void ensurePositionVisible(int line, int column) {
-        // Ensure y position
-        float y = getRowHeight() * line;
-        float minY = getOffsetY();
-        float maxY = minY + getHeight();
-        float targetY = minY;
-        if (y < minY) {
-            targetY = y;
-        } else if (y + getRowHeight() > maxY) {
-            targetY = y + getRowHeight() * 0.9f - getHeight();
+        float[] layoutOffset = mLayout.getCharLayoutOffset(line, column);
+        // x offset is the left of character
+        float xOffset = layoutOffset[1] + measureTextRegionOffset();
+        // y offset is the bottom of row
+        float yOffset = layoutOffset[0];
+
+        float targetY = getOffsetY();
+        float targetX = getOffsetX();
+
+        if (yOffset - getRowHeight() < getOffsetY()) {
+            //top invisible
+            targetY = yOffset - getRowHeight() * 1.1f;
+        }
+        if (yOffset > getHeight() + getOffsetY()) {
+            //bottom invisible
+            targetY = yOffset - getHeight() + getRowHeight() * 0.1f;
+        }
+        float charWidth = column == 0 ? 0 : measureText(mText.getLine(line), column - 1, 1);
+        if (xOffset < getOffsetX()) {
+            targetX = xOffset - charWidth * 0.2f;
+        }
+        if (xOffset + charWidth > getOffsetX() + getWidth()) {
+            targetX = xOffset + charWidth * 0.8f + getWidth();
         }
 
-        float prefix_width = measureTextRegionOffset();
-        float minX = getOffsetX();
-        float maxX = minX + getWidth();
+        targetX = Math.max(0, Math.min(getScrollMaxX(), targetX));
+        targetY = Math.max(0, Math.min(getScrollMaxY(), targetY));
 
-        float targetX = minX;
-        prepareLine(line);
-        float x = prefix_width + (column == 0 ? 0 : measureText(mBuffer, 0, column - 1));
-        float char_width = (column == 0 ? 0 : measureText(mBuffer, column - 1, 1));
-        if (x < minX) {
-            targetX = x - char_width * 0.5f;
-        } else if (x + char_width > maxX) {
-            targetX = x + char_width * 1.5f - getWidth();
-        }
-
-        targetX = Math.min(getScrollMaxX(), targetX);
-        targetY = Math.min(getScrollMaxY(), targetY);
-
-        if (targetY == minY && targetX == minX) {
+        if (targetY == getOffsetY() && targetX == getOffsetX()) {
             invalidate();
             return;
         }
@@ -3233,7 +3236,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     private void applyNewPanelPosition() {
         float panelX = updateCursorAnchor() + mDpUnit * 20;
-        float panelY = getRowBottom(mCursor.getRightLine()) - getOffsetY() + getRowHeight() / 2f;
+        float[] rightLayoutOffset = mLayout.getCharLayoutOffset(mCursor.getRightLine(), mCursor.getRightColumn());
+        float panelY = rightLayoutOffset[0] - getOffsetY() + getRowHeight() / 2f;
         float restY = getHeight() - panelY;
         if (restY > mDpUnit * 200) {
             restY = mDpUnit * 200;
