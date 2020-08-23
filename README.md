@@ -10,22 +10,23 @@ If you find any bug or require any enhancement, please send it to me by issues o
 See [Projects](https://github.com/Rosemoe/CodeEditor/projects/) to get more information about what I am working on.    
 ***Issues and pull requests are welcome.***   
 ## Features
-- [x] Smooth Syntax highlight
-- [x] Auto Completion
-- [x] Auto Indent
+- [x] Smooth syntax highlight
+- [x] Auto completion
+- [x] Auto indent
 - [x] Code block lines
 - [x] Format code (Requires improvement)
-- [x] Scale Text
-- [x] Select Text
+- [x] Scale text
+- [x] Select text
 - [x] Scroll, Scrollbars, EdgeEffect, OverScroll
-- [x] Undo/Redo
-- [x] Search and Replace
+- [x] Undo/redo
+- [x] Search and replace
 - [x] Shortcuts
 - [x] Auto wordwrap
-- [ ] Incremental Highlight Analysis
+- [x] Show non-printable characters
+- [ ] Incremental highlight Analysis
 ## Language Supported  
-* Java,JavaScript,C,C++(Basic Support:highlight,code block line,identifier and keyword auto completion)
-* S5droid(context sensitive auto completion,highlight,code block line,navigation)(going to be deprecated)   
+* Java,JavaScript,C,C++ (Basic Support:highlight, code block line,identifier and keyword auto-completion)
+* S5droid(context sensitive auto completion, highlight, code block line, navigation)(going to be deprecated)   
 ## Screenshots  
 ![View Outline](/images/outline.png)
 ![Auto Complete](/images/auto-completion.png)
