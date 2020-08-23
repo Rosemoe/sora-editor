@@ -112,7 +112,7 @@ public class MainActivity extends Activity {
         editor.setOverScrollEnabled(false);
         editor.setEditorLanguage(new JavaLanguage());
         editor.setColorScheme(new SchemeDarcula());
-        editor.setNonPrintablePaintingFlags(CodeEditor.PAINT_NON_PRINTABLE_LEADING);
+        editor.setNonPrintablePaintingFlags(CodeEditor.FLAG_DRAW_WHITESPACE_LEADING | CodeEditor.FLAG_DRAW_LINE_SEPARATOR);
         editor.setText("/**\n * Demo\n */\n@SuppressWarnings(/**/\"unused\")\n" +
                 "public class Main {\n\n\tpublic static void main(String[] args) {\n\t\t" +
                 "// Comment\n\t\tSystem.out.println(\"Hello\");\n\t}\n\n}\n");

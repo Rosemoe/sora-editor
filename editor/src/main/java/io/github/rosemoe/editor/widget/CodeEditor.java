@@ -91,6 +91,8 @@ import io.github.rosemoe.editor.widget.edge.EdgeEffectFactory;
  */
 public class CodeEditor extends View implements ContentListener, TextAnalyzer.Callback, FormatThread.FormatResultReceiver, LineRemoveListener {
 
+    private static final String LOG_TAG = "CodeEditor";
+
     /**
      * The default size when creating the editor object. Unit is sp.
      */
@@ -101,15 +103,48 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public static final int DEFAULT_CURSOR_BLINK_PERIOD = 500;
 
+    /*
+     * Internal state identifiers of action mode
+     */
     static final int ACTION_MODE_NONE = 0;
     static final int ACTION_MODE_SEARCH_TEXT = 1;
     static final int ACTION_MODE_SELECT_TEXT = 2;
 
-    public static final int PAINT_NON_PRINTABLE_LEADING = 1;
-    public static final int PAINT_NON_PRINTABLE_INNER = 1 << 1;
-    public static final int PAINT_NON_PRINTABLE_TRAILING = 1 << 2;
-
-    private static final String LOG_TAG = "CodeEditor";
+    /**
+     * Draw whitespace characters before line content start
+     * <strong>Whitespace here only means space and tab</strong>
+     *
+     * @see #setNonPrintablePaintingFlags(int)
+     */
+    public static final int FLAG_DRAW_WHITESPACE_LEADING = 1;
+    /**
+     * Draw whitespace characters inside line content
+     * <strong>Whitespace here only means space and tab</strong>
+     *
+     * @see #setNonPrintablePaintingFlags(int)
+     */
+    public static final int FLAG_DRAW_WHITESPACE_INNER = 1 << 1;
+    /**
+     * Draw whitespace characters after line content end
+     * <strong>Whitespace here only means space and tab</strong>
+     *
+     * @see #setNonPrintablePaintingFlags(int)
+     */
+    public static final int FLAG_DRAW_WHITESPACE_TRAILING = 1 << 2;
+    /**
+     * Draw whitespace characters even if it is a line full of whitespaces
+     * To apply this, you must enable {@link #FLAG_DRAW_WHITESPACE_LEADING}
+     * <strong>Whitespace here only means space and tab</strong>
+     *
+     * @see #setNonPrintablePaintingFlags(int)
+     */
+    public static final int FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE = 1 << 3;
+    /**
+     * Draw newline signals in text
+     *
+     * @see #setNonPrintablePaintingFlags(int)
+     */
+    public static final int FLAG_DRAW_LINE_SEPARATOR = 1 << 4;
 
     private int mTabWidth;
     private int mCursorPosition;
@@ -834,6 +869,25 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
+     * Clear flag in flags
+     * The flag must be power of two
+     *
+     * @param flags Flags to filter
+     * @param flag  The flag to clear
+     * @return Cleared flags
+     */
+    private int clearFlag(int flags, int flag) {
+        return (flags & flag) != 0 ? flags ^ flag : flags;
+    }
+
+    /**
+     * Whether non-printable is to be drawn
+     */
+    private boolean shouldInitializeNonPrintable() {
+        return clearFlag(mNonPrintableOptions, FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE) != 0;
+    }
+
+    /**
      * Draw rows with a {@link RowIterator}
      *
      * @param canvas              Canvas to draw
@@ -852,7 +906,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int leadingWhitespaceEnd = 0;
         int trailingWhitespaceStart = 0;
         float circleRadius = 0f;
-        if (mNonPrintableOptions != 0) {
+        if (shouldInitializeNonPrintable()) {
             float spaceWidth = mFontCache.measureChar(' ', mPaint);
             float maxD = Math.min(getRowHeight(), spaceWidth);
             maxD *= 0.18f;
@@ -874,7 +928,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 prepareLine(line);
                 computeMatchedPositions(line, matchedPositions);
                 spanOffset = 0;
-                if (mNonPrintableOptions != 0) {
+                if (shouldInitializeNonPrintable()) {
                     long positions = findLeadingAndTrailingWhitespacePos(line);
                     leadingWhitespaceEnd = IntPair.getFirst(positions);
                     trailingWhitespaceStart = IntPair.getSecond(positions);
@@ -968,18 +1022,24 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 }
             }
 
+            // Draw hard wrap
+            if (lastVisibleChar == columnCount && (mNonPrintableOptions & FLAG_DRAW_LINE_SEPARATOR) != 0) {
+                drawMiniGraph(canvas, paintingOffset, row, "↵", 0.9f);
+            }
+
+            // Recover the offset
             paintingOffset = backupOffset;
 
             // Draw non-printable characters
-            if (circleRadius != 0f && leadingWhitespaceEnd != columnCount) {
-                if ((mNonPrintableOptions & PAINT_NON_PRINTABLE_LEADING) != 0) {
-                    drawNonPrintableChars(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, 0, leadingWhitespaceEnd, circleRadius);
+            if (circleRadius != 0f && (leadingWhitespaceEnd != columnCount || (mNonPrintableOptions & FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE) != 0)) {
+                if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_LEADING) != 0) {
+                    drawWhitespaces(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, 0, leadingWhitespaceEnd, circleRadius);
                 }
-                if ((mNonPrintableOptions & PAINT_NON_PRINTABLE_INNER) != 0) {
-                    drawNonPrintableChars(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, leadingWhitespaceEnd, trailingWhitespaceStart, circleRadius);
+                if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_INNER) != 0) {
+                    drawWhitespaces(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, leadingWhitespaceEnd, trailingWhitespaceStart, circleRadius);
                 }
-                if ((mNonPrintableOptions & PAINT_NON_PRINTABLE_TRAILING) != 0) {
-                    drawNonPrintableChars(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, trailingWhitespaceStart, columnCount, circleRadius);
+                if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_TRAILING) != 0) {
+                    drawWhitespaces(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, trailingWhitespaceStart, columnCount, circleRadius);
                 }
             }
 
@@ -1019,9 +1079,28 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
+     * Draw small characters as graph
+     */
+    private void drawMiniGraph(Canvas canvas, float offset, int row, String graph, float scale) {
+        // Backup
+        Typeface typefaceLineNumber = mPaintOther.getTypeface();
+        // Draw
+        mPaintOther.setTypeface(Typeface.DEFAULT);
+        mPaintOther.setTextSize(mPaint.getTextSize() * scale);
+        mPaintOther.getFontMetricsInt(mLineNumberMetrics);
+        float baseline = getRowBottom(row) - getOffsetY() - mLineNumberMetrics.descent;
+        mPaintOther.setTextAlign(Paint.Align.LEFT);
+        canvas.drawText(graph, 0, graph.length(), offset, baseline, mPaintOther);
+        // Recover
+        mPaintOther.setTextSize(mPaint.getTextSize());
+        mPaintOther.setTypeface(typefaceLineNumber);
+        mPaintOther.getFontMetricsInt(mLineNumberMetrics);
+    }
+
+    /**
      * Draw non-printable characters
      */
-    private void drawNonPrintableChars(Canvas canvas, float offset, int row, int rowStart, int rowEnd, int min, int max, float circleRadius) {
+    private void drawWhitespaces(Canvas canvas, float offset, int row, int rowStart, int rowEnd, int min, int max, float circleRadius) {
         int paintStart = Math.max(rowStart, Math.min(rowEnd, min));
         int paintEnd = Math.max(rowStart, Math.min(rowEnd, max));
         mPaintOther.setColor(mColors.getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
@@ -1064,7 +1143,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             leading++;
         }
         // Only them this action is needed
-        if (leading != column && (mNonPrintableOptions & (PAINT_NON_PRINTABLE_INNER | PAINT_NON_PRINTABLE_TRAILING)) != 0) {
+        if (leading != column && (mNonPrintableOptions & (FLAG_DRAW_WHITESPACE_INNER | FLAG_DRAW_WHITESPACE_TRAILING)) != 0) {
             while (trailing > 0 && isWhitespace(mBuffer[trailing - 1])) {
                 trailing--;
             }
@@ -1213,43 +1292,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Get the color of EdgeEffect
-     *
-     * @return The color of EdgeEffect.
-     */
-    public int getEdgeEffectColor() {
-        return mVerticalEdgeGlow.getColor();
-    }
-
-    /**
-     * Set the color of EdgeEffect
-     *
-     * @param color The color of EdgeEffect
-     */
-    public void setEdgeEffectColor(int color) {
-        mVerticalEdgeGlow.setColor(color);
-        mHorizontalGlow.setColor(color);
-    }
-
-    /**
-     * Get EdgeEffect for vertical direction
-     *
-     * @return EdgeEffect
-     */
-    protected EdgeEffect getVerticalEdgeEffect() {
-        return mVerticalEdgeGlow;
-    }
-
-    /**
-     * Get EdgeEffect for horizontal direction
-     *
-     * @return EdgeEffect
-     */
-    protected EdgeEffect getHorizontalEdgeEffect() {
-        return mHorizontalGlow;
-    }
-
-    /**
      * Draw effect of edges
      *
      * @param canvas The canvas to draw
@@ -1379,90 +1421,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 invalidCount++;
             }
         }
-    }
-
-    /**
-     * Find the smallest code block that cursor is in
-     *
-     * @return The smallest code block index.
-     * If cursor is not in any code block,just -1.
-     */
-    private int findCursorBlock() {
-        List<BlockLine> blocks = mSpanner == null ? null : mSpanner.getResult().getBlocks();
-        if (blocks == null || blocks.isEmpty()) {
-            return -1;
-        }
-        return findCursorBlock(blocks);
-    }
-
-    /**
-     * Find the cursor code block internal
-     *
-     * @param blocks Current code blocks
-     * @return The smallest code block index.
-     * If cursor is not in any code block,just -1.
-     */
-    private int findCursorBlock(List<BlockLine> blocks) {
-        int line = mCursor.getLeftLine();
-        int min = binarySearchEndBlock(line, blocks);
-        int max = blocks.size() - 1;
-        int minDis = Integer.MAX_VALUE;
-        int found = -1;
-        int invalidCount = 0;
-        int maxCount = Integer.MAX_VALUE;
-        if (mSpanner != null) {
-            TextAnalyzeResult result = mSpanner.getResult();
-            if (result != null) {
-                maxCount = result.getSuppressSwitch();
-            }
-        }
-        for (int i = min; i <= max; i++) {
-            BlockLine block = blocks.get(i);
-            if (block.endLine >= line && block.startLine <= line) {
-                int dis = block.endLine - block.startLine;
-                if (dis < minDis) {
-                    minDis = dis;
-                    found = i;
-                }
-            } else if (minDis != Integer.MAX_VALUE) {
-                invalidCount++;
-                if (invalidCount >= maxCount) {
-                    break;
-                }
-            }
-        }
-        return found;
-    }
-
-    /**
-     * Find the first code block that maybe seen on screen
-     * Because the code blocks is sorted by its end line position
-     * we can use binary search to quicken this process in order to decrease
-     * the time we use on finding
-     *
-     * @param firstVis The first visible line
-     * @param blocks   Current code blocks
-     * @return The block we found.Always a valid index(Unless there is no block)
-     */
-    private int binarySearchEndBlock(int firstVis, List<BlockLine> blocks) {
-        //end > firstVis
-        int left = 0, right = blocks.size() - 1, mid, row;
-        int max = right;
-        while (left <= right) {
-            mid = (left + right) / 2;
-            if (mid < 0) return 0;
-            if (mid > max) return max;
-            row = blocks.get(mid).endLine;
-            if (row > firstVis) {
-                right = mid - 1;
-            } else if (row < firstVis) {
-                left = mid + 1;
-            } else {
-                left = mid;
-                break;
-            }
-        }
-        return Math.max(0, Math.min(left, max));
     }
 
     /**
@@ -1609,6 +1567,127 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (handle != null) {
             drawHandle(canvas, row, centerX, handle);
         }
+    }
+
+    /**
+     * Get the color of EdgeEffect
+     *
+     * @return The color of EdgeEffect.
+     */
+    public int getEdgeEffectColor() {
+        return mVerticalEdgeGlow.getColor();
+    }
+
+    /**
+     * Set the color of EdgeEffect
+     *
+     * @param color The color of EdgeEffect
+     */
+    public void setEdgeEffectColor(int color) {
+        mVerticalEdgeGlow.setColor(color);
+        mHorizontalGlow.setColor(color);
+    }
+
+    /**
+     * Get EdgeEffect for vertical direction
+     *
+     * @return EdgeEffect
+     */
+    protected EdgeEffect getVerticalEdgeEffect() {
+        return mVerticalEdgeGlow;
+    }
+
+    /**
+     * Get EdgeEffect for horizontal direction
+     *
+     * @return EdgeEffect
+     */
+    protected EdgeEffect getHorizontalEdgeEffect() {
+        return mHorizontalGlow;
+    }
+
+    /**
+     * Find the smallest code block that cursor is in
+     *
+     * @return The smallest code block index.
+     * If cursor is not in any code block,just -1.
+     */
+    private int findCursorBlock() {
+        List<BlockLine> blocks = mSpanner == null ? null : mSpanner.getResult().getBlocks();
+        if (blocks == null || blocks.isEmpty()) {
+            return -1;
+        }
+        return findCursorBlock(blocks);
+    }
+
+    /**
+     * Find the cursor code block internal
+     *
+     * @param blocks Current code blocks
+     * @return The smallest code block index.
+     * If cursor is not in any code block,just -1.
+     */
+    private int findCursorBlock(List<BlockLine> blocks) {
+        int line = mCursor.getLeftLine();
+        int min = binarySearchEndBlock(line, blocks);
+        int max = blocks.size() - 1;
+        int minDis = Integer.MAX_VALUE;
+        int found = -1;
+        int invalidCount = 0;
+        int maxCount = Integer.MAX_VALUE;
+        if (mSpanner != null) {
+            TextAnalyzeResult result = mSpanner.getResult();
+            if (result != null) {
+                maxCount = result.getSuppressSwitch();
+            }
+        }
+        for (int i = min; i <= max; i++) {
+            BlockLine block = blocks.get(i);
+            if (block.endLine >= line && block.startLine <= line) {
+                int dis = block.endLine - block.startLine;
+                if (dis < minDis) {
+                    minDis = dis;
+                    found = i;
+                }
+            } else if (minDis != Integer.MAX_VALUE) {
+                invalidCount++;
+                if (invalidCount >= maxCount) {
+                    break;
+                }
+            }
+        }
+        return found;
+    }
+
+    /**
+     * Find the first code block that maybe seen on screen
+     * Because the code blocks is sorted by its end line position
+     * we can use binary search to quicken this process in order to decrease
+     * the time we use on finding
+     *
+     * @param firstVis The first visible line
+     * @param blocks   Current code blocks
+     * @return The block we found.Always a valid index(Unless there is no block)
+     */
+    private int binarySearchEndBlock(int firstVis, List<BlockLine> blocks) {
+        //end > firstVis
+        int left = 0, right = blocks.size() - 1, mid, row;
+        int max = right;
+        while (left <= right) {
+            mid = (left + right) / 2;
+            if (mid < 0) return 0;
+            if (mid > max) return max;
+            row = blocks.get(mid).endLine;
+            if (row > firstVis) {
+                right = mid - 1;
+            } else if (row < firstVis) {
+                left = mid + 1;
+            } else {
+                left = mid;
+                break;
+            }
+        }
+        return Math.max(0, Math.min(left, max));
     }
 
     /**
@@ -1989,9 +2068,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Flags can be mixed
      *
      * @param flags Flags
-     * @see #PAINT_NON_PRINTABLE_LEADING
-     * @see #PAINT_NON_PRINTABLE_INNER
-     * @see #PAINT_NON_PRINTABLE_TRAILING
+     * @see #FLAG_DRAW_WHITESPACE_LEADING
+     * @see #FLAG_DRAW_WHITESPACE_INNER
+     * @see #FLAG_DRAW_WHITESPACE_TRAILING
+     * @see #FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE
+     * @see #FLAG_DRAW_LINE_SEPARATOR
      */
     public void setNonPrintablePaintingFlags(int flags) {
         this.mNonPrintableOptions = flags;
@@ -2000,9 +2081,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * @see #setNonPrintablePaintingFlags(int)
-     * @see #PAINT_NON_PRINTABLE_LEADING
-     * @see #PAINT_NON_PRINTABLE_INNER
-     * @see #PAINT_NON_PRINTABLE_TRAILING
+     * @see #FLAG_DRAW_WHITESPACE_LEADING
+     * @see #FLAG_DRAW_WHITESPACE_INNER
+     * @see #FLAG_DRAW_WHITESPACE_TRAILING
+     * @see #FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE
+     * @see #FLAG_DRAW_LINE_SEPARATOR
      */
     public int getNonPrintableFlags() {
         return mNonPrintableOptions;

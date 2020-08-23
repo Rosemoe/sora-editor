@@ -109,7 +109,7 @@ class WordwrapLayout extends AbstractLayout {
             char ch = sequence.charAt(i);
             float single = fontCache.measureChar(ch, shadowPaint);
             if (ch == '\t') {
-                single *= editor.getTabWidth();
+                single = fontCache.measureChar(' ', shadowPaint) * editor.getTabWidth();
             }
             if (currentWidth + single > width) {
                 int lastCommit = breakpoints.size() != 0 ? breakpoints.get(breakpoints.size() - 1) : 0;
