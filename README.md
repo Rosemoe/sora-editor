@@ -1,14 +1,18 @@
 # CodeEditor
 [![](https://jitpack.io/v/Rosemoe/CodeEditor.svg)](https://jitpack.io/#Rosemoe/CodeEditor)   
-A professional code editor on Android platform with good performance and nice features.   
-***Work In Progress*** This project is still developing slowly because of school. Bugs may be inside. It is ***not*** recommended to use this project for production use.   
+A cool and optimized code editor on Android platform with good performance and nice features.   
+[中文版README请点这里](/README_zh.md)   
+**This project is paused due to school, next major update can probably be delayed to January,2021**   
+   
+***Work In Progress*** This project is still developing slowly. Bugs may be inside.   
+It is **not** recommended to use this project for production use.   
 ***Note:***
 Branch `dev` has newest features and bug patches in editor and is developing.   
 Any method or field can be changed, moved or even deleted at current period.     
 If you find any bug or require any enhancement, please send it to me by issues or other ways.    
    
 See [Projects](https://github.com/Rosemoe/CodeEditor/projects/) to get more information about what I am working on.    
-***Issues and pull requests are welcome.***   
+**Issues and pull requests are welcome.**   
 ## Features
 - [x] Smooth syntax highlight
 - [x] Auto completion
@@ -26,7 +30,7 @@ See [Projects](https://github.com/Rosemoe/CodeEditor/projects/) to get more info
 - [ ] Incremental highlight Analysis
 ## Language Supported  
 * Java,JavaScript,C,C++ (Basic Support:highlight, code block line,identifier and keyword auto-completion)
-* S5droid(context sensitive auto completion, highlight, code block line, navigation)(going to be deprecated)   
+* S5droid 2.x(context sensitive auto completion, highlight, code block line, navigation)(going to be deprecated)   
 ## Screenshots  
 ![View Outline](/images/outline.png)
 ![Auto Complete](/images/auto-completion.png)
