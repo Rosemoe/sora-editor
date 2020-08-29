@@ -23,7 +23,6 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -96,17 +95,12 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         applyColor();
         mListView.setDividerHeight(0);
         setLoading(true);
-        mListView.setOnItemClickListener(new ListView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> p1, View p2, int p3, long p4) {
-                try {
-                    select(p3);
-                } catch (Exception e) {
-                    Toast.makeText(mEditor.getContext(), e.toString(), Toast.LENGTH_SHORT).show();
-                }
+        mListView.setOnItemClickListener((p1, p2, p3, p4) -> {
+            try {
+                select(p3);
+            } catch (Exception e) {
+                Toast.makeText(mEditor.getContext(), e.toString(), Toast.LENGTH_SHORT).show();
             }
-
         });
     }
 
@@ -242,20 +236,17 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         if (mRequestTime != requestTime) {
             return;
         }
-        mEditor.post(new Runnable() {
-            @Override
-            public void run() {
-                setLoading(false);
-                if (results == null || results.isEmpty()) {
-                    hide();
-                    return;
-                }
-                mCurrent = 0;
-                mListView.setAdapter(new ItemAdapter(results));
-                float newHeight = mEditor.getDpUnit() * 30 * results.size();
-                if (isShowing()) {
-                    update(getWidth(), (int) Math.min(newHeight, maxHeight));
-                }
+        mEditor.post(() -> {
+            setLoading(false);
+            if (results == null || results.isEmpty()) {
+                hide();
+                return;
+            }
+            mCurrent = 0;
+            mListView.setAdapter(new ItemAdapter(results));
+            float newHeight = mEditor.getDpUnit() * 30 * results.size();
+            if (isShowing()) {
+                update(getWidth(), (int) Math.min(newHeight, maxHeight));
             }
         });
     }
@@ -352,7 +343,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
                 displayResults(mLocalProvider.getAutoCompleteItems(mPrefix, mInner, mColors, mLine), mTime);
             } catch (Exception e) {
                 e.printStackTrace();
-                displayResults(new ArrayList<ResultItem>(), mTime);
+                displayResults(new ArrayList<>(), mTime);
             }
         }
 

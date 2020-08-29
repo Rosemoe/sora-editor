@@ -26,7 +26,7 @@ public class BinaryHeap {
     /**
       * Map from id to its position in heap array
       */
-    private SparseIntArray idToPosition;
+    private final SparseIntArray idToPosition;
     
     /**
       * Id allocator
@@ -54,7 +54,7 @@ public class BinaryHeap {
     }
     
     /**
-      * Ensure there is enought space
+      * Ensure there is enough space
       * @param capacity desired space size
       */
     public void ensureCapacity(int capacity) {

@@ -25,14 +25,7 @@ import java.util.Comparator;
 @SuppressWarnings("CanBeFinal")
 public class ResultItem {
 
-    public final static Comparator<ResultItem> COMPARATOR_BY_NAME = new Comparator<ResultItem>() {
-
-        @Override
-        public int compare(ResultItem p1, ResultItem p2) {
-            return p1.label.compareTo(p2.label);
-        }
-
-    };
+    public final static Comparator<ResultItem> COMPARATOR_BY_NAME = (p1, p2) -> p1.label.compareTo(p2.label);
 
     public static final int TYPE_KEYWORD = 0;
     public static final int TYPE_LOCAL_METHOD = 1;

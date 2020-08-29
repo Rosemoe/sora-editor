@@ -19,12 +19,10 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.os.Environment;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -50,11 +48,10 @@ import com.rose.editor.android.R;
 @SuppressWarnings("CanBeFinal")
 public class CrashHandler implements UncaughtExceptionHandler {
 
-    public final static String TAG = "CrashHandler";
+    public final static String LOG_TAG = "CrashHandler";
     public final static CrashHandler INSTANCE = new CrashHandler();
 
     private Context mContext;
-    private Thread.UncaughtExceptionHandler mDefaultHandler;
     private Map<String, String> info = new HashMap<>();
 
     private CrashHandler() {
@@ -63,19 +60,12 @@ public class CrashHandler implements UncaughtExceptionHandler {
     public void init(Context context) {
         mContext = context.getApplicationContext();
         collectDeviceInfo(mContext);
-        mDefaultHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(this);
     }
 
     @Override
     public void uncaughtException(Thread thread, Throwable ex) {
-        if (!handleException(ex) && mDefaultHandler != null) {
-            mDefaultHandler.uncaughtException(thread, ex);
-        }
-    }
-
-    private boolean handleException(Throwable ex) {
-        saveCrashInfo2File(ex);
+        saveCrashInfo(thread.getName(), ex);
         // Save the world, hopefully
         if (Looper.myLooper() != null) {
             while (true) {
@@ -83,11 +73,10 @@ public class CrashHandler implements UncaughtExceptionHandler {
                     Toast.makeText(mContext, R.string.err_crash_loop, Toast.LENGTH_SHORT).show();
                     Looper.loop();
                 } catch (Throwable t) {
-                    saveCrashInfo2File(ex);
+                    saveCrashInfo(thread.getName(), ex);
                 }
             }
         }
-        return true;
     }
 
     public void collectDeviceInfo(Context ctx) {
@@ -101,20 +90,20 @@ public class CrashHandler implements UncaughtExceptionHandler {
                 info.put("versionCode", versionCode);
             }
         } catch (NameNotFoundException e) {
-            Log.e(TAG, "an error occurred while collecting package info", e);
+            Log.e(LOG_TAG, "an error occurred while collecting package info", e);
         }
         Field[] fields = Build.class.getDeclaredFields();
         for (Field field : fields) {
             try {
                 field.setAccessible(true);
                 Object obj = field.get(null);
-                if (obj instanceof String[])
+                if (obj instanceof String[]) {
                     info.put(field.getName(), Arrays.toString((String[]) obj));
-                else
-                    info.put(field.getName(), obj.toString());
-                Log.d(TAG, field.getName() + " : " + field.get(null));
+                } else {
+                    info.put(field.getName(), String.valueOf(obj));
+                }
             } catch (Exception e) {
-                Log.e(TAG, "an error occurred while collecting crash info", e);
+                Log.e(LOG_TAG, "an error occurred while collecting crash info", e);
             }
         }
         fields = Build.VERSION.class.getDeclaredFields();
@@ -122,19 +111,22 @@ public class CrashHandler implements UncaughtExceptionHandler {
             try {
                 field.setAccessible(true);
                 Object obj = field.get(null);
-                if (obj instanceof String[])
+                if (obj instanceof String[]) {
                     info.put(field.getName(), Arrays.toString((String[]) obj));
-                else
-                    info.put(field.getName(), obj.toString());
-                Log.d(TAG, field.getName() + " : " + field.get(null));
+                } else {
+                    info.put(field.getName(), String.valueOf(obj));
+                }
             } catch (Exception e) {
-                Log.e(TAG, "an error occurred while collecting crash info", e);
+                Log.e(LOG_TAG, "an error occurred while collecting crash info", e);
             }
         }
     }
 
-    private void saveCrashInfo2File(Throwable ex) {
+    private void saveCrashInfo(String threadName, Throwable ex) {
         StringBuilder sb = new StringBuilder();
+        long timestamp = System.currentTimeMillis();
+        sb.append("Crash at ").append(timestamp).append("(timestamp) in thread named '").append(threadName).append("'\n");
+        sb.append("Local date and time:").append(SimpleDateFormat.getDateTimeInstance().format(new Date(timestamp))).append('\n');
         for (Map.Entry<String, String> entry : info.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
@@ -151,25 +143,14 @@ public class CrashHandler implements UncaughtExceptionHandler {
         }
         printWriter.close();
         String result = writer.toString();
-        sb.append(result);
+        sb.append(result).append('\n');
         try {
-            long timestamp = System.currentTimeMillis();
-            String time = SimpleDateFormat.getDateTimeInstance().format(new Date());
-            String fileName = "crash-" + time + "-" + timestamp + ".log";
-            if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-                String path = Environment.getExternalStoragePublicDirectory("#Logs").getAbsolutePath();
-                File dir = new File(path);
-                if (!dir.exists())
-                    dir.mkdirs();
-
-                FileOutputStream fos = new FileOutputStream(new File(path, fileName));
-                fos.write(sb.toString().getBytes());
-                Log.e("crash", sb.toString());
-
-                fos.close();
-            }
+            Log.e(LOG_TAG, sb.toString());
+            FileOutputStream fos = mContext.openFileOutput("crash-journal.log", Context.MODE_APPEND);
+            fos.write(sb.toString().getBytes());
+            fos.close();
         } catch (Exception e) {
-            Log.e(TAG, "an error occurred while writing file...", e);
+            Log.e(LOG_TAG, "an error occurred while writing file...", e);
         }
     }
 }

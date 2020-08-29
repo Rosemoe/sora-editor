@@ -24,7 +24,7 @@ import io.github.rosemoe.editor.util.Objects;
  * You can use color ids that are not in pre-defined id pool due to new languages.
  *
  * This is also the default color scheme of editor.
- * Be careful to change this class, bevcause this can cause its
+ * Be careful to change this class, because this can cause its
  * subclasses behave differently and some subclasses did not apply
  * their default colors to some color ids. So change to this can cause 
  * sub themes to change as well.
@@ -33,7 +33,7 @@ import io.github.rosemoe.editor.util.Objects;
  * with {@link #setColor(int, int)} in a thread with looper.
  *
  * However, we also accept you to extend this class to customize
- * your own ColorScheme to use diffrent default colors.
+ * your own ColorScheme to use different default colors.
  * Subclasses is expected to override {@link #applyDefault()}
  * to define colors, though other methods are not final.
  * After overriding this method, you will have to call super class's
@@ -70,7 +70,9 @@ public class EditorColorScheme {
     public static final int AUTO_COMP_PANEL_CORNER = 20;
     public static final int AUTO_COMP_PANEL_BG = 19;
 
-    @Deprecated
+    /**
+     * No longer supported
+     */
     public static final int LINE_BLOCK_LABEL = 18;
 
     public static final int LINE_NUMBER_PANEL_TEXT = 17;
@@ -185,9 +187,6 @@ public class EditorColorScheme {
             case UNDERLINE:
                 color = 0xff000000;
                 break;
-            case LINE_BLOCK_LABEL:
-                color = 0;
-                break;
             case SELECTION_HANDLE:
                 color = 0xff03ebff;
                 break;
@@ -218,6 +217,7 @@ public class EditorColorScheme {
             case BLOCK_LINE:
                 color = 0xffdddddd;
                 break;
+            case LINE_BLOCK_LABEL:
             case SCROLL_BAR_TRACK:
                 color = 0;
                 break;

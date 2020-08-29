@@ -15,9 +15,6 @@
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
 <resources>
-    <string name="dialog_permission_title">需要权限</string>
-    <string name="dialog_permission_content">我们需要存储空间权限来收集崩溃日志。\n这些日志将会被放在/sdcard./#Logs/中。\n如果您不想收集这些日志，请随意选择是否允许这一权限。\n单击“授权”以显示授权窗口。</string>
-    <string name="dialog_permission_permit">授权</string>
     <string name="layout_tv_last">上个</string>
     <string name="layout_tv_next">下个</string>
     <string name="layout_tv_replace">替换</string>
@@ -46,6 +43,8 @@
     <string name="code_navi">代码导航</string>
     <string name="navi_err_msg">代码导航没有准备好或者该语言不支持</string>
     <string name="color_scheme">颜色风格</string>
-    <string name="err_crash_loop">在一个具有Looper的线程中发生了错误，检查/#Logs/以获得详细错误信息</string>
+    <string name="err_crash_loop">在一个具有Looper的线程中发生了错误，错误日志已保存至应用私有文件夹的crash-journal.log</string>
     <string name="wordwrap">自动换行</string>
+    <string name="show_crash_log">打开崩溃日志</string>
+    <string name="clear_crash_log">清除崩溃日志</string>
 </resources>

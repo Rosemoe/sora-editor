@@ -15,18 +15,12 @@
  */
 package com.rose.editor.android;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.content.pm.PackageManager;
 import android.graphics.Typeface;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.Spanned;
 import android.text.TextWatcher;
-import android.text.style.ForegroundColorSpan;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -44,6 +38,11 @@ import io.github.rosemoe.editor.langs.universal.UniversalLanguage;
 import io.github.rosemoe.editor.struct.NavigationLabel;
 import io.github.rosemoe.editor.utils.CrashHandler;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 
 import io.github.rosemoe.editor.langs.java.JavaLanguage;
@@ -66,26 +65,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         CrashHandler.INSTANCE.init(this);
         setContentView(R.layout.activity_main);
-        if (getActionBar() != null) {
-            Editable title = Editable.Factory.getInstance().newEditable(getString(R.string.app_name));
-            title.setSpan(new ForegroundColorSpan(0xffffffff), 0, title.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            getActionBar().setTitle(title);
-        }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            new AlertDialog.Builder(this)
-                    .setTitle(R.string.dialog_permission_title)
-                    .setMessage(R.string.dialog_permission_content)
-                    .setPositiveButton(R.string.dialog_permission_permit, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            MainActivity.this.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 9998);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .setCancelable(false)
-                    .show();
-        }
         S5droidAutoComplete.init(this);
         editor = findViewById(R.id.editor);
         panel = findViewById(R.id.search_panel);
@@ -165,14 +145,9 @@ public class MainActivity extends Activity {
                     }
                     new AlertDialog.Builder(this)
                             .setTitle(R.string.code_navi)
-                            .setSingleChoiceItems(items, 0, new DialogInterface.OnClickListener() {
-
-                                @Override
-                                public void onClick(DialogInterface p1, int p2) {
-                                    editor.jumpToLine(labels.get(p2).line);
-                                    p1.dismiss();
-                                }
-
+                            .setSingleChoiceItems(items, 0, (dialog, i) -> {
+                                editor.jumpToLine(labels.get(i).line);
+                                dialog.dismiss();
                             })
                             .setPositiveButton(android.R.string.cancel, null)
                             .show();
@@ -185,30 +160,27 @@ public class MainActivity extends Activity {
             case R.id.switch_language:
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.switch_language)
-                        .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "S5droid", "None"}, -1, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                switch (which) {
-                                    case 0:
-                                        editor.setEditorLanguage(new UniversalLanguage(new CDescription()));
-                                        break;
-                                    case 1:
-                                        editor.setEditorLanguage(new UniversalLanguage(new CppDescription()));
-                                        break;
-                                    case 2:
-                                        editor.setEditorLanguage(new JavaLanguage());
-                                        break;
-                                    case 3:
-                                        editor.setEditorLanguage(new UniversalLanguage(new JavaScriptDescription()));
-                                        break;
-                                    case 4:
-                                        editor.setEditorLanguage(new S5droidLanguage());
-                                        break;
-                                    case 5:
-                                        editor.setEditorLanguage(new EmptyLanguage());
-                                }
-                                dialog.dismiss();
+                        .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "S5droid", "None"}, -1, (dialog, which) -> {
+                            switch (which) {
+                                case 0:
+                                    editor.setEditorLanguage(new UniversalLanguage(new CDescription()));
+                                    break;
+                                case 1:
+                                    editor.setEditorLanguage(new UniversalLanguage(new CppDescription()));
+                                    break;
+                                case 2:
+                                    editor.setEditorLanguage(new JavaLanguage());
+                                    break;
+                                case 3:
+                                    editor.setEditorLanguage(new UniversalLanguage(new JavaScriptDescription()));
+                                    break;
+                                case 4:
+                                    editor.setEditorLanguage(new S5droidLanguage());
+                                    break;
+                                case 5:
+                                    editor.setEditorLanguage(new EmptyLanguage());
                             }
+                            dialog.dismiss();
                         })
                         .setNegativeButton(android.R.string.cancel, null)
                         .show();
@@ -235,31 +207,28 @@ public class MainActivity extends Activity {
                         "Darcula", "VS2019", "NotepadXX"};
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.color_scheme)
-                        .setSingleChoiceItems(themes, -1, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                switch (which) {
-                                    case 0:
-                                        editor.setColorScheme(new EditorColorScheme());
-                                        break;
-                                    case 1:
-                                        editor.setColorScheme(new SchemeGitHub());
-                                        break;
-                                    case 2:
-                                        editor.setColorScheme(new SchemeEclipse());
-                                        break;
-                                    case 3:
-                                        editor.setColorScheme(new SchemeDarcula());
-                                        break;
-                                    case 4:
-                                        editor.setColorScheme(new SchemeVS2019());
-                                        break;
-                                    case 5:
-                                        editor.setColorScheme(new SchemeNotepadXX());
-                                        break;
-                                }
-                                dialog.dismiss();
+                        .setSingleChoiceItems(themes, -1, (dialog, which) -> {
+                            switch (which) {
+                                case 0:
+                                    editor.setColorScheme(new EditorColorScheme());
+                                    break;
+                                case 1:
+                                    editor.setColorScheme(new SchemeGitHub());
+                                    break;
+                                case 2:
+                                    editor.setColorScheme(new SchemeEclipse());
+                                    break;
+                                case 3:
+                                    editor.setColorScheme(new SchemeDarcula());
+                                    break;
+                                case 4:
+                                    editor.setColorScheme(new SchemeVS2019());
+                                    break;
+                                case 5:
+                                    editor.setColorScheme(new SchemeNotepadXX());
+                                    break;
                             }
+                            dialog.dismiss();
                         })
                         .setNegativeButton(android.R.string.cancel, null)
                         .show();
@@ -268,6 +237,51 @@ public class MainActivity extends Activity {
                 item.setChecked(!item.isChecked());
                 editor.setWordwrap(item.isChecked());
                 break;
+            case R.id.open_logs: {
+                FileInputStream fis = null;
+                try {
+                    fis = openFileInput("crash-journal.log");
+                    BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        sb.append(line).append('\n');
+                    }
+                    Toast.makeText(this, "Succeeded", Toast.LENGTH_SHORT).show();
+                    editor.setText(sb);
+                } catch (Exception e) {
+                    Toast.makeText(this, "Failed:" + e.toString(), Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
+                } finally {
+                    if (fis != null) {
+                        try {
+                            fis.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                break;
+            }
+            case R.id.clear_logs: {
+                FileOutputStream fos = null;
+                try {
+                    fos = openFileOutput("crash-journal.log", MODE_PRIVATE);
+                    Toast.makeText(this, "Succeeded", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Toast.makeText(this, "Failed:" + e.toString(), Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
+                } finally {
+                    if (fos != null) {
+                        try {
+                            fos.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                break;
+            }
         }
         return super.onOptionsItemSelected(item);
     }

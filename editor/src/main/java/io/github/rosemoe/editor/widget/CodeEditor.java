@@ -21,7 +21,6 @@ import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
@@ -276,13 +275,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Hide completion window later
      */
     protected void postHideCompletionWindow() {
-        // We do this because if you hide it at onec, the editor seems to flash with unknown reason
-        postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mCompletionWindow.hide();
-            }
-        }, 50);
+        // We do this because if you hide it at once, the editor seems to flash with unknown reason
+        postDelayed(() -> mCompletionWindow.hide(), 50);
     }
 
     /**
@@ -2465,19 +2459,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                                 .setTitle(replaceAll ? R.string.replaceAll : R.string.replace)
                                 .setView(et)
                                 .setNegativeButton(R.string.cancel, null)
-                                .setPositiveButton(R.string.replace, new AlertDialog.OnClickListener() {
-
-                                    @Override
-                                    public void onClick(DialogInterface p1, int p2) {
-                                        if (replaceAll) {
-                                            getSearcher().replaceAll(et.getText().toString());
-                                        } else {
-                                            getSearcher().replaceThis(et.getText().toString());
-                                        }
-                                        am.finish();
-                                        p1.dismiss();
+                                .setPositiveButton(R.string.replace, (dialog, which) -> {
+                                    if (replaceAll) {
+                                        getSearcher().replaceAll(et.getText().toString());
+                                    } else {
+                                        getSearcher().replaceThis(et.getText().toString());
                                     }
-
+                                    am.finish();
+                                    dialog.dismiss();
                                 })
                                 .show();
                         break;
@@ -3641,12 +3630,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     public void onFormatFail(final Throwable throwable) {
         if (mListener != null && !mListener.onFormatFail(this, throwable)) {
-            post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(getContext(), throwable.toString(), Toast.LENGTH_SHORT).show();
-                }
-            });
+            post(() -> Toast.makeText(getContext(), throwable.toString(), Toast.LENGTH_SHORT).show());
         }
         mFormatThread = null;
     }
@@ -3663,37 +3647,33 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         mFormatThread = null;
         if (originalText == mText) {
-            post(new Runnable() {
-                @Override
-                public void run() {
-                    int line = mCursor.getLeftLine();
-                    int column = mCursor.getLeftColumn();
-                    mText.replace(0, 0, getLineCount() - 1, mText.getColumnCount(getLineCount() - 1), newText);
-                    getScroller().forceFinished(true);
-                    mCompletionWindow.hide();
-                    setSelectionAround(line, column);
-                }
+            post(() -> {
+                int line = mCursor.getLeftLine();
+                int column = mCursor.getLeftColumn();
+                mText.replace(0, 0, getLineCount() - 1, mText.getColumnCount(getLineCount() - 1), newText);
+                getScroller().forceFinished(true);
+                mCompletionWindow.hide();
+                setSelectionAround(line, column);
             });
         }
     }
 
     @Override
     public void onAnalyzeDone(TextAnalyzer provider) {
-        if (mHighlightCurrentBlock) {
-            mCursorPosition = findCursorBlock();
+        if (provider == mSpanner) {
+            if (mHighlightCurrentBlock) {
+                mCursorPosition = findCursorBlock();
+            }
+            postInvalidate();
         }
-        postInvalidate();
-        //long lastAnalyzeThreadTime = System.currentTimeMillis() - provider.mOpStartTime;
-        //if(DEBUG)
-        //Log.d(LOG_TAG, "Highlight cost time:" + lastAnalyzeThreadTime);
     }
 
     static class CursorPaintAction {
 
-        int row;
-        float centerX;
-        RectF outRect;
-        boolean insert;
+        final int row;
+        final float centerX;
+        final RectF outRect;
+        final boolean insert;
 
         CursorPaintAction(int row, float centerX, RectF outRect, boolean insert) {
             this.row = row;

@@ -35,7 +35,7 @@ public class SpanRecycler {
     }
 
     private Thread recycleThread;
-    private BlockingQueue<List<List<Span>>> taskQueue;
+    private final BlockingQueue<List<List<Span>>> taskQueue;
 
     private SpanRecycler() {
         taskQueue = new ArrayBlockingQueue<>(8);

@@ -16,9 +16,6 @@
 
 <resources>
     <string name="app_name">CodeEditorSample</string>
-    <string name="dialog_permission_title">Permission needed</string>
-    <string name="dialog_permission_content">We need storage access to collect crash logs.\nCrash logs will be placed under /sdcard/#Logs/\nIf you do not want to save crash logs, feel free to deny the permission request.\nClick \'Permit\' to start the request.</string>
-    <string name="dialog_permission_permit">Permit</string>
     <string name="layout_tv_last">Last</string>
     <string name="layout_tv_next">Next</string>
     <string name="layout_tv_replace">Replace</string>
@@ -46,6 +43,8 @@
     <string name="code_navi">Code Navigation</string>
     <string name="navi_err_msg">Code navigation not prepared or unsupported</string>
     <string name="color_scheme">Color Scheme</string>
-    <string name="err_crash_loop">Exception in a thread with looper. see /#Logs/ to know more</string>
+    <string name="err_crash_loop">"Exception in a thread with looper. Crash log is saved to crash-journal.log in private files directory. "</string>
     <string name="wordwrap">Wordwrap</string>
+    <string name="show_crash_log">Open crash log</string>
+    <string name="clear_crash_log">Clear crash log</string>
 </resources>

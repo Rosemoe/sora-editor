@@ -28,7 +28,6 @@ class EditorBasePopupWindow extends PopupWindow {
     private int[] mLocation;
     private int mTop;
     private int mLeft;
-    private float mBackupTop;
 
     /**
      * Create a panel for editor
@@ -60,16 +59,6 @@ class EditorBasePopupWindow extends PopupWindow {
      */
     public void setExtendedY(float y) {
         mTop = (int) y;
-        mBackupTop = y;
-    }
-
-    /**
-     * Get last assigned y
-     *
-     * @return last assigned y
-     */
-    public float getY() {
-        return mBackupTop;
     }
 
     public void updatePosition() {

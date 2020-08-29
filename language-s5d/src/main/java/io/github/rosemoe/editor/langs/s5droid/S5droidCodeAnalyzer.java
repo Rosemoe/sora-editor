@@ -56,14 +56,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
 
     private final static TrieTree<Tokens> names;
     private final static Comparator<NavigationLabel> NAVI_COMP =
-            new Comparator<NavigationLabel>() {
-
-                @Override
-                public int compare(NavigationLabel p1, NavigationLabel p2) {
-                    return (p1.label).compareTo(p2.label);
-                }
-
-            };
+            (p1, p2) -> (p1.label).compareTo(p2.label);
 
     static {
         names = new TrieTree<>();

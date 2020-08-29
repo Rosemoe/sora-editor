@@ -27,7 +27,7 @@ import java.util.Arrays;
   */
 public class FontCache {
     
-    private float[] cache;
+    private final float[] cache;
     
     public FontCache() {
         cache = new float[65536];

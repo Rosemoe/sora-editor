@@ -86,20 +86,17 @@ public class EditorSearcher {
                 }
                 final Exception ex2 = ex;
                 final String text2 = text;
-                mEditor.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (text2 == null) {
-                            Toast.makeText(mEditor.getContext(), String.valueOf(ex2), Toast.LENGTH_SHORT).show();
-                        } else {
-                            int line = mEditor.getCursor().getLeftLine();
-                            int column = mEditor.getCursor().getLeftColumn();
-                            mEditor.getText().replace(0, 0, mEditor.getLineCount() - 1, mEditor.getText().getColumnCount(mEditor.getLineCount() - 1), text2);
-                            mEditor.setSelectionAround(line, column);
-                            mEditor.invalidate();
-                        }
-                        progressDialog.cancel();
+                mEditor.post(() -> {
+                    if (text2 == null) {
+                        Toast.makeText(mEditor.getContext(), String.valueOf(ex2), Toast.LENGTH_SHORT).show();
+                    } else {
+                        int line = mEditor.getCursor().getLeftLine();
+                        int column = mEditor.getCursor().getLeftColumn();
+                        mEditor.getText().replace(0, 0, mEditor.getLineCount() - 1, mEditor.getText().getColumnCount(mEditor.getLineCount() - 1), text2);
+                        mEditor.setSelectionAround(line, column);
+                        mEditor.invalidate();
                     }
+                    progressDialog.cancel();
                 });
             }
 

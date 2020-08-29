@@ -19,6 +19,7 @@ package io.github.rosemoe.editor.langs.s5droid;
  * @author Rose
  * Tokens of S5droid language
  */
+@SuppressWarnings("SpellCheckingInspection")
 public enum Tokens {
     //空白符号类 Whitespaces
     WHITESPACE,

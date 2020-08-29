@@ -20,6 +20,7 @@ package io.github.rosemoe.editor.langs.java;
  *
  * @author Rose
  */
+@SuppressWarnings("SpellCheckingInspection")
 public enum Tokens {
     WHITESPACE,
     NEWLINE,

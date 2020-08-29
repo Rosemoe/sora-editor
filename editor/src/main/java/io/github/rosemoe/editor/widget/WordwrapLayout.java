@@ -175,6 +175,7 @@ class WordwrapLayout extends AbstractLayout {
     @Override
     public void destroyLayout() {
         super.destroyLayout();
+        rowTable.clear();
     }
 
     @Override
@@ -236,9 +237,9 @@ class WordwrapLayout extends AbstractLayout {
 
         int line;
 
-        int startColumn;
+        final int startColumn;
 
-        int endColumn;
+        final int endColumn;
 
         RowRegion(int line, int start, int end) {
             this.line = line;
@@ -251,7 +252,7 @@ class WordwrapLayout extends AbstractLayout {
     class WordwrapLayoutRowItr implements RowIterator {
 
         int currentRow;
-        Row result;
+        final Row result;
 
         WordwrapLayoutRowItr(int initialRow) {
             currentRow = initialRow;

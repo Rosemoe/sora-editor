@@ -30,7 +30,7 @@ import io.github.rosemoe.editor.util.IntPair;
  */
 class EditorTextActionModeStarter implements CodeEditor.EditorTextActionPresenter {
 
-    private CodeEditor mEditor;
+    private final CodeEditor mEditor;
     private ActionMode mActionMode;
 
     EditorTextActionModeStarter(CodeEditor editor) {

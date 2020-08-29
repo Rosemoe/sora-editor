@@ -52,6 +52,7 @@ public class CDescription implements LanguageDescription {
 
     @Override
     public String[] getKeywords() {
+        //noinspection SpellCheckingInspection
         return new String[]{
                 "auto", "break", "case", "char", "const", "continue",
                 "default", "do", "double", "else", "enum", "extern",

@@ -570,10 +570,11 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             float targetX = (currX - offsetX) + startX;
             float targetY = (currY - offsetY) + startY;
             int line = IntPair.getFirst(mEditor.getPointPosition(0, targetY));
-            if (line >= mEditor.getLastVisibleRow()) {
+            int row = (int)(targetY / mEditor.getRowHeight());
+            if (row >= mEditor.getLastVisibleRow()) {
                 scrollBy(0, mEditor.getRowHeight());
             }
-            if (line < mEditor.getFirstVisibleRow()) {
+            if (row < mEditor.getFirstVisibleRow()) {
                 scrollBy(0, -mEditor.getRowHeight());
             }
             line = IntPair.getFirst(mEditor.getPointPosition(0, targetY));

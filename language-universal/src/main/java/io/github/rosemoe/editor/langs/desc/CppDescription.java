@@ -18,6 +18,7 @@ package io.github.rosemoe.editor.langs.desc;
 /**
  * @author Rose
  */
+@SuppressWarnings("SpellCheckingInspection")
 public class CppDescription extends CDescription {
 
     @Override
