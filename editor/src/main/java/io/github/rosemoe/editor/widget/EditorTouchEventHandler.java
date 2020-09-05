@@ -501,10 +501,8 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     @Override
     public void onScaleEnd(ScaleGestureDetector detector) {
         isScaling = false;
-        if (mEditor.isWordwrap()) {
-            mEditor.createLayout();
-            mEditor.invalidate();
-        }
+        mEditor.createLayout();
+        mEditor.invalidate();
     }
 
     @Override
