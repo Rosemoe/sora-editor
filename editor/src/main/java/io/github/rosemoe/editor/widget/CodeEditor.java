@@ -55,6 +55,7 @@ import android.widget.SearchView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import io.github.rosemoe.editor.R;
@@ -891,6 +892,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     private void drawRows(Canvas canvas, float offset, List<Long> postDrawLineNumbers, List<CursorPaintAction> postDrawCursor) {
         RowIterator rowIterator = mLayout.obtainRowIterator(getFirstVisibleRow());
+        List<Span> temporaryEmptySpans = null;
         List<List<Span>> spanMap = mSpanner.getResult().getSpanMap();
         List<Integer> matchedPositions = new ArrayList<>();
         int currentLine = mCursor.isSelected() ? -1 : mCursor.getLeftLine();
@@ -972,13 +974,21 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 drawRowBackground(canvas, currentLineBgColor, row);
             }
 
-            // Draw text
-            if (line >= spanMap.size() || spanMap.get(line).size() == 0) {
-                // Draw directly
-                drawRegionText(canvas, paintingOffset, getRowBaseline(row) - getOffsetY(), line, firstVisibleChar, lastVisibleChar, columnCount, mColors.getColor(EditorColorScheme.TEXT_NORMAL));
-            } else {
-                // Get span index
-                List<Span> spans = spanMap.get(line);
+            // Draw text here
+            {
+                // Get spans
+                List<Span> spans = null;
+                if (line < spanMap.size() && line >= 0) {
+                    spans = spanMap.get(line);
+                }
+                if (spans == null || spans.size() == 0) {
+                    if (temporaryEmptySpans == null) {
+                        temporaryEmptySpans = new LinkedList<>();
+                        temporaryEmptySpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
+                    }
+                    spans = temporaryEmptySpans;
+                }
+                // Seek for first span
                 while (spanOffset + 1 < spans.size()) {
                     if (spans.get(spanOffset + 1).column <= firstVisibleChar) {
                         spanOffset++;
@@ -989,7 +999,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 Span span = spans.get(spanOffset);
                 // Draw by spans
                 while (lastVisibleChar > span.column) {
-                    int spanEnd = spanOffset + 1 == spans.size() ? columnCount : spans.get(spanOffset + 1).column;
+                    int spanEnd = spanOffset + 1 >= spans.size() ? columnCount : spans.get(spanOffset + 1).column;
                     int paintStart = Math.max(firstVisibleChar, span.column);
                     int paintEnd = Math.min(lastVisibleChar, spanEnd);
                     float width = measureText(mBuffer, paintStart, paintEnd - paintStart);
@@ -1012,7 +1022,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         break;
                     }
                     spanOffset++;
-                    span = spanOffset < spans.size() ? spans.get(spanOffset) : span;
+                    if (spanOffset < spans.size()) {
+                        span = spans.get(spanOffset);
+                    } else {
+                        spanOffset--;
+                    }
                 }
             }
 
