@@ -451,6 +451,8 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         if (mEditor.isDrag()) {
             return false;
         }
+        // If we do not finish it here, it can produce a high speed and cause the final scroll range to be broken, even a NaN for velocity
+        mScroller.forceFinished(true);
         mScroller.fling(mScroller.getCurrX(),
                 mScroller.getCurrY(),
                 (int) -velocityX,

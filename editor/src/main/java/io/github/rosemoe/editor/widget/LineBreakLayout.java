@@ -106,7 +106,7 @@ class LineBreakLayout extends AbstractLayout {
 
     @Override
     public int getLineNumberForRow(int row) {
-        return row;
+        return Math.max(0, Math.min(row, text.getLineCount() - 1));
     }
 
     @Override
