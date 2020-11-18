@@ -1,7 +1,6 @@
 # CodeEditor
 [![](https://jitpack.io/v/Rosemoe/CodeEditor.svg)](https://jitpack.io/#Rosemoe/CodeEditor)   
 CodeEditor是一个运行于Android的，具有良好性能和众多特性的的代码编辑器。   
-**由于学业原因，本项目暂停开发。下一次重大更新可能会被推迟到2021年1月**   
    
 ***工作中*** 本项目正在缓慢开发，其中可能包含一些问题。   
 将本项目用于生产开发依赖是**不**推荐的。   

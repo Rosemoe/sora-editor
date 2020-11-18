@@ -2,7 +2,6 @@
 [![](https://jitpack.io/v/Rosemoe/CodeEditor.svg)](https://jitpack.io/#Rosemoe/CodeEditor)   
 A cool and optimized code editor on Android platform with good performance and nice features.   
 [中文版README请点这里](/README_zh.md)   
-**This project is paused due to school, next major update can probably be delayed to January,2021**   
    
 ***Work In Progress*** This project is still developing slowly. Bugs may be inside.   
 It is **not** recommended to use this project for production use.   
