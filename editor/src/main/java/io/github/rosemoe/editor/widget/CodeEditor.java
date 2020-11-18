@@ -792,7 +792,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     private void drawView(Canvas canvas) {
         //long startTime = System.currentTimeMillis();
-
+        mSpanner.notifyRecycle();
         if (mFormatThread != null) {
             String text = "Formatting your code...";
             float centerY = getHeight() / 2f;

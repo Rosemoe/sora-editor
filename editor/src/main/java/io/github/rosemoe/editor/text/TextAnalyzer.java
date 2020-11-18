@@ -45,6 +45,7 @@ public class TextAnalyzer {
     private Callback mCallback;
     private AnalyzeThread mThread;
     private CodeAnalyzer mCodeAnalyzer;
+    private final RecycleObjContainer mObjContainer = new RecycleObjContainer();
     private final Object mLock = new Object();
 
     /**
@@ -70,12 +71,22 @@ public class TextAnalyzer {
         mCallback = cb;
     }
 
+    /**
+     * Stop the text analyzer
+     */
     public void shutdown() {
         final AnalyzeThread thread = mThread;
         if (thread != null && thread.isAlive()) {
             thread.interrupt();
             mThread = null;
         }
+    }
+
+    /**
+     * Called from painting process to recycle outdated objects for reusing
+     */
+    public void notifyRecycle() {
+        mObjContainer.recycle();
     }
 
     /**
@@ -108,9 +119,44 @@ public class TextAnalyzer {
         return mResult;
     }
 
+    /**
+     * Callback for text analyzing
+     *
+     * @author Rose
+     */
     public interface Callback {
 
-        void onAnalyzeDone(TextAnalyzer provider);
+        /**
+         * Called when analyze result is available
+         * Count of calling this method is not always equal to the count you call {@link TextAnalyzer#analyze(Content)}
+         *
+         * @param analyzer Host TextAnalyzer
+         */
+        void onAnalyzeDone(TextAnalyzer analyzer);
+
+    }
+
+    /**
+     * Container for objects that is going to be recycled
+     *
+     * @author Rose
+     */
+    static class RecycleObjContainer {
+
+        List<List<Span>> spanMap;
+
+        List<BlockLine> blockLines;
+
+        void recycle() {
+            ObjectAllocator.recycleBlockLine(blockLines);
+            SpanRecycler.getInstance().recycle(spanMap);
+            clear();
+        }
+
+        void clear() {
+            spanMap = null;
+            blockLines = null;
+        }
 
     }
 
@@ -157,15 +203,13 @@ public class TextAnalyzer {
                         }
                     } while (waiting);
 
-                    List<BlockLine> blockLines = mResult.mBlocks;
-                    List<List<Span>> spanMap = mResult.mSpanMap;
+                    mObjContainer.blockLines = mResult.mBlocks;
+                    mObjContainer.spanMap = mResult.mSpanMap;
                     mResult = colors;
                     colors.addNormalIfNull();
                     try {
                         if (mCallback != null)
                             mCallback.onAnalyzeDone(TextAnalyzer.this);
-                        ObjectAllocator.recycleBlockLine(blockLines);
-                        SpanRecycler.getInstance().recycle(spanMap);
                     } catch (NullPointerException e) {
                         e.printStackTrace();
                     }

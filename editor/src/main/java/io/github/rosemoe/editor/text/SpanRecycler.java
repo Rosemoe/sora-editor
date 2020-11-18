@@ -42,6 +42,9 @@ public class SpanRecycler {
     }
 
     public void recycle(List<List<Span>> spans) {
+        if (spans == null) {
+            return;
+        }
         if (recycleThread == null || !recycleThread.isAlive()) {
             recycleThread = new RecycleThread();
             recycleThread.start();
