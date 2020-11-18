@@ -32,6 +32,7 @@ import io.github.rosemoe.editor.util.IntPair;
  */
 @SuppressWarnings("CanBeFinal")
 final class EditorTouchEventHandler implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
+
     private final CodeEditor mEditor;
     private final OverScroller mScroller;
     private long mLastScroll = 0;
@@ -44,6 +45,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     private float offsetX, offsetY;
     private SelectionHandle insert = null, left = null, right = null;
     private int type = -1;
+    boolean isScaling = false;
 
     private final static int HIDE_DELAY = 3000;
     private final static int HIDE_DELAY_HANDLE = 5000;
@@ -469,10 +471,14 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             notifyScrolled();
             mEditor.hideAutoCompleteWindow();
         }
+        if (Math.abs(velocityX) >= minVe / 2f) {
+            mEditor.getHorizontalEdgeEffect().finish();
+        }
+        if (Math.abs(velocityY) >= minVe) {
+            mEditor.getVerticalEdgeEffect().finish();
+        }
         return false;
     }
-
-    boolean isScaling = false;
 
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
@@ -569,7 +575,6 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             float currY = mScroller.getCurrY() + e.getY();
             float targetX = (currX - offsetX) + startX;
             float targetY = (currY - offsetY) + startY;
-            int line = IntPair.getFirst(mEditor.getPointPosition(0, targetY));
             int row = (int)(targetY / mEditor.getRowHeight());
             if (row >= mEditor.getLastVisibleRow()) {
                 scrollBy(0, mEditor.getRowHeight());
@@ -577,7 +582,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             if (row < mEditor.getFirstVisibleRow()) {
                 scrollBy(0, -mEditor.getRowHeight());
             }
-            line = IntPair.getFirst(mEditor.getPointPosition(0, targetY));
+            int line = IntPair.getFirst(mEditor.getPointPosition(0, targetY));
             if (line >= 0 && line < mEditor.getLineCount()) {
                 int column = IntPair.getSecond(mEditor.getPointPosition(targetX, targetY));
                 int lastLine = type == RIGHT ? mEditor.getCursor().getRightLine() : mEditor.getCursor().getLeftLine();
