@@ -75,8 +75,6 @@ import io.github.rosemoe.editor.text.SpanMapUpdater;
 import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.text.TextAnalyzer;
 import io.github.rosemoe.editor.util.IntPair;
-import io.github.rosemoe.editor.widget.edge.EdgeEffect;
-import io.github.rosemoe.editor.widget.edge.EdgeEffectFactory;
 
 /**
  * CodeEditor is a editor that can highlight text regions by doing basic syntax analyzing
@@ -200,8 +198,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private ScaleGestureDetector mScaleDetector;
     private EditorInputConnection mConnection;
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;
-    private EdgeEffect mVerticalEdgeGlow;
-    private EdgeEffect mHorizontalGlow;
+    private MaterialEdgeEffect mVerticalEdgeGlow;
+    private MaterialEdgeEffect mHorizontalGlow;
     private ExtractedTextRequest mExtracting;
     private FormatThread mFormatThread;
     private EditorSearcher mSearcher;
@@ -470,8 +468,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setFocusableInTouchMode(true);
         mConnection = new EditorInputConnection(this);
         mCompletionWindow = new EditorAutoCompleteWindow(this);
-        mVerticalEdgeGlow = EdgeEffectFactory.create(getContext());
-        mHorizontalGlow = EdgeEffectFactory.create(getContext());
+        mVerticalEdgeGlow = new MaterialEdgeEffect();
+        mHorizontalGlow = new MaterialEdgeEffect();
         setEditorLanguage(null);
         setText(null);
         setTextActionMode(TextActionMode.ACTION_MODE);
@@ -1601,7 +1599,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @return EdgeEffect
      */
-    protected EdgeEffect getVerticalEdgeEffect() {
+    protected MaterialEdgeEffect getVerticalEdgeEffect() {
         return mVerticalEdgeGlow;
     }
 
@@ -1610,7 +1608,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @return EdgeEffect
      */
-    protected EdgeEffect getHorizontalEdgeEffect() {
+    protected MaterialEdgeEffect getHorizontalEdgeEffect() {
         return mHorizontalGlow;
     }
 

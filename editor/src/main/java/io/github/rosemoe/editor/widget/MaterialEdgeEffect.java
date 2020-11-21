@@ -1,20 +1,19 @@
 /*
- * Copyright (C) 2020 Rosemoe
- * Copyright (C) 2010 The Android Open Source Project
+ *   Copyright 2020 Rosemoe
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
-package io.github.rosemoe.editor.widget.edge;
+package io.github.rosemoe.editor.widget;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -24,10 +23,14 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 
 //BEGIN Rosemoe note
-//Rename class,remove some fields and add interface of this
+//Rename class,remove some fields and add method isRecede()
 //END Rosemoe note
 
-public class MaterialEdgeEffect implements EdgeEffect {
+public class MaterialEdgeEffect {
+
+    public boolean isRecede() {
+        return mState == STATE_RECEDE;
+    }
 
     // Time it will take the effect to fully recede in ms
     private static final int RECEDE_TIME = 600;
@@ -97,7 +100,6 @@ public class MaterialEdgeEffect implements EdgeEffect {
         mInterpolator = new DecelerateInterpolator();
     }
 
-    @Override
     public void setSize(int width, int height) {
         final float r = width * RADIUS_FACTOR / SIN;
         final float y = COS * r;
@@ -112,17 +114,14 @@ public class MaterialEdgeEffect implements EdgeEffect {
         mBounds.set(mBounds.left, mBounds.top, width, (int) Math.min(height, h));
     }
 
-    @Override
     public boolean isFinished() {
         return mState == STATE_IDLE;
     }
 
-    @Override
     public void finish() {
         mState = STATE_IDLE;
     }
 
-    @Override
     public void onPull(float deltaDistance, float displacement) {
         final long now = AnimationUtils.currentAnimationTimeMillis();
         mTargetDisplacement = displacement;
@@ -156,7 +155,6 @@ public class MaterialEdgeEffect implements EdgeEffect {
         mGlowScaleYFinish = mGlowScaleY;
     }
 
-    @Override
     public void onRelease() {
         mPullDistance = 0;
 
@@ -175,7 +173,6 @@ public class MaterialEdgeEffect implements EdgeEffect {
         mDuration = RECEDE_TIME;
     }
 
-    @Override
     public void onAbsorb(int velocity) {
         mState = STATE_ABSORB;
         velocity = Math.min(Math.max(MIN_VELOCITY, Math.abs(velocity)), MAX_VELOCITY);
@@ -201,17 +198,14 @@ public class MaterialEdgeEffect implements EdgeEffect {
         mTargetDisplacement = 0.5f;
     }
 
-    @Override
     public void setColor(int color) {
         mPaint.setColor(color);
     }
 
-    @Override
     public int getColor() {
         return mPaint.getColor();
     }
 
-    @Override
     public boolean draw(Canvas canvas) {
         update();
 

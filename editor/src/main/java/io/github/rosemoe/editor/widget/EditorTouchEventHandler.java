@@ -411,13 +411,13 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         endX = Math.min(endX, mEditor.getScrollMaxX());
         boolean notifyY = true;
         boolean notifyX = true;
-        if (!mEditor.getVerticalEdgeEffect().isFinished()) {
+        if (!mEditor.getVerticalEdgeEffect().isFinished() && !mEditor.getVerticalEdgeEffect().isRecede()) {
             endY = mScroller.getCurrY();
             float displacement = Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth()));
             mEditor.getVerticalEdgeEffect().onPull((topOrBottom ? distanceY : -distanceY) / mEditor.getMeasuredHeight(), !topOrBottom ? displacement : 1 - displacement);
             notifyY = false;
         }
-        if (!mEditor.getHorizontalEdgeEffect().isFinished()) {
+        if (!mEditor.getHorizontalEdgeEffect().isFinished() && !mEditor.getHorizontalEdgeEffect().isRecede()) {
             endX = mScroller.getCurrX();
             float displacement = Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight()));
             mEditor.getHorizontalEdgeEffect().onPull((leftOrRight ? distanceX : -distanceX) / mEditor.getMeasuredWidth(), !leftOrRight ? 1 - displacement : displacement);
