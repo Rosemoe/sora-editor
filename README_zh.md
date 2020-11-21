@@ -54,5 +54,3 @@ dependencies {
 ```
 可用的模块:     
 editor,language-base,language-java,language-universal,language-s5d    
-## 更多信息
-请转到[维基](https://github.com/Rosemoe/CodeEditor/wiki)页面。

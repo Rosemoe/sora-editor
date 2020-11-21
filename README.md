@@ -55,5 +55,3 @@ dependencies {
 ```
 Available modules:     
 editor,language-base,language-java,language-universal,language-s5d    
-## More information
-Turn to [wiki](https://github.com/Rosemoe/CodeEditor/wiki) page.
