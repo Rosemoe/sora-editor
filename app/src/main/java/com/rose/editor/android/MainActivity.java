@@ -91,7 +91,6 @@ public class MainActivity extends Activity {
         editor.setTypefaceText(Typeface.MONOSPACE);
         editor.setOverScrollEnabled(false);
         editor.setEditorLanguage(new JavaLanguage());
-        editor.setColorScheme(new SchemeDarcula());
         editor.setNonPrintablePaintingFlags(CodeEditor.FLAG_DRAW_WHITESPACE_LEADING | CodeEditor.FLAG_DRAW_LINE_SEPARATOR);
         editor.setText("/**\n * Demo\n */\n@SuppressWarnings(/**/\"unused\")\n" +
                 "public class Main {\n\n\tpublic static void main(String[] args) {\n\t\t" +
@@ -280,6 +279,11 @@ public class MainActivity extends Activity {
                         }
                     }
                 }
+                break;
+            }
+            case R.id.editor_line_number:{
+                editor.setLineNumberEnabled(!editor.isLineNumberEnabled());
+                item.setChecked(editor.isLineNumberEnabled());
                 break;
             }
         }

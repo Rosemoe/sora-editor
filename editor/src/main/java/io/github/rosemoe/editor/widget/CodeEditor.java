@@ -164,6 +164,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mUndoEnabled;
     private boolean mDisplayLnPanel;
     private boolean mOverScrollEnabled;
+    private boolean mLineNumberEnabled;
     private boolean mHighlightSelectedText;
     private boolean mHighlightCurrentBlock;
     private boolean mVerticalScrollBarEnabled;
@@ -383,7 +384,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return The width
      */
     protected float measureTextRegionOffset() {
-        return measureLineNumber() + mDividerMargin * 2 + mDividerWidth;
+        return isLineNumberEnabled() ? measureLineNumber() + mDividerMargin * 2 + mDividerWidth : mDpUnit * 5;
     }
 
     /**
@@ -483,6 +484,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setOverScrollEnabled(true);
         setHorizontalScrollBarEnabled(true);
         setEditable(true);
+        setLineNumberEnabled(true);
     }
 
     /**
@@ -810,7 +812,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         drawColor(canvas, color.getColor(EditorColorScheme.WHOLE_BACKGROUND), mViewRect);
 
         float lineNumberWidth = measureLineNumber();
-        float offsetX = -getOffsetX() + lineNumberWidth + mDividerMargin * 2 + mDividerWidth;
+        float offsetX = -getOffsetX() + measureTextRegionOffset();
         float textOffset = offsetX;
 
         if (isWordwrap()) {
@@ -837,12 +839,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor);
 
         offsetX = -getOffsetX();
-        drawLineNumberBackground(canvas, offsetX, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
-        drawDivider(canvas, offsetX + lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
 
-        int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
-        for (long packed : postDrawLineNumbers) {
-            drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), offsetX, lineNumberWidth, lineNumberColor);
+        if (isLineNumberEnabled()) {
+            drawLineNumberBackground(canvas, offsetX, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
+            drawDivider(canvas, offsetX + lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
+            int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
+            for (long packed : postDrawLineNumbers) {
+                drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), offsetX, lineNumberWidth, lineNumberColor);
+            }
         }
 
         if (!isWordwrap()) {
@@ -1881,6 +1885,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return width of line number region
      */
     private float measureLineNumber() {
+        if (!isLineNumberEnabled()) {
+            return 0f;
+        }
         int count = 0;
         int lineCount = getLineCount();
         while (lineCount > 0) {
@@ -3164,8 +3171,25 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
+     * Set whether we should display line numbers
+     * @param lineNumberEnabled The state of line number displaying
+     */
+    public void setLineNumberEnabled(boolean lineNumberEnabled) {
+        mLineNumberEnabled = lineNumberEnabled;
+        invalidate();
+    }
+
+    /**
+     * Check whether line numbers are shown
+     * @return The state of line number displaying
+     */
+    public boolean isLineNumberEnabled() {
+        return mLineNumberEnabled;
+    }
+
+    /**
      * Get the paint of the editor
-     * You should not change text size and other arguments that are related to text measuring by the object
+     * You should not change text size and other attributes that are related to text measuring by the object
      *
      * @return The paint which is used by the editor now
      */

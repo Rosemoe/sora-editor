@@ -69,6 +69,11 @@
         android:checkable="true"
         android:title="@string/wordwrap" />
     <item
+        android:id="@+id/editor_line_number"
+        android:checkable="true"
+        android:checked="true"
+        android:title="@string/line_number_visibility" />
+    <item
         android:id="@+id/code_format"
         android:title="@string/format" />
     <item
