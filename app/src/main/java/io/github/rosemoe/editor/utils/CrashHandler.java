@@ -73,7 +73,7 @@ public class CrashHandler implements UncaughtExceptionHandler {
                     Toast.makeText(mContext, R.string.err_crash_loop, Toast.LENGTH_SHORT).show();
                     Looper.loop();
                 } catch (Throwable t) {
-                    saveCrashInfo(thread.getName(), ex);
+                    saveCrashInfo(thread.getName(), t);
                 }
             }
         }
