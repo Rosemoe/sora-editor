@@ -25,6 +25,13 @@ package io.github.rosemoe.editor.util;
 public class IntPair {
 
     /**
+     * Convert an integer to a long whose binary bits are equal to the given integer
+     */
+    private static long toUnsignedLong(int x) {
+        return ((long) x) & 0xffffffffL;
+    }
+
+    /**
      * Pack two int into a long
      *
      * @param first  First of pair
@@ -32,7 +39,7 @@ public class IntPair {
      * @return Packed value
      */
     public static long pack(int first, int second) {
-        return (((long) first) << 32L) + second;
+        return (toUnsignedLong(first) << 32L) | toUnsignedLong(second);
     }
 
     /**
@@ -42,7 +49,7 @@ public class IntPair {
      * @return Second of pair
      */
     public static int getSecond(long packedValue) {
-        return (int) (packedValue << 32L >> 32L);
+        return (int) (packedValue & 0xFFFFFFFFL);
     }
 
     /**

@@ -50,7 +50,7 @@ public class Content implements CharSequence {
      */
     public static void setInitialLineCapacity(int capacity) {
         if (capacity <= 0) {
-            throw new IllegalArgumentException("capacity can not be under or equal zero");
+            throw new IllegalArgumentException("capacity can not be negative or zero");
         }
         sInitialListCapacity = capacity;
     }
@@ -147,24 +147,14 @@ public class Content implements CharSequence {
     }
 
     /**
-     * Get raw data line
+     * Get raw data of line
+     * The result is not expected to be modified
      *
      * @param line Line
      * @return Raw ContentLine used by Content
      */
     public ContentLine getLine(int line) {
         return mLines.get(line);
-    }
-
-    /**
-     * Get character of given line
-     *
-     * @param dest Destination array
-     * @param line Requested line
-     */
-    public void copyChars(char[] dest, int line) {
-        ContentLine lineStr = mLines.get(line);
-        lineStr.getChars(0, lineStr.length(), dest, 0);
     }
 
     /**
@@ -199,6 +189,9 @@ public class Content implements CharSequence {
         return mLines.get(line).toString();
     }
 
+    /**
+     * Get characters of line
+     */
     public void getLineChars(int line, char[] dest) {
         mLines.get(line).getChars(0, getColumnCount(line), dest, 0);
     }
