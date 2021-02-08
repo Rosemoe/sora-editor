@@ -168,12 +168,12 @@ final class UndoManager implements ContentListener {
     }
 
     /**
-     * Push a new ContentAction to stack
+     * Push a new {@link ContentAction} to stack
      * It will merge actions if possible
      *
-     * @param action New ContentAction
+     * @param action New {@link ContentAction}
      */
-    private void _push(ContentAction action) {
+    private void pushAction(ContentAction action) {
         if (!isUndoEnabled()) {
             return;
         }
@@ -237,9 +237,9 @@ final class UndoManager implements ContentListener {
             ReplaceAction rep = new ReplaceAction();
             rep._delete = mDeleteAction;
             rep._insert = mInsertAction;
-            _push(rep);
+            pushAction(rep);
         } else {
-            _push(mInsertAction);
+            pushAction(mInsertAction);
         }
         mReplaceMark = false;
     }
@@ -257,8 +257,227 @@ final class UndoManager implements ContentListener {
         mDeleteAction.startLine = startLine;
         mDeleteAction.text = deletedContent;
         if (!mReplaceMark) {
-            _push(mDeleteAction);
+            pushAction(mDeleteAction);
         }
     }
 
+    /**
+     * Insert action model for UndoManager
+     *
+     * @author Rose
+     */
+    public static final class InsertAction implements ContentAction {
+
+        public int startLine, endLine, startColumn, endColumn;
+
+        public CharSequence text;
+
+        @Override
+        public void undo(Content content) {
+            content.delete(startLine, startColumn, endLine, endColumn);
+        }
+
+        @Override
+        public void redo(Content content) {
+            content.insert(startLine, startColumn, text);
+        }
+
+        @Override
+        public boolean canMerge(ContentAction action) {
+            if (action instanceof InsertAction) {
+                InsertAction ac = (InsertAction) action;
+                return (ac.startColumn == endColumn && ac.startLine == endLine && ac.text.length() + text.length() < 10000);
+            }
+            return false;
+        }
+
+        @Override
+        public void merge(ContentAction action) {
+            if (!canMerge(action)) {
+                throw new IllegalArgumentException();
+            }
+            InsertAction ac = (InsertAction) action;
+            this.endColumn = ac.endColumn;
+            this.endLine = ac.endLine;
+            StringBuilder sb;
+            if (text instanceof StringBuilder) {
+                sb = (StringBuilder) text;
+            } else {
+                sb = new StringBuilder(text);
+                text = sb;
+            }
+            sb.append(ac.text);
+        }
+
+    }
+
+    /**
+     * MultiAction saves several actions for UndoManager
+     *
+     * @author Rose
+     */
+    public static final class MultiAction implements ContentAction {
+
+        private final List<ContentAction> _actions = new ArrayList<>();
+
+        public void addAction(ContentAction action) {
+            if (_actions.isEmpty()) {
+                _actions.add(action);
+            } else {
+                ContentAction last = _actions.get(_actions.size() - 1);
+                if (last.canMerge(action)) {
+                    last.merge(action);
+                } else {
+                    _actions.add(action);
+                }
+            }
+        }
+
+        @Override
+        public void undo(Content content) {
+            for (int i = _actions.size() - 1; i >= 0; i--) {
+                _actions.get(i).undo(content);
+            }
+        }
+
+        @Override
+        public void redo(Content content) {
+            for (int i = 0; i < _actions.size(); i++) {
+                _actions.get(i).redo(content);
+            }
+        }
+
+        @Override
+        public boolean canMerge(ContentAction action) {
+            return false;
+        }
+
+        @Override
+        public void merge(ContentAction action) {
+            throw new UnsupportedOperationException();
+        }
+
+    }
+
+    /**
+     * Delete action model for UndoManager
+     *
+     * @author Rose
+     */
+    public static final class DeleteAction implements ContentAction {
+
+        public int startLine, endLine, startColumn, endColumn;
+
+        public CharSequence text;
+
+        @Override
+        public void undo(Content content) {
+            content.insert(startLine, startColumn, text);
+        }
+
+        @Override
+        public void redo(Content content) {
+            content.delete(startLine, startColumn, endLine, endColumn);
+        }
+
+        @Override
+        public boolean canMerge(ContentAction action) {
+            if (action instanceof DeleteAction) {
+                DeleteAction ac = (DeleteAction) action;
+                return (ac.endColumn == startColumn && ac.endLine == startLine && ac.text.length() + text.length() < 10000);
+            }
+            return false;
+        }
+
+        @Override
+        public void merge(ContentAction action) {
+            if (!canMerge(action)) {
+                throw new IllegalArgumentException();
+            }
+            DeleteAction ac = (DeleteAction) action;
+            this.startColumn = ac.startColumn;
+            this.startLine = ac.startLine;
+            StringBuilder sb;
+            if (text instanceof StringBuilder) {
+                sb = (StringBuilder) text;
+            } else {
+                sb = new StringBuilder(text);
+                text = sb;
+            }
+            sb.insert(0, ac.text);
+        }
+
+    }
+
+    /**
+     * Replace action model for UndoManager
+     *
+     * @author Rose
+     */
+    public static final class ReplaceAction implements ContentAction {
+
+        public InsertAction _insert;
+        public DeleteAction _delete;
+
+        @Override
+        public void undo(Content content) {
+            _insert.undo(content);
+            _delete.undo(content);
+        }
+
+        @Override
+        public void redo(Content content) {
+            _delete.redo(content);
+            _insert.redo(content);
+        }
+
+        @Override
+        public boolean canMerge(ContentAction action) {
+            return false;
+        }
+
+        @Override
+        public void merge(ContentAction action) {
+            throw new UnsupportedOperationException();
+        }
+
+    }
+
+    /**
+     * For saving modification better
+     *
+     * @author Rose
+     */
+    public interface ContentAction {
+
+        /**
+         * Undo this action
+         *
+         * @param content On the given object
+         */
+        void undo(Content content);
+
+        /**
+         * Redo this action
+         *
+         * @param content On the given object
+         */
+        void redo(Content content);
+
+        /**
+         * Get whether the target action can be merged with this action
+         *
+         * @param action Target action to merge
+         * @return Whether can merge
+         */
+        boolean canMerge(ContentAction action);
+
+        /**
+         * Merge with target action
+         *
+         * @param action Target action to merge
+         */
+        void merge(ContentAction action);
+
+    }
 }

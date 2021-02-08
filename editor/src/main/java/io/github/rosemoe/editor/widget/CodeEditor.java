@@ -89,25 +89,14 @@ import io.github.rosemoe.editor.util.IntPair;
  */
 public class CodeEditor extends View implements ContentListener, TextAnalyzer.Callback, FormatThread.FormatResultReceiver, LineRemoveListener {
 
-    private static final String LOG_TAG = "CodeEditor";
-
     /**
      * The default size when creating the editor object. Unit is sp.
      */
     public static final int DEFAULT_TEXT_SIZE = 20;
-
     /**
      * The default cursor blinking period
      */
     public static final int DEFAULT_CURSOR_BLINK_PERIOD = 500;
-
-    /*
-     * Internal state identifiers of action mode
-     */
-    static final int ACTION_MODE_NONE = 0;
-    static final int ACTION_MODE_SEARCH_TEXT = 1;
-    static final int ACTION_MODE_SELECT_TEXT = 2;
-
     /**
      * Draw whitespace characters before line content start
      * <strong>Whitespace here only means space and tab</strong>
@@ -143,7 +132,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @see #setNonPrintablePaintingFlags(int)
      */
     public static final int FLAG_DRAW_LINE_SEPARATOR = 1 << 4;
-
+    /*
+     * Internal state identifiers of action mode
+     */
+    static final int ACTION_MODE_NONE = 0;
+    static final int ACTION_MODE_SEARCH_TEXT = 1;
+    static final int ACTION_MODE_SELECT_TEXT = 2;
+    private static final String LOG_TAG = "CodeEditor";
+    Layout mLayout;
+    int mStartedActionMode;
     private int mTabWidth;
     private int mCursorPosition;
     private int mNonPrintableOptions;
@@ -177,11 +174,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private RectF mHorizontalScrollBar;
     private ClipboardManager mClipboardManager;
     private InputMethodManager mInputMethodManager;
-
     private Cursor mCursor;
     private Content mText;
     private TextAnalyzer mSpanner;
-
     private Paint mPaint;
     private Paint mPaintOther;
     private char[] mBuffer;
@@ -209,9 +204,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private Paint.FontMetricsInt mTextMetrics;
     private Paint.FontMetricsInt mLineNumberMetrics;
     private CursorBlink mCursorBlink;
-
-    Layout mLayout;
-    int mStartedActionMode;
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -3171,20 +3163,22 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
+     * Check whether line numbers are shown
+     *
+     * @return The state of line number displaying
+     */
+    public boolean isLineNumberEnabled() {
+        return mLineNumberEnabled;
+    }
+
+    /**
      * Set whether we should display line numbers
+     *
      * @param lineNumberEnabled The state of line number displaying
      */
     public void setLineNumberEnabled(boolean lineNumberEnabled) {
         mLineNumberEnabled = lineNumberEnabled;
         invalidate();
-    }
-
-    /**
-     * Check whether line numbers are shown
-     * @return The state of line number displaying
-     */
-    public boolean isLineNumberEnabled() {
-        return mLineNumberEnabled;
     }
 
     /**
@@ -3704,26 +3698,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
-    static class CursorPaintAction {
-
-        final int row;
-        final float centerX;
-        final RectF outRect;
-        final boolean insert;
-
-        CursorPaintAction(int row, float centerX, RectF outRect, boolean insert) {
-            this.row = row;
-            this.centerX = centerX;
-            this.outRect = outRect;
-            this.insert = insert;
-        }
-
-        void exec(Canvas canvas, CodeEditor editor) {
-            editor.drawCursor(canvas, centerX, row, outRect, insert);
-        }
-
-    }
-
     public enum TextActionMode {
 
         POPUP_WINDOW,
@@ -3742,6 +3716,26 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         void onExit();
 
         boolean shouldShowCursor();
+
+    }
+
+    static class CursorPaintAction {
+
+        final int row;
+        final float centerX;
+        final RectF outRect;
+        final boolean insert;
+
+        CursorPaintAction(int row, float centerX, RectF outRect, boolean insert) {
+            this.row = row;
+            this.centerX = centerX;
+            this.outRect = outRect;
+            this.insert = insert;
+        }
+
+        void exec(Canvas canvas, CodeEditor editor) {
+            editor.drawCursor(canvas, centerX, row, outRect, insert);
+        }
 
     }
 

@@ -339,10 +339,7 @@ class EditorInputConnection extends BaseInputConnection {
         Content content = mEditor.getText();
         CharPosition startPos = content.getIndexer().getCharPosition(start);
         CharPosition endPos = content.getIndexer().getCharPosition(end);
-        getCursor().setLeft(startPos.line, startPos.column);
-        getCursor().setRight(endPos.line, endPos.column);
-        mEditor.updateCursor();
-        mEditor.invalidate();
+        mEditor.setSelectionRegion(startPos.line, startPos.column, endPos.line, endPos.column, false);
         return true;
     }
 
