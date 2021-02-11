@@ -1,7 +1,6 @@
-# CodeEditor
+# CodeEditor (Refactoring in `dev`)
 [![](https://jitpack.io/v/Rosemoe/CodeEditor.svg)](https://jitpack.io/#Rosemoe/CodeEditor)   
-A cool and optimized code editor on Android platform with good performance and nice features.   
-[中文版README请点这里](/README_zh.md)
+A cool and optimized code editor on Android platform with good performance and nice features.
 
 ***Work In Progress*** This project is still developing slowly. Bugs may be inside.
 It is **not** recommended to use this project for production use.   
@@ -10,7 +9,7 @@ Branch `dev` has newest features and bug patches in editor and is developing.
 Any method or field can be changed, moved or even deleted at current period.     
 If you find any bug or require any enhancement, please send it to me by issues or other ways.    
    
-See [Projects](https://github.com/Rosemoe/CodeEditor/projects/) to get more information about what I am working on.    
+See [Milestones](https://github.com/Rosemoe/CodeEditor/milestones/) to get more information about what I am working on.   
 **Issues and pull requests are welcome.**   
 ## Features
 - [x] Smooth syntax highlight
