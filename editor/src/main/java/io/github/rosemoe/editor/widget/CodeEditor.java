@@ -2341,6 +2341,22 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
+     * Set max and min text size that can be used by user zooming.
+     *
+     * Unit is px.
+     */
+    public void setScaleTextSizes(float minSize, float maxSize) {
+        if (minSize > maxSize) {
+            throw new IllegalArgumentException("min size can not be bigger than max size");
+        }
+        if (minSize < 2f) {
+            throw new IllegalArgumentException("min size must be at least 2px");
+        }
+        mEventHandler.minSize = minSize;
+        mEventHandler.maxSize = maxSize;
+    }
+
+    /**
      * Specify input type for the editor
      *
      * Zero for default input type
@@ -2353,7 +2369,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * @see CodeEditor#setInputType(int)
      */
-    public int getInputTye() {
+    public int getInputType() {
         return mInputType;
     }
 

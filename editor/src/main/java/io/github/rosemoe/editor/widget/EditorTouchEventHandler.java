@@ -26,7 +26,7 @@ import android.content.res.Resources;
 import io.github.rosemoe.editor.util.IntPair;
 
 /**
- * Handles touch event of editor
+ * Handles touch events of editor
  *
  * @author Rose
  */
@@ -50,7 +50,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     private final static int HIDE_DELAY = 3000;
     private final static int HIDE_DELAY_HANDLE = 5000;
 
-    private float maxSize, minSize;
+    float maxSize, minSize;
 
     /**
      * Create a event handler for the given editor
