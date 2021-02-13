@@ -94,7 +94,7 @@ public class TextAnalyzeResult {
 
     /**
      * This method must be called when whole text is analyzed
-     * The line is the line last of text
+     * @param line The line is the line last of text
      */
     public void determine(int line) {
         int mapLine = mSpanMap.size() - 1;

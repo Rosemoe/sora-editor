@@ -143,6 +143,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     int mStartedActionMode;
     private int mTabWidth;
     private int mCursorPosition;
+    private int mInputType;
     private int mNonPrintableOptions;
     private int mCachedLineNumberWidth;
     private float mDpUnit;
@@ -162,6 +163,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mDisplayLnPanel;
     private boolean mOverScrollEnabled;
     private boolean mLineNumberEnabled;
+    private boolean mCompletionOnComposing;
     private boolean mHighlightSelectedText;
     private boolean mHighlightCurrentBlock;
     private boolean mVerticalScrollBarEnabled;
@@ -477,6 +479,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setHorizontalScrollBarEnabled(true);
         setEditable(true);
         setLineNumberEnabled(true);
+        setAutoCompletionOnComposing(true);
     }
 
     /**
@@ -2068,9 +2071,26 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Set non-printable painting flags
-     * Specify where they should be drawn
-     * Flags can be mixed
+     * Specify whether show auto completion window even the input method is in composing state.
+     * This is useful when the user uses an input method that does not support the attitude {@link EditorInfo#TYPE_TEXT_FLAG_NO_SUGGESTIONS}
+     * This is enabled by default now
+     */
+    public void setAutoCompletionOnComposing(boolean completionOnComposing) {
+        mCompletionOnComposing = completionOnComposing;
+    }
+
+    /**
+     * @see CodeEditor#setAutoCompletionOnComposing(boolean)
+     */
+    public boolean isAutoCompletionOnComposing() {
+        return mCompletionOnComposing;
+    }
+
+    /**
+     * Set non-printable painting flags.
+     * Specify where they should be drawn.
+     *
+     * Flags can be mixed.
      *
      * @param flags Flags
      * @see #FLAG_DRAW_WHITESPACE_LEADING
@@ -2318,6 +2338,23 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (mCursor != null) {
             mCursor.setTabWidth(mTabWidth);
         }
+    }
+
+    /**
+     * Specify input type for the editor
+     *
+     * Zero for default input type
+     * @see EditorInfo#inputType
+     */
+    public void setInputType(int inputType) {
+        mInputType = inputType;
+    }
+
+    /**
+     * @see CodeEditor#setInputType(int)
+     */
+    public int getInputTye() {
+        return mInputType;
     }
 
     /**
@@ -3271,7 +3308,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Get the InputMethodManager using
+     * Get using InputMethodManager
      */
     protected InputMethodManager getInputMethodManager() {
         return mInputMethodManager;
@@ -3364,7 +3401,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (!isEditable() || !isEnabled()) {
             return null;
         }
-        outAttrs.inputType = EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
+        outAttrs.inputType = mInputType != 0 ? mInputType : EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
         outAttrs.initialSelStart = getCursor() != null ? getCursor().getLeft() : 0;
         outAttrs.initialSelEnd = getCursor() != null ? getCursor().getRight() : 0;
         outAttrs.initialCapsMode = mConnection.getCursorCapsMode(0);
@@ -3584,7 +3621,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         // Visibility & State shift
         exitSelectModeIfNeeded();
         // Auto completion
-        if (mConnection.mComposingLine == -1 && endColumn != 0 && startLine == endLine) {
+        if ((mConnection.mComposingLine == -1 || mCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
             int end = endColumn;
             while (endColumn > 0) {
                 if (mLanguage.isAutoCompleteChar(content.charAt(endLine, endColumn - 1))) {
@@ -3633,7 +3670,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         updateCursor();
         exitSelectModeIfNeeded();
-        if (mConnection.mComposingLine == -1 && mCompletionWindow.isShowing()) {
+        if ((mConnection.mComposingLine == -1 || mCompletionOnComposing) && mCompletionWindow.isShowing()) {
             if (startLine != endLine || startColumn != endColumn - 1) {
                 postHideCompletionWindow();
             }
