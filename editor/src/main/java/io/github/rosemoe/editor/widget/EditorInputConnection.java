@@ -44,6 +44,7 @@ class EditorInputConnection extends BaseInputConnection {
     protected int mComposingLine = -1;
     protected int mComposingStart = -1;
     protected int mComposingEnd = -1;
+    protected boolean mCancelCompletion = false;
     private boolean mInvalid;
 
     /**
@@ -69,6 +70,7 @@ class EditorInputConnection extends BaseInputConnection {
     protected void reset() {
         mComposingEnd = mComposingStart = mComposingLine = -1;
         mInvalid = false;
+        mCancelCompletion = false;
     }
 
     /**
@@ -297,7 +299,9 @@ class EditorInputConnection extends BaseInputConnection {
             }
             // Reset range
             mComposingEnd = mComposingStart + text.length();
+            mCancelCompletion = true;
             mEditor.getText().insert(mComposingLine, mComposingStart, text);
+            mCancelCompletion = false;
         }
         return true;
     }
