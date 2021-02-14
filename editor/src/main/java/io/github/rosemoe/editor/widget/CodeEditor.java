@@ -3641,7 +3641,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         // Visibility & State shift
         exitSelectModeIfNeeded();
         // Auto completion
-        if ((mConnection.mComposingLine == -1 || mCompletionOnComposing) && !mConnection.mCancelCompletion && endColumn != 0 && startLine == endLine) {
+        if ((mConnection.mComposingLine == -1 || mCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
             int end = endColumn;
             while (endColumn > 0) {
                 if (mLanguage.isAutoCompleteChar(content.charAt(endLine, endColumn - 1))) {
@@ -3690,7 +3690,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         updateCursor();
         exitSelectModeIfNeeded();
-        if ((mConnection.mComposingLine == -1) && mCompletionWindow.isShowing()) {
+        if (mConnection.mComposingLine == -1 && mCompletionWindow.isShowing()) {
             if (startLine != endLine || startColumn != endColumn - 1) {
                 postHideCompletionWindow();
             }
