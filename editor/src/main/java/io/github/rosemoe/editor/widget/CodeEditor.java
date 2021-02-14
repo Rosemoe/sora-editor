@@ -269,6 +269,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Hide completion window later
      */
     protected void postHideCompletionWindow() {
+        // Avoid meaningless calls
+        if (!mCompletionWindow.isShowing()) {
+            return;
+        }
         // We do this because if you hide it at once, the editor seems to flash with unknown reason
         postDelayed(() -> mCompletionWindow.hide(), 50);
     }
@@ -3686,7 +3690,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         updateCursor();
         exitSelectModeIfNeeded();
-        if ((mConnection.mComposingLine == -1 || mCompletionOnComposing) && mCompletionWindow.isShowing()) {
+        if ((mConnection.mComposingLine == -1) && mCompletionWindow.isShowing()) {
             if (startLine != endLine || startColumn != endColumn - 1) {
                 postHideCompletionWindow();
             }

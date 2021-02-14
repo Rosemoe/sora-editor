@@ -56,6 +56,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
     private long mRequestTime;
     private String mLastPrefix;
     private AutoCompleteProvider mProvider;
+    private boolean mLoading;
 
     private final static String TIP = "Refreshing...";
 
@@ -128,7 +129,16 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
      * @param state Whether loading
      */
     public void setLoading(boolean state) {
-        mTip.setVisibility(state ? View.VISIBLE : View.GONE);
+        mLoading = state;
+        if (state) {
+            mEditor.postDelayed(() -> {
+                if (mLoading) {
+                    mTip.setVisibility(View.VISIBLE);
+                }
+            }, 300);
+        } else {
+            mTip.setVisibility(View.GONE);
+        }
         //mListView.setVisibility((!state) ? View.VISIBLE : View.GONE);
         //update();
     }

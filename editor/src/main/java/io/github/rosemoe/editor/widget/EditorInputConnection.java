@@ -297,9 +297,12 @@ class EditorInputConnection extends BaseInputConnection {
             if (mComposingStart != mComposingEnd) {
                 mEditor.getText().delete(mComposingLine, mComposingStart, mComposingLine, mComposingEnd);
             }
+            int previousLength = Math.max(0, mComposingEnd - mComposingStart);
             // Reset range
             mComposingEnd = mComposingStart + text.length();
-            mCancelCompletion = true;
+            if (previousLength > text.length()) {
+                mCancelCompletion = true;
+            }
             mEditor.getText().insert(mComposingLine, mComposingStart, text);
             mCancelCompletion = false;
         }
