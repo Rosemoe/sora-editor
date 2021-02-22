@@ -60,11 +60,11 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
 
     private final static String TIP = "Refreshing...";
 
-    protected boolean cancelShowUp = false;
+    protected boolean mCancelShowUp = false;
 
     @Override
     public void show() {
-        if (cancelShowUp) {
+        if (mCancelShowUp) {
             return;
         }
         super.show();
@@ -96,9 +96,9 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         applyColor();
         mListView.setDividerHeight(0);
         setLoading(true);
-        mListView.setOnItemClickListener((p1, p2, p3, p4) -> {
+        mListView.setOnItemClickListener((parent, view, position, id) -> {
             try {
-                select(p3);
+                select(position);
             } catch (Exception e) {
                 Toast.makeText(mEditor.getContext(), e.toString(), Toast.LENGTH_SHORT).show();
             }
@@ -190,7 +190,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         ResultItem item = ((ItemAdapter) mListView.getAdapter()).getItem(pos);
         Cursor cursor = mEditor.getCursor();
         if (!cursor.isSelected()) {
-            cancelShowUp = true;
+            mCancelShowUp = true;
             mEditor.getText().delete(cursor.getLeftLine(), cursor.getLeftColumn() - mLastPrefix.length(), cursor.getLeftLine(), cursor.getLeftColumn());
             cursor.onCommitText(item.commit);
             if ((item.mask & ResultItem.MASK_SHIFT_LEFT_TWICE) != 0) {
@@ -200,7 +200,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
             if ((item.mask & ResultItem.MASK_SHIFT_LEFT_ONCE) != 0) {
                 mEditor.moveSelectionLeft();
             }
-            cancelShowUp = false;
+            mCancelShowUp = false;
         }
         mEditor.postHideCompletionWindow();
     }
@@ -211,7 +211,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
      * @param prefix The user's input code's prefix
      */
     public void setPrefix(String prefix) {
-        if (cancelShowUp) {
+        if (mCancelShowUp) {
             return;
         }
         setLoading(true);
@@ -301,7 +301,6 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         }
 
         @Override
-        @SuppressWarnings("all") /*to clear redundant cast warnings*/
         public View getView(int pos, View view, ViewGroup parent) {
             if (view == null) {
                 view = LayoutInflater.from(mEditor.getContext()).inflate(R.layout.result_item, parent, false);

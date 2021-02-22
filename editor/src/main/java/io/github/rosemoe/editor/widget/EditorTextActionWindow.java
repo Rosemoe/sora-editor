@@ -34,7 +34,7 @@ import io.github.rosemoe.editor.R;
  */
 class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnClickListener, CodeEditor.EditorTextActionPresenter {
     private final CodeEditor mEditor;
-    private final Button paste;
+    private final Button mPasteBtn;
 
     /**
      * Create a panel for the given editor
@@ -50,11 +50,11 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
         Button selectAll = root.findViewById(R.id.panel_btn_select_all);
         Button cut = root.findViewById(R.id.panel_btn_cut);
         Button copy = root.findViewById(R.id.panel_btn_copy);
-        paste = root.findViewById(R.id.panel_btn_paste);
+        mPasteBtn = root.findViewById(R.id.panel_btn_paste);
         selectAll.setOnClickListener(this);
         cut.setOnClickListener(this);
         copy.setOnClickListener(this);
-        paste.setOnClickListener(this);
+        mPasteBtn.setOnClickListener(this);
         GradientDrawable gd = new GradientDrawable();
         gd.setCornerRadius(5);
         gd.setColor(0xffffffff);
@@ -143,11 +143,7 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
      * Update the state of paste button
      */
     private void updateBtnState() {
-        if (mEditor.hasClip()) {
-            paste.setEnabled(true);
-        } else {
-            paste.setEnabled(false);
-        }
+        mPasteBtn.setEnabled(mEditor.hasClip());
     }
 
     @Override
