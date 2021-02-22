@@ -488,7 +488,6 @@ public class JavaTextTokenizer {
         for (int i = 0; i < sKeywords.length; i++) {
             keywords.put(sKeywords[i], sTokens[i]);
         }
-        MyCharacter.initMap();
     }
 
     protected static boolean isDigit(char c) {

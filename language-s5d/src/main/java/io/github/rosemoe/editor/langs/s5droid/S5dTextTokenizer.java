@@ -510,8 +510,6 @@ public class S5dTextTokenizer {
         keywords.put("类", Tokens.CLASS);
         keywords.put("枚举", Tokens.ENUM);
         keywords.put("继承", Tokens.EXTENDS);
-
-        MyCharacter.initMap();
     }
 
     protected static boolean isDigit(char c) {

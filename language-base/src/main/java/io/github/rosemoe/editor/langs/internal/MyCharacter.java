@@ -23,15 +23,19 @@ import java.util.Arrays;
  */
 public class MyCharacter {
 
+    static {
+        initMapInternal();
+    }
+
     /**
      * Compressed bit set for isJavaIdentifierStart()
      */
-    private static int[] state_start;
+    private static int[] bitsIsStart;
 
     /**
      * Compressed bit set for isJavaIdentifierPart()
      */
-    private static int[] state_part;
+    private static int[] bitsIsPart;
 
     /**
      * Get bit in compressed bit set
@@ -56,21 +60,31 @@ public class MyCharacter {
 
     /**
      * Init maps
+     *
+     * @deprecated The class will be initialized automatically
      */
+    @Deprecated
     public static void initMap() {
-        if (state_start != null) {
+        // Empty
+    }
+
+    /**
+     * Init maps
+     */
+    private static void initMapInternal() {
+        if (bitsIsStart != null) {
             return;
         }
-        state_part = new int[2048];
-        state_start = new int[2048];
-        Arrays.fill(state_part, 0);
-        Arrays.fill(state_start, 0);
+        bitsIsPart = new int[2048];
+        bitsIsStart = new int[2048];
+        Arrays.fill(bitsIsPart, 0);
+        Arrays.fill(bitsIsStart, 0);
         for (int i = 0; i <= 65535; i++) {
             if (Character.isJavaIdentifierPart((char) i)) {
-                set(state_part, i);
+                set(bitsIsPart, i);
             }
             if (Character.isJavaIdentifierStart((char) i)) {
-                set(state_start, i);
+                set(bitsIsStart, i);
             }
         }
     }
@@ -81,7 +95,7 @@ public class MyCharacter {
      * @see Character#isJavaIdentifierPart(char)
      */
     public static boolean isJavaIdentifierPart(int key) {
-        return get(state_part, key);
+        return get(bitsIsPart, key);
     }
 
     /**
@@ -90,7 +104,7 @@ public class MyCharacter {
      * @see Character#isJavaIdentifierStart(char)
      */
     public static boolean isJavaIdentifierStart(int key) {
-        return get(state_start, key);
+        return get(bitsIsStart, key);
     }
 
 }
