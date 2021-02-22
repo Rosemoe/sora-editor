@@ -3234,6 +3234,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param lineNumberEnabled The state of line number displaying
      */
     public void setLineNumberEnabled(boolean lineNumberEnabled) {
+        if (lineNumberEnabled != mLineNumberEnabled && isWordwrap()) {
+            createLayout();
+        }
         mLineNumberEnabled = lineNumberEnabled;
         invalidate();
     }
