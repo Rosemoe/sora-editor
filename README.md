@@ -53,8 +53,13 @@ dependencies {
 }
 ```
 * Step 3 (Optional) : HTMLLexer is generated using ANTLR 4.9.1. You may need to add this dependency 
-```
+```Gradle
   implementation 'org.antlr:antlr4:4.9.1'
 ```
 Available modules:     
-editor, language-base, language-java, language-html, language-universal, language-s5d    
+* editor 
+* language-base
+* language-java
+* language-html
+* language-universal
+* language-s5d    
