@@ -27,7 +27,7 @@ See [Milestones](https://github.com/Rosemoe/CodeEditor/milestones/) to get more 
 - [x] Show non-printable characters
 - [ ] Incremental highlight Analysis
 ## Language Supported  
-* Java,JavaScript,C,C++ (Basic Support:highlight, code block line,identifier and keyword auto-completion)
+* Java, JavaScript, C, C++, HTML (Basic Support:highlight, code block line,identifier and keyword auto-completion). Code block line isn't available for HTML Language
 * S5droid 2.x(context sensitive auto completion, highlight, code block line, navigation)(going to be deprecated)   
 ## Screenshots  
 ![View Outline](/images/outline.png)
@@ -52,5 +52,14 @@ dependencies {
   implementation 'com.github.Rosemoe.CodeEditor:editor:<versionName>'
 }
 ```
+* Step 3 (Optional) : HTMLLexer is generated using ANTLR 4.9.1. You may need to add this dependency 
+```Gradle
+  implementation 'org.antlr:antlr4:4.9.1'
+```
 Available modules:     
-editor,language-base,language-java,language-universal,language-s5d    
+* editor 
+* language-base
+* language-java
+* language-html
+* language-universal
+* language-s5d    

@@ -46,6 +46,7 @@ import java.io.InputStreamReader;
 import java.util.List;
 
 import io.github.rosemoe.editor.langs.java.JavaLanguage;
+import io.github.rosemoe.editor.langs.html.HTMLLanguage;
 import io.github.rosemoe.editor.widget.CodeEditor;
 import io.github.rosemoe.editor.widget.EditorColorScheme;
 import io.github.rosemoe.editor.widget.schemes.SchemeDarcula;
@@ -53,6 +54,7 @@ import io.github.rosemoe.editor.widget.schemes.SchemeEclipse;
 import io.github.rosemoe.editor.widget.schemes.SchemeGitHub;
 import io.github.rosemoe.editor.widget.schemes.SchemeNotepadXX;
 import io.github.rosemoe.editor.widget.schemes.SchemeVS2019;
+import io.github.rosemoe.editor.widget.schemes.HTMLScheme;
 
 public class MainActivity extends Activity {
 
@@ -159,7 +161,7 @@ public class MainActivity extends Activity {
             case R.id.switch_language:
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.switch_language)
-                        .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "S5droid", "None"}, -1, (dialog, which) -> {
+                        .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "S5droid", "HTML", "None"}, -1, (dialog, which) -> {
                             switch (which) {
                                 case 0:
                                     editor.setEditorLanguage(new UniversalLanguage(new CDescription()));
@@ -176,7 +178,10 @@ public class MainActivity extends Activity {
                                 case 4:
                                     editor.setEditorLanguage(new S5droidLanguage());
                                     break;
-                                case 5:
+								case 5:
+                                    editor.setEditorLanguage(new HTMLLanguage());
+                                    break;
+                                case 6:
                                     editor.setEditorLanguage(new EmptyLanguage());
                             }
                             dialog.dismiss();
@@ -203,7 +208,7 @@ public class MainActivity extends Activity {
                 break;
             case R.id.switch_colors:
                 String[] themes = new String[]{"Default", "GitHub", "Eclipse",
-                        "Darcula", "VS2019", "NotepadXX"};
+                        "Darcula", "VS2019", "NotepadXX", "HTML"};
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.color_scheme)
                         .setSingleChoiceItems(themes, -1, (dialog, which) -> {
@@ -225,6 +230,9 @@ public class MainActivity extends Activity {
                                     break;
                                 case 5:
                                     editor.setColorScheme(new SchemeNotepadXX());
+                                    break;
+								case 6:
+                                    editor.setColorScheme(new HTMLScheme());
                                     break;
                             }
                             dialog.dismiss();
