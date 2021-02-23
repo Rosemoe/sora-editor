@@ -28,12 +28,16 @@ public class HTMLAnalyzer implements CodeAnalyzer
 			while(delegate.shouldAnalyze())
 			{
 				token = lexer.nextToken();
-				if(token == null || token.getType() == HTMLLexer.EOF)
+				if(token == null) break;
+				if(token.getType() == HTMLLexer.EOF)
+				{
+					lastLine = token.getLine() - 1;
 					break;
+				}
 				line = token.getLine() - 1;
 				column = token.getCharPositionInLine();
 				lastLine = line;
-
+				
 				switch(token.getType())
 				{
 					case HTMLLexer.TAG_WHITESPACE  :
