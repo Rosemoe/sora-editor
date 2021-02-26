@@ -27,19 +27,18 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import io.github.rosemoe.editor.R;
-
-import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
-import io.github.rosemoe.editor.text.Cursor;
-import io.github.rosemoe.editor.text.TextAnalyzeResult;
-import io.github.rosemoe.editor.struct.ResultItem;
-
 import java.util.ArrayList;
 import java.util.List;
-import android.widget.RelativeLayout;
+
+import io.github.rosemoe.editor.R;
+import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
+import io.github.rosemoe.editor.struct.ResultItem;
+import io.github.rosemoe.editor.text.Cursor;
+import io.github.rosemoe.editor.text.TextAnalyzeResult;
 
 /**
  * Auto complete window for editing code quicker
@@ -47,28 +46,18 @@ import android.widget.RelativeLayout;
  * @author Rose
  */
 public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
+    private final static String TIP = "Refreshing...";
     private final CodeEditor mEditor;
     private final ListView mListView;
     private final TextView mTip;
     private final GradientDrawable mBg;
-
+    protected boolean mCancelShowUp = false;
     private int mCurrent = 0;
     private long mRequestTime;
     private String mLastPrefix;
     private AutoCompleteProvider mProvider;
     private boolean mLoading;
-
-    private final static String TIP = "Refreshing...";
-
-    protected boolean mCancelShowUp = false;
-
-    @Override
-    public void show() {
-        if (mCancelShowUp) {
-            return;
-        }
-        super.show();
-    }
+    private int maxHeight;
 
     /**
      * Create a panel instance for the given editor
@@ -103,6 +92,14 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
                 Toast.makeText(mEditor.getContext(), e.toString(), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @Override
+    public void show() {
+        if (mCancelShowUp) {
+            return;
+        }
+        super.show();
     }
 
     /**
@@ -206,6 +203,15 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
     }
 
     /**
+     * Get prefix set
+     *
+     * @return The previous prefix
+     */
+    public String getPrefix() {
+        return mLastPrefix;
+    }
+
+    /**
      * Set prefix for auto complete analysis
      *
      * @param prefix The user's input code's prefix
@@ -220,17 +226,6 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         MatchThread mThread = new MatchThread(mRequestTime, prefix);
         mThread.start();
     }
-
-    /**
-     * Get prefix set
-     *
-     * @return The previous prefix
-     */
-    public String getPrefix() {
-        return mLastPrefix;
-    }
-
-    private int maxHeight;
 
     public void setMaxHeight(int height) {
         maxHeight = height;

@@ -21,6 +21,7 @@ import java.util.Map;
 /**
  * Define symbol pairs to complete them automatically when the user
  * enters the first character of pair.
+ *
  * @author Rosemoe
  */
 public class SymbolPairMatch {
@@ -45,6 +46,7 @@ public class SymbolPairMatch {
      * Put a pair of symbol completion
      * When the user types the {@param firstCharacter}, it will be replaced by {@param replacement}
      * Replacement maybe null to disable completion for this character.
+     *
      * @see Replacement
      */
     public void putPair(char firstCharacter, Replacement replacement) {
@@ -57,6 +59,10 @@ public class SymbolPairMatch {
             result = pairMaps.get(character);
         }
         return result;
+    }
+
+    public void removeAllRules() {
+        pairMaps.clear();
     }
 
     /**
@@ -86,10 +92,6 @@ public class SymbolPairMatch {
             }
         }
 
-    }
-
-    public void removeAllRules() {
-        pairMaps.clear();
     }
 
     public final static class DefaultSymbolPairs extends SymbolPairMatch {

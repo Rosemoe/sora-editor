@@ -15,15 +15,15 @@
  */
 package io.github.rosemoe.editor.langs;
 
-import io.github.rosemoe.editor.struct.ResultItem;
-import io.github.rosemoe.editor.text.TextAnalyzer.AnalyzeThread.Delegate;
-import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
-import io.github.rosemoe.editor.text.TextAnalyzeResult;
-import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
-import io.github.rosemoe.editor.interfaces.EditorLanguage;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
+import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
+import io.github.rosemoe.editor.interfaces.EditorLanguage;
+import io.github.rosemoe.editor.struct.ResultItem;
+import io.github.rosemoe.editor.text.TextAnalyzeResult;
+import io.github.rosemoe.editor.text.TextAnalyzer.AnalyzeThread.Delegate;
 
 /**
  * Empty language without any effect

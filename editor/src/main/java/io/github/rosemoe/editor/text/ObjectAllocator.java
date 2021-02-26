@@ -27,8 +27,8 @@ import io.github.rosemoe.editor.struct.BlockLine;
  */
 public class ObjectAllocator {
 
-    private static List<BlockLine> blockLines;
     private static final int RECYCLE_LIMIT = 1024 * 8;
+    private static List<BlockLine> blockLines;
 
     public static void recycleBlockLine(List<BlockLine> src) {
         if (src == null) {

@@ -139,8 +139,8 @@ class LineBreakLayout extends AbstractLayout {
 
     class LineBreakLayoutRowItr implements RowIterator {
 
-        private int currentRow;
         private final Row result;
+        private int currentRow;
 
         LineBreakLayoutRowItr(int initialRow) {
             currentRow = initialRow;

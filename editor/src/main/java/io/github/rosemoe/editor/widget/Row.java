@@ -32,17 +32,17 @@ class Row {
     /**
      * Whether this row is a start of a line
      * Editor will draw line number to left of this row to indicate this
-      */
+     */
     public boolean isLeadingRow;
-    
+
     /**
-      * Start index in target line
-      */
+     * Start index in target line
+     */
     public int startColumn;
-    
+
     /**
-      * End index in target line
-      */
+     * End index in target line
+     */
     public int endColumn;
-    
+
 }

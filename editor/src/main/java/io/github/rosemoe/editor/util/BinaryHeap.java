@@ -18,50 +18,52 @@ package io.github.rosemoe.editor.util;
 import android.util.SparseIntArray;
 
 /**
-  * A General implementation of big root heap
-  * @author Rose
-  */
+ * A General implementation of big root heap
+ *
+ * @author Rose
+ */
 public class BinaryHeap {
-    
+
     /**
-      * Map from id to its position in heap array
-      */
+     * Map from id to its position in heap array
+     */
     private final SparseIntArray idToPosition;
-    
+
     /**
-      * Id allocator
-      */
+     * Id allocator
+     */
     private int idAllocator = 1;
-    
+
     /**
-      * Current node count in heap
-      */
+     * Current node count in heap
+     */
     private int nodeCount;
-    
+
     /**
-      * Node array for heap
-      */
+     * Node array for heap
+     */
     private Node[] nodes;
-    
+
     /**
-      * Create a binary heap
-      * This heap maintains its max value in heap
-      */
+     * Create a binary heap
+     * This heap maintains its max value in heap
+     */
     public BinaryHeap() {
         idToPosition = new SparseIntArray();
         nodeCount = 0;
         nodes = new Node[129];
     }
-    
+
     /**
-      * Ensure there is enough space
-      * @param capacity desired space size
-      */
+     * Ensure there is enough space
+     *
+     * @param capacity desired space size
+     */
     public void ensureCapacity(int capacity) {
         capacity++;
         if (nodes.length < capacity) {
             Node[] origin = nodes;
-            if(nodes.length << 1 >= capacity) {
+            if (nodes.length << 1 >= capacity) {
                 nodes = new Node[nodes.length << 1];
             } else {
                 nodes = new Node[capacity];
@@ -69,24 +71,26 @@ public class BinaryHeap {
             System.arraycopy(origin, 0, nodes, 0, nodeCount + 1);
         }
     }
-    
+
     /**
-      * Get the max value in this heap
-      * @return Max value
-      */
+     * Get the max value in this heap
+     *
+     * @return Max value
+     */
     public int top() {
         if (nodeCount == 0) {
             return 0;
         }
         return nodes[1].data;
     }
-    
+
     /**
-      * Internal implementation to move down nodes
-      * @param position target node's position in heap
-      */
+     * Internal implementation to move down nodes
+     *
+     * @param position target node's position in heap
+     */
     private void heapifyDown(int position) {
-        for (int child = position * 2;child <= nodeCount;child = position * 2) {
+        for (int child = position * 2; child <= nodeCount; child = position * 2) {
             Node parentNode = nodes[position], childNode;
             if (child + 1 <= nodeCount && nodes[child + 1].data > nodes[child].data) {
                 child = child + 1;
@@ -103,13 +107,14 @@ public class BinaryHeap {
             }
         }
     }
-    
+
     /**
-      * Internal implementation to move up nodes
-      * @param position target node's position in heap
-      */
+     * Internal implementation to move up nodes
+     *
+     * @param position target node's position in heap
+     */
     private void heapifyUp(int position) {
-        for (int parent = position / 2;parent >= 1;parent = position / 2) {
+        for (int parent = position / 2; parent >= 1; parent = position / 2) {
             Node childNode = nodes[position], parentNode = nodes[parent];
             if (childNode.data > parentNode.data) {
                 idToPosition.put(childNode.id, parent);
@@ -122,12 +127,13 @@ public class BinaryHeap {
             }
         }
     }
-    
+
     /**
-      * Add a new node to the heap
-      * @throws IllegalStateException when there is no new id available
-      * @return Id of node
-      */
+     * Add a new node to the heap
+     *
+     * @return Id of node
+     * @throws IllegalStateException when there is no new id available
+     */
     public int push(int value) {
         ensureCapacity(nodeCount + 1);
         if (idAllocator == Integer.MAX_VALUE) {
@@ -140,13 +146,14 @@ public class BinaryHeap {
         heapifyUp(nodeCount);
         return id;
     }
-    
+
     /**
-      * Update the value of node with given id to newValue
-      * @param id Id returned by push()
-      * @param newValue new value for this node
-      * @throws IllegalArgumentException when the id is invalid
-      */
+     * Update the value of node with given id to newValue
+     *
+     * @param id       Id returned by push()
+     * @param newValue new value for this node
+     * @throws IllegalArgumentException when the id is invalid
+     */
     public void update(int id, int newValue) {
         int position = idToPosition.get(id, 0);
         if (position == 0) {
@@ -156,16 +163,17 @@ public class BinaryHeap {
         nodes[position].data = newValue;
         if (origin < newValue) {
             heapifyUp(position);
-        } else if(origin > newValue) {
+        } else if (origin > newValue) {
             heapifyDown(position);
         }
     }
-    
+
     /**
-      * Remove node with given id
-      * @param id Id returned by push()
-      * @throws IllegalArgumentException when the id is invalid
-      */
+     * Remove node with given id
+     *
+     * @param id Id returned by push()
+     * @throws IllegalArgumentException when the id is invalid
+     */
     public void remove(int id) {
         int position = idToPosition.get(id, 0);
         if (position == 0) {
@@ -184,7 +192,7 @@ public class BinaryHeap {
         heapifyUp(position);
         heapifyDown(position);
     }
-    
+
     /**
      * Print elements of this heap
      * They are printed layer by layer to system out
@@ -192,50 +200,51 @@ public class BinaryHeap {
     public void print() {
         int start = 1;
         int count = 1;
-        while(start <= nodeCount) {
+        while (start <= nodeCount) {
             printRegion(start, count);
             start += count;
             count *= 2;
         }
     }
-    
+
     /**
-      * Print elements and turn to new line
-      * @param start Start position in array
-      * @param count Element count to print
-      */
+     * Print elements and turn to new line
+     *
+     * @param start Start position in array
+     * @param count Element count to print
+     */
     private void printRegion(int start, int count) {
-        for(int i = 0;i < count;i++) {
-            if(start + i <= nodeCount) {
-                System.out.print((nodes[start+ i] != null ? nodes[start + i].data : -1) + ", ");
+        for (int i = 0; i < count; i++) {
+            if (start + i <= nodeCount) {
+                System.out.print((nodes[start + i] != null ? nodes[start + i].data : -1) + ", ");
             } else {
                 break;
             }
         }
         System.out.println();
     }
-    
+
     /**
-      * Data node of the heap
-      * @author Rose
-      */
+     * Data node of the heap
+     *
+     * @author Rose
+     */
     private static class Node {
-        
+
         /**
-          * Saved value of this node
-          */
-        int data;
-        
-        /**
-          * An final id of node
-          */
+         * An final id of node
+         */
         final int id;
-        
+        /**
+         * Saved value of this node
+         */
+        int data;
+
         Node(int id, int value) {
             this.data = value;
             this.id = id;
         }
-        
+
     }
-    
+
 }

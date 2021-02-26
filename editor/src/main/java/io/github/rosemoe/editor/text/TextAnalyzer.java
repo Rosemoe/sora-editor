@@ -17,11 +17,11 @@ package io.github.rosemoe.editor.text;
 
 import android.util.Log;
 
+import java.util.List;
+
 import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
 import io.github.rosemoe.editor.struct.BlockLine;
 import io.github.rosemoe.editor.struct.Span;
-
-import java.util.List;
 
 /**
  * This is a manager of analyzing text
@@ -31,12 +31,8 @@ import java.util.List;
 public class TextAnalyzer {
 
     private static int sThreadId = 0;
-
-    private synchronized static int nextThreadId() {
-        sThreadId++;
-        return sThreadId;
-    }
-
+    private final RecycleObjContainer mObjContainer = new RecycleObjContainer();
+    private final Object mLock = new Object();
     /**
      * Debug:Start time
      */
@@ -45,9 +41,6 @@ public class TextAnalyzer {
     private Callback mCallback;
     private AnalyzeThread mThread;
     private CodeAnalyzer mCodeAnalyzer;
-    private final RecycleObjContainer mObjContainer = new RecycleObjContainer();
-    private final Object mLock = new Object();
-
     /**
      * Create a new manager for the given codeAnalyzer
      *
@@ -60,6 +53,11 @@ public class TextAnalyzer {
         mResult = new TextAnalyzeResult();
         mResult.addNormalIfNull();
         mCodeAnalyzer = codeAnalyzer0;
+    }
+
+    private synchronized static int nextThreadId() {
+        sThreadId++;
+        return sThreadId;
     }
 
     /**
@@ -165,10 +163,10 @@ public class TextAnalyzer {
      */
     public class AnalyzeThread extends Thread {
 
-        private volatile boolean waiting = false;
-        private Content content;
         private final CodeAnalyzer codeAnalyzer;
         private final Object lock;
+        private volatile boolean waiting = false;
+        private Content content;
 
         /**
          * Create a new thread

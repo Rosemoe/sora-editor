@@ -15,13 +15,13 @@
  */
 package io.github.rosemoe.editor.widget;
 
+import android.content.res.Resources;
+import android.graphics.RectF;
+import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.widget.OverScroller;
-import android.graphics.RectF;
-import android.util.TypedValue;
-import android.content.res.Resources;
 
 import io.github.rosemoe.editor.util.IntPair;
 
@@ -33,8 +33,14 @@ import io.github.rosemoe.editor.util.IntPair;
 @SuppressWarnings("CanBeFinal")
 final class EditorTouchEventHandler implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
 
+    private final static int HIDE_DELAY = 3000;
+    private final static int HIDE_DELAY_HANDLE = 5000;
     private final CodeEditor mEditor;
     private final OverScroller mScroller;
+    protected boolean topOrBottom; //true for bottom
+    protected boolean leftOrRight; //true for right
+    boolean isScaling = false;
+    float maxSize, minSize;
     private long mLastScroll = 0;
     private long mLastSetSelection = 0;
     private boolean mHolding = false;
@@ -45,12 +51,6 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     private float offsetX, offsetY;
     private SelectionHandle insert = null, left = null, right = null;
     private int type = -1;
-    boolean isScaling = false;
-
-    private final static int HIDE_DELAY = 3000;
-    private final static int HIDE_DELAY_HANDLE = 5000;
-
-    float maxSize, minSize;
 
     /**
      * Create a event handler for the given editor
@@ -62,6 +62,16 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         mScroller = new OverScroller(editor.getContext());
         maxSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 32, Resources.getSystem().getDisplayMetrics());
         minSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 6, Resources.getSystem().getDisplayMetrics());
+    }
+
+    /**
+     * Whether this character is a part of word
+     *
+     * @param ch Character to check
+     * @return Whether a part of word
+     */
+    private static boolean isIdentifierPart(char ch) {
+        return Character.isJavaIdentifierPart(ch);
     }
 
     /**
@@ -126,14 +136,14 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     public void notifyScrolled() {
         mLastScroll = System.currentTimeMillis();
         class ScrollNotifier implements Runnable {
-            
+
             @Override
             public void run() {
                 if (System.currentTimeMillis() - mLastScroll >= HIDE_DELAY_HANDLE) {
                     mEditor.invalidate();
                 }
             }
-            
+
         }
         mEditor.postDelayed(new ScrollNotifier(), HIDE_DELAY_HANDLE);
     }
@@ -144,14 +154,14 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     public void notifyLater() {
         mLastSetSelection = System.currentTimeMillis();
         class InvalidateNotifier implements Runnable {
-            
+
             @Override
             public void run() {
                 if (System.currentTimeMillis() - mLastSetSelection >= HIDE_DELAY) {
                     mEditor.invalidate();
                 }
             }
-            
+
         }
         mEditor.postDelayed(new InvalidateNotifier(), HIDE_DELAY);
     }
@@ -295,7 +305,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         }
         return false;
     }
-    
+
     protected void smoothScrollBy(float distanceX, float distanceY) {
         mEditor.getTextActionPresenter().onUpdate();
         mEditor.hideAutoCompleteWindow();
@@ -306,12 +316,12 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         endY = Math.min(endY, mEditor.getScrollMaxY());
         endX = Math.min(endX, mEditor.getScrollMaxX());
         mScroller.startScroll(mScroller.getCurrX(),
-                              mScroller.getCurrY(),
-                              endX - mScroller.getCurrX(),
-                              endY - mScroller.getCurrY(), 0);
+                mScroller.getCurrY(),
+                endX - mScroller.getCurrX(),
+                endY - mScroller.getCurrY(), 0);
         mEditor.invalidate();
     }
-    
+
     protected void scrollBy(float distanceX, float distanceY) {
         if (mEditor.getTextActionPresenter() != null) {
             mEditor.getTextActionPresenter().onUpdate();
@@ -386,19 +396,6 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         }
         mEditor.setSelectionRegion(startLine, startColumn, endLine, endColumn);
     }
-
-    /**
-     * Whether this character is a part of word
-     *
-     * @param ch Character to check
-     * @return Whether a part of word
-     */
-    private static boolean isIdentifierPart(char ch) {
-        return Character.isJavaIdentifierPart(ch);
-    }
-
-    protected boolean topOrBottom; //true for bottom
-    protected boolean leftOrRight; //true for right
 
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
@@ -575,7 +572,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             float currY = mScroller.getCurrY() + e.getY();
             float targetX = (currX - offsetX) + startX;
             float targetY = (currY - offsetY) + startY;
-            int row = (int)(targetY / mEditor.getRowHeight());
+            int row = (int) (targetY / mEditor.getRowHeight());
             if (row >= mEditor.getLastVisibleRow()) {
                 scrollBy(0, mEditor.getRowHeight());
             }

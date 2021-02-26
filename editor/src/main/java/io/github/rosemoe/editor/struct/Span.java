@@ -28,10 +28,9 @@ import io.github.rosemoe.editor.widget.EditorColorScheme;
  */
 public class Span {
 
+    private static final BlockingQueue<Span> cacheQueue = new ArrayBlockingQueue<>(8192 * 2);
     public int column;
-
     public int colorId;
-
     public int underlineColor = 0;
 
     /**
@@ -44,6 +43,25 @@ public class Span {
     private Span(int column, int colorId) {
         this.column = column;
         this.colorId = colorId;
+    }
+
+    public static Span obtain(int column, int colorId) {
+        Span span = cacheQueue.poll();
+        if (span == null) {
+            return new Span(column, colorId);
+        } else {
+            span.column = column;
+            span.colorId = colorId;
+            return span;
+        }
+    }
+
+    public static void recycleAll(Collection<Span> spans) {
+        for (Span span : spans) {
+            if (!span.recycle()) {
+                return;
+            }
+        }
     }
 
     /**
@@ -88,26 +106,5 @@ public class Span {
         colorId = column = underlineColor = 0;
         return cacheQueue.offer(this);
     }
-
-    public static Span obtain(int column, int colorId) {
-        Span span = cacheQueue.poll();
-        if (span == null) {
-            return new Span(column, colorId);
-        } else {
-            span.column = column;
-            span.colorId = colorId;
-            return span;
-        }
-    }
-
-    public static void recycleAll(Collection<Span> spans) {
-        for (Span span : spans) {
-            if (!span.recycle()) {
-                return;
-            }
-        }
-    }
-
-    private static final BlockingQueue<Span> cacheQueue = new ArrayBlockingQueue<>(8192 * 2);
 
 }

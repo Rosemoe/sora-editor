@@ -18,10 +18,10 @@ package io.github.rosemoe.editor.widget.schemes;
 import io.github.rosemoe.editor.widget.EditorColorScheme;
 
 /**
-  * ColorScheme for editor
-  * picked from Eclipse IDE for Java Developers Version 2019-12 (4.14.0)
+ * ColorScheme for editor
+ * picked from Eclipse IDE for Java Developers Version 2019-12 (4.14.0)
  * Thanks to liyujiang-gzu (GitHub @liyujiang-gzu)
-  */
+ */
 public final class SchemeEclipse extends EditorColorScheme {
 
     @Override
@@ -47,5 +47,5 @@ public final class SchemeEclipse extends EditorColorScheme {
         setColor(BLOCK_LINE, 0xffd8d8d8);
         setColor(BLOCK_LINE_CURRENT, 0);
     }
-    
+
 }

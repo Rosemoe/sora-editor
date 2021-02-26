@@ -18,10 +18,10 @@ package io.github.rosemoe.editor.widget.schemes;
 import io.github.rosemoe.editor.widget.EditorColorScheme;
 
 /**
-  * ColorScheme for editor
-  * picked from Notepad++ v7.8.1
+ * ColorScheme for editor
+ * picked from Notepad++ v7.8.1
  * Thanks to liyujiang-gzu (GitHub @liyujiang-gzu)
-  */
+ */
 public final class SchemeNotepadXX extends EditorColorScheme {
 
     @Override
@@ -47,5 +47,5 @@ public final class SchemeNotepadXX extends EditorColorScheme {
         setColor(BLOCK_LINE, 0xffc0c0c0);
         setColor(BLOCK_LINE_CURRENT, 0);
     }
-    
+
 }

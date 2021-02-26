@@ -18,10 +18,10 @@ package io.github.rosemoe.editor.widget.schemes;
 import io.github.rosemoe.editor.widget.EditorColorScheme;
 
 /**
-  * ColorScheme for editor
-  * picked from GitHub site
+ * ColorScheme for editor
+ * picked from GitHub site
  * Thanks to liyujiang-gzu (GitHub @liyujiang-gzu)
-  */
+ */
 public final class SchemeGitHub extends EditorColorScheme {
 
     @Override
@@ -42,5 +42,5 @@ public final class SchemeGitHub extends EditorColorScheme {
         setColor(SELECTION_INSERT, 0xffc7edcc);
         setColor(SELECTION_HANDLE, 0xffc7edcc);
     }
-    
+
 }

@@ -141,6 +141,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     static final int ACTION_MODE_SEARCH_TEXT = 1;
     static final int ACTION_MODE_SELECT_TEXT = 2;
     private static final String LOG_TAG = "CodeEditor";
+    protected SymbolPairMatch mLanguageSymbolPairs;
     Layout mLayout;
     int mStartedActionMode;
     private int mTabWidth;
@@ -210,7 +211,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private Paint.FontMetricsInt mLineNumberMetrics;
     private CursorBlink mCursorBlink;
     private SymbolPairMatch mOverrideSymbolPairs;
-    protected SymbolPairMatch mLanguageSymbolPairs;
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -499,7 +499,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Define symbol pairs for any language,
      * Override language settings.
-     *
+     * <p>
      * Use {@link SymbolPairMatch.Replacement#NO_REPLACEMENT} to force no completion for a character
      */
     public SymbolPairMatch getOverrideSymbolPairs() {
@@ -507,17 +507,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Control whether auto-completes for symbol pairs
-     */
-    public void setSymbolCompletionEnabled(boolean symbolCompletionEnabled) {
-        mSymbolCompletionEnabled = symbolCompletionEnabled;
-    }
-
-    /**
      * @see CodeEditor#setSymbolCompletionEnabled(boolean)
      */
     public boolean isSymbolCompletionEnabled() {
         return mSymbolCompletionEnabled;
+    }
+
+    /**
+     * Control whether auto-completes for symbol pairs
+     */
+    public void setSymbolCompletionEnabled(boolean symbolCompletionEnabled) {
+        mSymbolCompletionEnabled = symbolCompletionEnabled;
     }
 
     /**
@@ -616,7 +616,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         mLanguageSymbolPairs = mLanguage.getSymbolPairs();
         if (mLanguageSymbolPairs == null) {
-            Log.w(LOG_TAG, "Language(" + mLanguage.toString() +") returned null for symbol pairs. It is a mistake.");
+            Log.w(LOG_TAG, "Language(" + mLanguage.toString() + ") returned null for symbol pairs. It is a mistake.");
             mLanguageSymbolPairs = new SymbolPairMatch();
         }
         mLanguageSymbolPairs.setParent(mOverrideSymbolPairs);
@@ -2124,6 +2124,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
+     * @see CodeEditor#setAutoCompletionOnComposing(boolean)
+     */
+    public boolean isAutoCompletionOnComposing() {
+        return mCompletionOnComposing;
+    }
+
+    /**
      * Specify whether show auto completion window even the input method is in composing state.
      * This is useful when the user uses an input method that does not support the attitude {@link EditorInfo#TYPE_TEXT_FLAG_NO_SUGGESTIONS}
      * This is enabled by default now
@@ -2133,16 +2140,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * @see CodeEditor#setAutoCompletionOnComposing(boolean)
-     */
-    public boolean isAutoCompletionOnComposing() {
-        return mCompletionOnComposing;
-    }
-
-    /**
      * Set non-printable painting flags.
      * Specify where they should be drawn.
-     *
+     * <p>
      * Flags can be mixed.
      *
      * @param flags Flags
@@ -2395,7 +2395,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Set max and min text size that can be used by user zooming.
-     *
+     * <p>
      * Unit is px.
      */
     public void setScaleTextSizes(float minSize, float maxSize) {
@@ -2410,20 +2410,21 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Specify input type for the editor
-     *
-     * Zero for default input type
-     * @see EditorInfo#inputType
-     */
-    public void setInputType(int inputType) {
-        mInputType = inputType;
-    }
-
-    /**
      * @see CodeEditor#setInputType(int)
      */
     public int getInputType() {
         return mInputType;
+    }
+
+    /**
+     * Specify input type for the editor
+     * <p>
+     * Zero for default input type
+     *
+     * @see EditorInfo#inputType
+     */
+    public void setInputType(int inputType) {
+        mInputType = inputType;
     }
 
     /**

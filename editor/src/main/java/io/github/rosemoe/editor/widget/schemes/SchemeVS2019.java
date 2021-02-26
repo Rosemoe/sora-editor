@@ -51,5 +51,5 @@ public class SchemeVS2019 extends EditorColorScheme {
         setColor(BLOCK_LINE_CURRENT, 0);
         setColor(NON_PRINTABLE_CHAR, 0xffdddddd);
     }
-    
+
 }

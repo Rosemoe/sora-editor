@@ -89,8 +89,9 @@ public interface EditorLanguage {
     /**
      * Get newline handlers of this language.
      * This method is called each time the user presses ENTER key.
-     *
+     * <p>
      * Pay attention to the performance as this method is called frequently
+     *
      * @return NewlineHandlers , maybe null
      */
     default NewlineHandler[] getNewlineHandlers() {

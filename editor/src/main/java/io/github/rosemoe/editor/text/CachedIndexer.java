@@ -30,21 +30,11 @@ public class CachedIndexer implements Indexer, ContentListener {
     private final CharPosition mZeroPoint = new CharPosition().zero();
     private final CharPosition mEndPoint = new CharPosition();
     private final List<CharPosition> mCachePositions = new ArrayList<>();
-    private int mSwitchIndex = 50;
     private final int mSwitchLine = 50;
+    private int mSwitchIndex = 50;
     private int mMaxCacheSize = 50;
     private boolean mHandleEvent = true;
     private boolean mHasException = false;
-
-    /**
-     * If the querying index is larger than the switch
-     * We will add its result to cache
-     *
-     * @param s Switch
-     */
-    public void setSwitchIndex(int s) {
-        mSwitchIndex = s;
-    }
 
     /**
      * Create a new CachedIndexer for the given content
@@ -54,6 +44,16 @@ public class CachedIndexer implements Indexer, ContentListener {
     /*package*/ CachedIndexer(Content content) {
         mContent = content;
         detectException();
+    }
+
+    /**
+     * If the querying index is larger than the switch
+     * We will add its result to cache
+     *
+     * @param s Switch
+     */
+    public void setSwitchIndex(int s) {
+        mSwitchIndex = s;
     }
 
     /**
@@ -300,15 +300,6 @@ public class CachedIndexer implements Indexer, ContentListener {
     }
 
     /**
-     * Set max cache size
-     *
-     * @param maxSize max cache size
-     */
-    protected void setMaxCacheSize(int maxSize) {
-        mMaxCacheSize = maxSize;
-    }
-
-    /**
      * Get max cache size
      *
      * @return max cache size
@@ -318,12 +309,12 @@ public class CachedIndexer implements Indexer, ContentListener {
     }
 
     /**
-     * For NoCacheIndexer
+     * Set max cache size
      *
-     * @param handle Whether handle changes to refresh cache
+     * @param maxSize max cache size
      */
-    protected void setHandleEvent(boolean handle) {
-        mHandleEvent = handle;
+    protected void setMaxCacheSize(int maxSize) {
+        mMaxCacheSize = maxSize;
     }
 
     /**
@@ -333,6 +324,15 @@ public class CachedIndexer implements Indexer, ContentListener {
      */
     protected boolean isHandleEvent() {
         return mHandleEvent;
+    }
+
+    /**
+     * For NoCacheIndexer
+     *
+     * @param handle Whether handle changes to refresh cache
+     */
+    protected void setHandleEvent(boolean handle) {
+        mHandleEvent = handle;
     }
 
     @Override

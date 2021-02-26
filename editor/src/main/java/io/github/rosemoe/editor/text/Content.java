@@ -44,27 +44,6 @@ public class Content implements CharSequence {
     private LineRemoveListener mLineListener;
 
     /**
-     * Set the default capacity of text line list
-     *
-     * @param capacity Default capacity
-     */
-    public static void setInitialLineCapacity(int capacity) {
-        if (capacity <= 0) {
-            throw new IllegalArgumentException("capacity can not be negative or zero");
-        }
-        sInitialListCapacity = capacity;
-    }
-
-    /**
-     * Returns the default capacity of text line list
-     *
-     * @return Default capacity
-     */
-    public static int getInitialLineCapacity() {
-        return Content.sInitialListCapacity;
-    }
-
-    /**
      * This constructor will create a Content object with no text
      */
     public Content() {
@@ -98,6 +77,46 @@ public class Content implements CharSequence {
         setUndoEnabled(true);
     }
 
+    /**
+     * Returns the default capacity of text line list
+     *
+     * @return Default capacity
+     */
+    public static int getInitialLineCapacity() {
+        return Content.sInitialListCapacity;
+    }
+
+    /**
+     * Set the default capacity of text line list
+     *
+     * @param capacity Default capacity
+     */
+    public static void setInitialLineCapacity(int capacity) {
+        if (capacity <= 0) {
+            throw new IllegalArgumentException("capacity can not be negative or zero");
+        }
+        sInitialListCapacity = capacity;
+    }
+
+    /**
+     * Test whether the two ContentLine have the same content
+     *
+     * @param a ContentLine
+     * @param b another ContentLine
+     * @return Whether equals in content
+     */
+    private static boolean equals(ContentLine a, ContentLine b) {
+        if (a.length() != b.length()) {
+            return false;
+        }
+        for (int i = 0; i < a.length(); i++) {
+            if (a.charAt(i) != b.charAt(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public char charAt(int index) {
         checkIndex(index);
@@ -119,11 +138,12 @@ public class Content implements CharSequence {
         CharPosition e = getIndexer().getCharPosition(end);
         return subContent(s.getLine(), s.getColumn(), e.getLine(), e.getColumn());
     }
-    
+
     /**
      * Set a line listener
-     * @see LineRemoveListener
+     *
      * @param lis the listener,maybe null
+     * @see LineRemoveListener
      */
     public void setLineListener(LineRemoveListener lis) {
         this.mLineListener = lis;
@@ -431,6 +451,15 @@ public class Content implements CharSequence {
     }
 
     /**
+     * Get whether UndoManager is enabled
+     *
+     * @return Whether UndoManager is enabled
+     */
+    public boolean isUndoEnabled() {
+        return mUndoManager.isUndoEnabled();
+    }
+
+    /**
      * Set whether enable the UndoManager.
      * If false,any modification will not be taken down and previous modification that
      * is already in UndoManager will be removed.Does not make changes to content.
@@ -442,12 +471,12 @@ public class Content implements CharSequence {
     }
 
     /**
-     * Get whether UndoManager is enabled
+     * Get current max stack size of UndoManager
      *
-     * @return Whether UndoManager is enabled
+     * @return current max stack size
      */
-    public boolean isUndoEnabled() {
-        return mUndoManager.isUndoEnabled();
+    public int getMaxUndoStackSize() {
+        return mUndoManager.getMaxUndoStackSize();
     }
 
     /**
@@ -457,15 +486,6 @@ public class Content implements CharSequence {
      */
     public void setMaxUndoStackSize(int maxSize) {
         mUndoManager.setMaxUndoStackSize(maxSize);
-    }
-
-    /**
-     * Get current max stack size of UndoManager
-     *
-     * @return current max stack size
-     */
-    public int getMaxUndoStackSize() {
-        return mUndoManager.getMaxUndoStackSize();
     }
 
     /**
@@ -641,25 +661,6 @@ public class Content implements CharSequence {
             mCursor = new Cursor(this);
         }
         return mCursor;
-    }
-
-    /**
-     * Test whether the two ContentLine have the same content
-     *
-     * @param a ContentLine
-     * @param b another ContentLine
-     * @return Whether equals in content
-     */
-    private static boolean equals(ContentLine a, ContentLine b) {
-        if (a.length() != b.length()) {
-            return false;
-        }
-        for (int i = 0; i < a.length(); i++) {
-            if (a.charAt(i) != b.charAt(i)) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**

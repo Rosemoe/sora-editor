@@ -28,7 +28,7 @@ interface RowIterator {
 
     /**
      * Return next Row object
-     *
+     * <p>
      * The result should not be stored, because implementing classes will always return the same
      * object due to performance
      *

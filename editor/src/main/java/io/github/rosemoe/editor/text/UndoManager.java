@@ -27,9 +27,9 @@ import java.util.List;
 final class UndoManager implements ContentListener {
 
     private final Content mContent;
+    private final List<ContentAction> mActionStack;
     private boolean mUndoEnabled;
     private int mMaxStackSize;
-    private final List<ContentAction> mActionStack;
     private InsertAction mInsertAction;
     private DeleteAction mDeleteAction;
     private boolean mReplaceMark;
@@ -98,6 +98,15 @@ final class UndoManager implements ContentListener {
     }
 
     /**
+     * Whether this UndoManager is enabled
+     *
+     * @return Whether enabled
+     */
+    public boolean isUndoEnabled() {
+        return mUndoEnabled;
+    }
+
+    /**
      * Set whether enable this module
      *
      * @param enabled Enable or disable
@@ -110,12 +119,12 @@ final class UndoManager implements ContentListener {
     }
 
     /**
-     * Whether this UndoManager is enabled
+     * Get current max stack size
      *
-     * @return Whether enabled
+     * @return max stack size
      */
-    public boolean isUndoEnabled() {
-        return mUndoEnabled;
+    public int getMaxUndoStackSize() {
+        return mMaxStackSize;
     }
 
     /**
@@ -130,15 +139,6 @@ final class UndoManager implements ContentListener {
         }
         mMaxStackSize = maxSize;
         cleanStack();
-    }
-
-    /**
-     * Get current max stack size
-     *
-     * @return max stack size
-     */
-    public int getMaxUndoStackSize() {
-        return mMaxStackSize;
     }
 
     /**
@@ -259,6 +259,44 @@ final class UndoManager implements ContentListener {
         if (!mReplaceMark) {
             pushAction(mDeleteAction);
         }
+    }
+
+    /**
+     * For saving modification better
+     *
+     * @author Rose
+     */
+    public interface ContentAction {
+
+        /**
+         * Undo this action
+         *
+         * @param content On the given object
+         */
+        void undo(Content content);
+
+        /**
+         * Redo this action
+         *
+         * @param content On the given object
+         */
+        void redo(Content content);
+
+        /**
+         * Get whether the target action can be merged with this action
+         *
+         * @param action Target action to merge
+         * @return Whether can merge
+         */
+        boolean canMerge(ContentAction action);
+
+        /**
+         * Merge with target action
+         *
+         * @param action Target action to merge
+         */
+        void merge(ContentAction action);
+
     }
 
     /**
@@ -440,44 +478,6 @@ final class UndoManager implements ContentListener {
         public void merge(ContentAction action) {
             throw new UnsupportedOperationException();
         }
-
-    }
-
-    /**
-     * For saving modification better
-     *
-     * @author Rose
-     */
-    public interface ContentAction {
-
-        /**
-         * Undo this action
-         *
-         * @param content On the given object
-         */
-        void undo(Content content);
-
-        /**
-         * Redo this action
-         *
-         * @param content On the given object
-         */
-        void redo(Content content);
-
-        /**
-         * Get whether the target action can be merged with this action
-         *
-         * @param action Target action to merge
-         * @return Whether can merge
-         */
-        boolean canMerge(ContentAction action);
-
-        /**
-         * Merge with target action
-         *
-         * @param action Target action to merge
-         */
-        void merge(ContentAction action);
 
     }
 }

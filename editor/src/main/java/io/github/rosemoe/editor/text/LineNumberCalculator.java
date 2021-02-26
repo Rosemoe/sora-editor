@@ -23,10 +23,10 @@ package io.github.rosemoe.editor.text;
 public class LineNumberCalculator {
 
     private final CharSequence mTarget;
+    private final int mLength;
     private int mOffset;
     private int mLine;
     private int mColumn;
-    private final int mLength;
 
     /**
      * Create a new helper for the given text and set offset to start

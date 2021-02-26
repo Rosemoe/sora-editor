@@ -22,16 +22,16 @@ import io.github.rosemoe.editor.util.Objects;
 /**
  * This class manages the colors of editor.
  * You can use color ids that are not in pre-defined id pool due to new languages.
- *
+ * <p>
  * This is also the default color scheme of editor.
  * Be careful to change this class, because this can cause its
  * subclasses behave differently and some subclasses did not apply
- * their default colors to some color ids. So change to this can cause 
+ * their default colors to some color ids. So change to this can cause
  * sub themes to change as well.
- *
+ * <p>
  * Typically, you can use this class to set color of editor directly
  * with {@link #setColor(int, int)} in a thread with looper.
- *
+ * <p>
  * However, we also accept you to extend this class to customize
  * your own ColorScheme to use different default colors.
  * Subclasses is expected to override {@link #applyDefault()}
@@ -39,23 +39,23 @@ import io.github.rosemoe.editor.util.Objects;
  * After overriding this method, you will have to call super class's
  * applyDefault() and then a series of {@link #setColor(int, int)} calls
  * to apply your colors.
- *
+ * <p>
  * Note that new colors can be added in newer version of editor,
  * it is dangerous not to call super.applyDefault(), which can cause
  * newer editor works wrongly.
- *
+ * <p>
  * For more pre-defined color schemes, please turn to package io.github.rosemoe.editor.widget.schemes
- *
+ * <p>
  * Thanks to liyujiang-gzu (GitHub @liyujiang-gzu) for contribution to color schemes
- * 
+ *
  * @author Rose
  */
 public class EditorColorScheme {
     //-----------------Highlight colors-----------
 
-	public static final int ATTRIBUTE_VALUE = 33;
-	public static final int ATTRIBUTE_NAME = 32;
-	public static final int HTML_TAG = 31;
+    public static final int ATTRIBUTE_VALUE = 33;
+    public static final int ATTRIBUTE_NAME = 32;
+    public static final int HTML_TAG = 31;
     public static final int ANNOTATION = 28;
     public static final int FUNCTION_NAME = 27;
     public static final int IDENTIFIER_NAME = 26;
@@ -105,16 +105,14 @@ public class EditorColorScheme {
      * Max pre-defined color id
      */
     protected static final int END_COLOR_ID = 31;
-
-    /**
-     * Host editor object
-     */
-    private CodeEditor mEditor;
-
     /**
      * Real color saver
      */
     protected final SparseIntArray mColors;
+    /**
+     * Host editor object
+     */
+    private CodeEditor mEditor;
 
     /**
      * Create a new ColorScheme for the given editor
@@ -126,18 +124,18 @@ public class EditorColorScheme {
         mColors = new SparseIntArray();
         applyDefault();
     }
-    
+
     /**
-      * For sub classes
-      */
+     * For sub classes
+     */
     public EditorColorScheme() {
         mColors = new SparseIntArray();
         applyDefault();
     }
-    
+
     /**
-      * Called by editor
-      */
+     * Called by editor
+     */
     void attachEditor(CodeEditor editor) {
         if (mEditor != null) {
             throw new IllegalStateException("A editor is already attached to this ColorScheme object");

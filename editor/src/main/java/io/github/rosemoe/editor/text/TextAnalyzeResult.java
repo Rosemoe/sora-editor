@@ -28,12 +28,12 @@ import io.github.rosemoe.editor.widget.EditorColorScheme;
  */
 public class TextAnalyzeResult {
 
-    public Object mExtra;
     protected final List<BlockLine> mBlocks;
+    protected final List<List<Span>> mSpanMap;
+    public Object mExtra;
     protected List<NavigationLabel> mLabels;
     protected Span mLast;
     protected int mSuppressSwitch = Integer.MAX_VALUE;
-    protected final List<List<Span>> mSpanMap;
 
     /**
      * Create a new result
@@ -94,6 +94,7 @@ public class TextAnalyzeResult {
 
     /**
      * This method must be called when whole text is analyzed
+     *
      * @param line The line is the line last of text
      */
     public void determine(int line) {

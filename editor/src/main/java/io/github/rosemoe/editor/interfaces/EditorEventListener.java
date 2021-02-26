@@ -27,12 +27,14 @@ public interface EditorEventListener {
 
     /**
      * Before format
+     *
      * @return true if you want to cancel this operation
      */
     boolean onRequestFormat(CodeEditor editor, boolean async);
 
     /**
      * Format failed
+     *
      * @return true if you do not want editor to handle this exception
      */
     boolean onFormatFail(CodeEditor editor, Throwable cause);

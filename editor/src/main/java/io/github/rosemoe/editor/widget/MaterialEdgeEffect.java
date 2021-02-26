@@ -28,76 +28,58 @@ import android.view.animation.Interpolator;
 
 public class MaterialEdgeEffect {
 
-    public boolean isRecede() {
-        return mState == STATE_RECEDE;
-    }
-
     // Time it will take the effect to fully recede in ms
     private static final int RECEDE_TIME = 600;
-
     // Time it will take before a pulled glow begins receding in ms
     private static final int PULL_TIME = 167;
-
     // Time it will take in ms for a pulled glow to decay to partial strength before release
     private static final int PULL_DECAY_TIME = 2000;
-
     private static final float MAX_ALPHA = 0.15f;
     private static final float GLOW_ALPHA_START = .09f;
-
     private static final float PULL_GLOW_BEGIN = 0.f;
-
     // Minimum velocity that will be absorbed
     private static final int MIN_VELOCITY = 100;
     // Maximum velocity, clamps at this value
     private static final int MAX_VELOCITY = 10000;
-
     private static final float EPSILON = 0.001f;
-
     private static final double ANGLE = Math.PI / 6;
     private static final float SIN = (float) Math.sin(ANGLE);
     private static final float COS = (float) Math.cos(ANGLE);
     private static final float RADIUS_FACTOR = 0.6f;
-
-    private float mGlowAlpha;
-    private float mGlowScaleY;
-
-    private float mGlowAlphaStart;
-    private float mGlowAlphaFinish;
-    private float mGlowScaleYStart;
-    private float mGlowScaleYFinish;
-
-    private long mStartTime;
-    private float mDuration;
-
-    private final Interpolator mInterpolator;
-
     private static final int STATE_IDLE = 0;
     private static final int STATE_PULL = 1;
     private static final int STATE_ABSORB = 2;
     private static final int STATE_RECEDE = 3;
     private static final int STATE_PULL_DECAY = 4;
-
     private static final float PULL_DISTANCE_ALPHA_GLOW_FACTOR = 0.8f;
-
     private static final int VELOCITY_GLOW_FACTOR = 6;
-
-    private int mState = STATE_IDLE;
-
-    private float mPullDistance;
-
+    private final Interpolator mInterpolator;
     private final Rect mBounds = new Rect();
     private final Paint mPaint = new Paint();
+    private float mGlowAlpha;
+    private float mGlowScaleY;
+    private float mGlowAlphaStart;
+    private float mGlowAlphaFinish;
+    private float mGlowScaleYStart;
+    private float mGlowScaleYFinish;
+    private long mStartTime;
+    private float mDuration;
+    private int mState = STATE_IDLE;
+    private float mPullDistance;
     private float mRadius;
     private float mBaseGlowScale;
     private float mDisplacement = 0.5f;
     private float mTargetDisplacement = 0.5f;
-
     public MaterialEdgeEffect() {
         mPaint.setAntiAlias(true);
         final int themeColor = 0xff666666;
         mPaint.setColor((themeColor & 0xffffff) | 0x33000000);
         mPaint.setStyle(Paint.Style.FILL);
         mInterpolator = new DecelerateInterpolator();
+    }
+
+    public boolean isRecede() {
+        return mState == STATE_RECEDE;
     }
 
     public void setSize(int width, int height) {
@@ -198,12 +180,12 @@ public class MaterialEdgeEffect {
         mTargetDisplacement = 0.5f;
     }
 
-    public void setColor(int color) {
-        mPaint.setColor(color);
-    }
-
     public int getColor() {
         return mPaint.getColor();
+    }
+
+    public void setColor(int color) {
+        mPaint.setColor(color);
     }
 
     public boolean draw(Canvas canvas) {

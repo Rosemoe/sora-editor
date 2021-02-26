@@ -22,16 +22,18 @@ public interface NewlineHandler {
 
     /**
      * Checks whether the given input matches the requirement to invoke this handler
+     *
      * @param beforeText Text of line before cursor
-     * @param afterText Text of line after cursor
+     * @param afterText  Text of line after cursor
      * @return Whether this handler should be called
      */
     boolean matchesRequirement(String beforeText, String afterText);
 
     /**
      * Handle newline and return processed content to insert
+     *
      * @param beforeText Text of line before cursor
-     * @param afterText Text of line after cursor
+     * @param afterText  Text of line after cursor
      * @return Actual content to insert
      */
     HandleResult handleNewline(String beforeText, String afterText, int tabSize);
@@ -51,7 +53,7 @@ public interface NewlineHandler {
         public HandleResult(CharSequence text, int shiftLeft) {
             this.text = text;
             this.shiftLeft = shiftLeft;
-            if (shiftLeft < 0 || shiftLeft >text.length()) {
+            if (shiftLeft < 0 || shiftLeft > text.length()) {
                 throw new IllegalArgumentException("invalid shiftLeft");
             }
         }

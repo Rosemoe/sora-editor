@@ -16,37 +16,42 @@
 package io.github.rosemoe.editor.text;
 
 import android.graphics.Paint;
+
 import java.util.Arrays;
 
 /**
-  * Cache to measure text quickly
-  * This is very useful when text is long
-  * Use this to make editor 20x faster than before
-  * It is not thread-safe
-  *
-  * @author Rose
-  */
+ * Cache to measure text quickly
+ * This is very useful when text is long
+ * Use this to make editor 20x faster than before
+ * It is not thread-safe
+ *
+ * @author Rose
+ */
 public class FontCache {
-    
+
     private final float[] cache;
 
     private final char[] buffer;
-    
+
     public FontCache() {
         cache = new float[65536];
         buffer = new char[2];
     }
-    
+
+    private static boolean isEmoji(char ch) {
+        return ch == 0xd83c || ch == 0xd83d;
+    }
+
     /**
-      * Clear caches of font
-      */
+     * Clear caches of font
+     */
     public void clearCache() {
         Arrays.fill(cache, 0);
     }
-    
+
     /**
-      * Measure a single character
-      */
+     * Measure a single character
+     */
     public float measureChar(char ch, Paint p) {
         float width = cache[(int) ch];
         if (width == 0) {
@@ -56,13 +61,13 @@ public class FontCache {
         }
         return width;
     }
-    
+
     /*
      * Measure text
      */
     public float measureText(char[] chars, int start, int end, Paint p) {
         float width = 0f;
-        for (int i = start;i < end;i++) {
+        for (int i = start; i < end; i++) {
             char ch = chars[i];
             if (isEmoji(ch) && i + 1 < end) {
                 buffer[0] = ch;
@@ -74,13 +79,13 @@ public class FontCache {
         }
         return width;
     }
-    
+
     /**
-      * Measure text
-      */
+     * Measure text
+     */
     public float measureText(CharSequence str, int start, int end, Paint p) {
         float width = 0f;
-        for (int i = start;i < end;i++) {
+        for (int i = start; i < end; i++) {
             char ch = str.charAt(i);
             if (isEmoji(ch) && i + 1 < end) {
                 buffer[0] = ch;
@@ -92,9 +97,5 @@ public class FontCache {
         }
         return width;
     }
-    
-    private static boolean isEmoji(char ch) {
-        return ch == 0xd83c || ch == 0xd83d;
-    }
-    
+
 }

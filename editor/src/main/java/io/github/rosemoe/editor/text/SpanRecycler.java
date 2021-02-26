@@ -26,19 +26,17 @@ import io.github.rosemoe.editor.struct.Span;
 public class SpanRecycler {
 
     private static SpanRecycler INSTANCE;
+    private final BlockingQueue<List<List<Span>>> taskQueue;
+    private Thread recycleThread;
+    private SpanRecycler() {
+        taskQueue = new ArrayBlockingQueue<>(8);
+    }
 
     public static synchronized SpanRecycler getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new SpanRecycler();
         }
         return INSTANCE;
-    }
-
-    private Thread recycleThread;
-    private final BlockingQueue<List<List<Span>>> taskQueue;
-
-    private SpanRecycler() {
-        taskQueue = new ArrayBlockingQueue<>(8);
     }
 
     public void recycle(List<List<Span>> spans) {

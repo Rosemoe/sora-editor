@@ -47,6 +47,26 @@ public final class Cursor {
     }
 
     /**
+     * Whether the given character is a white space character
+     *
+     * @param c Character to check
+     * @return Result whether a space char
+     */
+    protected static boolean isWhitespace(char c) {
+        return (c == '\t' || c == ' ');
+    }
+
+    /**
+     * Whether the char is a emoji
+     *
+     * @param ch Character to check
+     * @return Whether the char is a emoji
+     */
+    private static boolean isEmoji(char ch) {
+        return ch == 0xd83c || ch == 0xd83d;
+    }
+
+    /**
      * Make left and right cursor on the given position
      *
      * @param line   The line position
@@ -182,21 +202,21 @@ public final class Cursor {
     }
 
     /**
-     * Enable or disable auto indent when insert text through Cursor
-     *
-     * @param enabled Auto Indent state
-     */
-    public void setAutoIndent(boolean enabled) {
-        mAutoIndentEnabled = enabled;
-    }
-
-    /**
      * Returns whether auto indent is enabled
      *
      * @return Enabled or disabled
      */
     public boolean isAutoIndent() {
         return mAutoIndentEnabled;
+    }
+
+    /**
+     * Enable or disable auto indent when insert text through Cursor
+     *
+     * @param enabled Auto Indent state
+     */
+    public void setAutoIndent(boolean enabled) {
+        mAutoIndentEnabled = enabled;
     }
 
     /**
@@ -288,16 +308,6 @@ public final class Cursor {
     }
 
     /**
-     * Whether the given character is a white space character
-     *
-     * @param c Character to check
-     * @return Result whether a space char
-     */
-    protected static boolean isWhitespace(char c) {
-        return (c == '\t' || c == ' ');
-    }
-
-    /**
      * Handle delete submit by InputConnection
      */
     public void onDeleteKeyPressed() {
@@ -314,16 +324,6 @@ public final class Cursor {
             }
             mContent.delete(getLeftLine(), getLeftColumn() - len, getLeftLine(), getLeftColumn());
         }
-    }
-
-    /**
-     * Whether the char is a emoji
-     *
-     * @param ch Character to check
-     * @return Whether the char is a emoji
-     */
-    private static boolean isEmoji(char ch) {
-        return ch == 0xd83c || ch == 0xd83d;
     }
 
     /**

@@ -235,11 +235,9 @@ class WordwrapLayout extends AbstractLayout {
 
     static class RowRegion {
 
-        int line;
-
         final int startColumn;
-
         final int endColumn;
+        int line;
 
         RowRegion(int line, int start, int end) {
             this.line = line;
@@ -251,8 +249,8 @@ class WordwrapLayout extends AbstractLayout {
 
     class WordwrapLayoutRowItr implements RowIterator {
 
-        int currentRow;
         final Row result;
+        int currentRow;
 
         WordwrapLayoutRowItr(int initialRow) {
             currentRow = initialRow;

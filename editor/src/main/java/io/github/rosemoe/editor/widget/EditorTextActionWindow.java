@@ -16,14 +16,14 @@
 package io.github.rosemoe.editor.widget;
 
 import android.annotation.SuppressLint;
-import android.view.MotionEvent;
-import android.view.View;
-import android.widget.Button;
-import android.view.LayoutInflater;
+import android.content.res.Resources;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.util.TypedValue;
-import android.content.res.Resources;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.Button;
 
 import io.github.rosemoe.editor.R;
 
@@ -46,7 +46,7 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
         mEditor = editor;
         // Since popup window does provide decor view, we have to pass null to this method
         @SuppressLint("InflateParams")
-            View root = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_panel, null);
+        View root = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_panel, null);
         Button selectAll = root.findViewById(R.id.panel_btn_select_all);
         Button cut = root.findViewById(R.id.panel_btn_cut);
         Button copy = root.findViewById(R.id.panel_btn_copy);

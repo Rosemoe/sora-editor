@@ -17,8 +17,8 @@ package io.github.rosemoe.editor.interfaces;
 
 import java.util.List;
 
-import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.struct.ResultItem;
+import io.github.rosemoe.editor.text.TextAnalyzeResult;
 
 /**
  * Interface for auto completion analysis

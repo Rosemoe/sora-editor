@@ -22,11 +22,11 @@ package io.github.rosemoe.editor.widget;
  */
 final class CursorBlink implements Runnable {
 
+    final CodeEditor editor;
     long lastSelectionModificationTime = 0;
     int period;
     boolean visibility;
     boolean valid;
-    final CodeEditor editor;
 
     CursorBlink(CodeEditor editor, int period) {
         visibility = true;

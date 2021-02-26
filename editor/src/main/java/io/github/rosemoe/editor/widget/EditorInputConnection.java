@@ -15,21 +15,18 @@
  */
 package io.github.rosemoe.editor.widget;
 
+import android.text.Editable;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.inputmethod.BaseInputConnection;
-
-import io.github.rosemoe.editor.text.Content;
-import io.github.rosemoe.editor.text.Cursor;
-
-import android.text.Editable;
-import android.text.TextUtils;
-
-import io.github.rosemoe.editor.text.CharPosition;
-
-import android.text.SpannableStringBuilder;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
+
+import io.github.rosemoe.editor.text.CharPosition;
+import io.github.rosemoe.editor.text.Content;
+import io.github.rosemoe.editor.text.Cursor;
 
 /**
  * Connection between input method and editor
@@ -338,7 +335,7 @@ class EditorInputConnection extends BaseInputConnection {
         mEditor.invalidate();
         return true;
     }
-    
+
     private int getWrappedIndex(int index) {
         if (index < 0) {
             return 0;
@@ -442,7 +439,7 @@ class EditorInputConnection extends BaseInputConnection {
         mEditor.updateCursorAnchor();
         return true;
     }
-    
+
     @Override
     public ExtractedText getExtractedText(ExtractedTextRequest request, int flags) {
         //Logs.log("Get extracted text from input method");
@@ -450,7 +447,7 @@ class EditorInputConnection extends BaseInputConnection {
             //Logs.log("Monitor flag is set");
             mEditor.setExtracting(request);
         }
-        
+
         return mEditor.extractText(request);
     }
 
