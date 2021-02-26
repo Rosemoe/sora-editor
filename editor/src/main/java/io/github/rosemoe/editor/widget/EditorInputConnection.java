@@ -202,6 +202,11 @@ class EditorInputConnection extends BaseInputConnection {
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
+        commitTextInternal(text, true);
+        return true;
+    }
+
+    protected void commitTextInternal(CharSequence text, boolean applyAutoIndent) {
         // NOTE: Text styles are ignored by editor
         //Remove composing text first if there is
         deleteComposingText();
@@ -213,9 +218,9 @@ class EditorInputConnection extends BaseInputConnection {
         // newCursorPosition ignored
         // Call onCommitText() can make auto indent and delete text selected automatically
         if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT) {
-            getCursor().onCommitText(text);
+            getCursor().onCommitText(text, applyAutoIndent);
         } else {
-            getCursor().onCommitText(replacement.text);
+            getCursor().onCommitText(replacement.text, applyAutoIndent);
             int delta = (replacement.text.length() - replacement.selection);
             if (delta != 0) {
                 int newSel = Math.max(getCursor().getLeft() - delta, 0);
@@ -223,7 +228,6 @@ class EditorInputConnection extends BaseInputConnection {
                 mEditor.setSelection(charPosition.line, charPosition.column);
             }
         }
-        return true;
     }
 
     /**

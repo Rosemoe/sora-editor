@@ -217,16 +217,20 @@ public final class Cursor {
         mTabWidth = width;
     }
 
+    public void onCommitText(CharSequence text) {
+        onCommitText(text, true);
+    }
+
     /**
      * Commit text at current state
      *
      * @param text Text commit by InputConnection
      */
-    public void onCommitText(CharSequence text) {
+    public void onCommitText(CharSequence text, boolean applyAutoIndent) {
         if (isSelected()) {
             mContent.replace(getLeftLine(), getLeftColumn(), getRightLine(), getRightColumn(), text);
         } else {
-            if (mAutoIndentEnabled && text.length() != 0) {
+            if (mAutoIndentEnabled && text.length() != 0 && applyAutoIndent) {
                 char first = text.charAt(0);
                 if (first == '\n') {
                     String line = mContent.getLineString(getLeftLine());

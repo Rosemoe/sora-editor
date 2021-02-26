@@ -15,11 +15,13 @@
  */
 package io.github.rosemoe.editor.langs.java;
 
+import io.github.rosemoe.editor.interfaces.NewlineHandler;
 import io.github.rosemoe.editor.langs.internal.MyCharacter;
 import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
 import io.github.rosemoe.editor.langs.IdentifierAutoComplete;
+import io.github.rosemoe.editor.text.TextUtils;
 
 /**
  * Java language is much complex.
@@ -74,4 +76,34 @@ public class JavaLanguage implements EditorLanguage {
     public CharSequence format(CharSequence text) {
         return text;
     }
+
+    private NewlineHandler[] newlineHandlers = new NewlineHandler[] { new BraceHandler() };
+
+    @Override
+    public NewlineHandler[] getNewlineHandlers() {
+        return newlineHandlers;
+    }
+
+    class BraceHandler implements NewlineHandler {
+
+        @Override
+        public boolean matchesRequirement(String beforeText, String afterText) {
+            return beforeText.endsWith("{") && afterText.startsWith("}");
+        }
+
+        @Override
+        public HandleResult handleNewline(String beforeText, String afterText, int tabSize) {
+            int count = TextUtils.countLeadingSpaceCount(beforeText, tabSize);
+            int advanceBefore = getIndentAdvance(beforeText);
+            int advanceAfter = getIndentAdvance(afterText);
+            String text;
+            StringBuilder sb = new StringBuilder("\n")
+                    .append(TextUtils.createIndent(count + advanceBefore, tabSize, useTab()))
+                    .append('\n')
+                    .append(text = TextUtils.createIndent(count + advanceAfter, tabSize, useTab()));
+            int shiftLeft = text.length() + 1;
+            return new HandleResult(sb, shiftLeft);
+        }
+    }
+
 }

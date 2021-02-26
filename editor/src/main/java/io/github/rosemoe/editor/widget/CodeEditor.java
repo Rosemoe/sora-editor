@@ -61,6 +61,7 @@ import java.util.List;
 import io.github.rosemoe.editor.R;
 import io.github.rosemoe.editor.interfaces.EditorEventListener;
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
+import io.github.rosemoe.editor.interfaces.NewlineHandler;
 import io.github.rosemoe.editor.langs.EmptyLanguage;
 import io.github.rosemoe.editor.struct.BlockLine;
 import io.github.rosemoe.editor.struct.Span;
@@ -2001,8 +2002,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Commit a tab to cursor
      */
     private void commitTab() {
-        if (mConnection != null) {
-            mConnection.commitText("\t", 0);
+        if (mConnection != null && isEditable()) {
+            mConnection.commitTextInternal("\t", true);
         }
     }
 
@@ -3509,18 +3510,58 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             switch (keyCode) {
                 case KeyEvent.KEYCODE_DEL:
                 case KeyEvent.KEYCODE_FORWARD_DEL:
-                    if (mConnection != null) {
+                    if (mConnection != null && isEditable()) {
                         mCursor.onDeleteKeyPressed();
                         cursorChangeExternal();
                     }
                     return true;
-                case KeyEvent.KEYCODE_ENTER:
-                    if (mCompletionWindow.isShowing()) {
-                        mCompletionWindow.select();
-                        return true;
+                case KeyEvent.KEYCODE_ENTER: {
+                    if (isEditable()) {
+                        if (mCompletionWindow.isShowing()) {
+                            mCompletionWindow.select();
+                            return true;
+                        }
+                        NewlineHandler[] handlers = mLanguage.getNewlineHandlers();
+                        if (handlers == null || getCursor().isSelected()) {
+                            mCursor.onCommitText("\n", true);
+                        } else {
+                            ContentLine line = mText.getLine(mCursor.getLeftLine());
+                            int index = mCursor.getLeftColumn();
+                            String beforeText = line.subSequence(0, index).toString();
+                            String afterText = line.subSequence(index, line.length()).toString();
+                            boolean consumed = false;
+                            for (NewlineHandler handler : handlers) {
+                                if (handler != null) {
+                                    if (handler.matchesRequirement(beforeText, afterText)) {
+                                        try {
+                                            NewlineHandler.HandleResult result = handler.handleNewline(beforeText, afterText, getTabWidth());
+                                            if (result != null) {
+                                                mCursor.onCommitText(result.text, false);
+                                                int delta = result.shiftLeft;
+                                                if (delta != 0) {
+                                                    int newSel = Math.max(getCursor().getLeft() - delta, 0);
+                                                    CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
+                                                    setSelection(charPosition.line, charPosition.column);
+                                                }
+                                                consumed = true;
+                                            } else {
+                                                continue;
+                                            }
+                                        } catch (Exception e) {
+                                            Log.w(LOG_TAG, "Error occurred while calling Language's NewlineHandler", e);
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!consumed) {
+                                mCursor.onCommitText("\n", true);
+                            }
+                        }
+                        cursorChangeExternal();
                     }
-                    mConnection.commitText("\n", 0);
                     return true;
+                }
                 case KeyEvent.KEYCODE_DPAD_DOWN:
                     moveSelectionDown();
                     return true;
@@ -3546,42 +3587,58 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     movePageUp();
                     return true;
                 case KeyEvent.KEYCODE_TAB:
-                    commitTab();
+                    if (isEditable()) {
+                        commitTab();
+                    }
                     return true;
                 case KeyEvent.KEYCODE_PASTE:
-                    pasteText();
+                    if (isEditable()) {
+                        pasteText();
+                    }
                     return true;
                 case KeyEvent.KEYCODE_COPY:
                     copyText();
                     return true;
                 case KeyEvent.KEYCODE_SPACE:
-                    getCursor().onCommitText(" ");
-                    cursorChangeExternal();
+                    if (isEditable()) {
+                        getCursor().onCommitText(" ");
+                        cursorChangeExternal();
+                    }
                     return true;
                 default:
                     if (event.isCtrlPressed() && !event.isAltPressed()) {
                         switch (keyCode) {
                             case KeyEvent.KEYCODE_V:
-                                pasteText();
+                                if (isEditable()) {
+                                    pasteText();
+                                }
                                 return true;
                             case KeyEvent.KEYCODE_C:
                                 copyText();
                                 return true;
                             case KeyEvent.KEYCODE_X:
-                                cutText();
+                                if (isEditable()) {
+                                    cutText();
+                                } else {
+                                    copyText();
+                                }
                                 return true;
                             case KeyEvent.KEYCODE_A:
                                 selectAll();
                                 return true;
                             case KeyEvent.KEYCODE_Z:
-                                undo();
+                                if (isEditable()) {
+                                    undo();
+                                }
                                 return true;
                             case KeyEvent.KEYCODE_Y:
-                                redo();
+                                if (isEditable()) {
+                                    redo();
+                                }
                                 return true;
                         }
                     } else if (!event.isCtrlPressed() && !event.isAltPressed()) {
-                        if (event.isPrintingKey()) {
+                        if (event.isPrintingKey() && isEditable()) {
                             String text = new String(Character.toChars(event.getUnicodeChar(event.getMetaState())));
                             SymbolPairMatch.Replacement replacement = null;
                             if (text.length() == 1 && isSymbolCompletionEnabled()) {
@@ -3589,6 +3646,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                             }
                             if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT) {
                                 getCursor().onCommitText(text);
+                                cursorChangeExternal();
                             } else {
                                 getCursor().onCommitText(replacement.text);
                                 int delta = (replacement.text.length() - replacement.selection);
