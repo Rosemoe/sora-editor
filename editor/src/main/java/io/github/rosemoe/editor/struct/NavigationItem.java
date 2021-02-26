@@ -21,7 +21,7 @@ package io.github.rosemoe.editor.struct;
  * @author Rose
  */
 @SuppressWarnings("CanBeFinal")
-public class NavigationLabel {
+public class NavigationItem {
 
     /**
      * The line position
@@ -39,7 +39,7 @@ public class NavigationLabel {
      * @param line  The line position
      * @param label The description
      */
-    public NavigationLabel(int line, String label) {
+    public NavigationItem(int line, String label) {
         this.line = line;
         this.label = label;
     }

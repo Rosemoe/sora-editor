@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
-import io.github.rosemoe.editor.struct.ResultItem;
+import io.github.rosemoe.editor.struct.CompletionItem;
 import io.github.rosemoe.editor.text.TextAnalyzeResult;
 
 /**
@@ -16,15 +16,15 @@ import io.github.rosemoe.editor.text.TextAnalyzeResult;
 
 public class HTMLAutoComplete implements AutoCompleteProvider {
     @Override
-    public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzeResult colors, int line) {
-        List<ResultItem> items = new ArrayList<>();
+    public List<CompletionItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzeResult colors, int line) {
+        List<CompletionItem> items = new ArrayList<>();
         for (String key : HTMLLanguage.TAGS)
             if (key.toLowerCase().startsWith(prefix.toLowerCase()))
-                items.add(new ResultItem(key, "HTML Tag", ResultItem.TYPE_KEYWORD));
+                items.add(new CompletionItem(key, "HTML Tag"));
 
         for (String key : HTMLLanguage.TAGS)
             if (key.toLowerCase().startsWith(prefix.toLowerCase()))
-                items.add(new ResultItem(key, "HTML Atrribute", ResultItem.TYPE_KEYWORD));
+                items.add(new CompletionItem(key, "HTML Attribute"));
         return items;
     }
 }

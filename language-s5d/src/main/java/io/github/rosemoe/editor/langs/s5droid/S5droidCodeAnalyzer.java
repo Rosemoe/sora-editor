@@ -25,7 +25,7 @@ import io.github.rosemoe.editor.text.TextAnalyzer.AnalyzeThread.Delegate;
 import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
 import io.github.rosemoe.editor.struct.BlockLine;
-import io.github.rosemoe.editor.struct.NavigationLabel;
+import io.github.rosemoe.editor.struct.NavigationItem;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,7 +55,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
     };
 
     private final static TrieTree<Tokens> names;
-    private final static Comparator<NavigationLabel> NAVI_COMP =
+    private final static Comparator<NavigationItem> NAVI_COMP =
             (p1, p2) -> (p1.label).compareTo(p2.label);
 
     static {
@@ -126,7 +126,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
     */
     @Override
     public void analyze(CharSequence contentOrigin, TextAnalyzeResult colors, Delegate delegate) {
-        List<NavigationLabel> labels = new ArrayList<>();
+        List<NavigationItem> labels = new ArrayList<>();
         S5droidTree tree = new S5droidTree();
         TrieTree<Tokens> vars = new TrieTree<>();
         StringBuilder content = (contentOrigin instanceof StringBuilder) ? ((StringBuilder) contentOrigin) : new StringBuilder(contentOrigin);
@@ -257,7 +257,7 @@ public class S5droidCodeAnalyzer implements CodeAnalyzer {
                             currSwitch++;
                         }
                         if (token == METHOD || token == EVENT) {
-                            labels.add(new NavigationLabel(line, content.substring(helper.findLineStart(), helper.findLineEnd()).trim()));
+                            labels.add(new NavigationItem(line, content.substring(helper.findLineStart(), helper.findLineEnd()).trim()));
                             state = token == EVENT ? 6 : 12;
                         } else {
                             state = 0;

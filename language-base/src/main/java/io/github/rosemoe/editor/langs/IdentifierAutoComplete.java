@@ -17,7 +17,7 @@ package io.github.rosemoe.editor.langs;
 
 import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
-import io.github.rosemoe.editor.struct.ResultItem;
+import io.github.rosemoe.editor.struct.CompletionItem;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -75,8 +75,8 @@ public class IdentifierAutoComplete implements AutoCompleteProvider {
     }
 
     @Override
-    public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzeResult colors, int line) {
-        List<ResultItem> keywords = new ArrayList<>();
+    public List<CompletionItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzeResult colors, int line) {
+        List<CompletionItem> keywords = new ArrayList<>();
         final String[] keywordArray = mKeywords;
         final boolean lowCase = mKeywordsAreLowCase;
         String match = prefix.toLowerCase();
@@ -84,28 +84,28 @@ public class IdentifierAutoComplete implements AutoCompleteProvider {
             if (lowCase) {
                 for (String kw : keywordArray) {
                     if (kw.startsWith(match)) {
-                        keywords.add(new ResultItem(kw, "Keyword", ResultItem.TYPE_KEYWORD));
+                        keywords.add(new CompletionItem(kw, "Keyword"));
                     }
                 }
             } else {
                 for (String kw : keywordArray) {
                     if (kw.toLowerCase().startsWith(match)) {
-                        keywords.add(new ResultItem(kw, "Keyword", ResultItem.TYPE_KEYWORD));
+                        keywords.add(new CompletionItem(kw, "Keyword"));
                     }
                 }
             }
         }
-        Collections.sort(keywords, ResultItem.COMPARATOR_BY_NAME);
+        Collections.sort(keywords, CompletionItem.COMPARATOR_BY_NAME);
         Object extra = colors.mExtra;
         Identifiers userIdentifiers = (extra instanceof Identifiers) ? (Identifiers) extra : null;
         if (userIdentifiers != null) {
-            List<ResultItem> words = new ArrayList<>();
+            List<CompletionItem> words = new ArrayList<>();
             for (String word : userIdentifiers.getIdentifiers()) {
                 if (word.toLowerCase().startsWith(match)) {
-                    words.add(new ResultItem(word, "Identifier", ResultItem.TYPE_LOCAL_METHOD));
+                    words.add(new CompletionItem(word, "Identifier"));
                 }
             }
-            Collections.sort(words, ResultItem.COMPARATOR_BY_NAME);
+            Collections.sort(words, CompletionItem.COMPARATOR_BY_NAME);
             keywords.addAll(words);
         }
         return keywords;

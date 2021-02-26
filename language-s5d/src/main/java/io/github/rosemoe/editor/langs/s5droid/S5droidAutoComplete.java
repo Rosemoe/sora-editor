@@ -18,9 +18,9 @@ package io.github.rosemoe.editor.langs.s5droid;
 import android.content.Context;
 
 import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
-import io.github.rosemoe.editor.struct.ResultItem;
+import io.github.rosemoe.editor.struct.CompletionItem;
 import io.github.rosemoe.editor.langs.internal.Pinyin;
-import io.github.rosemoe.editor.struct.NavigationLabel;
+import io.github.rosemoe.editor.struct.NavigationItem;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -173,14 +173,14 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
     };
 
     @Override
-    public List<ResultItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzeResult colors, int line) {
-        List<NavigationLabel> mCustomMethods = colors.getNavigation();
+    public List<CompletionItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzeResult colors, int line) {
+        List<NavigationItem> mCustomMethods = colors.getNavigation();
         S5dTextTokenizer tk = new S5dTextTokenizer("");
         String lowCase = prefix.toLowerCase();
-        List<ResultItem> kws = new ArrayList<>();
-        List<ResultItem> methods = new ArrayList<>();
-        List<ResultItem> classes = new ArrayList<>();
-        List<ResultItem> fields = new ArrayList<>();
+        List<CompletionItem> kws = new ArrayList<>();
+        List<CompletionItem> methods = new ArrayList<>();
+        List<CompletionItem> classes = new ArrayList<>();
+        List<CompletionItem> fields = new ArrayList<>();
         if (lowCase.contains(":")) {
             String[] split = lowCase.split(":");
             if (split.length == 2) {
@@ -191,10 +191,10 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
                         int p = event.indexOf("(");
                         String eventName = event.substring(0, p);
                         if (eventName.startsWith(split[1])) {
-                            kws.add(new ResultItem(eventName + "()", split[0] + ":" + eventName + "()", event, ResultItem.TYPE_LOCAL_METHOD));
+                            kws.add(new CompletionItem(eventName + "()", split[0] + ":" + eventName + "()", event));
                         }
                     }
-                    Collections.sort(kws, ResultItem.COMPARATOR_BY_NAME);
+                    Collections.sort(kws, CompletionItem.COMPARATOR_BY_NAME);
                 }
             }
             return kws;
@@ -208,7 +208,7 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
             String[] keywords = isInCodeBlock ? keywordsInner : keywordsOutside;
             for (String keyword : keywords) {
                 if (whetherAdd(lowCase, keyword.toLowerCase())) {
-                    kws.add(new ResultItem(keyword, "结绳关键字"));
+                    kws.add(new CompletionItem(keyword, "结绳关键字"));
                 }
             }
 
@@ -217,20 +217,20 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
 
             for (String s : sClasses) {
                 if (whetherAdd(split[0], s) && !s.equals("文本型")) {
-                    classes.add(new ResultItem(s, "结绳核心类库"));
+                    classes.add(new CompletionItem(s, "结绳核心类库"));
                 }
             }
 
             for (String s : mComponentNames) {
                 if (whetherAdd(split[0], s) && !s.equals("文本型")) {
-                    classes.add(new ResultItem(s, "布局设计变量 - " + getComponentVariantType(s)));
+                    classes.add(new CompletionItem(s, "布局设计变量 - " + getComponentVariantType(s)));
                 }
             }
 
             if (mCustomMethods != null) {
                 int count = mCustomMethods.size() - 1;
                 for (int i = count; i >= 0; i--) {
-                    NavigationLabel navi = mCustomMethods.get(i);
+                    NavigationItem navi = mCustomMethods.get(i);
                     tk.reset(navi.label);
                     tk.setSkipWhitespace(true);
                     if (tk.nextToken() == Tokens.METHOD) {
@@ -239,7 +239,7 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
                         }
                         String name = (String) tk.getTokenString();
                         if (whetherAdd(lowCase, name.toLowerCase())) {
-                            methods.add(new ResultItem(name + "()", navi.label + "", ResultItem.TYPE_LOCAL_METHOD).mask(ResultItem.MASK_SHIFT_LEFT_TWICE));
+                            methods.add(new CompletionItem(name + "()", navi.label + "").shiftCount(2));
                         }
                     } else {
                         break;
@@ -253,21 +253,21 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
                 String funcName = func.substring(0, p);
                 if (whetherAdd(split[0], funcName)) {
                     int q = func.lastIndexOf(")");
-                    int mask = 0;
+                    int shift = 0;
                     String suffix = "()";
                     boolean hasResult = q != func.length() - 1;
                     boolean hasArg = p != q - 1;
                     if (hasResult) {
                         if (hasArg) {
-                            mask |= ResultItem.MASK_SHIFT_LEFT_ONCE;
+                            shift = 1;
                         }
                     } else {
                         suffix += ";";
                         if (hasArg) {
-                            mask |= ResultItem.MASK_SHIFT_LEFT_TWICE;
+                            shift = 2;
                         }
                     }
-                    methods.add(new ResultItem(funcName + "()", funcName + suffix, func, ResultItem.TYPE_LOCAL_METHOD).mask(mask));
+                    methods.add(new CompletionItem(funcName + "()", funcName + suffix, func).shiftCount(shift));
                 }
             }
 
@@ -287,15 +287,15 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
                         boolean hasArg = p != q - 1;
                         if (hasResult) {
                             if (hasArg) {
-                                mask |= ResultItem.MASK_SHIFT_LEFT_ONCE;
+                                mask = 1;
                             }
                         } else {
                             suffix += ";";
                             if (hasArg) {
-                                mask |= ResultItem.MASK_SHIFT_LEFT_TWICE;
+                                mask = 2;
                             }
                         }
-                        methods.add(new ResultItem(funcName + "()", split[0] + "." + funcName + suffix, func, ResultItem.TYPE_LOCAL_METHOD).mask(mask));
+                        methods.add(new CompletionItem(funcName + "()", split[0] + "." + funcName + suffix, func).shiftCount(mask));
                     }
                 }
             } else {
@@ -318,15 +318,15 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
                                     boolean hasArg = p != q - 1;
                                     if (hasResult) {
                                         if (hasArg) {
-                                            mask |= ResultItem.MASK_SHIFT_LEFT_ONCE;
+                                            mask = 1;
                                         }
                                     } else {
                                         suffix += ";";
                                         if (hasArg) {
-                                            mask |= ResultItem.MASK_SHIFT_LEFT_TWICE;
+                                            mask = 2;
                                         }
                                     }
-                                    methods.add(new ResultItem(funcName + "()", split[0] + "." + funcName + suffix, func, ResultItem.TYPE_LOCAL_METHOD).mask(mask));
+                                    methods.add(new CompletionItem(funcName + "()", split[0] + "." + funcName + suffix, func).shiftCount(mask));
                                 }
                             }
                         }
@@ -348,24 +348,24 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
                             boolean hasArg = p != q - 1;
                             if (hasResult) {
                                 if (hasArg) {
-                                    mask |= ResultItem.MASK_SHIFT_LEFT_ONCE;
+                                    mask = 1;
                                 }
                             } else {
                                 suffix += ";";
                                 if (hasArg) {
-                                    mask |= ResultItem.MASK_SHIFT_LEFT_TWICE;
+                                    mask = 2;
                                 }
                             }
-                            methods.add(new ResultItem(funcName + "()", split[0] + "." + funcName + suffix, func, ResultItem.TYPE_LOCAL_METHOD).mask(mask));
+                            methods.add(new CompletionItem(funcName + "()", split[0] + "." + funcName + suffix, func).shiftCount(mask));
                         }
                     }
                 }
             }
         }
-        Collections.sort(kws, ResultItem.COMPARATOR_BY_NAME);
-        Collections.sort(classes, ResultItem.COMPARATOR_BY_NAME);
-        Collections.sort(fields, ResultItem.COMPARATOR_BY_NAME);
-        Collections.sort(methods, ResultItem.COMPARATOR_BY_NAME);
+        Collections.sort(kws, CompletionItem.COMPARATOR_BY_NAME);
+        Collections.sort(classes, CompletionItem.COMPARATOR_BY_NAME);
+        Collections.sort(fields, CompletionItem.COMPARATOR_BY_NAME);
+        Collections.sort(methods, CompletionItem.COMPARATOR_BY_NAME);
         kws.addAll(fields);
         kws.addAll(classes);
         kws.addAll(methods);
@@ -385,10 +385,10 @@ public class S5droidAutoComplete implements AutoCompleteProvider {
         return (b.toLowerCase().contains(a) || Pinyin.getFirstPinyinForWords(b).contains(a) || Pinyin.getPinyinForWords(b).contains(a));
     }
 
-    private void findForPrefix(String match, S5droidTree.Node node, final S5droidTree.Node root, int line, List<ResultItem> tips) {
+    private void findForPrefix(String match, S5droidTree.Node node, final S5droidTree.Node root, int line, List<CompletionItem> tips) {
         if (!node.isBlock) {
             if (whetherAdd(match, node.varName.toLowerCase()) && (node.parent == root || node.startLine < line)) {
-                tips.add(new ResultItem(node.varName, "变量 - " + node.varType));
+                tips.add(new CompletionItem(node.varName, "变量 - " + node.varType));
             }
             return;
         }

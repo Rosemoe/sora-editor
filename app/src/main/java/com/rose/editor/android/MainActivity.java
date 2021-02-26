@@ -44,7 +44,7 @@ import io.github.rosemoe.editor.langs.java.JavaLanguage;
 import io.github.rosemoe.editor.langs.s5droid.S5droidAutoComplete;
 import io.github.rosemoe.editor.langs.s5droid.S5droidLanguage;
 import io.github.rosemoe.editor.langs.universal.UniversalLanguage;
-import io.github.rosemoe.editor.struct.NavigationLabel;
+import io.github.rosemoe.editor.struct.NavigationItem;
 import io.github.rosemoe.editor.utils.CrashHandler;
 import io.github.rosemoe.editor.widget.CodeEditor;
 import io.github.rosemoe.editor.widget.EditorColorScheme;
@@ -135,7 +135,7 @@ public class MainActivity extends Activity {
                 editor.moveSelectionRight();
                 break;
             case R.id.code_navigation: {
-                final List<NavigationLabel> labels = editor.getTextAnalyzeResult().getNavigation();
+                final List<NavigationItem> labels = editor.getTextAnalyzeResult().getNavigation();
                 if (labels == null) {
                     Toast.makeText(this, R.string.navi_err_msg, Toast.LENGTH_SHORT).show();
                 } else {

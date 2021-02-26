@@ -23,7 +23,7 @@ import io.github.rosemoe.editor.text.TextAnalyzer;
 import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
 import io.github.rosemoe.editor.langs.IdentifierAutoComplete;
 import io.github.rosemoe.editor.struct.BlockLine;
-import io.github.rosemoe.editor.struct.NavigationLabel;
+import io.github.rosemoe.editor.struct.NavigationItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +49,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
         IdentifierAutoComplete.Identifiers identifiers = new IdentifierAutoComplete.Identifiers();
         identifiers.begin();
         Stack<BlockLine> stack = new Stack<>();
-        List<NavigationLabel> labels = new ArrayList<>();
+        List<NavigationItem> labels = new ArrayList<>();
         int maxSwitch = 1, currSwitch = 0;
         //Tree to save class names and query
         TrieTree<Object> classNames = new TrieTree<>();

@@ -20,6 +20,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
@@ -198,6 +199,10 @@ class EditorInputConnection extends BaseInputConnection {
         //Log.d(LOG_TAG, "commit text:text = " + text + ", newCur = " + newCursorPosition);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
+        }
+        if (text.equals("\n")) {
+            mEditor.onKeyDown(KeyEvent.KEYCODE_ENTER, null);
+            return true;
         }
         commitTextInternal(text, true);
         return true;

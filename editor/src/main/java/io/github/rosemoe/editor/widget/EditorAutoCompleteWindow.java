@@ -15,16 +15,10 @@
  */
 package io.github.rosemoe.editor.widget;
 
-import android.graphics.Bitmap;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.BitmapDrawable;
+import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
 import android.util.TypedValue;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -34,9 +28,10 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.rosemoe.editor.R;
 import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
-import io.github.rosemoe.editor.struct.ResultItem;
+import io.github.rosemoe.editor.interfaces.EditorCompletionAdapter;
+import io.github.rosemoe.editor.struct.CompletionItem;
+import io.github.rosemoe.editor.text.CharPosition;
 import io.github.rosemoe.editor.text.Cursor;
 import io.github.rosemoe.editor.text.TextAnalyzeResult;
 
@@ -57,7 +52,8 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
     private String mLastPrefix;
     private AutoCompleteProvider mProvider;
     private boolean mLoading;
-    private int maxHeight;
+    private int mMaxHeight;
+    private EditorCompletionAdapter mAdapter;
 
     /**
      * Create a panel instance for the given editor
@@ -67,6 +63,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
     public EditorAutoCompleteWindow(CodeEditor editor) {
         super(editor);
         mEditor = editor;
+        mAdapter = new DefaultCompletionItemAdapter();
         RelativeLayout layout = new RelativeLayout(mEditor.getContext());
         mListView = new ListView(mEditor.getContext());
         layout.addView(mListView, new LinearLayout.LayoutParams(-1, -1));
@@ -82,7 +79,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         gd.setCornerRadius(1);
         layout.setBackgroundDrawable(gd);
         mBg = gd;
-        applyColor();
+        applyColorScheme();
         mListView.setDividerHeight(0);
         setLoading(true);
         mListView.setOnItemClickListener((parent, view, position, id) -> {
@@ -94,6 +91,13 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         });
     }
 
+    protected void setAdapter(EditorCompletionAdapter adapter) {
+        mAdapter = adapter;
+        if (adapter == null) {
+            mAdapter = new DefaultCompletionItemAdapter();
+        }
+    }
+
     @Override
     public void show() {
         if (mCancelShowUp) {
@@ -102,19 +106,27 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         super.show();
     }
 
+    public Context getContext() {
+        return mEditor.getContext();
+    }
+
+    public int getCurrentPosition() {
+        return mCurrent;
+    }
+
     /**
      * Set a auto completion items provider
      *
-     * @param p New provider.can not be null
+     * @param provider New provider.can not be null
      */
-    public void setProvider(AutoCompleteProvider p) {
-        mProvider = p;
+    public void setProvider(AutoCompleteProvider provider) {
+        mProvider = provider;
     }
 
     /**
      * Apply colors for self
      */
-    public void applyColor() {
+    public void applyColorScheme() {
         EditorColorScheme colors = mEditor.getColorScheme();
         mBg.setStroke(1, colors.getColor(EditorColorScheme.AUTO_COMP_PANEL_CORNER));
         mBg.setColor(colors.getColor(EditorColorScheme.AUTO_COMP_PANEL_BG));
@@ -148,7 +160,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
             return;
         }
         mCurrent++;
-        ((ItemAdapter) mListView.getAdapter()).notifyDataSetChanged();
+        ((EditorCompletionAdapter) mListView.getAdapter()).notifyDataSetChanged();
         ensurePosition();
     }
 
@@ -160,7 +172,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
             return;
         }
         mCurrent--;
-        ((ItemAdapter) mListView.getAdapter()).notifyDataSetChanged();
+        ((EditorCompletionAdapter) mListView.getAdapter()).notifyDataSetChanged();
         ensurePosition();
     }
 
@@ -184,18 +196,19 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
      * @param pos Index of auto complete item
      */
     public void select(int pos) {
-        ResultItem item = ((ItemAdapter) mListView.getAdapter()).getItem(pos);
+        CompletionItem item = ((DefaultCompletionItemAdapter) mListView.getAdapter()).getItem(pos);
         Cursor cursor = mEditor.getCursor();
         if (!cursor.isSelected()) {
             mCancelShowUp = true;
             mEditor.getText().delete(cursor.getLeftLine(), cursor.getLeftColumn() - mLastPrefix.length(), cursor.getLeftLine(), cursor.getLeftColumn());
             cursor.onCommitText(item.commit);
-            if ((item.mask & ResultItem.MASK_SHIFT_LEFT_TWICE) != 0) {
-                mEditor.moveSelectionLeft();
-                mEditor.moveSelectionLeft();
-            }
-            if ((item.mask & ResultItem.MASK_SHIFT_LEFT_ONCE) != 0) {
-                mEditor.moveSelectionLeft();
+            if (item.cursorOffset != item.commit.length()) {
+                int delta = (item.commit.length() - item.cursorOffset);
+                if (delta != 0) {
+                    int newSel = Math.max(mEditor.getCursor().getLeft() - delta, 0);
+                    CharPosition charPosition = mEditor.getCursor().getIndexer().getCharPosition(newSel);
+                    mEditor.setSelection(charPosition.line, charPosition.column);
+                }
             }
             mCancelShowUp = false;
         }
@@ -223,12 +236,11 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         setLoading(true);
         mLastPrefix = prefix;
         mRequestTime = System.currentTimeMillis();
-        MatchThread mThread = new MatchThread(mRequestTime, prefix);
-        mThread.start();
+        new MatchThread(mRequestTime, prefix).start();
     }
 
     public void setMaxHeight(int height) {
-        maxHeight = height;
+        mMaxHeight = height;
     }
 
     /**
@@ -237,7 +249,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
      * @param results     Items of analysis
      * @param requestTime The time that this thread starts
      */
-    private void displayResults(final List<ResultItem> results, long requestTime) {
+    private void displayResults(final List<CompletionItem> results, long requestTime) {
         if (mRequestTime != requestTime) {
             return;
         }
@@ -247,76 +259,14 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
                 hide();
                 return;
             }
+            mAdapter.attachAttributes(this, results);
+            mListView.setAdapter(mAdapter);
             mCurrent = 0;
-            mListView.setAdapter(new ItemAdapter(results));
             float newHeight = mEditor.getDpUnit() * 30 * results.size();
             if (isShowing()) {
-                update(getWidth(), (int) Math.min(newHeight, maxHeight));
+                update(getWidth(), (int) Math.min(newHeight, mMaxHeight));
             }
         });
-    }
-
-    /**
-     * Adapter to display results
-     *
-     * @author Rose
-     */
-    @SuppressWarnings("CanBeFinal")
-    private class ItemAdapter extends BaseAdapter {
-
-        private List<ResultItem> mItems;
-
-        private BitmapDrawable[] bmps;
-
-        public ItemAdapter(List<ResultItem> items) {
-            mItems = items;
-            bmps = new BitmapDrawable[2];
-            BitmapDrawable src = (BitmapDrawable) mEditor.getContext().getResources().getDrawable(R.mipmap.box_red);
-            Bitmap bmp = src.getBitmap();
-            bmps[0] = new BitmapDrawable(mEditor.getContext().getResources(), bmp);
-            bmps[0].setColorFilter(0xff009688, PorterDuff.Mode.SRC_ATOP);
-            bmps[1] = new BitmapDrawable(mEditor.getContext().getResources(), bmp);
-            bmps[1].setColorFilter(0xffec4071, PorterDuff.Mode.SRC_ATOP);
-
-        }
-
-        @Override
-        public int getCount() {
-            return mItems.size();
-        }
-
-        @Override
-        public ResultItem getItem(int pos) {
-            return mItems.get(pos);
-        }
-
-        @Override
-        public long getItemId(int pos) {
-            return getItem(pos).hashCode();
-        }
-
-        @Override
-        public View getView(int pos, View view, ViewGroup parent) {
-            if (view == null) {
-                view = LayoutInflater.from(mEditor.getContext()).inflate(R.layout.result_item, parent, false);
-            }
-            ResultItem item = getItem(pos);
-            TextView tv = (TextView) view.findViewById(R.id.result_item_label);
-            tv.setText(item.label);
-            tv = (TextView) view.findViewById(R.id.result_item_desc);
-            tv.setText(item.desc);
-            view.setTag(pos);
-            if (mCurrent == pos) {
-                view.setBackgroundColor(0xffdddddd);
-            } else {
-                view.setBackgroundColor(0xffffffff);
-            }
-            ImageView iv = (ImageView) view.findViewById(R.id.result_item_image);
-            iv.setImageDrawable(bmps[item.type]);
-
-            return view;
-        }
-
     }
 
     /**

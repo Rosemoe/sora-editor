@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.github.rosemoe.editor.struct.BlockLine;
-import io.github.rosemoe.editor.struct.NavigationLabel;
+import io.github.rosemoe.editor.struct.NavigationItem;
 import io.github.rosemoe.editor.struct.Span;
 import io.github.rosemoe.editor.widget.EditorColorScheme;
 
@@ -31,7 +31,7 @@ public class TextAnalyzeResult {
     protected final List<BlockLine> mBlocks;
     protected final List<List<Span>> mSpanMap;
     public Object mExtra;
-    protected List<NavigationLabel> mLabels;
+    protected List<NavigationItem> mLabels;
     protected Span mLast;
     protected int mSuppressSwitch = Integer.MAX_VALUE;
 
@@ -155,7 +155,7 @@ public class TextAnalyzeResult {
      *
      * @return Current navigation list
      */
-    public List<NavigationLabel> getNavigation() {
+    public List<NavigationItem> getNavigation() {
         return mLabels;
     }
 
@@ -164,7 +164,7 @@ public class TextAnalyzeResult {
      *
      * @param navigation New navigation list
      */
-    public void setNavigation(List<NavigationLabel> navigation) {
+    public void setNavigation(List<NavigationItem> navigation) {
         mLabels = navigation;
     }
 
