@@ -15,6 +15,8 @@
  */
 package io.github.rosemoe.editor.interfaces;
 
+import io.github.rosemoe.editor.widget.SymbolPairMatch;
+
 /**
  * Language for editor
  * <p>
@@ -75,5 +77,13 @@ public interface EditorLanguage {
      * @return Formatted code
      */
     CharSequence format(CharSequence text);
+
+    /**
+     * Returns language specified symbol pairs
+     * The method is called only once when the language is applied
+     */
+    default SymbolPairMatch getSymbolPairs() {
+        return new SymbolPairMatch.DefaultSymbolPairs();
+    }
 
 }

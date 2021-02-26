@@ -64,6 +64,7 @@ import io.github.rosemoe.editor.interfaces.EditorLanguage;
 import io.github.rosemoe.editor.langs.EmptyLanguage;
 import io.github.rosemoe.editor.struct.BlockLine;
 import io.github.rosemoe.editor.struct.Span;
+import io.github.rosemoe.editor.text.CharPosition;
 import io.github.rosemoe.editor.text.Content;
 import io.github.rosemoe.editor.text.ContentLine;
 import io.github.rosemoe.editor.text.ContentListener;
@@ -166,6 +167,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mCompletionOnComposing;
     private boolean mHighlightSelectedText;
     private boolean mHighlightCurrentBlock;
+    private boolean mSymbolCompletionEnabled;
     private boolean mVerticalScrollBarEnabled;
     private boolean mHorizontalScrollBarEnabled;
     private RectF mRect;
@@ -206,6 +208,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private Paint.FontMetricsInt mTextMetrics;
     private Paint.FontMetricsInt mLineNumberMetrics;
     private CursorBlink mCursorBlink;
+    private SymbolPairMatch mOverrideSymbolPairs;
+    protected SymbolPairMatch mLanguageSymbolPairs;
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -472,6 +476,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mCompletionWindow = new EditorAutoCompleteWindow(this);
         mVerticalEdgeGlow = new MaterialEdgeEffect();
         mHorizontalGlow = new MaterialEdgeEffect();
+        mOverrideSymbolPairs = new SymbolPairMatch();
         setEditorLanguage(null);
         setText(null);
         setTextActionMode(TextActionMode.ACTION_MODE);
@@ -484,9 +489,34 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setDisplayLnPanel(true);
         setOverScrollEnabled(true);
         setHorizontalScrollBarEnabled(true);
+        setSymbolCompletionEnabled(true);
         setEditable(true);
         setLineNumberEnabled(true);
         setAutoCompletionOnComposing(true);
+    }
+
+    /**
+     * Define symbol pairs for any language,
+     * Override language settings.
+     *
+     * Use {@link SymbolPairMatch.Replacement#NO_REPLACEMENT} to force no completion for a character
+     */
+    public SymbolPairMatch getOverrideSymbolPairs() {
+        return mOverrideSymbolPairs;
+    }
+
+    /**
+     * Control whether auto-completes for symbol pairs
+     */
+    public void setSymbolCompletionEnabled(boolean symbolCompletionEnabled) {
+        mSymbolCompletionEnabled = symbolCompletionEnabled;
+    }
+
+    /**
+     * @see CodeEditor#setSymbolCompletionEnabled(boolean)
+     */
+    public boolean isSymbolCompletionEnabled() {
+        return mSymbolCompletionEnabled;
     }
 
     /**
@@ -563,6 +593,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             lang = new EmptyLanguage();
         }
         this.mLanguage = lang;
+
+        // Update spanner
         if (mSpanner != null) {
             mSpanner.shutdown();
             mSpanner.setCallback(null);
@@ -576,6 +608,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mCompletionWindow.hide();
             mCompletionWindow.setProvider(lang.getAutoCompleteProvider());
         }
+
+        // Symbol pairs
+        if (mLanguageSymbolPairs != null) {
+            mLanguageSymbolPairs.setParent(null);
+        }
+        mLanguageSymbolPairs = mLanguage.getSymbolPairs();
+        if (mLanguageSymbolPairs == null) {
+            Log.w(LOG_TAG, "Language(" + mLanguage.toString() +") returned null for symbol pairs. It is a mistake.");
+            mLanguageSymbolPairs = new SymbolPairMatch();
+        }
+        mLanguageSymbolPairs.setParent(mOverrideSymbolPairs);
+
+        // Cursor
         if (mCursor != null) {
             mCursor.setLanguage(mLanguage);
         }
@@ -3537,8 +3582,23 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         }
                     } else if (!event.isCtrlPressed() && !event.isAltPressed()) {
                         if (event.isPrintingKey()) {
-                            getCursor().onCommitText(new String(Character.toChars(event.getUnicodeChar(event.getMetaState()))));
-                            cursorChangeExternal();
+                            String text = new String(Character.toChars(event.getUnicodeChar(event.getMetaState())));
+                            SymbolPairMatch.Replacement replacement = null;
+                            if (text.length() == 1 && isSymbolCompletionEnabled()) {
+                                replacement = mLanguageSymbolPairs.getCompletion(text.charAt(0));
+                            }
+                            if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT) {
+                                getCursor().onCommitText(text);
+                            } else {
+                                getCursor().onCommitText(replacement.text);
+                                int delta = (replacement.text.length() - replacement.selection);
+                                if (delta != 0) {
+                                    int newSel = Math.max(getCursor().getLeft() - delta, 0);
+                                    CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
+                                    setSelection(charPosition.line, charPosition.column);
+                                    cursorChangeExternal();
+                                }
+                            }
                         } else {
                             return super.onKeyDown(keyCode, event);
                         }

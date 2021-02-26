@@ -205,9 +205,24 @@ class EditorInputConnection extends BaseInputConnection {
         // NOTE: Text styles are ignored by editor
         //Remove composing text first if there is
         deleteComposingText();
+        // Replace text
+        SymbolPairMatch.Replacement replacement = null;
+        if (text.length() == 1 && mEditor.isSymbolCompletionEnabled()) {
+            replacement = mEditor.mLanguageSymbolPairs.getCompletion(text.charAt(0));
+        }
         // newCursorPosition ignored
-        // Call this can make auto indent and delete text selected automatically
-        getCursor().onCommitText(text);
+        // Call onCommitText() can make auto indent and delete text selected automatically
+        if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT) {
+            getCursor().onCommitText(text);
+        } else {
+            getCursor().onCommitText(replacement.text);
+            int delta = (replacement.text.length() - replacement.selection);
+            if (delta != 0) {
+                int newSel = Math.max(getCursor().getLeft() - delta, 0);
+                CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
+                mEditor.setSelection(charPosition.line, charPosition.column);
+            }
+        }
         return true;
     }
 
