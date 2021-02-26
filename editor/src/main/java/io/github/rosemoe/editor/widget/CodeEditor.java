@@ -306,6 +306,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 //Ignored
             }
         }
+        //Logs.log("Send selection changes: candidate(start = " + candidatesStart + ", end =" + candidatesEnd + " ) cursor(left = " + mCursor.getLeft() + ", right =" + mCursor.getRight() + ")");
         mInputMethodManager.updateSelection(this, mCursor.getLeft(), mCursor.getRight(), candidatesStart, candidatesEnd);
     }
 
@@ -314,6 +315,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     protected void updateExtractedText() {
         if (mExtracting != null) {
+            //Logs.log("Send extracted text updates");
             mInputMethodManager.updateExtractedText(this, mExtracting.token, extractText(mExtracting));
         }
     }
@@ -358,6 +360,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Notify input method that text has been changed for external reason
      */
     protected void cursorChangeExternal() {
+        //Logs.log("Call cursorChangeExternal()");
         updateExtractedText();
         updateSelection();
         updateCursorAnchor();
@@ -1337,12 +1340,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         OverScroller scroller = getScroller();
         if (scroller.isOverScrolled()) {
-            if (mVerticalEdgeGlow.isFinished() && (scroller.getCurrY() <= 0 || scroller.getCurrY() >= getScrollMaxY())) {
+            if (mVerticalEdgeGlow.isFinished() && (scroller.getCurrY() < 0 || scroller.getCurrY() >= getScrollMaxY())) {
                 mEventHandler.topOrBottom = scroller.getCurrY() >= getScrollMaxY();
                 mVerticalEdgeGlow.onAbsorb((int) scroller.getCurrVelocity());
                 postDraw = true;
             }
-            if (mHorizontalGlow.isFinished() && (scroller.getCurrX() <= 0 || scroller.getCurrX() >= getScrollMaxX())) {
+            if (mHorizontalGlow.isFinished() && (scroller.getCurrX() < 0 || scroller.getCurrX() >= getScrollMaxX())) {
                 mEventHandler.leftOrRight = scroller.getCurrX() >= getScrollMaxX();
                 mHorizontalGlow.onAbsorb((int) scroller.getCurrVelocity());
                 postDraw = true;
@@ -3462,7 +3465,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 case KeyEvent.KEYCODE_DEL:
                 case KeyEvent.KEYCODE_FORWARD_DEL:
                     if (mConnection != null) {
-                        mConnection.deleteSurroundingText(0, 0);
+                        mCursor.onDeleteKeyPressed();
                         cursorChangeExternal();
                     }
                     return true;

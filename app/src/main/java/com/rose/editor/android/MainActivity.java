@@ -28,16 +28,6 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import io.github.rosemoe.editor.langs.EmptyLanguage;
-import io.github.rosemoe.editor.langs.desc.CDescription;
-import io.github.rosemoe.editor.langs.desc.CppDescription;
-import io.github.rosemoe.editor.langs.desc.JavaScriptDescription;
-import io.github.rosemoe.editor.langs.s5droid.S5droidAutoComplete;
-import io.github.rosemoe.editor.langs.s5droid.S5droidLanguage;
-import io.github.rosemoe.editor.langs.universal.UniversalLanguage;
-import io.github.rosemoe.editor.struct.NavigationLabel;
-import io.github.rosemoe.editor.utils.CrashHandler;
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -45,16 +35,25 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
-import io.github.rosemoe.editor.langs.java.JavaLanguage;
+import io.github.rosemoe.editor.langs.EmptyLanguage;
+import io.github.rosemoe.editor.langs.desc.CDescription;
+import io.github.rosemoe.editor.langs.desc.CppDescription;
+import io.github.rosemoe.editor.langs.desc.JavaScriptDescription;
 import io.github.rosemoe.editor.langs.html.HTMLLanguage;
+import io.github.rosemoe.editor.langs.java.JavaLanguage;
+import io.github.rosemoe.editor.langs.s5droid.S5droidAutoComplete;
+import io.github.rosemoe.editor.langs.s5droid.S5droidLanguage;
+import io.github.rosemoe.editor.langs.universal.UniversalLanguage;
+import io.github.rosemoe.editor.struct.NavigationLabel;
+import io.github.rosemoe.editor.utils.CrashHandler;
 import io.github.rosemoe.editor.widget.CodeEditor;
 import io.github.rosemoe.editor.widget.EditorColorScheme;
+import io.github.rosemoe.editor.widget.schemes.HTMLScheme;
 import io.github.rosemoe.editor.widget.schemes.SchemeDarcula;
 import io.github.rosemoe.editor.widget.schemes.SchemeEclipse;
 import io.github.rosemoe.editor.widget.schemes.SchemeGitHub;
 import io.github.rosemoe.editor.widget.schemes.SchemeNotepadXX;
 import io.github.rosemoe.editor.widget.schemes.SchemeVS2019;
-import io.github.rosemoe.editor.widget.schemes.HTMLScheme;
 
 public class MainActivity extends Activity {
 
@@ -178,7 +177,7 @@ public class MainActivity extends Activity {
                                 case 4:
                                     editor.setEditorLanguage(new S5droidLanguage());
                                     break;
-								case 5:
+                                case 5:
                                     editor.setEditorLanguage(new HTMLLanguage());
                                     break;
                                 case 6:
@@ -231,7 +230,7 @@ public class MainActivity extends Activity {
                                 case 5:
                                     editor.setColorScheme(new SchemeNotepadXX());
                                     break;
-								case 6:
+                                case 6:
                                     editor.setColorScheme(new HTMLScheme());
                                     break;
                             }
@@ -289,7 +288,11 @@ public class MainActivity extends Activity {
                 }
                 break;
             }
-            case R.id.editor_line_number:{
+            case R.id.open_debug_logs: {
+                //editor.setText(Logs.getLogs());
+                break;
+            }
+            case R.id.editor_line_number: {
                 editor.setLineNumberEnabled(!editor.isLineNumberEnabled());
                 item.setChecked(editor.isLineNumberEnabled());
                 break;

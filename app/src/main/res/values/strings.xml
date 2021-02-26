@@ -16,6 +16,7 @@
 
 <resources>
     <string name="app_name">CodeEditorSample</string>
+    <string name="open_debug_logs">Open Debug Logs</string>
     <string name="layout_tv_last">Last</string>
     <string name="layout_tv_next">Next</string>
     <string name="layout_tv_replace">Replace</string>

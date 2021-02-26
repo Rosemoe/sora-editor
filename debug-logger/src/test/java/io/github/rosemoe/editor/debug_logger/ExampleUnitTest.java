@@ -1,4 +1,4 @@
-include ':debug-logger' /*******************************************************************************
+/*
  *   Copyright 2020-2021 Rosemoe
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +12,21 @@ include ':debug-logger' /*******************************************************
  *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
- ******************************************************************************/
+ */
+package io.github.rosemoe.editor.debug_logger;
 
-include ':language-universal'
-include ':language-java'
-include ':language-html'
-include ':language-s5d'
-include ':language-base'
-include ':editor'
-include ':app'
-rootProject.name='CodeEditor'
+import org.junit.Test;
+
+import static org.junit.Assert.*;
+
+/**
+ * Example local unit test, which will execute on the development machine (host).
+ *
+ * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ */
+public class ExampleUnitTest {
+    @Test
+    public void addition_isCorrect() {
+        assertEquals(4, 2 + 2);
+    }
+}

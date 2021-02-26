@@ -58,6 +58,7 @@ class EditorInputConnection extends BaseInputConnection {
     }
 
     protected void invalid() {
+        //Logs.log("Connection is set to invalid");
         mInvalid = true;
         mComposingEnd = mComposingStart = mComposingLine = -1;
         mEditor.invalidate();
@@ -67,6 +68,7 @@ class EditorInputConnection extends BaseInputConnection {
      * Reset the state of this connection
      */
     protected void reset() {
+        //Logs.log("Connection reset");
         mComposingEnd = mComposingStart = mComposingLine = -1;
         mInvalid = false;
     }
@@ -90,6 +92,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public synchronized void closeConnection() {
+        //Logs.log("close connection");
         super.closeConnection();
         Content content = mEditor.getText();
         while (content.isInBatchEdit()) {
@@ -167,6 +170,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public CharSequence getSelectedText(int flags) {
+        //Logs.log("getSelectedText()");
         //This text should be limited because when the user try to select all text
         //it can be quite large text and costs time, which will finally cause ANR
         int left = getCursor().getLeft();
@@ -179,18 +183,21 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public CharSequence getTextBeforeCursor(int length, int flags) {
+        //Logs.log("getTextBeforeCursor()");
         int start = getCursor().getLeft();
         return getTextRegion(start - length, start, flags);
     }
 
     @Override
     public CharSequence getTextAfterCursor(int length, int flags) {
+        //Logs.log("getTextAfterCursor()");
         int end = getCursor().getRight();
         return getTextRegion(end, end + length, flags);
     }
 
     @Override
     public boolean commitText(CharSequence text, int newCursorPosition) {
+        //Logs.log("Commit text: text = " + text + ", newCursorPosition = " + newCursorPosition);
         //Log.d(LOG_TAG, "commit text:text = " + text + ", newCur = " + newCursorPosition);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
@@ -221,12 +228,9 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean deleteSurroundingText(int beforeLength, int afterLength) {
+        //Logs.log("deleteSurroundingText: before = " + beforeLength + ", after = " + afterLength);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
-        }
-        if (beforeLength == afterLength && beforeLength == 0) {
-            getCursor().onDeleteKeyPressed();
-            return true;
         }
         if (beforeLength < 0 || afterLength < 0) {
             return false;
@@ -257,11 +261,13 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public synchronized boolean beginBatchEdit() {
+        //Logs.log("beginBatchEdit()");
         return mEditor.getText().beginBatchEdit();
     }
 
     @Override
     public synchronized boolean endBatchEdit() {
+        //Logs.log("endBatchEdit()");
         boolean inBatch = mEditor.getText().endBatchEdit();
         if (!inBatch) {
             mEditor.updateSelection();
@@ -278,6 +284,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setComposingText(CharSequence text, int newCursorPosition) {
+        //Logs.log("setComposingText: text = " + text + ", newCursorPosition = " + newCursorPosition);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
@@ -304,6 +311,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean finishComposingText() {
+        //Logs.log("Finish composing text");
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
@@ -324,6 +332,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setSelection(int start, int end) {
+        //Logs.log("set selection:" + start + ".." + end);
         //Log.d(LOG_TAG, " set selection:" + start + ".." + end);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
@@ -345,6 +354,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setComposingRegion(int start, int end) {
+        //Logs.log(" set composing region:" + start + ".." + end);
         //Log.d(LOG_TAG, "set composing region:" + start + ".." + end);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
@@ -409,13 +419,16 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean requestCursorUpdates(int cursorUpdateMode) {
+        //Logs.log("Receive update cursor anchor from input method");
         mEditor.updateCursorAnchor();
         return true;
     }
     
     @Override
     public ExtractedText getExtractedText(ExtractedTextRequest request, int flags) {
+        //Logs.log("Get extracted text from input method");
         if ((flags & GET_EXTRACTED_TEXT_MONITOR) != 0) {
+            //Logs.log("Monitor flag is set");
             mEditor.setExtracting(request);
         }
         

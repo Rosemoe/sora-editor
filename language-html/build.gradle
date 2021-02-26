@@ -46,5 +46,5 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     compileOnly project(path: ':editor')
     implementation project(path: ':language-base')
-    implementation 'org.antlr:antlr4:4.9.1'
+    implementation 'org.antlr:antlr4-runtime:4.9.1'
 }
