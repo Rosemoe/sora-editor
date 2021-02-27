@@ -13,7 +13,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package io.github.rosemoe.editor.interfaces;
+package io.github.rosemoe.editor.widget;
 
 import android.content.Context;
 import android.view.View;
@@ -23,13 +23,20 @@ import android.widget.BaseAdapter;
 import java.util.List;
 
 import io.github.rosemoe.editor.struct.CompletionItem;
-import io.github.rosemoe.editor.widget.EditorAutoCompleteWindow;
 
+/**
+ * A class to make custom adapter for auto-completion window
+ * @see EditorCompletionAdapter#getItemHeight()
+ * @see EditorCompletionAdapter#getView(int, View, ViewGroup, boolean)
+ */
 public abstract class EditorCompletionAdapter extends BaseAdapter {
 
     private EditorAutoCompleteWindow mWindow;
     private List<CompletionItem> mItems;
 
+    /**
+     * Called by {@link EditorAutoCompleteWindow} to attach some arguments
+     */
     public void attachAttributes(EditorAutoCompleteWindow window, List<CompletionItem> items) {
         mWindow = window;
         mItems = items;
@@ -67,6 +74,10 @@ public abstract class EditorCompletionAdapter extends BaseAdapter {
      */
     public abstract int getItemHeight();
 
+    /**
+     * @see BaseAdapter#getView(int, View, ViewGroup)
+     * @param isCurrentCursorPosition Is the {@param position} currently selected
+     */
     protected abstract View getView(int position, View convertView, ViewGroup parent, boolean isCurrentCursorPosition);
 
 }

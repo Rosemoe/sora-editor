@@ -24,7 +24,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import io.github.rosemoe.editor.R;
-import io.github.rosemoe.editor.interfaces.EditorCompletionAdapter;
 import io.github.rosemoe.editor.struct.CompletionItem;
 
 /**

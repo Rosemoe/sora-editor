@@ -59,7 +59,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import io.github.rosemoe.editor.R;
-import io.github.rosemoe.editor.interfaces.EditorCompletionAdapter;
 import io.github.rosemoe.editor.interfaces.EditorEventListener;
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
 import io.github.rosemoe.editor.interfaces.NewlineHandler;
@@ -3518,14 +3517,21 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        //Log.d(LOG_TAG, KeyEvent.keyCodeToString(keyCode));
         switch (keyCode) {
             case KeyEvent.KEYCODE_DEL:
-            case KeyEvent.KEYCODE_FORWARD_DEL:
-                if (mConnection != null && isEditable()) {
+                if (isEditable()) {
                     mCursor.onDeleteKeyPressed();
                     cursorChangeExternal();
                 }
                 return true;
+            case KeyEvent.KEYCODE_FORWARD_DEL:{
+                if (isEditable() && mConnection != null) {
+                    mConnection.deleteSurroundingText(0, 1);
+                    cursorChangeExternal();
+                }
+                return true;
+            }
             case KeyEvent.KEYCODE_ENTER: {
                 if (isEditable()) {
                     if (mCompletionWindow.isShowing()) {
@@ -3703,6 +3709,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             if (v_scroll != 0) {
                 mEventHandler.onScroll(event, event, 0, v_scroll * 20);
             }
+            return true;
         }
         return super.onGenericMotionEvent(event);
     }
@@ -3889,32 +3896,80 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
+    /**
+     * Mode for presenting text actions
+     */
     public enum TextActionMode {
 
+        /**
+         * In this way, the editor shows a windows inside the editor to present actions
+         */
         POPUP_WINDOW,
+        /**
+         * In this way, the editor starts a {@link ActionMode} to present actions
+         */
         ACTION_MODE
 
     }
 
+    /**
+     * Interface for various ways to present text action panel
+     */
     protected interface EditorTextActionPresenter {
 
+        /**
+         * Selected text is clicked
+         * @param event Event
+         */
         void onSelectedTextClicked(MotionEvent event);
 
+        /**
+         * Notify that the position of panel should be updated.
+         * If the presenter is displayed in editor's viewport, it should update
+         * its position
+         */
         void onUpdate();
 
+        /**
+         * Start the presenter
+         */
         void onBeginTextSelect();
 
+        /**
+         * Exit the presenter
+         */
         void onExit();
 
+        /**
+         * Called by editor to check whether it should draw handles of cursor
+         */
         boolean shouldShowCursor();
 
     }
 
+    /**
+     * Class for saving state for cursor
+     */
     static class CursorPaintAction {
 
+        /**
+         * Row position
+         */
         final int row;
+
+        /**
+         * Center x offset
+         */
         final float centerX;
+
+        /**
+         * Handle rectangle
+         */
         final RectF outRect;
+
+        /**
+         * Draw as insert cursor
+         */
         final boolean insert;
 
         CursorPaintAction(int row, float centerX, RectF outRect, boolean insert) {
@@ -3924,6 +3979,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             this.insert = insert;
         }
 
+        /**
+         * Execute painting on the given editor and canvas
+         */
         void exec(Canvas canvas, CodeEditor editor) {
             editor.drawCursor(canvas, centerX, row, outRect, insert);
         }
