@@ -20,11 +20,14 @@ import org.antlr.v4.runtime.Token;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
 import io.github.rosemoe.editor.interfaces.NewlineHandler;
+import io.github.rosemoe.editor.struct.CompletionItem;
 import io.github.rosemoe.editor.text.TextUtils;
 import io.github.rosemoe.editor.widget.SymbolPairMatch;
 
@@ -36,7 +39,7 @@ public class PythonLanguage implements EditorLanguage {
 
     @Override
     public AutoCompleteProvider getAutoCompleteProvider() {
-        return null;
+        return new PythonAutoComplete();
     }
 
     @Override
