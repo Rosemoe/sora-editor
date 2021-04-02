@@ -41,6 +41,7 @@ import io.github.rosemoe.editor.langs.desc.CppDescription;
 import io.github.rosemoe.editor.langs.desc.JavaScriptDescription;
 import io.github.rosemoe.editor.langs.html.HTMLLanguage;
 import io.github.rosemoe.editor.langs.java.JavaLanguage;
+import io.github.rosemoe.editor.langs.python.PythonLanguage;
 import io.github.rosemoe.editor.langs.s5droid.S5droidAutoComplete;
 import io.github.rosemoe.editor.langs.s5droid.S5droidLanguage;
 import io.github.rosemoe.editor.langs.universal.UniversalLanguage;
@@ -91,11 +92,61 @@ public class MainActivity extends Activity {
         });
         editor.setTypefaceText(Typeface.MONOSPACE);
         editor.setOverScrollEnabled(false);
-        editor.setEditorLanguage(new JavaLanguage());
+        editor.setEditorLanguage(new PythonLanguage());
         editor.setNonPrintablePaintingFlags(CodeEditor.FLAG_DRAW_WHITESPACE_LEADING | CodeEditor.FLAG_DRAW_LINE_SEPARATOR);
-        editor.setText("/**\n * Demo\n */\n@SuppressWarnings(/**/\"unused\")\n" +
-                "public class Main {\n\n\tpublic static void main(String[] args) {\n\t\t" +
-                "// Comment\n\t\tSystem.out.println(\"Hello\");\n\t}\n\n}\n");
+
+        String code1 = "\"\"\"The asyncio package, tracking PEP 3156.\"\"\"\n" +
+                "\n" +
+                "import sys\n" +
+                "\n" +
+                "# The selectors module is in the stdlib in Python 3.4 but not in 3.3.\n" +
+                "# Do this first, so the other submodules can use \"from . import selectors\".\n" +
+                "# Prefer asyncio/selectors.py over the stdlib one, as ours may be newer.\n" +
+                "try:\n" +
+                "\tfrom . import selectors\n" +
+                "except ImportError:\n" +
+                "\timport selectors  # Will also be exported.\n" +
+                "\n" +
+                "if sys.platform == 'win32':\n" +
+                "\t# Similar thing for _overlapped.\n" +
+                "\ttry:\n" +
+                "\t\tfrom . import _overlapped\n" +
+                "\texcept ImportError:\n" +
+                " \t\timport _overlapped  # Will also be exported.\n" +
+                "\n" +
+                "# This relies on each of the submodules having an __all__ variable.\n" +
+                "from .base_events import *\n" +
+                "from .coroutines import *\n" +
+                "from .events import *\n" +
+                "from .futures import *\n" +
+                "from .locks import *\n" +
+                "from .protocols import *\n" +
+                "from .queues import *\n" +
+                "from .streams import *\n" +
+                "from .subprocess import *\n" +
+                "from .tasks import *\n" +
+                "from .transports import *\n" +
+                "\n" +
+                "__all__ = (base_events.__all__ +\n" +
+                "           coroutines.__all__ +\n" +
+                "           events.__all__ +\n" +
+                "           futures.__all__ +\n" +
+                "           locks.__all__ +\n" +
+                "           protocols.__all__ +\n" +
+                "           queues.__all__ +\n" +
+                "           streams.__all__ +\n" +
+                "           subprocess.__all__ +\n" +
+                "           tasks.__all__ +\n" +
+                "           transports.__all__)\n" +
+                "\n" +
+                "if sys.platform == 'win32':  # pragma: no cover\n" +
+                "\tfrom .windows_events import *\n" +
+                "\t__all__ += windows_events.__all__\n" +
+                "else:\n" +
+                "\tfrom .unix_events import *  # pragma: no cover\n" +
+                "\t__all__ += unix_events.__all__";
+
+        editor.setText(code1);
     }
 
     @Override
