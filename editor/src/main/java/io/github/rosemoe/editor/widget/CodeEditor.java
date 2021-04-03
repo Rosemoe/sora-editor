@@ -494,6 +494,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setEditable(true);
         setLineNumberEnabled(true);
         setAutoCompletionOnComposing(true);
+        // Issue #41 View being highlighted when focused on Android 11
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            setDefaultFocusHighlightEnabled(false);
+        }
     }
 
     /**
@@ -542,7 +546,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else {
             int before = mCursorBlink.period;
             mCursorBlink.setPeriod(period);
-            if (before <= 0 && mCursorBlink.valid && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && isAttachedToWindow())) {
+            if (before <= 0 && mCursorBlink.valid && isAttachedToWindow()) {
                 post(mCursorBlink);
             }
         }
@@ -2107,12 +2111,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             visible = false;
             x = 0;
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            builder.setInsertionMarkerLocation(x, getRowTop(l) - getOffsetY(), getRowBaseline(l) - getOffsetY(), getRowBottom(l) - getOffsetY(), visible ? CursorAnchorInfo.FLAG_HAS_VISIBLE_REGION : CursorAnchorInfo.FLAG_HAS_INVISIBLE_REGION);
-            mInputMethodManager.updateCursorAnchorInfo(this, builder.build());
-        } else {
-            mInputMethodManager.updateCursor(this, (int) x, getRowTop(l) - getOffsetY(), (int) (x + mInsertSelWidth), getRowBottom(l) - getOffsetY());
-        }
+        builder.setInsertionMarkerLocation(x, getRowTop(l) - getOffsetY(), getRowBaseline(l) - getOffsetY(), getRowBottom(l) - getOffsetY(), visible ? CursorAnchorInfo.FLAG_HAS_VISIBLE_REGION : CursorAnchorInfo.FLAG_HAS_INVISIBLE_REGION);
+        mInputMethodManager.updateCursorAnchorInfo(this, builder.build());
         return x;
     }
 
@@ -3416,33 +3416,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     public AccessibilityNodeInfo createAccessibilityNodeInfo() {
         AccessibilityNodeInfo node = super.createAccessibilityNodeInfo();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            node.setEditable(isEditable());
-            node.setTextSelection(mCursor.getLeft(), mCursor.getRight());
-        }
+        node.setEditable(isEditable());
+        node.setTextSelection(mCursor.getLeft(), mCursor.getRight());
         node.setScrollable(true);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            node.setInputType(InputType.TYPE_CLASS_TEXT);
-            node.setMultiLine(true);
-        }
+        node.setInputType(InputType.TYPE_CLASS_TEXT);
+        node.setMultiLine(true);
         node.setText(getText().toStringBuilder());
         node.setLongClickable(true);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_COPY);
-            node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CUT);
-            node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_PASTE);
-            node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_TEXT);
-            node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);
-            node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                node.addAction(AccessibilityNodeInfo.ACTION_COPY);
-                node.addAction(AccessibilityNodeInfo.ACTION_CUT);
-                node.addAction(AccessibilityNodeInfo.ACTION_PASTE);
-            }
-            node.addAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
-            node.addAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
-        }
+        node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_COPY);
+        node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CUT);
+        node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_PASTE);
+        node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_TEXT);
+        node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);
+        node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD);
         return node;
     }
 
@@ -3525,7 +3511,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     cursorChangeExternal();
                 }
                 return true;
-            case KeyEvent.KEYCODE_FORWARD_DEL:{
+            case KeyEvent.KEYCODE_FORWARD_DEL: {
                 if (isEditable() && mConnection != null) {
                     mConnection.deleteSurroundingText(0, 1);
                     cursorChangeExternal();
@@ -3919,6 +3905,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         /**
          * Selected text is clicked
+         *
          * @param event Event
          */
         void onSelectedTextClicked(MotionEvent event);
