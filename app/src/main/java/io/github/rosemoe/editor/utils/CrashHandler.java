@@ -37,7 +37,7 @@ import java.lang.Thread.UncaughtExceptionHandler;
 
 import android.content.pm.PackageManager.NameNotFoundException;
 
-import com.rose.editor.android.R;
+import io.github.rosemoe.editor.app.R;
 
 /**
  * CrashHandler handles uncaught exceptions

@@ -13,7 +13,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.rose.editor.android;
+package io.github.rosemoe.editor.app;
 
 import android.app.Activity;
 import android.app.AlertDialog;
