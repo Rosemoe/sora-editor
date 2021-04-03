@@ -16,7 +16,6 @@
 package io.github.rosemoe.editor.widget;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -157,18 +156,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private float mLineInfoTextSize;
     private boolean mWait;
     private boolean mDrag;
-    private boolean mScale;
+    private boolean mScalable;
     private boolean mEditable;
-    private boolean mAutoIndent;
-    private boolean mPaintLabel;
+    private boolean mAutoIndentEnabled;
     private boolean mWordwrap;
     private boolean mUndoEnabled;
     private boolean mDisplayLnPanel;
     private boolean mOverScrollEnabled;
     private boolean mLineNumberEnabled;
+    private boolean mAutoCompletionEnabled;
     private boolean mCompletionOnComposing;
     private boolean mHighlightSelectedText;
     private boolean mHighlightCurrentBlock;
+    private boolean mHighlightCurrentLine;
     private boolean mSymbolCompletionEnabled;
     private boolean mVerticalScrollBarEnabled;
     private boolean mHorizontalScrollBarEnabled;
@@ -221,11 +221,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        initialize();
+        this(context, attrs, defStyleAttr, 0);
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initialize();
@@ -434,10 +432,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mMatrix = new Matrix();
         mSearcher = new EditorSearcher(this);
         setCursorBlinkPeriod(DEFAULT_CURSOR_BLINK_PERIOD);
-        //Only Android 21 and upper level device can use this builder
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mAnchorInfoBuilder = new CursorAnchorInfo.Builder();
-        }
+        mAnchorInfoBuilder = new CursorAnchorInfo.Builder();
         mPaint.setAntiAlias(true);
         mPaintOther.setAntiAlias(true);
         mPaintOther.setTypeface(Typeface.MONOSPACE);
@@ -463,7 +458,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mDpUnit = mDividerWidth / 2;
         mDividerMargin = mDpUnit * 5;
         mLineNumberAlign = Paint.Align.RIGHT;
-        mScale = true;
         mDrag = false;
         mWait = false;
         mBlockLineWidth = mDpUnit;
@@ -471,6 +465,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mClipboardManager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         setUndoEnabled(true);
         mCursorPosition = -1;
+        setScalable(true);
         setFocusable(true);
         setFocusableInTouchMode(true);
         mConnection = new EditorInputConnection(this);
@@ -482,11 +477,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setText(null);
         setTextActionMode(TextActionMode.ACTION_MODE);
         setTabWidth(4);
+        setHighlightCurrentLine(true);
         setAutoIndentEnabled(true);
+        setAutoCompletionEnabled(true);
         setVerticalScrollBarEnabled(true);
         setHighlightCurrentBlock(true);
         setHighlightSelectedText(true);
-        setPaintLabel(true);
         setDisplayLnPanel(true);
         setOverScrollEnabled(true);
         setHorizontalScrollBarEnabled(true);
@@ -580,21 +576,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * @return Enabled / disabled
-     * @see CodeEditor#setPaintLabel(boolean)
+     * Whether the editor should use a different color to draw
+     * the background of current line
      */
-    public boolean isPaintLabel() {
-        return mPaintLabel;
+    public void setHighlightCurrentLine(boolean highlightCurrentLine) {
+        mHighlightCurrentLine = highlightCurrentLine;
+        invalidate();
     }
 
     /**
-     * Whether we should use a different color to draw current code block's start line and end line background
-     *
-     * @param paintLabel Enabled or disabled
+     * @see CodeEditor#setHighlightCurrentLine(boolean)
      */
-    public void setPaintLabel(boolean paintLabel) {
-        this.mPaintLabel = paintLabel;
-        invalidate();
+    public boolean isHighlightCurrentLine() {
+        return mHighlightCurrentLine;
     }
 
     /**
@@ -751,7 +745,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @see CodeEditor#setAutoIndentEnabled(boolean)
      */
     public boolean isAutoIndentEnabled() {
-        return mAutoIndent;
+        return mAutoIndentEnabled;
     }
 
     /**
@@ -761,7 +755,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param enabled Enabled / disabled
      */
     public void setAutoIndentEnabled(boolean enabled) {
-        mAutoIndent = enabled;
+        mAutoIndentEnabled = enabled;
         mCursor.setAutoIndent(enabled);
     }
 
@@ -2125,12 +2119,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Set text size for line info panel
+     *
+     * @param size Text size for line information, <strong>unit is SP</strong>
      */
-    public void setLineInfoTextSize(float sizePx) {
-        if (sizePx <= 0) {
+    public void setLineInfoTextSize(float size) {
+        if (size <= 0) {
             throw new IllegalArgumentException();
         }
-        mLineInfoTextSize = sizePx;
+        mLineInfoTextSize = size;
     }
 
     /**
@@ -2142,11 +2138,37 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Specify whether show auto completion window even the input method is in composing state.
+     *
      * This is useful when the user uses an input method that does not support the attitude {@link EditorInfo#TYPE_TEXT_FLAG_NO_SUGGESTIONS}
+     *
+     * Note:
+     * Composing texts are marked by an underline. When this switch is set to false, the editor
+     * will not provide auto completion when there is any composing text in editor.
+     *
      * This is enabled by default now
      */
     public void setAutoCompletionOnComposing(boolean completionOnComposing) {
         mCompletionOnComposing = completionOnComposing;
+    }
+
+    /**
+     * Specify whether we should provide any auto completion
+     *
+     * If this is set to false, the completion window will never show and auto completion item
+     * provider will never be called.
+     */
+    public void setAutoCompletionEnabled(boolean autoCompletionEnabled) {
+        mAutoCompletionEnabled = autoCompletionEnabled;
+        if (!autoCompletionEnabled) {
+            mCompletionWindow.hide();
+        }
+    }
+
+    /**
+     * @see CodeEditor#setAutoCompletionEnabled(boolean)
+     */
+    public boolean isAutoCompletionEnabled() {
+        return mAutoCompletionEnabled;
     }
 
     /**
@@ -2896,16 +2918,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param scale Whether allow
      */
-    public void setCanScale(boolean scale) {
-        mScale = scale;
+    public void setScalable(boolean scale) {
+        mScalable = scale;
     }
 
     /**
      * @return Whether allow to scale
-     * @see CodeEditor#setCanScale(boolean)
+     * @see CodeEditor#setScalable(boolean)
      */
-    public boolean canScale() {
-        return mScale;
+    public boolean isScalable() {
+        return mScalable;
     }
 
     /**
@@ -3231,7 +3253,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         mText = new Content(text);
         mCursor = mText.getCursor();
-        mCursor.setAutoIndent(mAutoIndent);
+        mCursor.setAutoIndent(mAutoIndentEnabled);
         mCursor.setLanguage(mLanguage);
         mEventHandler.reset();
         mText.addContentListener(this);
@@ -3508,7 +3530,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             case KeyEvent.KEYCODE_DEL:
                 if (isEditable()) {
                     mCursor.onDeleteKeyPressed();
-                    cursorChangeExternal();
+                    //cursorChangeExternal();
                 }
                 return true;
             case KeyEvent.KEYCODE_FORWARD_DEL: {
@@ -3767,30 +3789,36 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mWait = false;
         // Visibility & State shift
         exitSelectModeIfNeeded();
+
         // Auto completion
-        if ((mConnection.mComposingLine == -1 || mCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
-            int end = endColumn;
-            while (endColumn > 0) {
-                if (mLanguage.isAutoCompleteChar(content.charAt(endLine, endColumn - 1))) {
-                    endColumn--;
-                } else {
-                    break;
+        if (isAutoCompletionEnabled()) {
+            if ((mConnection.mComposingLine == -1 || mCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
+                int end = endColumn;
+                while (endColumn > 0) {
+                    if (mLanguage.isAutoCompleteChar(content.charAt(endLine, endColumn - 1))) {
+                        endColumn--;
+                    } else {
+                        break;
+                    }
                 }
-            }
-            if (end > endColumn) {
-                String line = content.getLineString(endLine);
-                String prefix = line.substring(endColumn, end);
-                mCompletionWindow.setPrefix(prefix);
-                mCompletionWindow.show();
+                if (end > endColumn) {
+                    String line = content.getLineString(endLine);
+                    String prefix = line.substring(endColumn, end);
+                    mCompletionWindow.setPrefix(prefix);
+                    mCompletionWindow.show();
+                } else {
+                    postHideCompletionWindow();
+                }
             } else {
                 postHideCompletionWindow();
             }
+            if (mCompletionWindow.isShowing()) {
+                updateCompletionWindowPosition();
+            }
         } else {
-            postHideCompletionWindow();
+            mCompletionWindow.hide();
         }
-        if (mCompletionWindow.isShowing()) {
-            updateCompletionWindowPosition();
-        }
+
         updateCursorAnchor();
         ensureSelectionVisible();
         // Notify to update highlight
@@ -3817,19 +3845,25 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         updateCursor();
         exitSelectModeIfNeeded();
-        if (mConnection.mComposingLine == -1 && mCompletionWindow.isShowing()) {
-            if (startLine != endLine || startColumn != endColumn - 1) {
-                postHideCompletionWindow();
+
+        if (isAutoCompletionEnabled()) {
+            if (mConnection.mComposingLine == -1 && mCompletionWindow.isShowing()) {
+                if (startLine != endLine || startColumn != endColumn - 1) {
+                    postHideCompletionWindow();
+                }
+                String prefix = mCompletionWindow.getPrefix();
+                if (prefix == null || prefix.length() - 1 <= 0) {
+                    postHideCompletionWindow();
+                } else {
+                    prefix = prefix.substring(0, prefix.length() - 1);
+                    updateCompletionWindowPosition();
+                    mCompletionWindow.setPrefix(prefix);
+                }
             }
-            String prefix = mCompletionWindow.getPrefix();
-            if (prefix == null || prefix.length() - 1 <= 0) {
-                postHideCompletionWindow();
-            } else {
-                prefix = prefix.substring(0, prefix.length() - 1);
-                updateCompletionWindowPosition();
-                mCompletionWindow.setPrefix(prefix);
-            }
+        } else {
+            mCompletionWindow.hide();
         }
+
         if (!mWait) {
             updateCursorAnchor();
             ensureSelectionVisible();
