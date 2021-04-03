@@ -27,11 +27,21 @@ import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
 import io.github.rosemoe.editor.interfaces.NewlineHandler;
+import io.github.rosemoe.editor.langs.IdentifierAutoComplete;
+import io.github.rosemoe.editor.langs.internal.MyCharacter;
 import io.github.rosemoe.editor.struct.CompletionItem;
 import io.github.rosemoe.editor.text.TextUtils;
 import io.github.rosemoe.editor.widget.SymbolPairMatch;
 
 public class PythonLanguage implements EditorLanguage {
+    private final static String[] keywords = {
+            "and", "as", "assert", "break", "class", "continue", "def",
+            "del", "elif", "else", "except", "exec", "finally", "for",
+            "from", "global", "if", "import", "in", "is", "lambda",
+            "not", "or", "pass", "print", "raise", "return", "try",
+            "while", "with", "yield"
+    };
+
     @Override
     public CodeAnalyzer getAnalyzer() {
         return new PythonCodeAnalyzer();
@@ -39,12 +49,12 @@ public class PythonLanguage implements EditorLanguage {
 
     @Override
     public AutoCompleteProvider getAutoCompleteProvider() {
-        return new PythonAutoComplete();
+        return new IdentifierAutoComplete(keywords);
     }
 
     @Override
     public boolean isAutoCompleteChar(char ch) {
-        return false;
+        return MyCharacter.isJavaIdentifierPart(ch);
     }
 
     @Override

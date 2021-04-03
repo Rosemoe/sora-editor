@@ -460,7 +460,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mLineNumberAlign = Paint.Align.RIGHT;
         mDrag = false;
         mWait = false;
-        mBlockLineWidth = mDpUnit;
+        mBlockLineWidth = mDpUnit / 1.5f;
         mInputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         mClipboardManager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         setUndoEnabled(true);
