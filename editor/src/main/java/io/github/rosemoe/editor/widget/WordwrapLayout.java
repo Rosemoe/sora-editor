@@ -208,12 +208,16 @@ class WordwrapLayout extends AbstractLayout {
     }
 
     @Override
-    public float[] getCharLayoutOffset(int line, int column) {
+    public float[] getCharLayoutOffset(int line, int column, float[] dest) {
+        if (dest == null || dest.length < 2) {
+            dest = new float[2];
+        }
         int row = findRow(line);
         if (row < rowTable.size()) {
             RowRegion region = rowTable.get(row);
             if (region.line != line) {
-                return new float[]{0, 0};
+                dest[0] = dest[1] = 0;
+                return dest;
             }
             while (region.startColumn < column && row + 1 < rowTable.size()) {
                 row++;
@@ -224,13 +228,12 @@ class WordwrapLayout extends AbstractLayout {
                     break;
                 }
             }
-            return new float[]{
-                    editor.getRowHeight() * (row + 1),
-                    measureText(text.getLine(region.line), region.startColumn, column)
-            };
+            dest[0] = editor.getRowHeight() * (row + 1);
+            dest[1] = measureText(text.getLine(region.line), region.startColumn, column);
         } else {
-            return new float[]{0, 0};
+            dest[0] = dest[1] = 0;
         }
+        return dest;
     }
 
     static class RowRegion {

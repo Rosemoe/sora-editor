@@ -27,6 +27,7 @@ final class CursorBlink implements Runnable {
     int period;
     boolean visibility;
     boolean valid;
+    private float[] buffer;
 
     CursorBlink(CodeEditor editor, int period) {
         visibility = true;
@@ -49,12 +50,20 @@ final class CursorBlink implements Runnable {
         visibility = true;
     }
 
+    boolean isSelectionVisible() {
+        buffer = editor.mLayout.getCharLayoutOffset(editor.getCursor().getLeftLine(), editor.getCursor().getLeftColumn(), buffer);
+        return (buffer[0] >= editor.getOffsetY() && buffer[0] <= editor.getOffsetY() + editor.getHeight()
+                && buffer[1] >= editor.getOffsetX() && buffer[1] <= editor.getOffsetX() + editor.getWidth());
+    }
+
     @Override
     public void run() {
         if (valid && period > 0) {
             if (System.currentTimeMillis() - lastSelectionModificationTime >= period * 2) {
                 visibility = !visibility;
-                editor.invalidate();
+                if (!editor.getCursor().isSelected() && isSelectionVisible()) {
+                    editor.invalidate();
+                }
             }
             editor.postDelayed(this, period);
         } else {

@@ -82,6 +82,18 @@ interface Layout extends LineRemoveListener, ContentListener {
      * @param column Column on line
      * @return An array contains layout offset, first element is the bottom of character and second element is the left of character
      */
-    float[] getCharLayoutOffset(int line, int column);
+    default float[] getCharLayoutOffset(int line, int column) {
+        return getCharLayoutOffset(line, column, new float[2]);
+    }
+
+    /**
+     * Get layout offset of a position in text
+     *
+     * @param line   The line index
+     * @param column Column on line
+     * @param array If the array is given, it will try to save the two elements in this array. Otherwise, a new array is created
+     * @return An array contains layout offset, first element is the bottom of character and second element is the left of character
+     */
+    float[] getCharLayoutOffset(int line, int column, float[] array);
 
 }
