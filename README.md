@@ -59,3 +59,5 @@ Available modules:
 * language-universal
 * language-s5d    
 * language-python
+### Some more information
+Go to [Wiki](https://github.com/Rosemoe/CodeEditor/wiki)
