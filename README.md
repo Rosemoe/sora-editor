@@ -35,7 +35,7 @@ Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/re
 ![Search and Replace](/images/search-replace.png)
 ![Wordwrap](/images/wordwrap.png)
 ## How to use this editor  
-* Step 1.Add the JitPack repository to your build file
+* Step 1.Add the JitPack repository to your build file   
 Add it in your root build.gradle at the end of repositories:
 ```Gradle
 allprojects {
@@ -48,7 +48,7 @@ allprojects {
 * Step 2. Add the dependency to your app
 ```Gradle
 dependencies {
-  implementation 'com.github.Rosemoe.CodeEditor:editor:<versionName>'
+  implementation 'com.github.Rosemoe.CodeEditor:<moduleName>:<versionName>'
 }
 ```
 Available modules:     
@@ -56,8 +56,8 @@ Available modules:
 * language-base
 * language-java
 * language-html
+* language-python
 * language-universal
 * language-s5d    
-* language-python
 ### Some more information
 Go to [Wiki](https://github.com/Rosemoe/CodeEditor/wiki)
