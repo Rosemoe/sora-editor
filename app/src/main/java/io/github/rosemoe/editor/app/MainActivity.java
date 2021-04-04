@@ -93,6 +93,7 @@ public class MainActivity extends Activity {
         editor.setTypefaceText(Typeface.MONOSPACE);
         editor.setOverScrollEnabled(false);
         editor.setEditorLanguage(new JavaLanguage());
+        //editor.setCursorBlinkPeriod(50);
         editor.setNonPrintablePaintingFlags(CodeEditor.FLAG_DRAW_WHITESPACE_LEADING | CodeEditor.FLAG_DRAW_LINE_SEPARATOR);
 
         new Thread(() -> {
