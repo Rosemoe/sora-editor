@@ -32,27 +32,53 @@ import static org.junit.Assert.*;
 public class BigTextTest {
 
     private CodeEditor editor;
+    private final static String str = "public class Main {\npublic static void main(String[] args) {\n//test test test test test test\n}\n}\n";
 
-    @Test(timeout = 1000)
-    public void insertBigTextToContent() {
+    @Test(timeout = 5000)
+    public void insertBigTextToContent() throws Exception {
         Content text = new Content();
+        Content.useBlock = false;
+        Content text2 = new Content();
         Random random = new Random();
         for (int i = 0;i < 10000;i++) {
             int line = random.nextInt(text.getLineCount());
-            text.insert(line, 0, "public class Main {\npublic static void main(String[] args) {\n//test test test test test test\n}\n}\n");
+            int m = text2.getColumnCount(line);
+            int col = m > 0 ? random.nextInt(m) : 0;
+            text.insert(line, col, str);
+            text2.insert(line, col, str);
+        }
+        assertEquals(text, text2);
+        for (int i = 0;i < text2.getLineCount();i++) {
+            assertEquals("expected = " + text2.getColumnCount(i) + " actual = " + text.getColumnCount(i),text.getColumnCount(i), text2.getColumnCount(i));
         }
     }
 
-    @Test(timeout = 1000)
+
+
+    @Test(timeout = 10000)
     public void insertBigTextToEditor() {
         Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
         if (Looper.myLooper() == null)
             Looper.prepare();
         editor = new CodeEditor(instrumentation.getTargetContext());
         editor.setEditorLanguage(new EmptyLanguage());
-        for (int i = 0;i < 10000;i++) {
-            editor.getText().insert(editor.getLineCount() - 1, 0, "public class Main {\npublic static void main(String[] args) {\n//test test test test test test\n}\n}\n");
+        Content.useBlock = false;
+        Content text = new Content();
+        Random random = new Random();
+        int c = 0;
+        Exception ex = null;
+        //try {
+            for (int i = 0; i < 10000; i++) {
+                int line = random.nextInt(editor.getLineCount());
+                text.insert(line, 0, str);
+                editor.getText().insert(line, 0, str);
+            }
+        /*}catch (Exception e) {
+            ex = e;
+            c++;
+            assertEquals(text, editor.getText());
         }
+        assertEquals(ex == null ? "null" : ex.toString(),0, c);*/
     }
 
 }
