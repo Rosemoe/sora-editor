@@ -479,7 +479,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
 
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
-        if (mEditor.canScale()) {
+        if (mEditor.isScalable()) {
             float newSize = mEditor.getTextSizePx() * detector.getScaleFactor();
             if (newSize < minSize || newSize > maxSize) {
                 return false;
@@ -500,7 +500,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     @Override
     public boolean onScaleBegin(ScaleGestureDetector detector) {
         mScroller.forceFinished(true);
-        return mEditor.canScale();
+        return mEditor.isScalable();
     }
 
     @Override

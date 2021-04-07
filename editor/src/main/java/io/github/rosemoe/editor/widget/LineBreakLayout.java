@@ -129,12 +129,14 @@ class LineBreakLayout extends AbstractLayout {
     }
 
     @Override
-    public float[] getCharLayoutOffset(int line, int column) {
+    public float[] getCharLayoutOffset(int line, int column, float[] dest) {
+        if (dest == null || dest.length < 2) {
+            dest = new float[2];
+        }
         CharSequence sequence = text.getLine(line);
-        return new float[]{
-                editor.getRowHeight() * (line + 1),
-                measureText(sequence, 0, column)
-        };
+        dest[0] = editor.getRowHeight() * (line + 1);
+        dest[1] = measureText(sequence, 0, column);
+        return dest;
     }
 
     class LineBreakLayoutRowItr implements RowIterator {

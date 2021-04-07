@@ -26,7 +26,7 @@ Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/re
 - [x] Show non-printable characters
 - [ ] Incremental highlight Analysis
 ## Language Supported  
-* Java, JavaScript, C, C++, HTML (Basic Support:highlight, code block line,identifier and keyword auto-completion). Code block line isn't available for HTML Language
+* Java, JavaScript, C, C++, HTML, Python (Basic Support:highlight, code block line,identifier and keyword auto-completion). Code block line isn't available for HTML Language
 * S5droid 2.x(context sensitive auto completion, highlight, code block line, navigation)(going to be deprecated)   
 ## Screenshots  
 ![View Outline](/images/outline.png)
@@ -35,7 +35,7 @@ Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/re
 ![Search and Replace](/images/search-replace.png)
 ![Wordwrap](/images/wordwrap.png)
 ## How to use this editor  
-* Step 1.Add the JitPack repository to your build file
+* Step 1.Add the JitPack repository to your build file   
 Add it in your root build.gradle at the end of repositories:
 ```Gradle
 allprojects {
@@ -48,17 +48,16 @@ allprojects {
 * Step 2. Add the dependency to your app
 ```Gradle
 dependencies {
-  implementation 'com.github.Rosemoe.CodeEditor:editor:<versionName>'
+  implementation 'com.github.Rosemoe.CodeEditor:<moduleName>:<versionName>'
 }
-```
-* Step 3 (Optional) : HTMLLexer is generated using ANTLR 4.9.1. You may need to add this dependency 
-```Gradle
-  implementation 'org.antlr:antlr4:4.9.1'
 ```
 Available modules:     
 * editor 
 * language-base
 * language-java
 * language-html
+* language-python
 * language-universal
 * language-s5d    
+### Some more information
+Go to [Wiki](https://github.com/Rosemoe/CodeEditor/wiki)

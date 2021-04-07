@@ -116,7 +116,7 @@ public class ContentLine implements CharSequence, GetChars {
 
     private void checkIndex(int index) {
         if (index < 0 || index > length) {
-            throw new StringIndexOutOfBoundsException(index);
+            throw new StringIndexOutOfBoundsException("index = " + index + ", length = " + length);
         }
     }
 

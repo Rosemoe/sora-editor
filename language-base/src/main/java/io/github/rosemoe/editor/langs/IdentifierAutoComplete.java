@@ -34,6 +34,14 @@ public class IdentifierAutoComplete implements AutoCompleteProvider {
     private String[] mKeywords;
     private boolean mKeywordsAreLowCase;
 
+    public IdentifierAutoComplete() {
+
+    }
+
+    public IdentifierAutoComplete(String[] keywords) {
+        setKeywords(keywords);
+    }
+
     public void setKeywords(String[] keywords) {
         mKeywords = keywords;
         mKeywordsAreLowCase = true;

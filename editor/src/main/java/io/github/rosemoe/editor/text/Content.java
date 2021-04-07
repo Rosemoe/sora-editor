@@ -18,6 +18,8 @@ package io.github.rosemoe.editor.text;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.github.rosemoe.struct.BlockLinkedList;
+
 /**
  * This class saves the text content for editor and maintains line widths
  *
@@ -26,7 +28,7 @@ import java.util.List;
 public class Content implements CharSequence {
 
     public final static int DEFAULT_MAX_UNDO_STACK_SIZE = 100;
-    public final static int DEFAULT_LIST_CAPACITY = 100;
+    public final static int DEFAULT_LIST_CAPACITY = 1000;
 
     private static int sInitialListCapacity;
 
@@ -42,6 +44,7 @@ public class Content implements CharSequence {
     private UndoManager mUndoManager;
     private Cursor mCursor;
     private LineRemoveListener mLineListener;
+    public static boolean useBlock = false;
 
     /**
      * This constructor will create a Content object with no text
@@ -62,7 +65,10 @@ public class Content implements CharSequence {
         }
         mTextLength = 0;
         mNestedBatchEdit = 0;
-        mLines = new ArrayList<>(getInitialLineCapacity());
+        if (!useBlock)
+            mLines = new ArrayList<>(getInitialLineCapacity());
+        else
+            mLines = new BlockLinkedList<>(5000);
         mLines.add(new ContentLine());
         mListeners = new ArrayList<>();
         mUndoManager = new UndoManager(this);

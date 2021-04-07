@@ -1,4 +1,4 @@
-include ':debug-logger' /*******************************************************************************
+/*******************************************************************************
  *   Copyright 2020-2021 Rosemoe
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,8 @@ include ':language-java'
 include ':language-html'
 include ':language-s5d'
 include ':language-base'
+include ':language-python'
+include ':debug-logger'
 include ':editor'
 include ':app'
 rootProject.name='CodeEditor'
