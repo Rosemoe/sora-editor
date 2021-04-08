@@ -75,6 +75,9 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     }
 	
 	/**
+     * Checks whether the provided character is a whitespace
+     * 
+     * @param c the char to check
 	 * @return Whether the provided character is a whitespace
 	 */
 	private boolean isWhitespace(char c) {
@@ -82,7 +85,11 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     }
 	
 	/**
-	 * Handles the selected text click event
+     * Handles the selected text click event
+     * 
+     * @param e the MotionEvent
+     * @param line line number index
+     * @param column column index in line
 	 */ 
 	private void handleSelectedTextClick(MotionEvent e, int line, int column) {
 		if(mEditor.getTextActionPresenter() instanceof EditorTextActionWindow) {
