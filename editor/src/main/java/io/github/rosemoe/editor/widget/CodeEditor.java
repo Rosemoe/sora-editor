@@ -513,11 +513,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Use {@link SymbolPairMatch.Replacement#NO_REPLACEMENT} to force no completion for a character
      */
     public SymbolPairMatch getOverrideSymbolPairs() {
-		mOverrideSymbolPairs.putPair('{', new SymbolPairMatch. Replacement("{}", 1));
-		mOverrideSymbolPairs.putPair('(', new SymbolPairMatch.Replacement("()", 1));
-		mOverrideSymbolPairs.putPair('[', new SymbolPairMatch.Replacement("[]", 1));
-		mOverrideSymbolPairs.putPair('"', new SymbolPairMatch.Replacement("\"\"", 1));
-		mOverrideSymbolPairs.putPair('\'', new SymbolPairMatch.Replacement("''", 1));
         return mOverrideSymbolPairs;
     }
 
