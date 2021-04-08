@@ -22,6 +22,7 @@ import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
 import io.github.rosemoe.editor.langs.IdentifierAutoComplete;
 import io.github.rosemoe.editor.text.TextUtils;
+import io.github.rosemoe.editor.widget.SymbolPairMatch;
 
 /**
  * Java language is much complex.
@@ -70,6 +71,12 @@ public class JavaLanguage implements EditorLanguage {
     @Override
     public boolean useTab() {
         return true;
+    }
+	
+	@Override
+    public SymbolPairMatch getSymbolPairs()
+    {
+        return new SymbolPairMatch.DefaultSymbolPairs();
     }
 
     @Override

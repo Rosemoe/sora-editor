@@ -32,7 +32,7 @@ public final class Cursor {
     private boolean mAutoIndentEnabled;
     private EditorLanguage mLanguage;
     private int mTabWidth;
-
+	
     /**
      * Create a new Cursor for Content
      *
