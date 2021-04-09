@@ -23,9 +23,9 @@ public class Logs {
 
     public static void dumpStack() {
         Throwable e = new Throwable();
-        stringBuilder.append(e.toString()).append('\n');
+        stringBuilder.append("Stack trace:").append('\n');
         for (StackTraceElement element : e.getStackTrace()) {
-            stringBuilder.append(element.toString()).append('\n');
+            stringBuilder.append("- ").append(element.toString()).append('\n');
         }
     }
 

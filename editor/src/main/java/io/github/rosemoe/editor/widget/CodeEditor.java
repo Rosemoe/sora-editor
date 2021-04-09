@@ -368,13 +368,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Notify input method that text has been changed for external reason
      */
-    protected void cursorChangeExternal() {
+    protected void notifyExternalCursorChange() {
         //Logs.log("Call cursorChangeExternal()");
         updateExtractedText();
         updateSelection();
         updateCursorAnchor();
-        mConnection.invalid();
-        mInputMethodManager.restartInput(this);
+        // Restart if composing
+        if (mConnection.mComposingLine != -1) {
+            mConnection.invalid();
+            mInputMethodManager.restartInput(this);
+        }
     }
 
     /**
@@ -3231,7 +3234,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             if (text != null && mConnection != null) {
                 mConnection.commitText(text, 0);
             }
-            cursorChangeExternal();
+            notifyExternalCursorChange();
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(getContext(), e.toString(), Toast.LENGTH_SHORT).show();
@@ -3263,7 +3266,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         copyText();
         if (mCursor.isSelected()) {
             mCursor.onDeleteKeyPressed();
-            cursorChangeExternal();
+            notifyExternalCursorChange();
         }
     }
 
@@ -3382,10 +3385,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Set a new color scheme for.editor
-     * It can be a subclass of {@link EditorColorScheme}
-     * The scheme object can only be applied to one editor.
-     * Otherwise, an IllegalStateException is thrown
+     * Set a new color scheme for editor.
+     * <p>
+     * It can be a subclass of {@link EditorColorScheme}.
+     * The scheme object can only be applied to one editor instance.
+     * Otherwise, an IllegalStateException is thrown.
      *
      * @param colors A non-null and free EditorColorScheme
      */
@@ -3568,13 +3572,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             case KeyEvent.KEYCODE_DEL:
                 if (isEditable()) {
                     mCursor.onDeleteKeyPressed();
-                    //cursorChangeExternal();
+                    notifyExternalCursorChange();
                 }
                 return true;
             case KeyEvent.KEYCODE_FORWARD_DEL: {
-                if (isEditable() && mConnection != null) {
+                if (isEditable()) {
                     mConnection.deleteSurroundingText(0, 1);
-                    cursorChangeExternal();
+                    notifyExternalCursorChange();
                 }
                 return true;
             }
@@ -3621,7 +3625,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                             mCursor.onCommitText("\n", true);
                         }
                     }
-                    //cursorChangeExternal();
+                    notifyExternalCursorChange();
                 }
                 return true;
             }
@@ -3665,7 +3669,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             case KeyEvent.KEYCODE_SPACE:
                 if (isEditable()) {
                     getCursor().onCommitText(" ");
-                    cursorChangeExternal();
+                    notifyExternalCursorChange();
                 }
                 return true;
             default:
@@ -3709,7 +3713,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         }
                         if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT) {
                             getCursor().onCommitText(text);
-                            cursorChangeExternal();
+                            notifyExternalCursorChange();
                         } else {
                             getCursor().onCommitText(replacement.text);
                             int delta = (replacement.text.length() - replacement.selection);
@@ -3717,7 +3721,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                                 int newSel = Math.max(getCursor().getLeft() - delta, 0);
                                 CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
                                 setSelection(charPosition.line, charPosition.column);
-                                cursorChangeExternal();
+                                notifyExternalCursorChange();
                             }
                         }
                     } else {

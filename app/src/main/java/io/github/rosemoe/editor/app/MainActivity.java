@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
-import io.github.rosemoe.editor.debug_logger.Logs;
 import io.github.rosemoe.editor.langs.EmptyLanguage;
 import io.github.rosemoe.editor.langs.desc.CDescription;
 import io.github.rosemoe.editor.langs.desc.CppDescription;
@@ -306,7 +305,7 @@ public class MainActivity extends Activity {
                 break;
             }
             case R.id.open_debug_logs: {
-                editor.setText(Logs.getLogs());
+                //editor.setText(Logs.getLogs());
                 break;
             }
             case R.id.editor_line_number: {
