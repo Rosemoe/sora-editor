@@ -18,6 +18,7 @@ package io.github.rosemoe.editor.langs.universal;
 import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
+import io.github.rosemoe.editor.interfaces.NewlineHandler;
 import io.github.rosemoe.editor.langs.IdentifierAutoComplete;
 import io.github.rosemoe.editor.langs.internal.MyCharacter;
 import io.github.rosemoe.editor.struct.BlockLine;
@@ -25,6 +26,7 @@ import io.github.rosemoe.editor.text.LineNumberCalculator;
 import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.text.TextAnalyzer;
 import io.github.rosemoe.editor.widget.EditorColorScheme;
+import io.github.rosemoe.editor.widget.SymbolPairMatch;
 
 import java.util.Stack;
 
@@ -177,6 +179,16 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
             maxSwitch = currSwitch;
         }
         colors.setSuppressSwitch(maxSwitch + 50);
+    }
+
+    @Override
+    public SymbolPairMatch getSymbolPairs() {
+        return new SymbolPairMatch.DefaultSymbolPairs();
+    }
+
+    @Override
+    public NewlineHandler[] getNewlineHandlers() {
+        return new NewlineHandler[0];
     }
 
 }

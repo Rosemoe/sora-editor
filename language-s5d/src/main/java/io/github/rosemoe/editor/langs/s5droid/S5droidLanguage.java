@@ -18,6 +18,8 @@ package io.github.rosemoe.editor.langs.s5droid;
 import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
 import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
+import io.github.rosemoe.editor.interfaces.NewlineHandler;
+import io.github.rosemoe.editor.widget.SymbolPairMatch;
 
 /**
  * @author Rose
@@ -87,6 +89,16 @@ public class S5droidLanguage implements EditorLanguage {
     @Override
     public boolean useTab() {
         return false;
+    }
+
+    @Override
+    public SymbolPairMatch getSymbolPairs() {
+        return new SymbolPairMatch.DefaultSymbolPairs();
+    }
+
+    @Override
+    public NewlineHandler[] getNewlineHandlers() {
+        return new NewlineHandler[0];
     }
 
 }

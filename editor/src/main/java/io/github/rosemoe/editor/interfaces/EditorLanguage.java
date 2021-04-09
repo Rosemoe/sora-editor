@@ -82,9 +82,7 @@ public interface EditorLanguage {
      * Returns language specified symbol pairs.
      * The method is called only once when the language is applied.
      */
-    default SymbolPairMatch getSymbolPairs() {
-        return new SymbolPairMatch.DefaultSymbolPairs();
-    }
+    SymbolPairMatch getSymbolPairs();
 
     /**
      * Get newline handlers of this language.
@@ -94,8 +92,6 @@ public interface EditorLanguage {
      *
      * @return NewlineHandlers , maybe null
      */
-    default NewlineHandler[] getNewlineHandlers() {
-        return null;
-    }
+    NewlineHandler[] getNewlineHandlers();
 
 }

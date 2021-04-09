@@ -21,9 +21,11 @@ import java.util.List;
 import io.github.rosemoe.editor.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.editor.interfaces.CodeAnalyzer;
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
+import io.github.rosemoe.editor.interfaces.NewlineHandler;
 import io.github.rosemoe.editor.struct.CompletionItem;
 import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.text.TextAnalyzer.AnalyzeThread.Delegate;
+import io.github.rosemoe.editor.widget.SymbolPairMatch;
 
 /**
  * Empty language without any effect
@@ -35,6 +37,16 @@ public class EmptyLanguage implements EditorLanguage {
     @Override
     public CharSequence format(CharSequence text) {
         return text;
+    }
+
+    @Override
+    public SymbolPairMatch getSymbolPairs() {
+        return new SymbolPairMatch.DefaultSymbolPairs();
+    }
+
+    @Override
+    public NewlineHandler[] getNewlineHandlers() {
+        return new NewlineHandler[0];
     }
 
 
