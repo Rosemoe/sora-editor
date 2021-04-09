@@ -1145,8 +1145,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 int paintStart = Math.min(Math.max(composingStart, firstVisibleChar), lastVisibleChar);
                 int paintEnd = Math.min(Math.max(composingEnd, firstVisibleChar), lastVisibleChar);
                 if (paintStart != paintEnd) {
-                    mRect.bottom = getRowBottom(row) - getOffsetY();
-                    mRect.top = mRect.bottom + getRowHeight() * 0.06f;
+                    mRect.top = getRowBottom(row) - getOffsetY();
+                    mRect.bottom = mRect.top + getRowHeight() * 0.06f;
                     mRect.left = paintingOffset + measureText(mBuffer, firstVisibleChar, paintStart - firstVisibleChar);
                     mRect.right = mRect.left + measureText(mBuffer, paintStart, paintEnd - paintStart);
                     drawColor(canvas, mColors.getColor(EditorColorScheme.UNDERLINE), mRect);
