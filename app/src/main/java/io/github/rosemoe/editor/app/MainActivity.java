@@ -49,6 +49,7 @@ import io.github.rosemoe.editor.struct.NavigationItem;
 import io.github.rosemoe.editor.utils.CrashHandler;
 import io.github.rosemoe.editor.widget.CodeEditor;
 import io.github.rosemoe.editor.widget.EditorColorScheme;
+import io.github.rosemoe.editor.widget.SymbolInputView;
 import io.github.rosemoe.editor.widget.schemes.HTMLScheme;
 import io.github.rosemoe.editor.widget.schemes.SchemeDarcula;
 import io.github.rosemoe.editor.widget.schemes.SchemeEclipse;
@@ -74,6 +75,11 @@ public class MainActivity extends Activity {
         search = findViewById(R.id.search_editor);
         replace = findViewById(R.id.replace_editor);
 
+        SymbolInputView inputView = findViewById(R.id.symbol_input);
+        inputView.bindEditor(editor);
+        inputView.addSymbols(new String[]{"->" , "{", "}", "(", ")", ",", ".", ";", "\"", "?", "+", "-", "*", "/"},
+                new String[]{"\t", "{}", "}", "(", ")", ",", ".", ";", "\"", "?", "+", "-", "*", "/"});
+
         search.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -93,7 +99,6 @@ public class MainActivity extends Activity {
         editor.setTypefaceText(Typeface.MONOSPACE);
         editor.setOverScrollEnabled(false);
         editor.setEditorLanguage(new JavaLanguage());
-        //editor.setCursorBlinkPeriod(50);
         editor.setNonPrintablePaintingFlags(CodeEditor.FLAG_DRAW_WHITESPACE_LEADING | CodeEditor.FLAG_DRAW_LINE_SEPARATOR);
 
         new Thread(() -> {

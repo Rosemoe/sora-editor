@@ -53,6 +53,10 @@ import android.widget.OverScroller;
 import android.widget.SearchView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.Px;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -203,7 +207,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private GestureDetector mBasicDetector;
     private EditorTextActionPresenter mTextActionPresenter;
     private ScaleGestureDetector mScaleDetector;
-    private EditorInputConnection mConnection;
+    EditorInputConnection mConnection;
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;
     private MaterialEdgeEffect mVerticalEdgeGlow;
     private MaterialEdgeEffect mHorizontalGlow;
@@ -263,7 +267,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @see EditorEventListener
      */
-    public void setEventListener(EditorEventListener eventListener) {
+    public void setEventListener(@Nullable EditorEventListener eventListener) {
         this.mListener = eventListener;
     }
 
@@ -289,6 +293,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Get using EditorAutoCompleteWindow
      */
+    @NonNull
     protected EditorAutoCompleteWindow getAutoCompleteWindow() {
         return mCompletionWindow;
     }
@@ -298,6 +303,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @return EditorTextActionPresenter
      */
+    @NonNull
     protected EditorTextActionPresenter getTextActionPresenter() {
         return mTextActionPresenter;
     }
@@ -332,14 +338,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Set request needed to update when editor updates selection
      */
-    protected void setExtracting(ExtractedTextRequest request) {
+    protected void setExtracting(@Nullable ExtractedTextRequest request) {
         mExtracting = request;
     }
 
     /**
      * Extract text in editor for input method
      */
-    protected ExtractedText extractText(ExtractedTextRequest request) {
+    protected ExtractedText extractText(@NonNull ExtractedTextRequest request) {
         Cursor cur = getCursor();
         ExtractedText text = new ExtractedText();
         int selBegin = cur.getLeft();
@@ -515,6 +521,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * <p>
      * Use {@link SymbolPairMatch.Replacement#NO_REPLACEMENT} to force no completion for a character
      */
+    @NonNull
     public SymbolPairMatch getOverrideSymbolPairs() {
         return mOverrideSymbolPairs;
     }
@@ -534,12 +541,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
+     * Create a channel to insert symbols
+     */
+    public SymbolChannel createNewSymbolChannel() {
+        return new SymbolChannel(this);
+    }
+
+    /**
      * Set adapter for auto-completion window
      * Will take effect next time the window updates
      *
      * @param adapter New adapter, maybe null
      */
-    public void setAutoCompletionIemAdapter(EditorCompletionAdapter adapter) {
+    public void setAutoCompletionItemAdapter(@Nullable EditorCompletionAdapter adapter) {
         mCompletionWindow.setAdapter(adapter);
     }
 
@@ -610,7 +624,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param lang New EditorLanguage for editor
      */
-    public void setEditorLanguage(EditorLanguage lang) {
+    public void setEditorLanguage(@Nullable EditorLanguage lang) {
         if (lang == null) {
             lang = new EmptyLanguage();
         }
@@ -826,6 +840,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @see CodeEditor#setTextSize(float)
      * @see CodeEditor#setTextSizePx(float)
      */
+    @Px
     public float getTextSizePx() {
         return mPaint.getTextSize();
     }
@@ -835,7 +850,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param size Text size in pixel unit
      */
-    public void setTextSizePx(float size) {
+    public void setTextSizePx(@Px float size) {
         setTextSizePxDirect(size);
         createLayout();
         invalidate();
@@ -2213,7 +2228,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Set non-printable painting flags.
+     * Sets non-printable painting flags.
      * Specify where they should be drawn.
      * <p>
      * Flags can be mixed.
@@ -3274,16 +3289,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return Text displaying, the result is read-only. You should not make changes to this object as it is used internally
      * @see CodeEditor#setText(CharSequence)
      */
+    @NonNull
     public Content getText() {
         return mText;
     }
 
     /**
-     * Set the editor's text displaying
+     * Sets the text to be displayed.
      *
      * @param text the new text you want to display
      */
-    public void setText(CharSequence text) {
+    public void setText(@Nullable CharSequence text) {
         if (text == null) {
             text = "";
         }
@@ -3370,6 +3386,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @return The paint which is used by the editor now
      */
+    @NonNull
     public Paint getTextPaint() {
         return mPaint;
     }
@@ -3380,6 +3397,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @return ColorScheme object using
      */
+    @NonNull
     public EditorColorScheme getColorScheme() {
         return mColors;
     }
@@ -3393,7 +3411,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param colors A non-null and free EditorColorScheme
      */
-    public void setColorScheme(EditorColorScheme colors) {
+    public void setColorScheme(@NonNull EditorColorScheme colors) {
         colors.attachEditor(this);
         mColors = colors;
         if (mCompletionWindow != null) {
@@ -3415,6 +3433,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Get analyze result.
      * <strong>Do not make changes to it or read concurrently</strong>
      */
+    @NonNull
     public TextAnalyzeResult getTextAnalyzeResult() {
         return mSpanner.getResult();
     }

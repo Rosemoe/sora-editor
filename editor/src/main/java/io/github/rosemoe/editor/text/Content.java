@@ -18,6 +18,7 @@ package io.github.rosemoe.editor.text;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.github.rosemoe.editor.annotations.Experimental;
 import io.github.rosemoe.struct.BlockLinkedList;
 
 /**
@@ -44,6 +45,16 @@ public class Content implements CharSequence {
     private UndoManager mUndoManager;
     private Cursor mCursor;
     private LineRemoveListener mLineListener;
+
+    /**
+     * Use a BlockLinkedList instead of ArrayList.
+     * <p>
+     * This can be faster while inserting in large text.
+     * But in other conditions, it is quite slow.
+     * <p>
+     * Disabled by default.
+     */
+    @Experimental
     public static boolean useBlock = false;
 
     /**

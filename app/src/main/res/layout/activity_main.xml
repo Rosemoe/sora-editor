@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<?xml version="1.0" encoding="utf-8"?><!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ~   Copyright 2020-2021 Rosemoe
   ~
   ~   Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,10 +20,10 @@
     android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/search_panel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:id="@+id/search_panel"
         android:visibility="gone">
 
         <HorizontalScrollView
@@ -39,26 +38,26 @@
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/layout_tv_last"
-                    android:onClick="gotoLast"/>
+                    android:onClick="gotoLast"
+                    android:text="@string/layout_tv_last" />
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/layout_tv_next"
-                    android:onClick="gotoNext"/>
+                    android:onClick="gotoNext"
+                    android:text="@string/layout_tv_next" />
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/layout_tv_replace"
-                    android:onClick="replace"/>
+                    android:onClick="replace"
+                    android:text="@string/layout_tv_replace" />
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/layout_tv_replaceAll"
-                    android:onClick="replaceAll"/>
+                    android:onClick="replaceAll"
+                    android:text="@string/layout_tv_replaceAll" />
 
 
             </LinearLayout>
@@ -67,22 +66,34 @@
 
 
         <EditText
+            android:id="@+id/search_editor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/search_editor"
             android:hint="@string/text_to_search" />
 
         <EditText
+            android:id="@+id/replace_editor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/replace_editor"
             android:hint="@string/replacement" />
 
     </LinearLayout>
 
     <io.github.rosemoe.editor.widget.CodeEditor
+        android:id="@+id/editor"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/editor"/>
+        android:layout_height="match_parent" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:layout_marginTop="-36dp">
+
+        <io.github.rosemoe.editor.widget.SymbolInputView
+            android:id="@+id/symbol_input"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp" />
+
+    </HorizontalScrollView>
 
 </LinearLayout>
