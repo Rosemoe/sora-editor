@@ -195,7 +195,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
      * @param pos Index of auto complete item
      */
     public void select(int pos) {
-        CompletionItem item = ((DefaultCompletionItemAdapter) mListView.getAdapter()).getItem(pos);
+        CompletionItem item = ((EditorCompletionAdapter) mListView.getAdapter()).getItem(pos);
         Cursor cursor = mEditor.getCursor();
         if (!cursor.isSelected()) {
             mCancelShowUp = true;
