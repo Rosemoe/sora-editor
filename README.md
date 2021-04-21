@@ -61,3 +61,5 @@ Available modules:
 * language-s5d    
 ### Some more information
 Go to [Wiki](https://github.com/Rosemoe/CodeEditor/wiki)
+### Discuss
+Official QQ Group:[216632648](https://jq.qq.com/?_wv=1027&k=n68uxQws)
