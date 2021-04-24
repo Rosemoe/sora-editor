@@ -155,7 +155,15 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
      * @return Whether to draw
      */
     public boolean shouldDrawInsertHandle() {
-        return System.currentTimeMillis() - mLastSetSelection < HIDE_DELAY || mHolding3;
+        return (System.currentTimeMillis() - mLastSetSelection < HIDE_DELAY || mHolding3) && checkActionWindow();
+    }
+
+    private boolean checkActionWindow() {
+        CodeEditor.EditorTextActionPresenter presenter = mEditor.mTextActionPresenter;
+        if (presenter instanceof EditorTextActionWindow) {
+            return !((EditorTextActionWindow) presenter).isShowing();
+        }
+        return true;
     }
 
     /**
@@ -371,17 +379,31 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
         mEditor.showSoftInput();
-        mEditor.getInputMethodManager().viewClicked(mEditor);
+        //mEditor.getInputMethodManager().viewClicked(mEditor);
         mScroller.forceFinished(true);
         long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);
         if (mEditor.getCursor().isSelected() && mEditor.getCursor().isInSelectedRegion(line, column) && !mEditor.isOverMaxY(e.getY())) {
-            handleSelectedTextClick(e, line, column);	
+            handleSelectedTextClick(e, line, column);
         } else {
             notifyLater();
-            mEditor.setSelection(line, column);
-            mEditor.hideAutoCompleteWindow();
+            int oldLine = mEditor.getCursor().getLeftLine();
+            int oldColumn = mEditor.getCursor().getLeftColumn();
+            if (line == oldLine && column == oldColumn) {
+                if (mEditor.mTextActionPresenter instanceof EditorTextActionWindow) {
+                    EditorTextActionWindow window = (EditorTextActionWindow) mEditor.mTextActionPresenter;
+                    if (window.isShowing()) {
+                        window.hide();
+                    } else {
+                        window.onBeginTextSelect();
+                        window.onSelectedTextClicked(e);
+                    }
+                }
+            } else {
+                mEditor.setSelection(line, column);
+                mEditor.hideAutoCompleteWindow();
+            }
         }
         mEditor.performClick();
         return true;

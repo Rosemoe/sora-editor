@@ -205,7 +205,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private EditorTouchEventHandler mEventHandler;
     private Paint.Align mLineNumberAlign;
     private GestureDetector mBasicDetector;
-    private EditorTextActionPresenter mTextActionPresenter;
+    protected EditorTextActionPresenter mTextActionPresenter;
     private ScaleGestureDetector mScaleDetector;
     EditorInputConnection mConnection;
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;

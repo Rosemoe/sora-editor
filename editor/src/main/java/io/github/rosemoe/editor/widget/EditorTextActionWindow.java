@@ -18,7 +18,6 @@ package io.github.rosemoe.editor.widget;
 import android.annotation.SuppressLint;
 import android.content.res.Resources;
 import android.graphics.drawable.GradientDrawable;
-import android.os.Build;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -35,6 +34,10 @@ import io.github.rosemoe.editor.R;
 class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnClickListener, CodeEditor.EditorTextActionPresenter {
     private final CodeEditor mEditor;
     private final Button mPasteBtn;
+    private final Button mCopyBtn;
+    private final Button mCutBtn;
+    private final View mRootView;
+    private int maxWidth;
 
     /**
      * Create a panel for the given editor
@@ -51,6 +54,8 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
         Button cut = root.findViewById(R.id.panel_btn_cut);
         Button copy = root.findViewById(R.id.panel_btn_copy);
         mPasteBtn = root.findViewById(R.id.panel_btn_paste);
+        mCopyBtn = copy;
+        mCutBtn = cut;
         selectAll.setOnClickListener(this);
         cut.setOnClickListener(this);
         copy.setOnClickListener(this);
@@ -58,19 +63,17 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
         GradientDrawable gd = new GradientDrawable();
         gd.setCornerRadius(5);
         gd.setColor(0xffffffff);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            root.setBackground(gd);
-        } else {
-            root.setBackgroundDrawable(gd);
-        }
+        root.setBackground(gd);
         setContentView(root);
+        mRootView = root;
     }
 
     @Override
     public void onBeginTextSelect() {
         float dpUnit = mEditor.getDpUnit();
         setHeight((int) (dpUnit * 60));
-        setWidth((int) (dpUnit * 230));
+        maxWidth = (int) (dpUnit * 230);
+        setWidth(maxWidth);
     }
 
     @Override
@@ -144,14 +147,16 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
      */
     private void updateBtnState() {
         mPasteBtn.setEnabled(mEditor.hasClip());
+        mCopyBtn.setVisibility(mEditor.getCursor().isSelected() ? View.VISIBLE : View.GONE);
+        mCutBtn.setVisibility(mEditor.getCursor().isSelected() ? View.VISIBLE : View.GONE);
+        mRootView.measure(View.MeasureSpec.makeMeasureSpec(1000000, View.MeasureSpec.AT_MOST), View.MeasureSpec.makeMeasureSpec(100000, View.MeasureSpec.AT_MOST));
+        setWidth(Math.min(mRootView.getMeasuredWidth(), maxWidth));
     }
 
     @Override
     public void show() {
         updateBtnState();
-        if (Build.VERSION.SDK_INT >= 21) {
-            setElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, Resources.getSystem().getDisplayMetrics()));
-        }
+        setElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, Resources.getSystem().getDisplayMetrics()));
         super.show();
     }
 
