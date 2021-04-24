@@ -17,7 +17,6 @@
 include ':language-universal'
 include ':language-java'
 include ':language-html'
-include ':language-s5d'
 include ':language-base'
 include ':language-python'
 include ':debug-logger'

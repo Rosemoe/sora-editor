@@ -42,8 +42,6 @@ import io.github.rosemoe.editor.langs.desc.JavaScriptDescription;
 import io.github.rosemoe.editor.langs.html.HTMLLanguage;
 import io.github.rosemoe.editor.langs.java.JavaLanguage;
 import io.github.rosemoe.editor.langs.python.PythonLanguage;
-import io.github.rosemoe.editor.langs.s5droid.S5droidAutoComplete;
-import io.github.rosemoe.editor.langs.s5droid.S5droidLanguage;
 import io.github.rosemoe.editor.langs.universal.UniversalLanguage;
 import io.github.rosemoe.editor.struct.NavigationItem;
 import io.github.rosemoe.editor.utils.CrashHandler;
@@ -69,7 +67,6 @@ public class MainActivity extends Activity {
         CrashHandler.INSTANCE.init(this);
         setContentView(R.layout.activity_main);
 
-        S5droidAutoComplete.init(this);
         editor = findViewById(R.id.editor);
         panel = findViewById(R.id.search_panel);
         search = findViewById(R.id.search_editor);
@@ -178,7 +175,7 @@ public class MainActivity extends Activity {
             case R.id.switch_language:
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.switch_language)
-                        .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "S5droid", "HTML", "Python", "None"}, -1, (dialog, which) -> {
+                        .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "HTML", "Python", "None"}, -1, (dialog, which) -> {
                             switch (which) {
                                 case 0:
                                     editor.setEditorLanguage(new UniversalLanguage(new CDescription()));
@@ -193,15 +190,12 @@ public class MainActivity extends Activity {
                                     editor.setEditorLanguage(new UniversalLanguage(new JavaScriptDescription()));
                                     break;
                                 case 4:
-                                    editor.setEditorLanguage(new S5droidLanguage());
-                                    break;
-                                case 5:
                                     editor.setEditorLanguage(new HTMLLanguage());
                                     break;
-                                case 6:
+                                case 5:
                                     editor.setEditorLanguage(new PythonLanguage());
                                     break;
-                                case 7:
+                                case 6:
                                     editor.setEditorLanguage(new EmptyLanguage());
                             }
                             dialog.dismiss();

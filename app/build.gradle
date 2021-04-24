@@ -44,7 +44,6 @@ dependencies {
     implementation project(path: ':editor')
     implementation project(path: ':language-java')
 	implementation project(path: ':language-html')
-    implementation project(path: ':language-s5d')
     implementation project(path: ':language-universal')
     implementation project(path: ':language-python')
     //implementation project(path: ':debug-logger')

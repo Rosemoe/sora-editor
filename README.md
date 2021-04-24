@@ -15,7 +15,6 @@ Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/re
 - [x] Auto completion
 - [x] Auto indent
 - [x] Code block lines
-- [x] Format code (Requires improvement)
 - [x] Scale text
 - [x] Select text
 - [x] Scroll, Scrollbars, EdgeEffect, OverScroll
@@ -27,7 +26,6 @@ Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/re
 - [ ] Incremental highlight Analysis
 ## Language Supported  
 * Java, JavaScript, C, C++, HTML, Python (Basic Support:highlight, code block line,identifier and keyword auto-completion). Code block line isn't available for HTML Language
-* S5droid 2.x(context sensitive auto completion, highlight, code block line, navigation)(going to be deprecated)   
 ## Screenshots  
 ![View Outline](/images/outline.png)
 ![Auto Complete](/images/auto-completion.png)
@@ -57,8 +55,7 @@ Available modules:
 * language-java
 * language-html
 * language-python
-* language-universal
-* language-s5d    
+* language-universal   
 ### Some more information
 Go to [Wiki](https://github.com/Rosemoe/CodeEditor/wiki)
 ### Discuss
