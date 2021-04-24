@@ -7,7 +7,7 @@ It is **not** recommended to use this project for production use.
 ***Note:***
 Any method or field can be changed, moved or even deleted at current period.     
 If you find any bug or require any enhancement, please send it to me by issues or other ways.
-Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/releases) instead of clone this repo directly.
+Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/releases) instead of cloning this repository directly.
 
 **Issues and pull requests are welcome.**   
 ## Features
@@ -24,6 +24,7 @@ Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/re
 - [x] Auto wordwrap
 - [x] Show non-printable characters
 - [ ] Incremental highlight Analysis
+- [ ] Plugin System
 ## Language Supported  
 * Java, JavaScript, C, C++, HTML, Python (Basic Support:highlight, code block line,identifier and keyword auto-completion). Code block line isn't available for HTML Language
 ## Screenshots  
