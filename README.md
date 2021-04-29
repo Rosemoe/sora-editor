@@ -61,4 +61,4 @@ Available modules:
 Go to [Wiki](https://github.com/Rosemoe/CodeEditor/wiki)
 ### Discuss
 * Official QQ Group:[216632648](https://jq.qq.com/?_wv=1027&k=n68uxQws)
-* [Official Telegram Group](https://t.me/joinchat/mAVFBvuHWi0zOWQ1)
+* [Official Telegram Group](https://t.me/rosemoe_code_editor)
