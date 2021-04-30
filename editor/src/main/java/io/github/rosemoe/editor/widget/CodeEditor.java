@@ -165,6 +165,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mDrag;
     private boolean mScalable;
     private boolean mEditable;
+    private boolean mCharPaint;
     private boolean mAutoIndentEnabled;
     private boolean mWordwrap;
     private boolean mUndoEnabled;
@@ -1850,11 +1851,25 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         //counter++;
         int end = index + count;
         int st = index;
-        for (int i = index; i < end; i++) {
-            if (src[i] == '\t') {
-                canvas.drawText(src, st, i - st, offX, offY, mPaint);
-                offX = offX + measureText(src, st, i - st + 1);
-                st = i + 1;
+        if (mCharPaint) {
+            for (int i = index; i < end; i++) {
+                if (src[i] == '\t') {
+                    canvas.drawText(src, st, i - st, offX, offY, mPaint);
+                    offX = offX + measureText(src, st, i - st + 1);
+                    st = i + 1;
+                } else if (src[i] == '/') {
+                    canvas.drawText(src, st, i - st + 1, offX, offY, mPaint);
+                    offX = offX + measureText(src, st, i - st + 1);
+                    st = i + 1;
+                }
+            }
+        } else {
+            for (int i = index; i < end; i++) {
+                if (src[i] == '\t') {
+                    canvas.drawText(src, st, i - st, offX, offY, mPaint);
+                    offX = offX + measureText(src, st, i - st + 1);
+                    st = i + 1;
+                }
             }
         }
         if (st < end) {
@@ -2778,6 +2793,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         mPaint.setTypeface(typefaceText);
         mFontCache.clearCache();
+        if (2 * mPaint.measureText("/") != mPaint.measureText("//")) {
+            Log.w(LOG_TAG, "Font issue:Your font is painting '/' and '//' differently, which will cause the editor to render slowly than other fonts.");
+            mCharPaint = true;
+        } else {
+            mCharPaint = false;
+        }
         mTextMetrics = mPaint.getFontMetricsInt();
         createLayout();
         invalidate();
