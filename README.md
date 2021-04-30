@@ -10,6 +10,7 @@ If you find any bug or require any enhancement, please send it to me by issues o
 Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/releases) instead of cloning this repository directly.
 
 **Issues and pull requests are welcome.**   
+Note: Language issues may not be handled.   
 ## Features
 - [x] Smooth syntax highlight
 - [x] Auto completion
