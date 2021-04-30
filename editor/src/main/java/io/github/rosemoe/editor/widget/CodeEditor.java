@@ -1462,7 +1462,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param resultRect The rect of handle this method drew
      */
     private void drawHandle(Canvas canvas, int row, float centerX, RectF resultRect) {
-        float radius = mDpUnit * 10;
+        float radius = mDpUnit * 12;
         float top = getRowBottom(row) - getOffsetY();
         float bottom = top + radius * 2;
         float left = centerX - radius;
