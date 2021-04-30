@@ -3128,6 +3128,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param column The column to move
      */
     public void setSelection(int line, int column) {
+        setSelection(line, column, true);
+    }
+
+    /**
+     * Move selection to given position
+     *
+     * @param line   The line to move
+     * @param column The column to move
+     * @param makeItVisible Make the character visible
+     */
+    public void setSelection(int line, int column, boolean makeItVisible) {
         if (column > 0 && isEmoji(mText.charAt(line, column - 1))) {
             column++;
             if (column > mText.getColumnCount(line)) {
@@ -3139,7 +3150,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mCursorPosition = findCursorBlock();
         }
         updateCursor();
-        ensurePositionVisible(line, column);
+        if (makeItVisible) {
+            ensurePositionVisible(line, column);
+        } else {
+            invalidate();
+        }
         mCursorBlink.onSelectionChanged();
         if (mTextActionPresenter != null) {
             mTextActionPresenter.onExit();
@@ -3795,7 +3810,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (isWordwrap() && w != oldWidth) {
             createLayout();
         } else {
-            mEventHandler.smoothScrollBy(getOffsetX() > getScrollMaxX() ? getScrollMaxX() - getOffsetX() : 0, getOffsetY() > getScrollMaxY() ? getScrollMaxY() - getOffsetY() : 0);
+            mEventHandler.scrollBy(getOffsetX() > getScrollMaxX() ? getScrollMaxX() - getOffsetX() : 0, getOffsetY() > getScrollMaxY() ? getScrollMaxY() - getOffsetY() : 0);
         }
     }
 

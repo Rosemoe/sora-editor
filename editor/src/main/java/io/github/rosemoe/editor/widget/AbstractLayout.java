@@ -42,6 +42,7 @@ abstract class AbstractLayout implements Layout {
 
     protected float measureText(CharSequence text, int start, int end) {
         int tabCount = 0;
+        end = Math.min(text.length(), end);
         for (int i = start; i < end; i++) {
             if (text.charAt(i) == '\t') {
                 tabCount++;
