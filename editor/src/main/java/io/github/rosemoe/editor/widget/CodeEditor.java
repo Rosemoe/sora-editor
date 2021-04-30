@@ -381,9 +381,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         updateCursorAnchor();
         // Restart if composing
         if (mConnection.mComposingLine != -1) {
-            mConnection.invalid();
-            mInputMethodManager.restartInput(this);
+            restartInput();
         }
+    }
+
+    protected void restartInput() {
+        mConnection.invalid();
+        mInputMethodManager.restartInput(this);
     }
 
     /**

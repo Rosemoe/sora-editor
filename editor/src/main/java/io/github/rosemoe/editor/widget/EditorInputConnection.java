@@ -358,6 +358,9 @@ class EditorInputConnection extends BaseInputConnection {
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
+        if (TextUtils.indexOf(text, '\n') != -1) {
+            return false;
+        }
         //Log.d(LOG_TAG, "set composing text:text = " + text + ", newCur =" + newCursorPosition);
         if (mComposingLine == -1) {
             // Create composing info
@@ -445,6 +448,7 @@ class EditorInputConnection extends BaseInputConnection {
             CharPosition startPos = content.getIndexer().getCharPosition(start);
             CharPosition endPos = content.getIndexer().getCharPosition(end);
             if (startPos.line != endPos.line) {
+                mEditor.restartInput();
                 return false;
             }
             mComposingLine = startPos.line;
