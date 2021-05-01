@@ -80,6 +80,7 @@ import io.github.rosemoe.editor.text.SpanMapUpdater;
 import io.github.rosemoe.editor.text.TextAnalyzeResult;
 import io.github.rosemoe.editor.text.TextAnalyzer;
 import io.github.rosemoe.editor.util.IntPair;
+import io.github.rosemoe.editor.util.LongArrayList;
 
 /**
  * CodeEditor is a editor that can highlight text regions by doing basic syntax analyzing
@@ -90,7 +91,7 @@ import io.github.rosemoe.editor.util.IntPair;
  * When we say 'row', it means a line displayed on screen. It can be a part of a line in the text object.
  * When we say 'line', it means a real line in the original text.
  *
- * @author Rose
+ * @author Rosemoe
  */
 public class CodeEditor extends View implements ContentListener, TextAnalyzer.Callback, FormatThread.FormatResultReceiver, LineRemoveListener {
 
@@ -98,10 +99,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * The default size when creating the editor object. Unit is sp.
      */
     public static final int DEFAULT_TEXT_SIZE = 20;
+
     /**
      * The default cursor blinking period
      */
     public static final int DEFAULT_CURSOR_BLINK_PERIOD = 500;
+
     /**
      * Draw whitespace characters before line content start
      * <strong>Whitespace here only means space and tab</strong>
@@ -109,6 +112,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @see #setNonPrintablePaintingFlags(int)
      */
     public static final int FLAG_DRAW_WHITESPACE_LEADING = 1;
+
     /**
      * Draw whitespace characters inside line content
      * <strong>Whitespace here only means space and tab</strong>
@@ -116,6 +120,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @see #setNonPrintablePaintingFlags(int)
      */
     public static final int FLAG_DRAW_WHITESPACE_INNER = 1 << 1;
+
     /**
      * Draw whitespace characters after line content end
      * <strong>Whitespace here only means space and tab</strong>
@@ -123,6 +128,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @see #setNonPrintablePaintingFlags(int)
      */
     public static final int FLAG_DRAW_WHITESPACE_TRAILING = 1 << 2;
+
     /**
      * Draw whitespace characters even if it is a line full of whitespaces
      * To apply this, you must enable {@link #FLAG_DRAW_WHITESPACE_LEADING}
@@ -131,6 +137,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @see #setNonPrintablePaintingFlags(int)
      */
     public static final int FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE = 1 << 3;
+
     /**
      * Draw newline signals in text
      *
@@ -138,6 +145,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public static final int FLAG_DRAW_LINE_SEPARATOR = 1 << 4;
 
+    /**
+     * Text size scale of small graph
+     */
     private static final float SCALE_MINI_GRAPH = 0.9f;
 
     /*
@@ -172,6 +182,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mDisplayLnPanel;
     private boolean mOverScrollEnabled;
     private boolean mLineNumberEnabled;
+    private boolean mBlockLineEnabled;
     private boolean mAutoCompletionEnabled;
     private boolean mCompletionOnComposing;
     private boolean mHighlightSelectedText;
@@ -222,6 +233,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private Paint.FontMetricsInt mGraphMetrics;
     private CursorBlink mCursorBlink;
     private SymbolPairMatch mOverrideSymbolPairs;
+    private LongArrayList mPostDrawLineNumbers = new LongArrayList();
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -457,7 +469,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaint.setAntiAlias(true);
         mPaintOther.setAntiAlias(true);
         mPaintGraph.setAntiAlias(true);
-
         mPaintOther.setTypeface(Typeface.MONOSPACE);
         mBuffer = new char[256];
         mBuffer2 = new char[16];
@@ -484,6 +495,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mLineNumberAlign = Paint.Align.RIGHT;
         mDrag = false;
         mWait = false;
+        mBlockLineEnabled = true;
         mBlockLineWidth = mDpUnit / 1.5f;
         mInputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         mClipboardManager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
@@ -877,11 +889,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     private long startClock;
+
     private void record() {
         startClock = System.nanoTime();
     }
-    private void print(String processName) {
-        Log.d(LOG_TAG, "- Process " + processName + " used " + (System.nanoTime() - startClock) / 1e6 + " ms");
+
+    private void print() {
+        double time = (System.nanoTime() - startClock) / 1e6;
+        if (time > 3.0) {
+            Log.d(LOG_TAG, "Fatal: drawView() used " + time + " ms");
+        }
     }
 
     /**
@@ -890,7 +907,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param canvas Canvas you want to draw
      */
     private void drawView(Canvas canvas) {
-        //long startTime = System.currentTimeMillis();
+        //record();
         //counter = 0;
         mSpanner.notifyRecycle();
         if (mFormatThread != null) {
@@ -934,27 +951,25 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mRightHandle.setEmpty();
         }
 
-        List<Long> postDrawLineNumbers = new ArrayList<>();
+        LongArrayList postDrawLineNumbers = mPostDrawLineNumbers;
+        postDrawLineNumbers.clear();
         List<CursorPaintAction> postDrawCursor = new ArrayList<>();
 
-        //record();
         drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor);
-        //print("rows");
 
         offsetX = -getOffsetX();
 
-        //record();
         if (isLineNumberEnabled()) {
             drawLineNumberBackground(canvas, offsetX, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
             drawDivider(canvas, offsetX + lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
             int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
-            for (long packed : postDrawLineNumbers) {
+            for (int i = 0;i < postDrawLineNumbers.size();i++) {
+                long packed = postDrawLineNumbers.get(i);
                 drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), offsetX, lineNumberWidth, lineNumberColor);
             }
         }
-        //print("ln");
 
-        if (!isWordwrap()) {
+        if (!isWordwrap() && isBlockLineEnabled()) {
             drawBlockLines(canvas, textOffset);
         }
 
@@ -964,11 +979,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         drawScrollBars(canvas);
         drawEdgeEffect(canvas);
-
-        //long timeUsage = System.currentTimeMillis() - startTime;
-        //Log.d(LOG_TAG, "count = " + counter);
-        //Log.d(LOG_TAG, "Draw view cost time:" + timeUsage + "ms");
-
+        //print();
+        //Log.d(LOG_TAG, "drawText() calls count = " + counter);
     }
 
     /**
@@ -998,7 +1010,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param postDrawLineNumbers Line numbers to be drawn later
      * @param postDrawCursor      Cursors to be drawn later
      */
-    private void drawRows(Canvas canvas, float offset, List<Long> postDrawLineNumbers, List<CursorPaintAction> postDrawCursor) {
+    private void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<CursorPaintAction> postDrawCursor) {
         RowIterator rowIterator = mLayout.obtainRowIterator(getFirstVisibleRow());
         List<Span> temporaryEmptySpans = null;
         List<List<Span>> spanMap = mSpanner.getResult().getSpanMap();
@@ -1837,6 +1849,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         return mFontCache.measureText(text, index, index + count, mPaint) + tabCount * extraWidth;
     }
 
+    //private int counter;
+
     /**
      * Draw text on the given position
      *
@@ -1941,7 +1955,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             text[count++] = (char) ('0' + digit);
             copy /= 10;
         }
-        for (int i = 0, j = count - 1;i < j;i++,j--) {
+        for (int i = 0, j = count - 1; i < j; i++, j--) {
             char tmp = text[i];
             text[i] = text[j];
             text[j] = tmp;
@@ -2213,13 +2227,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Specify whether show auto completion window even the input method is in composing state.
-     *
+     * <p>
      * This is useful when the user uses an input method that does not support the attitude {@link EditorInfo#TYPE_TEXT_FLAG_NO_SUGGESTIONS}
-     *
+     * <p>
      * Note:
      * Composing texts are marked by an underline. When this switch is set to false, the editor
      * will not provide auto completion when there is any composing text in editor.
-     *
+     * <p>
      * This is enabled by default now
      */
     public void setAutoCompletionOnComposing(boolean completionOnComposing) {
@@ -2228,7 +2242,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Specify whether we should provide any auto completion
-     *
+     * <p>
      * If this is set to false, the completion window will never show and auto completion item
      * provider will never be called.
      */
@@ -3011,6 +3025,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         return mScalable;
     }
 
+    public void setBlockLineEnabled(boolean enabled) {
+        mBlockLineEnabled = enabled;
+        invalidate();
+    }
+
+    public boolean isBlockLineEnabled() {
+        return mBlockLineEnabled;
+    }
+
     /**
      * Move the selection down
      * If the auto complete panel is shown,move the selection in panel to next
@@ -3159,8 +3182,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Move selection to given position
      *
-     * @param line   The line to move
-     * @param column The column to move
+     * @param line          The line to move
+     * @param column        The column to move
      * @param makeItVisible Make the character visible
      */
     public void setSelection(int line, int column, boolean makeItVisible) {

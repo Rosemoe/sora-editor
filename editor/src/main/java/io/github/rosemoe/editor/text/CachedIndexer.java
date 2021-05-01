@@ -16,6 +16,7 @@
 package io.github.rosemoe.editor.text;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -41,7 +42,7 @@ public class CachedIndexer implements Indexer, ContentListener {
      *
      * @param content Content to manage
      */
-    /*package*/ CachedIndexer(Content content) {
+    CachedIndexer(Content content) {
         mContent = content;
         detectException();
     }
@@ -86,11 +87,14 @@ public class CachedIndexer implements Indexer, ContentListener {
     private CharPosition findNearestByIndex(int index) {
         int min = index, dis = index;
         CharPosition nearestCharPosition = mZeroPoint;
-        for (CharPosition pos : mCachePositions) {
+        int targetIndex = 0;
+        for (int i = 0;i < mCachePositions.size();i++) {
+            CharPosition pos = mCachePositions.get(i);
             dis = Math.abs(pos.index - index);
             if (dis < min) {
                 min = dis;
                 nearestCharPosition = pos;
+                targetIndex = i;
             }
             if (dis <= mSwitchIndex) {
                 break;
@@ -100,8 +104,7 @@ public class CachedIndexer implements Indexer, ContentListener {
             nearestCharPosition = mEndPoint;
         }
         if (nearestCharPosition != mZeroPoint && nearestCharPosition != mEndPoint) {
-            mCachePositions.remove(nearestCharPosition);
-            mCachePositions.add(nearestCharPosition);
+            Collections.swap(mCachePositions, targetIndex, 0);
         }
         return nearestCharPosition;
     }
@@ -115,13 +118,16 @@ public class CachedIndexer implements Indexer, ContentListener {
     private CharPosition findNearestByLine(int line) {
         int min = line, dis = line;
         CharPosition nearestCharPosition = mZeroPoint;
-        for (CharPosition pos : mCachePositions) {
+        int targetIndex = 0;
+        for (int i = 0;i < mCachePositions.size();i++) {
+            CharPosition pos = mCachePositions.get(i);
             dis = Math.abs(pos.line - line);
             if (dis < min) {
                 min = dis;
                 nearestCharPosition = pos;
+                targetIndex = i;
             }
-            if (dis <= mSwitchLine) {
+            if (min <= mSwitchLine) {
                 break;
             }
         }
@@ -129,8 +135,7 @@ public class CachedIndexer implements Indexer, ContentListener {
             nearestCharPosition = mEndPoint;
         }
         if (nearestCharPosition != mZeroPoint && nearestCharPosition != mEndPoint) {
-            mCachePositions.remove(nearestCharPosition);
-            mCachePositions.add(nearestCharPosition);
+            Collections.swap(mCachePositions, 0, targetIndex);
         }
         return nearestCharPosition;
     }

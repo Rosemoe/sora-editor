@@ -82,7 +82,8 @@
     <io.github.rosemoe.editor.widget.CodeEditor
         android:id="@+id/editor"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_marginBottom="36dp"/>
 
     <HorizontalScrollView
         android:layout_width="match_parent"
