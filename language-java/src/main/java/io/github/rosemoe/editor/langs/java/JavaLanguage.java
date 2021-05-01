@@ -59,9 +59,9 @@ public class JavaLanguage implements EditorLanguage {
                 case LBRACE:
                     advance++;
                     break;
-                case RBRACE:
+                /*case RBRACE:
                     advance--;
-                    break;
+                    break;*/
             }
         }
         advance = Math.max(0, advance);
