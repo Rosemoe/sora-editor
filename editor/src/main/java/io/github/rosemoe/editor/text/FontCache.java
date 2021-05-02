@@ -39,7 +39,7 @@ public class FontCache {
     }
 
     private static boolean isEmoji(char ch) {
-        return ch == 0xd83c || ch == 0xd83d || 0xd83e;
+        return ch == 0xd83c || ch == 0xd83d || ch == 0xd83e;
     }
 
     /**
