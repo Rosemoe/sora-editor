@@ -35,7 +35,7 @@ public class FontCache {
 
     public FontCache() {
         cache = new float[65536];
-        buffer = new char[2];
+        buffer = new char[3];
     }
 
     private static boolean isEmoji(char ch) {
@@ -62,6 +62,7 @@ public class FontCache {
         return width;
     }
 
+
     /*
      * Measure text
      */
@@ -72,8 +73,22 @@ public class FontCache {
             if (isEmoji(ch) && i + 1 < end) {
                 buffer[0] = ch;
                 buffer[1] = chars[++i];
-                width += p.measureText(buffer, 0, 2);
-            } else {
+                if( i + 1 < end ){
+                    buffer [2] = chars [++i];
+                    if( !isEmoji(buffer [1]) || isEmoji(buffer [2]) ){
+                        //当第2个字符不是Emoji或第3字符是Emoji时,只测量两个字符
+                        i--;
+                        width += p.measureText(buffer, 0, 2);
+                    }
+                    else{
+                        width += p.measureText(buffer, 0, 3);
+                    }
+                }
+                else{
+                    width += p.measureText(buffer, 0, 2);
+                }
+            }
+            else{
                 width += measureChar(ch, p);
             }
         }
@@ -90,12 +105,25 @@ public class FontCache {
             if (isEmoji(ch) && i + 1 < end) {
                 buffer[0] = ch;
                 buffer[1] = str.charAt(++i);
-                width += p.measureText(buffer, 0, 2);
-            } else {
+                if( i + 1 < end ){
+                    buffer [2] = str.charAt(++i);
+                    if( !isEmoji(buffer [1]) || isEmoji(buffer [2]) ){
+                        //当第2个字符不是Emoji或第3字符是Emoji时,只测量两个字符
+                        buffer [2] = 0;
+                        i--;
+                        width += p.measureText(buffer, 0, 2);
+                    }
+                    else{
+                        width += p.measureText(buffer, 0, 3);
+                    }
+                }
+                else{
+                    width += p.measureText(buffer, 0, 2);
+                }
+            }
+            else{
                 width += measureChar(ch, p);
             }
-        }
         return width;
     }
-
 }
