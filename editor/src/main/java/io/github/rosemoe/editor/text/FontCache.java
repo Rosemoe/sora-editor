@@ -35,11 +35,11 @@ public class FontCache {
 
     public FontCache() {
         cache = new float[65536];
-        buffer = new char[2];
+        buffer = new char[3];
     }
 
     private static boolean isEmoji(char ch) {
-        return ch == 0xd83c || ch == 0xd83d;
+        return ch == 0xd83c || ch == 0xd83d || 0xd83e;
     }
 
     /**
