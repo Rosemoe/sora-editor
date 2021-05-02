@@ -35,7 +35,7 @@ public class FontCache {
 
     public FontCache() {
         cache = new float[65536];
-        buffer = new char[3];
+        buffer = new char[2];
     }
 
     private static boolean isEmoji(char ch) {
@@ -62,7 +62,6 @@ public class FontCache {
         return width;
     }
 
-
     /*
      * Measure text
      */
@@ -87,8 +86,7 @@ public class FontCache {
                 else{
                     width += p.measureText(buffer, 0, 2);
                 }
-            }
-            else{
+            } else {
                 width += measureChar(ch, p);
             }
         }
@@ -120,10 +118,11 @@ public class FontCache {
                 else{
                     width += p.measureText(buffer, 0, 2);
                 }
-            }
-            else{
+            } else {
                 width += measureChar(ch, p);
             }
+        }
         return width;
     }
+
 }
