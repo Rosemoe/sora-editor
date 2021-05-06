@@ -35,16 +35,12 @@ public class SymbolChannel {
      * This method allows you to insert texts externally to the content of editor.
      * The content of {@param symbolText} is not checked to be exactly characters of symbols.
      *
-     * @throws IllegalArgumentException If the {@param symbolText} includes newlines or {@param selectionRegion}
-     * is invalid
+     * @throws IllegalArgumentException If the {@param selectionRegion} is invalid
      * @param symbolText Text to insert, usually a text of symbols
      * @param selectionOffset New selection position relative to the start of text to insert.
      *                        Ranging from 0 to symbolText.length()
      */
     public void insertSymbol(String symbolText, int selectionOffset) {
-        if (symbolText.contains("\n") || symbolText.contains("\r")) {
-            throw new IllegalArgumentException("text to insert can not include newlines");
-        }
         if (selectionOffset < 0 || selectionOffset > symbolText.length()) {
             throw new IllegalArgumentException("selectionOffset is invalid");
         }
@@ -54,10 +50,7 @@ public class SymbolChannel {
             mEditor.notifyExternalCursorChange();
         }
         mEditor.getText().insert(cur.getRightLine(), cur.getRightColumn(), symbolText);
-        EditorInputConnection conn = mEditor.mConnection;
-        if (conn.mComposingLine != -1) {
-            mEditor.notifyExternalCursorChange();
-        }
+        mEditor.notifyExternalCursorChange();
         if (selectionOffset != symbolText.length()) {
             mEditor.setSelection(cur.getRightLine(), cur.getRightColumn() - (symbolText.length() - selectionOffset));
         }
