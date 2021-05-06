@@ -526,6 +526,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setEditable(true);
         setLineNumberEnabled(true);
         setAutoCompletionOnComposing(true);
+        setTypefaceText(Typeface.DEFAULT);
         // Issue #41 View being highlighted when focused on Android 11
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             setDefaultFocusHighlightEnabled(false);

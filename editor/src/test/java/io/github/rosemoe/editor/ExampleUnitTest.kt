@@ -1,4 +1,4 @@
-include ':editor' /*******************************************************************************
+/*******************************************************************************
  *   Copyright 2020-2021 Rosemoe
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,12 +14,20 @@ include ':editor' /*************************************************************
  *   limitations under the License.
  ******************************************************************************/
 
-include ':language-universal'
-include ':language-java'
-include ':language-html'
-include ':language-base'
-include ':language-python'
-include ':debug-logger'
-include ':editor'
-include ':app'
-rootProject.name='CodeEditor'
+package io.github.rosemoe.editor
+
+import org.junit.Test
+
+import org.junit.Assert.*
+
+/**
+ * Example local unit test, which will execute on the development machine (host).
+ *
+ * See [testing documentation](http://d.android.com/tools/testing).
+ */
+class ExampleUnitTest {
+    @Test
+    fun addition_isCorrect() {
+        assertEquals(4, 2 + 2)
+    }
+}
