@@ -22,7 +22,7 @@ import io.github.rosemoe.editor.widget.SymbolPairMatch;
  * <p>
  * A Language helps editor to highlight text and provide auto-completion.
  * Implement this interface when you want to add new language support for editor.
- *
+ * <p>
  * <strong>NOTE:</strong> A language must not be single instance.
  * One language instance should always serves for only one editor.
  * It means that you should not give a language object to other editor instances
@@ -79,12 +79,10 @@ public interface EditorLanguage {
     CharSequence format(CharSequence text);
 
     /**
-     * Returns language specified symbol pairs
-     * The method is called only once when the language is applied
+     * Returns language specified symbol pairs.
+     * The method is called only once when the language is applied.
      */
-    default SymbolPairMatch getSymbolPairs() {
-        return new SymbolPairMatch.DefaultSymbolPairs();
-    }
+    SymbolPairMatch getSymbolPairs();
 
     /**
      * Get newline handlers of this language.
@@ -94,8 +92,6 @@ public interface EditorLanguage {
      *
      * @return NewlineHandlers , maybe null
      */
-    default NewlineHandler[] getNewlineHandlers() {
-        return null;
-    }
+    NewlineHandler[] getNewlineHandlers();
 
 }

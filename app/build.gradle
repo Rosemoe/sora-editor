@@ -23,8 +23,8 @@ android {
         applicationId 'io.github.rosemoe.editor.app'
         minSdkVersion Versions.minSdkVersion
         targetSdkVersion Versions.targetSdkVersion
-        versionCode 100
-        versionName "1.0.0"
+        versionCode Versions.versionCode
+        versionName Versions.versionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -44,9 +44,9 @@ dependencies {
     implementation project(path: ':editor')
     implementation project(path: ':language-java')
 	implementation project(path: ':language-html')
-    implementation project(path: ':language-s5d')
     implementation project(path: ':language-universal')
     implementation project(path: ':language-python')
+    //implementation project(path: ':debug-logger')
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'

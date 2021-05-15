@@ -1,5 +1,7 @@
 # CodeEditor
-[![](https://jitpack.io/v/Rosemoe/CodeEditor.svg)](https://jitpack.io/#Rosemoe/CodeEditor)   
+[![JitPack](https://jitpack.io/v/Rosemoe/CodeEditor.svg)](https://jitpack.io/#Rosemoe/CodeEditor)
+[![Telegram](https://img.shields.io/badge/Join-Telegram-blue)](https://t.me/rosemoe_code_editor)
+[![QQ](https://img.shields.io/badge/Join-QQ_Group-ff69b4)](https://jq.qq.com/?_wv=1027&k=n68uxQws)   
 A cool and optimized code editor on Android platform with good performance and nice features.
 
 ***Work In Progress*** This project is still developing slowly. Bugs may be inside.
@@ -7,15 +9,15 @@ It is **not** recommended to use this project for production use.
 ***Note:***
 Any method or field can be changed, moved or even deleted at current period.     
 If you find any bug or require any enhancement, please send it to me by issues or other ways.
-Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/releases) instead of clone this repo directly.
+Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/releases) instead of cloning this repository directly.
 
 **Issues and pull requests are welcome.**   
+Note: Language issues may not be handled.   
 ## Features
 - [x] Smooth syntax highlight
 - [x] Auto completion
 - [x] Auto indent
 - [x] Code block lines
-- [x] Format code (Requires improvement)
 - [x] Scale text
 - [x] Select text
 - [x] Scroll, Scrollbars, EdgeEffect, OverScroll
@@ -25,9 +27,9 @@ Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/re
 - [x] Auto wordwrap
 - [x] Show non-printable characters
 - [ ] Incremental highlight Analysis
+- [ ] Plugin System
 ## Language Supported  
 * Java, JavaScript, C, C++, HTML, Python (Basic Support:highlight, code block line,identifier and keyword auto-completion). Code block line isn't available for HTML Language
-* S5droid 2.x(context sensitive auto completion, highlight, code block line, navigation)(going to be deprecated)   
 ## Screenshots  
 ![View Outline](/images/outline.png)
 ![Auto Complete](/images/auto-completion.png)
@@ -57,7 +59,9 @@ Available modules:
 * language-java
 * language-html
 * language-python
-* language-universal
-* language-s5d    
+* language-universal   
 ### Some more information
 Go to [Wiki](https://github.com/Rosemoe/CodeEditor/wiki)
+### Discuss
+* Official QQ Group:[216632648](https://jq.qq.com/?_wv=1027&k=n68uxQws)
+* [Official Telegram Group](https://t.me/rosemoe_code_editor)

@@ -42,13 +42,12 @@ import io.github.rosemoe.editor.langs.desc.JavaScriptDescription;
 import io.github.rosemoe.editor.langs.html.HTMLLanguage;
 import io.github.rosemoe.editor.langs.java.JavaLanguage;
 import io.github.rosemoe.editor.langs.python.PythonLanguage;
-import io.github.rosemoe.editor.langs.s5droid.S5droidAutoComplete;
-import io.github.rosemoe.editor.langs.s5droid.S5droidLanguage;
 import io.github.rosemoe.editor.langs.universal.UniversalLanguage;
 import io.github.rosemoe.editor.struct.NavigationItem;
 import io.github.rosemoe.editor.utils.CrashHandler;
 import io.github.rosemoe.editor.widget.CodeEditor;
 import io.github.rosemoe.editor.widget.EditorColorScheme;
+import io.github.rosemoe.editor.widget.SymbolInputView;
 import io.github.rosemoe.editor.widget.schemes.HTMLScheme;
 import io.github.rosemoe.editor.widget.schemes.SchemeDarcula;
 import io.github.rosemoe.editor.widget.schemes.SchemeEclipse;
@@ -68,11 +67,15 @@ public class MainActivity extends Activity {
         CrashHandler.INSTANCE.init(this);
         setContentView(R.layout.activity_main);
 
-        S5droidAutoComplete.init(this);
         editor = findViewById(R.id.editor);
         panel = findViewById(R.id.search_panel);
         search = findViewById(R.id.search_editor);
         replace = findViewById(R.id.replace_editor);
+
+        SymbolInputView inputView = findViewById(R.id.symbol_input);
+        inputView.bindEditor(editor);
+        inputView.addSymbols(new String[]{"->" , "{", "}", "(", ")", ",", ".", ";", "\"", "?", "+", "-", "*", "/"},
+                new String[]{"\t", "{}", "}", "(", ")", ",", ".", ";", "\"", "?", "+", "-", "*", "/"});
 
         search.addTextChangedListener(new TextWatcher() {
             @Override
@@ -90,10 +93,9 @@ public class MainActivity extends Activity {
                 editor.getSearcher().search(editable.toString());
             }
         });
-        editor.setTypefaceText(Typeface.MONOSPACE);
+        //editor.setTypefaceText(Typeface.MONOSPACE);
         editor.setOverScrollEnabled(false);
         editor.setEditorLanguage(new JavaLanguage());
-        //editor.setCursorBlinkPeriod(50);
         editor.setNonPrintablePaintingFlags(CodeEditor.FLAG_DRAW_WHITESPACE_LEADING | CodeEditor.FLAG_DRAW_LINE_SEPARATOR);
 
         new Thread(() -> {
@@ -173,7 +175,7 @@ public class MainActivity extends Activity {
             case R.id.switch_language:
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.switch_language)
-                        .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "S5droid", "HTML", "Python", "None"}, -1, (dialog, which) -> {
+                        .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "HTML", "Python", "None"}, -1, (dialog, which) -> {
                             switch (which) {
                                 case 0:
                                     editor.setEditorLanguage(new UniversalLanguage(new CDescription()));
@@ -188,15 +190,12 @@ public class MainActivity extends Activity {
                                     editor.setEditorLanguage(new UniversalLanguage(new JavaScriptDescription()));
                                     break;
                                 case 4:
-                                    editor.setEditorLanguage(new S5droidLanguage());
-                                    break;
-                                case 5:
                                     editor.setEditorLanguage(new HTMLLanguage());
                                     break;
-                                case 6:
+                                case 5:
                                     editor.setEditorLanguage(new PythonLanguage());
                                     break;
-                                case 7:
+                                case 6:
                                     editor.setEditorLanguage(new EmptyLanguage());
                             }
                             dialog.dismiss();

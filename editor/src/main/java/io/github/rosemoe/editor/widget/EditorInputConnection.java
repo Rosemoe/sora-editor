@@ -57,6 +57,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     protected void invalid() {
         //Logs.log("Connection is set to invalid");
+        //Logs.dumpStack();
         mInvalid = true;
         mComposingEnd = mComposingStart = mComposingLine = -1;
         mEditor.invalidate();
@@ -256,20 +257,68 @@ class EditorInputConnection extends BaseInputConnection {
         if (beforeLength < 0 || afterLength < 0) {
             return false;
         }
-        beginBatchEdit();
+
+        // Start a batch edit when the operation can not be finished by one call to delete()
+        if (beforeLength > 0 && afterLength > 0) {
+            beginBatchEdit();
+        }
+
+        boolean composing = mComposingLine != -1;
+        int composingStart = composing ? getCursor().getIndexer().getCharIndex(mComposingLine, mComposingStart) : 0;
+        int composingEnd = composing ? getCursor().getIndexer().getCharIndex(mComposingLine, mComposingEnd) : 0;
+
         int rangeEnd = getCursor().getLeft();
         int rangeStart = rangeEnd - beforeLength;
         if (rangeStart < 0) {
             rangeStart = 0;
         }
         mEditor.getText().delete(rangeStart, rangeEnd);
+
+        if (composing) {
+            int crossStart = Math.max(rangeStart, composingStart);
+            int crossEnd = Math.min(rangeEnd, composingEnd);
+            composingEnd -= Math.max(0, crossEnd - crossStart);
+            int delta = Math.max(0, crossStart - rangeStart);
+            composingEnd -= delta;
+            composingStart -= delta;
+        }
+
         rangeStart = getCursor().getRight();
         rangeEnd = rangeStart + afterLength;
         if (rangeEnd > mEditor.getText().length()) {
             rangeEnd = mEditor.getText().length();
         }
         mEditor.getText().delete(rangeStart, rangeEnd);
-        endBatchEdit();
+
+        if (composing) {
+            int crossStart = Math.max(rangeStart, composingStart);
+            int crossEnd = Math.min(rangeEnd, composingEnd);
+            composingEnd -= Math.max(0, crossEnd - crossStart);
+            int delta = Math.max(0, crossStart - rangeStart);
+            composingEnd -= delta;
+            composingStart -= delta;
+        }
+
+        if (beforeLength > 0 && afterLength > 0) {
+            endBatchEdit();
+        }
+
+        if (composing) {
+            CharPosition start = getCursor().getIndexer().getCharPosition(composingStart);
+            CharPosition end = getCursor().getIndexer().getCharPosition(composingEnd);
+            if (start.line != end.line) {
+                invalid();
+                return false;
+            }
+            if (start.column == end.column) {
+                mComposingLine = -1;
+            } else {
+                mComposingLine = start.line;
+                mComposingStart = start.column;
+                mComposingEnd = end.column;
+            }
+        }
+
         return true;
     }
 
@@ -307,6 +356,9 @@ class EditorInputConnection extends BaseInputConnection {
     public boolean setComposingText(CharSequence text, int newCursorPosition) {
         //Logs.log("setComposingText: text = " + text + ", newCursorPosition = " + newCursorPosition);
         if (!mEditor.isEditable() || mInvalid) {
+            return false;
+        }
+        if (TextUtils.indexOf(text, '\n') != -1) {
             return false;
         }
         //Log.d(LOG_TAG, "set composing text:text = " + text + ", newCur =" + newCursorPosition);
@@ -375,7 +427,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setComposingRegion(int start, int end) {
-        //Logs.log(" set composing region:" + start + ".." + end);
+        //Logs.log("set composing region:" + start + ".." + end);
         //Log.d(LOG_TAG, "set composing region:" + start + ".." + end);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
@@ -396,6 +448,7 @@ class EditorInputConnection extends BaseInputConnection {
             CharPosition startPos = content.getIndexer().getCharPosition(start);
             CharPosition endPos = content.getIndexer().getCharPosition(end);
             if (startPos.line != endPos.line) {
+                mEditor.restartInput();
                 return false;
             }
             mComposingLine = startPos.line;

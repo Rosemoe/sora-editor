@@ -13,20 +13,20 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package io.github.rosemoe.langs.java;
+package io.github.rosemoe.editor.annotations;
 
-import org.junit.Test;
-
-import static org.junit.Assert.*;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Example local unit test, which will execute on the development machine (host).
- *
- * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ * This annotation marks those fields, methods and constructors experimentally created.
+ * <p>
+ * Methods, fields and constructors with this annotation is very subject to keep or delete.
+ * For that reason, they are not stable for production use.
  */
-public class ExampleUnitTest {
-    @Test
-    public void addition_isCorrect() {
-        assertEquals(4, 2 + 2);
-    }
+@Target({ElementType.FIELD, ElementType.CONSTRUCTOR, ElementType.METHOD})
+@Retention(RetentionPolicy.SOURCE)
+public @interface Experimental {
 }

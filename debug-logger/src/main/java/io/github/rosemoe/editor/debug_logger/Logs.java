@@ -21,6 +21,14 @@ public class Logs {
 
     private static StringBuilder stringBuilder = new StringBuilder();
 
+    public static void dumpStack() {
+        Throwable e = new Throwable();
+        stringBuilder.append("Stack trace:").append('\n');
+        for (StackTraceElement element : e.getStackTrace()) {
+            stringBuilder.append("- ").append(element.toString()).append('\n');
+        }
+    }
+
     public static void log(String line) {
         stringBuilder.append(line).append('\n');
         Log.d("CodeEditor", line);

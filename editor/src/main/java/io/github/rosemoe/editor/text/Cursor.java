@@ -32,7 +32,7 @@ public final class Cursor {
     private boolean mAutoIndentEnabled;
     private EditorLanguage mLanguage;
     private int mTabWidth;
-
+	
     /**
      * Create a new Cursor for Content
      *
@@ -174,7 +174,9 @@ public final class Cursor {
 
     /**
      * Notify the Indexer to update its cache for current display position
+     *
      * This will make querying actions quicker
+     *
      * Especially when the editor user want to set a new cursor position after scrolling long time
      *
      * @param line First visible line
@@ -198,7 +200,7 @@ public final class Cursor {
      * @return Whether selected
      */
     public boolean isSelected() {
-        return (getLeftColumn() != getRightColumn() || getLeftLine() != getRightLine());
+        return mLeft.index != mRight.index;
     }
 
     /**

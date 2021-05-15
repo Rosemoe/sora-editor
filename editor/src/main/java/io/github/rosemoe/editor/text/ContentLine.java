@@ -52,8 +52,8 @@ public class ContentLine implements CharSequence, GetChars {
         width = 0;
     }
 
-    static int lastIndexOf(char[] source, int sourceOffset, int sourceCount,
-                           char[] target, int targetOffset, int targetCount,
+    static int lastIndexOf(char[] source, int sourceCount,
+                           char[] target, int targetCount,
                            int fromIndex) {
         /*
          * Check arguments; return immediately where possible. For
@@ -71,9 +71,9 @@ public class ContentLine implements CharSequence, GetChars {
             return fromIndex;
         }
 
-        int strLastIndex = targetOffset + targetCount - 1;
+        int strLastIndex = targetCount - 1;
         char strLastChar = target[strLastIndex];
-        int min = sourceOffset + targetCount - 1;
+        int min = targetCount - 1;
         int i = min + fromIndex;
 
         startSearchForLastChar:
@@ -94,7 +94,7 @@ public class ContentLine implements CharSequence, GetChars {
                     continue startSearchForLastChar;
                 }
             }
-            return start - sourceOffset + 1;
+            return start + 1;
         }
     }
 
@@ -283,8 +283,8 @@ public class ContentLine implements CharSequence, GetChars {
     }
 
     public int lastIndexOf(String str, int fromIndex) {
-        return lastIndexOf(value, 0, length,
-                str.toCharArray(), 0, str.length(), fromIndex);
+        return lastIndexOf(value, length,
+                str.toCharArray(), str.length(), fromIndex);
     }
 
     @Override

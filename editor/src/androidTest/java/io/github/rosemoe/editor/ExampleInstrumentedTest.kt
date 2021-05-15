@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  *   Copyright 2020-2021 Rosemoe
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,30 +12,29 @@
  *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
- */
-package io.github.rosemoe.langs.java;
+ ******************************************************************************/
 
-import android.content.Context;
+package io.github.rosemoe.editor
 
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.Test
+import org.junit.runner.RunWith
 
-import static org.junit.Assert.*;
+import org.junit.Assert.*
 
 /**
  * Instrumented test, which will execute on an Android device.
  *
- * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ * See [testing documentation](http://d.android.com/tools/testing).
  */
-@RunWith(AndroidJUnit4.class)
-public class ExampleInstrumentedTest {
+@RunWith(AndroidJUnit4::class)
+class ExampleInstrumentedTest {
     @Test
-    public void useAppContext() {
+    fun useAppContext() {
         // Context of the app under test.
-        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("io.github.rosemoe.langs.java.test", appContext.getPackageName());
+        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+        assertEquals("io.github.rosemoe.editor.test", appContext.packageName)
     }
 }

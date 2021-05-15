@@ -100,6 +100,8 @@ public class SymbolPairMatch {
             super.putPair('{', new Replacement("{}", 1));
             super.putPair('(', new Replacement("()", 1));
             super.putPair('[', new Replacement("[]", 1));
+            super.putPair('"', new Replacement("\"\"", 1));
+            super.putPair('\'', new Replacement("''", 1));
         }
 
     }
