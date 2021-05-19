@@ -24,11 +24,15 @@ import android.widget.PopupWindow;
  * @author Rose
  */
 class TextComposeBasePopup extends PopupWindow {
+    public static int DISMISS = 0;
+    public static int DRAG = 1;
+    public static int SCROLL = 2;
     private CodeEditor mEditor;
     private int[] mLocation;
     private int mTop;
     private int mLeft;
     protected int popHeightPx;
+    private int hideType = -1;
 
     /**
      * Create a panel for editor
@@ -114,8 +118,12 @@ class TextComposeBasePopup extends PopupWindow {
     /**
      * Hide the panel (If shown)
      */
-    public void hide() {
+    public void hide(int type) {
         if (isShowing()) {
+            hideType = type;
+            if ((hideType == DRAG || hideType == SCROLL) && mEditor.getEventHandler() != null) {
+                mEditor.getEventHandler().notifyGestureInteractionEnd();
+            }
             super.dismiss();
         }
     }

@@ -759,6 +759,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         if (mode == TextActionMode.ACTION_MODE) {
             mTextActionPresenter = new EditorTextActionModeStarter(this);
+        } else if (mode == TextActionMode.POPUP_WINDOW_2) {
+            mTextActionPresenter = new TextActionPopupWindow(this);
         } else {
             mTextActionPresenter = new EditorTextActionWindow(this);
         }
@@ -1206,6 +1208,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 postDrawCursor.add(new CursorPaintAction(row, centerX, mEventHandler.shouldDrawInsertHandle() ? mInsertHandle : null, true));
             }
 
+        }
+    }
+
+
+    private void showTextActionPopup() {
+        if (mTextActionPresenter instanceof TextActionPopupWindow) {
+            TextActionPopupWindow window = (TextActionPopupWindow) mTextActionPresenter;
+            window.onBeginTextSelect();
+            window.onTextSelectionEnd();
         }
     }
 
@@ -2747,6 +2758,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         startActionMode(callback);
     }
 
+    public EditorTouchEventHandler getEventHandler() {
+        return mEventHandler;
+    }
+
     /**
      * @return Margin of divider line
      * @see CodeEditor#setDividerMargin(float)
@@ -4063,6 +4078,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
+
+    public void onEndTextSelect() {
+        showTextActionPopup();
+    }
+
+    public void onEndGestureInteraction() {
+        showTextActionPopup();
+    }
+
     /**
      * Mode for presenting text actions
      */
@@ -4072,12 +4096,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
          * In this way, the editor shows a windows inside the editor to present actions
          */
         POPUP_WINDOW,
+        POPUP_WINDOW_2,
         /**
          * In this way, the editor starts a {@link ActionMode} to present actions
          */
         ACTION_MODE
 
     }
+
 
     /**
      * Interface for various ways to present text action panel
@@ -4092,6 +4118,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         void onSelectedTextClicked(MotionEvent event);
 
         /**
+         * Text selection, gesture interaction is over
+         */
+        void onTextSelectionEnd();
+
+        /**
          * Notify that the position of panel should be updated.
          * If the presenter is displayed in editor's viewport, it should update
          * its position
@@ -4099,9 +4130,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         void onUpdate();
 
         /**
+         * Notify that the position of panel should be updated.
+         * If the presenter is displayed in editor's viewport, it should update
+         * its position
+         *
+         * @param updateReason {@link TextComposeBasePopup#DISMISS} {@link TextComposeBasePopup#DRAG} {@link TextComposeBasePopup#SCROLL}
+         */
+        void onUpdate(int updateReason);
+
+        /**
          * Start the presenter
          */
         void onBeginTextSelect();
+
 
         /**
          * Exit the presenter

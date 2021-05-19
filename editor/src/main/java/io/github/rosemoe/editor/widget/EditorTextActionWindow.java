@@ -87,6 +87,11 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
     }
 
     @Override
+    public void onUpdate(int updateReason) {
+        hide();
+    }
+
+    @Override
     public void onSelectedTextClicked(MotionEvent event) {
         EditorTextActionWindow panel = this;
         if (panel.isShowing()) {
@@ -135,6 +140,11 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
             panel.setExtendedY(panelY);
             panel.show();
         }
+    }
+
+    @Override
+    public void onTextSelectionEnd() {
+
     }
 
     @Override

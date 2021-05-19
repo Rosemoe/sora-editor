@@ -36,6 +36,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     private final static int HIDE_DELAY = 3000;
     private final static int SELECTION_HANDLE_RESIZE_DELAY = 10;
     private final static int HIDE_DELAY_HANDLE = 5000;
+    private static final long INTERACTION_END_DELAY = 300;
     private final CodeEditor mEditor;
     private final OverScroller mScroller;
     protected boolean topOrBottom; //true for bottom
@@ -45,6 +46,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     private long mLastScroll = 0;
     private long mLastSetSelection = 0;
     private long mLastTouchedSelectionHandle = 0;
+    private long mLastInteraction = 0;
     private boolean mHoldingScrollbarVertical = false;
     private boolean mHoldingScrollbarHorizontal = false;
     private boolean mHoldingInsertHandle = false;
@@ -226,12 +228,29 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             public void run() {
                 if (System.currentTimeMillis() - mLastTouchedSelectionHandle >= SELECTION_HANDLE_RESIZE_DELAY) {
                     mEditor.invalidate();
+                    mEditor.onEndTextSelect();
+                }
+            }
+        }
+        mEditor.postDelayed(new InvalidateNotifier(), SELECTION_HANDLE_RESIZE_DELAY);
+    }
+
+
+    public void notifyGestureInteractionEnd() {
+        mLastInteraction = System.currentTimeMillis();
+        class InvalidateNotifier implements Runnable {
+            @Override
+            public void run() {
+                if (System.currentTimeMillis() - mLastInteraction >= INTERACTION_END_DELAY) {
+                    mEditor.invalidate();
+                    mEditor.onEndGestureInteraction();
                 }
             }
 
         }
-        mEditor.postDelayed(new InvalidateNotifier(), SELECTION_HANDLE_RESIZE_DELAY);
+        mEditor.postDelayed(new InvalidateNotifier(), INTERACTION_END_DELAY);
     }
+
 
     /**
      * Called by editor
@@ -353,8 +372,12 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     notifyLater();
                 }
                 mSelHandleType = -1;
-                mTouchedHandleType = -1;
-                notifyTouchedSelectionHandlerLater();
+
+                // check touch event is related to text selection or not
+                if (mTouchedHandleType > -1) {
+                    mTouchedHandleType = -1;
+                    notifyTouchedSelectionHandlerLater();
+                }
                 stopEdgeScroll();
                 break;
         }
@@ -437,7 +460,11 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
 
     protected void scrollBy(float distanceX, float distanceY) {
         if (mEditor.getTextActionPresenter() != null) {
-            mEditor.getTextActionPresenter().onUpdate();
+            if (mEditor.getTextActionPresenter() instanceof TextComposeBasePopup) {
+                mEditor.getTextActionPresenter().onUpdate(TextActionPopupWindow.SCROLL);
+            } else {
+                mEditor.getTextActionPresenter().onUpdate();
+            }
         }
         mEditor.hideAutoCompleteWindow();
         int endX = mScroller.getCurrX() + (int) distanceX;
@@ -529,7 +556,11 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
 
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        mEditor.getTextActionPresenter().onUpdate();
+        if (mEditor.getTextActionPresenter() instanceof TextComposeBasePopup) {
+            mEditor.getTextActionPresenter().onUpdate(TextActionPopupWindow.SCROLL);
+        } else {
+            mEditor.getTextActionPresenter().onUpdate();
+        }
         int endX = mScroller.getCurrX() + (int) distanceX;
         int endY = mScroller.getCurrY() + (int) distanceY;
         endX = Math.max(endX, 0);
@@ -667,6 +698,13 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
 
 
     /**
+     * Interface for listen text selection over
+     */
+    protected interface TextSelectionEndListener {
+        void onEndTextSelect();
+    }
+
+    /**
      * This is a helper for EventHandler to control handles
      */
     @SuppressWarnings("CanBeFinal")
@@ -740,7 +778,12 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     }
                 }
             }
-            mEditor.getTextActionPresenter().onUpdate();
+
+            if (mEditor.getTextActionPresenter() instanceof TextComposeBasePopup) {
+                mEditor.getTextActionPresenter().onUpdate(TextActionPopupWindow.DRAG);
+            } else {
+                mEditor.getTextActionPresenter().onUpdate();
+            }
         }
 
     }

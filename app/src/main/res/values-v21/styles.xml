@@ -16,7 +16,7 @@
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
 <resources>
-    <style name="AppTheme" parent="@android:style/Theme.Material.Light">
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight">
         <item name="android:colorPrimary">#3F51B5</item>
         <item name="android:colorPrimaryDark">#3F51B5</item>
         <item name="android:colorAccent">#EC407A</item>
