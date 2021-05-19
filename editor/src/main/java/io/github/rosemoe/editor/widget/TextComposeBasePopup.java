@@ -23,18 +23,19 @@ import android.widget.PopupWindow;
  *
  * @author Rose
  */
-class EditorBasePopupWindow extends PopupWindow {
+class TextComposeBasePopup extends PopupWindow {
     private CodeEditor mEditor;
     private int[] mLocation;
     private int mTop;
     private int mLeft;
+    protected int popHeightPx;
 
     /**
      * Create a panel for editor
      *
      * @param editor Target editor
      */
-    public EditorBasePopupWindow(CodeEditor editor) {
+    public TextComposeBasePopup(CodeEditor editor) {
         if (editor == null) {
             throw new IllegalArgumentException();
         }
