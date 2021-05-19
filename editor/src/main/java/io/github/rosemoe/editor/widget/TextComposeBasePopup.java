@@ -15,6 +15,7 @@
  */
 package io.github.rosemoe.editor.widget;
 
+import android.graphics.RectF;
 import android.view.Gravity;
 import android.widget.PopupWindow;
 
@@ -27,9 +28,11 @@ class TextComposeBasePopup extends PopupWindow {
     public static int DISMISS = 0;
     public static int DRAG = 1;
     public static int SCROLL = 2;
+    private final float textSizePx;
     private CodeEditor mEditor;
     private int[] mLocation;
     private int mTop;
+    private int mMaximumTop;
     private int mLeft;
     protected int popHeightPx;
     private int hideType = -1;
@@ -46,6 +49,7 @@ class TextComposeBasePopup extends PopupWindow {
         mLocation = new int[2];
         mEditor = editor;
         super.setTouchable(true);
+        textSizePx = mEditor.getTextSizePx();
     }
 
     /**
@@ -63,35 +67,42 @@ class TextComposeBasePopup extends PopupWindow {
      * @param y Y on editor
      */
     public void setExtendedY(float y) {
-        mTop = (int) y;
+        mMaximumTop = (int) y;
     }
 
-    public void updatePosition() {
-        int width = mEditor.getWidth();
-        if (mLeft > width - getWidth()) {
-            mLeft = width - getWidth();
-        }
-        int height = mEditor.getHeight();
-        if (mTop > height - getHeight()) {
-            mTop = height - getHeight();
-        }
-        if (mTop < 0) {
-            mTop = 0;
-        }
-        if (mLeft < 0) {
-            mLeft = 0;
-        }
-        mEditor.getLocationInWindow(mLocation);
-        if (isShowing()) {
-            update(mLocation[0] + mLeft, mLocation[1] + mTop, getWidth(), getHeight());
-        }
-    }
+    private final RectF selectionRect = new RectF();
+
 
     /**
      * Show the panel or update its position(If already shown)
      */
     public void show() {
         int width = mEditor.getWidth();
+        RectF leftHandleRect = mEditor.getLeftHandleRect();
+        RectF rightHandleRect = mEditor.getRightHandleRect();
+
+        // when right handle goes below visible area, it rect becomes empty. so this feature (or bug) used to calculate popup location
+        // if we can not use this,
+        // alternative method can be implemented using mMaximumTop
+        // @TODO implement a proper way to calculate popup position
+        if (rightHandleRect.isEmpty()) {
+            rightHandleRect.top = mMaximumTop;
+            rightHandleRect.left = width;
+            rightHandleRect.bottom = mMaximumTop;
+            rightHandleRect.right = width;
+        }
+
+        float handleHeight = leftHandleRect.height();
+        selectionRect.top = Math.min(leftHandleRect.top, rightHandleRect.top);
+        selectionRect.bottom = Math.max(leftHandleRect.bottom, rightHandleRect.bottom);
+        selectionRect.left = Math.min(leftHandleRect.left, rightHandleRect.left);
+        selectionRect.right = Math.max(leftHandleRect.right, rightHandleRect.right);
+
+        // prevent drawing popup over the keyboard
+        /*if (selectionRect.bottom > mMaximumTop - popHeightPx) {
+            selectionRect.bottom -= popHeightPx;
+        }*/
+
         if (mLeft > width - getWidth()) {
             mLeft = width - getWidth();
         }
@@ -106,6 +117,13 @@ class TextComposeBasePopup extends PopupWindow {
             mLeft = 0;
         }
         mEditor.getLocationInWindow(mLocation);
+        boolean topCovered = mLocation[1] > selectionRect.top - textSizePx - popHeightPx - handleHeight;
+
+        if (topCovered) {
+            mTop = (int) (selectionRect.bottom + (handleHeight));
+        } else {
+            mTop = (int) (selectionRect.top - textSizePx - popHeightPx - handleHeight);
+        }
         if (isShowing()) {
             update(mLocation[0] + mLeft, mLocation[1] + mTop, getWidth(), getHeight());
             return;
@@ -122,7 +140,7 @@ class TextComposeBasePopup extends PopupWindow {
         if (isShowing()) {
             hideType = type;
             if ((hideType == DRAG || hideType == SCROLL) && mEditor.getEventHandler() != null) {
-                mEditor.getEventHandler().notifyGestureInteractionEnd();
+                mEditor.getEventHandler().notifyGestureInteractionEnd(type);
             }
             super.dismiss();
         }

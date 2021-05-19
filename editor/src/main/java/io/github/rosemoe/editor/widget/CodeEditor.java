@@ -1212,11 +1212,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
 
-    private void showTextActionPopup() {
+    protected void showTextActionPopup() {
         if (mTextActionPresenter instanceof TextActionPopupWindow) {
             TextActionPopupWindow window = (TextActionPopupWindow) mTextActionPresenter;
-            window.onBeginTextSelect();
-            window.onTextSelectionEnd();
+            if (window.isShowing()) {
+                //window.hide(TextActionPopupWindow.DISMISS);
+            } else {
+                window.onBeginTextSelect();
+                window.onTextSelectionEnd();
+            }
         }
     }
 
@@ -1485,11 +1489,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param row        The row you want to attach handle to its bottom (Usually the selection line)
      * @param centerX    Center x offset of handle
      * @param resultRect The rect of handle this method drew
+     * @param handleType The selection handle type (LEFT, RIGHT,BOTH or -1)
      */
     private void drawHandle(Canvas canvas, int row, float centerX, RectF resultRect, int handleType) {
         float radius = mDpUnit * 12;
 
-        if (handleType == mEventHandler.getTouchedHandleType()) {
+        if (handleType > -1 && handleType == mEventHandler.getTouchedHandleType()) {
             radius = mDpUnit * 16;
         }
 
@@ -3319,6 +3324,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (!lastState && mCursor.isSelected() && mStartedActionMode != ACTION_MODE_SEARCH_TEXT) {
             mTextActionPresenter.onBeginTextSelect();
         }
+        mEventHandler.notifyTouchedSelectionHandlerLater();
     }
 
     /**
