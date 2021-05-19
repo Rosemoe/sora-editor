@@ -34,6 +34,7 @@ import io.github.rosemoe.editor.util.IntPair;
 final class EditorTouchEventHandler implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
 
     private final static int HIDE_DELAY = 3000;
+    private final static int SELECTION_HANDLE_RESIZE_DELAY = 10;
     private final static int HIDE_DELAY_HANDLE = 5000;
     private final CodeEditor mEditor;
     private final OverScroller mScroller;
@@ -43,6 +44,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     float maxSize, minSize;
     private long mLastScroll = 0;
     private long mLastSetSelection = 0;
+    private long mLastTouchedSelectionHandle = 0;
     private boolean mHoldingScrollbarVertical = false;
     private boolean mHoldingScrollbarHorizontal = false;
     private boolean mHoldingInsertHandle = false;
@@ -50,6 +52,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     private float downX = 0;
     private SelectionHandle insert = null, left = null, right = null;
     private int mSelHandleType = -1;
+    private int mTouchedHandleType = -1;
 
     private final static int LEFT_EDGE = 1;
     private final static int RIGHT_EDGE = 1 << 1;
@@ -213,6 +216,24 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     }
 
     /**
+     * Notify the editor later to resize touched selection handle to normal size
+     */
+    public void notifyTouchedSelectionHandlerLater() {
+        mLastTouchedSelectionHandle = System.currentTimeMillis();
+        class InvalidateNotifier implements Runnable {
+
+            @Override
+            public void run() {
+                if (System.currentTimeMillis() - mLastTouchedSelectionHandle >= SELECTION_HANDLE_RESIZE_DELAY) {
+                    mEditor.invalidate();
+                }
+            }
+
+        }
+        mEditor.postDelayed(new InvalidateNotifier(), SELECTION_HANDLE_RESIZE_DELAY);
+    }
+
+    /**
      * Called by editor
      * Whether this class is handling motions by user
      *
@@ -281,14 +302,17 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 if (left || right) {
                     if (left) {
                         mSelHandleType = SelectionHandle.LEFT;
+                        mTouchedHandleType = SelectionHandle.LEFT;
                     } else {
                         mSelHandleType = SelectionHandle.RIGHT;
+                        mTouchedHandleType = SelectionHandle.RIGHT;
                     }
                     downY = e.getY();
                     downX = e.getX();
 
                     this.left = new SelectionHandle(SelectionHandle.LEFT);
                     this.right = new SelectionHandle(SelectionHandle.RIGHT);
+
                 }
                 return true;
             case MotionEvent.ACTION_MOVE:
@@ -329,6 +353,8 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     notifyLater();
                 }
                 mSelHandleType = -1;
+                mTouchedHandleType = -1;
+                notifyTouchedSelectionHandlerLater();
                 stopEdgeScroll();
                 break;
         }
@@ -425,6 +451,10 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 endX - mScroller.getCurrX(),
                 endY - mScroller.getCurrY(), 0);
         mEditor.invalidate();
+    }
+
+    protected int getTouchedHandleType() {
+        return mTouchedHandleType;
     }
 
     @Override
@@ -635,11 +665,12 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         return true;
     }
 
+
     /**
      * This is a helper for EventHandler to control handles
      */
     @SuppressWarnings("CanBeFinal")
-    private class SelectionHandle {
+    class SelectionHandle {
 
         public static final int LEFT = 0;
         public static final int RIGHT = 1;

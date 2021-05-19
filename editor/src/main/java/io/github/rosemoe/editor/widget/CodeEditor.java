@@ -964,7 +964,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             drawLineNumberBackground(canvas, offsetX, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
             drawDivider(canvas, offsetX + lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
             int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
-            for (int i = 0;i < postDrawLineNumbers.size();i++) {
+            for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
                 drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), offsetX, lineNumberWidth, lineNumberColor);
             }
@@ -1194,11 +1194,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 if (mTextActionPresenter.shouldShowCursor()) {
                     if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
                         float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar);
-                        postDrawCursor.add(new CursorPaintAction(row, centerX, mLeftHandle, false));
+                        postDrawCursor.add(new CursorPaintAction(row, centerX, mLeftHandle, false, EditorTouchEventHandler.SelectionHandle.LEFT));
                     }
                     if (mCursor.getRightLine() == line && isInside(mCursor.getRightColumn(), firstVisibleChar, lastVisibleChar, line)) {
                         float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getRightColumn() - firstVisibleChar);
-                        postDrawCursor.add(new CursorPaintAction(row, centerX, mRightHandle, false));
+                        postDrawCursor.add(new CursorPaintAction(row, centerX, mRightHandle, false, EditorTouchEventHandler.SelectionHandle.RIGHT));
                     }
                 }
             } else if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
@@ -1475,8 +1475,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param centerX    Center x offset of handle
      * @param resultRect The rect of handle this method drew
      */
-    private void drawHandle(Canvas canvas, int row, float centerX, RectF resultRect) {
+    private void drawHandle(Canvas canvas, int row, float centerX, RectF resultRect, int handleType) {
         float radius = mDpUnit * 12;
+
+        if (handleType == mEventHandler.getTouchedHandleType()) {
+            radius = mDpUnit * 16;
+        }
+
+        Log.d("drawHandle", "drawHandle: " + mEventHandler.getTouchedHandleType());
         float top = getRowBottom(row) - getOffsetY();
         float bottom = top + radius * 2;
         float left = centerX - radius;
@@ -1687,7 +1693,23 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             drawColor(canvas, mColors.getColor(EditorColorScheme.SELECTION_INSERT), mRect);
         }
         if (handle != null) {
-            drawHandle(canvas, row, centerX, handle);
+            drawHandle(canvas, row, centerX, handle, -1);
+        }
+    }
+
+    /**
+     * Draw cursor
+     */
+    private void drawCursor(Canvas canvas, float centerX, int row, RectF handle, boolean insert, int handleType) {
+        if (!insert || mCursorBlink == null || mCursorBlink.visibility) {
+            mRect.top = getRowTop(row) - getOffsetY();
+            mRect.bottom = getRowBottom(row) - getOffsetY();
+            mRect.left = centerX - mInsertSelWidth / 2f;
+            mRect.right = centerX + mInsertSelWidth / 2f;
+            drawColor(canvas, mColors.getColor(EditorColorScheme.SELECTION_INSERT), mRect);
+        }
+        if (handle != null) {
+            drawHandle(canvas, row, centerX, handle, handleType);
         }
     }
 
@@ -4118,6 +4140,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
          */
         final boolean insert;
 
+        int handleType = -1;
+
         CursorPaintAction(int row, float centerX, RectF outRect, boolean insert) {
             this.row = row;
             this.centerX = centerX;
@@ -4125,11 +4149,20 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             this.insert = insert;
         }
 
+        CursorPaintAction(int row, float centerX, RectF outRect, boolean insert, int handleType) {
+            this.row = row;
+            this.centerX = centerX;
+            this.outRect = outRect;
+            this.insert = insert;
+            this.handleType = handleType;
+        }
+
+
         /**
          * Execute painting on the given editor and canvas
          */
         void exec(Canvas canvas, CodeEditor editor) {
-            editor.drawCursor(canvas, centerX, row, outRect, insert);
+            editor.drawCursor(canvas, centerX, row, outRect, insert, handleType);
         }
 
     }
