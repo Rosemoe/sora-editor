@@ -106,14 +106,12 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
      * @param column column index in line
      */
     private void handleSelectedTextClick(MotionEvent e, int line, int column) {
-        if (mEditor.getTextActionPresenter() instanceof EditorTextActionWindow) {
-            char text = mEditor.getText().charAt(line, column);
-            if (isWhitespace(text) || ((EditorTextActionWindow) mEditor.getTextActionPresenter()).isShowing())
-                mEditor.setSelection(line, column);
-            else mEditor.getTextActionPresenter().onSelectedTextClicked(e);
-        } else {
-            mEditor.getTextActionPresenter().onSelectedTextClicked(e);
-        }
+		boolean isShowing1 = mEditor.getTextActionPresenter() instanceof EditorTextActionWindow && ((EditorTextActionWindow) mEditor.getTextActionPresenter()).isShowing();
+		boolean isShowing2 = mEditor.getTextActionPresenter() instanceof TextActionPopupWindow && ((TextActionPopupWindow) mEditor.getTextActionPresenter()).isShowing();
+		char text = mEditor.getText().charAt(line, column);
+		if (isWhitespace(text) || isShowing1 || isShowing2)
+			mEditor.setSelection(line, column);
+		else mEditor.getTextActionPresenter().onSelectedTextClicked(e);
     }
 
     /**
