@@ -77,8 +77,10 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
     }
 
     @Override
-    public void onExit() {
+    public boolean onExit() {
+        boolean result = isShowing();
         hide();
+        return result;
     }
 
     @Override

@@ -3695,6 +3695,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         //Log.d(LOG_TAG, KeyEvent.keyCodeToString(keyCode));
         switch (keyCode) {
+            case KeyEvent.KEYCODE_BACK:{
+                return mTextActionPresenter != null && mTextActionPresenter.onExit();
+            }
             case KeyEvent.KEYCODE_DEL:
                 if (isEditable()) {
                     mCursor.onDeleteKeyPressed();
@@ -4156,8 +4159,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         /**
          * Exit the presenter
+         * @return Whether action is executed. Return true if this has cause UI change such as
+         * popup window hides and action mode exits
          */
-        void onExit();
+        boolean onExit();
 
         /**
          * Called by editor to check whether it should draw handles of cursor

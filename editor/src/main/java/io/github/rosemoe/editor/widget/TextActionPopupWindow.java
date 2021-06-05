@@ -121,8 +121,13 @@ public class TextActionPopupWindow extends TextComposeBasePopup implements View.
     }
 
     @Override
-    public void onExit() {
+    public boolean onExit() {
+        boolean result = isShowing();
         hide(DISMISS);
+        if (mEditor.getCursor().isSelected()) {
+            mEditor.setSelection(mEditor.getCursor().getLeftLine(), mEditor.getCursor().getLeftColumn());
+        }
+        return result && !isShowing();
     }
 
     @Override

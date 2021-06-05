@@ -134,11 +134,13 @@ class EditorTextActionModeStarter implements CodeEditor.EditorTextActionPresente
     }
 
     @Override
-    public void onExit() {
+    public boolean onExit() {
         if (mActionMode != null) {
             mActionMode.finish();
             mActionMode = null;
+            return true;
         }
+        return false;
     }
 
     @Override
