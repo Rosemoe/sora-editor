@@ -759,6 +759,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         if (mode == TextActionMode.ACTION_MODE) {
             mTextActionPresenter = new EditorTextActionModeStarter(this);
+        } else if (mode == TextActionMode.POPUP_WINDOW_2) {
+            mTextActionPresenter = new TextActionPopupWindow(this);
         } else {
             mTextActionPresenter = new EditorTextActionWindow(this);
         }
@@ -964,7 +966,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             drawLineNumberBackground(canvas, offsetX, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
             drawDivider(canvas, offsetX + lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
             int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
-            for (int i = 0;i < postDrawLineNumbers.size();i++) {
+            for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
                 drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), offsetX, lineNumberWidth, lineNumberColor);
             }
@@ -1194,11 +1196,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 if (mTextActionPresenter.shouldShowCursor()) {
                     if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
                         float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar);
-                        postDrawCursor.add(new CursorPaintAction(row, centerX, mLeftHandle, false));
+                        postDrawCursor.add(new CursorPaintAction(row, centerX, mLeftHandle, false, EditorTouchEventHandler.SelectionHandle.LEFT));
                     }
                     if (mCursor.getRightLine() == line && isInside(mCursor.getRightColumn(), firstVisibleChar, lastVisibleChar, line)) {
                         float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getRightColumn() - firstVisibleChar);
-                        postDrawCursor.add(new CursorPaintAction(row, centerX, mRightHandle, false));
+                        postDrawCursor.add(new CursorPaintAction(row, centerX, mRightHandle, false, EditorTouchEventHandler.SelectionHandle.RIGHT));
                     }
                 }
             } else if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
@@ -1206,6 +1208,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 postDrawCursor.add(new CursorPaintAction(row, centerX, mEventHandler.shouldDrawInsertHandle() ? mInsertHandle : null, true));
             }
 
+        }
+    }
+
+
+    protected void showTextActionPopup() {
+        if (mTextActionPresenter instanceof TextActionPopupWindow) {
+            TextActionPopupWindow window = (TextActionPopupWindow) mTextActionPresenter;
+            if (window.isShowing()) {
+                //window.hide(TextActionPopupWindow.DISMISS);
+            } else {
+                window.onBeginTextSelect();
+                window.onTextSelectionEnd();
+            }
         }
     }
 
@@ -1474,9 +1489,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param row        The row you want to attach handle to its bottom (Usually the selection line)
      * @param centerX    Center x offset of handle
      * @param resultRect The rect of handle this method drew
+     * @param handleType The selection handle type (LEFT, RIGHT,BOTH or -1)
      */
-    private void drawHandle(Canvas canvas, int row, float centerX, RectF resultRect) {
+    private void drawHandle(Canvas canvas, int row, float centerX, RectF resultRect, int handleType) {
         float radius = mDpUnit * 12;
+
+        if (handleType > -1 && handleType == mEventHandler.getTouchedHandleType()) {
+            radius = mDpUnit * 16;
+        }
+
+        Log.d("drawHandle", "drawHandle: " + mEventHandler.getTouchedHandleType());
         float top = getRowBottom(row) - getOffsetY();
         float bottom = top + radius * 2;
         float left = centerX - radius;
@@ -1687,7 +1709,23 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             drawColor(canvas, mColors.getColor(EditorColorScheme.SELECTION_INSERT), mRect);
         }
         if (handle != null) {
-            drawHandle(canvas, row, centerX, handle);
+            drawHandle(canvas, row, centerX, handle, -1);
+        }
+    }
+
+    /**
+     * Draw cursor
+     */
+    private void drawCursor(Canvas canvas, float centerX, int row, RectF handle, boolean insert, int handleType) {
+        if (!insert || mCursorBlink == null || mCursorBlink.visibility) {
+            mRect.top = getRowTop(row) - getOffsetY();
+            mRect.bottom = getRowBottom(row) - getOffsetY();
+            mRect.left = centerX - mInsertSelWidth / 2f;
+            mRect.right = centerX + mInsertSelWidth / 2f;
+            drawColor(canvas, mColors.getColor(EditorColorScheme.SELECTION_INSERT), mRect);
+        }
+        if (handle != null) {
+            drawHandle(canvas, row, centerX, handle, handleType);
         }
     }
 
@@ -2725,6 +2763,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         startActionMode(callback);
     }
 
+    public EditorTouchEventHandler getEventHandler() {
+        return mEventHandler;
+    }
+
     /**
      * @return Margin of divider line
      * @see CodeEditor#setDividerMargin(float)
@@ -3282,6 +3324,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (!lastState && mCursor.isSelected() && mStartedActionMode != ACTION_MODE_SEARCH_TEXT) {
             mTextActionPresenter.onBeginTextSelect();
         }
+        mEventHandler.notifyTouchedSelectionHandlerLater();
     }
 
     /**
@@ -4041,6 +4084,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
+
+    public void onEndTextSelect() {
+        showTextActionPopup();
+    }
+
+    public void onEndGestureInteraction() {
+        showTextActionPopup();
+    }
+
     /**
      * Mode for presenting text actions
      */
@@ -4050,12 +4102,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
          * In this way, the editor shows a windows inside the editor to present actions
          */
         POPUP_WINDOW,
+        POPUP_WINDOW_2,
         /**
          * In this way, the editor starts a {@link ActionMode} to present actions
          */
         ACTION_MODE
 
     }
+
 
     /**
      * Interface for various ways to present text action panel
@@ -4070,6 +4124,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         void onSelectedTextClicked(MotionEvent event);
 
         /**
+         * Text selection, gesture interaction is over
+         */
+        void onTextSelectionEnd();
+
+        /**
          * Notify that the position of panel should be updated.
          * If the presenter is displayed in editor's viewport, it should update
          * its position
@@ -4077,9 +4136,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         void onUpdate();
 
         /**
+         * Notify that the position of panel should be updated.
+         * If the presenter is displayed in editor's viewport, it should update
+         * its position
+         *
+         * @param updateReason {@link TextComposeBasePopup#DISMISS} {@link TextComposeBasePopup#DRAG} {@link TextComposeBasePopup#SCROLL}
+         */
+        void onUpdate(int updateReason);
+
+        /**
          * Start the presenter
          */
         void onBeginTextSelect();
+
 
         /**
          * Exit the presenter
@@ -4118,6 +4187,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
          */
         final boolean insert;
 
+        int handleType = -1;
+
         CursorPaintAction(int row, float centerX, RectF outRect, boolean insert) {
             this.row = row;
             this.centerX = centerX;
@@ -4125,11 +4196,20 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             this.insert = insert;
         }
 
+        CursorPaintAction(int row, float centerX, RectF outRect, boolean insert, int handleType) {
+            this.row = row;
+            this.centerX = centerX;
+            this.outRect = outRect;
+            this.insert = insert;
+            this.handleType = handleType;
+        }
+
+
         /**
          * Execute painting on the given editor and canvas
          */
         void exec(Canvas canvas, CodeEditor editor) {
-            editor.drawCursor(canvas, centerX, row, outRect, insert);
+            editor.drawCursor(canvas, centerX, row, outRect, insert, handleType);
         }
 
     }
