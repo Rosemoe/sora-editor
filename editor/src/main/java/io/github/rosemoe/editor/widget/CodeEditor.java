@@ -1138,6 +1138,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     private void drawMiniGraph(Canvas canvas, float offset, int row, String graph) {
         // Draw
+        mPaintGraph.setColor(mColors.getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
         float baseline = getRowBottom(row) - getOffsetY() - mGraphMetrics.descent;
         canvas.drawText(graph, 0, graph.length(), offset, baseline, mPaintGraph);
     }
