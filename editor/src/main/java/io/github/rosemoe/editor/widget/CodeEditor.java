@@ -234,6 +234,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private CursorBlink mCursorBlink;
     private SymbolPairMatch mOverrideSymbolPairs;
     private LongArrayList mPostDrawLineNumbers = new LongArrayList();
+    private CharPosition mLockedSelection;
+    KeyMetaStates mKeyMetaStates = new KeyMetaStates(this);
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -319,99 +321,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @NonNull
     protected EditorTextActionPresenter getTextActionPresenter() {
         return mTextActionPresenter;
-    }
-
-    /**
-     * Send current selection position to input method
-     */
-    protected void updateSelection() {
-        int candidatesStart = -1, candidatesEnd = -1;
-        if (mConnection.mComposingLine != -1) {
-            try {
-                candidatesStart = mText.getCharIndex(mConnection.mComposingLine, mConnection.mComposingStart);
-                candidatesEnd = mText.getCharIndex(mConnection.mComposingLine, mConnection.mComposingEnd);
-            } catch (IndexOutOfBoundsException e) {
-                //Ignored
-            }
-        }
-        //Logs.log("Send selection changes: candidate(start = " + candidatesStart + ", end =" + candidatesEnd + " ) cursor(left = " + mCursor.getLeft() + ", right =" + mCursor.getRight() + ")");
-        mInputMethodManager.updateSelection(this, mCursor.getLeft(), mCursor.getRight(), candidatesStart, candidatesEnd);
-    }
-
-    /**
-     * Update request result for monitoring request
-     */
-    protected void updateExtractedText() {
-        if (mExtracting != null) {
-            //Logs.log("Send extracted text updates");
-            mInputMethodManager.updateExtractedText(this, mExtracting.token, extractText(mExtracting));
-        }
-    }
-
-    /**
-     * Set request needed to update when editor updates selection
-     */
-    protected void setExtracting(@Nullable ExtractedTextRequest request) {
-        mExtracting = request;
-    }
-
-    /**
-     * Extract text in editor for input method
-     */
-    protected ExtractedText extractText(@NonNull ExtractedTextRequest request) {
-        Cursor cur = getCursor();
-        ExtractedText text = new ExtractedText();
-        int selBegin = cur.getLeft();
-        int selEnd = cur.getRight();
-        int startOffset;
-        if (request.hintMaxChars == 0) {
-            request.hintMaxChars = 512;
-        }
-        if (selEnd - selBegin > request.hintMaxChars) {
-            startOffset = selBegin;
-        } else {
-            int redundantLength = (request.hintMaxChars - (selEnd - selBegin)) / 2;
-            startOffset = selBegin - redundantLength;
-        }
-        startOffset = Math.max(0, startOffset);
-        text.text = mConnection.getTextRegion(startOffset, startOffset + request.hintMaxChars, request.flags);
-        text.startOffset = startOffset;
-        text.selectionStart = selBegin - startOffset;
-        text.selectionEnd = selEnd - startOffset;
-        if (selBegin != selEnd) {
-            text.flags |= ExtractedText.FLAG_SELECTING;
-        }
-        return text;
-    }
-
-    /**
-     * Notify input method that text has been changed for external reason
-     */
-    protected void notifyExternalCursorChange() {
-        //Logs.log("Call cursorChangeExternal()");
-        updateExtractedText();
-        updateSelection();
-        updateCursorAnchor();
-        // Restart if composing
-        if (mConnection.mComposingLine != -1) {
-            restartInput();
-        }
-    }
-
-    protected void restartInput() {
-        mConnection.invalid();
-        mInputMethodManager.restartInput(this);
-    }
-
-    /**
-     * Send cursor position in text and on screen to input method
-     */
-    protected void updateCursor() {
-        updateCursorAnchor();
-        updateExtractedText();
-        if (!mText.isInBatchEdit()) {
-            updateSelection();
-        }
     }
 
     /**
@@ -1498,7 +1407,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             radius = mDpUnit * 16;
         }
 
-        Log.d("drawHandle", "drawHandle: " + mEventHandler.getTouchedHandleType());
+        //Log.d("drawHandle", "drawHandle: " + mEventHandler.getTouchedHandleType());
         float top = getRowBottom(row) - getOffsetY();
         float bottom = top + radius * 2;
         float left = centerX - radius;
@@ -2906,29 +2815,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Display soft input method for self
-     */
-    public void showSoftInput() {
-        if (isEditable() && isEnabled()) {
-            if (isInTouchMode()) {
-                requestFocusFromTouch();
-            }
-            if (!hasFocus()) {
-                requestFocus();
-            }
-            mInputMethodManager.showSoftInput(this, 0);
-        }
-        invalidate();
-    }
-
-    /**
-     * Hide soft input
-     */
-    public void hideSoftInput() {
-        mInputMethodManager.hideSoftInputFromWindow(getWindowToken(), 0);
-    }
-
-    /**
      * Get line count
      *
      * @return line count
@@ -3078,26 +2964,45 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
+     * Get the target cursor to move when shift is pressed
+     */
+    private CharPosition getSelectingTarget() {
+        if (mCursor.left().equals(mLockedSelection)) {
+            return mCursor.right();
+        } else {
+            return mCursor.left();
+        }
+    }
+
+    /**
+     * Make sure the moving selection is visible
+     */
+    private void ensureSelectingTargetVisible() {
+        if (mCursor.left().equals(mLockedSelection)) {
+            // Ensure right selection vivible
+            ensureSelectionVisible();
+        } else {
+            ensurePositionVisible(mCursor.getLeftLine(), mCursor.getLeftColumn());
+        }
+    }
+
+    /**
      * Move the selection down
      * If the auto complete panel is shown,move the selection in panel to next
      */
     public void moveSelectionDown() {
-        if (mCompletionWindow.isShowing()) {
-            mCompletionWindow.moveDown();
-            return;
-        }
-        Cursor c = getCursor();
-        int line = c.getLeftLine();
-        int column = c.getLeftColumn();
-        int c_line = getText().getLineCount();
-        if (line + 1 >= c_line) {
-            setSelection(line, getText().getColumnCount(line));
-        } else {
-            int c_column = getText().getColumnCount(line + 1);
-            if (column > c_column) {
-                column = c_column;
+        if (mLockedSelection == null) {
+            if (mCompletionWindow.isShowing()) {
+                mCompletionWindow.moveDown();
+                return;
             }
-            setSelection(line + 1, column);
+            long pos = mCursor.getDownOf(IntPair.pack(mCursor.getLeftLine(), mCursor.getLeftColumn()));
+            setSelection(IntPair.getFirst(pos), IntPair.getSecond(pos));
+        } else {
+            mCompletionWindow.hide();
+            long pos = mCursor.getDownOf(getSelectingTarget().toIntPair());
+            setSelectionRegion(mLockedSelection.line, mLockedSelection.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
+            ensureSelectingTargetVisible();
         }
     }
 
@@ -3106,59 +3011,53 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * If Auto complete panel is shown,move the selection in panel to last
      */
     public void moveSelectionUp() {
-        if (mCompletionWindow.isShowing()) {
-            mCompletionWindow.moveUp();
-            return;
+        if (mLockedSelection == null) {
+            if (mCompletionWindow.isShowing()) {
+                mCompletionWindow.moveUp();
+                return;
+            }
+            long pos = mCursor.getUpOf(IntPair.pack(mCursor.getLeftLine(), mCursor.getLeftColumn()));
+            setSelection(IntPair.getFirst(pos), IntPair.getSecond(pos));
+        } else {
+            mCompletionWindow.hide();
+            long pos = mCursor.getUpOf(getSelectingTarget().toIntPair());
+            setSelectionRegion(mLockedSelection.line, mLockedSelection.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
+            ensureSelectingTargetVisible();
         }
-        Cursor c = getCursor();
-        int line = c.getLeftLine();
-        int column = c.getLeftColumn();
-        if (line - 1 < 0) {
-            line = 1;
-        }
-        int c_column = getText().getColumnCount(line - 1);
-        if (column > c_column) {
-            column = c_column;
-        }
-        setSelection(line - 1, column);
     }
 
     /**
      * Move the selection left
      */
     public void moveSelectionLeft() {
-        Cursor c = getCursor();
-        int line = c.getLeftLine();
-        int column = c.getLeftColumn();
-        if (column - 1 >= 0) {
-            int toLeft = 1;
-            if (column - 2 >= 0) {
-                char ch = mText.charAt(line, column - 2);
-                if (isEmoji(ch)) {
-                    column--;
-                    toLeft++;
+        if (mLockedSelection == null) {
+            Cursor c = getCursor();
+            int line = c.getLeftLine();
+            int column = c.getLeftColumn();
+            long pos = mCursor.getLeftOf(IntPair.pack(line, column));
+            int lineAfter = IntPair.getFirst(pos);
+            int columnAfter = IntPair.getSecond(pos);
+            setSelection(lineAfter, columnAfter);
+            if (line == lineAfter) {
+                int toLeft = column - columnAfter;
+                if (mCompletionWindow.isShowing()) {
+                    String prefix = mCompletionWindow.getPrefix();
+                    if (prefix.length() > toLeft) {
+                        prefix = prefix.substring(0, prefix.length() - toLeft);
+                        mCompletionWindow.setPrefix(prefix);
+                    } else {
+                        mCompletionWindow.hide();
+                    }
                 }
-            }
-            setSelection(line, column - 1);
-            if (mCompletionWindow.isShowing()) {
-                String prefix = mCompletionWindow.getPrefix();
-                if (prefix.length() > toLeft) {
-                    prefix = prefix.substring(0, prefix.length() - toLeft);
-                    mCompletionWindow.setPrefix(prefix);
-                } else {
+                if (column - 1 <= 0) {
                     mCompletionWindow.hide();
                 }
             }
-            if (column - 1 <= 0) {
-                mCompletionWindow.hide();
-            }
         } else {
-            if (line == 0) {
-                setSelection(0, 0);
-            } else {
-                int c_column = getText().getColumnCount(line - 1);
-                setSelection(line - 1, c_column);
-            }
+            mCompletionWindow.hide();
+            long pos = mCursor.getLeftOf(getSelectingTarget().toIntPair());
+            setSelectionRegion(mLockedSelection.line, mLockedSelection.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
+            ensureSelectingTargetVisible();
         }
     }
 
@@ -3166,34 +3065,31 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Move the selection right
      */
     public void moveSelectionRight() {
-        Cursor c = getCursor();
-        int line = c.getLeftLine();
-        int column = c.getLeftColumn();
-        int c_column = getText().getColumnCount(line);
-        if (column + 1 <= c_column) {
-            char ch = mText.charAt(line, column);
-            boolean emoji;
-            if (emoji = isEmoji(ch)) {
-                column++;
-                if (column + 1 > c_column) {
-                    column--;
+        if (mLockedSelection == null) {
+            Cursor c = getCursor();
+            int line = c.getLeftLine();
+            int column = c.getLeftColumn();
+            int c_column = getText().getColumnCount(line);
+            long pos = mCursor.getRightOf(IntPair.pack(line, column));
+            int lineAfter = IntPair.getFirst(pos);
+            int columnAfter = IntPair.getSecond(pos);
+            setSelection(lineAfter, columnAfter);
+            if (line == lineAfter) {
+                char ch = (columnAfter - 1 < c_column && columnAfter - 1 >= 0) ? mText.charAt(lineAfter, columnAfter - 1) : '\0';
+                if (!isEmoji(ch) && mCompletionWindow.isShowing()) {
+                    if (!mLanguage.isAutoCompleteChar(ch)) {
+                        mCompletionWindow.hide();
+                    } else {
+                        String prefix = mCompletionWindow.getPrefix() + ch;
+                        mCompletionWindow.setPrefix(prefix);
+                    }
                 }
             }
-            if (!emoji && mCompletionWindow.isShowing()) {
-                if (!mLanguage.isAutoCompleteChar(ch)) {
-                    mCompletionWindow.hide();
-                } else {
-                    String prefix = mCompletionWindow.getPrefix() + ch;
-                    mCompletionWindow.setPrefix(prefix);
-                }
-            }
-            setSelection(line, column + 1);
         } else {
-            if (line + 1 == getLineCount()) {
-                setSelection(line, c_column);
-            } else {
-                setSelection(line + 1, 0);
-            }
+            mCompletionWindow.hide();
+            long pos = mCursor.getRightOf(getSelectingTarget().toIntPair());
+            setSelectionRegion(mLockedSelection.line, mLockedSelection.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
+            ensureSelectingTargetVisible();
         }
     }
 
@@ -3201,15 +3097,26 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Move selection to end of line
      */
     public void moveSelectionEnd() {
-        int line = mCursor.getLeftLine();
-        setSelection(line, getText().getColumnCount(line));
+        if (mLockedSelection == null) {
+            int line = mCursor.getLeftLine();
+            setSelection(line, getText().getColumnCount(line));
+        } else {
+            int line = getSelectingTarget().line;
+            setSelectionRegion(mLockedSelection.line, mLockedSelection.column, line, getText().getColumnCount(line), false);
+            ensureSelectingTargetVisible();
+        }
     }
 
     /**
      * Move selection to start of line
      */
     public void moveSelectionHome() {
-        setSelection(mCursor.getLeftLine(), 0);
+        if (mLockedSelection == null) {
+            setSelection(mCursor.getLeftLine(), 0);
+        } else {
+            setSelectionRegion(mLockedSelection.line, mLockedSelection.column, getSelectingTarget().line, 0, false);
+            ensureSelectingTargetVisible();
+        }
     }
 
     /**
@@ -3288,7 +3195,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             return;
         }
         if (start > end) {
-            throw new IllegalArgumentException("start > end:start = " + start + " end = " + end + " lineLeft = " + lineLeft + " columnLeft = " + columnLeft + " lineRight = " + lineRight + " columnRight = " + columnRight);
+            setSelectionRegion(lineRight, columnRight, lineLeft, columnLeft, makeRightVisible);
+            Log.w(LOG_TAG, "setSelectionRegion() error: start > end:start = " + start + " end = " + end + " lineLeft = " + lineLeft + " columnLeft = " + columnLeft + " lineRight = " + lineRight + " columnRight = " + columnRight);
+            return;
         }
         boolean lastState = mCursor.isSelected();
         if (columnLeft > 0) {
@@ -3564,7 +3473,131 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
 
-    //------------------------Internal Callbacks------------------------------
+    //-------------------------------------------------------------------------------
+    //-------------------------IME Interaction---------------------------------------
+    //-------------------------------------------------------------------------------
+
+    /**
+     * Display soft input method for self
+     */
+    public void showSoftInput() {
+        if (isEditable() && isEnabled()) {
+            if (isInTouchMode()) {
+                requestFocusFromTouch();
+            }
+            if (!hasFocus()) {
+                requestFocus();
+            }
+            mInputMethodManager.showSoftInput(this, 0);
+        }
+        invalidate();
+    }
+
+    /**
+     * Hide soft input
+     */
+    public void hideSoftInput() {
+        mInputMethodManager.hideSoftInputFromWindow(getWindowToken(), 0);
+    }
+
+    /**
+     * Send current selection position to input method
+     */
+    protected void updateSelection() {
+        int candidatesStart = -1, candidatesEnd = -1;
+        if (mConnection.mComposingLine != -1) {
+            try {
+                candidatesStart = mText.getCharIndex(mConnection.mComposingLine, mConnection.mComposingStart);
+                candidatesEnd = mText.getCharIndex(mConnection.mComposingLine, mConnection.mComposingEnd);
+            } catch (IndexOutOfBoundsException e) {
+                //Ignored
+            }
+        }
+        //Logs.log("Send selection changes: candidate(start = " + candidatesStart + ", end =" + candidatesEnd + " ) cursor(left = " + mCursor.getLeft() + ", right =" + mCursor.getRight() + ")");
+        mInputMethodManager.updateSelection(this, mCursor.getLeft(), mCursor.getRight(), candidatesStart, candidatesEnd);
+    }
+
+    /**
+     * Update request result for monitoring request
+     */
+    protected void updateExtractedText() {
+        if (mExtracting != null) {
+            //Logs.log("Send extracted text updates");
+            mInputMethodManager.updateExtractedText(this, mExtracting.token, extractText(mExtracting));
+        }
+    }
+
+    /**
+     * Set request needed to update when editor updates selection
+     */
+    protected void setExtracting(@Nullable ExtractedTextRequest request) {
+        mExtracting = request;
+
+    }
+
+    /**
+     * Extract text in editor for input method
+     */
+    protected ExtractedText extractText(@NonNull ExtractedTextRequest request) {
+        Cursor cur = getCursor();
+        ExtractedText text = new ExtractedText();
+        int selBegin = cur.getLeft();
+        int selEnd = cur.getRight();
+        int startOffset;
+        if (request.hintMaxChars == 0) {
+            request.hintMaxChars = EditorInputConnection.TEXT_LENGTH_LIMIT;
+        }
+        /*if (selEnd - selBegin > request.hintMaxChars) {
+            startOffset = selBegin;
+        } else {
+            int redundantLength = (request.hintMaxChars - (selEnd - selBegin)) / 2;
+            startOffset = selBegin - redundantLength;
+        }*/
+        startOffset = 0;
+        //startOffset = Math.max(0, startOffset);
+        text.text = mConnection.getTextRegion(startOffset, startOffset + request.hintMaxChars, request.flags);
+        text.startOffset = startOffset;
+        text.selectionStart = selBegin - startOffset;
+        text.selectionEnd = selEnd - startOffset;
+        if (selBegin != selEnd) {
+            text.flags |= ExtractedText.FLAG_SELECTING;
+        }
+        return text;
+    }
+
+    /**
+     * Notify input method that text has been changed for external reason
+     */
+    protected void notifyExternalCursorChange() {
+        //Logs.log("Call cursorChangeExternal()");
+        updateExtractedText();
+        updateSelection();
+        updateCursorAnchor();
+        // Restart if composing
+        if (mConnection.mComposingLine != -1) {
+            restartInput();
+        }
+    }
+
+    protected void restartInput() {
+        mConnection.invalid();
+        mInputMethodManager.restartInput(this);
+    }
+
+    /**
+     * Send cursor position in text and on screen to input method
+     */
+    protected void updateCursor() {
+        updateCursorAnchor();
+        updateExtractedText();
+        if (!mText.isInBatchEdit()) {
+            updateSelection();
+        }
+    }
+
+    //-------------------------------------------------------------------------------
+    //------------------------Internal Callbacks-------------------------------------
+    //-------------------------------------------------------------------------------
 
     /**
      * Called by ColorScheme to notify invalidate
@@ -3595,7 +3628,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         invalidate();
     }
 
-    //------------------------Overrides---------------------------------------
+    //-------------------------------------------------------------------------------
+    //-------------------------Override methods--------------------------------------
+    //-------------------------------------------------------------------------------
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -3693,7 +3728,22 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        //Log.d(LOG_TAG, KeyEvent.keyCodeToString(keyCode));
+        mKeyMetaStates.onKeyDown(event);
+        boolean isShiftPressed = mKeyMetaStates.isShiftPressed();
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+            case KeyEvent.KEYCODE_DPAD_UP:
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+            case KeyEvent.KEYCODE_MOVE_HOME:
+            case KeyEvent.KEYCODE_MOVE_END:
+                if (isShiftPressed && (!mCursor.isSelected())) {
+                    mLockedSelection = mCursor.left();
+                } else if(!isShiftPressed && mLockedSelection != null) {
+                    mLockedSelection = null;
+                }
+                mKeyMetaStates.adjust();
+        }
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:{
                 return mTextActionPresenter != null && mTextActionPresenter.onExit();
@@ -3860,6 +3910,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 }
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        mKeyMetaStates.onKeyUp(event);
+        if (!mKeyMetaStates.isShiftPressed() && mLockedSelection != null && !mCursor.isSelected()) {
+            mLockedSelection = null;
+        }
+        return super.onKeyUp(keyCode, event);
     }
 
     @Override
@@ -4088,7 +4147,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
-
     public void onEndTextSelect() {
         showTextActionPopup();
     }
@@ -4096,6 +4154,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public void onEndGestureInteraction() {
         showTextActionPopup();
     }
+
+    //-------------------------------------------------------------------------------
+    //-------------------------Inner classes-----------------------------------------
+    //-------------------------------------------------------------------------------
 
     /**
      * Mode for presenting text actions

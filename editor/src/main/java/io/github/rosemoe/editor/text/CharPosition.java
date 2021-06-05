@@ -16,6 +16,8 @@
 package io.github.rosemoe.editor.text;
 
 
+import io.github.rosemoe.editor.util.IntPair;
+
 /**
  * This a data class of a character position in {@link Content}
  *
@@ -66,6 +68,27 @@ public final class CharPosition {
     public CharPosition zero() {
         index = line = column = 0;
         return this;
+    }
+
+    @Override
+    public boolean equals(Object another) {
+        if (another instanceof CharPosition) {
+            CharPosition a = (CharPosition) another;
+            return a.column == column &&
+                    a.line == line &&
+                    a.index == index;
+        }
+        return false;
+    }
+
+    /**
+     * Convert {@link CharPosition#line} and {@link CharPosition#column} to a Long number
+     *
+     * First integer is line and second integer is column
+     * @return A Long integer describing the position
+     */
+    public long toIntPair() {
+        return IntPair.pack(line, column);
     }
 
     /**

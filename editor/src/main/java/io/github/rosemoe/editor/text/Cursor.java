@@ -18,6 +18,7 @@ package io.github.rosemoe.editor.text;
 import android.util.Log;
 
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
+import io.github.rosemoe.editor.util.IntPair;
 
 /**
  * @author Rose
@@ -32,7 +33,7 @@ public final class Cursor {
     private boolean mAutoIndentEnabled;
     private EditorLanguage mLanguage;
     private int mTabWidth;
-	
+
     /**
      * Create a new Cursor for Content
      *
@@ -174,9 +175,9 @@ public final class Cursor {
 
     /**
      * Notify the Indexer to update its cache for current display position
-     *
+     * <p>
      * This will make querying actions quicker
-     *
+     * <p>
      * Especially when the editor user want to set a new cursor position after scrolling long time
      *
      * @param line First visible line
@@ -329,6 +330,111 @@ public final class Cursor {
     }
 
     /**
+     * Get position after moving left once
+     * @param position A packed pair (line, column) describing the original position
+     * @return A packed pair (line, column) describing the result position
+     */
+    public long getLeftOf(long position) {
+        int line = IntPair.getFirst(position);
+        int column = IntPair.getSecond(position);
+        if (column - 1 >= 0) {
+            if (column - 2 >= 0) {
+                char ch = mContent.charAt(line, column - 2);
+                if (isEmoji(ch)) {
+                    column--;
+                }
+            }
+            return IntPair.pack(line, column - 1);
+        } else {
+            if (line == 0) {
+                return 0;
+            } else {
+                int c_column = mContent.getColumnCount(line - 1);
+                return IntPair.pack(line - 1, c_column);
+            }
+        }
+    }
+
+    /**
+     * Get position after moving right once
+     * @param position A packed pair (line, column) describing the original position
+     * @return A packed pair (line, column) describing the result position
+     */
+    public long getRightOf(long position) {
+        int line = IntPair.getFirst(position);
+        int column = IntPair.getSecond(position);
+        int c_column = mContent.getColumnCount(line);
+        if (column + 1 <= c_column) {
+            char ch = mContent.charAt(line, column);
+            if (isEmoji(ch)) {
+                column++;
+                if (column + 1 > c_column) {
+                    column--;
+                }
+            }
+           return IntPair.pack(line, column + 1);
+        } else {
+            if (line + 1 == mContent.getLineCount()) {
+                return IntPair.pack(line, c_column);
+            } else {
+                return IntPair.pack(line + 1, 0);
+            }
+        }
+    }
+
+    /**
+     * Get position after moving up once
+     * @param position A packed pair (line, column) describing the original position
+     * @return A packed pair (line, column) describing the result position
+     */
+    public long getUpOf(long position) {
+        int line = IntPair.getFirst(position);
+        int column = IntPair.getSecond(position);
+        if (line - 1 < 0) {
+            line = 1;
+        }
+        int c_column = mContent.getColumnCount(line - 1);
+        if (column > c_column) {
+            column = c_column;
+        }
+        return IntPair.pack(line - 1, column);
+    }
+
+    /**
+     * Get position after moving down once
+     * @param position A packed pair (line, column) describing the original position
+     * @return A packed pair (line, column) describing the result position
+     */
+    public long getDownOf(long position) {
+        int line = IntPair.getFirst(position);
+        int column = IntPair.getSecond(position);
+        int c_line = mContent.getLineCount();
+        if (line + 1 >= c_line) {
+            return IntPair.pack(line, mContent.getColumnCount(line));
+        } else {
+            int c_column = mContent.getColumnCount(line + 1);
+            if (column > c_column) {
+                column = c_column;
+            }
+            return IntPair.pack(line + 1, column);
+        }
+    }
+
+    /**
+     * Get copy of left cursor
+     */
+    public CharPosition left() {
+        return mLeft.fromThis();
+    }
+
+    /**
+     * Get copy of right cursor
+     */
+    public CharPosition right() {
+        return mRight.fromThis();
+    }
+
+    /**
      * Internal call back before insertion
      *
      * @param startLine   Start line
@@ -416,23 +522,6 @@ public final class Cursor {
                 mRight = mIndexer.getCharPosition(left + (right - beginIdx)).fromThis();
             }
         }
-		/*
-        if(beginIdx <= left) {
-            _left = _indexer.getCharPosition(left - (Math.min(endIdx, left) - beginIdx)).fromThis();
-            int region = endIdx - Math.max(beginIdx, left);
-            int region2 = right - left;
-            int len = region2 - region;
-            if(len > 0) {
-                _right = _indexer.getCharPosition(getLeft() + len).fromThis();
-            }else {
-                _right = _left.fromThis();
-            }
-        }else {
-            int len = Math.max(0,Math.min(endIdx, right) - beginIdx);
-            if(len > 0) {
-                _right = _indexer.getCharPosition(right - len).fromThis();
-            }
-        }*/
     }
 
 }
