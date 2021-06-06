@@ -15,10 +15,12 @@
  */
 package io.github.rosemoe.editor.widget;
 
+import android.os.SystemClock;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.ExtractedText;
@@ -195,11 +197,27 @@ class EditorInputConnection extends BaseInputConnection {
             return false;
         }
         if (text.equals("\n")) {
-            mEditor.onKeyDown(KeyEvent.KEYCODE_ENTER, null);
+            // #67
+            sendEnterKeyEvent();
             return true;
         }
         commitTextInternal(text, true);
         return true;
+    }
+
+    /**
+     * Perform enter key pressed
+     */
+    private void sendEnterKeyEvent() {
+        long eventTime = SystemClock.uptimeMillis();
+        sendKeyEvent(new KeyEvent(eventTime, eventTime,
+                KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER, 0, 0,
+                KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
+                KeyEvent.FLAG_SOFT_KEYBOARD | KeyEvent.FLAG_KEEP_TOUCH_MODE));
+        sendKeyEvent(new KeyEvent(SystemClock.uptimeMillis(), eventTime,
+                KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER, 0, 0,
+                KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
+                KeyEvent.FLAG_SOFT_KEYBOARD | KeyEvent.FLAG_KEEP_TOUCH_MODE));
     }
 
     protected void commitTextInternal(CharSequence text, boolean applyAutoIndent) {
