@@ -390,6 +390,10 @@ class EditorInputConnection extends BaseInputConnection {
             mComposingEnd = mComposingStart + text.length();
             mEditor.getText().insert(mComposingLine, mComposingStart, text);
         }
+        if (text.length() == 0) {
+            finishComposingText();
+            return true;
+        }
         return true;
     }
 
