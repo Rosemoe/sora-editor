@@ -31,7 +31,10 @@ public class HTMLLanguage implements EditorLanguage {
      */
     @Override
     public boolean isAutoCompleteChar(char ch) {
-        return Character.isLetter(ch);
+		// isDigit -> required to complete tags which may contain a number
+		// For example -> h1, h2, h3, h4...
+		// Better solution?
+        return Character.isLetter(ch) || Character.isDigit(ch);
     }
 
     @Override
