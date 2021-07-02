@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         CrashHandler.INSTANCE.init(this);
         setContentView(R.layout.activity_main);
-		
+
         editor = findViewById(R.id.editor);
         panel = findViewById(R.id.search_panel);
         search = findViewById(R.id.search_editor);
