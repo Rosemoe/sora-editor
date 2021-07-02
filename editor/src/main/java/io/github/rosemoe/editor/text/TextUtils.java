@@ -58,4 +58,10 @@ public class TextUtils {
         return ch == '\t' || ch == ' ';
     }
 
+    /**
+     * Check whether character is a leading emoji
+     */
+    public static boolean isEmoji(char ch) {
+        return ch == 0xd83c || ch == 0xd83d || ch == 0xd83e;
+    }
 }

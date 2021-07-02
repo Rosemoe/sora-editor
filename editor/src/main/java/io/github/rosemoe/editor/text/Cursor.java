@@ -20,6 +20,8 @@ import android.util.Log;
 import io.github.rosemoe.editor.interfaces.EditorLanguage;
 import io.github.rosemoe.editor.util.IntPair;
 
+import static io.github.rosemoe.editor.text.TextUtils.isEmoji;
+
 /**
  * @author Rose
  * Warning:The cursor position will update automatically when the content has been changed by other way
@@ -55,16 +57,6 @@ public final class Cursor {
      */
     protected static boolean isWhitespace(char c) {
         return (c == '\t' || c == ' ');
-    }
-
-    /**
-     * Whether the char is a emoji
-     *
-     * @param ch Character to check
-     * @return Whether the char is a emoji
-     */
-    private static boolean isEmoji(char ch) {
-        return ch == 0xd83c || ch == 0xd83d;
     }
 
     /**

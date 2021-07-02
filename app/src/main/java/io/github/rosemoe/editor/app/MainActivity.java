@@ -15,7 +15,6 @@
  */
 package io.github.rosemoe.editor.app;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -27,6 +26,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -55,7 +56,7 @@ import io.github.rosemoe.editor.widget.schemes.SchemeGitHub;
 import io.github.rosemoe.editor.widget.schemes.SchemeNotepadXX;
 import io.github.rosemoe.editor.widget.schemes.SchemeVS2019;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     private CodeEditor editor;
     private LinearLayout panel;

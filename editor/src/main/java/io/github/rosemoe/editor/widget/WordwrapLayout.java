@@ -23,6 +23,8 @@ import io.github.rosemoe.editor.text.Content;
 import io.github.rosemoe.editor.text.ContentLine;
 import io.github.rosemoe.editor.util.IntPair;
 
+import static io.github.rosemoe.editor.text.TextUtils.isEmoji;
+
 /**
  * Wordwrap layout for editor
  * <p>
@@ -41,7 +43,7 @@ class WordwrapLayout extends AbstractLayout {
     WordwrapLayout(CodeEditor editor, Content text) {
         super(editor, text);
         rowTable = new ArrayList<>();
-        width = editor.getWidth() - (int) editor.measureTextRegionOffset() - (int) editor.getDpUnit() * 5;
+        width = editor.getWidth() - (int) editor.measureTextRegionOffset();
         breakAllLines();
     }
 
@@ -105,21 +107,29 @@ class WordwrapLayout extends AbstractLayout {
     private void breakLine(int line, List<Integer> breakpoints) {
         ContentLine sequence = text.getLine(line);
         float currentWidth = 0;
-        for (int i = 0; i < sequence.length(); i++) {
+        int delta = 1;
+        for (int i = 0; i < sequence.length(); i+= delta) {
             char ch = sequence.charAt(i);
-            float single = fontCache.measureChar(ch, shadowPaint);
-            if (ch == '\t') {
-                single = fontCache.measureChar(' ', shadowPaint) * editor.getTabWidth();
+            delta = 1;
+            float single;
+            if (isEmoji(ch) && i + 1 < text.length()) {
+                delta = 2;
+                single = shadowPaint.measureText(new char[]{ch, text.charAt(i + 1)}, 0, 2);
+            } else {
+                single = fontCache.measureChar(ch, shadowPaint);
+                if (ch == '\t') {
+                    single = fontCache.measureChar(' ', shadowPaint) * editor.getTabWidth();
+                }
             }
             if (currentWidth + single > width) {
                 int lastCommit = breakpoints.size() != 0 ? breakpoints.get(breakpoints.size() - 1) : 0;
                 if (i == lastCommit) {
-                    i++;
+                    i += delta;
                     continue;
                 }
                 breakpoints.add(i);
                 currentWidth = 0;
-                i--;
+                i -= delta;
             } else {
                 currentWidth += single;
             }

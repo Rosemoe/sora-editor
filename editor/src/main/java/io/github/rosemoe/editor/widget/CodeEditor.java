@@ -82,6 +82,8 @@ import io.github.rosemoe.editor.text.TextAnalyzer;
 import io.github.rosemoe.editor.util.IntPair;
 import io.github.rosemoe.editor.util.LongArrayList;
 
+import static io.github.rosemoe.editor.text.TextUtils.isEmoji;
+
 /**
  * CodeEditor is a editor that can highlight text regions by doing basic syntax analyzing
  * This project in GitHub: https://github.com/Rosemoe/CodeEditor
@@ -265,16 +267,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     private static boolean hasVisibleRegion(int begin, int end, int first, int last) {
         return (end > first && begin < last);
-    }
-
-    /**
-     * Check whether the given character is a start sign for emoji
-     *
-     * @param ch Character to check
-     * @return Whether this is leading a emoji
-     */
-    private static boolean isEmoji(char ch) {
-        return ch == 0xd83c || ch == 0xd83d;
     }
 
     /**
@@ -1119,7 +1111,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         }
     }
-
 
     protected void showTextActionPopup() {
         if (mTextActionPresenter instanceof TextActionPopupWindow) {
@@ -2980,7 +2971,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     private void ensureSelectingTargetVisible() {
         if (mCursor.left().equals(mLockedSelection)) {
-            // Ensure right selection vivible
+            // Ensure right selection visible
             ensureSelectionVisible();
         } else {
             ensurePositionVisible(mCursor.getLeftLine(), mCursor.getLeftColumn());
