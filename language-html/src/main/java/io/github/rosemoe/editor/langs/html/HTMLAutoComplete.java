@@ -18,13 +18,28 @@ public class HTMLAutoComplete implements AutoCompleteProvider {
     @Override
     public List<CompletionItem> getAutoCompleteItems(String prefix, boolean isInCodeBlock, TextAnalyzeResult colors, int line) {
         List<CompletionItem> items = new ArrayList<>();
-        for (String key : HTMLLanguage.TAGS)
-            if (key.toLowerCase().startsWith(prefix.toLowerCase()))
-                items.add(new CompletionItem(key, "HTML Tag"));
+        for (String tag : HTMLLanguage.TAGS)
+            if (tag.toLowerCase().startsWith(prefix.toLowerCase()))
+                items.add(tagAsCompletion(tag, "HTML Tag"));
 
-        for (String key : HTMLLanguage.TAGS)
-            if (key.toLowerCase().startsWith(prefix.toLowerCase()))
-                items.add(new CompletionItem(key, "HTML Attribute"));
+        for (String attr : HTMLLanguage.ATTRIBUTES)
+            if (attr.toLowerCase().startsWith(prefix.toLowerCase()))
+                items.add(attrAsCompletion(attr, "HTML Attribute"));
         return items;
     }
+
+	private CompletionItem attrAsCompletion(String attr, String desc) {
+		final CompletionItem item = new CompletionItem(attr, attr.concat("=\"\""), desc);
+		item.cursorOffset(item.commit.length() - 1);
+		return item;
+	}
+
+	private CompletionItem tagAsCompletion(String tag, String desc) {
+		final String open = "<".concat(tag).concat(">");
+		final String close = "</".concat(tag).concat(">");
+		final CompletionItem item = new CompletionItem(tag, desc);
+		item.commit = open.concat(close);
+		item.cursorOffset(item.commit.length() - close.length());
+		return item;
+	}
 }
