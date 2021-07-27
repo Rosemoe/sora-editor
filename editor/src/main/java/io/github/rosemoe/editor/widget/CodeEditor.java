@@ -193,6 +193,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mSymbolCompletionEnabled;
     private boolean mVerticalScrollBarEnabled;
     private boolean mHorizontalScrollBarEnabled;
+    private boolean mAllowFullscreen;
     private RectF mRect;
     private RectF mLeftHandle;
     private RectF mRightHandle;
@@ -427,6 +428,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setEditable(true);
         setLineNumberEnabled(true);
         setAutoCompletionOnComposing(true);
+        setAllowFullscreen(false);
         setTypefaceText(Typeface.DEFAULT);
         // Issue #41 View being highlighted when focused on Android 11
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -492,6 +494,27 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 post(mCursorBlink);
             }
         }
+    }
+    
+    /**
+     * Set to {@code false} if you don't want the editor to go fullscreen on devices with smaller screen size.
+     * Otherwise, set to {@code true}
+     *
+     * Default value is {@code false}
+     *
+     * @param fullscreen Enable or disable fullscreen
+     */
+    public void setAllowFullscreen(boolean fullscreen) {
+        this.mAllowFullscreen = fullscreen;
+    }
+    
+    /**
+     * Is the editor allowed to go fullscreen?
+     *
+     * @return {@code true} if fullscreen is allowed or {@code false} if it isn't
+     */
+    public boolean isFullscreenAllowed() {
+        return mAllowFullscreen;
     }
 
     /**
@@ -3691,6 +3714,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         outAttrs.initialSelStart = getCursor() != null ? getCursor().getLeft() : 0;
         outAttrs.initialSelEnd = getCursor() != null ? getCursor().getRight() : 0;
         outAttrs.initialCapsMode = mConnection.getCursorCapsMode(0);
+        
+        // Prevent fullscreen when the screen height is too small
+        // Especially in landscape mode
+        if(!isFullscreenAllowed()) {
+            outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI|EditorInfo.IME_FLAG_NO_FULLSCREEN;
+        }
+        
         mConnection.reset();
         setExtracting(null);
         return mConnection;
