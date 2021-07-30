@@ -1,8 +1,5 @@
 <component name="CopyrightManager">
-  <settings default="Apache">
-    <module2copyright>
-      <element module="Project Source Files" copyright="Apache" />
-    </module2copyright>
+  <settings default="GPL v3">
     <LanguageOptions name="JAVA">
       <option name="fileTypeOverride" value="3" />
       <option name="addBlankAfter" value="false" />
