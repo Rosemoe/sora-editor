@@ -22,7 +22,6 @@ package io.github.rosemoe.editor.widget;
 
 import android.content.res.Resources;
 import android.graphics.RectF;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -111,12 +110,12 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
      * @param column column index in line
      */
     private void handleSelectedTextClick(MotionEvent e, int line, int column) {
-		boolean isShowing1 = mEditor.getTextActionPresenter() instanceof EditorTextActionWindow && ((EditorTextActionWindow) mEditor.getTextActionPresenter()).isShowing();
-		boolean isShowing2 = mEditor.getTextActionPresenter() instanceof TextActionPopupWindow && ((TextActionPopupWindow) mEditor.getTextActionPresenter()).isShowing();
-		char text = mEditor.getText().charAt(line, column);
-		if (isWhitespace(text) || isShowing1 || isShowing2)
-			mEditor.setSelection(line, column);
-		else mEditor.getTextActionPresenter().onSelectedTextClicked(e);
+        boolean isShowing1 = mEditor.getTextActionPresenter() instanceof EditorTextActionWindow && ((EditorTextActionWindow) mEditor.getTextActionPresenter()).isShowing();
+        boolean isShowing2 = mEditor.getTextActionPresenter() instanceof TextActionPopupWindow && ((TextActionPopupWindow) mEditor.getTextActionPresenter()).isShowing();
+        char text = mEditor.getText().charAt(line, column);
+        if (isWhitespace(text) || isShowing1 || isShowing2)
+            mEditor.setSelection(line, column);
+        else mEditor.getTextActionPresenter().onSelectedTextClicked(e);
     }
 
     /**

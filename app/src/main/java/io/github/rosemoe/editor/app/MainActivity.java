@@ -318,6 +318,11 @@ public class MainActivity extends AppCompatActivity {
                 item.setChecked(editor.isLineNumberEnabled());
                 break;
             }
+            case R.id.pin_line_number: {
+                editor.setPinLineNumber(!editor.isLineNumberPinned());
+                item.setChecked(editor.isLineNumberPinned());
+                break;
+            }
         }
         return super.onOptionsItemSelected(item);
     }

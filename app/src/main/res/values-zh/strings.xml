@@ -54,4 +54,5 @@
     <string name="show_crash_log">打开崩溃日志</string>
     <string name="clear_crash_log">清除崩溃日志</string>
     <string name="line_number_visibility">显示行号</string>
+    <string name="pin_line_number">固定显示行号</string>
 </resources>

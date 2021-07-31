@@ -198,6 +198,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mSymbolCompletionEnabled;
     private boolean mVerticalScrollBarEnabled;
     private boolean mHorizontalScrollBarEnabled;
+    private boolean mPinLineNumber;
     private boolean mAllowFullscreen;
     private RectF mRect;
     private RectF mLeftHandle;
@@ -471,6 +472,24 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public SymbolChannel createNewSymbolChannel() {
         return new SymbolChannel(this);
+    }
+
+    /**
+     * Set whether line number region will scroll together with code region
+     * @see CodeEditor#isLineNumberPinned()
+     */
+    public void setPinLineNumber(boolean pinLineNumber) {
+        mPinLineNumber = pinLineNumber;
+        if (isLineNumberEnabled()) {
+            invalidate();
+        }
+    }
+
+    /**
+     * @see CodeEditor#setPinLineNumber(boolean)
+     */
+    public boolean isLineNumberPinned() {
+        return mPinLineNumber;
     }
 
     /**
@@ -883,20 +902,29 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mRightHandle.setEmpty();
         }
 
+        boolean lineNumberNotPinned = isLineNumberEnabled() && (isWordwrap() || !isLineNumberPinned());
+
         LongArrayList postDrawLineNumbers = mPostDrawLineNumbers;
         postDrawLineNumbers.clear();
+        LongArrayList postDrawCurrentLines = new LongArrayList();
         List<CursorPaintAction> postDrawCursor = new ArrayList<>();
 
-        drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor);
+        drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor, postDrawCurrentLines);
 
         offsetX = -getOffsetX();
 
-        if (isLineNumberEnabled()) {
+        if (lineNumberNotPinned) {
             drawLineNumberBackground(canvas, offsetX, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
             drawDivider(canvas, offsetX + lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
             int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
+            int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
+            int j = 0;
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
+                if (j < postDrawCurrentLines.size() && postDrawCurrentLines.get(j) == IntPair.getSecond(packed)) {
+                    drawRowBackground(canvas, currentLineBgColor, (int)postDrawCurrentLines.get(j));
+                    j++;
+                }
                 drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), offsetX, lineNumberWidth, lineNumberColor);
             }
         }
@@ -907,6 +935,22 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         for (CursorPaintAction action : postDrawCursor) {
             action.exec(canvas, this);
+        }
+
+        if (!lineNumberNotPinned) {
+            drawLineNumberBackground(canvas, 0, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
+            drawDivider(canvas,  lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
+            int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
+            int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
+            int j = 0;
+            for (int i = 0; i < postDrawLineNumbers.size(); i++) {
+                long packed = postDrawLineNumbers.get(i);
+                if (j < postDrawCurrentLines.size() && postDrawCurrentLines.get(j) == IntPair.getSecond(packed)) {
+                    drawRowBackground(canvas, currentLineBgColor, (int)postDrawCurrentLines.get(j));
+                    j++;
+                }
+                drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), 0, lineNumberWidth, lineNumberColor);
+            }
         }
 
         drawScrollBars(canvas);
@@ -942,7 +986,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param postDrawLineNumbers Line numbers to be drawn later
      * @param postDrawCursor      Cursors to be drawn later
      */
-    private void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<CursorPaintAction> postDrawCursor) {
+    private void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<CursorPaintAction> postDrawCursor, LongArrayList postDrawCurrentLines) {
         RowIterator rowIterator = mLayout.obtainRowIterator(getFirstVisibleRow());
         List<Span> temporaryEmptySpans = null;
         List<List<Span>> spanMap = mSpanner.getResult().getSpanMap();
@@ -1023,9 +1067,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd, mColors.getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
             }
 
-            // Draw current line background
+            // Draw current line background (or save)
             if (line == currentLine) {
                 drawRowBackground(canvas, currentLineBgColor, row);
+                postDrawCurrentLines.add(row);
             }
 
             // Draw text here

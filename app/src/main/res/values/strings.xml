@@ -54,4 +54,5 @@
     <string name="show_crash_log">Open crash log</string>
     <string name="clear_crash_log">Clear crash log</string>
     <string name="line_number_visibility">Show line number</string>
+    <string name="pin_line_number">Pin LineNumber</string>
 </resources>
