@@ -99,5 +99,6 @@
         android:title="@string/clear_crash_log"/>
     <item
         android:id="@+id/open_debug_logs"
+        android:visible="false"
         android:title="@string/open_debug_logs"/>
 </menu>
