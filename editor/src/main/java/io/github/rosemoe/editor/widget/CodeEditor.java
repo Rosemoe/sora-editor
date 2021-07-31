@@ -37,6 +37,7 @@ import android.os.Bundle;
 import android.text.InputType;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.MutableInt;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.GestureDetector;
@@ -199,6 +200,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mVerticalScrollBarEnabled;
     private boolean mHorizontalScrollBarEnabled;
     private boolean mPinLineNumber;
+    private boolean mFirstLineNumberAlwaysVisible;
     private boolean mAllowFullscreen;
     private RectF mRect;
     private RectF mLeftHandle;
@@ -490,6 +492,24 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public boolean isLineNumberPinned() {
         return mPinLineNumber;
+    }
+
+    /**
+     * Show first line number in screen in word wrap mode
+     * @see CodeEditor#isFirstLineNumberAlwaysVisible()
+     */
+    public void setFirstLineNumberAlwaysVisible(boolean enabled) {
+        mFirstLineNumberAlwaysVisible = enabled;
+        if (isWordwrap()) {
+            invalidate();
+        }
+    }
+
+    /**
+     * @see CodeEditor#setFirstLineNumberAlwaysVisible(boolean)
+     */
+    public boolean isFirstLineNumberAlwaysVisible() {
+        return mFirstLineNumberAlwaysVisible;
     }
 
     /**
@@ -908,8 +928,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         postDrawLineNumbers.clear();
         LongArrayList postDrawCurrentLines = new LongArrayList();
         List<CursorPaintAction> postDrawCursor = new ArrayList<>();
+        MutableInt firstLn = isFirstLineNumberAlwaysVisible() ? new MutableInt(-1) : null;
 
-        drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor, postDrawCurrentLines);
+        drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor, postDrawCurrentLines, firstLn);
 
         offsetX = -getOffsetX();
 
@@ -918,13 +939,34 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             drawDivider(canvas, offsetX + lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
             int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
-            int j = 0;
+            for (int i = 0;i < postDrawCurrentLines.size(); i++) {
+                drawRowBackground(canvas, currentLineBgColor, (int)postDrawCurrentLines.get(i), (int)textOffset);
+            }
+            if (firstLn != null && firstLn.value != -1) {
+                int bottom = getRowBottom(0);
+                float y;
+                if (postDrawLineNumbers.size() == 0 || getRowTop(IntPair.getSecond(postDrawLineNumbers.get(0))) - getOffsetY() > bottom) {
+                    // Free to draw at first line
+                    y = (getRowBottom(0) + getRowTop(0)) / 2f - (mLineNumberMetrics.descent - mLineNumberMetrics.ascent) / 2f - mLineNumberMetrics.ascent;
+                } else {
+                    int row = IntPair.getSecond(postDrawLineNumbers.get(0));
+                    y = (getRowBottom(row - 1) + getRowTop(row - 1)) / 2f - (mLineNumberMetrics.descent - mLineNumberMetrics.ascent) / 2f - mLineNumberMetrics.ascent - getOffsetY();
+                }
+                mPaintOther.setTextAlign(mLineNumberAlign);
+                mPaintOther.setColor(lineNumberColor);
+                switch (mLineNumberAlign) {
+                    case LEFT:
+                        canvas.drawText(Integer.toString(firstLn.value + 1), offsetX, y, mPaintOther);
+                        break;
+                    case RIGHT:
+                        canvas.drawText(Integer.toString(firstLn.value + 1), offsetX + lineNumberWidth, y, mPaintOther);
+                        break;
+                    case CENTER:
+                        canvas.drawText(Integer.toString(firstLn.value + 1), offsetX + (lineNumberWidth + mDividerMargin) / 2f, y, mPaintOther);
+                }
+            }
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
-                if (j < postDrawCurrentLines.size() && postDrawCurrentLines.get(j) == IntPair.getSecond(packed)) {
-                    drawRowBackground(canvas, currentLineBgColor, (int)postDrawCurrentLines.get(j));
-                    j++;
-                }
                 drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), offsetX, lineNumberWidth, lineNumberColor);
             }
         }
@@ -942,13 +984,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             drawDivider(canvas,  lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
             int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
-            int j = 0;
+            for (int i = 0;i < postDrawCurrentLines.size(); i++) {
+                drawRowBackground(canvas, currentLineBgColor, (int)postDrawCurrentLines.get(i), (int)textOffset);
+            }
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
-                if (j < postDrawCurrentLines.size() && postDrawCurrentLines.get(j) == IntPair.getSecond(packed)) {
-                    drawRowBackground(canvas, currentLineBgColor, (int)postDrawCurrentLines.get(j));
-                    j++;
-                }
                 drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), 0, lineNumberWidth, lineNumberColor);
             }
         }
@@ -986,7 +1026,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param postDrawLineNumbers Line numbers to be drawn later
      * @param postDrawCursor      Cursors to be drawn later
      */
-    private void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<CursorPaintAction> postDrawCursor, LongArrayList postDrawCurrentLines) {
+    private void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<CursorPaintAction> postDrawCursor, LongArrayList postDrawCurrentLines, MutableInt requiredFirstLn) {
         RowIterator rowIterator = mLayout.obtainRowIterator(getFirstVisibleRow());
         List<Span> temporaryEmptySpans = null;
         List<List<Span>> spanMap = mSpanner.getResult().getSpanMap();
@@ -1010,7 +1050,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             int line = rowInf.lineIndex;
             ContentLine contentLine = mText.getLine(line);
             int columnCount = contentLine.length();
-            if (rowInf.isLeadingRow) {
+            if (row == getFirstVisibleRow() && requiredFirstLn != null) {
+                requiredFirstLn.value = line;
+            }else if (rowInf.isLeadingRow) {
                 postDrawLineNumbers.add(IntPair.pack(line, row));
             }
 
@@ -1942,6 +1984,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mRect.bottom = getRowBottom(row) - getOffsetY();
         mRect.left = 0;
         mRect.right = mViewRect.right;
+        drawColor(canvas, color, mRect);
+    }
+
+    private void drawRowBackground(Canvas canvas, int color, int row, int right) {
+        mRect.top = getRowTop(row) - getOffsetY();
+        mRect.bottom = getRowBottom(row) - getOffsetY();
+        mRect.left = 0;
+        mRect.right = right;
         drawColor(canvas, color, mRect);
     }
 
