@@ -940,7 +940,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
             for (int i = 0;i < postDrawCurrentLines.size(); i++) {
-                drawRowBackground(canvas, currentLineBgColor, (int)postDrawCurrentLines.get(i), (int)textOffset);
+                drawRowBackground(canvas, currentLineBgColor, (int)postDrawCurrentLines.get(i), (int)(textOffset - mDividerMargin));
             }
             if (firstLn != null && firstLn.value != -1) {
                 int bottom = getRowBottom(0);
@@ -985,7 +985,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
             for (int i = 0;i < postDrawCurrentLines.size(); i++) {
-                drawRowBackground(canvas, currentLineBgColor, (int)postDrawCurrentLines.get(i), (int)textOffset);
+                drawRowBackground(canvas, currentLineBgColor, (int)postDrawCurrentLines.get(i), (int)(textOffset - mDividerMargin));
             }
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
