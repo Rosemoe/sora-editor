@@ -928,7 +928,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         postDrawLineNumbers.clear();
         LongArrayList postDrawCurrentLines = new LongArrayList();
         List<CursorPaintAction> postDrawCursor = new ArrayList<>();
-        MutableInt firstLn = isFirstLineNumberAlwaysVisible() ? new MutableInt(-1) : null;
+        MutableInt firstLn = isFirstLineNumberAlwaysVisible() && isWordwrap() ? new MutableInt(-1) : null;
 
         drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor, postDrawCurrentLines, firstLn);
 
@@ -979,13 +979,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             action.exec(canvas, this);
         }
 
-        if (!lineNumberNotPinned) {
+        if (isLineNumberEnabled() && !lineNumberNotPinned) {
             drawLineNumberBackground(canvas, 0, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
             drawDivider(canvas,  lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
             int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
             for (int i = 0;i < postDrawCurrentLines.size(); i++) {
-                drawRowBackground(canvas, currentLineBgColor, (int)postDrawCurrentLines.get(i), (int)(textOffset - mDividerMargin));
+                drawRowBackground(canvas, currentLineBgColor, (int)postDrawCurrentLines.get(i), (int)(textOffset + getOffsetX() - mDividerMargin));
             }
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
