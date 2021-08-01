@@ -368,6 +368,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Initialize variants
      */
     private void initialize() {
+        Log.i(LOG_TAG, COPYRIGHT);
         mFontCache = new FontCache();
         mPaint = new Paint();
         mPaintOther = new Paint();
@@ -4406,5 +4407,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
 
     }
+
+    private final static String COPYRIGHT = "CodeEditor\nCopyright (C) Rosemoe roses2020@qq.com\nThis project is distributed under the GPL v3 license";
 
 }
