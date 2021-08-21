@@ -1,5 +1,6 @@
 # CodeEditor
-[![JitPack](https://jitpack.io/v/Rosemoe/CodeEditor.svg)](https://jitpack.io/#Rosemoe/CodeEditor)
+[![GitHub license](https://img.shields.io/github/license/Rosemoe/CodeEditor)](https://github.com/Rosemoe/CodeEditor/blob/main/LICENSE)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.Rosemoe.CodeEditor/editor.svg?label=Maven%20Central)]((https://search.maven.org/search?q=io.github.Rosemoe.CodeEditor%20editor))
 [![Telegram](https://img.shields.io/badge/Join-Telegram-blue)](https://t.me/rosemoe_code_editor)
 [![QQ](https://img.shields.io/badge/Join-QQ_Group-ff69b4)](https://jq.qq.com/?_wv=1027&k=n68uxQws)   
 A cool and optimized code editor on Android platform with good performance and nice features.
@@ -8,11 +9,6 @@ A cool and optimized code editor on Android platform with good performance and n
 It is **not** recommended to use this project for production use.
 Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/releases) instead of cloning this repository directly.
 **Issues and pull requests are welcome.**
-## License update tip
-***Pay attention to the license update***
-Before version 0.5.2 (including 0.5.2), project license is `Apache License`
-However after that we have changed it to `GNU General Public License v3.0`.
-Please pay attention to the change when you use the editor's source code or libraries.
 ## Features
 - [x] Smooth syntax highlight
 - [x] Auto completion
@@ -33,21 +29,9 @@ Please pay attention to the change when you use the editor's source code or libr
 ## Screenshots
 ![Wordwrap](/images/wordwrap.png)
 ## How to use this editor  
-* Step 1.Add the JitPack repository to your build file   
-Add it in your root build.gradle at the end of repositories:
+Add to your app's dependencies:
 ```Gradle
-allprojects {
-  repositories {
-    ...
-    maven { url 'https://jitpack.io' }
-  }
-}
- ```
-* Step 2. Add the dependency to your app
-```Gradle
-dependencies {
-  implementation 'com.github.Rosemoe.CodeEditor:<moduleName>:<versionName>'
-}
+implementation 'io.github.Rosemoe.CodeEditor:<moduleName>:<versionName>'
 ```
 Available modules:     
 * editor 
@@ -77,12 +61,9 @@ Available modules:
     Please contact Rosemoe by email roses2020@qq.com if you need
     additional information or have any questions
 ```
-## Some more information
-Go to [Wiki](https://github.com/Rosemoe/CodeEditor/wiki)
 ## Discuss
 * Official QQ Group:[216632648](https://jq.qq.com/?_wv=1027&k=n68uxQws)
 * [Official Telegram Group](https://t.me/rosemoe_code_editor)
 ## Acknowledgements
 Thanks to [JetBrains](https://www.jetbrains.com/?from=CodeEditor) for allocating free open-source licences for IDEs such as [IntelliJ IDEA](https://www.jetbrains.com/idea/?from=CodeEditor).
 [<img src=".github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)
-
