@@ -21,6 +21,12 @@
 
 apply plugin: 'com.android.library'
 
+ext {
+    PUBLISH_ARTIFACT_ID= "language-universal"
+}
+
+apply from:'../maven-publish.gradle'
+
 android {
     compileSdkVersion Versions.compileSdkVersion
     buildToolsVersion Versions.buildToolsVersion

@@ -22,6 +22,12 @@
 apply plugin: 'com.android.library'
 //apply plugin: 'kotlin-android'
 
+ext {
+    PUBLISH_ARTIFACT_ID= "editor"
+}
+
+apply from:'../maven-publish.gradle'
+
 android {
     compileSdkVersion Versions.compileSdkVersion
     buildToolsVersion Versions.buildToolsVersion
