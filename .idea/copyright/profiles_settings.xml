@@ -1,5 +1,5 @@
 <component name="CopyrightManager">
-  <settings default="GPL v3">
+  <settings default="LGPL">
     <LanguageOptions name="JAVA">
       <option name="fileTypeOverride" value="3" />
       <option name="addBlankAfter" value="false" />
