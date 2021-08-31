@@ -180,7 +180,7 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
         }
         colors.determine(helper.getLine());
         identifiers.finish();
-        colors.mExtra = identifiers;
+        colors.setExtra(identifiers);
         tokenizer.setInput(null);
         if (currSwitch > maxSwitch) {
             maxSwitch = currSwitch;

@@ -38,7 +38,7 @@ public class TextAnalyzeResult {
 
     protected final List<BlockLine> mBlocks;
     protected final List<List<Span>> mSpanMap;
-    public Object mExtra;
+    protected Object mExtra;
     protected List<NavigationItem> mLabels;
     protected Span mLast;
     protected int mSuppressSwitch = Integer.MAX_VALUE;
@@ -211,5 +211,16 @@ public class TextAnalyzeResult {
      */
     public List<List<Span>> getSpanMap() {
         return mSpanMap;
+    }
+
+    /**
+     * Leave extra information for your language object
+     */
+    public void setExtra(Object extra) {
+        mExtra = extra;
+    }
+
+    public Object getExtra() {
+        return mExtra;
     }
 }

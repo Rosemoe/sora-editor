@@ -251,7 +251,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
         }
         identifiers.finish();
         colors.determine(line);
-        colors.mExtra = identifiers;
+        colors.setExtra(identifiers);
         colors.setSuppressSwitch(maxSwitch + 10);
         colors.setNavigation(labels);
     }

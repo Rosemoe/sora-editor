@@ -34,7 +34,7 @@ import java.util.List;
 /**
  * Identifier auto-completion
  * You can use it to provide identifiers
- * <strong>Note:</strong> To use this, you must use {@link Identifiers} as {@link TextAnalyzeResult#mExtra}
+ * <strong>Note:</strong> To use this, you must use {@link Identifiers} to {@link TextAnalyzeResult#setExtra(Object)}
  */
 public class IdentifierAutoComplete implements AutoCompleteProvider {
 
@@ -111,7 +111,7 @@ public class IdentifierAutoComplete implements AutoCompleteProvider {
             }
         }
         Collections.sort(keywords, CompletionItem.COMPARATOR_BY_NAME);
-        Object extra = analyzeResult.mExtra;
+        Object extra = analyzeResult.getExtra();
         Identifiers userIdentifiers = (extra instanceof Identifiers) ? (Identifiers) extra : null;
         if (userIdentifiers != null) {
             List<CompletionItem> words = new ArrayList<>();
