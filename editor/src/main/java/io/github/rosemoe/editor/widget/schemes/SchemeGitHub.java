@@ -29,7 +29,7 @@ import io.github.rosemoe.editor.widget.EditorColorScheme;
  * picked from GitHub site
  * Thanks to liyujiang-gzu (GitHub @liyujiang-gzu)
  */
-public final class SchemeGitHub extends EditorColorScheme {
+public class SchemeGitHub extends EditorColorScheme {
 
     @Override
     public void applyDefault() {

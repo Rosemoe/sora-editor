@@ -29,7 +29,7 @@ import io.github.rosemoe.editor.widget.EditorColorScheme;
  * picked from Eclipse IDE for Java Developers Version 2019-12 (4.14.0)
  * Thanks to liyujiang-gzu (GitHub @liyujiang-gzu)
  */
-public final class SchemeEclipse extends EditorColorScheme {
+public class SchemeEclipse extends EditorColorScheme {
 
     @Override
     public void applyDefault() {
