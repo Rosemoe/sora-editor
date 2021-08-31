@@ -28,9 +28,9 @@ public final class Versions {
 
     // Platform & Tool versions
     public final static String buildToolsVersion = "30.0.3";
-    public final static int compileSdkVersion = 30;
+    public final static int compileSdkVersion = 31;
     public final static int minSdkVersion = 21;
-    public final static int targetSdkVersion = 30;
+    public final static int targetSdkVersion = 31;
 
     // Dependency versions
     public final static String antlrVersion = "4.9.2";

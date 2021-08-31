@@ -22,6 +22,6 @@
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="io.github.rosemoe.editor.langs.base">
+    package="io.github.rosemoe.sora.langs.base">
 
 </manifest>

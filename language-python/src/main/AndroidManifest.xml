@@ -23,6 +23,6 @@
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="io.github.rosemoe.editor.langs.python">
+    package="io.github.rosemoe.sora.langs.python">
 
 </manifest>
