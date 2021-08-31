@@ -22,11 +22,10 @@
  */
 package io.github.rosemoe.editor.text;
 
+import androidx.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import io.github.rosemoe.editor.annotations.Experimental;
-import io.github.rosemoe.struct.BlockLinkedList;
 
 /**
  * This class saves the text content for editor and maintains line widths
@@ -54,17 +53,6 @@ public class Content implements CharSequence {
     private LineRemoveListener mLineListener;
 
     /**
-     * Use a BlockLinkedList instead of ArrayList.
-     * <p>
-     * This can be faster while inserting in large text.
-     * But in other conditions, it is quite slow.
-     * <p>
-     * Disabled by default.
-     */
-    @Experimental
-    public static boolean useBlock = false;
-
-    /**
      * This constructor will create a Content object with no text
      */
     public Content() {
@@ -83,10 +71,7 @@ public class Content implements CharSequence {
         }
         mTextLength = 0;
         mNestedBatchEdit = 0;
-        if (!useBlock)
-            mLines = new ArrayList<>(getInitialLineCapacity());
-        else
-            mLines = new BlockLinkedList<>(5000);
+        mLines = new ArrayList<>(getInitialLineCapacity());
         mLines.add(new ContentLine());
         mListeners = new ArrayList<>();
         mUndoManager = new UndoManager(this);
@@ -153,6 +138,7 @@ public class Content implements CharSequence {
         return mTextLength;
     }
 
+    @NonNull
     @Override
     public CharSequence subSequence(int start, int end) {
         if (start > end) {
@@ -636,6 +622,7 @@ public class Content implements CharSequence {
         }
     }
 
+    @NonNull
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
