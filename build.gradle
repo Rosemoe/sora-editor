@@ -42,14 +42,14 @@ buildscript {
         println "No props file, loading env vars"
     }
     ext {
-        kotlin_version = '1.5.20'
+        kotlin_version = '1.5.30'
     }
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.0'
+        classpath 'com.android.tools.build:gradle:7.0.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -59,13 +59,12 @@ buildscript {
 allprojects {
     ext {
         PUBLISH_VERSION = Versions.versionName
-        PUBLISH_GROUP_ID = 'io.github.Rosemoe.CodeEditor'
+        PUBLISH_GROUP_ID = 'io.github.Rosemoe.sora-editor'
     }
     repositories {
         google()
         mavenCentral()
         maven { url = "https://maven.aliyun.com/nexus/content/groups/public/" }
-        maven { url = 'https://jitpack.io' }
     }
 }
 
