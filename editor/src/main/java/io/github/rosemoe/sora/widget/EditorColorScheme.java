@@ -24,7 +24,7 @@ package io.github.rosemoe.sora.widget;
 
 import android.util.SparseIntArray;
 
-import io.github.rosemoe.sora.util.Objects;
+import java.util.Objects;
 
 /**
  * This class manages the colors of editor.

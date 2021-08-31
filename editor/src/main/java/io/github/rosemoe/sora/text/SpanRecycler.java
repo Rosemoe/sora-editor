@@ -59,7 +59,7 @@ public class SpanRecycler {
 
     private class RecycleThread extends Thread {
 
-        private final static String LOG_TAG = "Span Recycle Thread";
+        private final static String LOG_TAG = "SpanRecycle";
 
         RecycleThread() {
             setDaemon(true);
@@ -80,7 +80,7 @@ public class SpanRecycler {
                                 count++;
                             }
                         }
-                        //Log.i(LOG_TAG, "Recycled " + count + " spans");
+                        Log.i(LOG_TAG, "Recycled " + count + " spans");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                         break;
