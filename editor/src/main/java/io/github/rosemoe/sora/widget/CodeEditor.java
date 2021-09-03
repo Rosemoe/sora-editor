@@ -423,8 +423,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mHorizontalGlow = new MaterialEdgeEffect();
         mOverrideSymbolPairs = new SymbolPairMatch();
         setEditorLanguage(null);
-        setText(null);
         setTextActionMode(TextActionMode.POPUP_WINDOW_2);
+        setText(null);
         setTabWidth(4);
         setHighlightCurrentLine(true);
         setAutoIndentEnabled(true);
