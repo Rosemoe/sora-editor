@@ -49,8 +49,14 @@ public class BlockLine {
      */
     public int endColumn;
 
+    /**
+     * Indicates that this BlockLine should be drawn vertically until the bottom of its end line
+     */
+    public boolean toBottomOfEndLine;
+
     public void clear() {
         startColumn = startLine = endLine = endColumn = 0;
+        toBottomOfEndLine = false;
     }
 
 }

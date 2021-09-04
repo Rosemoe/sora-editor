@@ -1576,7 +1576,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     float offset = Math.min(offset1, offset2);
                     float centerX = offset + offsetX;
                     mRect.top = Math.max(0, getRowBottom(block.startLine) - getOffsetY());
-                    mRect.bottom = Math.min(getHeight(), getRowTop(block.endLine) - getOffsetY());
+                    mRect.bottom = Math.min(getHeight(), (block.toBottomOfEndLine ? getRowBottom(block.endLine) : getRowTop(block.endLine)) - getOffsetY());
                     mRect.left = centerX - mDpUnit * mBlockLineWidth / 2;
                     mRect.right = centerX + mDpUnit * mBlockLineWidth / 2;
                     drawColor(canvas, mColors.getColor(curr == cursorIdx ? EditorColorScheme.BLOCK_LINE_CURRENT : EditorColorScheme.BLOCK_LINE), mRect);
