@@ -49,6 +49,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.ViewParent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.inputmethod.CursorAnchorInfo;
 import android.view.inputmethod.EditorInfo;
@@ -103,6 +104,7 @@ import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
  *
  * @author Rosemoe
  */
+@SuppressWarnings("unused")
 public class CodeEditor extends View implements ContentListener, TextAnalyzer.Callback, FormatThread.FormatResultReceiver, LineRemoveListener {
 
     /**
@@ -172,6 +174,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     int mStartedActionMode;
     private int mTabWidth;
     private int mCursorPosition;
+    private int mDownX = 0;
     private int mInputType;
     private int mNonPrintableOptions;
     private int mCachedLineNumberWidth;
@@ -193,6 +196,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mOverScrollEnabled;
     private boolean mLineNumberEnabled;
     private boolean mBlockLineEnabled;
+    private boolean mForceHorizontalScrollable;
     private boolean mAutoCompletionEnabled;
     private boolean mCompletionOnComposing;
     private boolean mHighlightSelectedText;
@@ -440,6 +444,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setLineNumberEnabled(true);
         setAutoCompletionOnComposing(true);
         setAllowFullscreen(false);
+        setInterceptParentHorizontalScrollIfNeeded(false);
         setTypefaceText(Typeface.DEFAULT);
         // Issue #41 View being highlighted when focused on Android 11
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -481,6 +486,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Set whether line number region will scroll together with code region
+     *
      * @see CodeEditor#isLineNumberPinned()
      */
     public void setPinLineNumber(boolean pinLineNumber) {
@@ -499,6 +505,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Show first line number in screen in word wrap mode
+     *
      * @see CodeEditor#isFirstLineNumberAlwaysVisible()
      */
     public void setFirstLineNumberAlwaysVisible(boolean enabled) {
@@ -542,11 +549,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
     }
-    
+
     /**
      * Set to {@code false} if you don't want the editor to go fullscreen on devices with smaller screen size.
      * Otherwise, set to {@code true}
-     *
+     * <p>
      * Default value is {@code false}
      *
      * @param fullscreen Enable or disable fullscreen
@@ -554,7 +561,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public void setAllowFullscreen(boolean fullscreen) {
         this.mAllowFullscreen = fullscreen;
     }
-    
+
     /**
      * Is the editor allowed to go fullscreen?
      *
@@ -942,8 +949,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             drawDivider(canvas, offsetX + lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
             int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
-            for (int i = 0;i < postDrawCurrentLines.size(); i++) {
-                drawRowBackground(canvas, currentLineBgColor, (int)postDrawCurrentLines.get(i), (int)(textOffset - mDividerMargin));
+            for (int i = 0; i < postDrawCurrentLines.size(); i++) {
+                drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - mDividerMargin));
             }
             if (firstLn != null && firstLn.value != -1) {
                 int bottom = getRowBottom(0);
@@ -984,11 +991,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         if (isLineNumberEnabled() && !lineNumberNotPinned) {
             drawLineNumberBackground(canvas, 0, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
-            drawDivider(canvas,  lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
+            drawDivider(canvas, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
             int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
-            for (int i = 0;i < postDrawCurrentLines.size(); i++) {
-                drawRowBackground(canvas, currentLineBgColor, (int)postDrawCurrentLines.get(i), (int)(textOffset + getOffsetX() - mDividerMargin));
+            for (int i = 0; i < postDrawCurrentLines.size(); i++) {
+                drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset + getOffsetX() - mDividerMargin));
             }
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
@@ -1055,7 +1062,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             int columnCount = contentLine.length();
             if (row == getFirstVisibleRow() && requiredFirstLn != null) {
                 requiredFirstLn.value = line;
-            }else if (rowInf.isLeadingRow) {
+            } else if (rowInf.isLeadingRow) {
                 postDrawLineNumbers.add(IntPair.pack(line, row));
             }
 
@@ -2592,6 +2599,30 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
+     * @see CodeEditor#setInterceptParentHorizontalScrollIfNeeded(boolean)
+     */
+    public boolean isInterceptParentHorizontalScrollEnabled() {
+        return mForceHorizontalScrollable;
+    }
+
+    /**
+     * When the parent is a scrollable view group,
+     * request it not to allow horizontal scrolling to be intercepted.
+     * Until the code cannot scroll horizontally
+     *
+     * @param forceHorizontalScrollable Whether force horizontal scrolling
+     */
+    public void setInterceptParentHorizontalScrollIfNeeded(boolean forceHorizontalScrollable) {
+        this.mForceHorizontalScrollable = forceHorizontalScrollable;
+        if (!forceHorizontalScrollable) {
+            ViewParent parent = getParent();
+            if (parent != null) {
+                parent.requestDisallowInterceptTouchEvent(false);
+            }
+        }
+    }
+
+    /**
      * @see CodeEditor#setInputType(int)
      */
     public int getInputType() {
@@ -3795,6 +3826,29 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        int x = (int) event.getX();
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                mDownX = x;
+                if (mForceHorizontalScrollable) {
+                    getParent().requestDisallowInterceptTouchEvent(true);
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                int deltaX = x - mDownX;
+                if (mForceHorizontalScrollable) {
+                    if (deltaX > 0 && getScroller().getCurrX() == 0
+                            || deltaX < 0 && getScroller().getCurrX() == getScrollMaxX()) {
+                        getParent().requestDisallowInterceptTouchEvent(false);
+                    }
+                }
+                break;
+        }
+        return super.dispatchTouchEvent(event);
+    }
+
+    @Override
     public boolean onCheckIsTextEditor() {
         return isEnabled() && isEditable();
     }
@@ -3808,13 +3862,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         outAttrs.initialSelStart = getCursor() != null ? getCursor().getLeft() : 0;
         outAttrs.initialSelEnd = getCursor() != null ? getCursor().getRight() : 0;
         outAttrs.initialCapsMode = mConnection.getCursorCapsMode(0);
-        
+
         // Prevent fullscreen when the screen height is too small
         // Especially in landscape mode
-        if(!isFullscreenAllowed()) {
-            outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI|EditorInfo.IME_FLAG_NO_FULLSCREEN;
+        if (!isFullscreenAllowed()) {
+            outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI | EditorInfo.IME_FLAG_NO_FULLSCREEN;
         }
-        
+
         mConnection.reset();
         setExtracting(null);
         return mConnection;
@@ -3855,13 +3909,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             case KeyEvent.KEYCODE_MOVE_END:
                 if (isShiftPressed && (!mCursor.isSelected())) {
                     mLockedSelection = mCursor.left();
-                } else if(!isShiftPressed && mLockedSelection != null) {
+                } else if (!isShiftPressed && mLockedSelection != null) {
                     mLockedSelection = null;
                 }
                 mKeyMetaStates.adjust();
         }
         switch (keyCode) {
-            case KeyEvent.KEYCODE_BACK:{
+            case KeyEvent.KEYCODE_BACK: {
                 return mTextActionPresenter != null && mTextActionPresenter.onExit();
             }
             case KeyEvent.KEYCODE_DEL:
@@ -4341,6 +4395,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         /**
          * Exit the presenter
+         *
          * @return Whether action is executed. Return true if this has cause UI change such as
          * popup window hides and action mode exits
          */
