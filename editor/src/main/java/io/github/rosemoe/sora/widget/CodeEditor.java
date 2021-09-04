@@ -246,7 +246,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private Paint.FontMetricsInt mGraphMetrics;
     private CursorBlink mCursorBlink;
     private SymbolPairMatch mOverrideSymbolPairs;
-    private LongArrayList mPostDrawLineNumbers = new LongArrayList();
+    private final LongArrayList mPostDrawLineNumbers = new LongArrayList();
     private CharPosition mLockedSelection;
     KeyMetaStates mKeyMetaStates = new KeyMetaStates(this);
 
@@ -725,7 +725,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Set how will the editor present text actions
      */
     public void setTextActionMode(TextActionMode mode) {
-        if (mCursor.isSelected()) {
+        if (mCursor != null && mCursor.isSelected()) {
             setSelection(mCursor.getLeftLine(), mCursor.getLeftColumn());
         }
         if (mode == TextActionMode.ACTION_MODE) {
@@ -3645,7 +3645,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     protected void setExtracting(@Nullable ExtractedTextRequest request) {
         mExtracting = request;
-
     }
 
     /**
