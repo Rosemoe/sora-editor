@@ -24,7 +24,7 @@
 apply plugin: 'com.android.library'
 
 ext {
-    PUBLISH_ARTIFACT_ID= "language-base"
+    PUBLISH_ARTIFACT_ID= "language-css3"
 }
 
 apply from:'../maven-publish.gradle'
