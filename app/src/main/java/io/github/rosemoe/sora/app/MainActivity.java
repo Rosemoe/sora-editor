@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import io.github.rosemoe.sora.langs.EmptyLanguage;
+import io.github.rosemoe.sora.langs.css3.CSS3Language;
 import io.github.rosemoe.sora.langs.desc.CDescription;
 import io.github.rosemoe.sora.langs.desc.CppDescription;
 import io.github.rosemoe.sora.langs.desc.JavaScriptDescription;
@@ -170,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.switch_language) {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.switch_language)
-                    .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "HTML", "Python", "None"}, -1, (dialog, which) -> {
+                    .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "HTML", "Python","CSS3", "None"}, -1, (dialog, which) -> {
                         switch (which) {
                             case 0:
                                 editor.setEditorLanguage(new UniversalLanguage(new CDescription()));
@@ -191,6 +192,9 @@ public class MainActivity extends AppCompatActivity {
                                 editor.setEditorLanguage(new PythonLanguage());
                                 break;
                             case 6:
+                                editor.setEditorLanguage(new CSS3Language());
+                                break;
+                            default:
                                 editor.setEditorLanguage(new EmptyLanguage());
                         }
                         dialog.dismiss();
