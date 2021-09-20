@@ -3297,7 +3297,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else {
             invalidate();
         }
-        mCursorBlink.onSelectionChanged();
+        onSelectionChanged();
         if (mTextActionPresenter != null) {
             mTextActionPresenter.onExit();
         }
@@ -3373,7 +3373,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else {
             invalidate();
         }
-        mCursorBlink.onSelectionChanged();
+        onSelectionChanged();
         if (!lastState && mCursor.isSelected() && mStartedActionMode != ACTION_MODE_SEARCH_TEXT) {
             mTextActionPresenter.onBeginTextSelect();
         }
@@ -3769,6 +3769,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     protected void onCloseConnection() {
         setExtracting(null);
         invalidate();
+    }
+
+    /**
+     * Called when the text is edited or {@link CodeEditor#setSelection} is called
+     */
+    protected void onSelectionChanged() {
+        mCursorBlink.onSelectionChanged();
+        final var listener = mListener;
+        if (listener != null) {
+            listener.onSelectionChanged(this, getCursor());
+        }
     }
 
     //-------------------------------------------------------------------------------
@@ -4186,7 +4197,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
 
-        mCursorBlink.onSelectionChanged();
         mLayout.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
 
         // Notify input method
@@ -4226,10 +4236,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         updateCursorAnchor();
         ensureSelectionVisible();
-        // Notify to update highlight
+
         mSpanner.analyze(mText);
         mEventHandler.hideInsertHandle();
-        // Notify listener
+
+        onSelectionChanged();
         if (mListener != null) {
             mListener.afterInsert(this, mText, startLine, startColumn, endLine, endColumn, insertedContent);
         }
@@ -4245,7 +4256,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
 
-        mCursorBlink.onSelectionChanged();
         mLayout.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
 
         updateCursor();
@@ -4275,6 +4285,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mSpanner.analyze(mText);
             mEventHandler.hideInsertHandle();
         }
+
+        onSelectionChanged();
         if (mListener != null) {
             mListener.afterDelete(this, mText, startLine, startColumn, endLine, endColumn, deletedContent);
         }

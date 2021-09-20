@@ -22,7 +22,10 @@
  */
 package io.github.rosemoe.sora.interfaces;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.text.Content;
+import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
@@ -37,41 +40,46 @@ public interface EditorEventListener {
      *
      * @return true if you want to cancel this operation
      */
-    boolean onRequestFormat(CodeEditor editor, boolean async);
+    boolean onRequestFormat(@NonNull CodeEditor editor, boolean async);
 
     /**
      * Format failed
      *
      * @return true if you do not want editor to handle this exception
      */
-    boolean onFormatFail(CodeEditor editor, Throwable cause);
+    boolean onFormatFail(@NonNull CodeEditor editor, Throwable cause);
 
     /**
      * Format succeeded
      */
-    void onFormatSucceed(CodeEditor editor);
+    void onFormatSucceed(@NonNull CodeEditor editor);
 
     /**
-     * CodeEditor's setText is called
+     * {@link CodeEditor#setText(CharSequence)} is called
      */
-    void onNewTextSet(CodeEditor editor);
+    void onNewTextSet(@NonNull CodeEditor editor);
 
     /**
      * @see io.github.rosemoe.sora.text.ContentListener#afterDelete(Content, int, int, int, int, CharSequence)
      * Note:do not change content at this time
      */
-    void afterDelete(CodeEditor editor, CharSequence content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent);
+    void afterDelete(@NonNull CodeEditor editor, @NonNull CharSequence content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent);
 
     /**
      * @see io.github.rosemoe.sora.text.ContentListener#afterInsert(Content, int, int, int, int, CharSequence)
      * Note:do not change content at this time
      */
-    void afterInsert(CodeEditor editor, CharSequence content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent);
+    void afterInsert(@NonNull CodeEditor editor, @NonNull CharSequence content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent);
 
     /**
      * @see io.github.rosemoe.sora.text.ContentListener#beforeReplace(Content)
      * Note:do not change content at this time
      */
-    void beforeReplace(CodeEditor editor, CharSequence content);
+    void beforeReplace(@NonNull CodeEditor editor, @NonNull CharSequence content);
+
+    /**
+     * Called when selection is changed
+     */
+    void onSelectionChanged(@NonNull CodeEditor editor, @NonNull Cursor cursor);
 
 }
