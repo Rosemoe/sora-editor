@@ -263,10 +263,10 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
                 hide();
                 return;
             }
-            mAdapter.attachAttributes(this, results);
+            mAdapter.attachValues(this, results);
             mListView.setAdapter(mAdapter);
             mCurrent = 0;
-            float newHeight = mEditor.getDpUnit() * 30 * results.size();
+            float newHeight = mAdapter.getItemHeight() * results.size();
             if (isShowing()) {
                 update(getWidth(), (int) Math.min(newHeight, mMaxHeight));
             }

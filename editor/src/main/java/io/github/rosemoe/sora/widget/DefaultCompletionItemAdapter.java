@@ -43,7 +43,8 @@ class DefaultCompletionItemAdapter extends EditorCompletionAdapter {
 
     @Override
     public int getItemHeight() {
-        return (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, Resources.getSystem().getDisplayMetrics());
+        // 30 dp
+        return (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getContext().getResources().getDisplayMetrics());
     }
 
     @Override
@@ -52,9 +53,9 @@ class DefaultCompletionItemAdapter extends EditorCompletionAdapter {
             view = LayoutInflater.from(getContext()).inflate(R.layout.default_completion_result_item, parent, false);
         }
         CompletionItem item = getItem(pos);
-        TextView tv = (TextView) view.findViewById(R.id.result_item_label);
+        TextView tv = view.findViewById(R.id.result_item_label);
         tv.setText(item.label);
-        tv = (TextView) view.findViewById(R.id.result_item_desc);
+        tv = view.findViewById(R.id.result_item_desc);
         tv.setText(item.desc);
         view.setTag(pos);
         if (isCurrentCursorPosition) {
@@ -62,7 +63,7 @@ class DefaultCompletionItemAdapter extends EditorCompletionAdapter {
         } else {
             view.setBackgroundColor(0xffffffff);
         }
-        ImageView iv = (ImageView) view.findViewById(R.id.result_item_image);
+        ImageView iv = view.findViewById(R.id.result_item_image);
         iv.setImageDrawable(item.icon);
         return view;
     }

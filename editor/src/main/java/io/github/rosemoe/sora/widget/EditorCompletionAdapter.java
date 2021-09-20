@@ -44,7 +44,7 @@ public abstract class EditorCompletionAdapter extends BaseAdapter {
     /**
      * Called by {@link EditorAutoCompleteWindow} to attach some arguments
      */
-    public void attachAttributes(EditorAutoCompleteWindow window, List<CompletionItem> items) {
+    public void attachValues(EditorAutoCompleteWindow window, List<CompletionItem> items) {
         mWindow = window;
         mItems = items;
     }
@@ -78,6 +78,8 @@ public abstract class EditorCompletionAdapter extends BaseAdapter {
 
     /**
      * Implementation of this class should provide exact height of its item
+     *
+     * The value will be used to calculate the height of completion window
      */
     public abstract int getItemHeight();
 
