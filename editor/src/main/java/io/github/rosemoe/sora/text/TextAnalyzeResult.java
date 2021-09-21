@@ -243,11 +243,11 @@ public class TextAnalyzeResult {
             for (int i = 0; i < spans.size(); i += increment) {
                 Span span = spans.get(i);
                 increment = 1;
-                if (span.column > end) {
+                if (span.column >= end) {
                     break;
                 }
-                if (span.column <= start) {
-                    int spanEnd = (i + 1 >= spans.size() ? Integer.MAX_VALUE : spans.get(i + 1).column);
+                int spanEnd = (i + 1 >= spans.size() ? Integer.MAX_VALUE : spans.get(i + 1).column);
+                if (spanEnd >= start) {
                     int regionStartInSpan = Math.max(span.column, start);
                     int regionEndInSpan = Math.min(end, spanEnd);
                     if (regionStartInSpan == span.column) {
