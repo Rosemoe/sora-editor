@@ -211,6 +211,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mPinLineNumber;
     private boolean mFirstLineNumberAlwaysVisible;
     private boolean mAllowFullscreen;
+    private boolean mLigatureEnabled;
     private RectF mRect;
     private RectF mLeftHandle;
     private RectF mRightHandle;
@@ -449,6 +450,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setLineNumberEnabled(true);
         setAutoCompletionOnComposing(true);
         setAllowFullscreen(false);
+        setLigatureEnabled(false);
         setInterceptParentHorizontalScrollIfNeeded(false);
         setTypefaceText(Typeface.DEFAULT);
         mPaintOther.setStrokeWidth(getDpUnit() * 1.8f);
@@ -575,6 +577,36 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public boolean isFullscreenAllowed() {
         return mAllowFullscreen;
+    }
+
+    /**
+     * Enable/disable ligature of all types.
+     * Generally you should disable them unless enabling this will have no effect on text measuring.
+     *
+     * Disabled by default. If you want to enable ligature of a specified type, use
+     * {@link CodeEditor#setFontFeatureSettings(String)}
+     *
+     */
+    public void setLigatureEnabled(boolean enabled) {
+        this.mLigatureEnabled = enabled;
+        setFontFeatureSettings(enabled ? null : "'liga' 0,'calt' 0,'hlig' 0,'dlig' 0,'clig' 0");
+    }
+
+    /**
+     * @see CodeEditor#setLigatureEnabled(boolean)
+     */
+    public boolean isLigatureEnabled() {
+        return mLigatureEnabled;
+    }
+
+    /**
+     * Set font feature settings for all paints used by editor
+     * @see Paint#setFontFeatureSettings(String)
+     */
+    public void setFontFeatureSettings(String features) {
+        mPaint.setFontFeatureSettings(features);
+        mPaintOther.setFontFeatureSettings(features);
+        mPaintGraph.setFontFeatureSettings(features);
     }
 
     /**
