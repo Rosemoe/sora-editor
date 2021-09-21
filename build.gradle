@@ -78,24 +78,18 @@ tasks.withType(JavaCompile) {
 
 task bundleAll {
     group = 'Rosemoe'
-    dependsOn(
-            project("editor").getTasksByName("bundleReleaseAar", false),
-            project("language-base").getTasksByName("bundleReleaseAar", false),
-            project("language-java").getTasksByName("bundleReleaseAar", false),
-            project("language-universal").getTasksByName("bundleReleaseAar", false),
-            project("language-html").getTasksByName("bundleReleaseAar", false),
-            project("language-python").getTasksByName("bundleReleaseAar", false)
-    )
+    allprojects.forEach {
+        if (it.name.equals("editor") || it.name.startsWith("language-")) {
+            dependsOn it.getTasksByName("bundleReleaseAar", false)
+        }
+    }
 }
 
 task publishAll {
     group = 'Rosemoe'
-    dependsOn(
-            project("editor").getTasksByName("publish", false),
-            project("language-base").getTasksByName("publish", false),
-            project("language-java").getTasksByName("publish", false),
-            project("language-universal").getTasksByName("publish", false),
-            project("language-html").getTasksByName("publish", false),
-            project("language-python").getTasksByName("publish", false)
-    )
+    allprojects.forEach {
+        if (it.name.equals("editor") || it.name.startsWith("language-")) {
+            dependsOn it.getTasksByName("publish", false)
+        }
+    }
 }
