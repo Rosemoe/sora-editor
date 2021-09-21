@@ -29,8 +29,10 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
@@ -215,6 +217,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private RectF mInsertHandle;
     private RectF mVerticalScrollBar;
     private RectF mHorizontalScrollBar;
+    private Path mPath;
     private ClipboardManager mClipboardManager;
     private InputMethodManager mInputMethodManager;
     private Cursor mCursor;
@@ -381,6 +384,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaintOther = new Paint();
         mPaintGraph = new Paint();
         mMatrix = new Matrix();
+        mPath = new Path();
         mSearcher = new EditorSearcher(this);
         setCursorBlinkPeriod(DEFAULT_CURSOR_BLINK_PERIOD);
         mAnchorInfoBuilder = new CursorAnchorInfo.Builder();
@@ -447,6 +451,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setAllowFullscreen(false);
         setInterceptParentHorizontalScrollIfNeeded(false);
         setTypefaceText(Typeface.DEFAULT);
+        mPaintOther.setStrokeWidth(getDpUnit() * 1.8f);
         // Issue #41 View being highlighted when focused on Android 11
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             setDefaultFocusHighlightEnabled(false);
@@ -1163,25 +1168,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         canvas.translate(paintingOffset, getRowTop(row) - getOffsetY());
                         canvas.clipRect(0f, 0f, width, getRowHeight());
                         try {
-                            renderer.preDraw(canvas, mPaint, mColors);
+                            renderer.draw(canvas, mPaint, mColors, true);
                         } catch (Exception e) {
                             Log.e(LOG_TAG, "Error while invoking external renderer", e);
                         }
                         canvas.restoreToCount(saveCount);
                     }
 
-                    // Apply Span#TYPE_DEPRECATED
-                    boolean deprecatedMark = span.issueType == Span.TYPE_DEPRECATED;
-                    if (deprecatedMark) {
-                        mPaint.setStrikeThruText(true);
-                    }
-
                     // Draw text
                     drawRegionText(canvas, paintingOffset, getRowBaseline(row) - getOffsetY(), line, paintStart, paintEnd, columnCount, mColors.getColor(span.colorId));
 
-                    // Restore attributes
-                    if (deprecatedMark) {
-                        mPaint.setStrikeThruText(false);
+                    if (span.issueType == Span.TYPE_DEPRECATED) {
+                        mPaintOther.setColor(Color.BLACK);
+                        canvas.drawLine(paintingOffset, getRowTop(row) + getRowHeight() / 2f - getOffsetY(), paintingOffset + width, getRowTop(row) + getRowHeight() / 2 - getOffsetY(), mPaintOther);
                     }
 
                     // Draw underline
@@ -1193,10 +1192,46 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         drawColor(canvas, span.underlineColor, mRect);
                     }
 
-
+                    // Draw issue curly underline
                     if (span.issueType > Span.TYPE_NONE && span.issueType < Span.TYPE_DEPRECATED) {
-                        //TODO draw curly lines
-
+                        int color = 0;
+                        switch (span.issueType) {
+                            case Span.TYPE_ERROR:
+                                color = mColors.getColor(EditorColorScheme.ISSUE_ERROR);
+                                break;
+                            case Span.TYPE_WARNING:
+                                color = mColors.getColor(EditorColorScheme.ISSUE_WARNING);
+                                break;
+                            case Span.TYPE_TYPO:
+                                color = mColors.getColor(EditorColorScheme.ISSUE_TYPO);
+                                break;
+                        }
+                        if (color != 0) {
+                            // Start and end X offset
+                            float startOffset = measureTextRegionOffset() + measureText(mBuffer, 0, span.column) - getOffsetX();
+                            float lineWidth = measureText(mBuffer, span.column, paintEnd - span.column);
+                            float centerY = getRowBottom(row) - getOffsetY();
+                            final float waveLength = getDpUnit() * 20;
+                            final float amplitude = getDpUnit() * 4;
+                            // Clip region due not to draw outside the horizontal region
+                            canvas.save();
+                            //canvas.clipRect(startOffset, 0, startOffset + lineWidth, canvas.getHeight());
+                            canvas.translate(startOffset, centerY);
+                            // Draw waves
+                            mPath.reset();
+                            mPath.moveTo(0, 0);
+                            int waveCount = (int) Math.ceil(lineWidth / waveLength);
+                            for (int i = 0; i < waveCount; i++) {
+                                mPath.quadTo(waveLength * i + waveLength / 4, amplitude, waveLength * i + waveLength / 2, 0);
+                                mPath.quadTo(waveLength * i + waveLength * 3 / 4, -amplitude, waveLength * i + waveLength, 0);
+                            }
+                            // Draw path
+                            mPaintOther.setStyle(Paint.Style.STROKE);
+                            mPaintOther.setColor(color);
+                            canvas.drawPath(mPath, mPaintOther);
+                            canvas.restore();
+                        }
+                        mPaintOther.setStyle(Paint.Style.FILL);
                     }
 
                     // Invoke external renderer postDraw
@@ -1205,7 +1240,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         canvas.translate(paintingOffset, getRowTop(row) - getOffsetY());
                         canvas.clipRect(0f, 0f, width, getRowHeight());
                         try {
-                            renderer.postDraw(canvas, mPaint, mColors);
+                            renderer.draw(canvas, mPaint, mColors, false);
                         } catch (Exception e) {
                             Log.e(LOG_TAG, "Error while invoking external renderer", e);
                         }

@@ -48,7 +48,7 @@ public class TextAnalyzer {
     private TextAnalyzeResult mResult;
     private Callback mCallback;
     private AnalyzeThread mThread;
-    private CodeAnalyzer mCodeAnalyzer;
+    private final CodeAnalyzer mCodeAnalyzer;
     /**
      * Create a new manager for the given codeAnalyzer
      *
@@ -206,6 +206,7 @@ public class TextAnalyzer {
                             colors.mSuppressSwitch = Integer.MAX_VALUE;
                             colors.mLabels = null;
                             colors.mExtra = null;
+                            colors.determined = false;
                         }
                     } while (waiting);
 

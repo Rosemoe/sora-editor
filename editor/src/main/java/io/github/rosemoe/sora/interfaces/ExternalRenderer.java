@@ -54,8 +54,13 @@ public interface ExternalRenderer {
 
     boolean requirePostDraw();
 
-    void preDraw(Canvas canvas, Paint paint, EditorColorScheme colorScheme);
-
-    void postDraw(Canvas canvas, Paint paint, EditorColorScheme colorScheme);
+    /**
+     * Called when the editor draws the given region.
+     * @param canvas The canvas to draw
+     * @param paint Paint for measuring
+     * @param colorScheme Current color scheme
+     * @param preOrPost True for preDraw, False for postDraw
+     */
+    void draw(Canvas canvas, Paint paint, EditorColorScheme colorScheme, boolean preOrPost);
 
 }

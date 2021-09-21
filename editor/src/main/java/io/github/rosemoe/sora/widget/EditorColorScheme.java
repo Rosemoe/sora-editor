@@ -58,11 +58,14 @@ import java.util.Objects;
  * @author Rose
  */
 public class EditorColorScheme {
+    //----------------Issue colors----------------
+    public static final int ISSUE_TYPO = 37;
+    public static final int ISSUE_WARNING = 36;
+    public static final int ISSUE_ERROR = 35;
     //-----------------Highlight colors-----------
-
-    public static final int ATTRIBUTE_VALUE = 33;
-    public static final int ATTRIBUTE_NAME = 32;
-    public static final int HTML_TAG = 31;
+    public static final int ATTRIBUTE_VALUE = 34;
+    public static final int ATTRIBUTE_NAME = 33;
+    public static final int HTML_TAG = 32;
     public static final int ANNOTATION = 28;
     public static final int FUNCTION_NAME = 27;
     public static final int IDENTIFIER_NAME = 26;
@@ -71,9 +74,7 @@ public class EditorColorScheme {
     public static final int OPERATOR = 23;
     public static final int COMMENT = 22;
     public static final int KEYWORD = 21;
-
     //-------------View colors---------------------
-
     public static final int NON_PRINTABLE_CHAR = 31;
     public static final int TEXT_SELECTED = 30;
     public static final int MATCHED_TEXT_BACKGROUND = 29;
@@ -111,7 +112,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 31;
+    protected static final int END_COLOR_ID = 36;
     /**
      * Real color saver
      */
@@ -165,7 +166,7 @@ public class EditorColorScheme {
      * @param type The type
      */
     private void applyDefault(int type) {
-        int color;
+        int color = mColors.get(type);
         switch (type) {
             case LINE_DIVIDER:
                 color = 0xFFdddddd;
@@ -246,8 +247,15 @@ public class EditorColorScheme {
             case NON_PRINTABLE_CHAR:
                 color = 0xff505050;
                 break;
-            default:
-                throw new IllegalArgumentException("Unexpected type:" + type);
+            case ISSUE_ERROR:
+                color = 0xaaff0000;
+                break;
+            case ISSUE_WARNING:
+                color = 0xaafff100;
+                break;
+            case ISSUE_TYPO:
+                color = 0xaa0000ff;
+                break;
         }
         setColor(type, color);
     }

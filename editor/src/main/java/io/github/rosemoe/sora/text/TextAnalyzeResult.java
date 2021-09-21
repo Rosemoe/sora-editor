@@ -42,6 +42,7 @@ public class TextAnalyzeResult {
     protected List<NavigationItem> mLabels;
     protected Span mLast;
     protected int mSuppressSwitch = Integer.MAX_VALUE;
+    boolean determined = false;
 
     /**
      * Create a new result
@@ -117,6 +118,7 @@ public class TextAnalyzeResult {
             mSpanMap.add(lineSpans);
             mapLine++;
         }
+        determined = true;
     }
 
     /**
@@ -223,4 +225,63 @@ public class TextAnalyzeResult {
     public Object getExtra() {
         return mExtra;
     }
+
+    /**
+     * Marks a region with the given issue type. New issue type will override old issue types
+     * in the given region.
+     * This can only be called after {@link TextAnalyzeResult#determine(int)} is called.
+     */
+    public void markRegion(int issueType, int startLine, int startColumn, int endLine, int endColumn) {
+        if (!determined) {
+            throw new IllegalStateException("determine() has not been successfully called");
+        }
+        for (int line = startLine; line <= endLine; line++) {
+            int start = (line == startLine ? startColumn : 0);
+            int end = (line == endLine ? endColumn : Integer.MAX_VALUE);
+            List<Span> spans = mSpanMap.get(line);
+            int increment;
+            for (int i = 0; i < spans.size(); i += increment) {
+                Span span = spans.get(i);
+                increment = 1;
+                if (span.column > end) {
+                    break;
+                }
+                if (span.column <= start) {
+                    int spanEnd = (i + 1 >= spans.size() ? Integer.MAX_VALUE : spans.get(i + 1).column);
+                    int regionStartInSpan = Math.max(span.column, start);
+                    int regionEndInSpan = Math.min(end, spanEnd);
+                    if (regionStartInSpan == span.column) {
+                        if (regionEndInSpan == spanEnd) {
+                            span.issueType = issueType;
+                        } else {
+                            increment = 2;
+                            Span nSpan = span.copy();
+                            nSpan.column = regionEndInSpan;
+                            spans.add(i + 1, nSpan);
+                            span.issueType = issueType;
+                        }
+                    } else {
+                        //regionStartInSpan > span.column
+                        if (regionEndInSpan == spanEnd) {
+                            increment = 2;
+                            Span nSpan = span.copy();
+                            nSpan.column = regionStartInSpan;
+                            spans.add(i + 1, nSpan);
+                            nSpan.issueType = issueType;
+                        } else {
+                            increment = 3;
+                            Span span1 = span.copy();
+                            span1.column = regionStartInSpan;
+                            span1.issueType = issueType;
+                            Span span2 = span.copy();
+                            span2.column = regionEndInSpan;
+                            spans.add(i + 1, span1);
+                            spans.add(i + 2, span2);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }
