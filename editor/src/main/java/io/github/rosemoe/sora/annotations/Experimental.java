@@ -33,7 +33,7 @@ import java.lang.annotation.Target;
  * Methods, fields and constructors with this annotation is very subject to keep or delete.
  * For that reason, they are not stable for production use.
  */
-@Target({ElementType.FIELD, ElementType.CONSTRUCTOR, ElementType.METHOD})
+@Target({ElementType.FIELD, ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.SOURCE)
 public @interface Experimental {
 }

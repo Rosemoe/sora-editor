@@ -73,6 +73,7 @@ import java.util.List;
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.interfaces.EditorEventListener;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
+import io.github.rosemoe.sora.interfaces.ExternalRenderer;
 import io.github.rosemoe.sora.interfaces.NewlineHandler;
 import io.github.rosemoe.sora.langs.EmptyLanguage;
 import io.github.rosemoe.sora.data.BlockLine;
@@ -1154,9 +1155,34 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     int paintStart = Math.max(firstVisibleChar, span.column);
                     int paintEnd = Math.min(lastVisibleChar, spanEnd);
                     float width = measureText(mBuffer, paintStart, paintEnd - paintStart);
+                    ExternalRenderer renderer = span.renderer;
+
+                    // Invoke external renderer preDraw
+                    if (renderer != null && renderer.requirePreDraw()) {
+                        int saveCount = canvas.save();
+                        canvas.translate(paintingOffset, getRowTop(row) - getOffsetY());
+                        canvas.clipRect(0f, 0f, width, getRowHeight());
+                        try {
+                            renderer.preDraw(canvas, mPaint, mColors);
+                        } catch (Exception e) {
+                            Log.e(LOG_TAG, "Error while invoking external renderer", e);
+                        }
+                        canvas.restoreToCount(saveCount);
+                    }
+
+                    // Apply Span#TYPE_DEPRECATED
+                    boolean deprecatedMark = span.issueType == Span.TYPE_DEPRECATED;
+                    if (deprecatedMark) {
+                        mPaint.setStrikeThruText(true);
+                    }
 
                     // Draw text
                     drawRegionText(canvas, paintingOffset, getRowBaseline(row) - getOffsetY(), line, paintStart, paintEnd, columnCount, mColors.getColor(span.colorId));
+
+                    // Restore attributes
+                    if (deprecatedMark) {
+                        mPaint.setStrikeThruText(false);
+                    }
 
                     // Draw underline
                     if (span.underlineColor != 0) {
@@ -1165,6 +1191,25 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         mRect.left = paintingOffset;
                         mRect.right = paintingOffset + width;
                         drawColor(canvas, span.underlineColor, mRect);
+                    }
+
+
+                    if (span.issueType > Span.TYPE_NONE && span.issueType < Span.TYPE_DEPRECATED) {
+                        //TODO draw curly lines
+
+                    }
+
+                    // Invoke external renderer postDraw
+                    if (renderer != null && renderer.requirePostDraw()) {
+                        int saveCount = canvas.save();
+                        canvas.translate(paintingOffset, getRowTop(row) - getOffsetY());
+                        canvas.clipRect(0f, 0f, width, getRowHeight());
+                        try {
+                            renderer.postDraw(canvas, mPaint, mColors);
+                        } catch (Exception e) {
+                            Log.e(LOG_TAG, "Error while invoking external renderer", e);
+                        }
+                        canvas.restoreToCount(saveCount);
                     }
 
                     paintingOffset += width;
@@ -2982,7 +3027,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return first visible row
      */
     public int getFirstVisibleRow() {
-        return (int) Math.max(0, getOffsetY() / getRowHeight());
+        return Math.max(0, getOffsetY() / getRowHeight());
     }
 
     /**
@@ -2991,7 +3036,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return last visible row
      */
     public int getLastVisibleRow() {
-        return (int) Math.max(0, (getOffsetY() + getHeight()) / getRowHeight());
+        return Math.max(0, (getOffsetY() + getHeight()) / getRowHeight());
     }
 
     /**
