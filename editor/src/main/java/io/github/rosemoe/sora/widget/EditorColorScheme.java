@@ -112,7 +112,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 36;
+    protected static final int END_COLOR_ID = 37;
     /**
      * Real color saver
      */
@@ -254,7 +254,7 @@ public class EditorColorScheme {
                 color = 0xaafff100;
                 break;
             case ISSUE_TYPO:
-                color = 0xaa0000ff;
+                color = 0x6600ff11;
                 break;
         }
         setColor(type, color);
