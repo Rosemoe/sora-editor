@@ -580,7 +580,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Enable/disable ligature of all types.
+     * Enable/disable ligature of all types(except 'rlig').
      * Generally you should disable them unless enabling this will have no effect on text measuring.
      *
      * Disabled by default. If you want to enable ligature of a specified type, use
