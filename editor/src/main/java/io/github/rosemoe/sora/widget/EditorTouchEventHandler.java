@@ -30,6 +30,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.widget.OverScroller;
 
+import io.github.rosemoe.sora.text.TextUtils;
 import io.github.rosemoe.sora.util.IntPair;
 
 /**
@@ -594,7 +595,23 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         while (endColumn < maxColumn && isIdentifierPart(mEditor.getText().charAt(line, endColumn))) {
             endColumn++;
         }
+        int startLine = line, endLine = line;
         if (startColumn == endColumn) {
+            if (startColumn > 0) {
+                startColumn--;
+            } else if (endColumn < maxColumn) {
+                endColumn++;
+            } else {
+                if (line > 0) {
+                    int lastColumn = mEditor.getText().getColumnCount(line - 1);
+                    startLine = line - 1;
+                    startColumn = lastColumn;
+                } else if (line < mEditor.getLineCount() - 1) {
+                    endLine = line + 1;
+                    endColumn = 0;
+                }
+            }
+            mEditor.setSelectionRegion(startLine, startColumn, endLine, endColumn);
             mEditor.showTextActionPopup();
         } else {
             mEditor.setSelectionRegion(line, startColumn, line, endColumn);
@@ -772,12 +789,12 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
          */
         public void applyPosition(MotionEvent e) {
             float targetX = mScroller.getCurrX() + e.getX();
-            float targetY = mScroller.getCurrY() + e.getY() - mEditor.getInsertHandleRect().height() * 4 / 3;
+            float targetY = mScroller.getCurrY() + e.getY() - Math.max(mEditor.getInsertHandleRect().height(), mEditor.getRightHandleRect().height()) * 4 / 3;
             int line = IntPair.getFirst(mEditor.getPointPosition(0, targetY));
             if (line >= 0 && line < mEditor.getLineCount()) {
                 int column = IntPair.getSecond(mEditor.getPointPosition(targetX, targetY));
                 int lastLine = type == RIGHT ? mEditor.getCursor().getRightLine() : mEditor.getCursor().getLeftLine();
-                int lastColumn = type == RIGHT ? mEditor.getCursor().getLeftColumn() : mEditor.getCursor().getLeftColumn();
+                int lastColumn = type == RIGHT ? mEditor.getCursor().getRightColumn() : mEditor.getCursor().getLeftColumn();
                 int anotherLine = type != RIGHT ? mEditor.getCursor().getRightLine() : mEditor.getCursor().getLeftLine();
                 int anotherColumn = type != RIGHT ? mEditor.getCursor().getRightColumn() : mEditor.getCursor().getLeftColumn();
 

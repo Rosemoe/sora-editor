@@ -586,6 +586,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Disabled by default. If you want to enable ligature of a specified type, use
      * {@link CodeEditor#setFontFeatureSettings(String)}
      *
+     * For enabling JetBrainsMono font's ligature, Use like this:
+     *
+     * CodeEditor editor = ...;
+     * editor.setFontFeatureSettings(enabled ? null : "'liga' 0,'hlig' 0,'dlig' 0,'clig' 0");
      */
     public void setLigatureEnabled(boolean enabled) {
         this.mLigatureEnabled = enabled;
@@ -962,7 +966,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mCachedLineNumberWidth = 0;
         }
 
-        if (!mCursor.isSelected()) {
+        if (mCursor.isSelected()) {
             mInsertHandle.setEmpty();
         }
         if (!mTextActionPresenter.shouldShowCursor()) {
@@ -1225,7 +1229,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
                     if (span.issueType == Span.TYPE_DEPRECATED) {
                         mPaintOther.setColor(Color.BLACK);
-                        canvas.drawLine(paintingOffset, getRowTop(row) + getRowHeight() / 2f - getOffsetY(), paintingOffset + width, getRowTop(row) + getRowHeight() / 2 - getOffsetY(), mPaintOther);
+                        canvas.drawLine(paintingOffset, getRowTop(row) + getRowHeight() / 2f - getOffsetY(), paintingOffset + width, getRowTop(row) + getRowHeight() / 2f - getOffsetY(), mPaintOther);
                     }
 
                     // Draw underline
@@ -3481,7 +3485,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
         if (columnRight > 0) {
-            int column = columnRight;
+            int column = columnRight - 1;
             char ch = mText.charAt(lineRight, column);
             if (isEmoji(ch)) {
                 columnRight++;
