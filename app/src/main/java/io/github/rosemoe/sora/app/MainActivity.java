@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
                 editor.getSearcher().search(editable.toString());
             }
         });
-        editor.setTypefaceText(Typeface.MONOSPACE);
+        editor.setTypefaceText(Typeface.createFromAsset(getAssets(), "JetBrainsMono-Regular.ttf"));
         editor.setOverScrollEnabled(false);
         editor.setEditorLanguage(new JavaLanguage());
         editor.setFirstLineNumberAlwaysVisible(true);
