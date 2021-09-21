@@ -22,12 +22,14 @@ Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/re
 - [x] Shortcuts
 - [x] Auto wordwrap
 - [x] Show non-printable characters
+- [x] Error/Warning/Typo/Deprecated indicators
 - [ ] Incremental highlight Analysis
 - [ ] Plugin System
 ## Language Supported  
-* Java, JavaScript, C, C++, HTML, Python (Basic Support:highlight, code block line,identifier and keyword auto-completion). Code block line isn't available for HTML Language
+* Java, JavaScript, C, C++, HTML, Python, CSS3 (Basic Support:highlight, code block line,identifier and keyword auto-completion). Code block line isn't available for HTML Language
 ## Screenshots
 ![Wordwrap](/images/wordwrap.png)
+![Reporting](/images/curlylines.jpg)
 ## How to use this editor  
 Add to your app's dependencies:
 ```Gradle
@@ -39,9 +41,10 @@ Available modules:
 * language-java
 * language-html
 * language-python
+* language-css3
 * language-universal
 
-Detailed:[Get started](https://rosemoe.github.io/2021/08/22/editor-get-started/)
+Detailed: [Get started](https://rosemoe.github.io/2021/08/22/editor-get-started/)
 ## License
 ```
 CodeEditor - the awesome code editor for Android
@@ -69,5 +72,5 @@ additional information or have any questions
 * Official QQ Group:[216632648](https://jq.qq.com/?_wv=1027&k=n68uxQws)
 * [Official Telegram Group](https://t.me/rosemoe_code_editor)
 ## Acknowledgements
-Thanks to [JetBrains](https://www.jetbrains.com/?from=CodeEditor) for allocating free open-source licences for IDEs such as [IntelliJ IDEA](https://www.jetbrains.com/idea/?from=CodeEditor).
+Thanks to [JetBrains](https://www.jetbrains.com/?from=CodeEditor) for allocating free open-source licences for IDEs such as [IntelliJ IDEA](https://www.jetbrains.com/idea/?from=CodeEditor).   
 [<img src=".github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)
