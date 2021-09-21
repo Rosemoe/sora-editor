@@ -22,10 +22,12 @@
  */
 package io.github.rosemoe.sora.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
@@ -44,6 +46,8 @@ import java.lang.Thread.UncaughtExceptionHandler;
 
 import android.content.pm.PackageManager.NameNotFoundException;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.app.R;
 
 /**
@@ -52,14 +56,14 @@ import io.github.rosemoe.sora.app.R;
  *
  * @author Rose
  */
-@SuppressWarnings("CanBeFinal")
 public class CrashHandler implements UncaughtExceptionHandler {
 
     public final static String LOG_TAG = "CrashHandler";
+    @SuppressLint("StaticFieldLeak")
     public final static CrashHandler INSTANCE = new CrashHandler();
 
     private Context mContext;
-    private Map<String, String> info = new HashMap<>();
+    private final Map<String, String> info = new HashMap<>();
 
     private CrashHandler() {
     }
@@ -71,16 +75,32 @@ public class CrashHandler implements UncaughtExceptionHandler {
     }
 
     @Override
-    public void uncaughtException(Thread thread, Throwable ex) {
+    public void uncaughtException(Thread thread, @NonNull Throwable ex) {
         saveCrashInfo(thread.getName(), ex);
         // Save the world, hopefully
         if (Looper.myLooper() != null) {
+            Handler handler = new Handler(Looper.myLooper());
+            Throwable e = ex;
             while (true) {
                 try {
-                    Toast.makeText(mContext, R.string.err_crash_loop, Toast.LENGTH_SHORT).show();
+                    /*Writer writer = new StringWriter();
+                    PrintWriter pw = new PrintWriter(writer);
+                    e.printStackTrace(pw);
+                    Throwable cause = e.getCause();
+                    while (cause != null) {
+                        cause.printStackTrace(pw);
+                        cause = cause.getCause();
+                    }
+                    pw.close();
+                    final String result = writer.toString();*/
+                    handler.post(() -> {
+                        Toast.makeText(mContext, R.string.err_crash_loop, Toast.LENGTH_SHORT).show();
+
+                    });
                     Looper.loop();
                 } catch (Throwable t) {
                     saveCrashInfo(thread.getName(), t);
+                    e = t;
                 }
             }
         }

@@ -1043,6 +1043,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param postDrawCursor      Cursors to be drawn later
      */
     private void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<CursorPaintAction> postDrawCursor, LongArrayList postDrawCurrentLines, MutableInt requiredFirstLn) {
+        final float waveLength = getDpUnit() * 18;
+        final float amplitude = getDpUnit() * 4;
         RowIterator rowIterator = mLayout.obtainRowIterator(getFirstVisibleRow());
         List<Span> temporaryEmptySpans = null;
         List<List<Span>> spanMap = mSpanner.getResult().getSpanMap();
@@ -1146,8 +1148,18 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     spans = temporaryEmptySpans;
                 }
                 // Seek for first span
+                float fai = 0f;
                 while (spanOffset + 1 < spans.size()) {
                     if (spans.get(spanOffset + 1).column <= firstVisibleChar) {
+                        // Update fai
+                        Span span = spans.get(spanOffset);
+                        if (span.issueType > Span.TYPE_NONE && span.issueType < Span.TYPE_DEPRECATED) {
+                            float lineWidth = measureText(mBuffer, Math.max(span.column, firstVisibleChar), spans.get(spanOffset + 1).column - Math.max(span.column, firstVisibleChar)) + fai;
+                            int waveCount = (int) Math.ceil(lineWidth / waveLength);
+                            fai = waveLength - (waveCount * waveLength - lineWidth);
+                        } else {
+                            fai = 0f;
+                        }
                         spanOffset++;
                     } else {
                         break;
@@ -1157,6 +1169,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 // Draw by spans
                 while (lastVisibleChar > span.column) {
                     int spanEnd = spanOffset + 1 >= spans.size() ? columnCount : spans.get(spanOffset + 1).column;
+                    spanEnd = Math.min(columnCount, spanEnd);
                     int paintStart = Math.max(firstVisibleChar, span.column);
                     int paintEnd = Math.min(lastVisibleChar, spanEnd);
                     float width = measureText(mBuffer, paintStart, paintEnd - paintStart);
@@ -1206,17 +1219,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                                 color = mColors.getColor(EditorColorScheme.ISSUE_TYPO);
                                 break;
                         }
-                        if (color != 0) {
+                        if (color != 0 && span.column >= 0 && spanEnd - span.column >= 0) {
                             // Start and end X offset
-                            float startOffset = measureTextRegionOffset() + measureText(mBuffer, 0, span.column) - getOffsetX();
-                            float lineWidth = measureText(mBuffer, span.column, paintEnd - span.column);
+                            float startOffset = measureTextRegionOffset() + measureText(mBuffer, firstVisibleChar, Math.max(0, span.column - firstVisibleChar)) - getOffsetX();
+                            float lineWidth = measureText(mBuffer, Math.max(firstVisibleChar, span.column), spanEnd - Math.max(firstVisibleChar, span.column)) + fai;
                             float centerY = getRowBottom(row) - getOffsetY();
-                            final float waveLength = getDpUnit() * 20;
-                            final float amplitude = getDpUnit() * 4;
                             // Clip region due not to draw outside the horizontal region
                             canvas.save();
-                            //canvas.clipRect(startOffset, 0, startOffset + lineWidth, canvas.getHeight());
-                            canvas.translate(startOffset, centerY);
+                            canvas.clipRect(startOffset, 0, startOffset + lineWidth, canvas.getHeight());
+                            canvas.translate(startOffset - fai, centerY);
                             // Draw waves
                             mPath.reset();
                             mPath.moveTo(0, 0);
@@ -1225,6 +1236,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                                 mPath.quadTo(waveLength * i + waveLength / 4, amplitude, waveLength * i + waveLength / 2, 0);
                                 mPath.quadTo(waveLength * i + waveLength * 3 / 4, -amplitude, waveLength * i + waveLength, 0);
                             }
+                            fai = waveLength - (waveCount * waveLength - lineWidth);
                             // Draw path
                             mPaintOther.setStyle(Paint.Style.STROKE);
                             mPaintOther.setColor(color);
@@ -1232,6 +1244,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                             canvas.restore();
                         }
                         mPaintOther.setStyle(Paint.Style.FILL);
+                    } else {
+                        fai = 0f;
                     }
 
                     // Invoke external renderer postDraw
