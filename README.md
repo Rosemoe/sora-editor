@@ -1,6 +1,6 @@
 # sora-editor (aka CodeEditor)
 [![GitHub license](https://img.shields.io/github/license/Rosemoe/CodeEditor)](https://github.com/Rosemoe/CodeEditor/blob/main/LICENSE)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.Rosemoe.CodeEditor/editor.svg?label=Maven%20Central)]((https://search.maven.org/search?q=io.github.Rosemoe.CodeEditor%20editor))
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.Rosemoe.sora-editor/editor.svg?label=Maven%20Central)]((https://search.maven.org/search?q=io.github.Rosemoe.sora-editor%20editor))
 [![Telegram](https://img.shields.io/badge/Join-Telegram-blue)](https://t.me/rosemoe_code_editor)
 [![QQ](https://img.shields.io/badge/Join-QQ_Group-ff69b4)](https://jq.qq.com/?_wv=1027&k=n68uxQws)   
 A cool and optimized code editor on Android platform with good performance and nice features.
@@ -33,7 +33,7 @@ Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/re
 ## How to use this editor  
 Add to your app's dependencies:
 ```Gradle
-implementation 'io.github.Rosemoe.CodeEditor:<moduleName>:<versionName>'
+implementation 'io.github.Rosemoe.sora-editor:<moduleName>:<versionName>'
 ```
 Available modules:     
 * editor 
