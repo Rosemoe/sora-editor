@@ -331,7 +331,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return EditorTextActionPresenter
      */
     @NonNull
-    protected EditorTextActionPresenter getTextActionPresenter() {
+    public EditorTextActionPresenter getTextActionPresenter() {
         return mTextActionPresenter;
     }
 
@@ -784,6 +784,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else {
             mTextActionPresenter = new EditorTextActionWindow(this);
         }
+    }
+
+    /**
+     * Set an EditorTextActionPresenter for this editor
+     */
+    public void setTextActionPresenter(@NonNull EditorTextActionPresenter presenter) {
+        mTextActionPresenter = presenter;
     }
 
     /**
