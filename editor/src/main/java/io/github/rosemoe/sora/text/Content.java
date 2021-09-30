@@ -74,7 +74,7 @@ public class Content implements CharSequence {
         mLines = new ArrayList<>(getInitialLineCapacity());
         mLines.add(new ContentLine());
         mListeners = new ArrayList<>();
-        mUndoManager = new UndoManager(this);
+        mUndoManager = new UndoManager();
         setMaxUndoStackSize(Content.DEFAULT_MAX_UNDO_STACK_SIZE);
         mIndexer = new NoCacheIndexer(this);
         if (src.length() == 0) {

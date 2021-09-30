@@ -33,7 +33,6 @@ import java.util.List;
  */
 final class UndoManager implements ContentListener {
 
-    private final Content mContent;
     private final List<ContentAction> mActionStack;
     private boolean mUndoEnabled;
     private int mMaxStackSize;
@@ -44,12 +43,9 @@ final class UndoManager implements ContentListener {
     private boolean mIgnoreModification;
 
     /**
-     * Create UndoManager with the target content
-     *
-     * @param content The Content going to attach
+     * Create an UndoManager
      */
-    protected UndoManager(Content content) {
-        mContent = content;
+    protected UndoManager() {
         mActionStack = new ArrayList<>();
         mReplaceMark = false;
         mInsertAction = null;
@@ -180,12 +176,12 @@ final class UndoManager implements ContentListener {
      *
      * @param action New {@link ContentAction}
      */
-    private void pushAction(ContentAction action) {
+    private void pushAction(Content content, ContentAction action) {
         if (!isUndoEnabled()) {
             return;
         }
         cleanBeforePush();
-        if (mContent.isInBatchEdit()) {
+        if (content.isInBatchEdit()) {
             if (mActionStack.isEmpty()) {
                 MultiAction a = new MultiAction();
                 a.addAction(action);
@@ -244,9 +240,9 @@ final class UndoManager implements ContentListener {
             ReplaceAction rep = new ReplaceAction();
             rep._delete = mDeleteAction;
             rep._insert = mInsertAction;
-            pushAction(rep);
+            pushAction(content, rep);
         } else {
-            pushAction(mInsertAction);
+            pushAction(content, mInsertAction);
         }
         mReplaceMark = false;
     }
@@ -264,7 +260,7 @@ final class UndoManager implements ContentListener {
         mDeleteAction.startLine = startLine;
         mDeleteAction.text = deletedContent;
         if (!mReplaceMark) {
-            pushAction(mDeleteAction);
+            pushAction(content, mDeleteAction);
         }
     }
 
