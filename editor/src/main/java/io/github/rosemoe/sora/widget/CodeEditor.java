@@ -937,8 +937,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param canvas Canvas you want to draw
      */
     private void drawView(Canvas canvas) {
-        //record();
-        //counter = 0;
         mSpanner.notifyRecycle();
         if (mFormatThread != null) {
             String text = "Formatting your code...";
@@ -1054,8 +1052,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         drawScrollBars(canvas);
         drawEdgeEffect(canvas);
-        //print();
-        //Log.d(LOG_TAG, "drawText() calls count = " + counter);
     }
 
     /**
@@ -3824,14 +3820,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (request.hintMaxChars == 0) {
             request.hintMaxChars = EditorInputConnection.TEXT_LENGTH_LIMIT;
         }
-        /*if (selEnd - selBegin > request.hintMaxChars) {
-            startOffset = selBegin;
-        } else {
-            int redundantLength = (request.hintMaxChars - (selEnd - selBegin)) / 2;
-            startOffset = selBegin - redundantLength;
-        }*/
         startOffset = 0;
-        //startOffset = Math.max(0, startOffset);
         text.text = mConnection.getTextRegion(startOffset, startOffset + request.hintMaxChars, request.flags);
         text.startOffset = startOffset;
         text.selectionStart = selBegin - startOffset;
@@ -4503,7 +4492,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Interface for various ways to present text action panel
      */
-    protected interface EditorTextActionPresenter {
+    public interface EditorTextActionPresenter {
 
         /**
          * Selected text is clicked
@@ -4606,6 +4595,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     }
 
-    private final static String COPYRIGHT = "CodeEditor\nCopyright (C) Rosemoe roses2020@qq.com\nThis project is distributed under the GPL v3 license";
+    private final static String COPYRIGHT = "sora-editor\nCopyright (C) Rosemoe roses2020@qq.com\nThis project is distributed under the LGPL v2.1 license";
 
 }
