@@ -25,7 +25,7 @@ package io.github.rosemoe.sora.widget;
 import android.graphics.Paint;
 
 import io.github.rosemoe.sora.text.Content;
-import io.github.rosemoe.sora.text.FontCache;
+import io.github.rosemoe.sora.graphics.FontCache;
 
 /**
  * Base layout implementation of {@link Layout}

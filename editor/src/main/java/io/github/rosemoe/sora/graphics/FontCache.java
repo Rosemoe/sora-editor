@@ -20,19 +20,20 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.text;
+package io.github.rosemoe.sora.graphics;
 
 import android.graphics.Paint;
 
 import java.util.Arrays;
 
+import io.github.rosemoe.sora.text.TextUtils;
+
 /**
- * Cache to measure text quickly
- * This is very useful when text is long
- * Use this to make editor 20x faster than before
- * It is not thread-safe
+ * Cache to measure text quickly,which is very useful when text is long
+ * <p>
+ * It is not thread-safe.
  *
- * @author Rose
+ * @author Rosemoe
  */
 public class FontCache {
 
@@ -60,7 +61,7 @@ public class FontCache {
         if (width == 0) {
             buffer[0] = ch;
             width = p.measureText(buffer, 0, 1);
-            cache[(int) ch] = width;
+            cache[ch] = width;
         }
         return width;
     }
@@ -75,18 +76,15 @@ public class FontCache {
             if (TextUtils.isEmoji(ch) && i + 1 < end) {
                 buffer[0] = ch;
                 buffer[1] = chars[++i];
-                if( i + 1 < end ){
-                    buffer [2] = chars [++i];
-                    if( !TextUtils.isEmoji(buffer [1]) || TextUtils.isEmoji(buffer [2]) ){
-                        //当第2个字符不是Emoji或第3字符是Emoji时,只测量两个字符
+                if (i + 1 < end) {
+                    buffer[2] = chars[++i];
+                    if (!TextUtils.isEmoji(buffer[1]) || TextUtils.isEmoji(buffer[2])) {
                         i--;
                         width += p.measureText(buffer, 0, 2);
-                    }
-                    else{
+                    } else {
                         width += p.measureText(buffer, 0, 3);
                     }
-                }
-                else{
+                } else {
                     width += p.measureText(buffer, 0, 2);
                 }
             } else {
@@ -106,19 +104,16 @@ public class FontCache {
             if (TextUtils.isEmoji(ch) && i + 1 < end) {
                 buffer[0] = ch;
                 buffer[1] = str.charAt(++i);
-                if( i + 1 < end ){
-                    buffer [2] = str.charAt(++i);
-                    if( !TextUtils.isEmoji(buffer [1]) || TextUtils.isEmoji(buffer [2]) ){
-                        //当第2个字符不是Emoji或第3字符是Emoji时,只测量两个字符
-                        buffer [2] = 0;
+                if (i + 1 < end) {
+                    buffer[2] = str.charAt(++i);
+                    if (!TextUtils.isEmoji(buffer[1]) || TextUtils.isEmoji(buffer[2])) {
+                        buffer[2] = 0;
                         i--;
                         width += p.measureText(buffer, 0, 2);
-                    }
-                    else{
+                    } else {
                         width += p.measureText(buffer, 0, 3);
                     }
-                }
-                else{
+                } else {
                     width += p.measureText(buffer, 0, 2);
                 }
             } else {
