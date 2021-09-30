@@ -2680,7 +2680,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return Whether the format task is scheduled
      */
     public synchronized boolean formatCodeAsync() {
-        if (mFormatThread != null || (mListener != null && mListener.onRequestFormat(this, true))) {
+        if (mFormatThread != null || (mListener != null && mListener.onRequestFormat(this))) {
             return false;
         }
         mFormatThread = new FormatThread(mText, mLanguage, this);

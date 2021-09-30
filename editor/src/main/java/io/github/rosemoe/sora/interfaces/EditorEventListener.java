@@ -40,7 +40,7 @@ public interface EditorEventListener {
      *
      * @return true if you want to cancel this operation
      */
-    boolean onRequestFormat(@NonNull CodeEditor editor, boolean async);
+    boolean onRequestFormat(@NonNull CodeEditor editor);
 
     /**
      * Format failed
