@@ -2125,14 +2125,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Draw background for row
+     * Draw background for whole row
      */
     private void drawRowBackground(Canvas canvas, int color, int row) {
-        mRect.top = getRowTop(row) - getOffsetY();
-        mRect.bottom = getRowBottom(row) - getOffsetY();
-        mRect.left = 0;
-        mRect.right = mViewRect.right;
-        drawColor(canvas, color, mRect);
+        drawRowBackground(canvas, color, row, mViewRect.right);
     }
 
     private void drawRowBackground(Canvas canvas, int color, int row, int right) {

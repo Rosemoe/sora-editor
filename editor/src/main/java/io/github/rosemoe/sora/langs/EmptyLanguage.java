@@ -35,9 +35,9 @@ import io.github.rosemoe.sora.text.TextAnalyzer.AnalyzeThread.Delegate;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
 /**
- * Empty language without any effect
+ * Empty language
  *
- * @author Rose
+ * @author Rosemoe
  */
 public class EmptyLanguage implements EditorLanguage {
 
@@ -55,7 +55,6 @@ public class EmptyLanguage implements EditorLanguage {
     public NewlineHandler[] getNewlineHandlers() {
         return new NewlineHandler[0];
     }
-
 
     @Override
     public CodeAnalyzer getAnalyzer() {
@@ -91,7 +90,7 @@ public class EmptyLanguage implements EditorLanguage {
 
     }
 
-    private static class EmptyCodeAnalyzer implements CodeAnalyzer {
+    public static class EmptyCodeAnalyzer implements CodeAnalyzer {
 
         @Override
         public void analyze(CharSequence content, TextAnalyzeResult colors, Delegate delegate) {
