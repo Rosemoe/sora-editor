@@ -196,7 +196,7 @@ public class TextAnalyzeResult {
      * Because the code blocks are not saved by the order of both start line and
      * end line,we are unable to know exactly when we should stop the process.
      * So without a suppress switch,it will cost a large of time to search code
-     * blocks.So I added this switch.
+     * blocks.
      * A suppress switch is the code block count in the first layer code block
      * (as well as its sub code blocks).
      * If you are unsure,do not set it.
@@ -222,16 +222,18 @@ public class TextAnalyzeResult {
         mExtra = extra;
     }
 
+    /**
+     * Get extra information set by the text analyzer
+     */
     public Object getExtra() {
         return mExtra;
     }
 
     /**
-     * Marks a region with the given issue type. New issue type will override old issue types
-     * in the given region.
+     * Marks a region with the given flag.
      * This can only be called after {@link TextAnalyzeResult#determine(int)} is called.
      */
-    public void markRegion(int issueType, int startLine, int startColumn, int endLine, int endColumn) {
+    public void markProblemRegion(int newFlag, int startLine, int startColumn, int endLine, int endColumn) {
         if (!determined) {
             throw new IllegalStateException("determine() has not been successfully called");
         }
@@ -252,13 +254,13 @@ public class TextAnalyzeResult {
                     int regionEndInSpan = Math.min(end, spanEnd);
                     if (regionStartInSpan == span.column) {
                         if (regionEndInSpan == spanEnd) {
-                            span.issueType = issueType;
+                            span.problemFlags |= newFlag;
                         } else {
                             increment = 2;
                             Span nSpan = span.copy();
                             nSpan.column = regionEndInSpan;
                             spans.add(i + 1, nSpan);
-                            span.issueType = issueType;
+                            span.problemFlags |= newFlag;
                         }
                     } else {
                         //regionStartInSpan > span.column
@@ -267,12 +269,12 @@ public class TextAnalyzeResult {
                             Span nSpan = span.copy();
                             nSpan.column = regionStartInSpan;
                             spans.add(i + 1, nSpan);
-                            nSpan.issueType = issueType;
+                            nSpan.problemFlags |= newFlag;
                         } else {
                             increment = 3;
                             Span span1 = span.copy();
                             span1.column = regionStartInSpan;
-                            span1.issueType = issueType;
+                            span1.problemFlags |= newFlag;
                             Span span2 = span.copy();
                             span2.column = regionEndInSpan;
                             spans.add(i + 1, span1);

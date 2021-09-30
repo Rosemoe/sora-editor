@@ -37,35 +37,29 @@ import io.github.rosemoe.sora.widget.EditorColorScheme;
 public class Span {
 
     /**
-     * Type for {@link Span#issueType}.
-     *
-     * Indicates there is no issue. Also the default value.
-     */
-    public static final int TYPE_NONE = 0;
-    /**
-     * Type for {@link Span#issueType}.
+     * Flag for {@link Span#problemFlags}.
      *
      * Indicates this span is in ERROR region
      */
-    public static final int TYPE_ERROR = 1;
+    public static final int FLAG_ERROR = 1 << 3;
     /**
-     * Type for {@link Span#issueType}.
+     * Flag for {@link Span#problemFlags}.
      *
      * Indicates this span is in WARNING region
      */
-    public static final int TYPE_WARNING = 2;
+    public static final int FLAG_WARNING = 1 << 2;
     /**
-     * Type for {@link Span#issueType}.
+     * Flag for {@link Span#problemFlags}.
      *
      * Indicates this span is in TYPO region
      */
-    public static final int TYPE_TYPO = 3;
+    public static final int FLAG_TYPO = 1 << 1;
     /**
-     * Type for {@link Span#issueType}.
+     * Flag for {@link Span#problemFlags}.
      *
      * Indicates this span is in DEPRECATED region
      */
-    public static final int TYPE_DEPRECATED = 4;
+    public static final int FLAG_DEPRECATED = 1;
 
     private static final BlockingQueue<Span> cacheQueue = new ArrayBlockingQueue<>(8192 * 2);
     public int column;
@@ -75,13 +69,12 @@ public class Span {
     /**
      * Set this value to draw curly lines for this span to indicates code problems.
      *
-     * @see Span#TYPE_NONE
-     * @see Span#TYPE_ERROR
-     * @see Span#TYPE_WARNING
-     * @see Span#TYPE_TYPO
-     * @see Span#TYPE_DEPRECATED
+     * @see Span#FLAG_ERROR
+     * @see Span#FLAG_WARNING
+     * @see Span#FLAG_TYPO
+     * @see Span#FLAG_DEPRECATED
      */
-    public int issueType = 0;
+    public int problemFlags = 0;
     public ExternalRenderer renderer = null;
 
     /**
@@ -152,13 +145,13 @@ public class Span {
     public Span copy() {
         Span copy = obtain(column, colorId);
         copy.setUnderlineColor(underlineColor);
-        copy.issueType = issueType;
+        copy.problemFlags = problemFlags;
         copy.renderer = renderer;
         return copy;
     }
 
     public boolean recycle() {
-        issueType = colorId = column = underlineColor = 0;
+        problemFlags = colorId = column = underlineColor = 0;
         renderer = null;
         return cacheQueue.offer(this);
     }

@@ -1191,17 +1191,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     spans = temporaryEmptySpans;
                 }
                 // Seek for first span
-                float fai = 0f;
+                float phi = 0f;
                 while (spanOffset + 1 < spans.size()) {
                     if (spans.get(spanOffset + 1).column <= firstVisibleChar) {
-                        // Update fai
+                        // Update phi
                         Span span = spans.get(spanOffset);
-                        if (span.issueType > Span.TYPE_NONE && span.issueType < Span.TYPE_DEPRECATED) {
-                            float lineWidth = measureText(mBuffer, Math.max(span.column, firstVisibleChar), spans.get(spanOffset + 1).column - Math.max(span.column, firstVisibleChar)) + fai;
+                        if (span.problemFlags > 0 && Integer.highestOneBit(span.problemFlags) != Span.FLAG_DEPRECATED) {
+                            float lineWidth = measureText(mBuffer, Math.max(span.column, firstVisibleChar), spans.get(spanOffset + 1).column - Math.max(span.column, firstVisibleChar)) + phi;
                             int waveCount = (int) Math.ceil(lineWidth / waveLength);
-                            fai = waveLength - (waveCount * waveLength - lineWidth);
+                            phi = waveLength - (waveCount * waveLength - lineWidth);
                         } else {
-                            fai = 0f;
+                            phi = 0f;
                         }
                         spanOffset++;
                     } else {
@@ -1234,7 +1234,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     // Draw text
                     drawRegionText(canvas, paintingOffset, getRowBaseline(row) - getOffsetY(), line, paintStart, paintEnd, columnCount, mColors.getColor(span.colorId));
 
-                    if (span.issueType == Span.TYPE_DEPRECATED) {
+                    // Draw strikethrough
+                    if ((span.problemFlags & Span.FLAG_DEPRECATED) != 0) {
                         mPaintOther.setColor(Color.BLACK);
                         canvas.drawLine(paintingOffset, getRowTop(row) + getRowHeight() / 2f - getOffsetY(), paintingOffset + width, getRowTop(row) + getRowHeight() / 2f - getOffsetY(), mPaintOther);
                     }
@@ -1249,28 +1250,28 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     }
 
                     // Draw issue curly underline
-                    if (span.issueType > Span.TYPE_NONE && span.issueType < Span.TYPE_DEPRECATED) {
+                    if (span.problemFlags > 0 && Integer.highestOneBit(span.problemFlags) != Span.FLAG_DEPRECATED) {
                         int color = 0;
-                        switch (span.issueType) {
-                            case Span.TYPE_ERROR:
-                                color = mColors.getColor(EditorColorScheme.ISSUE_ERROR);
+                        switch (Integer.highestOneBit(span.problemFlags)) {
+                            case Span.FLAG_ERROR:
+                                color = mColors.getColor(EditorColorScheme.PROBLEM_ERROR);
                                 break;
-                            case Span.TYPE_WARNING:
-                                color = mColors.getColor(EditorColorScheme.ISSUE_WARNING);
+                            case Span.FLAG_WARNING:
+                                color = mColors.getColor(EditorColorScheme.PROBLEM_WARNING);
                                 break;
-                            case Span.TYPE_TYPO:
-                                color = mColors.getColor(EditorColorScheme.ISSUE_TYPO);
+                            case Span.FLAG_TYPO:
+                                color = mColors.getColor(EditorColorScheme.PROBLEM_TYPO);
                                 break;
                         }
                         if (color != 0 && span.column >= 0 && spanEnd - span.column >= 0) {
                             // Start and end X offset
                             float startOffset = measureTextRegionOffset() + measureText(mBuffer, firstVisibleChar, Math.max(0, span.column - firstVisibleChar)) - getOffsetX();
-                            float lineWidth = measureText(mBuffer, Math.max(firstVisibleChar, span.column), spanEnd - Math.max(firstVisibleChar, span.column)) + fai;
+                            float lineWidth = measureText(mBuffer, Math.max(firstVisibleChar, span.column), spanEnd - Math.max(firstVisibleChar, span.column)) + phi;
                             float centerY = getRowBottom(row) - getOffsetY();
                             // Clip region due not to draw outside the horizontal region
                             canvas.save();
                             canvas.clipRect(startOffset, 0, startOffset + lineWidth, canvas.getHeight());
-                            canvas.translate(startOffset - fai, centerY);
+                            canvas.translate(startOffset - phi, centerY);
                             // Draw waves
                             mPath.reset();
                             mPath.moveTo(0, 0);
@@ -1279,7 +1280,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                                 mPath.quadTo(waveLength * i + waveLength / 4, amplitude, waveLength * i + waveLength / 2, 0);
                                 mPath.quadTo(waveLength * i + waveLength * 3 / 4, -amplitude, waveLength * i + waveLength, 0);
                             }
-                            fai = waveLength - (waveCount * waveLength - lineWidth);
+                            phi = waveLength - (waveCount * waveLength - lineWidth);
                             // Draw path
                             mPaintOther.setStyle(Paint.Style.STROKE);
                             mPaintOther.setColor(color);
@@ -1288,7 +1289,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         }
                         mPaintOther.setStyle(Paint.Style.FILL);
                     } else {
-                        fai = 0f;
+                        phi = 0f;
                     }
 
                     // Invoke external renderer postDraw

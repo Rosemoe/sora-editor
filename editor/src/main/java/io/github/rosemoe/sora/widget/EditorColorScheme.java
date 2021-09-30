@@ -59,9 +59,9 @@ import java.util.Objects;
  */
 public class EditorColorScheme {
     //----------------Issue colors----------------
-    public static final int ISSUE_TYPO = 37;
-    public static final int ISSUE_WARNING = 36;
-    public static final int ISSUE_ERROR = 35;
+    public static final int PROBLEM_TYPO = 37;
+    public static final int PROBLEM_WARNING = 36;
+    public static final int PROBLEM_ERROR = 35;
     //-----------------Highlight colors-----------
     public static final int ATTRIBUTE_VALUE = 34;
     public static final int ATTRIBUTE_NAME = 33;
@@ -247,13 +247,13 @@ public class EditorColorScheme {
             case NON_PRINTABLE_CHAR:
                 color = 0xff505050;
                 break;
-            case ISSUE_ERROR:
+            case PROBLEM_ERROR:
                 color = 0xaaff0000;
                 break;
-            case ISSUE_WARNING:
+            case PROBLEM_WARNING:
                 color = 0xaafff100;
                 break;
-            case ISSUE_TYPO:
+            case PROBLEM_TYPO:
                 color = 0x6600ff11;
                 break;
         }

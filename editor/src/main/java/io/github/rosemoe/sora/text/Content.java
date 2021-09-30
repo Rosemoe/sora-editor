@@ -34,7 +34,7 @@ import java.util.List;
  */
 public class Content implements CharSequence {
 
-    public final static int DEFAULT_MAX_UNDO_STACK_SIZE = 100;
+    public final static int DEFAULT_MAX_UNDO_STACK_SIZE = 500;
     public final static int DEFAULT_LIST_CAPACITY = 1000;
 
     private static int sInitialListCapacity;
