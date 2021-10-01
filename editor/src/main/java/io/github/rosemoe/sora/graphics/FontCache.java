@@ -57,7 +57,7 @@ public class FontCache {
      * Measure a single character
      */
     public float measureChar(char ch, Paint p) {
-        float width = cache[(int) ch];
+        float width = cache[ch];
         if (width == 0) {
             buffer[0] = ch;
             width = p.measureText(buffer, 0, 1);

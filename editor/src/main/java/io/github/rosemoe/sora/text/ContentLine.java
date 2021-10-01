@@ -336,6 +336,10 @@ public class ContentLine implements CharSequence, GetChars {
         return new String(value, 0, length);
     }
 
+    public char[] getRawData() {
+        return value;
+    }
+
     public void getChars(int srcBegin, int srcEnd, char[] dst, int dstBegin) {
         if (srcBegin < 0)
             throw new StringIndexOutOfBoundsException(srcBegin);

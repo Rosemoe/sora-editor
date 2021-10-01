@@ -245,7 +245,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private Paint mPaintOther;
     private Paint mPaintGraph;
     private char[] mBuffer;
-    private char[] mBuffer2;
     private Matrix mMatrix;
     private Rect mViewRect;
     private EditorColorScheme mColors;
@@ -430,7 +429,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaintGraph.setAntiAlias(true);
         mPaintOther.setTypeface(Typeface.MONOSPACE);
         mBuffer = new char[256];
-        mBuffer2 = new char[16];
         mStartedActionMode = ACTION_MODE_NONE;
         setTextSize(DEFAULT_TEXT_SIZE);
         setLineInfoTextSize(mPaint.getTextSize());
@@ -2316,7 +2314,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param offY   Offset y for paint(baseline)
      */
     protected void drawText(Canvas canvas, char[] src, int index, int count, float offX, float offY) {
-        canvas.drawText(src, index, count, offX, offY, mPaint);
         int end = index + count;
         if (mCharPaint) {
             for (int i = index; i < end; i++) {
@@ -2327,13 +2324,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             int st = index;
             for (int i = index; i < end; i++) {
                 if (src[i] == '\t') {
-                    canvas.drawText(src, st, i - st, offX, offY, mPaint);
+                    canvas.drawText(new String(src, st, i - st), offX, offY, mPaint);
                     offX = offX + measureText(src, st, i - st + 1);
                     st = i + 1;
                 }
             }
             if (st < end) {
-                canvas.drawText(src, st, end - st, offX, offY, mPaint);
+                canvas.drawText(new String(src, st, end - st), offX, offY, mPaint);
             }
         }
     }
@@ -2361,11 +2358,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param line Line going to draw or measure
      */
     protected void prepareLine(int line) {
-        int length = mText.getColumnCount(line);
+        /*int length = mText.getColumnCount(line);
         if (length >= mBuffer.length) {
             mBuffer = new char[length + 100];
         }
-        mText.getLineChars(line, mBuffer);
+        mText.getLineChars(line, mBuffer);*/
+        mBuffer = mText.getLine(line).getRawData();
     }
 
     /**
@@ -2397,30 +2395,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         // Line number center align to text center
         float y = (getRowBottom(row) + getRowTop(row)) / 2f - (mLineNumberMetrics.descent - mLineNumberMetrics.ascent) / 2f - mLineNumberMetrics.ascent - getOffsetY();
 
-        // Avoid Integer#toString() calls
-        char[] text = mBuffer2;
-        int count = 0;
-        int copy = line + 1;
-        while (copy > 0) {
-            int digit = copy % 10;
-            text[count++] = (char) ('0' + digit);
-            copy /= 10;
-        }
-        for (int i = 0, j = count - 1; i < j; i++, j--) {
-            char tmp = text[i];
-            text[i] = text[j];
-            text[j] = tmp;
-        }
+        String text = Integer.toString(line);
 
         switch (mLineNumberAlign) {
             case LEFT:
-                canvas.drawText(text, 0, count, offsetX, y, mPaintOther);
+                canvas.drawText(text, offsetX, y, mPaintOther);
                 break;
             case RIGHT:
-                canvas.drawText(text, 0, count, offsetX + width, y, mPaintOther);
+                canvas.drawText(text, offsetX + width, y, mPaintOther);
                 break;
             case CENTER:
-                canvas.drawText(text, 0, count, offsetX + (width + mDividerMargin) / 2f, y, mPaintOther);
+                canvas.drawText(text, offsetX + (width + mDividerMargin) / 2f, y, mPaintOther);
         }
     }
 
@@ -4543,9 +4528,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     public void computeScroll() {
         if (mEventHandler.getScroller().computeScrollOffset()) {
-            invalidate();
+            postInvalidate();
         }
-        super.computeScroll();
     }
 
     @Override
