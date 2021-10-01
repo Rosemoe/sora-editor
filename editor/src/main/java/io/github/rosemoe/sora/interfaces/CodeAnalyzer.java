@@ -37,11 +37,11 @@ public interface CodeAnalyzer {
      * Analyze spans for the given input
      *
      * @param content  The input text
-     * @param colors   Result dest
+     * @param result   Result dest
      * @param delegate Delegate between thread and analyzer
      * @see TextAnalyzer#analyze(Content)
      * @see TextAnalyzer.AnalyzeThread.Delegate#shouldAnalyze()
      */
-    void analyze(CharSequence content, TextAnalyzeResult colors, TextAnalyzer.AnalyzeThread.Delegate delegate);
+    void analyze(CharSequence content, TextAnalyzeResult result, TextAnalyzer.AnalyzeThread.Delegate delegate);
 
 }

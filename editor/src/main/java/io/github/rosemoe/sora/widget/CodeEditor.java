@@ -35,6 +35,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.RenderNode;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
@@ -3910,7 +3911,25 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        drawView(canvas);
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+            // Render test
+            Log.d(LOG_TAG, "RenderNode Test");
+            RenderNode displayList = new RenderNode("editorTestRenderNode");
+            displayList.setPosition(mViewRect);
+            Canvas local = displayList.beginRecording();
+            long time = System.currentTimeMillis();
+            drawView(local);
+            Log.i(LOG_TAG, "Draw to RenderNode = " + (System.currentTimeMillis() - time));
+            displayList.endRecording();
+            time = System.currentTimeMillis();
+            //canvas.save();
+            //canvas.translate(50, 50);
+            canvas.drawRenderNode(displayList);
+            //canvas.restore();
+            Log.i(LOG_TAG, "Draw RenderNode = " + (System.currentTimeMillis() - time));
+        } else {*/
+            drawView(canvas);
+        //}
     }
 
     @Override

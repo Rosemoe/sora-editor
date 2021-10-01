@@ -101,7 +101,7 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
     }
 
     @Override
-    public void analyze(CharSequence content, TextAnalyzeResult colors, TextAnalyzer.AnalyzeThread.Delegate delegate) {
+    public void analyze(CharSequence content, TextAnalyzeResult result, TextAnalyzer.AnalyzeThread.Delegate delegate) {
         StringBuilder text = content instanceof StringBuilder ? (StringBuilder) content : new StringBuilder(content);
         tokenizer.setInput(text);
         LineNumberCalculator helper = new LineNumberCalculator(text);
@@ -121,25 +121,25 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
                 int column = helper.getColumn();
                 switch (token) {
                     case KEYWORD:
-                        colors.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
+                        result.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
                         break;
                     case IDENTIFIER:
                         identifiers.addIdentifier(text.substring(index, index + tokenizer.getTokenLength()));
-                        colors.addIfNeeded(line, column, EditorColorScheme.TEXT_NORMAL);
+                        result.addIfNeeded(line, column, EditorColorScheme.TEXT_NORMAL);
                         break;
                     case LITERAL:
-                        colors.addIfNeeded(line, column, EditorColorScheme.LITERAL);
+                        result.addIfNeeded(line, column, EditorColorScheme.LITERAL);
                         break;
                     case LINE_COMMENT:
                     case LONG_COMMENT:
-                        colors.addIfNeeded(line, column, EditorColorScheme.COMMENT);
+                        result.addIfNeeded(line, column, EditorColorScheme.COMMENT);
                         break;
                     case OPERATOR:
-                        colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
+                        result.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                         if (mLanguage.isSupportBlockLine()) {
                             String op = text.substring(index, index + tokenizer.getTokenLength());
                             if (mLanguage.isBlockStart(op)) {
-                                BlockLine blockLine = colors.obtainNewBlock();
+                                BlockLine blockLine = result.obtainNewBlock();
                                 blockLine.startLine = line;
                                 blockLine.startColumn = column;
                                 stack.add(blockLine);
@@ -154,7 +154,7 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
                                     BlockLine blockLine = stack.pop();
                                     blockLine.endLine = line;
                                     blockLine.endColumn = column;
-                                    colors.addBlockLine(blockLine);
+                                    result.addBlockLine(blockLine);
                                     if (layer == 1) {
                                         if (currSwitch > maxSwitch) {
                                             maxSwitch = currSwitch;
@@ -167,10 +167,10 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
                         break;
                     case WHITESPACE:
                     case NEWLINE:
-                        colors.addNormalIfNull();
+                        result.addNormalIfNull();
                         break;
                     case UNKNOWN:
-                        colors.addIfNeeded(line, column, EditorColorScheme.ANNOTATION);
+                        result.addIfNeeded(line, column, EditorColorScheme.ANNOTATION);
                         break;
                 }
                 helper.update(tokenizer.getTokenLength());
@@ -178,14 +178,14 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        colors.determine(helper.getLine());
+        result.determine(helper.getLine());
         identifiers.finish();
-        colors.setExtra(identifiers);
+        result.setExtra(identifiers);
         tokenizer.setInput(null);
         if (currSwitch > maxSwitch) {
             maxSwitch = currSwitch;
         }
-        colors.setSuppressSwitch(maxSwitch + 50);
+        result.setSuppressSwitch(maxSwitch + 50);
     }
 
     @Override

@@ -44,7 +44,7 @@ import io.github.rosemoe.sora.widget.EditorColorScheme;
  */
 public class CSS3Analyzer implements CodeAnalyzer {
     @Override
-    public void analyze(CharSequence content, TextAnalyzeResult colors, TextAnalyzer.AnalyzeThread.Delegate delegate) {
+    public void analyze(CharSequence content, TextAnalyzeResult result, TextAnalyzer.AnalyzeThread.Delegate delegate) {
         try {
             CodePointCharStream stream = CharStreams.fromReader(new StringReader(content.toString()));
             CSS3Lexer lexer = new CSS3Lexer(stream);
@@ -66,7 +66,7 @@ public class CSS3Analyzer implements CodeAnalyzer {
                 //Log.d("test",token.getText()+"  "+token.getType());
                 switch (token.getType()) {
                     case CSS3Lexer.Space:
-                        if (first) colors.addNormalIfNull();
+                        if (first) result.addNormalIfNull();
                         break;
                     //运算符
                     case CSS3Lexer.Plus:
@@ -79,51 +79,51 @@ public class CSS3Analyzer implements CodeAnalyzer {
                     case CSS3Lexer.Comma:
                     case CSS3Lexer.T__5:
                     case CSS3Lexer.T__4:
-                        colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
+                        result.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                         break;
                     //单位
                     case CSS3Lexer.Dimension:
-                        colors.addIfNeeded(line, column, EditorColorScheme.ATTRIBUTE_VALUE);
+                        result.addIfNeeded(line, column, EditorColorScheme.ATTRIBUTE_VALUE);
                         break;
                     //@
                     case CSS3Lexer.T__14:
-                        colors.addIfNeeded(line, column, EditorColorScheme.ANNOTATION);
+                        result.addIfNeeded(line, column, EditorColorScheme.ANNOTATION);
                         break;
                     //函数
                     case CSS3Lexer.DxImageTransform:
                     case CSS3Lexer.Function_:
                     case CSS3Lexer.T__3:
-                        colors.addIfNeeded(line, column, EditorColorScheme.FUNCTION_NAME);
+                        result.addIfNeeded(line, column, EditorColorScheme.FUNCTION_NAME);
                         break;
                     //数字
                     case CSS3Lexer.Percentage:
                     case CSS3Lexer.Number:
-                        colors.addIfNeeded(line, column, EditorColorScheme.ANNOTATION);
+                        result.addIfNeeded(line, column, EditorColorScheme.ANNOTATION);
                         break;
                     //名字
                     case CSS3Lexer.Ident:
-                        colors.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
+                        result.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
                         break;
                     //字符串
                     case CSS3Lexer.String_:
-                        colors.addIfNeeded(line, column, EditorColorScheme.LITERAL);
+                        result.addIfNeeded(line, column, EditorColorScheme.LITERAL);
                         break;
                     //颜色
                     case CSS3Lexer.Hash:
-                        colors.addIfNeeded(line, column, EditorColorScheme.IDENTIFIER_VAR);
+                        result.addIfNeeded(line, column, EditorColorScheme.IDENTIFIER_VAR);
                         break;
                     //注释
                     case CSS3Lexer.Comment:
-                        colors.addIfNeeded(line, column, EditorColorScheme.COMMENT);
+                        result.addIfNeeded(line, column, EditorColorScheme.COMMENT);
                         break;
                     default:
-                        colors.addIfNeeded(line, column, EditorColorScheme.TEXT_NORMAL);
+                        result.addIfNeeded(line, column, EditorColorScheme.TEXT_NORMAL);
                         break;
                 }
 
                 first = false;
             }
-            colors.determine(lastLine);
+            result.determine(lastLine);
         } catch (IOException e) {
             e.printStackTrace();
         }

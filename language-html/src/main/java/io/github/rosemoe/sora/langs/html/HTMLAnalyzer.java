@@ -36,7 +36,7 @@ import io.github.rosemoe.sora.widget.EditorColorScheme;
 
 public class HTMLAnalyzer implements CodeAnalyzer {
     @Override
-    public void analyze(CharSequence content, TextAnalyzeResult colors, TextAnalyzer.AnalyzeThread.Delegate delegate) {
+    public void analyze(CharSequence content, TextAnalyzeResult result, TextAnalyzer.AnalyzeThread.Delegate delegate) {
         try {
             CodePointCharStream stream = CharStreams.fromReader(new StringReader(content.toString()));
             HTMLLexer lexer = new HTMLLexer(stream);
@@ -57,39 +57,39 @@ public class HTMLAnalyzer implements CodeAnalyzer {
 
                 switch (token.getType()) {
                     case HTMLLexer.TAG_WHITESPACE:
-                        if (first) colors.addNormalIfNull();
+                        if (first) result.addNormalIfNull();
                         break;
                     case HTMLLexer.TAG_OPEN:
                     case HTMLLexer.TAG_SLASH:
                     case HTMLLexer.TAG_SLASH_CLOSE:
                     case HTMLLexer.TAG_CLOSE:
                     case HTMLLexer.TAG_EQUALS:
-                        colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
+                        result.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                         break;
                     case HTMLLexer.TAG_NAME:
                     case HTMLLexer.XML:
-                        colors.addIfNeeded(line, column, EditorColorScheme.HTML_TAG);
+                        result.addIfNeeded(line, column, EditorColorScheme.HTML_TAG);
                         break;
                     case HTMLLexer.CDATA:
                     case HTMLLexer.ATTRIBUTE:
-                        colors.addIfNeeded(line, column, EditorColorScheme.ATTRIBUTE_NAME);
+                        result.addIfNeeded(line, column, EditorColorScheme.ATTRIBUTE_NAME);
                         break;
                     case HTMLLexer.ATTVALUE_VALUE:
-                        colors.addIfNeeded(line, column, EditorColorScheme.ATTRIBUTE_VALUE);
+                        result.addIfNeeded(line, column, EditorColorScheme.ATTRIBUTE_VALUE);
                         break;
                     case HTMLLexer.HTML_CONDITIONAL_COMMENT:
                     case HTMLLexer.HTML_COMMENT:
-                        colors.addIfNeeded(line, column, EditorColorScheme.COMMENT);
+                        result.addIfNeeded(line, column, EditorColorScheme.COMMENT);
                         break;
                     case HTMLLexer.HTML_TEXT:
                     default:
-                        colors.addIfNeeded(line, column, EditorColorScheme.TEXT_NORMAL);
+                        result.addIfNeeded(line, column, EditorColorScheme.TEXT_NORMAL);
                         break;
                 }
 
                 first = false;
             }
-            colors.determine(lastLine);
+            result.determine(lastLine);
         } catch (IOException e) {
             e.printStackTrace();
         }

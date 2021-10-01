@@ -36,7 +36,7 @@ import io.github.rosemoe.sora.widget.EditorColorScheme;
 
 public class PythonCodeAnalyzer implements CodeAnalyzer {
     @Override
-    public void analyze(CharSequence content, TextAnalyzeResult colors, TextAnalyzer.AnalyzeThread.Delegate delegate) {
+    public void analyze(CharSequence content, TextAnalyzeResult result, TextAnalyzer.AnalyzeThread.Delegate delegate) {
         try {
             CodePointCharStream stream = CharStreams.fromReader(new StringReader(content.toString()));
             PythonLexer lexer = new PythonLexer(stream);
@@ -61,7 +61,7 @@ public class PythonCodeAnalyzer implements CodeAnalyzer {
                     case PythonLexer.WS:
                     case PythonLexer.NEWLINE:
                         if (first) {
-                            colors.addNormalIfNull();
+                            result.addNormalIfNull();
                         }
                         break;
                     case PythonLexer.DEF:
@@ -97,16 +97,16 @@ public class PythonCodeAnalyzer implements CodeAnalyzer {
                     case PythonLexer.BREAK:
                     case PythonLexer.ASYNC:
                     case PythonLexer.AWAIT:
-                        colors.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
+                        result.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
                         break;
                     case PythonLexer.COMMENT:
-                        colors.addIfNeeded(line, column, EditorColorScheme.COMMENT);
+                        result.addIfNeeded(line, column, EditorColorScheme.COMMENT);
                         break;
                     case PythonLexer.STRING:
-                        colors.addIfNeeded(line, column, EditorColorScheme.LITERAL);
+                        result.addIfNeeded(line, column, EditorColorScheme.LITERAL);
                         break;
                     case PythonLexer.DECIMAL_INTEGER:
-                        colors.addIfNeeded(line, column, EditorColorScheme.LINE_NUMBER);
+                        result.addIfNeeded(line, column, EditorColorScheme.LINE_NUMBER);
                         break;
                     case PythonLexer.OPEN_BRACE:
                     case PythonLexer.CLOSE_BRACE:
@@ -155,22 +155,22 @@ public class PythonCodeAnalyzer implements CodeAnalyzer {
                     case PythonLexer.RIGHT_SHIFT_ASSIGN:
                     case PythonLexer.POWER_ASSIGN:
                     case PythonLexer.IDIV_ASSIGN:
-                        colors.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
+                        result.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                         break;
                     case PythonLexer.NAME: {
                         if (previous == null) {
-                            colors.addIfNeeded(line, column, EditorColorScheme.TEXT_NORMAL);
+                            result.addIfNeeded(line, column, EditorColorScheme.TEXT_NORMAL);
                             break;
                         } else if (previous.getType() == PythonLexer.DEF) {
-                            colors.addIfNeeded(line, column, EditorColorScheme.FUNCTION_NAME);
+                            result.addIfNeeded(line, column, EditorColorScheme.FUNCTION_NAME);
                             break;
                         } else if (previous.getType() == PythonLexer.CLASS) {
-                            colors.addIfNeeded(line, column, EditorColorScheme.IDENTIFIER_NAME);
+                            result.addIfNeeded(line, column, EditorColorScheme.IDENTIFIER_NAME);
                             break;
                         }
                     }
                     default:
-                        colors.addIfNeeded(line, column, EditorColorScheme.TEXT_NORMAL);
+                        result.addIfNeeded(line, column, EditorColorScheme.TEXT_NORMAL);
                         break;
                 }
                 first = false;
@@ -180,7 +180,7 @@ public class PythonCodeAnalyzer implements CodeAnalyzer {
                 }
             }
 
-            colors.determine(lastLine);
+            result.determine(lastLine);
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -93,8 +93,8 @@ public class EmptyLanguage implements EditorLanguage {
     public static class EmptyCodeAnalyzer implements CodeAnalyzer {
 
         @Override
-        public void analyze(CharSequence content, TextAnalyzeResult colors, Delegate delegate) {
-            colors.addNormalIfNull();
+        public void analyze(CharSequence content, TextAnalyzeResult result, Delegate delegate) {
+            result.addNormalIfNull();
         }
 
     }
