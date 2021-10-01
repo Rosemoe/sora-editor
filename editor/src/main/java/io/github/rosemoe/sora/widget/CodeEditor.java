@@ -35,6 +35,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.RenderNode;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
@@ -42,6 +43,7 @@ import android.text.InputType;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.MutableInt;
+import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.GestureDetector;
@@ -69,6 +71,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Px;
+import androidx.annotation.RequiresApi;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -76,6 +79,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import io.github.rosemoe.sora.R;
+import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.interfaces.EditorEventListener;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
@@ -399,7 +403,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 } else {
                     mVerticalScrollFactor = (float) result;
                 }
-            } catch (SecurityException| InvocationTargetException|NoSuchMethodException|IllegalAccessException|NullPointerException e) {
+            } catch (SecurityException | InvocationTargetException | NoSuchMethodException | IllegalAccessException | NullPointerException e) {
                 Log.e(LOG_TAG, "Failed to get scroll factor", e);
                 mVerticalScrollFactor = 20;
             }
@@ -413,10 +417,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mSearcher = new EditorSearcher(this);
         setCursorBlinkPeriod(DEFAULT_CURSOR_BLINK_PERIOD);
         mAnchorInfoBuilder = new CursorAnchorInfo.Builder();
-        /*mPaint.setAntiAlias(true);
+        mPaint.setAntiAlias(true);
         mPaintOther.setAntiAlias(true);
         mPaintGraph.setAntiAlias(true);
-        mPaintOther.setTypeface(Typeface.MONOSPACE);*/
+        mPaintOther.setTypeface(Typeface.MONOSPACE);
         mBuffer = new char[256];
         mBuffer2 = new char[16];
         mStartedActionMode = ACTION_MODE_NONE;
@@ -606,12 +610,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Enable/disable ligature of all types(except 'rlig').
      * Generally you should disable them unless enabling this will have no effect on text measuring.
-     *
+     * <p>
      * Disabled by default. If you want to enable ligature of a specified type, use
      * {@link CodeEditor#setFontFeatureSettings(String)}
-     *
+     * <p>
      * For enabling JetBrainsMono font's ligature, Use like this:
-     *
+     * <p>
      * CodeEditor editor = ...;
      * editor.setFontFeatureSettings(enabled ? null : "'liga' 0,'hlig' 0,'dlig' 0,'clig' 0");
      */
@@ -629,6 +633,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Set font feature settings for all paints used by editor
+     *
      * @see Paint#setFontFeatureSettings(String)
      */
     public void setFontFeatureSettings(String features) {
@@ -940,6 +945,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mLineNumberMetrics = mPaintOther.getFontMetricsInt();
         mGraphMetrics = mPaintGraph.getFontMetricsInt();
         mFontCache.clearCache();
+        if (displayLists != null) {
+            displayLists.clear();
+        }
     }
 
     /**
@@ -1083,6 +1091,179 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         return clearFlag(mNonPrintableOptions, FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE) != 0;
     }
 
+    private boolean hardware;
+
+    /**
+     * Set whether allow the editor to use RenderNode to draw its text.
+     * Enabling this can cause more memory usage, but the editor can display text
+     * much quick.
+     * However, only when hardware accelerate is enabled on this view can the switch
+     * make a difference.
+     */
+    @Experimental
+    public void setHardwareAcceleratedDrawAllowed(boolean acceleratedDraw) {
+        hardware = acceleratedDraw;
+    }
+
+    private SparseArray<DisplayList> displayLists;
+
+    private static class DisplayList {
+        public final RenderNode renderNode;
+        @RequiresApi(29)
+        public DisplayList() {
+            renderNode = new RenderNode("editorRenderNode");
+        }
+    }
+
+    @RequiresApi(29)
+    private void updateDisplayList(DisplayList displayList, int line, List<Span> spans) {
+        final float waveLength = getDpUnit() * 18;
+        final float amplitude = getDpUnit() * 4;
+        prepareLine(line);
+        int columnCount = getText().getColumnCount(line);
+        float widthLine = measureText(mBuffer, 0, columnCount);
+        displayList.renderNode.setPosition(0, 0, (int)widthLine, getRowHeight() + (int)amplitude);
+        Canvas canvas = displayList.renderNode.beginRecording();
+        if (spans == null || spans.size() == 0) {
+            spans = new LinkedList<>();
+            spans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
+        }
+        int spanOffset = 0;
+        float paintingOffset = 0;
+        int row = 0;
+        float phi = 0f;
+        Span span = spans.get(spanOffset);
+        // Draw by spans
+        while (columnCount > span.column) {
+            int spanEnd = spanOffset + 1 >= spans.size() ? columnCount : spans.get(spanOffset + 1).column;
+            spanEnd = Math.min(columnCount, spanEnd);
+            int paintStart = span.column;
+            int paintEnd = Math.min(columnCount, spanEnd);
+            float width = measureText(mBuffer, paintStart, paintEnd - paintStart);
+            ExternalRenderer renderer = span.renderer;
+
+            // Invoke external renderer preDraw
+            if (renderer != null && renderer.requirePreDraw()) {
+                int saveCount = canvas.save();
+                canvas.translate(paintingOffset, getRowTop(row));
+                canvas.clipRect(0f, 0f, width, getRowHeight());
+                try {
+                    renderer.draw(canvas, mPaint, mColors, true);
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "Error while invoking external renderer", e);
+                }
+                canvas.restoreToCount(saveCount);
+            }
+
+            // Draw text
+            drawRegionText(canvas, paintingOffset, getRowBaseline(row), line, paintStart, paintEnd, columnCount, mColors.getColor(span.colorId));
+
+            // Draw strikethrough
+            if ((span.problemFlags & Span.FLAG_DEPRECATED) != 0) {
+                mPaintOther.setColor(Color.BLACK);
+                canvas.drawLine(paintingOffset, getRowTop(row) + getRowHeight() / 2f, paintingOffset + width, getRowTop(row) + getRowHeight() / 2f, mPaintOther);
+            }
+
+            // Draw underline
+            if (span.underlineColor != 0) {
+                mRect.bottom = getRowBottom(row) - mDpUnit * 1;
+                mRect.top = mRect.bottom - getRowHeight() * 0.08f;
+                mRect.left = paintingOffset;
+                mRect.right = paintingOffset + width;
+                drawColor(canvas, span.underlineColor, mRect);
+            }
+
+            // Draw issue curly underline
+            if (span.problemFlags > 0 && Integer.highestOneBit(span.problemFlags) != Span.FLAG_DEPRECATED) {
+                int color = 0;
+                switch (Integer.highestOneBit(span.problemFlags)) {
+                    case Span.FLAG_ERROR:
+                        color = mColors.getColor(EditorColorScheme.PROBLEM_ERROR);
+                        break;
+                    case Span.FLAG_WARNING:
+                        color = mColors.getColor(EditorColorScheme.PROBLEM_WARNING);
+                        break;
+                    case Span.FLAG_TYPO:
+                        color = mColors.getColor(EditorColorScheme.PROBLEM_TYPO);
+                        break;
+                }
+                if (color != 0 && span.column >= 0 && spanEnd - span.column >= 0) {
+                    // Start and end X offset
+                    float startOffset = measureText(mBuffer, 0, span.column);
+                    float lineWidth = measureText(mBuffer, Math.max(0, span.column), spanEnd - span.column) + phi;
+                    float centerY = getRowBottom(row);
+                    // Clip region due not to draw outside the horizontal region
+                    canvas.save();
+                    canvas.clipRect(startOffset, 0, startOffset + lineWidth, canvas.getHeight());
+                    canvas.translate(startOffset - phi, centerY);
+                    // Draw waves
+                    mPath.reset();
+                    mPath.moveTo(0, 0);
+                    int waveCount = (int) Math.ceil(lineWidth / waveLength);
+                    for (int i = 0; i < waveCount; i++) {
+                        mPath.quadTo(waveLength * i + waveLength / 4, amplitude, waveLength * i + waveLength / 2, 0);
+                        mPath.quadTo(waveLength * i + waveLength * 3 / 4, -amplitude, waveLength * i + waveLength, 0);
+                    }
+                    phi = waveLength - (waveCount * waveLength - lineWidth);
+                    // Draw path
+                    mPaintOther.setStyle(Paint.Style.STROKE);
+                    mPaintOther.setColor(color);
+                    canvas.drawPath(mPath, mPaintOther);
+                    canvas.restore();
+                }
+                mPaintOther.setStyle(Paint.Style.FILL);
+            } else {
+                phi = 0f;
+            }
+
+            // Invoke external renderer postDraw
+            if (renderer != null && renderer.requirePostDraw()) {
+                int saveCount = canvas.save();
+                canvas.translate(paintingOffset, getRowTop(row));
+                canvas.clipRect(0f, 0f, width, getRowHeight());
+                try {
+                    renderer.draw(canvas, mPaint, mColors, false);
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "Error while invoking external renderer", e);
+                }
+                canvas.restoreToCount(saveCount);
+            }
+
+            paintingOffset += width;
+
+            if (paintEnd == columnCount) {
+                break;
+            }
+            spanOffset++;
+            if (spanOffset < spans.size()) {
+                span = spans.get(spanOffset);
+            } else {
+                spanOffset--;
+            }
+        }
+        displayList.renderNode.endRecording();
+    }
+
+    @RequiresApi(29)
+    private DisplayList getOrCreateDisplayList(int line, List<Span> spans) {
+        if (displayLists == null) {
+            displayLists = new SparseArray<>();
+        }
+        var displayList = displayLists.get(line);
+
+        if (displayList == null || !displayList.renderNode.hasDisplayList()) {
+            if (displayList == null) {
+                displayList = new DisplayList();
+                Log.d(LOG_TAG, "Create DisplayList for " + line);
+            } else {
+                Log.d(LOG_TAG, "Update DisplayList for " + line);
+            }
+            updateDisplayList(displayList, line, spans);
+            displayLists.put(line, displayList);
+        }
+        return displayList;
+    }
+
     /**
      * Draw rows with a {@link RowIterator}
      *
@@ -1183,7 +1364,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
 
             // Draw text here
-            {
+            if (!hardware || !canvas.isHardwareAccelerated() || isWordwrap() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                 // Get spans
                 List<Span> spans = null;
                 if (line < spanMap.size() && line >= 0) {
@@ -1323,6 +1504,30 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         spanOffset--;
                     }
                 }
+            } else {
+                List<Span> spans = null;
+                if (line < spanMap.size() && line >= 0) {
+                    spans = spanMap.get(line);
+                }
+                if (spans == null || spans.size() == 0) {
+                    if (temporaryEmptySpans == null) {
+                        temporaryEmptySpans = new LinkedList<>();
+                        temporaryEmptySpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
+                    }
+                    spans = temporaryEmptySpans;
+                }
+                var displayList= getOrCreateDisplayList(row, spans);
+                var node = displayList.renderNode;
+                //displayList.renderNode.offsetTopAndBottom(- displayList.lastOffsetY + getRowTop(row) - getOffsetY());
+                //displayList.lastOffsetY = getRowTop(row) - getOffsetY();
+                //if (row >= getFirstVisibleRow() && row <= getLastVisibleRow()) {
+                    canvas.save();
+                    canvas.translate(offset, getRowTop(row) - getOffsetY());
+                    canvas.drawRenderNode(node);
+                    canvas.restore();
+                //}
+                paintingOffset = offset + node.getWidth();
+                lastVisibleChar = columnCount;
             }
 
             // Draw hard wrap
@@ -4452,7 +4657,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             if (mHighlightCurrentBlock) {
                 mCursorPosition = findCursorBlock();
             }
-            postInvalidate();
+            post(() -> {
+                if (displayLists != null) {
+                    displayLists.clear();
+                }
+                invalidate();
+            });
         }
     }
 
