@@ -245,7 +245,7 @@ public class EditorColorScheme {
                 color = 0xffffff00;
                 break;
             case NON_PRINTABLE_CHAR:
-                color = 0xff505050;
+                color = 0xeecccccc;
                 break;
             case PROBLEM_ERROR:
                 color = 0xaaff0000;

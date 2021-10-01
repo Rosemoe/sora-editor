@@ -169,6 +169,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public static final int FLAG_DRAW_LINE_SEPARATOR = 1 << 4;
 
     /**
+     * Draw the tab character the same as space.
+     * If not set, tab will be display to be a line.
+     *
+     * @see #setNonPrintablePaintingFlags(int)
+     */
+    public static final int FLAG_DRAW_TAB_SAME_AS_SPACE = 1 << 5;
+
+    /**
      * Text size scale of small graph
      */
     private static final float SCALE_MINI_GRAPH = 0.9f;
@@ -1088,10 +1096,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Whether non-printable is to be drawn
      */
     protected boolean shouldInitializeNonPrintable() {
-        return clearFlag(mNonPrintableOptions, FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE) != 0;
+        return clearFlag(clearFlag(mNonPrintableOptions, FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE), FLAG_DRAW_TAB_SAME_AS_SPACE) != 0;
     }
 
-    private boolean hardware;
+    private boolean mHardwareAccAllowed;
 
     /**
      * Set whether allow the editor to use RenderNode to draw its text.
@@ -1102,7 +1110,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     @Experimental
     public void setHardwareAcceleratedDrawAllowed(boolean acceleratedDraw) {
-        hardware = acceleratedDraw;
+        mHardwareAccAllowed = acceleratedDraw;
+    }
+
+    /**
+     * @see #setHardwareAcceleratedDrawAllowed(boolean)
+     */
+    @Experimental
+    public boolean isHardwareAcceleratedDrawAllowed() {
+        return mHardwareAccAllowed;
     }
 
     private SparseArray<DisplayList> displayLists;
@@ -1364,7 +1380,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
 
             // Draw text here
-            if (!hardware || !canvas.isHardwareAccelerated() || isWordwrap() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (!mHardwareAccAllowed || !canvas.isHardwareAccelerated() || isWordwrap() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                 // Get spans
                 List<Span> spans = null;
                 if (line < spanMap.size() && line >= 0) {
@@ -1384,7 +1400,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         // Update phi
                         Span span = spans.get(spanOffset);
                         if (span.problemFlags > 0 && Integer.highestOneBit(span.problemFlags) != Span.FLAG_DEPRECATED) {
-                            float lineWidth = measureText(mBuffer, Math.max(span.column, firstVisibleChar), spans.get(spanOffset + 1).column - Math.max(span.column, firstVisibleChar)) + phi;
+                            float lineWidth;
+                            int spanEnd = Math.min(rowInf.endColumn, spans.get(spanOffset + 1).column);
+                            if (isWordwrap()) {
+                                lineWidth = measureText(mBuffer, Math.max(firstVisibleChar, span.column), spanEnd - Math.max(firstVisibleChar, span.column)) + phi;
+                            } else {
+                                lineWidth = measureText(mBuffer, span.column, spanEnd - span.column) + phi;
+                            }
                             int waveCount = (int) Math.ceil(lineWidth / waveLength);
                             phi = waveLength - (waveCount * waveLength - lineWidth);
                         } else {
@@ -1401,7 +1423,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     int spanEnd = spanOffset + 1 >= spans.size() ? columnCount : spans.get(spanOffset + 1).column;
                     spanEnd = Math.min(columnCount, spanEnd);
                     int paintStart = Math.max(firstVisibleChar, span.column);
+                    if (paintStart >= columnCount) {
+                        break;
+                    }
                     int paintEnd = Math.min(lastVisibleChar, spanEnd);
+                    if (paintStart > paintEnd) {
+                        break;
+                    }
                     float width = measureText(mBuffer, paintStart, paintEnd - paintStart);
                     ExternalRenderer renderer = span.renderer;
 
@@ -1452,8 +1480,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         }
                         if (color != 0 && span.column >= 0 && spanEnd - span.column >= 0) {
                             // Start and end X offset
-                            float startOffset = measureTextRegionOffset() + measureText(mBuffer, firstVisibleChar, Math.max(0, span.column - firstVisibleChar)) - getOffsetX();
-                            float lineWidth = measureText(mBuffer, Math.max(firstVisibleChar, span.column), spanEnd - Math.max(firstVisibleChar, span.column)) + phi;
+                            float startOffset;
+                            float lineWidth;
+                            if (isWordwrap()) {
+                                startOffset = measureTextRegionOffset() + measureText(mBuffer, firstVisibleChar, Math.max(0, span.column - firstVisibleChar)) - getOffsetX();
+                                lineWidth = measureText(mBuffer, Math.max(firstVisibleChar, span.column), spanEnd - Math.max(firstVisibleChar, span.column)) + phi;
+                            } else {
+                                startOffset = measureTextRegionOffset() + measureText(mBuffer, 0, span.column) - getOffsetX();
+                                lineWidth = measureText(mBuffer, span.column, spanEnd - span.column) + phi;
+                            }
                             float centerY = getRowBottom(row) - getOffsetY();
                             // Clip region due not to draw outside the horizontal region
                             canvas.save();
@@ -1626,7 +1661,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 if (ch == ' ') {
                     paintCount = 1;
                 } else if (ch == '\t') {
-                    paintCount = getTabWidth();
+                    if ((getNonPrintableFlags() & FLAG_DRAW_TAB_SAME_AS_SPACE) != 0) {
+                        paintCount = getTabWidth();
+                    } else {
+                        float delta = charWidth * 0.05f;
+                        canvas.drawLine(offset +delta, rowCenter, offset + charWidth - delta, rowCenter, mPaintOther);
+                        offset += charWidth;
+                        paintStart++;
+                        continue;
+                    }
                 }
                 for (int i = 0; i < paintCount; i++) {
                     float charStartOffset = offset + spaceWidth * i;
