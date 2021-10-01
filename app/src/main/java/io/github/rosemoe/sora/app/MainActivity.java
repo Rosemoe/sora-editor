@@ -105,7 +105,6 @@ public class MainActivity extends AppCompatActivity {
         editor.setEditorLanguage(new JavaLanguage());
         editor.setFirstLineNumberAlwaysVisible(true);
         editor.setNonPrintablePaintingFlags(CodeEditor.FLAG_DRAW_WHITESPACE_LEADING | CodeEditor.FLAG_DRAW_LINE_SEPARATOR);
-
         new Thread(() -> {
             try {
                 BufferedReader br = new BufferedReader(new InputStreamReader(getAssets().open("sample.txt")));
@@ -207,9 +206,11 @@ public class MainActivity extends AppCompatActivity {
                 search.setText("");
                 editor.getSearcher().stopSearch();
                 panel.setVisibility(View.VISIBLE);
+                item.setChecked(true);
             } else {
                 panel.setVisibility(View.GONE);
                 editor.getSearcher().stopSearch();
+                item.setChecked(false);
             }
         } else if (id == R.id.search_am) {
             replace.setText("");

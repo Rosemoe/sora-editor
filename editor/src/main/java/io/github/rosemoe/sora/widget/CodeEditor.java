@@ -45,12 +45,14 @@ import android.util.MutableInt;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.GestureDetector;
+import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewParent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.inputmethod.CursorAnchorInfo;
@@ -68,6 +70,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Px;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -186,6 +189,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private float mDividerMargin;
     private float mInsertSelWidth;
     private float mBlockLineWidth;
+    private float mVerticalScrollFactor;
     private float mLineInfoTextSize;
     private boolean mWait;
     private boolean mDrag;
@@ -380,6 +384,25 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     private void initialize() {
         Log.i(LOG_TAG, COPYRIGHT);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            var configuration = ViewConfiguration.get(getContext());
+            mVerticalScrollFactor = configuration.getScaledVerticalScrollFactor();
+        } else {
+            try {
+                var method = View.class.getDeclaredMethod("getVerticalScrollFactor");
+                method.setAccessible(true);
+                var result = method.invoke(this);
+                if (result == null) {
+                    Log.e(LOG_TAG, "Failed to get scroll factor");
+                    mVerticalScrollFactor = 20;
+                } else {
+                    mVerticalScrollFactor = (float) result;
+                }
+            } catch (SecurityException| InvocationTargetException|NoSuchMethodException|IllegalAccessException|NullPointerException e) {
+                Log.e(LOG_TAG, "Failed to get scroll factor", e);
+                mVerticalScrollFactor = 20;
+            }
+        }
         mFontCache = new FontCache();
         mPaint = new Paint();
         mPaintOther = new Paint();
@@ -389,10 +412,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mSearcher = new EditorSearcher(this);
         setCursorBlinkPeriod(DEFAULT_CURSOR_BLINK_PERIOD);
         mAnchorInfoBuilder = new CursorAnchorInfo.Builder();
-        mPaint.setAntiAlias(true);
+        /*mPaint.setAntiAlias(true);
         mPaintOther.setAntiAlias(true);
         mPaintGraph.setAntiAlias(true);
-        mPaintOther.setTypeface(Typeface.MONOSPACE);
+        mPaintOther.setTypeface(Typeface.MONOSPACE);*/
         mBuffer = new char[256];
         mBuffer2 = new char[16];
         mStartedActionMode = ACTION_MODE_NONE;
@@ -918,19 +941,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mFontCache.clearCache();
     }
 
-    private long startClock;
-
-    private void record() {
-        startClock = System.nanoTime();
-    }
-
-    private void print() {
-        double time = (System.nanoTime() - startClock) / 1e6;
-        if (time > 3.0) {
-            Log.d(LOG_TAG, "Fatal: drawView() used " + time + " ms");
-        }
-    }
-
     /**
      * Paint the view on given Canvas
      *
@@ -950,7 +960,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mPaint.setTextAlign(Paint.Align.LEFT);
             return;
         }
-
         getCursor().updateCache(getFirstVisibleLine());
 
         EditorColorScheme color = mColors;
@@ -1367,7 +1376,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar);
                 postDrawCursor.add(new CursorPaintAction(row, centerX, mEventHandler.shouldDrawInsertHandle() ? mInsertHandle : null, true));
             }
-
         }
     }
 
@@ -2048,8 +2056,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         return mFontCache.measureText(text, index, index + count, mPaint) + tabCount * extraWidth;
     }
 
-    //private int counter;
-
     /**
      * Draw text on the given position
      *
@@ -2061,22 +2067,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param offY   Offset y for paint(baseline)
      */
     private void drawText(Canvas canvas, char[] src, int index, int count, float offX, float offY) {
-        //counter++;
+        canvas.drawText(src, index, count, offX, offY, mPaint);
         int end = index + count;
-        int st = index;
         if (mCharPaint) {
             for (int i = index; i < end; i++) {
-                if (src[i] == '\t') {
-                    canvas.drawText(src, st, i - st, offX, offY, mPaint);
-                    offX = offX + measureText(src, st, i - st + 1);
-                    st = i + 1;
-                } else if (src[i] == '/') {
-                    canvas.drawText(src, st, i - st + 1, offX, offY, mPaint);
-                    offX = offX + measureText(src, st, i - st + 1);
-                    st = i + 1;
-                }
+                canvas.drawText(src, i, 1, offX, offY, mPaint);
+                offX = offX + measureText(src, i, 1);
             }
         } else {
+            int st = index;
             for (int i = index; i < end; i++) {
                 if (src[i] == '\t') {
                     canvas.drawText(src, st, i - st, offX, offY, mPaint);
@@ -2084,9 +2083,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     st = i + 1;
                 }
             }
-        }
-        if (st < end) {
-            canvas.drawText(src, st, end - st, offX, offY, mPaint);
+            if (st < end) {
+                canvas.drawText(src, st, end - st, offX, offY, mPaint);
+            }
         }
     }
 
@@ -2700,13 +2699,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Set tab width
      *
-     * @param w tab width compared to space
+     * @param width tab width compared to space
      */
-    public void setTabWidth(int w) {
-        if (w < 1) {
+    public void setTabWidth(int width) {
+        if (width < 1) {
             throw new IllegalArgumentException("width can not be under 1");
         }
-        mTabWidth = w;
+        mTabWidth = width;
         if (mCursor != null) {
             mCursor.setTabWidth(mTabWidth);
         }
@@ -3835,7 +3834,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Notify input method that text has been changed for external reason
      */
     protected void notifyExternalCursorChange() {
-        //Logs.log("Call cursorChangeExternal()");
         updateExtractedText();
         updateSelection();
         updateCursorAnchor();
@@ -4250,10 +4248,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     @Override
     public boolean onGenericMotionEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_SCROLL) {
+        if (event.getAction() == MotionEvent.ACTION_SCROLL && event.isFromSource(InputDevice.SOURCE_CLASS_POINTER)) {
             float v_scroll = -event.getAxisValue(MotionEvent.AXIS_VSCROLL);
+            float h_scroll = -event.getAxisValue(MotionEvent.AXIS_HSCROLL);
             if (v_scroll != 0) {
-                mEventHandler.onScroll(event, event, 0, v_scroll * 20);
+                mEventHandler.onScroll(event, event, h_scroll * mVerticalScrollFactor, v_scroll * mVerticalScrollFactor);
             }
             return true;
         }

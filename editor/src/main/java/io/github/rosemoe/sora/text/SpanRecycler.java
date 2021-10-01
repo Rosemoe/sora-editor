@@ -59,7 +59,7 @@ public class SpanRecycler {
 
     private class RecycleThread extends Thread {
 
-        private final static String LOG_TAG = "SpanRecycle";
+        private final static String LOG_TAG = "SpanRecycler";
 
         RecycleThread() {
             setDaemon(true);

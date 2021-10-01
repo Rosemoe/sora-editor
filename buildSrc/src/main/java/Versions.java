@@ -20,6 +20,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
+@SuppressWarnings("unused")
 public final class Versions {
 
     // Project versions
@@ -27,7 +28,7 @@ public final class Versions {
     public final static int versionCode = 15;
 
     // Platform & Tool versions
-    public final static String buildToolsVersion = "30.0.3";
+    public final static String buildToolsVersion = "31.0.0";
     public final static int compileSdkVersion = 31;
     public final static int minSdkVersion = 21;
     public final static int targetSdkVersion = 31;
