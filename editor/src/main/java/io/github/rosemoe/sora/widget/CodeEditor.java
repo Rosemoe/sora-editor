@@ -35,7 +35,6 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.RenderNode;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
@@ -932,7 +931,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param size Text size in pixel unit
      */
-    void setTextSizePxDirect(float size) {
+    protected void setTextSizePxDirect(float size) {
         mPaint.setTextSize(size);
         mPaintOther.setTextSize(size);
         mPaintGraph.setTextSize(size * SCALE_MINI_GRAPH);
@@ -947,7 +946,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param canvas Canvas you want to draw
      */
-    private void drawView(Canvas canvas) {
+    protected void drawView(Canvas canvas) {
         mSpanner.notifyRecycle();
         if (mFormatThread != null) {
             String text = "Formatting your code...";
@@ -1079,7 +1078,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Whether non-printable is to be drawn
      */
-    private boolean shouldInitializeNonPrintable() {
+    protected boolean shouldInitializeNonPrintable() {
         return clearFlag(mNonPrintableOptions, FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE) != 0;
     }
 
@@ -1091,7 +1090,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param postDrawLineNumbers Line numbers to be drawn later
      * @param postDrawCursor      Cursors to be drawn later
      */
-    private void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<CursorPaintAction> postDrawCursor, LongArrayList postDrawCurrentLines, MutableInt requiredFirstLn) {
+    protected void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<CursorPaintAction> postDrawCursor, LongArrayList postDrawCurrentLines, MutableInt requiredFirstLn) {
         final float waveLength = getDpUnit() * 18;
         final float amplitude = getDpUnit() * 4;
         RowIterator rowIterator = mLayout.obtainRowIterator(getFirstVisibleRow());
@@ -1395,7 +1394,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Draw small characters as graph
      */
-    private void drawMiniGraph(Canvas canvas, float offset, int row, String graph) {
+    protected void drawMiniGraph(Canvas canvas, float offset, int row, String graph) {
         // Draw
         mPaintGraph.setColor(mColors.getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
         float baseline = getRowBottom(row) - getOffsetY() - mGraphMetrics.descent;
@@ -1405,7 +1404,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Draw non-printable characters
      */
-    private void drawWhitespaces(Canvas canvas, float offset, int row, int rowStart, int rowEnd, int min, int max, float circleRadius) {
+    protected void drawWhitespaces(Canvas canvas, float offset, int row, int rowStart, int rowEnd, int min, int max, float circleRadius) {
         int paintStart = Math.max(rowStart, Math.min(rowEnd, min));
         int paintEnd = Math.max(rowStart, Math.min(rowEnd, max));
         mPaintOther.setColor(mColors.getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
@@ -1441,7 +1440,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param line The line to search
      */
-    private long findLeadingAndTrailingWhitespacePos(int line) {
+    protected long findLeadingAndTrailingWhitespacePos(int line) {
         int column = mText.getColumnCount(line);
         int leading = 0;
         int trailing = column;
@@ -1470,7 +1469,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param line      Target line
      * @param positions Outputs start positions
      */
-    private void computeMatchedPositions(int line, List<Integer> positions) {
+    protected void computeMatchedPositions(int line, List<Integer> positions) {
         positions.clear();
         CharSequence pattern = mSearcher.mSearchText;
         if (pattern == null || pattern.length() == 0) {
@@ -1516,7 +1515,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param highlightEnd   Region end
      * @param color          Color of background
      */
-    private void drawRowRegionBackground(Canvas canvas, float paintingOffset, int row, int firstVis, int lastVis, int highlightStart, int highlightEnd, int color) {
+    protected void drawRowRegionBackground(Canvas canvas, float paintingOffset, int row, int firstVis, int lastVis, int highlightStart, int highlightEnd, int color) {
         int paintStart = Math.min(Math.max(firstVis, highlightStart), lastVis);
         int paintEnd = Math.min(Math.max(firstVis, highlightEnd), lastVis);
         if (paintStart != paintEnd) {
@@ -1540,7 +1539,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param columnCount Column count of line
      * @param color       Color of normal text in this region
      */
-    private void drawRegionText(Canvas canvas, float offsetX, float baseline, int line, int startIndex, int endIndex, int columnCount, int color) {
+    protected void drawRegionText(Canvas canvas, float offsetX, float baseline, int line, int startIndex, int endIndex, int columnCount, int color) {
         boolean hasSelectionOnLine = mCursor.isSelected() && line >= mCursor.getLeftLine() && line <= mCursor.getRightLine();
         int selectionStart = 0;
         int selectionEnd = columnCount;
@@ -1602,7 +1601,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param canvas The canvas to draw
      */
-    private void drawEdgeEffect(Canvas canvas) {
+    protected void drawEdgeEffect(Canvas canvas) {
         boolean postDraw = false;
         if (!mVerticalEdgeGlow.isFinished()) {
             boolean bottom = mEventHandler.topOrBottom;
@@ -1660,7 +1659,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param resultRect The rect of handle this method drew
      * @param handleType The selection handle type (LEFT, RIGHT,BOTH or -1)
      */
-    private void drawHandle(Canvas canvas, int row, float centerX, RectF resultRect, int handleType) {
+    protected void drawHandle(Canvas canvas, int row, float centerX, RectF resultRect, int handleType) {
         float radius = mDpUnit * 12;
 
         if (handleType > -1 && handleType == mEventHandler.getTouchedHandleType()) {
@@ -1690,7 +1689,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param canvas  The canvas to draw
      * @param offsetX The start x offset for text
      */
-    private void drawBlockLines(Canvas canvas, float offsetX) {
+    protected void drawBlockLines(Canvas canvas, float offsetX) {
         List<BlockLine> blocks = mSpanner == null ? null : mSpanner.getResult().getBlocks();
         if (blocks == null || blocks.isEmpty()) {
             return;
@@ -1741,7 +1740,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param canvas The canvas to draw
      */
-    private void drawScrollBars(Canvas canvas) {
+    protected void drawScrollBars(Canvas canvas) {
         mVerticalScrollBar.setEmpty();
         mHorizontalScrollBar.setEmpty();
         if (!mEventHandler.shouldDrawScrollBar()) {
@@ -1762,7 +1761,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param canvas Canvas to draw
      */
-    private void drawScrollBarTrackVertical(Canvas canvas) {
+    protected void drawScrollBarTrackVertical(Canvas canvas) {
         if (mEventHandler.holdVerticalScrollBar()) {
             mRect.right = getWidth();
             mRect.left = getWidth() - mDpUnit * 10;
@@ -1777,7 +1776,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param canvas Canvas to draw
      */
-    private void drawScrollBarVertical(Canvas canvas) {
+    protected void drawScrollBarVertical(Canvas canvas) {
         int page = getHeight();
         float all = mLayout.getLayoutHeight() + getHeight() / 2f;
         float length = page / all * getHeight();
@@ -1807,7 +1806,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param centerY The center y on screen for the panel
      * @param rightX  The right x on screen for the panel
      */
-    private void drawLineInfoPanel(Canvas canvas, float centerY, float rightX) {
+    protected void drawLineInfoPanel(Canvas canvas, float centerY, float rightX) {
         if (!mDisplayLnPanel) {
             return;
         }
@@ -1838,7 +1837,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param canvas Canvas to draw
      */
-    private void drawScrollBarTrackHorizontal(Canvas canvas) {
+    protected void drawScrollBarTrackHorizontal(Canvas canvas) {
         if (mEventHandler.holdHorizontalScrollBar()) {
             mRect.top = getHeight() - mDpUnit * 10;
             mRect.bottom = getHeight();
@@ -1853,7 +1852,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param canvas Canvas to draw
      */
-    private void drawScrollBarHorizontal(Canvas canvas) {
+    protected void drawScrollBarHorizontal(Canvas canvas) {
         int page = getWidth();
         float all = getScrollMaxX() + getWidth();
         float length = page / all * getWidth();
@@ -1869,7 +1868,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Draw cursor
      */
-    private void drawCursor(Canvas canvas, float centerX, int row, RectF handle, boolean insert) {
+    protected void drawCursor(Canvas canvas, float centerX, int row, RectF handle, boolean insert) {
         if (!insert || mCursorBlink == null || mCursorBlink.visibility) {
             mRect.top = getRowTop(row) - getOffsetY();
             mRect.bottom = getRowBottom(row) - getOffsetY();
@@ -1885,7 +1884,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Draw cursor
      */
-    private void drawCursor(Canvas canvas, float centerX, int row, RectF handle, boolean insert, int handleType) {
+    protected void drawCursor(Canvas canvas, float centerX, int row, RectF handle, boolean insert, int handleType) {
         if (!insert || mCursorBlink == null || mCursorBlink.visibility) {
             mRect.top = getRowTop(row) - getOffsetY();
             mRect.bottom = getRowBottom(row) - getOffsetY();
@@ -2027,7 +2026,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param count Count of characters
      * @return The width measured
      */
-    private float measureText(char[] src, int index, int count) {
+    protected float measureText(char[] src, int index, int count) {
         int tabCount = 0;
         for (int i = 0; i < count; i++) {
             if (src[index + i] == '\t') {
@@ -2046,7 +2045,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param count Count of characters
      * @return The width measured
      */
-    private float measureText(CharSequence text, int index, int count) {
+    protected float measureText(CharSequence text, int index, int count) {
         int tabCount = 0;
         for (int i = 0; i < count; i++) {
             if (text.charAt(index + i) == '\t') {
@@ -2067,7 +2066,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param offX   Offset x for paint
      * @param offY   Offset y for paint(baseline)
      */
-    private void drawText(Canvas canvas, char[] src, int index, int count, float offX, float offY) {
+    protected void drawText(Canvas canvas, char[] src, int index, int count, float offX, float offY) {
         canvas.drawText(src, index, count, offX, offY, mPaint);
         int end = index + count;
         if (mCharPaint) {
@@ -2093,7 +2092,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Find first visible character
      */
-    private float[] findFirstVisibleChar(float initialPosition, int left, int right, char[] chars) {
+    protected float[] findFirstVisibleChar(float initialPosition, int left, int right, char[] chars) {
         float width = 0f;
         float target = mFontCache.measureChar(' ', mPaint) * getTabWidth() * 1.1f;
         while (left < right && initialPosition + width < -target) {
@@ -2112,7 +2111,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param line Line going to draw or measure
      */
-    private void prepareLine(int line) {
+    protected void prepareLine(int line) {
         int length = mText.getColumnCount(line);
         if (length >= mBuffer.length) {
             mBuffer = new char[length + 100];
@@ -2123,11 +2122,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Draw background for whole row
      */
-    private void drawRowBackground(Canvas canvas, int color, int row) {
+    protected void drawRowBackground(Canvas canvas, int color, int row) {
         drawRowBackground(canvas, color, row, mViewRect.right);
     }
 
-    private void drawRowBackground(Canvas canvas, int color, int row, int right) {
+    protected void drawRowBackground(Canvas canvas, int color, int row, int right) {
         mRect.top = getRowTop(row) - getOffsetY();
         mRect.bottom = getRowBottom(row) - getOffsetY();
         mRect.left = 0;
@@ -2138,7 +2137,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Draw single line number
      */
-    private void drawLineNumber(Canvas canvas, int line, int row, float offsetX, float width, int color) {
+    protected void drawLineNumber(Canvas canvas, int line, int row, float offsetX, float width, int color) {
         if (width + offsetX <= 0) {
             return;
         }
@@ -2184,7 +2183,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param width   Width of line number region
      * @param color   Color of line number background
      */
-    private void drawLineNumberBackground(Canvas canvas, float offsetX, float width, int color) {
+    protected void drawLineNumberBackground(Canvas canvas, float offsetX, float width, int color) {
         float right = offsetX + width;
         if (right < 0) {
             return;
@@ -2209,7 +2208,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param offsetX End x of line number region
      * @param color   Color to draw divider
      */
-    private void drawDivider(Canvas canvas, float offsetX, int color) {
+    protected void drawDivider(Canvas canvas, float offsetX, int color) {
         float right = offsetX + mDividerWidth;
         if (right < 0) {
             return;
@@ -2232,7 +2231,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @return width of line number region
      */
-    private float measureLineNumber() {
+    protected float measureLineNumber() {
         if (!isLineNumberEnabled()) {
             return 0f;
         }
@@ -2253,7 +2252,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Create layout for text
      */
-    void createLayout() {
+    protected void createLayout() {
         if (mLayout != null) {
             mLayout.destroyLayout();
         }
@@ -2276,7 +2275,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param color  Color of rect
      * @param rect   Rect to draw
      */
-    private void drawColor(Canvas canvas, int color, RectF rect) {
+    protected void drawColor(Canvas canvas, int color, RectF rect) {
         if (color != 0) {
             mPaint.setColor(color);
             canvas.drawRect(rect, mPaint);
@@ -2291,7 +2290,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param color  Color of rect
      * @param rect   Rect to draw
      */
-    private void drawColor(Canvas canvas, int color, Rect rect) {
+    protected void drawColor(Canvas canvas, int color, Rect rect) {
         if (color != 0) {
             mPaint.setColor(color);
             canvas.drawRect(rect, mPaint);
@@ -2311,7 +2310,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Whether span map is valid
      */
-    private boolean isSpanMapPrepared(boolean insert, int delta) {
+    protected boolean isSpanMapPrepared(boolean insert, int delta) {
         List<List<Span>> map = mSpanner.getResult().getSpanMap();
         if (map != null) {
             if (insert) {
@@ -2327,7 +2326,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Exit select mode after text changed
      */
-    private void exitSelectModeIfNeeded() {
+    protected void exitSelectModeIfNeeded() {
         if (!mCursor.isSelected()) {
             mTextActionPresenter.onExit();
         }
@@ -2336,7 +2335,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Apply new position of auto completion window
      */
-    private void updateCompletionWindowPosition() {
+    protected void updateCompletionWindowPosition() {
         float panelX = updateCursorAnchor() + mDpUnit * 20;
         float[] rightLayoutOffset = mLayout.getCharLayoutOffset(mCursor.getRightLine(), mCursor.getRightColumn());
         float panelY = rightLayoutOffset[0] - getOffsetY() + getRowHeight() / 2f;
@@ -3911,25 +3910,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-            // Render test
-            Log.d(LOG_TAG, "RenderNode Test");
-            RenderNode displayList = new RenderNode("editorTestRenderNode");
-            displayList.setPosition(mViewRect);
-            Canvas local = displayList.beginRecording();
-            long time = System.currentTimeMillis();
-            drawView(local);
-            Log.i(LOG_TAG, "Draw to RenderNode = " + (System.currentTimeMillis() - time));
-            displayList.endRecording();
-            time = System.currentTimeMillis();
-            //canvas.save();
-            //canvas.translate(50, 50);
-            canvas.drawRenderNode(displayList);
-            //canvas.restore();
-            Log.i(LOG_TAG, "Draw RenderNode = " + (System.currentTimeMillis() - time));
-        } else {*/
-            drawView(canvas);
-        //}
+        drawView(canvas);
     }
 
     @Override
