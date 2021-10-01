@@ -45,7 +45,7 @@ import io.github.rosemoe.sora.text.Cursor;
 class EditorInputConnection extends BaseInputConnection {
 
     private final static String LOG_TAG = "EditorInputConnection";
-    final static int TEXT_LENGTH_LIMIT = 10000000;
+    final static int TEXT_LENGTH_LIMIT = 500000;
 
     private final CodeEditor mEditor;
     protected int mComposingLine = -1;
