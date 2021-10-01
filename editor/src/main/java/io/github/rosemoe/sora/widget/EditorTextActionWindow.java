@@ -32,13 +32,14 @@ import android.view.View;
 import android.widget.Button;
 
 import io.github.rosemoe.sora.R;
+import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
 
 /**
  * This will show when selecting text
  *
  * @author Rose
  */
-class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnClickListener, CodeEditor.EditorTextActionPresenter {
+class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnClickListener, EditorTextActionPresenter {
     private final CodeEditor mEditor;
     private final Button mPasteBtn;
     private final Button mCopyBtn;

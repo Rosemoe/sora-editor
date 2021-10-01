@@ -30,7 +30,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.widget.OverScroller;
 
-import io.github.rosemoe.sora.text.TextUtils;
+import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
 import io.github.rosemoe.sora.util.IntPair;
 
 /**
@@ -181,7 +181,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
      * Check whether the text action window is shown
      */
     private boolean checkActionWindow() {
-        CodeEditor.EditorTextActionPresenter presenter = mEditor.mTextActionPresenter;
+        EditorTextActionPresenter presenter = mEditor.mTextActionPresenter;
         if (presenter instanceof EditorTextActionWindow) {
             return !((EditorTextActionWindow) presenter).isShowing();
         }

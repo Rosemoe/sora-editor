@@ -29,13 +29,14 @@ import android.view.KeyEvent;
  * Handles key events such SHIFT
  * @author Rosemoe
  */
-public class KeyMetaStates extends android.text.method.MetaKeyKeyListener {
+class KeyMetaStates extends android.text.method.MetaKeyKeyListener {
 
-    private CodeEditor editor;
+    private final CodeEditor editor;
+
     /**
      * Dummy text used for Android original APIs
      */
-    private Editable dest = Editable.Factory.getInstance().newEditable("");
+    private final Editable dest = Editable.Factory.getInstance().newEditable("");
 
     public KeyMetaStates(CodeEditor editor) {
         this.editor = editor;

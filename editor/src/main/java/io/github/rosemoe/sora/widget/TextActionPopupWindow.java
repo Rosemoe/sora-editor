@@ -25,7 +25,6 @@ package io.github.rosemoe.sora.widget;
 import android.annotation.SuppressLint;
 import android.content.res.Resources;
 import android.graphics.drawable.GradientDrawable;
-import android.os.Build;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -36,8 +35,9 @@ import android.widget.LinearLayout;
 import com.google.android.material.button.MaterialButton;
 
 import io.github.rosemoe.sora.R;
+import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
 
-public class TextActionPopupWindow extends TextComposeBasePopup implements View.OnClickListener, CodeEditor.EditorTextActionPresenter {
+public class TextActionPopupWindow extends TextComposeBasePopup implements View.OnClickListener, EditorTextActionPresenter {
     private final CodeEditor mEditor;
     private final MaterialButton mPasteBtn;
     private final MaterialButton mSelectAll;

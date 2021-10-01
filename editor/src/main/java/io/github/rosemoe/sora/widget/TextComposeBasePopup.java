@@ -31,7 +31,7 @@ import android.widget.PopupWindow;
  *
  * @author Rose
  */
-class TextComposeBasePopup extends PopupWindow {
+public class TextComposeBasePopup extends PopupWindow {
     public static int DISMISS = 0;
     public static int DRAG = 1;
     public static int SCROLL = 2;

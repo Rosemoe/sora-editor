@@ -28,6 +28,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 
+import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
 import io.github.rosemoe.sora.util.IntPair;
 
 /**
@@ -35,7 +36,7 @@ import io.github.rosemoe.sora.util.IntPair;
  *
  * @author Rose
  */
-class EditorTextActionModeStarter implements CodeEditor.EditorTextActionPresenter {
+class EditorTextActionModeStarter implements EditorTextActionPresenter {
 
     private final CodeEditor mEditor;
     private ActionMode mActionMode;
