@@ -106,7 +106,7 @@ class HwAcceleratedRenderer implements ContentListener {
                     node.isDirty = true;
                 }
             } catch (IndexOutOfBoundsException | NullPointerException e) {
-                //Ignored
+                node.isDirty = true;
             }
         });
     }
@@ -124,6 +124,16 @@ class HwAcceleratedRenderer implements ContentListener {
         var node = new TextRenderNode(line);
         cache.add(0, node);
         return node;
+    }
+
+    public void keepCurrentInDisplay(int start, int end) {
+        var itr = cache.iterator();
+        while (itr.hasNext()) {
+            var node = itr.next();
+            if (node.line < start || node.line > end) {
+                itr.remove();
+            }
+        }
     }
 
     public int drawLineHardwareAccelerated(Canvas canvas, int line, float offset) {
@@ -149,7 +159,6 @@ class HwAcceleratedRenderer implements ContentListener {
         canvas.translate(offset, editor.getRowTop(line) - editor.getOffsetY());
         canvas.drawRenderNode(node.renderNode);
         canvas.restore();
-        removeGarbage();
         return node.renderNode.getWidth();
     }
 

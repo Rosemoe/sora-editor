@@ -80,6 +80,7 @@ import java.util.List;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.Experimental;
+import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
 import io.github.rosemoe.sora.interfaces.EditorEventListener;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
@@ -273,6 +274,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private SymbolPairMatch mOverrideSymbolPairs;
     private final LongArrayList mPostDrawLineNumbers = new LongArrayList();
     private CharPosition mLockedSelection;
+    private BufferedDrawPoints mDrawPoints;
     private HwAcceleratedRenderer mRenderer;
     KeyMetaStates mKeyMetaStates = new KeyMetaStates(this);
 
@@ -420,6 +422,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mRenderer = new HwAcceleratedRenderer(this);
         }
         mFontCache = new FontCache();
+        mDrawPoints = new BufferedDrawPoints();
         mPaint = new Paint();
         mPaintOther = new Paint();
         mPaintGraph = new Paint();
@@ -492,6 +495,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setInterceptParentHorizontalScrollIfNeeded(false);
         setTypefaceText(Typeface.DEFAULT);
         mPaintOther.setStrokeWidth(getDpUnit() * 1.8f);
+        mPaintOther.setStrokeCap(Paint.Cap.ROUND);
         // Issue #41 View being highlighted when focused on Android 11
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             setDefaultFocusHighlightEnabled(false);
@@ -1034,12 +1038,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         if (lineNumberNotPinned) {
             drawLineNumberBackground(canvas, offsetX, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
-            drawDivider(canvas, offsetX + lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
             int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
             for (int i = 0; i < postDrawCurrentLines.size(); i++) {
                 drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - mDividerMargin));
             }
+            drawDivider(canvas, offsetX + lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
             if (firstLn != null && firstLn.value != -1) {
                 int bottom = getRowBottom(0);
                 float y;
@@ -1079,12 +1083,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         if (isLineNumberEnabled() && !lineNumberNotPinned) {
             drawLineNumberBackground(canvas, 0, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
-            drawDivider(canvas, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
             int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
             for (int i = 0; i < postDrawCurrentLines.size(); i++) {
                 drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset + getOffsetX() - mDividerMargin));
             }
+            drawDivider(canvas, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
                 drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), 0, lineNumberWidth, lineNumberColor);
@@ -1230,6 +1234,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     }
                     phi = waveLength - (waveCount * waveLength - lineWidth);
                     // Draw path
+                    mPaint.setStrokeWidth(getDpUnit() * 1.8f);
                     mPaintOther.setStyle(Paint.Style.STROKE);
                     mPaintOther.setColor(color);
                     canvas.drawPath(mPath, mPaintOther);
@@ -1298,6 +1303,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !isWordwrap() && canvas.isHardwareAccelerated() && isHardwareAcceleratedDrawAllowed()) {
             mRenderer.setExpectedCapacity(Math.max(getLastVisibleRow() - getFirstVisibleRow(), 30));
+            mRenderer.keepCurrentInDisplay(getFirstVisibleRow(), getLastVisibleRow());
         }
         for (int row = getFirstVisibleRow(); row <= getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
@@ -1494,6 +1500,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                             }
                             phi = waveLength - (waveCount * waveLength - lineWidth);
                             // Draw path
+                            mPaint.setStrokeWidth(getDpUnit() * 1.8f);
                             mPaintOther.setStyle(Paint.Style.STROKE);
                             mPaintOther.setColor(color);
                             canvas.drawPath(mPath, mPaintOther);
@@ -1587,6 +1594,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 postDrawCursor.add(new CursorPaintAction(row, centerX, mEventHandler.shouldDrawInsertHandle() ? mInsertHandle : null, true));
             }
         }
+        mPaintOther.setStrokeWidth(circleRadius * 2);
+        mDrawPoints.commitPoints(canvas, mPaintOther);
     }
 
     protected void showTextActionPopup() {
@@ -1644,7 +1653,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     float charStartOffset = offset + spaceWidth * i;
                     float charEndOffset = charStartOffset + spaceWidth;
                     float centerOffset = (charStartOffset + charEndOffset) / 2f;
-                    canvas.drawCircle(centerOffset, rowCenter, circleRadius, mPaintOther);
+                    mDrawPoints.drawPoint(centerOffset, rowCenter);
                 }
                 offset += charWidth;
                 paintStart++;
