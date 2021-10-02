@@ -39,7 +39,7 @@ import io.github.rosemoe.sora.data.Span;
 public class TextAnalyzer {
 
     private static int sThreadId = 0;
-    private final RecycleObjContainer mObjContainer = new RecycleObjContainer();
+    public final RecycleObjContainer mObjContainer = new RecycleObjContainer();
     private final Object mLock = new Object();
     /**
      * Debug:Start time
@@ -147,11 +147,11 @@ public class TextAnalyzer {
      *
      * @author Rose
      */
-    static class RecycleObjContainer {
+    public static class RecycleObjContainer {
 
-        List<List<Span>> spanMap;
+        public List<List<Span>> spanMap;
 
-        List<BlockLine> blockLines;
+        public List<BlockLine> blockLines;
 
         void recycle() {
             ObjectAllocator.recycleBlockLine(blockLines);

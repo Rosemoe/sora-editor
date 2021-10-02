@@ -273,6 +273,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private SymbolPairMatch mOverrideSymbolPairs;
     private final LongArrayList mPostDrawLineNumbers = new LongArrayList();
     private CharPosition mLockedSelection;
+    private HwAcceleratedRenderer mRenderer;
     KeyMetaStates mKeyMetaStates = new KeyMetaStates(this);
 
     public CodeEditor(Context context) {
@@ -415,6 +416,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 mVerticalScrollFactor = 20;
             }
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mRenderer = new HwAcceleratedRenderer(this);
+        }
         mFontCache = new FontCache();
         mPaint = new Paint();
         mPaintOther = new Paint();
@@ -491,6 +495,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         // Issue #41 View being highlighted when focused on Android 11
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             setDefaultFocusHighlightEnabled(false);
+        }
+    }
+
+    private void invalidateHwRenderer() {
+        if (mRenderer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mRenderer.invalidate();
         }
     }
 
@@ -772,6 +782,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (mWordwrap != wordwrap) {
             mWordwrap = wordwrap;
             createLayout();
+            if (!wordwrap) {
+                invalidateHwRenderer();
+            }
             invalidate();
         }
     }
@@ -951,9 +964,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mLineNumberMetrics = mPaintOther.getFontMetricsInt();
         mGraphMetrics = mPaintGraph.getFontMetricsInt();
         mFontCache.clearCache();
-        if (displayLists != null) {
-            displayLists.clear();
-        }
+        invalidateHwRenderer();
     }
 
     /**
@@ -1109,6 +1120,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Experimental
     public void setHardwareAcceleratedDrawAllowed(boolean acceleratedDraw) {
         mHardwareAccAllowed = acceleratedDraw;
+        if (acceleratedDraw && !isWordwrap()) {
+            invalidateHwRenderer();
+        }
     }
 
     /**
@@ -1119,25 +1133,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         return mHardwareAccAllowed;
     }
 
-    private SparseArray<DisplayList> displayLists;
-
-    private static class DisplayList {
-        public final RenderNode renderNode;
-        @RequiresApi(29)
-        public DisplayList() {
-            renderNode = new RenderNode("editorRenderNode");
-        }
-    }
-
     @RequiresApi(29)
-    private void updateDisplayList(DisplayList displayList, int line, List<Span> spans) {
+    protected void updateBoringLineDisplayList(RenderNode renderNode, int line, List<Span> spans) {
         final float waveLength = getDpUnit() * 18;
         final float amplitude = getDpUnit() * 4;
         prepareLine(line);
         int columnCount = getText().getColumnCount(line);
         float widthLine = measureText(mBuffer, 0, columnCount);
-        displayList.renderNode.setPosition(0, 0, (int)widthLine, getRowHeight() + (int)amplitude);
-        Canvas canvas = displayList.renderNode.beginRecording();
+        renderNode.setPosition(0, 0, (int)widthLine, getRowHeight() + (int)amplitude);
+        Canvas canvas = renderNode.beginRecording();
         if (spans == null || spans.size() == 0) {
             spans = new LinkedList<>();
             spans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
@@ -1255,27 +1259,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 spanOffset--;
             }
         }
-        displayList.renderNode.endRecording();
-    }
-
-    @RequiresApi(29)
-    private DisplayList getOrCreateDisplayList(int line, List<Span> spans) {
-        if (displayLists == null) {
-            displayLists = new SparseArray<>();
-        }
-        var displayList = displayLists.get(line);
-
-        if (displayList == null || !displayList.renderNode.hasDisplayList()) {
-            if (displayList == null) {
-                displayList = new DisplayList();
-                Log.d(LOG_TAG, "Create DisplayList for " + line);
-            } else {
-                Log.d(LOG_TAG, "Update DisplayList for " + line);
-            }
-            updateDisplayList(displayList, line, spans);
-            displayLists.put(line, displayList);
-        }
-        return displayList;
+        renderNode.endRecording();
     }
 
     /**
@@ -1306,7 +1290,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             maxD *= 0.18f;
             circleRadius = maxD / 2;
         }
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !isWordwrap() && canvas.isHardwareAccelerated() && isHardwareAcceleratedDrawAllowed()) {
+            mRenderer.setExpectedCapacity(Math.max(getLastVisibleRow() - getFirstVisibleRow(), 30));
+            mRenderer.drawLinesHardwareAccelerated(canvas, offset, mPaint);
+        }
         for (int row = getFirstVisibleRow(); row <= getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
             int line = rowInf.lineIndex;
@@ -1538,28 +1525,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     }
                 }
             } else {
-                List<Span> spans = null;
-                if (line < spanMap.size() && line >= 0) {
-                    spans = spanMap.get(line);
-                }
-                if (spans == null || spans.size() == 0) {
-                    if (temporaryEmptySpans == null) {
-                        temporaryEmptySpans = new LinkedList<>();
-                        temporaryEmptySpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
-                    }
-                    spans = temporaryEmptySpans;
-                }
-                var displayList= getOrCreateDisplayList(row, spans);
-                var node = displayList.renderNode;
-                //displayList.renderNode.offsetTopAndBottom(- displayList.lastOffsetY + getRowTop(row) - getOffsetY());
-                //displayList.lastOffsetY = getRowTop(row) - getOffsetY();
-                //if (row >= getFirstVisibleRow() && row <= getLastVisibleRow()) {
-                    canvas.save();
-                    canvas.translate(offset, getRowTop(row) - getOffsetY());
-                    canvas.drawRenderNode(node);
-                    canvas.restore();
-                //}
-                paintingOffset = offset + node.getWidth();
+                paintingOffset = offset + measureText(mBuffer, 0, lastVisibleChar);
                 lastVisibleChar = columnCount;
             }
 
@@ -2395,7 +2361,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         // Line number center align to text center
         float y = (getRowBottom(row) + getRowTop(row)) / 2f - (mLineNumberMetrics.descent - mLineNumberMetrics.ascent) / 2f - mLineNumberMetrics.ascent - getOffsetY();
 
-        String text = Integer.toString(line);
+        String text = Integer.toString(line + 1);
 
         switch (mLineNumberAlign) {
             case LEFT:
@@ -3273,6 +3239,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mCharPaint = false;
         }
         mTextMetrics = mPaint.getFontMetricsInt();
+        invalidateHwRenderer();
         createLayout();
         invalidate();
     }
@@ -3349,7 +3316,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Get last visible row on screen
+     * Get last visible row on screen.
+     * The result is <strong>unchecked</strong>. It can be bigger than the max row count in layout
      *
      * @return last visible row
      */
@@ -3860,6 +3828,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mInputMethodManager.restartInput(this);
         }
         createLayout();
+        invalidateHwRenderer();
         invalidate();
     }
 
@@ -3940,6 +3909,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (mCompletionWindow != null) {
             mCompletionWindow.applyColorScheme();
         }
+        invalidateHwRenderer();
         invalidate();
     }
 
@@ -4108,6 +4078,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 mCompletionWindow.applyColorScheme();
             return;
         }
+        invalidateHwRenderer();
         invalidate();
     }
 
@@ -4535,6 +4506,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     public void beforeReplace(Content content) {
         mWait = true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mRenderer.beforeReplace(content);
+        }
         mLayout.beforeReplace(content);
         if (mListener != null) {
             mListener.beforeReplace(this, content);
@@ -4552,6 +4526,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mRenderer.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
+        }
         mLayout.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
 
         // Notify input method
@@ -4611,6 +4588,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mRenderer.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
+        }
         mLayout.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
 
         updateCursor();
@@ -4685,8 +4665,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 mCursorPosition = findCursorBlock();
             }
             post(() -> {
-                if (displayLists != null) {
-                    displayLists.clear();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    mRenderer.invalidateDirtyRegions(provider.mObjContainer.spanMap, provider.getResult().getSpanMap());
                 }
                 invalidate();
             });

@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
         editor.setOverScrollEnabled(false);
         editor.setEditorLanguage(new JavaLanguage());
         editor.setFirstLineNumberAlwaysVisible(true);
-        //editor.setHardwareAcceleratedDrawAllowed(true);
+        editor.setHardwareAcceleratedDrawAllowed(true);
         editor.setNonPrintablePaintingFlags(CodeEditor.FLAG_DRAW_WHITESPACE_LEADING | CodeEditor.FLAG_DRAW_LINE_SEPARATOR);
         new Thread(() -> {
             try {
@@ -187,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
                                 break;
                             case 4:
                                 editor.setEditorLanguage(new HTMLLanguage());
+                                editor.setColorScheme(new HTMLScheme());
                                 break;
                             case 5:
                                 editor.setEditorLanguage(new PythonLanguage());

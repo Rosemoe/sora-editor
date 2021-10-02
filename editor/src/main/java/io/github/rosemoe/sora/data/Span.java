@@ -23,6 +23,7 @@
 package io.github.rosemoe.sora.data;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -156,4 +157,21 @@ public class Span {
         return cacheQueue.offer(this);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Span span = (Span) o;
+        return column == span.column && colorId == span.colorId && underlineColor == span.underlineColor && problemFlags == span.problemFlags && Objects.equals(renderer, span.renderer);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 31 * column;
+        hash = 31 * hash + colorId;
+        hash = 31 * hash + underlineColor;
+        hash = 31 * hash + problemFlags;
+        hash = 31 * hash + (renderer == null ? 0 : renderer.hashCode());
+        return hash;
+    }
 }
