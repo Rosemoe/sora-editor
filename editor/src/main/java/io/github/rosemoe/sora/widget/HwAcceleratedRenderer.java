@@ -41,6 +41,7 @@ import io.github.rosemoe.sora.util.ArrayList;
 /**
  * Hardware accelerated text render, which manages {@link RenderNode}
  * to speed up drawing process.
+ *
  * @author Rosemoe
  */
 @RequiresApi(29)
@@ -66,10 +67,18 @@ class HwAcceleratedRenderer implements ContentListener {
         removeGarbage();
     }
 
-    private void removeGarbage() {
+    public void removeGarbage() {
         if (cache.size() > desired) {
             cache.removeRange(desired, cache.size());
         }
+    }
+
+    public void invalidateInRegion(int startLine, int endLine) {
+        cache.forEach((node) -> {
+            if (!node.isDirty && node.line >= startLine && node.line <= endLine) {
+                node.isDirty = true;
+            }
+        });
     }
 
     /**
@@ -96,7 +105,7 @@ class HwAcceleratedRenderer implements ContentListener {
                 if (!node.needsRecord() && (olds.size() != news.size() || olds.hashCode() != news.hashCode())) {
                     node.isDirty = true;
                 }
-            } catch (IndexOutOfBoundsException|NullPointerException e) {
+            } catch (IndexOutOfBoundsException | NullPointerException e) {
                 //Ignored
             }
         });
@@ -104,7 +113,7 @@ class HwAcceleratedRenderer implements ContentListener {
 
     public TextRenderNode getNode(int line) {
         var size = cache.size();
-        for (int i = 0;i < size;i++) {
+        for (int i = 0; i < size; i++) {
             var node = cache.get(i);
             if (node.line == line) {
                 cache.remove(i);
@@ -117,36 +126,31 @@ class HwAcceleratedRenderer implements ContentListener {
         return node;
     }
 
-    public void drawLinesHardwareAccelerated(Canvas canvas, float offset, Paint paint) {
+    public int drawLineHardwareAccelerated(Canvas canvas, int line, float offset) {
         if (!canvas.isHardwareAccelerated()) {
             throw new UnsupportedOperationException("Only hardware-accelerated canvas can be used");
         }
         var spanMap = editor.getTextAnalyzeResult().getSpanMap();
-        List<Span> temporaryEmptySpans = null;
         // It's safe to use row directly because the mode is non-wordwrap
-        for (int line = editor.getFirstVisibleRow();line < editor.getLastVisibleRow() && line < editor.getText().getLineCount();line++) {
-            var node = getNode(line);
-            if (node.needsRecord()) {
-                List<Span> spans = null;
-                if (line < spanMap.size() && line >= 0) {
-                    spans = spanMap.get(line);
-                }
-                if (spans == null || spans.size() == 0) {
-                    if (temporaryEmptySpans == null) {
-                        temporaryEmptySpans = new LinkedList<>();
-                        temporaryEmptySpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
-                    }
-                    spans = temporaryEmptySpans;
-                }
-                editor.updateBoringLineDisplayList(node.renderNode, line, spans);
-                node.isDirty = false;
+        var node = getNode(line);
+        if (node.needsRecord()) {
+            List<Span> spans = null;
+            if (line < spanMap.size() && line >= 0) {
+                spans = spanMap.get(line);
             }
-            canvas.save();
-            canvas.translate(offset, editor.getRowTop(line) - editor.getOffsetY());
-            canvas.drawRenderNode(node.renderNode);
-            canvas.restore();
+            if (spans == null || spans.size() == 0) {
+                spans = new ArrayList<>();
+                spans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
+            }
+            editor.updateBoringLineDisplayList(node.renderNode, line, spans);
+            node.isDirty = false;
         }
+        canvas.save();
+        canvas.translate(offset, editor.getRowTop(line) - editor.getOffsetY());
+        canvas.drawRenderNode(node.renderNode);
+        canvas.restore();
         removeGarbage();
+        return node.renderNode.getWidth();
     }
 
     @Override
@@ -197,10 +201,6 @@ class HwAcceleratedRenderer implements ContentListener {
         public int line;
         public RenderNode renderNode;
         public boolean isDirty;
-
-        public TextRenderNode() {
-            this(-1);
-        }
 
         public TextRenderNode(int line) {
             this.line = line;

@@ -504,6 +504,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
+    private void invalidateInCursor() {
+        if (mRenderer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mCursor != null) {
+            mRenderer.invalidateInRegion(mCursor.getLeftLine(), mCursor.getRightLine());
+        }
+    }
+
     /**
      * Define symbol pairs for any language,
      * Override language settings.
@@ -1292,7 +1298,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !isWordwrap() && canvas.isHardwareAccelerated() && isHardwareAcceleratedDrawAllowed()) {
             mRenderer.setExpectedCapacity(Math.max(getLastVisibleRow() - getFirstVisibleRow(), 30));
-            mRenderer.drawLinesHardwareAccelerated(canvas, offset, mPaint);
         }
         for (int row = getFirstVisibleRow(); row <= getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
@@ -1525,7 +1530,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     }
                 }
             } else {
-                paintingOffset = offset + measureText(mBuffer, 0, lastVisibleChar);
+                paintingOffset = offset + mRenderer.drawLineHardwareAccelerated(canvas, line, offset);
                 lastVisibleChar = columnCount;
             }
 
@@ -3612,6 +3617,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param makeItVisible Make the character visible
      */
     public void setSelection(int line, int column, boolean makeItVisible) {
+        invalidateInCursor();
         if (column > 0 && isEmoji(mText.charAt(line, column - 1))) {
             column++;
             if (column > mText.getColumnCount(line)) {
@@ -3623,6 +3629,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mCursorPosition = findCursorBlock();
         }
         updateCursor();
+        invalidateInCursor();
         if (makeItVisible) {
             ensurePositionVisible(line, column);
         } else {
@@ -3663,6 +3670,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param makeRightVisible Whether make right cursor visible
      */
     public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight, int columnRight, boolean makeRightVisible) {
+        invalidateInCursor();
         int start = getText().getCharIndex(lineLeft, columnLeft);
         int end = getText().getCharIndex(lineRight, columnRight);
         if (start == end) {
@@ -3697,6 +3705,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         mCursor.setLeft(lineLeft, columnLeft);
         mCursor.setRight(lineRight, columnRight);
+        invalidateInCursor();
         updateCursor();
         mCompletionWindow.hide();
         if (makeRightVisible) {
@@ -4573,6 +4582,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mEventHandler.hideInsertHandle();
 
         onSelectionChanged();
+        invalidateInCursor();
         if (mListener != null) {
             mListener.afterInsert(this, mText, startLine, startColumn, endLine, endColumn, insertedContent);
         }
@@ -4622,6 +4632,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
 
         onSelectionChanged();
+        invalidateInCursor();
         if (mListener != null) {
             mListener.afterDelete(this, mText, startLine, startColumn, endLine, endColumn, deletedContent);
         }
