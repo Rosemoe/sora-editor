@@ -34,25 +34,25 @@ public class SymbolInputView extends LinearLayout {
 
     public SymbolInputView(Context context) {
         super(context);
-        setBackgroundColor(Color.WHITE);
+        setBackgroundColor(Color.TRANSPARENT);
         setOrientation(HORIZONTAL);
     }
 
     public SymbolInputView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        setBackgroundColor(Color.WHITE);
+        setBackgroundColor(Color.TRANSPARENT);
         setOrientation(HORIZONTAL);
     }
 
     public SymbolInputView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        setBackgroundColor(Color.WHITE);
+        setBackgroundColor(Color.TRANSPARENT);
         setOrientation(HORIZONTAL);
     }
 
     public SymbolInputView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        setBackgroundColor(Color.WHITE);
+        setBackgroundColor(Color.TRANSPARENT);
         setOrientation(HORIZONTAL);
     }
 
@@ -71,6 +71,7 @@ public class SymbolInputView extends LinearLayout {
         for (int i = 0; i < count; i++) {
             Button btn = new Button(getContext(), null, android.R.attr.buttonStyleSmall);
             btn.setText(display[i]);
+           btn.setTextColor(0xFFF44336);
             btn.setBackground(new ColorDrawable(0));
             addView(btn, new LinearLayout.LayoutParams(-2, -1));
             int finalI = i;
