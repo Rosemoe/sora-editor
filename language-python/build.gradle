@@ -25,6 +25,9 @@ plugins {
     id 'com.android.library'
 }
 
+group = "io.github.Rosemoe.sora-editor"
+version = Versions.versionName
+
 ext {
     PUBLISH_ARTIFACT_ID= "language-python"
 }

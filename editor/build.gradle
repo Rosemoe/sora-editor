@@ -24,6 +24,9 @@
 apply plugin: 'com.android.library'
 //apply plugin: 'kotlin-android'
 
+group = "io.github.Rosemoe.sora-editor"
+version = Versions.versionName
+
 ext {
     PUBLISH_ARTIFACT_ID= "editor"
 }
