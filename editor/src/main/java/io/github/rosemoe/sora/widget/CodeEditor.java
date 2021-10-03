@@ -474,7 +474,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mHorizontalGlow = new MaterialEdgeEffect();
         mOverrideSymbolPairs = new SymbolPairMatch();
         setEditorLanguage(null);
-        setTextActionMode(TextActionMode.POPUP_WINDOW_2);
+        setupDefaultTextActionPresenter();
         setText(null);
         setTabWidth(4);
         setHighlightCurrentLine(true);
@@ -499,6 +499,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         // Issue #41 View being highlighted when focused on Android 11
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             setDefaultFocusHighlightEnabled(false);
+        }
+    }
+
+    private void setupDefaultTextActionPresenter() {
+        try {
+            Class.forName("com.google.android.material.button.MaterialButton");
+            setTextActionMode(TextActionMode.POPUP_WINDOW_2);
+        } catch (ClassNotFoundException e) {
+            setTextActionMode(TextActionMode.POPUP_WINDOW);
         }
     }
 
