@@ -58,7 +58,7 @@ android {
 
 dependencies {
     implementation "org.antlr:antlr4-runtime:$Versions.antlrVersion"
-    implementation fileTree(dir: "libs", include: ["*.jar"])
+    //implementation fileTree(dir: "libs", include: ["*.jar"])
     compileOnly project(path: ':editor')
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'

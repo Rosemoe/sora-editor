@@ -57,7 +57,7 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: "libs", include: ["*.jar"])
+    //implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation project(path: ':language-base')
     compileOnly project(path: ':editor')
     testImplementation 'junit:junit:4.12'
