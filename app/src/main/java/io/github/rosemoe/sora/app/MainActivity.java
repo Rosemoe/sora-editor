@@ -101,10 +101,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         editor.setTypefaceText(Typeface.createFromAsset(getAssets(), "JetBrainsMono-Regular.ttf"));
-        editor.setOverScrollEnabled(false);
         editor.setEditorLanguage(new JavaLanguage());
-        editor.setFirstLineNumberAlwaysVisible(true);
-        editor.setHardwareAcceleratedDrawAllowed(true);
         editor.setNonPrintablePaintingFlags(CodeEditor.FLAG_DRAW_WHITESPACE_LEADING | CodeEditor.FLAG_DRAW_LINE_SEPARATOR);
         new Thread(() -> {
             try {

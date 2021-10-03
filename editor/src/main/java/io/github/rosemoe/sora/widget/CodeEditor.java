@@ -484,14 +484,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setHighlightCurrentBlock(true);
         setHighlightSelectedText(true);
         setDisplayLnPanel(true);
-        setOverScrollEnabled(true);
+        setOverScrollEnabled(false);
         setHorizontalScrollBarEnabled(true);
+        setFirstLineNumberAlwaysVisible(true);
         setSymbolCompletionEnabled(true);
         setEditable(true);
         setLineNumberEnabled(true);
         setAutoCompletionOnComposing(true);
         setAllowFullscreen(false);
         setLigatureEnabled(false);
+        setHardwareAcceleratedDrawAllowed(false);
         setInterceptParentHorizontalScrollIfNeeded(false);
         setTypefaceText(Typeface.DEFAULT);
         mPaintOther.setStrokeWidth(getDpUnit() * 1.8f);
