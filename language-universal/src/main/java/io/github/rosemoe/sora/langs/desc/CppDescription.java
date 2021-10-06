@@ -40,7 +40,9 @@ public class CppDescription extends CDescription {
                 "return", "short", "signed", "sizeof", "static", "static_cast",
                 "struct", "switch", "template", "this", "throw", "true", "try",
                 "typedef", "typeid", "typename", "unsigned", "union",
-                "using", "virtual", "void", "volatile", "wchar_t", "while",
+                "using", "virtual", "void", "volatile", "wchar_t", "while", "ifelse","include" , "string"
+           "typeface" , "namber", "boolstring", "class" , "define", "end", "endl" ,
+          "float", "int" , "int string" , int namber", 
         };
     }
 }
