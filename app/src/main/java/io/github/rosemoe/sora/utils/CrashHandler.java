@@ -80,19 +80,8 @@ public class CrashHandler implements UncaughtExceptionHandler {
         // Save the world, hopefully
         if (Looper.myLooper() != null) {
             Handler handler = new Handler(Looper.myLooper());
-            Throwable e = ex;
             while (true) {
                 try {
-                    /*Writer writer = new StringWriter();
-                    PrintWriter pw = new PrintWriter(writer);
-                    e.printStackTrace(pw);
-                    Throwable cause = e.getCause();
-                    while (cause != null) {
-                        cause.printStackTrace(pw);
-                        cause = cause.getCause();
-                    }
-                    pw.close();
-                    final String result = writer.toString();*/
                     handler.post(() -> {
                         Toast.makeText(mContext, R.string.err_crash_loop, Toast.LENGTH_SHORT).show();
 
@@ -100,7 +89,6 @@ public class CrashHandler implements UncaughtExceptionHandler {
                     Looper.loop();
                 } catch (Throwable t) {
                     saveCrashInfo(thread.getName(), t);
-                    e = t;
                 }
             }
         }

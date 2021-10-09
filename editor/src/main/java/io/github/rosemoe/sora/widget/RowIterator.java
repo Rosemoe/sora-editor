@@ -51,4 +51,12 @@ interface RowIterator {
      */
     boolean hasNext();
 
+    /**
+     * Reset the position to its original position.
+     *
+     * This can be useful when the elements should be iterated for
+     * several times.
+     */
+    void reset();
+
 }
