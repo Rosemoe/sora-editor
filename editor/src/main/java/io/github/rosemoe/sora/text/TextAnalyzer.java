@@ -191,32 +191,28 @@ public class TextAnalyzer {
         @Override
         public void run() {
             try {
-                do {
-                    TextAnalyzeResult colors = new TextAnalyzeResult();
+                while (true) {
+                    TextAnalyzeResult result = new TextAnalyzeResult();
                     Delegate d = new Delegate();
                     mOpStartTime = System.currentTimeMillis();
                     do {
                         waiting = false;
                         StringBuilder c = content.toStringBuilder();
-                        codeAnalyzer.analyze(c, colors, d);
+                        codeAnalyzer.analyze(c, result, d);
                         if (waiting) {
-                            colors.mSpanMap.clear();
-                            colors.mLast = null;
-                            colors.mBlocks.clear();
-                            colors.mSuppressSwitch = Integer.MAX_VALUE;
-                            colors.mLabels = null;
-                            colors.mExtra = null;
-                            colors.determined = false;
+                            result.reset();
                         }
                     } while (waiting);
 
                     mObjContainer.blockLines = mResult.mBlocks;
                     mObjContainer.spanMap = mResult.mSpanMap;
-                    mResult = colors;
-                    colors.addNormalIfNull();
+                    mResult = result;
+                    result.addNormalIfNull();
                     try {
-                        if (mCallback != null)
-                            mCallback.onAnalyzeDone(TextAnalyzer.this);
+                        final var callback = mCallback;
+                        if (callback != null) {
+                            callback.onAnalyzeDone(TextAnalyzer.this);
+                        }
                     } catch (NullPointerException e) {
                         e.printStackTrace();
                     }
@@ -226,12 +222,12 @@ public class TextAnalyzer {
                             lock.wait();
                         }
                     } catch (InterruptedException e) {
-                        Log.d("AnalyzeThread", "Analyze daemon is being interrupted -> Exit");
+                        Log.d("AnalyzeThread", "Analyze daemon is being interrupted. Exiting...");
                         break;
                     }
-                } while (true);
+                }
             } catch (Exception ex) {
-                Log.i("AnalyzeThread", "Analyze daemon got exception -> Exit", ex);
+                Log.i("AnalyzeThread", "Analyze daemon got an exception. Exiting...", ex);
             }
         }
 

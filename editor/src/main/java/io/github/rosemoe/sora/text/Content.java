@@ -625,22 +625,12 @@ public class Content implements CharSequence {
     @NonNull
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        boolean first = true;
-        for (ContentLine line : mLines) {
-            if (!first) {
-                sb.append('\n');
-            } else {
-                first = false;
-            }
-            sb.append(line);
-        }
-        return sb.toString();
+        return toStringBuilder().toString();
     }
 
     /**
      * Get the text in StringBuilder form
-     * Used by TextColorProvider
+     *
      * This can improve the speed in char getting for tokenizing
      *
      * @return StringBuilder form of Content
@@ -767,6 +757,20 @@ public class Content implements CharSequence {
             throw new StringIndexOutOfBoundsException(
                     "Column " + column + " out of bounds.line: " + line + " ,column count:" + len);
         }
+    }
+
+    /**
+     * Copy text in this Content object.
+     * Returns a new Content object with the same text as this object.
+     */
+    public Content copyText() {
+        var n = new Content();
+        n.mLines.remove(0);
+        for (int i = 0;i < getLineCount();i++) {
+            var line = mLines.get(i);
+            n.mLines.add(line.subSequence(0, line.length()));
+        }
+        return n;
     }
 
 }

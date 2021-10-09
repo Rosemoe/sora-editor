@@ -286,4 +286,17 @@ public class TextAnalyzeResult {
         }
     }
 
+    /**
+     * Reset this object to new instance
+     */
+    public void reset() {
+        mSpanMap.clear();
+        mLast = null;
+        mBlocks.clear();
+        mSuppressSwitch = Integer.MAX_VALUE;
+        mLabels = null;
+        mExtra = null;
+        determined = false;
+    }
+
 }
