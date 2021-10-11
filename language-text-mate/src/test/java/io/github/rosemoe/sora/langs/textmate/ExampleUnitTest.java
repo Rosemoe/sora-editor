@@ -22,33 +22,16 @@
  */
 package io.github.rosemoe.sora.langs.textmate;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
-import android.util.Log;
-
-import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.StringReader;
 import java.util.Arrays;
-import java.util.List;
-import java.util.regex.Pattern;
 
-import io.github.rosemoe.sora.textmate.core.grammar.IGrammar;
-import io.github.rosemoe.sora.textmate.core.grammar.IToken;
-import io.github.rosemoe.sora.textmate.core.grammar.ITokenizeLineResult;
-import io.github.rosemoe.sora.textmate.core.grammar.StackElement;
-import io.github.rosemoe.sora.textmate.core.internal.grammar.Grammar;
 import io.github.rosemoe.sora.textmate.core.internal.theme.ThemeRaw;
 import io.github.rosemoe.sora.textmate.core.internal.theme.reader.ThemeReader;
-import io.github.rosemoe.sora.textmate.core.registry.Registry;
 import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
-import io.github.rosemoe.sora.textmate.core.theme.IRawThemeSetting;
-import io.github.rosemoe.sora.textmate.core.theme.ParsedThemeRule;
-import io.github.rosemoe.sora.textmate.core.theme.Theme;
-import io.github.rosemoe.sora.textmate.core.theme.ThemeTrieElementRule;
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -59,9 +42,9 @@ public class ExampleUnitTest {
     @Test
     public void addition_isCorrect() throws Exception {
 
-        IRawTheme iRawTheme = ThemeReader.readThemeSync("ideal-color-theme.json",new FileInputStream("C:\\Users\\Coyamo\\.vscode\\extensions\\karsany.vscode-ideal-theme-0.0.3\\themes\\ideal-color-theme.json"));
+        IRawTheme iRawTheme = ThemeReader.readThemeSync("ideal-color-theme.json", new FileInputStream("C:\\Users\\Coyamo\\.vscode\\extensions\\karsany.vscode-ideal-theme-0.0.3\\themes\\ideal-color-theme.json"));
 
-        ThemeRaw themeRaw= (ThemeRaw) iRawTheme;
+        ThemeRaw themeRaw = (ThemeRaw) iRawTheme;
         System.out.println(Arrays.toString(themeRaw.keySet().toArray()));
         assertEquals(4, 2 + 2);
     }

@@ -27,10 +27,10 @@ group = "io.github.Rosemoe.sora-editor"
 version = Versions.versionName
 
 ext {
-    PUBLISH_ARTIFACT_ID= "text-mate-core"
+    PUBLISH_ARTIFACT_ID = "text-mate-core"
 }
 
-apply from:'../maven-publish.gradle'
+apply from: '../maven-publish.gradle'
 
 android {
     compileSdkVersion Versions.compileSdkVersion

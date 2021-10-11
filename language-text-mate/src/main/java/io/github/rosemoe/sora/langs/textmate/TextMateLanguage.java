@@ -24,22 +24,17 @@ package io.github.rosemoe.sora.langs.textmate;
 
 import java.io.InputStream;
 
-import io.github.rosemoe.sora.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
-import io.github.rosemoe.sora.interfaces.EditorLanguage;
-import io.github.rosemoe.sora.interfaces.NewlineHandler;
 import io.github.rosemoe.sora.langs.EmptyLanguage;
-import io.github.rosemoe.sora.textmate.core.grammar.IGrammar;
 import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
-import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
-public class TextMateLanguage extends EmptyLanguage{
+public class TextMateLanguage extends EmptyLanguage {
 
     private TextMateAnalyzer textMateAnalyzer;
 
-    private TextMateLanguage(String grammarName,InputStream grammarIns, IRawTheme theme){
+    private TextMateLanguage(String grammarName, InputStream grammarIns, IRawTheme theme) {
         try {
-            textMateAnalyzer=new TextMateAnalyzer(grammarName,grammarIns, theme);
+            textMateAnalyzer = new TextMateAnalyzer(grammarName, grammarIns, theme);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -47,23 +42,25 @@ public class TextMateLanguage extends EmptyLanguage{
 
     }
 
-    /**
-     * When you update the {@link TextMateColorScheme} for editor, you need to synchronize the updates here
-     * @param theme IRawTheme creates from file
-     */
-
-    public void updateTheme(IRawTheme theme){
-        if(textMateAnalyzer!=null){
-            textMateAnalyzer.updateTheme(theme);
-        }
-    }
-    public static TextMateLanguage create(String grammarName,InputStream grammarIns, IRawTheme theme) {
+    public static TextMateLanguage create(String grammarName, InputStream grammarIns, IRawTheme theme) {
         return new TextMateLanguage(grammarName, grammarIns, theme);
     }
 
+    /**
+     * When you update the {@link TextMateColorScheme} for editor, you need to synchronize the updates here
+     *
+     * @param theme IRawTheme creates from file
+     */
+
+    public void updateTheme(IRawTheme theme) {
+        if (textMateAnalyzer != null) {
+            textMateAnalyzer.updateTheme(theme);
+        }
+    }
+
     @Override
-    public CodeAnalyzer getAnalyzer(){
-        if(textMateAnalyzer!=null){
+    public CodeAnalyzer getAnalyzer() {
+        if (textMateAnalyzer != null) {
             return textMateAnalyzer;
         }
         return super.getAnalyzer();

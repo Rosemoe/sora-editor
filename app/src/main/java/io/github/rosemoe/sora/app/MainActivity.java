@@ -27,7 +27,6 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -57,7 +56,6 @@ import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.langs.universal.UniversalLanguage;
 import io.github.rosemoe.sora.textmate.core.internal.theme.reader.ThemeReader;
 import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
-import io.github.rosemoe.sora.textmate.core.theme.Theme;
 import io.github.rosemoe.sora.utils.CrashHandler;
 import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.EditorColorScheme;
@@ -175,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.switch_language) {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.switch_language)
-                    .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "HTML", "Python","CSS3","TextMate Java", "None"}, -1, (dialog, which) -> {
+                    .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "HTML", "Python","CSS3","TextMate Java","TextMate Kotlin", "None"}, -1, (dialog, which) -> {
                         switch (which) {
                             case 0:
                                 editor.setEditorLanguage(new UniversalLanguage(new CDescription()));
@@ -224,6 +222,31 @@ public class MainActivity extends AppCompatActivity {
                                 }
 
                                 break;
+                            case 8:
+
+                                try {
+                                    //TextMateLanguage only support TextMateColorScheme
+                                    EditorColorScheme editorColorScheme= editor.getColorScheme();
+                                    if(!(editorColorScheme instanceof TextMateColorScheme)){
+                                        IRawTheme iRawTheme=ThemeReader.readThemeSync("QuietLight.tmTheme",getAssets().open("textmate/QuietLight.tmTheme"));
+                                        editorColorScheme =TextMateColorScheme.create(iRawTheme);
+                                        editor.setColorScheme(editorColorScheme);
+                                    }
+
+
+
+                                    EditorLanguage language= TextMateLanguage.create(
+                                            "Kotlin.tmLanguage"
+                                            ,getAssets().open("textmate/Kotlin.tmLanguage")
+                                            , ((TextMateColorScheme) editorColorScheme).getRawTheme());
+
+
+                                    editor.setEditorLanguage(language);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+
+                                break;
                             default:
                                 editor.setEditorLanguage(new EmptyLanguage());
                         }
@@ -250,7 +273,7 @@ public class MainActivity extends AppCompatActivity {
             editor.beginSearchMode();
         } else if (id == R.id.switch_colors) {
             var themes = new String[]{"Default", "GitHub", "Eclipse",
-                    "Darcula", "VS2019", "NotepadXX", "HTML", "QuietLight for TM","dark_vs for TM","Abyss for TM"};
+                    "Darcula", "VS2019", "NotepadXX", "HTML", "QuietLight for TM","Darcula for TM","Abyss for TM"};
             new AlertDialog.Builder(this)
                     .setTitle(R.string.color_scheme)
                     .setSingleChoiceItems(themes, -1, (dialog, which) -> {
@@ -293,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
                                 break;
                             case 8:
                                 try {
-                                    IRawTheme iRawTheme = ThemeReader.readThemeSync("dark_vs.json",getAssets().open("textmate/dark_vs.json"));
+                                    IRawTheme iRawTheme = ThemeReader.readThemeSync("darcula.json",getAssets().open("textmate/darcula.json"));
                                     TextMateColorScheme colorScheme=TextMateColorScheme.create(iRawTheme);
                                     editor.setColorScheme(colorScheme);
 

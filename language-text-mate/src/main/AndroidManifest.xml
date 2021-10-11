@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<?xml version="1.0" encoding="utf-8"?><!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ~    CodeEditor - the awesome code editor for Android
   ~    Copyright (C) 2020-2021  Rosemoe
   ~
@@ -22,7 +21,6 @@
   ~     additional information or have any questions
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="io.github.rosemoe.sora.langs.textmate">
+<manifest package="io.github.rosemoe.sora.langs.textmate">
 
 </manifest>
