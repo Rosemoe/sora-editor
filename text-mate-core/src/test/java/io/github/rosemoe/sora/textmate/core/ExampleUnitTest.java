@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    CodeEditor - the awesome code editor for Android
  *    Copyright (C) 2020-2021  Rosemoe
  *
@@ -19,16 +19,21 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.textmate.core;
 
-include ':language-universal'
-include ':language-java'
-include ':language-html'
-include ':language-base'
-include ':language-python'
-include ':editor'
-include ':app'
-rootProject.name='sora-editor'
-include ':language-css3'
-include ':text-mate-core'
-include ':language-text-mate'
+import org.junit.Test;
+
+import static org.junit.Assert.*;
+
+/**
+ * Example local unit test, which will execute on the development machine (host).
+ *
+ * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ */
+public class ExampleUnitTest {
+    @Test
+    public void addition_isCorrect() {
+        assertEquals(4, 2 + 2);
+    }
+}

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    CodeEditor - the awesome code editor for Android
  *    Copyright (C) 2020-2021  Rosemoe
  *
@@ -19,16 +19,30 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.textmate.core;
 
-include ':language-universal'
-include ':language-java'
-include ':language-html'
-include ':language-base'
-include ':language-python'
-include ':editor'
-include ':app'
-rootProject.name='sora-editor'
-include ':language-css3'
-include ':text-mate-core'
-include ':language-text-mate'
+import android.content.Context;
+
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static org.junit.Assert.*;
+
+/**
+ * Instrumented test, which will execute on an Android device.
+ *
+ * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ */
+@RunWith(AndroidJUnit4.class)
+public class ExampleInstrumentedTest {
+    @Test
+    public void useAppContext() {
+        // Context of the app under test.
+        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        assertEquals("io.github.rosemoe.sora.textmate.core.test", appContext.getPackageName());
+    }
+}

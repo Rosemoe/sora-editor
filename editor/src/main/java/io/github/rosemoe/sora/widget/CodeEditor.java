@@ -724,6 +724,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
+     * Get the editor's language.
+     * @return EditorLanguage
+     */
+    @NonNull
+    public EditorLanguage getEditorLanguage(){
+        return mLanguage;
+    }
+
+    /**
      * Set the editor's language.
      * A language is a for auto completion,highlight and auto indent analysis.
      *
@@ -3985,6 +3994,18 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setSelection(line, 0);
     }
 
+
+    /**
+     * If there is a Analyzer, do analysis
+     */
+    public void doAnalyze(){
+        if (mSpanner != null) {
+            mSpanner.shutdown();
+            if (mText != null) {
+                mSpanner.analyze(mText);
+            }
+        }
+    }
     /**
      * Get analyze result.
      * <strong>Do not make changes to it or read concurrently</strong>
