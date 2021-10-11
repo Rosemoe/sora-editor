@@ -92,7 +92,6 @@ public class TextMateAnalyzer implements CodeAnalyzer {
                             }
 
                         }
-
                         //Paint object should not be modified. This is just for test.
                         span.renderer=new ExternalRenderer() {
                             @Override
