@@ -22,7 +22,6 @@
  */
 package io.github.rosemoe.sora.widget;
 
-import android.content.res.Resources;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;

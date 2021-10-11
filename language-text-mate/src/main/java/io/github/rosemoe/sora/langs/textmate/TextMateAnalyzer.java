@@ -25,12 +25,10 @@ package io.github.rosemoe.sora.langs.textmate;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.util.Arrays;
 import java.util.List;
 
 import io.github.rosemoe.sora.data.Span;
@@ -94,31 +92,32 @@ public class TextMateAnalyzer implements CodeAnalyzer {
                             }
 
                         }
+
                         //Paint object should not be modified. This is just for test.
-//                        span.renderer=new ExternalRenderer() {
-//                            @Override
-//                            public boolean requirePreDraw() {
-//                                return true;
-//                            }
-//
-//                            @Override
-//                            public boolean requirePostDraw() {
-//                                return true;
-//                            }
-//
-//                            final boolean bold=(rule.fontStyle&FontStyle.Bold)== FontStyle.Bold;
-//                            final boolean italic=(rule.fontStyle&FontStyle.Italic)== FontStyle.Italic;
-//                            @Override
-//                            public void draw(Canvas canvas, Paint paint, EditorColorScheme colorScheme, boolean preOrPost) {
-//                                if(bold){
-//                                    paint.setFakeBoldText(preOrPost);
-//                                }
-//
-//                                if(italic){
-//                                    paint.setTextSkewX(preOrPost?-0.2f:0);
-//                                }
-//                            }
-//                        };
+                        span.renderer=new ExternalRenderer() {
+                            @Override
+                            public boolean requirePreDraw() {
+                                return true;
+                            }
+
+                            @Override
+                            public boolean requirePostDraw() {
+                                return true;
+                            }
+
+                            final boolean bold=(rule.fontStyle&FontStyle.Bold)== FontStyle.Bold;
+                            final boolean italic=(rule.fontStyle&FontStyle.Italic)== FontStyle.Italic;
+                            @Override
+                            public void draw(Canvas canvas, Paint paint, EditorColorScheme colorScheme, boolean preOrPost) {
+                                if(bold){
+                                    paint.setFakeBoldText(preOrPost);
+                                }
+
+                                if(italic){
+                                    paint.setTextSkewX(preOrPost?-0.2f:0);
+                                }
+                            }
+                        };
                     }
 
 

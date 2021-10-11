@@ -26,10 +26,10 @@ import android.util.Log;
 
 import java.util.List;
 
-import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 import io.github.rosemoe.sora.data.BlockLine;
 import io.github.rosemoe.sora.data.ObjectAllocator;
 import io.github.rosemoe.sora.data.Span;
+import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 
 /**
  * This is a manager of analyzing text

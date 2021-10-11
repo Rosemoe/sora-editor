@@ -22,8 +22,6 @@
  */
 package io.github.rosemoe.sora.widget.schemes;
 
-import android.util.Log;
-
 import io.github.rosemoe.sora.widget.EditorColorScheme;
 
 /**

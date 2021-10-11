@@ -23,13 +23,10 @@
 package io.github.rosemoe.sora.widget;
 
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.RenderNode;
 
 import androidx.annotation.RequiresApi;
 
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 import io.github.rosemoe.sora.annotations.Experimental;

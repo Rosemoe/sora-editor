@@ -34,6 +34,8 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
@@ -72,6 +74,46 @@ public class MainActivity extends AppCompatActivity {
     private CodeEditor editor;
     private LinearLayout panel;
     private EditText search, replace;
+
+    private final ActivityResultLauncher<String> loadTMLLauncher=registerForActivityResult(new ActivityResultContracts.GetContent(), result -> {
+        try {
+            //TextMateLanguage only support TextMateColorScheme
+            EditorColorScheme editorColorScheme= editor.getColorScheme();
+            if(!(editorColorScheme instanceof TextMateColorScheme)){
+                IRawTheme iRawTheme=ThemeReader.readThemeSync("QuietLight.tmTheme",getAssets().open("textmate/QuietLight.tmTheme"));
+                editorColorScheme =TextMateColorScheme.create(iRawTheme);
+                editor.setColorScheme(editorColorScheme);
+            }
+
+
+            EditorLanguage language= TextMateLanguage.create(
+                    result.getPath()
+                    , getContentResolver().openInputStream(result)
+                    , ((TextMateColorScheme) editorColorScheme).getRawTheme());
+
+            editor.setEditorLanguage(language);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    });
+    private final ActivityResultLauncher<String> loadTMTLauncher=registerForActivityResult(new ActivityResultContracts.GetContent(), result -> {
+        try {
+            IRawTheme iRawTheme = ThemeReader.readThemeSync(
+                    result.getPath()
+                    ,getContentResolver().openInputStream(result));
+            TextMateColorScheme colorScheme=TextMateColorScheme.create(iRawTheme);
+            editor.setColorScheme(colorScheme);
+
+            EditorLanguage language= editor.getEditorLanguage();
+            if(language instanceof TextMateLanguage){
+                TextMateLanguage textMateLanguage= (TextMateLanguage) language;
+                textMateLanguage.updateTheme(iRawTheme);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -173,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.switch_language) {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.switch_language)
-                    .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "HTML", "Python","CSS3","TextMate Java","TextMate Kotlin", "None"}, -1, (dialog, which) -> {
+                    .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "HTML", "Python","CSS3","TextMate Java","TextMate Kotlin","TM Language from file", "None"}, -1, (dialog, which) -> {
                         switch (which) {
                             case 0:
                                 editor.setEditorLanguage(new UniversalLanguage(new CDescription()));
@@ -247,6 +289,9 @@ public class MainActivity extends AppCompatActivity {
                                 }
 
                                 break;
+                            case 9:
+                                loadTMLLauncher.launch("*/*");
+                                break;
                             default:
                                 editor.setEditorLanguage(new EmptyLanguage());
                         }
@@ -273,7 +318,7 @@ public class MainActivity extends AppCompatActivity {
             editor.beginSearchMode();
         } else if (id == R.id.switch_colors) {
             var themes = new String[]{"Default", "GitHub", "Eclipse",
-                    "Darcula", "VS2019", "NotepadXX", "HTML", "QuietLight for TM","Darcula for TM","Abyss for TM"};
+                    "Darcula", "VS2019", "NotepadXX", "HTML", "QuietLight for TM","Darcula for TM","Abyss for TM","TM theme from file"};
             new AlertDialog.Builder(this)
                     .setTitle(R.string.color_scheme)
                     .setSingleChoiceItems(themes, -1, (dialog, which) -> {
@@ -343,6 +388,9 @@ public class MainActivity extends AppCompatActivity {
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
+                                break;
+                            case 10:
+                                loadTMTLauncher.launch("*/*");
                                 break;
                         }
                         editor.doAnalyze();
