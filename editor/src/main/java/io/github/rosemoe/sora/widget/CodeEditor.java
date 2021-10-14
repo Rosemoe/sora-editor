@@ -43,7 +43,6 @@ import android.text.InputType;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.MutableInt;
-import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.GestureDetector;
@@ -4464,7 +4463,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         if (text.length() == 1 && isSymbolCompletionEnabled()) {
                             replacement = mLanguageSymbolPairs.getCompletion(text.charAt(0));
                         }
-                        if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT) {
+                        if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT ||
+                                replacement.shouldDoReplace(getText())) {
                             getCursor().onCommitText(text);
                             notifyExternalCursorChange();
                         } else {

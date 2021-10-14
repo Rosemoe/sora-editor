@@ -25,6 +25,8 @@ package io.github.rosemoe.sora.widget;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.github.rosemoe.sora.text.Content;
+
 /**
  * Define symbol pairs to complete them automatically when the user
  * enters the first character of pair.
@@ -72,10 +74,24 @@ public class SymbolPairMatch {
         pairMaps.clear();
     }
 
+
+
     /**
      * Defines a replacement of input
      */
-    public static class Replacement {
+    public static class Replacement  {
+
+
+
+        public interface IReplacement {
+            /**
+             * The method will be called before the replace
+             * to decide whether to perform the replace or not.
+             * if not override always return true.
+             * @param content editor content,quick analysis it to decide whether to replace
+             */
+            boolean shouldDoReplace(Content content);
+        }
 
         /**
          * Defines that this character does not have to be replaced
@@ -85,6 +101,8 @@ public class SymbolPairMatch {
         public final String text;
 
         public final int selection;
+
+        private IReplacement replacement;
 
         /**
          * The entered character will be replaced to {@param text} and
@@ -99,9 +117,23 @@ public class SymbolPairMatch {
             }
         }
 
+        public Replacement(String text, int selection,IReplacement replacement) {
+            this(text,selection);
+            this.replacement = replacement;
+        }
+
+
+
+        public boolean shouldDoReplace(Content content) {
+            return replacement == null || !replacement.shouldDoReplace(content);
+        }
+
+
     }
 
     public final static class DefaultSymbolPairs extends SymbolPairMatch {
+
+
 
         public DefaultSymbolPairs() {
             super.putPair('{', new Replacement("{}", 1));
