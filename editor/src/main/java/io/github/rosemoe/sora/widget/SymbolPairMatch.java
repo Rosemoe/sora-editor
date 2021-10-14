@@ -87,7 +87,6 @@ public class SymbolPairMatch {
             /**
              * The method will be called before the replace
              * to decide whether to perform the replace or not.
-             * if not override always return true.
              * @param content editor content,quick analysis it to decide whether to replace
              */
             boolean shouldDoReplace(Content content);
