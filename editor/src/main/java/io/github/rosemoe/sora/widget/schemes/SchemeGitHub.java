@@ -28,26 +28,38 @@ import io.github.rosemoe.sora.widget.EditorColorScheme;
  * ColorScheme for editor
  * picked from GitHub site
  * Thanks to liyujiang-gzu (GitHub @liyujiang-gzu)
+   *Theme by ninja coder
  */
-public class SchemeGitHub extends EditorColorScheme {
 
-    @Override
-    public void applyDefault() {
-        super.applyDefault();
-        setColor(ANNOTATION, 0xff6f42c1);
-        setColor(FUNCTION_NAME, 0xff24292e);
-        setColor(IDENTIFIER_NAME, 0xff24292e);
-        setColor(IDENTIFIER_VAR, 0xff24292e);
-        setColor(LITERAL, 0xff032f62);
-        setColor(OPERATOR, 0xff005cc5);
-        setColor(COMMENT, 0xff6a737d);
-        setColor(KEYWORD, 0xffde3a49);
-        setColor(WHOLE_BACKGROUND, 0xffffffff);
-        setColor(TEXT_NORMAL, 0xff24292e);
-        setColor(LINE_NUMBER_BACKGROUND, 0xffffffff);
-        setColor(LINE_NUMBER, 0xffbec0c1);
-        setColor(SELECTION_INSERT, 0xffc7edcc);
-        setColor(SELECTION_HANDLE, 0xffc7edcc);
-    }
-
+public class SchemeDarcula extends EditorColorScheme {
+   public void applyDefault() {
+      super.applyDefault();
+      setColor(ANNOTATION, 0xffbbb529);
+        setColor(FUNCTION_NAME, 0xffffffff);
+        setColor(IDENTIFIER_NAME, 0xffffffff);
+        setColor(IDENTIFIER_VAR, 0xff9876aa);
+        setColor(LITERAL, 0xffe60b3e);
+        setColor(OPERATOR, 0xFF27B0F5);
+        setColor(COMMENT, 0xFF06D718); // yellow
+        setColor(KEYWORD, 0xFFFE7400);
+        setColor(WHOLE_BACKGROUND, 0xFF01132B);
+        setColor(TEXT_NORMAL, 0xFFD3C7EA);
+        setColor(LINE_NUMBER_BACKGROUND, 0xFF01132B);
+        setColor(LINE_NUMBER, 0xFF812AD2);
+        setColor(LINE_DIVIDER, 0xFF812AD2);
+        setColor(SCROLL_BAR_THUMB, 0xffa6a6a6);
+        setColor(SCROLL_BAR_THUMB_PRESSED, 0xff565656);
+        setColor(SELECTED_TEXT_BACKGROUND, 0xff96993f);
+		// search result highlight color
+        setColor(MATCHED_TEXT_BACKGROUND, 0xFFF91D00);
+        setColor(CURRENT_LINE, 0x4B00D9BC);
+        setColor(SELECTION_INSERT, 0xffffffff);
+        setColor(SELECTION_HANDLE, 0xffffffff);
+        setColor(BLOCK_LINE, 0xFFDE3030);
+        setColor(BLOCK_LINE_CURRENT, 0xff40a8a3);
+        setColor(NON_PRINTABLE_CHAR, 0xFFA8340A);
+   }
 }
+
+
+
