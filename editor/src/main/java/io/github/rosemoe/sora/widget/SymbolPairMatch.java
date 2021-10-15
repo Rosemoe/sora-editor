@@ -129,7 +129,7 @@ public class SymbolPairMatch {
                 return true;
             }
             ContentLine currentLine = content.getLine(content.getCursor().getLeftLine());
-            return replacement == null || replacement.shouldDoReplace(currentLine);
+            return replacement.shouldDoReplace(currentLine);
         }
 
 
