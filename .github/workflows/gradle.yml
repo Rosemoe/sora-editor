@@ -1,6 +1,6 @@
 
    
-name: Android Gradle CI
+name: CI
 
 on:
   push:
