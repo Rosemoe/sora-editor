@@ -22,6 +22,8 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import android.util.Pair;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -86,11 +88,27 @@ public class SymbolPairMatch {
 
         public interface IReplacement {
             /**
-             * The method will be called before the replaced
+             * The method will be called
              * to decide whether to perform the replace or not.
+             * It maybe same as vscode language-configuration Autoclosing 'notIn'
+             * also see <a href="https://code.visualstudio.com/api/language-extensions/language-configuration-guide#autoclosing">this</a>
+             * If not implemented,always return true
              * @param currentLine The currently line edit in the editor,quick analysis it to decide whether to replaced
+             * @param leftColumn return current cursor column
              */
-            boolean shouldDoReplace(ContentLine currentLine);
+            default boolean shouldDoReplace(ContentLine currentLine,int leftColumn) {
+                return true;
+            }
+
+            /**
+             * when before the replaced and select a range,surrounds the selected content with return pair if return pair not null.
+             * If not implemented,always return null
+             * also see <a href="https://code.visualstudio.com/api/language-extensions/language-configuration-guide#autosurrounding">this</a>
+             */
+            default String[] getAutoSurroundPair() {
+                return null;
+            }
+
         }
 
         /**
@@ -102,7 +120,9 @@ public class SymbolPairMatch {
 
         public final int selection;
 
-        private IReplacement replacement;
+
+        public IReplacement iReplacement;
+
 
         /**
          * The entered character will be replaced to {@param text} and
@@ -117,21 +137,21 @@ public class SymbolPairMatch {
             }
         }
 
-        public Replacement(String text, int selection,IReplacement replacement) {
+
+        public Replacement(String text, int selection,IReplacement iReplacement) {
             this(text,selection);
-            this.replacement = replacement;
+            this.iReplacement = iReplacement;
         }
 
 
 
-        public boolean shouldDoReplace(Content content) {
-            if (replacement == null) {
+        protected boolean shouldDoReplace(Content content) {
+            if (iReplacement == null) {
                 return true;
             }
             ContentLine currentLine = content.getLine(content.getCursor().getLeftLine());
-            return replacement.shouldDoReplace(currentLine);
+            return iReplacement.shouldDoReplace(currentLine,content.getCursor().getLeftColumn());
         }
-
 
     }
 

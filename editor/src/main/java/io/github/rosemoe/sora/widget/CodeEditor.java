@@ -22,6 +22,8 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
+
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.ClipData;
@@ -79,21 +81,21 @@ import java.util.List;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.Experimental;
+import io.github.rosemoe.sora.data.BlockLine;
+import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
+import io.github.rosemoe.sora.graphics.FontCache;
 import io.github.rosemoe.sora.interfaces.EditorEventListener;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
 import io.github.rosemoe.sora.interfaces.ExternalRenderer;
 import io.github.rosemoe.sora.interfaces.NewlineHandler;
 import io.github.rosemoe.sora.langs.EmptyLanguage;
-import io.github.rosemoe.sora.data.BlockLine;
-import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.text.Cursor;
-import io.github.rosemoe.sora.graphics.FontCache;
 import io.github.rosemoe.sora.text.FormatThread;
 import io.github.rosemoe.sora.text.LineRemoveListener;
 import io.github.rosemoe.sora.text.SpanMapUpdater;
@@ -101,8 +103,6 @@ import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.text.TextAnalyzer;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
-
-import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
 
 /**
  * CodeEditor is a editor that can highlight text regions by doing basic syntax analyzing
@@ -1161,7 +1161,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         prepareLine(line);
         int columnCount = getText().getColumnCount(line);
         float widthLine = measureText(mBuffer, 0, columnCount);
-        renderNode.setPosition(0, 0, (int)widthLine, getRowHeight() + (int)amplitude);
+        renderNode.setPosition(0, 0, (int) widthLine, getRowHeight() + (int) amplitude);
         Canvas canvas = renderNode.beginRecording();
         if (spans == null || spans.size() == 0) {
             spans = new LinkedList<>();
@@ -1687,7 +1687,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         paintCount = getTabWidth();
                     } else {
                         float delta = charWidth * 0.05f;
-                        canvas.drawLine(offset +delta, rowCenter, offset + charWidth - delta, rowCenter, mPaintOther);
+                        canvas.drawLine(offset + delta, rowCenter, offset + charWidth - delta, rowCenter, mPaintOther);
                         offset += charWidth;
                         paintStart++;
                         continue;
@@ -4463,19 +4463,31 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         if (text.length() == 1 && isSymbolCompletionEnabled()) {
                             replacement = mLanguageSymbolPairs.getCompletion(text.charAt(0));
                         }
-                        if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT ||
-                                replacement.shouldDoReplace(getText())) {
+                        if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
+                                || !replacement.shouldDoReplace(getText()) || replacement.iReplacement.getAutoSurroundPair() == null) {
                             getCursor().onCommitText(text);
                             notifyExternalCursorChange();
                         } else {
-                            getCursor().onCommitText(replacement.text);
-                            int delta = (replacement.text.length() - replacement.selection);
-                            if (delta != 0) {
-                                int newSel = Math.max(getCursor().getLeft() - delta, 0);
-                                CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
-                                setSelection(charPosition.line, charPosition.column);
+                            String[] autoSurroundPair;
+                            if (getCursor().isSelected() && (autoSurroundPair = replacement.iReplacement.getAutoSurroundPair()) != null) {
+                                //insert left
+                                getText().insert(getCursor().getLeftLine(), getCursor().getLeftColumn(), autoSurroundPair[0]);
+                                //insert right
+                                getText().insert(getCursor().getRightLine(), getCursor().getRightColumn(), autoSurroundPair[1]);
+                                //cancel selected
+                                setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length()-1);
                                 notifyExternalCursorChange();
+                            } else {
+                                getCursor().onCommitText(replacement.text);
+                                int delta = (replacement.text.length() - replacement.selection);
+                                if (delta != 0) {
+                                    int newSel = Math.max(getCursor().getLeft() - delta, 0);
+                                    CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
+                                    setSelection(charPosition.line, charPosition.column);
+                                    notifyExternalCursorChange();
+                                }
                             }
+
                         }
                     } else {
                         return super.onKeyDown(keyCode, event);
