@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.github.rosemoe.sora.text.Content;
+import io.github.rosemoe.sora.text.ContentLine;
 
 /**
  * Define symbol pairs to complete them automatically when the user
@@ -85,11 +86,11 @@ public class SymbolPairMatch {
 
         public interface IReplacement {
             /**
-             * The method will be called before the replace
+             * The method will be called before the replaced
              * to decide whether to perform the replace or not.
-             * @param content editor content,quick analysis it to decide whether to replace
+             * @param currentLine The currently line edit in the editor,quick analysis it to decide whether to replaced
              */
-            boolean shouldDoReplace(Content content);
+            boolean shouldDoReplace(ContentLine currentLine);
         }
 
         /**
@@ -124,7 +125,11 @@ public class SymbolPairMatch {
 
 
         public boolean shouldDoReplace(Content content) {
-            return replacement == null || !replacement.shouldDoReplace(content);
+            if (replacement == null) {
+                return true;
+            }
+            ContentLine currentLine = content.getLine(content.getCursor().getLeftLine());
+            return replacement == null || replacement.shouldDoReplace(currentLine);
         }
 
 
