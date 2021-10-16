@@ -22,8 +22,6 @@
  */
 package io.github.rosemoe.sora.langs.css3;
 
-import android.util.Log;
-
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CodePointCharStream;
 import org.antlr.v4.runtime.Token;

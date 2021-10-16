@@ -25,8 +25,8 @@ package io.github.rosemoe.sora.langs.html;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.rosemoe.sora.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.sora.data.CompletionItem;
+import io.github.rosemoe.sora.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 
 /**

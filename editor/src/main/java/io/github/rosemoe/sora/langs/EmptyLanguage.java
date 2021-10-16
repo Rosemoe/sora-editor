@@ -25,11 +25,11 @@ package io.github.rosemoe.sora.langs;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.github.rosemoe.sora.data.CompletionItem;
 import io.github.rosemoe.sora.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.interfaces.NewlineHandler;
-import io.github.rosemoe.sora.data.CompletionItem;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.text.TextAnalyzer.AnalyzeThread.Delegate;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;

@@ -22,16 +22,15 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.IntPair;
-
-import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
 
 /**
  * Wordwrap layout for editor

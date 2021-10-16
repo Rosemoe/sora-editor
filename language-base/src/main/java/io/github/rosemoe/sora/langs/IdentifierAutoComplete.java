@@ -22,14 +22,14 @@
  */
 package io.github.rosemoe.sora.langs;
 
-import io.github.rosemoe.sora.text.TextAnalyzeResult;
-import io.github.rosemoe.sora.interfaces.AutoCompleteProvider;
-import io.github.rosemoe.sora.data.CompletionItem;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+
+import io.github.rosemoe.sora.data.CompletionItem;
+import io.github.rosemoe.sora.interfaces.AutoCompleteProvider;
+import io.github.rosemoe.sora.text.TextAnalyzeResult;
 
 /**
  * Identifier auto-completion

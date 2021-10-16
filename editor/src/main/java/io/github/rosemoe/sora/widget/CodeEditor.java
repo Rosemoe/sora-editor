@@ -22,6 +22,8 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
+
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.ClipData;
@@ -43,7 +45,6 @@ import android.text.InputType;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.MutableInt;
-import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.GestureDetector;
@@ -80,21 +81,21 @@ import java.util.List;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.Experimental;
+import io.github.rosemoe.sora.data.BlockLine;
+import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
+import io.github.rosemoe.sora.graphics.FontCache;
 import io.github.rosemoe.sora.interfaces.EditorEventListener;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
 import io.github.rosemoe.sora.interfaces.ExternalRenderer;
 import io.github.rosemoe.sora.interfaces.NewlineHandler;
 import io.github.rosemoe.sora.langs.EmptyLanguage;
-import io.github.rosemoe.sora.data.BlockLine;
-import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.text.Cursor;
-import io.github.rosemoe.sora.graphics.FontCache;
 import io.github.rosemoe.sora.text.FormatThread;
 import io.github.rosemoe.sora.text.LineRemoveListener;
 import io.github.rosemoe.sora.text.SpanMapUpdater;
@@ -102,8 +103,6 @@ import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.text.TextAnalyzer;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
-
-import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
 
 /**
  * CodeEditor is a editor that can highlight text regions by doing basic syntax analyzing
@@ -721,6 +720,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public boolean isHighlightCurrentLine() {
         return mHighlightCurrentLine;
+    }
+
+    /**
+     * Get the editor's language.
+     * @return EditorLanguage
+     */
+    @NonNull
+    public EditorLanguage getEditorLanguage(){
+        return mLanguage;
     }
 
     /**
@@ -3985,6 +3993,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setSelection(line, 0);
     }
 
+
+    /**
+     * If there is a Analyzer, do analysis
+     */
+    public void doAnalyze(){
+        if (mSpanner != null) {
+            if (mText != null) {
+                mSpanner.analyze(mText);
+            }
+        }
+    }
     /**
      * Get analyze result.
      * <strong>Do not make changes to it or read concurrently</strong>

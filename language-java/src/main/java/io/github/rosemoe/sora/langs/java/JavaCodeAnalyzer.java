@@ -22,20 +22,19 @@
  */
 package io.github.rosemoe.sora.langs.java;
 
-import io.github.rosemoe.sora.data.Span;
-import io.github.rosemoe.sora.langs.internal.TrieTree;
-import io.github.rosemoe.sora.text.TextAnalyzeResult;
-import io.github.rosemoe.sora.widget.EditorColorScheme;
-import io.github.rosemoe.sora.text.LineNumberCalculator;
-import io.github.rosemoe.sora.text.TextAnalyzer;
-import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
-import io.github.rosemoe.sora.langs.IdentifierAutoComplete;
-import io.github.rosemoe.sora.data.BlockLine;
-import io.github.rosemoe.sora.data.NavigationItem;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+
+import io.github.rosemoe.sora.data.BlockLine;
+import io.github.rosemoe.sora.data.NavigationItem;
+import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
+import io.github.rosemoe.sora.langs.IdentifierAutoComplete;
+import io.github.rosemoe.sora.langs.internal.TrieTree;
+import io.github.rosemoe.sora.text.LineNumberCalculator;
+import io.github.rosemoe.sora.text.TextAnalyzeResult;
+import io.github.rosemoe.sora.text.TextAnalyzer;
+import io.github.rosemoe.sora.widget.EditorColorScheme;
 
 /**
  * Note:Navigation not supported
