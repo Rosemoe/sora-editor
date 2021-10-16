@@ -76,10 +76,12 @@ tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
 }
 
+String[] excludeProjectName = new String[] {"app", "buildSrc"}
+
 task bundleAll {
     group = 'Rosemoe'
     allprojects.forEach {
-        if (it.name.equals("editor") || it.name.startsWith("language-")) {
+        if (!excludeProjectName.contains(it)) {
             dependsOn it.getTasksByName("bundleReleaseAar", false)
         }
     }
@@ -88,7 +90,7 @@ task bundleAll {
 task publishAll {
     group = 'Rosemoe'
     allprojects.forEach {
-        if (it.name.equals("editor") || it.name.startsWith("language-")) {
+        if (!excludeProjectName.contains(it)) {
             dependsOn it.getTasksByName("publish", false)
         }
     }

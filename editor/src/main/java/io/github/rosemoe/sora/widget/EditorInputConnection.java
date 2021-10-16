@@ -238,15 +238,28 @@ class EditorInputConnection extends BaseInputConnection {
         }
         // newCursorPosition ignored
         // Call onCommitText() can make auto indent and delete text selected automatically
-        if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT) {
+        if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
+                || !replacement.shouldDoReplace(mEditor.getText()) || replacement.iReplacement.getAutoSurroundPair() == null) {
             getCursor().onCommitText(text, applyAutoIndent);
         } else {
-            getCursor().onCommitText(replacement.text, applyAutoIndent);
-            int delta = (replacement.text.length() - replacement.selection);
-            if (delta != 0) {
-                int newSel = Math.max(getCursor().getLeft() - delta, 0);
-                CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
-                mEditor.setSelection(charPosition.line, charPosition.column);
+            String[] autoSurroundPair;
+            if (getCursor().isSelected() && (autoSurroundPair = replacement.iReplacement.getAutoSurroundPair()) != null) {
+                mEditor.getText().beginBatchEdit();
+                //insert left
+                mEditor.getText().insert(getCursor().getLeftLine(), getCursor().getLeftColumn(), autoSurroundPair[0]);
+                //insert right
+                mEditor.getText().insert(getCursor().getRightLine(), getCursor().getRightColumn(), autoSurroundPair[1]);
+                //cancel selected
+                mEditor.setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length()-1);
+                mEditor.getText().endBatchEdit();
+            } else {
+                getCursor().onCommitText(replacement.text,applyAutoIndent);
+                int delta = (replacement.text.length() - replacement.selection);
+                if (delta != 0) {
+                    int newSel = Math.max(getCursor().getLeft() - delta, 0);
+                    CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
+                    mEditor.setSelection(charPosition.line, charPosition.column);
+                }
             }
         }
     }
