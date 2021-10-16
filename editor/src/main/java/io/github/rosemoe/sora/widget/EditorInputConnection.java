@@ -244,12 +244,14 @@ class EditorInputConnection extends BaseInputConnection {
         } else {
             String[] autoSurroundPair;
             if (getCursor().isSelected() && (autoSurroundPair = replacement.iReplacement.getAutoSurroundPair()) != null) {
+                mEditor.getText().beginBatchEdit();
                 //insert left
                 mEditor.getText().insert(getCursor().getLeftLine(), getCursor().getLeftColumn(), autoSurroundPair[0]);
                 //insert right
                 mEditor.getText().insert(getCursor().getRightLine(), getCursor().getRightColumn(), autoSurroundPair[1]);
                 //cancel selected
                 mEditor.setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length()-1);
+                mEditor.getText().endBatchEdit();
             } else {
                 getCursor().onCommitText(replacement.text,applyAutoIndent);
                 int delta = (replacement.text.length() - replacement.selection);

@@ -4470,12 +4470,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         } else {
                             String[] autoSurroundPair;
                             if (getCursor().isSelected() && (autoSurroundPair = replacement.iReplacement.getAutoSurroundPair()) != null) {
+                                getText().beginBatchEdit();
                                 //insert left
                                 getText().insert(getCursor().getLeftLine(), getCursor().getLeftColumn(), autoSurroundPair[0]);
                                 //insert right
                                 getText().insert(getCursor().getRightLine(), getCursor().getRightColumn(), autoSurroundPair[1]);
                                 //cancel selected
                                 setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length()-1);
+                                getText().endBatchEdit();
                                 notifyExternalCursorChange();
                             } else {
                                 getCursor().onCommitText(replacement.text);
