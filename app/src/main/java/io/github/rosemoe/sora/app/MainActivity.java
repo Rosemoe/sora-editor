@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final ActivityResultLauncher<String> loadTMLLauncher=registerForActivityResult(new ActivityResultContracts.GetContent(), result -> {
         try {
+            if(result==null)return;
             //TextMateLanguage only support TextMateColorScheme
             EditorColorScheme editorColorScheme= editor.getColorScheme();
             if(!(editorColorScheme instanceof TextMateColorScheme)){
@@ -99,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
     });
     private final ActivityResultLauncher<String> loadTMTLauncher=registerForActivityResult(new ActivityResultContracts.GetContent(), result -> {
         try {
+            if(result==null)return;
             IRawTheme iRawTheme = ThemeReader.readThemeSync(
                     result.getPath()
                     ,getContentResolver().openInputStream(result));
