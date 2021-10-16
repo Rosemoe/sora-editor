@@ -1170,7 +1170,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         prepareLine(line);
         int columnCount = getText().getColumnCount(line);
         float widthLine = measureText(mBuffer, 0, columnCount);
-        renderNode.setPosition(0, 0, (int)widthLine, getRowHeight() + (int)amplitude);
+        renderNode.setPosition(0, 0, (int) widthLine, getRowHeight() + (int) amplitude);
         Canvas canvas = renderNode.beginRecording();
         if (spans == null || spans.size() == 0) {
             spans = new LinkedList<>();
@@ -1696,7 +1696,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         paintCount = getTabWidth();
                     } else {
                         float delta = charWidth * 0.05f;
-                        canvas.drawLine(offset +delta, rowCenter, offset + charWidth - delta, rowCenter, mPaintOther);
+                        canvas.drawLine(offset + delta, rowCenter, offset + charWidth - delta, rowCenter, mPaintOther);
                         offset += charWidth;
                         paintStart++;
                         continue;
@@ -4483,18 +4483,33 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         if (text.length() == 1 && isSymbolCompletionEnabled()) {
                             replacement = mLanguageSymbolPairs.getCompletion(text.charAt(0));
                         }
-                        if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT) {
+                        if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
+                                || !replacement.shouldDoReplace(getText()) || replacement.iReplacement.getAutoSurroundPair() == null) {
                             getCursor().onCommitText(text);
                             notifyExternalCursorChange();
                         } else {
-                            getCursor().onCommitText(replacement.text);
-                            int delta = (replacement.text.length() - replacement.selection);
-                            if (delta != 0) {
-                                int newSel = Math.max(getCursor().getLeft() - delta, 0);
-                                CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
-                                setSelection(charPosition.line, charPosition.column);
+                            String[] autoSurroundPair;
+                            if (getCursor().isSelected() && (autoSurroundPair = replacement.iReplacement.getAutoSurroundPair()) != null) {
+                                getText().beginBatchEdit();
+                                //insert left
+                                getText().insert(getCursor().getLeftLine(), getCursor().getLeftColumn(), autoSurroundPair[0]);
+                                //insert right
+                                getText().insert(getCursor().getRightLine(), getCursor().getRightColumn(), autoSurroundPair[1]);
+                                //cancel selected
+                                setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length()-1);
+                                getText().endBatchEdit();
                                 notifyExternalCursorChange();
+                            } else {
+                                getCursor().onCommitText(replacement.text);
+                                int delta = (replacement.text.length() - replacement.selection);
+                                if (delta != 0) {
+                                    int newSel = Math.max(getCursor().getLeft() - delta, 0);
+                                    CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
+                                    setSelection(charPosition.line, charPosition.column);
+                                    notifyExternalCursorChange();
+                                }
                             }
+
                         }
                     } else {
                         return super.onKeyDown(keyCode, event);
