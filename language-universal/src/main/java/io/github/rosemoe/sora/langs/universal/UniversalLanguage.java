@@ -22,22 +22,22 @@
  */
 package io.github.rosemoe.sora.langs.universal;
 
+import static io.github.rosemoe.sora.langs.universal.UniversalTokens.EOF;
+
+import java.util.Stack;
+
+import io.github.rosemoe.sora.data.BlockLine;
 import io.github.rosemoe.sora.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.interfaces.NewlineHandler;
 import io.github.rosemoe.sora.langs.IdentifierAutoComplete;
 import io.github.rosemoe.sora.langs.internal.MyCharacter;
-import io.github.rosemoe.sora.data.BlockLine;
 import io.github.rosemoe.sora.text.LineNumberCalculator;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.text.TextAnalyzer;
 import io.github.rosemoe.sora.widget.EditorColorScheme;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
-
-import java.util.Stack;
-
-import static io.github.rosemoe.sora.langs.universal.UniversalTokens.EOF;
 
 /**
  * Universal Language support

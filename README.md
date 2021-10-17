@@ -1,11 +1,19 @@
-# sora-editor (aka CodeEditor)
+<div align="center">
+
+![Banner](/images/editor_banner.jpg)
+----
 [![CI](https://github.com/Rosemoe/CodeEditor/actions/workflows/gradle.yml/badge.svg?event=push)](https://github.com/Rosemoe/CodeEditor/actions/workflows/gradle.yml)
 [![GitHub license](https://img.shields.io/github/license/Rosemoe/CodeEditor)](https://github.com/Rosemoe/CodeEditor/blob/main/LICENSE)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.Rosemoe.sora-editor/editor.svg?label=Maven%20Central)]((https://search.maven.org/search?q=io.github.Rosemoe.sora-editor%20editor))
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.Rosemoe.sora-editor/editor.svg?label=Maven%20Central)]((https://search.maven.org/search?q=io.github.Rosemoe.sora-editor%20editor))   
 [![Telegram](https://img.shields.io/badge/Join-Telegram-blue)](https://t.me/rosemoe_code_editor)
 [![QQ](https://img.shields.io/badge/Join-QQ_Group-ff69b4)](https://jq.qq.com/?_wv=1027&k=n68uxQws)   
-A cool and optimized code editor on Android platform with good performance and nice features.
---
+
+
+sora-editor is a cool and optimized code editor on Android platform   
+With good performance and nice features
+  
+</div>
+
 ***Work In Progress*** This project is still developing slowly. Note that APIs are unstable.
 It is **not** recommended to use this project for production use.
 Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/releases) instead of cloning this repository directly.
@@ -28,9 +36,10 @@ Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/re
 - [ ] Plugin System
 ## Language Supported  
 * Java, JavaScript, C, C++, HTML, Python, CSS3 (Basic Support:highlight, code block line,identifier and keyword auto-completion). Code block line isn't available for HTML Language
+* Textmate support
 ## Screenshots
 ![Wordwrap](/images/wordwrap.png)
-![Reporting](/images/curlylines.jpg)
+<img src="/images/curlylines.jpg" alt="ErrorIndicator" width="40%" align="bottom" />
 ## How to use this editor  
 Add to your app's dependencies:
 ```Gradle
@@ -44,6 +53,7 @@ Available modules:
 * language-python
 * language-css3
 * language-universal
+* language-textmate
 
 Detailed: [Get started](https://rosemoe.github.io/2021/08/22/editor-get-started/)
 ## License

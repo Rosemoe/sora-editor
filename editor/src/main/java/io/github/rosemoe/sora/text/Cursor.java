@@ -22,12 +22,12 @@
  */
 package io.github.rosemoe.sora.text;
 
+import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
+
 import android.util.Log;
 
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.util.IntPair;
-
-import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
 
 /**
  * @author Rose

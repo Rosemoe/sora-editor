@@ -44,6 +44,15 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
+
+
+    packagingOptions{
+        pickFirst 'license/README.dom.txt'
+        pickFirst 'license/LICENSE.dom-documentation.txt'
+        pickFirst 'license/NOTICE'
+        pickFirst 'license/LICENSE.dom-software.txt'
+        pickFirst 'license/LICENSE'
+    }
 }
 
 dependencies {
@@ -56,6 +65,8 @@ dependencies {
     implementation project(path: ':language-universal')
     implementation project(path: ':language-python')
     implementation project(path: ':language-css3')
+    implementation project(path: ':language-textmate')
+    implementation project(path: ':textmate-core')
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
