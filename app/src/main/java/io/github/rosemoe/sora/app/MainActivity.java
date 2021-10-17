@@ -256,7 +256,8 @@ public class MainActivity extends AppCompatActivity {
 
                                     EditorLanguage language= TextMateLanguage.create(
                                             "java.tmLanguage.json"
-                                            ,getAssets().open("textmate/java.tmLanguage.json")
+                                            ,getAssets().open("textmate/java/syntaxes/java.tmLanguage.json")
+                                            ,new InputStreamReader(getAssets().open("textmate/java/language-configuration.json"))
                                             , ((TextMateColorScheme) editorColorScheme).getRawTheme());
 
 
@@ -282,7 +283,7 @@ public class MainActivity extends AppCompatActivity {
                                     EditorLanguage language= TextMateLanguage.create(
                                             "Kotlin.tmLanguage"
                                             ,getAssets().open("textmate/kotlin/syntaxes/Kotlin.tmLanguage")
-                                            ,new InputStreamReader(getAssets().open("textmate/kotlin/kotlin.configuration.json"))
+                                            ,new InputStreamReader(getAssets().open("textmate/kotlin/language-configuration.json"))
                                             , ((TextMateColorScheme) editorColorScheme).getRawTheme());
 
 

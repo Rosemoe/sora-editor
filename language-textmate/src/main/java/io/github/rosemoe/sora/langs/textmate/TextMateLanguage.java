@@ -25,12 +25,14 @@ package io.github.rosemoe.sora.langs.textmate;
 import java.io.InputStream;
 import java.io.Reader;
 
+import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 import io.github.rosemoe.sora.langs.EmptyLanguage;
 import io.github.rosemoe.sora.langs.textmate.analyzer.TextMateAnalyzer;
 import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
 import io.github.rosemoe.sora.textmate.languageconfiguration.internal.LanguageConfigurator;
 
+@Experimental
 public class TextMateLanguage extends EmptyLanguage {
 
     private TextMateAnalyzer textMateAnalyzer;
