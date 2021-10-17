@@ -22,8 +22,6 @@
  */
 package io.github.rosemoe.sora.widget;
 
-import android.util.Pair;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -105,9 +103,9 @@ public class SymbolPairMatch {
              * If not implemented,always return null
              * also see <a href="https://code.visualstudio.com/api/language-extensions/language-configuration-guide#autosurrounding">this</a>
              */
-            default String[] getAutoSurroundPair() {
-                return null;
-            }
+             default String[] getAutoSurroundPair() {
+                 return null;
+             }
 
         }
 
@@ -120,8 +118,12 @@ public class SymbolPairMatch {
 
         public final int selection;
 
+        public final String[] autoSurroundPair ;
 
-        public IReplacement iReplacement;
+        /*
+         *
+         */
+        private IReplacement iReplacement;
 
 
         /**
@@ -132,6 +134,8 @@ public class SymbolPairMatch {
         public Replacement(String text, int selection) {
             this.selection = selection;
             this.text = text;
+            //cache pair
+            this.autoSurroundPair = iReplacement!=null ? iReplacement.getAutoSurroundPair() : null;
             if (selection < 0 || selection > text.length()) {
                 throw new IllegalArgumentException("invalid selection value");
             }
@@ -145,12 +149,22 @@ public class SymbolPairMatch {
 
 
 
-        protected boolean shouldDoReplace(Content content) {
+        protected boolean notHasAutoSurroundPair() {
+            return iReplacement!=null || autoSurroundPair!=null;
+        }
+
+
+        protected String[] getAutoSurroundPair() {
+            return autoSurroundPair;
+        }
+
+
+        protected boolean shouldNotDoReplace(Content content) {
             if (iReplacement == null) {
-                return true;
+                return false;
             }
             ContentLine currentLine = content.getLine(content.getCursor().getLeftLine());
-            return iReplacement.shouldDoReplace(currentLine,content.getCursor().getLeftColumn());
+            return !iReplacement.shouldDoReplace(currentLine, content.getCursor().getLeftColumn());
         }
 
     }
