@@ -4484,7 +4484,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                             replacement = mLanguageSymbolPairs.getCompletion(text.charAt(0));
                         }
                         if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
-                                || replacement.shouldNotDoReplace(getText()) || replacement.notHasAutoSurroundPair()) {
+                                || (replacement.shouldNotDoReplace(getText()) && replacement.notHasAutoSurroundPair())) {
                             getCursor().onCommitText(text);
                             notifyExternalCursorChange();
                         } else {
@@ -4495,9 +4495,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                                 getText().insert(getCursor().getLeftLine(), getCursor().getLeftColumn(), autoSurroundPair[0]);
                                 //insert right
                                 getText().insert(getCursor().getRightLine(), getCursor().getRightColumn(), autoSurroundPair[1]);
+                                getText().endBatchEdit();
                                 //cancel selected
                                 setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length()-1);
-                                getText().endBatchEdit();
+
                                 notifyExternalCursorChange();
                             } else {
                                 getCursor().onCommitText(replacement.text);

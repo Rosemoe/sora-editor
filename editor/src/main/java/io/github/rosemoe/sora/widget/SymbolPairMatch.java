@@ -118,13 +118,12 @@ public class SymbolPairMatch {
 
         public final int selection;
 
-        public final String[] autoSurroundPair ;
+        private String[] autoSurroundPair;
 
         /*
          *
          */
         private IReplacement iReplacement;
-
 
         /**
          * The entered character will be replaced to {@param text} and
@@ -134,8 +133,6 @@ public class SymbolPairMatch {
         public Replacement(String text, int selection) {
             this.selection = selection;
             this.text = text;
-            //cache pair
-            this.autoSurroundPair = iReplacement!=null ? iReplacement.getAutoSurroundPair() : null;
             if (selection < 0 || selection > text.length()) {
                 throw new IllegalArgumentException("invalid selection value");
             }
@@ -144,20 +141,18 @@ public class SymbolPairMatch {
 
         public Replacement(String text, int selection,IReplacement iReplacement) {
             this(text,selection);
-            this.iReplacement = iReplacement;
+            //cache pair
+            this.autoSurroundPair = iReplacement!=null ? iReplacement.getAutoSurroundPair() : null;
         }
 
-
-
-        protected boolean notHasAutoSurroundPair() {
-            return iReplacement!=null || autoSurroundPair!=null;
-        }
-
-
-        protected String[] getAutoSurroundPair() {
+        public String[] getAutoSurroundPair() {
             return autoSurroundPair;
         }
 
+
+        protected boolean notHasAutoSurroundPair() {
+            return iReplacement==null && autoSurroundPair==null;
+        }
 
         protected boolean shouldNotDoReplace(Content content) {
             if (iReplacement == null) {
