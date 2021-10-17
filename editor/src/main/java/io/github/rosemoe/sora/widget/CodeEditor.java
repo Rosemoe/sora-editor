@@ -4483,13 +4483,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         if (text.length() == 1 && isSymbolCompletionEnabled()) {
                             replacement = mLanguageSymbolPairs.getCompletion(text.charAt(0));
                         }
-                        if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
+                        if (replacement == null || replacement.iReplacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
                                 || !replacement.shouldDoReplace(getText()) || replacement.iReplacement.getAutoSurroundPair() == null) {
                             getCursor().onCommitText(text);
                             notifyExternalCursorChange();
                         } else {
                             String[] autoSurroundPair;
-                            if (getCursor().isSelected() && (autoSurroundPair = replacement.iReplacement.getAutoSurroundPair()) != null) {
+                            if (getCursor().isSelected() && replacement.iReplacement != null && (autoSurroundPair = replacement.iReplacement.getAutoSurroundPair()) != null) {
                                 getText().beginBatchEdit();
                                 //insert left
                                 getText().insert(getCursor().getLeftLine(), getCursor().getLeftColumn(), autoSurroundPair[0]);

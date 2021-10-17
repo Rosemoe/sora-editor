@@ -238,12 +238,12 @@ class EditorInputConnection extends BaseInputConnection {
         }
         // newCursorPosition ignored
         // Call onCommitText() can make auto indent and delete text selected automatically
-        if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
+        if (replacement == null || replacement.iReplacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
                 || !replacement.shouldDoReplace(mEditor.getText()) || replacement.iReplacement.getAutoSurroundPair() == null) {
             getCursor().onCommitText(text, applyAutoIndent);
         } else {
             String[] autoSurroundPair;
-            if (getCursor().isSelected() && (autoSurroundPair = replacement.iReplacement.getAutoSurroundPair()) != null) {
+            if (getCursor().isSelected() && replacement.iReplacement != null && (autoSurroundPair = replacement.iReplacement.getAutoSurroundPair()) != null) {
                 mEditor.getText().beginBatchEdit();
                 //insert left
                 mEditor.getText().insert(getCursor().getLeftLine(), getCursor().getLeftColumn(), autoSurroundPair[0]);
