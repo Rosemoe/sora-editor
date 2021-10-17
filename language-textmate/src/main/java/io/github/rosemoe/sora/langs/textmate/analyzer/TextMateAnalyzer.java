@@ -20,19 +20,22 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.textmate;
+package io.github.rosemoe.sora.langs.textmate.analyzer;
 
 import android.graphics.Color;
 import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.Stack;
 
 import io.github.rosemoe.sora.data.BlockLine;
 import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
+import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
+import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.text.TextAnalyzer;
 import io.github.rosemoe.sora.textmate.core.grammar.IGrammar;
@@ -46,33 +49,37 @@ import io.github.rosemoe.sora.textmate.core.registry.Registry;
 import io.github.rosemoe.sora.textmate.core.theme.FontStyle;
 import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
 import io.github.rosemoe.sora.textmate.core.theme.Theme;
+import io.github.rosemoe.sora.textmate.languageconfiguration.internal.LanguageConfiguration;
+import io.github.rosemoe.sora.textmate.languageconfiguration.internal.LanguageConfigurator;
 
 public class TextMateAnalyzer implements CodeAnalyzer {
 
     private final Registry registry = new Registry();
     private final IGrammar grammar;
     private Theme theme;
-
-    public TextMateAnalyzer(String grammarName, InputStream grammarIns, IRawTheme theme) throws Exception {
+    private BlockLineAnalyzer blockLineAnalyzer;
+    private TextMateLanguage language;
+    public TextMateAnalyzer(TextMateLanguage language, String grammarName, InputStream grammarIns, Reader languageConfiguration, IRawTheme theme) throws Exception {
         registry.setTheme(theme);
+        this.language=language;
         this.theme = Theme.createFromRawTheme(theme);
         this.grammar = registry.loadGrammarFromPathSync(grammarName, grammarIns);
+        if(languageConfiguration!=null){
+            LanguageConfigurator languageConfigurator = new LanguageConfigurator(languageConfiguration);
+            blockLineAnalyzer=new BlockLineAnalyzer(languageConfigurator.getLanguageConfiguration());
+        }
 
     }
 
     @Override
     public void analyze(CharSequence content, TextAnalyzeResult result, TextAnalyzer.AnalyzeThread.Delegate delegate) {
+        Content model=new Content(content);
 
         try {
             boolean first = true;
-            BufferedReader bufferedReader = new BufferedReader(new StringReader(content.toString()));
-            String line;
-            int lineCount = 0;
             StackElement ruleStack = null;
-
-            Stack<BlockLine> blockLineStack = new Stack<>();
-            while ((line = bufferedReader.readLine()) != null && delegate.shouldAnalyze()) {
-
+            for(int lineCount=0;lineCount<model.getLineCount()&& delegate.shouldAnalyze();lineCount++){
+                String line= model.getLineString(lineCount);
                 if (first) {
                     result.addNormalIfNull();
                     first = false;
@@ -91,9 +98,6 @@ public class TextMateAnalyzer implements CodeAnalyzer {
                     int fontStyle = StackElementMetadata.getFontStyle(metadata);
                     Span span = Span.obtain(startIndex, foreground + 255);
 
-                    //Block line
-
-
                     //Font style
                     if (fontStyle != FontStyle.NotSet) {
                         if ((fontStyle & FontStyle.Underline) == FontStyle.Underline) {
@@ -107,18 +111,19 @@ public class TextMateAnalyzer implements CodeAnalyzer {
                     result.add(lineCount, span);
                 }
                 ruleStack = lineTokens.getRuleStack();
-                lineCount++;
             }
 
-            result.determine(lineCount);
-            bufferedReader.close();
+            if(blockLineAnalyzer!=null){
+                blockLineAnalyzer.analyze(language,model, result);
+            }
 
+            result.determine(model.getLineCount());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    protected void updateTheme(IRawTheme theme) {
+    public void updateTheme(IRawTheme theme) {
         registry.setTheme(theme);
         this.theme = Theme.createFromRawTheme(theme);
     }

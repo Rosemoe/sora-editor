@@ -35,18 +35,6 @@ public class CommentSupport {
 		} catch (Exception e) {
 			return false;
 		}
-		/*
-		try {
-			if (isInBlockComment(document.get(0, offset))) {
-				return true;
-			}
-			int line = document.getLineOfOffset(offset);
-			int lineOffset = document.getLineOffset(line);
-			return isInLineComment(document.get(lineOffset, offset - lineOffset));
-		} catch (BadLocationException e) {
-			return false;
-		}
-		 */
 	}
 
 	public String getLineComment() {

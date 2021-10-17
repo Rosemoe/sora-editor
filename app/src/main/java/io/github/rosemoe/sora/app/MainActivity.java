@@ -281,7 +281,8 @@ public class MainActivity extends AppCompatActivity {
 
                                     EditorLanguage language= TextMateLanguage.create(
                                             "Kotlin.tmLanguage"
-                                            ,getAssets().open("textmate/Kotlin.tmLanguage")
+                                            ,getAssets().open("textmate/kotlin/syntaxes/Kotlin.tmLanguage")
+                                            ,new InputStreamReader(getAssets().open("textmate/kotlin/kotlin.configuration.json"))
                                             , ((TextMateColorScheme) editorColorScheme).getRawTheme());
 
 

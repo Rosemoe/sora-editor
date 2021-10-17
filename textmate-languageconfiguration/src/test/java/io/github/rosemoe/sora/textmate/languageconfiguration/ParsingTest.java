@@ -26,12 +26,11 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.InputStreamReader;
+import java.io.BufferedReader;
 import java.io.StringReader;
-
+import io.github.rosemoe.sora.textmate.core.internal.oniguruma.OnigRegExp;
+import io.github.rosemoe.sora.textmate.core.internal.oniguruma.OnigResult;
+import io.github.rosemoe.sora.textmate.core.internal.oniguruma.OnigString;
 import io.github.rosemoe.sora.textmate.languageconfiguration.internal.LanguageConfiguration;
 
 /**
@@ -70,8 +69,8 @@ public class ParsingTest {
             "  ],\n" +
             "  \"folding\": {\n" +
             "    \"markers\": {\n" +
-            "      \"start\": \"^\\\\s*//\\\\s*#?region\\\\b\",\n" +
-            "      \"end\": \"^\\\\s*//\\\\s*#?endregion\\\\b\"\n" +
+            "      \"start\": \"(\\\\{\\\\s*(//.*)?$|^\\\\s*// \\\\{\\\\{\\\\{)\",\n" +
+            "      \"end\": \"^\\\\s*(\\\\}|// \\\\}\\\\}\\\\}$)\"\n" +
             "    }\n" +
             "  },\n" +
             "  \"wordPattern\": \"(-?\\\\d*\\\\.\\\\d\\\\w*)|([^\\\\`\\\\~\\\\!\\\\@\\\\#\\\\%\\\\^\\\\&\\\\*\\\\(\\\\)\\\\-\\\\=\\\\+\\\\[\\\\{\\\\]\\\\}\\\\\\\\\\\\|\\\\;\\\\:\\\\'\\\\\\\"\\\\,\\\\.\\\\<\\\\>\\\\/\\\\?\\\\s]+)\",\n" +
@@ -79,9 +78,9 @@ public class ParsingTest {
             "    \"increaseIndentPattern\": \"^((?!\\\\/\\\\/).)*(\\\\{[^}\\\"'`]*|\\\\([^)\\\"'`]*|\\\\[[^\\\\]\\\"'`]*)$\",\n" +
             "    \"decreaseIndentPattern\": \"^((?!.*?\\\\/\\\\*).*\\\\*/)?\\\\s*[\\\\}\\\\]].*$\"\n" +
             "  }\n" +
-            "}\n";
+            "}";
     @Test
-    public void testCanLoadRustLanguageConfig() throws Exception {
+    public void testCanLoadLanguageConfig() throws Exception {
         LanguageConfiguration languageConfiguration = LanguageConfiguration.load(new StringReader(json));
         assertNotNull(languageConfiguration.getComments());
         assertNotNull(languageConfiguration.getBrackets());

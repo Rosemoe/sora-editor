@@ -20,53 +20,28 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.data;
+package io.github.rosemoe.sora.langs.textmate.folding;
 
-/**
- * Code block info model
- *
- * @author Rose
- */
-public class BlockLine {
+public class FoldingRegion {
 
-    /**
-     * Start line of code block
-     */
-    public int startLine;
+    private final FoldingRegions ranges;
+    private final int index;
 
-    /**
-     * Start column of code block
-     */
-    public int startColumn;
-
-    /**
-     * End line of code block
-     */
-    public int endLine;
-
-    /**
-     * End column of code block
-     */
-    public int endColumn;
-
-    /**
-     * Indicates that this BlockLine should be drawn vertically until the bottom of its end line
-     */
-    public boolean toBottomOfEndLine;
-
-    public void clear() {
-        startColumn = startLine = endLine = endColumn = 0;
-        toBottomOfEndLine = false;
+    public FoldingRegion(FoldingRegions ranges, int index) {
+        this.ranges = ranges;
+        this.index = index;
     }
 
-    @Override
-    public String toString() {
-        return "BlockLine{" +
-                "startLine=" + startLine +
-                ", startColumn=" + startColumn +
-                ", endLine=" + endLine +
-                ", endColumn=" + endColumn +
-                ", toBottomOfEndLine=" + toBottomOfEndLine +
-                '}';
+    public int getStartLineNumber() {
+        return this.ranges.getStartLineNumber(this.index);
     }
+
+    public int getEndLineNumber() {
+        return this.ranges.getEndLineNumber(this.index);
+    }
+
+    public int getRegionIndex() {
+        return this.index;
+    }
+
 }

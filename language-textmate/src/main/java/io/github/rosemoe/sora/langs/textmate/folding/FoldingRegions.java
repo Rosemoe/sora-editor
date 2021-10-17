@@ -20,53 +20,37 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.data;
+package io.github.rosemoe.sora.langs.textmate.folding;
 
-/**
- * Code block info model
- *
- * @author Rose
- */
-public class BlockLine {
+import android.util.SparseIntArray;
 
-    /**
-     * Start line of code block
-     */
-    public int startLine;
+public class FoldingRegions {
+    private final SparseIntArray _startIndexes;
+    private final SparseIntArray _endIndexes;
 
-    /**
-     * Start column of code block
-     */
-    public int startColumn;
-
-    /**
-     * End line of code block
-     */
-    public int endLine;
-
-    /**
-     * End column of code block
-     */
-    public int endColumn;
-
-    /**
-     * Indicates that this BlockLine should be drawn vertically until the bottom of its end line
-     */
-    public boolean toBottomOfEndLine;
-
-    public void clear() {
-        startColumn = startLine = endLine = endColumn = 0;
-        toBottomOfEndLine = false;
+    public FoldingRegions(SparseIntArray startIndexes, SparseIntArray endIndexes) throws Exception {
+        if (startIndexes.size() != endIndexes.size() || startIndexes.size() > IndentRange.MAX_FOLDING_REGIONS) {
+            throw new Exception("invalid startIndexes or endIndexes size");
+        }
+        this._startIndexes = startIndexes;
+        this._endIndexes = endIndexes;
     }
 
-    @Override
-    public String toString() {
-        return "BlockLine{" +
-                "startLine=" + startLine +
-                ", startColumn=" + startColumn +
-                ", endLine=" + endLine +
-                ", endColumn=" + endColumn +
-                ", toBottomOfEndLine=" + toBottomOfEndLine +
-                '}';
+    public int length() {
+        return this._startIndexes.size();
     }
+
+    public int getStartLineNumber(int index) {
+        return this._startIndexes.get(index) & IndentRange.MAX_LINE_NUMBER;
+    }
+
+    public int getEndLineNumber(int index) {
+        return this._endIndexes.get(index) & IndentRange.MAX_LINE_NUMBER;
+    }
+
+
+    public FoldingRegion toRegion(int index) {
+        return new FoldingRegion(this, index);
+    }
+
 }

@@ -63,6 +63,9 @@ dependencies {
     implementation "com.google.code.gson:gson:${Versions.gsonVersion}"
 
     testImplementation 'junit:junit:4.+'
+    testImplementation project(path: ':textmate-core')
+
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+
 }
