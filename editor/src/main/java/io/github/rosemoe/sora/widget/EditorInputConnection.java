@@ -239,19 +239,20 @@ class EditorInputConnection extends BaseInputConnection {
         // newCursorPosition ignored
         // Call onCommitText() can make auto indent and delete text selected automatically
         if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
-                || !replacement.shouldDoReplace(mEditor.getText()) || replacement.iReplacement.getAutoSurroundPair() == null) {
+                || (replacement.shouldNotDoReplace(mEditor.getText()) && replacement.notHasAutoSurroundPair())) {
             getCursor().onCommitText(text, applyAutoIndent);
         } else {
             String[] autoSurroundPair;
-            if (getCursor().isSelected() && (autoSurroundPair = replacement.iReplacement.getAutoSurroundPair()) != null) {
+            if (getCursor().isSelected() && (autoSurroundPair = replacement.getAutoSurroundPair()) != null) {
                 mEditor.getText().beginBatchEdit();
                 //insert left
                 mEditor.getText().insert(getCursor().getLeftLine(), getCursor().getLeftColumn(), autoSurroundPair[0]);
                 //insert right
                 mEditor.getText().insert(getCursor().getRightLine(), getCursor().getRightColumn(), autoSurroundPair[1]);
+                mEditor.getText().endBatchEdit();
                 //cancel selected
                 mEditor.setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length()-1);
-                mEditor.getText().endBatchEdit();
+
             } else {
                 getCursor().onCommitText(replacement.text,applyAutoIndent);
                 int delta = (replacement.text.length() - replacement.selection);
