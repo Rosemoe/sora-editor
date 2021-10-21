@@ -24,6 +24,9 @@ package io.github.rosemoe.sora.langs.textmate.analyzer;
 
 import android.util.Log;
 
+import java.util.Collections;
+import java.util.Comparator;
+
 import io.github.rosemoe.sora.data.BlockLine;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.langs.textmate.folding.FoldingRegion;
@@ -58,14 +61,17 @@ public class BlockLineAnalyzer  {
                     blockLine.endLine= endLine;
                     String line= model.getLineString(startLine);
                     // TODO: 2021/10/17 这2个column不知道怎么取值。。
-                    blockLine.startColumn= IndentRange.computeStartColumn(line,4);
-                    line= model.getLineString(endLine);
-                    blockLine.endColumn= IndentRange.computeStartColumn(line,4);
+                    blockLine.startColumn= IndentRange.computeStartColumn(line,language.getTabSize());
+//                    line= model.getLineString(endLine);
+//                    int endColumn=IndentRange.computeStartColumn(line,language.getTabSize());
+                    blockLine.endColumn= blockLine.startColumn;
 
                     result.addBlockLine(blockLine);
                 }
-
             }
+
+            Collections.sort(result.getBlocks(), (o1, o2) -> o1.endLine-o2.endLine);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
