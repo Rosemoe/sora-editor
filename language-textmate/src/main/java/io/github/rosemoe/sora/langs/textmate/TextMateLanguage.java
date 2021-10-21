@@ -23,18 +23,22 @@
 package io.github.rosemoe.sora.langs.textmate;
 
 import java.io.InputStream;
+import java.io.Reader;
 
+import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 import io.github.rosemoe.sora.langs.EmptyLanguage;
+import io.github.rosemoe.sora.langs.textmate.analyzer.TextMateAnalyzer;
 import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
+import io.github.rosemoe.sora.textmate.languageconfiguration.internal.LanguageConfigurator;
 
+@Experimental
 public class TextMateLanguage extends EmptyLanguage {
 
     private TextMateAnalyzer textMateAnalyzer;
-
-    private TextMateLanguage(String grammarName, InputStream grammarIns, IRawTheme theme) {
+    private TextMateLanguage(String grammarName, InputStream grammarIns, Reader languageConfiguration, IRawTheme theme) {
         try {
-            textMateAnalyzer = new TextMateAnalyzer(grammarName, grammarIns, theme);
+            textMateAnalyzer = new TextMateAnalyzer(this,grammarName, grammarIns,languageConfiguration, theme);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -42,10 +46,13 @@ public class TextMateLanguage extends EmptyLanguage {
 
     }
 
-    public static TextMateLanguage create(String grammarName, InputStream grammarIns, IRawTheme theme) {
-        return new TextMateLanguage(grammarName, grammarIns, theme);
+    public static TextMateLanguage create(String grammarName, InputStream grammarIns,Reader languageConfiguration, IRawTheme theme) {
+        return new TextMateLanguage(grammarName, grammarIns,languageConfiguration, theme);
     }
 
+    public static TextMateLanguage create(String grammarName, InputStream grammarIns, IRawTheme theme) {
+        return new TextMateLanguage(grammarName, grammarIns,null, theme);
+    }
     /**
      * When you update the {@link TextMateColorScheme} for editor, you need to synchronize the updates here
      *
@@ -64,5 +71,15 @@ public class TextMateLanguage extends EmptyLanguage {
             return textMateAnalyzer;
         }
         return super.getAnalyzer();
+    }
+
+    private int tabSize=4;
+
+    public void setTabSize(int tabSize) {
+        this.tabSize = tabSize;
+    }
+
+    public int getTabSize() {
+        return tabSize;
     }
 }

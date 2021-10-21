@@ -59,6 +59,7 @@ android {
 dependencies {
     //implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation project(path: ':textmate-core')
+    implementation project(path: ':textmate-languageconfiguration')
     compileOnly project(path: ':editor')
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'

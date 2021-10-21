@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    CodeEditor - the awesome code editor for Android
  *    Copyright (C) 2020-2021  Rosemoe
  *
@@ -19,17 +19,29 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.langs.textmate.folding;
 
-include ':language-universal'
-include ':language-java'
-include ':language-html'
-include ':language-base'
-include ':language-python'
-include ':editor'
-include ':app'
-rootProject.name='sora-editor'
-include ':language-css3'
-include ':textmate-core'
-include ':language-textmate'
-include ':textmate-languageconfiguration'
+public class FoldingRegion {
+
+    private final FoldingRegions ranges;
+    private final int index;
+
+    public FoldingRegion(FoldingRegions ranges, int index) {
+        this.ranges = ranges;
+        this.index = index;
+    }
+
+    public int getStartLineNumber() {
+        return this.ranges.getStartLineNumber(this.index);
+    }
+
+    public int getEndLineNumber() {
+        return this.ranges.getEndLineNumber(this.index);
+    }
+
+    public int getRegionIndex() {
+        return this.index;
+    }
+
+}
