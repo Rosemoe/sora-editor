@@ -22,8 +22,6 @@
  */
 package io.github.rosemoe.sora.widget;
 
-import android.util.Pair;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -105,9 +103,9 @@ public class SymbolPairMatch {
              * If not implemented,always return null
              * also see <a href="https://code.visualstudio.com/api/language-extensions/language-configuration-guide#autosurrounding">this</a>
              */
-            default String[] getAutoSurroundPair() {
-                return null;
-            }
+             default String[] getAutoSurroundPair() {
+                 return null;
+             }
 
         }
 
@@ -120,9 +118,12 @@ public class SymbolPairMatch {
 
         public final int selection;
 
+        private String[] autoSurroundPair;
 
-        public IReplacement iReplacement;
-
+        /*
+         *
+         */
+        private IReplacement iReplacement;
 
         /**
          * The entered character will be replaced to {@param text} and
@@ -140,17 +141,25 @@ public class SymbolPairMatch {
 
         public Replacement(String text, int selection,IReplacement iReplacement) {
             this(text,selection);
-            this.iReplacement = iReplacement;
+            //cache pair
+            this.autoSurroundPair = iReplacement!=null ? iReplacement.getAutoSurroundPair() : null;
+        }
+
+        public String[] getAutoSurroundPair() {
+            return autoSurroundPair;
         }
 
 
+        protected boolean notHasAutoSurroundPair() {
+            return iReplacement==null && autoSurroundPair==null;
+        }
 
-        protected boolean shouldDoReplace(Content content) {
+        protected boolean shouldNotDoReplace(Content content) {
             if (iReplacement == null) {
-                return true;
+                return false;
             }
             ContentLine currentLine = content.getLine(content.getCursor().getLeftLine());
-            return iReplacement.shouldDoReplace(currentLine,content.getCursor().getLeftColumn());
+            return !iReplacement.shouldDoReplace(currentLine, content.getCursor().getLeftColumn());
         }
 
     }
