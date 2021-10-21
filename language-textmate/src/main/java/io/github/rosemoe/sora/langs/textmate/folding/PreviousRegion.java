@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    CodeEditor - the awesome code editor for Android
  *    Copyright (C) 2020-2021  Rosemoe
  *
@@ -19,17 +19,21 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.langs.textmate.folding;
 
-include ':language-universal'
-include ':language-java'
-include ':language-html'
-include ':language-base'
-include ':language-python'
-include ':editor'
-include ':app'
-rootProject.name='sora-editor'
-include ':language-css3'
-include ':textmate-core'
-include ':language-textmate'
-include ':textmate-languageconfiguration'
+public class PreviousRegion {
+    // indent or -2 if a marker
+    public int indent;
+    // end line number for the region above
+    public int endAbove;
+    // start line of the region. Only used for marker regions.
+    public int line;
+
+    public PreviousRegion(int indent, int endAbove, int line) {
+        this.indent = indent;
+        this.endAbove = endAbove;
+        this.line = line;
+    }
+
+}
