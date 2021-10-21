@@ -75,19 +75,19 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout panel;
     private EditText search, replace;
 
-    private final ActivityResultLauncher<String> loadTMLLauncher=registerForActivityResult(new ActivityResultContracts.GetContent(), result -> {
+    private final ActivityResultLauncher<String> loadTMLLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), result -> {
         try {
-            if(result==null)return;
+            if (result == null) return;
             //TextMateLanguage only support TextMateColorScheme
-            EditorColorScheme editorColorScheme= editor.getColorScheme();
-            if(!(editorColorScheme instanceof TextMateColorScheme)){
-                IRawTheme iRawTheme=ThemeReader.readThemeSync("QuietLight.tmTheme",getAssets().open("textmate/QuietLight.tmTheme"));
-                editorColorScheme =TextMateColorScheme.create(iRawTheme);
+            EditorColorScheme editorColorScheme = editor.getColorScheme();
+            if (!(editorColorScheme instanceof TextMateColorScheme)) {
+                IRawTheme iRawTheme = ThemeReader.readThemeSync("QuietLight.tmTheme", getAssets().open("textmate/QuietLight.tmTheme"));
+                editorColorScheme = TextMateColorScheme.create(iRawTheme);
                 editor.setColorScheme(editorColorScheme);
             }
 
 
-            EditorLanguage language= TextMateLanguage.create(
+            EditorLanguage language = TextMateLanguage.create(
                     result.getPath()
                     , getContentResolver().openInputStream(result)
                     , ((TextMateColorScheme) editorColorScheme).getRawTheme());
@@ -98,18 +98,18 @@ public class MainActivity extends AppCompatActivity {
         }
 
     });
-    private final ActivityResultLauncher<String> loadTMTLauncher=registerForActivityResult(new ActivityResultContracts.GetContent(), result -> {
+    private final ActivityResultLauncher<String> loadTMTLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), result -> {
         try {
-            if(result==null)return;
+            if (result == null) return;
             IRawTheme iRawTheme = ThemeReader.readThemeSync(
                     result.getPath()
-                    ,getContentResolver().openInputStream(result));
-            TextMateColorScheme colorScheme=TextMateColorScheme.create(iRawTheme);
+                    , getContentResolver().openInputStream(result));
+            TextMateColorScheme colorScheme = TextMateColorScheme.create(iRawTheme);
             editor.setColorScheme(colorScheme);
 
-            EditorLanguage language= editor.getEditorLanguage();
-            if(language instanceof TextMateLanguage){
-                TextMateLanguage textMateLanguage= (TextMateLanguage) language;
+            EditorLanguage language = editor.getEditorLanguage();
+            if (language instanceof TextMateLanguage) {
+                TextMateLanguage textMateLanguage = (TextMateLanguage) language;
                 textMateLanguage.updateTheme(iRawTheme);
             }
         } catch (Exception e) {
@@ -217,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.switch_language) {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.switch_language)
-                    .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "HTML", "Python","CSS3","TextMate Java","TextMate Kotlin","TM Language from file", "None"}, -1, (dialog, which) -> {
+                    .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "HTML", "Python", "CSS3", "TextMate Java", "TextMate Kotlin", "TM Language from file", "None"}, -1, (dialog, which) -> {
                         switch (which) {
                             case 0:
                                 editor.setEditorLanguage(new UniversalLanguage(new CDescription()));
@@ -245,19 +245,18 @@ public class MainActivity extends AppCompatActivity {
 
                                 try {
                                     //TextMateLanguage only support TextMateColorScheme
-                                    EditorColorScheme editorColorScheme= editor.getColorScheme();
-                                    if(!(editorColorScheme instanceof TextMateColorScheme)){
-                                        IRawTheme iRawTheme=ThemeReader.readThemeSync("QuietLight.tmTheme",getAssets().open("textmate/QuietLight.tmTheme"));
-                                        editorColorScheme =TextMateColorScheme.create(iRawTheme);
+                                    EditorColorScheme editorColorScheme = editor.getColorScheme();
+                                    if (!(editorColorScheme instanceof TextMateColorScheme)) {
+                                        IRawTheme iRawTheme = ThemeReader.readThemeSync("QuietLight.tmTheme", getAssets().open("textmate/QuietLight.tmTheme"));
+                                        editorColorScheme = TextMateColorScheme.create(iRawTheme);
                                         editor.setColorScheme(editorColorScheme);
                                     }
 
 
-
-                                    EditorLanguage language= TextMateLanguage.create(
+                                    EditorLanguage language = TextMateLanguage.create(
                                             "java.tmLanguage.json"
-                                            ,getAssets().open("textmate/java/syntaxes/java.tmLanguage.json")
-                                            ,new InputStreamReader(getAssets().open("textmate/java/language-configuration.json"))
+                                            , getAssets().open("textmate/java/syntaxes/java.tmLanguage.json")
+                                            , new InputStreamReader(getAssets().open("textmate/java/language-configuration.json"))
                                             , ((TextMateColorScheme) editorColorScheme).getRawTheme());
 
 
@@ -271,19 +270,18 @@ public class MainActivity extends AppCompatActivity {
 
                                 try {
                                     //TextMateLanguage only support TextMateColorScheme
-                                    EditorColorScheme editorColorScheme= editor.getColorScheme();
-                                    if(!(editorColorScheme instanceof TextMateColorScheme)){
-                                        IRawTheme iRawTheme=ThemeReader.readThemeSync("QuietLight.tmTheme",getAssets().open("textmate/QuietLight.tmTheme"));
-                                        editorColorScheme =TextMateColorScheme.create(iRawTheme);
+                                    EditorColorScheme editorColorScheme = editor.getColorScheme();
+                                    if (!(editorColorScheme instanceof TextMateColorScheme)) {
+                                        IRawTheme iRawTheme = ThemeReader.readThemeSync("QuietLight.tmTheme", getAssets().open("textmate/QuietLight.tmTheme"));
+                                        editorColorScheme = TextMateColorScheme.create(iRawTheme);
                                         editor.setColorScheme(editorColorScheme);
                                     }
 
 
-
-                                    EditorLanguage language= TextMateLanguage.create(
+                                    EditorLanguage language = TextMateLanguage.create(
                                             "Kotlin.tmLanguage"
-                                            ,getAssets().open("textmate/kotlin/syntaxes/Kotlin.tmLanguage")
-                                            ,new InputStreamReader(getAssets().open("textmate/kotlin/language-configuration.json"))
+                                            , getAssets().open("textmate/kotlin/syntaxes/Kotlin.tmLanguage")
+                                            , new InputStreamReader(getAssets().open("textmate/kotlin/language-configuration.json"))
                                             , ((TextMateColorScheme) editorColorScheme).getRawTheme());
 
 
@@ -303,7 +301,7 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .setNegativeButton(android.R.string.cancel, null)
                     .show();
-        }  else if (id == R.id.search_panel_st) {
+        } else if (id == R.id.search_panel_st) {
             if (panel.getVisibility() == View.GONE) {
                 replace.setText("");
                 search.setText("");
@@ -322,7 +320,7 @@ public class MainActivity extends AppCompatActivity {
             editor.beginSearchMode();
         } else if (id == R.id.switch_colors) {
             var themes = new String[]{"Default", "GitHub", "Eclipse",
-                    "Darcula", "VS2019", "NotepadXX", "HTML", "QuietLight for TM","Darcula for TM","Abyss for TM","TM theme from file"};
+                    "Darcula", "VS2019", "NotepadXX", "HTML", "QuietLight for TM", "Darcula for TM", "Abyss for TM", "TM theme from file"};
             new AlertDialog.Builder(this)
                     .setTitle(R.string.color_scheme)
                     .setSingleChoiceItems(themes, -1, (dialog, which) -> {
@@ -350,13 +348,13 @@ public class MainActivity extends AppCompatActivity {
                                 break;
                             case 7:
                                 try {
-                                    IRawTheme iRawTheme = ThemeReader.readThemeSync("QuietLight.tmTheme",getAssets().open("textmate/QuietLight.tmTheme"));
-                                    TextMateColorScheme colorScheme=TextMateColorScheme.create(iRawTheme);
+                                    IRawTheme iRawTheme = ThemeReader.readThemeSync("QuietLight.tmTheme", getAssets().open("textmate/QuietLight.tmTheme"));
+                                    TextMateColorScheme colorScheme = TextMateColorScheme.create(iRawTheme);
                                     editor.setColorScheme(colorScheme);
 
-                                    EditorLanguage language= editor.getEditorLanguage();
-                                    if(language instanceof TextMateLanguage){
-                                        TextMateLanguage textMateLanguage= (TextMateLanguage) language;
+                                    EditorLanguage language = editor.getEditorLanguage();
+                                    if (language instanceof TextMateLanguage) {
+                                        TextMateLanguage textMateLanguage = (TextMateLanguage) language;
                                         textMateLanguage.updateTheme(iRawTheme);
                                     }
                                 } catch (Exception e) {
@@ -365,13 +363,13 @@ public class MainActivity extends AppCompatActivity {
                                 break;
                             case 8:
                                 try {
-                                    IRawTheme iRawTheme = ThemeReader.readThemeSync("darcula.json",getAssets().open("textmate/darcula.json"));
-                                    TextMateColorScheme colorScheme=TextMateColorScheme.create(iRawTheme);
+                                    IRawTheme iRawTheme = ThemeReader.readThemeSync("darcula.json", getAssets().open("textmate/darcula.json"));
+                                    TextMateColorScheme colorScheme = TextMateColorScheme.create(iRawTheme);
                                     editor.setColorScheme(colorScheme);
 
-                                    EditorLanguage language= editor.getEditorLanguage();
-                                    if(language instanceof TextMateLanguage){
-                                        TextMateLanguage textMateLanguage= (TextMateLanguage) language;
+                                    EditorLanguage language = editor.getEditorLanguage();
+                                    if (language instanceof TextMateLanguage) {
+                                        TextMateLanguage textMateLanguage = (TextMateLanguage) language;
                                         textMateLanguage.updateTheme(iRawTheme);
                                     }
                                 } catch (Exception e) {
@@ -380,13 +378,13 @@ public class MainActivity extends AppCompatActivity {
                                 break;
                             case 9:
                                 try {
-                                    IRawTheme iRawTheme = ThemeReader.readThemeSync("abyss-color-theme.json",getAssets().open("textmate/abyss-color-theme.json"));
-                                    TextMateColorScheme colorScheme=TextMateColorScheme.create(iRawTheme);
+                                    IRawTheme iRawTheme = ThemeReader.readThemeSync("abyss-color-theme.json", getAssets().open("textmate/abyss-color-theme.json"));
+                                    TextMateColorScheme colorScheme = TextMateColorScheme.create(iRawTheme);
                                     editor.setColorScheme(colorScheme);
 
-                                    EditorLanguage language= editor.getEditorLanguage();
-                                    if(language instanceof TextMateLanguage){
-                                        TextMateLanguage textMateLanguage= (TextMateLanguage) language;
+                                    EditorLanguage language = editor.getEditorLanguage();
+                                    if (language instanceof TextMateLanguage) {
+                                        TextMateLanguage textMateLanguage = (TextMateLanguage) language;
                                         textMateLanguage.updateTheme(iRawTheme);
                                     }
                                 } catch (Exception e) {
