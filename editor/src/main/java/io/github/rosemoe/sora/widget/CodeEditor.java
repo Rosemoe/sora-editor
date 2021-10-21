@@ -177,6 +177,22 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public static final int FLAG_DRAW_TAB_SAME_AS_SPACE = 1 << 5;
 
     /**
+     * Adjust the completion window's position scheme according to the device's screen size.
+     */
+    public static final int WINDOW_POS_MODE_AUTO = 0;
+
+    /**
+     * Completion window always follow the cursor
+     */
+    public static final int WINDOW_POS_MODE_FOLLOW_CURSOR_ALWAYS = 1;
+
+    /**
+     * Completion window always stay at the bottom of view and occupies the
+     * horizontal viewport
+     */
+    public static final int WINDOW_POS_MODE_FULL_WIDTH_ALWAYS = 2;
+
+    /**
      * Text size scale of small graph
      */
     private static final float SCALE_MINI_GRAPH = 0.9f;
@@ -197,6 +213,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private int mInputType;
     private int mNonPrintableOptions;
     private int mCachedLineNumberWidth;
+    private int mCompletionPosMode;
     private float mDpUnit;
     private float mDividerWidth;
     private float mDividerMargin;
@@ -403,6 +420,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mVerticalScrollFactor = configuration.getScaledVerticalScrollFactor();
         } else {
             try {
+                @SuppressLint("DiscouragedPrivateApi")
                 var method = View.class.getDeclaredMethod("getVerticalScrollFactor");
                 method.setAccessible(true);
                 var result = method.invoke(this);
@@ -495,6 +513,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setHardwareAcceleratedDrawAllowed(true);
         setInterceptParentHorizontalScrollIfNeeded(false);
         setTypefaceText(Typeface.DEFAULT);
+        setCompletionPositionMode(WINDOW_POS_MODE_AUTO);
         mPaintOther.setStrokeWidth(getDpUnit() * 1.8f);
         mPaintOther.setStrokeCap(Paint.Cap.ROUND);
         // Issue #41 View being highlighted when focused on Android 11
@@ -522,6 +541,27 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (mRenderer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mCursor != null) {
             mRenderer.invalidateInRegion(mCursor.getLeftLine(), mCursor.getRightLine());
         }
+    }
+
+    /**
+     * Set how should we control the position&size of completion window
+     *
+     * @see #WINDOW_POS_MODE_AUTO
+     * @see #WINDOW_POS_MODE_FOLLOW_CURSOR_ALWAYS
+     * @see #WINDOW_POS_MODE_FULL_WIDTH_ALWAYS
+     */
+    public void setCompletionPositionMode(int mode) {
+        mCompletionPosMode = mode;
+        if (mCompletionWindow.isShowing()) {
+            updateCompletionWindowPosition();
+        }
+    }
+
+    /**
+     * @see #setCompletionPositionMode(int)
+     */
+    public int getCompletionPositionMode() {
+        return mCompletionPosMode;
     }
 
     /**
@@ -2620,13 +2660,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         mCompletionWindow.setExtendedX(panelX);
         mCompletionWindow.setExtendedY(panelY);
-        if (getWidth() < 500 * mDpUnit) {
-            //Open center mode
+        if ((getWidth() < 500 * mDpUnit && mCompletionPosMode == WINDOW_POS_MODE_AUTO) || mCompletionPosMode == WINDOW_POS_MODE_FULL_WIDTH_ALWAYS) {
+            // center mode
             mCompletionWindow.setWidth(getWidth() * 7 / 8);
             mCompletionWindow.setExtendedX(getWidth() / 8f / 2f);
         } else {
-            //Follow cursor mode
-            mCompletionWindow.setWidth(getWidth() / 3);
+            // follow cursor mode
+            mCompletionWindow.setWidth((int)Math.min(300 * mDpUnit, getWidth() / 2f));
         }
         if (!mCompletionWindow.isShowing()) {
             mCompletionWindow.setHeight((int) restY);
