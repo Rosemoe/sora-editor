@@ -304,7 +304,8 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
 
     private void updateMagnifier(MotionEvent e) {
         if (mEditor.isMagnifierEnabled()) {
-            mMagnifier.show((int) e.getX(), (int) e.getY() - mEditor.getRowHeight());
+            var height = Math.max(Math.max(mEditor.getInsertHandleRect().height(), mEditor.getLeftHandleRect().height()), mEditor.getRightHandleRect().height());
+            mMagnifier.show((int) e.getX(), (int) (e.getY() - height/2 - mEditor.getRowHeight()));
         }
     }
 

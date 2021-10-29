@@ -56,7 +56,7 @@ public class Magnifier {
         popup = new PopupWindow(editor);
         var view = LayoutInflater.from(editor.getContext()).inflate(R.layout.magnifier_popup, null);
         image = view.findViewById(R.id.magnifier_image_view);
-        popup.setHeight((int) (editor.getDpUnit() * 60));
+        popup.setHeight((int) (editor.getDpUnit() * 65));
         popup.setWidth((int) (editor.getDpUnit() * 120));
         popup.setContentView(view);
         scaleFactor = 1.5f;
@@ -68,6 +68,7 @@ public class Magnifier {
      * X and Y are relative to the code editor view
      */
     public void show(int x, int y) {
+        popup.setWidth(Math.min(view.getWidth() * 2 / 5, (int)view.getDpUnit()) * 200);
         this.x = x;
         this.y = y;
         int[] pos = new int[2];
