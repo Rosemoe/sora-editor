@@ -1165,7 +1165,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 action.exec(canvas, this);
             }
         } else {
-            drawSelectionAnimation(canvas);
+            drawSelectionOnAnimation(canvas);
         }
 
         if (isLineNumberEnabled() && !lineNumberNotPinned) {
@@ -2212,13 +2212,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         drawColor(canvas, mColors.getColor(mEventHandler.holdHorizontalScrollBar() ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED : EditorColorScheme.SCROLL_BAR_THUMB), mRect);
     }
 
-    protected void drawSelectionAnimation(Canvas canvas) {
+    protected void drawSelectionOnAnimation(Canvas canvas) {
         mRect.bottom = (float) mCursorAnimator.animatorY.getAnimatedValue() - getOffsetY();
         mRect.top = mRect.bottom - getRowHeight();
         float centerX = (float) mCursorAnimator.animatorX.getAnimatedValue() - getOffsetX();
         // Bold width
-        mRect.left = centerX - mInsertSelWidth;
-        mRect.right = centerX + mInsertSelWidth;
+        mRect.left = centerX - mInsertSelWidth / 2;
+        mRect.right = centerX + mInsertSelWidth / 2;
         drawColor(canvas, mColors.getColor(EditorColorScheme.SELECTION_INSERT), mRect);
         if (mInsertHandle != null && mEventHandler.shouldDrawInsertHandle()) {
             var resultRect = mInsertHandle;
@@ -4781,6 +4781,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mEventHandler.hideInsertHandle();
 
         onSelectionChanged();
+        if (!mCursor.isSelected()) {
+            mCursorAnimator.markEndPosAndStart();
+        }
         invalidateInCursor();
         if (mListener != null) {
             mListener.afterInsert(this, mText, startLine, startColumn, endLine, endColumn, insertedContent);
@@ -4831,10 +4834,18 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
 
         onSelectionChanged();
+        if (!mCursor.isSelected()) {
+            mCursorAnimator.markEndPosAndStart();
+        }
         invalidateInCursor();
         if (mListener != null) {
             mListener.afterDelete(this, mText, startLine, startColumn, endLine, endColumn, deletedContent);
         }
+    }
+
+    @Override
+    public void beforeModification(Content content) {
+        mCursorAnimator.markStartPos();
     }
 
     @Override
