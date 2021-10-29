@@ -79,7 +79,7 @@ public class TextActionPopupWindow extends TextComposeBasePopup implements View.
 
     @Override
     public void show() {
-        setElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2f, Resources.getSystem().getDisplayMetrics()));
+        setElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4f, Resources.getSystem().getDisplayMetrics()));
         super.show();
     }
 

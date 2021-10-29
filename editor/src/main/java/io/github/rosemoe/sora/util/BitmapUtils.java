@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    CodeEditor - the awesome code editor for Android
  *    Copyright (C) 2020-2021  Rosemoe
  *
@@ -19,17 +19,25 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.util;
 
-rootProject.name='sora-editor'
-include ':language-universal'
-include ':language-java'
-include ':language-html'
-include ':language-base'
-include ':language-python'
-include ':editor'
-include ':app'
-include ':language-css3'
-include ':textmate-core'
-include ':language-textmate'
-include ':textmate-languageconfiguration'
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
+
+import androidx.annotation.NonNull;
+
+public class BitmapUtils {
+
+    @NonNull
+    private Bitmap scaleBitmap(@NonNull Bitmap origin, int newWidth, int newHeight) {
+        int height = origin.getHeight();
+        int width = origin.getWidth();
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+        Matrix matrix = new Matrix();
+        matrix.postScale(scaleWidth, scaleHeight);
+        return Bitmap.createBitmap(origin, 0, 0, width, height, matrix, false);
+    }
+
+}

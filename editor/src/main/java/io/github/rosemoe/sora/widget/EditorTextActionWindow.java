@@ -69,7 +69,7 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
         copy.setOnClickListener(this);
         mPasteBtn.setOnClickListener(this);
         GradientDrawable gd = new GradientDrawable();
-        gd.setCornerRadius(5);
+        gd.setCornerRadius(5 * editor.getDpUnit());
         gd.setColor(0xffffffff);
         root.setBackground(gd);
         setContentView(root);

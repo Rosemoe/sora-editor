@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Users/20734/AndroidStudioProjects/CodeEditor/editor/src/main/res/drawable/magnifier_background.xml" value="0.1035" />
+        <entry key="..\:/Users/20734/AndroidStudioProjects/CodeEditor/editor/src/main/res/layout/magnifier_popup.xml" value="0.16394927536231885" />
+        <entry key="..\:/Users/20734/AndroidStudioProjects/CodeEditor/editor/src/main/res/layout/text_compose_panel.xml" value="0.10729166666666666" />
+      </map>
+    </option>
+  </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK" />
 </project>

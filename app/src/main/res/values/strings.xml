@@ -21,7 +21,7 @@
   ~     additional information or have any questions
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">CodeEditorSample</string>
     <string name="open_debug_logs">Open Debug Logs</string>
     <string name="layout_tv_last">Last</string>

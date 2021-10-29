@@ -246,6 +246,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mFirstLineNumberAlwaysVisible;
     private boolean mAllowFullscreen;
     private boolean mLigatureEnabled;
+    private boolean mLastCursorState;
+    private boolean mMagnifierEnabled;
     private RectF mRect;
     private RectF mLeftHandle;
     private RectF mRightHandle;
@@ -438,6 +440,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             mRenderer = new HwAcceleratedRenderer(this);
         }
+        mDividerMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, Resources.getSystem().getDisplayMetrics());
+        mDividerWidth = mDividerMargin;
+        mInsertSelWidth = mDividerWidth / 2;
+        mDpUnit = mDividerWidth / 2;
+        mDividerMargin = mDpUnit * 5;
         mFontCache = new FontCache();
         mDrawPoints = new BufferedDrawPoints();
         mPaint = new Paint();
@@ -468,11 +475,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mRightHandle = new RectF();
         mVerticalScrollBar = new RectF();
         mHorizontalScrollBar = new RectF();
-        mDividerMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, Resources.getSystem().getDisplayMetrics());
-        mDividerWidth = mDividerMargin;
-        mInsertSelWidth = mDividerWidth / 2;
-        mDpUnit = mDividerWidth / 2;
-        mDividerMargin = mDpUnit * 5;
         mLineNumberAlign = Paint.Align.RIGHT;
         mDrag = false;
         mWait = false;
@@ -513,7 +515,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setHardwareAcceleratedDrawAllowed(true);
         setInterceptParentHorizontalScrollIfNeeded(false);
         setTypefaceText(Typeface.DEFAULT);
-        setCompletionPositionMode(WINDOW_POS_MODE_AUTO);
+        setMagnifierEnabled(true);
+        setCompletionWndPositionMode(WINDOW_POS_MODE_AUTO);
         mPaintOther.setStrokeWidth(getDpUnit() * 1.8f);
         mPaintOther.setStrokeCap(Paint.Cap.ROUND);
         // Issue #41 View being highlighted when focused on Android 11
@@ -550,7 +553,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @see #WINDOW_POS_MODE_FOLLOW_CURSOR_ALWAYS
      * @see #WINDOW_POS_MODE_FULL_WIDTH_ALWAYS
      */
-    public void setCompletionPositionMode(int mode) {
+    public void setCompletionWndPositionMode(int mode) {
         mCompletionPosMode = mode;
         if (mCompletionWindow.isShowing()) {
             updateCompletionWindowPosition();
@@ -558,10 +561,28 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * @see #setCompletionPositionMode(int)
+     * @see #setCompletionWndPositionMode(int)
      */
-    public int getCompletionPositionMode() {
+    public int getCompletionWndPositionMode() {
         return mCompletionPosMode;
+    }
+
+    /**
+     * Set whether the editor should show a magnifier window when the
+     * user is moving the selection handle
+     */
+    public void setMagnifierEnabled(boolean enabled) {
+        this.mMagnifierEnabled = enabled;
+        if (!enabled) {
+            mEventHandler.mMagnifier.dismiss();
+        }
+    }
+
+    /**
+     * @see #setMagnifierEnabled(boolean)
+     */
+    public boolean isMagnifierEnabled() {
+        return mMagnifierEnabled;
     }
 
     /**
@@ -4233,11 +4254,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     //-------------------------------------------------------------------------------
     //-------------------------Override methods--------------------------------------
     //-------------------------------------------------------------------------------
-
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         drawView(canvas);
+        // Update magnifier
+        if (mLastCursorState != mCursorBlink.visibility  && mEventHandler.mMagnifier.isShowing()) {
+            mLastCursorState = mCursorBlink.visibility;
+            post(mEventHandler.mMagnifier::updateDisplay);
+        }
     }
 
     @Override
