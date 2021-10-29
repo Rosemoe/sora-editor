@@ -303,6 +303,10 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     }
 
     private void updateMagnifier(MotionEvent e) {
+        if (mEdgeFlags != 0) {
+            dissmissMagnifier();
+            return;
+        }
         if (mEditor.isMagnifierEnabled()) {
             var height = Math.max(Math.max(mEditor.getInsertHandleRect().height(), mEditor.getLeftHandleRect().height()), mEditor.getRightHandleRect().height());
             mMagnifier.show((int) e.getX(), (int) (e.getY() - height/2 - mEditor.getRowHeight()));
@@ -912,6 +916,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 }
             }
             scrollBy(dx, dy);
+            mMagnifier.dismiss();
 
             // Speed up if we are scrolling in the direction
             if (isSameSign(dx, lastDx)) {

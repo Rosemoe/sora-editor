@@ -39,7 +39,7 @@ import io.github.rosemoe.sora.R;
  *
  * @author Rosemoe
  */
-public class Magnifier {
+class Magnifier {
 
     private final CodeEditor view;
     private final PopupWindow popup;
@@ -127,6 +127,19 @@ public class Magnifier {
         var top = Math.max(y - requiredHeight / 2, 0);
         var right = Math.min(left + requiredWidth, display.getWidth());
         var bottom = Math.min(top + requiredHeight, display.getHeight());
+        if (right - left < requiredWidth) {
+            left = Math.max(0, right - requiredWidth);
+        }
+        if (bottom - top < requiredHeight) {
+            top = Math.max(0, bottom - requiredHeight);
+        }
+        if (right - left <= 0 || bottom - top <= 0) {
+            dismiss();
+            view.destroyDrawingCache();
+            view.setDrawingCacheEnabled(false);
+            dest.recycle();
+            return;
+        }
         var clip = Bitmap.createBitmap(display, left, top, right - left, bottom - top);
         var scaled = Bitmap.createScaledBitmap(clip, popup.getWidth(), popup.getHeight(), false);
         clip.recycle();

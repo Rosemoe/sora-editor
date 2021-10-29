@@ -4259,7 +4259,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         super.onDraw(canvas);
         drawView(canvas);
         // Update magnifier
-        if (mLastCursorState != mCursorBlink.visibility  && mEventHandler.mMagnifier.isShowing()) {
+        if ((mLastCursorState != mCursorBlink.visibility || !mEventHandler.getScroller().isFinished()) && mEventHandler.mMagnifier.isShowing()) {
             mLastCursorState = mCursorBlink.visibility;
             post(mEventHandler.mMagnifier::updateDisplay);
         }
