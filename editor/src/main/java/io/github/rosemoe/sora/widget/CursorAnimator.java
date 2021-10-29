@@ -53,7 +53,11 @@ class CursorAnimator implements ValueAnimator.AnimatorUpdateListener {
     }
 
     public void markEndPosAndStart() {
-        cancel();
+        if (isRunning()) {
+            startX = (float) animatorX.getAnimatedValue();
+            startY = (float) animatorY.getAnimatedValue();
+            cancel();
+        }
         animatorX.removeAllUpdateListeners();
         animatorY.removeAllUpdateListeners();
         float[] pos = editor.mLayout.getCharLayoutOffset(editor.getCursor().getLeftLine(), editor.getCursor().getLeftColumn());
