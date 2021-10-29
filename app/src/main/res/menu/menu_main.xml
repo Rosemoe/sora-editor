@@ -68,7 +68,7 @@
                 android:title="@string/search_panel" />
         </menu>
     </item>
-    <item android:title="Feature Switches">
+    <item android:title="@string/feature_switches">
         <menu>
             <item
                 android:id="@+id/text_wordwrap"
@@ -84,6 +84,11 @@
                 android:checkable="true"
                 android:checked="true"
                 android:title="@string/pin_line_number"/>
+            <item
+                android:id="@+id/magnifier"
+                android:checkable="true"
+                android:checked="true"
+                android:title="@string/magnifier"/>
         </menu>
     </item>
     <item

@@ -75,48 +75,6 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout panel;
     private EditText search, replace;
 
-    private final ActivityResultLauncher<String> loadTMLLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), result -> {
-        try {
-            if (result == null) return;
-            //TextMateLanguage only support TextMateColorScheme
-            EditorColorScheme editorColorScheme = editor.getColorScheme();
-            if (!(editorColorScheme instanceof TextMateColorScheme)) {
-                IRawTheme iRawTheme = ThemeReader.readThemeSync("QuietLight.tmTheme", getAssets().open("textmate/QuietLight.tmTheme"));
-                editorColorScheme = TextMateColorScheme.create(iRawTheme);
-                editor.setColorScheme(editorColorScheme);
-            }
-
-
-            EditorLanguage language = TextMateLanguage.create(
-                    result.getPath()
-                    , getContentResolver().openInputStream(result)
-                    , ((TextMateColorScheme) editorColorScheme).getRawTheme());
-
-            editor.setEditorLanguage(language);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    });
-    private final ActivityResultLauncher<String> loadTMTLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), result -> {
-        try {
-            if (result == null) return;
-            IRawTheme iRawTheme = ThemeReader.readThemeSync(
-                    result.getPath()
-                    , getContentResolver().openInputStream(result));
-            TextMateColorScheme colorScheme = TextMateColorScheme.create(iRawTheme);
-            editor.setColorScheme(colorScheme);
-
-            EditorLanguage language = editor.getEditorLanguage();
-            if (language instanceof TextMateLanguage) {
-                TextMateLanguage textMateLanguage = (TextMateLanguage) language;
-                textMateLanguage.updateTheme(iRawTheme);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    });
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -167,6 +125,48 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+    private final ActivityResultLauncher<String> loadTMLLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), result -> {
+        try {
+            if (result == null) return;
+            //TextMateLanguage only support TextMateColorScheme
+            EditorColorScheme editorColorScheme = editor.getColorScheme();
+            if (!(editorColorScheme instanceof TextMateColorScheme)) {
+                IRawTheme iRawTheme = ThemeReader.readThemeSync("QuietLight.tmTheme", getAssets().open("textmate/QuietLight.tmTheme"));
+                editorColorScheme = TextMateColorScheme.create(iRawTheme);
+                editor.setColorScheme(editorColorScheme);
+            }
+
+
+            EditorLanguage language = TextMateLanguage.create(
+                    result.getPath()
+                    , getContentResolver().openInputStream(result)
+                    , ((TextMateColorScheme) editorColorScheme).getRawTheme());
+
+            editor.setEditorLanguage(language);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    });
+    private final ActivityResultLauncher<String> loadTMTLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), result -> {
+        try {
+            if (result == null) return;
+            IRawTheme iRawTheme = ThemeReader.readThemeSync(
+                    result.getPath()
+                    , getContentResolver().openInputStream(result));
+            TextMateColorScheme colorScheme = TextMateColorScheme.create(iRawTheme);
+            editor.setColorScheme(colorScheme);
+
+            EditorLanguage language = editor.getEditorLanguage();
+            if (language instanceof TextMateLanguage) {
+                TextMateLanguage textMateLanguage = (TextMateLanguage) language;
+                textMateLanguage.updateTheme(iRawTheme);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    });
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -194,24 +194,9 @@ public class MainActivity extends AppCompatActivity {
             editor.moveSelectionLeft();
         } else if (id == R.id.move_right) {
             editor.moveSelectionRight();
-        } else if (id == R.id.code_navigation) {
-            final var labels = editor.getTextAnalyzeResult().getNavigation();
-            if (labels == null) {
-                Toast.makeText(this, R.string.navi_err_msg, Toast.LENGTH_SHORT).show();
-            } else {
-                var items = new CharSequence[labels.size()];
-                for (int i = 0; i < labels.size(); i++) {
-                    items[i] = labels.get(i).label;
-                }
-                new AlertDialog.Builder(this)
-                        .setTitle(R.string.code_navi)
-                        .setSingleChoiceItems(items, 0, (dialog, i) -> {
-                            editor.jumpToLine(labels.get(i).line);
-                            dialog.dismiss();
-                        })
-                        .setPositiveButton(android.R.string.cancel, null)
-                        .show();
-            }
+        } else if (id == R.id.magnifier) {
+            editor.setMagnifierEnabled(!editor.isMagnifierEnabled());
+            item.setChecked(editor.isMagnifierEnabled());
         } else if (id == R.id.code_format) {
             editor.formatCodeAsync();
         } else if (id == R.id.switch_language) {
