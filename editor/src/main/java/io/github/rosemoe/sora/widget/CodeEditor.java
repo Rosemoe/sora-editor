@@ -1250,7 +1250,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         final float amplitude = getDpUnit() * 4;
         prepareLine(line);
         int columnCount = getText().getColumnCount(line);
-        float widthLine = measureText(mBuffer, 0, columnCount);
+        float widthLine = measureText(mBuffer, 0, columnCount) + getDpUnit() * 20;
         renderNode.setPosition(0, 0, (int) widthLine, getRowHeight() + (int) amplitude);
         Canvas canvas = renderNode.beginRecording();
         if (spans == null || spans.size() == 0) {
@@ -1704,7 +1704,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     }
                 }
             } else {
-                paintingOffset = offset + mRenderer.drawLineHardwareAccelerated(canvas, line, offset);
+                paintingOffset = offset + mRenderer.drawLineHardwareAccelerated(canvas, line, offset) - mDpUnit * 20;
                 lastVisibleChar = columnCount;
             }
 

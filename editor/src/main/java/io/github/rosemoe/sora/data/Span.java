@@ -167,11 +167,12 @@ public class Span {
         copy.setUnderlineColor(underlineColor);
         copy.problemFlags = problemFlags;
         copy.renderer = renderer;
+        copy.fontStyles = fontStyles;
         return copy;
     }
 
     public boolean recycle() {
-        problemFlags = colorId = column = underlineColor = 0;
+        problemFlags = colorId = column = underlineColor = fontStyles = 0;
         renderer = null;
         return cacheQueue.offer(this);
     }
