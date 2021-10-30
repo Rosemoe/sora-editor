@@ -453,6 +453,9 @@ class EditorInputConnection extends BaseInputConnection {
             start = end;
             end = tmp;
         }
+        if (start == getCursor().getLeft() && end == getCursor().getRight()) {
+            return true;
+        }
         mEditor.getAutoCompleteWindow().hide();
         Content content = mEditor.getText();
         CharPosition startPos = content.getIndexer().getCharPosition(start);
