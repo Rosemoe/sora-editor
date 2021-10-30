@@ -115,7 +115,7 @@ class WordwrapLayout extends AbstractLayout {
         ContentLine sequence = text.getLine(line);
         float currentWidth = 0;
         int delta;
-        for (int i = 0; i < sequence.length(); i+= delta) {
+        for (int i = 0; i < sequence.length(); i += delta) {
             char ch = sequence.charAt(i);
             delta = 1;
             float single;
@@ -239,7 +239,7 @@ class WordwrapLayout extends AbstractLayout {
             while (region.startColumn < column && row + 1 < rowTable.size()) {
                 row++;
                 region = rowTable.get(row);
-                if (region.line != line) {
+                if (region.line != line || region.startColumn > column) {
                     row--;
                     region = rowTable.get(row);
                     break;
@@ -251,6 +251,17 @@ class WordwrapLayout extends AbstractLayout {
             dest[0] = dest[1] = 0;
         }
         return dest;
+    }
+
+    @Override
+    public int getRowCountForLine(int line) {
+        int row = findRow(line);
+        int count = 0;
+        while (row < rowTable.size() && rowTable.get(row).line == line) {
+            count++;
+            row++;
+        }
+        return count;
     }
 
     static class RowRegion {

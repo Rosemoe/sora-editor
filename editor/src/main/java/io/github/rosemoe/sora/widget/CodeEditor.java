@@ -1123,6 +1123,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             drawLineNumberBackground(canvas, offsetX, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
             int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
+            if (mCursorAnimator.isRunning()) {
+                mRect.bottom = (float) mCursorAnimator.animatorBgBottom.getAnimatedValue() - getOffsetY();
+                mRect.top = mRect.bottom - (float)mCursorAnimator.animatorBackground.getAnimatedValue();
+                mRect.left = 0;
+                mRect.right = (int) (textOffset - mDividerMargin);
+                drawColor(canvas, currentLineBgColor, mRect);
+            }
             for (int i = 0; i < postDrawCurrentLines.size(); i++) {
                 drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - mDividerMargin));
             }
@@ -1172,6 +1179,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             drawLineNumberBackground(canvas, 0, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
             int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
+            if (mCursorAnimator.isRunning()) {
+                mRect.bottom = (float) mCursorAnimator.animatorBgBottom.getAnimatedValue() - getOffsetY();
+                mRect.top = mRect.bottom - (float)mCursorAnimator.animatorBackground.getAnimatedValue();
+                mRect.left = 0;
+                mRect.right = (int) (textOffset - mDividerMargin);
+                drawColor(canvas, currentLineBgColor, mRect);
+            }
             for (int i = 0; i < postDrawCurrentLines.size(); i++) {
                 drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset + getOffsetX() - mDividerMargin));
             }
@@ -1435,8 +1449,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
             lastVisibleChar = Math.min(lastVisibleChar, rowInf.endColumn);
 
-            // Draw current line background (or save)
-            if (line == currentLine) {
+            // Draw current line background
+            if (line == currentLine && !mCursorAnimator.isRunning()) {
                 drawRowBackground(canvas, currentLineBgColor, row);
                 postDrawCurrentLines.add(row);
             }
@@ -1462,6 +1476,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
         rowIterator.reset();
+
+        // Draw current line background on animation
+        if(mCursorAnimator.isRunning()) {
+            mRect.bottom = (float) mCursorAnimator.animatorBgBottom.getAnimatedValue() - getOffsetY();
+            mRect.top = mRect.bottom - (float)mCursorAnimator.animatorBackground.getAnimatedValue();
+            mRect.left = 0;
+            mRect.right = mViewRect.right;
+            drawColor(canvas, currentLineBgColor, mRect);
+        }
 
         // Step 2 - Draw text and text decorations
         for (int row = getFirstVisibleRow(); row <= getLastVisibleRow() && rowIterator.hasNext(); row++) {
@@ -1597,7 +1620,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
                     // Draw underline
                     if (span.underlineColor != 0) {
-                        mRect.bottom = getRowBottom(line) - getOffsetY() - mDpUnit * 1;
+                        mRect.bottom = getRowBottom(row) - getOffsetY() - mDpUnit * 1;
                         mRect.top = mRect.bottom - getRowHeight() * 0.08f;
                         mRect.left = paintingOffset;
                         mRect.right = paintingOffset + width;

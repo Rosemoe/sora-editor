@@ -191,6 +191,7 @@ public class Span {
         hash = 31 * hash + underlineColor;
         hash = 31 * hash + problemFlags;
         hash = 31 * hash + (renderer == null ? 0 : renderer.hashCode());
+        hash = 31 * hash + fontStyles;
         return hash;
     }
 }
