@@ -22,15 +22,22 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
+import android.os.Build;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.PixelCopy;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
+
+import androidx.annotation.RequiresApi;
 
 import io.github.rosemoe.sora.R;
 
@@ -116,9 +123,77 @@ class Magnifier {
         if (!isShowing()) {
             return;
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && view.getContext() instanceof Activity) {
+            updateDisplayN((Activity)view.getContext());
+        } else {
+            updateDisplayCompat();
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void updateDisplayN(Activity activity) {
+        var requiredWidth = (int) (popup.getWidth() / scaleFactor);
+        var requiredHeight = (int) (popup.getHeight() / scaleFactor);
+
+        var left = Math.max(x - requiredWidth / 2, 0);
+        var top = Math.max(y - requiredHeight / 2, 0);
+        var right = Math.min(left + requiredWidth, view.getWidth());
+        var bottom = Math.min(top + requiredHeight, view.getHeight());
+        if (right - left < requiredWidth) {
+            left = Math.max(0, right - requiredWidth);
+        }
+        if (bottom - top < requiredHeight) {
+            top = Math.max(0, bottom - requiredHeight);
+        }
+        if (right - left <= 0 || bottom - top <= 0) {
+            dismiss();
+            return;
+        }
+        var pos = new int[2];
+        view.getLocationInWindow(pos);
+        var clip = Bitmap.createBitmap(right - left, bottom - top, Bitmap.Config.ARGB_8888);
+        try {
+            PixelCopy.request(activity.getWindow(), new Rect(pos[0] + left, pos[1] + top, pos[0] + right, pos[1] + bottom), clip, (var statusCode) -> {
+                if (statusCode == PixelCopy.SUCCESS) {
+                    var dest = Bitmap.createBitmap(popup.getWidth(), popup.getHeight(), Bitmap.Config.ARGB_8888);
+                    var scaled = Bitmap.createScaledBitmap(clip, popup.getWidth(), popup.getHeight(), false);
+                    clip.recycle();
+
+                    Canvas canvas = new Canvas(dest);
+                    paint.reset();
+                    paint.setAntiAlias(true);
+                    canvas.drawARGB(0, 0, 0, 0);
+                    final int roundFactor = 6;
+                    canvas.drawRoundRect(0, 0, popup.getWidth(), popup.getHeight(), view.getDpUnit() * roundFactor, view.getDpUnit() * roundFactor, paint);
+                    paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+                    canvas.drawBitmap(scaled, 0, 0, paint);
+                    scaled.recycle();
+
+                    image.setImageBitmap(dest);
+                } else {
+                    Log.w("Magnifier", "Failed to copy pixels, error = " + statusCode);
+                }
+            }, view.getHandler());
+        } catch (IllegalArgumentException e) {
+            // Happens when the view has not been drawn yet
+            dismiss();
+            if (!clip.isRecycled()) {
+                clip.recycle();
+            }
+        }
+    }
+
+    public void updateDisplayCompat() {
         view.setDrawingCacheEnabled(true);
         view.buildDrawingCache();
         var display = view.getDrawingCache();
+        if (display == null) {
+            // Issue: the view is too large that drawing cache can not be obtained
+            Log.w("Magnifier", "Unable to create drawing cache");
+            view.setDrawingCacheEnabled(false);
+            dismiss();
+            return;
+        }
         var dest = Bitmap.createBitmap(popup.getWidth(), popup.getHeight(), Bitmap.Config.ARGB_8888);
         var requiredWidth = (int) (popup.getWidth() / scaleFactor);
         var requiredHeight = (int) (popup.getHeight() / scaleFactor);
