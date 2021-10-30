@@ -47,7 +47,6 @@ public class BlockLineAnalyzer  {
         FoldingRegions foldingRegions= null;
         try {
             foldingRegions = IndentRange.computeRanges(model,language.getTabSize(),folding.getOffSide(),folding,MAX_FOLDING_REGIONS_FOR_INDENT_LIMIT);
-            int startColumn=0;
             for(int i=0;i< foldingRegions.length();i++){
                 FoldingRegion foldingRegion= foldingRegions.toRegion(i);
                 int startLine=foldingRegion.getStartLineNumber();

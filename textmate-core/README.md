@@ -46,5 +46,5 @@ To avoid unexpected errors, the version is the same as `tm4e 0.4.2`
 ```
 
 # 3.License
-`tm4e` is a community open-source project licensed under the Eclipse Public License 1.0.This module is also.
+`tm4e` is a community open-source project licensed under the Eclipse Public License 2.0.This module is also.
 
