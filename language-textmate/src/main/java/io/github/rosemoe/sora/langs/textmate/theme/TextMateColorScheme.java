@@ -20,7 +20,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.textmate;
+package io.github.rosemoe.sora.langs.textmate.theme;
 
 import android.graphics.Color;
 
@@ -88,6 +88,12 @@ public class TextMateColorScheme extends EditorColorScheme {
             if (foreground != null) {
                 setColor(TEXT_NORMAL, Color.parseColor(foreground));
             }
+
+            //TMTheme seems to have no fields to control BLOCK_LINE colors
+            int blockLineColor=((getColor(WHOLE_BACKGROUND)+getColor(TEXT_NORMAL))/2)&0x00FFFFFF|0x88000000;
+            setColor(BLOCK_LINE, blockLineColor);
+            int blockLineColorCur=(blockLineColor)|0xFF000000;
+            setColor(BLOCK_LINE_CURRENT, blockLineColorCur);
         }
 
     }

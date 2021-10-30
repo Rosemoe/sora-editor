@@ -27,7 +27,6 @@ import java.io.InputStream;
 import java.io.Reader;
 import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
-import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
