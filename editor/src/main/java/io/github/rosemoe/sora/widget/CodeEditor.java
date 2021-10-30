@@ -1704,7 +1704,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     }
                 }
             } else {
-                paintingOffset = offset + mRenderer.drawLineHardwareAccelerated(canvas, line, offset);
+                paintingOffset = offset + mRenderer.drawLineHardwareAccelerated(canvas, line, offset) - mDpUnit * 20;
                 lastVisibleChar = columnCount;
             }
 
