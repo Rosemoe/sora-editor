@@ -2251,9 +2251,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     protected void drawScrollBarHorizontal(Canvas canvas) {
         int page = getWidth();
-        float all = getScrollMaxX() + getWidth();
-        float length = page / all * getWidth() / 2;
-        float leftX = getOffsetX() / all * getWidth() / 2;
+        float all = getScrollMaxX();
+        float length = page / (all + getWidth()) * getWidth();
+        float leftX = getOffsetX() / all * (getWidth() - length);
         mRect.top = getHeight() - mDpUnit * 10;
         mRect.bottom = getHeight();
         mRect.right = leftX + length;
