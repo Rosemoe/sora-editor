@@ -183,7 +183,7 @@ class Magnifier {
         }
     }
 
-    public void updateDisplayCompat() {
+    private void updateDisplayCompat() {
         view.setDrawingCacheEnabled(true);
         view.buildDrawingCache();
         var display = view.getDrawingCache();
