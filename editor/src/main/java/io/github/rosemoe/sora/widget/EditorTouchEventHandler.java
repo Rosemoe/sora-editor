@@ -883,7 +883,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
      * Runnable for controlling auto-scrolling when thumb reaches the edges of editor
      */
     private class EdgeScrollRunnable implements Runnable {
-        private final static int MAX_FACTOR = 25;
+        private final static int MAX_FACTOR = 32;
         private final static float INCREASE_FACTOR = 1.06f;
 
         private int initialDelta;
@@ -916,7 +916,9 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 }
             }
             scrollBy(dx, dy);
-            mMagnifier.dismiss();
+            if (mMagnifier.isShowing()) {
+                mMagnifier.dismiss();
+            }
 
             // Speed up if we are scrolling in the direction
             if (isSameSign(dx, lastDx)) {

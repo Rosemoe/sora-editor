@@ -4760,7 +4760,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     String line = content.getLineString(endLine);
                     String prefix = line.substring(endColumn, end);
                     mCompletionWindow.setPrefix(prefix);
-                    mCompletionWindow.show();
+                    if (!mCompletionWindow.isShowing()) {
+                        mCompletionWindow.show();
+                    }
                 } else {
                     postHideCompletionWindow();
                 }
