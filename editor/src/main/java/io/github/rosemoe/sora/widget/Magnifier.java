@@ -54,6 +54,7 @@ class Magnifier {
     public Magnifier(CodeEditor editor) {
         view = editor;
         popup = new PopupWindow(editor);
+        popup.setElevation(view.getDpUnit() * 8);
         var view = LayoutInflater.from(editor.getContext()).inflate(R.layout.magnifier_popup, null);
         image = view.findViewById(R.id.magnifier_image_view);
         popup.setHeight((int) (editor.getDpUnit() * 65));
@@ -83,7 +84,6 @@ class Magnifier {
         if (popup.isShowing()) {
             popup.update(left, top, popup.getWidth(), popup.getHeight());
         } else {
-            popup.setElevation(view.getDpUnit() * 8);
             popup.showAtLocation(view, Gravity.START | Gravity.TOP, left, top);
         }
         updateDisplay();

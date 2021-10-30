@@ -31,8 +31,8 @@ import android.widget.PopupWindow;
  * @author Rose
  */
 class EditorBasePopupWindow extends PopupWindow {
-    private CodeEditor mEditor;
-    private int[] mLocation;
+    private final CodeEditor mEditor;
+    private final int[] mLocation;
     private int mTop;
     private int mLeft;
 
@@ -48,6 +48,7 @@ class EditorBasePopupWindow extends PopupWindow {
         mLocation = new int[2];
         mEditor = editor;
         super.setTouchable(true);
+        setElevation(8 * editor.getDpUnit());
     }
 
     /**

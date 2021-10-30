@@ -176,7 +176,6 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
     @Override
     public void show() {
         updateBtnState();
-        setElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, Resources.getSystem().getDisplayMetrics()));
         super.show();
     }
 
