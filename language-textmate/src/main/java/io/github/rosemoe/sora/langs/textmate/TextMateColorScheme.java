@@ -33,8 +33,8 @@ import io.github.rosemoe.sora.widget.EditorColorScheme;
 
 public class TextMateColorScheme extends EditorColorScheme {
 
-    private Theme theme;
-    private IRawTheme iRawTheme;
+    private final Theme theme;
+    private final IRawTheme iRawTheme;
 
     public TextMateColorScheme(IRawTheme iRawTheme) {
         this.iRawTheme = iRawTheme;

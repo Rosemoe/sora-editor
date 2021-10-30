@@ -33,7 +33,7 @@ import io.github.rosemoe.sora.textmate.languageconfiguration.internal.supports.F
 public class IndentRange {
     public static final int MAX_LINE_NUMBER = 0xFFFFFF;
     public static final int MAX_FOLDING_REGIONS = 0xFFFF;
-
+    public static final int MASK_INDENT = 0xFF000000;
     public static int computeStartColumn(String line, int tabSize) {
         int column = 0;
         int i = 0;

@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
+import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
@@ -40,6 +41,7 @@ import io.github.rosemoe.sora.textmate.core.theme.FontStyle;
 import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
 import io.github.rosemoe.sora.textmate.core.theme.Theme;
 import io.github.rosemoe.sora.textmate.languageconfiguration.internal.LanguageConfigurator;
+import io.github.rosemoe.sora.widget.EditorColorScheme;
 
 public class TextMateAnalyzer implements CodeAnalyzer {
 
@@ -47,7 +49,7 @@ public class TextMateAnalyzer implements CodeAnalyzer {
     private final IGrammar grammar;
     private Theme theme;
     private BlockLineAnalyzer blockLineAnalyzer;
-    private TextMateLanguage language;
+    private final TextMateLanguage language;
     public TextMateAnalyzer(TextMateLanguage language, String grammarName, InputStream grammarIns, Reader languageConfiguration, IRawTheme theme) throws Exception {
         registry.setTheme(theme);
         this.language=language;
@@ -89,7 +91,7 @@ public class TextMateAnalyzer implements CodeAnalyzer {
 
                     //Font style
                     if (fontStyle != FontStyle.NotSet) {
-                        if ((fontStyle & FontStyle.Underline) == FontStyle.Underline) {
+                        if ((fontStyle & FontStyle.Underline) != 0) {
                             String color = theme.getColor(foreground);
                             if (color != null) {
                                 span.underlineColor = Color.parseColor(color);
@@ -104,6 +106,8 @@ public class TextMateAnalyzer implements CodeAnalyzer {
                     }
 
                     result.add(lineCount, span);
+                    //Erase the extra style at the end of the span
+                    result.addIfNeeded(lineCount,nextStartIndex, EditorColorScheme.TEXT_NORMAL);
                 }
                 ruleStack = lineTokens.getRuleStack();
             }
