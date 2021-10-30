@@ -30,6 +30,7 @@ class CursorAnimator implements ValueAnimator.AnimatorUpdateListener {
     ValueAnimator animatorY;
     private final CodeEditor editor;
     private float startX, startY;
+    private long lastAnimateTime;
 
     public CursorAnimator(CodeEditor editor) {
         this.editor = editor;
@@ -58,16 +59,21 @@ class CursorAnimator implements ValueAnimator.AnimatorUpdateListener {
             startY = (float) animatorY.getAnimatedValue();
             cancel();
         }
+        var duration = 120;
+        if (System.currentTimeMillis() - lastAnimateTime < 100) {
+            return;
+        }
         animatorX.removeAllUpdateListeners();
         animatorY.removeAllUpdateListeners();
         float[] pos = editor.mLayout.getCharLayoutOffset(editor.getCursor().getLeftLine(), editor.getCursor().getLeftColumn());
         animatorX = ValueAnimator.ofFloat(startX, (pos[1] + editor.measureTextRegionOffset()));
         animatorY = ValueAnimator.ofFloat(startY, pos[0]);
         animatorX.addUpdateListener(this);
-        animatorX.setDuration(120);
-        animatorY.setDuration(120);
+        animatorX.setDuration(duration);
+        animatorY.setDuration(duration);
         animatorX.start();
         animatorY.start();
+        lastAnimateTime = System.currentTimeMillis();
     }
 
     @Override
