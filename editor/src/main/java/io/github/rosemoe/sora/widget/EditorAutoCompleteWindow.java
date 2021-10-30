@@ -192,11 +192,11 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         mListView.onTouchEvent(ev);
         ev.recycle();
 
-        ev = MotionEvent.obtain(down, down + 1, MotionEvent.ACTION_MOVE, 0, offset, 0);
+        ev = MotionEvent.obtain(down, down, MotionEvent.ACTION_MOVE, 0, offset, 0);
         mListView.onTouchEvent(ev);
         ev.recycle();
 
-        ev = MotionEvent.obtain(down, down + 2, MotionEvent.ACTION_CANCEL, 0, offset, 0);
+        ev = MotionEvent.obtain(down, down, MotionEvent.ACTION_CANCEL, 0, offset, 0);
         mListView.onTouchEvent(ev);
         ev.recycle();
     }
@@ -208,11 +208,9 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         mListView.post(() -> {
             while (mListView.getFirstVisiblePosition() + 1 > mCurrent && mListView.canScrollList(-1)) {
                 performScrollList(mAdapter.getItemHeight());
-                Log.d("a", "up");
             }
             while (mListView.getLastVisiblePosition() - 1 < mCurrent && mListView.canScrollList(1)) {
                 performScrollList(-mAdapter.getItemHeight());
-                Log.d("a", "down");
             }
         });
     }
