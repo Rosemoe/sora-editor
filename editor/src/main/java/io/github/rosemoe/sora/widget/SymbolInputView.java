@@ -31,48 +31,73 @@ import android.widget.LinearLayout;
 
 public class SymbolInputView extends LinearLayout {
 
+    private SymbolChannel channel;
+    private int textColor;
 
     public SymbolInputView(Context context) {
         super(context);
-        setBackgroundColor(Color.WHITE);
-        setOrientation(HORIZONTAL);
+        init();
     }
 
     public SymbolInputView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        setBackgroundColor(Color.WHITE);
-        setOrientation(HORIZONTAL);
+        init();
     }
 
     public SymbolInputView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        setBackgroundColor(Color.WHITE);
-        setOrientation(HORIZONTAL);
+        init();
     }
 
     public SymbolInputView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        setBackgroundColor(Color.WHITE);
-        setOrientation(HORIZONTAL);
+        init();
     }
 
-    private SymbolChannel channel;
+    private void init() {
+        setBackgroundColor(Color.WHITE);
+        setOrientation(HORIZONTAL);
+        textColor = Color.BLACK;
+    }
 
+    /**
+     * Bind editor for the view
+     */
     public void bindEditor(CodeEditor editor) {
         channel = editor.createNewSymbolChannel();
     }
 
+    /**
+     * Set text color in the panel
+     */
+    public void setTextColor(int color) {
+        for (int i = 0;i < getChildCount();i++) {
+            ((Button) getChildAt(i)).setTextColor(color);
+        }
+        textColor = color;
+    }
+
+    /**
+     * Remove all added symbols
+     */
     public void removeSymbols() {
         removeAllViews();
     }
 
+    /**
+     * Add symbols to the view.
+     *
+     * @param display The texts displayed in button
+     * @param insertText The actual text to be inserted to editor when the button is clicked
+     */
     public void addSymbols(String[] display, final String[] insertText) {
         int count = Math.max(display.length, insertText.length);
         for (int i = 0; i < count; i++) {
             Button btn = new Button(getContext(), null, android.R.attr.buttonStyleSmall);
             btn.setText(display[i]);
             btn.setBackground(new ColorDrawable(0));
-            addView(btn, new LinearLayout.LayoutParams(-2, -1));
+            btn.setTextColor(textColor);
+            addView(btn, new LayoutParams(-2, -1));
             int finalI = i;
             btn.setOnClickListener((view) -> channel.insertSymbol(insertText[finalI], 1));
         }
