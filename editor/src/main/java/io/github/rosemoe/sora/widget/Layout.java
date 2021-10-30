@@ -103,4 +103,9 @@ interface Layout extends LineRemoveListener, ContentListener {
      */
     float[] getCharLayoutOffset(int line, int column, float[] array);
 
+    /**
+     * Get how many rows are in the given line
+     */
+    int getRowCountForLine(int line);
+
 }

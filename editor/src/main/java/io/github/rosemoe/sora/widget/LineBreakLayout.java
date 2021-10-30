@@ -146,6 +146,11 @@ class LineBreakLayout extends AbstractLayout {
         return dest;
     }
 
+    @Override
+    public int getRowCountForLine(int line) {
+        return 1;
+    }
+
     class LineBreakLayoutRowItr implements RowIterator {
 
         private final Row result;
