@@ -62,10 +62,19 @@ public class Span {
      */
     public static final int FLAG_DEPRECATED = 1;
 
+    public static final int STYLE_BOLD = 1;
+    public static final int STYLE_ITALICS = 1 << 1;
+
     private static final BlockingQueue<Span> cacheQueue = new ArrayBlockingQueue<>(8192 * 2);
     public int column;
     public int colorId;
-    public int underlineColor = 0;
+    public int underlineColor;
+    /**
+     * Extra font styles for this span
+     * @see #STYLE_BOLD
+     * @see #STYLE_ITALICS
+     */
+    public int fontStyles;
 
     /**
      * Set this value to draw curly lines for this span to indicates code problems.
@@ -74,6 +83,7 @@ public class Span {
      * @see Span#FLAG_WARNING
      * @see Span#FLAG_TYPO
      * @see Span#FLAG_DEPRECATED
+     * @see io.github.rosemoe.sora.text.TextAnalyzeResult#markProblemRegion(int, int, int, int, int)
      */
     public int problemFlags = 0;
     public ExternalRenderer renderer = null;
@@ -137,6 +147,15 @@ public class Span {
      */
     public Span setColumn(int column) {
         this.column = column;
+        return this;
+    }
+
+    /**
+     * Set font style
+     * @see #fontStyles
+     */
+    public Span setStyles(int styles) {
+        fontStyles = styles;
         return this;
     }
 

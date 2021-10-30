@@ -23,15 +23,8 @@
 package io.github.rosemoe.sora.langs.textmate.analyzer;
 
 import android.graphics.Color;
-import android.util.Log;
-
-import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.Reader;
-import java.io.StringReader;
-import java.util.Stack;
-
-import io.github.rosemoe.sora.data.BlockLine;
 import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
@@ -42,14 +35,10 @@ import io.github.rosemoe.sora.textmate.core.grammar.IGrammar;
 import io.github.rosemoe.sora.textmate.core.grammar.ITokenizeLineResult2;
 import io.github.rosemoe.sora.textmate.core.grammar.StackElement;
 import io.github.rosemoe.sora.textmate.core.internal.grammar.StackElementMetadata;
-import io.github.rosemoe.sora.textmate.core.internal.oniguruma.OnigRegExp;
-import io.github.rosemoe.sora.textmate.core.internal.oniguruma.OnigResult;
-import io.github.rosemoe.sora.textmate.core.internal.oniguruma.OnigString;
 import io.github.rosemoe.sora.textmate.core.registry.Registry;
 import io.github.rosemoe.sora.textmate.core.theme.FontStyle;
 import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
 import io.github.rosemoe.sora.textmate.core.theme.Theme;
-import io.github.rosemoe.sora.textmate.languageconfiguration.internal.LanguageConfiguration;
 import io.github.rosemoe.sora.textmate.languageconfiguration.internal.LanguageConfigurator;
 
 public class TextMateAnalyzer implements CodeAnalyzer {
@@ -105,6 +94,12 @@ public class TextMateAnalyzer implements CodeAnalyzer {
                             if (color != null) {
                                 span.underlineColor = Color.parseColor(color);
                             }
+                        }
+                        if ((fontStyle & FontStyle.Italic) != 0) {
+                            span.fontStyles |= Span.STYLE_ITALICS;
+                        }
+                        if ((fontStyle & FontStyle.Bold) != 0) {
+                            span.fontStyles |= Span.STYLE_BOLD;
                         }
                     }
 

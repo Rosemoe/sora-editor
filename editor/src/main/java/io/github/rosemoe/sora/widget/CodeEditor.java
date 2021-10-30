@@ -1231,7 +1231,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     @RequiresApi(29)
-    protected void updateBoringLineDisplayList(RenderNode renderNode, int line, List<Span> spans) {
+    protected void updateLineDisplayList(RenderNode renderNode, int line, List<Span> spans) {
         final float waveLength = getDpUnit() * 18;
         final float amplitude = getDpUnit() * 4;
         prepareLine(line);
@@ -1249,6 +1249,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         float phi = 0f;
         Span span = spans.get(spanOffset);
         // Draw by spans
+        int lastStyle = 0;
         while (columnCount > span.column) {
             int spanEnd = spanOffset + 1 >= spans.size() ? columnCount : spans.get(spanOffset + 1).column;
             spanEnd = Math.min(columnCount, spanEnd);
@@ -1270,6 +1271,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 canvas.restoreToCount(saveCount);
             }
 
+            // Apply font style
+            if (span.fontStyles != lastStyle) {
+                mPaint.setFakeBoldText((span.fontStyles & Span.STYLE_BOLD) != 0);
+                if ((span.fontStyles & Span.STYLE_ITALICS) != 0) {
+                    mPaint.setTextSkewX(-0.2f);
+                } else {
+                    mPaint.setTextSkewX(0);
+                }
+                lastStyle = span.fontStyles;
+            }
             // Draw text
             drawRegionText(canvas, paintingOffset, getRowBaseline(row), line, paintStart, paintEnd, columnCount, mColors.getColor(span.colorId));
 
@@ -1358,6 +1369,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
         renderNode.endRecording();
+        mPaint.setTextSkewX(0);
+        mPaint.setFakeBoldText(false);
     }
 
     /**
@@ -1534,6 +1547,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 }
                 Span span = spans.get(spanOffset);
                 // Draw by spans
+                int lastStyle = 0;
                 while (lastVisibleChar > span.column) {
                     int spanEnd = spanOffset + 1 >= spans.size() ? columnCount : spans.get(spanOffset + 1).column;
                     spanEnd = Math.min(columnCount, spanEnd);
@@ -1559,6 +1573,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                             Log.e(LOG_TAG, "Error while invoking external renderer", e);
                         }
                         canvas.restoreToCount(saveCount);
+                    }
+
+                    // Apply font style
+                    if (span.fontStyles != lastStyle) {
+                        mPaint.setFakeBoldText((span.fontStyles & Span.STYLE_BOLD) != 0);
+                        if ((span.fontStyles & Span.STYLE_ITALICS) != 0) {
+                            mPaint.setTextSkewX(-0.2f);
+                        } else {
+                            mPaint.setTextSkewX(0);
+                        }
+                        lastStyle = span.fontStyles;
                     }
 
                     // Draw text
@@ -1714,6 +1739,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
 
+        mPaint.setFakeBoldText(false);
+        mPaint.setTextSkewX(0);
         mPaintOther.setStrokeWidth(circleRadius * 2);
         mDrawPoints.commitPoints(canvas, mPaintOther);
     }

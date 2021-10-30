@@ -27,6 +27,7 @@ import static io.github.rosemoe.sora.langs.universal.UniversalTokens.EOF;
 import java.util.Stack;
 
 import io.github.rosemoe.sora.data.BlockLine;
+import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
@@ -121,7 +122,7 @@ public class UniversalLanguage implements EditorLanguage, CodeAnalyzer {
                 int column = helper.getColumn();
                 switch (token) {
                     case KEYWORD:
-                        result.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
+                        result.addIfNeeded(line, column, EditorColorScheme.KEYWORD, Span.STYLE_BOLD);
                         break;
                     case IDENTIFIER:
                         identifiers.addIdentifier(text.substring(index, index + tokenizer.getTokenLength()));
