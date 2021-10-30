@@ -29,6 +29,7 @@ import org.antlr.v4.runtime.Token;
 import java.io.IOException;
 import java.io.StringReader;
 
+import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.text.TextAnalyzer;
@@ -97,7 +98,7 @@ public class PythonCodeAnalyzer implements CodeAnalyzer {
                     case PythonLexer.BREAK:
                     case PythonLexer.ASYNC:
                     case PythonLexer.AWAIT:
-                        result.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
+                        result.addIfNeeded(line, column, EditorColorScheme.KEYWORD, Span.STYLE_BOLD);
                         break;
                     case PythonLexer.COMMENT:
                         result.addIfNeeded(line, column, EditorColorScheme.COMMENT);

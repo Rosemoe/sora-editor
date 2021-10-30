@@ -149,7 +149,7 @@ class HwAcceleratedRenderer implements ContentListener {
                 spans = new ArrayList<>();
                 spans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
             }
-            editor.updateBoringLineDisplayList(node.renderNode, line, spans);
+            editor.updateLineDisplayList(node.renderNode, line, spans);
             node.isDirty = false;
         }
         canvas.save();

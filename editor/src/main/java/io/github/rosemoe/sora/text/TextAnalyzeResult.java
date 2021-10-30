@@ -54,23 +54,32 @@ public class TextAnalyzeResult {
     }
 
     /**
-     * Add a new span if required (colorId is different from last)
+     * Add a new span if required
      *
      * @param spanLine Line
      * @param column   Column
      * @param colorId  Type
      */
     public void addIfNeeded(int spanLine, int column, int colorId) {
-        if (mLast != null && mLast.colorId == colorId) {
+        addIfNeeded(spanLine, column, colorId, 0);
+    }
+
+    /**
+     * Add a new span if required
+     */
+    public void addIfNeeded(int spanLine, int column, int colorId, int styles) {
+        if (mLast != null && mLast.colorId == colorId && mLast.fontStyles == styles) {
             return;
         }
-        add(spanLine, Span.obtain(column, colorId));
+        add(spanLine, Span.obtain(column, colorId).setStyles(styles));
     }
 
     /**
      * Add a span directly
+     *
      * Note: the line should always >= the line of span last committed
-     * if two spans are on the same line, you must add them in order by their column
+     *
+     * If two spans are on the same line, you must add them in order by their column
      *
      * @param spanLine The line position of span
      * @param span     The span

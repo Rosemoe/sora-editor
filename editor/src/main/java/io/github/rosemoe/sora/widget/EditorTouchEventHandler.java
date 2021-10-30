@@ -42,7 +42,7 @@ import io.github.rosemoe.sora.util.IntPair;
 final class EditorTouchEventHandler implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
 
     private final static int HIDE_DELAY = 3000;
-    private final static int SELECTION_HANDLE_RESIZE_DELAY = 10;
+    private final static int SELECTION_HANDLE_RESIZE_DELAY = 100;
     private final static int HIDE_DELAY_HANDLE = 5000;
     private static final long INTERACTION_END_DELAY = 100;
     private static final String TAG = "EditorTouchEventHandler";
@@ -64,6 +64,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     private SelectionHandle insert = null, left = null, right = null;
     private int mSelHandleType = -1;
     private int mTouchedHandleType = -1;
+    protected Magnifier mMagnifier;
 
     private final static int LEFT_EDGE = 1;
     private final static int RIGHT_EDGE = 1 << 1;
@@ -83,6 +84,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         mScroller = new OverScroller(editor.getContext());
         maxSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 32, Resources.getSystem().getDisplayMetrics());
         minSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 6, Resources.getSystem().getDisplayMetrics());
+        mMagnifier = new Magnifier(editor);
     }
 
     /**
@@ -300,6 +302,21 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         mScroller.startScroll(0, 0, 0, 0, 0);
     }
 
+    private void updateMagnifier(MotionEvent e) {
+        if (mEdgeFlags != 0) {
+            dissmissMagnifier();
+            return;
+        }
+        if (mEditor.isMagnifierEnabled()) {
+            var height = Math.max(Math.max(mEditor.getInsertHandleRect().height(), mEditor.getLeftHandleRect().height()), mEditor.getRightHandleRect().height());
+            mMagnifier.show((int) e.getX(), (int) (e.getY() - height/2 - mEditor.getRowHeight()));
+        }
+    }
+
+    private void dissmissMagnifier() {
+        mMagnifier.dismiss();
+    }
+
     /**
      * Handle events apart from detectors
      *
@@ -335,6 +352,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     mHoldingInsertHandle = true;
                     downY = e.getY();
                     downX = e.getX();
+                    updateMagnifier(e);
 
                     insert = new SelectionHandle(SelectionHandle.BOTH);
                 }
@@ -350,10 +368,10 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     }
                     downY = e.getY();
                     downX = e.getX();
+                    updateMagnifier(e);
 
                     this.left = new SelectionHandle(SelectionHandle.LEFT);
                     this.right = new SelectionHandle(SelectionHandle.RIGHT);
-
                 }
                 return true;
             case MotionEvent.ACTION_MOVE:
@@ -373,7 +391,12 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     scrollBy(dx, 0);
                     return true;
                 }
-                return handleSelectionChange(e);
+                if(handleSelectionChange(e)) {
+                    updateMagnifier(e);
+                    return true;
+                } else {
+                    return false;
+                }
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 if (mHoldingScrollbarVertical) {
@@ -401,6 +424,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     notifyTouchedSelectionHandlerLater();
                 }
                 stopEdgeScroll();
+                dissmissMagnifier();
                 break;
         }
         return false;
@@ -859,7 +883,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
      * Runnable for controlling auto-scrolling when thumb reaches the edges of editor
      */
     private class EdgeScrollRunnable implements Runnable {
-        private final static int MAX_FACTOR = 25;
+        private final static int MAX_FACTOR = 32;
         private final static float INCREASE_FACTOR = 1.06f;
 
         private int initialDelta;
@@ -892,6 +916,9 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 }
             }
             scrollBy(dx, dy);
+            if (mMagnifier.isShowing()) {
+                mMagnifier.dismiss();
+            }
 
             // Speed up if we are scrolling in the direction
             if (isSameSign(dx, lastDx)) {

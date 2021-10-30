@@ -36,8 +36,8 @@ public class TextComposeBasePopup extends PopupWindow {
     public static int DRAG = 1;
     public static int SCROLL = 2;
     private final float textSizePx;
-    private CodeEditor mEditor;
-    private int[] mLocation;
+    private final CodeEditor mEditor;
+    private final int[] mLocation;
     private int mTop;
     private int mMaximumTop;
     private int mLeft;
@@ -57,6 +57,7 @@ public class TextComposeBasePopup extends PopupWindow {
         mEditor = editor;
         super.setTouchable(true);
         textSizePx = mEditor.getTextSizePx();
+        setElevation(editor.getDpUnit() * 8);
     }
 
     /**

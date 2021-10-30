@@ -47,7 +47,7 @@
     <string name="code_navigation">代码导航</string>
     <string name="switch_language">调节程序语言</string>
     <string name="format">格式化</string>
-    <string name="app_name">CodeEditorSample</string>
+    <string name="app_name">Sora-editor Demo</string>
     <string name="code_navi">代码导航</string>
     <string name="navi_err_msg">代码导航没有准备好或者该语言不支持</string>
     <string name="color_scheme">颜色风格</string>
@@ -57,4 +57,6 @@
     <string name="clear_crash_log">清除崩溃日志</string>
     <string name="line_number_visibility">显示行号</string>
     <string name="pin_line_number">固定显示行号</string>
+    <string name="feature_switches">功能开关</string>
+    <string name="magnifier">放大镜</string>
 </resources>

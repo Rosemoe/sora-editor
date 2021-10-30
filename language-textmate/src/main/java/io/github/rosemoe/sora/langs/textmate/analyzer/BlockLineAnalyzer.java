@@ -22,10 +22,7 @@
  */
 package io.github.rosemoe.sora.langs.textmate.analyzer;
 
-import android.util.Log;
-
 import java.util.Collections;
-import java.util.Comparator;
 
 import io.github.rosemoe.sora.data.BlockLine;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;

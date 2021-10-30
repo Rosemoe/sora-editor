@@ -28,6 +28,7 @@ import java.util.Stack;
 
 import io.github.rosemoe.sora.data.BlockLine;
 import io.github.rosemoe.sora.data.NavigationItem;
+import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 import io.github.rosemoe.sora.langs.IdentifierAutoComplete;
 import io.github.rosemoe.sora.langs.internal.TrieTree;
@@ -193,7 +194,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                 case FALSE:
                 case NULL:
                     classNamePrevious = false;
-                    result.addIfNeeded(line, column, EditorColorScheme.KEYWORD);
+                    result.addIfNeeded(line, column, EditorColorScheme.KEYWORD, Span.STYLE_BOLD);
                     break;
                 case LBRACE: {
                     classNamePrevious = false;

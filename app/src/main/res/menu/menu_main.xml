@@ -68,23 +68,29 @@
                 android:title="@string/search_panel" />
         </menu>
     </item>
-    <item
-        android:id="@+id/code_navigation"
-        android:title="@string/code_navigation" />
-    <item
-        android:id="@+id/text_wordwrap"
-        android:checkable="true"
-        android:title="@string/wordwrap" />
-    <item
-        android:id="@+id/editor_line_number"
-        android:checkable="true"
-        android:checked="true"
-        android:title="@string/line_number_visibility" />
-    <item
-        android:id="@+id/pin_line_number"
-        android:checkable="true"
-        android:checked="true"
-        android:title="@string/pin_line_number"/>
+    <item android:title="@string/feature_switches">
+        <menu>
+            <item
+                android:id="@+id/text_wordwrap"
+                android:checkable="true"
+                android:title="@string/wordwrap" />
+            <item
+                android:id="@+id/editor_line_number"
+                android:checkable="true"
+                android:checked="true"
+                android:title="@string/line_number_visibility" />
+            <item
+                android:id="@+id/pin_line_number"
+                android:checkable="true"
+                android:checked="true"
+                android:title="@string/pin_line_number"/>
+            <item
+                android:id="@+id/magnifier"
+                android:checkable="true"
+                android:checked="true"
+                android:title="@string/magnifier"/>
+        </menu>
+    </item>
     <item
         android:id="@+id/code_format"
         android:title="@string/format" />

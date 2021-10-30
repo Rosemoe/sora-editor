@@ -254,6 +254,9 @@ public class Content implements CharSequence {
         //-----Notify------
         if (mCursor != null)
             mCursor.beforeInsert(line, column);
+        for (var lis : mListeners) {
+            lis.beforeModification(this);
+        }
 
         int workLine = line;
         int workIndex = column;
@@ -323,11 +326,16 @@ public class Content implements CharSequence {
             }
 
             //-----Notify------
-            if (mCursor != null)
-                if (columnOnStartLine != -1)
+            if (mCursor != null) {
+                if (columnOnStartLine != -1) {
                     mCursor.beforeDelete(startLine, columnOnStartLine, endLine, columnOnEndLine);
-                else
+                } else {
                     mCursor.beforeDelete(startLine == 0 ? 0 : startLine - 1, startLine == 0 ? 0 : getColumnCount(startLine - 1), endLine, columnOnEndLine);
+                }
+            }
+            for (var lis : mListeners) {
+                lis.beforeModification(this);
+            }
 
             changedContent.append(curr, beginIdx, columnOnEndLine);
             curr.delete(beginIdx, columnOnEndLine);

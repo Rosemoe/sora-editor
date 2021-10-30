@@ -49,6 +49,13 @@ public abstract class EditorCompletionAdapter extends BaseAdapter {
         mItems = items;
     }
 
+    /**
+     * Get current prefix of completion
+     */
+    public String getPrefix() {
+        return mWindow.getPrefix();
+    }
+
     @Override
     public CompletionItem getItem(int position) {
         return mItems.get(position);

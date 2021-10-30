@@ -24,7 +24,10 @@ package io.github.rosemoe.sora.widget;
 
 import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
+import android.os.SystemClock;
+import android.util.Log;
 import android.util.TypedValue;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -82,7 +85,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         ((RelativeLayout.LayoutParams) mTip.getLayoutParams()).addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         setContentView(layout);
         GradientDrawable gd = new GradientDrawable();
-        gd.setCornerRadius(1);
+        gd.setCornerRadius(editor.getDpUnit() * 8);
         layout.setBackground(gd);
         mBg = gd;
         applyColorScheme();
@@ -181,10 +184,35 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
     }
 
     /**
+     * Perform motion events
+     */
+    private void performScrollList(int offset) {
+        long down = SystemClock.uptimeMillis();
+        var ev = MotionEvent.obtain(down, down, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        mListView.onTouchEvent(ev);
+        ev.recycle();
+
+        ev = MotionEvent.obtain(down, down, MotionEvent.ACTION_MOVE, 0, offset, 0);
+        mListView.onTouchEvent(ev);
+        ev.recycle();
+
+        ev = MotionEvent.obtain(down, down, MotionEvent.ACTION_CANCEL, 0, offset, 0);
+        mListView.onTouchEvent(ev);
+        ev.recycle();
+    }
+
+    /**
      * Make current selection visible
      */
     private void ensurePosition() {
-        mListView.setSelection(mCurrent);
+        mListView.post(() -> {
+            while (mListView.getFirstVisiblePosition() + 1 > mCurrent && mListView.canScrollList(-1)) {
+                performScrollList(mAdapter.getItemHeight());
+            }
+            while (mListView.getLastVisiblePosition() - 1 < mCurrent && mListView.canScrollList(1)) {
+                performScrollList(-mAdapter.getItemHeight());
+            }
+        });
     }
 
     /**
