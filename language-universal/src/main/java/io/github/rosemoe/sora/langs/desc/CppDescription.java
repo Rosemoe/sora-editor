@@ -42,7 +42,13 @@ public class CppDescription extends CDescription {
                 "struct", "switch", "template", "this", "throw", "true", "try",
                 "typedef", "typeid", "typename", "unsigned", "union",
                 "using", "virtual", "void", "volatile", "wchar_t", "while", "define","include",
-                "_Bool", "char16_t","char32_t"
+                "_Bool","char8_t", "char16_t","char32_t","reflexpr","nce","register","reinterpret_cast","requires",
+				"ast short","sizeof","static_assert","static_cast","struct","template","thread_local","typedef",
+				"typeid","typename","ince","union","unsigned","using","virtual","wchar_t","xor","xor_eq",
+				"decltype","delete","explicit","noexcept","not","or","and","and_eq"
         };
     }
 }
+
+
+ 
