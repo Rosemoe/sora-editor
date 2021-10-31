@@ -41,8 +41,9 @@ public class CppDescription extends CDescription {
                 "return", "short", "signed", "sizeof", "static", "static_cast",
                 "struct", "switch", "template", "this", "throw", "true", "try",
                 "typedef", "typeid", "typename", "unsigned", "union",
-                "using", "virtual", "void", "volatile", "wchar_t", "while", "define","include",
-                "_Bool", "char16_t","char32_t"
+                "using", "virtual", "void", "volatile", "wchar_t", "while", "#define","#include",
+                "_Bool", "char16_t","char32_t","std","cout","cput","string","if else","end","endl",
+      
         };
     }
 }
