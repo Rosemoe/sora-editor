@@ -3207,6 +3207,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public void undo() {
         mText.undo();
+        mCompletionWindow.hide();
     }
 
     /**
@@ -3214,6 +3215,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public void redo() {
         mText.redo();
+        mCompletionWindow.hide();
     }
 
     /**
