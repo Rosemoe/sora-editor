@@ -243,6 +243,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mSymbolCompletionEnabled;
     private boolean mVerticalScrollBarEnabled;
     private boolean mHorizontalScrollBarEnabled;
+    private boolean mCursorAnimation;
     private boolean mPinLineNumber;
     private boolean mFirstLineNumberAlwaysVisible;
     private boolean mAllowFullscreen;
@@ -509,6 +510,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setHorizontalScrollBarEnabled(true);
         setFirstLineNumberAlwaysVisible(true);
         setSymbolCompletionEnabled(true);
+        setCursorAnimationEnabled(true);
         setEditable(true);
         setLineNumberEnabled(true);
         setAutoCompletionOnComposing(true);
@@ -881,6 +883,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
             invalidate();
         }
+    }
+
+    public void setCursorAnimationEnabled(boolean enabled) {
+        if (!enabled) {
+            mCursorAnimator.cancel();
+        }
+        mCursorAnimation = enabled;
+    }
+
+    public boolean isCursorAnimationEnabled() {
+        return mCursorAnimation;
     }
 
     /**
@@ -4736,6 +4749,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             createLayout();
         } else {
             mEventHandler.scrollBy(getOffsetX() > getScrollMaxX() ? getScrollMaxX() - getOffsetX() : 0, getOffsetY() > getScrollMaxY() ? getScrollMaxY() - getOffsetY() : 0);
+        }
+        if (oldHeight > h) {
+            ensureSelectionVisible();
         }
     }
 

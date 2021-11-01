@@ -24,8 +24,12 @@
 package io.github.rosemoe.sora.widget;
 
 import android.animation.ValueAnimator;
-import android.util.Log;
 
+/**
+ * Helper class for cursor animation in editor
+ *
+ * @author Rosemoe
+ */
 class CursorAnimator implements ValueAnimator.AnimatorUpdateListener {
 
     ValueAnimator animatorX;
@@ -49,25 +53,30 @@ class CursorAnimator implements ValueAnimator.AnimatorUpdateListener {
         float[] pos = editor.mLayout.getCharLayoutOffset(line, editor.getCursor().getLeftColumn());
         startX = editor.measureTextRegionOffset() + pos[1];
         startY = pos[0];
-        startSize = editor.mLayout.getRowCountForLine(line);
+        startSize = editor.mLayout.getRowCountForLine(line) * editor.getRowHeight();
         startBottom = editor.mLayout.getCharLayoutOffset(line, editor.getText().getColumnCount(line))[0];
     }
 
     public boolean isRunning() {
-        return animatorX.isRunning() || animatorY.isRunning() || animatorBackground.isRunning();
+        return animatorX.isRunning() || animatorY.isRunning() || animatorBackground.isRunning() || animatorBgBottom.isRunning();
     }
 
     public void cancel() {
         animatorX.cancel();
         animatorY.cancel();
         animatorBackground.cancel();
+        animatorBgBottom.cancel();
     }
 
     public void markEndPosAndStart() {
+        if (!editor.isCursorAnimationEnabled()) {
+            return;
+        }
         if (isRunning()) {
             startX = (float) animatorX.getAnimatedValue();
             startY = (float) animatorY.getAnimatedValue();
             startSize = (float) animatorBackground.getAnimatedValue();
+            startBottom = (float) animatorBgBottom.getAnimatedValue();
             cancel();
         }
         var duration = 120;
@@ -80,7 +89,7 @@ class CursorAnimator implements ValueAnimator.AnimatorUpdateListener {
 
         animatorX = ValueAnimator.ofFloat(startX, (pos[1] + editor.measureTextRegionOffset()));
         animatorY = ValueAnimator.ofFloat(startY, pos[0]);
-        animatorBackground = ValueAnimator.ofFloat(startSize * editor.getRowHeight(), editor.mLayout.getRowCountForLine(editor.getCursor().getLeftLine()) * editor.getRowHeight());
+        animatorBackground = ValueAnimator.ofFloat(startSize, editor.mLayout.getRowCountForLine(editor.getCursor().getLeftLine()) * editor.getRowHeight());
         animatorBgBottom = ValueAnimator.ofFloat(startBottom, editor.mLayout.getCharLayoutOffset(line, editor.getText().getColumnCount(line))[0]);
 
         animatorX.addUpdateListener(this);
@@ -94,6 +103,7 @@ class CursorAnimator implements ValueAnimator.AnimatorUpdateListener {
         animatorY.start();
         animatorBackground.start();
         animatorBgBottom.start();
+
         lastAnimateTime = System.currentTimeMillis();
     }
 
