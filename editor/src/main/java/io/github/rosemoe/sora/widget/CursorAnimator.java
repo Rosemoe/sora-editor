@@ -24,8 +24,12 @@
 package io.github.rosemoe.sora.widget;
 
 import android.animation.ValueAnimator;
-import android.util.Log;
 
+/**
+ * Helper class for cursor animation in editor
+ *
+ * @author Rosemoe
+ */
 class CursorAnimator implements ValueAnimator.AnimatorUpdateListener {
 
     ValueAnimator animatorX;
@@ -54,16 +58,20 @@ class CursorAnimator implements ValueAnimator.AnimatorUpdateListener {
     }
 
     public boolean isRunning() {
-        return animatorX.isRunning() || animatorY.isRunning() || animatorBackground.isRunning();
+        return animatorX.isRunning() || animatorY.isRunning() || animatorBackground.isRunning() || animatorBgBottom.isRunning();
     }
 
     public void cancel() {
         animatorX.cancel();
         animatorY.cancel();
         animatorBackground.cancel();
+        animatorBgBottom.cancel();
     }
 
     public void markEndPosAndStart() {
+        if (!editor.isCursorAnimationEnabled()) {
+            return;
+        }
         if (isRunning()) {
             startX = (float) animatorX.getAnimatedValue();
             startY = (float) animatorY.getAnimatedValue();
@@ -95,6 +103,7 @@ class CursorAnimator implements ValueAnimator.AnimatorUpdateListener {
         animatorY.start();
         animatorBackground.start();
         animatorBgBottom.start();
+
         lastAnimateTime = System.currentTimeMillis();
     }
 
