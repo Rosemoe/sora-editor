@@ -109,6 +109,6 @@ class CursorAnimator implements ValueAnimator.AnimatorUpdateListener {
 
     @Override
     public void onAnimationUpdate(ValueAnimator animation) {
-        editor.postInvalidate();
+        editor.postInvalidateOnAnimation();
     }
 }
