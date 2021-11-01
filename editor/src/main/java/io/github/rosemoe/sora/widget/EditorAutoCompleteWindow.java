@@ -229,6 +229,10 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
      * @param pos Index of auto complete item
      */
     public void select(int pos) {
+        if (pos == -1) {
+            mEditor.getCursor().onCommitText("\n");
+            return;
+        }
         CompletionItem item = ((EditorCompletionAdapter) mListView.getAdapter()).getItem(pos);
         Cursor cursor = mEditor.getCursor();
         if (!cursor.isSelected()) {

@@ -22,7 +22,8 @@
   ~     additional information or have any questions
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:title="@string/cursor_actions">
         <menu>
             <item
@@ -46,16 +47,6 @@
             <item
                 android:id="@+id/end"
                 android:title="@string/end" />
-        </menu>
-    </item>
-    <item android:title="@string/text_actions">
-        <menu>
-            <item
-                android:id="@+id/text_undo"
-                android:title="@string/undo" />
-            <item
-                android:id="@+id/text_redo"
-                android:title="@string/redo" />
         </menu>
     </item>
     <item android:title="@string/search_text">
@@ -111,4 +102,14 @@
         android:id="@+id/open_debug_logs"
         android:visible="false"
         android:title="@string/open_debug_logs"/>
+    <item
+       android:id="@+id/text_undo"
+       android:title="@string/undo" 
+       android:icon="@drawable/undo"
+       app:showAsAction="always"/>
+    <item
+        android:id="@+id/text_redo"
+        android:title="@string/redo" 
+        android:icon="@drawable/redo"
+        app:showAsAction="always"/>
 </menu>
