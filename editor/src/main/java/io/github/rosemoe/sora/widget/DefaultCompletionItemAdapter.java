@@ -48,8 +48,8 @@ class DefaultCompletionItemAdapter extends EditorCompletionAdapter {
 
     @Override
     public int getItemHeight() {
-        // 30 dp
-        return (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getContext().getResources().getDisplayMetrics());
+        // 45 dp
+        return (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 45, getContext().getResources().getDisplayMetrics());
     }
 
     @Override
