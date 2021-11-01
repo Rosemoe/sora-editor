@@ -4737,6 +4737,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else {
             mEventHandler.scrollBy(getOffsetX() > getScrollMaxX() ? getScrollMaxX() - getOffsetX() : 0, getOffsetY() > getScrollMaxY() ? getScrollMaxY() - getOffsetY() : 0);
         }
+        if (oldHeight > h) {
+            ensureSelectionVisible();
+        }
     }
 
     @Override
