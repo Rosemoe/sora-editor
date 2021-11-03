@@ -77,6 +77,9 @@ class Magnifier {
      * X and Y are relative to the code editor view
      */
     public void show(int x, int y) {
+        if (Math.abs(x - this.x) < 3 && Math.abs(y - this.y) < 3) {
+            return;
+        }
         popup.setWidth(Math.min(view.getWidth() * 2 / 5, (int)view.getDpUnit()) * 200);
         this.x = x;
         this.y = y;
