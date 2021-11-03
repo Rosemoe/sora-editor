@@ -67,7 +67,7 @@ public class JavaScriptDescription implements LanguageDescription {
                 "const", "for", "package", "try", "continue", "function", "private", "typeof",
                 "debugger", "goto", "protected", "var", "default", "if", "public", "void",
                 "delete", "implements", "return", "volatile", "do", "import", "short", "while",
-                "double", "in", "static", "with"
+                "double", "in", "static", "with","of"
         };
     }
 
