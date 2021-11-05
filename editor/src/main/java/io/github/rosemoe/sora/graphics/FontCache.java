@@ -44,7 +44,7 @@ public class FontCache {
 
     public FontCache() {
         cache = new float[65536];
-        buffer = new char[3];
+        buffer = new char[5];
     }
 
     /**
@@ -74,20 +74,14 @@ public class FontCache {
         float width = 0f;
         for (int i = start; i < end; i++) {
             char ch = chars[i];
-            if (TextUtils.isEmoji(ch) && i + 1 < end) {
-                buffer[0] = ch;
-                buffer[1] = chars[++i];
-                if (i + 1 < end) {
-                    buffer[2] = chars[++i];
-                    if (!TextUtils.isEmoji(buffer[1]) || TextUtils.isEmoji(buffer[2])) {
-                        i--;
-                        width += p.measureText(buffer, 0, 2);
-                    } else {
-                        width += p.measureText(buffer, 0, 3);
-                    }
-                } else {
-                    width += p.measureText(buffer, 0, 2);
+            if (TextUtils.isEmoji(ch)) {
+                int commitEnd = Math.min(end, i + 4);
+                int len = commitEnd - i;
+                if (len >= 0) {
+                    System.arraycopy(chars, i, buffer, 0, len);
                 }
+                width += p.measureText(buffer, 0, len);
+                i += len - 1;
             } else {
                 width += measureChar(ch, p);
             }
@@ -102,21 +96,14 @@ public class FontCache {
         float width = 0f;
         for (int i = start; i < end; i++) {
             char ch = str.charAt(i);
-            if (TextUtils.isEmoji(ch) && i + 1 < end) {
-                buffer[0] = ch;
-                buffer[1] = str.charAt(++i);
-                if (i + 1 < end) {
-                    buffer[2] = str.charAt(++i);
-                    if (!TextUtils.isEmoji(buffer[1]) || TextUtils.isEmoji(buffer[2])) {
-                        buffer[2] = 0;
-                        i--;
-                        width += p.measureText(buffer, 0, 2);
-                    } else {
-                        width += p.measureText(buffer, 0, 3);
-                    }
-                } else {
-                    width += p.measureText(buffer, 0, 2);
+            if (TextUtils.isEmoji(ch)) {
+                int commitEnd = Math.min(end, i + 4);
+                int len = commitEnd - i;
+                for (int j = 0; j < len; j++) {
+                    buffer[j] = str.charAt(i + j);
                 }
+                width += p.measureText(buffer, 0, len);
+                i += len - 1;
             } else {
                 width += measureChar(ch, p);
             }

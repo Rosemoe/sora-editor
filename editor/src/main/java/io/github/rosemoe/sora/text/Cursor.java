@@ -318,10 +318,10 @@ public final class Cursor {
             mContent.delete(getLeftLine(), getLeftColumn(), getRightLine(), getRightColumn());
         } else {
             int col = getLeftColumn(), len = 1;
-            //Do not put cursor inside a emotion character
+            // Do not put cursor inside a emotion character
             if (col > 1) {
                 char before = mContent.charAt(getLeftLine(), col - 2);
-                if (isEmoji(before)) {
+                if (Character.isHighSurrogate(before)) {
                     len = 2;
                 }
             }
@@ -340,7 +340,7 @@ public final class Cursor {
         if (column - 1 >= 0) {
             if (column - 2 >= 0) {
                 char ch = mContent.charAt(line, column - 2);
-                if (isEmoji(ch)) {
+                if (Character.isHighSurrogate(ch)) {
                     column--;
                 }
             }
@@ -364,9 +364,10 @@ public final class Cursor {
         int line = IntPair.getFirst(position);
         int column = IntPair.getSecond(position);
         int c_column = mContent.getColumnCount(line);
+
         if (column + 1 <= c_column) {
             char ch = mContent.charAt(line, column);
-            if (isEmoji(ch)) {
+            if (Character.isHighSurrogate(ch)) {
                 column++;
                 if (column + 1 > c_column) {
                     column--;

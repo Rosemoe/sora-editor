@@ -1449,7 +1449,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 prepareLine(line);
                 lastPreparedLine = line;
             }
-
             // Get visible region on the line
             float[] charPos = findFirstVisibleChar(offset, rowInf.startColumn, rowInf.endColumn, mBuffer);
             int firstVisibleChar = (int) charPos[0];
@@ -1458,16 +1457,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             float temporaryOffset = paintingOffset;
             while (temporaryOffset < getWidth() && lastVisibleChar < columnCount) {
                 char ch = mBuffer[lastVisibleChar];
-                if (isEmoji(ch) && lastVisibleChar + 1 < columnCount) {
-                    temporaryOffset += mFontCache.measureText(mBuffer, lastVisibleChar, lastVisibleChar + 2, mPaint);
-                    lastVisibleChar++;
+                if (isEmoji(ch)) {
+                    var end = Math.min(lastVisibleChar + 4, columnCount);
+                    temporaryOffset += mFontCache.measureText(mBuffer, lastVisibleChar, end, mPaint);
+                    lastVisibleChar += (end - lastVisibleChar - 1);
                 } else {
                     temporaryOffset += mFontCache.measureChar(mBuffer[lastVisibleChar], mPaint);
                 }
                 lastVisibleChar++;
             }
             lastVisibleChar = Math.min(lastVisibleChar, rowInf.endColumn);
-
             // Draw current line background
             if (line == currentLine && !mCursorAnimator.isRunning()) {
                 drawRowBackground(canvas, currentLineBgColor, row);
@@ -2547,6 +2546,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             float single = mFontCache.measureChar(chars[left], mPaint);
             if (chars[left] == '\t') {
                 single = mFontCache.measureChar(' ', mPaint) * getTabWidth();
+            } else if (isEmoji(chars[left])) {
+                int end = Math.min(left + 4, right);
+                single = mFontCache.measureText(chars, left, end, mPaint);
+                left += (end - left - 1);
             }
             width += single;
             left++;
@@ -3852,7 +3855,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public void setSelection(int line, int column, boolean makeItVisible) {
         invalidateInCursor();
         mCursorAnimator.markStartPos();
-        if (column > 0 && isEmoji(mText.charAt(line, column - 1))) {
+        if (column > 0 && Character.isHighSurrogate(mText.charAt(line, column - 1))) {
             column++;
             if (column > mText.getColumnCount(line)) {
                 column--;
@@ -3922,7 +3925,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (columnLeft > 0) {
             int column = columnLeft - 1;
             char ch = mText.charAt(lineLeft, column);
-            if (isEmoji(ch)) {
+            if (Character.isHighSurrogate(ch)) {
                 columnLeft++;
                 if (columnLeft > mText.getColumnCount(lineLeft)) {
                     columnLeft--;
@@ -3932,7 +3935,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (columnRight > 0) {
             int column = columnRight - 1;
             char ch = mText.charAt(lineRight, column);
-            if (isEmoji(ch)) {
+            if (Character.isHighSurrogate(ch)) {
                 columnRight++;
                 if (columnRight > mText.getColumnCount(lineRight)) {
                     columnRight--;

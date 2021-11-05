@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.app;
 
 import android.app.AlertDialog;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
@@ -126,6 +127,12 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }).start();
+
+        var paint = new Paint();
+        var str = "😊";
+        var widths = new float[10];
+        paint.getTextWidths(str, widths);
+        Toast.makeText(this, str.length() + "\n" + widths[0] + "\n" + widths[1], Toast.LENGTH_SHORT).show();
     }
 
     private final ActivityResultLauncher<String> loadTMLLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), result -> {
