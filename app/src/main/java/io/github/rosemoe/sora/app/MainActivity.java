@@ -54,6 +54,7 @@ import io.github.rosemoe.sora.langs.desc.JavaScriptDescription;
 import io.github.rosemoe.sora.langs.html.HTMLLanguage;
 import io.github.rosemoe.sora.langs.java.JavaLanguage;
 import io.github.rosemoe.sora.langs.python.PythonLanguage;
+import io.github.rosemoe.sora.langs.desc.PhpDescription;
 import io.github.rosemoe.sora.langs.textmate.theme.TextMateColorScheme;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.langs.universal.UniversalLanguage;
@@ -205,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.switch_language) {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.switch_language)
-                    .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "HTML", "Python", "CSS3", "TextMate Java", "TextMate Kotlin", "TM Language from file", "None"}, -1, (dialog, which) -> {
+                    .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "HTML", "Python","php", "CSS3", "TextMate Java", "TextMate Kotlin", "TM Language from file", "None"}, -1, (dialog, which) -> {
                         switch (which) {
                             case 0:
                                 editor.setEditorLanguage(new UniversalLanguage(new CDescription()));
@@ -282,6 +283,9 @@ public class MainActivity extends AppCompatActivity {
                             case 9:
                                 loadTMLLauncher.launch("*/*");
                                 break;
+                           case 10:
+                       editor.setEditorLanguage(new UniversalLanguage(new PhpDescription()));
+                           break;
                             default:
                                 editor.setEditorLanguage(new EmptyLanguage());
                         }
@@ -382,6 +386,7 @@ public class MainActivity extends AppCompatActivity {
                             case 10:
                                 loadTMTLauncher.launch("*/*");
                                 break;
+          
                         }
                         editor.doAnalyze();
                         dialog.dismiss();
