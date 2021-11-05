@@ -35,7 +35,7 @@ Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/re
 - [ ] Incremental highlight Analysis
 - [ ] Plugin System
 ## Language Supported  
-* Java, JavaScript, C, C++, HTML, Python, CSS3 (Basic Support:highlight, code block line,identifier and keyword auto-completion). Code block line isn't available for HTML Language
+* Java, JavaScript, C, C++, HTML, Python, PHP, CSS3 (Basic Support:highlight, code block line,identifier and keyword auto-completion). Code block line isn't available for HTML Language
 * Textmate support
 ## Screenshots
 ![Wordwrap](/images/wordwrap.png)
