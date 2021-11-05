@@ -106,7 +106,7 @@ import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
 
 /**
- * CodeEditor is a editor that can highlight text regions by doing basic syntax analyzing
+ * CodeEditor is an editor that can highlight text regions by doing basic syntax analyzing
  * This project in GitHub: https://github.com/Rosemoe/CodeEditor
  * <p>
  * Note:
@@ -317,9 +317,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Whether this region has visible region on screen
+     * Checks whether this region has visible region on screen
      *
-     * @param begin The begin line of code block
+     * @param begin The start line of code block
      * @param end   The end line of code block
      * @param first The first visible line on screen
      * @param last  The last visible line on screen
@@ -716,7 +716,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * {@link CodeEditor#setFontFeatureSettings(String)}
      * <p>
      * For enabling JetBrainsMono font's ligature, Use like this:
-     * <pre class="prettyprint">
+     * <pre class="pretty-print">
      * CodeEditor editor = ...;
      * editor.setFontFeatureSettings(enabled ? null : "'liga' 0,'hlig' 0,'dlig' 0,'clig' 0");
      * </pre>
@@ -772,7 +772,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Whether the editor should use a different color to draw
+     * Specify whether the editor should use a different color to draw
      * the background of current line
      */
     public void setHighlightCurrentLine(boolean highlightCurrentLine) {
@@ -799,7 +799,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Set the editor's language.
-     * A language is a for auto completion,highlight and auto indent analysis.
+     * A language is a for auto-completion,highlight and auto indent analysis.
      *
      * @param lang New EditorLanguage for editor
      */
@@ -1445,7 +1445,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 lastPreparedLine = line;
             }
 
-            // Get visible region on line
+            // Get visible region on the line
             float[] charPos = findFirstVisibleChar(offset, rowInf.startColumn, rowInf.endColumn, mBuffer);
             int firstVisibleChar = (int) charPos[0];
             int lastVisibleChar = firstVisibleChar;
@@ -1525,7 +1525,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 }
             }
 
-            // Get visible region on line
+            // Get visible region on the line
             float[] charPos = findFirstVisibleChar(offset, rowInf.startColumn, rowInf.endColumn, mBuffer);
             int firstVisibleChar = (int) charPos[0];
             int lastVisibleChar = firstVisibleChar;
@@ -1785,9 +1785,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     protected void showTextActionPopup() {
         if (mTextActionPresenter instanceof TextActionPopupWindow) {
             TextActionPopupWindow window = (TextActionPopupWindow) mTextActionPresenter;
-            if (window.isShowing()) {
-                //window.hide(TextActionPopupWindow.DISMISS);
-            } else {
+            if (!window.isShowing()) {
                 window.onBeginTextSelect();
                 window.onTextSelectionEnd();
             }
@@ -1875,7 +1873,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Get matched text regions on line
+     * Get matched text regions on the given line
      *
      * @param line      Target line
      * @param positions Outputs start positions
@@ -1904,7 +1902,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param start Start of region
      * @param end   End of region
      * @param line  Checking line
-     * @return Whether cursor should be drawn in this row
+     * @return true if cursor should be drawn in this row
      */
     private boolean isInside(int index, int start, int end, int line) {
         // Due not to draw duplicate cursors for a single one
@@ -2441,7 +2439,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param firstVis The first visible line
      * @param blocks   Current code blocks
-     * @return The block we found.Always a valid index(Unless there is no block)
+     * @return The block we found. It is always a valid index(Unless there is no block)
      */
     private int binarySearchEndBlock(int firstVis, List<BlockLine> blocks) {
         //end > firstVis
@@ -2702,7 +2700,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Draw rect on screen
-     * Will not do any thing if color is zero
+     * Will not do anything if color is zero
      *
      * @param canvas Canvas to draw
      * @param color  Color of rect
@@ -2717,7 +2715,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Draw rect on screen
-     * Will not do any thing if color is zero
+     * Will not do anything if color is zero
      *
      * @param canvas Canvas to draw
      * @param color  Color of rect
@@ -2766,7 +2764,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Apply new position of auto completion window
+     * Apply new position of auto-completion window
      */
     protected void updateCompletionWindowPosition() {
         float panelX = updateCursorAnchor() + mDpUnit * 20;
@@ -2859,13 +2857,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Specify whether show auto completion window even the input method is in composing state.
+     * Specify whether show auto-completion window even the input method is in composing state.
      * <p>
      * This is useful when the user uses an input method that does not support the attitude {@link EditorInfo#TYPE_TEXT_FLAG_NO_SUGGESTIONS}
      * <p>
      * Note:
      * Composing texts are marked by an underline. When this switch is set to false, the editor
-     * will not provide auto completion when there is any composing text in editor.
+     * will not provide auto-completion when there is any composing text in editor.
      * <p>
      * This is enabled by default now
      */
@@ -2874,9 +2872,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Specify whether we should provide any auto completion
+     * Specify whether we should provide any auto-completion
      * <p>
-     * If this is set to false, the completion window will never show and auto completion item
+     * If this is set to false, the completion window will never show and auto-completion item
      * provider will never be called.
      */
     public void setAutoCompletionEnabled(boolean autoCompletionEnabled) {
@@ -3014,7 +3012,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Whether the position is over max Y position
+     * Checks whether the position is over max Y position
      *
      * @param posOnScreen Y position on view
      * @return Whether over max Y
@@ -3219,18 +3217,18 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Whether can undo
+     * Checks whether we can undo
      *
-     * @return whether can undo
+     * @return true if we can undo
      */
     public boolean canUndo() {
         return mText.canUndo();
     }
 
     /**
-     * Whether can redo
+     * Checks whether we can redo
      *
-     * @return whether can redo
+     * @return true if we can redo
      */
     public boolean canRedo() {
         return mText.canRedo();
@@ -3561,7 +3559,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Whether this row is visible on screen
+     * Checks whether this row is visible on screen
      *
      * @param row Row to check
      * @return Whether visible
@@ -3657,7 +3655,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * @return Whether allow to scale
+     * @return Whether allow scaling
      * @see CodeEditor#setScalable(boolean)
      */
     public boolean isScalable() {
@@ -3899,7 +3897,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param columnLeft       Column Left
      * @param lineRight        Line right
      * @param columnRight      Column right
-     * @param makeRightVisible Whether make right cursor visible
+     * @param makeRightVisible Whether to make right cursor visible
      */
     public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight, int columnRight, boolean makeRightVisible) {
         invalidateInCursor();
@@ -4166,7 +4164,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
 
     /**
-     * If there is a Analyzer, do analysis
+     * If there is an Analyzer, do analysis
      */
     public void doAnalyze() {
         if (mSpanner != null) {
@@ -4244,7 +4242,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 //Ignored
             }
         }
-        //Logs.log("Send selection changes: candidate(start = " + candidatesStart + ", end =" + candidatesEnd + " ) cursor(left = " + mCursor.getLeft() + ", right =" + mCursor.getRight() + ")");
         mInputMethodManager.updateSelection(this, mCursor.getLeft(), mCursor.getRight(), candidatesStart, candidatesEnd);
     }
 
