@@ -50,10 +50,12 @@ Available modules:
 * language-base
 * language-java
 * language-html
+* language-php
 * language-python
 * language-css3
 * language-universal
 * language-textmate
+
 
 Detailed: [Get started](https://rosemoe.github.io/2021/08/22/editor-get-started/)
 ## License
