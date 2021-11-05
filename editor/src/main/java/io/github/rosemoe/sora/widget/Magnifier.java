@@ -57,6 +57,8 @@ class Magnifier {
     private final Paint paint;
     private int x, y;
     private final float maxTextSize;
+    private long expectedRequestTime;
+
     /**
      * Scale factor for regions
      */
@@ -138,14 +140,20 @@ class Magnifier {
             return;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && view.getContext() instanceof Activity) {
-            updateDisplayN((Activity)view.getContext());
+            updateDisplayOreo((Activity)view.getContext());
         } else {
-            updateDisplayCompat();
+            updateDisplayWithinEditor();
         }
     }
 
+    /**
+     * Update display on API 26 or later.
+     *
+     * This will include other view in the window as {@link PixelCopy} is used to capture the
+     * screen.
+     */
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void updateDisplayN(Activity activity) {
+    private void updateDisplayOreo(Activity activity) {
         var requiredWidth = (int) (popup.getWidth() / scaleFactor);
         var requiredHeight = (int) (popup.getHeight() / scaleFactor);
 
@@ -165,9 +173,14 @@ class Magnifier {
         }
         var pos = new int[2];
         view.getLocationInWindow(pos);
+        final var requestTime = System.currentTimeMillis();
+        expectedRequestTime = requestTime;
         var clip = Bitmap.createBitmap(right - left, bottom - top, Bitmap.Config.ARGB_8888);
         try {
             PixelCopy.request(activity.getWindow(), new Rect(pos[0] + left, pos[1] + top, pos[0] + right, pos[1] + bottom), clip, (var statusCode) -> {
+                if (requestTime != expectedRequestTime) {
+                    return;
+                }
                 if (statusCode == PixelCopy.SUCCESS) {
                     var dest = Bitmap.createBitmap(popup.getWidth(), popup.getHeight(), Bitmap.Config.ARGB_8888);
                     var scaled = Bitmap.createScaledBitmap(clip, popup.getWidth(), popup.getHeight(), false);
@@ -197,25 +210,21 @@ class Magnifier {
         }
     }
 
-    private void updateDisplayCompat() {
-        view.setDrawingCacheEnabled(true);
-        view.buildDrawingCache();
-        var display = view.getDrawingCache();
-        if (display == null) {
-            // Issue: the view is too large that drawing cache can not be obtained
-            Log.w("Magnifier", "Unable to create drawing cache");
-            view.setDrawingCacheEnabled(false);
-            dismiss();
-            return;
-        }
+    /**
+     * Update display on low API devices
+     *
+     * This method does not include other views as it obtain editor's display by
+     * directly calling {@link CodeEditor#drawView(Canvas)}
+     */
+    private void updateDisplayWithinEditor() {
         var dest = Bitmap.createBitmap(popup.getWidth(), popup.getHeight(), Bitmap.Config.ARGB_8888);
         var requiredWidth = (int) (popup.getWidth() / scaleFactor);
         var requiredHeight = (int) (popup.getHeight() / scaleFactor);
 
         var left = Math.max(x - requiredWidth / 2, 0);
         var top = Math.max(y - requiredHeight / 2, 0);
-        var right = Math.min(left + requiredWidth, display.getWidth());
-        var bottom = Math.min(top + requiredHeight, display.getHeight());
+        var right = Math.min(left + requiredWidth, view.getWidth());
+        var bottom = Math.min(top + requiredHeight, view.getHeight());
         if (right - left < requiredWidth) {
             left = Math.max(0, right - requiredWidth);
         }
@@ -224,12 +233,13 @@ class Magnifier {
         }
         if (right - left <= 0 || bottom - top <= 0) {
             dismiss();
-            view.destroyDrawingCache();
-            view.setDrawingCacheEnabled(false);
             dest.recycle();
             return;
         }
-        var clip = Bitmap.createBitmap(display, left, top, right - left, bottom - top);
+        var clip = Bitmap.createBitmap(requiredWidth, requiredHeight, Bitmap.Config.ARGB_8888);
+        var viewCanvas = new Canvas(clip);
+        viewCanvas.translate(-left, -top);
+        view.drawView(viewCanvas);
         var scaled = Bitmap.createScaledBitmap(clip, popup.getWidth(), popup.getHeight(), false);
         clip.recycle();
 
@@ -242,8 +252,6 @@ class Magnifier {
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
         canvas.drawBitmap(scaled, 0, 0, paint);
         scaled.recycle();
-        view.destroyDrawingCache();
-        view.setDrawingCacheEnabled(false);
 
         image.setImageBitmap(dest);
     }
