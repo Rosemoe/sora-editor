@@ -16,22 +16,21 @@ With good performance and nice features
 
 ***Work In Progress*** This project is still developing slowly. Note that APIs are unstable.
 It is **not** recommended to use this project for production use.
-Download newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/releases) instead of cloning this repository directly.
+Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/releases) instead of cloning this repository directly.
 **Issues and pull requests are welcome.**
 ## Features
-- [x] Smooth syntax highlight
-- [x] Auto completion
+- [x] Syntax highlighting
+- [x] Auto-completion
 - [x] Auto indent
 - [x] Code block lines
 - [x] Scale text
-- [x] Select text
-- [x] Scroll, Scrollbars, EdgeEffect, OverScroll
 - [x] Undo/redo
 - [x] Search and replace
-- [x] Shortcuts
 - [x] Auto wordwrap
 - [x] Show non-printable characters
 - [x] Error/Warning/Typo/Deprecated indicators
+- [x] Text magnifier
+- [ ] Code folding
 - [ ] Incremental highlight Analysis
 - [ ] Plugin System
 ## Language Supported  
@@ -50,7 +49,6 @@ Available modules:
 * language-base
 * language-java
 * language-html
-* language-php
 * language-python
 * language-css3
 * language-universal
