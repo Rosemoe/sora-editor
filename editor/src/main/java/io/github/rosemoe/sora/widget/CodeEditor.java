@@ -1501,6 +1501,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
 
         // Step 2 - Draw text and text decorations
+        int lastStyle = 0;
         for (int row = getFirstVisibleRow(); row <= getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
             int line = rowInf.lineIndex;
@@ -1584,7 +1585,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 }
                 Span span = spans.get(spanOffset);
                 // Draw by spans
-                int lastStyle = 0;
                 while (lastVisibleChar > span.column) {
                     int spanEnd = spanOffset + 1 >= spans.size() ? columnCount : spans.get(spanOffset + 1).column;
                     spanEnd = Math.min(columnCount, spanEnd);
@@ -3207,6 +3207,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public void undo() {
         mText.undo();
+        mCompletionWindow.hide();
     }
 
     /**
@@ -3214,6 +3215,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public void redo() {
         mText.redo();
+        mCompletionWindow.hide();
     }
 
     /**

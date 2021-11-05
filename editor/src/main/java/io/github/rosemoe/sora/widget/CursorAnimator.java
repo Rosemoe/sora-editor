@@ -79,7 +79,7 @@ class CursorAnimator implements ValueAnimator.AnimatorUpdateListener {
             startBottom = (float) animatorBgBottom.getAnimatedValue();
             cancel();
         }
-        var duration = 120;
+        var duration = 80;
         if (System.currentTimeMillis() - lastAnimateTime < 100) {
             return;
         }

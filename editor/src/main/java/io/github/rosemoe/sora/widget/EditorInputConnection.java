@@ -405,12 +405,14 @@ class EditorInputConnection extends BaseInputConnection {
         } else {
             // Already have composing text
             // Delete first
+            beginBatchEdit();
             if (mComposingStart != mComposingEnd) {
                 mEditor.getText().delete(mComposingLine, mComposingStart, mComposingLine, mComposingEnd);
             }
             // Reset range
             mComposingEnd = mComposingStart + text.length();
             mEditor.getText().insert(mComposingLine, mComposingStart, text);
+            endBatchEdit();
         }
         if (text.length() == 0) {
             finishComposingText();

@@ -54,7 +54,7 @@ import io.github.rosemoe.sora.langs.desc.JavaScriptDescription;
 import io.github.rosemoe.sora.langs.html.HTMLLanguage;
 import io.github.rosemoe.sora.langs.java.JavaLanguage;
 import io.github.rosemoe.sora.langs.python.PythonLanguage;
-import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme;
+import io.github.rosemoe.sora.langs.textmate.theme.TextMateColorScheme;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.langs.universal.UniversalLanguage;
 import io.github.rosemoe.sora.textmate.core.internal.theme.reader.ThemeReader;
