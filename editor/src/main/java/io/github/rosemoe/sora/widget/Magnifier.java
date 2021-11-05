@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -32,6 +33,7 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.os.Build;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.PixelCopy;
@@ -54,6 +56,7 @@ class Magnifier {
     private final ImageView image;
     private final Paint paint;
     private int x, y;
+    private final float maxTextSize;
     /**
      * Scale factor for regions
      */
@@ -63,11 +66,12 @@ class Magnifier {
         view = editor;
         popup = new PopupWindow(editor);
         popup.setElevation(view.getDpUnit() * 8);
-        var view = LayoutInflater.from(editor.getContext()).inflate(R.layout.magnifier_popup, null);
+        @SuppressLint("InflateParams") var view = LayoutInflater.from(editor.getContext()).inflate(R.layout.magnifier_popup, null);
         image = view.findViewById(R.id.magnifier_image_view);
         popup.setHeight((int) (editor.getDpUnit() * 65));
         popup.setWidth((int) (editor.getDpUnit() * 120));
         popup.setContentView(view);
+        maxTextSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 28, view.getResources().getDisplayMetrics());
         scaleFactor = 1.5f;
         paint = new Paint();
     }
@@ -78,6 +82,12 @@ class Magnifier {
      */
     public void show(int x, int y) {
         if (Math.abs(x - this.x) < 3 && Math.abs(y - this.y) < 3) {
+            return;
+        }
+        if (view.getTextSizePx() > maxTextSize) {
+            if (isShowing()) {
+                dismiss();
+            }
             return;
         }
         popup.setWidth(Math.min(view.getWidth() * 2 / 5, (int)view.getDpUnit()) * 200);
