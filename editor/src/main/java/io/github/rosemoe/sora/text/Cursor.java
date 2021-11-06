@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.text;
 
 import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
 
+import android.graphics.Paint;
 import android.util.Log;
 
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
@@ -43,6 +44,8 @@ public final class Cursor {
     private boolean mAutoIndentEnabled;
     private EditorLanguage mLanguage;
     private int mTabWidth;
+    private Paint mChecker = new Paint();
+    private float[] buffer = new float[10];
 
     /**
      * Create a new Cursor for Content
@@ -323,6 +326,13 @@ public final class Cursor {
                 char before = mContent.charAt(getLeftLine(), col - 2);
                 if (Character.isHighSurrogate(before)) {
                     len = 2;
+                    if (col >= 4 && isEmoji(before)) {
+                        //Check for combined emoji
+                        mChecker.getTextWidths(mContent.getLine(getLeftLine()).getRawData(), col - 4, 4, buffer);
+                        if (buffer[0] > 0 && buffer[1] == 0 && buffer[2] == 0 && buffer[3] == 0) {
+                            len = 4;
+                        }
+                    }
                 }
             }
             mContent.delete(getLeftLine(), getLeftColumn() - len, getLeftLine(), getLeftColumn());
@@ -392,7 +402,7 @@ public final class Cursor {
         int line = IntPair.getFirst(position);
         int column = IntPair.getSecond(position);
         if (line - 1 < 0) {
-            line = 1;
+            return IntPair.pack(0, 0);
         }
         int c_column = mContent.getColumnCount(line - 1);
         if (column > c_column) {
