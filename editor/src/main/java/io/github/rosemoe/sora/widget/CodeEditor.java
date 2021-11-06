@@ -2547,7 +2547,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             if (chars[left] == '\t') {
                 single = mFontCache.measureChar(' ', mPaint) * getTabWidth();
             } else if (isEmoji(chars[left])) {
-                int end = Math.min(left + 4, right);
+                if (left + 4 <= right) {
+                    var widths = mFontCache.widths;
+                    mPaint.getTextWidths(chars, left, 4, widths);
+                    if (widths[0] > 0 && widths[1] == 0 && widths[2] == 0 && widths[3] == 0) {
+                        left += 4;
+                        width += widths[0];
+                        continue;
+                    }
+                }
+                int end = Math.min(left + 2, right);
                 single = mFontCache.measureText(chars, left, end, mPaint);
                 left += (end - left - 1);
             }

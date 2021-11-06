@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
+
 import android.graphics.Paint;
 
 import io.github.rosemoe.sora.graphics.FontCache;
@@ -66,6 +68,24 @@ abstract class AbstractLayout implements Layout {
             float single = fontCache.measureChar(str.charAt(index), shadowPaint);
             if (str.charAt(index) == '\t') {
                 single = editor.getTabWidth() * fontCache.measureChar(' ', shadowPaint);
+            } else if (isEmoji(str.charAt(index))) {
+                if (index + 4 <= end) {
+                    var widths = fontCache.widths;
+                    shadowPaint.getTextWidths(str, index, index + 4, widths);
+                    if (widths[0] > 0 && widths[1] == 0 && widths[2] == 0 && widths[3] == 0) {
+                        index += 4;
+                        width += widths[0];
+                        continue;
+                    }
+                }
+                int commitEnd = Math.min(end, index + 2);
+                int len = commitEnd - index;
+                var buffer = fontCache.buffer;
+                for (int j = 0; j < len; j++) {
+                    buffer[j] = str.charAt(index + j);
+                }
+                single = shadowPaint.measureText(buffer, 0, len);
+                index += len - 1;
             }
             width += single;
             index++;
@@ -81,6 +101,24 @@ abstract class AbstractLayout implements Layout {
             float single = fontCache.measureChar(str.charAt(index), shadowPaint);
             if (str.charAt(index) == '\t') {
                 single = editor.getTabWidth() * fontCache.measureChar(' ', shadowPaint);
+            } else if (isEmoji(str.charAt(index))) {
+                if (index + 4 <= length) {
+                    var widths = fontCache.widths;
+                    shadowPaint.getTextWidths(str, index, index + 4, widths);
+                    if (widths[0] > 0 && widths[1] == 0 && widths[2] == 0 && widths[3] == 0) {
+                        index += 4;
+                        width += widths[0];
+                        continue;
+                    }
+                }
+                int commitEnd = Math.min(length, index + 2);
+                int len = commitEnd - index;
+                var buffer = fontCache.buffer;
+                for (int j = 0; j < len; j++) {
+                    buffer[j] = str.charAt(index + j);
+                }
+                single = shadowPaint.measureText(buffer, 0, len);
+                index += len - 1;
             }
             width += single;
             index++;

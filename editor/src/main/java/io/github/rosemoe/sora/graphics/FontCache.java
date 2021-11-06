@@ -39,12 +39,13 @@ import io.github.rosemoe.sora.text.TextUtils;
 public class FontCache {
 
     private final float[] cache;
-
-    private final char[] buffer;
+    public final float[] widths;
+    public final char[] buffer;
 
     public FontCache() {
         cache = new float[65536];
         buffer = new char[5];
+        widths = new float[10];
     }
 
     /**
@@ -75,7 +76,15 @@ public class FontCache {
         for (int i = start; i < end; i++) {
             char ch = chars[i];
             if (TextUtils.isEmoji(ch)) {
-                int commitEnd = Math.min(end, i + 4);
+                if (i + 4 <= end) {
+                    p.getTextWidths(chars, i, 4, widths);
+                    if (widths[0] > 0 && widths[1] == 0 && widths[2] == 0 && widths[3] == 0) {
+                        i += 3;
+                        width += widths[0];
+                        continue;
+                    }
+                }
+                int commitEnd = Math.min(end, i + 2);
                 int len = commitEnd - i;
                 if (len >= 0) {
                     System.arraycopy(chars, i, buffer, 0, len);
@@ -97,7 +106,15 @@ public class FontCache {
         for (int i = start; i < end; i++) {
             char ch = str.charAt(i);
             if (TextUtils.isEmoji(ch)) {
-                int commitEnd = Math.min(end, i + 4);
+                if (i + 4 <= end) {
+                    p.getTextWidths(str, i, i + 4, widths);
+                    if (widths[0] > 0 && widths[1] == 0 && widths[2] == 0 && widths[3] == 0) {
+                        i += 3;
+                        width += widths[0];
+                        continue;
+                    }
+                }
+                int commitEnd = Math.min(end, i + 2);
                 int len = commitEnd - i;
                 for (int j = 0; j < len; j++) {
                     buffer[j] = str.charAt(i + j);
