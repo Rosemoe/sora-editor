@@ -38,17 +38,14 @@ public class BlocksUpdater {
         if (delta == 0) {
             return;
         }
-        Log.d("a", "res = " + restrict + ", delta = " + delta);
         var itr = blocks.iterator();
         while(itr.hasNext()) {
             var block = itr.next();
             if (block.startLine >= restrict) {
                 block.startLine += delta;
-                Log.d("a", "upd st of" + block.startLine);
             }
             if (block.endLine >= restrict) {
                 block.endLine += delta;
-                Log.d("a", "upd end of " + block.endLine);
             }
             if (block.startLine >= block.endLine) {
                 itr.remove();
