@@ -34,6 +34,12 @@ import io.github.rosemoe.sora.data.BlockLine;
  */
 public class BlocksUpdater {
 
+    /**
+     * Update blocks
+     * @param blocks   Block lines to update
+     * @param restrict Min line to update
+     * @param delta Delta for line index
+     */
     public static void update(List<BlockLine> blocks, int restrict, int delta) {
         if (delta == 0) {
             return;

@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.data;
 
+import androidx.annotation.NonNull;
+
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -197,6 +199,7 @@ public class Span {
         return hash;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "Span{" +

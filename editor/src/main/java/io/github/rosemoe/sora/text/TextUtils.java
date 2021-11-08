@@ -42,6 +42,11 @@ public class TextUtils {
         return count;
     }
 
+    /**
+     * Create indent space
+     *
+     * @return Generated space string
+     */
     public static String createIndent(int indentSize, int tabWidth, boolean useTab) {
         indentSize = Math.max(0, indentSize);
         int tab = 0;
