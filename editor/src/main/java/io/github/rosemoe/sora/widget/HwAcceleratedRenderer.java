@@ -29,6 +29,7 @@ import android.graphics.RenderNode;
 import androidx.annotation.RequiresApi;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.data.Span;
@@ -71,12 +72,15 @@ class HwAcceleratedRenderer implements ContentListener {
         }
     }
 
-    public void invalidateInRegion(int startLine, int endLine) {
+    public boolean invalidateInRegion(int startLine, int endLine) {
+        var res = new AtomicBoolean(false);
         cache.forEach((node) -> {
             if (!node.isDirty && node.line >= startLine && node.line <= endLine) {
                 node.isDirty = true;
+                res.set(true);
             }
         });
+        return res.get();
     }
 
     /**
@@ -100,7 +104,7 @@ class HwAcceleratedRenderer implements ContentListener {
             try {
                 var olds = old.get(node.line);
                 var news = updated.get(node.line);
-                if (!node.needsRecord() && (olds.size() != news.size() || olds.hashCode() != news.hashCode())) {
+                if ((olds.size() != news.size() || olds.hashCode() != news.hashCode())) {
                     node.isDirty = true;
                 }
             } catch (IndexOutOfBoundsException | NullPointerException e) {
@@ -168,17 +172,7 @@ class HwAcceleratedRenderer implements ContentListener {
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
         if (shouldUpdateCache()) {
-            int delta = endLine - startLine;
-            cache.forEach((node) -> {
-                if (node != null && node.line != -1) {
-                    if (node.line == startLine) {
-                        node.isDirty = true;
-                    }
-                    if (delta != 0 && node.line > startLine) {
-                        node.line += delta;
-                    }
-                }
-            });
+            invalidateInRegion(startLine, Integer.MAX_VALUE);
         }
     }
 
@@ -186,16 +180,7 @@ class HwAcceleratedRenderer implements ContentListener {
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
         if (shouldUpdateCache()) {
             int delta = endLine - startLine;
-            cache.forEach((node) -> {
-                if (node != null && node.line != -1) {
-                    if (node.line == startLine || node.line == endLine) {
-                        node.isDirty = true;
-                    }
-                    if (delta != 0 && node.line >= endLine) {
-                        node.line -= delta;
-                    }
-                }
-            });
+            invalidateInRegion(startLine, Integer.MAX_VALUE);
         }
     }
 
