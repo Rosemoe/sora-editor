@@ -169,14 +169,12 @@ public class EditorColorScheme {
     private void applyDefault(int type) {
         int color = mColors.get(type);
         switch (type) {
-            case LINE_DIVIDER:
-                color = 0xFFdddddd;
-                break;
             case LINE_NUMBER:
-                color = 0xFF808080;
+                color = 0xFF505050;
                 break;
             case LINE_NUMBER_BACKGROUND:
-                color = 0xfff0f0f0;
+            case LINE_DIVIDER:
+                color = 0xeeeeeeee;
                 break;
             case WHOLE_BACKGROUND:
             case LINE_NUMBER_PANEL_TEXT:

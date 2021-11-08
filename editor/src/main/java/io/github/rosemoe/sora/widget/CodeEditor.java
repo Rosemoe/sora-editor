@@ -125,7 +125,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * The default size when creating the editor object. Unit is sp.
      */
-    public static final int DEFAULT_TEXT_SIZE = 20;
+    public static final int DEFAULT_TEXT_SIZE = 18;
 
     /**
      * The default cursor blinking period
@@ -445,11 +445,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             mRenderer = new HwAcceleratedRenderer(this);
         }
-        mDividerMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, Resources.getSystem().getDisplayMetrics());
-        mDividerWidth = mDividerMargin;
+        mDpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10F;
+        mDividerWidth = 2 * mDpUnit;
         mInsertSelWidth = mDividerWidth / 2;
-        mDpUnit = mDividerWidth / 2;
-        mDividerMargin = mDpUnit * 5;
+        mDividerMargin = mDpUnit * 6;
         mFontCache = new FontCache();
         mDrawPoints = new BufferedDrawPoints();
         mPaint = new Paint();
@@ -485,7 +484,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mDrag = false;
         mWait = false;
         mBlockLineEnabled = true;
-        mBlockLineWidth = mDpUnit / 1.5f;
+        mBlockLineWidth = 1.5f;
         mInputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         mClipboardManager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         setUndoEnabled(true);
@@ -552,7 +551,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     private void invalidateInCursor() {
         if (mRenderer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mCursor != null) {
-            mRenderer.invalidateInRegion(mCursor.getLeftLine(), mCursor.getRightLine());
+            if (mRenderer.invalidateInRegion(mCursor.getLeftLine(), mCursor.getRightLine())) {
+                invalidate();
+            }
         }
     }
 
@@ -1145,7 +1146,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
             if (mCursorAnimator.isRunning()) {
                 mRect.bottom = (float) mCursorAnimator.animatorBgBottom.getAnimatedValue() - getOffsetY();
-                mRect.top = mRect.bottom - (float)mCursorAnimator.animatorBackground.getAnimatedValue();
+                mRect.top = mRect.bottom - (float) mCursorAnimator.animatorBackground.getAnimatedValue();
                 mRect.left = 0;
                 mRect.right = (int) (textOffset - mDividerMargin);
                 drawColor(canvas, currentLineBgColor, mRect);
@@ -1201,7 +1202,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
             if (mCursorAnimator.isRunning()) {
                 mRect.bottom = (float) mCursorAnimator.animatorBgBottom.getAnimatedValue() - getOffsetY();
-                mRect.top = mRect.bottom - (float)mCursorAnimator.animatorBackground.getAnimatedValue();
+                mRect.top = mRect.bottom - (float) mCursorAnimator.animatorBackground.getAnimatedValue();
                 mRect.left = 0;
                 mRect.right = (int) (textOffset - mDividerMargin);
                 drawColor(canvas, currentLineBgColor, mRect);
@@ -1432,11 +1433,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (shouldInitializeNonPrintable()) {
             float spaceWidth = mFontCache.measureChar(' ', mPaint);
             float maxD = Math.min(getRowHeight(), spaceWidth);
-            maxD *= 0.18f;
+            maxD *= 0.25f;
             circleRadius = maxD / 2;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !isWordwrap() && canvas.isHardwareAccelerated() && isHardwareAcceleratedDrawAllowed()) {
-            mRenderer.setExpectedCapacity(Math.max(getLastVisibleRow() - getFirstVisibleRow(), 30));
             mRenderer.keepCurrentInDisplay(getFirstVisibleRow(), getLastVisibleRow());
         }
 
@@ -1497,9 +1497,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         rowIterator.reset();
 
         // Draw current line background on animation
-        if(mCursorAnimator.isRunning()) {
+        if (mCursorAnimator.isRunning()) {
             mRect.bottom = (float) mCursorAnimator.animatorBgBottom.getAnimatedValue() - getOffsetY();
-            mRect.top = mRect.bottom - (float)mCursorAnimator.animatorBackground.getAnimatedValue();
+            mRect.top = mRect.bottom - (float) mCursorAnimator.animatorBackground.getAnimatedValue();
             mRect.left = 0;
             mRect.right = mViewRect.right;
             drawColor(canvas, currentLineBgColor, mRect);
@@ -2126,9 +2126,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             if (hasVisibleRegion(block.startLine, block.endLine, first, last)) {
                 try {
                     CharSequence lineContent = mText.getLine(block.endLine);
-                    float offset1 = measureText(lineContent, 0, block.endColumn);
+                    float offset1 = measureText(lineContent, 0, Math.min(block.endColumn, lineContent.length()));
                     lineContent = mText.getLine(block.startLine);
-                    float offset2 = measureText(lineContent, 0, block.startColumn);
+                    float offset2 = measureText(lineContent, 0, Math.min(block.startColumn, lineContent.length()));
                     float offset = Math.min(offset1, offset2);
                     float centerX = offset + offsetX;
                     mRect.top = Math.max(0, getRowBottom(block.startLine) - getOffsetY());
@@ -2658,6 +2658,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param color   Color to draw divider
      */
     protected void drawDivider(Canvas canvas, float offsetX, int color) {
+        boolean shadow = isLineNumberPinned() && !isWordwrap() && getOffsetX() > 0;
         float right = offsetX + mDividerWidth;
         if (right < 0) {
             return;
@@ -2672,7 +2673,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         mRect.left = left;
         mRect.right = right;
+        if (shadow) {
+            canvas.save();
+            canvas.clipRect(mRect.left, mRect.top, getWidth(), mRect.bottom);
+            mPaint.setShadowLayer(Math.min(mDpUnit * 8, getOffsetX()), 0, 0, Color.BLACK);
+        }
         drawColor(canvas, color, mRect);
+        if (shadow) {
+            canvas.restore();
+            mPaint.setShadowLayer(0, 0, 0, 0);
+        }
     }
 
     /**
@@ -4860,18 +4870,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mCompletionWindow.hide();
         }
 
+        BlocksUpdater.update(getTextAnalyzeResult().getBlocks(), startLine, endLine - startLine);
+        //Log.d(LOG_TAG, "Ins: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + insertedContent);
         updateCursorAnchor();
+
+        invalidateInCursor();
         ensureSelectionVisible();
 
-        BlocksUpdater.update(getTextAnalyzeResult().getBlocks(), startLine, endLine - startLine);
         mSpanner.analyze(mText);
         mEventHandler.hideInsertHandle();
-
         onSelectionChanged();
         if (!mCursor.isSelected()) {
             mCursorAnimator.markEndPosAndStart();
         }
-        invalidateInCursor();
         if (mListener != null) {
             mListener.afterInsert(this, mText, startLine, startColumn, endLine, endColumn, insertedContent);
         }
@@ -4913,20 +4924,21 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mCompletionWindow.hide();
         }
 
+        //Log.d(LOG_TAG, "Del: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + deletedContent);
         BlocksUpdater.update(getTextAnalyzeResult().getBlocks(), endLine, startLine - endLine);
 
         if (!mWait) {
             updateCursorAnchor();
+            invalidateInCursor();
             ensureSelectionVisible();
             mSpanner.analyze(mText);
             mEventHandler.hideInsertHandle();
         }
-
-        onSelectionChanged();
         if (!mCursor.isSelected()) {
             mCursorAnimator.markEndPosAndStart();
         }
-        invalidateInCursor();
+
+        onSelectionChanged();
         if (mListener != null) {
             mListener.afterDelete(this, mText, startLine, startColumn, endLine, endColumn, deletedContent);
         }
