@@ -55,29 +55,23 @@ public class SpanMapUpdater {
             }
         }
         // Shift end line
-        List<Span> endLineSpans = map.get(startLine + 1);
-        while (endLineSpans.size() > 1) {
-            Span first = endLineSpans.get(0);
-            if (first.column >= endColumn) {
-                break;
-            } else {
-                int spanEnd = endLineSpans.get(1).column;
-                if (spanEnd <= endColumn) {
-                    endLineSpans.remove(first);
-                    first.recycle();
-                } else {
-                    break;
-                }
-            }
-        }
+        List<Span> endLineSpans = map.remove(startLine + 1);
         for (int i = 0; i < endLineSpans.size(); i++) {
             Span span = endLineSpans.get(i);
-            if (span.column < endColumn) {
-                span.column = 0;
+            span.column -= endColumn;
+            span.column += startColumn;
+        }
+        while (endLineSpans.size() > 1) {
+            if (endLineSpans.get(0).column <= startColumn && endLineSpans.get(1).column <= startColumn) {
+                endLineSpans.remove(0).recycle();
             } else {
-                span.column -= endColumn;
+                break;
             }
         }
+        if (endLineSpans.get(0).column <= startColumn) {
+            endLineSpans.get(0).column = startColumn;
+        }
+        startLineSpans.addAll(endLineSpans);
     }
 
     public static void shiftSpansOnSingleLineDelete(List<List<Span>> map, int line, int startCol, int endCol) {
@@ -168,16 +162,12 @@ public class SpanMapUpdater {
         }
         // Add original spans to new line
         List<Span> endLineSpans = map.get(endLine);
-        if (endColumn == 0 && extendedSpanIndex + 1 < startLineSpans.size()) {
-            endLineSpans.clear();
+        while (extendedSpanIndex  < startLineSpans.size()) {
+            Span span = startLineSpans.remove(extendedSpanIndex);
+            endLineSpans.add(span.setColumn(Math.max(0, span.column - startColumn)));
         }
-        int delta = Integer.MIN_VALUE;
-        while (extendedSpanIndex + 1 < startLineSpans.size()) {
-            Span span = startLineSpans.remove(extendedSpanIndex + 1);
-            if (delta == Integer.MIN_VALUE) {
-                delta = span.column;
-            }
-            endLineSpans.add(span.setColumn(span.column - delta + endColumn));
+        if (endLineSpans.size() > 1 && endLineSpans.get(0).column == 0 && endLineSpans.get(1).column == 0) {
+            endLineSpans.remove(0).recycle();
         }
     }
 
