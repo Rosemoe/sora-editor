@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.util;
+package io.github.rosemoe.sora.text;
 
 import android.text.DynamicLayout;
 import android.text.Editable;
@@ -35,16 +35,31 @@ import android.text.TextPaint;
  *
  * @author Rosemoe
  */
-public class SelectionHelper {
+public class TextLayoutHelper {
+
+    private static final ThreadLocal<TextLayoutHelper> sLocal;
+
+    static {
+        sLocal = new ThreadLocal<>();
+    }
+
+    public static TextLayoutHelper get() {
+        var v = sLocal.get();
+        if (v == null) {
+            v = new TextLayoutHelper();
+            sLocal.set(v);
+        }
+        return v;
+    }
 
     private final Editable text = Editable.Factory.getInstance().newEditable("");
     private final DynamicLayout layout;
 
-    public SelectionHelper() {
-        layout = new DynamicLayout(text, new TextPaint(), Integer.MAX_VALUE / 2, Layout.Alignment.ALIGN_CENTER, 0, 0 , true);
+    private TextLayoutHelper() {
+        layout = new DynamicLayout(text, new TextPaint(), Integer.MAX_VALUE / 2, Layout.Alignment.ALIGN_NORMAL, 0, 0 , true);
     }
 
-    public int moveLeft(int offset, CharSequence s) {
+    public int getCurPosLeft(int offset, CharSequence s) {
         int left = Math.max(0, offset - 20);
         int index = offset - left;
         text.append(s, left, Math.min(s.length(), offset + 20));
@@ -56,7 +71,7 @@ public class SelectionHelper {
         return left + index;
     }
 
-    public int moveRight(int offset, CharSequence s) {
+    public int getCurPosRight(int offset, CharSequence s) {
         int left = Math.max(0, offset - 20);
         int index = offset - left;
         text.append(s, left, Math.min(s.length(), offset + 20));

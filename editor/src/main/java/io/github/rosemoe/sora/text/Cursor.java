@@ -23,14 +23,10 @@
  */
 package io.github.rosemoe.sora.text;
 
-import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
-
-import android.graphics.Paint;
 import android.util.Log;
 
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.util.IntPair;
-import io.github.rosemoe.sora.util.SelectionHelper;
 
 /**
  * @author Rose
@@ -45,7 +41,6 @@ public final class Cursor {
     private boolean mAutoIndentEnabled;
     private EditorLanguage mLanguage;
     private int mTabWidth;
-    private final SelectionHelper selectionHelper = new SelectionHelper();
 
     /**
      * Create a new Cursor for Content
@@ -298,7 +293,7 @@ public final class Cursor {
             int col = getLeftColumn(), len = 1;
             // Do not put cursor inside a emotion character
             if (col > 1) {
-                int left = selectionHelper.moveLeft(col, mContent.getLine(getLeftLine()));
+                int left = TextLayoutHelper.get().getCurPosLeft(col, mContent.getLine(getLeftLine()));
                 len = col - left;
             }
             mContent.delete(getLeftLine(), getLeftColumn() - len, getLeftLine(), getLeftColumn());
@@ -320,7 +315,7 @@ public final class Cursor {
                     column--;
                 }
             }*/
-            column = selectionHelper.moveLeft(column, mContent.getLine(line));
+            column = TextLayoutHelper.get().getCurPosLeft(column, mContent.getLine(line));
             return IntPair.pack(line, column);
         } else {
             if (line == 0) {
@@ -350,7 +345,7 @@ public final class Cursor {
                     column--;
                 }
             }*/
-            column = selectionHelper.moveRight(column, mContent.getLine(line));
+            column = TextLayoutHelper.get().getCurPosRight(column, mContent.getLine(line));
            return IntPair.pack(line, column);
         } else {
             if (line + 1 == mContent.getLineCount()) {
