@@ -196,4 +196,16 @@ public class Span {
         hash = 31 * hash + fontStyles;
         return hash;
     }
+
+    @Override
+    public String toString() {
+        return "Span{" +
+                "column=" + column +
+                ", colorId=" + colorId +
+                ", underlineColor=" + underlineColor +
+                ", fontStyles=" + fontStyles +
+                ", problemFlags=" + problemFlags +
+                ", renderer=" + renderer +
+                "}";
+    }
 }
