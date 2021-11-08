@@ -112,7 +112,7 @@ class EditorTextActionModeStarter implements EditorTextActionPresenter {
             public void onDestroyActionMode(ActionMode actionMode) {
                 mEditor.mStartedActionMode = CodeEditor.ACTION_MODE_NONE;
                 mActionMode = null;
-                mEditor.setSelection(mEditor.getCursor().getLeftLine(), mEditor.getCursor().getLeftColumn());
+                mEditor.setSelection(mEditor.getCursor().getRightLine(), mEditor.getCursor().getRightColumn());
             }
 
         });

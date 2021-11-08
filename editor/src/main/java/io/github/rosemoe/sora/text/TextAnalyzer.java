@@ -209,6 +209,7 @@ public class TextAnalyzer {
                     mObjContainer.spanMap = mResult.mSpanMap;
                     mResult = result;
                     result.addNormalIfNull();
+                    result.runBeforePublish();
                     try {
                         final var callback = mCallback;
                         if (callback != null) {

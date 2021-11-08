@@ -93,6 +93,7 @@ import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
 import io.github.rosemoe.sora.interfaces.ExternalRenderer;
 import io.github.rosemoe.sora.interfaces.NewlineHandler;
 import io.github.rosemoe.sora.langs.EmptyLanguage;
+import io.github.rosemoe.sora.text.BlocksUpdater;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
@@ -4862,6 +4863,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         updateCursorAnchor();
         ensureSelectionVisible();
 
+        BlocksUpdater.update(getTextAnalyzeResult().getBlocks(), startLine, endLine - startLine);
         mSpanner.analyze(mText);
         mEventHandler.hideInsertHandle();
 
@@ -4910,6 +4912,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else {
             mCompletionWindow.hide();
         }
+
+        BlocksUpdater.update(getTextAnalyzeResult().getBlocks(), endLine, startLine - endLine);
 
         if (!mWait) {
             updateCursorAnchor();

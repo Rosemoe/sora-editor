@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.data;
 
+import java.util.Comparator;
+
 /**
  * Code block info model
  *
@@ -70,4 +72,22 @@ public class BlockLine {
                 ", toBottomOfEndLine=" + toBottomOfEndLine +
                 '}';
     }
+
+    public static final Comparator<BlockLine> COMPARATOR_END = (a,b) ->  {
+        var res = Integer.compare(a.endLine, b.endLine);
+        if (res == 0) {
+            return Integer.compare(a.endColumn, b.endColumn);
+        } else {
+            return res;
+        }
+    };
+
+    public static final Comparator<BlockLine> COMPARATOR_START = (a,b) ->  {
+        var res = Integer.compare(a.startLine, b.startLine);
+        if (res == 0) {
+            return Integer.compare(a.startColumn, b.startColumn);
+        } else {
+            return res;
+        }
+    };
 }

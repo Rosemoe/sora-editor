@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.text;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import io.github.rosemoe.sora.data.BlockLine;
@@ -133,7 +134,6 @@ public class TextAnalyzeResult {
 
     /**
      * Get a new BlockLine object
-     * <strong>It fields maybe not initialized with zero</strong>
      *
      * @return An idle BlockLine
      */
@@ -157,6 +157,22 @@ public class TextAnalyzeResult {
      */
     public List<BlockLine> getBlocks() {
         return mBlocks;
+    }
+
+    public void runBeforePublish() {
+        int pre = -1;
+        var sort = false;
+        for (int i = 0;i < mBlocks.size() - 1;i++) {
+            var cur = mBlocks.get(i + 1).endLine;
+            if (pre > cur) {
+                sort = true;
+                break;
+            }
+            pre = cur;
+        }
+        if (sort) {
+            Collections.sort(mBlocks, BlockLine.COMPARATOR_END);
+        }
     }
 
     /**
