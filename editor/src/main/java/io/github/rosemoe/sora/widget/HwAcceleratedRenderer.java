@@ -49,27 +49,14 @@ class HwAcceleratedRenderer implements ContentListener {
 
     private final CodeEditor editor;
     private final ArrayList<TextRenderNode> cache;
-    private int desired;
 
     public HwAcceleratedRenderer(CodeEditor editor) {
         this.editor = editor;
         cache = new ArrayList<>(64);
-        setExpectedCapacity(30);
     }
 
     private boolean shouldUpdateCache() {
         return !editor.isWordwrap() && editor.isHardwareAcceleratedDrawAllowed();
-    }
-
-    public void setExpectedCapacity(int desired) {
-        this.desired = desired;
-        removeGarbage();
-    }
-
-    public void removeGarbage() {
-        if (cache.size() > desired) {
-            cache.removeRange(desired, cache.size());
-        }
     }
 
     public boolean invalidateInRegion(int startLine, int endLine) {
@@ -172,7 +159,8 @@ class HwAcceleratedRenderer implements ContentListener {
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
         if (shouldUpdateCache()) {
-            invalidateInRegion(startLine, Integer.MAX_VALUE);
+            if (startLine != endLine)
+                invalidateInRegion(startLine, Integer.MAX_VALUE);
         }
     }
 
@@ -180,7 +168,8 @@ class HwAcceleratedRenderer implements ContentListener {
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
         if (shouldUpdateCache()) {
             int delta = endLine - startLine;
-            invalidateInRegion(startLine, Integer.MAX_VALUE);
+            if (delta != 0)
+                invalidateInRegion(startLine, Integer.MAX_VALUE);
         }
     }
 
