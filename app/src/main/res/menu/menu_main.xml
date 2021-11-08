@@ -74,7 +74,6 @@
             <item
                 android:id="@+id/pin_line_number"
                 android:checkable="true"
-                android:checked="true"
                 android:title="@string/pin_line_number"/>
             <item
                 android:id="@+id/magnifier"
