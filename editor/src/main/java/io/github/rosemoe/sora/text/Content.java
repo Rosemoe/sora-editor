@@ -363,6 +363,9 @@ public class Content implements CharSequence {
             //-----Notify------
             if (mCursor != null)
                 mCursor.beforeDelete(startLine, columnOnStartLine, endLine, columnOnEndLine);
+            for (var lis : mListeners) {
+                lis.beforeModification(this);
+            }
 
             for (int i = 0; i < endLine - startLine - 1; i++) {
                 ContentLine line = mLines.remove(startLine + 1);
