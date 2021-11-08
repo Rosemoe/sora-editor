@@ -66,17 +66,21 @@ class EditorTextActionModeStarter implements EditorTextActionPresenter {
                         .setShowAsActionFlags(2)
                         .setIcon(array.getDrawable(0));
 
-                menu.add(0, 1, 0, mEditor.getContext().getString(android.R.string.cut))
-                        .setShowAsActionFlags(2)
-                        .setIcon(array.getDrawable(1));
+                if (mEditor.isEditable()) {
+                    menu.add(0, 1, 0, mEditor.getContext().getString(android.R.string.cut))
+                            .setShowAsActionFlags(2)
+                            .setIcon(array.getDrawable(1));
+                }
 
                 menu.add(0, 2, 0, mEditor.getContext().getString(android.R.string.copy))
                         .setShowAsActionFlags(2)
                         .setIcon(array.getDrawable(2));
 
-                menu.add(0, 3, 0, mEditor.getContext().getString(android.R.string.paste))
-                        .setShowAsActionFlags(2)
-                        .setIcon(array.getDrawable(3));
+                if (mEditor.isEditable()) {
+                    menu.add(0, 3, 0, mEditor.getContext().getString(android.R.string.paste))
+                            .setShowAsActionFlags(2)
+                            .setIcon(array.getDrawable(3));
+                }
 
                 array.recycle();
                 return true;
@@ -94,7 +98,8 @@ class EditorTextActionModeStarter implements EditorTextActionPresenter {
                         mEditor.selectAll();
                         break;
                     case 1:
-                        mEditor.cutText();
+                        if (mEditor.isEditable())
+                            mEditor.cutText();
                         onExit();
                         break;
                     case 2:
@@ -102,7 +107,8 @@ class EditorTextActionModeStarter implements EditorTextActionPresenter {
                         onExit();
                         break;
                     case 3:
-                        mEditor.pasteText();
+                        if (mEditor.isEditable())
+                            mEditor.pasteText();
                         onExit();
                 }
                 return false;

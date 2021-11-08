@@ -309,12 +309,6 @@ public final class Cursor {
         int line = IntPair.getFirst(position);
         int column = IntPair.getSecond(position);
         if (column - 1 >= 0) {
-            /*if (column - 2 >= 0) {
-                char ch = mContent.charAt(line, column - 2);
-                if (Character.isHighSurrogate(ch)) {
-                    column--;
-                }
-            }*/
             column = TextLayoutHelper.get().getCurPosLeft(column, mContent.getLine(line));
             return IntPair.pack(line, column);
         } else {
@@ -338,13 +332,6 @@ public final class Cursor {
         int c_column = mContent.getColumnCount(line);
 
         if (column + 1 <= c_column) {
-            /*char ch = mContent.charAt(line, column);
-            if (Character.isHighSurrogate(ch)) {
-                column++;
-                if (column + 1 > c_column) {
-                    column--;
-                }
-            }*/
             column = TextLayoutHelper.get().getCurPosRight(column, mContent.getLine(line));
            return IntPair.pack(line, column);
         } else {

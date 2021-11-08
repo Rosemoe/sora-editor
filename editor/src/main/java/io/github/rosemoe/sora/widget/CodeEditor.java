@@ -413,7 +413,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return The x offset on screen
      */
     protected float getOffset(int line, int column) {
-        return mLayout.getCharLayoutOffset(line, column)[0] + measureTextRegionOffset() - getOffsetX();
+        return mLayout.getCharLayoutOffset(line, column)[1] + measureTextRegionOffset() - getOffsetX();
     }
 
     /**
@@ -5000,7 +5000,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     public void onEndGestureInteraction() {
-        showTextActionPopup();
+        if (mCursor.isSelected()) {
+            showTextActionPopup();
+        }
     }
 
     //-------------------------------------------------------------------------------

@@ -42,6 +42,7 @@ public class TextActionPopupWindow extends TextComposeBasePopup implements View.
     private final CodeEditor mEditor;
     private final MaterialButton mPasteBtn;
     private final MaterialButton mSelectAll;
+    private final MaterialButton mCutBtn;
     private final LinearLayout mContainer;
 
     private float mDpUnit;
@@ -63,11 +64,11 @@ public class TextActionPopupWindow extends TextComposeBasePopup implements View.
         View root = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_popup_window, null);
         mSelectAll = root.findViewById(R.id.tcpw_material_button_select_all);
         mContainer = root.findViewById(R.id.text_compose_panel);
-        MaterialButton cut = root.findViewById(R.id.tcpw_material_button_cut);
+        mCutBtn = root.findViewById(R.id.tcpw_material_button_cut);
         MaterialButton copy = root.findViewById(R.id.tcpw_material_button_copy);
         mPasteBtn = root.findViewById(R.id.tcpw_material_button_paste);
         mSelectAll.setOnClickListener(this);
-        cut.setOnClickListener(this);
+        mCutBtn.setOnClickListener(this);
         copy.setOnClickListener(this);
         mPasteBtn.setOnClickListener(this);
         GradientDrawable gd = new GradientDrawable();
@@ -85,11 +86,14 @@ public class TextActionPopupWindow extends TextComposeBasePopup implements View.
             mEditor.selectAll();
         } else if (id == R.id.tcpw_material_button_cut) {
             mEditor.copyText();
-            if (mEditor.getCursor().isSelected()) {
+            if (mEditor.getCursor().isSelected() && mEditor.isEditable()) {
                 mEditor.getCursor().onDeleteKeyPressed();
+            } else {
+                mEditor.setSelection(mEditor.getCursor().getRightLine(), mEditor.getCursor().getRightColumn());
             }
         } else if (id == R.id.tcpw_material_button_paste) {
-            mEditor.pasteText();
+            if (mEditor.isEditable())
+                mEditor.pasteText();
             mEditor.setSelection(mEditor.getCursor().getRightLine(), mEditor.getCursor().getRightColumn());
         } else if (id == R.id.tcpw_material_button_copy) {
             mEditor.copyText();
@@ -110,6 +114,13 @@ public class TextActionPopupWindow extends TextComposeBasePopup implements View.
     }
 
     @Override
+    public void show() {
+        mCutBtn.setVisibility(mEditor.isEditable() ? View.VISIBLE : View.GONE);
+        mPasteBtn.setVisibility(mEditor.isEditable() ? View.VISIBLE : View.GONE);
+        super.show();
+    }
+
+    @Override
     public void onUpdate(int updateReason) {
         hide(updateReason);
     }
@@ -125,7 +136,7 @@ public class TextActionPopupWindow extends TextComposeBasePopup implements View.
         boolean result = isShowing();
         hide(DISMISS);
         if (mEditor.getCursor().isSelected()) {
-            mEditor.setSelection(mEditor.getCursor().getLeftLine(), mEditor.getCursor().getLeftColumn());
+            mEditor.setSelection(mEditor.getCursor().getRightLine(), mEditor.getCursor().getRightColumn());
         }
         return result && !isShowing();
     }
@@ -181,12 +192,10 @@ public class TextActionPopupWindow extends TextComposeBasePopup implements View.
             float handleLeftX = mEditor.getOffset(left, mEditor.getCursor().getLeftColumn());
             float handleRightX = mEditor.getOffset(right, mEditor.getCursor().getRightColumn());
             int panelX = (int) ((handleLeftX + handleRightX) / 2f);
-            panel.setExtendedX(mDpUnit * 28);
+            panel.setExtendedX(panelX);
             panel.setExtendedY(panelY);
-            Log.d("onTextSelectionEnd", "panelX: " + panelX + ", panelY: " + panelY);
             panel.show();
             mContainer.requestFocus();
-            //mSelectAll.clearFocus();
         }
     }
 

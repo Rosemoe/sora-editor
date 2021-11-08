@@ -250,7 +250,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
 
     public void notifyGestureInteractionEnd(int type) {
         mLastInteraction = System.currentTimeMillis();
-        class InvalidateNotifier implements Runnable {
+        class Notifier implements Runnable {
             @Override
             public void run() {
                 if (type == TextComposeBasePopup.SCROLL) {
@@ -273,7 +273,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             }
 
         }
-        mEditor.postDelayed(new InvalidateNotifier(), INTERACTION_END_DELAY);
+        mEditor.postDelayed(new Notifier(), INTERACTION_END_DELAY);
     }
 
 

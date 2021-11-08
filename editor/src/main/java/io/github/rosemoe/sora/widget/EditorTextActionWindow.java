@@ -167,9 +167,9 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
      * Update the state of paste button
      */
     private void updateBtnState() {
-        mPasteBtn.setEnabled(mEditor.hasClip());
+        mPasteBtn.setEnabled(mEditor.hasClip() && mEditor.isEditable());
         mCopyBtn.setVisibility(mEditor.getCursor().isSelected() ? View.VISIBLE : View.GONE);
-        mCutBtn.setVisibility(mEditor.getCursor().isSelected() ? View.VISIBLE : View.GONE);
+        mCutBtn.setVisibility(mEditor.getCursor().isSelected() && mEditor.isEditable() ? View.VISIBLE : View.GONE);
         mRootView.measure(View.MeasureSpec.makeMeasureSpec(1000000, View.MeasureSpec.AT_MOST), View.MeasureSpec.makeMeasureSpec(100000, View.MeasureSpec.AT_MOST));
         setWidth(Math.min(mRootView.getMeasuredWidth(), maxWidth));
     }
