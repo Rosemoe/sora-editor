@@ -83,7 +83,7 @@ class Magnifier {
      * X and Y are relative to the code editor view
      */
     public void show(int x, int y) {
-        if (Math.abs(x - this.x) < 3 && Math.abs(y - this.y) < 3) {
+        if (Math.abs(x - this.x) < 2 && Math.abs(y - this.y) < 2) {
             return;
         }
         if (view.getTextSizePx() > maxTextSize) {

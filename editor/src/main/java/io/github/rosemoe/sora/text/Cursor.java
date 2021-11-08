@@ -30,6 +30,7 @@ import android.util.Log;
 
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.util.IntPair;
+import io.github.rosemoe.sora.util.SelectionHelper;
 
 /**
  * @author Rose
@@ -44,8 +45,7 @@ public final class Cursor {
     private boolean mAutoIndentEnabled;
     private EditorLanguage mLanguage;
     private int mTabWidth;
-    private Paint mChecker = new Paint();
-    private float[] buffer = new float[10];
+    private final SelectionHelper selectionHelper = new SelectionHelper();
 
     /**
      * Create a new Cursor for Content
@@ -280,37 +280,12 @@ public final class Cursor {
                         Log.w("EditorCursor", "Language object error", e);
                     }
                     StringBuilder sb = new StringBuilder(text);
-                    sb.insert(1, createIndent(count));
+                    sb.insert(1, TextUtils.createIndent(count, mTabWidth, mLanguage.useTab()));
                     text = sb;
                 }
             }
             mContent.insert(getLeftLine(), getLeftColumn(), text);
         }
-    }
-
-    /**
-     * Create indent space
-     *
-     * @param p Target width effect
-     * @return Generated space string
-     */
-    private String createIndent(int p) {
-        int tab = 0;
-        int space;
-        if (mLanguage.useTab()) {
-            tab = p / mTabWidth;
-            space = p % mTabWidth;
-        } else {
-            space = p;
-        }
-        StringBuilder s = new StringBuilder();
-        for (int i = 0; i < tab; i++) {
-            s.append('\t');
-        }
-        for (int i = 0; i < space; i++) {
-            s.append(' ');
-        }
-        return s.toString();
     }
 
     /**
@@ -323,17 +298,8 @@ public final class Cursor {
             int col = getLeftColumn(), len = 1;
             // Do not put cursor inside a emotion character
             if (col > 1) {
-                char before = mContent.charAt(getLeftLine(), col - 2);
-                if (Character.isHighSurrogate(before)) {
-                    len = 2;
-                    if (col >= 4 && isEmoji(before)) {
-                        //Check for combined emoji
-                        mChecker.getTextWidths(mContent.getLine(getLeftLine()).getRawData(), col - 4, 4, buffer);
-                        if (buffer[0] > 0 && buffer[1] == 0 && buffer[2] == 0 && buffer[3] == 0) {
-                            len = 4;
-                        }
-                    }
-                }
+                int left = selectionHelper.moveLeft(col, mContent.getLine(getLeftLine()));
+                len = col - left;
             }
             mContent.delete(getLeftLine(), getLeftColumn() - len, getLeftLine(), getLeftColumn());
         }
@@ -348,13 +314,14 @@ public final class Cursor {
         int line = IntPair.getFirst(position);
         int column = IntPair.getSecond(position);
         if (column - 1 >= 0) {
-            if (column - 2 >= 0) {
+            /*if (column - 2 >= 0) {
                 char ch = mContent.charAt(line, column - 2);
                 if (Character.isHighSurrogate(ch)) {
                     column--;
                 }
-            }
-            return IntPair.pack(line, column - 1);
+            }*/
+            column = selectionHelper.moveLeft(column, mContent.getLine(line));
+            return IntPair.pack(line, column);
         } else {
             if (line == 0) {
                 return 0;
@@ -376,14 +343,15 @@ public final class Cursor {
         int c_column = mContent.getColumnCount(line);
 
         if (column + 1 <= c_column) {
-            char ch = mContent.charAt(line, column);
+            /*char ch = mContent.charAt(line, column);
             if (Character.isHighSurrogate(ch)) {
                 column++;
                 if (column + 1 > c_column) {
                     column--;
                 }
-            }
-           return IntPair.pack(line, column + 1);
+            }*/
+            column = selectionHelper.moveRight(column, mContent.getLine(line));
+           return IntPair.pack(line, column);
         } else {
             if (line + 1 == mContent.getLineCount()) {
                 return IntPair.pack(line, c_column);
