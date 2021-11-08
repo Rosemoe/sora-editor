@@ -346,6 +346,7 @@ public class Content implements CharSequence {
                     mTextLength++;
                 } else {
                     ContentLine previous = mLines.get(startLine - 1);
+                    columnOnStartLine = previous.length();
                     previous.append(curr);
                     ContentLine rm = mLines.remove(startLine);
                     if (mLineListener != null) {
@@ -353,7 +354,6 @@ public class Content implements CharSequence {
                     }
                     changedContent.insert(0, '\n');
                     startLine--;
-                    columnOnStartLine = getColumnCount(startLine);
                 }
             }
         } else if (startLine < endLine) {
