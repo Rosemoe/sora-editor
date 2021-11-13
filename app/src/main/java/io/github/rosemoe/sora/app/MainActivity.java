@@ -477,3 +477,5 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 }
+////// ((io.github.rosemoe.sora.widget.CodeEditor)editor).selectAll();
+///the code select all text for code editor 100%work
