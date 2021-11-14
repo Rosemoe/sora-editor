@@ -27,10 +27,10 @@ import android.text.Editable;
 import android.view.KeyEvent;
 
 /**
- * Handles key events such SHIFT
+ * Handles key events such as SHIFT
  * @author Rosemoe
  */
-class KeyMetaStates extends android.text.method.MetaKeyKeyListener {
+public class KeyMetaStates extends android.text.method.MetaKeyKeyListener {
 
     private final CodeEditor editor;
 
