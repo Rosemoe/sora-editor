@@ -24,8 +24,10 @@
 package io.github.rosemoe.sora.langs.textmate.analyzer;
 
 import android.graphics.Color;
+
 import java.io.InputStream;
 import java.io.Reader;
+
 import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
@@ -50,27 +52,27 @@ public class TextMateAnalyzer implements CodeAnalyzer {
     private Theme theme;
     private BlockLineAnalyzer blockLineAnalyzer;
     private final TextMateLanguage language;
+
     public TextMateAnalyzer(TextMateLanguage language, String grammarName, InputStream grammarIns, Reader languageConfiguration, IRawTheme theme) throws Exception {
         registry.setTheme(theme);
-        this.language=language;
+        this.language = language;
         this.theme = Theme.createFromRawTheme(theme);
         this.grammar = registry.loadGrammarFromPathSync(grammarName, grammarIns);
-        if(languageConfiguration!=null){
+        if (languageConfiguration != null) {
             LanguageConfigurator languageConfigurator = new LanguageConfigurator(languageConfiguration);
-            blockLineAnalyzer=new BlockLineAnalyzer(languageConfigurator.getLanguageConfiguration());
+            blockLineAnalyzer = new BlockLineAnalyzer(languageConfigurator.getLanguageConfiguration());
         }
-
     }
 
     @Override
     public void analyze(CharSequence content, TextAnalyzeResult result, TextAnalyzer.AnalyzeThread.Delegate delegate) {
-        Content model=new Content(content);
+        Content model = new Content(content);
 
         try {
             boolean first = true;
             StackElement ruleStack = null;
-            for(int lineCount=0;lineCount<model.getLineCount()&& delegate.shouldAnalyze();lineCount++){
-                String line= model.getLineString(lineCount);
+            for (int lineCount = 0; lineCount < model.getLineCount() && delegate.shouldAnalyze(); lineCount++) {
+                String line = model.getLineString(lineCount) + "\n";
                 if (first) {
                     result.addNormalIfNull();
                     first = false;
@@ -107,13 +109,13 @@ public class TextMateAnalyzer implements CodeAnalyzer {
 
                     result.add(lineCount, span);
                     //Erase the extra style at the end of the span
-                    result.addIfNeeded(lineCount,nextStartIndex, EditorColorScheme.TEXT_NORMAL);
+                    result.addIfNeeded(lineCount, nextStartIndex, EditorColorScheme.TEXT_NORMAL);
                 }
                 ruleStack = lineTokens.getRuleStack();
             }
 
-            if(blockLineAnalyzer!=null){
-                blockLineAnalyzer.analyze(language,model, result);
+            if (blockLineAnalyzer != null) {
+                blockLineAnalyzer.analyze(language, model, result);
             }
 
             result.determine(model.getLineCount());

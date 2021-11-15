@@ -29,7 +29,7 @@ import io.github.rosemoe.sora.data.CompletionItem;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 
 /**
- * Interface for auto completion analysis
+ * Interface for auto-completion analysis
  *
  * @author Rose
  */

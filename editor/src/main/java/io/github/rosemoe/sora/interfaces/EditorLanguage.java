@@ -32,7 +32,7 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
  * Implement this interface when you want to add new language support for editor.
  * <p>
  * <strong>NOTE:</strong> A language must not be single instance.
- * One language instance should always serves for only one editor.
+ * One language instance should always serve for only one editor.
  * It means that you should not give a language object to other editor instances
  * after it has been applied to one editor.
  * This is to provide better connection between auto completion provider and code analyzer.
@@ -56,10 +56,10 @@ public interface EditorLanguage {
     AutoCompleteProvider getAutoCompleteProvider();
 
     /**
-     * Called by editor to check whether this is a character for auto completion
+     * Called by editor to check whether this is a character for auto-completion
      *
      * @param ch Character to check
-     * @return Whether is character for auto completion
+     * @return Whether is character for auto-completion
      */
     boolean isAutoCompleteChar(char ch);
 
