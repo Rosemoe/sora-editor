@@ -480,7 +480,7 @@ public class JavaTextTokenizer {
                 "goto", "continue", "break", "transient", "void", "try", "catch",
                 "finally", "while", "case", "default", "const", "enum", "extends",
                 "implements", "import", "instanceof", "interface", "native",
-                "this", "throw", "throws", "true", "false", "null"
+                "this", "throw", "throws", "true", "false", "null","var","Override","Deprecated"
         };
         Tokens[] sTokens = new Tokens[]{
                 Tokens.ABSTRACT, Tokens.ASSERT, Tokens.BOOLEAN, Tokens.BYTE, Tokens.CHAR, Tokens.CLASS, Tokens.DO,
@@ -490,7 +490,7 @@ public class JavaTextTokenizer {
                 Tokens.GOTO, Tokens.CONTINUE, Tokens.BREAK, Tokens.TRANSIENT, Tokens.VOID, Tokens.TRY, Tokens.CATCH,
                 Tokens.FINALLY, Tokens.WHILE, Tokens.CASE, Tokens.DEFAULT, Tokens.CONST, Tokens.ENUM, Tokens.EXTENDS,
                 Tokens.IMPLEMENTS, Tokens.IMPORT, Tokens.INSTANCEOF, Tokens.INTERFACE, Tokens.NATIVE,
-                Tokens.THIS, Tokens.THROW, Tokens.THROWS, Tokens.TRUE, Tokens.FALSE, Tokens.NULL
+                Tokens.THIS, Tokens.THROW, Tokens.THROWS, Tokens.TRUE, Tokens.FALSE, Tokens.NULL,Tokens.VAR,Tokens.OVERRIDE,Tokens.DEPRECATED
         };
         keywords = new TrieTree<>();
         for (int i = 0; i < sKeywords.length; i++) {
