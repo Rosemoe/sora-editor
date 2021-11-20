@@ -44,7 +44,7 @@ public class PythonLanguage implements EditorLanguage {
             "del", "elif", "else", "except", "exec", "finally", "for",
             "from", "global", "if", "import", "in", "is", "lambda",
             "not", "or", "pass", "print", "raise", "return", "try",
-            "while", "with", "yield"
+            "while", "with", "yield","dict"
     };
 
     @Override
