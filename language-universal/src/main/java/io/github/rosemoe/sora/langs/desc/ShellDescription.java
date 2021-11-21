@@ -32,7 +32,7 @@ public class ShellDescription implements LanguageDescription {
     }
 
     public String[] getKeywords() { 
-    return new String[]{"echo","read","set","unset","readonly","shift","export","if","fi","else","do","while","done","for","until","continue","exit",			"esac","case","break","return","trap","wait","eval","exec","ulimit","umask"};
+    return new String[]{"alias","case","hash","wait","bg","bind","break","builtin","debugger","cd","command","compgen","declare","cat","dirs","disown","do","done","fc","fg","fi","for","function","getopts","jobs","kill","break","umask","let","local","logout","alias","else","elif","ulimit","complete","until","echo","continue","source","while","wh","times","exec","exit","export","zi","eval","pwd","popd","printf","pushd","if","del"};
     }
 
     public int getOperatorAdvance(String str) {
