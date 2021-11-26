@@ -26,7 +26,6 @@ package io.github.rosemoe.sora.widget;
 import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
 import android.os.SystemClock;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
@@ -117,11 +116,12 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
             return;
         }
         requestShow = System.currentTimeMillis();
+        final var requireRequest = mRequestTime;
         mEditor.postDelayed(() -> {
-            if (requestHide < requestShow) {
+            if (requestHide < requestShow && mRequestTime == requireRequest) {
                 super.show();
             }
-        }, 60);
+        }, 70);
     }
 
     @Override
@@ -261,7 +261,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
             }
             mCancelShowUp = false;
         }
-        mEditor.postHideCompletionWindow();
+        mEditor.hideCompletionWindow();
     }
 
     /**
@@ -312,9 +312,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
             mListView.setAdapter(mAdapter);
             mCurrent = -1;
             float newHeight = mAdapter.getItemHeight() * results.size();
-            if (isShowing()) {
-                update(getWidth(), (int) Math.min(newHeight, mMaxHeight));
-            }
+            update(getWidth(), (int) Math.min(newHeight, mMaxHeight));
         });
     }
 
