@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
+package io.github.rosemoe.sora.widget.layout;
 
 import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
 
@@ -32,6 +32,7 @@ import java.util.NoSuchElementException;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.IntPair;
+import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
  * Wordwrap layout for editor
@@ -43,12 +44,12 @@ import io.github.rosemoe.sora.util.IntPair;
  *
  * @author Rose
  */
-class WordwrapLayout extends AbstractLayout {
+public class WordwrapLayout extends AbstractLayout {
 
     private final List<RowRegion> rowTable;
     private final int width;
 
-    WordwrapLayout(CodeEditor editor, Content text) {
+    public WordwrapLayout(CodeEditor editor, Content text) {
         super(editor, text);
         rowTable = new ArrayList<>();
         width = editor.getWidth() - (int) editor.measureTextRegionOffset();

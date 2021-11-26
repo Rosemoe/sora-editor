@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
+package io.github.rosemoe.sora.widget.layout;
 
 import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.text.LineRemoveListener;
@@ -33,7 +33,7 @@ import io.github.rosemoe.sora.text.LineRemoveListener;
  *
  * @author Rose
  */
-interface Layout extends LineRemoveListener, ContentListener {
+public interface Layout extends LineRemoveListener, ContentListener {
 
     /**
      * Called by editor to destroy this layout

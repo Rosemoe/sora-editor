@@ -49,8 +49,8 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     private static final String TAG = "EditorTouchEventHandler";
     private final CodeEditor mEditor;
     private final OverScroller mScroller;
-    protected boolean topOrBottom; //true for bottom
-    protected boolean leftOrRight; //true for right
+    boolean topOrBottom; //true for bottom
+    boolean leftOrRight; //true for right
     boolean isScaling = false;
     float maxSize, minSize;
     private long mLastScroll = 0;
@@ -65,7 +65,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     private SelectionHandle insert = null, left = null, right = null;
     private int mSelHandleType = -1;
     private int mTouchedHandleType = -1;
-    protected Magnifier mMagnifier;
+    Magnifier mMagnifier;
 
     private final static int LEFT_EDGE = 1;
     private final static int RIGHT_EDGE = 1 << 1;

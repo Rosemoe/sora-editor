@@ -21,43 +21,36 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
-
-import java.util.NoSuchElementException;
+package io.github.rosemoe.sora.widget.layout;
 
 /**
- * Row iterator.
- * This iterator is able to return a series of Row objects linearly
- * Editor uses this to get information of rows and paint them accordingly
+ * This class represents a 'row' in editor.
+ * Editor uses this to draw rows
  *
  * @author Rose
  */
-interface RowIterator {
+public class Row {
 
     /**
-     * Return next Row object
-     * <p>
-     * The result should not be stored, because implementing classes will always return the same
-     * object due to performance
-     *
-     * @return Row object contains the information about a row
-     * @throws NoSuchElementException If no more row available
+     * The index in lines
+     * But not row index
      */
-    Row next();
+    public int lineIndex;
 
     /**
-     * Whether there is more Row object
-     *
-     * @return Whether more row available
+     * Whether this row is a start of a line
+     * Editor will draw line number to left of this row to indicate this
      */
-    boolean hasNext();
+    public boolean isLeadingRow;
 
     /**
-     * Reset the position to its original position.
-     *
-     * This can be useful when the elements should be iterated for
-     * several times.
+     * Start index in target line
      */
-    void reset();
+    public int startColumn;
+
+    /**
+     * End index in target line
+     */
+    public int endColumn;
 
 }

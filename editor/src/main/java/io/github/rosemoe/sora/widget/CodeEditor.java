@@ -40,6 +40,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.RenderNode;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
@@ -107,6 +108,11 @@ import io.github.rosemoe.sora.text.TextAnalyzer;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
 import io.github.rosemoe.sora.util.ThemeUtils;
+import io.github.rosemoe.sora.widget.layout.Layout;
+import io.github.rosemoe.sora.widget.layout.LineBreakLayout;
+import io.github.rosemoe.sora.widget.layout.Row;
+import io.github.rosemoe.sora.widget.layout.RowIterator;
+import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
 
 /**
  * CodeEditor is an editor that can highlight text regions by doing basic syntax analyzing
@@ -301,6 +307,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private Paint.FontMetricsInt mTextMetrics;
     private Paint.FontMetricsInt mLineNumberMetrics;
     private Paint.FontMetricsInt mGraphMetrics;
+    private Drawable mCursorHandle;
     private CursorBlink mCursorBlink;
     private SymbolPairMatch mOverrideSymbolPairs;
     private final LongArrayList mPostDrawLineNumbers = new LongArrayList();
@@ -390,7 +397,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @return The width
      */
-    protected float measureTextRegionOffset() {
+    public float measureTextRegionOffset() {
         return isLineNumberEnabled() ? measureLineNumber() + mDividerMargin * 2 + mDividerWidth : mDpUnit * 5;
     }
 
@@ -434,6 +441,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mVerticalScrollFactor = configuration.getScaledVerticalScrollFactor();
         } else {
             try {
+                //noinspection JavaReflectionMemberAccess
                 @SuppressLint("DiscouragedPrivateApi")
                 var method = View.class.getDeclaredMethod("getVerticalScrollFactor");
                 method.setAccessible(true);
@@ -1989,7 +1997,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param baseline    Baseline on canvas
      * @param line        Drawing line index
      * @param startIndex  Start index to paint
-     * @param endIndex    End index to paint
+     * @param endIndex    Index of end character to paint
      * @param columnCount Column count of line
      * @param color       Color of normal text in this region
      */
@@ -2119,6 +2127,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (handleType > -1 && handleType == mEventHandler.getTouchedHandleType()) {
             radius = mDpUnit * 16;
         }
+
 
         float top = getRowBottom(row) - getOffsetY();
         float bottom = top + radius * 2;

@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
+package io.github.rosemoe.sora.widget.layout;
 
 import java.util.NoSuchElementException;
 
@@ -29,6 +29,7 @@ import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.BinaryHeap;
 import io.github.rosemoe.sora.util.IntPair;
+import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
  * Layout implementation of editor
@@ -36,11 +37,11 @@ import io.github.rosemoe.sora.util.IntPair;
  *
  * @author Rose
  */
-class LineBreakLayout extends AbstractLayout {
+public class LineBreakLayout extends AbstractLayout {
 
     private BinaryHeap widthMaintainer;
 
-    LineBreakLayout(CodeEditor editor, Content text) {
+    public LineBreakLayout(CodeEditor editor, Content text) {
         super(editor, text);
         measureAllLines();
     }

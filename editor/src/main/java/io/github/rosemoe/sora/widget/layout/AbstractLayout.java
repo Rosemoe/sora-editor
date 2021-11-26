@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
+package io.github.rosemoe.sora.widget.layout;
 
 import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
 
@@ -29,6 +29,7 @@ import android.graphics.Paint;
 
 import io.github.rosemoe.sora.graphics.FontCache;
 import io.github.rosemoe.sora.text.Content;
+import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
  * Base layout implementation of {@link Layout}
@@ -36,7 +37,7 @@ import io.github.rosemoe.sora.text.Content;
  *
  * @author Rose
  */
-abstract class AbstractLayout implements Layout {
+public abstract class AbstractLayout implements Layout {
 
     protected CodeEditor editor;
     protected Content text;
