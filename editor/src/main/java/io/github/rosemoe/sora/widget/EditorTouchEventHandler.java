@@ -744,14 +744,18 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             if (newSize < minSize || newSize > maxSize) {
                 return false;
             }
-            int firstVisible = mEditor.getFirstVisibleRow();
-            float top = mScroller.getCurrY() - firstVisible * mEditor.getRowHeight();
-            int height = mEditor.getRowHeight();
+            float focusX = detector.getFocusX();
+            float focusY = detector.getFocusY();
+            int originHeight = mEditor.getRowHeight();
             mEditor.setTextSizePxDirect(newSize);
-            mEditor.invalidate();
-            float newY = firstVisible * mEditor.getRowHeight() + top * mEditor.getRowHeight() / height;
-            mScroller.startScroll(mScroller.getCurrX(), (int) newY, 0, 0, 0);
+            float heightFactor = mEditor.getRowHeight() * 1f / originHeight;
+            float afterScrollY = (mScroller.getCurrY() + focusY) * heightFactor - focusY;
+            float afterScrollX = (mScroller.getCurrX() + focusX) * detector.getScaleFactor() - focusX;
+            afterScrollX = Math.max(0, Math.min(afterScrollX, mEditor.getScrollMaxX()));
+            afterScrollY = Math.max(0, Math.min(afterScrollY, mEditor.getScrollMaxY()));
+            mScroller.startScroll((int)afterScrollX, (int)afterScrollY, 0, 0, 0);
             isScaling = true;
+            mEditor.invalidate();
             return true;
         }
         return false;
@@ -824,7 +828,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
          */
         public void applyPosition(MotionEvent e) {
             float targetX = mScroller.getCurrX() + e.getX();
-            float targetY = mScroller.getCurrY() + e.getY() - Math.max(mEditor.getInsertHandleRect().height(), mEditor.getRightHandleRect().height()) * 4 / 3;
+            float targetY = mScroller.getCurrY() + e.getY() - mEditor.getDpUnit() * 12 * 4 / 3;
             int line = IntPair.getFirst(mEditor.getPointPosition(0, targetY));
             if (line >= 0 && line < mEditor.getLineCount()) {
                 int column = IntPair.getSecond(mEditor.getPointPosition(targetX, targetY));

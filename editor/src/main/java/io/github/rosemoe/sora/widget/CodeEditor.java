@@ -2111,7 +2111,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             radius = mDpUnit * 16;
         }
 
-        //Log.d("drawHandle", "drawHandle: " + mEventHandler.getTouchedHandleType());
         float top = getRowBottom(row) - getOffsetY();
         float bottom = top + radius * 2;
         float left = centerX - radius;
