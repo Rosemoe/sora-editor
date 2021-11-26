@@ -1498,7 +1498,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 if (line == mCursor.getRightLine()) {
                     selectionEnd = mCursor.getRightColumn();
                 }
-                drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd, mColors.getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
+                if (mText.getColumnCount(line) == 0 && line != mCursor.getRightLine()) {
+                    mRect.top = getRowTop(row) - getOffsetY();
+                    mRect.bottom = getRowBottom(row) - getOffsetY();
+                    mRect.left = paintingOffset;
+                    mRect.right = mRect.left + measureText("  ", 0, 2);
+                    mPaint.setColor(mColors.getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
+                    canvas.drawRoundRect(mRect, getRowHeight() * 0.13f, getRowHeight() * 0.13f, mPaint);
+                } else {
+                    drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd, mColors.getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
+                }
             }
         }
         rowIterator.reset();
