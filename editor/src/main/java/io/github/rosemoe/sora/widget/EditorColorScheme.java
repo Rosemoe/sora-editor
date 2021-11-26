@@ -25,6 +25,9 @@ package io.github.rosemoe.sora.widget;
 
 import android.util.SparseIntArray;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -125,7 +128,7 @@ public class EditorColorScheme {
     /**
      * Host editor object
      */
-    private CodeEditor mEditor;
+    private List<WeakReference<CodeEditor>> mEditors;
 
     /**
      * Create a new ColorScheme for the given editor
@@ -133,9 +136,8 @@ public class EditorColorScheme {
      * @param editor Host editor
      */
     EditorColorScheme(CodeEditor editor) {
-        mEditor = editor;
-        mColors = new SparseIntArray();
-        applyDefault();
+        this();
+        attachEditor(editor);
     }
 
     /**
@@ -143,17 +145,37 @@ public class EditorColorScheme {
      */
     public EditorColorScheme() {
         mColors = new SparseIntArray();
+        mEditors = new ArrayList<>();
         applyDefault();
     }
 
     /**
+     * Subscribe changes
+     *
      * Called by editor
      */
     void attachEditor(CodeEditor editor) {
-        if (mEditor != null) {
-            throw new IllegalStateException("A editor is already attached to this ColorScheme object");
+        Objects.requireNonNull(editor);
+        for (var ref : mEditors) {
+            if (ref.get() == editor) {
+                return;
+            }
         }
-        mEditor = Objects.requireNonNull(editor);
+        mEditors.add(new WeakReference<>(editor));
+        editor.onColorFullUpdate();
+    }
+
+    /**
+     * Unsubscribe changes
+     */
+    void detachEditor(CodeEditor editor) {
+        var itr = mEditors.iterator();
+        while (itr.hasNext()) {
+            if (itr.next().get() == editor) {
+                itr.remove();
+                break;
+            }
+        }
     }
 
     /**
@@ -280,8 +302,14 @@ public class EditorColorScheme {
         mColors.put(type, color);
 
         //Notify the editor
-        if (mEditor != null) {
-            mEditor.onColorUpdated(type);
+        var itr = mEditors.iterator();
+        while (itr.hasNext()) {
+            var editor = itr.next().get();
+            if (editor == null) {
+                itr.remove();
+            } else {
+                editor.onColorUpdated(type);
+            }
         }
     }
 

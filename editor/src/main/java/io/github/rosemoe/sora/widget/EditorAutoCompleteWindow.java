@@ -108,12 +108,26 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         }
     }
 
+    private long requestShow = 0;
+    private long requestHide = -1;
+
     @Override
     public void show() {
         if (mCancelShowUp) {
             return;
         }
-        super.show();
+        requestShow = System.currentTimeMillis();
+        mEditor.postDelayed(() -> {
+            if (requestHide < requestShow) {
+                super.show();
+            }
+        }, 60);
+    }
+
+    @Override
+    public void hide() {
+        super.hide();
+        requestHide = System.currentTimeMillis();
     }
 
     public Context getContext() {
@@ -208,10 +222,10 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
     private void ensurePosition() {
         mListView.post(() -> {
             while (mListView.getFirstVisiblePosition() + 1 > mCurrent && mListView.canScrollList(-1)) {
-                performScrollList(mAdapter.getItemHeight());
+                performScrollList(mAdapter.getItemHeight() / 2);
             }
             while (mListView.getLastVisiblePosition() - 1 < mCurrent && mListView.canScrollList(1)) {
-                performScrollList(-mAdapter.getItemHeight());
+                performScrollList(-mAdapter.getItemHeight() / 2);
             }
         });
     }

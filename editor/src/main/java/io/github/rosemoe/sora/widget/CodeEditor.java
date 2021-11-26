@@ -581,9 +581,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public void setCompletionWndPositionMode(int mode) {
         mCompletionPosMode = mode;
-        if (mCompletionWindow.isShowing()) {
-            updateCompletionWindowPosition();
-        }
+        updateCompletionWindowPosition();
     }
 
     /**
@@ -4223,6 +4221,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public void setColorScheme(@NonNull EditorColorScheme colors) {
         colors.attachEditor(this);
+        if (mColors != null) {
+            mColors.detachEditor(this);
+        }
         mColors = colors;
         if (mCompletionWindow != null) {
             mCompletionWindow.applyColorScheme();
@@ -4407,6 +4408,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 mCompletionWindow.applyColorScheme();
             return;
         }
+        invalidateHwRenderer();
+        invalidate();
+    }
+
+    /**
+     * Called by color scheme to init colors
+     */
+    protected void onColorFullUpdate() {
+        if (mCompletionWindow != null)
+            mCompletionWindow.applyColorScheme();
         invalidateHwRenderer();
         invalidate();
     }
@@ -4913,9 +4924,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             } else {
                 postHideCompletionWindow();
             }
-            if (mCompletionWindow.isShowing()) {
-                updateCompletionWindowPosition();
-            }
+            updateCompletionWindowPosition();
         } else {
             mCompletionWindow.hide();
         }
