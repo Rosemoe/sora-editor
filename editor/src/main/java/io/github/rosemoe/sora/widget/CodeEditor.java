@@ -1937,7 +1937,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mRect.bottom = getRowBottom(row) - getOffsetY();
             mRect.left = paintingOffset + measureText(mBuffer, firstVis, paintStart - firstVis);
             mRect.right = mRect.left + measureText(mBuffer, paintStart, paintEnd - paintStart);
-            drawColor(canvas, color, mRect);
+            mPaint.setColor(color);
+            canvas.drawRoundRect(mRect, getRowHeight() * 0.13f, getRowHeight() * 0.13f, mPaint);
         }
     }
 
@@ -1964,7 +1965,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             selectionEnd = mCursor.getRightColumn();
         }
         mPaint.setColor(color);
-        if (hasSelectionOnLine) {
+        if (hasSelectionOnLine && mColors.getColor(EditorColorScheme.TEXT_SELECTED) != 0) {
             if (endIndex <= selectionStart || startIndex >= selectionEnd) {
                 drawText(canvas, mBuffer, startIndex, endIndex - startIndex, offsetX, baseline);
             } else {

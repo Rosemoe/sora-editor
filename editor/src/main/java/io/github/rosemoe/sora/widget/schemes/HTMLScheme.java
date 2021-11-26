@@ -50,6 +50,8 @@ public class HTMLScheme extends EditorColorScheme {
         setColor(TEXT_NORMAL, 0xffffffff);
         setColor(IDENTIFIER_NAME, 0xfff0be4b);
         setColor(COMMENT, 0xffbdbdbd);
+        setColor(TEXT_SELECTED, 0xffffffff);
+        setColor(SELECTED_TEXT_BACKGROUND, 0xFF9E9E9E);
     }
 
 }

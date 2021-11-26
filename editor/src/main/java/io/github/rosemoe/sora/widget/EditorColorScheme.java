@@ -77,6 +77,10 @@ public class EditorColorScheme {
     public static final int KEYWORD = 21;
     //-------------View colors---------------------
     public static final int NON_PRINTABLE_CHAR = 31;
+
+    /**
+     * Use zero if the text color should not be changed
+     */
     public static final int TEXT_SELECTED = 30;
     public static final int MATCHED_TEXT_BACKGROUND = 29;
     public static final int AUTO_COMP_PANEL_CORNER = 20;
@@ -135,7 +139,7 @@ public class EditorColorScheme {
     }
 
     /**
-     * For sub classes
+     * For sub-classes
      */
     public EditorColorScheme() {
         mColors = new SparseIntArray();
@@ -180,7 +184,6 @@ public class EditorColorScheme {
             case LINE_NUMBER_PANEL_TEXT:
             case AUTO_COMP_PANEL_BG:
             case AUTO_COMP_PANEL_CORNER:
-            case TEXT_SELECTED:
                 color = 0xffffffff;
                 break;
             case OPERATOR:
@@ -205,7 +208,7 @@ public class EditorColorScheme {
                 color = 0x10000000;
                 break;
             case SELECTED_TEXT_BACKGROUND:
-                color = 0xFF9E9E9E;
+                color = 0x2D3F51B5;
                 break;
             case KEYWORD:
                 color = 0xFF2196F3;
@@ -227,6 +230,7 @@ public class EditorColorScheme {
                 break;
             case LINE_BLOCK_LABEL:
             case SCROLL_BAR_TRACK:
+            case TEXT_SELECTED:
                 color = 0;
                 break;
             case LINE_NUMBER_PANEL:

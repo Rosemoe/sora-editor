@@ -58,6 +58,7 @@ public class SchemeDarcula extends EditorColorScheme {
         setColor(BLOCK_LINE, 0xff575757);
         setColor(BLOCK_LINE_CURRENT, 0xdd575757);
         setColor(NON_PRINTABLE_CHAR, 0xffdddddd);
+        setColor(TEXT_SELECTED, 0xffffffff);
     }
 
 }

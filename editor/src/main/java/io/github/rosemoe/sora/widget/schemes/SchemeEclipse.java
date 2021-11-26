@@ -54,6 +54,7 @@ public class SchemeEclipse extends EditorColorScheme {
         setColor(SELECTION_HANDLE, 0xff03ebeb);
         setColor(BLOCK_LINE, 0xffd8d8d8);
         setColor(BLOCK_LINE_CURRENT, 0);
+        setColor(TEXT_SELECTED, 0xffffffff);
     }
 
 }
