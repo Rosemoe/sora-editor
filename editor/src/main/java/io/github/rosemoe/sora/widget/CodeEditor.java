@@ -5055,11 +5055,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     public void onEndTextSelect() {
-        showTextActionPopup();
+        if (mEventHandler.getTouchedHandleType() == -1) {
+            showTextActionPopup();
+        }
     }
 
     public void onEndGestureInteraction() {
-        if (mCursor.isSelected()) {
+        if (mCursor.isSelected() && mEventHandler.getTouchedHandleType() == -1) {
             showTextActionPopup();
         }
     }

@@ -43,9 +43,9 @@ import io.github.rosemoe.sora.util.IntPair;
 final class EditorTouchEventHandler implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
 
     private final static int HIDE_DELAY = 3000;
-    private final static int SELECTION_HANDLE_RESIZE_DELAY = 100;
+    private final static int SELECTION_HANDLE_RESIZE_DELAY = 250;
     private final static int HIDE_DELAY_HANDLE = 5000;
-    private static final long INTERACTION_END_DELAY = 100;
+    private static final long INTERACTION_END_DELAY = 250;
     private static final String TAG = "EditorTouchEventHandler";
     private final CodeEditor mEditor;
     private final OverScroller mScroller;
@@ -245,8 +245,8 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         mEditor.postDelayed(new InvalidateNotifier(), SELECTION_HANDLE_RESIZE_DELAY);
     }
 
-    private int preciousX = 0;
-    private int preciousY = 0;
+    private int previousX = 0;
+    private int previousY = 0;
 
     public void notifyGestureInteractionEnd(int type) {
         mLastInteraction = System.currentTimeMillis();
@@ -256,15 +256,15 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 if (type == TextComposeBasePopup.SCROLL) {
                     int x = mScroller.getCurrX();
                     int y = mScroller.getCurrY();
-                    if (x - preciousX == 0 && y - preciousY == 0) {
+                    if (x - previousX == 0 && y - previousY == 0) {
                         mEditor.invalidate();
                         mEditor.onEndGestureInteraction();
-                        preciousX = 0;
-                        preciousY = 0;
+                        previousX = 0;
+                        previousY = 0;
                         return;
                     }
-                    preciousX = x;
-                    preciousY = y;
+                    previousX = x;
+                    previousY = y;
                     mEditor.postDelayed(this, INTERACTION_END_DELAY);
                 } else if (System.currentTimeMillis() - mLastInteraction >= INTERACTION_END_DELAY) {
                     mEditor.invalidate();
