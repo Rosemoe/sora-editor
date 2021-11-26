@@ -57,6 +57,7 @@ import io.github.rosemoe.sora.langs.python.PythonLanguage;
 import io.github.rosemoe.sora.langs.textmate.theme.TextMateColorScheme;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.langs.universal.UniversalLanguage;
+import io.github.rosemoe.sora.langs.xml.XMLLanguage;
 import io.github.rosemoe.sora.textmate.core.internal.theme.reader.ThemeReader;
 import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
 import io.github.rosemoe.sora.utils.CrashHandler;
@@ -205,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.switch_language) {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.switch_language)
-                    .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "HTML", "Python", "CSS3", "TextMate Java", "TextMate Kotlin", "TM Language from file", "None"}, -1, (dialog, which) -> {
+                    .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "HTML", "Python", "CSS3", "Xml", "TextMate Java", "TextMate Kotlin", "TM Language from file", "None"}, -1, (dialog, which) -> {
                         switch (which) {
                             case 0:
                                 editor.setEditorLanguage(new UniversalLanguage(new CDescription()));
@@ -230,6 +231,11 @@ public class MainActivity extends AppCompatActivity {
                                 editor.setEditorLanguage(new CSS3Language());
                                 break;
                             case 7:
+                                XMLLanguage xmlLanguage=new XMLLanguage();
+                                xmlLanguage.setSyntaxCheckEnable(true);
+                                editor.setEditorLanguage(xmlLanguage);
+                                break;
+                            case 8:
 
                                 try {
                                     //TextMateLanguage only support TextMateColorScheme
@@ -254,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
 
                                 break;
-                            case 8:
+                            case 9:
 
                                 try {
                                     //TextMateLanguage only support TextMateColorScheme
@@ -279,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
 
                                 break;
-                            case 9:
+                            case 10:
                                 loadTMLLauncher.launch("*/*");
                                 break;
                             default:
