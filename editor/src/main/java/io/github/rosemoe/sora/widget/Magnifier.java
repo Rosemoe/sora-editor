@@ -70,7 +70,7 @@ class Magnifier {
         popup.setElevation(view.getDpUnit() * 8);
         @SuppressLint("InflateParams") var view = LayoutInflater.from(editor.getContext()).inflate(R.layout.magnifier_popup, null);
         image = view.findViewById(R.id.magnifier_image_view);
-        popup.setHeight((int) (editor.getDpUnit() * 65));
+        popup.setHeight((int) (editor.getDpUnit() * 75));
         popup.setWidth((int) (editor.getDpUnit() * 120));
         popup.setContentView(view);
         maxTextSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 28, view.getResources().getDisplayMetrics());
@@ -92,7 +92,7 @@ class Magnifier {
             }
             return;
         }
-        popup.setWidth(Math.min(view.getWidth() * 2 / 5, (int)view.getDpUnit()) * 200);
+        popup.setWidth(Math.min(view.getWidth() * 3 / 5, (int)view.getDpUnit()) * 250);
         this.x = x;
         this.y = y;
         int[] pos = new int[2];
