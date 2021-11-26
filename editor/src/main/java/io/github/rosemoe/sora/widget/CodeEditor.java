@@ -448,13 +448,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 var result = method.invoke(this);
                 if (result == null) {
                     Log.e(LOG_TAG, "Failed to get scroll factor");
-                    mVerticalScrollFactor = 20;
+                    mVerticalScrollFactor = 32;
                 } else {
                     mVerticalScrollFactor = (float) result;
                 }
             } catch (SecurityException | InvocationTargetException | NoSuchMethodException | IllegalAccessException | NullPointerException e) {
                 Log.e(LOG_TAG, "Failed to get scroll factor", e);
-                mVerticalScrollFactor = 20;
+                mVerticalScrollFactor = 32;
             }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -4246,10 +4246,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * If there is an Analyzer, do analysis
      */
     public void doAnalyze() {
-        if (mSpanner != null) {
-            if (mText != null) {
-                mSpanner.analyze(mText);
-            }
+        if (mSpanner != null && mText != null) {
+            mSpanner.analyze(mText);
         }
     }
 
@@ -4816,9 +4814,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (event.getAction() == MotionEvent.ACTION_SCROLL && event.isFromSource(InputDevice.SOURCE_CLASS_POINTER)) {
             float v_scroll = -event.getAxisValue(MotionEvent.AXIS_VSCROLL);
             float h_scroll = -event.getAxisValue(MotionEvent.AXIS_HSCROLL);
-            if (v_scroll != 0) {
-                mEventHandler.onScroll(event, event, h_scroll * mVerticalScrollFactor, v_scroll * mVerticalScrollFactor);
-            }
+            mEventHandler.onScroll(event, event, h_scroll * mVerticalScrollFactor, v_scroll * mVerticalScrollFactor);
             return true;
         }
         return super.onGenericMotionEvent(event);
