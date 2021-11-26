@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/CodeEditor
  *    Copyright (C) 2020-2021  Rosemoe
@@ -20,18 +20,21 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.langs.xml;
 
-rootProject.name='sora-editor'
-include ':language-universal'
-include ':language-java'
-include ':language-html'
-include ':language-base'
-include ':language-python'
-include ':editor'
-include ':app'
-include ':language-css3'
-include ':textmate-core'
-include ':language-textmate'
-include ':textmate-languageconfiguration'
-include ':language-xml'
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
+/**
+ * Example local unit test, which will execute on the development machine (host).
+ *
+ * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ */
+public class ExampleUnitTest {
+    @Test
+    public void addition_isCorrect() {
+        assertEquals(4, 2 + 2);
+    }
+}
