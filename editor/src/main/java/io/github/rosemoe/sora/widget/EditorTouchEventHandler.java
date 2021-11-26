@@ -702,7 +702,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             leftOrRight = true;
         }
         mEditor.invalidate();
-        mEditor.updateCompletionWindowPosition();
+        mEditor.updateCompletionWindowPosition(false);
         return true;
     }
 

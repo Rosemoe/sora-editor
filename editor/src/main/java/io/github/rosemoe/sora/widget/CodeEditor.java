@@ -365,13 +365,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Hide completion window later
      */
-    protected void postHideCompletionWindow() {
-        // Avoid meaningless calls
-        if (!mCompletionWindow.isShowing()) {
-            return;
-        }
+    protected void hideCompletionWindow() {
         // We do this because if you hide it at once, the editor seems to flash with unknown reason
-        postDelayed(() -> mCompletionWindow.hide(), 50);
+        //postDelayed(() -> mCompletionWindow.hide(), 40);
+        mCompletionWindow.hide();
     }
 
     /**
@@ -2837,17 +2834,21 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
+    protected void updateCompletionWindowPosition() {
+        updateCompletionWindowPosition(true);
+    }
+
     /**
      * Apply new position of auto-completion window
      */
-    protected void updateCompletionWindowPosition() {
+    protected void updateCompletionWindowPosition(boolean shift) {
         float panelX = updateCursorAnchor() + mDpUnit * 20;
         float[] rightLayoutOffset = mLayout.getCharLayoutOffset(mCursor.getRightLine(), mCursor.getRightColumn());
         float panelY = rightLayoutOffset[0] - getOffsetY() + getRowHeight() / 2f;
         float restY = getHeight() - panelY;
         if (restY > mDpUnit * 200) {
             restY = mDpUnit * 200;
-        } else if (restY < mDpUnit * 100) {
+        } else if (restY < mDpUnit * 100 && shift) {
             float offset = 0;
             while (restY < mDpUnit * 100) {
                 restY += getRowHeight();
@@ -4915,12 +4916,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         mCompletionWindow.show();
                     }
                 } else {
-                    postHideCompletionWindow();
+                    hideCompletionWindow();
                 }
             } else {
-                postHideCompletionWindow();
+                hideCompletionWindow();
             }
-            updateCompletionWindowPosition();
+            updateCompletionWindowPosition(mCompletionWindow.isShowing());
         } else {
             mCompletionWindow.hide();
         }
@@ -4964,11 +4965,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (isAutoCompletionEnabled()) {
             if (mConnection.mComposingLine == -1 && mCompletionWindow.isShowing()) {
                 if (startLine != endLine || startColumn != endColumn - 1) {
-                    postHideCompletionWindow();
+                    hideCompletionWindow();
                 }
                 String prefix = mCompletionWindow.getPrefix();
                 if (prefix == null || prefix.length() - 1 <= 0) {
-                    postHideCompletionWindow();
+                    hideCompletionWindow();
                 } else {
                     prefix = prefix.substring(0, prefix.length() - 1);
                     updateCompletionWindowPosition();
