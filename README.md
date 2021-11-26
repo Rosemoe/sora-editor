@@ -35,7 +35,7 @@ Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEdito
 - [ ] Plugin System
 ## Language Supported  
 * Java, JavaScript, C, C++, HTML, Python, PHP, CSS3 (Basic Support:highlight, code block line,identifier and keyword auto-completion). Code block line isn't available for HTML Language
-* Textmate support
+* [Textmate support](/textmate-core/README.md)
 ## Screenshots
 ![Wordwrap](/images/wordwrap.png)
 <img src="/images/curlylines.jpg" alt="ErrorIndicator" width="40%" align="bottom" />
@@ -51,8 +51,9 @@ Available modules:
 * language-html
 * language-python
 * language-css3
+* language-xml
 * language-universal
-* language-textmate
+* [language-textmate](/language-textmate/README.md)
 
 
 Detailed: [Get started](https://rosemoe.github.io/2021/08/22/editor-get-started/)
