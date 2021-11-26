@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
         editor.setEditorLanguage(new JavaLanguage());
         // The font we use does not have the issue
         editor.setLigatureEnabled(true);
-        editor.setNonPrintablePaintingFlags(CodeEditor.FLAG_DRAW_WHITESPACE_LEADING | CodeEditor.FLAG_DRAW_LINE_SEPARATOR);
+        editor.setNonPrintablePaintingFlags(CodeEditor.FLAG_DRAW_WHITESPACE_LEADING | CodeEditor.FLAG_DRAW_LINE_SEPARATOR | CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION);
         new Thread(() -> {
             try {
                 BufferedReader br = new BufferedReader(new InputStreamReader(getAssets().open("sample.txt")));

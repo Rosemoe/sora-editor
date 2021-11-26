@@ -181,6 +181,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public static final int FLAG_DRAW_TAB_SAME_AS_SPACE = 1 << 5;
 
     /**
+     * Draw the whitespaces in selected text
+     *
+     * @see #setNonPrintablePaintingFlags(int)
+     */
+    public static final int FLAG_DRAW_WHITESPACE_IN_SELECTION = 1 << 6;
+
+    /**
      * Adjust the completion window's position scheme according to the device's screen size.
      */
     public static final int WINDOW_POS_MODE_AUTO = 0;
@@ -1746,6 +1753,29 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_TRAILING) != 0) {
                     drawWhitespaces(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, trailingWhitespaceStart, columnCount, circleRadius);
                 }
+                if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_IN_SELECTION) != 0 && mCursor.isSelected() && line >= mCursor.getLeftLine() && line <= mCursor.getRightLine()) {
+                    int selectionStart = 0;
+                    int selectionEnd = columnCount;
+                    if (line == mCursor.getLeftLine()) {
+                        selectionStart = mCursor.getLeftColumn();
+                    }
+                    if (line == mCursor.getRightLine()) {
+                        selectionEnd = mCursor.getRightColumn();
+                    }
+                    if ((mNonPrintableOptions & 0b1110) == 0) {
+                        drawWhitespaces(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd, circleRadius);
+                    } else {
+                        if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_LEADING) == 0) {
+                            drawWhitespaces(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, selectionStart, Math.min(leadingWhitespaceEnd, selectionEnd), circleRadius);
+                        }
+                        if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_INNER) == 0) {
+                            drawWhitespaces(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, Math.max(leadingWhitespaceEnd, selectionStart), Math.min(trailingWhitespaceStart, selectionEnd), circleRadius);
+                        }
+                        if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_TRAILING) == 0) {
+                            drawWhitespaces(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, Math.max(trailingWhitespaceStart, selectionStart), selectionEnd, circleRadius);
+                        }
+                    }
+                }
             }
 
             // Draw composing text underline
@@ -2932,6 +2962,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @see #FLAG_DRAW_WHITESPACE_TRAILING
      * @see #FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE
      * @see #FLAG_DRAW_LINE_SEPARATOR
+     * @see #FLAG_DRAW_WHITESPACE_IN_SELECTION
      */
     public void setNonPrintablePaintingFlags(int flags) {
         this.mNonPrintableOptions = flags;
@@ -2945,6 +2976,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @see #FLAG_DRAW_WHITESPACE_TRAILING
      * @see #FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE
      * @see #FLAG_DRAW_LINE_SEPARATOR
+     * @see #FLAG_DRAW_WHITESPACE_IN_SELECTION
      */
     public int getNonPrintableFlags() {
         return mNonPrintableOptions;
