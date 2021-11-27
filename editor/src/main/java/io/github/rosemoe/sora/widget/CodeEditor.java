@@ -5030,11 +5030,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 }
             }
 
-            mRect.top = y - getRowHeight();
-            mRect.bottom = y;
-            mRect.left = x - mInsertSelWidth / 2f;
-            mRect.right = x + mInsertSelWidth / 2f;
-            drawColor(canvas, mColors.getColor(EditorColorScheme.SELECTION_INSERT), mRect);
+            if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED || mCursorBlink.visibility || mEventHandler.holdInsertHandle()) {
+                mRect.top = y - getRowHeight();
+                mRect.bottom = y;
+                mRect.left = x - mInsertSelWidth / 2f;
+                mRect.right = x + mInsertSelWidth / 2f;
+                drawColor(canvas, mColors.getColor(EditorColorScheme.SELECTION_INSERT), mRect);
+            }
             if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED) {
                 mHandleStyle.draw(canvas, handleType, x, y, getRowHeight(), mColors.getColor(EditorColorScheme.SELECTION_HANDLE), descriptor);
             } else if (descriptor != null) {
