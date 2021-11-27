@@ -162,9 +162,13 @@ public class SpanMapUpdater {
         }
         // Add original spans to new line
         List<Span> endLineSpans = map.get(endLine);
-        while (extendedSpanIndex  < startLineSpans.size()) {
-            Span span = startLineSpans.remove(extendedSpanIndex);
-            endLineSpans.add(span.setColumn(Math.max(0, span.column - startColumn)));
+        int idx = extendedSpanIndex;
+        while (idx  < startLineSpans.size()) {
+            Span span = startLineSpans.get(idx++);
+            endLineSpans.add(span.copy().setColumn(Math.max(0, span.column - startColumn + endColumn)));
+        }
+        while (extendedSpanIndex + 1 < startLineSpans.size()) {
+            startLineSpans.remove(startLineSpans.size() - 1).recycle();
         }
         if (endLineSpans.size() > 1 && endLineSpans.get(0).column == 0 && endLineSpans.get(1).column == 0) {
             endLineSpans.remove(0).recycle();

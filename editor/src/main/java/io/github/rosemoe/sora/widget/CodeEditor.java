@@ -402,7 +402,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Get the rect of left selection handle painted on view
      *
-     * @return Descript of left handle
+     * @return Descriptor of left handle
      */
     protected SelectionHandleStyle.HandleDescriptor getLeftHandleDescriptor() {
         return mLeftHandle;
@@ -2533,11 +2533,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param line Line going to draw or measure
      */
     protected void prepareLine(int line) {
-        /*int length = mText.getColumnCount(line);
-        if (length >= mBuffer.length) {
-            mBuffer = new char[length + 100];
-        }
-        mText.getLineChars(line, mBuffer);*/
         mBuffer = mText.getLine(line).getRawData();
     }
 
