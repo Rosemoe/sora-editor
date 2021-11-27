@@ -33,6 +33,7 @@ import android.widget.OverScroller;
 
 import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
 import io.github.rosemoe.sora.util.IntPair;
+import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 
 /**
  * Handles touch events of editor
@@ -43,7 +44,7 @@ import io.github.rosemoe.sora.util.IntPair;
 final class EditorTouchEventHandler implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
 
     private final static int HIDE_DELAY = 3000;
-    private final static int SELECTION_HANDLE_RESIZE_DELAY = 250;
+    private final static int SELECTION_HANDLE_RESIZE_DELAY = 180;
     private final static int HIDE_DELAY_HANDLE = 5000;
     private static final long INTERACTION_END_DELAY = 250;
     private static final String TAG = "EditorTouchEventHandler";
@@ -63,7 +64,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     private float downY = 0;
     private float downX = 0;
     private SelectionHandle insert = null, left = null, right = null;
-    private int mSelHandleType = -1;
+    int mSelHandleType = -1;
     private int mTouchedHandleType = -1;
     Magnifier mMagnifier;
 
@@ -74,9 +75,10 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
     private float edgeFieldSize;
     private int mEdgeFlags;
     private MotionEvent mThumb;
+    float mMotionX, mMotionY;
 
     /**
-     * Create a event handler for the given editor
+     * Create an event handler for the given editor
      *
      * @param editor Host editor
      */
@@ -96,6 +98,10 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
      */
     private static boolean isIdentifierPart(char ch) {
         return Character.isJavaIdentifierPart(ch);
+    }
+
+    protected boolean hasAnyHeldHandle() {
+        return holdInsertHandle() || mSelHandleType != -1;
     }
 
     /**
@@ -305,16 +311,16 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
 
     private void updateMagnifier(MotionEvent e) {
         if (mEdgeFlags != 0) {
-            dissmissMagnifier();
+            dismissMagnifier();
             return;
         }
         if (mEditor.isMagnifierEnabled()) {
-            var height = Math.max(Math.max(mEditor.getInsertHandleRect().height(), mEditor.getLeftHandleRect().height()), mEditor.getRightHandleRect().height());
+            var height = Math.max(Math.max(mEditor.getInsertHandleDescriptor().position.height(), mEditor.getLeftHandleDescriptor().position.height()), mEditor.getRightHandleDescriptor().position.height());
             mMagnifier.show((int) e.getX(), (int) (e.getY() - height/2 - mEditor.getRowHeight()));
         }
     }
 
-    private void dissmissMagnifier() {
+    private void dismissMagnifier() {
         mMagnifier.dismiss();
     }
 
@@ -326,8 +332,10 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
      */
     public boolean onTouchEvent(MotionEvent e) {
         if (edgeFieldSize == 0) {
-            edgeFieldSize = mEditor.getDpUnit() * 25;
+            edgeFieldSize = mEditor.getDpUnit() * 18;
         }
+        mMotionY = e.getY();
+        mMotionX = e.getX();
         switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 mHoldingScrollbarVertical = mHoldingScrollbarHorizontal = false;
@@ -349,7 +357,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 if (mHoldingScrollbarVertical || mHoldingScrollbarHorizontal) {
                     mEditor.invalidate();
                 }
-                if (shouldDrawInsertHandle() && mEditor.getInsertHandleRect().contains(e.getX(), e.getY())) {
+                if (shouldDrawInsertHandle() && mEditor.getInsertHandleDescriptor().position.contains(e.getX(), e.getY())) {
                     mHoldingInsertHandle = true;
                     downY = e.getY();
                     downX = e.getX();
@@ -357,8 +365,8 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
 
                     insert = new SelectionHandle(SelectionHandle.BOTH);
                 }
-                boolean left = mEditor.getLeftHandleRect().contains(e.getX(), e.getY());
-                boolean right = mEditor.getRightHandleRect().contains(e.getX(), e.getY());
+                boolean left = mEditor.getLeftHandleDescriptor().position.contains(e.getX(), e.getY());
+                boolean right = mEditor.getRightHandleDescriptor().position.contains(e.getX(), e.getY());
                 if (left || right) {
                     if (left) {
                         mSelHandleType = SelectionHandle.LEFT;
@@ -394,6 +402,9 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 }
                 if(handleSelectionChange(e)) {
                     updateMagnifier(e);
+                    if (mTouchedHandleType != -1 || holdInsertHandle()) {
+                        mEditor.invalidate();
+                    }
                     return true;
                 } else {
                     return false;
@@ -418,14 +429,14 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     notifyLater();
                 }
                 mSelHandleType = -1;
-
+                mEditor.invalidate();
                 // check touch event is related to text selection or not
                 if (mTouchedHandleType > -1) {
                     mTouchedHandleType = -1;
                     notifyTouchedSelectionHandlerLater();
                 }
                 stopEdgeScroll();
-                dissmissMagnifier();
+                dismissMagnifier();
                 break;
         }
         return false;
@@ -828,8 +839,19 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
          * @param e Event sent by EventHandler
          */
         public void applyPosition(MotionEvent e) {
-            float targetX = mScroller.getCurrX() + e.getX();
-            float targetY = mScroller.getCurrY() + e.getY() - mEditor.getDpUnit() * 12 * 4 / 3;
+            SelectionHandleStyle.HandleDescriptor descriptor = null;
+            switch (type) {
+                case LEFT:
+                    descriptor = mEditor.getLeftHandleDescriptor();
+                    break;
+                case RIGHT:
+                    descriptor = mEditor.getRightHandleDescriptor();
+                    break;
+                default:
+                    descriptor = mEditor.getInsertHandleDescriptor();
+            }
+            float targetX = mScroller.getCurrX() + e.getX() + (descriptor.alignment != SelectionHandleStyle.ALIGN_CENTER ? descriptor.position.width() : 0) * (descriptor.alignment == SelectionHandleStyle.ALIGN_LEFT ? 1 : -1);
+            float targetY = mScroller.getCurrY() + e.getY() - descriptor.position.height();
             int line = IntPair.getFirst(mEditor.getPointPosition(0, targetY));
             if (line >= 0 && line < mEditor.getLineCount()) {
                 int column = IntPair.getSecond(mEditor.getPointPosition(targetX, targetY));
@@ -892,14 +914,16 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         private final static int MAX_FACTOR = 32;
         private final static float INCREASE_FACTOR = 1.06f;
 
-        private int initialDelta;
+        private final int initialDelta;
         private int deltaHorizontal;
         private int deltaVertical;
         private int lastDx, lastDy;
         private int factorX, factorY;
+        private long postTimes;
 
         public EdgeScrollRunnable(int initDelta) {
             initialDelta = deltaHorizontal = deltaVertical = initDelta;
+            postTimes = 0;
         }
 
         @Override
@@ -928,7 +952,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
 
             // Speed up if we are scrolling in the direction
             if (isSameSign(dx, lastDx)) {
-                if (factorX < MAX_FACTOR) {
+                if (factorX < MAX_FACTOR && (postTimes & 1) == 0) {
                     factorX++;
                     deltaHorizontal *= INCREASE_FACTOR;
                 }
@@ -938,7 +962,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 factorX = 0;
             }
             if (isSameSign(dy, lastDy)) {
-                if (factorY < MAX_FACTOR) {
+                if (factorY < MAX_FACTOR && (postTimes & 1) == 0) {
                     factorY++;
                     deltaVertical *= INCREASE_FACTOR;
                 }
@@ -952,6 +976,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
             // Update selection
             handleSelectionChange2(mThumb);
 
+            postTimes ++;
             // Post for animation
             if (mEdgeFlags != 0) {
                 mEditor.postDelayed(this, 10);

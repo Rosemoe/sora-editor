@@ -40,7 +40,6 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.RenderNode;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
@@ -113,6 +112,8 @@ import io.github.rosemoe.sora.widget.layout.LineBreakLayout;
 import io.github.rosemoe.sora.widget.layout.Row;
 import io.github.rosemoe.sora.widget.layout.RowIterator;
 import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
+import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
+import io.github.rosemoe.sora.widget.style.builtin.HandleStyleDrop;
 
 /**
  * CodeEditor is an editor that can highlight text regions by doing basic syntax analyzing
@@ -267,9 +268,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mLastCursorState;
     private boolean mMagnifierEnabled;
     private RectF mRect;
-    private RectF mLeftHandle;
-    private RectF mRightHandle;
-    private RectF mInsertHandle;
+    private SelectionHandleStyle.HandleDescriptor mLeftHandle;
+    private SelectionHandleStyle.HandleDescriptor mRightHandle;
+    private SelectionHandleStyle.HandleDescriptor mInsertHandle;
     private RectF mVerticalScrollBar;
     private RectF mHorizontalScrollBar;
     private Path mPath;
@@ -307,7 +308,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private Paint.FontMetricsInt mTextMetrics;
     private Paint.FontMetricsInt mLineNumberMetrics;
     private Paint.FontMetricsInt mGraphMetrics;
-    private Drawable mCursorHandle;
+    private SelectionHandleStyle mHandleStyle;
     private CursorBlink mCursorBlink;
     private SymbolPairMatch mOverrideSymbolPairs;
     private final LongArrayList mPostDrawLineNumbers = new LongArrayList();
@@ -401,18 +402,18 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Get the rect of left selection handle painted on view
      *
-     * @return Rect of left handle
+     * @return Descript of left handle
      */
-    protected RectF getLeftHandleRect() {
+    protected SelectionHandleStyle.HandleDescriptor getLeftHandleDescriptor() {
         return mLeftHandle;
     }
 
     /**
      * Get the rect of right selection handle painted on view
      *
-     * @return Rect of right handle
+     * @return Descriptor of right handle
      */
-    protected RectF getRightHandleRect() {
+    protected SelectionHandleStyle.HandleDescriptor getRightHandleDescriptor() {
         return mRightHandle;
     }
 
@@ -468,6 +469,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaintGraph = new Paint();
         mMatrix = new Matrix();
         mPath = new Path();
+        mHandleStyle = new HandleStyleDrop(getContext());
         mSearcher = new EditorSearcher(this);
         mCursorAnimator = new CursorAnimator(this);
         setCursorBlinkPeriod(DEFAULT_CURSOR_BLINK_PERIOD);
@@ -487,9 +489,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mScaleDetector = new ScaleGestureDetector(getContext(), mEventHandler);
         mViewRect = new Rect(0, 0, 0, 0);
         mRect = new RectF();
-        mInsertHandle = new RectF();
-        mLeftHandle = new RectF();
-        mRightHandle = new RectF();
+        mInsertHandle = new SelectionHandleStyle.HandleDescriptor();
+        mLeftHandle = new SelectionHandleStyle.HandleDescriptor();
+        mRightHandle = new SelectionHandleStyle.HandleDescriptor();
         mVerticalScrollBar = new RectF();
         mHorizontalScrollBar = new RectF();
         mLineNumberAlign = Paint.Align.RIGHT;
@@ -1048,7 +1050,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @return Rect of insert handle
      */
-    protected RectF getInsertHandleRect() {
+    protected SelectionHandleStyle.HandleDescriptor getInsertHandleDescriptor() {
         return mInsertHandle;
     }
 
@@ -1143,7 +1145,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         LongArrayList postDrawLineNumbers = mPostDrawLineNumbers;
         postDrawLineNumbers.clear();
         LongArrayList postDrawCurrentLines = new LongArrayList();
-        List<CursorPaintAction> postDrawCursor = new ArrayList<>();
+        List<DrawCursorTask> postDrawCursor = new ArrayList<>();
         MutableInt firstLn = isFirstLineNumberAlwaysVisible() && isWordwrap() ? new MutableInt(-1) : null;
 
         drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor, postDrawCurrentLines, firstLn);
@@ -1199,8 +1201,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
 
         if (!mCursorAnimator.isRunning()) {
-            for (CursorPaintAction action : postDrawCursor) {
-                action.exec(canvas, this);
+            for (var action : postDrawCursor) {
+                action.execute(canvas);
             }
         } else {
             drawSelectionOnAnimation(canvas);
@@ -1426,10 +1428,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param postDrawLineNumbers Line numbers to be drawn later
      * @param postDrawCursor      Cursors to be drawn later
      */
-    protected void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<CursorPaintAction> postDrawCursor, LongArrayList postDrawCurrentLines, MutableInt requiredFirstLn) {
+    protected void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<DrawCursorTask> postDrawCursor, LongArrayList postDrawCurrentLines, MutableInt requiredFirstLn) {
+        // Draw a extra row
+        int firstVis = Math.max(0, getFirstVisibleRow() - 1);
         final float waveLength = getDpUnit() * 18;
         final float amplitude = getDpUnit() * 4;
-        RowIterator rowIterator = mLayout.obtainRowIterator(getFirstVisibleRow());
+        RowIterator rowIterator = mLayout.obtainRowIterator(firstVis);
         List<Span> temporaryEmptySpans = null;
         List<List<Span>> spanMap = mSpanner.getResult().getSpanMap();
         List<Integer> matchedPositions = new ArrayList<>();
@@ -1447,11 +1451,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             circleRadius = maxD / 2;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !isWordwrap() && canvas.isHardwareAccelerated() && isHardwareAcceleratedDrawAllowed()) {
-            mRenderer.keepCurrentInDisplay(getFirstVisibleRow(), getLastVisibleRow());
+            mRenderer.keepCurrentInDisplay(firstVis, getLastVisibleRow());
         }
 
         // Step 1 - Draw background of rows
-        for (int row = getFirstVisibleRow(); row <= getLastVisibleRow() && rowIterator.hasNext(); row++) {
+        for (int row = firstVis; row <= getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
             int line = rowInf.lineIndex;
             int columnCount = mText.getColumnCount(line);
@@ -1526,7 +1530,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         // Step 2 - Draw text and text decorations
         int lastStyle = 0;
-        for (int row = getFirstVisibleRow(); row <= getLastVisibleRow() && rowIterator.hasNext(); row++) {
+        for (int row = firstVis; row <= getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
             int line = rowInf.lineIndex;
             ContentLine contentLine = mText.getLine(line);
@@ -1810,16 +1814,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 if (mTextActionPresenter.shouldShowCursor()) {
                     if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
                         float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar);
-                        postDrawCursor.add(new CursorPaintAction(row, centerX, mLeftHandle, false, EditorTouchEventHandler.SelectionHandle.LEFT));
+                        postDrawCursor.add(new DrawCursorTask(centerX, getRowBottom(row) - getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_LEFT, mLeftHandle));
                     }
                     if (mCursor.getRightLine() == line && isInside(mCursor.getRightColumn(), firstVisibleChar, lastVisibleChar, line)) {
                         float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getRightColumn() - firstVisibleChar);
-                        postDrawCursor.add(new CursorPaintAction(row, centerX, mRightHandle, false, EditorTouchEventHandler.SelectionHandle.RIGHT));
+                        postDrawCursor.add(new DrawCursorTask(centerX, getRowBottom(row) - getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_RIGHT, mRightHandle));
                     }
                 }
             } else if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
                 float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar);
-                postDrawCursor.add(new CursorPaintAction(row, centerX, mEventHandler.shouldDrawInsertHandle() ? mInsertHandle : null, true));
+                postDrawCursor.add(new DrawCursorTask(centerX, getRowBottom(row) - getOffsetY(), mEventHandler.shouldDrawInsertHandle() ? SelectionHandleStyle.HANDLE_TYPE_INSERT : SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, mInsertHandle));
             }
         }
 
@@ -2107,40 +2111,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Draw a handle.
-     * The handle can be insert handle,left handle or right handle
-     *
-     * @param canvas     The Canvas to draw handle
-     * @param row        The row you want to attach handle to its bottom (Usually the selection line)
-     * @param centerX    Center x offset of handle
-     * @param resultRect The rect of handle this method drew
-     * @param handleType The selection handle type (LEFT, RIGHT,BOTH or -1)
-     */
-    protected void drawHandle(Canvas canvas, int row, float centerX, RectF resultRect, int handleType) {
-        float radius = mDpUnit * 12;
-
-        if (handleType > -1 && handleType == mEventHandler.getTouchedHandleType()) {
-            radius = mDpUnit * 16;
-        }
-
-
-        float top = getRowBottom(row) - getOffsetY();
-        float bottom = top + radius * 2;
-        float left = centerX - radius;
-        float right = centerX + radius;
-        if (right < 0 || left > getWidth() || bottom < 0 || top > getHeight()) {
-            resultRect.setEmpty();
-            return;
-        }
-        resultRect.left = left;
-        resultRect.right = right;
-        resultRect.top = top;
-        resultRect.bottom = bottom;
-        mPaint.setColor(mColors.getColor(EditorColorScheme.SELECTION_HANDLE));
-        canvas.drawCircle(centerX, (top + bottom) / 2, radius, mPaint);
-    }
-
-    /**
      * Draw code block lines on screen
      *
      * @param canvas  The canvas to draw
@@ -2326,68 +2296,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mRect.bottom = (float) mCursorAnimator.animatorY.getAnimatedValue() - getOffsetY();
         mRect.top = mRect.bottom - getRowHeight();
         float centerX = (float) mCursorAnimator.animatorX.getAnimatedValue() - getOffsetX();
-        // Bold width
         mRect.left = centerX - mInsertSelWidth / 2;
         mRect.right = centerX + mInsertSelWidth / 2;
         drawColor(canvas, mColors.getColor(EditorColorScheme.SELECTION_INSERT), mRect);
-        if (mInsertHandle != null && mEventHandler.shouldDrawInsertHandle()) {
-            var resultRect = mInsertHandle;
-            int handleType = EditorTouchEventHandler.SelectionHandle.BOTH;
-            float radius = mDpUnit * 12;
-
-            if (handleType == mEventHandler.getTouchedHandleType()) {
-                radius = mDpUnit * 16;
-            }
-
-            float top = mRect.bottom;
-            float bottom = top + radius * 2;
-            float left = centerX - radius;
-            float right = centerX + radius;
-            if (right < 0 || left > getWidth() || bottom < 0 || top > getHeight()) {
-                resultRect.setEmpty();
-                return;
-            }
-            resultRect.left = left;
-            resultRect.right = right;
-            resultRect.top = top;
-            resultRect.bottom = bottom;
-            mPaint.setColor(mColors.getColor(EditorColorScheme.SELECTION_HANDLE));
-            canvas.drawCircle(centerX, (top + bottom) / 2, radius, mPaint);
+        if (mEventHandler.shouldDrawInsertHandle()) {
+            mHandleStyle.draw(canvas, SelectionHandleStyle.HANDLE_TYPE_INSERT, centerX, mRect.bottom, getRowHeight(), mColors.getColor(EditorColorScheme.SELECTION_HANDLE), mInsertHandle);
         }
     }
 
-
-    /**
-     * Draw cursor
-     */
-    protected void drawCursor(Canvas canvas, float centerX, int row, RectF handle, boolean insert) {
-        if (!insert || mCursorBlink == null || mCursorBlink.visibility) {
-            mRect.top = getRowTop(row) - getOffsetY();
-            mRect.bottom = getRowBottom(row) - getOffsetY();
-            mRect.left = centerX - mInsertSelWidth / 2f;
-            mRect.right = centerX + mInsertSelWidth / 2f;
-            drawColor(canvas, mColors.getColor(EditorColorScheme.SELECTION_INSERT), mRect);
-        }
-        if (handle != null) {
-            drawHandle(canvas, row, centerX, handle, -1);
-        }
-    }
-
-    /**
-     * Draw cursor
-     */
-    protected void drawCursor(Canvas canvas, float centerX, int row, RectF handle, boolean insert, int handleType) {
-        if (!insert || mCursorBlink == null || mCursorBlink.visibility) {
-            mRect.top = getRowTop(row) - getOffsetY();
-            mRect.bottom = getRowBottom(row) - getOffsetY();
-            mRect.left = centerX - mInsertSelWidth / 2f;
-            mRect.right = centerX + mInsertSelWidth / 2f;
-            drawColor(canvas, mColors.getColor(EditorColorScheme.SELECTION_INSERT), mRect);
-        }
-        if (handle != null) {
-            drawHandle(canvas, row, centerX, handle, handleType);
-        }
-    }
 
     /**
      * Get the color of EdgeEffect
@@ -3936,7 +3852,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         updateCursor();
         invalidateInCursor();
-        mCursorAnimator.markEndPosAndStart();
+        if (!mEventHandler.hasAnyHeldHandle()) {
+            mCursorAnimator.markEndPosAndStart();
+        }
         if (makeItVisible) {
             ensurePositionVisible(line, column);
         } else {
@@ -5087,58 +5005,45 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     }
 
+    private class DrawCursorTask {
 
-    /**
-     * Class for saving state for cursor
-     */
-    static class CursorPaintAction {
+        float x;
+        float y;
+        int handleType;
+        SelectionHandleStyle.HandleDescriptor descriptor;
 
-        /**
-         * Row position
-         */
-        final int row;
-
-        /**
-         * Center x offset
-         */
-        final float centerX;
-
-        /**
-         * Handle rectangle
-         */
-        final RectF outRect;
-
-        /**
-         * Draw as insert cursor
-         */
-        final boolean insert;
-
-        int handleType = -1;
-
-        CursorPaintAction(int row, float centerX, RectF outRect, boolean insert) {
-            this.row = row;
-            this.centerX = centerX;
-            this.outRect = outRect;
-            this.insert = insert;
-        }
-
-        CursorPaintAction(int row, float centerX, RectF outRect, boolean insert, int handleType) {
-            this.row = row;
-            this.centerX = centerX;
-            this.outRect = outRect;
-            this.insert = insert;
+        public DrawCursorTask(float x, float y, int handleType, SelectionHandleStyle.HandleDescriptor descriptor) {
+            this.x = x;
+            this.y = y;
             this.handleType = handleType;
+            this.descriptor = descriptor;
         }
 
+        void execute(Canvas canvas) {
+            // Follow the thumb
+            if (!descriptor.position.isEmpty()) {
+                if ((mEventHandler.holdInsertHandle() && handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT)
+                        || (mEventHandler.mSelHandleType == EditorTouchEventHandler.SelectionHandle.LEFT && handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT)
+                        || (mEventHandler.mSelHandleType == EditorTouchEventHandler.SelectionHandle.RIGHT && handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT)) {
+                    x = mEventHandler.mMotionX + (descriptor.alignment != SelectionHandleStyle.ALIGN_CENTER ? descriptor.position.width() : 0) * (descriptor.alignment == SelectionHandleStyle.ALIGN_LEFT ? 1 : -1);
+                    y = mEventHandler.mMotionY - descriptor.position.height() * 2 / 3f;
+                }
+            }
 
-        /**
-         * Execute painting on the given editor and canvas
-         */
-        void exec(Canvas canvas, CodeEditor editor) {
-            editor.drawCursor(canvas, centerX, row, outRect, insert, handleType);
+            mRect.top = y - getRowHeight();
+            mRect.bottom = y;
+            mRect.left = x - mInsertSelWidth / 2f;
+            mRect.right = x + mInsertSelWidth / 2f;
+            drawColor(canvas, mColors.getColor(EditorColorScheme.SELECTION_INSERT), mRect);
+            if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED) {
+                mHandleStyle.draw(canvas, handleType, x, y, getRowHeight(), mColors.getColor(EditorColorScheme.SELECTION_HANDLE), descriptor);
+            } else if (descriptor != null) {
+                descriptor.setEmpty();
+            }
         }
 
     }
+
 
     private final static String COPYRIGHT = "sora-editor\nCopyright (C) Rosemoe roses2020@qq.com\nThis project is distributed under the LGPL v2.1 license";
 

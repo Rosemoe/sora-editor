@@ -39,12 +39,11 @@ import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.data.CompletionItem;
 
 /**
- * Adapter to display results
+ * Default adapter to display results
  *
  * @author Rose
  */
-@SuppressWarnings("CanBeFinal")
-class DefaultCompletionItemAdapter extends EditorCompletionAdapter {
+public final class DefaultCompletionItemAdapter extends EditorCompletionAdapter {
 
     @Override
     public int getItemHeight() {

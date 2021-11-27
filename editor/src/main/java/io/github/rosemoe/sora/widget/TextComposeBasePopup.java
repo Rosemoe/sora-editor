@@ -87,8 +87,8 @@ public class TextComposeBasePopup extends PopupWindow {
      */
     public void show() {
         int width = mEditor.getWidth();
-        RectF leftHandleRect = mEditor.getLeftHandleRect();
-        RectF rightHandleRect = mEditor.getRightHandleRect();
+        var leftHandleRect = mEditor.getLeftHandleDescriptor().position;
+        var rightHandleRect = mEditor.getRightHandleDescriptor().position;
 
         // when right handle goes below visible area, it rect becomes empty. so this feature (or bug) used to calculate popup location
         // if we can not use this,
