@@ -1574,7 +1574,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             float backupOffset = paintingOffset;
 
             // Draw text here
-            if (!mHardwareAccAllowed || !canvas.isHardwareAccelerated() || isWordwrap() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (!mHardwareAccAllowed || !canvas.isHardwareAccelerated() || isWordwrap() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || rowInf.endColumn - rowInf.startColumn > 256 /* Save memory */) {
+                // Draw without hardware acceleration
                 // Get spans
                 List<Span> spans = null;
                 if (line < spanMap.size() && line >= 0) {
@@ -3950,7 +3951,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Move to next page
      */
     public void movePageDown() {
-        mEventHandler.onScroll(null, null, 0, getHeight());
+        mEventHandler.scrollBy(0, getHeight(), true);
         mCompletionWindow.hide();
     }
 
@@ -3958,7 +3959,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Move to previous page
      */
     public void movePageUp() {
-        mEventHandler.onScroll(null, null, 0, -getHeight());
+        mEventHandler.scrollBy( 0, -getHeight(), true);
         mCompletionWindow.hide();
     }
 

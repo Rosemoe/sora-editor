@@ -516,7 +516,11 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         mEdgeFlags = 0;
     }
 
-    protected void scrollBy(float distanceX, float distanceY) {
+    void scrollBy(float distanceX, float distanceY) {
+        scrollBy(distanceX, distanceY, false);
+    }
+
+    void scrollBy(float distanceX, float distanceY, boolean smooth) {
         if (mEditor.getTextActionPresenter() instanceof TextActionPopupWindow) {
             mEditor.getTextActionPresenter().onUpdate(TextActionPopupWindow.SCROLL);
         } else {
@@ -529,10 +533,17 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         endY = Math.max(endY, 0);
         endY = Math.min(endY, mEditor.getScrollMaxY());
         endX = Math.min(endX, mEditor.getScrollMaxX());
-        mScroller.startScroll(mScroller.getCurrX(),
-                mScroller.getCurrY(),
-                endX - mScroller.getCurrX(),
-                endY - mScroller.getCurrY(), 0);
+        if (smooth) {
+            mScroller.startScroll(mScroller.getCurrX(),
+                    mScroller.getCurrY(),
+                    endX - mScroller.getCurrX(),
+                    endY - mScroller.getCurrY());
+        } else {
+            mScroller.startScroll(mScroller.getCurrX(),
+                    mScroller.getCurrY(),
+                    endX - mScroller.getCurrX(),
+                    endY - mScroller.getCurrY(), 0);
+        }
         mEditor.invalidate();
     }
 
