@@ -65,11 +65,11 @@ android {
 dependencies {
     //implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.9.0.M3'
     //implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation 'androidx.annotation:annotation:1.2.0'
+    implementation 'androidx.annotation:annotation:1.3.0'
     compileOnly 'com.google.android.material:material:1.4.0'
     //implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     //implementation 'androidx.core:core-ktx:1.3.2'
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
