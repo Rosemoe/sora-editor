@@ -66,6 +66,7 @@ dependencies {
     implementation "org.apache.xmlgraphics:batik-css:${Versions.batikCssVersion}"
     implementation "org.apache.xmlgraphics:batik-util:${Versions.batikUtilVersion}"
     implementation "xerces:xercesImpl:${Versions.xercesImplVersion}"
+    implementation "commons-io:commons-io:2.5"
 
 
     testImplementation 'junit:junit:4.12'
