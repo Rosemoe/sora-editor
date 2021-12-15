@@ -1135,7 +1135,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (mCursor.isSelected()) {
             mInsertHandle.setEmpty();
         }
-        if (!mTextActionPresenter.shouldShowCursor()) {
+        if (!mTextActionPresenter.shouldShowCursor() || !mCursor.isSelected()) {
             mLeftHandle.setEmpty();
             mRightHandle.setEmpty();
         }
