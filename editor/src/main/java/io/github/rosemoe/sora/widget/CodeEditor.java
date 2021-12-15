@@ -113,7 +113,7 @@ import io.github.rosemoe.sora.widget.layout.Row;
 import io.github.rosemoe.sora.widget.layout.RowIterator;
 import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
-import io.github.rosemoe.sora.widget.style.builtin.HandleStyleDrop;
+import io.github.rosemoe.sora.widget.style.builtin.HandleStyleSideDrop;
 
 /**
  * CodeEditor is an editor that can highlight text regions by doing basic syntax analyzing
@@ -469,7 +469,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaintGraph = new Paint();
         mMatrix = new Matrix();
         mPath = new Path();
-        mHandleStyle = new HandleStyleDrop(getContext());
+        mHandleStyle = new HandleStyleSideDrop(getContext());
         mSearcher = new EditorSearcher(this);
         mCursorAnimator = new CursorAnimator(this);
         setCursorBlinkPeriod(DEFAULT_CURSOR_BLINK_PERIOD);
@@ -761,6 +761,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaint.setFontFeatureSettings(features);
         mPaintOther.setFontFeatureSettings(features);
         mPaintGraph.setFontFeatureSettings(features);
+    }
+    
+    public void setSelectionHandleStyle(@NonNull SelectionHandleStyle style) {
+        if (style == null) {
+           throw new IllegalArgumentException("handle style can not be null");
+        }
+        mHandleStyle = style;
+        invalidate();
     }
 
     /**
