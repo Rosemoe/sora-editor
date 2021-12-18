@@ -215,13 +215,13 @@ public class EditorColorScheme {
                 color = 0xFF333333;
                 break;
             case SELECTION_INSERT:
-                color = 0xFF03EBEB;
+                color = 0xdd536dfe;
                 break;
             case UNDERLINE:
                 color = 0xff000000;
                 break;
             case SELECTION_HANDLE:
-                color = 0xff03ebff;
+                color = 0xff536dfe;
                 break;
             case ANNOTATION:
                 color = 0xFF03A9F4;
