@@ -34,6 +34,7 @@ import android.widget.OverScroller;
 import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
+import java.lang.Integer;
 
 /**
  * Handles touch events of editor
@@ -337,7 +338,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         mMotionY = e.getY();
         mMotionX = e.getX();
         switch (e.getAction()) {
-            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_DOWN:{
                 mHoldingScrollbarVertical = mHoldingScrollbarHorizontal = false;
                 RectF rect = mEditor.getVerticalScrollBarRect();
                 if (rect.contains(e.getX(), e.getY())) {
@@ -383,7 +384,8 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                     this.right = new SelectionHandle(SelectionHandle.RIGHT);
                 }
                 return true;
-            case MotionEvent.ACTION_MOVE:
+            }
+            case MotionEvent.ACTION_MOVE:{
                 if (mHoldingScrollbarVertical) {
                     float movedDis = e.getY() - downY;
                     downY = e.getY();
@@ -409,6 +411,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 } else {
                     return false;
                 }
+            }
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 if (mHoldingScrollbarVertical) {
@@ -706,20 +709,20 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 mScroller.getCurrY(),
                 endX - mScroller.getCurrX(),
                 endY - mScroller.getCurrY(), 0);
-        final float minOverPull = 0;
-        if (notifyY && mScroller.getCurrY() <= -minOverPull) {
+        final float minOverPull = 2f;
+        if (notifyY && mScroller.getCurrY() + distanceY < -minOverPull) {
             mEditor.getVerticalEdgeEffect().onPull(-distanceY / mEditor.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth())));
             topOrBottom = false;
         }
-        if (notifyY && mScroller.getCurrY() >= mEditor.getScrollMaxY() + minOverPull) {
+        if (notifyY && mScroller.getCurrY() + distanceY > mEditor.getScrollMaxY() + minOverPull) {
             mEditor.getVerticalEdgeEffect().onPull(distanceY / mEditor.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth())));
             topOrBottom = true;
         }
-        if (notifyX && mScroller.getCurrX() <= -minOverPull) {
+        if (notifyX && mScroller.getCurrX() + distanceX < -minOverPull) {
             mEditor.getHorizontalEdgeEffect().onPull(-distanceX / mEditor.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight())));
             leftOrRight = false;
         }
-        if (notifyX && mScroller.getCurrX() >= mEditor.getScrollMaxX() + minOverPull) {
+        if (notifyX && mScroller.getCurrX() + distanceX > mEditor.getScrollMaxX() + minOverPull) {
             mEditor.getHorizontalEdgeEffect().onPull(distanceX / mEditor.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight())));
             leftOrRight = true;
         }
@@ -843,6 +846,10 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
         public SelectionHandle(int type) {
             this.type = type;
         }
+        
+        private boolean checkNoIntersection(SelectionHandleStyle.HandleDescriptor one, SelectionHandleStyle.HandleDescriptor another) {
+            return !RectF.intersects(one.position, another.position);
+        }
 
         /**
          * Handle the event
@@ -861,6 +868,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 default:
                     descriptor = mEditor.getInsertHandleDescriptor();
             }
+            var anotherDesc = type == LEFT ? mEditor.getRightHandleDescriptor() : mEditor.getLeftHandleDescriptor();
             float targetX = mScroller.getCurrX() + e.getX() + (descriptor.alignment != SelectionHandleStyle.ALIGN_CENTER ? descriptor.position.width() : 0) * (descriptor.alignment == SelectionHandleStyle.ALIGN_LEFT ? 1 : -1);
             float targetY = mScroller.getCurrY() + e.getY() - descriptor.position.height();
             int line = IntPair.getFirst(mEditor.getPointPosition(0, targetY));
@@ -871,7 +879,7 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                 int anotherLine = type != RIGHT ? mEditor.getCursor().getRightLine() : mEditor.getCursor().getLeftLine();
                 int anotherColumn = type != RIGHT ? mEditor.getCursor().getRightColumn() : mEditor.getCursor().getLeftColumn();
 
-                if (line != lastLine || column != lastColumn) {
+                if ((line != lastLine || column != lastColumn) && (type == BOTH || (line != anotherLine || column != anotherColumn))) {
                     switch (type) {
                         case BOTH:
                             mEditor.cancelAnimation();
@@ -880,13 +888,15 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                         case RIGHT:
                             if (anotherLine > line || (anotherLine == line && anotherColumn > column)) {
                                 //Swap type
-                                EditorTouchEventHandler.this.mSelHandleType = LEFT;
-                                this.type = LEFT;
-                                left.type = RIGHT;
-                                SelectionHandle tmp = right;
-                                right = left;
-                                left = tmp;
-                                mEditor.setSelectionRegion(line, column, anotherLine, anotherColumn, false);
+                                if(checkNoIntersection(descriptor, anotherDesc)) {
+                                    EditorTouchEventHandler.this.mSelHandleType = LEFT;
+                                    this.type = LEFT;
+                                    left.type = RIGHT;
+                                    SelectionHandle tmp = right;
+                                    right = left;
+                                    left = tmp;
+                                    mEditor.setSelectionRegion(line, column, anotherLine, anotherColumn, false);
+                                }
                             } else {
                                 mEditor.setSelectionRegion(anotherLine, anotherColumn, line, column, false);
                             }
@@ -894,13 +904,15 @@ final class EditorTouchEventHandler implements GestureDetector.OnGestureListener
                         case LEFT:
                             if (anotherLine < line || (anotherLine == line && anotherColumn < column)) {
                                 //Swap type
-                                EditorTouchEventHandler.this.mSelHandleType = RIGHT;
-                                this.type = RIGHT;
-                                right.type = LEFT;
-                                SelectionHandle tmp = right;
-                                right = left;
-                                left = tmp;
-                                mEditor.setSelectionRegion(anotherLine, anotherColumn, line, column, false);
+                                if(checkNoIntersection(descriptor, anotherDesc)) {
+                                    EditorTouchEventHandler.this.mSelHandleType = RIGHT;
+                                    this.type = RIGHT;
+                                    right.type = LEFT;
+                                    SelectionHandle tmp = right;
+                                    right = left;
+                                    left = tmp;
+                                    mEditor.setSelectionRegion(anotherLine, anotherColumn, line, column, false);
+                                }
                             } else {
                                 mEditor.setSelectionRegion(line, column, anotherLine, anotherColumn, false);
                             }

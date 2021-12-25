@@ -2103,12 +2103,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         OverScroller scroller = getScroller();
         if (scroller.isOverScrolled()) {
-            if (mVerticalEdgeGlow.isFinished() && (scroller.getCurrY() < 0 || scroller.getCurrY() >= getScrollMaxY())) {
+            if (mVerticalEdgeGlow.isFinished() && (scroller.getCurrY() < 0 || scroller.getCurrY() > getScrollMaxY())) {
                 mEventHandler.topOrBottom = scroller.getCurrY() >= getScrollMaxY();
                 mVerticalEdgeGlow.onAbsorb((int) scroller.getCurrVelocity());
                 postDraw = true;
             }
-            if (mHorizontalGlow.isFinished() && (scroller.getCurrX() < 0 || scroller.getCurrX() >= getScrollMaxX())) {
+            if (mHorizontalGlow.isFinished() && (scroller.getCurrX() < 0 || scroller.getCurrX() > getScrollMaxX())) {
                 mEventHandler.leftOrRight = scroller.getCurrX() >= getScrollMaxX();
                 mHorizontalGlow.onAbsorb((int) scroller.getCurrVelocity());
                 postDraw = true;
