@@ -1,6 +1,6 @@
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/CodeEditor
+ *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2021  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
@@ -22,17 +22,11 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-rootProject.name='sora-editor'
-include ':language-universal'
-include ':language-java'
-include ':language-html'
-include ':language-base'
-include ':language-python'
-include ':editor'
-include ':app'
-include ':language-css3'
-include ':textmate-core'
-include ':language-textmate'
-include ':textmate-languageconfiguration'
-include ':language-xml'
-include ':paint-helper'
+plugins {
+    id 'java-library'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_7
+    targetCompatibility = JavaVersion.VERSION_1_7
+}
