@@ -86,7 +86,6 @@ import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.data.BlockLine;
 import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
-import io.github.rosemoe.sora.graphics.FontCache;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.interfaces.EditorEventListener;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
