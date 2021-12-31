@@ -34,7 +34,6 @@ import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -83,10 +82,12 @@ import java.util.List;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.Experimental;
+import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.data.BlockLine;
 import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
 import io.github.rosemoe.sora.graphics.FontCache;
+import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.interfaces.EditorEventListener;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
@@ -243,7 +244,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mDrag;
     private boolean mScalable;
     private boolean mEditable;
-    private boolean mCharPaint;
     private boolean mAutoIndentEnabled;
     private boolean mWordwrap;
     private boolean mUndoEnabled;
@@ -282,7 +282,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private Paint mPaint;
     private Paint mPaintOther;
     private Paint mPaintGraph;
-    private char[] mBuffer;
+    private ContentLine mBuffer;
     private Matrix mMatrix;
     private Rect mViewRect;
     private EditorColorScheme mColors;
@@ -304,7 +304,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private EditorSearcher mSearcher;
     private EditorEventListener mListener;
     private CursorAnimator mCursorAnimator;
-    private FontCache mFontCache;
     private Paint.FontMetricsInt mTextMetrics;
     private Paint.FontMetricsInt mLineNumberMetrics;
     private Paint.FontMetricsInt mGraphMetrics;
@@ -462,7 +461,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mDividerWidth = 2 * mDpUnit;
         mInsertSelWidth = mDividerWidth / 2;
         mDividerMargin = mDpUnit * 6;
-        mFontCache = new FontCache();
         mDrawPoints = new BufferedDrawPoints();
         mPaint = new Paint();
         mPaintOther = new Paint();
@@ -478,7 +476,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaintOther.setAntiAlias(true);
         mPaintGraph.setAntiAlias(true);
         mPaintOther.setTypeface(Typeface.MONOSPACE);
-        mBuffer = new char[256];
         mStartedActionMode = ACTION_MODE_NONE;
         setTextSize(DEFAULT_TEXT_SIZE);
         setLineInfoTextSize(mPaint.getTextSize());
@@ -531,7 +528,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setLineNumberEnabled(true);
         setAutoCompletionOnComposing(true);
         setAllowFullscreen(false);
-        setLigatureEnabled(false);
         setHardwareAcceleratedDrawAllowed(true);
         setInterceptParentHorizontalScrollIfNeeded(false);
         setTypefaceText(Typeface.DEFAULT);
@@ -758,14 +754,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @see Paint#setFontFeatureSettings(String)
      */
     public void setFontFeatureSettings(String features) {
-        mPaint.setFontFeatureSettings(features);
+        mPaint.setFontFeatureSettingsWrapped(features);
         mPaintOther.setFontFeatureSettings(features);
         mPaintGraph.setFontFeatureSettings(features);
     }
-    
+
     public void setSelectionHandleStyle(@NonNull SelectionHandleStyle style) {
         if (style == null) {
-           throw new IllegalArgumentException("handle style can not be null");
+            throw new IllegalArgumentException("handle style can not be null");
         }
         mHandleStyle = style;
         invalidate();
@@ -1091,14 +1087,21 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param size Text size in pixel unit
      */
     protected void setTextSizePxDirect(float size) {
-        mPaint.setTextSize(size);
+        int start = 0, end = 0;
+        if (mEventHandler != null) {
+            start = getFirstVisibleLine();
+            end = getLastVisibleRow();
+        }
+        mPaint.setTextSizeWrapped(size);
         mPaintOther.setTextSize(size);
         mPaintGraph.setTextSize(size * SCALE_MINI_GRAPH);
         mTextMetrics = mPaint.getFontMetricsInt();
         mLineNumberMetrics = mPaintOther.getFontMetricsInt();
         mGraphMetrics = mPaintGraph.getFontMetricsInt();
-        mFontCache.clearCache();
         invalidateHwRenderer();
+        if (mLayout != null) {
+            mLayout.updateCache(start, end);
+        }
     }
 
     /**
@@ -1453,7 +1456,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int trailingWhitespaceStart = 0;
         float circleRadius = 0f;
         if (shouldInitializeNonPrintable()) {
-            float spaceWidth = mFontCache.measureChar(' ', mPaint);
+            float spaceWidth = mPaint.getSpaceWidth();
             float maxD = Math.min(getRowHeight(), spaceWidth);
             maxD *= 0.25f;
             circleRadius = maxD / 2;
@@ -1475,21 +1478,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             // Get visible region on the line
             float[] charPos = findFirstVisibleChar(offset, rowInf.startColumn, rowInf.endColumn, mBuffer);
             int firstVisibleChar = (int) charPos[0];
-            int lastVisibleChar = firstVisibleChar;
             float paintingOffset = charPos[1];
-            float temporaryOffset = paintingOffset;
-            while (temporaryOffset < getWidth() && lastVisibleChar < columnCount) {
-                char ch = mBuffer[lastVisibleChar];
-                if (isEmoji(ch)) {
-                    var end = Math.min(lastVisibleChar + 4, columnCount);
-                    temporaryOffset += mFontCache.measureText(mBuffer, lastVisibleChar, end, mPaint);
-                    lastVisibleChar += (end - lastVisibleChar - 1);
-                } else {
-                    temporaryOffset += mFontCache.measureChar(mBuffer[lastVisibleChar], mPaint);
-                }
-                lastVisibleChar++;
-            }
-            lastVisibleChar = Math.min(lastVisibleChar, rowInf.endColumn);
+            int lastVisibleChar = (int) findFirstVisibleChar(paintingOffset - getWidth(), firstVisibleChar + 1, rowInf.endColumn, rowInf.startColumn, mBuffer)[0];
+
             // Draw current line background
             if (line == currentLine && !mCursorAnimator.isRunning()) {
                 drawRowBackground(canvas, currentLineBgColor, row);
@@ -1564,20 +1555,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             // Get visible region on the line
             float[] charPos = findFirstVisibleChar(offset, rowInf.startColumn, rowInf.endColumn, mBuffer);
             int firstVisibleChar = (int) charPos[0];
-            int lastVisibleChar = firstVisibleChar;
             float paintingOffset = charPos[1];
-            float temporaryOffset = paintingOffset;
-            while (temporaryOffset < getWidth() && lastVisibleChar < columnCount) {
-                char ch = mBuffer[lastVisibleChar];
-                if (isEmoji(ch) && lastVisibleChar + 1 < columnCount) {
-                    temporaryOffset += mFontCache.measureText(mBuffer, lastVisibleChar, lastVisibleChar + 2, mPaint);
-                    lastVisibleChar++;
-                } else {
-                    temporaryOffset += mFontCache.measureChar(mBuffer[lastVisibleChar], mPaint);
-                }
-                lastVisibleChar++;
-            }
-            lastVisibleChar = Math.min(lastVisibleChar, rowInf.endColumn);
+            int lastVisibleChar = (int) findFirstVisibleChar(paintingOffset - getWidth(), firstVisibleChar + 1, rowInf.endColumn, rowInf.startColumn, mBuffer)[0];
 
             float backupOffset = paintingOffset;
 
@@ -1871,24 +1850,22 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaintOther.setColor(mColors.getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
 
         if (paintStart < paintEnd) {
-            float spaceWidth = mFontCache.measureChar(' ', mPaint);
+            float spaceWidth = mPaint.getSpaceWidth();
             float rowCenter = (getRowTop(row) + getRowBottom(row)) / 2f - getOffsetY();
             offset += measureText(mBuffer, rowStart, paintStart - rowStart);
+            var chars = mBuffer.value;
+            var lastPos = paintStart;
             while (paintStart < paintEnd) {
-                char ch = mBuffer[paintStart];
-                float charWidth = measureText(mBuffer, paintStart, 1);
+                char ch = chars[paintStart];
                 int paintCount = 0;
+                boolean paintLine = false;
                 if (ch == ' ') {
                     paintCount = 1;
                 } else if (ch == '\t') {
                     if ((getNonPrintableFlags() & FLAG_DRAW_TAB_SAME_AS_SPACE) != 0) {
                         paintCount = getTabWidth();
                     } else {
-                        float delta = charWidth * 0.05f;
-                        canvas.drawLine(offset + delta, rowCenter, offset + charWidth - delta, rowCenter, mPaintOther);
-                        offset += charWidth;
-                        paintStart++;
-                        continue;
+                        paintLine = true;
                     }
                 }
                 for (int i = 0; i < paintCount; i++) {
@@ -1897,7 +1874,17 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     float centerOffset = (charStartOffset + charEndOffset) / 2f;
                     mDrawPoints.drawPoint(centerOffset, rowCenter);
                 }
-                offset += charWidth;
+                if (paintLine) {
+                    var charWidth = getTabWidth() * spaceWidth;
+                    float delta = charWidth * 0.05f;
+                    canvas.drawLine(offset + delta, rowCenter, offset + charWidth - delta, rowCenter, mPaintOther);
+                }
+
+                if (ch == ' ' || ch == '\t') {
+                    offset += (ch == ' ' ? spaceWidth : spaceWidth * getTabWidth());
+                    offset += measureText(mBuffer, lastPos, paintStart - lastPos);
+                    lastPos = paintStart + 1;
+                }
                 paintStart++;
             }
         }
@@ -1910,15 +1897,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param line The line to search
      */
     protected long findLeadingAndTrailingWhitespacePos(int line) {
+        var buffer = mText.getLine(line).value;
         int column = mText.getColumnCount(line);
         int leading = 0;
         int trailing = column;
-        while (leading < column && isWhitespace(mBuffer[leading])) {
+        while (leading < column && isWhitespace(buffer[leading])) {
             leading++;
         }
         // Only them this action is needed
         if (leading != column && (mNonPrintableOptions & (FLAG_DRAW_WHITESPACE_INNER | FLAG_DRAW_WHITESPACE_TRAILING)) != 0) {
-            while (trailing > 0 && isWhitespace(mBuffer[trailing - 1])) {
+            while (trailing > 0 && isWhitespace(buffer[trailing - 1])) {
                 trailing--;
             }
         }
@@ -2443,15 +2431,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param count Count of characters
      * @return The width measured
      */
-    protected float measureText(char[] src, int index, int count) {
+    @UnsupportedUserUsage
+    public float measureText(char[] src, int index, int count) {
         int tabCount = 0;
         for (int i = 0; i < count; i++) {
             if (src[index + i] == '\t') {
                 tabCount++;
             }
         }
-        float extraWidth = mFontCache.measureChar(' ', mPaint) * getTabWidth() - mFontCache.measureChar('\t', mPaint);
-        return mFontCache.measureText(src, index, index + count, mPaint) + tabCount * extraWidth;
+        float extraWidth = tabCount == 0 ? 0 : mPaint.getSpaceWidth() * getTabWidth() - mPaint.measureText("\t");
+        return mPaint.measureTextRunAdvance(src, index, index + count, 0, src.length) + tabCount * extraWidth;
     }
 
     /**
@@ -2462,77 +2451,97 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param count Count of characters
      * @return The width measured
      */
-    protected float measureText(CharSequence text, int index, int count) {
+    @UnsupportedUserUsage
+    public float measureText(CharSequence text, int index, int count) {
         int tabCount = 0;
         for (int i = 0; i < count; i++) {
             if (text.charAt(index + i) == '\t') {
                 tabCount++;
             }
         }
-        float extraWidth = mFontCache.measureChar(' ', mPaint) * getTabWidth() - mFontCache.measureChar('\t', mPaint);
-        return mFontCache.measureText(text, index, index + count, mPaint) + tabCount * extraWidth;
+        float extraWidth = tabCount == 0 ? 0 : mPaint.getSpaceWidth() * getTabWidth() - mPaint.measureText("\t");
+        if (text instanceof ContentLine && ((ContentLine) text).widthCache != null) {
+            var width = 0f;
+            var cache = ((ContentLine) text).widthCache;
+            for (int i = 0; i < count; i++) {
+                width += cache[i + index];
+            }
+            return width + extraWidth * tabCount;
+        }
+        return mPaint.measureTextRunAdvance(text, index, index + count, 0, text.length()) + tabCount * extraWidth;
     }
 
     /**
      * Draw text on the given position
      *
      * @param canvas Canvas to draw
-     * @param src    Source of characters
+     * @param line   Source of characters
      * @param index  The index in array
      * @param count  Count of characters
      * @param offX   Offset x for paint
      * @param offY   Offset y for paint(baseline)
      */
-    protected void drawText(Canvas canvas, char[] src, int index, int count, float offX, float offY) {
+    protected void drawText(Canvas canvas, ContentLine line, int index, int count, float offX, float offY) {
         int end = index + count;
-        if (mCharPaint) {
-            for (int i = index; i < end; i++) {
-                canvas.drawText(src, i, 1, offX, offY, mPaint);
-                offX = offX + measureText(src, i, 1);
-            }
-        } else {
-            int st = index;
-            for (int i = index; i < end; i++) {
-                if (src[i] == '\t') {
-                    canvas.drawText(new String(src, st, i - st), offX, offY, mPaint);
-                    offX = offX + measureText(src, st, i - st + 1);
-                    st = i + 1;
-                }
-            }
-            if (st < end) {
-                canvas.drawText(new String(src, st, end - st), offX, offY, mPaint);
+        var src = line.value;
+        int st = index;
+        for (int i = index; i < end; i++) {
+            if (src[i] == '\t') {
+                canvas.drawText(new String(src, st, i - st), offX, offY, mPaint);
+                offX = offX + measureText(line, st, i - st + 1);
+                st = i + 1;
             }
         }
+        if (st < end) {
+            canvas.drawText(new String(src, st, end - st), offX, offY, mPaint);
+        }
+    }
+
+    @UnsupportedUserUsage
+    public float[] findFirstVisibleChar(float currentPosition, int start, int end, ContentLine line) {
+        return findFirstVisibleChar(currentPosition, start, end, start, line);
     }
 
     /**
      * Find first visible character
      */
-    protected float[] findFirstVisibleChar(float initialPosition, int left, int right, char[] chars) {
-        float width = 0f;
-        float target = mFontCache.measureChar(' ', mPaint) * getTabWidth() * 1.1f;
-        while (left < right && initialPosition + width < -target) {
-            float single = mFontCache.measureChar(chars[left], mPaint);
-            if (chars[left] == '\t') {
-                single = mFontCache.measureChar(' ', mPaint) * getTabWidth();
-            } else if (isEmoji(chars[left])) {
-                if (left + 4 <= right) {
-                    var widths = mFontCache.widths;
-                    mPaint.getTextWidths(chars, left, 4, widths);
-                    if (widths[0] > 0 && widths[1] == 0 && widths[2] == 0 && widths[3] == 0) {
-                        left += 4;
-                        width += widths[0];
-                        continue;
+    @UnsupportedUserUsage
+    public float[] findFirstVisibleChar(float currentPosition, int start, int end, int contextStart, ContentLine line) {
+        if (start >= end) {
+            return new float[]{end, currentPosition};
+        }
+        var chars = line.value;
+        float tabAdvance = mPaint.getSpaceWidth() * getTabWidth();
+        int lastStart = start;
+        for (int i = start; i < end; i++) {
+            if (chars[i] == '\t') {
+                // Here is a tab
+                // Try to find advance
+                if (lastStart != i) {
+                    int idx = mPaint.findOffsetByRunAdvance(line, lastStart, i, 0 - currentPosition);
+                    currentPosition += mPaint.measureTextRunAdvance(chars, lastStart, idx, start, end);
+                    if (idx < i) {
+                        return new float[]{idx, currentPosition};
+                    } else {
+                        if (currentPosition + tabAdvance > 0) {
+                            return new float[]{i, currentPosition};
+                        } else {
+                            currentPosition += tabAdvance;
+                        }
+                    }
+                } else {
+                    if (currentPosition + tabAdvance > 0) {
+                        return new float[]{i, currentPosition};
+                    } else {
+                        currentPosition += tabAdvance;
                     }
                 }
-                int end = Math.min(left + 2, right);
-                single = mFontCache.measureText(chars, left, end, mPaint);
-                left += (end - left - 1);
+                lastStart = i;
             }
-            width += single;
-            left++;
         }
-        return new float[]{left, initialPosition + width};
+        int idx = mPaint.findOffsetByRunAdvance(line, lastStart, end, 0 - currentPosition);
+        currentPosition += mPaint.measureTextRunAdvance(chars, lastStart, idx, start, end);
+        return new float[]{idx, currentPosition};
     }
 
     /**
@@ -2541,7 +2550,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param line Line going to draw or measure
      */
     protected void prepareLine(int line) {
-        mBuffer = mText.getLine(line).getRawData();
+        mBuffer = mText.getLine(line);
     }
 
     /**
@@ -3460,14 +3469,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (typefaceText == null) {
             typefaceText = Typeface.DEFAULT;
         }
-        mPaint.setTypeface(typefaceText);
-        mFontCache.clearCache();
-        if (2 * mPaint.measureText("/") != mPaint.measureText("//")) {
-            Log.w(LOG_TAG, "Font issue:Your font is painting '/' and '//' differently, which will cause the editor to render slowly than other fonts.");
-            mCharPaint = true;
-        } else {
-            mCharPaint = false;
-        }
+        mPaint.setTypefaceWrapped(typefaceText);
         mTextMetrics = mPaint.getFontMetricsInt();
         invalidateHwRenderer();
         createLayout();
@@ -3552,7 +3554,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return last visible row
      */
     public int getLastVisibleRow() {
-        return Math.max(0, (getOffsetY() + getHeight()) / getRowHeight());
+        return Math.max(0, Math.min(mLayout.getLayoutHeight(), getOffsetY() + getHeight()) / getRowHeight());
+    }
+
+    public int getLastVisibleLine() {
+        try {
+            return mLayout.getLineNumberForRow(getFirstVisibleRow());
+        } catch (IndexOutOfBoundsException e) {
+            return getLineCount() - 1;
+        }
     }
 
     /**
@@ -3962,7 +3972,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Move to previous page
      */
     public void movePageUp() {
-        mEventHandler.scrollBy( 0, -getHeight(), true);
+        mEventHandler.scrollBy(0, -getHeight(), true);
         mCompletionWindow.hide();
     }
 

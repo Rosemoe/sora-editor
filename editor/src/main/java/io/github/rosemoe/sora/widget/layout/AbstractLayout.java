@@ -29,6 +29,7 @@ import android.graphics.Paint;
 
 import io.github.rosemoe.sora.graphics.FontCache;
 import io.github.rosemoe.sora.text.Content;
+import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
@@ -41,98 +42,61 @@ public abstract class AbstractLayout implements Layout {
 
     protected CodeEditor editor;
     protected Content text;
-    protected Paint shadowPaint;
-    protected FontCache fontCache;
 
     public AbstractLayout(CodeEditor editor, Content text) {
         this.editor = editor;
         this.text = text;
-        shadowPaint = new Paint(editor.getTextPaint());
-        fontCache = new FontCache();
+        updateMeasureCaches(0, text == null ? 0 : text.getLineCount());
     }
 
     protected float measureText(CharSequence text, int start, int end) {
-        int tabCount = 0;
-        end = Math.min(text.length(), end);
-        for (int i = start; i < end; i++) {
-            if (text.charAt(i) == '\t') {
-                tabCount++;
-            }
-        }
-        float extraWidth = fontCache.measureChar(' ', shadowPaint) * editor.getTabWidth() - fontCache.measureChar('\t', shadowPaint);
-        return fontCache.measureText(text, start, end, shadowPaint) + tabCount * extraWidth;
+        return editor.measureText(text, start, end - start);
     }
 
-    protected float[] orderedFindCharIndex(float targetOffset, CharSequence str, int index, int end) {
-        float width = 0f;
-        while (index < end && width < targetOffset) {
-            float single = fontCache.measureChar(str.charAt(index), shadowPaint);
-            if (str.charAt(index) == '\t') {
-                single = editor.getTabWidth() * fontCache.measureChar(' ', shadowPaint);
-            } else if (isEmoji(str.charAt(index))) {
-                if (index + 4 <= end) {
-                    var widths = fontCache.widths;
-                    shadowPaint.getTextWidths(str, index, index + 4, widths);
-                    if (widths[0] > 0 && widths[1] == 0 && widths[2] == 0 && widths[3] == 0) {
-                        index += 4;
-                        width += widths[0];
-                        continue;
-                    }
-                }
-                int commitEnd = Math.min(end, index + 2);
-                int len = commitEnd - index;
-                var buffer = fontCache.buffer;
-                for (int j = 0; j < len; j++) {
-                    buffer[j] = str.charAt(index + j);
-                }
-                single = shadowPaint.measureText(buffer, 0, len);
-                index += len - 1;
-            }
-            width += single;
-            index++;
-        }
-        return new float[]{index, width};
+    protected float[] orderedFindCharIndex(float targetOffset, ContentLine str, int index, int end) {
+        return editor.findFirstVisibleChar(-targetOffset, index, end, 0, str);
     }
 
-    protected float[] orderedFindCharIndex(float targetOffset, CharSequence str) {
-        float width = 0f;
-        int index = 0;
-        int length = str.length();
-        while (index < length && width < targetOffset) {
-            float single = fontCache.measureChar(str.charAt(index), shadowPaint);
-            if (str.charAt(index) == '\t') {
-                single = editor.getTabWidth() * fontCache.measureChar(' ', shadowPaint);
-            } else if (isEmoji(str.charAt(index))) {
-                if (index + 4 <= length) {
-                    var widths = fontCache.widths;
-                    shadowPaint.getTextWidths(str, index, index + 4, widths);
-                    if (widths[0] > 0 && widths[1] == 0 && widths[2] == 0 && widths[3] == 0) {
-                        index += 4;
-                        width += widths[0];
-                        continue;
-                    }
-                }
-                int commitEnd = Math.min(length, index + 2);
-                int len = commitEnd - index;
-                var buffer = fontCache.buffer;
-                for (int j = 0; j < len; j++) {
-                    buffer[j] = str.charAt(index + j);
-                }
-                single = shadowPaint.measureText(buffer, 0, len);
-                index += len - 1;
-            }
-            width += single;
-            index++;
+    protected float[] orderedFindCharIndex(float targetOffset, ContentLine str) {
+       return orderedFindCharIndex(targetOffset, str, 0, str.length());
+    }
+
+    private void updateMeasureCaches(int startLine, int endLine) {
+        if (text == null) {
+            return;
         }
-        return new float[]{index, width};
+        while (startLine <= endLine && startLine < text.getLineCount()) {
+            ContentLine line = text.getLine(startLine);
+            if (line.length() < 128) {
+                if (line.widthCache == null) {
+                    line.widthCache = new float[128];
+                }
+                editor.getTextPaint().getTextWidths(line.value, 0, line.length(), line.widthCache);
+            } else {
+                line.widthCache = null;
+            }
+            startLine++;
+        }
+    }
+
+    @Override
+    public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
+        updateMeasureCaches(startLine, endLine);
+    }
+
+    @Override
+    public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
+        updateMeasureCaches(startLine, endLine);
     }
 
     @Override
     public void destroyLayout() {
         editor = null;
         text = null;
-        shadowPaint = null;
-        fontCache = null;
     }
 
+    @Override
+    public void updateCache(int startLine, int endLine) {
+        updateMeasureCaches(0, text == null ? 0 : text.getLineCount());
+    }
 }

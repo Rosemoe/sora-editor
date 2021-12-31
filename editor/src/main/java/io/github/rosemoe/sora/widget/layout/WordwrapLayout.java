@@ -25,6 +25,9 @@ package io.github.rosemoe.sora.widget.layout;
 
 import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
 
+import android.content.res.Resources;
+import android.util.TypedValue;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -52,7 +55,7 @@ public class WordwrapLayout extends AbstractLayout {
     public WordwrapLayout(CodeEditor editor, Content text) {
         super(editor, text);
         rowTable = new ArrayList<>();
-        width = editor.getWidth() - (int) editor.measureTextRegionOffset();
+        width = editor.getWidth() - (int) (editor.measureTextRegionOffset() + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5.0f, editor.getResources().getDisplayMetrics()));
         breakAllLines();
     }
 
@@ -115,33 +118,13 @@ public class WordwrapLayout extends AbstractLayout {
 
     private void breakLine(int line, List<Integer> breakpoints) {
         ContentLine sequence = text.getLine(line);
-        float currentWidth = 0;
-        int delta;
-        for (int i = 0; i < sequence.length(); i += delta) {
-            char ch = sequence.charAt(i);
-            delta = 1;
-            float single;
-            if (isEmoji(ch) && i + 1 < text.length()) {
-                delta = 2;
-                single = shadowPaint.measureText(new char[]{ch, text.charAt(i + 1)}, 0, 2);
-            } else {
-                single = fontCache.measureChar(ch, shadowPaint);
-                if (ch == '\t') {
-                    single = fontCache.measureChar(' ', shadowPaint) * editor.getTabWidth();
-                }
-            }
-            if (currentWidth + single > width) {
-                int lastCommit = breakpoints.size() != 0 ? breakpoints.get(breakpoints.size() - 1) : 0;
-                if (i == lastCommit) {
-                    i += delta;
-                    continue;
-                }
-                breakpoints.add(i);
-                currentWidth = 0;
-                i -= delta;
-            } else {
-                currentWidth += single;
-            }
+        int start = 0;
+        int len = sequence.length();
+
+        while (start < len) {
+            var next = (int)editor.findFirstVisibleChar(-width, start, len, 0, sequence)[0];
+            breakpoints.add(next);
+            start = next;
         }
         if (breakpoints.size() != 0 && breakpoints.get(breakpoints.size() - 1) == sequence.length()) {
             breakpoints.remove(breakpoints.size() - 1);
@@ -155,6 +138,7 @@ public class WordwrapLayout extends AbstractLayout {
 
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
+        super.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
         // Update line numbers
         int delta = endLine - startLine;
         if (delta != 0) {
@@ -168,6 +152,7 @@ public class WordwrapLayout extends AbstractLayout {
 
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
+        super.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
         int delta = endLine - startLine;
         if (delta != 0) {
             int startRow = findRow(startLine);

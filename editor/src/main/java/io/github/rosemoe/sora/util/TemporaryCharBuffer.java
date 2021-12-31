@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2021  Rosemoe
@@ -20,13 +20,33 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.util;
 
-plugins {
-    id 'java-library'
-}
+public class TemporaryCharBuffer {
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_7
-    targetCompatibility = JavaVersion.VERSION_1_7
+    public static char[] obtain(int len) {
+        char[] buf;
+
+        synchronized (TemporaryCharBuffer.class) {
+            buf = sTemp;
+            sTemp = null;
+        }
+
+        if (buf == null || buf.length < len) {
+            buf = new char[len];
+        }
+
+        return buf;
+    }
+
+    public static void recycle(char[] temp) {
+        if (temp.length > 1000) return;
+
+        synchronized (TemporaryCharBuffer.class) {
+            sTemp = temp;
+        }
+    }
+
+    private static char[] sTemp = null;
 }

@@ -94,11 +94,13 @@ public class LineBreakLayout extends AbstractLayout {
 
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
+        super.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
         measureLines(startLine, endLine);
     }
 
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
+        super.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
         measureLines(startLine, startLine);
     }
 

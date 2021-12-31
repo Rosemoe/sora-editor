@@ -28,9 +28,12 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
+import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
+
 public class ContentLine implements CharSequence, GetChars {
 
-    private char[] value;
+    @UnsupportedUserUsage
+    public char[] value;
 
     private int length;
 
@@ -43,6 +46,12 @@ public class ContentLine implements CharSequence, GetChars {
      * Measured width of line
      */
     private int width;
+
+    /**
+     * Width of each character inside
+     */
+    @UnsupportedUserUsage
+    public float[] widthCache;
 
     public ContentLine() {
         this(true);

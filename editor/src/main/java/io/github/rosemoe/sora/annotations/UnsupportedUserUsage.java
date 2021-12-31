@@ -1,6 +1,6 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/CodeEditor
+ *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2021  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
@@ -20,18 +20,19 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.annotations;
 
-rootProject.name='sora-editor'
-include ':language-universal'
-include ':language-java'
-include ':language-html'
-include ':language-base'
-include ':language-python'
-include ':editor'
-include ':app'
-include ':language-css3'
-include ':textmate-core'
-include ':language-textmate'
-include ':textmate-languageconfiguration'
-include ':language-xml'
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * Marks that this member is internally used and that it is not recommended using this
+ * member at your side.
+ */
+@Retention(RetentionPolicy.CLASS)
+@Target({ElementType.METHOD, ElementType.FIELD, ElementType.CONSTRUCTOR, ElementType.TYPE})
+public @interface UnsupportedUserUsage {
+}

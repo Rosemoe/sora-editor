@@ -109,10 +109,8 @@ public class MainActivity extends AppCompatActivity {
                 editor.getSearcher().search(editable.toString());
             }
         });
-        editor.setTypefaceText(Typeface.createFromAsset(getAssets(), "JetBrainsMono-Regular.ttf"));
+        editor.setTypefaceText(Typeface.createFromAsset(getAssets(), "Roboto-Regular.ttf"));
         editor.setEditorLanguage(new JavaLanguage());
-        // The font we use does not have the issue
-        editor.setLigatureEnabled(true);
         editor.setNonPrintablePaintingFlags(CodeEditor.FLAG_DRAW_WHITESPACE_LEADING | CodeEditor.FLAG_DRAW_LINE_SEPARATOR | CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION);
         new Thread(() -> {
             try {
