@@ -23,11 +23,6 @@
  */
 package io.github.rosemoe.sora.widget.layout;
 
-import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
-
-import android.graphics.Paint;
-
-import io.github.rosemoe.sora.graphics.FontCache;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.widget.CodeEditor;
@@ -65,17 +60,26 @@ public abstract class AbstractLayout implements Layout {
         if (text == null) {
             return;
         }
-        while (startLine <= endLine && startLine < text.getLineCount()) {
-            ContentLine line = text.getLine(startLine);
-            if (line.length() < 128) {
-                if (line.widthCache == null) {
-                    line.widthCache = new float[128];
-                }
-                editor.getTextPaint().getTextWidths(line.value, 0, line.length(), line.widthCache);
-            } else {
-                line.widthCache = null;
+        if (text.getLineCount() > 10000) {
+            // Disable the cache if text is too large
+            while (startLine <= endLine && startLine < text.getLineCount()) {
+                text.getLine(startLine).widthCache = null;
+                startLine++;
             }
-            startLine++;
+        } else {
+            while (startLine <= endLine && startLine < text.getLineCount()) {
+                ContentLine line = text.getLine(startLine);
+                // Do not create cache for long lines
+                if (line.length() < 128) {
+                    if (line.widthCache == null) {
+                        line.widthCache = new float[128];
+                    }
+                    editor.getTextPaint().getTextWidths(line.value, 0, line.length(), line.widthCache);
+                } else {
+                    line.widthCache = null;
+                }
+                startLine++;
+            }
         }
     }
 
