@@ -15,7 +15,7 @@ With good performance and nice features
 </div>
 
 ***Work In Progress*** This project is still developing slowly. Note that APIs are unstable.
-It is **not** recommended to use this project for production use.
+It is **not** recommended using this project for production use.
 Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/releases) instead of cloning this repository directly.
 **Issues and pull requests are welcome.**
 ## Features
@@ -59,8 +59,9 @@ Available modules:
 Detailed: [Get started](https://rosemoe.github.io/2021/08/22/editor-get-started/)
 ## License
 ```
-CodeEditor - the awesome code editor for Android
-Copyright (C) 2020-2021  Rosemoe
+sora-editor - the awesome code editor for Android
+https://github.com/Rosemoe/sora-editor
+Copyright (C) 2020-2022  Rosemoe
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
