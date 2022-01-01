@@ -64,11 +64,6 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.3.0'
     implementation project(path: ':editor')
     implementation project(path: ':language-java')
-    implementation project(path: ':language-html')
-    implementation project(path: ':language-universal')
-    implementation project(path: ':language-python')
-    implementation project(path: ':language-css3')
-    implementation project(path: ':language-xml')
     implementation project(path: ':language-textmate')
     implementation project(path: ':textmate-core')
     testImplementation 'junit:junit:4.12'

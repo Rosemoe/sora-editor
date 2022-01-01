@@ -23,15 +23,9 @@
  ******************************************************************************/
 
 rootProject.name='sora-editor'
-include ':language-universal'
 include ':language-java'
-include ':language-html'
-include ':language-base'
-include ':language-python'
 include ':editor'
 include ':app'
-include ':language-css3'
 include ':textmate-core'
 include ':language-textmate'
 include ':textmate-languageconfiguration'
-include ':language-xml'

@@ -58,6 +58,12 @@ public class Paint extends android.graphics.Paint {
         spaceWidth = measureText(" ");
     }
 
+    @Override
+    public void set(android.graphics.Paint src) {
+        super.set(src);
+        spaceWidth = measureText(" ");
+    }
+
     /**
      * Get the advance of text with the context positions related to shaping the characters
      */

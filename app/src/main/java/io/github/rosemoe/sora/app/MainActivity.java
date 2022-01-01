@@ -204,36 +204,12 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.switch_language) {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.switch_language)
-                    .setSingleChoiceItems(new String[]{"C", "C++", "Java", "JavaScript", "HTML", "Python", "CSS3", "Xml", "TextMate Java", "TextMate Kotlin", "TM Language from file", "None"}, -1, (dialog, which) -> {
+                    .setSingleChoiceItems(new String[]{"Java", "TextMate Java", "TextMate Kotlin", "TM Language from file", "None"}, -1, (dialog, which) -> {
                         switch (which) {
                             case 0:
-                                editor.setEditorLanguage(new UniversalLanguage(new CDescription()));
-                                break;
-                            case 1:
-                                editor.setEditorLanguage(new UniversalLanguage(new CppDescription()));
-                                break;
-                            case 2:
                                 editor.setEditorLanguage(new JavaLanguage());
                                 break;
-                            case 3:
-                                editor.setEditorLanguage(new UniversalLanguage(new JavaScriptDescription()));
-                                break;
-                            case 4:
-                                editor.setEditorLanguage(new HTMLLanguage());
-                                editor.setColorScheme(new HTMLScheme());
-                                break;
-                            case 5:
-                                editor.setEditorLanguage(new PythonLanguage());
-                                break;
-                            case 6:
-                                editor.setEditorLanguage(new CSS3Language());
-                                break;
-                            case 7:
-                                XMLLanguage xmlLanguage=new XMLLanguage();
-                                xmlLanguage.setSyntaxCheckEnable(true);
-                                editor.setEditorLanguage(xmlLanguage);
-                                break;
-                            case 8:
+                            case 1:
 
                                 try {
                                     //TextMateLanguage only support TextMateColorScheme
@@ -258,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
 
                                 break;
-                            case 9:
+                            case 2:
 
                                 try {
                                     //TextMateLanguage only support TextMateColorScheme
@@ -283,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
 
                                 break;
-                            case 10:
+                            case 3:
                                 loadTMLLauncher.launch("*/*");
                                 break;
                             default:

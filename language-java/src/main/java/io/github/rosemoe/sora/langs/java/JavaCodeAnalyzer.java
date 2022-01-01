@@ -32,7 +32,7 @@ import io.github.rosemoe.sora.data.NavigationItem;
 import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 import io.github.rosemoe.sora.langs.IdentifierAutoComplete;
-import io.github.rosemoe.sora.langs.internal.TrieTree;
+import io.github.rosemoe.sora.util.TrieTree;
 import io.github.rosemoe.sora.text.LineNumberCalculator;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.text.TextAnalyzer;

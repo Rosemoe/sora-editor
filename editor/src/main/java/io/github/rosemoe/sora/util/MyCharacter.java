@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.internal;
+package io.github.rosemoe.sora.util;
 
 import java.util.Arrays;
 

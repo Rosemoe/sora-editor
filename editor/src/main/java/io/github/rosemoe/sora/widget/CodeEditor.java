@@ -365,8 +365,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Hide completion window later
      */
     protected void hideCompletionWindow() {
-        // We do this because if you hide it at once, the editor seems to flash with unknown reason
-        //postDelayed(() -> mCompletionWindow.hide(), 40);
         mCompletionWindow.hide();
     }
 
@@ -2420,26 +2418,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
         return Math.max(0, Math.min(left, max));
-    }
-
-    /**
-     * Measure text width with editor's text paint
-     *
-     * @param src   Source characters array
-     * @param index Start index in array
-     * @param count Count of characters
-     * @return The width measured
-     */
-    @UnsupportedUserUsage
-    public float measureText(char[] src, int index, int count) {
-        int tabCount = 0;
-        for (int i = 0; i < count; i++) {
-            if (src[index + i] == '\t') {
-                tabCount++;
-            }
-        }
-        float extraWidth = tabCount == 0 ? 0 : mPaint.getSpaceWidth() * getTabWidth() - mPaint.measureText("\t");
-        return mPaint.measureTextRunAdvance(src, index, index + count, 0, src.length) + tabCount * extraWidth;
     }
 
     /**

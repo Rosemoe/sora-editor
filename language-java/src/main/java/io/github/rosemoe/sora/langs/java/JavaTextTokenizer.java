@@ -23,8 +23,8 @@
  */
 package io.github.rosemoe.sora.langs.java;
 
-import io.github.rosemoe.sora.langs.internal.MyCharacter;
-import io.github.rosemoe.sora.langs.internal.TrieTree;
+import io.github.rosemoe.sora.util.MyCharacter;
+import io.github.rosemoe.sora.util.TrieTree;
 
 /**
  * @author Rose
