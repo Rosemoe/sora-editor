@@ -1987,7 +1987,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param color          Color of background
      */
     protected void drawRowRegionBackground(Canvas canvas, float paintingOffset, int row, int firstVis, int lastVis, int highlightStart, int highlightEnd, int color, int line) {
-        int paintStart = Math.min(Math.max(Math.max(0, firstVis - 1), highlightStart), lastVis);
+        firstVis = Math.max(0, firstVis - 1);
+        int paintStart = Math.min(Math.max(firstVis, highlightStart), lastVis);
         int paintEnd = Math.min(Math.max(firstVis, highlightEnd), lastVis);
         if (paintStart != paintEnd) {
             mRect.top = getRowTop(row) - getOffsetY();
