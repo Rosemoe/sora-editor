@@ -34,6 +34,7 @@ import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.text.TextAnalyzer;
+import io.github.rosemoe.sora.text.TextStyle;
 import io.github.rosemoe.sora.textmate.core.grammar.IGrammar;
 import io.github.rosemoe.sora.textmate.core.grammar.ITokenizeLineResult2;
 import io.github.rosemoe.sora.textmate.core.grammar.StackElement;
@@ -89,21 +90,12 @@ public class TextMateAnalyzer implements CodeAnalyzer {
                     int metadata = lineTokens.getTokens()[2 * i + 1];
                     int foreground = StackElementMetadata.getForeground(metadata);
                     int fontStyle = StackElementMetadata.getFontStyle(metadata);
-                    Span span = Span.obtain(startIndex, foreground + 255);
+                    Span span = Span.obtain(startIndex, TextStyle.makeStyle(foreground + 255, 0, (fontStyle & FontStyle.Bold) != 0, (fontStyle & FontStyle.Italic) != 0, false));
 
-                    //Font style
-                    if (fontStyle != FontStyle.NotSet) {
-                        if ((fontStyle & FontStyle.Underline) != 0) {
-                            String color = theme.getColor(foreground);
-                            if (color != null) {
-                                span.underlineColor = Color.parseColor(color);
-                            }
-                        }
-                        if ((fontStyle & FontStyle.Italic) != 0) {
-                            span.fontStyles |= Span.STYLE_ITALICS;
-                        }
-                        if ((fontStyle & FontStyle.Bold) != 0) {
-                            span.fontStyles |= Span.STYLE_BOLD;
+                    if ((fontStyle & FontStyle.Underline) != 0) {
+                        String color = theme.getColor(foreground);
+                        if (color != null) {
+                            span.underlineColor = Color.parseColor(color);
                         }
                     }
 

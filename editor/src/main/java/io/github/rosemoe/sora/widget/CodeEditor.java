@@ -86,6 +86,7 @@ import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.data.BlockLine;
 import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
+import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.interfaces.EditorEventListener;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
@@ -104,6 +105,7 @@ import io.github.rosemoe.sora.text.LineRemoveListener;
 import io.github.rosemoe.sora.text.SpanMapUpdater;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.text.TextAnalyzer;
+import io.github.rosemoe.sora.text.TextStyle;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
 import io.github.rosemoe.sora.util.ThemeUtils;
@@ -1291,7 +1293,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         final float amplitude = getDpUnit() * 4;
         prepareLine(line);
         int columnCount = getText().getColumnCount(line);
-        float widthLine = measureText(mBuffer, 0, columnCount) + getDpUnit() * 20;
+        float widthLine = measureText(mBuffer, 0, columnCount, line) + getDpUnit() * 20;
         renderNode.setPosition(0, 0, (int) widthLine, getRowHeight() + (int) amplitude);
         Canvas canvas = renderNode.beginRecording();
         if (spans == null || spans.size() == 0) {
@@ -1304,13 +1306,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         float phi = 0f;
         Span span = spans.get(spanOffset);
         // Draw by spans
-        int lastStyle = 0;
+        long lastStyle = 0;
         while (columnCount > span.column) {
             int spanEnd = spanOffset + 1 >= spans.size() ? columnCount : spans.get(spanOffset + 1).column;
             spanEnd = Math.min(columnCount, spanEnd);
             int paintStart = span.column;
             int paintEnd = Math.min(columnCount, spanEnd);
-            float width = measureText(mBuffer, paintStart, paintEnd - paintStart);
+            float width = measureText(mBuffer, paintStart, paintEnd - paintStart, line);
             ExternalRenderer renderer = span.renderer;
 
             // Invoke external renderer preDraw
@@ -1327,20 +1329,27 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
 
             // Apply font style
-            if (span.fontStyles != lastStyle) {
-                mPaint.setFakeBoldText((span.fontStyles & Span.STYLE_BOLD) != 0);
-                if ((span.fontStyles & Span.STYLE_ITALICS) != 0) {
+            long styleBits = span.getStyleBits();
+            if (span.getStyleBits() != lastStyle) {
+                mPaint.setFakeBoldText(TextStyle.isBold(styleBits));
+                if (TextStyle.isItalics(styleBits)) {
                     mPaint.setTextSkewX(-0.2f);
                 } else {
                     mPaint.setTextSkewX(0);
                 }
-                lastStyle = span.fontStyles;
+                lastStyle = styleBits;
             }
+
+            int backgroundColorId = span.getBackgroundColorId();
+            if (backgroundColorId != 0) {
+                drawRowRegionBackground(canvas, paintingOffset, row, 0, columnCount, paintStart, paintEnd, mColors.getColor(backgroundColorId), line);
+            }
+
             // Draw text
-            drawRegionText(canvas, paintingOffset, getRowBaseline(row), line, paintStart, paintEnd, columnCount, mColors.getColor(span.colorId));
+            drawRegionText(canvas, paintingOffset, getRowBaseline(row), line, paintStart, paintEnd, columnCount, mColors.getColor(span.getForegroundColorId()));
 
             // Draw strikethrough
-            if ((span.problemFlags & Span.FLAG_DEPRECATED) != 0) {
+            if ((span.problemFlags & Span.FLAG_DEPRECATED) != 0 || TextStyle.isStrikeThrough(span.style)) {
                 mPaintOther.setColor(Color.BLACK);
                 canvas.drawLine(paintingOffset, getRowTop(row) + getRowHeight() / 2f, paintingOffset + width, getRowTop(row) + getRowHeight() / 2f, mPaintOther);
             }
@@ -1370,8 +1379,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 }
                 if (color != 0 && span.column >= 0 && spanEnd - span.column >= 0) {
                     // Start and end X offset
-                    float startOffset = measureText(mBuffer, 0, span.column);
-                    float lineWidth = measureText(mBuffer, Math.max(0, span.column), spanEnd - span.column) + phi;
+                    float startOffset = measureText(mBuffer, 0, span.column, line);
+                    float lineWidth = measureText(mBuffer, Math.max(0, span.column), spanEnd - span.column, line) + phi;
                     float centerY = getRowBottom(row);
                     // Clip region due not to draw outside the horizontal region
                     canvas.save();
@@ -1461,6 +1470,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !isWordwrap() && canvas.isHardwareAccelerated() && isHardwareAcceleratedDrawAllowed()) {
             mRenderer.keepCurrentInDisplay(firstVis, getLastVisibleRow());
         }
+        float offset2 = getOffsetX() - measureTextRegionOffset();
 
         // Step 1 - Draw background of rows
         for (int row = firstVis; row <= getLastVisibleRow() && rowIterator.hasNext(); row++) {
@@ -1473,10 +1483,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 lastPreparedLine = line;
             }
             // Get visible region on the line
-            float[] charPos = findFirstVisibleChar(offset, rowInf.startColumn, rowInf.endColumn, mBuffer);
+            float[] charPos = findFirstVisibleChar(offset2, rowInf.startColumn, rowInf.endColumn, mBuffer, line);
             int firstVisibleChar = (int) charPos[0];
-            float paintingOffset = charPos[1];
-            int lastVisibleChar = (int) findFirstVisibleChar(paintingOffset - getWidth(), firstVisibleChar + 1, rowInf.endColumn, rowInf.startColumn, mBuffer)[0];
+            float paintingOffset = charPos[1] + offset2;
+            int lastVisibleChar = (int) findFirstVisibleChar(offset2 + getWidth(), firstVisibleChar + 1, rowInf.endColumn, rowInf.startColumn, mBuffer, line)[0];
 
             // Draw current line background
             if (line == currentLine && !mCursorAnimator.isRunning()) {
@@ -1487,7 +1497,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             // Draw matched text background
             if (!matchedPositions.isEmpty()) {
                 for (int position : matchedPositions) {
-                    drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, position, position + mSearcher.mSearchText.length(), mColors.getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND));
+                    drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, position, position + mSearcher.mSearchText.length(), mColors.getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND), line);
                 }
             }
 
@@ -1505,11 +1515,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     mRect.top = getRowTop(row) - getOffsetY();
                     mRect.bottom = getRowBottom(row) - getOffsetY();
                     mRect.left = paintingOffset;
-                    mRect.right = mRect.left + measureText("  ", 0, 2);
+                    mRect.right = mRect.left + mPaint.getSpaceWidth() * 2;
                     mPaint.setColor(mColors.getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
                     canvas.drawRoundRect(mRect, getRowHeight() * 0.13f, getRowHeight() * 0.13f, mPaint);
                 } else {
-                    drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd, mColors.getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
+                    drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd, mColors.getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND), line);
                 }
             }
         }
@@ -1525,7 +1535,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
 
         // Step 2 - Draw text and text decorations
-        int lastStyle = 0;
+        long lastStyle = 0;
         for (int row = firstVis; row <= getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
             int line = rowInf.lineIndex;
@@ -1550,10 +1560,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
 
             // Get visible region on the line
-            float[] charPos = findFirstVisibleChar(offset, rowInf.startColumn, rowInf.endColumn, mBuffer);
+            float[] charPos = findFirstVisibleChar(offset2, rowInf.startColumn, rowInf.endColumn, mBuffer, line);
             int firstVisibleChar = (int) charPos[0];
-            float paintingOffset = charPos[1];
-            int lastVisibleChar = (int) findFirstVisibleChar(paintingOffset - getWidth(), firstVisibleChar + 1, rowInf.endColumn, rowInf.startColumn, mBuffer)[0];
+            float paintingOffset = charPos[1] - offset2;
+            int lastVisibleChar = (int) findFirstVisibleChar(offset2 + getWidth(), firstVisibleChar + 1, rowInf.endColumn, rowInf.startColumn, mBuffer, line)[0];
 
             float backupOffset = paintingOffset;
 
@@ -1582,9 +1592,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                             float lineWidth;
                             int spanEnd = Math.min(rowInf.endColumn, spans.get(spanOffset + 1).column);
                             if (isWordwrap()) {
-                                lineWidth = measureText(mBuffer, Math.max(firstVisibleChar, span.column), spanEnd - Math.max(firstVisibleChar, span.column)) + phi;
+                                lineWidth = measureText(mBuffer, Math.max(firstVisibleChar, span.column), spanEnd - Math.max(firstVisibleChar, span.column), line) + phi;
                             } else {
-                                lineWidth = measureText(mBuffer, span.column, spanEnd - span.column) + phi;
+                                lineWidth = measureText(mBuffer, span.column, spanEnd - span.column, line) + phi;
                             }
                             int waveCount = (int) Math.ceil(lineWidth / waveLength);
                             phi = waveLength - (waveCount * waveLength - lineWidth);
@@ -1609,7 +1619,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     if (paintStart > paintEnd) {
                         break;
                     }
-                    float width = measureText(mBuffer, paintStart, paintEnd - paintStart);
+                    float width = measureText(mBuffer, paintStart, paintEnd - paintStart, line);
                     ExternalRenderer renderer = span.renderer;
 
                     // Invoke external renderer preDraw
@@ -1626,18 +1636,24 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     }
 
                     // Apply font style
-                    if (span.fontStyles != lastStyle) {
-                        mPaint.setFakeBoldText((span.fontStyles & Span.STYLE_BOLD) != 0);
-                        if ((span.fontStyles & Span.STYLE_ITALICS) != 0) {
+                    long styleBits = span.getStyleBits();
+                    if (span.getStyleBits() != lastStyle) {
+                        mPaint.setFakeBoldText(TextStyle.isBold(styleBits));
+                        if (TextStyle.isItalics(styleBits)) {
                             mPaint.setTextSkewX(-0.2f);
                         } else {
                             mPaint.setTextSkewX(0);
                         }
-                        lastStyle = span.fontStyles;
+                        lastStyle = styleBits;
+                    }
+
+                    int backgroundColorId = span.getBackgroundColorId();
+                    if (backgroundColorId != 0) {
+                        drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, paintStart, paintEnd, mColors.getColor(backgroundColorId), line);
                     }
 
                     // Draw text
-                    drawRegionText(canvas, paintingOffset, getRowBaseline(row) - getOffsetY(), line, paintStart, paintEnd, columnCount, mColors.getColor(span.colorId));
+                    drawRegionText(canvas, paintingOffset, getRowBaseline(row) - getOffsetY(), line, paintStart, paintEnd, columnCount, mColors.getColor(span.getForegroundColorId()));
 
                     // Draw strikethrough
                     if ((span.problemFlags & Span.FLAG_DEPRECATED) != 0) {
@@ -1673,11 +1689,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                             float startOffset;
                             float lineWidth;
                             if (isWordwrap()) {
-                                startOffset = measureTextRegionOffset() + measureText(mBuffer, firstVisibleChar, Math.max(0, span.column - firstVisibleChar)) - getOffsetX();
-                                lineWidth = measureText(mBuffer, Math.max(firstVisibleChar, span.column), spanEnd - Math.max(firstVisibleChar, span.column)) + phi;
+                                startOffset = measureTextRegionOffset() + measureText(mBuffer, firstVisibleChar, Math.max(0, span.column - firstVisibleChar), line) - getOffsetX();
+                                lineWidth = measureText(mBuffer, Math.max(firstVisibleChar, span.column), spanEnd - Math.max(firstVisibleChar, span.column), line) + phi;
                             } else {
-                                startOffset = measureTextRegionOffset() + measureText(mBuffer, 0, span.column) - getOffsetX();
-                                lineWidth = measureText(mBuffer, span.column, spanEnd - span.column) + phi;
+                                startOffset = measureTextRegionOffset() + measureText(mBuffer, 0, span.column, line) - getOffsetX();
+                                lineWidth = measureText(mBuffer, span.column, spanEnd - span.column, line) + phi;
                             }
                             float centerY = getRowBottom(row) - getOffsetY();
                             // Clip region due not to draw outside the horizontal region
@@ -1746,13 +1762,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             // Draw non-printable characters
             if (circleRadius != 0f && (leadingWhitespaceEnd != columnCount || (mNonPrintableOptions & FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE) != 0)) {
                 if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_LEADING) != 0) {
-                    drawWhitespaces(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, 0, leadingWhitespaceEnd, circleRadius);
+                    drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, 0, leadingWhitespaceEnd, circleRadius);
                 }
                 if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_INNER) != 0) {
-                    drawWhitespaces(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, leadingWhitespaceEnd, trailingWhitespaceStart, circleRadius);
+                    drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, leadingWhitespaceEnd, trailingWhitespaceStart, circleRadius);
                 }
                 if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_TRAILING) != 0) {
-                    drawWhitespaces(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, trailingWhitespaceStart, columnCount, circleRadius);
+                    drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, trailingWhitespaceStart, columnCount, circleRadius);
                 }
                 if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_IN_SELECTION) != 0 && mCursor.isSelected() && line >= mCursor.getLeftLine() && line <= mCursor.getRightLine()) {
                     int selectionStart = 0;
@@ -1764,16 +1780,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         selectionEnd = mCursor.getRightColumn();
                     }
                     if ((mNonPrintableOptions & 0b1110) == 0) {
-                        drawWhitespaces(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd, circleRadius);
+                        drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd, circleRadius);
                     } else {
                         if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_LEADING) == 0) {
-                            drawWhitespaces(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, selectionStart, Math.min(leadingWhitespaceEnd, selectionEnd), circleRadius);
+                            drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, selectionStart, Math.min(leadingWhitespaceEnd, selectionEnd), circleRadius);
                         }
                         if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_INNER) == 0) {
-                            drawWhitespaces(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, Math.max(leadingWhitespaceEnd, selectionStart), Math.min(trailingWhitespaceStart, selectionEnd), circleRadius);
+                            drawWhitespaces(canvas, paintingOffset, line , row, firstVisibleChar, lastVisibleChar, Math.max(leadingWhitespaceEnd, selectionStart), Math.min(trailingWhitespaceStart, selectionEnd), circleRadius);
                         }
                         if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_TRAILING) == 0) {
-                            drawWhitespaces(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, Math.max(trailingWhitespaceStart, selectionStart), selectionEnd, circleRadius);
+                            drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, Math.max(trailingWhitespaceStart, selectionStart), selectionEnd, circleRadius);
                         }
                     }
                 }
@@ -1788,8 +1804,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 if (paintStart != paintEnd) {
                     mRect.top = getRowBottom(row) - getOffsetY();
                     mRect.bottom = mRect.top + getRowHeight() * 0.06f;
-                    mRect.left = paintingOffset + measureText(mBuffer, firstVisibleChar, paintStart - firstVisibleChar);
-                    mRect.right = mRect.left + measureText(mBuffer, paintStart, paintEnd - paintStart);
+                    mRect.left = paintingOffset + measureText(mBuffer, firstVisibleChar, paintStart - firstVisibleChar, line);
+                    mRect.right = mRect.left + measureText(mBuffer, paintStart, paintEnd - paintStart, line);
                     drawColor(canvas, mColors.getColor(EditorColorScheme.UNDERLINE), mRect);
                 }
             }
@@ -1798,16 +1814,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             if (mCursor.isSelected()) {
                 if (mTextActionPresenter.shouldShowCursor()) {
                     if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
-                        float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar);
+                        float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar, line);
                         postDrawCursor.add(new DrawCursorTask(centerX, getRowBottom(row) - getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_LEFT, mLeftHandle));
                     }
                     if (mCursor.getRightLine() == line && isInside(mCursor.getRightColumn(), firstVisibleChar, lastVisibleChar, line)) {
-                        float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getRightColumn() - firstVisibleChar);
+                        float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getRightColumn() - firstVisibleChar, line);
                         postDrawCursor.add(new DrawCursorTask(centerX, getRowBottom(row) - getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_RIGHT, mRightHandle));
                     }
                 }
             } else if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
-                float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar);
+                float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar, line);
                 postDrawCursor.add(new DrawCursorTask(centerX, getRowBottom(row) - getOffsetY(), mEventHandler.shouldDrawInsertHandle() ? SelectionHandleStyle.HANDLE_TYPE_INSERT : SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, mInsertHandle));
             }
         }
@@ -1841,7 +1857,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Draw non-printable characters
      */
-    protected void drawWhitespaces(Canvas canvas, float offset, int row, int rowStart, int rowEnd, int min, int max, float circleRadius) {
+    protected void drawWhitespaces(Canvas canvas, float offset,int line, int row, int rowStart, int rowEnd, int min, int max, float circleRadius) {
         int paintStart = Math.max(rowStart, Math.min(rowEnd, min));
         int paintEnd = Math.max(rowStart, Math.min(rowEnd, max));
         mPaintOther.setColor(mColors.getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
@@ -1849,7 +1865,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (paintStart < paintEnd) {
             float spaceWidth = mPaint.getSpaceWidth();
             float rowCenter = (getRowTop(row) + getRowBottom(row)) / 2f - getOffsetY();
-            offset += measureText(mBuffer, rowStart, paintStart - rowStart);
+            offset += measureText(mBuffer, rowStart, paintStart - rowStart, line);
             var chars = mBuffer.value;
             var lastPos = paintStart;
             while (paintStart < paintEnd) {
@@ -1879,7 +1895,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
                 if (ch == ' ' || ch == '\t') {
                     offset += (ch == ' ' ? spaceWidth : spaceWidth * getTabWidth());
-                    offset += measureText(mBuffer, lastPos, paintStart - lastPos);
+                    offset += measureText(mBuffer, lastPos, paintStart - lastPos, line);
                     lastPos = paintStart + 1;
                 }
                 paintStart++;
@@ -1959,8 +1975,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Draw background of a text region
-     *
-     * @param canvas         Canvas to draw
+     *  @param canvas         Canvas to draw
      * @param paintingOffset Paint offset x on canvas
      * @param row            The row index
      * @param firstVis       First visible character
@@ -1969,14 +1984,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param highlightEnd   Region end
      * @param color          Color of background
      */
-    protected void drawRowRegionBackground(Canvas canvas, float paintingOffset, int row, int firstVis, int lastVis, int highlightStart, int highlightEnd, int color) {
+    protected void drawRowRegionBackground(Canvas canvas, float paintingOffset, int row, int firstVis, int lastVis, int highlightStart, int highlightEnd, int color, int line) {
         int paintStart = Math.min(Math.max(firstVis, highlightStart), lastVis);
         int paintEnd = Math.min(Math.max(firstVis, highlightEnd), lastVis);
         if (paintStart != paintEnd) {
             mRect.top = getRowTop(row) - getOffsetY();
             mRect.bottom = getRowBottom(row) - getOffsetY();
-            mRect.left = paintingOffset + measureText(mBuffer, firstVis, paintStart - firstVis);
-            mRect.right = mRect.left + measureText(mBuffer, paintStart, paintEnd - paintStart);
+            mRect.left = paintingOffset + measureText(mBuffer, firstVis, paintStart - firstVis, line);
+            mRect.right = mRect.left + measureText(mBuffer, paintStart, paintEnd - paintStart, line);
             mPaint.setColor(color);
             canvas.drawRoundRect(mRect, getRowHeight() * 0.13f, getRowHeight() * 0.13f, mPaint);
         }
@@ -2007,47 +2022,47 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaint.setColor(color);
         if (hasSelectionOnLine && mColors.getColor(EditorColorScheme.TEXT_SELECTED) != 0) {
             if (endIndex <= selectionStart || startIndex >= selectionEnd) {
-                drawText(canvas, mBuffer, startIndex, endIndex - startIndex, offsetX, baseline);
+                drawText(canvas, mBuffer, startIndex, endIndex - startIndex, offsetX, baseline, line);
             } else {
                 if (startIndex <= selectionStart) {
                     if (endIndex >= selectionEnd) {
                         //Three regions
                         //startIndex - selectionStart
-                        drawText(canvas, mBuffer, startIndex, selectionStart - startIndex, offsetX, baseline);
-                        float deltaX = measureText(mBuffer, startIndex, selectionStart - startIndex);
+                        drawText(canvas, mBuffer, startIndex, selectionStart - startIndex, offsetX, baseline, line);
+                        float deltaX = measureText(mBuffer, startIndex, selectionStart - startIndex, line);
                         //selectionStart - selectionEnd
                         mPaint.setColor(mColors.getColor(EditorColorScheme.TEXT_SELECTED));
-                        drawText(canvas, mBuffer, selectionStart, selectionEnd - selectionStart, offsetX + deltaX, baseline);
-                        deltaX += measureText(mBuffer, selectionStart, selectionEnd - selectionStart);
+                        drawText(canvas, mBuffer, selectionStart, selectionEnd - selectionStart, offsetX + deltaX, baseline, line);
+                        deltaX += measureText(mBuffer, selectionStart, selectionEnd - selectionStart, line);
                         //selectionEnd - endIndex
                         mPaint.setColor(color);
-                        drawText(canvas, mBuffer, selectionEnd, endIndex - selectionEnd, offsetX + deltaX, baseline);
+                        drawText(canvas, mBuffer, selectionEnd, endIndex - selectionEnd, offsetX + deltaX, baseline, line);
                     } else {
                         //Two regions
                         //startIndex - selectionStart
-                        drawText(canvas, mBuffer, startIndex, selectionStart - startIndex, offsetX, baseline);
+                        drawText(canvas, mBuffer, startIndex, selectionStart - startIndex, offsetX, baseline, line);
                         //selectionStart - endIndex
                         mPaint.setColor(mColors.getColor(EditorColorScheme.TEXT_SELECTED));
-                        drawText(canvas, mBuffer, selectionStart, endIndex - selectionStart, offsetX + measureText(mBuffer, startIndex, selectionStart - startIndex), baseline);
+                        drawText(canvas, mBuffer, selectionStart, endIndex - selectionStart, offsetX + measureText(mBuffer, startIndex, selectionStart - startIndex, line), baseline, line);
                     }
                 } else {
                     //selectionEnd > startIndex > selectionStart
                     if (endIndex > selectionEnd) {
                         //Two regions
                         //selectionEnd - endIndex
-                        drawText(canvas, mBuffer, selectionEnd, endIndex - selectionEnd, offsetX + measureText(mBuffer, startIndex, selectionEnd - startIndex), baseline);
+                        drawText(canvas, mBuffer, selectionEnd, endIndex - selectionEnd, offsetX + measureText(mBuffer, startIndex, selectionEnd - startIndex, line), baseline, line);
                         //startIndex - selectionEnd
                         mPaint.setColor(mColors.getColor(EditorColorScheme.TEXT_SELECTED));
-                        drawText(canvas, mBuffer, startIndex, selectionEnd - startIndex, offsetX, baseline);
+                        drawText(canvas, mBuffer, startIndex, selectionEnd - startIndex, offsetX, baseline, line);
                     } else {
                         //One region
                         mPaint.setColor(mColors.getColor(EditorColorScheme.TEXT_SELECTED));
-                        drawText(canvas, mBuffer, startIndex, endIndex - startIndex, offsetX, baseline);
+                        drawText(canvas, mBuffer, startIndex, endIndex - startIndex, offsetX, baseline, line);
                     }
                 }
             }
         } else {
-            drawText(canvas, mBuffer, startIndex, endIndex - startIndex, offsetX, baseline);
+            drawText(canvas, mBuffer, startIndex, endIndex - startIndex, offsetX, baseline, line);
         }
     }
 
@@ -2132,10 +2147,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             BlockLine block = blocks.get(curr);
             if (hasVisibleRegion(block.startLine, block.endLine, first, last)) {
                 try {
-                    CharSequence lineContent = mText.getLine(block.endLine);
-                    float offset1 = measureText(lineContent, 0, Math.min(block.endColumn, lineContent.length()));
+                    var lineContent = mText.getLine(block.endLine);
+                    float offset1 = measureText(lineContent, 0, Math.min(block.endColumn, lineContent.length()), block.endLine);
                     lineContent = mText.getLine(block.startLine);
-                    float offset2 = measureText(lineContent, 0, Math.min(block.startColumn, lineContent.length()));
+                    float offset2 = measureText(lineContent, 0, Math.min(block.startColumn, lineContent.length()), block.startLine);
                     float offset = Math.min(offset1, offset2);
                     float centerX = offset + offsetX;
                     mRect.top = Math.max(0, getRowBottom(block.startLine) - getOffsetY());
@@ -2429,43 +2444,40 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return The width measured
      */
     @UnsupportedUserUsage
-    public float measureText(CharSequence text, int index, int count) {
-        int tabCount = 0;
-        for (int i = 0; i < count; i++) {
-            if (text.charAt(index + i) == '\t') {
-                tabCount++;
-            }
+    public float measureText(ContentLine text, int index, int count, int line) {
+        var gtr = GraphicTextRow.obtain();
+        gtr.set(text, 0, text.length(), mTabWidth, getSpansForLine(line), mPaint);
+        var res = gtr.measureText(index, index + count);
+        GraphicTextRow.recycle(gtr);
+        return res;
+    }
+
+    protected List<Span> defSpans = new ArrayList<>(2);
+    private List<Span> getSpansForLine(int line) {
+        var spanMap = getTextAnalyzeResult().getSpanMap();
+        if (defSpans.size() == 0) {
+            defSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
         }
-        float extraWidth = tabCount == 0 ? 0 : mPaint.getSpaceWidth() * getTabWidth() - mPaint.measureText("\t");
-        if (text instanceof ContentLine && ((ContentLine) text).widthCache != null) {
-            var width = 0f;
-            var cache = ((ContentLine) text).widthCache;
-            for (int i = 0; i < count; i++) {
-                width += cache[i + index];
-            }
-            return width + extraWidth * tabCount;
-        }
-        return mPaint.measureTextRunAdvance(text, index, index + count, 0, text.length()) + tabCount * extraWidth;
+        return line < spanMap.size() ? spanMap.get(line) : defSpans;
     }
 
     /**
      * Draw text on the given position
-     *
-     * @param canvas Canvas to draw
+     *  @param canvas Canvas to draw
      * @param line   Source of characters
      * @param index  The index in array
      * @param count  Count of characters
      * @param offX   Offset x for paint
      * @param offY   Offset y for paint(baseline)
      */
-    protected void drawText(Canvas canvas, ContentLine line, int index, int count, float offX, float offY) {
+    protected void drawText(Canvas canvas, ContentLine line, int index, int count, float offX, float offY, int lineNumber) {
         int end = index + count;
         var src = line.value;
         int st = index;
         for (int i = index; i < end; i++) {
             if (src[i] == '\t') {
                 canvas.drawText(new String(src, st, i - st), offX, offY, mPaint);
-                offX = offX + measureText(line, st, i - st + 1);
+                offX = offX + measureText(line, st, i - st + 1, lineNumber);
                 st = i + 1;
             }
         }
@@ -2475,50 +2487,23 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     @UnsupportedUserUsage
-    public float[] findFirstVisibleChar(float currentPosition, int start, int end, ContentLine line) {
-        return findFirstVisibleChar(currentPosition, start, end, start, line);
+    public float[] findFirstVisibleChar(float target, int start, int end, ContentLine line, int lineNumber) {
+        return findFirstVisibleChar(target, start, end, start, line, lineNumber);
     }
 
     /**
      * Find first visible character
      */
     @UnsupportedUserUsage
-    public float[] findFirstVisibleChar(float currentPosition, int start, int end, int contextStart, ContentLine line) {
+    public float[] findFirstVisibleChar(float target, int start, int end, int contextStart, ContentLine line, int lineNumber) {
         if (start >= end) {
-            return new float[]{end, currentPosition};
+            return new float[]{end, 0};
         }
-        var chars = line.value;
-        float tabAdvance = mPaint.getSpaceWidth() * getTabWidth();
-        int lastStart = start;
-        for (int i = start; i < end; i++) {
-            if (chars[i] == '\t') {
-                // Here is a tab
-                // Try to find advance
-                if (lastStart != i) {
-                    int idx = mPaint.findOffsetByRunAdvance(line, lastStart, i, 0 - currentPosition);
-                    currentPosition += mPaint.measureTextRunAdvance(chars, lastStart, idx, start, end);
-                    if (idx < i) {
-                        return new float[]{idx, currentPosition};
-                    } else {
-                        if (currentPosition + tabAdvance > 0) {
-                            return new float[]{i, currentPosition};
-                        } else {
-                            currentPosition += tabAdvance;
-                        }
-                    }
-                } else {
-                    if (currentPosition + tabAdvance > 0) {
-                        return new float[]{i, currentPosition};
-                    } else {
-                        currentPosition += tabAdvance;
-                    }
-                }
-                lastStart = i;
-            }
-        }
-        int idx = mPaint.findOffsetByRunAdvance(line, lastStart, end, 0 - currentPosition);
-        currentPosition += mPaint.measureTextRunAdvance(chars, lastStart, idx, start, end);
-        return new float[]{idx, currentPosition};
+        var gtr = GraphicTextRow.obtain();
+        gtr.set(line, contextStart, end, mTabWidth, getSpansForLine(lineNumber), mPaint);
+        var res = gtr.findOffsetByAdvance(start, target);
+        GraphicTextRow.recycle(gtr);
+        return res;
     }
 
     /**
@@ -2935,7 +2920,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             //bottom invisible
             targetY = yOffset - getHeight() + getRowHeight() * 0.1f;
         }
-        float charWidth = column == 0 ? 0 : measureText(mText.getLine(line), column - 1, 1);
+        float charWidth = column == 0 ? 0 : measureText(mText.getLine(line), column - 1, 1, line);
         if (xOffset < getOffsetX()) {
             targetX = xOffset - charWidth * 0.2f;
         }

@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.widget.layout;
 
 import java.util.NoSuchElementException;
 
+import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.BinaryHeap;
@@ -52,21 +53,26 @@ public class LineBreakLayout extends AbstractLayout {
         }
         widthMaintainer = new BinaryHeap();
         widthMaintainer.ensureCapacity(text.getLineCount());
+        var gtr = GraphicTextRow.obtain();
         for (int i = 0; i < text.getLineCount(); i++) {
             ContentLine line = text.getLine(i);
-            int width = (int) measureText(line, 0, line.length());
+            gtr.set(line, 0, line.length(), editor.getTabWidth(), getSpans(i), editor.getTextPaint());
+            int width = (int) gtr.measureText(0, line.length());
             line.setWidth(width);
             line.setId(widthMaintainer.push(width));
         }
+        GraphicTextRow.recycle(gtr);
     }
 
     private void measureLines(int startLine, int endLine) {
         if (text == null) {
             return;
         }
+        var gtr = GraphicTextRow.obtain();
         while (startLine <= endLine && startLine < text.getLineCount()) {
             ContentLine line = text.getLine(startLine);
-            int width = (int) measureText(line, 0, line.length());
+            gtr.set(line, 0, line.length(), editor.getTabWidth(), getSpans(startLine), editor.getTextPaint());
+            int width = (int) gtr.measureText(0, line.length());
             if (line.getId() != -1) {
                 if (line.getWidth() == width) {
                     startLine++;
@@ -80,6 +86,7 @@ public class LineBreakLayout extends AbstractLayout {
             line.setWidth(width);
             startLine++;
         }
+        GraphicTextRow.recycle(gtr);
     }
 
     @Override
@@ -135,7 +142,7 @@ public class LineBreakLayout extends AbstractLayout {
         int lineCount = text.getLineCount();
         int line = Math.min(lineCount - 1, Math.max((int) (yOffset / editor.getRowHeight()), 0));
         ContentLine str = text.getLine(line);
-        float[] res = orderedFindCharIndex(xOffset, str);
+        float[] res = orderedFindCharIndex(xOffset, str, line);
         return IntPair.pack(line, (int) res[0]);
     }
 
@@ -144,9 +151,12 @@ public class LineBreakLayout extends AbstractLayout {
         if (dest == null || dest.length < 2) {
             dest = new float[2];
         }
-        CharSequence sequence = text.getLine(line);
+        var sequence = text.getLine(line);
         dest[0] = editor.getRowHeight() * (line + 1);
-        dest[1] = measureText(sequence, 0, column);
+        var gtr = GraphicTextRow.obtain();
+        gtr.set(sequence, 0, sequence.length(), editor.getTabWidth(), getSpans(line), editor.getTextPaint());
+        dest[1] = gtr.measureText(0, column);
+        GraphicTextRow.recycle(gtr);
         return dest;
     }
 

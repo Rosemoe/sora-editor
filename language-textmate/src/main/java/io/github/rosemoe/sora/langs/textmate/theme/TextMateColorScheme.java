@@ -55,7 +55,6 @@ public class TextMateColorScheme extends EditorColorScheme {
             ThemeRaw themeRaw = (ThemeRaw) ((List<?>) iRawTheme.getSettings()).get(0);
             themeRaw = (ThemeRaw) themeRaw.getSetting();
 
-
             setColor(LINE_DIVIDER, Color.TRANSPARENT);
 
             String caret = (String) themeRaw.get("caret");

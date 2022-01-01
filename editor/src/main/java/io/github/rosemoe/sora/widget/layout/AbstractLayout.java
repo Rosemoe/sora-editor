@@ -23,9 +23,15 @@
  */
 package io.github.rosemoe.sora.widget.layout;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import io.github.rosemoe.sora.data.Span;
+import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.EditorColorScheme;
 
 /**
  * Base layout implementation of {@link Layout}
@@ -37,23 +43,28 @@ public abstract class AbstractLayout implements Layout {
 
     protected CodeEditor editor;
     protected Content text;
+    protected List<Span> defSpans = new ArrayList<>(2);
 
     public AbstractLayout(CodeEditor editor, Content text) {
         this.editor = editor;
         this.text = text;
+        defSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
         updateMeasureCaches(0, text == null ? 0 : text.getLineCount());
     }
 
-    protected float measureText(CharSequence text, int start, int end) {
-        return editor.measureText(text, start, end - start);
+    protected List<Span> getSpans(int line) {
+        var spanMap = editor.getTextAnalyzeResult().getSpanMap();
+        return line < spanMap.size() ? spanMap.get(line) : defSpans;
     }
 
-    protected float[] orderedFindCharIndex(float targetOffset, ContentLine str, int index, int end) {
-        return editor.findFirstVisibleChar(-targetOffset, index, end, 0, str);
+    protected float[] orderedFindCharIndex(float targetOffset, ContentLine str, int line, int index, int end) {
+        var gtr = GraphicTextRow.obtain();
+        gtr.set(str, index, end, editor.getTabWidth(), getSpans(line), editor.getTextPaint());
+        return gtr.findOffsetByAdvance(index, targetOffset);
     }
 
-    protected float[] orderedFindCharIndex(float targetOffset, ContentLine str) {
-       return orderedFindCharIndex(targetOffset, str, 0, str.length());
+    protected float[] orderedFindCharIndex(float targetOffset, ContentLine str, int line) {
+       return orderedFindCharIndex(targetOffset, str, line, 0, str.length());
     }
 
     private void updateMeasureCaches(int startLine, int endLine) {

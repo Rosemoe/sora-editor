@@ -24,55 +24,76 @@
 package io.github.rosemoe.sora.text;
 
 /**
- * Define a kind of text style, which can be used in spans.
- * The text style is unchangeable, so when you want to change the style, you'll
- * have to create a new one.
+ * Utility class for text style related operations
  *
  * @author Rosemoe
  */
 public class TextStyle {
 
     /**
-     * The color ID number obtained from editor
+     * Convenient method
      */
-    public final int colorId;
-
-    /**
-     * Bold text
-     */
-    public final boolean bold;
-
-    /**
-     * Italic text
-     */
-    public final boolean italic;
-
-    /**
-     * Show strikeThrough line
-     */
-    public final boolean strikeThrough;
-
-    /**
-     * Paint's skewX
-     */
-    public final float skewX;
-
-    /**
-     * Create a new TextStyle with the given colorId, but without any other special styles.
-     */
-    public TextStyle(int colorId) {
-        this(colorId, false, false, false, 0f);
+    public static long makeStyle(int foregroundColorId) {
+        checkColorId(foregroundColorId);
+        return foregroundColorId;
     }
 
     /**
-     * Create a TextStyle with the given style arguments
+     * Make a TextStyle with the given style arguments
+     *
+     * Note: colorId must be less than 20 bits
      */
-    public TextStyle(int colorId, boolean bold, boolean italic, boolean strikeThrough, float skewX) {
-        this.colorId = colorId;
-        this.bold = bold;
-        this.italic = italic;
-        this.strikeThrough = strikeThrough;
-        this.skewX = skewX;
+    public static long makeStyle(int foregroundColorId, int backgroundColorId, boolean bold,
+                                 boolean italic, boolean strikeThrough) {
+        checkColorId(foregroundColorId);
+        checkColorId(backgroundColorId);
+        return ((long)foregroundColorId) +
+                (((long) backgroundColorId) << COLOR_ID_BIT_COUNT)
+                + (bold ? BOLD_BIT : 0)
+                + (italic ? ITALICS_BIT : 0)
+                + (strikeThrough ? STRIKETHROUGH_BIT : 0);
+    }
+
+    public static int getForegroundColorId(long style) {
+        return (int) (style & FOREGROUND_BITS);
+    }
+
+    public static int getBackgroundColorId(long style) {
+        return (int) ((style & BACKGROUND_BITS) >> COLOR_ID_BIT_COUNT);
+    }
+
+    public static boolean isBold(long style) {
+        return (style & BOLD_BIT) != 0;
+    }
+
+    public static boolean isItalics(long style) {
+        return (style & ITALICS_BIT) != 0;
+    }
+
+    public static boolean isStrikeThrough(long style) {
+        return (style & STRIKETHROUGH_BIT) != 0;
+    }
+
+    public static long getStyleBits(long style) {
+        return style & (~(BACKGROUND_BITS + FOREGROUND_BITS));
+    }
+
+    public final static int COLOR_ID_BIT_COUNT = 19;
+
+    public final static long FOREGROUND_BITS = ((1 << (COLOR_ID_BIT_COUNT)) - 1);
+
+    public final static long BACKGROUND_BITS =  FOREGROUND_BITS << COLOR_ID_BIT_COUNT;
+
+    public final static long BOLD_BIT = 1L << (COLOR_ID_BIT_COUNT * 2);
+
+    public final static long ITALICS_BIT = BOLD_BIT << 1;
+
+    public final static long STRIKETHROUGH_BIT = ITALICS_BIT << 1;
+
+    public static void checkColorId(int colorId) {
+        if (colorId > (1 << COLOR_ID_BIT_COUNT) - 1 || colorId < 0) {
+            throw new IllegalArgumentException("color id must be positive and bit count is less than " + COLOR_ID_BIT_COUNT);
+        }
     }
 
 

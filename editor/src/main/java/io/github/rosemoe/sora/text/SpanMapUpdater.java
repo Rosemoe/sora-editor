@@ -130,7 +130,7 @@ public class SpanMapUpdater {
         // Add extra span for line start
         if (originIndex == 0) {
             Span first = spanList.get(0);
-            if (first.colorId == EditorColorScheme.TEXT_NORMAL && first.underlineColor == 0) {
+            if (first.style == EditorColorScheme.TEXT_NORMAL && first.underlineColor == 0) {
                 first.column = 0;
             } else {
                 spanList.add(0, Span.obtain(0, EditorColorScheme.TEXT_NORMAL));

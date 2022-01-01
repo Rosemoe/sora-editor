@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.IntPair;
@@ -119,7 +120,7 @@ public class WordwrapLayout extends AbstractLayout {
         int len = sequence.length();
 
         while (start < len) {
-            var next = (int)editor.findFirstVisibleChar(-width, start, len, 0, sequence)[0];
+            var next = (int)editor.findFirstVisibleChar(width, start, len, 0, sequence, line)[0];
             breakpoints.add(next);
             start = next;
         }
@@ -204,7 +205,7 @@ public class WordwrapLayout extends AbstractLayout {
         int row = (int) (yOffset / editor.getRowHeight());
         row = Math.max(0, Math.min(row, rowTable.size() - 1));
         RowRegion region = rowTable.get(row);
-        int column = (int) orderedFindCharIndex(xOffset, text.getLine(region.line), region.startColumn, region.endColumn)[0];
+        int column = (int) orderedFindCharIndex(xOffset, text.getLine(region.line), region.line, region.startColumn, region.endColumn)[0];
         return IntPair.pack(region.line, column);
     }
 
@@ -230,7 +231,11 @@ public class WordwrapLayout extends AbstractLayout {
                 }
             }
             dest[0] = editor.getRowHeight() * (row + 1);
-            dest[1] = measureText(text.getLine(region.line), region.startColumn, column);
+            var sequence = text.getLine(region.line);
+            var gtr = GraphicTextRow.obtain();
+            gtr.set(sequence, region.startColumn, region.endColumn, editor.getTabWidth(), getSpans(line), editor.getTextPaint());
+            dest[1] = gtr.measureText(region.startColumn, column);
+            GraphicTextRow.recycle(gtr);
         } else {
             dest[0] = dest[1] = 0;
         }

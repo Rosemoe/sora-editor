@@ -56,31 +56,26 @@ public class TextAnalyzeResult {
     }
 
     /**
-     * Add a new span if required
+     * Add a new span if required.
+     *
+     * If no special style is specified, you can use colorId as style long integer
      *
      * @param spanLine Line
      * @param column   Column
-     * @param colorId  Type
+     * @param style Style of text
      */
-    public void addIfNeeded(int spanLine, int column, int colorId) {
-        addIfNeeded(spanLine, column, colorId, 0);
-    }
-
-    /**
-     * Add a new span if required
-     */
-    public void addIfNeeded(int spanLine, int column, int colorId, int styles) {
-        if (mLast != null && mLast.colorId == colorId && mLast.fontStyles == styles) {
+    public void addIfNeeded(int spanLine, int column, long style) {
+        if (mLast != null && mLast.style == style) {
             return;
         }
-        add(spanLine, Span.obtain(column, colorId).setStyles(styles));
+        add(spanLine, Span.obtain(column, style));
     }
 
     /**
      * Add a span directly
-     *
+     * <p>
      * Note: the line should always >= the line of span last committed
-     *
+     * <p>
      * If two spans are on the same line, you must add them in order by their column
      *
      * @param spanLine The line position of span
@@ -162,7 +157,7 @@ public class TextAnalyzeResult {
     public void runBeforePublish() {
         int pre = -1;
         var sort = false;
-        for (int i = 0;i < mBlocks.size() - 1;i++) {
+        for (int i = 0; i < mBlocks.size() - 1; i++) {
             var cur = mBlocks.get(i + 1).endLine;
             if (pre > cur) {
                 sort = true;

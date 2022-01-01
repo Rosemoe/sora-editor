@@ -31,6 +31,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import io.github.rosemoe.sora.interfaces.ExternalRenderer;
+import io.github.rosemoe.sora.text.TextStyle;
 import io.github.rosemoe.sora.widget.EditorColorScheme;
 
 /**
@@ -65,19 +66,11 @@ public class Span {
      */
     public static final int FLAG_DEPRECATED = 1;
 
-    public static final int STYLE_BOLD = 1;
-    public static final int STYLE_ITALICS = 1 << 1;
 
     private static final BlockingQueue<Span> cacheQueue = new ArrayBlockingQueue<>(8192 * 2);
     public int column;
-    public int colorId;
+    public long style;
     public int underlineColor;
-    /**
-     * Extra font styles for this span
-     * @see #STYLE_BOLD
-     * @see #STYLE_ITALICS
-     */
-    public int fontStyles;
 
     /**
      * Set this value to draw curly lines for this span to indicates code problems.
@@ -95,25 +88,25 @@ public class Span {
      * Create a new span
      *
      * @param column  Start column of span
-     * @param colorId Type of span
-     * @see Span#obtain(int, int)
+     * @param style Style made from {@link io.github.rosemoe.sora.text.TextStyle}
+     * @see Span#obtain(int, long)
      */
-    private Span(int column, int colorId) {
+    private Span(int column, long style) {
         this.column = column;
-        this.colorId = colorId;
+        this.style = style;
     }
 
     /**
      * Get an available Span object from either cache or new instance.
      * The result object will be initialized with the given arguments.
      */
-    public static Span obtain(int column, int colorId) {
+    public static Span obtain(int column, long style) {
         Span span = cacheQueue.poll();
         if (span == null) {
-            return new Span(column, colorId);
+            return new Span(column, style);
         } else {
             span.column = column;
-            span.colorId = colorId;
+            span.style = style;
             return span;
         }
     }
@@ -154,30 +147,33 @@ public class Span {
     }
 
     /**
-     * Set font style
-     * @see #fontStyles
-     */
-    public Span setStyles(int styles) {
-        fontStyles = styles;
-        return this;
-    }
-
-    /**
      * Make a copy of this span
      */
     public Span copy() {
-        Span copy = obtain(column, colorId);
+        Span copy = obtain(column, style);
         copy.setUnderlineColor(underlineColor);
         copy.problemFlags = problemFlags;
         copy.renderer = renderer;
-        copy.fontStyles = fontStyles;
         return copy;
     }
 
     public boolean recycle() {
-        problemFlags = colorId = column = underlineColor = fontStyles = 0;
+        problemFlags = column = underlineColor = 0;
+        style = 0;
         renderer = null;
         return cacheQueue.offer(this);
+    }
+
+    public int getForegroundColorId() {
+        return TextStyle.getForegroundColorId(style);
+    }
+
+    public int getBackgroundColorId() {
+        return TextStyle.getBackgroundColorId(style);
+    }
+
+    public long getStyleBits() {
+        return TextStyle.getStyleBits(style);
     }
 
     @Override
@@ -185,17 +181,16 @@ public class Span {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Span span = (Span) o;
-        return column == span.column && colorId == span.colorId && underlineColor == span.underlineColor && problemFlags == span.problemFlags && Objects.equals(renderer, span.renderer);
+        return column == span.column && style == span.style && underlineColor == span.underlineColor && problemFlags == span.problemFlags && Objects.equals(renderer, span.renderer);
     }
 
     @Override
     public int hashCode() {
         int hash = 31 * column;
-        hash = 31 * hash + colorId;
+        hash = 31 * hash + Long.hashCode(style);
         hash = 31 * hash + underlineColor;
         hash = 31 * hash + problemFlags;
         hash = 31 * hash + (renderer == null ? 0 : renderer.hashCode());
-        hash = 31 * hash + fontStyles;
         return hash;
     }
 
@@ -204,9 +199,8 @@ public class Span {
     public String toString() {
         return "Span{" +
                 "column=" + column +
-                ", colorId=" + colorId +
+                ", style=" + style +
                 ", underlineColor=" + underlineColor +
-                ", fontStyles=" + fontStyles +
                 ", problemFlags=" + problemFlags +
                 ", renderer=" + renderer +
                 "}";
