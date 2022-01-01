@@ -1485,7 +1485,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             // Get visible region on the line
             float[] charPos = findFirstVisibleChar(offset2, rowInf.startColumn, rowInf.endColumn, mBuffer, line);
             int firstVisibleChar = (int) charPos[0];
-            float paintingOffset = charPos[1] + offset2;
+            float paintingOffset = charPos[1] - offset2;
             int lastVisibleChar = (int) findFirstVisibleChar(offset2 + getWidth(), firstVisibleChar + 1, rowInf.endColumn, rowInf.startColumn, mBuffer, line)[0];
 
             // Draw current line background
