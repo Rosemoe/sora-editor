@@ -47,17 +47,9 @@ import java.io.InputStreamReader;
 
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.langs.EmptyLanguage;
-import io.github.rosemoe.sora.langs.css3.CSS3Language;
-import io.github.rosemoe.sora.langs.desc.CDescription;
-import io.github.rosemoe.sora.langs.desc.CppDescription;
-import io.github.rosemoe.sora.langs.desc.JavaScriptDescription;
-import io.github.rosemoe.sora.langs.html.HTMLLanguage;
 import io.github.rosemoe.sora.langs.java.JavaLanguage;
-import io.github.rosemoe.sora.langs.python.PythonLanguage;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.langs.textmate.theme.TextMateColorScheme;
-import io.github.rosemoe.sora.langs.universal.UniversalLanguage;
-import io.github.rosemoe.sora.langs.xml.XMLLanguage;
 import io.github.rosemoe.sora.textmate.core.internal.theme.reader.ThemeReader;
 import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
 import io.github.rosemoe.sora.utils.CrashHandler;
