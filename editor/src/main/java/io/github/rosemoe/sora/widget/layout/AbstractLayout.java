@@ -57,6 +57,10 @@ public abstract class AbstractLayout implements Layout {
     }
 
     private void updateMeasureCaches(int startLine, int endLine) {
+        //Temporarily disabled
+        if (true) {
+            return;
+        }
         if (text == null) {
             return;
         }
