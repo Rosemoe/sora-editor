@@ -7,8 +7,6 @@ import android.util.TypedValue;
 
 import androidx.annotation.NonNull;
 
-import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
-
 public class HandleStyleSideDrop extends HandleStyleDrop {
     
     private final int size;

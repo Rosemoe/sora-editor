@@ -23,9 +23,6 @@
  */
 package io.github.rosemoe.sora.widget.layout;
 
-import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
-
-import android.content.res.Resources;
 import android.util.TypedValue;
 
 import java.util.ArrayList;

@@ -23,8 +23,6 @@
  */
 package io.github.rosemoe.sora.text;
 
-import android.util.Log;
-
 import java.util.List;
 
 import io.github.rosemoe.sora.data.BlockLine;

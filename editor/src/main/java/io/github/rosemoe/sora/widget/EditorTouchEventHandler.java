@@ -34,7 +34,6 @@ import android.widget.OverScroller;
 import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
-import java.lang.Integer;
 
 /**
  * Handles touch events of editor
