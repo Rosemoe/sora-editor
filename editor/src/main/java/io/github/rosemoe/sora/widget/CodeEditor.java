@@ -1470,7 +1470,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !isWordwrap() && canvas.isHardwareAccelerated() && isHardwareAcceleratedDrawAllowed()) {
             mRenderer.keepCurrentInDisplay(firstVis, getLastVisibleRow());
         }
-        float offset2 = getOffsetX() - measureTextRegionOffset() - mDpUnit * 10;
+        float offset2 = getOffsetX() - measureTextRegionOffset();
 
         // Step 1 - Draw background of rows
         for (int row = firstVis; row <= getLastVisibleRow() && rowIterator.hasNext(); row++) {
