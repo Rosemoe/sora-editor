@@ -1471,6 +1471,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mRenderer.keepCurrentInDisplay(firstVis, getLastVisibleRow());
         }
         float offset2 = getOffsetX() - measureTextRegionOffset();
+        float offset3 = offset2 - mDpUnit * 15;
 
         // Step 1 - Draw background of rows
         for (int row = firstVis; row <= getLastVisibleRow() && rowIterator.hasNext(); row++) {
@@ -1483,7 +1484,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 lastPreparedLine = line;
             }
             // Get visible region on the line
-            float[] charPos = findFirstVisibleChar(offset2, rowInf.startColumn, rowInf.endColumn, mBuffer, line);
+            float[] charPos = findFirstVisibleChar(offset3, rowInf.startColumn, rowInf.endColumn, mBuffer, line);
             int firstVisibleChar = (int) charPos[0];
             float paintingOffset = charPos[1] - offset2;
             int lastVisibleChar = (int) findFirstVisibleChar(offset2 + getWidth(), firstVisibleChar + 1, rowInf.endColumn, rowInf.startColumn, mBuffer, line)[0];
@@ -1560,7 +1561,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
 
             // Get visible region on the line
-            float[] charPos = findFirstVisibleChar(offset2, rowInf.startColumn, rowInf.endColumn, mBuffer, line);
+            float[] charPos = findFirstVisibleChar(offset3, rowInf.startColumn, rowInf.endColumn, mBuffer, line);
             int firstVisibleChar = (int) charPos[0];
             float paintingOffset = charPos[1] - offset2;
             int lastVisibleChar = (int) findFirstVisibleChar(offset2 + getWidth(), firstVisibleChar + 1, rowInf.endColumn, rowInf.startColumn, mBuffer, line)[0];
@@ -1656,7 +1657,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     drawRegionText(canvas, paintingOffset, getRowBaseline(row) - getOffsetY(), line, paintStart, paintEnd, columnCount, mColors.getColor(span.getForegroundColorId()));
 
                     // Draw strikethrough
-                    if ((span.problemFlags & Span.FLAG_DEPRECATED) != 0) {
+                    if ((span.problemFlags & Span.FLAG_DEPRECATED) != 0 || TextStyle.isStrikeThrough(styleBits)) {
                         mPaintOther.setColor(Color.BLACK);
                         canvas.drawLine(paintingOffset, getRowTop(row) + getRowHeight() / 2f - getOffsetY(), paintingOffset + width, getRowTop(row) + getRowHeight() / 2f - getOffsetY(), mPaintOther);
                     }
