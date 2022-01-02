@@ -1470,7 +1470,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !isWordwrap() && canvas.isHardwareAccelerated() && isHardwareAcceleratedDrawAllowed()) {
             mRenderer.keepCurrentInDisplay(firstVis, getLastVisibleRow());
         }
-        float offset2 = getOffsetX() - measureTextRegionOffset();
+        float offset2 = getOffsetX() - measureTextRegionOffset() - mDpUnit * 10;
 
         // Step 1 - Draw background of rows
         for (int row = firstVis; row <= getLastVisibleRow() && rowIterator.hasNext(); row++) {
@@ -1987,7 +1987,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param color          Color of background
      */
     protected void drawRowRegionBackground(Canvas canvas, float paintingOffset, int row, int firstVis, int lastVis, int highlightStart, int highlightEnd, int color, int line) {
-        firstVis = Math.max(0, firstVis - 1);
         int paintStart = Math.min(Math.max(firstVis, highlightStart), lastVis);
         int paintEnd = Math.min(Math.max(firstVis, highlightEnd), lastVis);
         if (paintStart != paintEnd) {
