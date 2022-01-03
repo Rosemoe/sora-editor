@@ -64,6 +64,9 @@ public class GraphicTextRow {
     }
 
     public static void recycle(GraphicTextRow st) {
+        st.mText = null;
+        st.mSpans = null;
+        st.mStart = st.mEnd = st.mTabWidth = 0;
         synchronized (sCached) {
             for (int i = 0; i < sCached.length; ++i) {
                 if (sCached[i] == null) {
@@ -88,7 +91,7 @@ public class GraphicTextRow {
         mSpans = spans;
     }
 
-    public float createMeasureCache() {
+    public float buildMeasureCache() {
         if (mText.widthCache == null) {
             mText.widthCache = new float[Math.max(128, mText.length())];
         }
@@ -194,6 +197,9 @@ public class GraphicTextRow {
     }
 
     public float measureText(int start, int end) {
+        if (start == end) {
+            return 0f;
+        }
         if (mText.widthCache != null) {
             float width = 0f;
             var cache = mText.widthCache;
@@ -250,6 +256,9 @@ public class GraphicTextRow {
 
     @SuppressLint("NewApi")
     private float measureTextInner(int start, int end, float[] widths) {
+        if (start == end) {
+            return 0f;
+        }
         // Can be called directly
         float width = mPaint.getTextRunAdvances(mText.value, start, end - start, start, end - start, false, widths, widths == null ? 0 : start);
         float tabWidth = mPaint.getSpaceWidth() * mTabWidth;
