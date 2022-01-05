@@ -70,7 +70,7 @@ public class CDescription implements LanguageDescription {
                 "unsigned", "union", "void", "volatile", "while",
                 "_Bool", "_Complex", "_Imaginary", "inline", "restrict",
                 "_Alignas", "_Alignof", "_Atomic", "_Generic", "_Noreurn",
-                "_Static_assert", "_Thread_local"
+                "_Static_assert", "_Thread_local","include"
         };
     }
 
