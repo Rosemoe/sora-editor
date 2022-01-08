@@ -272,7 +272,7 @@ public class GraphicTextRow {
             }
         }
         float extraWidth = tabCount == 0 ? 0 : tabWidth - mPaint.measureText("\t");
-        return width + extraWidth;
+        return width + extraWidth * tabCount;
     }
 
 
