@@ -168,7 +168,7 @@ public class GraphicTextRow {
                                 currentPosition += tabAdvance;
                             }
                         }
-                        lastStart = i;
+                        lastStart = i + 1;
                     }
                 }
                 if (res == -1) {
