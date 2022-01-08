@@ -2480,13 +2480,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int st = index;
         for (int i = index; i < end; i++) {
             if (src[i] == '\t') {
-                canvas.drawText(new String(src, st, i - st), offX, offY, mPaint);
+                canvas.drawText(src, st, i - st, offX, offY, mPaint);
+                //canvas.drawText(new String(src, st, i - st), offX, offY, mPaint);
                 offX = offX + measureText(line, st, i - st + 1, lineNumber);
                 st = i + 1;
             }
         }
         if (st < end) {
-            canvas.drawText(new String(src, st, end - st), offX, offY, mPaint);
+            canvas.drawText(src, st, end - st, offX, offY, mPaint);
         }
     }
 
@@ -3502,7 +3503,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return first visible line
      */
     public int getFirstVisibleLine() {
-        return mLayout.getLineNumberForRow(getFirstVisibleRow());
+        try {
+            return mLayout.getLineNumberForRow(getFirstVisibleRow());
+        } catch (IndexOutOfBoundsException e) {
+            return 0;
+        }
     }
 
     /**
@@ -3524,9 +3529,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         return Math.max(0, Math.min(mLayout.getLayoutHeight(), getOffsetY() + getHeight()) / getRowHeight());
     }
 
+    /**
+     * Get last visible line on screen
+     *
+     * @return last visible line
+     */
     public int getLastVisibleLine() {
         try {
-            return mLayout.getLineNumberForRow(getFirstVisibleRow());
+            return mLayout.getLineNumberForRow(getLastVisibleRow());
         } catch (IndexOutOfBoundsException e) {
             return getLineCount() - 1;
         }
