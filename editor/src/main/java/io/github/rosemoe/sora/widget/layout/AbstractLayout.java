@@ -67,8 +67,8 @@ public abstract class AbstractLayout implements Layout {
        return orderedFindCharIndex(targetOffset, str, line, 0, str.length());
     }
 
-    private void updateMeasureCaches(int startLine, int endLine) {
-        //Temporarily disabled
+    @Override
+    public void updateMeasureCaches(int startLine, int endLine, long timestamp) {
         if (true) {
             return;
         }
@@ -85,11 +85,12 @@ public abstract class AbstractLayout implements Layout {
             while (startLine <= endLine && startLine < text.getLineCount()) {
                 ContentLine line = text.getLine(startLine);
                 // Do not create cache for long lines
-                if (line.length() < 128) {
-                    if (line.widthCache == null) {
-                        line.widthCache = new float[128];
-                    }
-                    editor.getTextPaint().getTextWidths(line.value, 0, line.length(), line.widthCache);
+                if (line.length() <= 128 && line.timestamp < timestamp) {
+                    var gtr = GraphicTextRow.obtain();
+                    gtr.set(line, 0, line.length(), editor.getTabWidth(), getSpans(startLine), editor.getTextPaint());
+                    gtr.buildMeasureCache();
+                    GraphicTextRow.recycle(gtr);
+                    line.timestamp = timestamp;
                 } else {
                     line.widthCache = null;
                 }
@@ -98,9 +99,13 @@ public abstract class AbstractLayout implements Layout {
         }
     }
 
+    public void updateMeasureCaches(int line1, int line2) {
+        updateMeasureCaches(line1, line2, System.nanoTime());
+    }
+
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
-        updateMeasureCaches(startLine, endLine);
+        updateMeasureCaches(startLine, startLine + 1);
     }
 
     @Override
@@ -114,8 +119,4 @@ public abstract class AbstractLayout implements Layout {
         text = null;
     }
 
-    @Override
-    public void updateCache(int startLine, int endLine) {
-        updateMeasureCaches(0, text == null ? 0 : text.getLineCount());
-    }
 }

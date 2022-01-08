@@ -92,7 +92,7 @@ public class GraphicTextRow {
     }
 
     public float buildMeasureCache() {
-        if (mText.widthCache == null) {
+        if (mText.widthCache == null || mText.widthCache.length < mEnd) {
             mText.widthCache = new float[Math.max(128, mText.length())];
         }
         return measureTextInternal(mStart, mEnd, mText.widthCache);

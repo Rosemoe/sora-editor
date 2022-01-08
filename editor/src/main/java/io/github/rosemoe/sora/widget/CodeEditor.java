@@ -234,6 +234,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private int mNonPrintableOptions;
     private int mCachedLineNumberWidth;
     private int mCompletionPosMode;
+    private long mTimestamp;
     private float mDpUnit;
     private float mDividerWidth;
     private float mDividerMargin;
@@ -756,6 +757,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaint.setFontFeatureSettingsWrapped(features);
         mPaintOther.setFontFeatureSettings(features);
         mPaintGraph.setFontFeatureSettings(features);
+        updateTimestamp();
     }
 
     public void setSelectionHandleStyle(@NonNull SelectionHandleStyle style) {
@@ -1098,9 +1100,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mLineNumberMetrics = mPaintOther.getFontMetricsInt();
         mGraphMetrics = mPaintGraph.getFontMetricsInt();
         invalidateHwRenderer();
-        if (mLayout != null) {
-            mLayout.updateCache(start, end);
-        }
+        updateTimestamp();
     }
 
     /**
@@ -1141,6 +1141,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else {
             mCachedLineNumberWidth = 0;
         }
+        mLayout.updateMeasureCaches(getFirstVisibleLine(), getLastVisibleLine(), mTimestamp);
 
         if (mCursor.isSelected()) {
             mInsertHandle.setEmpty();
@@ -3437,6 +3438,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaint.setTypefaceWrapped(typefaceText);
         mTextMetrics = mPaint.getFontMetricsInt();
         invalidateHwRenderer();
+        updateTimestamp();
         createLayout();
         invalidate();
     }
@@ -4774,6 +4776,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
+        updateTimestamp();
         // Update spans
         if (isSpanMapPrepared(true, endLine - startLine)) {
             if (startLine == endLine) {
@@ -4841,8 +4844,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
+    private void updateTimestamp() {
+        mTimestamp = System.nanoTime();
+    }
+
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
+        updateTimestamp();
         if (isSpanMapPrepared(false, endLine - startLine)) {
             if (startLine == endLine) {
                 SpanMapUpdater.shiftSpansOnSingleLineDelete(mSpanner.getResult().getSpanMap(), startLine, startColumn, endColumn);
@@ -4943,6 +4951,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     mRenderer.invalidateDirtyRegions(provider.mObjContainer.spanMap, provider.getResult().getSpanMap());
                 }
+                updateTimestamp();
                 invalidate();
             });
         }

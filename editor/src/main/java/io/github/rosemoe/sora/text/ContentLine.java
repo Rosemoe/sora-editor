@@ -52,6 +52,7 @@ public class ContentLine implements CharSequence, GetChars {
      */
     @UnsupportedUserUsage
     public float[] widthCache;
+    public long timestamp;
 
     public ContentLine() {
         this(true);
