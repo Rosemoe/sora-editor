@@ -69,9 +69,6 @@ public abstract class AbstractLayout implements Layout {
 
     @Override
     public void updateMeasureCaches(int startLine, int endLine, long timestamp) {
-        if (true) {
-            return;
-        }
         if (text == null) {
             return;
         }
