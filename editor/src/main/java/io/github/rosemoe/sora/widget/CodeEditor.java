@@ -312,6 +312,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private SelectionHandleStyle mHandleStyle;
     private CursorBlink mCursorBlink;
     private SymbolPairMatch mOverrideSymbolPairs;
+    protected List<Span> defSpans = new ArrayList<>(2);
     private final LongArrayList mPostDrawLineNumbers = new LongArrayList();
     private CharPosition mLockedSelection;
     private BufferedDrawPoints mDrawPoints;
@@ -2456,8 +2457,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         return res;
     }
 
-    protected List<Span> defSpans = new ArrayList<>(2);
-    private List<Span> getSpansForLine(int line) {
+    /**
+     * Get spans on the given line
+     */
+    public List<Span> getSpansForLine(int line) {
         var spanMap = getTextAnalyzeResult().getSpanMap();
         if (defSpans.size() == 0) {
             defSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
@@ -2467,7 +2470,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Draw text on the given position
-     *  @param canvas Canvas to draw
+     * @param canvas Canvas to draw
      * @param line   Source of characters
      * @param index  The index in array
      * @param count  Count of characters
@@ -2512,7 +2515,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Read out characters to mChars for the given line
+     * Switch current drawing context to the given line
      *
      * @param line Line going to draw or measure
      */

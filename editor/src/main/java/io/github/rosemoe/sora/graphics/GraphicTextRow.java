@@ -23,14 +23,15 @@
  */
 package io.github.rosemoe.sora.graphics;
 
+import static io.github.rosemoe.sora.text.TextStyle.isBold;
+import static io.github.rosemoe.sora.text.TextStyle.isItalics;
+
 import android.annotation.SuppressLint;
-import android.util.Log;
 
 import java.util.List;
 
 import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.text.ContentLine;
-import static io.github.rosemoe.sora.text.TextStyle.*;
 
 public class GraphicTextRow {
 

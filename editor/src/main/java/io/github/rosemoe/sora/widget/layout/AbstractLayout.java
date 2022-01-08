@@ -23,7 +23,6 @@
  */
 package io.github.rosemoe.sora.widget.layout;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import io.github.rosemoe.sora.data.Span;
@@ -31,11 +30,10 @@ import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.widget.CodeEditor;
-import io.github.rosemoe.sora.widget.EditorColorScheme;
 
 /**
- * Base layout implementation of {@link Layout}
- * This class has basic methods for its subclasses to measure texts
+ * Base layout implementation of {@link Layout}.
+ * It provides some convenient methods to editor instance and text measuring.
  *
  * @author Rose
  */
@@ -43,24 +41,23 @@ public abstract class AbstractLayout implements Layout {
 
     protected CodeEditor editor;
     protected Content text;
-    protected List<Span> defSpans = new ArrayList<>(2);
 
     public AbstractLayout(CodeEditor editor, Content text) {
         this.editor = editor;
         this.text = text;
-        defSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
         updateMeasureCaches(0, text == null ? 0 : text.getLineCount());
     }
 
     protected List<Span> getSpans(int line) {
-        var spanMap = editor.getTextAnalyzeResult().getSpanMap();
-        return line < spanMap.size() ? spanMap.get(line) : defSpans;
+        return editor.getSpansForLine(line);
     }
 
     protected float[] orderedFindCharIndex(float targetOffset, ContentLine str, int line, int index, int end) {
         var gtr = GraphicTextRow.obtain();
         gtr.set(str, index, end, editor.getTabWidth(), getSpans(line), editor.getTextPaint());
-        return gtr.findOffsetByAdvance(index, targetOffset);
+        var res = gtr.findOffsetByAdvance(index, targetOffset);
+        GraphicTextRow.recycle(gtr);
+        return res;
     }
 
     protected float[] orderedFindCharIndex(float targetOffset, ContentLine str, int line) {
