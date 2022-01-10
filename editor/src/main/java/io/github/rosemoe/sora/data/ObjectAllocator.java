@@ -23,10 +23,11 @@
  */
 package io.github.rosemoe.sora.data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A object provider for speed improvement
+ * An object provider for speed improvement
  * Now meaningless because it is not as well as it expected
  *
  * @author Rose
@@ -35,8 +36,9 @@ public class ObjectAllocator {
 
     private static final int RECYCLE_LIMIT = 1024 * 8;
     private static List<BlockLine> blockLines;
+    private static List<BlockLine> tempArray;
 
-    public static void recycleBlockLine(List<BlockLine> src) {
+    public static void recycleBlockLines(List<BlockLine> src) {
         if (src == null) {
             return;
         }
@@ -53,6 +55,22 @@ public class ObjectAllocator {
             obj.clear();
             blockLines.add(obj);
         }
+        src.clear();
+        synchronized (ObjectAllocator.class) {
+            tempArray = src;
+        }
+    }
+
+    public static List<BlockLine> obtainList() {
+        List<BlockLine> temp = null;
+        synchronized (ObjectAllocator.class) {
+            temp = tempArray;
+            tempArray = null;
+        }
+        if (temp == null) {
+            temp = new ArrayList<>(128);
+        }
+        return temp;
     }
 
     public static BlockLine obtainBlockLine() {

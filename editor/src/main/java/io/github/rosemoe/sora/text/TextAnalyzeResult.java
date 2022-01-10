@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.text;
 
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +39,29 @@ import io.github.rosemoe.sora.widget.EditorColorScheme;
  */
 public class TextAnalyzeResult {
 
+    private static SoftReference<List<List<Span>>> ref;
+    private static List<List<Span>> obtainSpanMap() {
+        List<List<Span>> temp = null;
+        synchronized (TextAnalyzeResult.class) {
+            temp = ref != null ? ref.get() : null;
+            ref = null;
+        }
+        if (temp == null) {
+            temp = new ArrayList<>(2048);
+        }
+        return temp;
+    }
+    static synchronized void offerSpanMap(List<List<Span>> cache) {
+        if (ref == null) {
+            ref = new SoftReference<>(cache);
+        } else {
+            var current = ref.get();
+            if (current == null) {
+                ref = new SoftReference<>(cache);
+            }
+        }
+    }
+
     protected final List<BlockLine> mBlocks;
     protected final List<List<Span>> mSpanMap;
     protected Object mExtra;
@@ -51,8 +75,8 @@ public class TextAnalyzeResult {
      */
     public TextAnalyzeResult() {
         mLast = null;
-        mSpanMap = new ArrayList<>(2048);
-        mBlocks = new ArrayList<>(1024);
+        mSpanMap = obtainSpanMap();
+        mBlocks = ObjectAllocator.obtainList();
     }
 
     /**

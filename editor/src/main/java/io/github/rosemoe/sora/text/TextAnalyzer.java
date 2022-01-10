@@ -155,7 +155,7 @@ public class TextAnalyzer {
         public List<BlockLine> blockLines;
 
         void recycle() {
-            ObjectAllocator.recycleBlockLine(blockLines);
+            ObjectAllocator.recycleBlockLines(blockLines);
             SpanRecycler.getInstance().recycle(spanMap);
             clear();
         }

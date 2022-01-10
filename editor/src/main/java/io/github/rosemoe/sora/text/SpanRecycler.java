@@ -77,11 +77,16 @@ public class SpanRecycler {
                         for (List<Span> spans : spanMap) {
                             int size = spans.size();
                             for (int i = 0; i < size; i++) {
-                                spans.remove(size - 1 - i).recycle();
+                                var recycled = spans.remove(size - 1 - i).recycle();
+                                if (!recycled) {
+                                    break;
+                                }
                                 count++;
                             }
                         }
-                        Log.i(LOG_TAG, "Recycled " + count + " spans");
+                        spanMap.clear();
+                        TextAnalyzeResult.offerSpanMap(spanMap);
+                        Log.i(LOG_TAG, "Called recycle() on " + count + " spans");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                         break;

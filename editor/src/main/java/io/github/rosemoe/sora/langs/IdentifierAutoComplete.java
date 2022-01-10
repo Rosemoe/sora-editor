@@ -61,7 +61,7 @@ public class IdentifierAutoComplete implements AutoCompleteProvider {
 
     public static class Identifiers {
 
-        private final List<String> identifiers = new ArrayList<>();
+        private final List<String> identifiers = new ArrayList<>(128);
         private HashMap<String, Object> cache;
         private final static Object SIGN = new Object();
 

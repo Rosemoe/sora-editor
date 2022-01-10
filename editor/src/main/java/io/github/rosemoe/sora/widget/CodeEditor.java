@@ -4851,7 +4851,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     public void computeScroll() {
         if (mEventHandler.getScroller().computeScrollOffset()) {
-            postInvalidate();
+            invalidate();
         }
     }
 
