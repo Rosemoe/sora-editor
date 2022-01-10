@@ -4870,6 +4870,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
         updateTimestamp();
+        for (int i = startLine;i <= endLine && i < getLineCount();i++) {
+            mText.getLine(i).widthCache = null;
+        }
+
         // Update spans
         if (isSpanMapPrepared(true, endLine - startLine)) {
             if (startLine == endLine) {
@@ -4944,6 +4948,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
         updateTimestamp();
+        for (int i = startLine;i <= startLine + 1 && i < getLineCount();i++) {
+            mText.getLine(i).widthCache = null;
+        }
+
         if (isSpanMapPrepared(false, endLine - startLine)) {
             if (startLine == endLine) {
                 SpanMapUpdater.shiftSpansOnSingleLineDelete(mSpanner.getResult().getSpanMap(), startLine, startColumn, endColumn);
