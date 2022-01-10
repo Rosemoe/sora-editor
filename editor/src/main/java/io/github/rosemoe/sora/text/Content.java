@@ -309,6 +309,9 @@ public class Content implements CharSequence {
      * @param columnOnEndLine   The end column position
      */
     public void delete(int startLine, int columnOnStartLine, int endLine, int columnOnEndLine) {
+        if (startLine == 0 && columnOnStartLine == -1) {
+            return;
+        }
         StringBuilder changedContent = new StringBuilder();
         if (startLine == endLine) {
             checkLineAndColumn(endLine, columnOnEndLine, true);

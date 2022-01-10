@@ -291,7 +291,7 @@ public final class Cursor {
             mContent.delete(getLeftLine(), getLeftColumn(), getRightLine(), getRightColumn());
         } else {
             int col = getLeftColumn(), len = 1;
-            // Do not put cursor inside a emotion character
+            // Do not put cursor inside an emotion character
             if (col > 1) {
                 int left = TextLayoutHelper.get().getCurPosLeft(col, mContent.getLine(getLeftLine()));
                 len = col - left;
