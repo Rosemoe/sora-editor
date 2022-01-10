@@ -108,6 +108,7 @@ import io.github.rosemoe.sora.text.TextAnalyzer;
 import io.github.rosemoe.sora.text.TextStyle;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
+import io.github.rosemoe.sora.util.TemporaryFloatBuffer;
 import io.github.rosemoe.sora.util.ThemeUtils;
 import io.github.rosemoe.sora.widget.layout.Layout;
 import io.github.rosemoe.sora.widget.layout.LineBreakLayout;
@@ -131,9 +132,10 @@ import io.github.rosemoe.sora.widget.style.builtin.HandleStyleSideDrop;
 @SuppressWarnings("unused")
 public class CodeEditor extends View implements ContentListener, TextAnalyzer.Callback, FormatThread.FormatResultReceiver, LineRemoveListener {
 
-    private final static String[] NUMBER_DIGITS = {
-      "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
-    };
+    /**
+     * Digits for line number measuring
+     */
+    private final static String NUMBER_DIGITS = "0 1 2 3 4 5 6 7 8 9";
 
     /**
      * The default size when creating the editor object. Unit is sp.
@@ -239,6 +241,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private int mCachedLineNumberWidth;
     private int mCompletionPosMode;
     private long mTimestamp;
+    private long mAvailableFloatArrayRegion;
     private float mDpUnit;
     private float mDividerWidth;
     private float mDividerMargin;
@@ -1146,7 +1149,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else {
             mCachedLineNumberWidth = 0;
         }
-        mLayout.buildMeasureCacheForLines(getFirstVisibleLine(), getLastVisibleLine(), System.nanoTime());
+
+        buildMeasureCacheForLines(getFirstVisibleLine(), getLastVisibleLine(), mTimestamp);
 
         if (mCursor.isSelected()) {
             mInsertHandle.setEmpty();
@@ -1247,6 +1251,72 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         drawScrollBars(canvas);
         drawEdgeEffect(canvas);
+
+        rememberDisplayedLines();
+    }
+
+    /**
+     * Update displayed lines after drawing
+     */
+    private void rememberDisplayedLines() {
+        mAvailableFloatArrayRegion = IntPair.pack(getFirstVisibleLine(), getLastVisibleLine());
+    }
+
+    /**
+     * Obtain a float array from previously displayed lines, or either create a new one
+     * if no float array matches the requirement.
+     */
+    private float[] obtainFloatArray(int desiredSize) {
+        var start = IntPair.getFirst(mAvailableFloatArrayRegion);
+        var end = IntPair.getSecond(mAvailableFloatArrayRegion);
+        var firstVis = getFirstVisibleLine();
+        var lastVis = getLastVisibleRow();
+        start = Math.max(0, start - 5);
+        end = Math.min(end + 5, getLineCount());
+        for (int i = start;i < end;i++) {
+            // Find line that is not displaying currently
+            if (i < firstVis || i > lastVis) {
+                var line = mText.getLine(i);
+                if (line.widthCache != null && line.widthCache.length >= desiredSize) {
+                    line.timestamp = 0;
+                    var res = line.widthCache;
+                    line.widthCache = null;
+                    return res;
+                }
+            }
+            // Skip the region because we can't obtain arrays from here
+            if (i >= firstVis && i <= lastVis) {
+                i = lastVis;
+            }
+        }
+        //Log.d(LOG_TAG, "Allocate float[], size = " + desiredSize);
+        return new float[desiredSize];
+    }
+
+    /**
+     * Build measure cache for the given lines, if the timestamp indicates that it is outdated.
+     */
+    private void buildMeasureCacheForLines(int startLine, int endLine, long timestamp) {
+        var text = mText;
+        while (startLine <= endLine && startLine < text.getLineCount()) {
+            ContentLine line = text.getLine(startLine);
+            // Do not create cache for long lines
+            if (line.length() <= 256) {
+                if (line.timestamp < timestamp) {
+                    var gtr = GraphicTextRow.obtain();
+                    if (line.widthCache == null) {
+                        line.widthCache = obtainFloatArray(Math.max(line.length(), 128));
+                    }
+                    gtr.set(line, 0, line.length(), getTabWidth(), getSpansForLine(startLine), mPaint);
+                    gtr.buildMeasureCache();
+                    GraphicTextRow.recycle(gtr);
+                    line.timestamp = timestamp;
+                }
+            } else {
+                line.widthCache = null;
+            }
+            startLine++;
+        }
     }
 
     /**
@@ -1792,7 +1862,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                             drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, selectionStart, Math.min(leadingWhitespaceEnd, selectionEnd), circleRadius);
                         }
                         if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_INNER) == 0) {
-                            drawWhitespaces(canvas, paintingOffset, line , row, firstVisibleChar, lastVisibleChar, Math.max(leadingWhitespaceEnd, selectionStart), Math.min(trailingWhitespaceStart, selectionEnd), circleRadius);
+                            drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, Math.max(leadingWhitespaceEnd, selectionStart), Math.min(trailingWhitespaceStart, selectionEnd), circleRadius);
                         }
                         if ((mNonPrintableOptions & FLAG_DRAW_WHITESPACE_TRAILING) == 0) {
                             drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, Math.max(trailingWhitespaceStart, selectionStart), selectionEnd, circleRadius);
@@ -1863,7 +1933,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * Draw non-printable characters
      */
-    protected void drawWhitespaces(Canvas canvas, float offset,int line, int row, int rowStart, int rowEnd, int min, int max, float circleRadius) {
+    protected void drawWhitespaces(Canvas canvas, float offset, int line, int row, int rowStart, int rowEnd, int min, int max, float circleRadius) {
         int paintStart = Math.max(rowStart, Math.min(rowEnd, min));
         int paintEnd = Math.max(rowStart, Math.min(rowEnd, max));
         mPaintOther.setColor(mColors.getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
@@ -1878,7 +1948,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 char ch = chars[paintStart];
                 int paintCount = 0;
                 boolean paintLine = false;
-                if(ch == ' ' || ch == '\t') {
+                if (ch == ' ' || ch == '\t') {
                     offset += measureText(mBuffer, lastPos, paintStart - lastPos, line);
                 }
                 if (ch == ' ') {
@@ -1983,7 +2053,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Draw background of a text region
-     *  @param canvas         Canvas to draw
+     *
+     * @param canvas         Canvas to draw
      * @param paintingOffset Paint offset x on canvas
      * @param row            The row index
      * @param firstVis       First visible character
@@ -2474,6 +2545,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Draw text on the given position
+     *
      * @param canvas Canvas to draw
      * @param line   Source of characters
      * @param index  The index in array
@@ -2647,9 +2719,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             count++;
             lineCount /= 10;
         }
+        var len = NUMBER_DIGITS.length();
+        var buffer = TemporaryFloatBuffer.obtain(len);
+        mPaintOther.getTextWidths(NUMBER_DIGITS, buffer);
+        TemporaryFloatBuffer.recycle(buffer);
         float single = 0f;
-        for (String ch : NUMBER_DIGITS) {
-            single = Math.max(single, mPaintOther.measureText(ch));
+        for (int i = 0;i < len;i+=2) {
+            single = Math.max(single, buffer[i]);
         }
         return single * count;
     }
