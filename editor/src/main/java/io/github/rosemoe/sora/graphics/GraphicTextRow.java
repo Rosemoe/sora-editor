@@ -194,6 +194,10 @@ public class GraphicTextRow {
             mPaint.setFakeBoldText(false);
             mPaint.setTextSkewX(0f);
         }
+        if (currentPosition > advance && offset > start) {
+            offset--;
+            currentPosition -= measureText(offset, offset + 1);
+        }
         return new float[] {offset, currentPosition};
     }
 

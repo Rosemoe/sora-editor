@@ -1352,7 +1352,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
 
             // Draw text
-            drawRegionText(canvas, paintingOffset, getRowBaseline(row), line, paintStart, paintEnd, columnCount, mColors.getColor(span.getForegroundColorId()));
+            drawRegionText(canvas, paintingOffset, getRowBaseline(row), line, paintStart, paintEnd, span.column, spanEnd, columnCount, mColors.getColor(span.getForegroundColorId()));
 
             // Draw strikethrough
             if ((span.problemFlags & Span.FLAG_DEPRECATED) != 0 || TextStyle.isStrikeThrough(span.style)) {
@@ -1452,8 +1452,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param postDrawCursor      Cursors to be drawn later
      */
     protected void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<DrawCursorTask> postDrawCursor, LongArrayList postDrawCurrentLines, MutableInt requiredFirstLn) {
-        // Draw a extra row
-        int firstVis = Math.max(0, getFirstVisibleRow() - 1);
+        int firstVis = getFirstVisibleRow();
         final float waveLength = getDpUnit() * 18;
         final float amplitude = getDpUnit() * 4;
         RowIterator rowIterator = mLayout.obtainRowIterator(firstVis);
@@ -1548,7 +1547,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             int line = rowInf.lineIndex;
             ContentLine contentLine = mText.getLine(line);
             int columnCount = contentLine.length();
-            if (row == getFirstVisibleRow() && requiredFirstLn != null) {
+            if (row == firstVis && requiredFirstLn != null) {
                 requiredFirstLn.value = line;
             } else if (rowInf.isLeadingRow) {
                 postDrawLineNumbers.add(IntPair.pack(line, row));
@@ -1660,7 +1659,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     }
 
                     // Draw text
-                    drawRegionText(canvas, paintingOffset, getRowBaseline(row) - getOffsetY(), line, paintStart, paintEnd, columnCount, mColors.getColor(span.getForegroundColorId()));
+                    drawRegionText(canvas, paintingOffset, getRowBaseline(row) - getOffsetY(), line, paintStart, paintEnd, span.column, spanEnd, columnCount, mColors.getColor(span.getForegroundColorId()));
 
                     // Draw strikethrough
                     if ((span.problemFlags & Span.FLAG_DEPRECATED) != 0 || TextStyle.isStrikeThrough(styleBits)) {
@@ -2018,10 +2017,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param columnCount Column count of line
      * @param color       Color of normal text in this region
      */
-    protected void drawRegionText(Canvas canvas, float offsetX, float baseline, int line, int startIndex, int endIndex, int columnCount, int color) {
+    protected void drawRegionText(Canvas canvas, float offsetX, float baseline, int line, int startIndex, int endIndex, int contextStart, int contextEnd, int columnCount, int color) {
         boolean hasSelectionOnLine = mCursor.isSelected() && line >= mCursor.getLeftLine() && line <= mCursor.getRightLine();
         int selectionStart = 0;
         int selectionEnd = columnCount;
+        int contextCount = contextEnd - contextStart;
         if (line == mCursor.getLeftLine()) {
             selectionStart = mCursor.getLeftColumn();
         }
@@ -2031,47 +2031,47 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaint.setColor(color);
         if (hasSelectionOnLine && mColors.getColor(EditorColorScheme.TEXT_SELECTED) != 0) {
             if (endIndex <= selectionStart || startIndex >= selectionEnd) {
-                drawText(canvas, mBuffer, startIndex, endIndex - startIndex, offsetX, baseline, line);
+                drawText(canvas, mBuffer, startIndex, endIndex - startIndex, contextStart, contextCount, offsetX, baseline, line);
             } else {
                 if (startIndex <= selectionStart) {
                     if (endIndex >= selectionEnd) {
                         //Three regions
                         //startIndex - selectionStart
-                        drawText(canvas, mBuffer, startIndex, selectionStart - startIndex, offsetX, baseline, line);
+                        drawText(canvas, mBuffer, startIndex, selectionStart - startIndex, contextStart, contextCount, offsetX, baseline, line);
                         float deltaX = measureText(mBuffer, startIndex, selectionStart - startIndex, line);
                         //selectionStart - selectionEnd
                         mPaint.setColor(mColors.getColor(EditorColorScheme.TEXT_SELECTED));
-                        drawText(canvas, mBuffer, selectionStart, selectionEnd - selectionStart, offsetX + deltaX, baseline, line);
+                        drawText(canvas, mBuffer, selectionStart, selectionEnd - selectionStart, contextStart, contextCount, offsetX + deltaX, baseline, line);
                         deltaX += measureText(mBuffer, selectionStart, selectionEnd - selectionStart, line);
                         //selectionEnd - endIndex
                         mPaint.setColor(color);
-                        drawText(canvas, mBuffer, selectionEnd, endIndex - selectionEnd, offsetX + deltaX, baseline, line);
+                        drawText(canvas, mBuffer, selectionEnd, endIndex - selectionEnd, contextStart, contextCount, offsetX + deltaX, baseline, line);
                     } else {
                         //Two regions
                         //startIndex - selectionStart
-                        drawText(canvas, mBuffer, startIndex, selectionStart - startIndex, offsetX, baseline, line);
+                        drawText(canvas, mBuffer, startIndex, selectionStart - startIndex, contextStart, contextCount, offsetX, baseline, line);
                         //selectionStart - endIndex
                         mPaint.setColor(mColors.getColor(EditorColorScheme.TEXT_SELECTED));
-                        drawText(canvas, mBuffer, selectionStart, endIndex - selectionStart, offsetX + measureText(mBuffer, startIndex, selectionStart - startIndex, line), baseline, line);
+                        drawText(canvas, mBuffer, selectionStart, endIndex - selectionStart, contextStart, contextCount, offsetX + measureText(mBuffer, startIndex, selectionStart - startIndex, line), baseline, line);
                     }
                 } else {
                     //selectionEnd > startIndex > selectionStart
                     if (endIndex > selectionEnd) {
                         //Two regions
                         //selectionEnd - endIndex
-                        drawText(canvas, mBuffer, selectionEnd, endIndex - selectionEnd, offsetX + measureText(mBuffer, startIndex, selectionEnd - startIndex, line), baseline, line);
+                        drawText(canvas, mBuffer, selectionEnd, endIndex - selectionEnd, contextStart, contextCount, offsetX + measureText(mBuffer, startIndex, selectionEnd - startIndex, line), baseline, line);
                         //startIndex - selectionEnd
                         mPaint.setColor(mColors.getColor(EditorColorScheme.TEXT_SELECTED));
-                        drawText(canvas, mBuffer, startIndex, selectionEnd - startIndex, offsetX, baseline, line);
+                        drawText(canvas, mBuffer, startIndex, selectionEnd - startIndex, contextStart, contextCount, offsetX, baseline, line);
                     } else {
                         //One region
                         mPaint.setColor(mColors.getColor(EditorColorScheme.TEXT_SELECTED));
-                        drawText(canvas, mBuffer, startIndex, endIndex - startIndex, offsetX, baseline, line);
+                        drawText(canvas, mBuffer, startIndex, endIndex - startIndex, contextStart, contextCount, offsetX, baseline, line);
                     }
                 }
             }
         } else {
-            drawText(canvas, mBuffer, startIndex, endIndex - startIndex, offsetX, baseline, line);
+            drawText(canvas, mBuffer, startIndex, endIndex - startIndex, contextStart, contextCount, offsetX, baseline, line);
         }
     }
 
@@ -2481,20 +2481,21 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param offX   Offset x for paint
      * @param offY   Offset y for paint(baseline)
      */
-    protected void drawText(Canvas canvas, ContentLine line, int index, int count, float offX, float offY, int lineNumber) {
+    @SuppressLint("NewApi")
+    protected void drawText(Canvas canvas, ContentLine line, int index, int count, int contextStart, int contextCount, float offX, float offY, int lineNumber) {
+        // drawTextRun() can be called directly on low API systems
         int end = index + count;
         var src = line.value;
         int st = index;
         for (int i = index; i < end; i++) {
             if (src[i] == '\t') {
-                canvas.drawText(src, st, i - st, offX, offY, mPaint);
-                //canvas.drawText(new String(src, st, i - st), offX, offY, mPaint);
+                canvas.drawTextRun(src, st, i - st, contextStart, contextCount, offX, offY, false, mPaint);
                 offX = offX + measureText(line, st, i - st + 1, lineNumber);
                 st = i + 1;
             }
         }
         if (st < end) {
-            canvas.drawText(src, st, end - st, offX, offY, mPaint);
+            canvas.drawTextRun(src, st, end - st, contextStart, contextCount, offX, offY, false, mPaint);
         }
     }
 
