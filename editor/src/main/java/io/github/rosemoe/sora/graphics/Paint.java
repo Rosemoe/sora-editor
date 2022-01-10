@@ -77,19 +77,6 @@ public class Paint extends android.graphics.Paint {
         }
     }
 
-    @SuppressLint("NewApi")
-    public float measureTextRunAdvance(CharSequence text, int start, int end, int contextStart, int contextEnd) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return getRunAdvance(text, start, end, contextStart, contextEnd, false, end);
-        } else {
-            var buffer = TemporaryCharBuffer.obtain(contextEnd - contextStart);
-            // Hidden, but we can call it directly on Android 21 - 22
-            float result = getTextRunAdvances(buffer, start - contextStart, end - start, 0, contextEnd - contextStart, false, null, 0);
-            TemporaryCharBuffer.recycle(buffer);
-            return result;
-        }
-    }
-
     /**
      * Find offset for a certain advance returned by {@link #measureTextRunAdvance(char[], int, int, int, int)}
      */
