@@ -648,8 +648,16 @@ public class Content implements CharSequence {
      * @return StringBuilder form of Content
      */
     public StringBuilder toStringBuilder() {
-        StringBuilder sb = new StringBuilder();
-        sb.ensureCapacity(mTextLength + 10);
+        var sb = new StringBuilder();
+        appendToStringBuilder(sb);
+        return sb;
+    }
+
+    /**
+     * Append the content to the given {@link StringBuilder}
+     */
+    public void appendToStringBuilder(StringBuilder sb) {
+        sb.ensureCapacity(sb.length() + length());
         boolean first = true;
         final int lines = getLineCount();
         for (int i = 0; i < lines; i++) {
@@ -661,7 +669,6 @@ public class Content implements CharSequence {
             }
             line.appendTo(sb);
         }
-        return sb;
     }
 
     /**

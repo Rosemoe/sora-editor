@@ -35,7 +35,7 @@ import io.github.rosemoe.sora.text.LineRemoveListener;
  */
 public interface Layout extends LineRemoveListener, ContentListener {
 
-    void updateMeasureCaches(int startLine, int endLine, long timestamp);
+    void buildMeasureCacheForLines(int startLine, int endLine, long timestamp);
 
     /**
      * Called by editor to destroy this layout

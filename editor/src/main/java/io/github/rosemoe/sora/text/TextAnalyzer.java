@@ -192,14 +192,17 @@ public class TextAnalyzer {
         @Override
         public void run() {
             try {
+                // Use a cached object to cut down StringBuilder and char array allocations
+                StringBuilder buffer = new StringBuilder();
                 while (true) {
                     TextAnalyzeResult result = new TextAnalyzeResult();
                     Delegate d = new Delegate();
                     mOpStartTime = System.currentTimeMillis();
                     do {
                         waiting = false;
-                        StringBuilder c = content.toStringBuilder();
-                        codeAnalyzer.analyze(c, result, d);
+                        buffer.setLength(0);
+                        content.appendToStringBuilder(buffer);
+                        codeAnalyzer.analyze(buffer, result, d);
                         if (waiting) {
                             result.reset();
                         }

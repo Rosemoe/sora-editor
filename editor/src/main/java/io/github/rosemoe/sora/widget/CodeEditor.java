@@ -131,6 +131,10 @@ import io.github.rosemoe.sora.widget.style.builtin.HandleStyleSideDrop;
 @SuppressWarnings("unused")
 public class CodeEditor extends View implements ContentListener, TextAnalyzer.Callback, FormatThread.FormatResultReceiver, LineRemoveListener {
 
+    private final static String[] NUMBER_DIGITS = {
+      "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+    };
+
     /**
      * The default size when creating the editor object. Unit is sp.
      */
@@ -1142,7 +1146,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else {
             mCachedLineNumberWidth = 0;
         }
-        mLayout.updateMeasureCaches(getFirstVisibleLine(), getLastVisibleLine(), mTimestamp);
+        mLayout.buildMeasureCacheForLines(getFirstVisibleLine(), getLastVisibleLine(), System.nanoTime());
 
         if (mCursor.isSelected()) {
             mInsertHandle.setEmpty();
@@ -2642,9 +2646,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             count++;
             lineCount /= 10;
         }
-        final String[] charSet = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
         float single = 0f;
-        for (String ch : charSet) {
+        for (String ch : NUMBER_DIGITS) {
             single = Math.max(single, mPaintOther.measureText(ch));
         }
         return single * count;

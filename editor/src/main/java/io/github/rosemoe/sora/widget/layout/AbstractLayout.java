@@ -65,7 +65,7 @@ public abstract class AbstractLayout implements Layout {
     }
 
     @Override
-    public void updateMeasureCaches(int startLine, int endLine, long timestamp) {
+    public void buildMeasureCacheForLines(int startLine, int endLine, long timestamp) {
         if (text == null) {
             return;
         }
@@ -94,17 +94,17 @@ public abstract class AbstractLayout implements Layout {
     }
 
     public void updateMeasureCaches(int line1, int line2) {
-        updateMeasureCaches(line1, line2, System.nanoTime());
+        buildMeasureCacheForLines(line1, line2, System.nanoTime());
     }
 
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
-        updateMeasureCaches(startLine, startLine + 1);
+        //updateMeasureCaches(startLine, startLine + 1);
     }
 
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
-        updateMeasureCaches(startLine, endLine);
+        //updateMeasureCaches(startLine, endLine);
     }
 
     @Override

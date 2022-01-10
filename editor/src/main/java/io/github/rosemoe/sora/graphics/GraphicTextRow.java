@@ -92,11 +92,11 @@ public class GraphicTextRow {
         mSpans = spans;
     }
 
-    public float buildMeasureCache() {
+    public void buildMeasureCache() {
         if (mText.widthCache == null || mText.widthCache.length < mEnd) {
             mText.widthCache = new float[Math.max(128, mText.length())];
         }
-        return measureTextInternal(mStart, mEnd, mText.widthCache);
+        measureTextInternal(mStart, mEnd, mText.widthCache);
     }
 
     public float[] findOffsetByAdvance(int start, float advance) {
