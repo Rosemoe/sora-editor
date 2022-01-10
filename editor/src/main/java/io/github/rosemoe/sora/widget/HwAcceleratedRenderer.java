@@ -121,7 +121,7 @@ class HwAcceleratedRenderer implements ContentListener {
             var node = itr.next();
             if (node.line < start || node.line > end) {
                 itr.remove();
-                node.discardDisplayList();
+                node.renderNode.discardDisplayList();
             }
         }
     }
