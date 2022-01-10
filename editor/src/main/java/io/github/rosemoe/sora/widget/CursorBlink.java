@@ -59,7 +59,6 @@ final class CursorBlink implements Runnable {
     }
 
     boolean isSelectionVisible() {
-        buffer = editor.mLayout.getCharLayoutOffset(editor.getCursor().getLeftLine(), editor.getCursor().getLeftColumn(), buffer);
         return (buffer[0] >= editor.getOffsetY() && buffer[0] - editor.getRowHeight() <= editor.getOffsetY() + editor.getHeight()
                 && buffer[1] >= editor.getOffsetX() && buffer[1] - 100f/* larger than a single character */ <= editor.getOffsetX() + editor.getWidth());
     }
@@ -69,8 +68,15 @@ final class CursorBlink implements Runnable {
         if (valid && period > 0) {
             if (System.currentTimeMillis() - lastSelectionModificationTime >= period * 2L) {
                 visibility = !visibility;
+                buffer = editor.mLayout.getCharLayoutOffset(editor.getCursor().getLeftLine(), editor.getCursor().getLeftColumn(), buffer);
                 if (!editor.getCursor().isSelected() && isSelectionVisible()) {
-                    editor.invalidate();
+                    // Invalidate dirty region
+                    var delta = (int)(editor.getDpUnit() * 10);
+                    var l = (int)buffer[1] - delta;
+                    var r = l + delta * 2;
+                    var b = (int)buffer[0] + delta;
+                    var t = b - delta * 2;
+                    editor.postInvalidate(l, t, r, b);
                 }
             }
             editor.postDelayed(this, period);
