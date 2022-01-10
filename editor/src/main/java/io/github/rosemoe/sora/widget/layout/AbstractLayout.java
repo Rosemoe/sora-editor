@@ -79,12 +79,14 @@ public abstract class AbstractLayout implements Layout {
             while (startLine <= endLine && startLine < text.getLineCount()) {
                 ContentLine line = text.getLine(startLine);
                 // Do not create cache for long lines
-                if (line.length() <= 128 && line.timestamp < timestamp) {
-                    var gtr = GraphicTextRow.obtain();
-                    gtr.set(line, 0, line.length(), editor.getTabWidth(), getSpans(startLine), editor.getTextPaint());
-                    gtr.buildMeasureCache();
-                    GraphicTextRow.recycle(gtr);
-                    line.timestamp = timestamp;
+                if (line.length() <= 128) {
+                    if (line.timestamp < timestamp) {
+                        var gtr = GraphicTextRow.obtain();
+                        gtr.set(line, 0, line.length(), editor.getTabWidth(), getSpans(startLine), editor.getTextPaint());
+                        gtr.buildMeasureCache();
+                        GraphicTextRow.recycle(gtr);
+                        line.timestamp = timestamp;
+                    }
                 } else {
                     line.widthCache = null;
                 }
