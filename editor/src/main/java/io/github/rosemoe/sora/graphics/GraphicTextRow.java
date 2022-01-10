@@ -27,6 +27,7 @@ import static io.github.rosemoe.sora.text.TextStyle.isBold;
 import static io.github.rosemoe.sora.text.TextStyle.isItalics;
 
 import android.annotation.SuppressLint;
+import android.graphics.Typeface;
 
 import java.util.List;
 
@@ -42,6 +43,7 @@ public class GraphicTextRow {
     private int mEnd;
     private int mTabWidth;
     private List<Span> mSpans;
+    private Typeface mLastTypeface;
 
     private final static GraphicTextRow[] sCached = new GraphicTextRow[5];
 
@@ -81,8 +83,12 @@ public class GraphicTextRow {
     public void set(ContentLine line, int start, int end, int tabWidth, List<Span> spans, Paint paint) {
         if (mPaint.getTextSize() != paint.getTextSize())
             mPaint.setTextSizeWrapped(paint.getTextSize());
-        if (mPaint.getTypeface() != paint.getTypeface())
-            mPaint.setTypefaceWrapped(paint.getTypeface());
+        // Cut time usage to native methods
+        var typeface = paint.getTypeface();
+        if (mLastTypeface != typeface) {
+            mPaint.setTypefaceWrapped(typeface);
+            mLastTypeface = typeface;
+        }
         if (paint.getFontFeatureSettings() != null)
             mPaint.setFontFeatureSettingsWrapped(paint.getFontFeatureSettings());
         mText = line;
