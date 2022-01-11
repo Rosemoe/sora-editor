@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.widget;
 
 import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
+import static io.github.rosemoe.sora.util.Numbers.stringSize;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -108,6 +109,8 @@ import io.github.rosemoe.sora.text.TextAnalyzer;
 import io.github.rosemoe.sora.text.TextStyle;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
+import io.github.rosemoe.sora.util.Numbers;
+import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 import io.github.rosemoe.sora.util.TemporaryFloatBuffer;
 import io.github.rosemoe.sora.util.ThemeUtils;
 import io.github.rosemoe.sora.widget.layout.Layout;
@@ -321,6 +324,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private SymbolPairMatch mOverrideSymbolPairs;
     protected List<Span> defSpans = new ArrayList<>(2);
     private final LongArrayList mPostDrawLineNumbers = new LongArrayList();
+    private final LongArrayList mPostDrawCurrentLines = new LongArrayList();
     private CharPosition mLockedSelection;
     private BufferedDrawPoints mDrawPoints;
     private HwAcceleratedRenderer mRenderer;
@@ -1164,8 +1168,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         LongArrayList postDrawLineNumbers = mPostDrawLineNumbers;
         postDrawLineNumbers.clear();
-        LongArrayList postDrawCurrentLines = new LongArrayList();
-        List<DrawCursorTask> postDrawCursor = new ArrayList<>();
+        LongArrayList postDrawCurrentLines = mPostDrawCurrentLines;
+        postDrawCurrentLines.clear();
+        List<DrawCursorTask> postDrawCursor = new ArrayList<>(3);
         MutableInt firstLn = isFirstLineNumberAlwaysVisible() && isWordwrap() ? new MutableInt(-1) : null;
 
         drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor, postDrawCurrentLines, firstLn);
@@ -2629,18 +2634,22 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         // Line number center align to text center
         float y = (getRowBottom(row) + getRowTop(row)) / 2f - (mLineNumberMetrics.descent - mLineNumberMetrics.ascent) / 2f - mLineNumberMetrics.ascent - getOffsetY();
 
-        String text = Integer.toString(line + 1);
+        var buffer = TemporaryCharBuffer.obtain(20);
+        line++;
+        int i =  stringSize(line);
+        Numbers.getChars(line, i, buffer);
 
         switch (mLineNumberAlign) {
             case LEFT:
-                canvas.drawText(text, offsetX, y, mPaintOther);
+                canvas.drawText(buffer, 0, i, offsetX, y, mPaintOther);
                 break;
             case RIGHT:
-                canvas.drawText(text, offsetX + width, y, mPaintOther);
+                canvas.drawText(buffer, 0, i, offsetX + width, y, mPaintOther);
                 break;
             case CENTER:
-                canvas.drawText(text, offsetX + (width + mDividerMargin) / 2f, y, mPaintOther);
+                canvas.drawText(buffer, 0, i, offsetX + (width + mDividerMargin) / 2f, y, mPaintOther);
         }
+        TemporaryCharBuffer.recycle(buffer);
     }
 
     /**

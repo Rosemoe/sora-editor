@@ -44,11 +44,12 @@ public class GraphicTextRow {
     private int mTabWidth;
     private List<Span> mSpans;
     private Typeface mLastTypeface;
+    private final float[] mBuffer;
 
     private final static GraphicTextRow[] sCached = new GraphicTextRow[5];
 
     private GraphicTextRow() {
-
+        mBuffer = new float[2];
     }
 
     public static GraphicTextRow obtain() {
@@ -105,18 +106,30 @@ public class GraphicTextRow {
         measureTextInternal(mStart, mEnd, mText.widthCache);
     }
 
+    /**
+     * From {@code start} to measure characters, until measured width add next char's width is bigger
+     * than {@code advance}.
+     *
+     * Note that the result array should not be stored.
+     *
+     * @return Element 0 is offset, Element 1 is measured width
+     */
     public float[] findOffsetByAdvance(int start, float advance) {
         if (mText.widthCache != null) {
             float w = 0f;
             var cache = mText.widthCache;
             for (int i = start; i < mEnd;i++) {
                 if (w > advance) {
-                    return new float[] {i, w};
+                    mBuffer[0] = i;
+                    mBuffer[1] = w;
+                    return mBuffer;
                 } else {
                     w += cache[i];
                 }
             }
-            return new float[] {mEnd, w};
+            mBuffer[0] = mEnd;
+            mBuffer[1] = w;
+            return mBuffer;
         }
         int regionStart = start;
         int index = 0;
@@ -204,7 +217,9 @@ public class GraphicTextRow {
             offset--;
             currentPosition -= measureText(offset, offset + 1);
         }
-        return new float[] {offset, currentPosition};
+        mBuffer[0] = offset;
+        mBuffer[1] = currentPosition;
+        return mBuffer;
     }
 
     public float measureText(int start, int end) {

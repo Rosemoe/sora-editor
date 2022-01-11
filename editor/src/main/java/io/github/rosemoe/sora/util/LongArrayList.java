@@ -32,7 +32,7 @@ public class LongArrayList {
     private int length;
 
     public LongArrayList() {
-        data = new long[128];
+        data = new long[64];
     }
 
     public void add(long value) {
