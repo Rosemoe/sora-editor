@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updatePositionText() {
         var cursor = editor.getCursor();
-        var text = cursor.getLeftLine() + ":" + cursor.getLeftColumn();
+        var text = (1 + cursor.getLeftLine()) + ":" + cursor.getLeftColumn();
         if (cursor.isSelected()) {
             text += "(" + (cursor.getRight() - cursor.getLeft()) + " chars)";
         }
