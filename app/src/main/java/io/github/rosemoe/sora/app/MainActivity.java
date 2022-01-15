@@ -33,6 +33,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -45,6 +46,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.langs.EmptyLanguage;
 import io.github.rosemoe.sora.langs.java.JavaLanguage;
@@ -68,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
     private CodeEditor editor;
     private LinearLayout panel;
     private EditText search, replace;
+    private TextView position;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
         panel = findViewById(R.id.search_panel);
         search = findViewById(R.id.search_editor);
         replace = findViewById(R.id.replace_editor);
+        position = findViewById(R.id.position_display);
 
         SymbolInputView inputView = findViewById(R.id.symbol_input);
         inputView.bindEditor(editor);
@@ -117,6 +121,18 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }).start();
+        updatePositionText();
+        // Update the selection display
+        editor.subscribeEvent(SelectionChangeEvent.class, ((event, unsubscribe) -> updatePositionText()));
+    }
+
+    private void updatePositionText() {
+        var cursor = editor.getCursor();
+        var text = cursor.getLeftLine() + ":" + cursor.getLeftColumn();
+        if (cursor.isSelected()) {
+            text += "(" + (cursor.getRight() - cursor.getLeft()) + " chars)";
+        }
+        position.setText(text);
     }
 
     private final ActivityResultLauncher<String> loadTMLLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), result -> {
