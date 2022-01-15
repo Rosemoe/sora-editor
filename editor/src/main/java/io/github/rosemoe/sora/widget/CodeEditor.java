@@ -86,10 +86,14 @@ import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.data.BlockLine;
 import io.github.rosemoe.sora.data.Span;
+import io.github.rosemoe.sora.event.ContentChangeEvent;
+import io.github.rosemoe.sora.event.Event;
+import io.github.rosemoe.sora.event.EventManager;
+import io.github.rosemoe.sora.event.EventReceiver;
+import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.Paint;
-import io.github.rosemoe.sora.interfaces.EditorEventListener;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
 import io.github.rosemoe.sora.interfaces.ExternalRenderer;
@@ -314,7 +318,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private ExtractedTextRequest mExtracting;
     private FormatThread mFormatThread;
     private EditorSearcher mSearcher;
-    private EditorEventListener mListener;
+    private EventManager mEventManager;
     private CursorAnimator mCursorAnimator;
     private Paint.FontMetricsInt mTextMetrics;
     private Paint.FontMetricsInt mLineNumberMetrics;
@@ -358,15 +362,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     private static boolean hasVisibleRegion(int begin, int end, int first, int last) {
         return (end > first && begin < last);
-    }
-
-    /**
-     * Set event listener
-     *
-     * @see EditorEventListener
-     */
-    public void setEventListener(@Nullable EditorEventListener eventListener) {
-        this.mListener = eventListener;
     }
 
     /**
@@ -469,6 +464,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             mRenderer = new HwAcceleratedRenderer(this);
         }
+        mEventManager = new EventManager();
         mDpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10F;
         mDividerWidth = 2 * mDpUnit;
         mInsertSelWidth = mDividerWidth / 2;
@@ -3175,7 +3171,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return Whether the format task is scheduled
      */
     public synchronized boolean formatCodeAsync() {
-        if (mFormatThread != null || (mListener != null && mListener.onRequestFormat(this))) {
+        if (mFormatThread != null) {
             return false;
         }
         mFormatThread = new FormatThread(mText, mLanguage, this);
@@ -4139,9 +4135,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         requestLayout();
 
-        if (mListener != null) {
-            mListener.onNewTextSet(this);
-        }
+        dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_SET_NEW_TEXT, new CharPosition(), mText.getIndexer().getCharPosition(getLineCount() - 1, mText.getColumnCount(getLineCount() - 1)), mText));
         if (mInputMethodManager != null) {
             mInputMethodManager.restartInput(this);
         }
@@ -4166,6 +4160,22 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
 
         setTextSizePx(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, textSize, res.getDisplayMetrics()));
+    }
+
+    /**
+     * Subscribe event of the given type.
+     * @see EventManager#subscribeEvent(Class, EventReceiver)
+     */
+    public <T extends Event> void subscribeEvent(Class<T> eventType, EventReceiver<T> receiver) {
+        mEventManager.subscribeEvent(eventType, receiver);
+    }
+
+    /**
+     * Dispatch the given event
+     * @see EventManager#dispatchEvent(Event)
+     */
+    public <T extends Event> void dispatchEvent(T event) {
+        mEventManager.dispatchEvent(event);
     }
 
     /**
@@ -4442,10 +4452,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     protected void onSelectionChanged() {
         mCursorBlink.onSelectionChanged();
-        final var listener = mListener;
-        if (listener != null) {
-            listener.onSelectionChanged(this, getCursor());
-        }
+        dispatchEvent(new SelectionChangeEvent(this));
     }
 
     //-------------------------------------------------------------------------------
@@ -4871,9 +4878,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mRenderer.beforeReplace(content);
         }
         mLayout.beforeReplace(content);
-        if (mListener != null) {
-            mListener.beforeReplace(this, content);
-        }
     }
 
     @Override
@@ -4945,9 +4949,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (!mCursor.isSelected()) {
             mCursorAnimator.markEndPosAndStart();
         }
-        if (mListener != null) {
-            mListener.afterInsert(this, mText, startLine, startColumn, endLine, endColumn, insertedContent);
-        }
+        dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_INSERT, mText.getIndexer().getCharPosition(startLine, startColumn), mText.getIndexer().getCharPosition(endLine, endColumn), insertedContent));
     }
 
     private void updateTimestamp() {
@@ -5010,9 +5012,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
 
         onSelectionChanged();
-        if (mListener != null) {
-            mListener.afterDelete(this, mText, startLine, startColumn, endLine, endColumn, deletedContent);
-        }
+        var start = mText.getIndexer().getCharPosition(startLine, startColumn);
+        var end = start.fromThis();
+        end.column = endColumn;
+        end.line = endLine;
+        end.index = start.index + deletedContent.length();
+        dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_DELETE, start, end, deletedContent));
     }
 
     @Override
@@ -5022,9 +5027,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     @Override
     public void onFormatFail(final Throwable throwable) {
-        if (mListener != null && !mListener.onFormatFail(this, throwable)) {
-            post(() -> Toast.makeText(getContext(), throwable.toString(), Toast.LENGTH_SHORT).show());
-        }
+        post(() -> Toast.makeText(getContext(), throwable.toString(), Toast.LENGTH_SHORT).show());
         mFormatThread = null;
     }
 
@@ -5035,9 +5038,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     @Override
     public void onFormatSucceed(CharSequence originalText, final CharSequence newText) {
-        if (mListener != null) {
-            mListener.onFormatSucceed(this);
-        }
         mFormatThread = null;
         if (originalText == mText) {
             post(() -> {
