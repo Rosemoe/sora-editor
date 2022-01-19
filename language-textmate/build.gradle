@@ -59,6 +59,13 @@ android {
 
 dependencies {
     compileOnly project(path: ':editor')
+    implementation "com.google.code.gson:gson:${Versions.gsonVersion}"
+    implementation "org.jruby.jcodings:jcodings:${Versions.jcodingsVersion}"
+    implementation "org.jruby.joni:joni:${Versions.joniVersion}"
+    implementation "org.apache.xmlgraphics:batik-css:${Versions.batikCssVersion}"
+    implementation "org.apache.xmlgraphics:batik-util:${Versions.batikUtilVersion}"
+    implementation "xerces:xercesImpl:${Versions.xercesImplVersion}"
+
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
