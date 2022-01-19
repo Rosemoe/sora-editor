@@ -42,40 +42,52 @@
 			android:gravity="center_vertical">
 
 			<Button
-				style="?android:attr/buttonBarButtonStyle"
+				android:id="@+id/panel_btn_select_all"
+				android:layout_width="55dp"
 				android:layout_height="wrap_content"
-				android:layout_width="wrap_content"
 				android:text="@string/selectAll"
-				android:textColor="#FF000000"
-				android:textSize="12sp"
-				android:id="@+id/panel_btn_select_all"/>
+				android:textColor="@color/textActionNameColor"
+				android:textSize="9sp"
+				android:drawableTop="@drawable/round_select_all_20"
+				android:drawablePadding="-4dp"
+				android:paddingTop="4dp"
+				android:background="#00000000" />
 
 			<Button
-				style="?android:attr/buttonBarButtonStyle"
+				android:id="@+id/panel_btn_copy"
+				android:layout_width="55dp"
 				android:layout_height="wrap_content"
-				android:layout_width="wrap_content"
 				android:text="@string/copy"
-				android:textColor="#FF000000"
-				android:textSize="12sp"
-				android:id="@+id/panel_btn_copy"/>
+				android:textColor="@color/textActionNameColor"
+				android:textSize="9sp"
+				android:drawableTop="@drawable/round_content_copy_20"
+				android:drawablePadding="-4dp"
+				android:paddingTop="4dp"
+				android:background="#00000000" />
 
 			<Button
-				style="?android:attr/buttonBarButtonStyle"
+				android:id="@+id/panel_btn_paste"
+				android:layout_width="55dp"
 				android:layout_height="wrap_content"
-				android:layout_width="wrap_content"
 				android:text="@string/paste"
-				android:textColor="#FF000000"
-				android:textSize="12sp"
-				android:id="@+id/panel_btn_paste"/>
+				android:textColor="@color/textActionNameColor"
+				android:textSize="9sp"
+				android:drawableTop="@drawable/round_content_paste_20"
+				android:drawablePadding="-4dp"
+				android:paddingTop="4dp"
+				android:background="#00000000" />
 
 			<Button
-				style="?android:attr/buttonBarButtonStyle"
+				android:id="@+id/panel_btn_cut"
+				android:layout_width="55dp"
 				android:layout_height="wrap_content"
-				android:layout_width="wrap_content"
 				android:text="@string/cut"
-				android:textColor="#FF000000"
-				android:textSize="12sp"
-				android:id="@+id/panel_btn_cut"/>
+				android:textColor="@color/textActionNameColor"
+				android:textSize="9sp"
+				android:drawableTop="@drawable/round_content_cut_20"
+				android:drawablePadding="-4dp"
+				android:paddingTop="4dp"
+				android:background="#00000000" />
 
 		</LinearLayout>
 

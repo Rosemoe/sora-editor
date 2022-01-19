@@ -90,12 +90,12 @@ import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.EventManager;
 import io.github.rosemoe.sora.event.EventReceiver;
+import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
-import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
 import io.github.rosemoe.sora.interfaces.ExternalRenderer;
 import io.github.rosemoe.sora.interfaces.NewlineHandler;
 import io.github.rosemoe.sora.langs.EmptyLanguage;
@@ -309,7 +309,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private EditorTouchEventHandler mEventHandler;
     private Paint.Align mLineNumberAlign;
     private GestureDetector mBasicDetector;
-    protected EditorTextActionPresenter mTextActionPresenter;
+    protected EditorTextActionWindow mTextActionWindow;
     private ScaleGestureDetector mScaleDetector;
     EditorInputConnection mConnection;
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;
@@ -387,13 +387,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Get EditorTextActionPresenter instance of this editor
-     *
-     * @return EditorTextActionPresenter
+     * Get EditorTextActionWindow instance of this editor
      */
     @NonNull
-    public EditorTextActionPresenter getTextActionPresenter() {
-        return mTextActionPresenter;
+    public EditorTextActionWindow getTextActionWindow() {
+        return mTextActionWindow;
     }
 
     /**
@@ -515,9 +513,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mCompletionWindow = new EditorAutoCompleteWindow(this);
         mVerticalEdgeGlow = new MaterialEdgeEffect();
         mHorizontalGlow = new MaterialEdgeEffect();
+        mTextActionWindow = new EditorTextActionWindow(this);
         mOverrideSymbolPairs = new SymbolPairMatch();
         setEditorLanguage(null);
-        setupDefaultTextActionPresenter();
         setText(null);
         setTabWidth(4);
         setHighlightCurrentLine(true);
@@ -549,15 +547,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         if (getContext() instanceof ContextThemeWrapper) {
             setEdgeEffectColor(ThemeUtils.getColorPrimary((ContextThemeWrapper) getContext()));
-        }
-    }
-
-    private void setupDefaultTextActionPresenter() {
-        try {
-            Class.forName("com.google.android.material.button.MaterialButton");
-            setTextActionMode(TextActionMode.POPUP_WINDOW_2);
-        } catch (ClassNotFoundException e) {
-            setTextActionMode(TextActionMode.POPUP_WINDOW);
         }
     }
 
@@ -958,29 +947,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Set how will the editor present text actions
-     */
-    public void setTextActionMode(TextActionMode mode) {
-        if (mCursor != null && mCursor.isSelected()) {
-            setSelection(mCursor.getLeftLine(), mCursor.getLeftColumn());
-        }
-        if (mode == TextActionMode.ACTION_MODE) {
-            mTextActionPresenter = new EditorTextActionModeStarter(this);
-        } else if (mode == TextActionMode.POPUP_WINDOW_2) {
-            mTextActionPresenter = new TextActionPopupWindow(this);
-        } else {
-            mTextActionPresenter = new EditorTextActionWindow(this);
-        }
-    }
-
-    /**
-     * Set an EditorTextActionPresenter for this editor
-     */
-    public void setTextActionPresenter(@NonNull EditorTextActionPresenter presenter) {
-        mTextActionPresenter = presenter;
-    }
-
-    /**
      * @return The prefix
      * @see CodeEditor#setLnTip(String)
      */
@@ -1155,7 +1121,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (mCursor.isSelected()) {
             mInsertHandle.setEmpty();
         }
-        if (!mTextActionPresenter.shouldShowCursor() || !mCursor.isSelected()) {
+        if (!mCursor.isSelected()) {
             mLeftHandle.setEmpty();
             mRightHandle.setEmpty();
         }
@@ -1274,7 +1240,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         var lastVis = getLastVisibleRow();
         start = Math.max(0, start - 5);
         end = Math.min(end + 5, getLineCount());
-        for (int i = start;i < end;i++) {
+        for (int i = start; i < end; i++) {
             // Find line that is not displaying currently
             if (i < firstVis || i > lastVis) {
                 var line = mText.getLine(i);
@@ -1889,15 +1855,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
             // Draw cursors
             if (mCursor.isSelected()) {
-                if (mTextActionPresenter.shouldShowCursor()) {
-                    if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
-                        float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar, line);
-                        postDrawCursor.add(new DrawCursorTask(centerX, getRowBottom(row) - getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_LEFT, mLeftHandle));
-                    }
-                    if (mCursor.getRightLine() == line && isInside(mCursor.getRightColumn(), firstVisibleChar, lastVisibleChar, line)) {
-                        float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getRightColumn() - firstVisibleChar, line);
-                        postDrawCursor.add(new DrawCursorTask(centerX, getRowBottom(row) - getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_RIGHT, mRightHandle));
-                    }
+                if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
+                    float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar, line);
+                    postDrawCursor.add(new DrawCursorTask(centerX, getRowBottom(row) - getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_LEFT, mLeftHandle));
+                }
+                if (mCursor.getRightLine() == line && isInside(mCursor.getRightColumn(), firstVisibleChar, lastVisibleChar, line)) {
+                    float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getRightColumn() - firstVisibleChar, line);
+                    postDrawCursor.add(new DrawCursorTask(centerX, getRowBottom(row) - getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_RIGHT, mRightHandle));
                 }
             } else if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
                 float centerX = paintingOffset + measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar, line);
@@ -1909,16 +1873,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaint.setTextSkewX(0);
         mPaintOther.setStrokeWidth(circleRadius * 2);
         mDrawPoints.commitPoints(canvas, mPaintOther);
-    }
-
-    protected void showTextActionPopup() {
-        if (mTextActionPresenter instanceof TextActionPopupWindow) {
-            TextActionPopupWindow window = (TextActionPopupWindow) mTextActionPresenter;
-            if (!window.isShowing()) {
-                window.onBeginTextSelect();
-                window.onTextSelectionEnd();
-            }
-        }
     }
 
     /**
@@ -2632,7 +2586,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         var buffer = TemporaryCharBuffer.obtain(20);
         line++;
-        int i =  stringSize(line);
+        int i = stringSize(line);
         Numbers.getChars(line, i, buffer);
 
         switch (mLineNumberAlign) {
@@ -2729,7 +2683,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mPaintOther.getTextWidths(NUMBER_DIGITS, buffer);
         TemporaryFloatBuffer.recycle(buffer);
         float single = 0f;
-        for (int i = 0;i < len;i+=2) {
+        for (int i = 0; i < len; i += 2) {
             single = Math.max(single, buffer[i]);
         }
         return single * count;
@@ -2809,15 +2763,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
-    /**
-     * Exit select mode after text changed
-     */
-    protected void exitSelectModeIfNeeded() {
-        if (!mCursor.isSelected()) {
-            mTextActionPresenter.onExit();
-        }
-    }
-
     protected void updateCompletionWindowPosition() {
         updateCompletionWindowPosition(true);
     }
@@ -2841,21 +2786,22 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
             getScroller().startScroll(getOffsetX(), getOffsetY(), 0, (int) offset, 0);
         }
-        mCompletionWindow.setExtendedX(panelX);
-        mCompletionWindow.setExtendedY(panelY);
+        int width;
         if ((getWidth() < 500 * mDpUnit && mCompletionPosMode == WINDOW_POS_MODE_AUTO) || mCompletionPosMode == WINDOW_POS_MODE_FULL_WIDTH_ALWAYS) {
             // center mode
-            mCompletionWindow.setWidth(getWidth() * 7 / 8);
-            mCompletionWindow.setExtendedX(getWidth() / 8f / 2f);
+            width = getWidth() * 7 / 8;
+            panelX = getWidth() / 8f / 2f;
         } else {
             // follow cursor mode
-            mCompletionWindow.setWidth((int) Math.min(300 * mDpUnit, getWidth() / 2f));
+            width = (int) Math.min(300 * mDpUnit, getWidth() / 2f);
         }
+        int height = mCompletionWindow.getHeight();
         if (!mCompletionWindow.isShowing()) {
-            mCompletionWindow.setHeight((int) restY);
+            height = (int) restY;
         }
         mCompletionWindow.setMaxHeight((int) restY);
-        mCompletionWindow.updatePosition();
+        mCompletionWindow.setSize(width, height);
+        mCompletionWindow.setLocation((int) panelX + getOffsetX(), (int) panelY + getOffsetY());
     }
 
     /**
@@ -3040,6 +2986,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else {
             getScroller().startScroll(getOffsetX(), getOffsetY(), (int) (targetX - getOffsetX()), (int) (targetY - getOffsetY()), 0);
         }
+
+        dispatchEvent(new ScrollEvent(this, getOffsetX(),
+                getOffsetY(), (int) targetX, (int)targetY, ScrollEvent.CAUSE_MAKE_POSITION_VISIBLE));
 
         invalidate();
     }
@@ -3940,9 +3889,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             invalidate();
         }
         onSelectionChanged();
-        if (mTextActionPresenter != null) {
-            mTextActionPresenter.onExit();
-        }
     }
 
     /**
@@ -4020,9 +3966,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         onSelectionChanged();
         if (!lastState && mCursor.isSelected() && mStartedActionMode != ACTION_MODE_SEARCH_TEXT) {
-            mTextActionPresenter.onBeginTextSelect();
+            //TODO
         }
-        mEventHandler.notifyTouchedSelectionHandlerLater();
     }
 
     /**
@@ -4164,6 +4109,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Subscribe event of the given type.
+     *
      * @see EventManager#subscribeEvent(Class, EventReceiver)
      */
     public <T extends Event> void subscribeEvent(Class<T> eventType, EventReceiver<T> receiver) {
@@ -4172,6 +4118,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Dispatch the given event
+     *
      * @see EventManager#dispatchEvent(Event)
      */
     public <T extends Event> void dispatchEvent(T event) {
@@ -4604,7 +4551,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK: {
-                return mTextActionPresenter != null && mTextActionPresenter.onExit();
+                if (mCursor.isSelected()) {
+                    setSelection(mCursor.getLeftLine(), mCursor.getLeftColumn());
+                    return true;
+                }
+                return false;
             }
             case KeyEvent.KEYCODE_DEL:
                 if (isEditable()) {
@@ -4883,7 +4834,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
         updateTimestamp();
-        for (int i = startLine;i <= endLine && i < getLineCount();i++) {
+        for (int i = startLine; i <= endLine && i < getLineCount(); i++) {
             mText.getLine(i).widthCache = null;
         }
 
@@ -4904,8 +4855,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         // Notify input method
         updateCursor();
         mWait = false;
-        // Visibility & State shift
-        exitSelectModeIfNeeded();
 
         // Auto completion
         if (isAutoCompletionEnabled()) {
@@ -4923,6 +4872,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     String prefix = line.substring(endColumn, end);
                     mCompletionWindow.setPrefix(prefix);
                     if (!mCompletionWindow.isShowing()) {
+                        updateCompletionWindowPosition();
                         mCompletionWindow.show();
                     }
                 } else {
@@ -4959,7 +4909,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
         updateTimestamp();
-        for (int i = startLine;i <= startLine + 1 && i < getLineCount();i++) {
+        for (int i = startLine; i <= startLine + 1 && i < getLineCount(); i++) {
             mText.getLine(i).widthCache = null;
         }
 
@@ -4977,7 +4927,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mLayout.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
 
         updateCursor();
-        exitSelectModeIfNeeded();
 
         if (isAutoCompletionEnabled()) {
             if (mConnection.mComposingLine == -1 && mCompletionWindow.isShowing()) {
@@ -5067,41 +5016,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
-    public void onEndTextSelect() {
-        if (mEventHandler.getTouchedHandleType() == -1) {
-            showTextActionPopup();
-        }
-    }
-
-    public void onEndGestureInteraction() {
-        if (mCursor.isSelected() && mEventHandler.getTouchedHandleType() == -1) {
-            showTextActionPopup();
-        }
-    }
-
     //-------------------------------------------------------------------------------
     //-------------------------Inner classes-----------------------------------------
     //-------------------------------------------------------------------------------
-
-    /**
-     * Mode for presenting text actions
-     */
-    public enum TextActionMode {
-
-        /**
-         * In this way, the editor shows a windows inside the editor to present actions
-         */
-        POPUP_WINDOW,
-        /**
-         * Beautified text action window by @RandunuRtx
-         */
-        POPUP_WINDOW_2,
-        /**
-         * In this way, the editor starts a {@link ActionMode} to present actions
-         */
-        ACTION_MODE
-
-    }
 
     private class DrawCursorTask {
 
@@ -5143,7 +5060,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
 
     }
-
 
     private final static String COPYRIGHT = "sora-editor\nCopyright (C) Rosemoe roses2020@qq.com\nThis project is distributed under the LGPL v2.1 license";
 

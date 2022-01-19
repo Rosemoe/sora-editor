@@ -24,27 +24,37 @@
 package io.github.rosemoe.sora.widget;
 
 import android.annotation.SuppressLint;
+import android.graphics.RectF;
 import android.graphics.drawable.GradientDrawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 
 import io.github.rosemoe.sora.R;
-import io.github.rosemoe.sora.interfaces.EditorTextActionPresenter;
+import io.github.rosemoe.sora.event.EventReceiver;
+import io.github.rosemoe.sora.event.HandleStateChangeEvent;
+import io.github.rosemoe.sora.event.ScrollEvent;
+import io.github.rosemoe.sora.event.SelectionChangeEvent;
+import io.github.rosemoe.sora.event.Unsubscribe;
+import io.github.rosemoe.sora.util.IntPair;
 
 /**
  * This will show when selecting text
  *
- * @author Rose
+ * @author Rosemoe
  */
-class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnClickListener, EditorTextActionPresenter {
+class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickListener, EventReceiver<SelectionChangeEvent> {
     private final CodeEditor mEditor;
     private final Button mPasteBtn;
     private final Button mCopyBtn;
     private final Button mCutBtn;
     private final View mRootView;
-    private int maxWidth;
+    private final EditorTouchEventHandler mHandler;
+    private final static long DELAY = 200;
+    private long mLastScroll;
+    private int mLastPosition;
 
     /**
      * Create a panel for the given editor
@@ -52,8 +62,9 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
      * @param editor Target editor
      */
     public EditorTextActionWindow(CodeEditor editor) {
-        super(editor);
+        super(editor, FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED);
         mEditor = editor;
+        mHandler = editor.getEventHandler();
         // Since popup window does provide decor view, we have to pass null to this method
         @SuppressLint("InflateParams")
         View root = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_panel, null);
@@ -72,93 +83,91 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
         gd.setColor(0xffffffff);
         root.setBackground(gd);
         setContentView(root);
+        setSize(0, (int) (mEditor.getDpUnit() * 60));
         mRootView = root;
+        editor.subscribeEvent(SelectionChangeEvent.class, this);
+        editor.subscribeEvent(ScrollEvent.class, ((event, unsubscribe) -> {
+            var last = mLastScroll;
+            mLastScroll = System.currentTimeMillis();
+            if (mLastScroll - last < DELAY) {
+                postDisplay();
+            }
+        }));
+        editor.subscribeEvent(HandleStateChangeEvent.class, ((event, unsubscribe) -> {
+            if (event.isHeld()) {
+                postDisplay();
+            }
+        }));
     }
 
-    @Override
-    public void onBeginTextSelect() {
-        float dpUnit = mEditor.getDpUnit();
-        setHeight((int) (dpUnit * 60));
-        maxWidth = (int) (dpUnit * 230);
-        setWidth(maxWidth);
-    }
-
-    @Override
-    public boolean onExit() {
-        boolean result = isShowing();
-        hide();
-        return result;
-    }
-
-    @Override
-    public void onUpdate() {
-        hide();
-    }
-
-    @Override
-    public void onUpdate(int updateReason) {
-        hide();
-    }
-
-    @Override
-    public void onSelectedTextClicked(MotionEvent event) {
-        EditorTextActionWindow panel = this;
-        if (panel.isShowing()) {
-            panel.hide();
-        } else {
-            int first = mEditor.getFirstVisibleRow();
-            int last = mEditor.getLastVisibleRow();
-            int left = mEditor.getCursor().getLeftLine();
-            int right = mEditor.getCursor().getRightLine();
-            int toLineBottom;
-            if (right <= first) {
-                toLineBottom = first;
-            } else if (right > last) {
-                if (left <= first) {
-                    toLineBottom = (first + last) / 2;
-                } else if (left >= last) {
-                    toLineBottom = last - 2;
+    private void postDisplay() {
+        if (!isShowing()) {
+            return;
+        }
+        dismiss();
+        if (!mEditor.getCursor().isSelected()) {
+            return;
+        }
+        mEditor.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (!mHandler.hasAnyHeldHandle() && System.currentTimeMillis() - mLastScroll > DELAY
+                        && mEditor.getScroller().isFinished()) {
+                    displayWindow();
                 } else {
-                    if (left + 3 >= last) {
-                        toLineBottom = left - 2;
-                    } else {
-                        toLineBottom = left + 1;
-                    }
-                }
-            } else {
-                if (left <= first) {
-                    if (right + 3 >= last) {
-                        toLineBottom = right - 2;
-                    } else {
-                        toLineBottom = right + 1;
-                    }
-                } else {
-                    if (left + 5 >= right) {
-                        toLineBottom = right + 1;
-                    } else {
-                        toLineBottom = (left + right) / 2;
-                    }
+                    mEditor.postDelayed(this, DELAY);
                 }
             }
-            toLineBottom = Math.max(0, toLineBottom);
-            int panelY = mEditor.getRowBottom(toLineBottom) - mEditor.getOffsetY();
-            float handleLeftX = mEditor.getOffset(left, mEditor.getCursor().getLeftColumn());
-            float handleRightX = mEditor.getOffset(right, mEditor.getCursor().getRightColumn());
-            int panelX = (int) ((handleLeftX + handleRightX) / 2f);
-            panel.setExtendedX(panelX);
-            panel.setExtendedY(panelY);
-            panel.show();
+        }, DELAY);
+    }
+
+    @Override
+    public void onReceive(SelectionChangeEvent event, Unsubscribe unsubscribe) {
+        if (mHandler.hasAnyHeldHandle()) {
+            return;
+        }
+        if (event.isSelected()) {
+            if (!isShowing()) {
+                mEditor.post(this::displayWindow);
+            }
+            mLastPosition = -1;
+        } else {
+            if (event.getLeft().index == mLastPosition && !isShowing()) {
+                mEditor.post(this::displayWindow);
+            } else {
+                dismiss();
+            }
+            mLastPosition = event.getLeft().index;
         }
     }
 
-    @Override
-    public void onTextSelectionEnd() {
-
+    private int selectTop(RectF rect) {
+        var rowHeight = mEditor.getRowHeight();
+        if (rect.top - rowHeight * 3 / 2F > getHeight()) {
+            return (int) (rect.top - rowHeight * 3 / 2 - getHeight());
+        } else {
+            return (int) (rect.bottom + rowHeight / 2);
+        }
     }
 
-    @Override
-    public boolean shouldShowCursor() {
-        return !isShowing();
+    public void displayWindow() {
+        int top;
+        var cursor = mEditor.getCursor();
+        if (cursor.isSelected()) {
+            var leftRect = mEditor.getLeftHandleDescriptor().position;
+            var rightRect = mEditor.getRightHandleDescriptor().position;
+            var top1 = selectTop(leftRect);
+            var top2 = selectTop(rightRect);
+            top = Math.min(top1, top2);
+        } else {
+            top = selectTop(mEditor.getInsertHandleDescriptor().position);
+        }
+        top = Math.max(0, Math.min(top, mEditor.getHeight() - getHeight() - 5));
+        float handleLeftX = mEditor.getOffset(mEditor.getCursor().getLeftLine(), mEditor.getCursor().getLeftColumn());
+        float handleRightX = mEditor.getOffset(mEditor.getCursor().getRightLine(), mEditor.getCursor().getRightColumn());
+        int panelX = (int) ((handleLeftX + handleRightX) / 2f);
+        setLocationAbsolutely(panelX, top);
+        show();
     }
 
     /**
@@ -169,7 +178,7 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
         mCopyBtn.setVisibility(mEditor.getCursor().isSelected() ? View.VISIBLE : View.GONE);
         mCutBtn.setVisibility(mEditor.getCursor().isSelected() && mEditor.isEditable() ? View.VISIBLE : View.GONE);
         mRootView.measure(View.MeasureSpec.makeMeasureSpec(1000000, View.MeasureSpec.AT_MOST), View.MeasureSpec.makeMeasureSpec(100000, View.MeasureSpec.AT_MOST));
-        setWidth(Math.min(mRootView.getMeasuredWidth(), maxWidth));
+        setSize(Math.min(mRootView.getMeasuredWidth(), (int) (mEditor.getDpUnit() * 230)), getHeight());
     }
 
     @Override
@@ -183,6 +192,7 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
         int id = p1.getId();
         if (id == R.id.panel_btn_select_all) {
             mEditor.selectAll();
+            return;
         } else if (id == R.id.panel_btn_cut) {
             mEditor.copyText();
             if (mEditor.getCursor().isSelected()) {
@@ -195,7 +205,7 @@ class EditorTextActionWindow extends EditorBasePopupWindow implements View.OnCli
             mEditor.copyText();
             mEditor.setSelection(mEditor.getCursor().getRightLine(), mEditor.getCursor().getRightColumn());
         }
-        hide();
+        dismiss();
     }
 
 }

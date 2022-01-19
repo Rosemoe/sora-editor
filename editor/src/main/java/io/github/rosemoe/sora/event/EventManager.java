@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.event;
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -120,10 +121,20 @@ public class EventManager {
         // Safe cast
         var receivers = getReceivers((Class<T>)event.getClass());
         receivers.lock.readLock().lock();
+        EventReceiver<T>[] receiverArr;
+        int count;
+        try {
+            count = receivers.receivers.size();
+            receiverArr = obtainBuffer(count);
+            receivers.receivers.toArray(receiverArr);
+        } finally {
+            receivers.lock.readLock().unlock();
+        }
         List<EventReceiver<T>> unsubscribedReceivers = null;
         try {
             Unsubscribe unsubscribe = new Unsubscribe();
-            for (EventReceiver<T> receiver : receivers.receivers) {
+            for (int i = 0;i < count;i++) {
+                var receiver = receiverArr[i];
                 receiver.onReceive(event, unsubscribe);
                 if (unsubscribe.isUnsubscribed()) {
                     if (unsubscribedReceivers == null) {
@@ -134,7 +145,6 @@ public class EventManager {
                 unsubscribe.reset();
             }
         } finally {
-            receivers.lock.readLock().unlock();
             if (unsubscribedReceivers != null) {
                 receivers.lock.writeLock().lock();
                 try {
@@ -143,6 +153,7 @@ public class EventManager {
                     receivers.lock.writeLock().unlock();
                 }
             }
+            recycleBuffer(receiverArr);
         }
     }
 
@@ -156,6 +167,39 @@ public class EventManager {
 
         List<EventReceiver<T>> receivers = new ArrayList<>();
 
+    }
+
+    private final EventReceiver<?>[][] caches = new EventReceiver[10][];
+
+    @SuppressWarnings("unchecked")
+    private <V extends Event> EventReceiver<V>[] obtainBuffer(int size) {
+        EventReceiver<V>[] res = null;
+        synchronized (this) {
+            for (int i = 0;i < caches.length;i++) {
+                if (caches[i] != null && caches[i].length >= size) {
+                    res = (EventReceiver<V>[]) caches[i];
+                    caches[i] = null;
+                    break;
+                }
+            }
+        }
+        if (res == null) {
+            res = new EventReceiver[size];
+        }
+        return res;
+    }
+
+    private synchronized void recycleBuffer(EventReceiver<?>[] array) {
+        if (array == null) {
+            return;
+        }
+        for (int i = 0;i < caches.length;i++) {
+            if (caches[i] == null) {
+                Arrays.fill(array, null);
+                caches[i] = array;
+                break;
+            }
+        }
     }
 
 }

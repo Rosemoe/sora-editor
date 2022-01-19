@@ -23,52 +23,31 @@
  */
 package io.github.rosemoe.sora.event;
 
-import androidx.annotation.NonNull;
-
-import java.util.Objects;
-
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
- * An Event object describes an event of editor.
- * It includes several attributes such as time and the editor object.
- * Subclasses of Event will define their own fields or methods.
- *
- * @author Rosemoe
+ * Notifies a selection handle's touch state has changed
  */
-public abstract class Event {
+public class HandleStateChangeEvent extends Event {
 
-    private final long mEventTime;
-    private final CodeEditor mEditor;
+    public final static int HANDLE_TYPE_INSERT = 0;
+    public final static int HANDLE_TYPE_LEFT = 1;
+    public final static int HANDLE_TYPE_RIGHT = 2;
+    private final int mWhich;
+    private final boolean isHeld;
 
-    public Event(@NonNull CodeEditor editor) {
-        this(editor, System.currentTimeMillis());
+    public HandleStateChangeEvent(CodeEditor editor, int which, boolean heldState) {
+        super(editor);
+        mWhich = which;
+        isHeld = heldState;
     }
 
-    public Event(@NonNull CodeEditor editor, long eventTime) {
-        mEditor = Objects.requireNonNull(editor);
-        mEventTime = eventTime;
+    public int getHandleType() {
+        return mWhich;
     }
 
-    /**
-     * Get event time
-     */
-    public long getEventTime() {
-        return mEventTime;
+    public boolean isHeld() {
+        return isHeld;
     }
-
-    /**
-     * Get the editor
-     */
-    @NonNull
-    public CodeEditor getEditor() {
-        return mEditor;
-    }
-
-    /*
-     * Checks whether this event can be intercepted (so that the event is not sent to other
-     * receivers after being intercepted)
-     */
-    //abstract boolean canIntercept();
 
 }

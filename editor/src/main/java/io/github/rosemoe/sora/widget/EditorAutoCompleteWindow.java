@@ -31,6 +31,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,11 +50,10 @@ import io.github.rosemoe.sora.text.TextAnalyzeResult;
  *
  * @author Rose
  */
-public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
-    private final static String TIP = "Refreshing...";
+public class EditorAutoCompleteWindow extends EditorPopupWindow {
     private final CodeEditor mEditor;
     private final ListView mListView;
-    private final TextView mTip;
+    private final ProgressBar mPb;
     private final GradientDrawable mBg;
     protected boolean mCancelShowUp = false;
     private int mCurrent = 0;
@@ -70,19 +70,15 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
      * @param editor Target editor
      */
     public EditorAutoCompleteWindow(CodeEditor editor) {
-        super(editor);
+        super(editor, FEATURE_HIDE_WHEN_FAST_SCROLL | FEATURE_SCROLL_AS_CONTENT);
         mEditor = editor;
         mAdapter = new DefaultCompletionItemAdapter();
         RelativeLayout layout = new RelativeLayout(mEditor.getContext());
         mListView = new ListView(mEditor.getContext());
         layout.addView(mListView, new LinearLayout.LayoutParams(-1, -1));
-        mTip = new TextView(mEditor.getContext());
-        mTip.setText(TIP);
-        mTip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        mTip.setBackgroundColor(0xeeeeeeee);
-        mTip.setTextColor(0xff000000);
-        layout.addView(mTip);
-        ((RelativeLayout.LayoutParams) mTip.getLayoutParams()).addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        mPb = new ProgressBar(editor.getContext());
+        layout.addView(mPb);
+        ((RelativeLayout.LayoutParams) mPb.getLayoutParams()).addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         setContentView(layout);
         GradientDrawable gd = new GradientDrawable();
         gd.setCornerRadius(editor.getDpUnit() * 8);
@@ -124,9 +120,8 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         }, 70);
     }
 
-    @Override
     public void hide() {
-        super.hide();
+        super.dismiss();
         requestHide = System.currentTimeMillis();
     }
 
@@ -166,11 +161,11 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
         if (state) {
             mEditor.postDelayed(() -> {
                 if (mLoading) {
-                    mTip.setVisibility(View.VISIBLE);
+                    mPb.setVisibility(View.VISIBLE);
                 }
             }, 300);
         } else {
-            mTip.setVisibility(View.GONE);
+            mPb.setVisibility(View.GONE);
         }
     }
 
@@ -312,9 +307,7 @@ public class EditorAutoCompleteWindow extends EditorBasePopupWindow {
             mListView.setAdapter(mAdapter);
             mCurrent = -1;
             float newHeight = mAdapter.getItemHeight() * results.size();
-            if (isShowing()) {
-                update(getWidth(), (int) Math.min(newHeight, mMaxHeight));
-            }
+            setSize(getWidth(), (int) Math.min(newHeight, mMaxHeight));
         });
     }
 

@@ -84,18 +84,14 @@ final class UndoManager implements ContentListener {
     }
 
     /**
-     * Whether can undo
-     *
-     * @return Whether can undo
+     * Whether it can undo
      */
     public boolean canUndo() {
         return isUndoEnabled() && (mStackPointer > 0);
     }
 
     /**
-     * Whether can redo
-     *
-     * @return Whether can redo
+     * Whether it can redo
      */
     public boolean canRedo() {
         return isUndoEnabled() && (mStackPointer < mActionStack.size());

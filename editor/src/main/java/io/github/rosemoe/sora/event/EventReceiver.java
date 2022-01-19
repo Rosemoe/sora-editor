@@ -25,6 +25,6 @@ package io.github.rosemoe.sora.event;
 
 public interface EventReceiver<T extends Event> {
 
-    void onReceive(Event event, Unsubscribe unsubscribe);
+    void onReceive(T event, Unsubscribe unsubscribe);
 
 }

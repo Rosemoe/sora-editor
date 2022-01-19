@@ -23,14 +23,21 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import android.view.Gravity;
+import android.view.View;
 import android.widget.PopupWindow;
 
 import androidx.annotation.NonNull;
 
 import java.util.Objects;
 
-//TODO
-public class EditorPopupWindow extends PopupWindow {
+import io.github.rosemoe.sora.event.EventReceiver;
+import io.github.rosemoe.sora.event.ScrollEvent;
+
+/**
+ * Base class for all editor popup windows.
+ */
+public class EditorPopupWindow {
 
     /**
      * Update the position of this window when user scrolls the editor
@@ -50,8 +57,15 @@ public class EditorPopupWindow extends PopupWindow {
      */
     public final static int FEATURE_HIDE_WHEN_FAST_SCROLL = 1 << 2;
 
+    private final PopupWindow mWindow;
     private final CodeEditor mEditor;
     private final int mFeatures;
+    private final int[] mLocationBuffer = new int[2];
+    private final EventReceiver<ScrollEvent> mScrollListener;
+    private boolean mShowState;
+    private boolean mRegisterFlag;
+    private boolean mRegistered;
+    private int mOffsetX, mOffsetY, mX, mY, mWidth, mHeight;
 
     /**
      * Create a popup window for editor
@@ -64,6 +78,34 @@ public class EditorPopupWindow extends PopupWindow {
     public EditorPopupWindow(@NonNull CodeEditor editor, int features) {
         mEditor = Objects.requireNonNull(editor);
         mFeatures = features;
+        mWindow = new PopupWindow(editor);
+        mWindow.setElevation(editor.getDpUnit() * 8);
+        mScrollListener = ((event, unsubscribe) -> {
+            if (!mRegisterFlag) {
+                unsubscribe.unsubscribe();
+                mRegistered = false;
+                return;
+            }
+            switch (event.getCause()) {
+                case ScrollEvent.CAUSE_MAKE_POSITION_VISIBLE:
+                case ScrollEvent.CAUSE_TEXT_SELECTING:
+                case ScrollEvent.CAUSE_USER_FLING:
+                case ScrollEvent.CAUSE_SCALE_TEXT:
+                    if (isFeatureEnabled(FEATURE_HIDE_WHEN_FAST_SCROLL) &&
+                            (Math.abs(event.getEndX() - event.getStartX()) > 80 ||
+                                    Math.abs(event.getEndY() - event.getStartY()) > 80)) {
+                        if (isShowing()) {
+                            dismiss();
+                            return;
+                        }
+                    }
+                    break;
+            }
+            if (isFeatureEnabled(FEATURE_SCROLL_AS_CONTENT)) {
+                applyWindowAttributes(false);
+            }
+        });
+        register();
     }
 
     /**
@@ -86,6 +128,129 @@ public class EditorPopupWindow extends PopupWindow {
             throw new IllegalArgumentException("Not a valid feature integer");
         }
         return (mFeatures & feature) != 0;
+    }
+
+    /**
+     * Register this window in target editor.
+     * After registering, features are available.
+     */
+    public void register() {
+        if (!mRegistered) {
+            mEditor.subscribeEvent(ScrollEvent.class, mScrollListener);
+        }
+        mRegisterFlag = true;
+    }
+
+    /**
+     * Unregister this window in target editor.
+     */
+    public void unregister() {
+        mRegisterFlag = false;
+    }
+
+    public boolean isShowing() {
+        return mShowState;
+    }
+
+    public PopupWindow getPopup() {
+        return mWindow;
+    }
+
+    public void setContentView(View view) {
+        mWindow.setContentView(view);
+    }
+
+    private int wrapHorizontal(int horizontal) {
+        return Math.max(0, Math.min(horizontal, mEditor.getWidth()));
+    }
+
+    private int wrapVertical(int vertical) {
+        return Math.max(0, Math.min(vertical, mEditor.getHeight()));
+    }
+
+    private void applyWindowAttributes(boolean show) {
+        if (!show && !isShowing()) {
+            return;
+        }
+        boolean autoScroll = isFeatureEnabled(FEATURE_SCROLL_AS_CONTENT);
+        var left = autoScroll ? (mX - mEditor.getOffsetX()) : (mX - mOffsetX);
+        var top = autoScroll ? (mY - mEditor.getOffsetY()) : (mY - mOffsetY);
+        var right = left + mWidth;
+        var bottom = top + mHeight;
+        if (!isFeatureEnabled(FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED)) {
+            // Adjust positions
+            left = wrapHorizontal(left);
+            right = wrapHorizontal(right);
+            top = wrapVertical(top);
+            bottom = wrapVertical(bottom);
+            if (top >= bottom || left >= right) {
+                dismiss();
+                return;
+            }
+        }
+        // Show/update if needed
+        mEditor.getLocationInWindow(mLocationBuffer);
+        int width = right - left;
+        int height = bottom - top;
+        left += mLocationBuffer[0];
+        top += mLocationBuffer[1];
+        if (mWindow.isShowing()) {
+            mWindow.update(left, top, width, height);
+        } else if (show) {
+            mWindow.setHeight(height);
+            mWindow.setWidth(width);
+            mWindow.showAtLocation(mEditor, Gravity.START | Gravity.TOP, left, top);
+        }
+    }
+
+    public int getWidth() {
+        return mWidth;
+    }
+
+    public int getHeight() {
+        return mHeight;
+    }
+
+    /**
+     * Set the size of this window
+     */
+    public void setSize(int width, int height) {
+        mWidth = width;
+        mHeight = height;
+        applyWindowAttributes(false);
+    }
+
+    /**
+     * Sets the position of the window <strong>in editor's drawing offset</strong>
+     */
+    public void setLocation(int x, int y) {
+        mX = x;
+        mY = y;
+        mOffsetY = getEditor().getOffsetY();
+        mOffsetX = getEditor().getOffsetX();
+        applyWindowAttributes(false);
+    }
+
+    /**
+     * Sets the absolute position on view
+     */
+    public void setLocationAbsolutely(int x, int y) {
+        setLocation(x + mEditor.getOffsetX(), y + mEditor.getOffsetY());
+    }
+
+    public void show() {
+        if (mShowState) {
+            return;
+        }
+        applyWindowAttributes(true);
+        mShowState = true;
+    }
+
+    public void dismiss() {
+        if (mShowState) {
+            mShowState = false;
+            mWindow.dismiss();
+        }
     }
 
 }

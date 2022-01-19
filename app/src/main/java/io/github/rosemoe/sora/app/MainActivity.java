@@ -46,6 +46,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.langs.EmptyLanguage;
@@ -71,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout panel;
     private EditText search, replace;
     private TextView position;
+    private MenuItem undo;
+    private MenuItem redo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,8 +125,20 @@ public class MainActivity extends AppCompatActivity {
             }
         }).start();
         updatePositionText();
-        // Update the selection display
+        updateBtnState();
+        // Update display dynamically
         editor.subscribeEvent(SelectionChangeEvent.class, ((event, unsubscribe) -> updatePositionText()));
+        editor.subscribeEvent(ContentChangeEvent.class, ((event, unsubscribe) -> {
+            editor.postDelayed(this::updateBtnState, 50);
+        }));
+    }
+
+    private void updateBtnState() {
+        if (undo == null) {
+            return;
+        }
+        undo.setEnabled(editor.canUndo());
+        redo.setEnabled(editor.canRedo());
     }
 
     private void updatePositionText() {
@@ -180,6 +195,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        undo = menu.findItem(R.id.text_undo);
+        redo = menu.findItem(R.id.text_redo);
         return super.onCreateOptionsMenu(menu);
     }
 
