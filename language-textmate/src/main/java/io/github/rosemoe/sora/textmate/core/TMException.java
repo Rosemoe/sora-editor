@@ -1,6 +1,7 @@
 /*
- *    CodeEditor - the awesome code editor for Android
- *    Copyright (C) 2020-2021  Rosemoe
+ *    sora-editor - the awesome code editor for Android
+ *    https://github.com/Rosemoe/sora-editor
+ *    Copyright (C) 2020-2022  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -22,27 +23,19 @@
  */
 package io.github.rosemoe.sora.textmate.core;
 
-import static org.junit.Assert.assertEquals;
-
-import android.content.Context;
-
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.platform.app.InstrumentationRegistry;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 /**
- * Instrumented test, which will execute on an Android device.
+ * TextMate exception.
  *
- * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
-@RunWith(AndroidJUnit4.class)
-public class ExampleInstrumentedTest {
-    @Test
-    public void useAppContext() {
-        // Context of the app under test.
-        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("io.github.rosemoe.sora.textmate.core.test", appContext.getPackageName());
+public class TMException extends RuntimeException {
+
+    private static final long serialVersionUID = 1L;
+
+    public TMException(String message) {
+        super(message);
+    }
+
+    public TMException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

@@ -12,8 +12,6 @@
  */
 package io.github.rosemoe.sora.textmate.core.internal.grammar.parser;
 
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
