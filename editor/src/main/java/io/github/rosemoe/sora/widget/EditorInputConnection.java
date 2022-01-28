@@ -66,8 +66,6 @@ class EditorInputConnection extends BaseInputConnection {
     }
 
     protected void invalid() {
-        //Logs.log("Connection is set to invalid");
-        //Logs.dumpStack();
         mInvalid = true;
         mComposingEnd = mComposingStart = mComposingLine = -1;
         mEditor.invalidate();
@@ -199,8 +197,6 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean commitText(CharSequence text, int newCursorPosition) {
-        //Logs.log("Commit text: text = " + text + ", newCursorPosition = " + newCursorPosition);
-        //Log.d(LOG_TAG, "commit text:text = " + text + ", newCur = " + newCursorPosition);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
@@ -234,7 +230,7 @@ class EditorInputConnection extends BaseInputConnection {
         deleteComposingText();
         // Replace text
         SymbolPairMatch.Replacement replacement = null;
-        if (text.length() == 1 && mEditor.isSymbolCompletionEnabled()) {
+        if (text.length() == 1 && mEditor.getProps().symbolPairAutoCompletion) {
             replacement = mEditor.mLanguageSymbolPairs.getCompletion(text.charAt(0));
         }
         // newCursorPosition ignored
@@ -255,7 +251,7 @@ class EditorInputConnection extends BaseInputConnection {
                 mEditor.setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length()-1);
 
             } else {
-                getCursor().onCommitText(replacement.text,applyAutoIndent);
+                getCursor().onCommitText(replacement.text, applyAutoIndent);
                 int delta = (replacement.text.length() - replacement.selection);
                 if (delta != 0) {
                     int newSel = Math.max(getCursor().getLeft() - delta, 0);
@@ -444,8 +440,6 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setSelection(int start, int end) {
-        //Logs.log("set selection:" + start + ".." + end);
-        //Log.d(LOG_TAG, " set selection:" + start + ".." + end);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
@@ -469,8 +463,6 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setComposingRegion(int start, int end) {
-        //Logs.log("set composing region:" + start + ".." + end);
-        //Log.d(LOG_TAG, "set composing region:" + start + ".." + end);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
