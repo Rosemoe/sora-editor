@@ -348,7 +348,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        initialize();
+        initialize(attrs, defStyleAttr, defStyleRes);
     }
 
     /**
@@ -434,27 +434,20 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
     /**
      * Prepare editor
+     *
      * Initialize variants
      */
-    private void initialize() {
+    private void initialize(AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         Log.i(LOG_TAG, COPYRIGHT);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             var configuration = ViewConfiguration.get(getContext());
             mVerticalScrollFactor = configuration.getScaledVerticalScrollFactor();
         } else {
             try {
-                //noinspection JavaReflectionMemberAccess
-                @SuppressLint("DiscouragedPrivateApi")
-                var method = View.class.getDeclaredMethod("getVerticalScrollFactor");
-                method.setAccessible(true);
-                var result = method.invoke(this);
-                if (result == null) {
-                    Log.e(LOG_TAG, "Failed to get scroll factor");
-                    mVerticalScrollFactor = 32;
-                } else {
-                    mVerticalScrollFactor = (float) result;
-                }
-            } catch (SecurityException | InvocationTargetException | NoSuchMethodException | IllegalAccessException | NullPointerException e) {
+                var a = getContext().obtainStyledAttributes(new int[] {android.R.attr.listPreferredItemHeight});
+                mVerticalScrollFactor = a.getFloat(0, 32);
+                a.recycle();
+            } catch (Exception e) {
                 Log.e(LOG_TAG, "Failed to get scroll factor", e);
                 mVerticalScrollFactor = 32;
             }

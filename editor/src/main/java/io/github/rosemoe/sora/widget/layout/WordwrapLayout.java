@@ -121,6 +121,10 @@ public class WordwrapLayout extends AbstractLayout {
 
         while (start < len) {
             var next = (int)editor.findFirstVisibleChar(width, start, len, 0, sequence, line)[0];
+            // Force to break the text, though no space is available
+            if (next == start) {
+                next ++;
+            }
             breakpoints.add(next);
             start = next;
         }
