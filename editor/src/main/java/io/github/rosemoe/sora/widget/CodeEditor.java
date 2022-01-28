@@ -620,13 +620,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Create a channel to insert symbols
-     */
-    public SymbolChannel createNewSymbolChannel() {
-        return new SymbolChannel(this);
-    }
-
-    /**
      * Set whether line number region will scroll together with code region
      *
      * @see CodeEditor#isLineNumberPinned()
@@ -662,6 +655,33 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public boolean isFirstLineNumberAlwaysVisible() {
         return mFirstLineNumberAlwaysVisible;
+    }
+
+    /**
+     * Inserts the given text in the editor.
+     * <p>
+     * This method allows you to insert texts externally to the content of editor.
+     * The content of {@param text} is not checked to be exactly characters of symbols.
+     *
+     * @throws IllegalArgumentException If the {@param selectionRegion} is invalid
+     * @param text Text to insert, usually a text of symbols
+     * @param selectionOffset New selection position relative to the start of text to insert.
+     *                        Ranging from 0 to text.length()
+     */
+    public void insertText(String text, int selectionOffset) {
+        if (selectionOffset < 0 || selectionOffset > text.length()) {
+            throw new IllegalArgumentException("selectionOffset is invalid");
+        }
+        var cur = getText().getCursor();
+        if (cur.isSelected()) {
+            cur.onDeleteKeyPressed();
+            notifyExternalCursorChange();
+        }        mText.insert(cur.getRightLine(), cur.getRightColumn(), text);
+        notifyExternalCursorChange();
+        if (selectionOffset != text.length()) {
+            var pos = mText.getIndexer().getCharPosition(cur.getRight() - (text.length() - selectionOffset));
+            setSelection(pos.line, pos.column);
+        }
     }
 
     /**
