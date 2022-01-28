@@ -2521,6 +2521,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         var gtr = GraphicTextRow.obtain();
         gtr.set(line, contextStart, end, mTabWidth, getSpansForLine(lineNumber), mPaint);
+        if (line.widthCache != null && line.timestamp < mTimestamp) {
+            buildMeasureCacheForLines(lineNumber, lineNumber, mTimestamp);
+        }
         var res = gtr.findOffsetByAdvance(start, target);
         GraphicTextRow.recycle(gtr);
         return res;
@@ -4937,7 +4940,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_INSERT, mText.getIndexer().getCharPosition(startLine, startColumn), mText.getIndexer().getCharPosition(endLine, endColumn), insertedContent));
     }
 
-    private void updateTimestamp() {
+    protected void updateTimestamp() {
         mTimestamp = System.nanoTime();
     }
 
