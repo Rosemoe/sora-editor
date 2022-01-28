@@ -36,6 +36,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,6 +64,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
     private boolean mLoading;
     private int mMaxHeight;
     private EditorCompletionAdapter mAdapter;
+    private Thread mThread;
 
     /**
      * Create a panel instance for the given editor
@@ -136,7 +138,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
     /**
      * Set a auto completion items provider
      *
-     * @param provider New provider.can not be null
+     * @param provider New provider can not be null
      */
     public void setProvider(AutoCompleteProvider provider) {
         mProvider = provider;
@@ -280,7 +282,12 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
         setLoading(true);
         mLastPrefix = prefix;
         mRequestTime = System.currentTimeMillis();
-        new MatchThread(mRequestTime, prefix).start();
+        final var previous = mThread;
+        if (previous != null && previous.isAlive()) {
+            previous.interrupt();
+        }
+        mThread = new MatchThread(mRequestTime, prefix);
+        mThread.start();
     }
 
     public void setMaxHeight(int height) {
