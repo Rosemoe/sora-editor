@@ -35,7 +35,7 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
  * One language instance should always serve for only one editor.
  * It means that you should not give a language object to other editor instances
  * after it has been applied to one editor.
- * This is to provide better connection between auto completion provider and code analyzer.
+ * This is to provide better connection between auto-completion provider and code analyzer.
  *
  * @author Rose
  */
@@ -72,9 +72,7 @@ public interface EditorLanguage {
     int getIndentAdvance(String content);
 
     /**
-     * Whether use tab to format
-     *
-     * @return Whether use tab
+     * Use tab to format
      */
     boolean useTab();
 
