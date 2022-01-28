@@ -76,7 +76,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.Px;
 import androidx.annotation.RequiresApi;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -1048,11 +1047,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param size Text size in pixel unit
      */
     protected void setTextSizePxDirect(float size) {
-        int start = 0, end = 0;
-        if (mEventHandler != null) {
-            start = getFirstVisibleLine();
-            end = getLastVisibleRow();
-        }
         mPaint.setTextSizeWrapped(size);
         mPaintOther.setTextSize(size);
         mPaintGraph.setTextSize(size * SCALE_MINI_GRAPH);
@@ -4009,9 +4003,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             invalidate();
         }
         onSelectionChanged();
-        if (!lastState && mCursor.isSelected() && mStartedActionMode != ACTION_MODE_SEARCH_TEXT) {
-            //TODO
-        }
     }
 
     /**
