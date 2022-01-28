@@ -59,5 +59,12 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean allowFullscreen = false;
 
+    /**
+     * Control whether auto-completes for symbol pairs.
+     *
+     * Such as automatically adding a ')' when '(' is entered
+     */
+    public boolean symbolPairAutoCompletion = true;
+
 
 }

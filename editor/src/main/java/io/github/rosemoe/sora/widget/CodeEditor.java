@@ -274,7 +274,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mHighlightSelectedText;
     private boolean mHighlightCurrentBlock;
     private boolean mHighlightCurrentLine;
-    private boolean mSymbolCompletionEnabled;
     private boolean mVerticalScrollBarEnabled;
     private boolean mHorizontalScrollBarEnabled;
     private boolean mCursorAnimation;
@@ -523,7 +522,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setOverScrollEnabled(false);
         setHorizontalScrollBarEnabled(true);
         setFirstLineNumberAlwaysVisible(true);
-        setSymbolCompletionEnabled(true);
         setCursorAnimationEnabled(true);
         setEditable(true);
         setLineNumberEnabled(true);
@@ -613,20 +611,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @NonNull
     public SymbolPairMatch getOverrideSymbolPairs() {
         return mOverrideSymbolPairs;
-    }
-
-    /**
-     * @see CodeEditor#setSymbolCompletionEnabled(boolean)
-     */
-    public boolean isSymbolCompletionEnabled() {
-        return mSymbolCompletionEnabled;
-    }
-
-    /**
-     * Control whether auto-completes for symbol pairs
-     */
-    public void setSymbolCompletionEnabled(boolean symbolCompletionEnabled) {
-        mSymbolCompletionEnabled = symbolCompletionEnabled;
     }
 
     /**
@@ -4760,7 +4744,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                     if (event.isPrintingKey() && isEditable()) {
                         String text = new String(Character.toChars(event.getUnicodeChar(event.getMetaState())));
                         SymbolPairMatch.Replacement replacement = null;
-                        if (text.length() == 1 && isSymbolCompletionEnabled()) {
+                        if (text.length() == 1 && mProps.symbolPairAutoCompletion) {
                             replacement = mLanguageSymbolPairs.getCompletion(text.charAt(0));
                         }
                         if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
