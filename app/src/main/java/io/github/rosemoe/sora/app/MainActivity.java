@@ -59,7 +59,6 @@ import io.github.rosemoe.sora.utils.CrashHandler;
 import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.EditorColorScheme;
 import io.github.rosemoe.sora.widget.SymbolInputView;
-import io.github.rosemoe.sora.widget.schemes.HTMLScheme;
 import io.github.rosemoe.sora.widget.schemes.SchemeDarcula;
 import io.github.rosemoe.sora.widget.schemes.SchemeEclipse;
 import io.github.rosemoe.sora.widget.schemes.SchemeGitHub;
@@ -313,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
             editor.beginSearchMode();
         } else if (id == R.id.switch_colors) {
             var themes = new String[]{"Default", "GitHub", "Eclipse",
-                    "Darcula", "VS2019", "NotepadXX", "HTML", "QuietLight for TM", "Darcula for TM", "Abyss for TM", "TM theme from file"};
+                    "Darcula", "VS2019", "NotepadXX", "QuietLight for TM", "Darcula for TM", "Abyss for TM", "TM theme from file"};
             new AlertDialog.Builder(this)
                     .setTitle(R.string.color_scheme)
                     .setSingleChoiceItems(themes, -1, (dialog, which) -> {
@@ -337,9 +336,6 @@ public class MainActivity extends AppCompatActivity {
                                 editor.setColorScheme(new SchemeNotepadXX());
                                 break;
                             case 6:
-                                editor.setColorScheme(new HTMLScheme());
-                                break;
-                            case 7:
                                 try {
                                     IRawTheme iRawTheme = ThemeReader.readThemeSync("QuietLight.tmTheme", getAssets().open("textmate/QuietLight.tmTheme"));
                                     TextMateColorScheme colorScheme = TextMateColorScheme.create(iRawTheme);
@@ -354,7 +350,7 @@ public class MainActivity extends AppCompatActivity {
                                     e.printStackTrace();
                                 }
                                 break;
-                            case 8:
+                            case 7:
                                 try {
                                     IRawTheme iRawTheme = ThemeReader.readThemeSync("darcula.json", getAssets().open("textmate/darcula.json"));
                                     TextMateColorScheme colorScheme = TextMateColorScheme.create(iRawTheme);
@@ -369,7 +365,7 @@ public class MainActivity extends AppCompatActivity {
                                     e.printStackTrace();
                                 }
                                 break;
-                            case 9:
+                            case 8:
                                 try {
                                     IRawTheme iRawTheme = ThemeReader.readThemeSync("abyss-color-theme.json", getAssets().open("textmate/abyss-color-theme.json"));
                                     TextMateColorScheme colorScheme = TextMateColorScheme.create(iRawTheme);
@@ -384,7 +380,7 @@ public class MainActivity extends AppCompatActivity {
                                     e.printStackTrace();
                                 }
                                 break;
-                            case 10:
+                            case 9:
                                 loadTMTLauncher.launch("*/*");
                                 break;
                         }
