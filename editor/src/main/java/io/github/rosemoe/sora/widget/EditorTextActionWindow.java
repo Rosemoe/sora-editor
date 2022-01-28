@@ -196,7 +196,7 @@ class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickLi
         } else if (id == R.id.panel_btn_cut) {
             mEditor.copyText();
             if (mEditor.getCursor().isSelected()) {
-                mEditor.getCursor().onDeleteKeyPressed();
+                mEditor.deleteText();
             }
         } else if (id == R.id.panel_btn_paste) {
             mEditor.pasteText();

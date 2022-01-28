@@ -381,7 +381,7 @@ class EditorInputConnection extends BaseInputConnection {
     private void deleteSelected() {
         if (getCursor().isSelected()) {
             // Delete selected text
-            getCursor().onDeleteKeyPressed();
+            mEditor.deleteText();
         }
     }
 
@@ -513,7 +513,7 @@ class EditorInputConnection extends BaseInputConnection {
             case android.R.id.cut:
                 mEditor.copyText();
                 if (getCursor().isSelected()) {
-                    getCursor().onDeleteKeyPressed();
+                    mEditor.deleteText();
                 }
                 return true;
             case android.R.id.paste:

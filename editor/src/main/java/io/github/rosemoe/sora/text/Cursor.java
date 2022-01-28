@@ -284,23 +284,6 @@ public final class Cursor {
     }
 
     /**
-     * Handle delete submit by InputConnection
-     */
-    public void onDeleteKeyPressed() {
-        if (isSelected()) {
-            mContent.delete(getLeftLine(), getLeftColumn(), getRightLine(), getRightColumn());
-        } else {
-            int col = getLeftColumn(), len = 1;
-            // Do not put cursor inside an emotion character
-            if (col > 1) {
-                int left = TextLayoutHelper.get().getCurPosLeft(col, mContent.getLine(getLeftLine()));
-                len = col - left;
-            }
-            mContent.delete(getLeftLine(), getLeftColumn() - len, getLeftLine(), getLeftColumn());
-        }
-    }
-
-    /**
      * Get position after moving left once
      * @param position A packed pair (line, column) describing the original position
      * @return A packed pair (line, column) describing the result position

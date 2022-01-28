@@ -110,6 +110,7 @@ import io.github.rosemoe.sora.text.LineRemoveListener;
 import io.github.rosemoe.sora.text.SpanMapUpdater;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.text.TextAnalyzer;
+import io.github.rosemoe.sora.text.TextLayoutHelper;
 import io.github.rosemoe.sora.text.TextStyle;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
@@ -279,7 +280,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private boolean mCursorAnimation;
     private boolean mPinLineNumber;
     private boolean mFirstLineNumberAlwaysVisible;
-    private boolean mAllowFullscreen;
     private boolean mLigatureEnabled;
     private boolean mLastCursorState;
     private boolean mMagnifierEnabled;
@@ -332,7 +332,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private CharPosition mLockedSelection;
     private BufferedDrawPoints mDrawPoints;
     private HwAcceleratedRenderer mRenderer;
-    KeyMetaStates mKeyMetaStates = new KeyMetaStates(this);
+    private DirectAccessProps mProps;
+    final KeyMetaStates mKeyMetaStates = new KeyMetaStates(this);
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -455,6 +456,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             mRenderer = new HwAcceleratedRenderer(this);
         }
+        mProps = new DirectAccessProps();
         mEventManager = new EventManager();
         mDpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10F;
         mDividerWidth = 2 * mDpUnit;
@@ -526,7 +528,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         setEditable(true);
         setLineNumberEnabled(true);
         setAutoCompletionOnComposing(true);
-        setAllowFullscreen(false);
         setHardwareAcceleratedDrawAllowed(true);
         setInterceptParentHorizontalScrollIfNeeded(false);
         setTypefaceText(Typeface.DEFAULT);
@@ -592,6 +593,15 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      */
     public boolean isMagnifierEnabled() {
         return mMagnifierEnabled;
+    }
+
+    /**
+     * Get {@code DirectAccessProps} object of the editor.
+     *
+     * You can update some features in editor with the instance without disturb to call methods.
+     */
+    public DirectAccessProps getProps() {
+        return mProps;
     }
 
     /**
@@ -674,7 +684,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         var cur = getText().getCursor();
         if (cur.isSelected()) {
-            cur.onDeleteKeyPressed();
+            deleteText();
             notifyExternalCursorChange();
         }        mText.insert(cur.getRightLine(), cur.getRightColumn(), text);
         notifyExternalCursorChange();
@@ -710,27 +720,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 post(mCursorBlink);
             }
         }
-    }
-
-    /**
-     * Set to {@code false} if you don't want the editor to go fullscreen on devices with smaller screen size.
-     * Otherwise, set to {@code true}
-     * <p>
-     * Default value is {@code false}
-     *
-     * @param fullscreen Enable or disable fullscreen
-     */
-    public void setAllowFullscreen(boolean fullscreen) {
-        this.mAllowFullscreen = fullscreen;
-    }
-
-    /**
-     * Is the editor allowed to go fullscreen?
-     *
-     * @return {@code true} if fullscreen is allowed or {@code false} if it isn't
-     */
-    public boolean isFullscreenAllowed() {
-        return mAllowFullscreen;
     }
 
     /**
@@ -2849,6 +2838,64 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
+     * Delete text before cursor or selected text (if there is)
+     */
+    protected void deleteText() {
+        var cur = mCursor;
+        if (cur.isSelected()) {
+            mText.delete(cur.getLeftLine(), cur.getLeftColumn(), cur.getRightLine(), cur.getRightColumn());
+        } else {
+            int col = cur.getLeftColumn(), len = 1;
+            int line = cur.getLeftLine();
+            if (mProps.deleteEmptyLineFast || (mProps.deleteMultiSpaces != 1 && col > 0 && mText.charAt(line, col - 1) == ' ')) {
+                // Check whether selection is in leading spaces
+                var text = mText.getLine(cur.getLeftLine()).value;
+                var inLeading = true;
+                for (int i = col - 1; i >= 0; i--) {
+                    char ch = text[i];
+                    if (ch != ' ' && ch != '\t') {
+                        inLeading = false;
+                        break;
+                    }
+                }
+
+                if (inLeading) {
+                    // Check empty line
+                    var emptyLine = true;
+                    var max = mText.getColumnCount(line);
+                    for (int i = col; i < max; i++) {
+                        char ch = text[i];
+                        if (ch != ' ' && ch != '\t') {
+                            emptyLine = false;
+                            break;
+                        }
+                    }
+                    if (mProps.deleteEmptyLineFast && emptyLine) {
+                        if (line == 0) {
+                            // Just delete whitespaces before
+                            mText.delete(line, 0, line, col);
+                        } else {
+                            mText.delete(line - 1, mText.getColumnCount(line - 1), line, max);
+                        }
+                        return;
+                    }
+
+                    if (mProps.deleteMultiSpaces != 1 && col > 0 && mText.charAt(line, col - 1) == ' ') {
+                        mText.delete(line, Math.max(0, col - (mProps.deleteMultiSpaces == -1 ? getTabWidth() : mProps.deleteMultiSpaces)), line, col);
+                        return;
+                    }
+                }
+            }
+            // Do not put cursor inside combined characters
+            if (col > 1) {
+                int left = TextLayoutHelper.get().getCurPosLeft(col, mText.getLine(cur.getLeftLine()));
+                len = col - left;
+            }
+            mText.delete(cur.getLeftLine(), cur.getLeftColumn() - len, cur.getLeftLine(), cur.getLeftColumn());
+        }
+    }
+
+    /**
      * @see #setLineInfoTextSize(float)
      */
     public float getLineInfoTextSize() {
@@ -4043,7 +4090,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public void cutText() {
         copyText();
         if (mCursor.isSelected()) {
-            mCursor.onDeleteKeyPressed();
+            deleteText();
             notifyExternalCursorChange();
         }
     }
@@ -4513,7 +4560,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         // Prevent fullscreen when the screen height is too small
         // Especially in landscape mode
-        if (!isFullscreenAllowed()) {
+        if (!mProps.allowFullscreen) {
             outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI | EditorInfo.IME_FLAG_NO_FULLSCREEN;
         }
 
@@ -4572,7 +4619,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
             case KeyEvent.KEYCODE_DEL:
                 if (isEditable()) {
-                    mCursor.onDeleteKeyPressed();
+                    deleteText();
                     notifyExternalCursorChange();
                 }
                 return true;
