@@ -30,7 +30,7 @@ import android.widget.BaseAdapter;
 
 import java.util.List;
 
-import io.github.rosemoe.sora.data.CompletionItem;
+import io.github.rosemoe.sora.lang.completion.CompletionItem;
 
 /**
  * A class to make custom adapter for auto-completion window
@@ -48,13 +48,7 @@ public abstract class EditorCompletionAdapter extends BaseAdapter {
     public void attachValues(EditorAutoCompleteWindow window, List<CompletionItem> items) {
         mWindow = window;
         mItems = items;
-    }
-
-    /**
-     * Get current prefix of completion
-     */
-    public String getPrefix() {
-        return mWindow.getPrefix();
+        notifyDataSetInvalidated();
     }
 
     @Override
@@ -69,7 +63,7 @@ public abstract class EditorCompletionAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return mItems.size();
+        return mItems == null ? 0 : mItems.size();
     }
 
     @Override

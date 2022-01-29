@@ -31,10 +31,8 @@ import java.util.Stack;
 
 import io.github.rosemoe.sora.data.BlockLine;
 import io.github.rosemoe.sora.data.NavigationItem;
-import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
-import io.github.rosemoe.sora.langs.IdentifierAutoComplete;
-import io.github.rosemoe.sora.text.TextStyle;
+import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
 import io.github.rosemoe.sora.util.TrieTree;
 import io.github.rosemoe.sora.text.LineNumberCalculator;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;

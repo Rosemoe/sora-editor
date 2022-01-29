@@ -23,14 +23,21 @@
  */
 package io.github.rosemoe.sora.langs;
 
+import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.rosemoe.sora.data.CompletionItem;
+import io.github.rosemoe.sora.lang.completion.CompletionItem;
 import io.github.rosemoe.sora.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
-import io.github.rosemoe.sora.interfaces.NewlineHandler;
+import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
+import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
+import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.text.TextAnalyzer.AnalyzeThread.Delegate;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
@@ -53,6 +60,11 @@ public class EmptyLanguage implements EditorLanguage {
     }
 
     @Override
+    public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position, @NonNull CompletionPublisher publisher, @NonNull TextAnalyzeResult analyzeResult, @NonNull Bundle extraArguments) throws InterruptedException {
+
+    }
+
+    @Override
     public NewlineHandler[] getNewlineHandlers() {
         return new NewlineHandler[0];
     }
@@ -63,17 +75,7 @@ public class EmptyLanguage implements EditorLanguage {
     }
 
     @Override
-    public AutoCompleteProvider getAutoCompleteProvider() {
-        return new EmptyAutoCompleteProvider();
-    }
-
-    @Override
-    public boolean isAutoCompleteChar(char ch) {
-        return false;
-    }
-
-    @Override
-    public int getIndentAdvance(String content) {
+    public int getIndentAdvance(@NonNull ContentReference content, int line, int column) {
         return 0;
     }
 

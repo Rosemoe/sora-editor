@@ -34,8 +34,6 @@ import java.util.HashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import io.github.rosemoe.sora.widget.CodeEditor;
-
 /**
  * This class manages event dispatching in editor.
  * Users can either register their event receivers here or dispatch event to

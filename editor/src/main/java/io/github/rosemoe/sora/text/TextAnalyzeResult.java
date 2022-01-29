@@ -132,7 +132,8 @@ public class TextAnalyzeResult {
     }
 
     /**
-     * This method must be called when whole text is analyzed
+     * This method must be called when whole text is analyzed.
+     * <strong>Note that it is not the line count but line index!</strong>
      *
      * @param line The line is the line last of text
      */

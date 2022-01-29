@@ -25,26 +25,27 @@ package io.github.rosemoe.sora.widget;
 
 import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Bundle;
 import android.os.SystemClock;
-import android.util.TypedValue;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.List;
 
-import io.github.rosemoe.sora.data.CompletionItem;
-import io.github.rosemoe.sora.interfaces.AutoCompleteProvider;
+import io.github.rosemoe.sora.interfaces.EditorLanguage;
+import io.github.rosemoe.sora.lang.completion.CompletionItem;
+import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
+import io.github.rosemoe.sora.text.TextReference;
 
 /**
  * Auto complete window for editing code quicker
@@ -59,12 +60,10 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
     protected boolean mCancelShowUp = false;
     private int mCurrent = 0;
     private long mRequestTime;
-    private String mLastPrefix;
-    private AutoCompleteProvider mProvider;
     private boolean mLoading;
     private int mMaxHeight;
     private EditorCompletionAdapter mAdapter;
-    private Thread mThread;
+    private AutoCompletionThread mThread;
 
     /**
      * Create a panel instance for the given editor
@@ -80,7 +79,9 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
         layout.addView(mListView, new LinearLayout.LayoutParams(-1, -1));
         mPb = new ProgressBar(editor.getContext());
         layout.addView(mPb);
-        ((RelativeLayout.LayoutParams) mPb.getLayoutParams()).addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        var params = ((RelativeLayout.LayoutParams) mPb.getLayoutParams());
+        params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        params.width = params.height = (int) (mEditor.getDpUnit() * 30);
         setContentView(layout);
         GradientDrawable gd = new GradientDrawable();
         gd.setCornerRadius(editor.getDpUnit() * 8);
@@ -124,6 +125,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
 
     public void hide() {
         super.dismiss();
+        mRequestTime = 0;
         requestHide = System.currentTimeMillis();
     }
 
@@ -133,15 +135,6 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
 
     public int getCurrentPosition() {
         return mCurrent;
-    }
-
-    /**
-     * Set a auto completion items provider
-     *
-     * @param provider New provider can not be null
-     */
-    public void setProvider(AutoCompleteProvider provider) {
-        mProvider = provider;
     }
 
     /**
@@ -160,15 +153,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
      */
     public void setLoading(boolean state) {
         mLoading = state;
-        if (state) {
-            mEditor.postDelayed(() -> {
-                if (mLoading) {
-                    mPb.setVisibility(View.VISIBLE);
-                }
-            }, 300);
-        } else {
-            mPb.setVisibility(View.GONE);
-        }
+        mPb.setVisibility(state ? View.VISIBLE : View.INVISIBLE);
     }
 
     /**
@@ -248,45 +233,51 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
         Cursor cursor = mEditor.getCursor();
         if (!cursor.isSelected()) {
             mCancelShowUp = true;
-            mEditor.getText().delete(cursor.getLeftLine(), cursor.getLeftColumn() - mLastPrefix.length(), cursor.getLeftLine(), cursor.getLeftColumn());
-            cursor.onCommitText(item.commit);
-            if (item.cursorOffset != item.commit.length()) {
-                int delta = (item.commit.length() - item.cursorOffset);
-                int newSel = Math.max(mEditor.getCursor().getLeft() - delta, 0);
-                CharPosition charPosition = mEditor.getCursor().getIndexer().getCharPosition(newSel);
-                mEditor.setSelection(charPosition.line, charPosition.column);
-            }
+            mEditor.getText().beginBatchEdit();
+            item.performCompletion(mEditor, mEditor.getText(), mThread.mPosition.line, mThread.mPosition.column);
+            mEditor.getText().endBatchEdit();
             mCancelShowUp = false;
         }
         mEditor.hideCompletionWindow();
     }
 
     /**
-     * Get prefix set
-     *
-     * @return The previous prefix
+     * Stop previous completion thread
      */
-    public String getPrefix() {
-        return mLastPrefix;
+    public void interruptCompletion() {
+        var previous = mThread;
+        if (previous != null && previous.isAlive()) {
+            previous.interrupt();
+            mRequestTime = 0;
+        }
+        mThread = null;
     }
 
     /**
-     * Set prefix for auto complete analysis
-     *
-     * @param prefix The user's input code's prefix
+     * Start completion at current selection position
      */
-    public void setPrefix(String prefix) {
-        if (mCancelShowUp) {
+    public void requireCompletion() {
+        if (!mEditor.isAutoCompletionEnabled() || mCancelShowUp) {
             return;
         }
-        setLoading(true);
-        mLastPrefix = prefix;
-        mRequestTime = System.currentTimeMillis();
-        final var previous = mThread;
-        if (previous != null && previous.isAlive()) {
-            previous.interrupt();
+        var text = mEditor.getText();
+        if (text.getCursor().isSelected()) {
+            return;
         }
-        mThread = new MatchThread(mRequestTime, prefix);
+        interruptCompletion();
+        mRequestTime = System.nanoTime();
+        mCurrent = -1;
+        var publisher = new CompletionPublisher(mEditor.getHandler(), mAdapter, () -> {
+            float newHeight = mAdapter.getItemHeight() * mAdapter.getCount();
+            setSize(getWidth(), (int) Math.min(newHeight, mMaxHeight));
+            if (!isShowing()) {
+                show();
+            }
+        });
+        mAdapter.attachValues(this, publisher.getItems());
+        mListView.setAdapter(mAdapter);
+        mThread = new AutoCompletionThread(mRequestTime, publisher);
+        setLoading(true);
         mThread.start();
     }
 
@@ -295,58 +286,50 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
     }
 
     /**
-     * Display result of analysis
+     * Auto-completion Analyzing thread
      *
-     * @param results     Items of analysis
-     * @param requestTime The time that this thread starts
+     * @author Rosemoe
      */
-    private synchronized void displayResults(final List<CompletionItem> results, long requestTime) {
-        if (mRequestTime != requestTime) {
-            return;
-        }
-        mEditor.post(() -> {
-            setLoading(false);
-            if (results == null || results.isEmpty()) {
-                hide();
-                return;
-            }
-            mAdapter.attachValues(this, results);
-            mListView.setAdapter(mAdapter);
-            mCurrent = -1;
-            float newHeight = mAdapter.getItemHeight() * results.size();
-            setSize(getWidth(), (int) Math.min(newHeight, mMaxHeight));
-        });
-    }
-
-    /**
-     * Analysis thread
-     *
-     * @author Rose
-     */
-    private class MatchThread extends Thread {
+    private class AutoCompletionThread extends Thread implements TextReference.Validator {
 
         private final long mTime;
-        private final String mPrefix;
-        private final TextAnalyzeResult mColors;
-        private final int mLine;
-        private final int mColumn;
-        private final AutoCompleteProvider mLocalProvider = mProvider;
+        private final TextAnalyzeResult mData;
+        private final Bundle mExtra;
+        private final CharPosition mPosition;
+        private final EditorLanguage mLanguage;
+        private final ContentReference mRef;
+        private final CompletionPublisher mPublisher;
 
-        public MatchThread(long requestTime, String prefix) {
+        public AutoCompletionThread(long requestTime, CompletionPublisher publisher) {
             mTime = requestTime;
-            mPrefix = prefix;
-            mColors = mEditor.getTextAnalyzeResult();
-            mLine = mEditor.getCursor().getLeftLine();
-            mColumn = mEditor.getCursor().getLeftColumn();
+            mData = mEditor.getTextAnalyzeResult();
+            mPosition = mEditor.getCursor().left();
+            mLanguage = mEditor.getEditorLanguage();
+            mRef = new ContentReference(mEditor.getText());
+            mRef.setValidator(this);
+            mPublisher = publisher;
+            mExtra = mEditor.getExtraArguments();
+        }
+
+        @Override
+        public void validate() {
+            if (mRequestTime != mTime) {
+                throw new TextReference.ValidateFailedException("invalid access: this thread is abandoned by editor framework");
+            }
         }
 
         @Override
         public void run() {
             try {
-                displayResults(mLocalProvider.getAutoCompleteItems(mPrefix, mColors, mLine, mColumn), mTime);
+                mLanguage.requireAutoComplete(mRef, mPosition, mPublisher, mData, mExtra);
+                if (mPublisher.hasData()) {
+                    mPublisher.updateList(true);
+                } else {
+                    mEditor.post(EditorAutoCompleteWindow.this::hide);
+                }
+                mEditor.post(() -> setLoading(false));
             } catch (Exception e) {
                 e.printStackTrace();
-                displayResults(new ArrayList<>(), mTime);
             }
         }
 

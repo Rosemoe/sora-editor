@@ -36,7 +36,7 @@ import android.widget.TextView;
 import java.util.Locale;
 
 import io.github.rosemoe.sora.R;
-import io.github.rosemoe.sora.data.CompletionItem;
+import io.github.rosemoe.sora.lang.completion.CompletionItem;
 
 /**
  * Default adapter to display results
@@ -58,13 +58,7 @@ public final class DefaultCompletionItemAdapter extends EditorCompletionAdapter 
         }
         CompletionItem item = getItem(pos);
         TextView tv = view.findViewById(R.id.result_item_label);
-        var label = Spannable.Factory.getInstance().newSpannable(item.label);
-        var prefix = getPrefix();
-        var index = TextUtils.indexOf(item.label.toLowerCase(Locale.ROOT), prefix.toLowerCase(Locale.ROOT));
-        if (index != -1) {
-            label.setSpan(new ForegroundColorSpan(0xffec407a), index, index + prefix.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-        tv.setText(label);
+        tv.setText(item.label);
         tv = view.findViewById(R.id.result_item_desc);
         tv.setText(item.desc);
         view.setTag(pos);

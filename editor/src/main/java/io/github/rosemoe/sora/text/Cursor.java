@@ -268,9 +268,8 @@ public final class Cursor {
                             break;
                         }
                     }
-                    String sub = line.substring(0, getLeftColumn());
                     try {
-                        count += mLanguage.getIndentAdvance(sub);
+                        count += mLanguage.getIndentAdvance(new ContentReference(mContent), getLeftLine(), getLeftColumn());
                     } catch (Exception e) {
                         Log.w("EditorCursor", "Language object error", e);
                     }

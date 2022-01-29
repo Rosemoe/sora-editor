@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
                 while ((line = br.readLine()) != null) {
                     text.append(line).append('\n');
                 }
-                runOnUiThread(() -> editor.setText(text));
+                runOnUiThread(() -> editor.setText(text, null));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -403,7 +403,7 @@ public class MainActivity extends AppCompatActivity {
                     sb.append(line).append('\n');
                 }
                 Toast.makeText(this, "Succeeded", Toast.LENGTH_SHORT).show();
-                editor.setText(sb);
+                editor.setText(sb, null);
             } catch (Exception e) {
                 Toast.makeText(this, "Failed:" + e, Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
@@ -442,6 +442,9 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.pin_line_number) {
             editor.setPinLineNumber(!editor.isLineNumberPinned());
             item.setChecked(editor.isLineNumberPinned());
+        } else if (id == R.id.enable_highlight) {
+            item.setChecked(!item.isChecked());
+            editor.getSpanner().setEnabled(item.isChecked());
         }
         return super.onOptionsItemSelected(item);
     }

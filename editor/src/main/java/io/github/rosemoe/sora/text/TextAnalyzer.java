@@ -50,6 +50,7 @@ public class TextAnalyzer {
     private Callback mCallback;
     private AnalyzeThread mThread;
     private final CodeAnalyzer mCodeAnalyzer;
+    private boolean mEnabled = true;
     /**
      * Create a new manager for the given codeAnalyzer
      *
@@ -62,6 +63,10 @@ public class TextAnalyzer {
         mResult = new TextAnalyzeResult();
         mResult.addNormalIfNull();
         mCodeAnalyzer = codeAnalyzer0;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.mEnabled = enabled;
     }
 
     private synchronized static int nextThreadId() {
@@ -102,6 +107,9 @@ public class TextAnalyzer {
      * @param origin The source text
      */
     public synchronized void analyze(Content origin) {
+        if (!mEnabled) {
+            return;
+        }
         AnalyzeThread thread = this.mThread;
         if (thread == null || !thread.isAlive()) {
             Log.d("TextAnalyzer", "Starting a new thread for analyzing");

@@ -107,4 +107,15 @@ public class TextReference implements CharSequence {
     public interface Validator {
         void validate();
     }
+
+    public static class ValidateFailedException extends RuntimeException {
+
+        public ValidateFailedException() {
+        }
+
+        public ValidateFailedException(String message) {
+            super(message);
+        }
+
+    }
 }

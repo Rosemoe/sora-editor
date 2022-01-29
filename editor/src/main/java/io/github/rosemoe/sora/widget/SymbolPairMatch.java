@@ -37,7 +37,7 @@ import io.github.rosemoe.sora.text.ContentLine;
  */
 public class SymbolPairMatch {
 
-    private Map<Character, Replacement> pairMaps = new HashMap<>();
+    private final Map<Character, Replacement> pairMaps = new HashMap<>();
 
     private SymbolPairMatch parent;
 

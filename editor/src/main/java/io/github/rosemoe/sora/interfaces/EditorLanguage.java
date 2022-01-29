@@ -23,6 +23,19 @@
  */
 package io.github.rosemoe.sora.interfaces;
 
+import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.UiThread;
+import androidx.annotation.WorkerThread;
+
+import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
+import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
+import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.Content;
+import io.github.rosemoe.sora.text.ContentReference;
+import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
 /**
@@ -37,7 +50,7 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
  * after it has been applied to one editor.
  * This is to provide better connection between auto-completion provider and code analyzer.
  *
- * @author Rose
+ * @author Rosemoe
  */
 public interface EditorLanguage {
 
@@ -49,19 +62,21 @@ public interface EditorLanguage {
     CodeAnalyzer getAnalyzer();
 
     /**
-     * Get AutoCompleteProvider of this language object
+     * Request to auto-complete the code at the given {@code position}.
+     * This is called in a worker thread other than UI thread.
      *
-     * @return AutoCompleteProvider
+     * @see ContentReference
+     * @see CompletionPublisher
+     * @param content Read-only reference of content
+     * @param position The position for auto-complete
+     * @param publisher The publisher used to update items
+     * @throws InterruptedException This thread can be interrupted by the editor framework because the
+     * auto-completion items of this invocation are no longer needed by the user.
      */
-    AutoCompleteProvider getAutoCompleteProvider();
-
-    /**
-     * Called by editor to check whether this is a character for auto-completion
-     *
-     * @param ch Character to check
-     * @return Whether is character for auto-completion
-     */
-    boolean isAutoCompleteChar(char ch);
+    @WorkerThread
+    void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position,
+                             @NonNull CompletionPublisher publisher, @NonNull TextAnalyzeResult analyzeResult,
+                             @NonNull Bundle extraArguments) throws InterruptedException;
 
     /**
      * Get advance for indent
@@ -69,11 +84,13 @@ public interface EditorLanguage {
      * @param content Content of a line
      * @return Advance space count
      */
-    int getIndentAdvance(String content);
+    @UiThread
+    int getIndentAdvance(@NonNull ContentReference content, int line, int column);
 
     /**
      * Use tab to format
      */
+    @UiThread
     boolean useTab();
 
     /**
@@ -82,12 +99,14 @@ public interface EditorLanguage {
      * @param text Content to format
      * @return Formatted code
      */
+    @WorkerThread
     CharSequence format(CharSequence text);
 
     /**
      * Returns language specified symbol pairs.
      * The method is called only once when the language is applied.
      */
+    @UiThread
     SymbolPairMatch getSymbolPairs();
 
     /**
@@ -98,6 +117,8 @@ public interface EditorLanguage {
      *
      * @return NewlineHandlers , maybe null
      */
+    @UiThread
+    @Nullable
     NewlineHandler[] getNewlineHandlers();
 
 }

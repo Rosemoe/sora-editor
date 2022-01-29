@@ -21,15 +21,18 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs;
+package io.github.rosemoe.sora.lang.completion;
+
+import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-import io.github.rosemoe.sora.data.CompletionItem;
-import io.github.rosemoe.sora.interfaces.AutoCompleteProvider;
+import io.github.rosemoe.sora.lang.completion.CompletionItem;
+import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
+import io.github.rosemoe.sora.lang.completion.SimpleCompletionItem;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 
 /**
@@ -37,7 +40,7 @@ import io.github.rosemoe.sora.text.TextAnalyzeResult;
  * You can use it to provide identifiers
  * <strong>Note:</strong> To use this, you must use {@link Identifiers} to {@link TextAnalyzeResult#setExtra(Object)}
  */
-public class IdentifierAutoComplete implements AutoCompleteProvider {
+public class IdentifierAutoComplete {
 
     private String[] mKeywords;
     private boolean mKeywordsAreLowCase;
@@ -90,9 +93,13 @@ public class IdentifierAutoComplete implements AutoCompleteProvider {
 
     }
 
-    @Override
-    public List<CompletionItem> getAutoCompleteItems(String prefix, TextAnalyzeResult analyzeResult, int line, int column) {
-        List<CompletionItem> keywords = new ArrayList<>();
+    public void requireAutoComplete(String prefix, CompletionPublisher publisher, TextAnalyzeResult analyzeResult) throws InterruptedException {
+        publisher.setComparator(COMPARATOR);
+        publisher.setUpdateThreshold(0);
+        int prefixLength = prefix.length();
+        if (prefixLength == 0) {
+            return;
+        }
         final String[] keywordArray = mKeywords;
         final boolean lowCase = mKeywordsAreLowCase;
         String match = prefix.toLowerCase();
@@ -100,32 +107,43 @@ public class IdentifierAutoComplete implements AutoCompleteProvider {
             if (lowCase) {
                 for (String kw : keywordArray) {
                     if (kw.startsWith(match)) {
-                        keywords.add(new CompletionItem(kw, "Keyword"));
+                        publisher.addItem(new SimpleCompletionItem(kw, "Keyword", prefixLength, kw));
                     }
                 }
             } else {
                 for (String kw : keywordArray) {
                     if (kw.toLowerCase().startsWith(match)) {
-                        keywords.add(new CompletionItem(kw, "Keyword"));
+                        publisher.addItem(new SimpleCompletionItem(kw, "Keyword", prefixLength, kw));
                     }
                 }
             }
         }
-        Collections.sort(keywords, CompletionItem.COMPARATOR_BY_NAME);
         Object extra = analyzeResult.getExtra();
         Identifiers userIdentifiers = (extra instanceof Identifiers) ? (Identifiers) extra : null;
         if (userIdentifiers != null) {
             List<CompletionItem> words = new ArrayList<>();
             for (String word : userIdentifiers.getIdentifiers()) {
                 if (word.toLowerCase().startsWith(match)) {
-                    words.add(new CompletionItem(word, "Identifier"));
+                    Thread.sleep(200);
+                    publisher.addItem(new SimpleCompletionItem(word, "Identifier", prefixLength, word));
                 }
             }
-            Collections.sort(words, CompletionItem.COMPARATOR_BY_NAME);
-            keywords.addAll(words);
         }
-        return keywords;
     }
+
+    private static String asString(CharSequence str) {
+        return (str instanceof String ? (String) str : str.toString());
+    }
+
+    private final static Comparator<CompletionItem> COMPARATOR = (p1, p2) -> {
+        var cmp1 = asString(p1.desc).compareTo(asString(p2.desc));
+        if (cmp1 < 0) {
+            return 1;
+        } else if (cmp1 > 0) {
+            return -1;
+        }
+        return asString(p1.label).compareTo(asString(p2.label));
+    };
 
 
 }

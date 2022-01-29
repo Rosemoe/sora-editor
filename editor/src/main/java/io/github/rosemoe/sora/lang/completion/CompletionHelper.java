@@ -21,30 +21,28 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.interfaces;
+package io.github.rosemoe.sora.lang.completion;
 
-import java.util.List;
+import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.ContentReference;
 
-import io.github.rosemoe.sora.lang.completion.CompletionItem;
-import io.github.rosemoe.sora.text.TextAnalyzeResult;
+public class CompletionHelper {
 
-/**
- * Interface for auto-completion analysis
- *
- * @author Rose
- */
-public interface AutoCompleteProvider {
+    public static String computePrefix(ContentReference ref, CharPosition pos, PrefixChecker checker) {
+        int begin = pos.column;
+        var line = ref.getLine(pos.line);
+        for (;begin > 0;begin--) {
+            if (!checker.check(line.charAt(begin - 1))) {
+                break;
+            }
+        }
+        return line.substring(begin, pos.column);
+    }
 
-    /**
-     * Analyze auto complete items
-     *
-     * @param prefix        The prefix of input to match
-     * @param analyzeResult        Last analyze result
-     * @param line          The line of cursor
-     * @param column The column of cursor
-     * @return Analyzed items
-     */
-    List<CompletionItem> getAutoCompleteItems(String prefix, TextAnalyzeResult analyzeResult, int line, int column);
+    public interface PrefixChecker {
+
+        boolean check(char ch);
+
+    }
 
 }
-

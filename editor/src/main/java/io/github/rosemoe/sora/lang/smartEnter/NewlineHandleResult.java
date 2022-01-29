@@ -21,30 +21,26 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.interfaces;
+package io.github.rosemoe.sora.lang.smartEnter;
 
-import java.util.List;
-
-import io.github.rosemoe.sora.lang.completion.CompletionItem;
-import io.github.rosemoe.sora.text.TextAnalyzeResult;
-
-/**
- * Interface for auto-completion analysis
- *
- * @author Rose
- */
-public interface AutoCompleteProvider {
+public class NewlineHandleResult {
 
     /**
-     * Analyze auto complete items
-     *
-     * @param prefix        The prefix of input to match
-     * @param analyzeResult        Last analyze result
-     * @param line          The line of cursor
-     * @param column The column of cursor
-     * @return Analyzed items
+     * Text to insert
      */
-    List<CompletionItem> getAutoCompleteItems(String prefix, TextAnalyzeResult analyzeResult, int line, int column);
+    public final CharSequence text;
+
+    /**
+     * Count to shift left from the end of {@link NewlineHandleResult#text}
+     */
+    public final int shiftLeft;
+
+    public NewlineHandleResult(CharSequence text, int shiftLeft) {
+        this.text = text;
+        this.shiftLeft = shiftLeft;
+        if (shiftLeft < 0 || shiftLeft > text.length()) {
+            throw new IllegalArgumentException("invalid shiftLeft");
+        }
+    }
 
 }
-

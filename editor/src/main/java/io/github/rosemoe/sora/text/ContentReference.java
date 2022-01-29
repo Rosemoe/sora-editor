@@ -27,6 +27,8 @@ import androidx.annotation.NonNull;
 
 /**
  * Reference of a content due to accessed in read-only mode.
+ * Access can be validated during accesses.
+ * {@link io.github.rosemoe.sora.text.TextReference.ValidateFailedException} may be thrown if the check is failed.
  *
  * @author Rosemoe
  */
@@ -39,7 +41,7 @@ public class ContentReference extends TextReference {
         this.content = ref;
     }
 
-    public int getLineCount() {
+    public int getLineCount() throws InterruptedException {
         validateAccess();
         return content.getLineCount();
     }

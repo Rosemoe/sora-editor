@@ -84,7 +84,8 @@
     </item>
     <item
         android:id="@+id/code_format"
-        android:title="@string/format" />
+        android:title="@string/format"
+        android:visible="false"/>
     <item
         android:id="@+id/switch_language"
         android:title="@string/switch_language" />
@@ -111,4 +112,10 @@
         android:title="@string/redo" 
         android:icon="@drawable/redo"
         app:showAsAction="always"/>
+    <item
+        android:id="@+id/enable_highlight"
+        android:title="Highlight update(Debug)"
+        android:checkable="true"
+        android:checked="true"
+        android:visible="false"/>
 </menu>

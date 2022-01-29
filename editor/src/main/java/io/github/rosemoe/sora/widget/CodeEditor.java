@@ -23,7 +23,6 @@
  */
 package io.github.rosemoe.sora.widget;
 
-import static io.github.rosemoe.sora.text.TextUtils.isEmoji;
 import static io.github.rosemoe.sora.util.Numbers.stringSize;
 
 import android.annotation.SuppressLint;
@@ -96,7 +95,8 @@ import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.interfaces.ExternalRenderer;
-import io.github.rosemoe.sora.interfaces.NewlineHandler;
+import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
+import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.langs.EmptyLanguage;
 import io.github.rosemoe.sora.text.BlocksUpdater;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -331,6 +331,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private BufferedDrawPoints mDrawPoints;
     private HwAcceleratedRenderer mRenderer;
     private DirectAccessProps mProps;
+    private Bundle mExtraArguments;
     final KeyMetaStates mKeyMetaStates = new KeyMetaStates(this);
 
     public CodeEditor(Context context) {
@@ -348,6 +349,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initialize(attrs, defStyleAttr, defStyleRes);
+    }
+
+    public TextAnalyzer getSpanner() {
+        return mSpanner;
     }
 
     /**
@@ -374,6 +379,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Hide completion window later
      */
     protected void hideCompletionWindow() {
+        mCompletionWindow.interruptCompletion();
         mCompletionWindow.hide();
     }
 
@@ -827,7 +833,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
         if (mCompletionWindow != null) {
             mCompletionWindow.hide();
-            mCompletionWindow.setProvider(lang.getAutoCompleteProvider());
         }
 
         // Symbol pairs
@@ -3809,18 +3814,12 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             int columnAfter = IntPair.getSecond(pos);
             setSelection(lineAfter, columnAfter);
             if (line == lineAfter) {
-                int toLeft = column - columnAfter;
                 if (mCompletionWindow.isShowing()) {
-                    String prefix = mCompletionWindow.getPrefix();
-                    if (prefix.length() > toLeft) {
-                        prefix = prefix.substring(0, prefix.length() - toLeft);
-                        mCompletionWindow.setPrefix(prefix);
-                    } else {
+                    if (columnAfter == 0) {
                         mCompletionWindow.hide();
+                    } else {
+                        mCompletionWindow.requireCompletion();
                     }
-                }
-                if (column - 1 <= 0) {
-                    mCompletionWindow.hide();
                 }
             }
         } else {
@@ -3844,16 +3843,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             int lineAfter = IntPair.getFirst(pos);
             int columnAfter = IntPair.getSecond(pos);
             setSelection(lineAfter, columnAfter);
-            if (line == lineAfter) {
-                char ch = (columnAfter - 1 < c_column && columnAfter - 1 >= 0) ? mText.charAt(lineAfter, columnAfter - 1) : '\0';
-                if (!isEmoji(ch) && mCompletionWindow.isShowing()) {
-                    if (!mLanguage.isAutoCompleteChar(ch)) {
-                        mCompletionWindow.hide();
-                    } else {
-                        String prefix = mCompletionWindow.getPrefix() + ch;
-                        mCompletionWindow.setPrefix(prefix);
-                    }
-                }
+            if (line == lineAfter && mCompletionWindow.isShowing()) {
+                mCompletionWindow.requireCompletion();
             }
         } else {
             mCompletionWindow.hide();
@@ -4076,6 +4067,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     /**
      * @return Text displaying, the result is read-only. You should not make changes to this object as it is used internally
      * @see CodeEditor#setText(CharSequence)
+     * @see CodeEditor#setText(CharSequence, Bundle)
      */
     @NonNull
     public Content getText() {
@@ -4083,11 +4075,31 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Sets the text to be displayed.
+     * Get extra argument set by {@link CodeEditor#setText(CharSequence, Bundle)}
+     */
+    @NonNull
+    public Bundle getExtraArguments() {
+        return mExtraArguments;
+    }
+
+    /**
+     * Set the text to be displayed.
+     * With no extra arguments.
      *
      * @param text the new text you want to display
      */
     public void setText(@Nullable CharSequence text) {
+        setText(text, null);
+    }
+
+    /**
+     * Sets the text to be displayed.
+     *
+     * @param text the new text you want to display
+     * @param extraArguments Extra arguments for the document. This {@link Bundle} object is passed
+     *                       to all languages and plugins in editor.
+     */
+    public void setText(@Nullable CharSequence text, @Nullable Bundle extraArguments) {
         if (text == null) {
             text = "";
         }
@@ -4096,6 +4108,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mText.removeContentListener(this);
             mText.setLineListener(null);
         }
+        mExtraArguments = extraArguments == null ? new Bundle() : extraArguments;
         mText = new Content(text);
         mCursor = mText.getCursor();
         mCursor.setAutoIndent(mAutoIndentEnabled);
@@ -4627,7 +4640,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                             if (handler != null) {
                                 if (handler.matchesRequirement(beforeText, afterText)) {
                                     try {
-                                        NewlineHandler.HandleResult result = handler.handleNewline(beforeText, afterText, getTabWidth());
+                                        NewlineHandleResult result = handler.handleNewline(beforeText, afterText, getTabWidth());
                                         if (result != null) {
                                             mCursor.onCommitText(result.text, false);
                                             int delta = result.shiftLeft;
@@ -4897,25 +4910,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         // Auto completion
         if (isAutoCompletionEnabled()) {
             if ((mConnection.mComposingLine == -1 || mCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
-                int end = endColumn;
-                while (endColumn > 0) {
-                    if (mLanguage.isAutoCompleteChar(content.charAt(endLine, endColumn - 1))) {
-                        endColumn--;
-                    } else {
-                        break;
-                    }
-                }
-                if (end > endColumn) {
-                    String line = content.getLineString(endLine);
-                    String prefix = line.substring(endColumn, end);
-                    mCompletionWindow.setPrefix(prefix);
-                    if (!mCompletionWindow.isShowing()) {
-                        updateCompletionWindowPosition();
-                        mCompletionWindow.show();
-                    }
-                } else {
-                    hideCompletionWindow();
-                }
+                mCompletionWindow.requireCompletion();
             } else {
                 hideCompletionWindow();
             }
@@ -4970,14 +4965,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             if (mConnection.mComposingLine == -1 && mCompletionWindow.isShowing()) {
                 if (startLine != endLine || startColumn != endColumn - 1) {
                     hideCompletionWindow();
-                }
-                String prefix = mCompletionWindow.getPrefix();
-                if (prefix == null || prefix.length() - 1 <= 0) {
-                    hideCompletionWindow();
                 } else {
-                    prefix = prefix.substring(0, prefix.length() - 1);
-                    updateCompletionWindowPosition();
-                    mCompletionWindow.setPrefix(prefix);
+                    mCompletionWindow.requireCompletion();
                 }
             }
         } else {

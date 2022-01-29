@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.interfaces;
+package io.github.rosemoe.sora.lang.smartEnter;
 
 /**
  * Perform text processing when user enters '\n' and selection size is 0
@@ -44,28 +44,6 @@ public interface NewlineHandler {
      * @param afterText  Text of line after cursor
      * @return Actual content to insert
      */
-    HandleResult handleNewline(String beforeText, String afterText, int tabSize);
-
-    class HandleResult {
-
-        /**
-         * Text to insert
-         */
-        public final CharSequence text;
-
-        /**
-         * Count to shift left from the end of {@link HandleResult#text}
-         */
-        public final int shiftLeft;
-
-        public HandleResult(CharSequence text, int shiftLeft) {
-            this.text = text;
-            this.shiftLeft = shiftLeft;
-            if (shiftLeft < 0 || shiftLeft > text.length()) {
-                throw new IllegalArgumentException("invalid shiftLeft");
-            }
-        }
-
-    }
+    NewlineHandleResult handleNewline(String beforeText, String afterText, int tabSize);
 
 }
