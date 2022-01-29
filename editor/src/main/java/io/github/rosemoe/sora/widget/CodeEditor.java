@@ -547,12 +547,16 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
     }
 
-    private void invalidateInCursor() {
+    private void invalidateChanged(int startLine, int endLine) {
         if (mRenderer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mCursor != null) {
-            if (mRenderer.invalidateInRegion(mCursor.getLeftLine(), mCursor.getRightLine())) {
+            if (mRenderer.invalidateInRegion(startLine, endLine)) {
                 invalidate();
             }
         }
+    }
+
+    private void invalidateInCursor() {
+        invalidateChanged(mCursor.getLeftLine(), mCursor.getRightLine());
     }
 
     /**
@@ -4921,6 +4925,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         updateCursorAnchor();
 
         invalidateInCursor();
+        invalidateChanged(startLine, endLine);
         ensureSelectionVisible();
 
         mSpanner.analyze(mText);
@@ -4932,6 +4937,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_INSERT, mText.getIndexer().getCharPosition(startLine, startColumn), mText.getIndexer().getCharPosition(endLine, endColumn), insertedContent));
     }
 
+    /**
+     * Update timestamp required for measuring cache
+     */
     protected void updateTimestamp() {
         mTimestamp = System.nanoTime();
     }
@@ -4976,6 +4984,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (!mWait) {
             updateCursorAnchor();
             invalidateInCursor();
+            invalidateChanged(startLine, startLine + 1);
             ensureSelectionVisible();
             mSpanner.analyze(mText);
             mEventHandler.hideInsertHandle();

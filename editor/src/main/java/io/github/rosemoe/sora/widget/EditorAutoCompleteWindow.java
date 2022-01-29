@@ -214,6 +214,10 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
         select(mCurrent);
     }
 
+    public boolean shouldRejectComposing() {
+        return mCancelShowUp;
+    }
+
     /**
      * Select the given position
      *
