@@ -110,7 +110,7 @@ public class TextMateAnalyzer implements CodeAnalyzer {
                 blockLineAnalyzer.analyze(language, model, result);
             }
 
-            result.determine(model.getLineCount());
+            result.determine(model.getLineCount() - 1);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -43,8 +43,6 @@ public class TextMateLanguage extends EmptyLanguage {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
     }
 
     public static TextMateLanguage create(String grammarName, InputStream grammarIns,Reader languageConfiguration, IRawTheme theme) {
@@ -74,13 +72,7 @@ public class TextMateLanguage extends EmptyLanguage {
         return super.getAnalyzer();
     }
 
-    private int tabSize=4;
-
-    public void setTabSize(int tabSize) {
-        this.tabSize = tabSize;
-    }
-
     public int getTabSize() {
-        return tabSize;
+        return 4;
     }
 }
