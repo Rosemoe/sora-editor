@@ -26,9 +26,7 @@ package io.github.rosemoe.sora.widget;
 import android.annotation.SuppressLint;
 import android.graphics.RectF;
 import android.graphics.drawable.GradientDrawable;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 
@@ -38,7 +36,6 @@ import io.github.rosemoe.sora.event.HandleStateChangeEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.Unsubscribe;
-import io.github.rosemoe.sora.util.IntPair;
 
 /**
  * This will show when selecting text

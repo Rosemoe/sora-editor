@@ -25,8 +25,6 @@ package io.github.rosemoe.sora.lang.completion;
 
 import android.graphics.drawable.Drawable;
 
-import java.util.Comparator;
-
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
@@ -90,7 +88,11 @@ public abstract class CompletionItem {
     }
 
     /**
-     * Perform this completion
+     * Perform this completion.
+     * You can implement custom logic to make your completion better(by updating selection and text
+     * from here).
+     * To make it considered as a single action, the editor will enter batch edit state before invoking
+     * this method. Feel free to update the text by multiple calls to {@code text}.
      *
      * @param editor The editor. You can set cursor position with that.
      * @param text The text in editor. You can make modifications to it.

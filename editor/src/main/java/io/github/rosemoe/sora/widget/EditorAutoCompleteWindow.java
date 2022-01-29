@@ -27,7 +27,6 @@ import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -35,8 +34,6 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
-
-import java.util.List;
 
 import io.github.rosemoe.sora.interfaces.EditorLanguage;
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
@@ -60,7 +57,6 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
     protected boolean mCancelShowUp = false;
     private int mCurrent = 0;
     private long mRequestTime;
-    private boolean mLoading;
     private int mMaxHeight;
     private EditorCompletionAdapter mAdapter;
     private AutoCompletionThread mThread;
@@ -152,7 +148,6 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
      * @param state Whether loading
      */
     public void setLoading(boolean state) {
-        mLoading = state;
         mPb.setVisibility(state ? View.VISIBLE : View.INVISIBLE);
     }
 
@@ -233,6 +228,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
         Cursor cursor = mEditor.getCursor();
         if (!cursor.isSelected()) {
             mCancelShowUp = true;
+            mEditor.restartInput();
             mEditor.getText().beginBatchEdit();
             item.performCompletion(mEditor, mEditor.getText(), mThread.mPosition.line, mThread.mPosition.column);
             mEditor.getText().endBatchEdit();
@@ -267,7 +263,8 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
         interruptCompletion();
         mRequestTime = System.nanoTime();
         mCurrent = -1;
-        var publisher = new CompletionPublisher(mEditor.getHandler(), mAdapter, () -> {
+        var publisher = new CompletionPublisher(mEditor.getHandler(), () -> {
+            mAdapter.notifyDataSetChanged();
             float newHeight = mAdapter.getItemHeight() * mAdapter.getCount();
             setSize(getWidth(), (int) Math.min(newHeight, mMaxHeight));
             if (!isShowing()) {

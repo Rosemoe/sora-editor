@@ -480,7 +480,7 @@ public class JavaTextTokenizer {
                 "goto", "continue", "break", "transient", "void", "try", "catch",
                 "finally", "while", "case", "default", "const", "enum", "extends",
                 "implements", "import", "instanceof", "interface", "native",
-                "this", "throw", "throws", "true", "false", "null"
+                "this", "throw", "throws", "true", "false", "null", "var", "sealed", "permits"
         };
         Tokens[] sTokens = new Tokens[]{
                 Tokens.ABSTRACT, Tokens.ASSERT, Tokens.BOOLEAN, Tokens.BYTE, Tokens.CHAR, Tokens.CLASS, Tokens.DO,

@@ -23,17 +23,12 @@
  */
 package io.github.rosemoe.sora.widget;
 
-import android.text.Spannable;
-import android.text.TextUtils;
-import android.text.style.ForegroundColorSpan;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import java.util.Locale;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.lang.completion.CompletionItem;

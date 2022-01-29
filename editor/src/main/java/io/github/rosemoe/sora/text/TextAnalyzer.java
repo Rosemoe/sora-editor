@@ -27,6 +27,7 @@ import android.util.Log;
 
 import java.util.List;
 
+import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.data.BlockLine;
 import io.github.rosemoe.sora.data.ObjectAllocator;
 import io.github.rosemoe.sora.data.Span;
@@ -65,6 +66,7 @@ public class TextAnalyzer {
         mCodeAnalyzer = codeAnalyzer0;
     }
 
+    @UnsupportedUserUsage
     public void setEnabled(boolean enabled) {
         this.mEnabled = enabled;
     }

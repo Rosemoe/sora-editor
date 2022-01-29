@@ -78,6 +78,7 @@ import androidx.annotation.RequiresApi;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.Experimental;
@@ -351,6 +352,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         initialize(attrs, defStyleAttr, defStyleRes);
     }
 
+    @UnsupportedUserUsage
     public TextAnalyzer getSpanner() {
         return mSpanner;
     }
@@ -748,11 +750,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         updateTimestamp();
     }
 
+    /**
+     * Set the style of selection handler.
+     * @see SelectionHandleStyle
+     * @see io.github.rosemoe.sora.widget.style.builtin.HandleStyleDrop
+     * @see HandleStyleSideDrop
+     */
     public void setSelectionHandleStyle(@NonNull SelectionHandleStyle style) {
-        if (style == null) {
-            throw new IllegalArgumentException("handle style can not be null");
-        }
-        mHandleStyle = style;
+        mHandleStyle = Objects.requireNonNull(style);
         invalidate();
     }
 

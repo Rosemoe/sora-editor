@@ -71,23 +71,26 @@ public class CompletionPublisher {
     private final Lock lock;
     private final Handler handler;
     private int updateThreshold;
-    private final EditorCompletionAdapter targetAdapter;
     private boolean invalid = false;
     private final Runnable callback;
 
-    private final static int DEFAULT_MIN_AUTO_UPDATE_COUNT = 5;
+    /**
+     * Default value for {@link CompletionPublisher#setUpdateThreshold(int)}
+     */
+    public final static int DEFAULT_UPDATE_THRESHOLD = 5;
 
-    public CompletionPublisher(@NonNull Handler handler, @NonNull EditorCompletionAdapter updateReceiver,
-                               @NonNull Runnable callback) {
+    public CompletionPublisher(@NonNull Handler handler, @NonNull Runnable callback) {
         this.handler = handler;
         this.items = new ArrayList<>();
         this.candidates = new ArrayList<>();
         lock = new ReentrantLock(true);
-        this.targetAdapter = updateReceiver;
-        updateThreshold = DEFAULT_MIN_AUTO_UPDATE_COUNT;
+        updateThreshold = DEFAULT_UPDATE_THRESHOLD;
         this.callback = callback;
     }
 
+    /**
+     * Checks whether there is data
+     */
     public boolean hasData() {
         return items.size() + candidates.size() > 0;
     }
@@ -124,7 +127,7 @@ public class CompletionPublisher {
                 if (comparator != null) {
                     Collections.sort(items, comparator);
                 }
-               targetAdapter.notifyDataSetInvalidated();
+                callback.run();
             });
         }
     }
@@ -235,7 +238,6 @@ public class CompletionPublisher {
                         items.addAll(candidates);
                         candidates.clear();
                     }
-                    targetAdapter.notifyDataSetChanged();
                     callback.run();
                 } finally {
                     lock.unlock();

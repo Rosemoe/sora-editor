@@ -24,7 +24,6 @@
 package io.github.rosemoe.sora.event;
 
 import io.github.rosemoe.sora.text.CharPosition;
-import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**

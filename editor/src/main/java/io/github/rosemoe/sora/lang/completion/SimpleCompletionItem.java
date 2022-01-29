@@ -36,6 +36,8 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  *
  * Note that you must make sure the start position of replacement is on the same line as auto-completion's
  * required position.
+ *
+ * @see CompletionItem
  */
 public class SimpleCompletionItem extends CompletionItem {
 

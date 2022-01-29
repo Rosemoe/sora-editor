@@ -28,7 +28,6 @@ import android.graphics.Typeface;
 import android.os.Build;
 
 import io.github.rosemoe.sora.text.ContentLine;
-import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 
 public class Paint extends android.graphics.Paint {
 

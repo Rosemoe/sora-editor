@@ -33,7 +33,6 @@ import androidx.annotation.WorkerThread;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.text.CharPosition;
-import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
@@ -71,7 +70,8 @@ public interface EditorLanguage {
      * @param position The position for auto-complete
      * @param publisher The publisher used to update items
      * @throws InterruptedException This thread can be interrupted by the editor framework because the
-     * auto-completion items of this invocation are no longer needed by the user.
+     * auto-completion items of this invocation are no longer needed by the user. This can either be thrown
+     * by {@link ContentReference} or {@link CompletionPublisher}
      */
     @WorkerThread
     void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position,

@@ -52,8 +52,7 @@ public class JavaLanguage implements EditorLanguage {
     private final IdentifierAutoComplete autoComplete;
 
     public JavaLanguage() {
-        autoComplete = new IdentifierAutoComplete();
-        autoComplete.setKeywords(JavaTextTokenizer.sKeywords);
+        autoComplete = new IdentifierAutoComplete(JavaTextTokenizer.sKeywords);
     }
 
     @Override

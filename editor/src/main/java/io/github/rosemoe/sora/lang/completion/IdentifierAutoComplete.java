@@ -23,16 +23,15 @@
  */
 package io.github.rosemoe.sora.lang.completion;
 
-import android.util.Log;
+import android.os.Bundle;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-import io.github.rosemoe.sora.lang.completion.CompletionItem;
-import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
-import io.github.rosemoe.sora.lang.completion.SimpleCompletionItem;
+import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 
 /**
@@ -46,16 +45,16 @@ public class IdentifierAutoComplete {
     private boolean mKeywordsAreLowCase;
 
     public IdentifierAutoComplete() {
-
     }
 
     public IdentifierAutoComplete(String[] keywords) {
-        setKeywords(keywords);
+        this();
+        setKeywords(keywords, true);
     }
 
-    public void setKeywords(String[] keywords) {
+    public void setKeywords(String[] keywords, boolean lowCase) {
         mKeywords = keywords;
-        mKeywordsAreLowCase = true;
+        mKeywordsAreLowCase = lowCase;
     }
 
     public String[] getKeywords() {
@@ -93,6 +92,11 @@ public class IdentifierAutoComplete {
 
     }
 
+    /**
+     * Make completion items for the given arguments.
+     * Provide the required arguments passed by {@link io.github.rosemoe.sora.interfaces.EditorLanguage#requireAutoComplete(ContentReference, CharPosition, CompletionPublisher, TextAnalyzeResult, Bundle)}
+     * @param prefix The prefix to make completions for.
+     */
     public void requireAutoComplete(String prefix, CompletionPublisher publisher, TextAnalyzeResult analyzeResult) throws InterruptedException {
         publisher.setComparator(COMPARATOR);
         publisher.setUpdateThreshold(0);
