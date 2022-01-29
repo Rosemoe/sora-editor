@@ -52,14 +52,16 @@ import io.github.rosemoe.sora.text.TextReference;
 public class EditorAutoCompleteWindow extends EditorPopupWindow {
     private final CodeEditor mEditor;
     private final ListView mListView;
-    private final ProgressBar mPb;
-    private final GradientDrawable mBg;
+    private final ProgressBar mProgressBar;
+    private final GradientDrawable mBackground;
     protected boolean mCancelShowUp = false;
-    private int mCurrent = 0;
+    private int mCurrent = -1;
     private long mRequestTime;
     private int mMaxHeight;
     private EditorCompletionAdapter mAdapter;
     private AutoCompletionThread mThread;
+    private long requestShow = 0;
+    private long requestHide = -1;
 
     /**
      * Create a panel instance for the given editor
@@ -73,16 +75,16 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
         RelativeLayout layout = new RelativeLayout(mEditor.getContext());
         mListView = new ListView(mEditor.getContext());
         layout.addView(mListView, new LinearLayout.LayoutParams(-1, -1));
-        mPb = new ProgressBar(editor.getContext());
-        layout.addView(mPb);
-        var params = ((RelativeLayout.LayoutParams) mPb.getLayoutParams());
+        mProgressBar = new ProgressBar(editor.getContext());
+        layout.addView(mProgressBar);
+        var params = ((RelativeLayout.LayoutParams) mProgressBar.getLayoutParams());
         params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         params.width = params.height = (int) (mEditor.getDpUnit() * 30);
         setContentView(layout);
         GradientDrawable gd = new GradientDrawable();
         gd.setCornerRadius(editor.getDpUnit() * 8);
         layout.setBackground(gd);
-        mBg = gd;
+        mBackground = gd;
         applyColorScheme();
         mListView.setDividerHeight(0);
         setLoading(true);
@@ -102,9 +104,6 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
         }
     }
 
-    private long requestShow = 0;
-    private long requestHide = -1;
-
     @Override
     public void show() {
         if (mCancelShowUp) {
@@ -121,6 +120,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
 
     public void hide() {
         super.dismiss();
+        interruptCompletion();
         mRequestTime = 0;
         requestHide = System.currentTimeMillis();
     }
@@ -138,8 +138,8 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
      */
     public void applyColorScheme() {
         EditorColorScheme colors = mEditor.getColorScheme();
-        mBg.setStroke(1, colors.getColor(EditorColorScheme.AUTO_COMP_PANEL_CORNER));
-        mBg.setColor(colors.getColor(EditorColorScheme.AUTO_COMP_PANEL_BG));
+        mBackground.setStroke(1, colors.getColor(EditorColorScheme.AUTO_COMP_PANEL_CORNER));
+        mBackground.setColor(colors.getColor(EditorColorScheme.AUTO_COMP_PANEL_BG));
     }
 
     /**
@@ -148,7 +148,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
      * @param state Whether loading
      */
     public void setLoading(boolean state) {
-        mPb.setVisibility(state ? View.VISIBLE : View.INVISIBLE);
+        mProgressBar.setVisibility(state ? View.VISIBLE : View.INVISIBLE);
     }
 
     /**
@@ -234,7 +234,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
             mEditor.getText().endBatchEdit();
             mCancelShowUp = false;
         }
-        mEditor.hideCompletionWindow();
+        hide();
     }
 
     /**

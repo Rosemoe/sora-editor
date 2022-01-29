@@ -378,14 +378,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     /**
-     * Hide completion window later
-     */
-    protected void hideCompletionWindow() {
-        mCompletionWindow.interruptCompletion();
-        mCompletionWindow.hide();
-    }
-
-    /**
      * Get using EditorAutoCompleteWindow
      */
     @NonNull
@@ -4917,7 +4909,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             if ((mConnection.mComposingLine == -1 || mCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
                 mCompletionWindow.requireCompletion();
             } else {
-                hideCompletionWindow();
+                mCompletionWindow.hide();
             }
             updateCompletionWindowPosition(mCompletionWindow.isShowing());
         } else {
@@ -4969,7 +4961,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (isAutoCompletionEnabled()) {
             if (mConnection.mComposingLine == -1 && mCompletionWindow.isShowing()) {
                 if (startLine != endLine || startColumn != endColumn - 1) {
-                    hideCompletionWindow();
+                    mCompletionWindow.hide();
                 } else {
                     mCompletionWindow.requireCompletion();
                 }

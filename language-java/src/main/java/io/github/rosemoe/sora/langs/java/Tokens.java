@@ -1,7 +1,6 @@
 /*
  *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+ *    https: *    Copyright (C) 2020-2022  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -35,63 +34,43 @@ public enum Tokens {
     UNKNOWN,
     EOF,
 
-    //注释类 Comments
-    LONG_COMMENT,//长注释 Long comment
-    LINE_COMMENT,//单行注释 Single line comment
+    
+    LONG_COMMENT,
+    LINE_COMMENT,
 
-    DIV,//除
-    MULT,//乘
-    IDENTIFIER,//标识符
-    INTEGER_LITERAL,//整数
-    DOT,//点
-    MINUS,//减
-    STRING,//字符串
-    CHARACTER_LITERAL,//字符
-    LPAREN,//左小括号
-    RPAREN,//右小括号
-    LBRACE,//左大括号
-    RBRACE,//右大括号
-    LBRACK,//左中括号
-    RBRACK,//右中括号
-    SEMICOLON,//分号
-    COMMA,//逗号
-    EQ,//等于
-    GT,//大于
-    LT,//小于
-    NOT,//非
-    COMP,//~
-    QUESTION,//问号
-    COLON,//冒号
-    AND,//与
-    OR,//或
-    PLUS,//加
-    XOR,//异或
-    MOD,//百分号
-    DIVEQ,
-    MULTEQ,
-    FLOATING_POINT_LITERAL,//浮点数
-    MINUSMINUS,//减减
-    MINUSEQ,
-    EQEQ,//等于等于
-    GTEQ,
-    RSHIFT,//右位移
-    LTEQ,
-    LSHIFT,//左位移
-    NOTEQ,
-    ANDEQ,
-    ANDAND,//与与
-    OREQ,
-    OROR,//或或
-    PLUSEQ,
-    PLUSPLUS,//加加
-    XOREQ,
-    MODEQ,
-    RSHIFTEQ,
-    URSHIFT,
-    LSHIFTEQ,
-    URSHIFTEQ,
+    DIV,
+    MULT,
+    IDENTIFIER,
+    INTEGER_LITERAL,
+    DOT,
+    MINUS,
+    STRING,
+    CHARACTER_LITERAL,
+    LPAREN,
+    RPAREN,
+    LBRACE,
+    RBRACE,
+    LBRACK,
+    RBRACK,
+    SEMICOLON,
+    COMMA,
+    EQ,
+    GT,
+    LT,
+    NOT,
+    COMP,
+    QUESTION,
+    COLON,
+    AND,
+    OR,
+    PLUS,
+    XOR,
+    MOD,
+    FLOATING_POINT_LITERAL,
 
-    //Keywords
+    VAR,
+    SEALED,
+    PERMITS,
     ABSTRACT,
     ASSERT,
     BOOLEAN,

@@ -195,6 +195,9 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                 case TRUE:
                 case FALSE:
                 case NULL:
+                case VAR:
+                case SEALED:
+                case PERMITS:
                     classNamePrevious = false;
                     result.addIfNeeded(line, column, makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false));
                     break;
