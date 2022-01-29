@@ -128,7 +128,6 @@ public class IdentifierAutoComplete {
             List<CompletionItem> words = new ArrayList<>();
             for (String word : userIdentifiers.getIdentifiers()) {
                 if (word.toLowerCase().startsWith(match)) {
-                    Thread.sleep(200);
                     publisher.addItem(new SimpleCompletionItem(word, "Identifier", prefixLength, word));
                 }
             }
