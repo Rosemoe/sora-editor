@@ -36,13 +36,14 @@ import io.github.rosemoe.sora.event.HandleStateChangeEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.Unsubscribe;
+import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
 
 /**
  * This window will show when selecting text to present text actions.
  *
  * @author Rosemoe
  */
-class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickListener, EventReceiver<SelectionChangeEvent> {
+public final class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickListener, EventReceiver<SelectionChangeEvent> {
     private final CodeEditor mEditor;
     private final Button mPasteBtn;
     private final Button mCopyBtn;

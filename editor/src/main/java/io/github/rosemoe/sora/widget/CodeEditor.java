@@ -3054,7 +3054,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @return 1dp in pixel
      */
-    protected float getDpUnit() {
+    public float getDpUnit() {
         return mDpUnit;
     }
 

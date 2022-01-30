@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
+package io.github.rosemoe.sora.widget.base;
 
 import android.view.Gravity;
 import android.view.View;
@@ -33,6 +33,7 @@ import java.util.Objects;
 
 import io.github.rosemoe.sora.event.EventReceiver;
 import io.github.rosemoe.sora.event.ScrollEvent;
+import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
  * Base class for all editor popup windows.
@@ -133,6 +134,8 @@ public class EditorPopupWindow {
     /**
      * Register this window in target editor.
      * After registering, features are available.
+     * This automatically done when you create the window. But if you call {@link #unregister()}, you
+     * should re-invoke this method to make features available.
      */
     public void register() {
         if (!mRegistered) {
@@ -152,10 +155,19 @@ public class EditorPopupWindow {
         return mShowState;
     }
 
+    /**
+     * Get the actual {@link PopupWindow} instance.
+     *
+     * Note that you should not manage its visibility but update that by invoking methods in this
+     * class. Otherwise, there may be some abnormal display.
+     */
     public PopupWindow getPopup() {
         return mWindow;
     }
 
+    /**
+     * @see PopupWindow#setContentView(View)
+     */
     public void setContentView(View view) {
         mWindow.setContentView(view);
     }
@@ -203,16 +215,28 @@ public class EditorPopupWindow {
         }
     }
 
+    /**
+     * Get width you've set for this window.
+     *
+     * Note that, according to you feature switches, this may be different from the actual size of the window on screen.
+     */
     public int getWidth() {
         return mWidth;
     }
 
+    /**
+     * Get height you've set for this window.
+     *
+     * Note that, according to you feature switches, this may be different from the actual size of the window on screen.
+     */
     public int getHeight() {
         return mHeight;
     }
 
     /**
-     * Set the size of this window
+     * Set the size of this window.
+     *
+     * Note that, according to you feature switches, the window can have a different size on screen.
      */
     public void setSize(int width, int height) {
         mWidth = width;
@@ -232,12 +256,15 @@ public class EditorPopupWindow {
     }
 
     /**
-     * Sets the absolute position on view
+     * Sets the absolute position on view.
      */
     public void setLocationAbsolutely(int x, int y) {
         setLocation(x + mEditor.getOffsetX(), y + mEditor.getOffsetY());
     }
 
+    /**
+     * Show the window if appropriate
+     */
     public void show() {
         if (mShowState) {
             return;
@@ -246,6 +273,9 @@ public class EditorPopupWindow {
         mShowState = true;
     }
 
+    /**
+     * Dismiss the window
+     */
     public void dismiss() {
         if (mShowState) {
             mShowState = false;

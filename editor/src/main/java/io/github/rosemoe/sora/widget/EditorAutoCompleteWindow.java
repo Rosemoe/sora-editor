@@ -44,6 +44,7 @@ import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.text.TextReference;
+import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
 
 /**
  * Auto complete window for editing code quicker
