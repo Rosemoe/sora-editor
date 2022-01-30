@@ -26,54 +26,54 @@ package io.github.rosemoe.sora.langs.textmate.analyzer;
 import java.util.Collections;
 
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
+import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.langs.textmate.folding.FoldingRegion;
 import io.github.rosemoe.sora.langs.textmate.folding.FoldingRegions;
 import io.github.rosemoe.sora.langs.textmate.folding.IndentRange;
 import io.github.rosemoe.sora.text.Content;
-import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.textmate.languageconfiguration.ILanguageConfiguration;
 import io.github.rosemoe.sora.textmate.languageconfiguration.internal.supports.Folding;
 
-public class BlockLineAnalyzer  {
+public class BlockLineAnalyzer {
     private static final int MAX_FOLDING_REGIONS_FOR_INDENT_LIMIT = 5000;
     private final ILanguageConfiguration configuration;
 
-    public BlockLineAnalyzer(ILanguageConfiguration configuration){
+    public BlockLineAnalyzer(ILanguageConfiguration configuration) {
         this.configuration = configuration;
     }
-    public void analyze(TextMateLanguage language,Content model, TextAnalyzeResult result) {
-        Folding folding=configuration.getFolding();
-        if(folding==null)return;
-        FoldingRegions foldingRegions= null;
+
+    public void analyze(TextMateLanguage language, Content model, Styles result) {
+        Folding folding = configuration.getFolding();
+        if (folding == null) return;
+        FoldingRegions foldingRegions = null;
         try {
-            foldingRegions = IndentRange.computeRanges(model,language.getTabSize(),folding.getOffSide(),folding,MAX_FOLDING_REGIONS_FOR_INDENT_LIMIT);
-            for(int i=0;i< foldingRegions.length();i++){
-                FoldingRegion foldingRegion= foldingRegions.toRegion(i);
-                int startLine=foldingRegion.getStartLineNumber();
-                int endLine=foldingRegion.getEndLineNumber();
-                if(startLine!=endLine){
+            foldingRegions = IndentRange.computeRanges(model, language.getTabSize(), folding.getOffSide(), folding, MAX_FOLDING_REGIONS_FOR_INDENT_LIMIT);
+            for (int i = 0; i < foldingRegions.length(); i++) {
+                FoldingRegion foldingRegion = foldingRegions.toRegion(i);
+                int startLine = foldingRegion.getStartLineNumber();
+                int endLine = foldingRegion.getEndLineNumber();
+                if (startLine != endLine) {
                     CodeBlock codeBlock = result.obtainNewBlock();
-                    codeBlock.toBottomOfEndLine=true;
-                    codeBlock.startLine=startLine;
-                    codeBlock.endLine= endLine;
-                    String line= model.getLineString(startLine);
+                    codeBlock.toBottomOfEndLine = true;
+                    codeBlock.startLine = startLine;
+                    codeBlock.endLine = endLine;
+                    String line = model.getLineString(startLine);
                     // TODO: 2021/10/17 这2个column不知道怎么取值。。
-                    codeBlock.startColumn= IndentRange.computeStartColumn(line,language.getTabSize());
+                    codeBlock.startColumn = IndentRange.computeStartColumn(line, language.getTabSize());
 //                    line= model.getLineString(endLine);
 //                    int endColumn=IndentRange.computeStartColumn(line,language.getTabSize());
-                    codeBlock.endColumn= codeBlock.startColumn;
+                    codeBlock.endColumn = codeBlock.startColumn;
 
-                    result.addBlockLine(codeBlock);
+                    result.addCodeBlock(codeBlock);
                 }
             }
 
-            Collections.sort(result.getBlocks(), (o1, o2) -> o1.endLine-o2.endLine);
+            Collections.sort(result.blocks, (o1, o2) -> o1.endLine - o2.endLine);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-
 
 
     }

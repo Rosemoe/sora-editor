@@ -76,15 +76,12 @@ import androidx.annotation.Px;
 import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
-import io.github.rosemoe.sora.lang.styling.CodeBlock;
-import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.EventManager;
@@ -94,12 +91,19 @@ import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.Paint;
-import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.interfaces.ExternalRenderer;
+import io.github.rosemoe.sora.lang.EmptyLanguage;
+import io.github.rosemoe.sora.lang.Language;
+import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
+import io.github.rosemoe.sora.lang.analysis.StyleReceiver;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
-import io.github.rosemoe.sora.lang.EmptyLanguage;
-import io.github.rosemoe.sora.text.BlocksUpdater;
+import io.github.rosemoe.sora.lang.styling.CodeBlock;
+import io.github.rosemoe.sora.lang.styling.EmptyReader;
+import io.github.rosemoe.sora.lang.styling.Span;
+import io.github.rosemoe.sora.lang.styling.Spans;
+import io.github.rosemoe.sora.lang.styling.Styles;
+import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
@@ -108,11 +112,7 @@ import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.FormatThread;
 import io.github.rosemoe.sora.text.LineRemoveListener;
-import io.github.rosemoe.sora.lang.styling.MappedSpanUpdater;
-import io.github.rosemoe.sora.text.TextAnalyzeResult;
-import io.github.rosemoe.sora.text.TextAnalyzer;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
-import io.github.rosemoe.sora.text.TextStyle;
 import io.github.rosemoe.sora.text.TextUtils;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
@@ -146,7 +146,7 @@ import io.github.rosemoe.sora.widget.style.builtin.HandleStyleSideDrop;
  * @author Rosemoe
  */
 @SuppressWarnings("unused")
-public class CodeEditor extends View implements ContentListener, TextAnalyzer.Callback, FormatThread.FormatResultReceiver, LineRemoveListener {
+public class CodeEditor extends View implements ContentListener, StyleReceiver, FormatThread.FormatResultReceiver, LineRemoveListener {
 
     /**
      * Digits for line number measuring
@@ -297,7 +297,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private InputMethodManager mInputMethodManager;
     private Cursor mCursor;
     private Content mText;
-    private TextAnalyzer mSpanner;
     private Paint mPaint;
     private Paint mPaintOther;
     private Paint mPaintGraph;
@@ -336,6 +335,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private HwAcceleratedRenderer mRenderer;
     private DirectAccessProps mProps;
     private Bundle mExtraArguments;
+    private Styles mStyles;
     final KeyMetaStates mKeyMetaStates = new KeyMetaStates(this);
 
     public CodeEditor(Context context) {
@@ -371,11 +371,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         } else {
             throw new IllegalArgumentException("Unknown component type");
         }
-    }
-
-    @UnsupportedUserUsage
-    public TextAnalyzer getSpanner() {
-        return mSpanner;
     }
 
     /**
@@ -791,20 +786,25 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         if (lang == null) {
             lang = new EmptyLanguage();
         }
+
+        // Destroy old one
+        var old = mLanguage;
+        if (old != null) {
+            old.getAnalyzeManager().setReceiver(null);
+            old.getAnalyzeManager().destroy();
+            old.destroy();
+        }
+
         this.mLanguage = lang;
 
-        // Update spanner
-        if (mSpanner != null) {
-            mSpanner.shutdown();
-            mSpanner.setCallback(null);
-        }
-        mSpanner = new TextAnalyzer(lang.getAnalyzer());
-        mSpanner.setCallback(this);
-        if (mText != null) {
-            mSpanner.analyze(mText);
-        }
         if (mCompletionWindow != null) {
             mCompletionWindow.hide();
+        }
+        // Setup new one
+        var mgr = lang.getAnalyzeManager();
+        mgr.setReceiver(this);
+        if (mText != null) {
+            mgr.reset(new ContentReference(mText), mExtraArguments);
         }
 
         // Symbol pairs
@@ -1017,7 +1017,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param canvas Canvas you want to draw
      */
     public void drawView(Canvas canvas) {
-        mSpanner.notifyRecycle();
         if (mFormatThread != null) {
             String text = "Formatting your code...";
             float centerY = getHeight() / 2f;
@@ -1265,7 +1264,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     @RequiresApi(29)
-    protected void updateLineDisplayList(RenderNode renderNode, int line, List<Span> spans) {
+    protected void updateLineDisplayList(RenderNode renderNode, int line, Spans.Reader spans) {
         final float waveLength = getDpUnit() * 18;
         final float amplitude = getDpUnit() * 4;
         prepareLine(line);
@@ -1273,19 +1272,18 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         float widthLine = measureText(mBuffer, 0, columnCount, line) + getDpUnit() * 20;
         renderNode.setPosition(0, 0, (int) widthLine, getRowHeight() + (int) amplitude);
         Canvas canvas = renderNode.beginRecording();
-        if (spans == null || spans.size() == 0) {
-            spans = new LinkedList<>();
-            spans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
+        if (spans == null) {
+            spans = new EmptyReader();
         }
         int spanOffset = 0;
         float paintingOffset = 0;
         int row = 0;
         float phi = 0f;
-        Span span = spans.get(spanOffset);
+        Span span = spans.getSpanAt(spanOffset);
         // Draw by spans
         long lastStyle = 0;
         while (columnCount > span.column) {
-            int spanEnd = spanOffset + 1 >= spans.size() ? columnCount : spans.get(spanOffset + 1).column;
+            int spanEnd = spanOffset + 1 >= spans.getSpanCount() ? columnCount : spans.getSpanAt(spanOffset + 1).column;
             spanEnd = Math.min(columnCount, spanEnd);
             int paintStart = span.column;
             int paintEnd = Math.min(columnCount, spanEnd);
@@ -1403,8 +1401,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                 break;
             }
             spanOffset++;
-            if (spanOffset < spans.size()) {
-                span = spans.get(spanOffset);
+            if (spanOffset < spans.getSpanCount()) {
+                span = spans.getSpanAt(spanOffset);
             } else {
                 spanOffset--;
             }
@@ -1428,7 +1426,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         final float amplitude = getDpUnit() * 4;
         RowIterator rowIterator = mLayout.obtainRowIterator(firstVis);
         List<Span> temporaryEmptySpans = null;
-        List<List<Span>> spanMap = mSpanner.getResult().getSpanMap();
+        Spans spans = mStyles == null ? null : mStyles.spans;
         List<Integer> matchedPositions = new ArrayList<>();
         int currentLine = mCursor.isSelected() ? -1 : mCursor.getLeftLine();
         int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
@@ -1548,26 +1546,21 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             if (!mHardwareAccAllowed || !canvas.isHardwareAccelerated() || isWordwrap() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || rowInf.endColumn - rowInf.startColumn > 256 /* Save memory */) {
                 // Draw without hardware acceleration
                 // Get spans
-                List<Span> spans = null;
-                if (line < spanMap.size() && line >= 0) {
-                    spans = spanMap.get(line);
-                }
-                if (spans == null || spans.size() == 0) {
-                    if (temporaryEmptySpans == null) {
-                        temporaryEmptySpans = new LinkedList<>();
-                        temporaryEmptySpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
-                    }
-                    spans = temporaryEmptySpans;
+                var reader = spans == null ? new EmptyReader() : spans.read();
+                try {
+                    reader.moveToLine(line);
+                }catch (Exception e) {
+                    reader = new EmptyReader();
                 }
                 // Seek for first span
                 float phi = 0f;
-                while (spanOffset + 1 < spans.size()) {
-                    if (spans.get(spanOffset + 1).column <= firstVisibleChar) {
+                while (spanOffset + 1 < reader.getSpanCount()) {
+                    if (reader.getSpanAt(spanOffset + 1).column <= firstVisibleChar) {
                         // Update phi
-                        Span span = spans.get(spanOffset);
+                        Span span = reader.getSpanAt(spanOffset);
                         if (span.problemFlags > 0 && Integer.highestOneBit(span.problemFlags) != Span.FLAG_DEPRECATED) {
                             float lineWidth;
-                            int spanEnd = Math.min(rowInf.endColumn, spans.get(spanOffset + 1).column);
+                            int spanEnd = Math.min(rowInf.endColumn, reader.getSpanAt(spanOffset + 1).column);
                             if (isWordwrap()) {
                                 lineWidth = measureText(mBuffer, Math.max(firstVisibleChar, span.column), spanEnd - Math.max(firstVisibleChar, span.column), line) + phi;
                             } else {
@@ -1583,10 +1576,10 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         break;
                     }
                 }
-                Span span = spans.get(spanOffset);
+                Span span = reader.getSpanAt(spanOffset);
                 // Draw by spans
                 while (lastVisibleChar > span.column) {
-                    int spanEnd = spanOffset + 1 >= spans.size() ? columnCount : spans.get(spanOffset + 1).column;
+                    int spanEnd = spanOffset + 1 >= reader.getSpanCount() ? columnCount : reader.getSpanCount();
                     spanEnd = Math.min(columnCount, spanEnd);
                     int paintStart = Math.max(firstVisibleChar, span.column);
                     if (paintStart >= columnCount) {
@@ -1717,8 +1710,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
                         break;
                     }
                     spanOffset++;
-                    if (spanOffset < spans.size()) {
-                        span = spans.get(spanOffset);
+                    if (spanOffset < reader.getSpanCount()) {
+                        span = reader.getSpanAt(spanOffset);
                     } else {
                         spanOffset--;
                     }
@@ -2095,7 +2088,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param offsetX The start x offset for text
      */
     protected void drawBlockLines(Canvas canvas, float offsetX) {
-        List<CodeBlock> blocks = mSpanner == null ? null : mSpanner.getResult().getBlocks();
+        List<CodeBlock> blocks = mStyles == null ? null : mStyles.blocks;
         if (blocks == null || blocks.isEmpty()) {
             return;
         }
@@ -2104,11 +2097,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         boolean mark = false;
         int invalidCount = 0;
         int maxCount = Integer.MAX_VALUE;
-        if (mSpanner != null) {
-            TextAnalyzeResult colors = mSpanner.getResult();
-            if (colors != null) {
-                maxCount = colors.getSuppressSwitch();
-            }
+        if (mStyles != null) {
+            maxCount = mStyles.getSuppressSwitch();
         }
         int mm = binarySearchEndBlock(first, blocks);
         int cursorIdx = mCursorPosition;
@@ -2327,7 +2317,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * If cursor is not in any code block,just -1.
      */
     private int findCursorBlock() {
-        List<CodeBlock> blocks = mSpanner == null ? null : mSpanner.getResult().getBlocks();
+        List<CodeBlock> blocks = mStyles == null ? null : mStyles.blocks;
         if (blocks == null || blocks.isEmpty()) {
             return -1;
         }
@@ -2349,11 +2339,8 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int found = -1;
         int invalidCount = 0;
         int maxCount = Integer.MAX_VALUE;
-        if (mSpanner != null) {
-            TextAnalyzeResult result = mSpanner.getResult();
-            if (result != null) {
-                maxCount = result.getSuppressSwitch();
-            }
+        if (mStyles != null) {
+            maxCount = mStyles.getSuppressSwitch();
         }
         for (int i = min; i <= max; i++) {
             CodeBlock block = blocks.get(i);
@@ -2425,11 +2412,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Get spans on the given line
      */
     public List<Span> getSpansForLine(int line) {
-        var spanMap = getTextAnalyzeResult().getSpanMap();
+        var spanMap = mStyles == null ? null : mStyles.spans;
         if (defSpans.size() == 0) {
             defSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
         }
-        return line < spanMap.size() ? spanMap.get(line) : defSpans;
+        try {
+            if (spanMap != null) {
+                return spanMap.read().getSpansOnLine(line);
+            } else {
+                return defSpans;
+            }
+        } catch (Exception e) {
+            return defSpans;
+        }
     }
 
     /**
@@ -2680,23 +2675,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private void commitTab() {
         if (mConnection != null && isEditable()) {
             mConnection.commitTextInternal("\t", true);
-        }
-    }
-
-
-    /**
-     * Whether span map is valid
-     */
-    protected boolean isSpanMapPrepared(boolean insert, int delta) {
-        List<List<Span>> map = mSpanner.getResult().getSpanMap();
-        if (map != null) {
-            if (insert) {
-                return map.size() == getLineCount() - delta;
-            } else {
-                return map.size() == getLineCount() + delta;
-            }
-        } else {
-            return false;
         }
     }
 
@@ -4075,16 +4053,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         mText.setUndoEnabled(mUndoEnabled);
         mText.setLineListener(this);
 
-        if (mSpanner != null) {
-            mSpanner.setCallback(null);
-            mSpanner.shutdown();
+        if (mLanguage != null) {
+            mLanguage.getAnalyzeManager().reset(new ContentReference(mText), extraArguments);
         }
-        mSpanner = new TextAnalyzer(mLanguage.getAnalyzer());
-        mSpanner.setCallback(this);
-
-        TextAnalyzeResult colors = mSpanner.getResult();
-        colors.getSpanMap().clear();
-        mSpanner.analyze(getText());
 
         requestLayout();
 
@@ -4210,11 +4181,11 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
 
     /**
-     * If there is an Analyzer, do analysis
+     * Rerun analysis forcibly
      */
-    public void doAnalyze() {
-        if (mSpanner != null && mText != null) {
-            mSpanner.analyze(mText);
+    public void rerunAnalysis() {
+        if (mLanguage != null) {
+            mLanguage.getAnalyzeManager().rerun();
         }
     }
 
@@ -4222,9 +4193,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * Get analyze result.
      * <strong>Do not make changes to it or read concurrently</strong>
      */
-    @NonNull
-    public TextAnalyzeResult getTextAnalyzeResult() {
-        return mSpanner.getResult();
+    @Nullable
+    public Styles getStyles() {
+        return mStyles;
     }
 
     /**
@@ -4849,17 +4820,19 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
         updateTimestamp();
+        var start = mText.getIndexer().getCharPosition(startLine, startColumn);
+        var end = mText.getIndexer().getCharPosition(endLine, endColumn);
         for (int i = startLine; i <= endLine && i < getLineCount(); i++) {
             mText.getLine(i).widthCache = null;
         }
 
         // Update spans
-        if (isSpanMapPrepared(true, endLine - startLine)) {
-            if (startLine == endLine) {
-                MappedSpanUpdater.shiftSpansOnSingleLineInsert(mSpanner.getResult().getSpanMap(), startLine, startColumn, endColumn);
-            } else {
-                MappedSpanUpdater.shiftSpansOnMultiLineInsert(mSpanner.getResult().getSpanMap(), startLine, startColumn, endLine, endColumn);
+        try {
+            if (mStyles != null) {
+                mStyles.adjustOnInsert(start, end);
             }
+        } catch (Exception e) {
+            Log.w(LOG_TAG, "Update failure", e);
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -4883,7 +4856,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             mCompletionWindow.hide();
         }
 
-        BlocksUpdater.update(getTextAnalyzeResult().getBlocks(), startLine, endLine - startLine);
         //Log.d(LOG_TAG, "Ins: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + insertedContent);
         updateCursorAnchor();
 
@@ -4891,13 +4863,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         invalidateChanged(startLine, endLine);
         ensureSelectionVisible();
 
-        mSpanner.analyze(mText);
+        mLanguage.getAnalyzeManager().insert(start, end, insertedContent);
         mEventHandler.hideInsertHandle();
         onSelectionChanged();
         if (!mCursor.isSelected()) {
             mCursorAnimator.markEndPosAndStart();
         }
-        dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_INSERT, mText.getIndexer().getCharPosition(startLine, startColumn), mText.getIndexer().getCharPosition(endLine, endColumn), insertedContent));
+        dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_INSERT, start, end, insertedContent));
     }
 
     /**
@@ -4910,16 +4882,22 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
         updateTimestamp();
+        var start = mText.getIndexer().getCharPosition(startLine, startColumn);
+        var end = start.fromThis();
+        end.column = endColumn;
+        end.line = endLine;
+        end.index = start.index + deletedContent.length();
+
         for (int i = startLine; i <= startLine + 1 && i < getLineCount(); i++) {
             mText.getLine(i).widthCache = null;
         }
 
-        if (isSpanMapPrepared(false, endLine - startLine)) {
-            if (startLine == endLine) {
-                MappedSpanUpdater.shiftSpansOnSingleLineDelete(mSpanner.getResult().getSpanMap(), startLine, startColumn, endColumn);
-            } else {
-                MappedSpanUpdater.shiftSpansOnMultiLineDelete(mSpanner.getResult().getSpanMap(), startLine, startColumn, endLine, endColumn);
+        try {
+            if (mStyles != null) {
+                mStyles.adjustOnDelete(start, end);
             }
+        } catch (Exception e) {
+            Log.w(LOG_TAG, "Update failure", e);
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -4942,14 +4920,13 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
 
         //Log.d(LOG_TAG, "Del: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + deletedContent);
-        BlocksUpdater.update(getTextAnalyzeResult().getBlocks(), endLine, startLine - endLine);
 
         if (!mWait) {
             updateCursorAnchor();
             invalidateInCursor();
             invalidateChanged(startLine, startLine + 1);
             ensureSelectionVisible();
-            mSpanner.analyze(mText);
+            mLanguage.getAnalyzeManager().delete(start, end, deletedContent);
             mEventHandler.hideInsertHandle();
         }
         if (!mCursor.isSelected()) {
@@ -4957,11 +4934,6 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         }
 
         onSelectionChanged();
-        var start = mText.getIndexer().getCharPosition(startLine, startColumn);
-        var end = start.fromThis();
-        end.column = endColumn;
-        end.line = endLine;
-        end.index = start.index + deletedContent.length();
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_DELETE, start, end, deletedContent));
     }
 
@@ -4997,15 +4969,14 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     }
 
     @Override
-    public void onAnalyzeDone(TextAnalyzer provider) {
-        if (provider == mSpanner) {
-            if (mHighlightCurrentBlock) {
-                mCursorPosition = findCursorBlock();
-            }
+    public void setStyles(final AnalyzeManager sourceManager, Styles styles) {
+        if (sourceManager == mLanguage.getAnalyzeManager()) {
             post(() -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    mRenderer.invalidateDirtyRegions(provider.mObjContainer.spanMap, provider.getResult().getSpanMap());
+                mStyles = styles;
+                if (mHighlightCurrentBlock) {
+                    mCursorPosition = findCursorBlock();
                 }
+                invalidateHwRenderer();
                 updateTimestamp();
                 invalidate();
             });

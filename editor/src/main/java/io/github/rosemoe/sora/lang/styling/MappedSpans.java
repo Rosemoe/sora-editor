@@ -28,7 +28,6 @@ import androidx.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
@@ -250,39 +249,29 @@ public class MappedSpans implements Spans {
 
     private class Mdf implements Modifier {
 
-        private int line = -1;
-        private int index = 0;
+        private List<Span> span;
 
         private void checkLine() {
-            if (line == -1) {
+            if (span == null) {
                 throw new IllegalStateException("line must be set first");
             }
         }
 
         @Override
         public void moveToLine(int line) {
-            this.line = line;
-            index = 0;
+            span = spanMap.get(line);
         }
 
         @Override
-        public boolean hasNext() {
+        public int getSpanCount() {
             checkLine();
-            return index < spanMap.get(line).size();
+            return span.size();
         }
 
         @Override
-        public Span next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
-            return spanMap.get(line).get(index++);
-        }
-
-        @Override
-        public int peekSpanEnd(int columnCount) {
+        public Span getSpanAt(int index) {
             checkLine();
-            return Math.min(hasNext() ? spanMap.get(line).get(index).column : columnCount, columnCount);
+            return span.get(index);
         }
 
         @Override

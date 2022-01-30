@@ -181,7 +181,7 @@ public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
                         // Send result
                         final var receiver = SimpleAnalyzeManager.this.receiver;
                         if (receiver != null) {
-                            receiver.setStyles(result);
+                            receiver.setStyles(SimpleAnalyzeManager.this, result);
                         }
                         data = newData;
                     }

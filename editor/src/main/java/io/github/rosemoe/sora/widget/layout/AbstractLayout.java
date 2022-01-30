@@ -25,8 +25,8 @@ package io.github.rosemoe.sora.widget.layout;
 
 import java.util.List;
 
-import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
+import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.widget.CodeEditor;

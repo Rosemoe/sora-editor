@@ -40,6 +40,6 @@ public interface StyleReceiver {
      * Send the styles to the receiver. You can call it in any thread.
      * The implementation of this should make sure that concurrent invocations to it are safe.
      */
-    void setStyles(Styles styles);
+    void setStyles(AnalyzeManager sourceManager, Styles styles);
 
 }

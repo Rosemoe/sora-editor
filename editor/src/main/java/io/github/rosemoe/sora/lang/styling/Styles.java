@@ -23,19 +23,17 @@
  */
 package io.github.rosemoe.sora.lang.styling;
 
-import androidx.annotation.NonNull;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 import io.github.rosemoe.sora.data.ObjectAllocator;
-import io.github.rosemoe.sora.text.TextAnalyzeResult;
+import io.github.rosemoe.sora.text.CharPosition;
 
 /**
  * This class stores styles of text and other decorations in editor related to code.
- *
+ * <p>
  * Note that this does not save any information related to languages. No extra space is provided
  * for communication between analyzers and auto-completion. You should manage it by yourself.
  */
@@ -47,12 +45,16 @@ public class Styles {
 
     public int suppressSwitch = Integer.MAX_VALUE;
 
-    public Styles(@NonNull Spans spans) {
+    public Styles() {
+        this(null);
+    }
+
+    public Styles(Spans spans) {
         this(spans, true);
     }
 
-    public Styles(@NonNull Spans spans, boolean initCodeBlocks) {
-        this.spans = Objects.requireNonNull(spans);
+    public Styles(Spans spans, boolean initCodeBlocks) {
+        this.spans = spans;
         if (initCodeBlocks) {
             blocks = new ArrayList<>(128);
         }
@@ -112,6 +114,24 @@ public class Styles {
      */
     public void setSuppressSwitch(int suppressSwitch) {
         this.suppressSwitch = suppressSwitch;
+    }
+
+    /**
+     * Adjust styles on insert.
+     */
+    public void adjustOnInsert(CharPosition start, CharPosition end) {
+        spans.adjustOnInsert(start, end);
+        if (blocks != null)
+            BlocksUpdater.update(blocks, start.line, end.line - start.line);
+    }
+
+    /**
+     * Adjust styles on delete.
+     */
+    public void adjustOnDelete(CharPosition start, CharPosition end) {
+        spans.adjustOnDelete(start, end);
+        if (blocks != null)
+            BlocksUpdater.update(blocks, start.line, start.line - end.line);
     }
 
     /**

@@ -23,8 +23,8 @@
  */
 package io.github.rosemoe.sora.graphics;
 
-import static io.github.rosemoe.sora.text.TextStyle.isBold;
-import static io.github.rosemoe.sora.text.TextStyle.isItalics;
+import static io.github.rosemoe.sora.lang.styling.TextStyle.isBold;
+import static io.github.rosemoe.sora.lang.styling.TextStyle.isItalics;
 
 import android.annotation.SuppressLint;
 

@@ -32,7 +32,6 @@ import android.widget.TextView;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
-import io.github.rosemoe.sora.widget.component.EditorCompletionAdapter;
 
 /**
  * Default adapter to display results

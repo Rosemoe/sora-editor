@@ -33,7 +33,6 @@ import java.util.List;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
-import io.github.rosemoe.sora.text.TextAnalyzeResult;
 
 /**
  * Identifier auto-completion.
@@ -42,8 +41,6 @@ import io.github.rosemoe.sora.text.TextAnalyzeResult;
  * if it is used. If you have to mix the result, then you should call {@link CompletionPublisher#setComparator(Comparator)}
  * with null first. Otherwise, your completion list may be corrupted. And in that case, you must do the sorting
  * work by yourself and then add your items.
- *
- * <strong>Note:</strong> To use this, you must use {@link Identifiers} to {@link TextAnalyzeResult#setExtra(Object)}
  *
  * @author Rosemoe
  */
@@ -102,10 +99,10 @@ public class IdentifierAutoComplete {
 
     /**
      * Make completion items for the given arguments.
-     * Provide the required arguments passed by {@link Language#requireAutoComplete(ContentReference, CharPosition, CompletionPublisher, TextAnalyzeResult, Bundle)}
+     * Provide the required arguments passed by {@link Language#requireAutoComplete(ContentReference, CharPosition, CompletionPublisher,  Bundle)}
      * @param prefix The prefix to make completions for.
      */
-    public void requireAutoComplete(String prefix, CompletionPublisher publisher, TextAnalyzeResult analyzeResult) {
+    public void requireAutoComplete(String prefix, CompletionPublisher publisher, Identifiers userIdentifiers) {
         publisher.setComparator(COMPARATOR);
         publisher.setUpdateThreshold(0);
         int prefixLength = prefix.length();
@@ -130,8 +127,6 @@ public class IdentifierAutoComplete {
                 }
             }
         }
-        Object extra = analyzeResult.getExtra();
-        Identifiers userIdentifiers = (extra instanceof Identifiers) ? (Identifiers) extra : null;
         if (userIdentifiers != null) {
             List<CompletionItem> words = new ArrayList<>();
             for (String word : userIdentifiers.getIdentifiers()) {

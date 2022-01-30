@@ -43,11 +43,10 @@ import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
-import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.text.TextReference;
 import io.github.rosemoe.sora.widget.CodeEditor;
-import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
  * Auto complete window for editing code quicker
@@ -316,7 +315,6 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     public final class CompletionThread extends Thread implements TextReference.Validator {
 
         private final long mTime;
-        private final TextAnalyzeResult mData;
         private final Bundle mExtra;
         private final CharPosition mPosition;
         private final Language mLanguage;
@@ -326,7 +324,6 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
 
         public CompletionThread(long requestTime, CompletionPublisher publisher) {
             mTime = requestTime;
-            mData = mEditor.getTextAnalyzeResult();
             mPosition = mEditor.getCursor().left();
             mLanguage = mEditor.getEditorLanguage();
             mRef = new ContentReference(mEditor.getText());
@@ -362,7 +359,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         @Override
         public void run() {
             try {
-                mLanguage.requireAutoComplete(mRef, mPosition, mPublisher, mData, mExtra);
+                mLanguage.requireAutoComplete(mRef, mPosition, mPublisher, mExtra);
                 if (mPublisher.hasData()) {
                     mPublisher.updateList(true);
                 } else {

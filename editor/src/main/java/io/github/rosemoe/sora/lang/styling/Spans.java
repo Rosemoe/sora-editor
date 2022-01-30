@@ -69,27 +69,16 @@ public interface Spans {
          */
         void moveToLine(int line);
 
-        /**
-         * Has next span on the line
-         */
-        boolean hasNext();
+        int getSpanCount();
 
-        /**
-         * Get next span
-         */
-        Span next();
+        Span getSpanAt(int index);
 
-        /**
-         * Get the end column of last returned span on the line
-         * @param columnCount Column count of the line.
-         */
-        int peekSpanEnd(int columnCount);
+
+        List<Span> getSpansOnLine(int line);
 
     }
 
     interface Modifier extends Reader {
-
-        List<Span> getSpansOnLine(int line);
 
         void setSpansOnLine(int line, List<Span> spans);
 

@@ -26,7 +26,6 @@ package io.github.rosemoe.sora.lang.styling;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**

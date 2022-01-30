@@ -23,20 +23,17 @@
  */
 package io.github.rosemoe.sora.langs.java;
 
-import static io.github.rosemoe.sora.text.TextStyle.makeStyle;
+import static io.github.rosemoe.sora.lang.styling.TextStyle.makeStyle;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Stack;
 
-import io.github.rosemoe.sora.lang.styling.CodeBlock;
-import io.github.rosemoe.sora.data.NavigationItem;
-import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
+import io.github.rosemoe.sora.lang.analysis.SimpleAnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
-import io.github.rosemoe.sora.util.TrieTree;
+import io.github.rosemoe.sora.lang.styling.CodeBlock;
+import io.github.rosemoe.sora.lang.styling.MappedSpans;
+import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.text.LineNumberCalculator;
-import io.github.rosemoe.sora.text.TextAnalyzeResult;
-import io.github.rosemoe.sora.text.TextAnalyzer;
+import io.github.rosemoe.sora.util.TrieTree;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
@@ -44,22 +41,24 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
  *
  * @author Rose
  */
-public class JavaCodeAnalyzer implements CodeAnalyzer {
+public class JavaAnalyzeManager extends SimpleAnalyzeManager<IdentifierAutoComplete.Identifiers> {
 
     private final static Object OBJECT = new Object();
 
     @Override
-    public void analyze(CharSequence content, TextAnalyzeResult result, TextAnalyzer.AnalyzeThread.Delegate delegate) {
-        StringBuilder text = content instanceof StringBuilder ? (StringBuilder) content : new StringBuilder(content);
-        JavaTextTokenizer tokenizer = new JavaTextTokenizer(text);
+    protected Styles analyze(StringBuilder text, Delegate<IdentifierAutoComplete.Identifiers> delegate) {
+        var tokenizer = new JavaTextTokenizer(text);
+        var styles = new Styles();
+        var result = new MappedSpans.Builder(1024);
         tokenizer.setCalculateLineColumn(false);
+
         Tokens token, previous = Tokens.UNKNOWN;
         int line = 0, column = 0;
-        LineNumberCalculator helper = new LineNumberCalculator(text);
-        IdentifierAutoComplete.Identifiers identifiers = new IdentifierAutoComplete.Identifiers();
+        var helper = new LineNumberCalculator(text);
+        var identifiers = new IdentifierAutoComplete.Identifiers();
         identifiers.begin();
-        Stack<CodeBlock> stack = new Stack<>();
-        List<NavigationItem> labels = new ArrayList<>();
+
+        var stack = new Stack<CodeBlock>();
         int maxSwitch = 1, currSwitch = 0;
         //Tree to save class names and query
         TrieTree<Object> classNames = new TrieTree<>();
@@ -69,7 +68,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
         classNames.put("String", OBJECT);
         classNames.put("Object", OBJECT);
         boolean first = true;
-        while (delegate.shouldAnalyze()) {
+        while (!delegate.isCancelled()) {
             try {
                 // directNextToken() does not skip any token
                 token = tokenizer.directNextToken();
@@ -211,7 +210,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                         currSwitch = 0;
                     }
                     currSwitch++;
-                    CodeBlock block = result.obtainNewBlock();
+                    CodeBlock block = styles.obtainNewBlock();
                     block.startLine = line;
                     block.startColumn = column;
                     stack.push(block);
@@ -225,7 +224,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                         block.endLine = line;
                         block.endColumn = column;
                         if (block.startLine != block.endLine) {
-                            result.addBlockLine(block);
+                            styles.addCodeBlock(block);
                         }
                     }
                     break;
@@ -257,9 +256,10 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
         }
         identifiers.finish();
         result.determine(line);
-        result.setExtra(identifiers);
-        result.setSuppressSwitch(maxSwitch + 10);
-        result.setNavigation(labels);
+        delegate.setData(identifiers);
+        styles.setSuppressSwitch(maxSwitch + 10);
+        styles.spans = result.build();
+        return styles;
     }
 
 }

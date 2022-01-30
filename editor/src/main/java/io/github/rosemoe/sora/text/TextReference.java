@@ -101,7 +101,8 @@ public class TextReference implements CharSequence {
     }
 
     public void validateAccess() {
-        validator.validate();
+        if (validator != null)
+            validator.validate();
     }
 
     public interface Validator {

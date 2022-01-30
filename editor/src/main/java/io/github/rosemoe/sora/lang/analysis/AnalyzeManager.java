@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lang.analysis;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
@@ -44,10 +45,11 @@ public interface AnalyzeManager {
      * Set the span receiver of the manager.
      *
      * This is called when the {@link io.github.rosemoe.sora.lang.Language} is going to be used by
-     * an editor. And this will be called only once.
+     * an editor. It will also be called when the instance is no longer used.
+     * Make sure you check the exact receiver at the time you send results to it.
      * Thus, you should save the instance at your side.
      */
-    void setReceiver(@NonNull StyleReceiver receiver);
+    void setReceiver(@Nullable StyleReceiver receiver);
 
     /**
      * Called when new text is set in editor by either {@link CodeEditor#setText(CharSequence)}
@@ -86,6 +88,7 @@ public interface AnalyzeManager {
 
     /**
      * Destroy the manager. Release any resources held.
+     * Make sure that you will not call the receiver anymore.
      */
     void destroy();
 

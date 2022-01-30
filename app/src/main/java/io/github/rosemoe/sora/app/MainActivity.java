@@ -385,7 +385,7 @@ public class MainActivity extends AppCompatActivity {
                                 loadTMTLauncher.launch("*/*");
                                 break;
                         }
-                        editor.doAnalyze();
+                        editor.rerunAnalysis();
                         dialog.dismiss();
                     })
                     .setNegativeButton(android.R.string.cancel, null)
@@ -445,7 +445,7 @@ public class MainActivity extends AppCompatActivity {
             item.setChecked(editor.isLineNumberPinned());
         } else if (id == R.id.enable_highlight) {
             item.setChecked(!item.isChecked());
-            editor.getSpanner().setEnabled(item.isChecked());
+            // no implementation
         }
         return super.onOptionsItemSelected(item);
     }

@@ -27,18 +27,17 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 
-import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 import io.github.rosemoe.sora.lang.Language;
+import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
+import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
-import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
-import io.github.rosemoe.sora.text.TextAnalyzeResult;
-import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.text.TextUtils;
+import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
 /**
@@ -49,15 +48,23 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
  */
 public class JavaLanguage implements Language {
 
-    private final IdentifierAutoComplete autoComplete;
+    private IdentifierAutoComplete autoComplete;
+    private JavaAnalyzeManager manager;
 
     public JavaLanguage() {
         autoComplete = new IdentifierAutoComplete(JavaTextTokenizer.sKeywords);
+        manager = new JavaAnalyzeManager();
+    }
+
+    @NonNull
+    @Override
+    public AnalyzeManager getAnalyzeManager() {
+        return manager;
     }
 
     @Override
-    public CodeAnalyzer getAnalyzer() {
-        return new JavaCodeAnalyzer();
+    public void destroy() {
+        autoComplete = null;
     }
 
     @Override
@@ -67,10 +74,9 @@ public class JavaLanguage implements Language {
 
     @Override
     public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position,
-                                    @NonNull CompletionPublisher publisher, @NonNull TextAnalyzeResult analyzeResult,
-                                    @NonNull Bundle extraArguments) {
+                                    @NonNull CompletionPublisher publisher, @NonNull Bundle extraArguments) {
         var prefix = CompletionHelper.computePrefix(content, position, MyCharacter::isJavaIdentifierPart);
-        autoComplete.requireAutoComplete(prefix, publisher, analyzeResult);
+        autoComplete.requireAutoComplete(prefix, publisher, manager.getData());
     }
 
     @Override

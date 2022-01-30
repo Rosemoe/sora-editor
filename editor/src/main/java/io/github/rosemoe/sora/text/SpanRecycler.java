@@ -85,7 +85,6 @@ public class SpanRecycler {
                             }
                         }
                         spanMap.clear();
-                        TextAnalyzeResult.offerSpanMap(spanMap);
                         Log.i(LOG_TAG, "Called recycle() on " + count + " spans");
                     } catch (InterruptedException e) {
                         e.printStackTrace();

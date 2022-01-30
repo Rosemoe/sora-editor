@@ -26,15 +26,14 @@ package io.github.rosemoe.sora.lang;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
-import io.github.rosemoe.sora.lang.Language;
+import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
+import io.github.rosemoe.sora.lang.analysis.StyleReceiver;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
-import io.github.rosemoe.sora.text.TextAnalyzeResult;
-import io.github.rosemoe.sora.text.TextAnalyzer.AnalyzeThread.Delegate;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
 /**
@@ -55,7 +54,7 @@ public class EmptyLanguage implements Language {
     }
 
     @Override
-    public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position, @NonNull CompletionPublisher publisher, @NonNull TextAnalyzeResult analyzeResult, @NonNull Bundle extraArguments) {
+    public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position, @NonNull CompletionPublisher publisher, @NonNull Bundle extraArguments) {
 
     }
 
@@ -69,9 +68,10 @@ public class EmptyLanguage implements Language {
         return new NewlineHandler[0];
     }
 
+    @NonNull
     @Override
-    public CodeAnalyzer getAnalyzer() {
-        return new EmptyCodeAnalyzer();
+    public AnalyzeManager getAnalyzeManager() {
+        return EmptyAnalyzeManager.INSTANCE;
     }
 
     @Override
@@ -80,17 +80,50 @@ public class EmptyLanguage implements Language {
     }
 
     @Override
+    public void destroy() {
+
+    }
+
+    @Override
     public boolean useTab() {
         return false;
     }
 
-    public static class EmptyCodeAnalyzer implements CodeAnalyzer {
+
+
+    public static class EmptyAnalyzeManager implements AnalyzeManager {
+
+        public final static EmptyAnalyzeManager INSTANCE = new EmptyAnalyzeManager();
 
         @Override
-        public void analyze(CharSequence content, TextAnalyzeResult result, Delegate delegate) {
-            result.addNormalIfNull();
+        public void setReceiver(@Nullable StyleReceiver receiver) {
+
         }
 
+        @Override
+        public void reset(@NonNull ContentReference content, @NonNull Bundle extraArguments) {
+
+        }
+
+        @Override
+        public void insert(CharPosition start, CharPosition end, CharSequence insertedContent) {
+
+        }
+
+        @Override
+        public void delete(CharPosition start, CharPosition end, CharSequence deletedContent) {
+
+        }
+
+        @Override
+        public void rerun() {
+
+        }
+
+        @Override
+        public void destroy() {
+
+        }
     }
 }
 

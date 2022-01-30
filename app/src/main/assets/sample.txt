@@ -30,7 +30,7 @@ import java.util.List;
 
 import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.text.ContentLine;
-import static io.github.rosemoe.sora.text.TextStyle.*;
+import static io.github.rosemoe.sora.lang.styling.TextStyle.*;
 
 public class GraphicTextRow {
 

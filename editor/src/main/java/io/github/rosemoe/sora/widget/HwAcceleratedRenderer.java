@@ -32,11 +32,11 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.github.rosemoe.sora.annotations.Experimental;
+import io.github.rosemoe.sora.lang.styling.EmptyReader;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.util.ArrayList;
-import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
  * Hardware accelerated text render, which manages {@link RenderNode}
@@ -131,19 +131,18 @@ class HwAcceleratedRenderer implements ContentListener {
         if (!canvas.isHardwareAccelerated()) {
             throw new UnsupportedOperationException("Only hardware-accelerated canvas can be used");
         }
-        var spanMap = editor.getTextAnalyzeResult().getSpanMap();
+        var styles = editor.getStyles();
         // It's safe to use row directly because the mode is non-wordwrap
         var node = getNode(line);
         if (node.needsRecord()) {
-            List<Span> spans = null;
-            if (line < spanMap.size() && line >= 0) {
-                spans = spanMap.get(line);
+            var spans = styles == null ? null : styles.spans;
+            var reader = spans == null ? new EmptyReader() : spans.read();
+            try {
+                reader.moveToLine(line);
+            } catch (Exception e) {
+                reader = new EmptyReader();
             }
-            if (spans == null || spans.size() == 0) {
-                spans = new ArrayList<>();
-                spans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
-            }
-            editor.updateLineDisplayList(node.renderNode, line, spans);
+            editor.updateLineDisplayList(node.renderNode, line, reader);
             node.isDirty = false;
         }
         canvas.save();

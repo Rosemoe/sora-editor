@@ -31,7 +31,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import io.github.rosemoe.sora.interfaces.ExternalRenderer;
-import io.github.rosemoe.sora.text.TextStyle;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
@@ -69,6 +68,9 @@ public class Span {
 
     private static final BlockingQueue<Span> cacheQueue = new ArrayBlockingQueue<>(8192 * 2);
     public int column;
+    /**
+     * @see TextStyle
+     */
     public long style;
     public int underlineColor;
 
@@ -79,7 +81,7 @@ public class Span {
      * @see Span#FLAG_WARNING
      * @see Span#FLAG_TYPO
      * @see Span#FLAG_DEPRECATED
-     * @see io.github.rosemoe.sora.text.TextAnalyzeResult#markProblemRegion(int, int, int, int, int)
+     * @see MappedSpans.Builder#markProblemRegion(int, int, int, int, int) 
      */
     public int problemFlags = 0;
     public ExternalRenderer renderer = null;
@@ -88,8 +90,9 @@ public class Span {
      * Create a new span
      *
      * @param column  Start column of span
-     * @param style Style made from {@link io.github.rosemoe.sora.text.TextStyle}
+     * @param style Style made from {@link TextStyle}
      * @see Span#obtain(int, long)
+     * @see TextStyle
      */
     private Span(int column, long style) {
         this.column = column;
@@ -157,6 +160,10 @@ public class Span {
         return copy;
     }
 
+    /**
+     * Recycle the object
+     * @return Is successful?
+     */
     public boolean recycle() {
         problemFlags = column = underlineColor = 0;
         style = 0;

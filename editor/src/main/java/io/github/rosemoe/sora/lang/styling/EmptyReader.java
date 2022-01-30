@@ -21,40 +21,41 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.text;
+package io.github.rosemoe.sora.lang.styling;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import io.github.rosemoe.sora.lang.styling.CodeBlock;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
-/**
- * Update block line positions on edit
- */
-public class BlocksUpdater {
+public class EmptyReader implements Spans.Reader {
 
-    /**
-     * Update blocks
-     * @param blocks   Block lines to update
-     * @param restrict Min line to update
-     * @param delta Delta for line index
-     */
-    public static void update(List<CodeBlock> blocks, int restrict, int delta) {
-        if (delta == 0) {
-            return;
-        }
-        var itr = blocks.iterator();
-        while(itr.hasNext()) {
-            var block = itr.next();
-            if (block.startLine >= restrict) {
-                block.startLine += delta;
-            }
-            if (block.endLine >= restrict) {
-                block.endLine += delta;
-            }
-            if (block.startLine >= block.endLine) {
-                itr.remove();
-            }
-        }
+    private final List<Span> spans;
+    private boolean moved;
+
+    public EmptyReader() {
+        spans = new ArrayList<>(1);
+        spans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
     }
 
+
+    @Override
+    public void moveToLine(int line) {
+
+    }
+
+    @Override
+    public Span getSpanAt(int index) {
+        return spans.get(index);
+    }
+
+    @Override
+    public int getSpanCount() {
+        return 1;
+    }
+
+    @Override
+    public List<Span> getSpansOnLine(int line) {
+        return spans;
+    }
 }

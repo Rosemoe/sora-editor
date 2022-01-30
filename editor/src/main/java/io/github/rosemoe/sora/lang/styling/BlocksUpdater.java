@@ -21,28 +21,38 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.interfaces;
+package io.github.rosemoe.sora.lang.styling;
 
-import io.github.rosemoe.sora.text.Content;
-import io.github.rosemoe.sora.text.TextAnalyzeResult;
-import io.github.rosemoe.sora.text.TextAnalyzer;
+import java.util.List;
 
 /**
- * Interface for analyzing highlight
- *
- * @author Rose
+ * Update block line positions on edit
  */
-public interface CodeAnalyzer {
+public class BlocksUpdater {
 
     /**
-     * Analyze spans for the given input
-     *
-     * @param content  The input text
-     * @param result   Result dest
-     * @param delegate Delegate between thread and analyzer
-     * @see TextAnalyzer#analyze(Content)
-     * @see TextAnalyzer.AnalyzeThread.Delegate#shouldAnalyze()
+     * Update blocks
+     * @param blocks   Block lines to update
+     * @param restrict Min line to update
+     * @param delta Delta for line index
      */
-    void analyze(CharSequence content, TextAnalyzeResult result, TextAnalyzer.AnalyzeThread.Delegate delegate);
+    public static void update(List<CodeBlock> blocks, int restrict, int delta) {
+        if (delta == 0) {
+            return;
+        }
+        var itr = blocks.iterator();
+        while(itr.hasNext()) {
+            var block = itr.next();
+            if (block.startLine >= restrict) {
+                block.startLine += delta;
+            }
+            if (block.endLine >= restrict) {
+                block.endLine += delta;
+            }
+            if (block.startLine >= block.endLine) {
+                itr.remove();
+            }
+        }
+    }
 
 }
