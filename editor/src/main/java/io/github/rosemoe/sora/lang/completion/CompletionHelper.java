@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.lang.completion;
 
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
+import io.github.rosemoe.sora.widget.EditorAutoCompleteWindow;
 
 /**
  * Helper class for completion
@@ -46,6 +47,19 @@ public class CompletionHelper {
             }
         }
         return line.substring(begin, pos.column);
+    }
+
+    /**
+     * Check whether the thread is abandoned by editor.
+     * Return true if it is cancelled by editor.
+     */
+    public static boolean checkCancelled() {
+        var thread = Thread.currentThread();
+        if (thread instanceof EditorAutoCompleteWindow.CompletionThread) {
+            return ((EditorAutoCompleteWindow.CompletionThread) thread).isCancelled();
+        } else {
+            return false;
+        }
     }
 
     public interface PrefixChecker {

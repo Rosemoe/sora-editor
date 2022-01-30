@@ -31,6 +31,7 @@ import androidx.annotation.UiThread;
 import androidx.annotation.WorkerThread;
 
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
+import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -55,6 +56,30 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
 public interface Language {
 
     /**
+     * Set the thread's interrupted flag by calling {@link Thread#interrupt()}.
+     *
+     * Throw {@link io.github.rosemoe.sora.lang.completion.CompletionCancelledException} exceptions
+     * from {@link ContentReference} and {@link CompletionPublisher}.
+     *
+     * Set thread's flag for abortion.
+     */
+    int INTERRUPTION_LEVEL_STRONG = 0;
+    /**
+     * Throw {@link io.github.rosemoe.sora.lang.completion.CompletionCancelledException} exceptions
+     * from {@link ContentReference} and {@link CompletionPublisher}.
+     *
+     * Set thread's flag for abortion.
+     */
+    int INTERRUPTION_LEVEL_SLIGHT = 1;
+    /**
+     * Throw {@link io.github.rosemoe.sora.lang.completion.CompletionCancelledException} exceptions
+     * from {@link ContentReference}
+     *
+     * Set thread's flag for abortion.
+     */
+    int INTERRUPTION_LEVEL_NONE = 2;
+
+    /**
      * Get CodeAnalyzer of this language object
      *
      * @return CodeAnalyzer
@@ -62,22 +87,36 @@ public interface Language {
     CodeAnalyzer getAnalyzer();
 
     /**
+     * Get the interruption level for auto-completion.
+     *
+     * @see #INTERRUPTION_LEVEL_STRONG
+     * @see #INTERRUPTION_LEVEL_SLIGHT
+     * @see #INTERRUPTION_LEVEL_NONE
+     */
+    int getInterruptionLevel();
+
+    /**
      * Request to auto-complete the code at the given {@code position}.
      * This is called in a worker thread other than UI thread.
      *
      * @see ContentReference
      * @see CompletionPublisher
+     * @see #getInterruptionLevel()
+     * @see CompletionHelper#checkCancelled()
      * @param content Read-only reference of content
      * @param position The position for auto-complete
      * @param publisher The publisher used to update items
-     * @throws InterruptedException This thread can be interrupted by the editor framework because the
-     * auto-completion items of this invocation are no longer needed by the user. This can either be thrown
-     * by {@link ContentReference} or {@link CompletionPublisher}
+     * @param extraArguments Arguments set by {@link io.github.rosemoe.sora.widget.CodeEditor#setText(CharSequence, Bundle)}
+     * @throws io.github.rosemoe.sora.lang.completion.CompletionCancelledException This thread can be abandoned
+     * by the editor framework because the auto-completion items of
+     *  this invocation are no longer needed by the user. This can either be thrown
+     * by {@link ContentReference} or {@link CompletionPublisher}. How the exceptions will be thrown is according to
+     * your settings: {@link #getInterruptionLevel()}
      */
     @WorkerThread
     void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position,
                              @NonNull CompletionPublisher publisher, @NonNull TextAnalyzeResult analyzeResult,
-                             @NonNull Bundle extraArguments) throws InterruptedException;
+                             @NonNull Bundle extraArguments);
 
     /**
      * Get advance for indent

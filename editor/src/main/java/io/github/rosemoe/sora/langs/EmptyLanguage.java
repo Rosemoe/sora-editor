@@ -55,8 +55,13 @@ public class EmptyLanguage implements Language {
     }
 
     @Override
-    public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position, @NonNull CompletionPublisher publisher, @NonNull TextAnalyzeResult analyzeResult, @NonNull Bundle extraArguments) throws InterruptedException {
+    public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position, @NonNull CompletionPublisher publisher, @NonNull TextAnalyzeResult analyzeResult, @NonNull Bundle extraArguments) {
 
+    }
+
+    @Override
+    public int getInterruptionLevel() {
+        return INTERRUPTION_LEVEL_STRONG;
     }
 
     @Override

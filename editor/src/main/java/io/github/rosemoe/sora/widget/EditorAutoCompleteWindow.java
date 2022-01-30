@@ -36,6 +36,7 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import io.github.rosemoe.sora.lang.Language;
+import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -59,7 +60,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
     private long mRequestTime;
     private int mMaxHeight;
     private EditorCompletionAdapter mAdapter;
-    private AutoCompletionThread mThread;
+    private CompletionThread mThread;
     private long requestShow = 0;
     private long requestHide = -1;
 
@@ -120,7 +121,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
 
     public void hide() {
         super.dismiss();
-        interruptCompletion();
+        cancelCompletion();
         mRequestTime = 0;
         requestHide = System.currentTimeMillis();
     }
@@ -214,6 +215,9 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
         select(mCurrent);
     }
 
+    /**
+     * Reject the IME's requests to set composing region/text
+     */
     public boolean shouldRejectComposing() {
         return mCancelShowUp;
     }
@@ -244,10 +248,10 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
     /**
      * Stop previous completion thread
      */
-    public void interruptCompletion() {
+    public void cancelCompletion() {
         var previous = mThread;
         if (previous != null && previous.isAlive()) {
-            previous.interrupt();
+            previous.cancel();
             mRequestTime = 0;
         }
         mThread = null;
@@ -264,7 +268,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
         if (text.getCursor().isSelected()) {
             return;
         }
-        interruptCompletion();
+        cancelCompletion();
         mRequestTime = System.nanoTime();
         mCurrent = -1;
         var publisher = new CompletionPublisher(mEditor.getHandler(), () -> {
@@ -274,10 +278,10 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
             if (!isShowing()) {
                 show();
             }
-        });
+        }, mEditor.getEditorLanguage().getInterruptionLevel());
         mAdapter.attachValues(this, publisher.getItems());
         mListView.setAdapter(mAdapter);
-        mThread = new AutoCompletionThread(mRequestTime, publisher);
+        mThread = new CompletionThread(mRequestTime, publisher);
         setLoading(true);
         mThread.start();
     }
@@ -291,7 +295,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
      *
      * @author Rosemoe
      */
-    private class AutoCompletionThread extends Thread implements TextReference.Validator {
+    public final class CompletionThread extends Thread implements TextReference.Validator {
 
         private final long mTime;
         private final TextAnalyzeResult mData;
@@ -300,8 +304,9 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
         private final Language mLanguage;
         private final ContentReference mRef;
         private final CompletionPublisher mPublisher;
+        private boolean mAborted;
 
-        public AutoCompletionThread(long requestTime, CompletionPublisher publisher) {
+        public CompletionThread(long requestTime, CompletionPublisher publisher) {
             mTime = requestTime;
             mData = mEditor.getTextAnalyzeResult();
             mPosition = mEditor.getCursor().left();
@@ -310,12 +315,29 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
             mRef.setValidator(this);
             mPublisher = publisher;
             mExtra = mEditor.getExtraArguments();
+            mAborted = false;
+        }
+
+        /**
+         * Abort the completion thread
+         */
+        public void cancel() {
+            mAborted = true;
+            var level = mLanguage.getInterruptionLevel();
+            if (level == Language.INTERRUPTION_LEVEL_STRONG) {
+                interrupt();
+            }
+            mPublisher.cancel();
+        }
+
+        public boolean isCancelled() {
+            return mAborted;
         }
 
         @Override
         public void validate() {
-            if (mRequestTime != mTime) {
-                throw new TextReference.ValidateFailedException("invalid access: this thread is abandoned by editor framework");
+            if (mRequestTime != mTime || mAborted) {
+                throw new CompletionCancelledException();
             }
         }
 

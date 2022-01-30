@@ -37,7 +37,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
-import io.github.rosemoe.sora.widget.EditorCompletionAdapter;
+import io.github.rosemoe.sora.lang.Language;
 
 /**
  * CompletionPublisher manages completion items to be added in one completion analyzing process.
@@ -73,19 +73,21 @@ public class CompletionPublisher {
     private int updateThreshold;
     private boolean invalid = false;
     private final Runnable callback;
+    private final int languageInterruptionLevel;
 
     /**
      * Default value for {@link CompletionPublisher#setUpdateThreshold(int)}
      */
     public final static int DEFAULT_UPDATE_THRESHOLD = 5;
 
-    public CompletionPublisher(@NonNull Handler handler, @NonNull Runnable callback) {
+    public CompletionPublisher(@NonNull Handler handler, @NonNull Runnable callback, int languageInterruptionLevel) {
         this.handler = handler;
         this.items = new ArrayList<>();
         this.candidates = new ArrayList<>();
         lock = new ReentrantLock(true);
         updateThreshold = DEFAULT_UPDATE_THRESHOLD;
         this.callback = callback;
+        this.languageInterruptionLevel = languageInterruptionLevel;
     }
 
     /**
@@ -116,8 +118,11 @@ public class CompletionPublisher {
      *
      * The comparator is used when publishing the completion to user.
      */
-    public void setComparator(@Nullable Comparator<CompletionItem> comparator) throws InterruptedException {
-        checkInterrupted();
+    public void setComparator(@Nullable Comparator<CompletionItem> comparator) {
+        checkCancelled();
+        if (invalid) {
+            return;
+        }
         this.comparator = comparator;
         if (items.size() != 0) {
             handler.post(() -> {
@@ -140,8 +145,11 @@ public class CompletionPublisher {
      *
      * @see CompletionPublisher#setUpdateThreshold(int)
      */
-    public void addItems(Collection<CompletionItem> items) throws InterruptedException {
-        checkInterrupted();
+    public void addItems(Collection<CompletionItem> items) {
+        checkCancelled();
+        if (invalid) {
+            return;
+        }
         lock.lock();
         try {
             candidates.addAll(items);
@@ -161,8 +169,11 @@ public class CompletionPublisher {
      *
      * @see CompletionPublisher#setUpdateThreshold(int)
      */
-    public void addItem(CompletionItem item) throws InterruptedException {
-        checkInterrupted();
+    public void addItem(CompletionItem item) {
+        checkCancelled();
+        if (invalid) {
+            return;
+        }
         lock.lock();
         try {
             candidates.add(item);
@@ -190,6 +201,9 @@ public class CompletionPublisher {
      *               currently available for the thread, the update will be executed.
      */
     public void updateList(boolean forced) {
+        if (invalid) {
+            return;
+        }
         handler.post(() -> {
             // Lock the candidate list accordingly
             if (invalid) {
@@ -246,10 +260,16 @@ public class CompletionPublisher {
         });
     }
 
-    private void checkInterrupted() throws InterruptedException {
+    public void cancel() {
+        invalid = true;
+    }
+
+    private void checkCancelled() {
         if (Thread.interrupted() || invalid) {
             invalid = true;
-            throw new InterruptedException();
+            if (languageInterruptionLevel <= Language.INTERRUPTION_LEVEL_SLIGHT) {
+                throw new CompletionCancelledException();
+            }
         }
     }
 

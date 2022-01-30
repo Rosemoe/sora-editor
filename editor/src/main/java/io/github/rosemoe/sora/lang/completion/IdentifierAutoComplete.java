@@ -98,7 +98,7 @@ public class IdentifierAutoComplete {
      * Provide the required arguments passed by {@link Language#requireAutoComplete(ContentReference, CharPosition, CompletionPublisher, TextAnalyzeResult, Bundle)}
      * @param prefix The prefix to make completions for.
      */
-    public void requireAutoComplete(String prefix, CompletionPublisher publisher, TextAnalyzeResult analyzeResult) throws InterruptedException {
+    public void requireAutoComplete(String prefix, CompletionPublisher publisher, TextAnalyzeResult analyzeResult) {
         publisher.setComparator(COMPARATOR);
         publisher.setUpdateThreshold(0);
         int prefixLength = prefix.length();

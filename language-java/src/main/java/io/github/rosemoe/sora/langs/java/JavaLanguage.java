@@ -61,9 +61,14 @@ public class JavaLanguage implements Language {
     }
 
     @Override
+    public int getInterruptionLevel() {
+        return INTERRUPTION_LEVEL_STRONG;
+    }
+
+    @Override
     public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position,
                                     @NonNull CompletionPublisher publisher, @NonNull TextAnalyzeResult analyzeResult,
-                                    @NonNull Bundle extraArguments) throws InterruptedException {
+                                    @NonNull Bundle extraArguments) {
         var prefix = CompletionHelper.computePrefix(content, position, MyCharacter::isJavaIdentifierPart);
         autoComplete.requireAutoComplete(prefix, publisher, analyzeResult);
     }
