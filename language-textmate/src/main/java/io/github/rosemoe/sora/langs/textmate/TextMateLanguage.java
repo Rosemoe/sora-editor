@@ -28,7 +28,7 @@ import java.io.Reader;
 
 import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
-import io.github.rosemoe.sora.langs.EmptyLanguage;
+import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.langs.textmate.analyzer.TextMateAnalyzer;
 import io.github.rosemoe.sora.langs.textmate.theme.TextMateColorScheme;
 import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;

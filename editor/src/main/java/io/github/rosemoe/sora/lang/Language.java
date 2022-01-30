@@ -48,9 +48,8 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
  * <p>
  * <strong>NOTE:</strong> A language must not be single instance.
  * One language instance should always serve for only one editor.
- * It means that you should not give a language object to other editor instances
+ * It means that you should not give one language object to other editor instances
  * after it has been applied to one editor.
- * This is to provide better connection between auto-completion provider and code analyzer.
  *
  * @author Rosemoe
  */

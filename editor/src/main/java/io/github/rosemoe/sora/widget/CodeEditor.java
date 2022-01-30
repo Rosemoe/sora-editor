@@ -98,7 +98,7 @@ import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.interfaces.ExternalRenderer;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
-import io.github.rosemoe.sora.langs.EmptyLanguage;
+import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.text.BlocksUpdater;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;

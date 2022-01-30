@@ -21,23 +21,25 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lang.completion;
+package io.github.rosemoe.sora.lang.analysis;
+
+import io.github.rosemoe.sora.lang.styling.Styles;
 
 /**
- * Thrown when the thread is abandoned by the editor framework because the editor do not need its
- * new items anymore.
+ * A {@link StyleReceiver} receives spans and other styles from analyzers.
  *
- * This can be thrown by {@link io.github.rosemoe.sora.text.ContentReference} and
- * {@link CompletionPublisher}.
+ * The implementations of the class must make sure its code can be safely run. For example, update
+ * UI by posting its actions to UI thread, but not here.
  *
- * @author Rosemoe
+ * Also, the implementations of the class should pay attention to concurrent invocations due not to
+ * corrupt the information it maintains.
  */
-public class CompletionCancelledException extends RuntimeException {
+public interface StyleReceiver {
 
-    public CompletionCancelledException() {
-    }
+    /**
+     * Send the styles to the receiver. You can call it in any thread.
+     * The implementation of this should make sure that concurrent invocations to it are safe.
+     */
+    void setStyles(Styles styles);
 
-    public CompletionCancelledException(String message) {
-        super(message);
-    }
 }

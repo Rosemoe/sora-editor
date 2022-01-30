@@ -21,23 +21,13 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lang.completion;
+package io.github.rosemoe.sora.lang.styling;
 
 /**
- * Thrown when the thread is abandoned by the editor framework because the editor do not need its
- * new items anymore.
- *
- * This can be thrown by {@link io.github.rosemoe.sora.text.ContentReference} and
- * {@link CompletionPublisher}.
- *
- * @author Rosemoe
+ * This class stores styles of text and other decorations in editor related to code.
  */
-public class CompletionCancelledException extends RuntimeException {
+public class Styles {
 
-    public CompletionCancelledException() {
-    }
 
-    public CompletionCancelledException(String message) {
-        super(message);
-    }
+
 }

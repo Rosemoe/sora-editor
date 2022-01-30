@@ -36,9 +36,16 @@ import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 
 /**
- * Identifier auto-completion
- * You can use it to provide identifiers
+ * Identifier auto-completion.
+ *
+ * You can use it to provide identifiers, but you can't update the given {@link CompletionPublisher}
+ * if it is used. If you have to mix the result, then you should call {@link CompletionPublisher#setComparator(Comparator)}
+ * with null first. Otherwise, your completion list may be corrupted. And in that case, you must do the sorting
+ * work by yourself and then add your items.
+ *
  * <strong>Note:</strong> To use this, you must use {@link Identifiers} to {@link TextAnalyzeResult#setExtra(Object)}
+ *
+ * @author Rosemoe
  */
 public class IdentifierAutoComplete {
 

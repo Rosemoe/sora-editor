@@ -61,6 +61,11 @@ public class ContentReference extends TextReference {
         content.getLineChars(line, dest);
     }
 
+    public void appendLineTo(StringBuilder sb, int line) {
+        validateAccess();
+        content.getLine(line).appendTo(sb);
+    }
+
     @NonNull
     @Override
     public Content getReference() {

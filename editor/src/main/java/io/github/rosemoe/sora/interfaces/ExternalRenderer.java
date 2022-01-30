@@ -31,18 +31,19 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
  * External renderer for spans.
+ * <p>
  * Users can attach this renderer to any span so that you can draw
- * extra content inside the the rectangle on canvas of the span.
- *
+ * extra content inside the rectangle on canvas of the span.
+ * <p>
  * However, any implementation of this class should not create many new objects
  * in its methods but initialize your required resources when the renderer is
  * created.
- *
+ * <p>
  * Meanwhile, the renderer should be consistent with editor's current
  * color scheme. Use colors defined in your color schemes if possible.
- *
+ * <p>
  * Also try to create universal renderers for a certain effect.
- *
+ * <p>
  * Note: the Paint object should not be modified or used to draw objects on the canvas
  * It is only provided for measuring. Use another Paint created by yourself instead.
  *

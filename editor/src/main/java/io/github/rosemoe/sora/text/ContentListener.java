@@ -23,18 +23,20 @@
  */
 package io.github.rosemoe.sora.text;
 
+import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
+
 /**
  * This is the listener for content.
  * You will receive calls when the Content object is going to change or changed.
  *
- * @author Rose
+ * @author Rosemoe
  */
 public interface ContentListener {
 
     /**
      * This is to notify you that you will receive {@link ContentListener#afterDelete(Content, int, int, int, int, CharSequence)}
      * and {@link ContentListener#afterInsert(Content, int, int, int, int, CharSequence)} calls.
-     * These two calls are a action of replacement.
+     * These two calls are an action of replacement.
      * <strong> You are not expected to make changes to this Content object at this method. </strong>
      *
      * @param content The target Content object being replaced text
@@ -46,7 +48,7 @@ public interface ContentListener {
      *
      * @param content         The Content which has inserted the given text
      * @param startLine       The insertion position line
-     * @param startColumn     The insertion position column on line
+     * @param startColumn     The insertion position column on the line
      * @param endLine         The line position of the last character in inserted content
      * @param endColumn       The column position after the last character in inserted content
      * @param insertedContent The content inserted
@@ -68,6 +70,7 @@ public interface ContentListener {
     /**
      * Internal API
      */
+    @UnsupportedUserUsage
     default void beforeModification(Content content) {
         
     }
