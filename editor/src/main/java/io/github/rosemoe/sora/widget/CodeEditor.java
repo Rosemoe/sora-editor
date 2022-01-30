@@ -83,8 +83,8 @@ import java.util.Objects;
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
-import io.github.rosemoe.sora.data.BlockLine;
-import io.github.rosemoe.sora.data.Span;
+import io.github.rosemoe.sora.lang.styling.CodeBlock;
+import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.EventManager;
@@ -108,7 +108,7 @@ import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.FormatThread;
 import io.github.rosemoe.sora.text.LineRemoveListener;
-import io.github.rosemoe.sora.text.SpanMapUpdater;
+import io.github.rosemoe.sora.lang.styling.MappedSpanUpdater;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.text.TextAnalyzer;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
@@ -2095,7 +2095,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param offsetX The start x offset for text
      */
     protected void drawBlockLines(Canvas canvas, float offsetX) {
-        List<BlockLine> blocks = mSpanner == null ? null : mSpanner.getResult().getBlocks();
+        List<CodeBlock> blocks = mSpanner == null ? null : mSpanner.getResult().getBlocks();
         if (blocks == null || blocks.isEmpty()) {
             return;
         }
@@ -2113,7 +2113,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         int mm = binarySearchEndBlock(first, blocks);
         int cursorIdx = mCursorPosition;
         for (int curr = mm; curr < blocks.size(); curr++) {
-            BlockLine block = blocks.get(curr);
+            CodeBlock block = blocks.get(curr);
             if (hasVisibleRegion(block.startLine, block.endLine, first, last)) {
                 try {
                     var lineContent = mText.getLine(block.endLine);
@@ -2327,7 +2327,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * If cursor is not in any code block,just -1.
      */
     private int findCursorBlock() {
-        List<BlockLine> blocks = mSpanner == null ? null : mSpanner.getResult().getBlocks();
+        List<CodeBlock> blocks = mSpanner == null ? null : mSpanner.getResult().getBlocks();
         if (blocks == null || blocks.isEmpty()) {
             return -1;
         }
@@ -2341,7 +2341,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return The smallest code block index.
      * If cursor is not in any code block,just -1.
      */
-    private int findCursorBlock(List<BlockLine> blocks) {
+    private int findCursorBlock(List<CodeBlock> blocks) {
         int line = mCursor.getLeftLine();
         int min = binarySearchEndBlock(line, blocks);
         int max = blocks.size() - 1;
@@ -2356,7 +2356,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
             }
         }
         for (int i = min; i <= max; i++) {
-            BlockLine block = blocks.get(i);
+            CodeBlock block = blocks.get(i);
             if (block.endLine >= line && block.startLine <= line) {
                 int dis = block.endLine - block.startLine;
                 if (dis < minDis) {
@@ -2383,7 +2383,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @param blocks   Current code blocks
      * @return The block we found. It is always a valid index(Unless there is no block)
      */
-    private int binarySearchEndBlock(int firstVis, List<BlockLine> blocks) {
+    private int binarySearchEndBlock(int firstVis, List<CodeBlock> blocks) {
         //end > firstVis
         int left = 0, right = blocks.size() - 1, mid, row;
         int max = right;
@@ -4856,9 +4856,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
         // Update spans
         if (isSpanMapPrepared(true, endLine - startLine)) {
             if (startLine == endLine) {
-                SpanMapUpdater.shiftSpansOnSingleLineInsert(mSpanner.getResult().getSpanMap(), startLine, startColumn, endColumn);
+                MappedSpanUpdater.shiftSpansOnSingleLineInsert(mSpanner.getResult().getSpanMap(), startLine, startColumn, endColumn);
             } else {
-                SpanMapUpdater.shiftSpansOnMultiLineInsert(mSpanner.getResult().getSpanMap(), startLine, startColumn, endLine, endColumn);
+                MappedSpanUpdater.shiftSpansOnMultiLineInsert(mSpanner.getResult().getSpanMap(), startLine, startColumn, endLine, endColumn);
             }
         }
 
@@ -4916,9 +4916,9 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
 
         if (isSpanMapPrepared(false, endLine - startLine)) {
             if (startLine == endLine) {
-                SpanMapUpdater.shiftSpansOnSingleLineDelete(mSpanner.getResult().getSpanMap(), startLine, startColumn, endColumn);
+                MappedSpanUpdater.shiftSpansOnSingleLineDelete(mSpanner.getResult().getSpanMap(), startLine, startColumn, endColumn);
             } else {
-                SpanMapUpdater.shiftSpansOnMultiLineDelete(mSpanner.getResult().getSpanMap(), startLine, startColumn, endLine, endColumn);
+                MappedSpanUpdater.shiftSpansOnMultiLineDelete(mSpanner.getResult().getSpanMap(), startLine, startColumn, endLine, endColumn);
             }
         }
 

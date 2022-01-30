@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import io.github.rosemoe.sora.data.Span;
+import io.github.rosemoe.sora.lang.styling.Span;
 
 public class SpanRecycler {
 

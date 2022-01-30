@@ -25,7 +25,7 @@ package io.github.rosemoe.sora.langs.textmate.analyzer;
 
 import java.util.Collections;
 
-import io.github.rosemoe.sora.data.BlockLine;
+import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.langs.textmate.folding.FoldingRegion;
 import io.github.rosemoe.sora.langs.textmate.folding.FoldingRegions;
@@ -53,18 +53,18 @@ public class BlockLineAnalyzer  {
                 int startLine=foldingRegion.getStartLineNumber();
                 int endLine=foldingRegion.getEndLineNumber();
                 if(startLine!=endLine){
-                    BlockLine blockLine= result.obtainNewBlock();
-                    blockLine.toBottomOfEndLine=true;
-                    blockLine.startLine=startLine;
-                    blockLine.endLine= endLine;
+                    CodeBlock codeBlock = result.obtainNewBlock();
+                    codeBlock.toBottomOfEndLine=true;
+                    codeBlock.startLine=startLine;
+                    codeBlock.endLine= endLine;
                     String line= model.getLineString(startLine);
                     // TODO: 2021/10/17 这2个column不知道怎么取值。。
-                    blockLine.startColumn= IndentRange.computeStartColumn(line,language.getTabSize());
+                    codeBlock.startColumn= IndentRange.computeStartColumn(line,language.getTabSize());
 //                    line= model.getLineString(endLine);
 //                    int endColumn=IndentRange.computeStartColumn(line,language.getTabSize());
-                    blockLine.endColumn= blockLine.startColumn;
+                    codeBlock.endColumn= codeBlock.startColumn;
 
-                    result.addBlockLine(blockLine);
+                    result.addBlockLine(codeBlock);
                 }
             }
 

@@ -26,6 +26,8 @@ package io.github.rosemoe.sora.data;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.github.rosemoe.sora.lang.styling.CodeBlock;
+
 /**
  * An object provider for speed improvement
  * Now meaningless because it is not as well as it expected
@@ -35,25 +37,25 @@ import java.util.List;
 public class ObjectAllocator {
 
     private static final int RECYCLE_LIMIT = 1024 * 8;
-    private static List<BlockLine> blockLines;
-    private static List<BlockLine> tempArray;
+    private static List<CodeBlock> codeBlocks;
+    private static List<CodeBlock> tempArray;
 
-    public static void recycleBlockLines(List<BlockLine> src) {
+    public static void recycleBlockLines(List<CodeBlock> src) {
         if (src == null) {
             return;
         }
-        if (blockLines == null) {
-            blockLines = src;
+        if (codeBlocks == null) {
+            codeBlocks = src;
             return;
         }
-        int size = blockLines.size();
+        int size = codeBlocks.size();
         int sizeAnother = src.size();
         while (sizeAnother > 0 && size < RECYCLE_LIMIT) {
             size++;
             sizeAnother--;
             var obj = src.get(sizeAnother);
             obj.clear();
-            blockLines.add(obj);
+            codeBlocks.add(obj);
         }
         src.clear();
         synchronized (ObjectAllocator.class) {
@@ -61,8 +63,8 @@ public class ObjectAllocator {
         }
     }
 
-    public static List<BlockLine> obtainList() {
-        List<BlockLine> temp = null;
+    public static List<CodeBlock> obtainList() {
+        List<CodeBlock> temp = null;
         synchronized (ObjectAllocator.class) {
             temp = tempArray;
             tempArray = null;
@@ -73,8 +75,8 @@ public class ObjectAllocator {
         return temp;
     }
 
-    public static BlockLine obtainBlockLine() {
-        return (blockLines == null || blockLines.isEmpty()) ? new BlockLine() : blockLines.remove(blockLines.size() - 1);
+    public static CodeBlock obtainBlockLine() {
+        return (codeBlocks == null || codeBlocks.isEmpty()) ? new CodeBlock() : codeBlocks.remove(codeBlocks.size() - 1);
     }
 
 }

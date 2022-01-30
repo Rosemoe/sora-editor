@@ -21,12 +21,12 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.text;
+package io.github.rosemoe.sora.lang.styling;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.rosemoe.sora.data.Span;
+import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
@@ -34,7 +34,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
  *
  * @author Rose
  */
-public class SpanMapUpdater {
+public class MappedSpanUpdater {
 
     public static void shiftSpansOnMultiLineDelete(List<List<Span>> map, int startLine, int startColumn, int endLine, int endColumn) {
         int lineCount = endLine - startLine - 1;

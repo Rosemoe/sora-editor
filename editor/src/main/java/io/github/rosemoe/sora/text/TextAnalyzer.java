@@ -28,9 +28,9 @@ import android.util.Log;
 import java.util.List;
 
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
-import io.github.rosemoe.sora.data.BlockLine;
+import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.data.ObjectAllocator;
-import io.github.rosemoe.sora.data.Span;
+import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 
 /**
@@ -162,17 +162,17 @@ public class TextAnalyzer {
 
         public List<List<Span>> spanMap;
 
-        public List<BlockLine> blockLines;
+        public List<CodeBlock> codeBlocks;
 
         void recycle() {
-            ObjectAllocator.recycleBlockLines(blockLines);
+            ObjectAllocator.recycleBlockLines(codeBlocks);
             SpanRecycler.getInstance().recycle(spanMap);
             clear();
         }
 
         void clear() {
             spanMap = null;
-            blockLines = null;
+            codeBlocks = null;
         }
 
     }
@@ -218,7 +218,7 @@ public class TextAnalyzer {
                         }
                     } while (waiting);
 
-                    mObjContainer.blockLines = mResult.mBlocks;
+                    mObjContainer.codeBlocks = mResult.mBlocks;
                     mObjContainer.spanMap = mResult.mSpanMap;
                     mResult = result;
                     result.addNormalIfNull();

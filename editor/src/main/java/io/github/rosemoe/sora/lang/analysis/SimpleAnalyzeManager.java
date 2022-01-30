@@ -27,6 +27,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -39,8 +40,9 @@ import io.github.rosemoe.sora.text.ContentReference;
  *
  * The analysis will always re-run when the text changes. Hopefully, it will stop previous outdated
  * runs by provide a {@link Delegate} object.
+ * @param <V> The shared object type that we get for auto-completion.
  */
-public abstract class SimpleAnalyzeManager implements AnalyzeManager {
+public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
 
     private final static String LOG_TAG = "SimpleAnalyzeManager";
     private static int sThreadId = 0;
@@ -51,6 +53,7 @@ public abstract class SimpleAnalyzeManager implements AnalyzeManager {
     private volatile long newestRequestId;
     private AnalyzeThread thread;
     private final Object lock = new Object();
+    private V data;
 
     @Override
     public void setReceiver(@NonNull StyleReceiver receiver) {
@@ -95,6 +98,7 @@ public abstract class SimpleAnalyzeManager implements AnalyzeManager {
         ref = null;
         extraArguments = null;
         newestRequestId = 0;
+        data = null;
         if (thread != null && thread.isAlive()) {
             thread.interrupt();
         }
@@ -114,6 +118,14 @@ public abstract class SimpleAnalyzeManager implements AnalyzeManager {
     }
 
     /**
+     * Get data set by analyze thread
+     */
+    @Nullable
+    public V getData() {
+        return data;
+    }
+
+    /**
      * Analyze the given input.
      *
      * @param text A {@link StringBuilder} instance containing the text in editor. DO NOT SAVE THE INSTANCE OR
@@ -122,7 +134,7 @@ public abstract class SimpleAnalyzeManager implements AnalyzeManager {
      *                 if {@link Delegate#isCancelled()} returns true.
      * @return Styles created according to the text.
      */
-    protected abstract Styles analyze(StringBuilder text, Delegate delegate);
+    protected abstract Styles analyze(StringBuilder text, Delegate<V> delegate);
 
     /**
      * Analyze thread.
@@ -146,10 +158,11 @@ public abstract class SimpleAnalyzeManager implements AnalyzeManager {
                     if (text != null) {
                         var requestId = 0L;
                         Styles result;
+                        V newData;
                         // Do the analysis, until the requestId matches
                         do {
                             requestId = newestRequestId;
-                            var delegate = new Delegate(requestId);
+                            var delegate = new Delegate<V>(requestId);
 
                             // Collect line contents
                             textContainer.setLength(0);
@@ -163,12 +176,14 @@ public abstract class SimpleAnalyzeManager implements AnalyzeManager {
 
                             // Invoke the implementation
                             result = analyze(textContainer, delegate);
+                            newData = delegate.data;
                         } while (requestId != newestRequestId);
                         // Send result
                         final var receiver = SimpleAnalyzeManager.this.receiver;
                         if (receiver != null) {
                             receiver.setStyles(result);
                         }
+                        data = newData;
                     }
                     // Wait for next time
                     synchronized (lock) {
@@ -187,12 +202,20 @@ public abstract class SimpleAnalyzeManager implements AnalyzeManager {
     /**
      * Delegate between manager and analysis implementation
      */
-    public final class Delegate {
+    public final class Delegate<T> {
 
         private final long myRequestId;
+        private T data;
 
         public Delegate(long requestId) {
             myRequestId = requestId;
+        }
+
+        /**
+         * Set shared data
+         */
+        public void setData(T value) {
+            data = value;
         }
 
         /**

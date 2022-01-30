@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
-import io.github.rosemoe.sora.data.BlockLine;
+import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.data.NavigationItem;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
@@ -58,7 +58,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
         LineNumberCalculator helper = new LineNumberCalculator(text);
         IdentifierAutoComplete.Identifiers identifiers = new IdentifierAutoComplete.Identifiers();
         identifiers.begin();
-        Stack<BlockLine> stack = new Stack<>();
+        Stack<CodeBlock> stack = new Stack<>();
         List<NavigationItem> labels = new ArrayList<>();
         int maxSwitch = 1, currSwitch = 0;
         //Tree to save class names and query
@@ -211,7 +211,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                         currSwitch = 0;
                     }
                     currSwitch++;
-                    BlockLine block = result.obtainNewBlock();
+                    CodeBlock block = result.obtainNewBlock();
                     block.startLine = line;
                     block.startColumn = column;
                     stack.push(block);
@@ -221,7 +221,7 @@ public class JavaCodeAnalyzer implements CodeAnalyzer {
                     classNamePrevious = false;
                     result.addIfNeeded(line, column, EditorColorScheme.OPERATOR);
                     if (!stack.isEmpty()) {
-                        BlockLine block = stack.pop();
+                        CodeBlock block = stack.pop();
                         block.endLine = line;
                         block.endColumn = column;
                         if (block.startLine != block.endLine) {

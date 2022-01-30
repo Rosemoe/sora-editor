@@ -23,7 +23,8 @@
  */
 package io.github.rosemoe.sora.lang.styling;
 
-import io.github.rosemoe.sora.interfaces.ExternalRenderer;
+import java.util.List;
+
 import io.github.rosemoe.sora.text.CharPosition;
 
 /**
@@ -31,51 +32,66 @@ import io.github.rosemoe.sora.text.CharPosition;
  */
 public interface Spans {
 
+    /**
+     * Adjust spans on insert.
+     * Must be implemented.
+     */
     void adjustOnInsert(CharPosition start, CharPosition end);
 
+    /**
+     * Adjust spans on delete.
+     * Must be implemented.
+     */
     void adjustOnDelete(CharPosition start, CharPosition end);
 
+    /**
+     * Read spans.
+     * Must be implemented.
+     */
     Reader read();
 
+    /**
+     * Check whether the class supports {@link #modify()}
+     */
     boolean supportsModify();
 
+    /**
+     * Modify the content.
+     *
+     * Optional to implement.
+     */
     Modifier modify();
 
     interface Reader {
 
-        void moveToLine(int line, int columnCountOfLine);
+        /**
+         * Start reading the spans on the given line linearly
+         */
+        void moveToLine(int line);
 
-        int getSpanCountOnLine();
+        /**
+         * Has next span on the line
+         */
+        boolean hasNext();
 
-        int current();
+        /**
+         * Get next span
+         */
+        Span next();
 
-        void moveTo(int index);
-
-        void moveToNext();
-
-        int getLine();
-
-        int getStartColumn();
-
-        int getEndColumn();
-
-        int getForegroundColorId();
-
-        int getBackgroundColorId();
-
-        int getUnderlineColor();
-
-        int getFontStyles();
-
-        int getProblemFlags();
-
-        ExternalRenderer getRenderer();
+        /**
+         * Get the end column of last returned span on the line
+         * @param columnCount Column count of the line.
+         */
+        int peekSpanEnd(int columnCount);
 
     }
 
-    interface Modifier {
+    interface Modifier extends Reader {
 
+        List<Span> getSpansOnLine(int line);
 
+        void setSpansOnLine(int line, List<Span> spans);
 
     }
 

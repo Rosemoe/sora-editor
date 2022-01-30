@@ -30,7 +30,7 @@ import android.annotation.SuppressLint;
 
 import java.util.List;
 
-import io.github.rosemoe.sora.data.Span;
+import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.text.ContentLine;
 
 public class GraphicTextRow {

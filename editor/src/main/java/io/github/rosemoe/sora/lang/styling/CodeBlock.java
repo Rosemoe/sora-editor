@@ -21,7 +21,9 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.data;
+package io.github.rosemoe.sora.lang.styling;
+
+import androidx.annotation.NonNull;
 
 import java.util.Comparator;
 
@@ -30,7 +32,7 @@ import java.util.Comparator;
  *
  * @author Rose
  */
-public class BlockLine {
+public class CodeBlock {
 
     /**
      * Start line of code block
@@ -62,6 +64,7 @@ public class BlockLine {
         toBottomOfEndLine = false;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "BlockLine{" +
@@ -73,7 +76,7 @@ public class BlockLine {
                 '}';
     }
 
-    public static final Comparator<BlockLine> COMPARATOR_END = (a,b) ->  {
+    public static final Comparator<CodeBlock> COMPARATOR_END = (a, b) ->  {
         var res = Integer.compare(a.endLine, b.endLine);
         if (res == 0) {
             return Integer.compare(a.endColumn, b.endColumn);
@@ -82,7 +85,7 @@ public class BlockLine {
         }
     };
 
-    public static final Comparator<BlockLine> COMPARATOR_START = (a,b) ->  {
+    public static final Comparator<CodeBlock> COMPARATOR_START = (a, b) ->  {
         var res = Integer.compare(a.startLine, b.startLine);
         if (res == 0) {
             return Integer.compare(a.startColumn, b.startColumn);

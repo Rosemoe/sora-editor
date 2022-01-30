@@ -28,10 +28,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import io.github.rosemoe.sora.data.BlockLine;
+import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.data.NavigationItem;
 import io.github.rosemoe.sora.data.ObjectAllocator;
-import io.github.rosemoe.sora.data.Span;
+import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
@@ -62,7 +62,7 @@ public class TextAnalyzeResult {
         }
     }
 
-    protected final List<BlockLine> mBlocks;
+    protected final List<CodeBlock> mBlocks;
     protected final List<List<Span>> mSpanMap;
     protected Object mExtra;
     protected List<NavigationItem> mLabels;
@@ -157,7 +157,7 @@ public class TextAnalyzeResult {
      *
      * @return An idle BlockLine
      */
-    public BlockLine obtainNewBlock() {
+    public CodeBlock obtainNewBlock() {
         return ObjectAllocator.obtainBlockLine();
     }
 
@@ -166,7 +166,7 @@ public class TextAnalyzeResult {
      *
      * @param block Info of code block
      */
-    public void addBlockLine(BlockLine block) {
+    public void addBlockLine(CodeBlock block) {
         mBlocks.add(block);
     }
 
@@ -175,7 +175,7 @@ public class TextAnalyzeResult {
      *
      * @return code blocks
      */
-    public List<BlockLine> getBlocks() {
+    public List<CodeBlock> getBlocks() {
         return mBlocks;
     }
 
@@ -191,7 +191,7 @@ public class TextAnalyzeResult {
             pre = cur;
         }
         if (sort) {
-            Collections.sort(mBlocks, BlockLine.COMPARATOR_END);
+            Collections.sort(mBlocks, CodeBlock.COMPARATOR_END);
         }
     }
 

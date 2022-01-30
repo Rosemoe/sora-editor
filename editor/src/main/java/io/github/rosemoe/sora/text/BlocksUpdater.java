@@ -25,7 +25,7 @@ package io.github.rosemoe.sora.text;
 
 import java.util.List;
 
-import io.github.rosemoe.sora.data.BlockLine;
+import io.github.rosemoe.sora.lang.styling.CodeBlock;
 
 /**
  * Update block line positions on edit
@@ -38,7 +38,7 @@ public class BlocksUpdater {
      * @param restrict Min line to update
      * @param delta Delta for line index
      */
-    public static void update(List<BlockLine> blocks, int restrict, int delta) {
+    public static void update(List<CodeBlock> blocks, int restrict, int delta) {
         if (delta == 0) {
             return;
         }

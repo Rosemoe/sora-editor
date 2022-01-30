@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.data;
+package io.github.rosemoe.sora.lang.styling;
 
 import androidx.annotation.NonNull;
 
@@ -37,7 +37,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 /**
  * The span model
  *
- * @author Rose
+ * @author Rosemoe
  */
 public class Span {
 
@@ -73,7 +73,7 @@ public class Span {
     public int underlineColor;
 
     /**
-     * Set this value to draw curly lines for this span to indicates code problems.
+     * Set this value to draw curly lines for this span to indicate code problems.
      *
      * @see Span#FLAG_ERROR
      * @see Span#FLAG_WARNING
@@ -205,4 +205,5 @@ public class Span {
                 ", renderer=" + renderer +
                 "}";
     }
+
 }
