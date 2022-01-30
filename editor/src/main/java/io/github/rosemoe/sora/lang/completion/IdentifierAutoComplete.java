@@ -30,6 +30,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
+import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
@@ -94,7 +95,7 @@ public class IdentifierAutoComplete {
 
     /**
      * Make completion items for the given arguments.
-     * Provide the required arguments passed by {@link io.github.rosemoe.sora.interfaces.EditorLanguage#requireAutoComplete(ContentReference, CharPosition, CompletionPublisher, TextAnalyzeResult, Bundle)}
+     * Provide the required arguments passed by {@link Language#requireAutoComplete(ContentReference, CharPosition, CompletionPublisher, TextAnalyzeResult, Bundle)}
      * @param prefix The prefix to make completions for.
      */
     public void requireAutoComplete(String prefix, CompletionPublisher publisher, TextAnalyzeResult analyzeResult) throws InterruptedException {

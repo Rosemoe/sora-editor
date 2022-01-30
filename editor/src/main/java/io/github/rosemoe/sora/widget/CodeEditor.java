@@ -94,7 +94,7 @@ import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.Paint;
-import io.github.rosemoe.sora.interfaces.EditorLanguage;
+import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.interfaces.ExternalRenderer;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
@@ -302,7 +302,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
     private Rect mViewRect;
     private EditorColorScheme mColors;
     private String mLnTip = "Line:";
-    private EditorLanguage mLanguage;
+    private Language mLanguage;
     private long mLastMakeVisible = 0;
     private EditorAutoCompleteWindow mCompletionWindow;
     private EditorTouchEventHandler mEventHandler;
@@ -806,7 +806,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      * @return EditorLanguage
      */
     @NonNull
-    public EditorLanguage getEditorLanguage() {
+    public Language getEditorLanguage() {
         return mLanguage;
     }
 
@@ -816,7 +816,7 @@ public class CodeEditor extends View implements ContentListener, TextAnalyzer.Ca
      *
      * @param lang New EditorLanguage for editor
      */
-    public void setEditorLanguage(@Nullable EditorLanguage lang) {
+    public void setEditorLanguage(@Nullable Language lang) {
         if (lang == null) {
             lang = new EmptyLanguage();
         }

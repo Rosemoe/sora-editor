@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.interfaces;
+package io.github.rosemoe.sora.lang;
 
 import android.os.Bundle;
 
@@ -30,6 +30,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.annotation.WorkerThread;
 
+import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -51,7 +52,7 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
  *
  * @author Rosemoe
  */
-public interface EditorLanguage {
+public interface Language {
 
     /**
      * Get CodeAnalyzer of this language object

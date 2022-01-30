@@ -23,17 +23,17 @@
  */
 package io.github.rosemoe.sora.text;
 
-import io.github.rosemoe.sora.interfaces.EditorLanguage;
+import io.github.rosemoe.sora.lang.Language;
 
 public class FormatThread extends Thread {
 
     private CharSequence mText;
 
-    private EditorLanguage mLanguage;
+    private Language mLanguage;
 
     private FormatResultReceiver mReceiver;
 
-    public FormatThread(CharSequence text, EditorLanguage language, FormatResultReceiver receiver) {
+    public FormatThread(CharSequence text, Language language, FormatResultReceiver receiver) {
         mText = text;
         mLanguage = language;
         mReceiver = receiver;

@@ -25,7 +25,7 @@ package io.github.rosemoe.sora.text;
 
 import android.util.Log;
 
-import io.github.rosemoe.sora.interfaces.EditorLanguage;
+import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.util.IntPair;
 
 /**
@@ -39,7 +39,7 @@ public final class Cursor {
     private CharPosition mLeft, mRight;
     private CharPosition cache0, cache1, cache2;
     private boolean mAutoIndentEnabled;
-    private EditorLanguage mLanguage;
+    private Language mLanguage;
     private int mTabWidth;
 
     /**
@@ -225,7 +225,7 @@ public final class Cursor {
      *
      * @param lang The target language
      */
-    public void setLanguage(EditorLanguage lang) {
+    public void setLanguage(Language lang) {
         mLanguage = lang;
     }
 

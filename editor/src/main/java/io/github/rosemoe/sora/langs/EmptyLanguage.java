@@ -27,13 +27,8 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import io.github.rosemoe.sora.interfaces.AutoCompleteProvider;
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
-import io.github.rosemoe.sora.interfaces.EditorLanguage;
-import io.github.rosemoe.sora.lang.completion.CompletionItem;
+import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -47,7 +42,7 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
  *
  * @author Rosemoe
  */
-public class EmptyLanguage implements EditorLanguage {
+public class EmptyLanguage implements Language {
 
     @Override
     public CharSequence format(CharSequence text) {
@@ -82,15 +77,6 @@ public class EmptyLanguage implements EditorLanguage {
     @Override
     public boolean useTab() {
         return false;
-    }
-
-    public static class EmptyAutoCompleteProvider implements AutoCompleteProvider {
-
-        @Override
-        public List<CompletionItem> getAutoCompleteItems(String prefix, TextAnalyzeResult analyzeResult, int line, int column) {
-            return new ArrayList<>();
-        }
-
     }
 
     public static class EmptyCodeAnalyzer implements CodeAnalyzer {

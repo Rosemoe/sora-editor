@@ -35,7 +35,7 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import io.github.rosemoe.sora.interfaces.EditorLanguage;
+import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -297,7 +297,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
         private final TextAnalyzeResult mData;
         private final Bundle mExtra;
         private final CharPosition mPosition;
-        private final EditorLanguage mLanguage;
+        private final Language mLanguage;
         private final ContentReference mRef;
         private final CompletionPublisher mPublisher;
 

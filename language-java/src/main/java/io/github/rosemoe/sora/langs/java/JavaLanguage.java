@@ -28,7 +28,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
-import io.github.rosemoe.sora.interfaces.EditorLanguage;
+import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
@@ -47,7 +47,7 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
  *
  * @author Rosemoe
  */
-public class JavaLanguage implements EditorLanguage {
+public class JavaLanguage implements Language {
 
     private final IdentifierAutoComplete autoComplete;
 

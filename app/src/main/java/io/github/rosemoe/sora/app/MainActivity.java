@@ -48,7 +48,7 @@ import java.io.InputStreamReader;
 
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
-import io.github.rosemoe.sora.interfaces.EditorLanguage;
+import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.langs.EmptyLanguage;
 import io.github.rosemoe.sora.langs.java.JavaLanguage;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
-            EditorLanguage language = TextMateLanguage.create(
+            Language language = TextMateLanguage.create(
                     result.getPath()
                     , getContentResolver().openInputStream(result)
                     , ((TextMateColorScheme) editorColorScheme).getRawTheme());
@@ -181,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
             TextMateColorScheme colorScheme = TextMateColorScheme.create(iRawTheme);
             editor.setColorScheme(colorScheme);
 
-            EditorLanguage language = editor.getEditorLanguage();
+            Language language = editor.getEditorLanguage();
             if (language instanceof TextMateLanguage) {
                 TextMateLanguage textMateLanguage = (TextMateLanguage) language;
                 textMateLanguage.updateTheme(iRawTheme);
@@ -245,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
                                     }
 
 
-                                    EditorLanguage language = TextMateLanguage.create(
+                                    Language language = TextMateLanguage.create(
                                             "java.tmLanguage.json"
                                             , getAssets().open("textmate/java/syntaxes/java.tmLanguage.json")
                                             , new InputStreamReader(getAssets().open("textmate/java/language-configuration.json"))
@@ -270,7 +270,7 @@ public class MainActivity extends AppCompatActivity {
                                     }
 
 
-                                    EditorLanguage language = TextMateLanguage.create(
+                                    Language language = TextMateLanguage.create(
                                             "Kotlin.tmLanguage"
                                             , getAssets().open("textmate/kotlin/syntaxes/Kotlin.tmLanguage")
                                             , new InputStreamReader(getAssets().open("textmate/kotlin/language-configuration.json"))
@@ -341,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
                                     TextMateColorScheme colorScheme = TextMateColorScheme.create(iRawTheme);
                                     editor.setColorScheme(colorScheme);
 
-                                    EditorLanguage language = editor.getEditorLanguage();
+                                    Language language = editor.getEditorLanguage();
                                     if (language instanceof TextMateLanguage) {
                                         TextMateLanguage textMateLanguage = (TextMateLanguage) language;
                                         textMateLanguage.updateTheme(iRawTheme);
@@ -356,7 +356,7 @@ public class MainActivity extends AppCompatActivity {
                                     TextMateColorScheme colorScheme = TextMateColorScheme.create(iRawTheme);
                                     editor.setColorScheme(colorScheme);
 
-                                    EditorLanguage language = editor.getEditorLanguage();
+                                    Language language = editor.getEditorLanguage();
                                     if (language instanceof TextMateLanguage) {
                                         TextMateLanguage textMateLanguage = (TextMateLanguage) language;
                                         textMateLanguage.updateTheme(iRawTheme);
@@ -371,7 +371,7 @@ public class MainActivity extends AppCompatActivity {
                                     TextMateColorScheme colorScheme = TextMateColorScheme.create(iRawTheme);
                                     editor.setColorScheme(colorScheme);
 
-                                    EditorLanguage language = editor.getEditorLanguage();
+                                    Language language = editor.getEditorLanguage();
                                     if (language instanceof TextMateLanguage) {
                                         TextMateLanguage textMateLanguage = (TextMateLanguage) language;
                                         textMateLanguage.updateTheme(iRawTheme);

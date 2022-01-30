@@ -38,7 +38,7 @@ import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.Unsubscribe;
 
 /**
- * This will show when selecting text
+ * This window will show when selecting text to present text actions.
  *
  * @author Rosemoe
  */
@@ -129,7 +129,7 @@ class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickLi
             }
             mLastPosition = -1;
         } else {
-            if (event.getLeft().index == mLastPosition && !isShowing()) {
+            if (event.getLeft().index == mLastPosition && !isShowing() && !mEditor.getText().isInBatchEdit()) {
                 mEditor.post(this::displayWindow);
             } else {
                 dismiss();
