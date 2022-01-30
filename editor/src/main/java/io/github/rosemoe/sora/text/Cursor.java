@@ -23,14 +23,12 @@
  */
 package io.github.rosemoe.sora.text;
 
-import android.util.Log;
-
-import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.util.IntPair;
 
 /**
- * @author Rose
- * Warning:The cursor position will update automatically when the content has been changed by other way
+ * The cursor position will update automatically when the content has been changed by other ways.
+ *
+ * @author Rosemoe
  */
 public final class Cursor {
 
@@ -38,9 +36,6 @@ public final class Cursor {
     private final CachedIndexer mIndexer;
     private CharPosition mLeft, mRight;
     private CharPosition cache0, cache1, cache2;
-    private boolean mAutoIndentEnabled;
-    private Language mLanguage;
-    private int mTabWidth;
 
     /**
      * Create a new Cursor for Content
@@ -52,7 +47,6 @@ public final class Cursor {
         mIndexer = new CachedIndexer(content);
         mLeft = new CharPosition().zero();
         mRight = new CharPosition().zero();
-        mTabWidth = 4;
     }
 
     /**
@@ -200,86 +194,6 @@ public final class Cursor {
      */
     public boolean isSelected() {
         return mLeft.index != mRight.index;
-    }
-
-    /**
-     * Returns whether auto indent is enabled
-     *
-     * @return Enabled or disabled
-     */
-    public boolean isAutoIndent() {
-        return mAutoIndentEnabled;
-    }
-
-    /**
-     * Enable or disable auto indent when insert text through Cursor
-     *
-     * @param enabled Auto Indent state
-     */
-    public void setAutoIndent(boolean enabled) {
-        mAutoIndentEnabled = enabled;
-    }
-
-    /**
-     * Set language for auto indent
-     *
-     * @param lang The target language
-     */
-    public void setLanguage(Language lang) {
-        mLanguage = lang;
-    }
-
-    /**
-     * Set tab width for auto indent
-     *
-     * @param width tab width
-     */
-    public void setTabWidth(int width) {
-        mTabWidth = width;
-    }
-
-    public void onCommitText(CharSequence text) {
-        onCommitText(text, true);
-    }
-
-    /**
-     * Commit text at current state
-     *
-     * @param text Text commit by InputConnection
-     */
-    public void onCommitText(CharSequence text, boolean applyAutoIndent) {
-        if (isSelected()) {
-            mContent.replace(getLeftLine(), getLeftColumn(), getRightLine(), getRightColumn(), text);
-        } else {
-            if (mAutoIndentEnabled && text.length() != 0 && applyAutoIndent) {
-                char first = text.charAt(0);
-                if (first == '\n') {
-                    String line = mContent.getLineString(getLeftLine());
-                    int p = 0, count = 0;
-                    while (p < getLeftColumn()) {
-                        if (isWhitespace(line.charAt(p))) {
-                            if (line.charAt(p) == '\t') {
-                                count += mTabWidth;
-                            } else {
-                                count++;
-                            }
-                            p++;
-                        } else {
-                            break;
-                        }
-                    }
-                    try {
-                        count += mLanguage.getIndentAdvance(new ContentReference(mContent), getLeftLine(), getLeftColumn());
-                    } catch (Exception e) {
-                        Log.w("EditorCursor", "Language object error", e);
-                    }
-                    StringBuilder sb = new StringBuilder(text);
-                    sb.insert(1, TextUtils.createIndent(count, mTabWidth, mLanguage.useTab()));
-                    text = sb;
-                }
-            }
-            mContent.insert(getLeftLine(), getLeftColumn(), text);
-        }
     }
 
     /**

@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
+package io.github.rosemoe.sora.widget.component;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -43,13 +43,14 @@ import android.widget.PopupWindow;
 import androidx.annotation.RequiresApi;
 
 import io.github.rosemoe.sora.R;
+import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
  * Magnifier specially designed for CodeEditor
  *
  * @author Rosemoe
  */
-class Magnifier {
+public final class Magnifier implements EditorBuiltinComponent {
 
     private final CodeEditor view;
     private final PopupWindow popup;
@@ -58,6 +59,7 @@ class Magnifier {
     private int x, y;
     private final float maxTextSize;
     private long expectedRequestTime;
+    private boolean enabled = true;
 
     /**
      * Scale factor for regions
@@ -78,11 +80,27 @@ class Magnifier {
         paint = new Paint();
     }
 
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        if (!enabled) {
+            dismiss();
+        }
+    }
+
     /**
      * Show the magnifier according to the given position.
      * X and Y are relative to the code editor view
      */
     public void show(int x, int y) {
+        if (!enabled) {
+            return;
+        }
         if (Math.abs(x - this.x) < 2 && Math.abs(y - this.y) < 2) {
             return;
         }

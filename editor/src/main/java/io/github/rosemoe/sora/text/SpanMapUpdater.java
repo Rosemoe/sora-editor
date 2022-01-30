@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.github.rosemoe.sora.data.Span;
-import io.github.rosemoe.sora.widget.EditorColorScheme;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
  * Update spans on text change event

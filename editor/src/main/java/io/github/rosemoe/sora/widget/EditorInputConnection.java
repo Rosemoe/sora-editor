@@ -37,6 +37,7 @@ import android.view.inputmethod.ExtractedTextRequest;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.Cursor;
+import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 
 /**
  * Connection between input method and editor
@@ -232,7 +233,7 @@ class EditorInputConnection extends BaseInputConnection {
         // Call onCommitText() can make auto indent and delete text selected automatically
         if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
                 || (replacement.shouldNotDoReplace(mEditor.getText()) && replacement.notHasAutoSurroundPair())) {
-            getCursor().onCommitText(text, applyAutoIndent);
+            mEditor.commitText(text, applyAutoIndent);
         } else {
             String[] autoSurroundPair;
             if (getCursor().isSelected() && (autoSurroundPair = replacement.getAutoSurroundPair()) != null) {
@@ -246,7 +247,7 @@ class EditorInputConnection extends BaseInputConnection {
                 mEditor.setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length()-1);
 
             } else {
-                getCursor().onCommitText(replacement.text, applyAutoIndent);
+                mEditor.commitText(replacement.text, applyAutoIndent);
                 int delta = (replacement.text.length() - replacement.selection);
                 if (delta != 0) {
                     int newSel = Math.max(getCursor().getLeft() - delta, 0);
@@ -374,7 +375,7 @@ class EditorInputConnection extends BaseInputConnection {
     }
 
     private boolean shouldRejectComposing() {
-        return mEditor.getAutoCompleteWindow().shouldRejectComposing();
+        return mEditor.getComponent(EditorAutoCompletion.class).shouldRejectComposing();
     }
 
     @Override
@@ -391,7 +392,7 @@ class EditorInputConnection extends BaseInputConnection {
             mComposingLine = getCursor().getLeftLine();
             mComposingStart = getCursor().getLeftColumn();
             mComposingEnd = mComposingStart + text.length();
-            getCursor().onCommitText(text);
+            mEditor.commitText(text);
         } else {
             // Already have composing text
             // Delete first
@@ -447,7 +448,7 @@ class EditorInputConnection extends BaseInputConnection {
         if (start == getCursor().getLeft() && end == getCursor().getRight()) {
             return true;
         }
-        mEditor.getAutoCompleteWindow().hide();
+        mEditor.getComponent(EditorAutoCompletion.class).hide();
         Content content = mEditor.getText();
         CharPosition startPos = content.getIndexer().getCharPosition(start);
         CharPosition endPos = content.getIndexer().getCharPosition(end);

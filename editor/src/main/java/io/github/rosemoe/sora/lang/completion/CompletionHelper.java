@@ -25,7 +25,7 @@ package io.github.rosemoe.sora.lang.completion;
 
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
-import io.github.rosemoe.sora.widget.EditorAutoCompleteWindow;
+import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 
 /**
  * Helper class for completion
@@ -55,8 +55,8 @@ public class CompletionHelper {
      */
     public static boolean checkCancelled() {
         var thread = Thread.currentThread();
-        if (thread instanceof EditorAutoCompleteWindow.CompletionThread) {
-            return ((EditorAutoCompleteWindow.CompletionThread) thread).isCancelled();
+        if (thread instanceof EditorAutoCompletion.CompletionThread) {
+            return ((EditorAutoCompletion.CompletionThread) thread).isCancelled();
         } else {
             return false;
         }

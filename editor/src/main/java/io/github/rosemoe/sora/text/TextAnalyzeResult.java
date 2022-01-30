@@ -32,7 +32,7 @@ import io.github.rosemoe.sora.data.BlockLine;
 import io.github.rosemoe.sora.data.NavigationItem;
 import io.github.rosemoe.sora.data.ObjectAllocator;
 import io.github.rosemoe.sora.data.Span;
-import io.github.rosemoe.sora.widget.EditorColorScheme;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
  * The result of analysis

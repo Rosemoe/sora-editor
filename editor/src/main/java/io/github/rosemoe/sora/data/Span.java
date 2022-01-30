@@ -32,7 +32,7 @@ import java.util.concurrent.BlockingQueue;
 
 import io.github.rosemoe.sora.interfaces.ExternalRenderer;
 import io.github.rosemoe.sora.text.TextStyle;
-import io.github.rosemoe.sora.widget.EditorColorScheme;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
  * The span model

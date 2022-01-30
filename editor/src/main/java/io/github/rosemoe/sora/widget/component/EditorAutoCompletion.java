@@ -21,12 +21,13 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
+package io.github.rosemoe.sora.widget.component;
 
 import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -44,14 +45,16 @@ import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.TextAnalyzeResult;
 import io.github.rosemoe.sora.text.TextReference;
+import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
 
 /**
  * Auto complete window for editing code quicker
  *
- * @author Rose
+ * @author Rosemoe
  */
-public class EditorAutoCompleteWindow extends EditorPopupWindow {
+public class EditorAutoCompletion extends EditorPopupWindow implements EditorBuiltinComponent {
     private final CodeEditor mEditor;
     private final ListView mListView;
     private final ProgressBar mProgressBar;
@@ -64,13 +67,14 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
     private CompletionThread mThread;
     private long requestShow = 0;
     private long requestHide = -1;
+    private boolean enabled = true;
 
     /**
      * Create a panel instance for the given editor
      *
      * @param editor Target editor
      */
-    public EditorAutoCompleteWindow(CodeEditor editor) {
+    public EditorAutoCompletion(CodeEditor editor) {
         super(editor, FEATURE_HIDE_WHEN_FAST_SCROLL | FEATURE_SCROLL_AS_CONTENT);
         mEditor = editor;
         mAdapter = new DefaultCompletionItemAdapter();
@@ -99,7 +103,20 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
         });
     }
 
-    protected void setAdapter(EditorCompletionAdapter adapter) {
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        if (!enabled) {
+            hide();
+        }
+    }
+
+    public void setAdapter(EditorCompletionAdapter adapter) {
         mAdapter = adapter;
         if (adapter == null) {
             mAdapter = new DefaultCompletionItemAdapter();
@@ -108,7 +125,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
 
     @Override
     public void show() {
-        if (mCancelShowUp) {
+        if (mCancelShowUp || !isEnabled()) {
             return;
         }
         requestShow = System.currentTimeMillis();
@@ -230,7 +247,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
      */
     public void select(int pos) {
         if (pos == -1) {
-            mEditor.getCursor().onCommitText("\n");
+            mEditor.commitText("\n");
             return;
         }
         CompletionItem item = ((EditorCompletionAdapter) mListView.getAdapter()).getItem(pos);
@@ -262,7 +279,7 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
      * Start completion at current selection position
      */
     public void requireCompletion() {
-        if (!mEditor.isAutoCompletionEnabled() || mCancelShowUp) {
+        if (mCancelShowUp || !isEnabled()) {
             return;
         }
         var text = mEditor.getText();
@@ -349,10 +366,13 @@ public class EditorAutoCompleteWindow extends EditorPopupWindow {
                 if (mPublisher.hasData()) {
                     mPublisher.updateList(true);
                 } else {
-                    mEditor.post(EditorAutoCompleteWindow.this::hide);
+                    mEditor.post(EditorAutoCompletion.this::hide);
                 }
                 mEditor.post(() -> setLoading(false));
             } catch (Exception e) {
+                if (e instanceof CompletionCancelledException) {
+                    Log.v("CompletionThread", "Completion is cancelled");
+                }
                 e.printStackTrace();
             }
         }

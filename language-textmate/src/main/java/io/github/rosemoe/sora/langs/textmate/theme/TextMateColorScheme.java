@@ -30,7 +30,7 @@ import java.util.List;
 import io.github.rosemoe.sora.textmate.core.internal.theme.ThemeRaw;
 import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
 import io.github.rosemoe.sora.textmate.core.theme.Theme;
-import io.github.rosemoe.sora.widget.EditorColorScheme;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 public class TextMateColorScheme extends EditorColorScheme {
 

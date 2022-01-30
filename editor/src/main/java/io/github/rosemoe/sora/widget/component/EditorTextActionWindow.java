@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
+package io.github.rosemoe.sora.widget.component;
 
 import android.annotation.SuppressLint;
 import android.graphics.RectF;
@@ -36,6 +36,8 @@ import io.github.rosemoe.sora.event.HandleStateChangeEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.Unsubscribe;
+import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.EditorTouchEventHandler;
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
 
 /**
@@ -43,7 +45,7 @@ import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
  *
  * @author Rosemoe
  */
-public final class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickListener, EventReceiver<SelectionChangeEvent> {
+public final class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickListener, EventReceiver<SelectionChangeEvent>, EditorBuiltinComponent {
     private final CodeEditor mEditor;
     private final Button mPasteBtn;
     private final Button mCopyBtn;
@@ -53,6 +55,7 @@ public final class EditorTextActionWindow extends EditorPopupWindow implements V
     private final static long DELAY = 200;
     private long mLastScroll;
     private int mLastPosition;
+    private boolean mEnabled = true;
 
     /**
      * Create a panel for the given editor
@@ -96,6 +99,19 @@ public final class EditorTextActionWindow extends EditorPopupWindow implements V
                 postDisplay();
             }
         }));
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        mEnabled = enabled;
+        if (!enabled) {
+            dismiss();
+        }
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return mEnabled;
     }
 
     private void postDisplay() {
@@ -181,6 +197,9 @@ public final class EditorTextActionWindow extends EditorPopupWindow implements V
 
     @Override
     public void show() {
+        if (!mEnabled) {
+            return;
+        }
         updateBtnState();
         super.show();
     }

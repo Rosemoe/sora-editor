@@ -28,6 +28,8 @@ import android.graphics.RectF;
 
 import androidx.annotation.NonNull;
 
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
+
 /**
  * Class for custom handle style
  *
@@ -51,7 +53,7 @@ public interface SelectionHandleStyle {
      * @param x The x of text position on canvas
      * @param y The y of row bottom position on canvas
      * @param rowHeight The height of a single row
-     * @param color The color of handle configured in {@link io.github.rosemoe.sora.widget.EditorColorScheme}
+     * @param color The color of handle configured in {@link EditorColorScheme}
      * @param descriptor The descriptor that should be adjusted
      */
     void draw(@NonNull Canvas canvas, int handleType, float x, float y, int rowHeight, int color, @NonNull HandleDescriptor descriptor);

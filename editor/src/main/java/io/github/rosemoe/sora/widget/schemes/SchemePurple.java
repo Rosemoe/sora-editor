@@ -23,8 +23,6 @@
  */
 package io.github.rosemoe.sora.widget.schemes;
 
-import io.github.rosemoe.sora.widget.EditorColorScheme;
-
 public class SchemePurple extends EditorColorScheme {
    public void applyDefault() {
       super.applyDefault();

@@ -23,27 +23,37 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import io.github.rosemoe.sora.event.EventReceiver;
+import io.github.rosemoe.sora.event.SelectionChangeEvent;
+import io.github.rosemoe.sora.event.Unsubscribe;
+
 /**
  * This class is used to control cursor visibility
  *
  * @author Rose
  */
-final class CursorBlink implements Runnable {
+final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent> {
 
     final CodeEditor editor;
     long lastSelectionModificationTime = 0;
     int period;
-    boolean visibility;
-    boolean valid;
+    public boolean visibility;
+    public boolean valid;
     private float[] buffer;
 
-    CursorBlink(CodeEditor editor, int period) {
+    public CursorBlink(CodeEditor editor, int period) {
         visibility = true;
         this.editor = editor;
         this.period = period;
+        editor.subscribeEvent(SelectionChangeEvent.class, this);
     }
 
-    void setPeriod(int period) {
+    @Override
+    public void onReceive(SelectionChangeEvent event, Unsubscribe unsubscribe) {
+        lastSelectionModificationTime = event.getEventTime();
+    }
+
+    public void setPeriod(int period) {
         this.period = period;
         if (period <= 0) {
             visibility = true;
@@ -53,12 +63,12 @@ final class CursorBlink implements Runnable {
         }
     }
 
-    void onSelectionChanged() {
+    public void onSelectionChanged() {
         lastSelectionModificationTime = System.currentTimeMillis();
         visibility = true;
     }
 
-    boolean isSelectionVisible() {
+    public boolean isSelectionVisible() {
         return (buffer[0] >= editor.getOffsetY() && buffer[0] - editor.getRowHeight() <= editor.getOffsetY() + editor.getHeight()
                 && buffer[1] >= editor.getOffsetX() && buffer[1] - 100f/* larger than a single character */ <= editor.getOffsetX() + editor.getWidth());
     }

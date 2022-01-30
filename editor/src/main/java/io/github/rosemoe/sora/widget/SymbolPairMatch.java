@@ -87,11 +87,11 @@ public class SymbolPairMatch {
         public interface IReplacement {
             /**
              * The method will be called
-             * to decide whether to perform the replace or not.
-             * It maybe same as vscode language-configuration Autoclosing 'notIn'
+             * to decide whether to perform the replacement or not.
+             * It may be same as vscode language-configuration Auto-closing 'notIn'
              * also see <a href="https://code.visualstudio.com/api/language-extensions/language-configuration-guide#autoclosing">this</a>
              * If not implemented,always return true
-             * @param currentLine The currently line edit in the editor,quick analysis it to decide whether to replaced
+             * @param currentLine The current line edit in the editor,quick analysis it to decide whether to replaced
              * @param leftColumn return current cursor column
              */
             default boolean shouldDoReplace(ContentLine currentLine,int leftColumn) {

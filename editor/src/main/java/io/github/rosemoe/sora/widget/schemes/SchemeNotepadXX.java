@@ -23,8 +23,6 @@
  */
 package io.github.rosemoe.sora.widget.schemes;
 
-import io.github.rosemoe.sora.widget.EditorColorScheme;
-
 /**
  * ColorScheme for editor
  * picked from Notepad++ v7.8.1

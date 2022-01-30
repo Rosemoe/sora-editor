@@ -31,6 +31,7 @@ import androidx.annotation.UiThread;
 import androidx.annotation.WorkerThread;
 
 import io.github.rosemoe.sora.interfaces.CodeAnalyzer;
+import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
@@ -116,7 +117,7 @@ public interface Language {
     @WorkerThread
     void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position,
                              @NonNull CompletionPublisher publisher, @NonNull TextAnalyzeResult analyzeResult,
-                             @NonNull Bundle extraArguments);
+                             @NonNull Bundle extraArguments) throws CompletionCancelledException;
 
     /**
      * Get advance for indent

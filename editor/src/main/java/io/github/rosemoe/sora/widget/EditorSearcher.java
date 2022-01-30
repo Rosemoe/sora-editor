@@ -66,7 +66,7 @@ public class EditorSearcher {
         if (cursor.isSelected()) {
             String selectedText = text.subContent(cursor.getLeftLine(), cursor.getLeftColumn(), cursor.getRightLine(), cursor.getRightColumn()).toString();
             if (selectedText.equals(mSearchText)) {
-                cursor.onCommitText(newText);
+                mEditor.commitText(newText);
                 mEditor.hideAutoCompleteWindow();
                 gotoNext(false);
                 return true;

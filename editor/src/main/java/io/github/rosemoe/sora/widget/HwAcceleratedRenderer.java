@@ -36,6 +36,7 @@ import io.github.rosemoe.sora.data.Span;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.util.ArrayList;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
  * Hardware accelerated text render, which manages {@link RenderNode}

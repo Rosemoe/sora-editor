@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
+package io.github.rosemoe.sora.widget.schemes;
 
 import android.util.SparseIntArray;
 
@@ -29,6 +29,9 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
+import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
  * This class manages the colors of editor.
@@ -135,7 +138,7 @@ public class EditorColorScheme {
      *
      * @param editor Host editor
      */
-    EditorColorScheme(CodeEditor editor) {
+    public EditorColorScheme(CodeEditor editor) {
         this();
         attachEditor(editor);
     }
@@ -154,7 +157,8 @@ public class EditorColorScheme {
      *
      * Called by editor
      */
-    void attachEditor(CodeEditor editor) {
+    @UnsupportedUserUsage
+    public void attachEditor(CodeEditor editor) {
         Objects.requireNonNull(editor);
         for (var ref : mEditors) {
             if (ref.get() == editor) {
@@ -168,7 +172,8 @@ public class EditorColorScheme {
     /**
      * Unsubscribe changes
      */
-    void detachEditor(CodeEditor editor) {
+    @UnsupportedUserUsage
+    public void detachEditor(CodeEditor editor) {
         var itr = mEditors.iterator();
         while (itr.hasNext()) {
             if (itr.next().get() == editor) {

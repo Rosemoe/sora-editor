@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
+package io.github.rosemoe.sora.widget.component;
 
 import android.content.Context;
 import android.view.View;
@@ -34,18 +34,19 @@ import io.github.rosemoe.sora.lang.completion.CompletionItem;
 
 /**
  * A class to make custom adapter for auto-completion window
+ *
  * @see EditorCompletionAdapter#getItemHeight()
  * @see EditorCompletionAdapter#getView(int, View, ViewGroup, boolean)
  */
 public abstract class EditorCompletionAdapter extends BaseAdapter {
 
-    private EditorAutoCompleteWindow mWindow;
+    private EditorAutoCompletion mWindow;
     private List<CompletionItem> mItems;
 
     /**
-     * Called by {@link EditorAutoCompleteWindow} to attach some arguments
+     * Called by {@link EditorAutoCompletion} to attach some arguments
      */
-    public void attachValues(EditorAutoCompleteWindow window, List<CompletionItem> items) {
+    public void attachValues(EditorAutoCompletion window, List<CompletionItem> items) {
         mWindow = window;
         mItems = items;
         notifyDataSetInvalidated();

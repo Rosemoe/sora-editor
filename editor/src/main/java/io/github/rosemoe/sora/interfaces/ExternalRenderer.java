@@ -27,7 +27,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 
 import io.github.rosemoe.sora.annotations.Experimental;
-import io.github.rosemoe.sora.widget.EditorColorScheme;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
  * External renderer for spans.

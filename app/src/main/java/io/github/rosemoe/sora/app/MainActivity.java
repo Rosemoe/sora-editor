@@ -57,7 +57,8 @@ import io.github.rosemoe.sora.textmate.core.internal.theme.reader.ThemeReader;
 import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
 import io.github.rosemoe.sora.utils.CrashHandler;
 import io.github.rosemoe.sora.widget.CodeEditor;
-import io.github.rosemoe.sora.widget.EditorColorScheme;
+import io.github.rosemoe.sora.widget.component.Magnifier;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.SymbolInputView;
 import io.github.rosemoe.sora.widget.schemes.SchemeDarcula;
 import io.github.rosemoe.sora.widget.schemes.SchemeEclipse;
@@ -221,8 +222,8 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.move_right) {
             editor.moveSelectionRight();
         } else if (id == R.id.magnifier) {
-            editor.setMagnifierEnabled(!editor.isMagnifierEnabled());
-            item.setChecked(editor.isMagnifierEnabled());
+            item.setChecked(!item.isChecked());
+            editor.getComponent(Magnifier.class).setEnabled(item.isChecked());
         } else if (id == R.id.code_format) {
             editor.formatCodeAsync();
         } else if (id == R.id.switch_language) {

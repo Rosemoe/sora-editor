@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
+package io.github.rosemoe.sora.widget.component;
 
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -32,6 +32,7 @@ import android.widget.TextView;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
+import io.github.rosemoe.sora.widget.component.EditorCompletionAdapter;
 
 /**
  * Default adapter to display results

@@ -34,6 +34,7 @@ import android.widget.OverScroller;
 import io.github.rosemoe.sora.event.HandleStateChangeEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.util.IntPair;
+import io.github.rosemoe.sora.widget.component.Magnifier;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 
 /**
@@ -99,7 +100,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         return Character.isJavaIdentifierPart(ch);
     }
 
-    protected boolean hasAnyHeldHandle() {
+    public boolean hasAnyHeldHandle() {
         return holdInsertHandle() || mSelHandleType != -1;
     }
 
@@ -211,7 +212,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      *
      * @return Whether handling
      */
-    protected boolean handlingMotions() {
+    public boolean handlingMotions() {
         return holdHorizontalScrollBar() || holdVerticalScrollBar() || holdInsertHandle() || mSelHandleType != -1;
     }
 
@@ -220,29 +221,29 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      *
      * @return Scroller using
      */
-    protected OverScroller getScroller() {
+    public OverScroller getScroller() {
         return mScroller;
     }
 
     /**
      * Reset scroll state
      */
-    protected void reset() {
+    public void reset() {
         mScroller.startScroll(0, 0, 0, 0, 0);
     }
 
-    private void updateMagnifier(MotionEvent e) {
+    public void updateMagnifier(MotionEvent e) {
         if (mEdgeFlags != 0) {
             dismissMagnifier();
             return;
         }
-        if (mEditor.isMagnifierEnabled()) {
+        if (mMagnifier.isEnabled()) {
             var height = Math.max(Math.max(mEditor.getInsertHandleDescriptor().position.height(), mEditor.getLeftHandleDescriptor().position.height()), mEditor.getRightHandleDescriptor().position.height());
             mMagnifier.show((int) e.getX(), (int) (e.getY() - height / 2 - mEditor.getRowHeight()));
         }
     }
 
-    private void dismissMagnifier() {
+    public void dismissMagnifier() {
         mMagnifier.dismiss();
     }
 

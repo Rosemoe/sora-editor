@@ -23,6 +23,10 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import android.view.inputmethod.EditorInfo;
+
+import androidx.annotation.NonNull;
+
 import java.io.Serializable;
 
 /**
@@ -65,6 +69,34 @@ public class DirectAccessProps implements Serializable {
      * Such as automatically adding a ')' when '(' is entered
      */
     public boolean symbolPairAutoCompletion = true;
+
+    /**
+     * Show auto-completion even when there is composing text set by the IME in editor.
+     *
+     * Note: composing text is usually a small piece of text you are typing. It is displayed with an
+     * underline in editor.
+     * This is useful when the user uses an input method that does not support the attitude {@link EditorInfo#TYPE_TEXT_FLAG_NO_SUGGESTIONS}.
+     * When this switch is set to false, the editor will not provide auto-completion
+     * when there is any composing text in editor.
+     */
+    public boolean autoCompletionOnComposing = true;
+
+    /**
+     * Set whether auto indent should be executed when user enters
+     * a NEWLINE.
+     *
+     * Enabling this will automatically copy the leading spaces on this line to the new line.
+     */
+    public boolean autoIndent = true;
+
+    /**
+     * Define symbol pairs for any language,
+     * Override language settings.
+     * <p>
+     * Use {@link SymbolPairMatch.Replacement#NO_REPLACEMENT} to force no completion for a character
+     */
+    @NonNull
+    public final SymbolPairMatch overrideSymbolPairs = new SymbolPairMatch();
 
 
 }
