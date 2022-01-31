@@ -46,10 +46,8 @@ import io.github.rosemoe.sora.text.ContentReference;
  *
  * Note that the analysis is done on UI thread.
  *
- * @param <S> State type at line endings
- * @param <T> Token type
  */
-public abstract class UIThreadIncrementalAnalyzeManager<S, T> implements AnalyzeManager {
+public abstract class UIThreadIncrementalAnalyzeManager<S, T> implements IncrementalAnalyzeManager<S, T> {
 
     private StyleReceiver receiver;
     /**
@@ -156,46 +154,6 @@ public abstract class UIThreadIncrementalAnalyzeManager<S, T> implements Analyze
         receiver = null;
         sentStyles = null;
         ref = null;
-    }
-
-    /**
-     * Get the initial at document start
-     */
-    protected abstract S getInitialState();
-
-    /**
-     * Compare the two states.
-     * Return true if they equal
-     */
-    protected abstract boolean stateEquals(S state, S another);
-
-    /**
-     * Tokenize for the given line
-     */
-    protected abstract LineTokenizeResult<S, T> tokenizeLine(CharSequence line, S state);
-
-    /**
-     * Generate spans for the line
-     */
-    protected abstract List<Span> generateSpansForLine(LineTokenizeResult<S, T> tokens);
-
-    protected static class LineTokenizeResult<S_, T_> {
-
-        /**
-         * State at line end
-         */
-        public S_ state;
-
-        /**
-         * Tokens on this line
-         */
-        public List<T_> tokens;
-
-        public LineTokenizeResult(@NonNull S_ state, @Nullable List<T_> tokens) {
-            this.state = state;
-            this.tokens = tokens;
-        }
-
     }
 
 }

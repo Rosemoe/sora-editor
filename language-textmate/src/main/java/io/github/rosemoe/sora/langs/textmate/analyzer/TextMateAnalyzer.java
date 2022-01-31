@@ -65,12 +65,12 @@ public class TextMateAnalyzer extends UIThreadIncrementalAnalyzeManager<StackEle
     }
 
     @Override
-    protected StackElement getInitialState() {
+    public StackElement getInitialState() {
         return null;
     }
 
     @Override
-    protected boolean stateEquals(StackElement state, StackElement another) {
+    public boolean stateEquals(StackElement state, StackElement another) {
         if (state == null && another == null) {
             return true;
         }
@@ -81,7 +81,7 @@ public class TextMateAnalyzer extends UIThreadIncrementalAnalyzeManager<StackEle
     }
 
     @Override
-    protected LineTokenizeResult<StackElement, Span> tokenizeLine(CharSequence lineC, StackElement state) {
+    public LineTokenizeResult<StackElement, Span> tokenizeLine(CharSequence lineC, StackElement state) {
         String line = lineC.toString();
         var tokens = new ArrayList<Span>();
         ITokenizeLineResult2 lineTokens = grammar.tokenizeLine2(line, state);
@@ -109,7 +109,7 @@ public class TextMateAnalyzer extends UIThreadIncrementalAnalyzeManager<StackEle
     }
 
     @Override
-    protected List<Span> generateSpansForLine(LineTokenizeResult<StackElement, Span> tokens) {
+    public List<Span> generateSpansForLine(LineTokenizeResult<StackElement, Span> tokens) {
         var res = new ArrayList<Span>();
         for (var span : tokens.tokens) {
             res.add(span.copy());
