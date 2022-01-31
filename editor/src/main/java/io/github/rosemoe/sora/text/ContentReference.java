@@ -41,7 +41,7 @@ public class ContentReference extends TextReference {
         this.content = ref;
     }
 
-    public int getLineCount() throws InterruptedException {
+    public int getLineCount() {
         validateAccess();
         return content.getLineCount();
     }

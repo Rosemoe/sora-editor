@@ -42,17 +42,20 @@ import io.github.rosemoe.sora.text.ContentReference;
 /**
  * Simple implementation of incremental analyze manager.
  * This class saves states at line endings. It is for simple token-based highlighting, and it can also
- * save tokens on lines so that they can be reused.
+ * save tokens on lines so that they can be reused. However, no code blocks support is provided.
  *
- * Note that the analysis is done on UI thread currently.
+ * Note that the analysis is done on UI thread.
  *
  * @param <S> State type at line endings
  * @param <T> Token type
  */
-public abstract class IncrementalAnalyzeManager<S, T> implements AnalyzeManager {
+public abstract class UIThreadIncrementalAnalyzeManager<S, T> implements AnalyzeManager {
 
     private StyleReceiver receiver;
-    private Content shadowed;
+    /**
+     * This class run actions in main thread. The reference can be safely accessed.
+     */
+    private ContentReference ref;
     private List<LineTokenizeResult<S, T>> states = new ArrayList<>();
     private Styles sentStyles;
 
@@ -63,30 +66,25 @@ public abstract class IncrementalAnalyzeManager<S, T> implements AnalyzeManager 
 
     @Override
     public void reset(@NonNull ContentReference content, @NonNull Bundle extraArguments) {
-        shadowed = content.getReference().copyText();
-        shadowed.setUndoEnabled(false);
-        shadowed.beginStreamCharGetting(0);
+        ref = content;
         rerun();
     }
 
     @Override
     public void insert(CharPosition start, CharPosition end, CharSequence insertedContent) {
-        shadowed.insert(start.line, start.column, insertedContent);
         S state = start.line == 0 ? getInitialState() : states.get(start.line - 1).state;
         int line = start.line;
         var spans = sentStyles.spans.modify();
         while (line <= end.line) {
-            var res = tokenizeLine(shadowed.getLine(line), state);
-            Log.d("T", "Generate for:" + line);
+            var res = tokenizeLine(ref.getLine(line), state);
             states.set(line, res);
             spans.setSpansOnLine(line, generateSpansForLine(res));
             state = res.state;
             line++;
         }
         // line = end.line + 1, check whether the state equals
-        while (line < shadowed.getLineCount()) {
-            var res = tokenizeLine(shadowed.getLine(line), state);
-            Log.d("T", "Generate for:" + line);
+        while (line < ref.getLineCount()) {
+            var res = tokenizeLine(ref.getLine(line), state);
             if (stateEquals(res.state, states.get(line).state)) {
                 break;
             } else {
@@ -100,19 +98,17 @@ public abstract class IncrementalAnalyzeManager<S, T> implements AnalyzeManager 
 
     @Override
     public void delete(CharPosition start, CharPosition end, CharSequence deletedContent) {
-        shadowed.delete(start.line, start.column, end.line, end.column);
         S state = start.line == 0 ? getInitialState() : states.get(start.line - 1).state;
         // Remove states
         if (end.line >= start.line + 1) {
             states.subList(start.line + 1, end.line + 1).clear();
         }
         int line = start.line;
-        while (line < shadowed.getLineCount()){
-            var res = tokenizeLine(shadowed.getLine(line), state);
+        while (line < ref.getLineCount()){
+            var res = tokenizeLine(ref.getLine(line), state);
             var old = states.set(line, res);
             var spans = sentStyles.spans.modify();
             spans.setSpansOnLine(line, generateSpansForLine(res));
-            Log.d("T", "Generate for:" + line);
             if (stateEquals(old.state, res.state)) {
                 break;
             }
@@ -126,9 +122,9 @@ public abstract class IncrementalAnalyzeManager<S, T> implements AnalyzeManager 
     public void rerun() {
         states.clear();
         S state = getInitialState();
-        var builder = new MappedSpans.Builder(shadowed.getLineCount());
-        for (int i = 0;i < shadowed.getLineCount();i++) {
-            var result = tokenizeLine(shadowed.getLine(i), state);
+        var builder = new MappedSpans.Builder(ref.getLineCount());
+        for (int i = 0;i < ref.getLineCount();i++) {
+            var result = tokenizeLine(ref.getLine(i), state);
             states.add(result);
             state = result.state;
             var spans = generateSpansForLine(result);
@@ -137,6 +133,17 @@ public abstract class IncrementalAnalyzeManager<S, T> implements AnalyzeManager 
             }
         }
         sentStyles = new Styles(builder.build());
+        sendUpdate();
+    }
+
+    /**
+     * Send the update.
+     *
+     * We always use the same object, but the editor can use a HwAcceleratedRenderer
+     * so that some displaying content may not be updated in the renderer.
+     * So we must call this to notify editor to invalidate its drawing cache.
+     */
+    private void sendUpdate() {
         final var r = receiver;
         if (r != null) {
             r.setStyles(this, sentStyles);
@@ -148,21 +155,40 @@ public abstract class IncrementalAnalyzeManager<S, T> implements AnalyzeManager 
         states = null;
         receiver = null;
         sentStyles = null;
-        shadowed = null;
+        ref = null;
     }
 
+    /**
+     * Get the initial at document start
+     */
     protected abstract S getInitialState();
 
+    /**
+     * Compare the two states.
+     * Return true if they equal
+     */
     protected abstract boolean stateEquals(S state, S another);
 
+    /**
+     * Tokenize for the given line
+     */
     protected abstract LineTokenizeResult<S, T> tokenizeLine(CharSequence line, S state);
 
+    /**
+     * Generate spans for the line
+     */
     protected abstract List<Span> generateSpansForLine(LineTokenizeResult<S, T> tokens);
 
     protected static class LineTokenizeResult<S_, T_> {
 
+        /**
+         * State at line end
+         */
         public S_ state;
 
+        /**
+         * Tokens on this line
+         */
         public List<T_> tokens;
 
         public LineTokenizeResult(@NonNull S_ state, @Nullable List<T_> tokens) {

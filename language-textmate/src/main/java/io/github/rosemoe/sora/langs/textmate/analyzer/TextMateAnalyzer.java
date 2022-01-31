@@ -29,14 +29,10 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.util.List;
 
-import io.github.rosemoe.sora.lang.analysis.IncrementalAnalyzeManager;
-import io.github.rosemoe.sora.lang.analysis.SimpleAnalyzeManager;
-import io.github.rosemoe.sora.lang.styling.MappedSpans;
+import io.github.rosemoe.sora.lang.analysis.UIThreadIncrementalAnalyzeManager;
 import io.github.rosemoe.sora.lang.styling.Span;
-import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
-import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.textmate.core.grammar.IGrammar;
 import io.github.rosemoe.sora.textmate.core.grammar.ITokenizeLineResult2;
 import io.github.rosemoe.sora.textmate.core.grammar.StackElement;
@@ -49,7 +45,7 @@ import io.github.rosemoe.sora.textmate.languageconfiguration.internal.LanguageCo
 import io.github.rosemoe.sora.util.ArrayList;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
-public class TextMateAnalyzer extends IncrementalAnalyzeManager<StackElement, Span> {
+public class TextMateAnalyzer extends UIThreadIncrementalAnalyzeManager<StackElement, Span> {
 
     private final Registry registry = new Registry();
     private final IGrammar grammar;
