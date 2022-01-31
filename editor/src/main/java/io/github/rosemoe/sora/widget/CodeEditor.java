@@ -1580,7 +1580,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                 Span span = reader.getSpanAt(spanOffset);
                 // Draw by spans
                 while (lastVisibleChar > span.column) {
-                    int spanEnd = spanOffset + 1 >= reader.getSpanCount() ? columnCount : reader.getSpanCount();
+                    int spanEnd = spanOffset + 1 >= reader.getSpanCount() ? columnCount : reader.getSpanAt(spanOffset + 1).column;
                     spanEnd = Math.min(columnCount, spanEnd);
                     int paintStart = Math.max(firstVisibleChar, span.column);
                     if (paintStart >= columnCount) {
@@ -1716,6 +1716,11 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                     } else {
                         spanOffset--;
                     }
+                }
+                try {
+                    reader.moveToLine(-1);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             } else {
                 paintingOffset = offset + mRenderer.drawLineHardwareAccelerated(canvas, line, offset) - mDpUnit * 20;

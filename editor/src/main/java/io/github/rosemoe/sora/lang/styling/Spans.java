@@ -65,7 +65,8 @@ public interface Spans {
     interface Reader {
 
         /**
-         * Start reading the spans on the given line linearly
+         * Start reading the spans on the given line.
+         * line may be -1 to release the reader.
          */
         void moveToLine(int line);
 
@@ -73,12 +74,11 @@ public interface Spans {
 
         Span getSpanAt(int index);
 
-
         List<Span> getSpansOnLine(int line);
 
     }
 
-    interface Modifier extends Reader {
+    interface Modifier {
 
         void setSpansOnLine(int line, List<Span> spans);
 

@@ -247,7 +247,7 @@ public class MappedSpans implements Spans {
         }
     }
 
-    private class Mdf implements Modifier {
+    private class Mdf implements Reader, Modifier {
 
         private List<Span> span;
 
@@ -259,6 +259,10 @@ public class MappedSpans implements Spans {
 
         @Override
         public void moveToLine(int line) {
+            if (line == -1) {
+                span = null;
+                return;
+            }
             span = spanMap.get(line);
         }
 
