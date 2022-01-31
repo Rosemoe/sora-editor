@@ -31,9 +31,11 @@ import java.util.List;
 
 import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager;
 import io.github.rosemoe.sora.lang.analysis.UIThreadIncrementalAnalyzeManager;
+import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
+import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.textmate.core.grammar.IGrammar;
 import io.github.rosemoe.sora.textmate.core.grammar.ITokenizeLineResult2;
 import io.github.rosemoe.sora.textmate.core.grammar.StackElement;
@@ -79,6 +81,13 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<StackElemen
             return state.equals(another);
         }
         return false;
+    }
+
+    @Override
+    public List<CodeBlock> computeBlocks(Content text) {
+        var list = new java.util.ArrayList<CodeBlock>();
+        blockLineAnalyzer.analyze(language, text, list);
+        return list;
     }
 
     @Override

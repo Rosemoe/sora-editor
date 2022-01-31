@@ -27,6 +27,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -36,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Spans;
 import io.github.rosemoe.sora.lang.styling.Styles;
@@ -122,6 +124,12 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         }
     }
 
+    /**
+     * Compute code blocks
+     * @param text The text. can be safely accessed.
+     */
+    public abstract List<CodeBlock> computeBlocks(Content text);
+
     public Bundle getExtraArguments() {
         return extraArguments;
     }
@@ -158,6 +166,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                 var spans = generateSpansForLine(result);
                 mdf.addLineAt(i, spans);
             }
+            styles.blocks = computeBlocks(shadowed);
             tryUpdate();
         }
 
@@ -212,12 +221,13 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                                         int line = startLine;
                                         var spans = styles.spans.modify();
                                         // Add Lines
-                                        while (line <= endLine + 1 && line < shadowed.getLineCount()) {
+                                        while (line <= endLine) {
                                             var res = tokenizeLine(shadowed.getLine(line), state);
-                                            states.set(line, res);
                                             if (line == startLine) {
+                                                states.set(line, res);
                                                 spans.setSpansOnLine(line, generateSpansForLine(res));
                                             } else {
+                                                states.add(line, res);
                                                 spans.addLineAt(line, generateSpansForLine(res));
                                             }
                                             state = res.state;
@@ -236,6 +246,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                                         }
                                     }
                                 }
+                                styles.blocks = computeBlocks(shadowed);
                                 tryUpdate();
                                 break;
                             case MSG_EXIT:

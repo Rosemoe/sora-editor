@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.langs.textmate.analyzer;
 
 import java.util.Collections;
+import java.util.List;
 
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Styles;
@@ -43,7 +44,7 @@ public class BlockLineAnalyzer {
         this.configuration = configuration;
     }
 
-    public void analyze(TextMateLanguage language, Content model, Styles result) {
+    public void analyze(TextMateLanguage language, Content model, List<CodeBlock> blocks) {
         Folding folding = configuration.getFolding();
         if (folding == null) return;
         FoldingRegions foldingRegions = null;
@@ -54,7 +55,7 @@ public class BlockLineAnalyzer {
                 int startLine = foldingRegion.getStartLineNumber();
                 int endLine = foldingRegion.getEndLineNumber();
                 if (startLine != endLine) {
-                    CodeBlock codeBlock = result.obtainNewBlock();
+                    CodeBlock codeBlock = new CodeBlock();
                     codeBlock.toBottomOfEndLine = true;
                     codeBlock.startLine = startLine;
                     codeBlock.endLine = endLine;
@@ -65,11 +66,11 @@ public class BlockLineAnalyzer {
 //                    int endColumn=IndentRange.computeStartColumn(line,language.getTabSize());
                     codeBlock.endColumn = codeBlock.startColumn;
 
-                    result.addCodeBlock(codeBlock);
+                    blocks.add(codeBlock);
                 }
             }
 
-            Collections.sort(result.blocks, (o1, o2) -> o1.endLine - o2.endLine);
+            Collections.sort(blocks, (o1, o2) -> o1.endLine - o2.endLine);
 
         } catch (Exception e) {
             e.printStackTrace();
