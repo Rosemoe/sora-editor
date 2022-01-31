@@ -50,7 +50,7 @@ final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent>
 
     @Override
     public void onReceive(SelectionChangeEvent event, Unsubscribe unsubscribe) {
-        lastSelectionModificationTime = event.getEventTime();
+        onSelectionChanged();
     }
 
     public void setPeriod(int period) {

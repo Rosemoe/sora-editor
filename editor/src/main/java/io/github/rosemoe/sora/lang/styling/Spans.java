@@ -82,6 +82,10 @@ public interface Spans {
 
         void setSpansOnLine(int line, List<Span> spans);
 
+        void addLineAt(int line, List<Span> spans);
+
+        void deleteLineAt(int line);
+
     }
 
 }

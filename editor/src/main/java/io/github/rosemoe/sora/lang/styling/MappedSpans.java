@@ -290,6 +290,16 @@ public class MappedSpans implements Spans {
             }
             spanMap.set(line, spans);
         }
+
+        @Override
+        public void addLineAt(int line, List<Span> spans) {
+            spanMap.add(line, spans);
+        }
+
+        @Override
+        public void deleteLineAt(int line) {
+            spanMap.remove(line);
+        }
     }
 
 }
