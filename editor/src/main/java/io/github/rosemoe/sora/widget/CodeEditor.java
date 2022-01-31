@@ -41,6 +41,7 @@ import android.graphics.RenderNode;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.text.InputType;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -4926,13 +4927,13 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             invalidateInCursor();
             invalidateChanged(startLine, startLine + 1);
             ensureSelectionVisible();
-            mLanguage.getAnalyzeManager().delete(start, end, deletedContent);
             mEventHandler.hideInsertHandle();
         }
         if (!mCursor.isSelected()) {
             mCursorAnimator.markEndPosAndStart();
         }
 
+        mLanguage.getAnalyzeManager().delete(start, end, deletedContent);
         onSelectionChanged();
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_DELETE, start, end, deletedContent));
     }
@@ -4971,7 +4972,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     @Override
     public void setStyles(final AnalyzeManager sourceManager, Styles styles) {
         if (sourceManager == mLanguage.getAnalyzeManager()) {
-            post(() -> {
+            Runnable operation = () -> {
                 mStyles = styles;
                 if (mHighlightCurrentBlock) {
                     mCursorPosition = findCursorBlock();
@@ -4979,7 +4980,12 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                 invalidateHwRenderer();
                 updateTimestamp();
                 invalidate();
-            });
+            };
+            if (Looper.getMainLooper().getThread() == Thread.currentThread()) {
+                operation.run();
+            } else {
+                post(operation);
+            }
         }
     }
 

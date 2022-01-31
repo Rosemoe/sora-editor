@@ -78,26 +78,21 @@ public abstract class IncrementalAnalyzeManager<S, T> implements AnalyzeManager 
         while (line <= end.line) {
             var res = tokenizeLine(shadowed.getLine(line), state);
             Log.d("T", "Generate for:" + line);
-            if (line == start.line) {
-                states.set(line, res);
-                spans.setSpansOnLine(line, generateSpansForLine(res));
-            } else {
-                states.add(line, res);
-                spans.addLineAt(line, generateSpansForLine(res));
-            }
+            states.set(line, res);
+            spans.setSpansOnLine(line, generateSpansForLine(res));
             state = res.state;
             line++;
         }
         // line = end.line + 1, check whether the state equals
         while (line < shadowed.getLineCount()) {
             var res = tokenizeLine(shadowed.getLine(line), state);
+            Log.d("T", "Generate for:" + line);
             if (stateEquals(res.state, states.get(line).state)) {
                 break;
             } else {
                 states.set(line, res);
                 spans.setSpansOnLine(line, generateSpansForLine(res));
             }
-            Log.d("T", "Generate for:" + line);
             line ++;
         }
         receiver.setStyles(this, sentStyles);
