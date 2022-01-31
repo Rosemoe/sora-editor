@@ -85,7 +85,7 @@ public class StackElement {
         if (a == null || b == null) {
             return false;
         }
-        return a.depth == b.depth && a.ruleId == b.ruleId && !Objects.equals(a.endRule, b.endRule) && structuralEquals(a.parent, b.parent);
+        return a.depth == b.depth && a.ruleId == b.ruleId && Objects.equals(a.endRule, b.endRule) && structuralEquals(a.parent, b.parent);
     }
 
     @Override
