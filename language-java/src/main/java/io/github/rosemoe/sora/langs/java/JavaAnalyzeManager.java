@@ -236,7 +236,7 @@ public class JavaAnalyzeManager extends SimpleAnalyzeManager<IdentifierAutoCompl
                 }
                 case LINE_COMMENT:
                 case LONG_COMMENT:
-                    result.addIfNeeded(line, column, EditorColorScheme.COMMENT);
+                    result.addIfNeeded(line, column, makeStyle(EditorColorScheme.COMMENT, true));
                     break;
                 default:
                     if (token == Tokens.LBRACK || (token == Tokens.RBRACK && previous == Tokens.LBRACK)) {

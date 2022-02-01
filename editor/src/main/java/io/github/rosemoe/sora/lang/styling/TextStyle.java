@@ -32,6 +32,7 @@ public class TextStyle {
 
     /**
      * Convenient method
+     * @see #makeStyle(int, int, boolean, boolean, boolean, boolean)
      */
     public static long makeStyle(int foregroundColorId) {
         checkColorId(foregroundColorId);
@@ -39,19 +40,42 @@ public class TextStyle {
     }
 
     /**
-     * Make a TextStyle with the given style arguments
-     *
-     * Note: colorId must be less than 20 bits
+     * Convenient method
+     * @see #makeStyle(int, int, boolean, boolean, boolean, boolean)
+     */
+    public static long makeStyle(int foregroundColorId, boolean noCompletion) {
+        checkColorId(foregroundColorId);
+        return ((long)foregroundColorId) | NO_COMPLETION_BIT;
+    }
+
+    /**
+     * Convenient method
+     * @see #makeStyle(int, int, boolean, boolean, boolean, boolean)
      */
     public static long makeStyle(int foregroundColorId, int backgroundColorId, boolean bold,
                                  boolean italic, boolean strikeThrough) {
+        return makeStyle(foregroundColorId, backgroundColorId, bold, italic, strikeThrough, false);
+    }
+
+    /**
+     * Make a TextStyle with the given style arguments
+     *
+     * Note: colorId must be less than 20 bits
+     * @see #BOLD_BIT
+     * @see #ITALICS_BIT
+     * @see #STRIKETHROUGH_BIT
+     * @see #NO_COMPLETION_BIT
+     */
+    public static long makeStyle(int foregroundColorId, int backgroundColorId, boolean bold,
+                                 boolean italic, boolean strikeThrough, boolean noCompletion) {
         checkColorId(foregroundColorId);
         checkColorId(backgroundColorId);
         return ((long)foregroundColorId) +
                 (((long) backgroundColorId) << COLOR_ID_BIT_COUNT)
-                + (bold ? BOLD_BIT : 0)
-                + (italic ? ITALICS_BIT : 0)
-                + (strikeThrough ? STRIKETHROUGH_BIT : 0);
+                | (bold ? BOLD_BIT : 0)
+                | (italic ? ITALICS_BIT : 0)
+                | (strikeThrough ? STRIKETHROUGH_BIT : 0)
+                | (noCompletion ? NO_COMPLETION_BIT : 0);
     }
 
     public static int getForegroundColorId(long style) {
@@ -74,8 +98,12 @@ public class TextStyle {
         return (style & STRIKETHROUGH_BIT) != 0;
     }
 
+    public static boolean isNoCompletion(long style) {
+        return (style & NO_COMPLETION_BIT) != 0;
+    }
+
     public static long getStyleBits(long style) {
-        return style & (~(BACKGROUND_BITS + FOREGROUND_BITS));
+        return style & (BOLD_BIT + ITALICS_BIT + STRIKETHROUGH_BIT);
     }
 
     public final static int COLOR_ID_BIT_COUNT = 19;
@@ -84,11 +112,25 @@ public class TextStyle {
 
     public final static long BACKGROUND_BITS =  FOREGROUND_BITS << COLOR_ID_BIT_COUNT;
 
+    /**
+     * Bold text style
+     */
     public final static long BOLD_BIT = 1L << (COLOR_ID_BIT_COUNT * 2);
 
+    /**
+     * Italic text style
+     */
     public final static long ITALICS_BIT = BOLD_BIT << 1;
 
+    /**
+     * Show a strikethrough
+     */
     public final static long STRIKETHROUGH_BIT = ITALICS_BIT << 1;
+
+    /**
+     * Edit texts in the region will not cause auto-completion to work
+     */
+    public final static long NO_COMPLETION_BIT = STRIKETHROUGH_BIT << 1;
 
     public static void checkColorId(int colorId) {
         if (colorId > (1 << COLOR_ID_BIT_COUNT) - 1 || colorId < 0) {

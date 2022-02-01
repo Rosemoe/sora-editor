@@ -40,6 +40,8 @@ import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
+import io.github.rosemoe.sora.lang.styling.Spans;
+import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
@@ -274,6 +276,47 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     }
 
     /**
+     * Check cursor position's span.
+     * If {@link io.github.rosemoe.sora.lang.styling.TextStyle#NO_COMPLETION_BIT} is set, true is returned.
+     */
+    public boolean checkNoCompletion() {
+        var pos = mEditor.getCursor().left();
+        var line = pos.line;
+        var column = pos.column;
+        var styles = mEditor.getStyles();
+        Spans spans;
+        // Do not make completion without styles. The language may be empty or busy analyzing spans
+        if (styles == null || (spans = styles.spans) == null) {
+            return true;
+        }
+        var reader = spans.read();
+        try {
+            reader.moveToLine(line);
+            int index = reader.getSpanCount() - 1;
+            if (index == -1) {
+                return true;
+            }
+            for (int i = 0;i < reader.getSpanCount();i++) {
+                if (reader.getSpanAt(i).column > column) {
+                    index = i - 1;
+                    break;
+                }
+            }
+            index = Math.max(0, Math.min(index, reader.getSpanCount() - 1));
+            if (TextStyle.isNoCompletion(reader.getSpanAt(index).style)) {
+                reader.moveToLine(-1);
+                return true;
+            }
+            reader.moveToLine(-1);
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Unexpected exception. Maybe there is something wrong in language implementation
+            return true;
+        }
+    }
+
+    /**
      * Start completion at current selection position
      */
     public void requireCompletion() {
@@ -281,7 +324,8 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             return;
         }
         var text = mEditor.getText();
-        if (text.getCursor().isSelected()) {
+        if (text.getCursor().isSelected() || checkNoCompletion()) {
+            hide();
             return;
         }
         if (System.nanoTime() - mRequestTime < mEditor.getProps().cancelCompletionNs) {
