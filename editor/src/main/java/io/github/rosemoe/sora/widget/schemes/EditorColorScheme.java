@@ -131,7 +131,7 @@ public class EditorColorScheme {
     /**
      * Host editor object
      */
-    private List<WeakReference<CodeEditor>> mEditors;
+    private final List<WeakReference<CodeEditor>> mEditors;
 
     /**
      * Create a new ColorScheme for the given editor

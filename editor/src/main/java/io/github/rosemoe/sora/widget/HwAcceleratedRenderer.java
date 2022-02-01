@@ -86,21 +86,6 @@ class HwAcceleratedRenderer implements ContentListener {
         cache.forEach(node -> node.isDirty = true);
     }
 
-    public void invalidateDirtyRegions(List<List<Span>> old, List<List<Span>> updated) {
-        //Simply compares hash code
-        cache.forEach((node) -> {
-            try {
-                var olds = old.get(node.line);
-                var news = updated.get(node.line);
-                if ((olds.size() != news.size() || olds.hashCode() != news.hashCode())) {
-                    node.isDirty = true;
-                }
-            } catch (IndexOutOfBoundsException | NullPointerException e) {
-                node.isDirty = true;
-            }
-        });
-    }
-
     public TextRenderNode getNode(int line) {
         var size = cache.size();
         for (int i = 0; i < size; i++) {

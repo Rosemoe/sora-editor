@@ -48,7 +48,6 @@ import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 class EditorInputConnection extends BaseInputConnection {
 
     private final static String LOG_TAG = "EditorInputConnection";
-    final static int TEXT_LENGTH_LIMIT = 500000;
 
     private final CodeEditor mEditor;
     protected int mComposingLine = -1;
@@ -126,6 +125,9 @@ class EditorInputConnection extends BaseInputConnection {
         if (end < start) {
             start = end = 0;
         }
+        if (end - start > mEditor.getProps().maxIPCTextLength) {
+            end = start + mEditor.getProps().maxIPCTextLength;
+        }
         Content sub = (Content) origin.subSequence(start, end);
         if (flags == GET_TEXT_WITH_STYLES) {
             SpannableStringBuilder text = new SpannableStringBuilder(sub);
@@ -173,9 +175,6 @@ class EditorInputConnection extends BaseInputConnection {
         //it can be quite large text and costs time, which will finally cause ANR
         int left = getCursor().getLeft();
         int right = getCursor().getRight();
-        if (right - left > TEXT_LENGTH_LIMIT) {
-            right = left + TEXT_LENGTH_LIMIT;
-        }
         return left == right ? null : getTextRegion(left, right, flags);
     }
 
@@ -380,7 +379,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setComposingText(CharSequence text, int newCursorPosition) {
-        if (!mEditor.isEditable() || mInvalid || shouldRejectComposing()) {
+        if (!mEditor.isEditable() || mInvalid || shouldRejectComposing()|| mEditor.getProps().disallowSuggestions) {
             return false;
         }
         if (TextUtils.indexOf(text, '\n') != -1) {
@@ -435,7 +434,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setSelection(int start, int end) {
-        if (!mEditor.isEditable() || mInvalid) {
+        if (!mEditor.isEditable() || mInvalid || mComposingLine != -1) {
             return false;
         }
         start = getWrappedIndex(start);
@@ -458,7 +457,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setComposingRegion(int start, int end) {
-        if (!mEditor.isEditable() || mInvalid || shouldRejectComposing()) {
+        if (!mEditor.isEditable() || mInvalid || shouldRejectComposing() || mEditor.getProps().disallowSuggestions) {
             return false;
         }
         try {

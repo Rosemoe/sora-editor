@@ -24,6 +24,8 @@
 package io.github.rosemoe.sora.widget;
 
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.ExtractedTextRequest;
+import android.widget.OverScroller;
 
 import androidx.annotation.NonNull;
 
@@ -97,6 +99,37 @@ public class DirectAccessProps implements Serializable {
      */
     @NonNull
     public final SymbolPairMatch overrideSymbolPairs = new SymbolPairMatch();
+
+    /**
+     * Disallow suggestions from keyboard forcibly by preventing
+     * {@link android.view.inputmethod.InputConnection#setComposingText(CharSequence, int)} and
+     * {@link android.view.inputmethod.InputConnection#setComposingRegion(int, int)} taking effects.
+     * <p>
+     * This may not be always good for all IMEs, as keyboards' strategy varies.
+     */
+    public boolean disallowSuggestions = false;
+
+    /**
+     * Max text length that can be extracted by {@link android.view.inputmethod.InputConnection#getExtractedText(ExtractedTextRequest, int)}
+     * and other methods related to text content.
+     * <p>
+     * Usually you need to make it big enough so that the IME does it work for its symbol pair match (at least
+     * some Chinese keyboards need it).
+     * Text exceeds the limit will be cut, but editor will make sure the selection region is in the extracted text.
+     * Some IMEs ignore the {@link android.view.inputmethod.ExtractedText#startOffset} and if the length exceeds this
+     * limit, they may not work properly.
+     * <p>
+     * Set it to 0 to send no text to IME.
+     */
+    public int maxIPCTextLength = 500000;
+
+    /**
+     * Whether over scroll is permitted.
+     * When over scroll is enabled, the user will be able to scroll out of displaying
+     * bounds if the user scroll fast enough.
+     * This is implemented by {@link OverScroller#fling(int, int, int, int, int, int, int, int, int, int)}
+     */
+    public boolean overScrollEnabled = false;
 
 
 }

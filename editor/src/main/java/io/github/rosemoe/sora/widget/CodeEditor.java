@@ -273,11 +273,9 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private boolean mWordwrap;
     private boolean mUndoEnabled;
     private boolean mDisplayLnPanel;
-    private boolean mOverScrollEnabled;
     private boolean mLineNumberEnabled;
     private boolean mBlockLineEnabled;
     private boolean mForceHorizontalScrollable;
-    private boolean mHighlightSelectedText;
     private boolean mHighlightCurrentBlock;
     private boolean mHighlightCurrentLine;
     private boolean mVerticalScrollBarEnabled;
@@ -514,9 +512,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         setHighlightCurrentLine(true);
         setVerticalScrollBarEnabled(true);
         setHighlightCurrentBlock(true);
-        setHighlightSelectedText(true);
         setDisplayLnPanel(true);
-        setOverScrollEnabled(false);
         setHorizontalScrollBarEnabled(true);
         setFirstLineNumberAlwaysVisible(true);
         setCursorAnimationEnabled(true);
@@ -537,12 +533,18 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
     }
 
+    /**
+     * Invalidate the whole hardware-accelerated renderer
+     */
     private void invalidateHwRenderer() {
         if (mRenderer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             mRenderer.invalidate();
         }
     }
 
+    /**
+     * Invalidate the region in hardware-accelerated renderer
+     */
     private void invalidateChanged(int startLine, int endLine) {
         if (mRenderer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mCursor != null) {
             if (mRenderer.invalidateInRegion(startLine, endLine)) {
@@ -551,6 +553,9 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
     }
 
+    /**
+     * Invalidate the cursor region in hardware-accelerated renderer
+     */
     private void invalidateInCursor() {
         invalidateChanged(mCursor.getLeftLine(), mCursor.getRightLine());
     }
@@ -639,9 +644,9 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         var cur = getText().getCursor();
         if (cur.isSelected()) {
             deleteText();
-            notifyExternalCursorChange();
+            notifyIMEExternalCursorChange();
         }        mText.insert(cur.getRightLine(), cur.getRightColumn(), text);
-        notifyExternalCursorChange();
+        notifyIMEExternalCursorChange();
         if (selectionOffset != text.length()) {
             var pos = mText.getIndexer().getCharPosition(cur.getRight() - (text.length() - selectionOffset));
             setSelection(pos.line, pos.column);
@@ -3059,22 +3064,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
-     * @see CodeEditor#setHighlightSelectedText(boolean)
-     */
-    public boolean isHighlightSelectedText() {
-        return mHighlightSelectedText;
-    }
-
-    /**
-     * Use color {@link EditorColorScheme#TEXT_SELECTED} to draw selected text
-     * instead of color specified by its span
-     */
-    public void setHighlightSelectedText(boolean highlightSelected) {
-        mHighlightSelectedText = highlightSelected;
-        invalidate();
-    }
-
-    /**
      * Get EditorSearcher
      *
      * @return EditorSearcher
@@ -3269,23 +3258,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         if (drag && !mEventHandler.getScroller().isFinished()) {
             mEventHandler.getScroller().forceFinished(true);
         }
-    }
-
-    /**
-     * @see CodeEditor#setOverScrollEnabled(boolean)
-     */
-    public boolean isOverScrollEnabled() {
-        return mOverScrollEnabled;
-    }
-
-    /**
-     * Whether over scroll is permitted.
-     * When over scroll is enabled, the user will be able to scroll out of displaying
-     * bounds if the user scroll fast enough.
-     * This is implemented by {@link OverScroller#fling(int, int, int, int, int, int, int, int, int, int)}
-     */
-    public void setOverScrollEnabled(boolean overScrollEnabled) {
-        mOverScrollEnabled = overScrollEnabled;
     }
 
     /**
@@ -4017,7 +3989,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             if (text != null && mConnection != null) {
                 mConnection.commitText(text, 0);
             }
-            notifyExternalCursorChange();
+            notifyIMEExternalCursorChange();
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(getContext(), e.toString(), Toast.LENGTH_SHORT).show();
@@ -4049,7 +4021,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         copyText();
         if (mCursor.isSelected()) {
             deleteText();
-            notifyExternalCursorChange();
+            notifyIMEExternalCursorChange();
         }
     }
 
@@ -4339,7 +4311,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         int selEnd = cur.getRight();
         int startOffset;
         if (request.hintMaxChars == 0) {
-            request.hintMaxChars = EditorInputConnection.TEXT_LENGTH_LIMIT;
+            request.hintMaxChars = mProps.maxIPCTextLength;
         }
         startOffset = 0;
         text.text = mConnection.getTextRegion(startOffset, startOffset + request.hintMaxChars, request.flags);
@@ -4355,7 +4327,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     /**
      * Notify input method that text has been changed for external reason
      */
-    protected void notifyExternalCursorChange() {
+    public void notifyIMEExternalCursorChange() {
         updateExtractedText();
         updateSelection();
         updateCursorAnchor();
@@ -4386,6 +4358,21 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         updateExtractedText();
         if (!mText.isInBatchEdit()) {
             updateSelection();
+        }
+    }
+
+    /**
+     * Release any resources held by editor.
+     * This will stop completion threads and destroy using {@link Language} object.
+     * <p>
+     * Recommend to call if the activity is to destroy.
+     */
+    public void release() {
+        mCompletionWindow.cancelCompletion();
+        if (mLanguage != null) {
+            mLanguage.getAnalyzeManager().destroy();
+            mLanguage.destroy();
+            mLanguage = new EmptyLanguage();
         }
     }
 
@@ -4598,13 +4585,13 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             case KeyEvent.KEYCODE_DEL:
                 if (isEditable()) {
                     deleteText();
-                    notifyExternalCursorChange();
+                    notifyIMEExternalCursorChange();
                 }
                 return true;
             case KeyEvent.KEYCODE_FORWARD_DEL: {
                 if (isEditable()) {
                     mConnection.deleteSurroundingText(0, 1);
-                    notifyExternalCursorChange();
+                    notifyIMEExternalCursorChange();
                 }
                 return true;
             }
@@ -4651,7 +4638,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                             commitText("\n", true);
                         }
                     }
-                    notifyExternalCursorChange();
+                    notifyIMEExternalCursorChange();
                 }
                 return true;
             }
@@ -4699,7 +4686,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             case KeyEvent.KEYCODE_SPACE:
                 if (isEditable()) {
                     commitText(" ");
-                    notifyExternalCursorChange();
+                    notifyIMEExternalCursorChange();
                 }
                 return true;
             default:
@@ -4744,7 +4731,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                         if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
                                 || (replacement.shouldNotDoReplace(getText()) && replacement.notHasAutoSurroundPair())) {
                             commitText(text);
-                            notifyExternalCursorChange();
+                            notifyIMEExternalCursorChange();
                         } else {
                             String[] autoSurroundPair;
                             if (getCursor().isSelected() && (autoSurroundPair = replacement.getAutoSurroundPair()) != null) {
@@ -4757,7 +4744,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                                 //cancel selected
                                 setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length() - 1);
 
-                                notifyExternalCursorChange();
+                                notifyIMEExternalCursorChange();
                             } else {
                                 commitText(replacement.text);
                                 int delta = (replacement.text.length() - replacement.selection);
@@ -4765,7 +4752,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                                     int newSel = Math.max(getCursor().getLeft() - delta, 0);
                                     CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
                                     setSelection(charPosition.line, charPosition.column);
-                                    notifyExternalCursorChange();
+                                    notifyIMEExternalCursorChange();
                                 }
                             }
 
