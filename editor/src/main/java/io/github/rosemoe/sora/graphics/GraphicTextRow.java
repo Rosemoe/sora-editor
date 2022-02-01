@@ -117,7 +117,7 @@ public class GraphicTextRow {
             for (int i = start; i < mEnd;i++) {
                 if (w > advance) {
                     mBuffer[0] = Math.max(start, i - 1);
-                    mBuffer[1] = w;
+                    mBuffer[1] = i > start ? w - cache[i - 1] : w;
                     return mBuffer;
                 } else {
                     w += cache[i];
