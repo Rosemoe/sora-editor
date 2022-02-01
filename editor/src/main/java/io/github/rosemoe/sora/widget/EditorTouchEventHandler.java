@@ -33,6 +33,7 @@ import android.widget.OverScroller;
 
 import io.github.rosemoe.sora.event.HandleStateChangeEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
+import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.component.Magnifier;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
@@ -102,16 +103,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     public boolean hasAnyHeldHandle() {
         return holdInsertHandle() || mSelHandleType != -1;
-    }
-
-    /**
-     * Checks whether the provided character is a whitespace
-     *
-     * @param c the char to check
-     * @return Whether the provided character is a whitespace
-     */
-    private boolean isWhitespace(char c) {
-        return (c == '\t' || c == ' ' || c == '\f' || c == '\n' || c == '\r');
     }
 
     /**
@@ -489,9 +480,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);
         notifyLater();
-        int oldLine = mEditor.getCursor().getLeftLine();
-        int oldColumn = mEditor.getCursor().getLeftColumn();
-        mEditor.setSelection(line, column);
+        mEditor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
         mEditor.hideAutoCompleteWindow();
         mEditor.performClick();
         return true;
@@ -751,7 +740,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     switch (type) {
                         case BOTH:
                             mEditor.cancelAnimation();
-                            mEditor.setSelection(line, column, false);
+                            mEditor.setSelection(line, column, false, SelectionChangeEvent.CAUSE_SELECTION_HANDLE);
                             break;
                         case RIGHT:
                             if (anotherLine > line || (anotherLine == line && anotherColumn > column)) {
@@ -765,10 +754,10 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                                     SelectionHandle tmp = right;
                                     right = left;
                                     left = tmp;
-                                    mEditor.setSelectionRegion(line, column, anotherLine, anotherColumn, false);
+                                    mEditor.setSelectionRegion(line, column, anotherLine, anotherColumn, false, SelectionChangeEvent.CAUSE_SELECTION_HANDLE);
                                 }
                             } else {
-                                mEditor.setSelectionRegion(anotherLine, anotherColumn, line, column, false);
+                                mEditor.setSelectionRegion(anotherLine, anotherColumn, line, column, false, SelectionChangeEvent.CAUSE_SELECTION_HANDLE);
                             }
                             break;
                         case LEFT:
@@ -783,10 +772,10 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                                     SelectionHandle tmp = right;
                                     right = left;
                                     left = tmp;
-                                    mEditor.setSelectionRegion(anotherLine, anotherColumn, line, column, false);
+                                    mEditor.setSelectionRegion(anotherLine, anotherColumn, line, column, false, SelectionChangeEvent.CAUSE_SELECTION_HANDLE);
                                 }
                             } else {
-                                mEditor.setSelectionRegion(line, column, anotherLine, anotherColumn, false);
+                                mEditor.setSelectionRegion(line, column, anotherLine, anotherColumn, false, SelectionChangeEvent.CAUSE_SELECTION_HANDLE);
                             }
                             break;
                     }

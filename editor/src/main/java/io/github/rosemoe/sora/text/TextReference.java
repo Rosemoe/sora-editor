@@ -62,6 +62,9 @@ public class TextReference implements CharSequence {
         }
     }
 
+    /**
+     * Get original text of the reference
+     */
     @NonNull
     public CharSequence getReference() {
         return ref;

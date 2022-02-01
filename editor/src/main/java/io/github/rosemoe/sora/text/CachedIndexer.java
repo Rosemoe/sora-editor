@@ -282,6 +282,8 @@ public class CachedIndexer implements Indexer, ContentListener {
             throw new IllegalArgumentException("can not find other lines with findInLine()");
         }
         pos.index = pos.index - pos.column + column;
+        pos.line = line;
+        pos.column = column;
     }
 
     /**
@@ -388,7 +390,6 @@ public class CachedIndexer implements Indexer, ContentListener {
         throwIfHas();
         mContent.checkLineAndColumn(line, column, true);
         CharPosition pos = findNearestByLine(line);
-        CharPosition res;
         if (pos.line == line) {
             dest.set(pos);
             if (pos.column == column) {

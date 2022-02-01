@@ -3826,11 +3826,21 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     /**
      * Move selection to given position
      *
+     * @param line          The line to move
+     * @param column        The column to move
+     */
+    public void setSelection(int line, int column) {
+        setSelection(line, column, SelectionChangeEvent.CAUSE_UNKNOWN);
+    }
+
+    /**
+     * Move selection to given position
+     *
      * @param line   The line to move
      * @param column The column to move
      */
-    public void setSelection(int line, int column) {
-        setSelection(line, column, true);
+    public void setSelection(int line, int column, int cause) {
+        setSelection(line, column, true, cause);
     }
 
     /**
@@ -3841,6 +3851,17 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * @param makeItVisible Make the character visible
      */
     public void setSelection(int line, int column, boolean makeItVisible) {
+        setSelection(line, column, makeItVisible, SelectionChangeEvent.CAUSE_UNKNOWN);
+    }
+
+    /**
+     * Move selection to given position
+     *
+     * @param line          The line to move
+     * @param column        The column to move
+     * @param makeItVisible Make the character visible
+     */
+    public void setSelection(int line, int column, boolean makeItVisible, int cause) {
         invalidateInCursor();
         mCursorAnimator.markStartPos();
         if (column > 0 && Character.isHighSurrogate(mText.charAt(line, column - 1))) {
@@ -3863,7 +3884,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         } else {
             invalidate();
         }
-        onSelectionChanged();
+        onSelectionChanged(cause);
     }
 
     /**
@@ -3881,8 +3902,20 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * @param lineRight   Line right
      * @param columnRight Column right
      */
+    public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight, int columnRight, int cause) {
+        setSelectionRegion(lineLeft, columnLeft, lineRight, columnRight, true, cause);
+    }
+
+    /**
+     * Set selection region with a call to {@link CodeEditor#ensureSelectionVisible()}
+     *
+     * @param lineLeft    Line left
+     * @param columnLeft  Column Left
+     * @param lineRight   Line right
+     * @param columnRight Column right
+     */
     public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight, int columnRight) {
-        setSelectionRegion(lineLeft, columnLeft, lineRight, columnRight, true);
+        setSelectionRegion(lineLeft, columnLeft, lineRight, columnRight, true, SelectionChangeEvent.CAUSE_UNKNOWN);
     }
 
     /**
@@ -3895,6 +3928,19 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * @param makeRightVisible Whether to make right cursor visible
      */
     public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight, int columnRight, boolean makeRightVisible) {
+        setSelectionRegion(lineLeft, columnLeft, lineRight, columnRight, makeRightVisible, SelectionChangeEvent.CAUSE_UNKNOWN);
+    }
+
+    /**
+     * Set selection region
+     *
+     * @param lineLeft         Line left
+     * @param columnLeft       Column Left
+     * @param lineRight        Line right
+     * @param columnRight      Column right
+     * @param makeRightVisible Whether to make right cursor visible
+     */
+    public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight, int columnRight, boolean makeRightVisible, int cause) {
         invalidateInCursor();
         int start = getText().getCharIndex(lineLeft, columnLeft);
         int end = getText().getCharIndex(lineRight, columnRight);
@@ -3903,7 +3949,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             return;
         }
         if (start > end) {
-            setSelectionRegion(lineRight, columnRight, lineLeft, columnLeft, makeRightVisible);
+            setSelectionRegion(lineRight, columnRight, lineLeft, columnLeft, makeRightVisible, cause);
             Log.w(LOG_TAG, "setSelectionRegion() error: start > end:start = " + start + " end = " + end + " lineLeft = " + lineLeft + " columnLeft = " + columnLeft + " lineRight = " + lineRight + " columnRight = " + columnRight);
             return;
         }
@@ -3939,7 +3985,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         } else {
             invalidate();
         }
-        onSelectionChanged();
+        onSelectionChanged(cause);
     }
 
     /**
@@ -4390,8 +4436,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     /**
      * Called when the text is edited or {@link CodeEditor#setSelection} is called
      */
-    protected void onSelectionChanged() {
-        dispatchEvent(new SelectionChangeEvent(this));
+    protected void onSelectionChanged(int cause) {
+        dispatchEvent(new SelectionChangeEvent(this, cause));
     }
 
     //-------------------------------------------------------------------------------
@@ -4851,7 +4897,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         mWait = false;
 
         // Auto completion
-        if (mCompletionWindow.isEnabled()) {
+        if (mCompletionWindow.isEnabled() && !mText.isUndoOrRedo()) {
             if ((mConnection.mComposingLine == -1 || mProps.autoCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
                 mCompletionWindow.requireCompletion();
             } else {
@@ -4871,7 +4917,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
         mLanguage.getAnalyzeManager().insert(start, end, insertedContent);
         mEventHandler.hideInsertHandle();
-        onSelectionChanged();
+        onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
         if (!mCursor.isSelected()) {
             mCursorAnimator.markEndPosAndStart();
         }
@@ -4913,7 +4959,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
         updateCursor();
 
-        if (mCompletionWindow.isEnabled()) {
+        if (mCompletionWindow.isEnabled() && !mText.isUndoOrRedo()) {
             if (mConnection.mComposingLine == -1 && mCompletionWindow.isShowing()) {
                 if (startLine != endLine || startColumn != endColumn - 1) {
                     mCompletionWindow.hide();
@@ -4939,7 +4985,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
 
         mLanguage.getAnalyzeManager().delete(start, end, deletedContent);
-        onSelectionChanged();
+        onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_DELETE, start, end, deletedContent));
     }
 

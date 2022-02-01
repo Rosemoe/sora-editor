@@ -146,12 +146,18 @@ public final class EditorTextActionWindow extends EditorPopupWindow implements V
             }
             mLastPosition = -1;
         } else {
-            if (event.getLeft().index == mLastPosition && !isShowing() && !mEditor.getText().isInBatchEdit()) {
+            var show = false;
+            if (event.getCause() == SelectionChangeEvent.CAUSE_TAP && event.getLeft().index == mLastPosition && !isShowing() && !mEditor.getText().isInBatchEdit()) {
                 mEditor.post(this::displayWindow);
+                show = true;
             } else {
                 dismiss();
             }
-            mLastPosition = event.getLeft().index;
+            if (event.getCause() == SelectionChangeEvent.CAUSE_TAP && !show) {
+                mLastPosition = event.getLeft().index;
+            } else {
+                mLastPosition = -1;
+            }
         }
     }
 

@@ -34,6 +34,7 @@ import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 
+import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.Cursor;
@@ -127,7 +128,6 @@ class EditorInputConnection extends BaseInputConnection {
         }
         Content sub = (Content) origin.subSequence(start, end);
         if (flags == GET_TEXT_WITH_STYLES) {
-            sub.beginStreamCharGetting(0);
             SpannableStringBuilder text = new SpannableStringBuilder(sub);
             // Apply composing span
             if (mComposingLine != -1) {
@@ -244,7 +244,7 @@ class EditorInputConnection extends BaseInputConnection {
                 mEditor.getText().insert(getCursor().getRightLine(), getCursor().getRightColumn(), autoSurroundPair[1]);
                 mEditor.getText().endBatchEdit();
                 //cancel selected
-                mEditor.setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length()-1);
+                mEditor.setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length()-1, SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
 
             } else {
                 mEditor.commitText(replacement.text, applyAutoIndent);
@@ -252,7 +252,7 @@ class EditorInputConnection extends BaseInputConnection {
                 if (delta != 0) {
                     int newSel = Math.max(getCursor().getLeft() - delta, 0);
                     CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
-                    mEditor.setSelection(charPosition.line, charPosition.column);
+                    mEditor.setSelection(charPosition.line, charPosition.column, SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
                 }
             }
         }
@@ -452,7 +452,7 @@ class EditorInputConnection extends BaseInputConnection {
         Content content = mEditor.getText();
         CharPosition startPos = content.getIndexer().getCharPosition(start);
         CharPosition endPos = content.getIndexer().getCharPosition(end);
-        mEditor.setSelectionRegion(startPos.line, startPos.column, endPos.line, endPos.column, false);
+        mEditor.setSelectionRegion(startPos.line, startPos.column, endPos.line, endPos.column, false, SelectionChangeEvent.CAUSE_IME);
         return true;
     }
 
