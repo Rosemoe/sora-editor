@@ -136,5 +136,11 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean scrollFling = true;
 
+    /**
+     * If the two completion requests are sent within this time, the completion will not
+     * show.
+     */
+    public long cancelCompletionNs = 70 * 1000000;
+
 
 }

@@ -568,6 +568,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 mScroller.getCurrY(),
                 endX - mScroller.getCurrX(),
                 endY - mScroller.getCurrY(), 0);
+        mEditor.updateCompletionWindowPosition(false);
         final float minOverPull = 2f;
         if (notifyY && mScroller.getCurrY() + distanceY < -minOverPull) {
             mEditor.getVerticalEdgeEffect().onPull(-distanceY / mEditor.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth())));

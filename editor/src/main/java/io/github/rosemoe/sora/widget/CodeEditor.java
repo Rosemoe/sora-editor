@@ -4929,6 +4929,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                     mCompletionWindow.hide();
                 } else {
                     mCompletionWindow.requireCompletion();
+                    updateCompletionWindowPosition();
                 }
             }
         } else {

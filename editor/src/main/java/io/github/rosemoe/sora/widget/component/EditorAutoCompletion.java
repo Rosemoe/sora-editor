@@ -74,7 +74,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
      * @param editor Target editor
      */
     public EditorAutoCompletion(CodeEditor editor) {
-        super(editor, FEATURE_HIDE_WHEN_FAST_SCROLL | FEATURE_SCROLL_AS_CONTENT);
+        super(editor, FEATURE_HIDE_WHEN_FAST_SCROLL);
         mEditor = editor;
         mAdapter = new DefaultCompletionItemAdapter();
         RelativeLayout layout = new RelativeLayout(mEditor.getContext());
@@ -139,7 +139,6 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     public void hide() {
         super.dismiss();
         cancelCompletion();
-        mRequestTime = 0;
         requestHide = System.currentTimeMillis();
     }
 
@@ -269,7 +268,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         var previous = mThread;
         if (previous != null && previous.isAlive()) {
             previous.cancel();
-            mRequestTime = 0;
+            previous.mTime = -1;
         }
         mThread = null;
     }
@@ -283,6 +282,11 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         }
         var text = mEditor.getText();
         if (text.getCursor().isSelected()) {
+            return;
+        }
+        if (System.nanoTime() - mRequestTime < mEditor.getProps().cancelCompletionNs) {
+            hide();
+            mRequestTime = System.nanoTime();
             return;
         }
         cancelCompletion();
@@ -314,7 +318,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
      */
     public final class CompletionThread extends Thread implements TextReference.Validator {
 
-        private final long mTime;
+        private long mTime;
         private final Bundle mExtra;
         private final CharPosition mPosition;
         private final Language mLanguage;
