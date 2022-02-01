@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.text;
 
+import androidx.annotation.NonNull;
+
 /**
  * A helper class for ITextContent to transform (line,column) and index
  *
@@ -57,21 +59,33 @@ public interface Indexer {
 
     /**
      * Get the CharPosition for the given index
-     * You are not expected to make changes with this CharPosition
      *
      * @param index The index you want to get
      * @return The CharPosition object.
      */
+    @NonNull
     CharPosition getCharPosition(int index);
 
     /**
      * Get the CharPosition for the given (line,column)
-     * You are not expected to make changes with this CharPosition
      *
      * @param line   The line position you want to get
      * @param column The column position you want to get
      * @return The CharPosition object.
      */
+    @NonNull
     CharPosition getCharPosition(int line, int column);
+
+    /**
+     * @see #getCharPosition(int)
+     * @param dest Destination of result
+     */
+    void getCharPosition(int index, @NonNull CharPosition dest);
+
+    /**
+     * @see #getCharPosition(int, int)
+     * @param dest Destination of result
+     */
+    void getCharPosition(int line, int column, @NonNull CharPosition dest);
 
 }

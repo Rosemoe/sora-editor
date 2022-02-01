@@ -55,7 +55,7 @@ public final class Cursor {
      * @param c Character to check
      * @return Result whether a space char
      */
-    protected static boolean isWhitespace(char c) {
+    private static boolean isWhitespace(char c) {
         return (c == '\t' || c == ' ');
     }
 

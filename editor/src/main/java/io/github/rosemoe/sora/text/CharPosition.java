@@ -31,11 +31,9 @@ import io.github.rosemoe.sora.util.IntPair;
 /**
  * This a data class of a character position in {@link Content}
  *
- * @author Rose
+ * @author Rosemoe
  */
 public final class CharPosition {
-
-    //Packaged due to make changes
 
     public int index;
 
@@ -106,12 +104,20 @@ public final class CharPosition {
      *
      * @return New CharPosition including info of this CharPosition
      */
+    @NonNull
     public CharPosition fromThis() {
-        CharPosition pos = new CharPosition();
-        pos.index = index;
-        pos.line = line;
-        pos.column = column;
+        var pos = new CharPosition();
+        pos.set(this);
         return pos;
+    }
+
+    /**
+     * Set this {@link CharPosition} object's data the same as {@code another}
+     */
+    public void set(@NonNull CharPosition another) {
+        index = another.index;
+        line = another.line;
+        column = another.column;
     }
 
     @NonNull

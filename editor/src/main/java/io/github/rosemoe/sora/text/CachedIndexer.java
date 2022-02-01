@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.text;
 
+import androidx.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -153,9 +155,8 @@ public class CachedIndexer implements Indexer, ContentListener {
      *
      * @param start Given position
      * @param index Querying index
-     * @return The querying position
      */
-    private CharPosition findIndexForward(CharPosition start, int index) {
+    private void findIndexForward(@NonNull CharPosition start, int index, @NonNull CharPosition dest) {
         if (start.index > index) {
             throw new IllegalArgumentException("Unable to find backward from method findIndexForward()");
         }
@@ -176,11 +177,9 @@ public class CachedIndexer implements Indexer, ContentListener {
         if (workIndex > index) {
             workColumn -= workIndex - index;
         }
-        CharPosition pos = new CharPosition();
-        pos.column = workColumn;
-        pos.line = workLine;
-        pos.index = index;
-        return pos;
+        dest.column = workColumn;
+        dest.line = workLine;
+        dest.index = index;
     }
 
     /**
@@ -188,9 +187,8 @@ public class CachedIndexer implements Indexer, ContentListener {
      *
      * @param start Given position
      * @param index Querying index
-     * @return The querying position
      */
-    private CharPosition findIndexBackward(CharPosition start, int index) {
+    private void findIndexBackward(CharPosition start, int index, CharPosition dest) {
         if (start.index < index) {
             throw new IllegalArgumentException("Unable to find forward from method findIndexBackward()");
         }
@@ -204,7 +202,8 @@ public class CachedIndexer implements Indexer, ContentListener {
                 workColumn = mContent.getColumnCount(workLine);
             } else {
                 //Reached the start of text,we have to use findIndexForward() as this method can not handle it
-                return findIndexForward(mZeroPoint, index);
+                findIndexForward(mZeroPoint, index, dest);
+                return;
             }
         }
         int dColumn = index - workIndex;
@@ -212,11 +211,9 @@ public class CachedIndexer implements Indexer, ContentListener {
             workLine++;
             workColumn = dColumn - 1;
         }
-        CharPosition pos = new CharPosition();
-        pos.column = workColumn;
-        pos.line = workLine;
-        pos.index = index;
-        return pos;
+        dest.column = workColumn;
+        dest.line = workLine;
+        dest.index = index;
     }
 
     /**
@@ -225,27 +222,25 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param start  Given position
      * @param line   Querying line
      * @param column Querying column
-     * @return The querying position
      */
-    private CharPosition findLiCoForward(CharPosition start, int line, int column) {
+    private void findLiCoForward(CharPosition start, int line, int column, CharPosition dest) {
         if (start.line > line) {
             throw new IllegalArgumentException("can not find backward from findLiCoForward()");
         }
         int workLine = start.line;
         int workIndex = start.index;
         {
-            //Make index to to left of line
+            //Make index to left of line
             workIndex = workIndex - start.column;
         }
         while (workLine < line) {
             workIndex += mContent.getColumnCount(workLine) + 1;
             workLine++;
         }
-        CharPosition pos = new CharPosition();
-        pos.column = 0;
-        pos.line = workLine;
-        pos.index = workIndex;
-        return findInLine(pos, line, column);
+        dest.column = 0;
+        dest.line = workLine;
+        dest.index = workIndex;
+        findInLine(dest, line, column);
     }
 
     /**
@@ -254,9 +249,8 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param start  Given position
      * @param line   Querying line
      * @param column Querying column
-     * @return The querying position
      */
-    private CharPosition findLiCoBackward(CharPosition start, int line, int column) {
+    private void findLiCoBackward(CharPosition start, int line, int column, CharPosition dest) {
         if (start.line < line) {
             throw new IllegalArgumentException("can not find forward from findLiCoBackward()");
         }
@@ -270,11 +264,10 @@ public class CachedIndexer implements Indexer, ContentListener {
             workIndex -= mContent.getColumnCount(workLine - 1) + 1;
             workLine--;
         }
-        CharPosition pos = new CharPosition();
-        pos.column = 0;
-        pos.line = workLine;
-        pos.index = workIndex;
-        return findInLine(pos, line, column);
+        dest.column = 0;
+        dest.line = workLine;
+        dest.index = workIndex;
+        findInLine(dest, line, column);
     }
 
     /**
@@ -283,18 +276,12 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param pos    Given position
      * @param line   Querying line
      * @param column Querying column
-     * @return The querying position
      */
-    private CharPosition findInLine(CharPosition pos, int line, int column) {
+    private void findInLine(CharPosition pos, int line, int column) {
         if (pos.line != line) {
             throw new IllegalArgumentException("can not find other lines with findInLine()");
         }
-        int index = pos.index - pos.column + column;
-        CharPosition pos2 = new CharPosition();
-        pos2.column = column;
-        pos2.line = line;
-        pos2.index = index;
-        return pos2;
+        pos.index = pos.index - pos.column + column;
     }
 
     /**
@@ -363,45 +350,59 @@ public class CachedIndexer implements Indexer, ContentListener {
         return getCharPosition(index).column;
     }
 
+    @NonNull
     @Override
     public CharPosition getCharPosition(int index) {
-        throwIfHas();
-        mContent.checkIndex(index);
-        CharPosition pos = findNearestByIndex(index);
-        CharPosition res;
-        if (pos.index == index) {
-            return pos;
-        } else if (pos.index < index) {
-            res = findIndexForward(pos, index);
-        } else {
-            res = findIndexBackward(pos, index);
-        }
-        if (Math.abs(index - pos.index) >= mSwitchIndex) {
-            push(res);
-        }
-        return res;
+        var pos = new CharPosition();
+        getCharPosition(index, pos);
+        return pos;
     }
 
     @Override
+    public void getCharPosition(int index, @NonNull CharPosition dest) {
+        throwIfHas();
+        mContent.checkIndex(index);
+        CharPosition pos = findNearestByIndex(index);
+        if (pos.index == index) {
+            dest.set(pos);
+        } else if (pos.index < index) {
+            findIndexForward(pos, index, dest);
+        } else {
+            findIndexBackward(pos, index, dest);
+        }
+        if (Math.abs(index - pos.index) >= mSwitchIndex) {
+            push(dest.fromThis());
+        }
+    }
+
+    @NonNull
+    @Override
     public CharPosition getCharPosition(int line, int column) {
+        var pos = new CharPosition();
+        getCharPosition(line, column, pos);
+        return pos;
+    }
+
+    @Override
+    public void getCharPosition(int line, int column, @NonNull CharPosition dest) {
         throwIfHas();
         mContent.checkLineAndColumn(line, column, true);
         CharPosition pos = findNearestByLine(line);
         CharPosition res;
         if (pos.line == line) {
+            dest.set(pos);
             if (pos.column == column) {
-                return pos;
+                return;
             }
-            return findInLine(pos, line, column);
+            findInLine(dest, line, column);
         } else if (pos.line < line) {
-            res = findLiCoForward(pos, line, column);
+            findLiCoForward(pos, line, column, dest);
         } else {
-            res = findLiCoBackward(pos, line, column);
+            findLiCoBackward(pos, line, column, dest);
         }
         if (Math.abs(pos.line - line) > mSwitchLine) {
-            push(res);
+            push(dest.fromThis());
         }
-        return res;
     }
 
     @Override
