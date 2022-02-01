@@ -73,9 +73,26 @@ public interface IncrementalAnalyzeManager<S, T> extends AnalyzeManager {
          */
         public List<T_> tokens;
 
+        /**
+         * Spans. If spans are generated as well you can directly return them here to avoid
+         * {@link #generateSpansForLine(LineTokenizeResult)} calls.
+         */
+        public List<Span> spans;
+
         public LineTokenizeResult(@NonNull S_ state, @Nullable List<T_> tokens) {
             this.state = state;
             this.tokens = tokens;
+        }
+
+        public LineTokenizeResult(@NonNull S_ state, @Nullable List<T_> tokens, @Nullable List<Span> spans) {
+            this.state = state;
+            this.tokens = tokens;
+            this.spans = spans;
+        }
+
+        protected LineTokenizeResult<S_, T_> clearSpans() {
+            spans = null;
+            return this;
         }
 
     }

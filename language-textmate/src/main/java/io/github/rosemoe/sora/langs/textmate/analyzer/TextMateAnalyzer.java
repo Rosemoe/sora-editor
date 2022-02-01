@@ -115,16 +115,12 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<StackElemen
 
             tokens.add(span);
         }
-        return new LineTokenizeResult<>(lineTokens.getRuleStack(), tokens);
+        return new LineTokenizeResult<>(lineTokens.getRuleStack(), null, tokens);
     }
 
     @Override
     public List<Span> generateSpansForLine(LineTokenizeResult<StackElement, Span> tokens) {
-        var res = new ArrayList<Span>();
-        for (var span : tokens.tokens) {
-            res.add(span.copy());
-        }
-        return res;
+        return null;
     }
 
     public void updateTheme(IRawTheme theme) {

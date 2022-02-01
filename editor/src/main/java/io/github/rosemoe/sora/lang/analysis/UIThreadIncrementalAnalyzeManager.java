@@ -72,8 +72,8 @@ public abstract class UIThreadIncrementalAnalyzeManager<S, T> implements Increme
         var spans = sentStyles.spans.modify();
         while (line <= end.line) {
             var res = tokenizeLine(ref.getLine(line), state);
-            states.set(line, res);
-            spans.setSpansOnLine(line, generateSpansForLine(res));
+            spans.setSpansOnLine(line, res.spans != null ? res.spans : generateSpansForLine(res));
+            states.set(line, res.clearSpans());
             state = res.state;
             line++;
         }
@@ -83,8 +83,8 @@ public abstract class UIThreadIncrementalAnalyzeManager<S, T> implements Increme
             if (stateEquals(res.state, states.get(line).state)) {
                 break;
             } else {
-                states.set(line, res);
-                spans.setSpansOnLine(line, generateSpansForLine(res));
+                spans.setSpansOnLine(line, res.spans != null ? res.spans : generateSpansForLine(res));
+                states.set(line, res.clearSpans());
             }
             line ++;
         }
@@ -103,7 +103,7 @@ public abstract class UIThreadIncrementalAnalyzeManager<S, T> implements Increme
             var res = tokenizeLine(ref.getLine(line), state);
             var old = states.set(line, res);
             var spans = sentStyles.spans.modify();
-            spans.setSpansOnLine(line, generateSpansForLine(res));
+            spans.setSpansOnLine(line, res.spans != null ? res.spans : generateSpansForLine(res));
             if (stateEquals(old.state, res.state)) {
                 break;
             }
@@ -119,10 +119,10 @@ public abstract class UIThreadIncrementalAnalyzeManager<S, T> implements Increme
         S state = getInitialState();
         var builder = new MappedSpans.Builder(ref.getLineCount());
         for (int i = 0;i < ref.getLineCount();i++) {
-            var result = tokenizeLine(ref.getLine(i), state);
-            states.add(result);
-            state = result.state;
-            var spans = generateSpansForLine(result);
+            var res = tokenizeLine(ref.getLine(i), state);
+            state = res.state;
+            var spans = res.spans != null ? res.spans : generateSpansForLine(res);
+            states.add(res.clearSpans());
             for (var span : spans) {
                 builder.add(i, span);
             }
