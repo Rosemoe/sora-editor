@@ -116,7 +116,7 @@ public class GraphicTextRow {
             var cache = mText.widthCache;
             for (int i = start; i < mEnd;i++) {
                 if (w > advance) {
-                    mBuffer[0] = i;
+                    mBuffer[0] = Math.max(start, i - 1);
                     mBuffer[1] = w;
                     return mBuffer;
                 } else {

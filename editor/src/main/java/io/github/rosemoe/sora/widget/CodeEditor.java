@@ -800,6 +800,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
 
         this.mLanguage = lang;
+        this.mStyles = null;
 
         if (mCompletionWindow != null) {
             mCompletionWindow.hide();
@@ -822,6 +823,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
         mLanguageSymbolPairs.setParent(mProps.overrideSymbolPairs);
 
+        invalidateHwRenderer();
         invalidate();
     }
 
@@ -4411,6 +4413,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         drawView(canvas);
+        int x = (int) (getWidth() - getDpUnit() * 50);
+        canvas.drawLine(x, 0, x, getHeight(), mPaintGraph);
         // Update magnifier
         if ((mLastCursorState != mCursorBlink.visibility || !mEventHandler.getScroller().isFinished()) && mEventHandler.mMagnifier.isShowing()) {
             mLastCursorState = mCursorBlink.visibility;
