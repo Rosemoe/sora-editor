@@ -100,7 +100,12 @@ public class JavaAnalyzeManager extends SimpleAnalyzeManager<IdentifierAutoCompl
                     //Here we have to get next token to see if it is function
                     //We can only get the next token in stream.
                     //If more tokens required, we have to use a stack in tokenizer
-                    Tokens next = tokenizer.directNextToken();
+                    Tokens next;
+                    try {
+                        next = tokenizer.directNextToken();
+                    } catch (RuntimeException e) {
+                        next = Tokens.UNKNOWN;
+                    }
                     //The next is LPAREN,so this is function name or type name
                     if (next == Tokens.LPAREN) {
                         result.addIfNeeded(line, column, EditorColorScheme.FUNCTION_NAME);
@@ -129,7 +134,7 @@ public class JavaAnalyzeManager extends SimpleAnalyzeManager<IdentifierAutoCompl
                         classNamePrevious = false;
                         break;
                     }
-                    result.addIfNeeded(line, column,EditorColorScheme.TEXT_NORMAL);
+                    result.addIfNeeded(line, column, EditorColorScheme.TEXT_NORMAL);
                     break;
                 case CHARACTER_LITERAL:
                 case STRING:
