@@ -4412,6 +4412,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        drawView(canvas);
         // Update magnifier
         if ((mLastCursorState != mCursorBlink.visibility || !mEventHandler.getScroller().isFinished()) && mEventHandler.mMagnifier.isShowing()) {
             mLastCursorState = mCursorBlink.visibility;
