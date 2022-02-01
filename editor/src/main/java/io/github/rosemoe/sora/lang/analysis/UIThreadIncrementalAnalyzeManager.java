@@ -24,7 +24,6 @@
 package io.github.rosemoe.sora.lang.analysis;
 
 import android.os.Bundle;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,10 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.github.rosemoe.sora.lang.styling.MappedSpans;
-import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.text.CharPosition;
-import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentReference;
 
 /**

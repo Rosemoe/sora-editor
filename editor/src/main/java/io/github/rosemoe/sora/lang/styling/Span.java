@@ -30,7 +30,6 @@ import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import io.github.rosemoe.sora.interfaces.ExternalRenderer;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**

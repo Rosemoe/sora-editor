@@ -26,7 +26,6 @@ package io.github.rosemoe.sora.lang.styling;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import io.github.rosemoe.sora.data.ObjectAllocator;
 import io.github.rosemoe.sora.text.CharPosition;

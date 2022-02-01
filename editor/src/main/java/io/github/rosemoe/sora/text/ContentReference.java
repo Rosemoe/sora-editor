@@ -26,7 +26,6 @@ package io.github.rosemoe.sora.text;
 import androidx.annotation.NonNull;
 
 import java.io.IOException;
-import java.io.PushbackReader;
 import java.io.Reader;
 
 /**
