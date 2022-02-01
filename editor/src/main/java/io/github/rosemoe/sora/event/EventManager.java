@@ -113,9 +113,10 @@ public class EventManager {
      * Dispatch the given event to its receivers registered in this manager.
      * @param event Event to dispatch
      * @param <T> Event type
+     * @return Whether the event's intercept flag is set
      */
     @SuppressWarnings("unchecked")
-    public <T extends Event> void dispatchEvent(T event) {
+    public <T extends Event> boolean dispatchEvent(T event) {
         // Safe cast
         var receivers = getReceivers((Class<T>)event.getClass());
         receivers.lock.readLock().lock();
@@ -131,7 +132,7 @@ public class EventManager {
         List<EventReceiver<T>> unsubscribedReceivers = null;
         try {
             Unsubscribe unsubscribe = new Unsubscribe();
-            for (int i = 0;i < count;i++) {
+            for (int i = 0;i < count && !event.isIntercepted();i++) {
                 var receiver = receiverArr[i];
                 receiver.onReceive(event, unsubscribe);
                 if (unsubscribe.isUnsubscribed()) {
@@ -153,6 +154,7 @@ public class EventManager {
             }
             recycleBuffer(receiverArr);
         }
+        return event.isIntercepted();
     }
 
     /**

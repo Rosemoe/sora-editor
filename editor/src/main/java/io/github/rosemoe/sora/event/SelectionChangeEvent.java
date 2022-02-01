@@ -42,14 +42,17 @@ public class SelectionChangeEvent extends Event {
      * Unknown cause
      */
     public final static int CAUSE_UNKNOWN = 0;
+
     /**
      * Selection change caused by text modifications
      */
     public final static int CAUSE_TEXT_MODIFICATION = 1;
+
     /**
      * Set selection by handle
      */
     public final static int CAUSE_SELECTION_HANDLE = 2;
+
     /**
      * Set selection by single tap
      */
@@ -59,6 +62,11 @@ public class SelectionChangeEvent extends Event {
      * Set selection because of {@link android.view.inputmethod.InputConnection#setSelection(int, int)}
      */
     public final static int CAUSE_IME = 4;
+
+    /**
+     *  Long press
+     */
+    public final static int CAUSE_LONG_PRESS = 5;
 
     public SelectionChangeEvent(CodeEditor editor, int cause) {
         super(editor);

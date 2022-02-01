@@ -131,5 +131,10 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean overScrollEnabled = false;
 
+    /**
+     * Allow fling scroll
+     */
+    public boolean scrollFling = true;
+
 
 }

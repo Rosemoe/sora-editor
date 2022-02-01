@@ -267,7 +267,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private float mVerticalScrollFactor;
     private float mLineInfoTextSize;
     private boolean mWait;
-    private boolean mDrag;
     private boolean mScalable;
     private boolean mEditable;
     private boolean mWordwrap;
@@ -490,7 +489,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         mVerticalScrollBar = new RectF();
         mHorizontalScrollBar = new RectF();
         mLineNumberAlign = Paint.Align.RIGHT;
-        mDrag = false;
         mWait = false;
         mBlockLineEnabled = true;
         mBlockLineWidth = 1.5f;
@@ -3240,27 +3238,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
-     * @return Whether drag
-     * @see CodeEditor#setDrag(boolean)
-     */
-    public boolean isDrag() {
-        return mDrag;
-    }
-
-    /**
-     * Set whether drag mode
-     * drag:no fling scroll
-     *
-     * @param drag Whether drag
-     */
-    public void setDrag(boolean drag) {
-        mDrag = drag;
-        if (drag && !mEventHandler.getScroller().isFinished()) {
-            mEventHandler.getScroller().forceFinished(true);
-        }
-    }
-
-    /**
      * Start search action mode
      */
     public void beginSearchMode() {
@@ -4124,8 +4101,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      *
      * @see EventManager#dispatchEvent(Event)
      */
-    public <T extends Event> void dispatchEvent(T event) {
-        mEventManager.dispatchEvent(event);
+    public <T extends Event> boolean dispatchEvent(T event) {
+        return mEventManager.dispatchEvent(event);
     }
 
     /**

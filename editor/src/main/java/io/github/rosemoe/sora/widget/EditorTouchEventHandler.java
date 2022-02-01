@@ -31,9 +31,12 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.widget.OverScroller;
 
+import io.github.rosemoe.sora.event.ClickEvent;
 import io.github.rosemoe.sora.event.HandleStateChangeEvent;
+import io.github.rosemoe.sora.event.LongPressEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
+import io.github.rosemoe.sora.text.ICUUtils;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.component.Magnifier;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
@@ -417,7 +420,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         return flags;
     }
 
-    private void scrollIfThumbReachesEdge(MotionEvent e) {
+    public void scrollIfThumbReachesEdge(MotionEvent e) {
         int flag = computeEdgeFlags(e.getX(), e.getY());
         int initialDelta = (int) (8 * mEditor.getDpUnit());
         if (flag != 0 && mEdgeFlags == 0) {
@@ -436,15 +439,15 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         return (a < 0 && b < 0) || (a > 0 && b > 0);
     }
 
-    private void stopEdgeScroll() {
+    public void stopEdgeScroll() {
         mEdgeFlags = 0;
     }
 
-    void scrollBy(float distanceX, float distanceY) {
+    public void scrollBy(float distanceX, float distanceY) {
         scrollBy(distanceX, distanceY, false);
     }
 
-    void scrollBy(float distanceX, float distanceY, boolean smooth) {
+    public void scrollBy(float distanceX, float distanceY, boolean smooth) {
         mEditor.hideAutoCompleteWindow();
         int endX = mScroller.getCurrX() + (int) distanceX;
         int endY = mScroller.getCurrY() + (int) distanceY;
@@ -468,7 +471,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         mEditor.invalidate();
     }
 
-    protected int getTouchedHandleType() {
+    public int getTouchedHandleType() {
         return mTouchedHandleType;
     }
 
@@ -479,36 +482,27 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);
+        mEditor.performClick();
+        if (mEditor.dispatchEvent(new ClickEvent(mEditor, mEditor.getText().getIndexer().getCharPosition(line, column), e))) {
+            return true;
+        }
         notifyLater();
         mEditor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
         mEditor.hideAutoCompleteWindow();
-        mEditor.performClick();
         return true;
     }
 
-    @Override
-    public void onLongPress(MotionEvent e) {
-        if (mEditor.getCursor().isSelected() || e.getPointerCount() != 1) {
-            return;
-        }
-        long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
-        int line = IntPair.getFirst(res);
-        int column = IntPair.getSecond(res);
-        //Find word edges
+    private void selectWord(int line, int column) {
+        // Find word edges
         int startLine = line, endLine = line;
-        int startColumn = column;
-        while (startColumn > 0 && isIdentifierPart(mEditor.getText().charAt(line, startColumn - 1))) {
-            startColumn--;
-        }
-        int maxColumn = mEditor.getText().getColumnCount(line);
-        int endColumn = column;
-        while (endColumn < maxColumn && isIdentifierPart(mEditor.getText().charAt(line, endColumn))) {
-            endColumn++;
-        }
+        var lineObj = mEditor.getText().getLine(line);
+        long edges = ICUUtils.getWordEdges(lineObj, column);
+        int startColumn = IntPair.getFirst(edges);
+        int endColumn = IntPair.getSecond(edges);
         if (startColumn == endColumn) {
             if (startColumn > 0) {
                 startColumn--;
-            } else if (endColumn < maxColumn) {
+            } else if (endColumn < lineObj.length()) {
                 endColumn++;
             } else {
                 if (line > 0) {
@@ -521,7 +515,21 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 }
             }
         }
-        mEditor.setSelectionRegion(startLine, startColumn, endLine, endColumn);
+        mEditor.setSelectionRegion(startLine, startColumn, endLine, endColumn, SelectionChangeEvent.CAUSE_LONG_PRESS);
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+        if (mEditor.getCursor().isSelected() || e.getPointerCount() != 1) {
+            return;
+        }
+        long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
+        int line = IntPair.getFirst(res);
+        int column = IntPair.getSecond(res);
+        if (mEditor.dispatchEvent(new LongPressEvent(mEditor, mEditor.getText().getIndexer().getCharPosition(line, column), e))) {
+            return;
+        }
+        selectWord(line, column);
     }
 
     @Override
@@ -585,7 +593,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-        if (mEditor.isDrag()) {
+        if (!mEditor.getProps().scrollFling) {
             return false;
         }
         // If we do not finish it here, it can produce a high speed and cause the final scroll range to be broken, even a NaN for velocity
