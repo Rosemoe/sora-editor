@@ -40,6 +40,7 @@ public abstract class Event {
 
     private final long mEventTime;
     private final CodeEditor mEditor;
+    private boolean mIntercepted;
 
     public Event(@NonNull CodeEditor editor) {
         this(editor, System.currentTimeMillis());
@@ -48,6 +49,7 @@ public abstract class Event {
     public Event(@NonNull CodeEditor editor, long eventTime) {
         mEditor = Objects.requireNonNull(editor);
         mEventTime = eventTime;
+        mIntercepted = false;
     }
 
     /**
@@ -66,9 +68,31 @@ public abstract class Event {
     }
 
     /*
-     * Checks whether this event can be intercepted (so that the event is not sent to other
+     * Check whether this event can be intercepted (so that the event is not sent to other
      * receivers after being intercepted)
      */
-    //abstract boolean canIntercept();
+    public boolean canIntercept() {
+        return false;
+    }
+
+    /**
+     * Intercept the event.
+     *
+     * Make sure {@link #canIntercept()} returns true. Otherwise, an {@link UnsupportedOperationException}
+     * will be thrown.
+     */
+    public void intercept() {
+        if (!canIntercept()) {
+            throw new UnsupportedOperationException("intercept() not supported");
+        }
+        mIntercepted = true;
+    }
+
+    /**
+     * Check whether this event is intercepted
+     */
+    public boolean isIntercepted() {
+        return mIntercepted;
+    }
 
 }
