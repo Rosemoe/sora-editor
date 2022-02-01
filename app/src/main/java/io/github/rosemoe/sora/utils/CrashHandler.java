@@ -54,7 +54,7 @@ import io.github.rosemoe.sora.app.R;
  * CrashHandler handles uncaught exceptions
  * And force the main thread continue to work
  *
- * @author Rose
+ * @author Rosemoe
  */
 public class CrashHandler implements UncaughtExceptionHandler {
 
