@@ -88,6 +88,8 @@ final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent>
                     var t = b - delta * 2;
                     editor.postInvalidate(l, t, r, b);
                 }
+            } else {
+                visibility = true;
             }
             editor.postDelayed(this, period);
         } else {
