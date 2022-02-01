@@ -22,9 +22,20 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-rootProject.name='sora-editor'
-include ':language-java'
-include ':editor'
-include ':app'
-include ':language-textmate'
-include ':editor-kt'
+package io.github.rosemoe.sorakt
+
+import org.junit.Test
+
+import org.junit.Assert.*
+
+/**
+ * Example local unit test, which will execute on the development machine (host).
+ *
+ * See [testing documentation](http://d.android.com/tools/testing).
+ */
+class ExampleUnitTest {
+    @Test
+    fun addition_isCorrect() {
+        assertEquals(4, 2 + 2)
+    }
+}

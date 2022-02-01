@@ -22,9 +22,16 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-rootProject.name='sora-editor'
-include ':language-java'
-include ':editor'
-include ':app'
-include ':language-textmate'
-include ':editor-kt'
+package io.github.rosemoe.sorakt
+
+import io.github.rosemoe.sora.lang.styling.TextStyle
+
+/**
+ * Make a text style
+ *
+ * @see io.github.rosemoe.sora.lang.styling.TextStyle.makeStyle
+ */
+fun textStyle(foreground: Int, background: Int = 0, bold: Boolean = false,
+              italic: Boolean = false, strikethrough: Boolean = false, noCompletion: Boolean = false) : Long {
+    return TextStyle.makeStyle(foreground, background, bold, italic, strikethrough, noCompletion)
+}

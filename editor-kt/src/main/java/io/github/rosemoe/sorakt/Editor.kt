@@ -22,9 +22,17 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-rootProject.name='sora-editor'
-include ':language-java'
-include ':editor'
-include ':app'
-include ':language-textmate'
-include ':editor-kt'
+package io.github.rosemoe.sorakt
+
+import io.github.rosemoe.sora.event.Event
+import io.github.rosemoe.sora.event.EventReceiver
+import io.github.rosemoe.sora.widget.CodeEditor
+
+/**
+ * Subscribe event in editor
+ *
+ * @see CodeEditor.subscribeEvent
+ */
+inline fun <reified T : Event> CodeEditor.subscribeEvent(receiver: EventReceiver<T>) {
+    subscribeEvent(T::class.java, receiver)
+}
