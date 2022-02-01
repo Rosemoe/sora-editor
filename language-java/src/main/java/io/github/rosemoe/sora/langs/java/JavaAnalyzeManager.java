@@ -32,6 +32,7 @@ import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.MappedSpans;
 import io.github.rosemoe.sora.lang.styling.Styles;
+import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.text.LineNumberCalculator;
 import io.github.rosemoe.sora.util.TrieTree;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
@@ -137,11 +138,14 @@ public class JavaAnalyzeManager extends SimpleAnalyzeManager<IdentifierAutoCompl
                     result.addIfNeeded(line, column, EditorColorScheme.TEXT_NORMAL);
                     break;
                 case CHARACTER_LITERAL:
-                case STRING:
                 case FLOATING_POINT_LITERAL:
                 case INTEGER_LITERAL:
                     classNamePrevious = false;
                     result.addIfNeeded(line, column, EditorColorScheme.LITERAL);
+                    break;
+                case STRING:
+                    classNamePrevious = false;
+                    result.addIfNeeded(line, column, TextStyle.makeStyle(EditorColorScheme.LITERAL, true));
                     break;
                 case INT:
                 case LONG:
