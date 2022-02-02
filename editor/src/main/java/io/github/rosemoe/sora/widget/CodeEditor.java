@@ -362,7 +362,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * @see io.github.rosemoe.sora.widget.component
      */
     @SuppressWarnings("unchecked")
-    public <T extends EditorBuiltinComponent> T getComponent(Class<T> clazz) {
+    @NonNull
+    public <T extends EditorBuiltinComponent> T getComponent(@NonNull Class<T> clazz) {
         if (clazz == EditorAutoCompletion.class) {
             return (T) mCompletionWindow;
         } else if (clazz == Magnifier.class) {
@@ -374,6 +375,33 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
     }
 
+    /**
+     * Replace the built-in component to the given one.
+     * The new component's enabled state will extend the old one.
+     *
+     * @param clazz Built-in class type. Such as {@code EditorAutoCompletion.class}
+     * @param replacement The new component to apply
+     * @param <T> Type of built-in component
+     */
+    public <T extends EditorBuiltinComponent> void replaceComponent(@NonNull Class<T> clazz, @NonNull T replacement) {
+        var old = getComponent(clazz);
+        var isEnabled = old.isEnabled();
+        old.setEnabled(false);
+        if (clazz == EditorAutoCompletion.class) {
+            mCompletionWindow = (EditorAutoCompletion) replacement;
+        } else if (clazz == Magnifier.class) {
+            mEventHandler.mMagnifier = (Magnifier) replacement;
+        } else if (clazz == EditorTextActionWindow.class) {
+            mTextActionWindow = (EditorTextActionWindow) replacement;
+        } else {
+            throw new IllegalArgumentException("Unknown component type");
+        }
+        replacement.setEnabled(isEnabled);
+    }
+
+    /**
+     * Get KeyMetaStates, which manages alt/shift state in editor
+     */
     public KeyMetaStates getKeyMetaStates() {
         return mKeyMetaStates;
     }
