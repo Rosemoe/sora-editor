@@ -48,7 +48,7 @@ publishing {
                 name = PUBLISH_ARTIFACT_ID
                 description = 'An awesome code editor library on Android'
                 // If your project has a dedicated site, use its URL here
-                url = 'https://github.com/Rosemoe/CodeEditor'
+                url = 'https://github.com/Rosemoe/sora-editor'
                 licenses {
                     license {
                         name = 'LGPL v2.1'
@@ -64,9 +64,9 @@ publishing {
                 }
                 // Version control info, if you're using GitHub, follow the format as seen here
                 scm {
-                    connection = 'scm:git:github.com/Rosemoe/CodeEditor.git'
-                    developerConnection = 'scm:git:ssh://github.com/Rosemoe/CodeEditor.git'
-                    url = 'https://github.com/Rosemoe/CodeEditor/tree/master'
+                    connection = 'scm:git:github.com/Rosemoe/sora-editor.git'
+                    developerConnection = 'scm:git:ssh://github.com/Rosemoe/sora-editor.git'
+                    url = 'https://github.com/Rosemoe/sora-editor/tree/master'
                 }
                 // A slightly hacky fix so that your POM will include any transitive dependencies
                 // that your library builds upon
