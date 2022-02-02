@@ -25,8 +25,8 @@
 public final class Versions {
 
     // Project versions
-    public final static String versionName = "0.9.0";
-    public final static int versionCode = 31;
+    public final static String versionName = "0.9.1";
+    public final static int versionCode = 32;
 
     // Platform & Tool versions
     public final static String buildToolsVersion = "32.0.0";
