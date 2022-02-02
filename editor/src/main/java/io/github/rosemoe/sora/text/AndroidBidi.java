@@ -30,6 +30,11 @@ import android.os.Build;
 import androidx.annotation.IntRange;
 import androidx.annotation.RequiresApi;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Objects;
+
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 
 /**
@@ -61,36 +66,72 @@ public final class AndroidBidi {
     public static final int DIR_REQUEST_DEFAULT_LTR = 2;
     public static final int DIR_REQUEST_DEFAULT_RTL = -2;
 
-    private static Class<?> bidiClass;
+    private static Method bidiFunction;
     static {
+        // Initialize reflection for low API devices.
+        Class<?> bidiClass = null;
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
             try {
                 bidiClass = Class.forName("android.text.AndroidBidi");
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
-                bidiClass = null;
             }
-        } else {
-            bidiClass = null;
+        }
+        if (bidiClass != null) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    // Android API 21-27
+                    // public static int bidi(int dir, char[] chs, byte[] chInfo, int n, boolean haveInfo)
+                    bidiFunction = bidiClass.getDeclaredMethod("bidi", int.class, char[].class, byte[].class, int.class, boolean.class);
+                    bidiFunction.setAccessible(true);
+                } else {
+                    // Android API 28+
+                    // public static int bidi(int dir, char[] chs, byte[] chInfo)
+                    bidiFunction = bidiClass.getDeclaredMethod("bidi", int.class, char[].class, byte[].class);
+                    bidiFunction.setAccessible(true);
+                }
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     public static int bidi(int dir, char[] chs, byte[] chInfo) {
-        // TODO
-        return 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return bidiImplQ(dir, chs, chInfo);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && bidiFunction != null) {
+            return bidiImplP(dir, chs, chInfo);
+        } else if (bidiFunction != null) {
+            return bidiImplLollipop(dir, chs, chInfo);
+        } else {
+            return bidiFallback(dir, chInfo);
+        }
+    }
+
+    private static int bidiFallback(int dir, byte[] chInfo) {
+        Arrays.fill(chInfo, (byte) 0);
+        return DIR_LEFT_TO_RIGHT;
     }
 
     private static int bidiImplLollipop(int dir, char[] chs, byte[] chInfo) {
-        // Android API 21-27
-        // public static int bidi(int dir, char[] chs, byte[] chInfo, int n, boolean haveInfo)
-        return 0;
+        try {
+            var res = (Integer) bidiFunction.invoke(null, dir, chs, chInfo, chs.length, false);
+            return Objects.requireNonNullElseGet(res, () -> bidiFallback(dir, chInfo));
+        } catch (IllegalAccessException|InvocationTargetException|NullPointerException e) {
+            e.printStackTrace();
+            return bidiFallback(dir, chInfo);
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.P)
     private static int bidiImplP(int dir, char[] chs, byte[] chInfo) {
-        // Android API 28+
-        // public static int bidi(int dir, char[] chs, byte[] chInfo)
-       return 0;
+        try {
+            var res = (Integer) bidiFunction.invoke(null, dir, chs, chInfo);
+            return Objects.requireNonNullElseGet(res, () -> bidiFallback(dir, chInfo));
+        } catch (IllegalAccessException|InvocationTargetException|NullPointerException e) {
+            e.printStackTrace();
+            return bidiFallback(dir, chInfo);
+        }
     }
 
 
