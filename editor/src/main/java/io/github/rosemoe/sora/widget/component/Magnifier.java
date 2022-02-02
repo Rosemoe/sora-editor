@@ -50,7 +50,7 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  *
  * @author Rosemoe
  */
-public final class Magnifier implements EditorBuiltinComponent {
+public class Magnifier implements EditorBuiltinComponent {
 
     private final CodeEditor view;
     private final PopupWindow popup;

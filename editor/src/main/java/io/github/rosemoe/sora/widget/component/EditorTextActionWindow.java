@@ -46,7 +46,7 @@ import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
  *
  * @author Rosemoe
  */
-public final class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickListener, EventReceiver<SelectionChangeEvent>, EditorBuiltinComponent {
+public class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickListener, EventReceiver<SelectionChangeEvent>, EditorBuiltinComponent {
     private final CodeEditor mEditor;
     private final Button mPasteBtn;
     private final Button mCopyBtn;

@@ -49,14 +49,15 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
  * @author Rosemoe
  */
 public class EditorAutoCompletion extends EditorPopupWindow implements EditorBuiltinComponent {
+
     private final CodeEditor mEditor;
     protected boolean mCancelShowUp = false;
     private int mCurrent = -1;
-    private long mRequestTime;
-    private int mMaxHeight;
+    protected long mRequestTime;
+    protected int mMaxHeight;
     private EditorCompletionAdapter mAdapter;
     private CompletionLayout mLayout;
-    private CompletionThread mThread;
+    protected CompletionThread mThread;
     private long requestShow = 0;
     private long requestHide = -1;
     private boolean enabled = true;
