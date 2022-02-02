@@ -430,10 +430,32 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      *
      * @param line   The line position of character
      * @param column The column position of character
-     * @return The x offset on screen
+     * @return The x offset on view
      */
     public float getOffset(int line, int column) {
         return mLayout.getCharLayoutOffset(line, column)[1] + measureTextRegionOffset() - getOffsetX();
+    }
+
+    /**
+     * Get the character's x offset on view
+     *
+     * @param line   The line position of character
+     * @param column The column position of character
+     * @return The x offset on view
+     */
+    public float getCharOffsetX(int line, int column) {
+        return mLayout.getCharLayoutOffset(line, column)[1] + measureTextRegionOffset() - getOffsetX();
+    }
+
+    /**
+     * Get the character's y offset on view
+     *
+     * @param line The line position of character
+     * @param column The column position of character
+     * @return The y offset on view
+     */
+    public float getCharOffsetY(int line, int column) {
+        return mLayout.getCharLayoutOffset(line, column)[0] - getOffsetY();
     }
 
     /**
@@ -1258,11 +1280,10 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     /**
      * Set whether allow the editor to use RenderNode to draw its text.
      * Enabling this can cause more memory usage, but the editor can display text
-     * much quick.
+     * much quicker.
      * However, only when hardware accelerate is enabled on this view can the switch
      * make a difference.
      */
-    @Experimental
     public void setHardwareAcceleratedDrawAllowed(boolean acceleratedDraw) {
         mHardwareAccAllowed = acceleratedDraw;
         if (acceleratedDraw && !isWordwrap()) {
