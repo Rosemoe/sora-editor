@@ -26,6 +26,9 @@ package io.github.rosemoe.sora.widget.component;
 /**
  * Builtin editor component.
  *
+ * @see EditorAutoCompletion
+ * @see EditorTextActionWindow
+ * @see Magnifier
  * @author Rosemoe
  */
 public interface EditorBuiltinComponent {

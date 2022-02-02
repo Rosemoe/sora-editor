@@ -30,9 +30,9 @@ Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEdito
 - [x] Show non-printable characters
 - [x] Error/Warning/Typo/Deprecated indicators
 - [x] Text magnifier
-- [ ] Code folding
-- [ ] Incremental highlight Analysis
+- [x] Incremental highlight Analysis (for language-textmate)
 - [ ] Plugin System
+- [ ] Code folding (unscheduled)
 ## Screenshots
 ![Wordwrap](/images/wordwrap.png)
 <img src="/images/curlylines.jpg" alt="ErrorIndicator" width="40%" align="bottom" />
@@ -65,7 +65,7 @@ additional information or have any questions
 ```
 ## Discuss
 * Official QQ Group:[216632648](https://jq.qq.com/?_wv=1027&k=n68uxQws)
-* [Official Telegram Group](https://t.me/rosemoe_code_editor)
+* Official [Telegram Group](https://t.me/rosemoe_code_editor)
 ## Acknowledgements
 Thanks to [JetBrains](https://www.jetbrains.com/?from=CodeEditor) for allocating free open-source licences for IDEs such as [IntelliJ IDEA](https://www.jetbrains.com/idea/?from=CodeEditor).   
 [<img src=".github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)
