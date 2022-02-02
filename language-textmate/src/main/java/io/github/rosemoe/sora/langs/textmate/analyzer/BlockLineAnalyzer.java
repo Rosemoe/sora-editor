@@ -60,7 +60,6 @@ public class BlockLineAnalyzer {
                     codeBlock.startLine = startLine;
                     codeBlock.endLine = endLine;
                     String line = model.getLineString(startLine);
-                    // TODO: 2021/10/17 这2个column不知道怎么取值。。
                     codeBlock.startColumn = IndentRange.computeStartColumn(line, language.getTabSize());
 //                    line= model.getLineString(endLine);
 //                    int endColumn=IndentRange.computeStartColumn(line,language.getTabSize());

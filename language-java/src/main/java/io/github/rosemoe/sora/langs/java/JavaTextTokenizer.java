@@ -124,10 +124,6 @@ public class JavaTextTokenizer {
         return currToken;
     }
 
-    public String yyDesc() {
-        return " Line：" + line + " Column：" + column;
-    }
-
     private char charAt(int i) {
         return source.charAt(i);
     }
@@ -256,7 +252,6 @@ public class JavaTextTokenizer {
                     scanStringLiteral();
                     return Tokens.STRING;
                 default:
-                    //error("没有匹配的Token : '" + ch + " '", new StringAdvice("检查是否使用了非法的符号，比如误使用了中文符号代替英文符号等"));
                     return Tokens.UNKNOWN;
             }
         }

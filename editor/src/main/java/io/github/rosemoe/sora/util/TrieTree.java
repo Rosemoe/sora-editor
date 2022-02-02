@@ -93,9 +93,9 @@ public class TrieTree<T> {
     }
 
     /**
-     * 固定长度哈希表
+     * Hashmap with fixed length
      *
-     * @author Rose
+     * @author Rosemoe
      */
     public static class HashCharMap<V> {
 

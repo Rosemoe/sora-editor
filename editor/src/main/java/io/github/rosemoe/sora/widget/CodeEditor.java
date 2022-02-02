@@ -1774,7 +1774,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
             // Draw hard wrap
             if (lastVisibleChar == columnCount && (mNonPrintableOptions & FLAG_DRAW_LINE_SEPARATOR) != 0) {
-                drawMiniGraph(canvas, paintingOffset, row, "↵");
+                drawMiniGraph(canvas, paintingOffset, row, "\u21B5");
             }
 
             // Recover the offset
