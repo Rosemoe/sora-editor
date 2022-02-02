@@ -32,6 +32,9 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 /**
  * Manages layout of {@link EditorAutoCompletion}
  * Can be set by {@link EditorAutoCompletion#setLayout(CompletionLayout)}
+ *
+ * The implementation of this class must call {@link EditorAutoCompletion#select(int)} to select the
+ * item in completion list when the user clicks one.
  */
 @SuppressWarnings("rawtypes")
 public interface CompletionLayout {
