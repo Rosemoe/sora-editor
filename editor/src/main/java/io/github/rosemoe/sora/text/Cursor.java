@@ -204,16 +204,16 @@ public final class Cursor {
     public long getLeftOf(long position) {
         int line = IntPair.getFirst(position);
         int column = IntPair.getSecond(position);
-        if (column - 1 >= 0) {
-            column = TextLayoutHelper.get().getCurPosLeft(column, mContent.getLine(line));
-            return IntPair.pack(line, column);
-        } else {
+        int n_column = TextLayoutHelper.get().getCurPosLeft(column, mContent.getLine(line));
+        if (n_column == column && column == 0) {
             if (line == 0) {
                 return 0;
             } else {
                 int c_column = mContent.getColumnCount(line - 1);
                 return IntPair.pack(line - 1, c_column);
             }
+        } else {
+            return IntPair.pack(line, n_column);
         }
     }
 
@@ -226,16 +226,15 @@ public final class Cursor {
         int line = IntPair.getFirst(position);
         int column = IntPair.getSecond(position);
         int c_column = mContent.getColumnCount(line);
-
-        if (column + 1 <= c_column) {
-            column = TextLayoutHelper.get().getCurPosRight(column, mContent.getLine(line));
-           return IntPair.pack(line, column);
-        } else {
+        int n_column = TextLayoutHelper.get().getCurPosRight(column, mContent.getLine(line));
+        if (n_column == c_column && column == n_column) {
             if (line + 1 == mContent.getLineCount()) {
                 return IntPair.pack(line, c_column);
             } else {
                 return IntPair.pack(line + 1, 0);
             }
+        } else {
+            return IntPair.pack(line, n_column);
         }
     }
 

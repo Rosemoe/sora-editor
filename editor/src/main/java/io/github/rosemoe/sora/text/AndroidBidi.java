@@ -70,7 +70,7 @@ public final class AndroidBidi {
     static {
         // Initialize reflection for low API devices.
         Class<?> bidiClass = null;
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             try {
                 bidiClass = Class.forName("android.text.AndroidBidi");
             } catch (ClassNotFoundException e) {
@@ -79,7 +79,7 @@ public final class AndroidBidi {
         }
         if (bidiClass != null) {
             try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
                     // Android API 21-27
                     // public static int bidi(int dir, char[] chs, byte[] chInfo, int n, boolean haveInfo)
                     bidiFunction = bidiClass.getDeclaredMethod("bidi", int.class, char[].class, byte[].class, int.class, boolean.class);
@@ -133,7 +133,6 @@ public final class AndroidBidi {
             return bidiFallback(dir, chInfo);
         }
     }
-
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private static int bidiImplQ(int dir, char[] chs, byte[] chInfo) {
