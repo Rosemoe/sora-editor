@@ -21,50 +21,34 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
+package io.github.rosemoe.sora.event;
 
-import android.text.Editable;
-import android.view.KeyEvent;
+import androidx.annotation.NonNull;
+
+import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
- * Handles key events such as SHIFT
- * @author Rosemoe
+ * Event with a result
+ * @param <T> Result type
  */
-public class KeyMetaStates extends android.text.method.MetaKeyKeyListener {
+public abstract class ResultedEvent<T> extends Event {
 
-    private final CodeEditor editor;
+    private T result;
 
-    /**
-     * Dummy text used for Android original APIs
-     */
-    private final Editable dest = Editable.Factory.getInstance().newEditable("");
-
-    public KeyMetaStates(CodeEditor editor) {
-        this.editor = editor;
+    public ResultedEvent(@NonNull CodeEditor editor) {
+        super(editor);
     }
 
-    public void onKeyDown(KeyEvent event) {
-        super.onKeyDown(editor, dest, event.getKeyCode(), event);
+    public void setResult(T result) {
+        this.result = result;
     }
 
-    public void onKeyUp(KeyEvent event) {
-        super.onKeyUp(editor, dest, event.getKeyCode(), event);
+    public T getResult() {
+        return result;
     }
 
-    public boolean isShiftPressed() {
-        return getMetaState(dest, META_SHIFT_ON) != 0;
-    }
-
-    public boolean isAltPressed() {
-        return getMetaState(dest, META_ALT_ON) != 0;
-    }
-
-    public void adjust() {
-        adjustMetaAfterKeypress(dest);
-    }
-
-    public void clearMetaStates(int states) {
-        clearMetaKeyState(editor, dest, states);
+    public boolean isResultSet() {
+        return result != null;
     }
 
 }
