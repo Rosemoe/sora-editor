@@ -33,6 +33,9 @@ import java.util.List;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.text.ContentLine;
 
+/**
+ * Manages graphical(actually measuring) operations of a text row
+ */
 public class GraphicTextRow {
 
     private final static float SKEW_X = -0.2f;
@@ -79,6 +82,9 @@ public class GraphicTextRow {
         }
     }
 
+    /**
+     * Reset
+     */
     public void set(ContentLine line, int start, int end, int tabWidth, List<Span> spans, Paint paint) {
         if (mPaint.getTextSize() != paint.getTextSize())
             mPaint.setTextSizeWrapped(paint.getTextSize());
@@ -95,6 +101,9 @@ public class GraphicTextRow {
         mSpans = spans;
     }
 
+    /**
+     * Build measure cache for the text
+     */
     public void buildMeasureCache() {
         if (mText.widthCache == null || mText.widthCache.length < mEnd) {
             mText.widthCache = new float[Math.max(128, mText.length())];
@@ -154,7 +163,7 @@ public class GraphicTextRow {
                 lastStyle = style;
             }
 
-            // Find in sub-region
+            // Find in subregion
             int res = -1;
             {
                 int lastStart = regionStart;
