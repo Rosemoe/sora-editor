@@ -722,7 +722,7 @@ public class Content implements CharSequence {
     public boolean equals(Object anotherObject) {
         if (anotherObject instanceof Content) {
             Content content = (Content) anotherObject;
-            if (content.getLineCount() != this.getLineCount()) {
+            if (content.length() != this.length()) {
                 return false;
             }
             for (int i = 0; i < this.getLineCount(); i++) {
