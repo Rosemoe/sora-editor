@@ -31,6 +31,7 @@ import android.os.Message;
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -52,6 +53,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
     private ContentReference ref;
     private Bundle extraArguments;
     private LooperThread thread;
+    private static int sThreadId = 0;
     private final static int MSG_BASE = 11451400;
     private final static int MSG_INIT = MSG_BASE + 1;
     private final static int MSG_MOD = MSG_BASE + 2;
@@ -97,8 +99,14 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         final var text = ref.getReference().copyText(false);
         text.setUndoEnabled(false);
         thread = new LooperThread(() -> thread.handler.sendMessage(thread.handler.obtainMessage(MSG_INIT, text)));
+        thread.setName("AsyncAnalyzer-" + nextThreadId());
         thread.start();
         sendUpdate(null);
+    }
+
+    private synchronized static int nextThreadId() {
+        sThreadId++;
+        return sThreadId;
     }
 
     @Override
@@ -396,9 +404,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                     }
                     if (obj != null && obj.lock.tryLock()) {
                         try {
-                            for (var span : obj.spans) {
-                                spans.add(span.copy());
-                            }
+                            return Collections.unmodifiableList(obj.spans);
                         } finally {
                             obj.lock.unlock();
                         }

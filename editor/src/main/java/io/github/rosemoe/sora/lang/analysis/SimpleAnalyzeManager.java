@@ -56,7 +56,7 @@ public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
     private V data;
 
     @Override
-    public void setReceiver(@NonNull StyleReceiver receiver) {
+    public void setReceiver(@Nullable StyleReceiver receiver) {
         this.receiver = receiver;
     }
 
