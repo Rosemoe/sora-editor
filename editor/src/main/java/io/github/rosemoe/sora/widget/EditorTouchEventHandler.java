@@ -478,7 +478,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
-        mEditor.showSoftInput();
         mScroller.forceFinished(true);
         long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
         int line = IntPair.getFirst(res);
@@ -487,6 +486,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         if (mEditor.dispatchEvent(new ClickEvent(mEditor, mEditor.getText().getIndexer().getCharPosition(line, column), e))) {
             return true;
         }
+        mEditor.showSoftInput();
         notifyLater();
         mEditor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
         mEditor.hideAutoCompleteWindow();
@@ -521,13 +521,13 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     @Override
     public void onLongPress(MotionEvent e) {
-        if (mEditor.getCursor().isSelected() || e.getPointerCount() != 1) {
-            return;
-        }
         long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);
         if (mEditor.dispatchEvent(new LongPressEvent(mEditor, mEditor.getText().getIndexer().getCharPosition(line, column), e))) {
+            return;
+        }
+        if (mEditor.getCursor().isSelected() || e.getPointerCount() != 1) {
             return;
         }
         selectWord(line, column);
@@ -683,13 +683,13 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
-        if (mEditor.getCursor().isSelected() || e.getPointerCount() != 1) {
-            return true;
-        }
         long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);
         if (mEditor.dispatchEvent(new DoubleClickEvent(mEditor, mEditor.getText().getIndexer().getCharPosition(line, column), e))) {
+            return true;
+        }
+        if (mEditor.getCursor().isSelected() || e.getPointerCount() != 1) {
             return true;
         }
         selectWord(line, column);
