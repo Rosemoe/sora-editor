@@ -35,7 +35,8 @@ public enum Tokens {
     EOF,
 
     
-    LONG_COMMENT,
+    LONG_COMMENT_COMPLETE,
+    LONG_COMMENT_INCOMPLETE,
     LINE_COMMENT,
 
     DIV,

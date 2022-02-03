@@ -89,7 +89,7 @@ public class JavaLanguage implements Language {
         JavaTextTokenizer t = new JavaTextTokenizer(content);
         Tokens token;
         int advance = 0;
-        while ((token = t.directNextToken()) != Tokens.EOF) {
+        while ((token = t.nextToken()) != Tokens.EOF) {
             if (token == Tokens.LBRACE) {
                 advance++;
             }

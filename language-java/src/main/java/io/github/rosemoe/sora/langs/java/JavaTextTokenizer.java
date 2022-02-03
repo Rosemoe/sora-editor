@@ -50,8 +50,6 @@ public class JavaTextTokenizer {
     protected int length;
     private Tokens currToken;
     private boolean lcCal;
-    private boolean skipWS;
-    private boolean skipComment;
 
     public JavaTextTokenizer(CharSequence src) {
         if (src == null) {
@@ -68,21 +66,11 @@ public class JavaTextTokenizer {
         index = 0;
         currToken = Tokens.WHITESPACE;
         lcCal = false;
-        skipWS = false;
-        skipComment = false;
         this.bufferLen = source.length();
     }
 
     public void setCalculateLineColumn(boolean cal) {
         this.lcCal = cal;
-    }
-
-    public void setSkipWhitespace(boolean skip) {
-        this.skipWS = skip;
-    }
-
-    public void setSkipComment(boolean skip) {
-        this.skipComment = skip;
     }
 
     public void pushBack(int length) {
@@ -133,15 +121,6 @@ public class JavaTextTokenizer {
     }
 
     public Tokens nextToken() {
-        Tokens token;
-        do {
-            token = directNextToken();
-        } while ((skipWS && token == Tokens.WHITESPACE) || (skipComment && (token == Tokens.LINE_COMMENT || token == Tokens.LONG_COMMENT)));
-        currToken = token;
-        return token;
-    }
-
-    public Tokens directNextToken() {
         if (lcCal) {
             boolean r = false;
             for (int i = offset; i < offset + length; i++) {
@@ -305,7 +284,6 @@ public class JavaTextTokenizer {
                 scanTrans();
             } else {
                 if (ch == '\n') {
-
                     return;
                 }
                 length++;
@@ -319,21 +297,20 @@ public class JavaTextTokenizer {
 
     protected void scanCharLiteral() {
         throwIfNeeded();
-        char ch = charAt();
-        if (ch == '\\') {
-            length++;
-            scanTrans();
-        } else if (ch == '\'') {
-            length++;
-            return;
-        } else {
-            if (ch == '\n') {
-                return;
+        char ch;
+        while (offset + length < bufferLen && (ch = charAt(offset + length)) != '\'') {
+            if (ch == '\\') {
+                length++;
+                scanTrans();
+            } else {
+                if (ch == '\n') {
+                    return;
+                }
+                length++;
+                throwIfNeeded();
             }
-            length++;
         }
-        throwIfNeeded();
-        if (charAt() == '\'') {
+        if (offset + length != bufferLen) {
             length++;
         }
     }
@@ -421,16 +398,18 @@ public class JavaTextTokenizer {
         } else if (ch == '*') {
             length++;
             char pre, curr = '?';
+            boolean finished = false;
             while (offset + length < bufferLen) {
                 pre = curr;
                 curr = charAt();
                 if (curr == '/' && pre == '*') {
                     length++;
+                    finished = true;
                     break;
                 }
                 length++;
             }
-            return Tokens.LONG_COMMENT;
+            return finished ? Tokens.LONG_COMMENT_COMPLETE : Tokens.LONG_COMMENT_INCOMPLETE;
         } else {
             return Tokens.DIV;
         }

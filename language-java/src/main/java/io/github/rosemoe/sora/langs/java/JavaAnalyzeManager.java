@@ -71,8 +71,8 @@ public class JavaAnalyzeManager extends SimpleAnalyzeManager<IdentifierAutoCompl
         boolean first = true;
         while (!delegate.isCancelled()) {
             try {
-                // directNextToken() does not skip any token
-                token = tokenizer.directNextToken();
+                // nextToken() does not skip any token
+                token = tokenizer.nextToken();
             } catch (RuntimeException e) {
                 //When a spelling input is in process, this will happen because of format mismatch
                 token = Tokens.CHARACTER_LITERAL;
@@ -103,7 +103,7 @@ public class JavaAnalyzeManager extends SimpleAnalyzeManager<IdentifierAutoCompl
                     //If more tokens required, we have to use a stack in tokenizer
                     Tokens next;
                     try {
-                        next = tokenizer.directNextToken();
+                        next = tokenizer.nextToken();
                     } catch (RuntimeException e) {
                         next = Tokens.UNKNOWN;
                     }
@@ -239,7 +239,8 @@ public class JavaAnalyzeManager extends SimpleAnalyzeManager<IdentifierAutoCompl
                     break;
                 }
                 case LINE_COMMENT:
-                case LONG_COMMENT:
+                case LONG_COMMENT_COMPLETE:
+                case LONG_COMMENT_INCOMPLETE:
                     result.addIfNeeded(line, column, makeStyle(EditorColorScheme.COMMENT, true));
                     break;
                 default:
