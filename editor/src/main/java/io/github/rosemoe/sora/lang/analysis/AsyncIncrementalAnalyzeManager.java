@@ -94,7 +94,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                 thread.abort = true;
             }
         }
-        final var text = ref.getReference().copyText();
+        final var text = ref.getReference().copyText(false);
         text.setUndoEnabled(false);
         thread = new LooperThread(() -> thread.handler.sendMessage(thread.handler.obtainMessage(MSG_INIT, text)));
         thread.start();
