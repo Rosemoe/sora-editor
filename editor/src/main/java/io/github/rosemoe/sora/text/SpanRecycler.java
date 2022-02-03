@@ -34,8 +34,9 @@ import io.github.rosemoe.sora.lang.styling.Span;
 public class SpanRecycler {
 
     private static SpanRecycler INSTANCE;
-    private final BlockingQueue<List<List<Span>>> taskQueue;
+    private final BlockingQueue<List<Span>> taskQueue;
     private Thread recycleThread;
+
     private SpanRecycler() {
         taskQueue = new ArrayBlockingQueue<>(8);
     }
@@ -47,7 +48,7 @@ public class SpanRecycler {
         return INSTANCE;
     }
 
-    public void recycle(List<List<Span>> spans) {
+    public void recycle(List<Span> spans) {
         if (spans == null) {
             return;
         }
@@ -72,19 +73,16 @@ public class SpanRecycler {
             try {
                 while (!isInterrupted()) {
                     try {
-                        List<List<Span>> spanMap = taskQueue.take();
+                        var spans = taskQueue.take();
                         int count = 0;
-                        for (List<Span> spans : spanMap) {
-                            int size = spans.size();
-                            for (int i = 0; i < size; i++) {
-                                var recycled = spans.remove(size - 1 - i).recycle();
-                                if (!recycled) {
-                                    break;
-                                }
-                                count++;
+                        int size = spans.size();
+                        for (int i = 0; i < size; i++) {
+                            var recycled = spans.remove(size - 1 - i).recycle();
+                            if (!recycled) {
+                                break;
                             }
+                            count++;
                         }
-                        spanMap.clear();
                         Log.i(LOG_TAG, "Called recycle() on " + count + " spans");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
