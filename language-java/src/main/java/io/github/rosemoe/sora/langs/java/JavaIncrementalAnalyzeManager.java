@@ -208,6 +208,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                 case DOUBLE:
                 case SHORT:
                 case VOID:
+                case VAR:
                     classNamePrevious = true;
                     spans.add(Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false)));
                     break;
@@ -255,7 +256,6 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                 case TRUE:
                 case FALSE:
                 case NULL:
-                case VAR:
                 case SEALED:
                 case PERMITS:
                     classNamePrevious = false;
