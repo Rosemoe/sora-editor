@@ -27,14 +27,15 @@ import android.graphics.Color;
 
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.Collections;
 import java.util.List;
 
 import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager;
-import io.github.rosemoe.sora.lang.analysis.UIThreadIncrementalAnalyzeManager;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
+import io.github.rosemoe.sora.langs.textmate.folding.IndentRange;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.textmate.core.grammar.IGrammar;
 import io.github.rosemoe.sora.textmate.core.grammar.ITokenizeLineResult2;
@@ -44,17 +45,23 @@ import io.github.rosemoe.sora.textmate.core.registry.Registry;
 import io.github.rosemoe.sora.textmate.core.theme.FontStyle;
 import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
 import io.github.rosemoe.sora.textmate.core.theme.Theme;
+import io.github.rosemoe.sora.textmate.languageconfiguration.ILanguageConfiguration;
 import io.github.rosemoe.sora.textmate.languageconfiguration.internal.LanguageConfigurator;
 import io.github.rosemoe.sora.util.ArrayList;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<StackElement, Span> {
 
+    /**
+     * Maximum for code block count
+     */
+    public static int MAX_FOLDING_REGIONS_FOR_INDENT_LIMIT = 5000;
+
     private final Registry registry = new Registry();
     private final IGrammar grammar;
     private Theme theme;
-    private BlockLineAnalyzer blockLineAnalyzer;
     private final TextMateLanguage language;
+    private final ILanguageConfiguration configuration;
 
     public TextMateAnalyzer(TextMateLanguage language, String grammarName, InputStream grammarIns, Reader languageConfiguration, IRawTheme theme) throws Exception {
         registry.setTheme(theme);
@@ -63,7 +70,9 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<StackElemen
         this.grammar = registry.loadGrammarFromPathSync(grammarName, grammarIns);
         if (languageConfiguration != null) {
             LanguageConfigurator languageConfigurator = new LanguageConfigurator(languageConfiguration);
-            blockLineAnalyzer = new BlockLineAnalyzer(languageConfigurator.getLanguageConfiguration());
+            configuration = languageConfigurator.getLanguageConfiguration();
+        } else {
+            configuration = null;
         }
     }
 
@@ -84,10 +93,42 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<StackElemen
     }
 
     @Override
-    public List<CodeBlock> computeBlocks(Content text) {
+    public List<CodeBlock> computeBlocks(Content text, CodeBlockAnalyzeDelegate delegate) {
         var list = new java.util.ArrayList<CodeBlock>();
-        blockLineAnalyzer.analyze(language, text, list);
+        analyzeCodeBlocks(text, list, delegate);
         return list;
+    }
+
+    public void analyzeCodeBlocks( Content model, List<CodeBlock> blocks, CodeBlockAnalyzeDelegate delegate) {
+        if (configuration == null) {
+            return;
+        }
+        var folding = configuration.getFolding();
+        if (folding == null) return;
+        try {
+            var foldingRegions = IndentRange.computeRanges(model, language.getTabSize(), folding.getOffSide(), folding, MAX_FOLDING_REGIONS_FOR_INDENT_LIMIT, delegate);
+            for (int i = 0; i < foldingRegions.length() && delegate.isNotCancelled(); i++) {
+                int startLine = foldingRegions.getStartLineNumber(i);
+                int endLine = foldingRegions.getEndLineNumber(i);
+                if (startLine != endLine) {
+                    CodeBlock codeBlock = new CodeBlock();
+                    codeBlock.toBottomOfEndLine = true;
+                    codeBlock.startLine = startLine;
+                    codeBlock.endLine = endLine;
+
+                    // It's safe here to use raw data because the Content is only held by this thread
+                    var length = model.getColumnCount(startLine);
+                    var chars = model.getLine(startLine).getRawData();
+
+                    codeBlock.startColumn = IndentRange.computeStartColumn(chars, length, language.getTabSize());
+                    codeBlock.endColumn = codeBlock.startColumn;
+                    blocks.add(codeBlock);
+                }
+            }
+            Collections.sort(blocks, CodeBlock.COMPARATOR_END);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.textmate.core.internal.oniguruma.OnigRegExp;
 import io.github.rosemoe.sora.textmate.core.internal.oniguruma.OnigResult;
@@ -95,7 +96,8 @@ public class IndentRange {
         return indent;
     }
 
-    public static FoldingRegions computeRanges(Content model,int tabSize , boolean offSide, Folding markers, int foldingRangesLimit) throws Exception {
+    @SuppressWarnings("rawtype")
+    public static FoldingRegions computeRanges(Content model, int tabSize , boolean offSide, Folding markers, int foldingRangesLimit, AsyncIncrementalAnalyzeManager.CodeBlockAnalyzeDelegate delegate) throws Exception {
 
         RangesCollector result = new RangesCollector(foldingRangesLimit, tabSize);
 
@@ -109,7 +111,7 @@ public class IndentRange {
         // sentinel, to make sure there's at least one entry
         previousRegions.add(new PreviousRegion(-1, line, line));
 
-        for (line = model.getLineCount() - 1; line >= 0; line--) {
+        for (line = model.getLineCount() - 1; line >= 0 && delegate.isNotCancelled(); line--) {
             String lineContent = model.getLineString(line);
             int indent = computeIndentLevel(model.getLine(line).getRawData(), model.getColumnCount(line), tabSize);
             PreviousRegion previous = previousRegions.get(previousRegions.size() - 1);

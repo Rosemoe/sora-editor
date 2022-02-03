@@ -53,6 +53,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
     private ContentReference ref;
     private Bundle extraArguments;
     private LooperThread thread;
+    private volatile long runCount;
     private static int sThreadId = 0;
     private final static int MSG_BASE = 11451400;
     private final static int MSG_INIT = MSG_BASE + 1;
@@ -74,6 +75,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
     @Override
     public void insert(CharPosition start, CharPosition end, CharSequence insertedText) {
         if (thread != null) {
+            increaseRunCount();
             thread.handler.sendMessage(thread.handler.obtainMessage(MSG_MOD, new TextModification(IntPair.pack(start.line, start.column), IntPair.pack(end.line, end.column), insertedText)));
             sendUpdate(thread.styles);
         }
@@ -82,6 +84,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
     @Override
     public void delete(CharPosition start, CharPosition end, CharSequence deletedText) {
         if (thread != null) {
+            increaseRunCount();
             thread.handler.sendMessage(thread.handler.obtainMessage(MSG_MOD, new TextModification(IntPair.pack(start.line, start.column), IntPair.pack(end.line, end.column), null)));
             sendUpdate(thread.styles);
         }
@@ -100,8 +103,13 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         text.setUndoEnabled(false);
         thread = new LooperThread(() -> thread.handler.sendMessage(thread.handler.obtainMessage(MSG_INIT, text)));
         thread.setName("AsyncAnalyzer-" + nextThreadId());
+        increaseRunCount();
         thread.start();
         sendUpdate(null);
+    }
+
+    private synchronized void increaseRunCount() {
+        runCount ++;
     }
 
     private synchronized static int nextThreadId() {
@@ -135,10 +143,40 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
      * Compute code blocks
      * @param text The text. can be safely accessed.
      */
-    public abstract List<CodeBlock> computeBlocks(Content text);
+    public abstract List<CodeBlock> computeBlocks(Content text, CodeBlockAnalyzeDelegate delegate);
 
     public Bundle getExtraArguments() {
         return extraArguments;
+    }
+
+    /**
+     * Helper class for analyzing code block
+     */
+    public class CodeBlockAnalyzeDelegate {
+
+        private final LooperThread thread;
+        int suppressSwitch;
+
+        CodeBlockAnalyzeDelegate(@NonNull LooperThread lp) {
+            thread = lp;
+        }
+
+        public void setSuppressSwitch(int suppressSwitch) {
+            this.suppressSwitch = suppressSwitch;
+        }
+
+        void reset() {
+            suppressSwitch = Integer.MAX_VALUE;
+        }
+
+        public boolean isCancelled() {
+            return thread.myRunCount != runCount;
+        }
+
+        public boolean isNotCancelled() {
+            return thread.myRunCount == runCount;
+        }
+
     }
 
     private class LooperThread extends Thread {
@@ -147,11 +185,13 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         Looper looper;
         Handler handler;
         Content shadowed;
+        long myRunCount;
 
         List<LineTokenizeResult<S, T>> states = new ArrayList<>();
         Styles styles;
         LockedSpans spans;
-        private Runnable callback;
+        Runnable callback;
+        CodeBlockAnalyzeDelegate delegate = new CodeBlockAnalyzeDelegate(this);
 
         public LooperThread(Runnable callback) {
             this.callback = callback;
@@ -173,7 +213,8 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                 states.add(result.clearSpans());
                 mdf.addLineAt(i, spans);
             }
-            styles.blocks = computeBlocks(shadowed);
+            styles.blocks = computeBlocks(shadowed, delegate);
+            styles.setSuppressSwitch(delegate.suppressSwitch);
             tryUpdate();
         }
 
@@ -187,6 +228,8 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                 public void handleMessage(@NonNull Message msg) {
                     super.handleMessage(msg);
                     try {
+                        myRunCount = runCount;
+                        delegate.reset();
                         switch (msg.what) {
                             case MSG_INIT:
                                 shadowed = (Content) msg.obj;
@@ -253,7 +296,8 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                                         }
                                     }
                                 }
-                                styles.blocks = computeBlocks(shadowed);
+                                styles.blocks = computeBlocks(shadowed, delegate);
+                                styles.setSuppressSwitch(delegate.suppressSwitch);
                                 tryUpdate();
                                 break;
                             case MSG_EXIT:
