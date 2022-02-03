@@ -114,6 +114,11 @@ public abstract class UIThreadIncrementalAnalyzeManager<S, T> implements Increme
     }
 
     @Override
+    public LineTokenizeResult<S, T> getState(int line) {
+        return states.get(line);
+    }
+
+    @Override
     public void rerun() {
         states.clear();
         S state = getInitialState();

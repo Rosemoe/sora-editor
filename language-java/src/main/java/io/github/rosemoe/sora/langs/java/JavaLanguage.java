@@ -49,11 +49,11 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
 public class JavaLanguage implements Language {
 
     private IdentifierAutoComplete autoComplete;
-    private JavaAnalyzeManager manager;
+    private JavaIncrementalAnalyzeManager manager;
 
     public JavaLanguage() {
         autoComplete = new IdentifierAutoComplete(JavaTextTokenizer.sKeywords);
-        manager = new JavaAnalyzeManager();
+        manager = new JavaIncrementalAnalyzeManager();
     }
 
     @NonNull
@@ -76,7 +76,10 @@ public class JavaLanguage implements Language {
     public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position,
                                     @NonNull CompletionPublisher publisher, @NonNull Bundle extraArguments) {
         var prefix = CompletionHelper.computePrefix(content, position, MyCharacter::isJavaIdentifierPart);
-        autoComplete.requireAutoComplete(prefix, publisher, manager.getData());
+        final var idt = manager.identifiers;
+        if (idt != null) {
+            autoComplete.requireAutoComplete(prefix, publisher, idt);
+        }
     }
 
     @Override

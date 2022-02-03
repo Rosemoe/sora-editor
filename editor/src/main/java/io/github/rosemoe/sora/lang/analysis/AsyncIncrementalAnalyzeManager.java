@@ -108,6 +108,15 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         sendUpdate(null);
     }
 
+    @Override
+    public LineTokenizeResult<S, T> getState(int line) {
+        final var thread = this.thread;
+        if (thread == Thread.currentThread()) {
+            return thread.states.get(line);
+        }
+        throw new SecurityException("Can not get state from non-analytical or abandoned thread");
+    }
+
     private synchronized void increaseRunCount() {
         runCount ++;
     }

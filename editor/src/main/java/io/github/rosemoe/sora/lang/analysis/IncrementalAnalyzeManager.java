@@ -43,6 +43,11 @@ public interface IncrementalAnalyzeManager<S, T> extends AnalyzeManager {
     S getInitialState();
 
     /**
+     * Get recorded state for subclass
+     */
+    LineTokenizeResult<S, T> getState(int line);
+
+    /**
      * Compare the two states.
      * Return true if they equal
      */
