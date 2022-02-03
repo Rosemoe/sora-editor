@@ -37,6 +37,8 @@ import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
 public class TextMateLanguage extends EmptyLanguage {
 
     private TextMateAnalyzer textMateAnalyzer;
+    private int tabSize = 4;
+
     private TextMateLanguage(String grammarName, InputStream grammarIns, Reader languageConfiguration, IRawTheme theme) {
         try {
             textMateAnalyzer = new TextMateAnalyzer(this,grammarName, grammarIns,languageConfiguration, theme);
@@ -77,7 +79,14 @@ public class TextMateLanguage extends EmptyLanguage {
         super.destroy();
     }
 
+    /**
+     * Set tab size. The tab size is used to compute code blocks.
+     */
+    public void setTabSize(int tabSize) {
+        this.tabSize = tabSize;
+    }
+
     public int getTabSize() {
-        return 4;
+        return tabSize;
     }
 }
