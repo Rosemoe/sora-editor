@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.langs.textmate.folding;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 import io.github.rosemoe.sora.text.Content;
@@ -35,13 +37,17 @@ public class IndentRange {
     public static final int MAX_LINE_NUMBER = 0xFFFFFF;
     public static final int MAX_FOLDING_REGIONS = 0xFFFF;
     public static final int MASK_INDENT = 0xFF000000;
-    public static int computeStartColumn(String line, int tabSize) {
+
+    // START sora-editor note
+    // Change String to char[] and int
+    // END sora-editor note
+
+    public static int computeStartColumn(char[] line, int len, int tabSize) {
         int column = 0;
         int i = 0;
-        int len = line.length();
 
         while (i < len) {
-            char chCode = line.charAt(i);
+            char chCode = line[i];
             if (chCode == ' ') {
                 column++;
             } else if (chCode == '\t') {
@@ -65,13 +71,12 @@ public class IndentRange {
      * - -1 => the line consists of whitespace
      * - otherwise => the indent level is returned value
      */
-    public static int computeIndentLevel(String line, int tabSize) {
+    public static int computeIndentLevel(char[] line, int len, int tabSize) {
         int indent = 0;
         int i = 0;
-        int len = line.length();
 
         while (i < len) {
-            char chCode = line.charAt(i);
+            char chCode = line[i];
             if (chCode == ' ') {
                 indent++;
             } else if (chCode == '\t') {
@@ -99,14 +104,14 @@ public class IndentRange {
             pattern = new OnigRegExp("(" + markers.getMarkersStart() + ")|(?:" + markers.getMarkersEnd() + ")");
         }
 
-        Stack<PreviousRegion> previousRegions = new Stack<>();
+        List<PreviousRegion> previousRegions = new ArrayList<>();
         int line = model.getLineCount() + 1;
         // sentinel, to make sure there's at least one entry
-        previousRegions.push(new PreviousRegion(-1, line, line));
+        previousRegions.add(new PreviousRegion(-1, line, line));
 
         for (line = model.getLineCount() - 1; line >= 0; line--) {
             String lineContent = model.getLineString(line);
-            int indent = computeIndentLevel(lineContent, tabSize);
+            int indent = computeIndentLevel(model.getLine(line).getRawData(), model.getColumnCount(line), tabSize);
             PreviousRegion previous = previousRegions.get(previousRegions.size() - 1);
             if (indent == -1) {
                 if (offSide) {
@@ -140,14 +145,14 @@ public class IndentRange {
                         // no end marker found, treat line as a regular line
                     }
                 } else { // end pattern match
-                    previousRegions.push(new PreviousRegion(-2, line, line));
+                    previousRegions.add(new PreviousRegion(-2, line, line));
                     continue;
                 }
             }
             if (previous.indent > indent) {
                 // discard all regions with larger indent
                 do {
-                    previousRegions.pop();
+                    previousRegions.remove(previousRegions.size() - 1);
                     previous = previousRegions.get(previousRegions.size() - 1);
                 } while (previous.indent > indent);
 
@@ -161,7 +166,7 @@ public class IndentRange {
                 previous.endAbove = line;
             } else { // previous.indent < indent
                 // new region with a bigger indent
-                previousRegions.push(new PreviousRegion(indent, line, line));
+                previousRegions.add(new PreviousRegion(indent, line, line));
             }
         }
         return result.toIndentRanges(model);

@@ -84,8 +84,7 @@ public class RangesCollector {
             SparseIntArray endIndexes = new SparseIntArray(this._foldingRangesLimit);
             for (int i = this._length - 1, k = 0; i >= 0; i--) {
                 int startIndex = this._startIndexes.get(i);
-                String lineContent = model.getLineString(startIndex);
-                int indent = IndentRange.computeIndentLevel(lineContent, tabSize);
+                int indent = IndentRange.computeIndentLevel(model.getLine(startIndex).getRawData(), model.getColumnCount(startIndex), tabSize);
                 if (indent < maxIndent || (indent == maxIndent && entries++ < this._foldingRangesLimit)) {
                     startIndexes.put(k, startIndex);
                     endIndexes.put(k, this._endIndexes.get(i));

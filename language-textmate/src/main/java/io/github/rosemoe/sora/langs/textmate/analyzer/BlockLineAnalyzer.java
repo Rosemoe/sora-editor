@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.langs.textmate.analyzer;
 
+import android.util.Log;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -45,37 +47,34 @@ public class BlockLineAnalyzer {
     }
 
     public void analyze(TextMateLanguage language, Content model, List<CodeBlock> blocks) {
-        Folding folding = configuration.getFolding();
+        long start = System.nanoTime();
+        var folding = configuration.getFolding();
         if (folding == null) return;
-        FoldingRegions foldingRegions = null;
         try {
-            foldingRegions = IndentRange.computeRanges(model, language.getTabSize(), folding.getOffSide(), folding, MAX_FOLDING_REGIONS_FOR_INDENT_LIMIT);
+            var foldingRegions = IndentRange.computeRanges(model, language.getTabSize(), folding.getOffSide(), folding, MAX_FOLDING_REGIONS_FOR_INDENT_LIMIT);
             for (int i = 0; i < foldingRegions.length(); i++) {
-                FoldingRegion foldingRegion = foldingRegions.toRegion(i);
-                int startLine = foldingRegion.getStartLineNumber();
-                int endLine = foldingRegion.getEndLineNumber();
+                int startLine = foldingRegions.getStartLineNumber(i);
+                int endLine = foldingRegions.getEndLineNumber(i);
                 if (startLine != endLine) {
                     CodeBlock codeBlock = new CodeBlock();
                     codeBlock.toBottomOfEndLine = true;
                     codeBlock.startLine = startLine;
                     codeBlock.endLine = endLine;
-                    String line = model.getLineString(startLine);
-                    codeBlock.startColumn = IndentRange.computeStartColumn(line, language.getTabSize());
-//                    line= model.getLineString(endLine);
-//                    int endColumn=IndentRange.computeStartColumn(line,language.getTabSize());
-                    codeBlock.endColumn = codeBlock.startColumn;
 
+                    // It's safe here to use raw data because the Content is only held by this thread
+                    var length = model.getColumnCount(startLine);
+                    var chars = model.getLine(startLine).getRawData();
+
+                    codeBlock.startColumn = IndentRange.computeStartColumn(chars, length, language.getTabSize());
+                    codeBlock.endColumn = codeBlock.startColumn;
                     blocks.add(codeBlock);
                 }
             }
-
-            Collections.sort(blocks, (o1, o2) -> o1.endLine - o2.endLine);
-
+            Collections.sort(blocks, CodeBlock.COMPARATOR_END);
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
+        Log.e("tm-folding", "Time cost=" + (System.nanoTime() - start) / 10e6 + " ms");
     }
 
 }
