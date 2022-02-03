@@ -2900,7 +2900,13 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                 begin = end;
                 end = tmp;
             }
-            mText.delete(cur.getLeftLine(), begin, cur.getLeftLine(), end);
+            if (begin == end) {
+                if (cur.getLeftLine() > 0) {
+                    mText.delete(cur.getLeftLine() - 1, mText.getColumnCount(cur.getLeftLine() - 1), cur.getLeftLine(), 0);
+                }
+            } else {
+                mText.delete(cur.getLeftLine(), begin, cur.getLeftLine(), end);
+            }
         }
     }
 
