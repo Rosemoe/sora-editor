@@ -90,19 +90,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     public EditorTouchEventHandler(CodeEditor editor) {
         mEditor = editor;
         mScroller = new OverScroller(editor.getContext());
-        maxSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 32, Resources.getSystem().getDisplayMetrics());
-        minSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 6, Resources.getSystem().getDisplayMetrics());
+        maxSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 26, Resources.getSystem().getDisplayMetrics());
+        minSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 8, Resources.getSystem().getDisplayMetrics());
         mMagnifier = new Magnifier(editor);
-    }
-
-    /**
-     * Whether this character is a part of word
-     *
-     * @param ch Character to check
-     * @return Whether a part of word
-     */
-    private static boolean isIdentifierPart(char ch) {
-        return Character.isJavaIdentifierPart(ch);
     }
 
     public boolean hasAnyHeldHandle() {
@@ -632,7 +622,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         if (mEditor.isScalable()) {
             float newSize = mEditor.getTextSizePx() * detector.getScaleFactor();
             if (newSize < minSize || newSize > maxSize) {
-                return false;
+                return true;
             }
             float focusX = detector.getFocusX();
             float focusY = detector.getFocusY();
