@@ -5148,6 +5148,10 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
 
         void execute(Canvas canvas) {
+            // Hide cursors (API level 31)
+            if (mConnection.mImeConsumingInput) {
+                return;
+            }
             // Follow the thumb
             if (!descriptor.position.isEmpty()) {
                 if ((mEventHandler.holdInsertHandle() && handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT)

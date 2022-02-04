@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import android.os.Handler;
 import android.os.SystemClock;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -33,6 +34,10 @@ import android.view.KeyEvent;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
+import android.view.inputmethod.SurroundingText;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -53,6 +58,7 @@ class EditorInputConnection extends BaseInputConnection {
     protected int mComposingLine = -1;
     protected int mComposingStart = -1;
     protected int mComposingEnd = -1;
+    protected boolean mImeConsumingInput = false;
     private boolean mInvalid;
 
     /**
@@ -78,6 +84,7 @@ class EditorInputConnection extends BaseInputConnection {
     protected void reset() {
         mComposingEnd = mComposingStart = mComposingLine = -1;
         mInvalid = false;
+        mImeConsumingInput = false;
     }
 
     /**
@@ -208,13 +215,17 @@ class EditorInputConnection extends BaseInputConnection {
      * Perform enter key pressed
      */
     private void sendEnterKeyEvent() {
+        sendKeyClick(KeyEvent.KEYCODE_ENTER);
+    }
+
+    private void sendKeyClick(int keyCode) {
         long eventTime = SystemClock.uptimeMillis();
         sendKeyEvent(new KeyEvent(eventTime, eventTime,
-                KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER, 0, 0,
+                KeyEvent.ACTION_DOWN, keyCode, 0, 0,
                 KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
                 KeyEvent.FLAG_SOFT_KEYBOARD | KeyEvent.FLAG_KEEP_TOUCH_MODE));
         sendKeyEvent(new KeyEvent(SystemClock.uptimeMillis(), eventTime,
-                KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER, 0, 0,
+                KeyEvent.ACTION_UP, keyCode, 0, 0,
                 KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
                 KeyEvent.FLAG_SOFT_KEYBOARD | KeyEvent.FLAG_KEEP_TOUCH_MODE));
     }
@@ -529,6 +540,8 @@ class EditorInputConnection extends BaseInputConnection {
     public ExtractedText getExtractedText(ExtractedTextRequest request, int flags) {
         if ((flags & GET_EXTRACTED_TEXT_MONITOR) != 0) {
             mEditor.setExtracting(request);
+        } else {
+            mEditor.setExtracting(null);
         }
 
         return mEditor.extractText(request);
@@ -543,5 +556,32 @@ class EditorInputConnection extends BaseInputConnection {
     @Override
     public boolean reportFullscreenMode(boolean enabled) {
         return false;
+    }
+
+    @Override
+    public Handler getHandler() {
+        return mEditor.getHandler();
+    }
+
+    @Nullable
+    @Override
+    @RequiresApi(31)
+    public SurroundingText getSurroundingText(int beforeLength, int afterLength, int flags) {
+        if ((beforeLength | afterLength) < 0) {
+            throw new IllegalArgumentException("length < 0");
+        }
+        int startOffset = Math.min(0, getCursor().getLeft() - beforeLength);
+        var text = (Spanned) getTextRegion(startOffset, Math.min(mEditor.getText().length(), getCursor().getRight() + afterLength), flags);
+        return new SurroundingText(text, getCursor().getLeft() - startOffset, getCursor().getRight() - startOffset, startOffset);
+    }
+
+    @Override
+    public boolean setImeConsumesInput(boolean imeConsumesInput) {
+        if (mInvalid) {
+            return false;
+        }
+        mImeConsumingInput = imeConsumesInput;
+        mEditor.invalidate();
+        return true;
     }
 }
