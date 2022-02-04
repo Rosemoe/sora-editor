@@ -165,6 +165,32 @@ public class LineBreakLayout extends AbstractLayout {
         return 1;
     }
 
+    @Override
+    public long getDownPosition(int line, int column) {
+        int c_line = text.getLineCount();
+        if (line + 1 >= c_line) {
+            return IntPair.pack(line, text.getColumnCount(line));
+        } else {
+            int c_column = text.getColumnCount(line + 1);
+            if (column > c_column) {
+                column = c_column;
+            }
+            return IntPair.pack(line + 1, column);
+        }
+    }
+
+    @Override
+    public long getUpPosition(int line, int column) {
+        if (line - 1 < 0) {
+            return IntPair.pack(0, 0);
+        }
+        int c_column = text.getColumnCount(line - 1);
+        if (column > c_column) {
+            column = c_column;
+        }
+        return IntPair.pack(line - 1, column);
+    }
+
     class LineBreakLayoutRowItr implements RowIterator {
 
         private final Row result;

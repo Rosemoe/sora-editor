@@ -239,44 +239,6 @@ public final class Cursor {
     }
 
     /**
-     * Get position after moving up once
-     * @param position A packed pair (line, column) describing the original position
-     * @return A packed pair (line, column) describing the result position
-     */
-    public long getUpOf(long position) {
-        int line = IntPair.getFirst(position);
-        int column = IntPair.getSecond(position);
-        if (line - 1 < 0) {
-            return IntPair.pack(0, 0);
-        }
-        int c_column = mContent.getColumnCount(line - 1);
-        if (column > c_column) {
-            column = c_column;
-        }
-        return IntPair.pack(line - 1, column);
-    }
-
-    /**
-     * Get position after moving down once
-     * @param position A packed pair (line, column) describing the original position
-     * @return A packed pair (line, column) describing the result position
-     */
-    public long getDownOf(long position) {
-        int line = IntPair.getFirst(position);
-        int column = IntPair.getSecond(position);
-        int c_line = mContent.getLineCount();
-        if (line + 1 >= c_line) {
-            return IntPair.pack(line, mContent.getColumnCount(line));
-        } else {
-            int c_column = mContent.getColumnCount(line + 1);
-            if (column > c_column) {
-                column = c_column;
-            }
-            return IntPair.pack(line + 1, column);
-        }
-    }
-
-    /**
      * Get copy of left cursor
      */
     public CharPosition left() {

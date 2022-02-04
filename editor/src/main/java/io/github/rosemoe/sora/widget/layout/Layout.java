@@ -109,4 +109,16 @@ public interface Layout extends LineRemoveListener, ContentListener {
      */
     int getRowCountForLine(int line);
 
+    /**
+     * Get position after moving up once
+     * @return A packed pair (line, column) describing the result position
+     */
+    long getUpPosition(int line, int column);
+
+    /**
+     * Get position after moving down once
+     * @return A packed pair (line, column) describing the result position
+     */
+    long getDownPosition(int line, int column);
+
 }

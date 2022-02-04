@@ -378,9 +378,9 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * Replace the built-in component to the given one.
      * The new component's enabled state will extend the old one.
      *
-     * @param clazz Built-in class type. Such as {@code EditorAutoCompletion.class}
+     * @param clazz       Built-in class type. Such as {@code EditorAutoCompletion.class}
      * @param replacement The new component to apply
-     * @param <T> Type of built-in component
+     * @param <T>         Type of built-in component
      */
     public <T extends EditorBuiltinComponent> void replaceComponent(@NonNull Class<T> clazz, @NonNull T replacement) {
         var old = getComponent(clazz);
@@ -477,7 +477,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     /**
      * Get the character's y offset on view
      *
-     * @param line The line position of character
+     * @param line   The line position of character
      * @param column The column position of character
      * @return The y offset on view
      */
@@ -2399,6 +2399,14 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
+     * Get the layout of editor
+     */
+    @UnsupportedUserUsage
+    public Layout getLayout() {
+        return mLayout;
+    }
+
+    /**
      * Get EdgeEffect for vertical direction
      *
      * @return EdgeEffect
@@ -3769,11 +3777,11 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                 mCompletionWindow.moveDown();
                 return;
             }
-            long pos = mCursor.getDownOf(IntPair.pack(mCursor.getLeftLine(), mCursor.getLeftColumn()));
+            long pos = mLayout.getDownPosition(mCursor.getLeftLine(), mCursor.getLeftColumn());
             setSelection(IntPair.getFirst(pos), IntPair.getSecond(pos));
         } else {
             mCompletionWindow.hide();
-            long pos = mCursor.getDownOf(getSelectingTarget().toIntPair());
+            long pos = mLayout.getDownPosition(getSelectingTarget().getLine(), getSelectingTarget().getColumn());
             setSelectionRegion(mSelectionAnchor.line, mSelectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
             ensureSelectingTargetVisible();
         }
@@ -3789,11 +3797,11 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                 mCompletionWindow.moveUp();
                 return;
             }
-            long pos = mCursor.getUpOf(IntPair.pack(mCursor.getLeftLine(), mCursor.getLeftColumn()));
+            long pos = mLayout.getUpPosition(mCursor.getLeftLine(), mCursor.getLeftColumn());
             setSelection(IntPair.getFirst(pos), IntPair.getSecond(pos));
         } else {
             mCompletionWindow.hide();
-            long pos = mCursor.getUpOf(getSelectingTarget().toIntPair());
+            long pos = mLayout.getUpPosition(getSelectingTarget().getLine(), getSelectingTarget().getColumn());
             setSelectionRegion(mSelectionAnchor.line, mSelectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
             ensureSelectingTargetVisible();
         }

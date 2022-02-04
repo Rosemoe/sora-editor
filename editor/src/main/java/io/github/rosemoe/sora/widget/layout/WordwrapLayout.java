@@ -71,16 +71,28 @@ public class WordwrapLayout extends AbstractLayout {
     }
 
     private int findRow(int line) {
-        int index = 0;
-        while (index < rowTable.size()) {
-            if (rowTable.get(index).line < line) {
-                index++;
-            } else {
-                if (rowTable.get(index).line > line) {
-                    index--;
-                }
+        int index;
+        // Binary find line
+        int left = 0, right = rowTable.size();
+        while (left <= right) {
+            var mid = (left + right) / 2;
+            if (mid < 0 || mid >= rowTable.size()) {
+                left = Math.min(rowTable.size() - 1, Math.max(0, mid));
                 break;
             }
+            int value = rowTable.get(mid).line;
+            if (value < line) {
+                left = mid + 1;
+            } else if (value > line) {
+                right = mid - 1;
+            } else {
+                left = mid;
+                break;
+            }
+        }
+        index = left;
+        while (rowTable.get(index).startColumn > 0) {
+            index --;
         }
         return index;
     }
@@ -192,6 +204,41 @@ public class WordwrapLayout extends AbstractLayout {
     @Override
     public RowIterator obtainRowIterator(int initialRow) {
         return new WordwrapLayoutRowItr(initialRow);
+    }
+
+    private int findRow(int line, int column) {
+        int row = findRow(line);
+        while (rowTable.get(row).endColumn <= column && row + 1 < rowTable.size() && rowTable.get(row + 1).line == line) {
+            row ++;
+        }
+        return row;
+    }
+
+    @Override
+    public long getUpPosition(int line, int column) {
+        int row = findRow(line, column);
+        if (row > 0) {
+            var offset = column - rowTable.get(row).startColumn;
+            var lastRow = rowTable.get(row - 1);
+            var max = lastRow.endColumn - lastRow.startColumn;
+            offset = Math.min(offset, max);
+            return IntPair.pack(lastRow.line, lastRow.startColumn + offset);
+        }
+        return IntPair.pack(0, 0);
+    }
+
+    @Override
+    public long getDownPosition(int line, int column) {
+        int row = findRow(line, column);
+        if (row + 1 < rowTable.size()) {
+            var offset = column - rowTable.get(row).startColumn;
+            var nextRow = rowTable.get(row + 1);
+            var max = nextRow.endColumn - nextRow.startColumn;
+            offset = Math.min(offset, max);
+            return IntPair.pack(nextRow.line, nextRow.startColumn + offset);
+        } else {
+            return IntPair.pack(line, text.getColumnCount(line));
+        }
     }
 
     @Override
