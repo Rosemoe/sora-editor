@@ -51,10 +51,7 @@ import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 public final class EditorTouchEventHandler implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
 
     private final static int HIDE_DELAY = 3000;
-    private final static int SELECTION_HANDLE_RESIZE_DELAY = 180;
     private final static int HIDE_DELAY_HANDLE = 5000;
-    private static final long INTERACTION_END_DELAY = 250;
-    private static final String TAG = "EditorTouchEventHandler";
     private final CodeEditor mEditor;
     private final OverScroller mScroller;
     boolean topOrBottom; //true for bottom
@@ -723,7 +720,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
          * @param e Event sent by EventHandler
          */
         public void applyPosition(MotionEvent e) {
-            SelectionHandleStyle.HandleDescriptor descriptor = null;
+            SelectionHandleStyle.HandleDescriptor descriptor;
             switch (type) {
                 case LEFT:
                     descriptor = mEditor.getLeftHandleDescriptor();
