@@ -49,7 +49,7 @@ public class DirectAccessProps implements Serializable {
     public boolean deleteEmptyLineFast = true;
 
     /**
-     * Delete multiple space at a time when the user press the DELETE key.
+     * Delete multiple spaces at a time when the user press the DELETE key.
      * This only takes effect when selection is in leading spaces.
      *
      * Default Value: {@code 1}  -> The editor will always delete only 1 space.
