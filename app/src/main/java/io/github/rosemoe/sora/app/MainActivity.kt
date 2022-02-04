@@ -97,9 +97,9 @@ class MainActivity : AppCompatActivity() {
             nonPrintablePaintingFlags =
                 CodeEditor.FLAG_DRAW_WHITESPACE_LEADING or CodeEditor.FLAG_DRAW_LINE_SEPARATOR or CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION
             // Update display dynamically
-            binding.editor.subscribeEvent<SelectionChangeEvent> { _, _ -> updatePositionText() }
-            binding.editor.subscribeEvent<ContentChangeEvent> { _, _ ->
-                binding.editor.postDelayed(
+            subscribeEvent<SelectionChangeEvent> { _, _ -> updatePositionText() }
+            subscribeEvent<ContentChangeEvent> { _, _ ->
+                postDelayed(
                     ::updateBtnState,
                     50
                 )

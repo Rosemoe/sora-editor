@@ -39,7 +39,6 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.RenderNode;
 import android.graphics.Typeface;
-import android.icu.text.Bidi;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
@@ -1390,7 +1389,14 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
             int backgroundColorId = span.getBackgroundColorId();
             if (backgroundColorId != 0) {
-                drawRowRegionBackground(canvas, paintingOffset, row, 0, columnCount, paintStart, paintEnd, mColors.getColor(backgroundColorId), line);
+                if (paintStart != paintEnd) {
+                    mRect.top = getRowTop(row);
+                    mRect.bottom = getRowBottom(row);
+                    mRect.left = paintingOffset;
+                    mRect.right = mRect.left + width;
+                    mPaint.setColor(mColors.getColor(backgroundColorId));
+                    canvas.drawRoundRect(mRect, getRowHeight() * 0.13f, getRowHeight() * 0.13f, mPaint);
+                }
             }
 
 
@@ -1693,7 +1699,14 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
                     int backgroundColorId = span.getBackgroundColorId();
                     if (backgroundColorId != 0) {
-                        drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, paintStart, paintEnd, mColors.getColor(backgroundColorId), line);
+                        if (paintStart != paintEnd) {
+                            mRect.top = getRowTop(row) - getOffsetY();
+                            mRect.bottom = getRowBottom(row) - getOffsetY();
+                            mRect.left = paintingOffset;
+                            mRect.right = mRect.left + width;
+                            mPaint.setColor(mColors.getColor(backgroundColorId));
+                            canvas.drawRoundRect(mRect, getRowHeight() * 0.13f, getRowHeight() * 0.13f, mPaint);
+                        }
                     }
 
                     // Draw text
