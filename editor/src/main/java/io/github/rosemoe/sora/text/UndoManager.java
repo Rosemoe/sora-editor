@@ -23,6 +23,9 @@
  */
 package io.github.rosemoe.sora.text;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,9 +33,30 @@ import java.util.List;
  * Helper class for Content to take down modification
  * As well as provide Undo/Redo actions
  *
- * @author Rose
+ * @author Rosemoe
  */
-final class UndoManager implements ContentListener {
+public final class UndoManager implements ContentListener, Parcelable {
+
+    public final static Creator<UndoManager> CREATOR = new Creator<>() {
+        @Override
+        public UndoManager createFromParcel(Parcel parcel) {
+            var o = new UndoManager();
+            o.mMaxStackSize = parcel.readInt();
+            o.mStackPointer = parcel.readInt();
+            o.mUndoEnabled = parcel.readInt() > 0;
+            var count = parcel.readInt();
+            while (count > 0) {
+                o.mActionStack.add(parcel.readParcelable(UndoManager.class.getClassLoader()));
+                count --;
+            }
+            return o;
+        }
+
+        @Override
+        public UndoManager[] newArray(int flags) {
+            return new UndoManager[flags];
+        }
+    };
 
     private final List<ContentAction> mActionStack;
     private boolean mUndoEnabled;
@@ -53,6 +77,22 @@ final class UndoManager implements ContentListener {
         mDeleteAction = null;
         mStackPointer = 0;
         mIgnoreModification = false;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int flags) {
+        parcel.writeInt(mMaxStackSize);
+        parcel.writeInt(mStackPointer);
+        parcel.writeInt(mUndoEnabled ? 1 : 0);
+        parcel.writeInt(mActionStack.size());
+        for (ContentAction contentAction : mActionStack) {
+            parcel.writeParcelable(contentAction, flags);
+        }
     }
 
     /**
@@ -273,7 +313,7 @@ final class UndoManager implements ContentListener {
      *
      * @author Rose
      */
-    public interface ContentAction {
+    public interface ContentAction extends Parcelable {
 
         /**
          * Undo this action
@@ -354,6 +394,37 @@ final class UndoManager implements ContentListener {
             sb.append(ac.text);
         }
 
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel parcel, int flags) {
+            parcel.writeInt(startLine);
+            parcel.writeInt(startColumn);
+            parcel.writeInt(endLine);
+            parcel.writeInt(endColumn);
+            parcel.writeString(text.toString());
+        }
+
+        public static final Creator<InsertAction> CREATOR = new Creator<>() {
+            @Override
+            public InsertAction createFromParcel(Parcel parcel) {
+                var o = new InsertAction();
+                o.startLine = parcel.readInt();
+                o.startColumn = parcel.readInt();
+                o.endLine = parcel.readInt();
+                o.endColumn = parcel.readInt();
+                o.text = parcel.readString();
+                return o;
+            }
+
+            @Override
+            public InsertAction[] newArray(int size) {
+                return new InsertAction[size];
+            }
+        };
     }
 
     /**
@@ -402,6 +473,36 @@ final class UndoManager implements ContentListener {
             throw new UnsupportedOperationException();
         }
 
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel parcel, int flags) {
+            parcel.writeInt(_actions.size());
+            for (ContentAction action : _actions) {
+                parcel.writeParcelable(action, flags);
+            }
+        }
+
+        public final static Creator<MultiAction> CREATOR = new Creator<>() {
+            @Override
+            public MultiAction createFromParcel(Parcel parcel) {
+                var o = new MultiAction();
+                var count = parcel.readInt();
+                while (count > 0) {
+                    o._actions.add(parcel.readParcelable(MultiAction.class.getClassLoader()));
+                    count--;
+                }
+                return o;
+            }
+
+            @Override
+            public MultiAction[] newArray(int size) {
+                return new MultiAction[size];
+            }
+        };
     }
 
     /**
@@ -452,6 +553,37 @@ final class UndoManager implements ContentListener {
             sb.insert(0, ac.text);
         }
 
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel parcel, int flags) {
+            parcel.writeInt(startLine);
+            parcel.writeInt(startColumn);
+            parcel.writeInt(endLine);
+            parcel.writeInt(endColumn);
+            parcel.writeString(text.toString());
+        }
+
+        public final static Creator<DeleteAction> CREATOR = new Creator<>() {
+            @Override
+            public DeleteAction createFromParcel(Parcel parcel) {
+                var o = new DeleteAction();
+                o.startLine = parcel.readInt();
+                o.startColumn = parcel.readInt();
+                o.endLine = parcel.readInt();
+                o.endColumn = parcel.readInt();
+                o.text = parcel.readString();
+                return o;
+            }
+
+            @Override
+            public DeleteAction[] newArray(int size) {
+                return new DeleteAction[size];
+            }
+        };
     }
 
     /**
@@ -486,5 +618,30 @@ final class UndoManager implements ContentListener {
             throw new UnsupportedOperationException();
         }
 
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel parcel, int flags) {
+            parcel.writeParcelable(_insert, flags);
+            parcel.writeParcelable(_delete, flags);
+        }
+
+        public final static Creator<ReplaceAction> CREATOR = new Creator<>() {
+            @Override
+            public ReplaceAction createFromParcel(Parcel parcel) {
+                var o = new ReplaceAction();
+                o._insert = parcel.readParcelable(ReplaceAction.class.getClassLoader());
+                o._delete = parcel.readParcelable(ReplaceAction.class.getClassLoader());
+                return o;
+            }
+
+            @Override
+            public ReplaceAction[] newArray(int size) {
+                return new ReplaceAction[size];
+            }
+        };
     }
 }

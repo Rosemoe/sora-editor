@@ -53,7 +53,7 @@ public class Content implements CharSequence {
     private int nestedBatchEdit;
     private final List<ContentListener> contentListeners;
     private Indexer indexer;
-    private final UndoManager undoManager;
+    private UndoManager undoManager;
     private Cursor cursor;
     private LineRemoveListener lineListener;
     private final ReadWriteLock lock;
@@ -753,6 +753,20 @@ public class Content implements CharSequence {
         var sb = new StringBuilder();
         appendToStringBuilder(sb);
         return sb;
+    }
+
+    /**
+     * Set undo manager. You may use this to recover to a previously saved state of undo stack.
+     */
+    public void setUndoManager(UndoManager manager) {
+        this.undoManager = manager;
+    }
+
+    /**
+     * Get UndoManager instance in use
+     */
+    public UndoManager getUndoManager() {
+        return undoManager;
     }
 
     /**
