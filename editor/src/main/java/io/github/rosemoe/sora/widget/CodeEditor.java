@@ -4920,7 +4920,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         } else {
             mEventHandler.scrollBy(getOffsetX() > getScrollMaxX() ? getScrollMaxX() - getOffsetX() : 0, getOffsetY() > getScrollMaxY() ? getScrollMaxY() - getOffsetY() : 0);
         }
-        if (oldHeight > h) {
+        if (oldHeight > h && mProps.adjustToSelectionOnResize) {
             ensureSelectionVisible();
         }
     }

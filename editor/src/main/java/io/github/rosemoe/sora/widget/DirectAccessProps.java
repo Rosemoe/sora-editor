@@ -142,5 +142,11 @@ public class DirectAccessProps implements Serializable {
      */
     public long cancelCompletionNs = 70 * 1000000;
 
+    /**
+     * Whether the editor should adjust its scroll position to make selection visible when its
+     * layout height decreases.
+     */
+    public boolean adjustToSelectionOnResize = true;
+
 
 }
