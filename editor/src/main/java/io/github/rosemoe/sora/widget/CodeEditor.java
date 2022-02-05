@@ -1204,7 +1204,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                 drawColor(canvas, currentLineBgColor, mRect);
             }
             for (int i = 0; i < postDrawCurrentLines.size(); i++) {
-                drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset + getOffsetX() - mDividerMargin));
+                drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - mDividerMargin + getOffsetX()));
             }
             drawDivider(canvas, lineNumberWidth + mDividerMargin, color.getColor(EditorColorScheme.LINE_DIVIDER));
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
@@ -3087,8 +3087,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             targetY = yOffset - getHeight() + getRowHeight() * 0.1f;
         }
         float charWidth = column == 0 ? 0 : measureText(mText.getLine(line), column - 1, 1, line);
-        if (xOffset < getOffsetX()) {
-            targetX = xOffset - charWidth * 0.2f;
+        if (xOffset < getOffsetX() + (mPinLineNumber ? measureTextRegionOffset() : 0)) {
+            targetX = xOffset + (mPinLineNumber ? -measureTextRegionOffset() : 0) - charWidth * 0.2f;
         }
         if (xOffset + charWidth > getOffsetX() + getWidth()) {
             targetX = xOffset + charWidth * 0.8f - getWidth();
