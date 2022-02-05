@@ -68,6 +68,11 @@ public class SelectionChangeEvent extends Event {
      */
     public final static int CAUSE_LONG_PRESS = 5;
 
+    /**
+     * Search text by {@link io.github.rosemoe.sora.widget.EditorSearcher}
+     */
+    public final static int CAUSE_SEARCH = 6;
+
     public SelectionChangeEvent(CodeEditor editor, int cause) {
         super(editor);
         var cursor = editor.getText().getCursor();

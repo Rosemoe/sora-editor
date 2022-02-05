@@ -1507,7 +1507,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         RowIterator rowIterator = mLayout.obtainRowIterator(firstVis);
         List<Span> temporaryEmptySpans = null;
         Spans spans = mStyles == null ? null : mStyles.spans;
-        List<Integer> matchedPositions = new ArrayList<>();
+        var matchedPositions = new LongArrayList();
         int currentLine = mCursor.isSelected() ? -1 : mCursor.getLeftLine();
         int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
         int lastPreparedLine = -1;
@@ -1550,9 +1550,12 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             }
 
             // Draw matched text background
-            if (!matchedPositions.isEmpty()) {
-                for (int position : matchedPositions) {
-                    drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, position, position + mSearcher.mSearchText.length(), mColors.getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND), line);
+            if (matchedPositions.size() > 0) {
+                for (int i = 0;i < matchedPositions.size();i++) {
+                    var position = matchedPositions.get(i);
+                    var start = IntPair.getFirst(position);
+                    var end = IntPair.getSecond(position);
+                    drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, start, end, mColors.getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND), line);
                 }
             }
 
@@ -1991,19 +1994,41 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * @param line      Target line
      * @param positions Outputs start positions
      */
-    protected void computeMatchedPositions(int line, List<Integer> positions) {
+    protected void computeMatchedPositions(int line, LongArrayList positions) {
         positions.clear();
-        CharSequence pattern = mSearcher.mSearchText;
-        if (pattern == null || pattern.length() == 0) {
+        if (mSearcher.mPattern == null || mSearcher.mOptions == null) {
+            return;
+        }
+        if (mSearcher.mOptions.useRegex) {
+            if (!mSearcher.isResultValid()) {
+                return;
+            }
+            var res = mSearcher.mLastResults;
+            var lineLeft = mText.getCharIndex(line, 0);
+            var lineRight = lineLeft + mText.getColumnCount(line);
+            for (int i = 0;i < res.size();i++) {
+                var region = res.get(i);
+                var start = IntPair.getFirst(region);
+                var end = IntPair.getSecond(region);
+                var highlightStart = Math.max(start, lineLeft);
+                var highlightEnd = Math.min(end, lineRight);
+                if (highlightStart < highlightEnd) {
+                    positions.add(IntPair.pack(highlightStart - lineLeft, highlightEnd - lineLeft));
+                }
+                if (start > lineRight) {
+                    break;
+                }
+            }
             return;
         }
         ContentLine seq = mText.getLine(line);
         int index = 0;
+        var len = mSearcher.mPattern.length();
         while (index != -1) {
-            index = seq.indexOf(pattern, index);
+            index = TextUtils.indexOf(seq, mSearcher.mPattern, mSearcher.mOptions.ignoreCase, index);
             if (index != -1) {
-                positions.add(index);
-                index += pattern.length();
+                positions.add(IntPair.pack(index, index + len));
+                index += len;
             }
         }
     }
@@ -3375,7 +3400,11 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
                     @Override
                     public boolean onQueryTextChange(String text) {
-                        getSearcher().search(text);
+                        if (text == null || text.length() == 0) {
+                            getSearcher().stopSearch();
+                            return false;
+                        }
+                        getSearcher().search(text, new EditorSearcher.SearchOptions(false, false));
                         return false;
                     }
 
@@ -3395,9 +3424,12 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
             @Override
             public boolean onActionItemClicked(final ActionMode am, MenuItem p2) {
+                if (!getSearcher().hasQuery()) {
+                    return false;
+                }
                 switch (p2.getItemId()) {
                     case 1:
-                        getSearcher().gotoLast();
+                        getSearcher().gotoPrevious();
                         break;
                     case 0:
                         getSearcher().gotoNext();

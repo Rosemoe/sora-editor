@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.text;
 
+import androidx.annotation.NonNull;
+
 public class TextUtils {
 
     public static int countLeadingSpaceCount(CharSequence text, int tabWidth) {
@@ -65,6 +67,42 @@ public class TextUtils {
             s.append(' ');
         }
         return s.toString();
+    }
+
+    public static int indexOf(@NonNull CharSequence text, @NonNull CharSequence pattern, boolean ignoreCase, int fromIndex) {
+        var max = text.length() - pattern.length();
+        var len = pattern.length();
+        label:
+        for (int i = fromIndex; i <= max; i++) {
+            // Compare
+            for (int j = 0; j < len; j++) {
+                char s = text.charAt(i + j);
+                char p = pattern.charAt(j);
+                if (!(s == p || (ignoreCase && Character.toLowerCase(s) == Character.toLowerCase(p)))) {
+                    continue label;
+                }
+            }
+            return i;
+        }
+        return -1;
+    }
+
+    public static int lastIndexOf(@NonNull CharSequence text, @NonNull CharSequence pattern, boolean ignoreCase, int fromIndex) {
+        var len = pattern.length();
+        fromIndex = Math.min(fromIndex, text.length() - len);
+        label:
+        for (int i = fromIndex; i >= 0; i--) {
+            // Compare
+            for (int j = 0; j < len; j++) {
+                char s = text.charAt(i + j);
+                char p = pattern.charAt(j);
+                if (!(s == p || (ignoreCase && Character.toLowerCase(s) == Character.toLowerCase(p)))) {
+                    continue label;
+                }
+            }
+            return i;
+        }
+        return -1;
     }
 
     private static boolean isWhitespace(char ch) {
