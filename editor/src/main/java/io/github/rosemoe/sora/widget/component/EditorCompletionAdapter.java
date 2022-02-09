@@ -50,7 +50,6 @@ public abstract class EditorCompletionAdapter extends BaseAdapter implements Ada
     public void attachValues(EditorAutoCompletion window, List<CompletionItem> items) {
         mWindow = window;
         mItems = items;
-        notifyDataSetInvalidated();
     }
 
     @Override

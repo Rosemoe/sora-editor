@@ -207,6 +207,7 @@ public class CompletionPublisher {
         handler.post(() -> {
             // Lock the candidate list accordingly
             if (invalid) {
+                callback.run();
                 return;
             }
             var locked = false;
@@ -220,6 +221,7 @@ public class CompletionPublisher {
             if (locked) {
                 try {
                     if (candidates.size() == 0) {
+                        callback.run();
                         return;
                     }
                     final var comparator = this.comparator;
