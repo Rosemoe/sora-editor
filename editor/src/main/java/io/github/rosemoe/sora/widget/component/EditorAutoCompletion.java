@@ -26,6 +26,8 @@ package io.github.rosemoe.sora.widget.component;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Adapter;
+import android.widget.AdapterView;
 
 import androidx.annotation.NonNull;
 
@@ -70,8 +72,8 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     public EditorAutoCompletion(CodeEditor editor) {
         super(editor, FEATURE_HIDE_WHEN_FAST_SCROLL);
         mEditor = editor;
-        setLayout(new DefaultCompletionLayout());
         mAdapter = new DefaultCompletionItemAdapter();
+        setLayout(new DefaultCompletionLayout());
     }
 
     @SuppressWarnings("unchecked")
@@ -103,6 +105,8 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         if (adapter == null) {
             mAdapter = new DefaultCompletionItemAdapter();
         }
+
+        mLayout.getCompletionList();
     }
 
     @Override
@@ -305,8 +309,6 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             }
         }, mEditor.getEditorLanguage().getInterruptionLevel());
         mAdapter.attachValues(this, publisher.getItems());
-        var adpView = mLayout.getCompletionList();
-        adpView.setAdapter(mAdapter);
         mThread = new CompletionThread(mRequestTime, publisher);
         setLoading(true);
         mThread.start();
