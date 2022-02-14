@@ -26,10 +26,11 @@ package io.github.rosemoe.sora.widget.component;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Adapter;
-import android.widget.AdapterView;
 
 import androidx.annotation.NonNull;
+
+import java.lang.ref.WeakReference;
+import java.util.List;
 
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
@@ -60,6 +61,8 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     private EditorCompletionAdapter mAdapter;
     private CompletionLayout mLayout;
     protected CompletionThread mThread;
+    protected CompletionPublisher mPublisher;
+    protected WeakReference<List<CompletionItem>> mLastAttachedItems;
     private long requestShow = 0;
     private long requestHide = -1;
     private boolean enabled = true;
@@ -300,16 +303,22 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         cancelCompletion();
         mRequestTime = System.nanoTime();
         mCurrent = -1;
-        var publisher = new CompletionPublisher(mEditor.getHandler(), () -> {
-            mAdapter.notifyDataSetChanged();
+        mPublisher = new CompletionPublisher(mEditor.getHandler(), () -> {
+            var items = mPublisher.getItems();
+            if (mLastAttachedItems != null && mLastAttachedItems.get() != items) {
+                mAdapter.attachValues(this, items);
+                mAdapter.notifyDataSetInvalidated();
+                mLastAttachedItems = new WeakReference<>(items);
+            } else {
+                mAdapter.notifyDataSetChanged();
+            }
             float newHeight = mAdapter.getItemHeight() * mAdapter.getCount();
             setSize(getWidth(), (int) Math.min(newHeight, mMaxHeight));
             if (!isShowing()) {
                 show();
             }
         }, mEditor.getEditorLanguage().getInterruptionLevel());
-        mAdapter.attachValues(this, publisher.getItems());
-        mThread = new CompletionThread(mRequestTime, publisher);
+        mThread = new CompletionThread(mRequestTime, mPublisher);
         setLoading(true);
         mThread.start();
     }
@@ -330,7 +339,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         private final CharPosition mPosition;
         private final Language mLanguage;
         private final ContentReference mRef;
-        private final CompletionPublisher mPublisher;
+        private final CompletionPublisher mLocalPublisher;
         private boolean mAborted;
 
         public CompletionThread(long requestTime, CompletionPublisher publisher) {
@@ -339,7 +348,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             mLanguage = mEditor.getEditorLanguage();
             mRef = new ContentReference(mEditor.getText());
             mRef.setValidator(this);
-            mPublisher = publisher;
+            mLocalPublisher = publisher;
             mExtra = mEditor.getExtraArguments();
             mAborted = false;
         }
@@ -353,7 +362,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             if (level == Language.INTERRUPTION_LEVEL_STRONG) {
                 interrupt();
             }
-            mPublisher.cancel();
+            mLocalPublisher.cancel();
         }
 
         public boolean isCancelled() {
@@ -370,9 +379,9 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         @Override
         public void run() {
             try {
-                mLanguage.requireAutoComplete(mRef, mPosition, mPublisher, mExtra);
-                if (mPublisher.hasData()) {
-                    mPublisher.updateList(true);
+                mLanguage.requireAutoComplete(mRef, mPosition, mLocalPublisher, mExtra);
+                if (mLocalPublisher.hasData()) {
+                    mLocalPublisher.updateList(true);
                 } else {
                     mEditor.post(EditorAutoCompletion.this::hide);
                 }
