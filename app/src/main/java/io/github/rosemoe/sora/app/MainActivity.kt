@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         })
         binding.editor.apply {
             typefaceText = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
-            //setEditorLanguage(JavaLanguage())
+            setEditorLanguage(JavaLanguage())
             nonPrintablePaintingFlags =
                 CodeEditor.FLAG_DRAW_WHITESPACE_LEADING or CodeEditor.FLAG_DRAW_LINE_SEPARATOR or CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION
             // Update display dynamically
