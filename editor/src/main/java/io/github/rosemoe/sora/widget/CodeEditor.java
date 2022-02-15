@@ -4175,7 +4175,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * @param text the new text you want to display
      */
     public void setText(@Nullable CharSequence text) {
-        setText(text, null);
+        setText(text, true, null);
     }
 
     /**
@@ -4186,6 +4186,19 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      *                       to all languages and plugins in editor.
      */
     public void setText(@Nullable CharSequence text, @Nullable Bundle extraArguments) {
+        setText(text, true, extraArguments);
+    }
+
+
+    /**
+     * Sets the text to be displayed.
+     *
+     * @param text           the new text you want to display
+     * @param reuseContentObject If the given {@code text} is an instance of {@link Content}, reuse it.
+     * @param extraArguments Extra arguments for the document. This {@link Bundle} object is passed
+     *                       to all languages and plugins in editor.
+     */
+    public void setText(@Nullable CharSequence text, boolean reuseContentObject, @Nullable Bundle extraArguments) {
         if (text == null) {
             text = "";
         }
@@ -4195,7 +4208,12 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             mText.setLineListener(null);
         }
         mExtraArguments = extraArguments == null ? new Bundle() : extraArguments;
-        mText = new Content(text);
+        if (reuseContentObject && text instanceof Content) {
+            mText = (Content) text;
+            updateTimestamp();
+        } else {
+            mText = new Content(text);
+        }
         mCursor = mText.getCursor();
         mEventHandler.reset();
         mText.addContentListener(this);
@@ -4203,16 +4221,15 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         mText.setLineListener(this);
 
         if (mLanguage != null) {
-            mLanguage.getAnalyzeManager().reset(new ContentReference(mText), extraArguments);
+            mLanguage.getAnalyzeManager().reset(new ContentReference(mText), mExtraArguments);
         }
-
-        requestLayout();
 
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_SET_NEW_TEXT, new CharPosition(), mText.getIndexer().getCharPosition(getLineCount() - 1, mText.getColumnCount(getLineCount() - 1)), mText));
         if (mInputMethodManager != null) {
             mInputMethodManager.restartInput(this);
         }
         createLayout();
+        requestLayout();
         invalidateHwRenderer();
         invalidate();
     }
