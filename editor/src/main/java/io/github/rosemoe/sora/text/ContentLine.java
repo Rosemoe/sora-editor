@@ -273,7 +273,9 @@ public class ContentLine implements CharSequence, GetChars {
 
     public ContentLine insert(int offset, char c) {
         ensureCapacity(length + 1);
-        System.arraycopy(value, offset, value, offset + 1, length - offset);
+        if (offset < length) {
+            System.arraycopy(value, offset, value, offset + 1, length - offset);
+        }
         value[offset] = c;
         length += 1;
         return this;
