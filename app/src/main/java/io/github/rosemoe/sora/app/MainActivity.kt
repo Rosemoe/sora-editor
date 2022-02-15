@@ -44,7 +44,9 @@ import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.theme.TextMateColorScheme
+import io.github.rosemoe.sora.text.ContentCreator
 import io.github.rosemoe.sora.textmate.core.internal.theme.reader.ThemeReader
+import io.github.rosemoe.sora.textmate.languageconfiguration.internal.supports.CharacterPair
 import io.github.rosemoe.sora.utils.CrashHandler
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorSearcher
@@ -106,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         })
         binding.editor.apply {
             typefaceText = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
-            setEditorLanguage(JavaLanguage())
+            //setEditorLanguage(JavaLanguage())
             nonPrintablePaintingFlags =
                 CodeEditor.FLAG_DRAW_WHITESPACE_LEADING or CodeEditor.FLAG_DRAW_LINE_SEPARATOR or CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION
             // Update display dynamically
@@ -118,14 +120,16 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
+        openAssetsFile("sample.txt")
+        updatePositionText()
+        updateBtnState()
+    }
+
+    private fun openAssetsFile(name: String) {
         Thread {
             try {
-                val br = BufferedReader(InputStreamReader(assets.open("sample.txt")))
-                var line: String?
-                val text = StringBuilder()
-                while (br.readLine().also { line = it } != null) {
-                    text.append(line).append('\n')
-                }
+                val stream = assets.open(name)
+                val text = ContentCreator.fromStream(stream)
                 runOnUiThread { binding.editor.setText(text, null) }
             } catch (e: IOException) {
                 e.printStackTrace()

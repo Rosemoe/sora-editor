@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.widget.layout;
 import java.util.NoSuchElementException;
 
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
+import io.github.rosemoe.sora.graphics.RoughBufferedMeasure;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.BinaryHeap;
@@ -41,9 +42,11 @@ import io.github.rosemoe.sora.widget.CodeEditor;
 public class LineBreakLayout extends AbstractLayout {
 
     private BinaryHeap widthMaintainer;
+    private final RoughBufferedMeasure measurer;
 
     public LineBreakLayout(CodeEditor editor, Content text) {
         super(editor, text);
+        measurer = new RoughBufferedMeasure();
         measureAllLines();
     }
 
@@ -53,7 +56,7 @@ public class LineBreakLayout extends AbstractLayout {
         }
         widthMaintainer = new BinaryHeap();
         widthMaintainer.ensureCapacity(text.getLineCount());
-        var gtr = GraphicTextRow.obtain();
+        /*var gtr = GraphicTextRow.obtain();
         for (int i = 0; i < text.getLineCount(); i++) {
             ContentLine line = text.getLine(i);
             gtr.set(line, 0, line.length(), editor.getTabWidth(), getSpans(i), editor.getTextPaint());
@@ -61,18 +64,25 @@ public class LineBreakLayout extends AbstractLayout {
             line.setWidth(width);
             line.setId(widthMaintainer.push(width));
         }
-        GraphicTextRow.recycle(gtr);
+        GraphicTextRow.recycle(gtr);*/
+        for (int i = 0;i < text.getLineCount(); i++) {
+            ContentLine line = text.getLine(i);
+            var width = (int) measurer.measureText(line, 0, line.length(), editor.getTextPaint());
+            line.setWidth(width);
+            line.setId(widthMaintainer.push(width));
+        }
     }
 
     private void measureLines(int startLine, int endLine) {
         if (text == null) {
             return;
         }
-        var gtr = GraphicTextRow.obtain();
+        //var gtr = GraphicTextRow.obtain();
         while (startLine <= endLine && startLine < text.getLineCount()) {
             ContentLine line = text.getLine(startLine);
-            gtr.set(line, 0, line.length(), editor.getTabWidth(), getSpans(startLine), editor.getTextPaint());
-            int width = (int) gtr.measureText(0, line.length());
+            //gtr.set(line, 0, line.length(), editor.getTabWidth(), getSpans(startLine), editor.getTextPaint());
+            //int width = (int) gtr.measureText(0, line.length());
+            var width = (int) measurer.measureText(line, 0, line.length(), editor.getTextPaint());
             if (line.getId() != -1) {
                 if (line.getWidth() == width) {
                     startLine++;
@@ -86,7 +96,7 @@ public class LineBreakLayout extends AbstractLayout {
             line.setWidth(width);
             startLine++;
         }
-        GraphicTextRow.recycle(gtr);
+        //GraphicTextRow.recycle(gtr);
     }
 
     @Override
