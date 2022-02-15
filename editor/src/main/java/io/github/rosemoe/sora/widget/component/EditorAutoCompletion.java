@@ -305,7 +305,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         mCurrent = -1;
         mPublisher = new CompletionPublisher(mEditor.getHandler(), () -> {
             var items = mPublisher.getItems();
-            if (mLastAttachedItems != null && mLastAttachedItems.get() != items) {
+            if (mLastAttachedItems == null || mLastAttachedItems.get() != items) {
                 mAdapter.attachValues(this, items);
                 mAdapter.notifyDataSetInvalidated();
                 mLastAttachedItems = new WeakReference<>(items);
