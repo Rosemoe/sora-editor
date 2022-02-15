@@ -22,5 +22,5 @@
     <option name="OUTPUT_DIRECTORY" value="D:/Javadoc" />
     <option name="OPTION_INCLUDE_LIBS" value="true" />
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_16_PREVIEW" project-jdk-name="11" project-jdk-type="JavaSDK" />
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK" />
 </project>
