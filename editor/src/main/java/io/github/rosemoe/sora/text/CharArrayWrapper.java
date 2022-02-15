@@ -29,6 +29,11 @@ import androidx.annotation.NonNull;
 
 import java.nio.CharBuffer;
 
+/**
+ * Wrapper for char array. Make char array work as a char sequence.
+ *
+ * @author Rosemoe
+ */
 public class CharArrayWrapper implements CharSequence, GetChars {
 
     private final char[] data;

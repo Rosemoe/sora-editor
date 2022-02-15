@@ -139,7 +139,7 @@ public class BinaryHeap {
     /**
      * Add a new node to the heap
      *
-     * @return Id of node
+     * @return ID of node
      * @throws IllegalStateException when there is no new id available
      */
     public int push(int value) {
@@ -158,7 +158,7 @@ public class BinaryHeap {
     /**
      * Update the value of node with given id to newValue
      *
-     * @param id       Id returned by push()
+     * @param id       ID returned by push()
      * @param newValue new value for this node
      * @throws IllegalArgumentException when the id is invalid
      */
@@ -179,7 +179,7 @@ public class BinaryHeap {
     /**
      * Remove node with given id
      *
-     * @param id Id returned by push()
+     * @param id ID returned by push()
      * @throws IllegalArgumentException when the id is invalid
      */
     public void remove(int id) {
@@ -240,7 +240,7 @@ public class BinaryHeap {
     private static class Node {
 
         /**
-         * An final id of node
+         * A final id of node
          */
         final int id;
         /**

@@ -23,20 +23,29 @@
  */
 package io.github.rosemoe.sora.text;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.nio.CharBuffer;
 
+/**
+ * Utility class for creating {@link Content} objects
+ *
+ * @author Rosemoe
+ */
 public class ContentCreator {
 
+    /**
+     * Create a {@link Content} from stream
+     */
     public static Content fromStream(InputStream stream) throws IOException {
-        return fromStream(new InputStreamReader(stream));
+        return fromReader(new InputStreamReader(stream));
     }
 
-    public static Content fromStream(Reader reader) throws IOException {
+    /**
+     * Create a {@link Content} from reader
+     */
+    public static Content fromReader(Reader reader) throws IOException {
         var content = new Content();
         content.setUndoEnabled(false);
         var buffer = new char[8192 * 2];

@@ -26,6 +26,7 @@ package io.github.rosemoe.sorakt
 
 import io.github.rosemoe.sora.event.Event
 import io.github.rosemoe.sora.event.EventReceiver
+import io.github.rosemoe.sora.event.SubscriptionReceipt
 import io.github.rosemoe.sora.widget.CodeEditor
 
 /**
@@ -33,6 +34,6 @@ import io.github.rosemoe.sora.widget.CodeEditor
  *
  * @see CodeEditor.subscribeEvent
  */
-inline fun <reified T : Event> CodeEditor.subscribeEvent(receiver: EventReceiver<T>) {
-    subscribeEvent(T::class.java, receiver)
+inline fun <reified T : Event> CodeEditor.subscribeEvent(receiver: EventReceiver<T>) : SubscriptionReceipt<T> {
+    return subscribeEvent(T::class.java, receiver)
 }
