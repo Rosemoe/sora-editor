@@ -40,7 +40,7 @@ public abstract class Event {
 
     private final long mEventTime;
     private final CodeEditor mEditor;
-    private boolean mIntercepted;
+    private int mInterceptTargets;
 
     public Event(@NonNull CodeEditor editor) {
         this(editor, System.currentTimeMillis());
@@ -49,7 +49,7 @@ public abstract class Event {
     public Event(@NonNull CodeEditor editor, long eventTime) {
         mEditor = Objects.requireNonNull(editor);
         mEventTime = eventTime;
-        mIntercepted = false;
+        mInterceptTargets = 0;
     }
 
     /**
@@ -81,23 +81,47 @@ public abstract class Event {
     }
 
     /**
-     * Intercept the event.
+     * Intercept the event for all targets.
      *
      * Make sure {@link #canIntercept()} returns true. Otherwise, an {@link UnsupportedOperationException}
      * will be thrown.
+     *
+     * @see InterceptTarget
      */
     public void intercept() {
         if (!canIntercept()) {
             throw new UnsupportedOperationException("intercept() not supported");
         }
-        mIntercepted = true;
+        mInterceptTargets = InterceptTarget.TARGET_EDITOR | InterceptTarget.TARGET_RECEIVERS;
     }
 
     /**
-     * Check whether this event is intercepted
+     * Intercept the event for some targets
+     * @param targets Masks for target types
+     * @see InterceptTarget
+     */
+    public void intercept(int targets) {
+        if (!canIntercept()) {
+            throw new UnsupportedOperationException("intercept() not supported");
+        }
+        mInterceptTargets = targets;
+    }
+
+    /**
+     * Get intercepted dispatch targets
+     * @see #intercept(int)
+     * @see InterceptTarget
+     */
+    public int getInterceptTargets() {
+        return mInterceptTargets;
+    }
+
+    /**
+     * Check whether this event is intercepted for some types of targets
+     * @see #getInterceptTargets()
      */
     public boolean isIntercepted() {
-        return mIntercepted;
+        return mInterceptTargets != 0;
     }
 
 }

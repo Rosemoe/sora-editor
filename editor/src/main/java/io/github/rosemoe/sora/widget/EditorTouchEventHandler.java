@@ -34,6 +34,7 @@ import android.widget.OverScroller;
 import io.github.rosemoe.sora.event.ClickEvent;
 import io.github.rosemoe.sora.event.DoubleClickEvent;
 import io.github.rosemoe.sora.event.HandleStateChangeEvent;
+import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.LongPressEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
@@ -470,7 +471,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);
         mEditor.performClick();
-        if (mEditor.dispatchEvent(new ClickEvent(mEditor, mEditor.getText().getIndexer().getCharPosition(line, column), e))) {
+        if ((mEditor.dispatchEvent(new ClickEvent(mEditor, mEditor.getText().getIndexer().getCharPosition(line, column), e)) & InterceptTarget.TARGET_EDITOR) != 0) {
             return true;
         }
         mEditor.showSoftInput();
@@ -511,7 +512,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);
-        if (mEditor.dispatchEvent(new LongPressEvent(mEditor, mEditor.getText().getIndexer().getCharPosition(line, column), e))) {
+        if ((mEditor.dispatchEvent(new LongPressEvent(mEditor, mEditor.getText().getIndexer().getCharPosition(line, column), e)) & InterceptTarget.TARGET_EDITOR) != 0) {
             return;
         }
         if (mEditor.getCursor().isSelected() || e.getPointerCount() != 1) {
@@ -673,7 +674,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);
-        if (mEditor.dispatchEvent(new DoubleClickEvent(mEditor, mEditor.getText().getIndexer().getCharPosition(line, column), e))) {
+        if ((mEditor.dispatchEvent(new DoubleClickEvent(mEditor, mEditor.getText().getIndexer().getCharPosition(line, column), e)) & InterceptTarget.TARGET_EDITOR) != 0) {
             return true;
         }
         if (mEditor.getCursor().isSelected() || e.getPointerCount() != 1) {

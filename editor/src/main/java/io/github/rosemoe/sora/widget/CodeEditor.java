@@ -88,8 +88,10 @@ import io.github.rosemoe.sora.event.EditorKeyEvent;
 import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.EventManager;
 import io.github.rosemoe.sora.event.EventReceiver;
+import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
+import io.github.rosemoe.sora.event.SubscriptionReceipt;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.Paint;
@@ -4238,8 +4240,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      *
      * @see EventManager#subscribeEvent(Class, EventReceiver)
      */
-    public <T extends Event> void subscribeEvent(Class<T> eventType, EventReceiver<T> receiver) {
-        mEventManager.subscribeEvent(eventType, receiver);
+    public <T extends Event> SubscriptionReceipt<T> subscribeEvent(Class<T> eventType, EventReceiver<T> receiver) {
+        return mEventManager.subscribeEvent(eventType, receiver);
     }
 
     /**
@@ -4247,7 +4249,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      *
      * @see EventManager#dispatchEvent(Event)
      */
-    public <T extends Event> boolean dispatchEvent(T event) {
+    public <T extends Event> int dispatchEvent(T event) {
         return mEventManager.dispatchEvent(event);
     }
 
@@ -4683,7 +4685,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         mKeyMetaStates.onKeyDown(event);
         var e = new EditorKeyEvent(this, event);
-        if (mEventManager.dispatchEvent(e)) {
+        if ((mEventManager.dispatchEvent(e) & InterceptTarget.TARGET_EDITOR) != 0) {
             return e.result(false);
         }
         boolean isShiftPressed = mKeyMetaStates.isShiftPressed();
@@ -4897,7 +4899,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         mKeyMetaStates.onKeyUp(event);
         var e = new EditorKeyEvent(this, event);
-        if (mEventManager.dispatchEvent(e)) {
+        if ((mEventManager.dispatchEvent(e) & InterceptTarget.TARGET_EDITOR) != 0) {
             return e.result(false);
         }
         if (!mKeyMetaStates.isShiftPressed() && mSelectionAnchor != null && !mCursor.isSelected()) {
@@ -4910,7 +4912,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     @Override
     public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
         var e = new EditorKeyEvent(this, event);
-        if (mEventManager.dispatchEvent(e)) {
+        if ((mEventManager.dispatchEvent(e) & InterceptTarget.TARGET_EDITOR) != 0) {
             return e.result(false);
         }
         return e.result(super.onKeyMultiple(keyCode, repeatCount, event));

@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.event;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -113,7 +114,7 @@ public final class EventManager {
      * Get root manager and dispatch the given event
      * @see #dispatchEvent(Event)
      */
-    public <T extends Event> boolean dispatchEventFromRoot(@NonNull T event) {
+    public <T extends Event> int dispatchEventFromRoot(@NonNull T event) {
         return getRootManager().dispatchEvent(event);
     }
 
@@ -141,7 +142,7 @@ public final class EventManager {
      */
     @NonNull
     @SuppressWarnings("unchecked")
-    private <T extends Event> Receivers<T> getReceivers(@NonNull Class<T> type) {
+    <T extends Event> Receivers<T> getReceivers(@NonNull Class<T> type) {
         lock.readLock().lock();
         Receivers<T> result;
         try {
@@ -171,7 +172,7 @@ public final class EventManager {
      * @param receiver Receiver of event
      * @param <T> Event type
      */
-    public <T extends Event> void subscribeEvent(@NonNull Class<T> eventType, @NonNull EventReceiver<T> receiver) {
+    public <T extends Event> SubscriptionReceipt<T> subscribeEvent(@NonNull Class<T> eventType, @NonNull EventReceiver<T> receiver) {
         var receivers = getReceivers(eventType);
         receivers.lock.writeLock().lock();
         try {
@@ -183,16 +184,17 @@ public final class EventManager {
         } finally {
             receivers.lock.writeLock().unlock();
         }
+        return new SubscriptionReceipt<>(this, eventType, receiver);
     }
 
     /**
      * Dispatch the given event to its receivers registered in this manager.
      * @param event Event to dispatch
      * @param <T> Event type
-     * @return Whether the event's intercept flag is set
+     * @return The event's intercept targets
      */
     @SuppressWarnings("unchecked")
-    public <T extends Event> boolean dispatchEvent(@NonNull T event) {
+    public <T extends Event> int dispatchEvent(@NonNull T event) {
         // Safe cast
         var receivers = getReceivers((Class<T>)event.getClass());
         receivers.lock.readLock().lock();
@@ -208,7 +210,7 @@ public final class EventManager {
         List<EventReceiver<T>> unsubscribedReceivers = null;
         try {
             Unsubscribe unsubscribe = new Unsubscribe();
-            for (int i = 0;i < count && !event.isIntercepted();i++) {
+            for (int i = 0;i < count && (event.getInterceptTargets() & InterceptTarget.TARGET_RECEIVERS) == 0;i++) {
                 var receiver = receiverArr[i];
                 receiver.onReceive(event, unsubscribe);
                 if (unsubscribe.isUnsubscribed()) {
@@ -230,7 +232,7 @@ public final class EventManager {
             }
             recycleBuffer(receiverArr);
         }
-        for (int i = 0;i < children.size() && !event.isIntercepted();i++) {
+        for (int i = 0;i < children.size() && (event.getInterceptTargets() & InterceptTarget.TARGET_RECEIVERS) == 0;i++) {
             EventManager sub = null;
             try {
                 sub = children.get(i);
@@ -241,14 +243,14 @@ public final class EventManager {
                 sub.dispatchEvent(event);
             }
         }
-        return event.isIntercepted();
+        return event.getInterceptTargets();
     }
 
     /**
      * Internal class for saving receivers of each type
      * @param <T> Event type
      */
-    private static class Receivers<T extends Event> {
+    static class Receivers<T extends Event> {
 
         ReadWriteLock lock = new ReentrantReadWriteLock();
 
