@@ -4955,7 +4955,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         getHorizontalEdgeEffect().setSize(h, w);
         getVerticalEdgeEffect().finish();
         getHorizontalEdgeEffect().finish();
-        if (isWordwrap() && w != oldWidth) {
+        if (mLayout == null || (isWordwrap() && w != oldWidth)) {
             createLayout();
         } else {
             mEventHandler.scrollBy(getOffsetX() > getScrollMaxX() ? getScrollMaxX() - getOffsetX() : 0, getOffsetY() > getScrollMaxY() ? getScrollMaxY() - getOffsetY() : 0);
