@@ -36,7 +36,8 @@
         <activity 
             android:name="io.github.rosemoe.sora.app.MainActivity"
             android:windowSoftInputMode="adjustResize"
-            android:exported="true">
+            android:exported="true"
+            android:configChanges="orientation|keyboardHidden|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.ACTION_VIEW"/>
