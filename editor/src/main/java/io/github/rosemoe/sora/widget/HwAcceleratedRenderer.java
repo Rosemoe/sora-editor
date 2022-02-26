@@ -125,7 +125,7 @@ class HwAcceleratedRenderer implements ContentListener {
             } catch (Exception e) {
                 reader = new EmptyReader();
             }
-            editor.updateLineDisplayList(node.renderNode, line, reader);
+            editor.getEditorPainter().updateLineDisplayList(node.renderNode, line, reader);
             try {
                 reader.moveToLine(-1);
             } catch (Exception e) {

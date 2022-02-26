@@ -650,7 +650,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     @Override
     public void onScaleEnd(ScaleGestureDetector detector) {
         isScaling = false;
-        mEditor.updateTimestamp();
+        mEditor.getEditorPainter().updateTimestamp();
         mEditor.createLayout();
         mEditor.invalidate();
     }
