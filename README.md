@@ -28,7 +28,7 @@ Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEdito
 - [x] Show non-printable characters
 - [x] Error/Warning/Typo/Deprecated indicators
 - [x] Text magnifier
-- [x] Incremental highlight Analysis (for language-textmate)
+- [x] Incremental highlight Analysis 
 - [x] Event System
 ## Screenshots
 ![Wordwrap](/images/wordwrap.png)
