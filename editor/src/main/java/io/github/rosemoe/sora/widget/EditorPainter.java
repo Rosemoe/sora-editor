@@ -240,8 +240,9 @@ public class EditorPainter {
 
     @RequiresApi(29)
     protected void updateLineDisplayList(RenderNode renderNode, int line, Spans.Reader spans) {
-        final float waveLength = mEditor.getDpUnit() * 18;
-        final float amplitude = mEditor.getDpUnit() * 4;
+        final float waveLength = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveLength;
+        final float amplitude = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveAmplitude;
+        final float waveWidth = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveWidth;
         mEditor.prepareLine(line);
         /*if (bidiBuffer == null || bidiBuffer.length != mEditor.getLineBuffer().length()) {
             bidiBuffer = new char[mEditor.getLineBuffer().length()];
@@ -329,7 +330,7 @@ public class EditorPainter {
             }
 
             // Draw issue curly underline
-            if (span.problemFlags > 0 && Integer.highestOneBit(span.problemFlags) != Span.FLAG_DEPRECATED) {
+            if (waveWidth > 0 && span.problemFlags > 0 && Integer.highestOneBit(span.problemFlags) != Span.FLAG_DEPRECATED) {
                 int color = 0;
                 switch (Integer.highestOneBit(span.problemFlags)) {
                     case Span.FLAG_ERROR:
@@ -361,7 +362,7 @@ public class EditorPainter {
                     }
                     phi = waveLength - (waveCount * waveLength - lineWidth);
                     // Draw path
-                    mPaint.setStrokeWidth(mEditor.getDpUnit() * 1.8f);
+                    mPaint.setStrokeWidth(mEditor.getDpUnit() * waveWidth);
                     mPaintOther.setStyle(Paint.Style.STROKE);
                     mPaintOther.setColor(color);
                     canvas.drawPath(mPath, mPaintOther);
@@ -696,8 +697,9 @@ public class EditorPainter {
      */
     protected void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<DrawCursorTask> postDrawCursor, LongArrayList postDrawCurrentLines, MutableInt requiredFirstLn) {
         int firstVis = mEditor.getFirstVisibleRow();
-        final float waveLength = mEditor.getDpUnit() * 18;
-        final float amplitude = mEditor.getDpUnit() * 4;
+        final float waveLength = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveLength;
+        final float amplitude = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveAmplitude;
+        final float waveWidth = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveWidth;
         RowIterator rowIterator = mEditor.getLayout().obtainRowIterator(firstVis);
         List<Span> temporaryEmptySpans = null;
         Spans spans = mEditor.getStyles() == null ? null : mEditor.getStyles().spans;
@@ -926,7 +928,7 @@ public class EditorPainter {
                     }
 
                     // Draw issue curly underline
-                    if (span.problemFlags > 0 && Integer.highestOneBit(span.problemFlags) != Span.FLAG_DEPRECATED) {
+                    if (waveWidth > 0 && span.problemFlags > 0 && Integer.highestOneBit(span.problemFlags) != Span.FLAG_DEPRECATED) {
                         int color = 0;
                         switch (Integer.highestOneBit(span.problemFlags)) {
                             case Span.FLAG_ERROR:
@@ -965,7 +967,7 @@ public class EditorPainter {
                             }
                             phi = waveLength - (waveCount * waveLength - lineWidth);
                             // Draw path
-                            mPaint.setStrokeWidth(mEditor.getDpUnit() * 1.8f);
+                            mPaint.setStrokeWidth(waveWidth);
                             mPaintOther.setStyle(Paint.Style.STROKE);
                             mPaintOther.setColor(color);
                             canvas.drawPath(mPath, mPaintOther);

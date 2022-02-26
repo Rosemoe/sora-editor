@@ -27,9 +27,12 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.ExtractedTextRequest;
 import android.widget.OverScroller;
 
+import androidx.annotation.FloatRange;
 import androidx.annotation.NonNull;
 
 import java.io.Serializable;
+
+import io.github.rosemoe.sora.annotations.InvalidateRequired;
 
 /**
  * Direct-access properties.
@@ -152,5 +155,32 @@ public class DirectAccessProps implements Serializable {
      * Show scroll bars even when the scroll is caused by editor's adjustment but not user interaction
      */
     public boolean awareScrollbarWhenAdjust = false;
+
+    /**
+     * Wave length of problem indicators.
+     *
+     * Unit DIP.
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, fromInclusive = false)
+    public float indicatorWaveLength = 18f;
+
+    /**
+     * Wave width of problem indicators.
+     *
+     * Unit DIP.
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, fromInclusive = false)
+    public float indicatorWaveWidth = 2f;
+
+    /**
+     * Wave amplitude of problem indicators.
+     *
+     * Unit DIP.
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, fromInclusive = false)
+    public float indicatorWaveAmplitude = 4f;
 
 }
