@@ -86,13 +86,11 @@ public class EditorPainter {
     private final Rect mViewRect;
     private final RectF mRect;
     private final Path mPath;
-    private Paint mPaintGraph;
-    private RectF mVerticalScrollBar;
-    private RectF mHorizontalScrollBar;
+    private final Paint mPaintGraph;
+    private final RectF mVerticalScrollBar;
+    private final RectF mHorizontalScrollBar;
 
     private final CodeEditor mEditor;
-    private final Cursor mCursor;
-    private final EditorColorScheme mColors;
     private Paint.FontMetricsInt mLineNumberMetrics;
     private Paint.FontMetricsInt mGraphMetrics;
 
@@ -101,8 +99,6 @@ public class EditorPainter {
 
     public EditorPainter(@NonNull CodeEditor editor) {
         mEditor = editor;
-        mCursor = editor.getCursor();
-        mColors = editor.getColorScheme();
         mLineNumberMetrics = mEditor.getLineNumberMetrics();
         mVerticalScrollBar = new RectF();
         mHorizontalScrollBar = new RectF();
@@ -193,7 +189,7 @@ public class EditorPainter {
      * Invalidate the region in hardware-accelerated renderer
      */
     void invalidateChanged(int startLine, int endLine) {
-        if (mRenderer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mCursor != null) {
+        if (mRenderer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mEditor.getCursor() != null) {
             if (mRenderer.invalidateInRegion(startLine, endLine)) {
                 mEditor.invalidate();
             }
@@ -204,7 +200,7 @@ public class EditorPainter {
      * Invalidate the cursor region in hardware-accelerated renderer
      */
     void invalidateInCursor() {
-        invalidateChanged(mCursor.getLeftLine(), mCursor.getRightLine());
+        invalidateChanged(mEditor.getCursor().getLeftLine(), mEditor.getCursor().getRightLine());
     }
 
 
@@ -248,7 +244,7 @@ public class EditorPainter {
                 canvas.translate(paintingOffset, mEditor.getRowTop(row));
                 canvas.clipRect(0f, 0f, width, mEditor.getRowHeight());
                 try {
-                    renderer.draw(canvas, mPaint, mColors, true);
+                    renderer.draw(canvas, mPaint, mEditor.getColorScheme(), true);
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Error while invoking external renderer", e);
                 }
@@ -274,14 +270,14 @@ public class EditorPainter {
                     mRect.bottom = mEditor.getRowBottom(row);
                     mRect.left = paintingOffset;
                     mRect.right = mRect.left + width;
-                    mPaint.setColor(mColors.getColor(backgroundColorId));
+                    mPaint.setColor(mEditor.getColorScheme().getColor(backgroundColorId));
                     canvas.drawRoundRect(mRect, mEditor.getRowHeight() * 0.13f, mEditor.getRowHeight() * 0.13f, mPaint);
                 }
             }
 
 
             // Draw text
-            drawRegionTextDirectional(canvas, null, paintingOffset, mEditor.getRowBaseline(row), line, paintStart, paintEnd, span.column, spanEnd, columnCount, mColors.getColor(span.getForegroundColorId()));
+            drawRegionTextDirectional(canvas, null, paintingOffset, mEditor.getRowBaseline(row), line, paintStart, paintEnd, span.column, spanEnd, columnCount, mEditor.getColorScheme().getColor(span.getForegroundColorId()));
 
             // Draw strikethrough
             if ((span.problemFlags & Span.FLAG_DEPRECATED) != 0 || TextStyle.isStrikeThrough(span.style)) {
@@ -303,13 +299,13 @@ public class EditorPainter {
                 int color = 0;
                 switch (Integer.highestOneBit(span.problemFlags)) {
                     case Span.FLAG_ERROR:
-                        color = mColors.getColor(EditorColorScheme.PROBLEM_ERROR);
+                        color = mEditor.getColorScheme().getColor(EditorColorScheme.PROBLEM_ERROR);
                         break;
                     case Span.FLAG_WARNING:
-                        color = mColors.getColor(EditorColorScheme.PROBLEM_WARNING);
+                        color = mEditor.getColorScheme().getColor(EditorColorScheme.PROBLEM_WARNING);
                         break;
                     case Span.FLAG_TYPO:
-                        color = mColors.getColor(EditorColorScheme.PROBLEM_TYPO);
+                        color = mEditor.getColorScheme().getColor(EditorColorScheme.PROBLEM_TYPO);
                         break;
                 }
                 if (color != 0 && span.column >= 0 && spanEnd - span.column >= 0) {
@@ -348,7 +344,7 @@ public class EditorPainter {
                 canvas.translate(paintingOffset, mEditor.getRowTop(row));
                 canvas.clipRect(0f, 0f, width, mEditor.getRowHeight());
                 try {
-                    renderer.draw(canvas, mPaint, mColors, false);
+                    renderer.draw(canvas, mPaint, mEditor.getColorScheme(), false);
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Error while invoking external renderer", e);
                 }
@@ -380,21 +376,21 @@ public class EditorPainter {
      * @param canvas Canvas you want to draw
      */
     public void drawView(Canvas canvas) {
-        if (mEditor != null) {
+        if (mEditor.isFormatting()) {
             String text = "Formatting your code...";
             float centerY = mEditor.getHeight() / 2f;
-            drawColor(canvas, mColors.getColor(EditorColorScheme.LINE_NUMBER_PANEL), mRect);
+            drawColor(canvas, mEditor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL), mRect);
             float baseline = centerY - mEditor.getRowHeight() / 2f + mEditor.getRowBaseline(0);
             float centerX = mEditor.getWidth() / 2f;
-            mPaint.setColor(mColors.getColor(EditorColorScheme.LINE_NUMBER_PANEL_TEXT));
+            mPaint.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL_TEXT));
             mPaint.setTextAlign(Paint.Align.CENTER);
             canvas.drawText(text, centerX, baseline, mPaint);
             mPaint.setTextAlign(Paint.Align.LEFT);
             return;
         }
-        mCursor.updateCache(mEditor.getFirstVisibleLine());
+        mEditor.getCursor().updateCache(mEditor.getFirstVisibleLine());
 
-        EditorColorScheme color = mColors;
+        EditorColorScheme color = mEditor.getColorScheme();
         drawColor(canvas, color.getColor(EditorColorScheme.WHOLE_BACKGROUND), mViewRect);
 
         float lineNumberWidth = mEditor.measureLineNumber();
@@ -414,10 +410,10 @@ public class EditorPainter {
 
         mEditor.buildMeasureCacheForLines(mEditor.getFirstVisibleLine(), mEditor.getLastVisibleLine(), mTimestamp);
 
-        if (mCursor.isSelected()) {
+        if (mEditor.getCursor().isSelected()) {
             mEditor.getInsertHandleDescriptor().setEmpty();
         }
-        if (!mCursor.isSelected()) {
+        if (!mEditor.getCursor().isSelected()) {
             mEditor.getLeftHandleDescriptor().setEmpty();
             mEditor.getRightHandleDescriptor().setEmpty();
         }
@@ -437,8 +433,8 @@ public class EditorPainter {
 
         if (lineNumberNotPinned) {
             drawLineNumberBackground(canvas, offsetX, lineNumberWidth + mEditor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
-            int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
-            int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
+            int lineNumberColor = mEditor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER);
+            int currentLineBgColor = mEditor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE);
             if (mEditor.getCursorAnimator().isRunning()) {
                 mRect.bottom = (float) mEditor.getCursorAnimator().animatorBgBottom.getAnimatedValue() - mEditor.getOffsetY();
                 mRect.top = mRect.bottom - (float) mEditor.getCursorAnimator().animatorBackground.getAnimatedValue();
@@ -493,8 +489,8 @@ public class EditorPainter {
 
         if (mEditor.isLineNumberEnabled() && !lineNumberNotPinned) {
             drawLineNumberBackground(canvas, 0, lineNumberWidth + mEditor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
-            int lineNumberColor = mColors.getColor(EditorColorScheme.LINE_NUMBER);
-            int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
+            int lineNumberColor = mEditor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER);
+            int currentLineBgColor = mEditor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE);
             if (mEditor.getCursorAnimator().isRunning()) {
                 mRect.bottom = (float) mEditor.getCursorAnimator().animatorBgBottom.getAnimatedValue() - mEditor.getOffsetY();
                 mRect.top = mRect.bottom - (float) mEditor.getCursorAnimator().animatorBackground.getAnimatedValue();
@@ -672,8 +668,8 @@ public class EditorPainter {
         List<Span> temporaryEmptySpans = null;
         Spans spans = mEditor.getStyles() == null ? null : mEditor.getStyles().spans;
         var matchedPositions = new LongArrayList();
-        int currentLine = mCursor.isSelected() ? -1 : mCursor.getLeftLine();
-        int currentLineBgColor = mColors.getColor(EditorColorScheme.CURRENT_LINE);
+        int currentLine = mEditor.getCursor().isSelected() ? -1 : mEditor.getCursor().getLeftLine();
+        int currentLineBgColor = mEditor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE);
         int lastPreparedLine = -1;
         int spanOffset = 0;
         int leadingWhitespaceEnd = 0;
@@ -719,29 +715,29 @@ public class EditorPainter {
                     var position = matchedPositions.get(i);
                     var start = IntPair.getFirst(position);
                     var end = IntPair.getSecond(position);
-                    drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, start, end, mColors.getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND), line);
+                    drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, start, end, mEditor.getColorScheme().getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND), line);
                 }
             }
 
             // Draw selected text background
-            if (mCursor.isSelected() && line >= mCursor.getLeftLine() && line <= mCursor.getRightLine()) {
+            if (mEditor.getCursor().isSelected() && line >= mEditor.getCursor().getLeftLine() && line <= mEditor.getCursor().getRightLine()) {
                 int selectionStart = 0;
                 int selectionEnd = columnCount;
-                if (line == mCursor.getLeftLine()) {
-                    selectionStart = mCursor.getLeftColumn();
+                if (line == mEditor.getCursor().getLeftLine()) {
+                    selectionStart = mEditor.getCursor().getLeftColumn();
                 }
-                if (line == mCursor.getRightLine()) {
-                    selectionEnd = mCursor.getRightColumn();
+                if (line == mEditor.getCursor().getRightLine()) {
+                    selectionEnd = mEditor.getCursor().getRightColumn();
                 }
-                if (mEditor.getText().getColumnCount(line) == 0 && line != mCursor.getRightLine()) {
+                if (mEditor.getText().getColumnCount(line) == 0 && line != mEditor.getCursor().getRightLine()) {
                     mRect.top = mEditor.getRowTop(row) - mEditor.getOffsetY();
                     mRect.bottom = mEditor.getRowBottom(row) - mEditor.getOffsetY();
                     mRect.left = paintingOffset;
                     mRect.right = mRect.left + mPaint.getSpaceWidth() * 2;
-                    mPaint.setColor(mColors.getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
+                    mPaint.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
                     canvas.drawRoundRect(mRect, mEditor.getRowHeight() * 0.13f, mEditor.getRowHeight() * 0.13f, mPaint);
                 } else {
-                    drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd, mColors.getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND), line);
+                    drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd, mEditor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND), line);
                 }
             }
         }
@@ -845,7 +841,7 @@ public class EditorPainter {
                         canvas.translate(paintingOffset, mEditor.getRowTop(row) - mEditor.getOffsetY());
                         canvas.clipRect(0f, 0f, width, mEditor.getRowHeight());
                         try {
-                            renderer.draw(canvas, mPaint, mColors, true);
+                            renderer.draw(canvas, mPaint, mEditor.getColorScheme(), true);
                         } catch (Exception e) {
                             Log.e(LOG_TAG, "Error while invoking external renderer", e);
                         }
@@ -871,13 +867,13 @@ public class EditorPainter {
                             mRect.bottom = mEditor.getRowBottom(row) - mEditor.getOffsetY();
                             mRect.left = paintingOffset;
                             mRect.right = mRect.left + width;
-                            mPaint.setColor(mColors.getColor(backgroundColorId));
+                            mPaint.setColor(mEditor.getColorScheme().getColor(backgroundColorId));
                             canvas.drawRoundRect(mRect, mEditor.getRowHeight() * 0.13f, mEditor.getRowHeight() * 0.13f, mPaint);
                         }
                     }
 
                     // Draw text
-                    drawRegionText(canvas, paintingOffset, mEditor.getRowBaseline(row) - mEditor.getOffsetY(), line, paintStart, paintEnd, span.column, spanEnd, false, columnCount, mColors.getColor(span.getForegroundColorId()));
+                    drawRegionText(canvas, paintingOffset, mEditor.getRowBaseline(row) - mEditor.getOffsetY(), line, paintStart, paintEnd, span.column, spanEnd, false, columnCount, mEditor.getColorScheme().getColor(span.getForegroundColorId()));
 
                     // Draw strikethrough
                     if ((span.problemFlags & Span.FLAG_DEPRECATED) != 0 || TextStyle.isStrikeThrough(styleBits)) {
@@ -900,13 +896,13 @@ public class EditorPainter {
                         int color = 0;
                         switch (Integer.highestOneBit(span.problemFlags)) {
                             case Span.FLAG_ERROR:
-                                color = mColors.getColor(EditorColorScheme.PROBLEM_ERROR);
+                                color = mEditor.getColorScheme().getColor(EditorColorScheme.PROBLEM_ERROR);
                                 break;
                             case Span.FLAG_WARNING:
-                                color = mColors.getColor(EditorColorScheme.PROBLEM_WARNING);
+                                color = mEditor.getColorScheme().getColor(EditorColorScheme.PROBLEM_WARNING);
                                 break;
                             case Span.FLAG_TYPO:
-                                color = mColors.getColor(EditorColorScheme.PROBLEM_TYPO);
+                                color = mEditor.getColorScheme().getColor(EditorColorScheme.PROBLEM_TYPO);
                                 break;
                         }
                         if (color != 0 && span.column >= 0 && spanEnd - span.column >= 0) {
@@ -952,7 +948,7 @@ public class EditorPainter {
                         canvas.translate(paintingOffset, mEditor.getRowTop(row) - mEditor.getOffsetY());
                         canvas.clipRect(0f, 0f, width, mEditor.getRowHeight());
                         try {
-                            renderer.draw(canvas, mPaint, mColors, false);
+                            renderer.draw(canvas, mPaint, mEditor.getColorScheme(), false);
                         } catch (Exception e) {
                             Log.e(LOG_TAG, "Error while invoking external renderer", e);
                         }
@@ -1001,14 +997,14 @@ public class EditorPainter {
                 if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_TRAILING) != 0) {
                     drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, trailingWhitespaceStart, columnCount, circleRadius);
                 }
-                if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_IN_SELECTION) != 0 && mCursor.isSelected() && line >= mCursor.getLeftLine() && line <= mCursor.getRightLine()) {
+                if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_IN_SELECTION) != 0 && mEditor.getCursor().isSelected() && line >= mEditor.getCursor().getLeftLine() && line <= mEditor.getCursor().getRightLine()) {
                     int selectionStart = 0;
                     int selectionEnd = columnCount;
-                    if (line == mCursor.getLeftLine()) {
-                        selectionStart = mCursor.getLeftColumn();
+                    if (line == mEditor.getCursor().getLeftLine()) {
+                        selectionStart = mEditor.getCursor().getLeftColumn();
                     }
-                    if (line == mCursor.getRightLine()) {
-                        selectionEnd = mCursor.getRightColumn();
+                    if (line == mEditor.getCursor().getRightLine()) {
+                        selectionEnd = mEditor.getCursor().getRightColumn();
                     }
                     if ((nonPrintableFlags & 0b1110) == 0) {
                         drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd, circleRadius);
@@ -1037,22 +1033,22 @@ public class EditorPainter {
                     mRect.bottom = mRect.top + mEditor.getRowHeight() * 0.06f;
                     mRect.left = paintingOffset + mEditor.measureText(mEditor.getLineBuffer(), firstVisibleChar, paintStart - firstVisibleChar, line);
                     mRect.right = mRect.left + mEditor.measureText(mEditor.getLineBuffer(), paintStart, paintEnd - paintStart, line);
-                    drawColor(canvas, mColors.getColor(EditorColorScheme.UNDERLINE), mRect);
+                    drawColor(canvas, mEditor.getColorScheme().getColor(EditorColorScheme.UNDERLINE), mRect);
                 }
             }
 
             // Draw cursors
-            if (mCursor.isSelected()) {
-                if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
-                    float centerX = paintingOffset + mEditor.measureText(mEditor.getLineBuffer(), firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar, line);
+            if (mEditor.getCursor().isSelected()) {
+                if (mEditor.getCursor().getLeftLine() == line && isInside(mEditor.getCursor().getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
+                    float centerX = paintingOffset + mEditor.measureText(mEditor.getLineBuffer(), firstVisibleChar, mEditor.getCursor().getLeftColumn() - firstVisibleChar, line);
                     postDrawCursor.add(new DrawCursorTask(centerX, mEditor.getRowBottom(row) - mEditor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_LEFT, mEditor.getLeftHandleDescriptor()));
                 }
-                if (mCursor.getRightLine() == line && isInside(mCursor.getRightColumn(), firstVisibleChar, lastVisibleChar, line)) {
-                    float centerX = paintingOffset + mEditor.measureText(mEditor.getLineBuffer(), firstVisibleChar, mCursor.getRightColumn() - firstVisibleChar, line);
+                if (mEditor.getCursor().getRightLine() == line && isInside(mEditor.getCursor().getRightColumn(), firstVisibleChar, lastVisibleChar, line)) {
+                    float centerX = paintingOffset + mEditor.measureText(mEditor.getLineBuffer(), firstVisibleChar, mEditor.getCursor().getRightColumn() - firstVisibleChar, line);
                     postDrawCursor.add(new DrawCursorTask(centerX, mEditor.getRowBottom(row) - mEditor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_RIGHT, mEditor.getRightHandleDescriptor()));
                 }
-            } else if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
-                float centerX = paintingOffset + mEditor.measureText(mEditor.getLineBuffer(), firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar, line);
+            } else if (mEditor.getCursor().getLeftLine() == line && isInside(mEditor.getCursor().getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
+                float centerX = paintingOffset + mEditor.measureText(mEditor.getLineBuffer(), firstVisibleChar, mEditor.getCursor().getLeftColumn() - firstVisibleChar, line);
                 postDrawCursor.add(new DrawCursorTask(centerX, mEditor.getRowBottom(row) - mEditor.getOffsetY(), mEditor.getEventHandler().shouldDrawInsertHandle() ? SelectionHandleStyle.HANDLE_TYPE_INSERT : SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, mEditor.getInsertHandleDescriptor()));
             }
         }
@@ -1069,7 +1065,7 @@ public class EditorPainter {
     protected void drawWhitespaces(Canvas canvas, float offset, int line, int row, int rowStart, int rowEnd, int min, int max, float circleRadius) {
         int paintStart = Math.max(rowStart, Math.min(rowEnd, min));
         int paintEnd = Math.max(rowStart, Math.min(rowEnd, max));
-        mPaintOther.setColor(mColors.getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
+        mPaintOther.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
 
         if (paintStart < paintEnd) {
             float spaceWidth = mPaint.getSpaceWidth();
@@ -1119,7 +1115,7 @@ public class EditorPainter {
      */
     protected void drawMiniGraph(Canvas canvas, float offset, int row, String graph) {
         // Draw
-        mPaintGraph.setColor(mColors.getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
+        mPaintGraph.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
         float baseline = mEditor.getRowBottom(row) - mEditor.getOffsetY() - mGraphMetrics.descent;
         canvas.drawText(graph, 0, graph.length(), offset, baseline, mPaintGraph);
     }
@@ -1162,18 +1158,18 @@ public class EditorPainter {
      * @param color       Color of normal text in this region
      */
     protected void drawRegionText(Canvas canvas, float offsetX, float baseline, int line, int startIndex, int endIndex, int contextStart, int contextEnd, boolean isRtl, int columnCount, int color) {
-        boolean hasSelectionOnLine = mCursor.isSelected() && line >= mCursor.getLeftLine() && line <= mCursor.getRightLine();
+        boolean hasSelectionOnLine = mEditor.getCursor().isSelected() && line >= mEditor.getCursor().getLeftLine() && line <= mEditor.getCursor().getRightLine();
         int selectionStart = 0;
         int selectionEnd = columnCount;
         int contextCount = contextEnd - contextStart;
-        if (line == mCursor.getLeftLine()) {
-            selectionStart = mCursor.getLeftColumn();
+        if (line == mEditor.getCursor().getLeftLine()) {
+            selectionStart = mEditor.getCursor().getLeftColumn();
         }
-        if (line == mCursor.getRightLine()) {
-            selectionEnd = mCursor.getRightColumn();
+        if (line == mEditor.getCursor().getRightLine()) {
+            selectionEnd = mEditor.getCursor().getRightColumn();
         }
         mPaint.setColor(color);
-        if (hasSelectionOnLine && mColors.getColor(EditorColorScheme.TEXT_SELECTED) != 0) {
+        if (hasSelectionOnLine && mEditor.getColorScheme().getColor(EditorColorScheme.TEXT_SELECTED) != 0) {
             if (endIndex <= selectionStart || startIndex >= selectionEnd) {
                 drawText(canvas, mEditor.getLineBuffer(), startIndex, endIndex - startIndex, contextStart, contextCount, isRtl, offsetX, baseline, line);
             } else {
@@ -1184,7 +1180,7 @@ public class EditorPainter {
                         drawText(canvas, mEditor.getLineBuffer(), startIndex, selectionStart - startIndex, contextStart, contextCount, isRtl, offsetX, baseline, line);
                         float deltaX = mEditor.measureText(mEditor.getLineBuffer(), startIndex, selectionStart - startIndex, line);
                         //selectionStart - selectionEnd
-                        mPaint.setColor(mColors.getColor(EditorColorScheme.TEXT_SELECTED));
+                        mPaint.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.TEXT_SELECTED));
                         drawText(canvas, mEditor.getLineBuffer(), selectionStart, selectionEnd - selectionStart, contextStart, contextCount, isRtl, offsetX + deltaX, baseline, line);
                         deltaX += mEditor.measureText(mEditor.getLineBuffer(), selectionStart, selectionEnd - selectionStart, line);
                         //selectionEnd - endIndex
@@ -1195,7 +1191,7 @@ public class EditorPainter {
                         //startIndex - selectionStart
                         drawText(canvas, mEditor.getLineBuffer(), startIndex, selectionStart - startIndex, contextStart, contextCount, isRtl, offsetX, baseline, line);
                         //selectionStart - endIndex
-                        mPaint.setColor(mColors.getColor(EditorColorScheme.TEXT_SELECTED));
+                        mPaint.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.TEXT_SELECTED));
                         drawText(canvas, mEditor.getLineBuffer(), selectionStart, endIndex - selectionStart, contextStart, contextCount, isRtl, offsetX + mEditor.measureText(mEditor.getLineBuffer(), startIndex, selectionStart - startIndex, line), baseline, line);
                     }
                 } else {
@@ -1205,11 +1201,11 @@ public class EditorPainter {
                         //selectionEnd - endIndex
                         drawText(canvas, mEditor.getLineBuffer(), selectionEnd, endIndex - selectionEnd, contextStart, contextCount, isRtl, offsetX + mEditor.measureText(mEditor.getLineBuffer(), startIndex, selectionEnd - startIndex, line), baseline, line);
                         //startIndex - selectionEnd
-                        mPaint.setColor(mColors.getColor(EditorColorScheme.TEXT_SELECTED));
+                        mPaint.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.TEXT_SELECTED));
                         drawText(canvas, mEditor.getLineBuffer(), startIndex, selectionEnd - startIndex, contextStart, contextCount, isRtl, offsetX, baseline, line);
                     } else {
                         //One region
-                        mPaint.setColor(mColors.getColor(EditorColorScheme.TEXT_SELECTED));
+                        mPaint.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.TEXT_SELECTED));
                         drawText(canvas, mEditor.getLineBuffer(), startIndex, endIndex - startIndex, contextStart, contextCount, isRtl, offsetX, baseline, line);
                     }
                 }
@@ -1312,10 +1308,10 @@ public class EditorPainter {
                 mRect.bottom = y;
                 mRect.left = x - mEditor.getInsertSelectionWidth() / 2f;
                 mRect.right = x + mEditor.getInsertSelectionWidth() / 2f;
-                drawColor(canvas, mColors.getColor(EditorColorScheme.SELECTION_INSERT), mRect);
+                drawColor(canvas, mEditor.getColorScheme().getColor(EditorColorScheme.SELECTION_INSERT), mRect);
             }
             if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED) {
-                mEditor.getHandleStyle().draw(canvas, handleType, x, y, mEditor.getRowHeight(), mColors.getColor(EditorColorScheme.SELECTION_HANDLE), descriptor);
+                mEditor.getHandleStyle().draw(canvas, handleType, x, y, mEditor.getRowHeight(), mEditor.getColorScheme().getColor(EditorColorScheme.SELECTION_HANDLE), descriptor);
             } else if (descriptor != null) {
                 descriptor.setEmpty();
             }
@@ -1412,7 +1408,7 @@ public class EditorPainter {
                     mRect.bottom = Math.min(mEditor.getHeight(), (block.toBottomOfEndLine ? mEditor.getRowBottom(block.endLine) : mEditor.getRowTop(block.endLine)) - mEditor.getOffsetY());
                     mRect.left = centerX - mEditor.getDpUnit() * mEditor.getBlockLineWidth() / 2;
                     mRect.right = centerX + mEditor.getDpUnit() * mEditor.getBlockLineWidth() / 2;
-                    drawColor(canvas, mColors.getColor(curr == cursorIdx ? EditorColorScheme.BLOCK_LINE_CURRENT : EditorColorScheme.BLOCK_LINE), mRect);
+                    drawColor(canvas, mEditor.getColorScheme().getColor(curr == cursorIdx ? EditorColorScheme.BLOCK_LINE_CURRENT : EditorColorScheme.BLOCK_LINE), mRect);
                 } catch (IndexOutOfBoundsException e) {
                     //Ignored
                     //Because the exception usually occurs when the content changed.
@@ -1458,7 +1454,7 @@ public class EditorPainter {
             mRect.left = mEditor.getWidth() - mEditor.getDpUnit() * 10;
             mRect.top = 0;
             mRect.bottom = mEditor.getHeight();
-            drawColor(canvas, mColors.getColor(EditorColorScheme.SCROLL_BAR_TRACK), mRect);
+            drawColor(canvas, mEditor.getColorScheme().getColor(EditorColorScheme.SCROLL_BAR_TRACK), mRect);
         }
     }
 
@@ -1487,7 +1483,7 @@ public class EditorPainter {
         mRect.top = topY;
         mRect.bottom = topY + length;
         mVerticalScrollBar.set(mRect);
-        drawColor(canvas, mColors.getColor(mEditor.getEventHandler().holdVerticalScrollBar()
+        drawColor(canvas, mEditor.getColorScheme().getColor(mEditor.getEventHandler().holdVerticalScrollBar()
                 ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED
                 : EditorColorScheme.SCROLL_BAR_THUMB), mRect);
     }
@@ -1514,10 +1510,10 @@ public class EditorPainter {
         mRect.bottom = centerY + mEditor.getRowHeight() / 2f + expand;
         mRect.right = rightX;
         mRect.left = rightX - expand * 2 - textWidth;
-        drawColor(canvas, mColors.getColor(EditorColorScheme.LINE_NUMBER_PANEL), mRect);
+        drawColor(canvas, mEditor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL), mRect);
         float baseline = centerY - mEditor.getRowHeight() / 2f + mEditor.getRowBaseline(0);
         float centerX = (mRect.left + mRect.right) / 2;
-        mPaint.setColor(mColors.getColor(EditorColorScheme.LINE_NUMBER_PANEL_TEXT));
+        mPaint.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL_TEXT));
         mPaint.setTextAlign(Paint.Align.CENTER);
         canvas.drawText(text, centerX, baseline, mPaint);
         mPaint.setTextAlign(Paint.Align.LEFT);
@@ -1536,7 +1532,7 @@ public class EditorPainter {
             mRect.bottom = mEditor.getHeight();
             mRect.right = mEditor.getWidth();
             mRect.left = 0;
-            drawColor(canvas, mColors.getColor(EditorColorScheme.SCROLL_BAR_TRACK), mRect);
+            drawColor(canvas, mEditor.getColorScheme().getColor(EditorColorScheme.SCROLL_BAR_TRACK), mRect);
         }
     }
 
@@ -1546,9 +1542,9 @@ public class EditorPainter {
         float centerX = (float) mEditor.getCursorAnimator().animatorX.getAnimatedValue() - mEditor.getOffsetX();
         mRect.left = centerX - mEditor.getInsertSelectionWidth() / 2;
         mRect.right = centerX + mEditor.getInsertSelectionWidth() / 2;
-        drawColor(canvas, mColors.getColor(EditorColorScheme.SELECTION_INSERT), mRect);
+        drawColor(canvas, mEditor.getColorScheme().getColor(EditorColorScheme.SELECTION_INSERT), mRect);
         if (mEditor.getEventHandler().shouldDrawInsertHandle()) {
-            mEditor.getHandleStyle().draw(canvas, SelectionHandleStyle.HANDLE_TYPE_INSERT, centerX, mRect.bottom, mEditor.getRowHeight(), mColors.getColor(EditorColorScheme.SELECTION_HANDLE), mEditor.getInsertHandleDescriptor());
+            mEditor.getHandleStyle().draw(canvas, SelectionHandleStyle.HANDLE_TYPE_INSERT, centerX, mRect.bottom, mEditor.getRowHeight(), mEditor.getColorScheme().getColor(EditorColorScheme.SELECTION_HANDLE), mEditor.getInsertHandleDescriptor());
         }
     }
 
@@ -1567,6 +1563,6 @@ public class EditorPainter {
         mRect.right = leftX + length;
         mRect.left = leftX;
         mHorizontalScrollBar.set(mRect);
-        drawColor(canvas, mColors.getColor(mEditor.getEventHandler().holdHorizontalScrollBar() ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED : EditorColorScheme.SCROLL_BAR_THUMB), mRect);
+        drawColor(canvas, mEditor.getColorScheme().getColor(mEditor.getEventHandler().holdHorizontalScrollBar() ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED : EditorColorScheme.SCROLL_BAR_THUMB), mRect);
     }
 }

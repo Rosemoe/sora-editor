@@ -1125,7 +1125,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                     if (line.widthCache == null) {
                         line.widthCache = obtainFloatArray(Math.max(line.length(), 128));
                     }
-                    gtr.set(line, 0, line.length(), getTabWidth(), getSpansForLine(startLine), mPaint);
+                    gtr.set(line, 0, line.length(), getTabWidth(), getSpansForLine(startLine), mPainter.getPaint());
                     gtr.buildMeasureCache();
                     GraphicTextRow.recycle(gtr);
                     line.timestamp = timestamp;
@@ -1395,7 +1395,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     @UnsupportedUserUsage
     public float measureText(ContentLine text, int index, int count, int line) {
         var gtr = GraphicTextRow.obtain();
-        gtr.set(text, 0, text.length(), mTabWidth, getSpansForLine(line), mPaint);
+        gtr.set(text, 0, text.length(), mTabWidth, getSpansForLine(line), mPainter.getPaint());
         var res = gtr.measureText(index, index + count);
         GraphicTextRow.recycle(gtr);
         return res;
@@ -1438,13 +1438,13 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         int st = index;
         for (int i = index; i < end; i++) {
             if (src[i] == '\t') {
-                canvas.drawTextRun(src, st, i - st, contextStart, contextCount, offX, offY, isRtl, mPaint);
+                canvas.drawTextRun(src, st, i - st, contextStart, contextCount, offX, offY, isRtl, mPainter.getPaint());
                 offX = offX + measureText(line, st, i - st + 1, lineNumber);
                 st = i + 1;
             }
         }
         if (st < end) {
-            canvas.drawTextRun(src, st, end - st, contextStart, contextCount, offX, offY, isRtl, mPaint);
+            canvas.drawTextRun(src, st, end - st, contextStart, contextCount, offX, offY, isRtl, mPainter.getPaint());
         }
     }
 
@@ -1462,7 +1462,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             return new float[]{end, 0};
         }
         var gtr = GraphicTextRow.obtain();
-        gtr.set(line, contextStart, end, mTabWidth, getSpansForLine(lineNumber), mPaint);
+        gtr.set(line, contextStart, end, mTabWidth, getSpansForLine(lineNumber), mPainter.getPaint());
         if (line.widthCache != null && line.timestamp < mTimestamp) {
             buildMeasureCacheForLines(lineNumber, lineNumber, mTimestamp);
         }
@@ -2982,6 +2982,16 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      */
     public <T extends Event> int dispatchEvent(T event) {
         return mEventManager.dispatchEvent(event);
+    }
+
+
+    /**
+     * Check whether the editor is currently performing a format operation
+     *
+     * @return whether the editor is currently formatting
+     */
+    public boolean isFormatting() {
+        return mFormatThread != null;
     }
 
     /**
