@@ -148,5 +148,9 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean adjustToSelectionOnResize = true;
 
+    /**
+     * Show scroll bars even when the scroll is caused by editor's adjustment but not user interaction
+     */
+    public boolean awareScrollbarWhenAdjust = false;
 
 }

@@ -1773,7 +1773,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         if (animation) {
             getScroller().forceFinished(true);
             getScroller().startScroll(getOffsetX(), getOffsetY(), (int) (targetX - getOffsetX()), (int) (targetY - getOffsetY()));
-            if (Math.abs(getOffsetY() - targetY) > mDpUnit * 100) {
+            if (mProps.awareScrollbarWhenAdjust && Math.abs(getOffsetY() - targetY) > mDpUnit * 100) {
                 mEventHandler.notifyScrolled();
             }
         } else {
