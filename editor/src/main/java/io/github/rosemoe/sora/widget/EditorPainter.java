@@ -62,7 +62,6 @@ import io.github.rosemoe.sora.lang.styling.Spans;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.text.AndroidBidi;
 import io.github.rosemoe.sora.text.ContentLine;
-import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
 import io.github.rosemoe.sora.util.Numbers;
@@ -362,7 +361,7 @@ public class EditorPainter {
                     }
                     phi = waveLength - (waveCount * waveLength - lineWidth);
                     // Draw path
-                    mPaint.setStrokeWidth(mEditor.getDpUnit() * waveWidth);
+                    mPaintOther.setStrokeWidth(mEditor.getDpUnit() * waveWidth);
                     mPaintOther.setStyle(Paint.Style.STROKE);
                     mPaintOther.setColor(color);
                     canvas.drawPath(mPath, mPaintOther);
@@ -701,7 +700,6 @@ public class EditorPainter {
         final float amplitude = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveAmplitude;
         final float waveWidth = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveWidth;
         RowIterator rowIterator = mEditor.getLayout().obtainRowIterator(firstVis);
-        List<Span> temporaryEmptySpans = null;
         Spans spans = mEditor.getStyles() == null ? null : mEditor.getStyles().spans;
         var matchedPositions = new LongArrayList();
         int currentLine = mEditor.getCursor().isSelected() ? -1 : mEditor.getCursor().getLeftLine();
@@ -967,7 +965,7 @@ public class EditorPainter {
                             }
                             phi = waveLength - (waveCount * waveLength - lineWidth);
                             // Draw path
-                            mPaint.setStrokeWidth(waveWidth);
+                            mPaintOther.setStrokeWidth(waveWidth);
                             mPaintOther.setStyle(Paint.Style.STROKE);
                             mPaintOther.setColor(color);
                             canvas.drawPath(mPath, mPaintOther);
@@ -1025,13 +1023,13 @@ public class EditorPainter {
             // Draw non-printable characters
             if (circleRadius != 0f && (leadingWhitespaceEnd != columnCount || (nonPrintableFlags & FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE) != 0)) {
                 if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_LEADING) != 0) {
-                    drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, 0, leadingWhitespaceEnd, circleRadius);
+                    drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, 0, leadingWhitespaceEnd);
                 }
                 if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_INNER) != 0) {
-                    drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, leadingWhitespaceEnd, trailingWhitespaceStart, circleRadius);
+                    drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, leadingWhitespaceEnd, trailingWhitespaceStart);
                 }
                 if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_TRAILING) != 0) {
-                    drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, trailingWhitespaceStart, columnCount, circleRadius);
+                    drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, trailingWhitespaceStart, columnCount);
                 }
                 if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_IN_SELECTION) != 0 && mEditor.getCursor().isSelected() && line >= mEditor.getCursor().getLeftLine() && line <= mEditor.getCursor().getRightLine()) {
                     int selectionStart = 0;
@@ -1043,16 +1041,16 @@ public class EditorPainter {
                         selectionEnd = mEditor.getCursor().getRightColumn();
                     }
                     if ((nonPrintableFlags & 0b1110) == 0) {
-                        drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd, circleRadius);
+                        drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd);
                     } else {
                         if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_LEADING) == 0) {
-                            drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, selectionStart, Math.min(leadingWhitespaceEnd, selectionEnd), circleRadius);
+                            drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, selectionStart, Math.min(leadingWhitespaceEnd, selectionEnd));
                         }
                         if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_INNER) == 0) {
-                            drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, Math.max(leadingWhitespaceEnd, selectionStart), Math.min(trailingWhitespaceStart, selectionEnd), circleRadius);
+                            drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, Math.max(leadingWhitespaceEnd, selectionStart), Math.min(trailingWhitespaceStart, selectionEnd));
                         }
                         if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_TRAILING) == 0) {
-                            drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, Math.max(trailingWhitespaceStart, selectionStart), selectionEnd, circleRadius);
+                            drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, Math.max(trailingWhitespaceStart, selectionStart), selectionEnd);
                         }
                     }
                 }
@@ -1098,7 +1096,7 @@ public class EditorPainter {
     /**
      * Draw non-printable characters
      */
-    protected void drawWhitespaces(Canvas canvas, float offset, int line, int row, int rowStart, int rowEnd, int min, int max, float circleRadius) {
+    protected void drawWhitespaces(Canvas canvas, float offset, int line, int row, int rowStart, int rowEnd, int min, int max) {
         int paintStart = Math.max(rowStart, Math.min(rowEnd, min));
         int paintEnd = Math.max(rowStart, Math.min(rowEnd, max));
         mPaintOther.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
