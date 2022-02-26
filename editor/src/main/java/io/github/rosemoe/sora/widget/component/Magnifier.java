@@ -44,6 +44,7 @@ import androidx.annotation.RequiresApi;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.EditorPainter;
 
 /**
  * Magnifier specially designed for CodeEditor
@@ -232,7 +233,7 @@ public class Magnifier implements EditorBuiltinComponent {
      * Update display on low API devices
      *
      * This method does not include other views as it obtain editor's display by
-     * directly calling {@link CodeEditor#drawView(Canvas)}
+     * directly calling {@link EditorPainter#drawView(Canvas)}
      */
     private void updateDisplayWithinEditor() {
         var dest = Bitmap.createBitmap(popup.getWidth(), popup.getHeight(), Bitmap.Config.ARGB_8888);
@@ -257,7 +258,7 @@ public class Magnifier implements EditorBuiltinComponent {
         var clip = Bitmap.createBitmap(requiredWidth, requiredHeight, Bitmap.Config.ARGB_8888);
         var viewCanvas = new Canvas(clip);
         viewCanvas.translate(-left, -top);
-        view.drawView(viewCanvas);
+        view.draw(viewCanvas);
         var scaled = Bitmap.createScaledBitmap(clip, popup.getWidth(), popup.getHeight(), false);
         clip.recycle();
 
