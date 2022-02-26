@@ -23,8 +23,6 @@
  */
 package io.github.rosemoe.sora.widget;
 
-import static io.github.rosemoe.sora.util.Numbers.stringSize;
-
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.ClipData;
@@ -32,12 +30,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.Path;
-import android.graphics.Rect;
-import android.graphics.RectF;
-import android.graphics.RenderNode;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
@@ -45,7 +38,6 @@ import android.os.Looper;
 import android.text.InputType;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.util.MutableInt;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.ContextThemeWrapper;
@@ -74,14 +66,12 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Px;
-import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import io.github.rosemoe.sora.R;
-import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.EditorKeyEvent;
@@ -92,7 +82,6 @@ import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.SubscriptionReceipt;
-import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
@@ -102,13 +91,8 @@ import io.github.rosemoe.sora.lang.analysis.StyleReceiver;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
-import io.github.rosemoe.sora.lang.styling.EmptyReader;
-import io.github.rosemoe.sora.lang.styling.ExternalRenderer;
 import io.github.rosemoe.sora.lang.styling.Span;
-import io.github.rosemoe.sora.lang.styling.Spans;
 import io.github.rosemoe.sora.lang.styling.Styles;
-import io.github.rosemoe.sora.lang.styling.TextStyle;
-import io.github.rosemoe.sora.text.AndroidBidi;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
@@ -121,8 +105,6 @@ import io.github.rosemoe.sora.text.TextLayoutHelper;
 import io.github.rosemoe.sora.text.TextUtils;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
-import io.github.rosemoe.sora.util.Numbers;
-import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 import io.github.rosemoe.sora.util.TemporaryFloatBuffer;
 import io.github.rosemoe.sora.util.ThemeUtils;
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
@@ -132,8 +114,6 @@ import io.github.rosemoe.sora.widget.component.EditorTextActionWindow;
 import io.github.rosemoe.sora.widget.component.Magnifier;
 import io.github.rosemoe.sora.widget.layout.Layout;
 import io.github.rosemoe.sora.widget.layout.LineBreakLayout;
-import io.github.rosemoe.sora.widget.layout.Row;
-import io.github.rosemoe.sora.widget.layout.RowIterator;
 import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
@@ -259,9 +239,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private int mDownX = 0;
     private int mInputType;
     private int mNonPrintableOptions;
-    private int mCachedLineNumberWidth;
     private int mCompletionPosMode;
-    private long mTimestamp;
     private long mAvailableFloatArrayRegion;
     private float mDpUnit;
     private float mDividerWidth;
@@ -288,23 +266,15 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private boolean mFirstLineNumberAlwaysVisible;
     private boolean mLigatureEnabled;
     private boolean mLastCursorState;
-    private RectF mRect;
     private SelectionHandleStyle.HandleDescriptor mLeftHandle;
     private SelectionHandleStyle.HandleDescriptor mRightHandle;
     private SelectionHandleStyle.HandleDescriptor mInsertHandle;
-    private RectF mVerticalScrollBar;
-    private RectF mHorizontalScrollBar;
-    private Path mPath;
     private ClipboardManager mClipboardManager;
     private InputMethodManager mInputMethodManager;
     private Cursor mCursor;
     private Content mText;
-    private Paint mPaint;
-    private Paint mPaintOther;
-    private Paint mPaintGraph;
     private ContentLine mBuffer;
     private Matrix mMatrix;
-    private Rect mViewRect;
     private EditorColorScheme mColors;
     private String mLnTip = "Line:";
     private Language mLanguage;
@@ -324,7 +294,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private EditorSearcher mSearcher;
     private EventManager mEventManager;
     private CursorAnimator mCursorAnimator;
-    private Paint.FontMetricsInt mTextMetrics;
     private Paint.FontMetricsInt mLineNumberMetrics;
     private Paint.FontMetricsInt mGraphMetrics;
     private SelectionHandleStyle mHandleStyle;
@@ -333,12 +302,12 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private final LongArrayList mPostDrawLineNumbers = new LongArrayList();
     private final LongArrayList mPostDrawCurrentLines = new LongArrayList();
     private CharPosition mSelectionAnchor;
-    private BufferedDrawPoints mDrawPoints;
     private HwAcceleratedRenderer mRenderer;
     private DirectAccessProps mProps;
     private Bundle mExtraArguments;
     private Styles mStyles;
     final KeyMetaStates mKeyMetaStates = new KeyMetaStates(this);
+
     private EditorPainter mPainter;
 
     public CodeEditor(Context context) {
@@ -536,14 +505,9 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         mBasicDetector = new GestureDetector(getContext(), mEventHandler);
         mBasicDetector.setOnDoubleTapListener(mEventHandler);
         mScaleDetector = new ScaleGestureDetector(getContext(), mEventHandler);
-        mViewRect = new Rect(0, 0, 0, 0);
-        mRect = new RectF();
         mInsertHandle = new SelectionHandleStyle.HandleDescriptor();
         mLeftHandle = new SelectionHandleStyle.HandleDescriptor();
         mRightHandle = new SelectionHandleStyle.HandleDescriptor();
-        mVerticalScrollBar = new RectF();
-        mHorizontalScrollBar = new RectF();
-        mHorizontalScrollBar = new RectF();
         mLineNumberAlign = Paint.Align.RIGHT;
         mWait = false;
         mBlockLineEnabled = true;
@@ -992,24 +956,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     @Override
     public void setVerticalScrollBarEnabled(boolean verticalScrollBarEnabled) {
         mVerticalScrollBarEnabled = verticalScrollBarEnabled;
-    }
-
-    /**
-     * Get the rect of vertical scroll bar on view
-     *
-     * @return Rect of scroll bar
-     */
-    protected RectF getVerticalScrollBarRect() {
-        return mVerticalScrollBar;
-    }
-
-    /**
-     * Get the rect of horizontal scroll bar on view
-     *
-     * @return Rect of scroll bar
-     */
-    protected RectF getHorizontalScrollBarRect() {
-        return mHorizontalScrollBar;
     }
 
     /**
@@ -1463,8 +1409,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
         var gtr = GraphicTextRow.obtain();
         gtr.set(line, contextStart, end, mTabWidth, getSpansForLine(lineNumber), mPainter.getPaint());
-        if (line.widthCache != null && line.timestamp < mTimestamp) {
-            buildMeasureCacheForLines(lineNumber, lineNumber, mTimestamp);
+        if (line.widthCache != null && line.timestamp < mPainter.getTimestamp()) {
+            buildMeasureCacheForLines(lineNumber, lineNumber, mPainter.getTimestamp());
         }
         var res = gtr.findOffsetByAdvance(start, target);
         GraphicTextRow.recycle(gtr);
@@ -1518,7 +1464,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             mLayout.destroyLayout();
         }
         if (mWordwrap) {
-            mCachedLineNumberWidth = (int) measureLineNumber();
+            mPainter.setCachedLineNumberWidth((int) measureLineNumber());
             mLayout = new WordwrapLayout(this, mText);
         } else {
             mLayout = new LineBreakLayout(this, mText);
@@ -2243,7 +2189,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * @see CodeEditor#setTypefaceLineNumber(Typeface)
      */
     public Typeface getTypefaceLineNumber() {
-        return mPaintOther.getTypeface();
+        return mPainter.getPaintOther().getTypeface();
     }
 
     /**
@@ -2252,12 +2198,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * @param typefaceLineNumber New typeface
      */
     public void setTypefaceLineNumber(Typeface typefaceLineNumber) {
-        if (typefaceLineNumber == null) {
-            typefaceLineNumber = Typeface.MONOSPACE;
-        }
-        mPaintOther.setTypeface(typefaceLineNumber);
-        mLineNumberMetrics = mPaintOther.getFontMetricsInt();
-        invalidate();
+        mPainter.setTypefaceLineNumber(typefaceLineNumber);
     }
 
     /**
@@ -3693,8 +3634,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     @Override
     protected void onSizeChanged(int w, int h, int oldWidth, int oldHeight) {
         super.onSizeChanged(w, h, oldWidth, oldHeight);
-        mViewRect.right = w;
-        mViewRect.bottom = h;
+        mPainter.onSizeChanged(w, h, oldWidth, oldHeight);
         getVerticalEdgeEffect().setSize(w, h);
         getHorizontalEdgeEffect().setSize(h, w);
         getVerticalEdgeEffect().finish();

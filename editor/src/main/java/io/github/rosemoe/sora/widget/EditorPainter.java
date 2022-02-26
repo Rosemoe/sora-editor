@@ -99,7 +99,6 @@ public class EditorPainter {
 
     public EditorPainter(@NonNull CodeEditor editor) {
         mEditor = editor;
-        mLineNumberMetrics = mEditor.getLineNumberMetrics();
         mVerticalScrollBar = new RectF();
         mHorizontalScrollBar = new RectF();
 
@@ -114,7 +113,12 @@ public class EditorPainter {
         mPaintOther.setStrokeWidth(mEditor.getDpUnit() * 1.8f);
         mPaintOther.setStrokeCap(Paint.Cap.ROUND);
         mPaintOther.setTypeface(Typeface.MONOSPACE);
+        mPaintOther.setAntiAlias(true);
         mPaintGraph = new Paint();
+        mPaintGraph.setAntiAlias(true);
+
+        mTextMetrics = mPaint.getFontMetricsInt();
+        mLineNumberMetrics = mPaintOther.getFontMetricsInt();
 
         mViewRect = new Rect();
         mRect = new RectF();
@@ -123,6 +127,11 @@ public class EditorPainter {
 
     public void draw(@NonNull Canvas canvas) {
         drawView(canvas);
+    }
+
+    public void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
+        mViewRect.right = width;
+        mViewRect.bottom = height;
     }
 
     Paint getPaint() {
@@ -139,6 +148,22 @@ public class EditorPainter {
 
     android.graphics.Paint.FontMetricsInt getTextMetrics() {
         return mTextMetrics;
+    }
+
+    int getCachedLineNumberWidth() {
+        return mCachedLineNumberWidth;
+    }
+
+    void setCachedLineNumberWidth(int width) {
+        mCachedLineNumberWidth = width;
+    }
+
+    public RectF getVerticalScrollBarRect() {
+        return mVerticalScrollBar;
+    }
+
+    public RectF getHorizontalScrollBarRect() {
+        return mHorizontalScrollBar;
     }
 
     public void setTextSizePxDirect(float size) {
@@ -166,6 +191,15 @@ public class EditorPainter {
         invalidateHwRenderer();
         updateTimestamp();
         mEditor.createLayout();
+        mEditor.invalidate();
+    }
+
+    public void setTypefaceLineNumber(Typeface typefaceLineNumber) {
+        if (typefaceLineNumber == null) {
+            typefaceLineNumber = Typeface.MONOSPACE;
+        }
+        mPaintOther.setTypeface(typefaceLineNumber);
+        mLineNumberMetrics = mPaintOther.getFontMetricsInt();
         mEditor.invalidate();
     }
 
@@ -1274,6 +1308,10 @@ public class EditorPainter {
         return index >= start && index <= end;
     }
 
+    public long getTimestamp() {
+        return mTimestamp;
+    }
+
     class DrawCursorTask {
 
         float x;
@@ -1502,7 +1540,7 @@ public class EditorPainter {
         String text = mEditor.getLnTip() + (1 + mEditor.getFirstVisibleLine());
         float backupSize = mPaint.getTextSize();
         mPaint.setTextSize(mEditor.getLineInfoTextSize());
-        Paint.FontMetricsInt backupMetrics = mEditor.getLineNumberMetrics();
+        Paint.FontMetricsInt backupMetrics = mTextMetrics;
         mTextMetrics = mPaint.getFontMetricsInt();
         float expand = mEditor.getDpUnit() * 3;
         float textWidth = mPaint.measureText(text);
