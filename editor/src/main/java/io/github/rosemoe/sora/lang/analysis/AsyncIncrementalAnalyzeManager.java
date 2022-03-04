@@ -95,7 +95,10 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         if (thread != null) {
             thread.callback = () -> { throw new CancelledException(); };
             if (thread.isAlive()) {
-                thread.handler.sendMessage(Message.obtain(thread.handler, MSG_EXIT));
+                final var handler = thread.handler;
+                if (handler != null) {
+                    handler.sendMessage(Message.obtain(thread.handler, MSG_EXIT));
+                }
                 thread.abort = true;
             }
         }
