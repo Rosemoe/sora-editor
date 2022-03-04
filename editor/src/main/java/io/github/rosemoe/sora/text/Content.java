@@ -472,7 +472,7 @@ public class Content implements CharSequence {
                 lis.beforeModification(this);
             }
 
-            for (int i = startLine + 1; i < endLine - 1; i++) {
+            for (int i = startLine + 1; i <= endLine - 1; i++) {
                 ContentLine line = lines.get(i);
                 if (lineListener != null) {
                     lineListener.onRemove(this, line);
@@ -481,7 +481,7 @@ public class Content implements CharSequence {
                 changedContent.append('\n').append(line);
             }
             if (startLine + 1 < endLine - 1) {
-                lines.subList(startLine + 1, endLine - 1).clear();
+                lines.subList(startLine + 1, endLine).clear();
             }
 
             int currEnd = startLine + 1;
