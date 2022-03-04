@@ -77,7 +77,7 @@ public class WordwrapLayout extends AbstractLayout {
         while (left <= right) {
             var mid = (left + right) / 2;
             if (mid < 0 || mid >= rowTable.size()) {
-                left = Math.min(rowTable.size() - 1, Math.max(0, mid));
+                left = Math.max(0, Math.min(rowTable.size() - 1, mid));
                 break;
             }
             int value = rowTable.get(mid).line;
@@ -91,7 +91,7 @@ public class WordwrapLayout extends AbstractLayout {
             }
         }
         index = left;
-        while (rowTable.get(index).startColumn > 0) {
+        while (index > 0 && rowTable.get(index).startColumn > 0) {
             index --;
         }
         return index;
