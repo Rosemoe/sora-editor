@@ -3722,9 +3722,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
         //Log.d(LOG_TAG, "Ins: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + insertedContent);
         updateCursorAnchor();
-
-        mPainter.invalidateInCursor();
-        mPainter.invalidateChanged(startLine, endLine);
+        mPainter.invalidateHwRenderer();
         ensureSelectionVisible();
 
         mLanguage.getAnalyzeManager().insert(start, end, insertedContent);
@@ -3778,11 +3776,9 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
 
         //Log.d(LOG_TAG, "Del: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + deletedContent);
-
+        mPainter.invalidateHwRenderer();
         if (!mWait) {
             updateCursorAnchor();
-            mPainter.invalidateInCursor();
-            mPainter.invalidateChanged(startLine, startLine + 1);
             ensureSelectionVisible();
             mEventHandler.hideInsertHandle();
         }

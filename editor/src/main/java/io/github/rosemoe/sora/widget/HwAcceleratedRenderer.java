@@ -43,7 +43,6 @@ import io.github.rosemoe.sora.util.ArrayList;
  * @author Rosemoe
  */
 @RequiresApi(29)
-@Experimental
 class HwAcceleratedRenderer implements ContentListener {
 
     private final CodeEditor editor;
@@ -59,14 +58,16 @@ class HwAcceleratedRenderer implements ContentListener {
     }
 
     public boolean invalidateInRegion(int startLine, int endLine) {
-        var res = new AtomicBoolean(false);
-        cache.forEach((node) -> {
-            if (!node.isDirty && node.line >= startLine && node.line <= endLine) {
-                node.isDirty = true;
-                res.set(true);
+       /* var res = new AtomicBoolean(false);
+        var itr = cache.iterator();
+        while (itr.hasNext()) {
+            if (itr.next().line >= startLine) {
+                itr.remove();
             }
-        });
-        return res.get();
+        }
+        return res.get();*/
+        invalidateDirectly();
+        return true;
     }
 
     /**
@@ -75,9 +76,7 @@ class HwAcceleratedRenderer implements ContentListener {
      * Also called when wordwrap state changes from true to false
      */
     public void invalidate() {
-        if (shouldUpdateCache()) {
-            invalidateDirectly();
-        }
+        invalidateDirectly();
     }
 
     public void invalidateDirectly() {
@@ -147,19 +146,12 @@ class HwAcceleratedRenderer implements ContentListener {
 
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
-        if (shouldUpdateCache()) {
-            if (startLine != endLine)
-                invalidateInRegion(startLine, Integer.MAX_VALUE);
-        }
+        invalidateInRegion(startLine, Integer.MAX_VALUE);
     }
 
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
-        if (shouldUpdateCache()) {
-            int delta = endLine - startLine;
-            if (delta != 0)
-                invalidateInRegion(startLine, Integer.MAX_VALUE);
-        }
+        invalidateInRegion(startLine, Integer.MAX_VALUE);
     }
 
     protected static class TextRenderNode {
