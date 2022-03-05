@@ -287,7 +287,7 @@ public class GraphicTextRow {
 
     @SuppressLint("NewApi")
     private float measureTextInner(int start, int end, float[] widths) {
-        if (start == end) {
+        if (start >= end) {
             return 0f;
         }
         // Can be called directly
