@@ -548,6 +548,9 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         if (getContext() instanceof ContextThemeWrapper) {
             setEdgeEffectColor(ThemeUtils.getColorPrimary((ContextThemeWrapper) getContext()));
         }
+
+        // Config scale detector
+        mScaleDetector.setQuickScaleEnabled(false);
     }
 
     /**
@@ -3352,10 +3355,9 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         boolean res = mEventHandler.onTouchEvent(event);
         boolean handling = mEventHandler.handlingMotions();
         boolean res2 = false;
-        boolean res3 = false;
+        boolean res3 = mScaleDetector.onTouchEvent(event);
         if (!handling && !handlingBefore) {
             res2 = mBasicDetector.onTouchEvent(event);
-            res3 = mScaleDetector.onTouchEvent(event);
         }
         if (event.getAction() == MotionEvent.ACTION_UP) {
             mVerticalEdgeGlow.onRelease();
