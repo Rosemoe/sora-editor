@@ -151,7 +151,6 @@ class MainActivity : AppCompatActivity() {
                 val text = ContentCreator.fromStream(stream)
                 runOnUiThread {
                     binding.editor.setText(text, null)
-                    binding.editor.rerunAnalysis()
                 }
             } catch (e: IOException) {
                 e.printStackTrace()
