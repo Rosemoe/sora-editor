@@ -132,7 +132,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<StackElemen
     }
 
     @Override
-    public LineTokenizeResult<StackElement, Span> tokenizeLine(CharSequence lineC, StackElement state) {
+    public synchronized LineTokenizeResult<StackElement, Span> tokenizeLine(CharSequence lineC, StackElement state) {
         String line = lineC.toString();
         var tokens = new ArrayList<Span>();
         ITokenizeLineResult2 lineTokens = grammar.tokenizeLine2(line, state);
