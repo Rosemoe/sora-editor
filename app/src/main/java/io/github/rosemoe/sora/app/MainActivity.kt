@@ -108,7 +108,6 @@ class MainActivity : AppCompatActivity() {
         })
         binding.editor.apply {
             typefaceText = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
-            setEditorLanguage(JavaLanguage())
             nonPrintablePaintingFlags =
                 CodeEditor.FLAG_DRAW_WHITESPACE_LEADING or CodeEditor.FLAG_DRAW_LINE_SEPARATOR or CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION
             // Update display dynamically
@@ -120,6 +119,25 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
+
+        val editor = binding.editor
+        var editorColorScheme = editor.colorScheme
+        if (editorColorScheme !is TextMateColorScheme) {
+            val iRawTheme = ThemeReader.readThemeSync(
+                "QuietLight.tmTheme",
+                assets.open("textmate/QuietLight.tmTheme")
+            )
+            editorColorScheme = TextMateColorScheme.create(iRawTheme)
+            editor.colorScheme = editorColorScheme
+        }
+        val language: Language = TextMateLanguage.create(
+            "java.tmLanguage.json",
+            assets.open("textmate/java/syntaxes/java.tmLanguage.json"),
+            InputStreamReader(assets.open("textmate/java/language-configuration.json")),
+            (editorColorScheme as TextMateColorScheme).rawTheme
+        )
+        editor.setEditorLanguage(language)
+
         openAssetsFile("sample.txt")
         updatePositionText()
         updateBtnState()
@@ -381,7 +399,6 @@ class MainActivity : AppCompatActivity() {
                         }
                         9 -> loadTMTLauncher.launch("*/*")
                     }
-                    editor.rerunAnalysis()
                     dialog.dismiss()
                 }
                 .setNegativeButton(android.R.string.cancel, null)
