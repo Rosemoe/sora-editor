@@ -45,8 +45,17 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
     private final static int STATE_NORMAL = 0;
     private final static int STATE_INCOMPLETE_COMMENT = 1;
 
-    private final JavaTextTokenizer tokenizer = new JavaTextTokenizer("");
+    private final ThreadLocal<JavaTextTokenizer> tokenizerProvider = new ThreadLocal<>();
     protected IdentifierAutoComplete.Identifiers identifiers;
+
+    private synchronized JavaTextTokenizer obtainTokenizer() {
+        var res = tokenizerProvider.get();
+        if (res == null) {
+            res = new JavaTextTokenizer("");
+            tokenizerProvider.set(res);
+        }
+        return res;
+    }
 
     @Override
     public List<CodeBlock> computeBlocks(Content text, AsyncIncrementalAnalyzeManager<State, Long>.CodeBlockAnalyzeDelegate delegate) {
@@ -156,6 +165,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
     }
 
     private int tokenizeNormal(CharSequence text, int offset, List<Long> tokens, State st) {
+        var tokenizer = obtainTokenizer();
         tokenizer.reset(text);
         tokenizer.offset = offset;
         Tokens token;

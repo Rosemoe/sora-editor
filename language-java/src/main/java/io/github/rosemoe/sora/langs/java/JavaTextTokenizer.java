@@ -144,7 +144,7 @@ public class JavaTextTokenizer {
         }
         index = index + length;
         offset = offset + length;
-        if (offset == bufferLen) {
+        if (offset >= bufferLen) {
             return Tokens.EOF;
         }
         char ch = source.charAt(offset);
