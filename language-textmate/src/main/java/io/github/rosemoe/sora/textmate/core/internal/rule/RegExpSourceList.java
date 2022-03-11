@@ -34,7 +34,7 @@ public class RegExpSourceList {
     private boolean _hasAnchors;
     private ICompiledRule _cached;
     public RegExpSourceList() {
-        this._items = new ArrayList<RegExpSource>();
+        this._items = new io.github.rosemoe.sora.util.ArrayList<RegExpSource>();
         this._hasAnchors = false;
         this._cached = null;
         this._anchorCache = new RegExpSourceListAnchorCache();

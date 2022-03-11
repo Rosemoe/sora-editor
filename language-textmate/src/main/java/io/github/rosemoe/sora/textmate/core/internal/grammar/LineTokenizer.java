@@ -81,7 +81,7 @@ class LineTokenizer {
     }
 
     private void scanNext() {
-        LOGGER.finest("@@scanNext: |" + lineText.string.replaceAll("\n", "\\n").substring(linePos) + '|');
+        //LOGGER.finest("@@scanNext: |" + lineText.string.replaceAll("\n", "\\n").substring(linePos) + '|');
 
         IMatchResult r = matchRuleOrInjections(grammar, lineText, isFirstLine, linePos, stack, anchorPosition);
 
