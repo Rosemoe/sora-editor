@@ -232,8 +232,22 @@ class EditorInputConnection extends BaseInputConnection {
 
     protected void commitTextInternal(CharSequence text, boolean applyAutoIndent) {
         // NOTE: Text styles are ignored by editor
-        //Remove composing text first if there is
-        deleteComposingText();
+        // Remove composing text first if there is
+        if (mEditor.getProps().trackComposingTextOnCommit) {
+            final var composingLine = mComposingLine;
+            if (composingLine != -1) {
+                var composingText = mEditor.getText().getLine(composingLine).subSequence(mComposingStart, mComposingEnd).toString();
+                var commitText = text.toString();
+                if (commitText.startsWith(composingText) && commitText.length() > composingText.length()) {
+                    text = commitText.substring(composingText.length());
+                    mComposingLine = mComposingStart = mComposingEnd = -1;
+                } else {
+                    deleteComposingText();
+                }
+            }
+        } else if (mComposingLine != -1) {
+            deleteComposingText();
+        }
         // Replace text
         SymbolPairMatch.Replacement replacement = null;
         if (text.length() == 1 && mEditor.getProps().symbolPairAutoCompletion) {

@@ -172,7 +172,7 @@ public class DirectAccessProps implements Serializable {
      */
     @InvalidateRequired
     @FloatRange(from = 0.0f, fromInclusive = false)
-    public float indicatorWaveWidth = 2f;
+    public float indicatorWaveWidth = 1.5f;
 
     /**
      * Wave amplitude of problem indicators.
@@ -182,5 +182,12 @@ public class DirectAccessProps implements Serializable {
     @InvalidateRequired
     @FloatRange(from = 0.0f, fromInclusive = false)
     public float indicatorWaveAmplitude = 4f;
+
+    /**
+     * Compare the text to commit with composing text.
+     *
+     * See detailed issue: #155
+     */
+    public boolean trackComposingTextOnCommit = true;
 
 }
