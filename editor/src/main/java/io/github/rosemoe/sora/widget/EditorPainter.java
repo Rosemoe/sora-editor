@@ -349,7 +349,7 @@ public class EditorPainter {
                     float centerY = mEditor.getRowBottom(row);
                     // Clip region due not to draw outside the horizontal region
                     canvas.save();
-                    canvas.clipRect(startOffset, 0, startOffset + lineWidth, canvas.getHeight());
+                    canvas.clipRect(paintingOffset, 0, paintingOffset + width , canvas.getHeight());
                     canvas.translate(startOffset - phi, centerY);
                     // Draw waves
                     mPath.reset();
@@ -953,7 +953,7 @@ public class EditorPainter {
                             float centerY = mEditor.getRowBottom(row) - mEditor.getOffsetY();
                             // Clip region due not to draw outside the horizontal region
                             canvas.save();
-                            canvas.clipRect(startOffset, 0, startOffset + lineWidth, canvas.getHeight());
+                            canvas.clipRect(paintingOffset, 0, paintingOffset + width, canvas.getHeight());
                             canvas.translate(startOffset - phi, centerY);
                             // Draw waves
                             mPath.reset();
