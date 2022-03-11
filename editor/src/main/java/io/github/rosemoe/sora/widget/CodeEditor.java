@@ -287,7 +287,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private ScaleGestureDetector mScaleDetector;
     EditorInputConnection mConnection;
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;
-    private MaterialEdgeEffect mVerticalEdgeGlow;
+    private MaterialEdgeEffect mVerticalGlow;
     private MaterialEdgeEffect mHorizontalGlow;
     private ExtractedTextRequest mExtracting;
     private FormatThread mFormatThread;
@@ -521,7 +521,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         setFocusableInTouchMode(true);
         mConnection = new EditorInputConnection(this);
         mCompletionWindow = new EditorAutoCompletion(this);
-        mVerticalEdgeGlow = new MaterialEdgeEffect();
+        mVerticalGlow = new MaterialEdgeEffect();
         mHorizontalGlow = new MaterialEdgeEffect();
         mTextActionWindow = new EditorTextActionWindow(this);
         setEditorLanguage(null);
@@ -1213,7 +1213,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * @return The color of EdgeEffect.
      */
     public int getEdgeEffectColor() {
-        return mVerticalEdgeGlow.getColor();
+        return mVerticalGlow.getColor();
     }
 
     /**
@@ -1222,7 +1222,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * @param color The color of EdgeEffect
      */
     public void setEdgeEffectColor(int color) {
-        mVerticalEdgeGlow.setColor(color);
+        mVerticalGlow.setColor(color);
         mHorizontalGlow.setColor(color);
     }
 
@@ -1240,7 +1240,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * @return EdgeEffect
      */
     protected MaterialEdgeEffect getVerticalEdgeEffect() {
-        return mVerticalEdgeGlow;
+        return mVerticalGlow;
     }
 
     /**
@@ -3237,6 +3237,11 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         dispatchEvent(new SelectionChangeEvent(this, cause));
     }
 
+    protected void releaseEdgeEffects() {
+        mHorizontalGlow.onRelease();
+        mVerticalGlow.onRelease();
+    }
+
     //-------------------------------------------------------------------------------
     //-------------------------Override methods--------------------------------------
     //-------------------------------------------------------------------------------
@@ -3360,7 +3365,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             res2 = mBasicDetector.onTouchEvent(event);
         }
         if (event.getAction() == MotionEvent.ACTION_UP) {
-            mVerticalEdgeGlow.onRelease();
+            mVerticalGlow.onRelease();
             mHorizontalGlow.onRelease();
         }
         return (res3 || res2 || res);
@@ -3667,10 +3672,41 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         removeCallbacks(mCursorBlink);
     }
 
+    private float scrollerFinalX;
+    private float scrollerFinalY;
+    private boolean verticalAbsorb;
+    private boolean horizontalAbsorb;
     @Override
     public void computeScroll() {
-        if (mEventHandler.getScroller().computeScrollOffset()) {
-            invalidate();
+        var scroller = mEventHandler.getScroller();
+        if (scroller.computeScrollOffset()) {
+            if (!scroller.isFinished() && (scroller.getStartX() != scroller.getFinalX() || scroller.getStartY() != scroller.getFinalY())) {
+                scrollerFinalX = scroller.getFinalX();
+                scrollerFinalY = scroller.getFinalY();
+                horizontalAbsorb = Math.abs(scroller.getStartX() - scroller.getFinalX()) > getDpUnit() * 5;
+                verticalAbsorb = Math.abs(scroller.getStartY() - scroller.getFinalY()) > getDpUnit() * 5;
+            }
+            if (scroller.getCurrX() <= 0 && scrollerFinalX <= 0 && mHorizontalGlow.isFinished() && horizontalAbsorb) {
+                mHorizontalGlow.onAbsorb((int)scroller.getCurrVelocity());
+                mEventHandler.leftOrRight = false;
+            } else {
+                var max = getScrollMaxX();
+               if (scroller.getCurrX() >= max && scrollerFinalX >= max && mHorizontalGlow.isFinished() &&horizontalAbsorb) {
+                   mHorizontalGlow.onAbsorb((int)scroller.getCurrVelocity());
+                   mEventHandler.leftOrRight = true;
+               }
+            }
+            if (scroller.getCurrY() <= 0 && scrollerFinalY <= 0 && mVerticalGlow.isFinished() && verticalAbsorb) {
+                mVerticalGlow.onAbsorb((int)scroller.getCurrVelocity());
+                mEventHandler.topOrBottom = false;
+            } else {
+                var max = getScrollMaxY();
+                if (scroller.getCurrY() >= max && scrollerFinalY >= max && mVerticalGlow.isFinished() && verticalAbsorb) {
+                    mVerticalGlow.onAbsorb((int)scroller.getCurrVelocity());
+                    mEventHandler.topOrBottom = true;
+                }
+            }
+            postInvalidateOnAnimation();
         }
     }
 

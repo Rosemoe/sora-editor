@@ -535,7 +535,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             endY = mScroller.getCurrY();
             float displacement = Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth()));
             float distance = (topOrBottom ? distanceY : -distanceY) / mEditor.getMeasuredHeight();
-            if (distance < -0.005) {
+            if (distance < -0.001) {
                 mEditor.getVerticalEdgeEffect().finish();
             } else {
                 mEditor.getVerticalEdgeEffect().onPull(distance, !topOrBottom ? displacement : 1 - displacement);
@@ -546,7 +546,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             endX = mScroller.getCurrX();
             float displacement = Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight()));
             float distance = (leftOrRight ? distanceX : -distanceX) / mEditor.getMeasuredWidth();
-            if (distance < -0.005) {
+            if (distance < -0.001) {
                 mEditor.getHorizontalEdgeEffect().finish();
             } else {
                 mEditor.getHorizontalEdgeEffect().onPull(distance, !leftOrRight ? 1 - displacement : displacement);
@@ -598,20 +598,15 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 mEditor.getScrollMaxY(),
                 mEditor.getProps().overScrollEnabled && !mEditor.isWordwrap() ? (int) (20 * mEditor.getDpUnit()) : 0,
                 mEditor.getProps().overScrollEnabled ? (int) (20 * mEditor.getDpUnit()) : 0);
-        mEditor.invalidate();
         float minVe = mEditor.getDpUnit() * 2000;
         if (Math.abs(velocityX) >= minVe || Math.abs(velocityY) >= minVe) {
             notifyScrolled();
             mEditor.hideAutoCompleteWindow();
         }
-        if (Math.abs(velocityX) >= minVe / 2f) {
-            mEditor.getHorizontalEdgeEffect().finish();
-        }
-        if (Math.abs(velocityY) >= minVe) {
-            mEditor.getVerticalEdgeEffect().finish();
-        }
+        mEditor.releaseEdgeEffects();
         mEditor.dispatchEvent(new ScrollEvent(mEditor, mScroller.getCurrX(),
                 mScroller.getCurrY(), mScroller.getFinalX(), mScroller.getFinalY(), ScrollEvent.CAUSE_USER_FLING));
+        mEditor.postInvalidateOnAnimation();
         return false;
     }
 

@@ -110,6 +110,7 @@ public class MaterialEdgeEffect {
 
     public void finish() {
         mState = STATE_IDLE;
+        mPullDistance = 0f;
     }
 
     public void onPull(float deltaDistance, float displacement) {
