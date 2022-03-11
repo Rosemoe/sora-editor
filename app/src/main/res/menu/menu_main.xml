@@ -102,6 +102,8 @@
         android:id="@+id/open_debug_logs"
         android:visible="false"
         android:title="@string/open_debug_logs"/>
+    <item android:id="@+id/open_test_activity"
+        android:title="Open new activity"/>
     <item
        android:id="@+id/text_undo"
        android:title="@string/undo" 

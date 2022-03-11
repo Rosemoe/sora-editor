@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.app
 
 import android.app.AlertDialog
 import android.content.DialogInterface
+import android.content.Intent
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
@@ -148,7 +149,10 @@ class MainActivity : AppCompatActivity() {
             try {
                 val stream = assets.open(name)
                 val text = ContentCreator.fromStream(stream)
-                runOnUiThread { binding.editor.setText(text, null) }
+                runOnUiThread {
+                    binding.editor.setText(text, null)
+                    binding.editor.rerunAnalysis()
+                }
             } catch (e: IOException) {
                 e.printStackTrace()
             }
@@ -224,7 +228,9 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
         val editor = binding.editor
-        if (id == R.id.text_undo) {
+        if (id == R.id.open_test_activity) {
+            startActivity(Intent(this, TestActivity::class.java))
+        } else if (id == R.id.text_undo) {
             editor.undo()
         } else if (id == R.id.text_redo) {
             editor.redo()
