@@ -3178,12 +3178,21 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * Recommend to call if the activity is to destroy.
      */
     public void release() {
-        mCompletionWindow.cancelCompletion();
+        hideEditorWindows();
         if (mLanguage != null) {
             mLanguage.getAnalyzeManager().destroy();
             mLanguage.destroy();
             mLanguage = new EmptyLanguage();
         }
+    }
+
+    /**
+     * Hide all built-in windows of the editor
+     */
+    public void hideEditorWindows() {
+        mCompletionWindow.cancelCompletion();
+        mTextActionWindow.dismiss();
+        mEventHandler.mMagnifier.dismiss();
     }
 
     //-------------------------------------------------------------------------------
