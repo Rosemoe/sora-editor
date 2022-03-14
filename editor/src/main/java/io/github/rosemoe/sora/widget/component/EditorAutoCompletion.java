@@ -109,7 +109,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             mAdapter = new DefaultCompletionItemAdapter();
         }
 
-        mLayout.getCompletionList();
+        mLayout.getCompletionList().setAdapter(adapter);
     }
 
     @Override
