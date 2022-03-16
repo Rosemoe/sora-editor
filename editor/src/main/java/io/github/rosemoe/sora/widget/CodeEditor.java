@@ -1179,7 +1179,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             var res = mSearcher.mLastResults;
             var lineLeft = mText.getCharIndex(line, 0);
             var lineRight = lineLeft + mText.getColumnCount(line);
-            for (int i = 0;i < res.size();i++) {
+            for (int i = 0; i < res.size(); i++) {
                 var region = res.get(i);
                 var start = IntPair.getFirst(region);
                 var end = IntPair.getSecond(region);
@@ -2218,7 +2218,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * @param typefaceText New typeface
      */
     public void setTypefaceText(Typeface typefaceText) {
-       mPainter.setTypefaceText(typefaceText);
+        mPainter.setTypefaceText(typefaceText);
     }
 
     /**
@@ -2851,10 +2851,10 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     /**
      * Sets the text to be displayed.
      *
-     * @param text           the new text you want to display
+     * @param text               the new text you want to display
      * @param reuseContentObject If the given {@code text} is an instance of {@link Content}, reuse it.
-     * @param extraArguments Extra arguments for the document. This {@link Bundle} object is passed
-     *                       to all languages and plugins in editor.
+     * @param extraArguments     Extra arguments for the document. This {@link Bundle} object is passed
+     *                           to all languages and plugins in editor.
      */
     public void setText(@Nullable CharSequence text, boolean reuseContentObject, @Nullable Bundle extraArguments) {
         if (text == null) {
@@ -3660,6 +3660,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         } else {
             mEventHandler.scrollBy(getOffsetX() > getScrollMaxX() ? getScrollMaxX() - getOffsetX() : 0, getOffsetY() > getScrollMaxY() ? getScrollMaxY() - getOffsetY() : 0);
         }
+        verticalAbsorb = false;
+        horizontalAbsorb = false;
         if (oldHeight > h && mProps.adjustToSelectionOnResize) {
             ensureSelectionVisible();
         }
@@ -3685,6 +3687,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private float scrollerFinalY;
     private boolean verticalAbsorb;
     private boolean horizontalAbsorb;
+
     @Override
     public void computeScroll() {
         var scroller = mEventHandler.getScroller();
@@ -3696,22 +3699,22 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                 verticalAbsorb = Math.abs(scroller.getStartY() - scroller.getFinalY()) > getDpUnit() * 5;
             }
             if (scroller.getCurrX() <= 0 && scrollerFinalX <= 0 && mHorizontalGlow.isFinished() && horizontalAbsorb) {
-                mHorizontalGlow.onAbsorb((int)scroller.getCurrVelocity());
+                mHorizontalGlow.onAbsorb((int) scroller.getCurrVelocity());
                 mEventHandler.leftOrRight = false;
             } else {
                 var max = getScrollMaxX();
-               if (scroller.getCurrX() >= max && scrollerFinalX >= max && mHorizontalGlow.isFinished() &&horizontalAbsorb) {
-                   mHorizontalGlow.onAbsorb((int)scroller.getCurrVelocity());
-                   mEventHandler.leftOrRight = true;
-               }
+                if (scroller.getCurrX() >= max && scrollerFinalX >= max && mHorizontalGlow.isFinished() && horizontalAbsorb) {
+                    mHorizontalGlow.onAbsorb((int) scroller.getCurrVelocity());
+                    mEventHandler.leftOrRight = true;
+                }
             }
             if (scroller.getCurrY() <= 0 && scrollerFinalY <= 0 && mVerticalGlow.isFinished() && verticalAbsorb) {
-                mVerticalGlow.onAbsorb((int)scroller.getCurrVelocity());
+                mVerticalGlow.onAbsorb((int) scroller.getCurrVelocity());
                 mEventHandler.topOrBottom = false;
             } else {
                 var max = getScrollMaxY();
                 if (scroller.getCurrY() >= max && scrollerFinalY >= max && mVerticalGlow.isFinished() && verticalAbsorb) {
-                    mVerticalGlow.onAbsorb((int)scroller.getCurrVelocity());
+                    mVerticalGlow.onAbsorb((int) scroller.getCurrVelocity());
                     mEventHandler.topOrBottom = true;
                 }
             }
