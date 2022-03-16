@@ -1303,6 +1303,13 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
+     * @see #findCursorBlock()
+     */
+    public int getCurrentCursorBlock() {
+        return mCursorPosition;
+    }
+
+    /**
      * Find the first code block that maybe seen on screen
      * Because the code blocks is sorted by its end line position
      * we can use binary search to quicken this process in order to decrease

@@ -1431,7 +1431,7 @@ public class EditorPainter {
             maxCount = mEditor.getStyles().getSuppressSwitch();
         }
         int mm = mEditor.binarySearchEndBlock(first, blocks);
-        int cursorIdx = mEditor.getCursor().getLeft();
+        int cursorIdx = mEditor.getCurrentCursorBlock();
         for (int curr = mm; curr < blocks.size(); curr++) {
             CodeBlock block = blocks.get(curr);
             if (CodeEditor.hasVisibleRegion(block.startLine, block.endLine, first, last)) {
