@@ -509,8 +509,12 @@ public class EditorPainter {
             }
         }
 
-        if (!mEditor.isWordwrap() && mEditor.isBlockLineEnabled()) {
-            drawBlockLines(canvas, textOffset);
+        if (mEditor.isBlockLineEnabled()) {
+            if (mEditor.isWordwrap()) {
+                drawSideBlockLine(canvas);
+            } else {
+                drawBlockLines(canvas, textOffset);
+            }
         }
 
         if (!mEditor.getCursorAnimator().isRunning()) {
@@ -1456,6 +1460,30 @@ public class EditorPainter {
                 if (invalidCount >= maxCount)
                     break;
                 invalidCount++;
+            }
+        }
+    }
+
+    protected void drawSideBlockLine(Canvas canvas) {
+        List<CodeBlock> blocks = mEditor.getStyles() == null ? null : mEditor.getStyles().blocks;
+        if (blocks == null || blocks.isEmpty()) {
+            return;
+        }
+        var current = mEditor.getCurrentCursorBlock();
+        if (current >= 0 && current < blocks.size()) {
+            var block = blocks.get(current);
+            var layout = mEditor.getLayout();
+            try {
+                float top = layout.getCharLayoutOffset(block.startLine, block.startColumn)[0] - mEditor.getRowHeight() - mEditor.getOffsetY();
+                float bottom = layout.getCharLayoutOffset(block.endLine, block.endColumn)[0] - mEditor.getOffsetY();
+                float left = mEditor.measureLineNumber();
+                float right = left + mEditor.getDividerMargin();
+                float center = (left + right) / 2 - mEditor.getOffsetX();
+                mPaint.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.SIDE_BLOCK_LINE));
+                mPaint.setStrokeWidth(mEditor.getDpUnit() / 2f);
+                canvas.drawLine(center, top, center, bottom, mPaint);
+            } catch (IndexOutOfBoundsException e) {
+                //ignored
             }
         }
     }

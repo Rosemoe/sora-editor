@@ -82,6 +82,7 @@ public class EditorColorScheme {
     public static final int COMMENT = 22;
     public static final int KEYWORD = 21;
     //-------------View colors---------------------
+    public static final int SIDE_BLOCK_LINE = 38;
     public static final int NON_PRINTABLE_CHAR = 31;
 
     /**
@@ -123,7 +124,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 37;
+    protected static final int END_COLOR_ID = 38;
     /**
      * Real color saver
      */
@@ -223,6 +224,7 @@ public class EditorColorScheme {
                 color = 0xdd536dfe;
                 break;
             case UNDERLINE:
+            case SIDE_BLOCK_LINE:
                 color = 0xff000000;
                 break;
             case SELECTION_HANDLE:
