@@ -480,6 +480,9 @@ public class Content implements CharSequence {
                 textLength -= line.length() + 1;
                 changedContent.append('\n').append(line);
             }
+            if (lineListener != null) {
+                lineListener.onRemove(this, lines.get(endLine));
+            }
             if (startLine + 1 < endLine - 1) {
                 lines.subList(startLine + 1, endLine).clear();
             }
@@ -494,10 +497,7 @@ public class Content implements CharSequence {
             changedContent.append('\n').append(end, 0, columnOnEndLine);
             end.delete(0, columnOnEndLine);
             textLength--;
-            ContentLine r = lines.remove(currEnd);
-            if (lineListener != null) {
-                lineListener.onRemove(this, r);
-            }
+            lines.remove(currEnd);
             start.append(end);
         } else {
             throw new IllegalArgumentException("start line > end line");
