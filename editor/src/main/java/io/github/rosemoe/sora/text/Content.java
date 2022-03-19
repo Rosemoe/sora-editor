@@ -473,7 +473,7 @@ public class Content implements CharSequence {
             }
 
             for (int i = startLine + 1; i <= endLine - 1; i++) {
-                ContentLine line = lines.get(i);
+                var line = lines.get(i);
                 if (lineListener != null) {
                     lineListener.onRemove(this, line);
                 }
@@ -483,7 +483,7 @@ public class Content implements CharSequence {
             if (lineListener != null) {
                 lineListener.onRemove(this, lines.get(endLine));
             }
-            if (startLine + 1 < endLine - 1) {
+            if (endLine > startLine + 1) {
                 lines.subList(startLine + 1, endLine).clear();
             }
 
