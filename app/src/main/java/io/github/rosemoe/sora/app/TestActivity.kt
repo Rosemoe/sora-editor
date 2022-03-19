@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.app
 
+import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import io.github.rosemoe.sora.langs.java.JavaLanguage
@@ -36,6 +37,7 @@ class TestActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         editor = CodeEditor(this)
         setContentView(editor)
+        editor.typefaceText = Typeface.createFromAsset(assets, "Roboto-Regular.ttf")
         editor.setEditorLanguage(JavaLanguage())
         editor.setText("private final PopupWindow mWindow;\n" +
                 "    private final CodeEditor mEditor;\n" +
