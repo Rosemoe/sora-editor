@@ -1465,6 +1465,9 @@ public class EditorPainter {
     }
 
     protected void drawSideBlockLine(Canvas canvas) {
+        if (!mEditor.getProps().drawSideBlockLine) {
+            return;
+        }
         List<CodeBlock> blocks = mEditor.getStyles() == null ? null : mEditor.getStyles().blocks;
         if (blocks == null || blocks.isEmpty()) {
             return;

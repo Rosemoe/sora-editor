@@ -190,4 +190,10 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean trackComposingTextOnCommit = true;
 
+    /**
+     * Draw side block line when in wordwrap mode
+     */
+    @InvalidateRequired
+    public boolean drawSideBlockLine = true;
+
 }
