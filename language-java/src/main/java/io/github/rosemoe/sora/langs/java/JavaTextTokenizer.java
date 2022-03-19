@@ -454,7 +454,7 @@ public class JavaTextTokenizer {
                 "goto", "continue", "break", "transient", "void", "try", "catch",
                 "finally", "while", "case", "default", "const", "enum", "extends",
                 "implements", "import", "instanceof", "interface", "native",
-                "this", "throw", "throws", "true", "false", "null", "var", "sealed", "permits"
+                "this", "throw", "throws", "true", "false", "null", "var", "sealed", "permits","var"
         };
         Tokens[] sTokens = new Tokens[]{
                 Tokens.ABSTRACT, Tokens.ASSERT, Tokens.BOOLEAN, Tokens.BYTE, Tokens.CHAR, Tokens.CLASS, Tokens.DO,
@@ -463,7 +463,7 @@ public class JavaTextTokenizer {
                 Tokens.SHORT, Tokens.SUPER, Tokens.SWITCH, Tokens.ELSE, Tokens.VOLATILE, Tokens.SYNCHRONIZED, Tokens.STRICTFP,
                 Tokens.GOTO, Tokens.CONTINUE, Tokens.BREAK, Tokens.TRANSIENT, Tokens.VOID, Tokens.TRY, Tokens.CATCH,
                 Tokens.FINALLY, Tokens.WHILE, Tokens.CASE, Tokens.DEFAULT, Tokens.CONST, Tokens.ENUM, Tokens.EXTENDS,
-                Tokens.IMPLEMENTS, Tokens.IMPORT, Tokens.INSTANCEOF, Tokens.INTERFACE, Tokens.NATIVE,
+                Tokens.IMPLEMENTS, Tokens.IMPORT, Tokens.INSTANCEOF, Tokens.INTERFACE, Tokens.NATIVE,Tokens.VAR,
                 Tokens.THIS, Tokens.THROW, Tokens.THROWS, Tokens.TRUE, Tokens.FALSE, Tokens.NULL, Tokens.VAR, Tokens.SEALED, Tokens.PERMITS
         };
         keywords = new TrieTree<>();
