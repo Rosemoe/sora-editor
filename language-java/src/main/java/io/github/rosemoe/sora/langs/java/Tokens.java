@@ -122,6 +122,7 @@ public enum Tokens {
     THIS,
     THROW,
     THROWS,
+    VAR,
     AT,
 
     TRUE,
