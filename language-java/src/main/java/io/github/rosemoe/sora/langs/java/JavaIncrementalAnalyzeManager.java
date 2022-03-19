@@ -264,6 +264,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                 case THROW:
                 case THROWS:
                 case TRUE:
+                case VAR:
                 case FALSE:
                 case NULL:
                 case SEALED:
