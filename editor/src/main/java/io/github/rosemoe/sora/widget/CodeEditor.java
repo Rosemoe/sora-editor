@@ -1067,20 +1067,15 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         var text = mText;
         while (startLine <= endLine && startLine < text.getLineCount()) {
             ContentLine line = text.getLine(startLine);
-            // Do not create cache for long lines
-            if (line.length() <= 256) {
-                if (line.timestamp < timestamp) {
-                    var gtr = GraphicTextRow.obtain();
-                    if (line.widthCache == null) {
-                        line.widthCache = obtainFloatArray(Math.max(line.length(), 128));
-                    }
-                    gtr.set(line, 0, line.length(), getTabWidth(), getSpansForLine(startLine), mPainter.getPaint());
-                    gtr.buildMeasureCache();
-                    GraphicTextRow.recycle(gtr);
-                    line.timestamp = timestamp;
+            if (line.timestamp < timestamp) {
+                var gtr = GraphicTextRow.obtain();
+                if (line.widthCache == null) {
+                    line.widthCache = obtainFloatArray(Math.max(line.length(), 128));
                 }
-            } else {
-                line.widthCache = null;
+                gtr.set(line, 0, line.length(), getTabWidth(), getSpansForLine(startLine), mPainter.getPaint());
+                gtr.buildMeasureCache();
+                GraphicTextRow.recycle(gtr);
+                line.timestamp = timestamp;
             }
             startLine++;
         }
