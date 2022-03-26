@@ -824,7 +824,7 @@ public class EditorPainter {
             float backupOffset = paintingOffset;
 
             // Draw text here
-            if (!mEditor.isHardwareAcceleratedDrawAllowed() || !canvas.isHardwareAccelerated() || mEditor.isWordwrap() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || rowInf.endColumn - rowInf.startColumn > 256 /* Save memory */) {
+            if (!mEditor.isHardwareAcceleratedDrawAllowed() || !canvas.isHardwareAccelerated() || mEditor.isWordwrap() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || (rowInf.endColumn - rowInf.startColumn > 256 && !mEditor.getProps().cacheRenderNodeForLongLines) /* Save memory */) {
                 // Draw without hardware acceleration
                 // Get spans
                 var reader = spans == null ? new EmptyReader() : spans.read();

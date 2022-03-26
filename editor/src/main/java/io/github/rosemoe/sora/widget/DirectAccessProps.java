@@ -196,4 +196,10 @@ public class DirectAccessProps implements Serializable {
     @InvalidateRequired
     public boolean drawSideBlockLine = true;
 
+    /**
+     * Cache RenderNode of long text lines
+     * This costs some memory, but improves performance.
+     */
+    public boolean cacheRenderNodeForLongLines = true;
+
 }
