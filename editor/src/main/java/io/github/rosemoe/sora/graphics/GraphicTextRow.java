@@ -105,10 +105,19 @@ public class GraphicTextRow {
      * Build measure cache for the text
      */
     public void buildMeasureCache() {
-        if (mText.widthCache == null || mText.widthCache.length < mEnd) {
-            mText.widthCache = new float[Math.max(128, mText.length())];
+        if (mText.widthCache == null || mText.widthCache.length < mEnd + 4) {
+            mText.widthCache = new float[Math.max(128, mText.length() + 16)];
         }
         measureTextInternal(mStart, mEnd, mText.widthCache);
+        // Generate prefix sum
+        var cache = mText.widthCache;
+        var pending = cache[0];
+        cache[0] = 0f;
+        for (int i = 1; i <= mEnd;i++) {
+            var tmp = cache[i];
+            cache[i] = cache[i - 1] + pending;
+            pending = tmp;
+        }
     }
 
     /**
@@ -121,19 +130,32 @@ public class GraphicTextRow {
      */
     public float[] findOffsetByAdvance(int start, float advance) {
         if (mText.widthCache != null) {
-            float w = 0f;
             var cache = mText.widthCache;
-            for (int i = start; i <= mEnd;i++) {
-                if (w > advance) {
-                    mBuffer[0] = Math.max(start, i - 1);
-                    mBuffer[1] = i > start ? w - cache[i - 1] : w;
-                    return mBuffer;
-                } else if(i < mEnd) {
-                    w += cache[i];
+            var end = mEnd;
+            int left = start, right = end;
+            var base = cache[start];
+            while(left <= right) {
+                var mid = (left + right) / 2;
+                if (mid <= start) {
+                    left = start;
+                    break;
+                }
+                if (mid >= end) {
+                    left = end;
+                    break;
+                }
+                var value = cache[mid] - base;
+                if (value > advance) {
+                    right = mid - 1;
+                } else if (value < advance) {
+                    left = mid + 1;
+                } else {
+                    left = mid;
+                    break;
                 }
             }
-            mBuffer[0] = mEnd;
-            mBuffer[1] = w;
+            mBuffer[0] = left;
+            mBuffer[1] = cache[left] - base;
             return mBuffer;
         }
         int regionStart = start;
@@ -232,12 +254,8 @@ public class GraphicTextRow {
             return 0f;
         }
         if (mText.widthCache != null) {
-            float width = 0f;
             var cache = mText.widthCache;
-            for (int i = start;i < end;i++) {
-                width += cache[i];
-            }
-            return width;
+            return cache[end] - cache[start];
         }
         return measureTextInternal(start, end, null);
     }

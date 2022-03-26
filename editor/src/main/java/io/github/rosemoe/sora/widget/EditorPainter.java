@@ -739,7 +739,7 @@ public class EditorPainter {
             float[] charPos = mEditor.findFirstVisibleChar(offset3, rowInf.startColumn, rowInf.endColumn, mEditor.getLineBuffer(), line);
             int firstVisibleChar = (int) charPos[0];
             float paintingOffset = charPos[1] - offset2;
-            int lastVisibleChar = (int) mEditor.findFirstVisibleChar(offset2 + mEditor.getWidth(), firstVisibleChar + 1, rowInf.endColumn, rowInf.startColumn, mEditor.getLineBuffer(), line)[0];
+            int lastVisibleChar = (int) mEditor.findFirstVisibleChar(offset2 + mEditor.getWidth() - offset3, firstVisibleChar + 1, rowInf.endColumn, mEditor.getLineBuffer(), line)[0];
 
             // Draw current line background
             if (line == currentLine && !mEditor.getCursorAnimator().isRunning()) {
@@ -819,7 +819,7 @@ public class EditorPainter {
             float[] charPos = mEditor.findFirstVisibleChar(offset3, rowInf.startColumn, rowInf.endColumn, mEditor.getLineBuffer(), line);
             int firstVisibleChar = (int) charPos[0];
             float paintingOffset = charPos[1] - offset2;
-            int lastVisibleChar = (int) mEditor.findFirstVisibleChar(offset2 + mEditor.getWidth(), firstVisibleChar + 1, rowInf.endColumn, rowInf.startColumn, mEditor.getLineBuffer(), line)[0];
+            int lastVisibleChar = (int) mEditor.findFirstVisibleChar(offset2 + mEditor.getWidth() - offset3, firstVisibleChar + 1, rowInf.endColumn, mEditor.getLineBuffer(), line)[0];
 
             float backupOffset = paintingOffset;
 
@@ -1279,12 +1279,12 @@ public class EditorPainter {
      */
     @SuppressLint("NewApi")
     protected void drawText(Canvas canvas, ContentLine line, int index, int count, int contextStart, int contextCount, boolean isRtl, float offX, float offY, int lineNumber) {
-        // drawTextRun() can be called directly on low API systems
         int end = index + count;
         var src = line.value;
         int st = index;
         for (int i = index; i < end; i++) {
             if (src[i] == '\t') {
+                //canvas.drawText(src, st, i - st, offX, offY, mPaint);
                 canvas.drawTextRun(src, st, i - st, contextStart, contextCount, offX, offY, isRtl, mPaint);
                 offX = offX + mEditor.measureText(line, st, i - st + 1, lineNumber);
                 st = i + 1;
@@ -1292,6 +1292,7 @@ public class EditorPainter {
         }
         if (st < end) {
             canvas.drawTextRun(src, st, end - st, contextStart, contextCount, offX, offY, isRtl, mPaint);
+            //canvas.drawText(src, st, end - st, offX, offY, mPaint);
         }
     }
 
