@@ -1284,6 +1284,7 @@ public class EditorPainter {
         int st = index;
         for (int i = index; i < end; i++) {
             if (src[i] == '\t') {
+                //canvas.drawText(src, st, i - st, offX, offY, mPaint);
                 canvas.drawTextRun(src, st, i - st, contextStart, contextCount, offX, offY, isRtl, mPaint);
                 offX = offX + mEditor.measureText(line, st, i - st + 1, lineNumber);
                 st = i + 1;
@@ -1291,6 +1292,7 @@ public class EditorPainter {
         }
         if (st < end) {
             canvas.drawTextRun(src, st, end - st, contextStart, contextCount, offX, offY, isRtl, mPaint);
+            //canvas.drawText(src, st, end - st, offX, offY, mPaint);
         }
     }
 
