@@ -24,35 +24,17 @@
 
 package io.github.rosemoe.sorakt
 
-import io.github.rosemoe.sora.event.Event
-import io.github.rosemoe.sora.event.EventReceiver
-import io.github.rosemoe.sora.event.SubscriptionReceipt
-import io.github.rosemoe.sora.widget.CodeEditor
-import io.github.rosemoe.sora.widget.component.EditorBuiltinComponent
+import io.github.rosemoe.sora.text.Content
 
 /**
- * Subscribe event in editor
- *
- * @see CodeEditor.subscribeEvent
+ * A delegate method.
+ * Notify the UndoManager to batch edit.
+ * @see Content.beginBatchEdit
+ * @see Content.endBatchEdit
  */
-inline fun <reified T : Event> CodeEditor.subscribeEvent(receiver: EventReceiver<T>) : SubscriptionReceipt<T> {
-    return subscribeEvent(T::class.java, receiver)
-}
-
-/**
- * Get builtin component so that you can enable/disable them or do some other actions.
- *
- * @see CodeEditor.getComponent
- */
-inline fun <reified T:EditorBuiltinComponent> CodeEditor.getComponent():T {
-    return getComponent(T::class.java)
-}
-
-/**
- * Replace the built-in component to the given one. The new component's enabled state will extend the old one.
- *
- * @see CodeEditor.replaceComponent
- */
-inline fun <reified T:EditorBuiltinComponent> CodeEditor.replaceComponent(component:T) {
-    replaceComponent(T::class.java,component)
+fun Content.batchEdit(block:(Content)->Unit):Content {
+    this.beginBatchEdit()
+    block(this)
+    this.endBatchEdit()
+    return this
 }
