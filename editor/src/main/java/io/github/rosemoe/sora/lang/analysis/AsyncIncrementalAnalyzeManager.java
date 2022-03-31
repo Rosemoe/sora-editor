@@ -487,7 +487,13 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                         list.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
                         lines.add(new Line(list));
                     }
-                    lines.get(line).spans = spans;
+                    var obj = lines.get(line);
+                    obj.lock.lock();
+                    try {
+                        obj.spans = spans;
+                    } finally {
+                        obj.lock.unlock();
+                    }
                 } finally {
                     lock.unlock();
                 }
