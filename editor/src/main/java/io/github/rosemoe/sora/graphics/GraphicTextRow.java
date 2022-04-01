@@ -136,12 +136,8 @@ public class GraphicTextRow {
             var base = cache[start];
             while(left <= right) {
                 var mid = (left + right) / 2;
-                if (mid <= start) {
-                    left = start;
-                    break;
-                }
-                if (mid >= end) {
-                    left = end;
+                if (mid < start || mid >= end) {
+                    left = mid;
                     break;
                 }
                 var value = cache[mid] - base;
@@ -154,6 +150,7 @@ public class GraphicTextRow {
                     break;
                 }
             }
+            left = Math.max(start, Math.min(end, left));
             mBuffer[0] = left;
             mBuffer[1] = cache[left] - base;
             return mBuffer;
