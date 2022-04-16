@@ -306,6 +306,12 @@ class EditorInputConnection extends BaseInputConnection {
             return false;
         }
 
+        // #170 Gboard compatible
+        if (beforeLength == 1 && afterLength == 0 && mComposingLine == -1) {
+            mEditor.deleteText();
+            return true;
+        }
+
         // Start a batch edit when the operation can not be finished by one call to delete()
         if (beforeLength > 0 && afterLength > 0) {
             beginBatchEdit();
