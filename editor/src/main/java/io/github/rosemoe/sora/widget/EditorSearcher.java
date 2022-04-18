@@ -27,6 +27,7 @@ import android.app.ProgressDialog;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.regex.Pattern;
 
@@ -216,7 +217,11 @@ public class EditorSearcher {
         }
     }
 
-    public void replaceAll(@NonNull String replacement) {
+    public void replaceAll (@NonNull String replacement) {
+        replaceAll (replacement, null);
+    }
+
+    public void replaceAll(@NonNull String replacement, @Nullable final Runnable whenFinished) {
         checkState();
         if (!isResultValid()) {
             Toast.makeText(mEditor.getContext(), "Editor is still preparing", Toast.LENGTH_SHORT).show();
@@ -252,6 +257,10 @@ public class EditorSearcher {
                     mEditor.getText().replace(0, 0, mEditor.getLineCount() - 1, mEditor.getText().getColumnCount(mEditor.getLineCount() - 1), sb);
                     mEditor.setSelectionAround(pos.line, pos.column);
                     dialog.dismiss();
+    
+                    if (whenFinished != null) {
+                        whenFinished.run ();
+                    }
                 });
             } catch (Exception e) {
                 mEditor.post(() -> {
