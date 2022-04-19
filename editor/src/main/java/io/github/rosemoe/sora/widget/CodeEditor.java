@@ -2116,11 +2116,11 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                                 .setNegativeButton(R.string.cancel, null)
                                 .setPositiveButton(R.string.replace, (dialog, which) -> {
                                     if (replaceAll) {
-                                        getSearcher().replaceAll(et.getText().toString());
+                                        getSearcher().replaceAll(et.getText().toString(), am::finish);
                                     } else {
                                         getSearcher().replaceThis(et.getText().toString());
+                                        am.finish();
                                     }
-                                    am.finish();
                                     dialog.dismiss();
                                 })
                                 .show();
