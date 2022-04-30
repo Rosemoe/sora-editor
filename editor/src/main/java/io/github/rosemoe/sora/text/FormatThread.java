@@ -33,34 +33,56 @@ public class FormatThread extends Thread {
 
     private FormatResultReceiver mReceiver;
 
+    private CharPosition mStart, mEnd;
+
     public FormatThread(CharSequence text, Language language, FormatResultReceiver receiver) {
         mText = text;
         mLanguage = language;
         mReceiver = receiver;
     }
 
+    public FormatThread(CharSequence text, Language language, FormatResultReceiver receiver, CharPosition start, CharPosition end) {
+        mText = text;
+        mLanguage = language;
+        mReceiver = receiver;
+        mStart = start;
+        mEnd = end;
+    }
+
     @Override
     public void run() {
         CharSequence result = null;
+        var type = mStart != null;
         try {
             CharSequence chars = ((mText instanceof Content) ? (((Content) mText).toStringBuilder()) : new StringBuilder(mText));
-            result = mLanguage.format(chars);
+            if (type) {
+                result = mLanguage.formatRegion(chars, mStart, mEnd);
+            } else {
+                result = mLanguage.format(chars);
+            }
         } catch (Throwable e) {
             if (mReceiver != null) {
                 mReceiver.onFormatFail(e);
             }
         }
         if (mReceiver != null) {
-            mReceiver.onFormatSucceed(mText, result);
+            if (type) {
+                mReceiver.onFormatSucceed(mText, result, mStart, mEnd);
+            } else {
+                mReceiver.onFormatSucceed(mText, result);
+            }
         }
         mReceiver = null;
         mLanguage = null;
         mText = null;
+        mStart = mEnd = null;
     }
 
     public interface FormatResultReceiver {
 
         void onFormatSucceed(CharSequence originalText, CharSequence newText);
+
+        void onFormatSucceed(CharSequence originalText, CharSequence replaceText, CharPosition start, CharPosition end);
 
         void onFormatFail(Throwable throwable);
 

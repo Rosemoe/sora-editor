@@ -1697,7 +1697,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
     /**
      * Sets non-printable painting flags.
-     * Specify where they should be drawn.
+     * Specify where they should be drawn and some other properties.
      * <p>
      * Flags can be mixed.
      *
@@ -1904,6 +1904,28 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * @return Whether the format task is scheduled
      */
     public synchronized boolean formatCodeAsync() {
+        if (mFormatThread != null) {
+            return false;
+        }
+        mFormatThread = new FormatThread(mText, mLanguage, this);
+        mFormatThread.start();
+        return true;
+    }
+
+    /**
+     * Format text in the given region.
+     * <p>
+     * Note: Make sure the given positions are valid (line, column and index). Typically, you should
+     * obtain a position by an object of {@link io.github.rosemoe.sora.text.Indexer}
+     *
+     * @param start Start position created by Indexer
+     * @param end   End position created by Indexer
+     * @return Whether the format task is scheduled
+     */
+    public synchronized boolean formatCodeAsync(CharPosition start, CharPosition end) {
+        if (start.index > end.index) {
+            throw new IllegalArgumentException("start > end");
+        }
         if (mFormatThread != null) {
             return false;
         }
@@ -3863,11 +3885,26 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     @Override
     public void onFormatSucceed(CharSequence originalText, final CharSequence newText) {
         mFormatThread = null;
-        if (originalText == mText) {
+        if (originalText == mText && newText != null) {
             post(() -> {
                 int line = mCursor.getLeftLine();
                 int column = mCursor.getLeftColumn();
                 mText.replace(0, 0, getLineCount() - 1, mText.getColumnCount(getLineCount() - 1), newText);
+                getScroller().forceFinished(true);
+                mCompletionWindow.hide();
+                setSelectionAround(line, column);
+            });
+        }
+    }
+
+    @Override
+    public void onFormatSucceed(CharSequence originalText, CharSequence replaceText, CharPosition start, CharPosition end) {
+        mFormatThread = null;
+        if (originalText == mText && replaceText != null) {
+            post(() -> {
+                int line = mCursor.getLeftLine();
+                int column = mCursor.getLeftColumn();
+                mText.replace(start.line, start.column, end.line, end.column, replaceText);
                 getScroller().forceFinished(true);
                 mCompletionWindow.hide();
                 setSelectionAround(line, column);

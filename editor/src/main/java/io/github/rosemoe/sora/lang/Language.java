@@ -139,7 +139,21 @@ public interface Language {
      * @return Formatted code
      */
     @WorkerThread
-    CharSequence format(CharSequence text);
+    default CharSequence format(CharSequence text) {
+        return null;
+    }
+
+    /**
+     * Format the given content from {@code start} position to {@code end} position
+     * <p>
+     * Note: Make sure that you return formatted code in the given region. The original text in this region
+     * will be <strong>replaced</strong> by the returned text.
+     * @return Formatted code from {@code start} to {@code end}.
+     */
+    @WorkerThread
+    default CharSequence formatRegion(CharSequence text, CharPosition start, CharPosition end) {
+        return null;
+    }
 
     /**
      * Returns language specified symbol pairs.
@@ -160,6 +174,13 @@ public interface Language {
     @Nullable
     NewlineHandler[] getNewlineHandlers();
 
+    /**
+     * Destroy this {@link Language} object.
+     * <p>
+     * When called, you should stop your resource-taking actions and remove any reference
+     * of editor or other objects related to editor (such as references to text in editor) to avoid
+     * memory leaks and resource waste.
+     */
     void destroy();
 
 }
