@@ -49,4 +49,9 @@ class TestActivity : AppCompatActivity() {
                 "    private boolean mRegistered;\n" +
                 "    private int mOffsetX, mOffsetY, mX, mY, mWidth, mHeight;")
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        editor.release()
+    }
 }

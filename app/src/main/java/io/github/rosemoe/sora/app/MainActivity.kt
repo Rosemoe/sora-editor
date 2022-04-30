@@ -224,6 +224,11 @@ class MainActivity : AppCompatActivity() {
         return super.onCreateOptionsMenu(menu)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        binding.editor.release()
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
         val editor = binding.editor
