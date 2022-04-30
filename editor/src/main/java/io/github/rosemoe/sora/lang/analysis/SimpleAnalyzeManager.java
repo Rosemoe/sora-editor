@@ -103,6 +103,7 @@ public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
             thread.interrupt();
         }
         thread = null;
+        receiver = null;
     }
 
     private synchronized static int nextThreadId() {
