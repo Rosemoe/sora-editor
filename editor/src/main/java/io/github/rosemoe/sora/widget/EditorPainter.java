@@ -1003,6 +1003,7 @@ public class EditorPainter {
                         span = reader.getSpanAt(spanOffset);
                     } else {
                         spanOffset--;
+                        //break;
                     }
                 }
                 try {

@@ -25,6 +25,8 @@ package io.github.rosemoe.sora.widget.layout;
 
 import android.util.TypedValue;
 
+import androidx.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -179,7 +181,9 @@ public class WordwrapLayout extends AbstractLayout {
                 }
             }
             for (int row = findRow(endLine + 1); row < rowTable.size(); row++) {
-                rowTable.get(row).line -= delta;
+                var region = rowTable.get(row);
+                if (region.line >= endLine)
+                    region.line -= delta;
             }
         }
         breakLines(startLine, startLine);
@@ -316,6 +320,15 @@ public class WordwrapLayout extends AbstractLayout {
             endColumn = end;
         }
 
+        @NonNull
+        @Override
+        public String toString() {
+            return "RowRegion{" +
+                    "startColumn=" + startColumn +
+                    ", endColumn=" + endColumn +
+                    ", line=" + line +
+                    '}';
+        }
     }
 
     class WordwrapLayoutRowItr implements RowIterator {

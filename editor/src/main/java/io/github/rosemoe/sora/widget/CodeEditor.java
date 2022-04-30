@@ -3837,7 +3837,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         if (!mCursor.isSelected()) {
             mCursorAnimator.markEndPosAndStart();
         }
-
         mLanguage.getAnalyzeManager().delete(start, end, deletedContent);
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_DELETE, start, end, deletedContent));
