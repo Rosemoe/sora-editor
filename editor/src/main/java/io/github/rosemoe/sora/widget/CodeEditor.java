@@ -103,6 +103,7 @@ import io.github.rosemoe.sora.text.FormatThread;
 import io.github.rosemoe.sora.text.LineRemoveListener;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
 import io.github.rosemoe.sora.text.TextUtils;
+import io.github.rosemoe.sora.util.Floats;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
 import io.github.rosemoe.sora.util.TemporaryFloatBuffer;
@@ -1768,13 +1769,14 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         targetX = Math.max(0, Math.min(getScrollMaxX(), targetX));
         targetY = Math.max(0, Math.min(getScrollMaxY(), targetY));
 
-        if (targetY == getOffsetY() && targetX == getOffsetX()) {
+        if (Floats.withinDelta(targetX, getOffsetX(), 1f) && Floats.withinDelta(targetY, getOffsetY(), 1f)) {
             invalidate();
             return;
         }
 
         boolean animation = System.currentTimeMillis() - mLastMakeVisible >= 100;
         mLastMakeVisible = System.currentTimeMillis();
+
         if (animation) {
             getScroller().forceFinished(true);
             getScroller().startScroll(getOffsetX(), getOffsetY(), (int) (targetX - getOffsetX()), (int) (targetY - getOffsetY()));
