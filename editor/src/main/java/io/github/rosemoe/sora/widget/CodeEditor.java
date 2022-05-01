@@ -2252,6 +2252,40 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
+     * Set text scale x of Paint
+     *
+     * @see Paint#setTextScaleX(float)
+     * @see #getTextScaleX()
+     */
+    public void setTextScaleX(float textScaleX) {
+        mPainter.setTextScaleX(textScaleX);
+    }
+
+    /**
+     * @see #setTextScaleX(float)
+     */
+    public float getTextScaleX() {
+        return mPainter.getPaint().getTextScaleX();
+    }
+
+    /**
+     * Set letter spacing of Paint
+     *
+     * @see Paint#setLetterSpacing(float)
+     * @see #getTextLetterSpacing()
+     */
+    public void setTextLetterSpacing(float textLetterSpacing) {
+        mPainter.setLetterSpacing(textLetterSpacing);
+    }
+
+    /**
+     * @see #setTextLetterSpacing(float)
+     */
+    public float getTextLetterSpacing() {
+        return mPainter.getPaint().getLetterSpacing();
+    }
+
+    /**
      * @return Line number align
      * @see CodeEditor#setLineNumberAlign(Paint.Align)
      */

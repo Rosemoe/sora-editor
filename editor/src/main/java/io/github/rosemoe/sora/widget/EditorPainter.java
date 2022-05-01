@@ -211,6 +211,27 @@ public class EditorPainter {
         mEditor.invalidate();
     }
 
+    public void setTextScaleX(float textScaleX) {
+        mPaint.setTextScaleX(textScaleX);
+        mPaintOther.setTextScaleX(textScaleX);
+        onTextStyleUpdate();
+    }
+
+    public void setLetterSpacing(float letterSpacing) {
+        mPaint.setLetterSpacing(letterSpacing);
+        mPaintOther.setLetterSpacing(letterSpacing);
+        onTextStyleUpdate();
+    }
+
+    void onTextStyleUpdate() {
+        mLineNumberMetrics = mPaintOther.getFontMetricsInt();
+        mTextMetrics = mPaint.getFontMetricsInt();
+        invalidateHwRenderer();
+        updateTimestamp();
+        mEditor.createLayout();
+        mEditor.invalidate();
+    }
+
     /**
      * Update timestamp required for measuring cache
      */
