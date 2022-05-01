@@ -411,7 +411,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                     }
                     var locked = false;
                     try {
-                        locked = lock.tryLock(1, TimeUnit.MILLISECONDS);
+                        locked = lock.tryLock(100, TimeUnit.MICROSECONDS);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
