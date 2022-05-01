@@ -28,6 +28,7 @@ import android.graphics.RenderNode;
 
 import androidx.annotation.RequiresApi;
 
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.github.rosemoe.sora.annotations.Experimental;
@@ -88,8 +89,7 @@ class HwAcceleratedRenderer implements ContentListener {
         for (int i = 0; i < size; i++) {
             var node = cache.get(i);
             if (node.line == line) {
-                cache.remove(i);
-                cache.add(0, node);
+                Collections.swap(cache, 0, i);
                 return node;
             }
         }
