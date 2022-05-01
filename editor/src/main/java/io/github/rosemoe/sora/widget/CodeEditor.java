@@ -1067,7 +1067,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     void buildMeasureCacheForLines(int startLine, int endLine, long timestamp) {
         var text = mText;
         while (startLine <= endLine && startLine < text.getLineCount()) {
-            ContentLine line = text.getLine(startLine);
+            var line = text.getLine(startLine);
             if (line.timestamp < timestamp) {
                 var gtr = GraphicTextRow.obtain();
                 if (line.widthCache == null) {
@@ -1133,9 +1133,9 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      *
      * @param line The line to search
      */
-    protected long findLeadingAndTrailingWhitespacePos(int line) {
-        var buffer = mText.getLine(line).value;
-        int column = mText.getColumnCount(line);
+    protected long findLeadingAndTrailingWhitespacePos(ContentLine line) {
+        var buffer = line.value;
+        int column = line.length();
         int leading = 0;
         int trailing = column;
         while (leading < column && isWhitespace(buffer[leading])) {
@@ -1347,7 +1347,11 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     @UnsupportedUserUsage
     public float measureText(ContentLine text, int index, int count, int line) {
         var gtr = GraphicTextRow.obtain();
-        gtr.set(text, 0, text.length(), mTabWidth, getSpansForLine(line), mPainter.getPaint());
+        List<Span> spans = null;
+        if (text.widthCache == null) {
+            spans = getSpansForLine(line);
+        }
+        gtr.set(text, 0, text.length(), mTabWidth, spans, mPainter.getPaint());
         var res = gtr.measureText(index, index + count);
         GraphicTextRow.recycle(gtr);
         return res;
@@ -1413,11 +1417,11 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         if (start >= end) {
             return new float[]{end, 0};
         }
-        var gtr = GraphicTextRow.obtain();
-        gtr.set(line, contextStart, end, mTabWidth, getSpansForLine(lineNumber), mPainter.getPaint());
         if (line.widthCache != null && line.timestamp < mPainter.getTimestamp()) {
             buildMeasureCacheForLines(lineNumber, lineNumber, mPainter.getTimestamp());
         }
+        var gtr = GraphicTextRow.obtain();
+        gtr.set(line, contextStart, end, mTabWidth, line.widthCache == null ? getSpansForLine(lineNumber) : null, mPainter.getPaint());
         var res = gtr.findOffsetByAdvance(start, target);
         GraphicTextRow.recycle(gtr);
         return res;
@@ -2375,7 +2379,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * @return height of single row
      */
     public int getRowHeight() {
-        return mPainter.getTextMetrics().descent - mPainter.getTextMetrics().ascent;
+        var metrics = mPainter.getTextMetrics();
+        return metrics.descent - metrics.ascent;
     }
 
     /**
@@ -2903,6 +2908,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         mText.addContentListener(this);
         mText.setUndoEnabled(mUndoEnabled);
         mText.setLineListener(this);
+        mPainter.notifyFullTextUpdate();
 
         if (mLanguage != null) {
             mLanguage.getAnalyzeManager().reset(new ContentReference(mText), mExtraArguments);
