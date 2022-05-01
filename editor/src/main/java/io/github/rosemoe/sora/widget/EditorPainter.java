@@ -232,7 +232,7 @@ public class EditorPainter {
      */
     void invalidateChanged(int startLine, int endLine) {
         if (mRenderer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mCursor != null) {
-            if (mRenderer.invalidateInRegion(startLine, endLine)) {
+            if (mRenderer.invalidateInRegion(startLine, Integer.MAX_VALUE)) {
                 mEditor.invalidate();
             }
         }

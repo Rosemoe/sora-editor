@@ -59,16 +59,15 @@ class HwAcceleratedRenderer implements ContentListener {
     }
 
     public boolean invalidateInRegion(int startLine, int endLine) {
-       /* var res = new AtomicBoolean(false);
+        var res = false;
         var itr = cache.iterator();
         while (itr.hasNext()) {
             if (itr.next().line >= startLine) {
                 itr.remove();
+                res = true;
             }
         }
-        return res.get();*/
-        invalidateDirectly();
-        return true;
+        return res;
     }
 
     /**
