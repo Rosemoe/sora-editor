@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="io.github.rosemoe.sora.app">
 
     <application
@@ -9,6 +10,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
+        <profileable android:shell="true"
+            tools:targetApi="q" />
+
         <activity
             android:name=".TestActivity"
             android:exported="false" />
