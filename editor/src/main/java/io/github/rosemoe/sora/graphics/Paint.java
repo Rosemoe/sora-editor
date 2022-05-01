@@ -38,6 +38,10 @@ public class Paint extends android.graphics.Paint {
         spaceWidth = measureText(" ");
     }
 
+    public void onAttributeUpdate() {
+        spaceWidth = measureText(" ");
+    }
+
     public float getSpaceWidth() {
         return spaceWidth;
     }

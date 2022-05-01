@@ -39,7 +39,7 @@ import io.github.rosemoe.sora.text.ContentLine;
 public class GraphicTextRow {
 
     private final static float SKEW_X = -0.2f;
-    private final Paint mPaint = new Paint();
+    private Paint mPaint;
     private ContentLine mText;
     private int mStart;
     private int mEnd;
@@ -71,6 +71,7 @@ public class GraphicTextRow {
     public static void recycle(GraphicTextRow st) {
         st.mText = null;
         st.mSpans = null;
+        st.mPaint = null;
         st.mStart = st.mEnd = st.mTabWidth = 0;
         synchronized (sCached) {
             for (int i = 0; i < sCached.length; ++i) {
@@ -86,14 +87,7 @@ public class GraphicTextRow {
      * Reset
      */
     public void set(ContentLine line, int start, int end, int tabWidth, List<Span> spans, Paint paint) {
-        if (mPaint.getTextSize() != paint.getTextSize())
-            mPaint.setTextSizeWrapped(paint.getTextSize());
-        var typeface = paint.getTypeface();
-        if (mPaint.getTypeface() != typeface) {
-            mPaint.setTypefaceWrapped(typeface);
-        }
-        if (paint.getFontFeatureSettings() != null)
-            mPaint.setFontFeatureSettingsWrapped(paint.getFontFeatureSettings());
+        mPaint = paint;
         mText = line;
         mTabWidth = tabWidth;
         mStart = start;
@@ -258,6 +252,10 @@ public class GraphicTextRow {
     }
 
     private float measureTextInternal(int start, int end, float[] widths) {
+        // Backup values
+        final var originalBold = mPaint.isFakeBoldText();
+        final var originalSkew = mPaint.getTextSkewX();
+
         start = Math.max(start, mStart);
         end = Math.min(end, mEnd);
         if (mSpans.size() == 0) {
@@ -293,10 +291,8 @@ public class GraphicTextRow {
                 break;
             }
         }
-        if (lastStyle != 0L) {
-            mPaint.setFakeBoldText(false);
-            mPaint.setTextSkewX(0f);
-        }
+        mPaint.setFakeBoldText(originalBold);
+        mPaint.setTextSkewX(originalSkew);
         return width;
     }
 
