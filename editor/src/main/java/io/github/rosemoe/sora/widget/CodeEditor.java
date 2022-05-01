@@ -676,7 +676,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
     }
 
-    public CursorBlink getCursorBlink() {
+    protected CursorBlink getCursorBlink() {
         return mCursorBlink;
     }
 
