@@ -23,8 +23,12 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.RectF;
+import android.os.Vibrator;
+import android.os.VibratorManager;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -53,6 +57,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     private final static int HIDE_DELAY = 3000;
     private final static int HIDE_DELAY_HANDLE = 5000;
+    private final static int VIBRATION_MILLIS = 30;
+
     private final CodeEditor mEditor;
     private final OverScroller mScroller;
     boolean topOrBottom; //true for bottom
@@ -70,6 +76,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     int mSelHandleType = -1;
     private int mTouchedHandleType = -1;
     Magnifier mMagnifier;
+    Vibrator mVibrator;
 
     private final static int LEFT_EDGE = 1;
     private final static int RIGHT_EDGE = 1 << 1;
@@ -91,6 +98,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         maxSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 26, Resources.getSystem().getDisplayMetrics());
         minSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 8, Resources.getSystem().getDisplayMetrics());
         mMagnifier = new Magnifier(editor);
+        mVibrator = (Vibrator) editor.getContext().getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     public boolean hasAnyHeldHandle() {
@@ -507,6 +515,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         mEditor.setSelectionRegion(startLine, startColumn, endLine, endColumn, SelectionChangeEvent.CAUSE_LONG_PRESS);
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public void onLongPress(MotionEvent e) {
         long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
@@ -518,6 +527,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         if (mEditor.getCursor().isSelected() || e.getPointerCount() != 1) {
             return;
         }
+        mVibrator.vibrate(VIBRATION_MILLIS);
         selectWord(line, column);
     }
 
