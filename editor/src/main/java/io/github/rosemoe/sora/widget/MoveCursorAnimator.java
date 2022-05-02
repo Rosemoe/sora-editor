@@ -26,11 +26,11 @@ package io.github.rosemoe.sora.widget;
 import android.animation.ValueAnimator;
 
 /**
- * Helper class for cursor animation in editor
+ * Default cursor animation implementation
  *
  * @author Rosemoe
  */
-class MoveCursorAnimator implements CursorAnimator, ValueAnimator.AnimatorUpdateListener {
+public class MoveCursorAnimator implements CursorAnimator, ValueAnimator.AnimatorUpdateListener {
 
     private ValueAnimator animatorX;
     private ValueAnimator animatorY;
@@ -39,6 +39,8 @@ class MoveCursorAnimator implements CursorAnimator, ValueAnimator.AnimatorUpdate
 
     private final CodeEditor editor;
     private float startX, startY, startSize, startBottom;
+
+    private final long duration;
     private long lastAnimateTime;
 
     public MoveCursorAnimator(CodeEditor editor) {
@@ -47,6 +49,7 @@ class MoveCursorAnimator implements CursorAnimator, ValueAnimator.AnimatorUpdate
         animatorY = new ValueAnimator();
         animatorBackground = new ValueAnimator();
         animatorBgBottom = new ValueAnimator();
+        duration = 120;
     }
 
     @Override
@@ -84,7 +87,6 @@ class MoveCursorAnimator implements CursorAnimator, ValueAnimator.AnimatorUpdate
             startBottom = (float) animatorBgBottom.getAnimatedValue();
             cancel();
         }
-        var duration = 120;
         if (System.currentTimeMillis() - lastAnimateTime < 100) {
             return;
         }

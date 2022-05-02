@@ -51,6 +51,7 @@ import io.github.rosemoe.sora.textmate.languageconfiguration.internal.supports.C
 import io.github.rosemoe.sora.utils.CrashHandler
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorSearcher
+import io.github.rosemoe.sora.widget.FadeCursorAnimator
 import io.github.rosemoe.sora.widget.SymbolInputView
 import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.schemes.*
@@ -120,6 +121,9 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
+
+        // Custom cursor animator
+        binding.editor.cursorAnimator = FadeCursorAnimator(binding.editor)
 
         val editor = binding.editor
         var editorColorScheme = editor.colorScheme

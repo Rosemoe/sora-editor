@@ -41,6 +41,7 @@ public class HandleStyleDrop implements SelectionHandleStyle {
     private final int width;
     private final int height;
     private int lastColor = 0;
+    private int alpha = 255;
 
     public HandleStyleDrop(Context context) {
         drawable = context.getDrawable(R.drawable.ic_sora_handle_drop).mutate();
@@ -54,10 +55,16 @@ public class HandleStyleDrop implements SelectionHandleStyle {
             lastColor = color;
             drawable.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_ATOP));
         }
-        var cx = (int)x;
-        var ty = (int)y;
+        var cx = (int) x;
+        var ty = (int) y;
         drawable.setBounds(cx - width / 2, ty, cx + width / 2, ty + height);
+        drawable.setAlpha(alpha);
         drawable.draw(canvas);
-        descriptor.set(cx - width / 2, ty, cx + width / 2, ty + height, ALIGN_CENTER);
+        descriptor.set(cx - width / 2f, ty, cx + width / 2f, ty + height, ALIGN_CENTER);
+    }
+
+    @Override
+    public void setAlpha(int alpha) {
+        this.alpha = alpha;
     }
 }

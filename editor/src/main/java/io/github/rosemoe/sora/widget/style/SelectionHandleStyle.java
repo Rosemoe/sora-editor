@@ -58,6 +58,8 @@ public interface SelectionHandleStyle {
      */
     void draw(@NonNull Canvas canvas, int handleType, float x, float y, int rowHeight, int color, @NonNull HandleDescriptor descriptor);
 
+    void setAlpha(int alpha);
+
     /**
      * The descriptor of a drawn handle on canvas
      */
