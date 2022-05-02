@@ -500,8 +500,8 @@ public class EditorPainter {
             int lineNumberColor = mEditor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = mEditor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE);
             if (mEditor.getCursorAnimator().isRunning()) {
-                mRect.bottom = (float) mEditor.getCursorAnimator().animatorBgBottom.getAnimatedValue() - mEditor.getOffsetY();
-                mRect.top = mRect.bottom - (float) mEditor.getCursorAnimator().animatorBackground.getAnimatedValue();
+                mRect.bottom = mEditor.getCursorAnimator().animatedLineBottom() - mEditor.getOffsetY();
+                mRect.top = mRect.bottom - mEditor.getCursorAnimator().animatedLineHeight();
                 mRect.left = 0;
                 mRect.right = (int) (textOffset - mEditor.getDividerMargin());
                 drawColor(canvas, currentLineBgColor, mRect);
@@ -560,8 +560,8 @@ public class EditorPainter {
             int lineNumberColor = mEditor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = mEditor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE);
             if (mEditor.getCursorAnimator().isRunning()) {
-                mRect.bottom = (float) mEditor.getCursorAnimator().animatorBgBottom.getAnimatedValue() - mEditor.getOffsetY();
-                mRect.top = mRect.bottom - (float) mEditor.getCursorAnimator().animatorBackground.getAnimatedValue();
+                mRect.bottom = mEditor.getCursorAnimator().animatedLineBottom() - mEditor.getOffsetY();
+                mRect.top = mRect.bottom - mEditor.getCursorAnimator().animatedLineHeight();
                 mRect.left = 0;
                 mRect.right = (int) (textOffset - mEditor.getDividerMargin());
                 drawColor(canvas, currentLineBgColor, mRect);
@@ -813,8 +813,8 @@ public class EditorPainter {
 
         // Draw current line background on animation
         if (mEditor.getCursorAnimator().isRunning()) {
-            mRect.bottom = (float) mEditor.getCursorAnimator().animatorBgBottom.getAnimatedValue() - mEditor.getOffsetY();
-            mRect.top = mRect.bottom - (float) mEditor.getCursorAnimator().animatorBackground.getAnimatedValue();
+            mRect.bottom = mEditor.getCursorAnimator().animatedLineBottom() - mEditor.getOffsetY();
+            mRect.top = mRect.bottom - mEditor.getCursorAnimator().animatedLineHeight();
             mRect.left = 0;
             mRect.right = mViewRect.right;
             drawColor(canvas, currentLineBgColor, mRect);
@@ -1638,9 +1638,9 @@ public class EditorPainter {
     }
 
     protected void drawSelectionOnAnimation(Canvas canvas) {
-        mRect.bottom = (float) mEditor.getCursorAnimator().animatorY.getAnimatedValue() - mEditor.getOffsetY();
+        mRect.bottom = mEditor.getCursorAnimator().animatedY() - mEditor.getOffsetY();
         mRect.top = mRect.bottom - mEditor.getRowHeight();
-        float centerX = (float) mEditor.getCursorAnimator().animatorX.getAnimatedValue() - mEditor.getOffsetX();
+        float centerX = mEditor.getCursorAnimator().animatedX() - mEditor.getOffsetX();
         mRect.left = centerX - mEditor.getInsertSelectionWidth() / 2;
         mRect.right = centerX + mEditor.getInsertSelectionWidth() / 2;
         drawColor(canvas, mEditor.getColorScheme().getColor(EditorColorScheme.SELECTION_INSERT), mRect);
