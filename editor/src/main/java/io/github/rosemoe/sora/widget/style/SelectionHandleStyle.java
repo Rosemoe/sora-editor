@@ -60,6 +60,8 @@ public interface SelectionHandleStyle {
 
     void setAlpha(int alpha);
 
+    void setScale(float factor);
+
     /**
      * The descriptor of a drawn handle on canvas
      */
