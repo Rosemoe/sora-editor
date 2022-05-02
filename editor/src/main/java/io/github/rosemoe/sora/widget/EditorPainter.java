@@ -1367,13 +1367,32 @@ public class EditorPainter {
             if (mEditor.mConnection.mImeConsumingInput) {
                 return;
             }
-            // Follow the thumb
+            // Follow the thumb or stick to text row
             if (!descriptor.position.isEmpty()) {
-                if ((mEditor.getEventHandler().holdInsertHandle() && handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT)
-                        || (mEditor.getEventHandler().mSelHandleType == EditorTouchEventHandler.SelectionHandle.LEFT && handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT)
-                        || (mEditor.getEventHandler().mSelHandleType == EditorTouchEventHandler.SelectionHandle.RIGHT && handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT)) {
-                    x = mEditor.getEventHandler().mMotionX + (descriptor.alignment != SelectionHandleStyle.ALIGN_CENTER ? descriptor.position.width() : 0) * (descriptor.alignment == SelectionHandleStyle.ALIGN_LEFT ? 1 : -1);
-                    y = mEditor.getEventHandler().mMotionY - descriptor.position.height() * 2 / 3f;
+                boolean isSingleHandle = mEditor.getEventHandler().holdInsertHandle() && handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT;
+                boolean isLeftHandle = mEditor.getEventHandler().mSelHandleType == EditorTouchEventHandler.SelectionHandle.LEFT && handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT;
+                boolean isRightHandle = mEditor.getEventHandler().mSelHandleType == EditorTouchEventHandler.SelectionHandle.RIGHT && handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT;
+                if (mEditor.isStickyTextSelection()) {
+                    if (isLeftHandle) {
+                        x = mCursor.getLeftColumn() * mEditor.getTextPaint().getSpaceWidth() +
+                                mEditor.measureTextRegionOffset() -
+                                mEditor.getOffsetX();
+                        y = mCursor.getLeftLine() * mEditor.getRowHeight() +
+                                mEditor.getRowHeight() -
+                                mEditor.getOffsetY();
+                    } else if (isRightHandle) {
+                        x = mCursor.getRightColumn() * mEditor.getTextPaint().getSpaceWidth() +
+                                mEditor.measureTextRegionOffset() -
+                                mEditor.getOffsetX();
+                        y = mCursor.getRightLine() * mEditor.getRowHeight() +
+                                mEditor.getRowHeight() -
+                                mEditor.getOffsetY();
+                    }
+                } else {
+                    if (isSingleHandle || isLeftHandle || isRightHandle) {
+                        x = mEditor.getEventHandler().mMotionX + (descriptor.alignment != SelectionHandleStyle.ALIGN_CENTER ? descriptor.position.width() : 0) * (descriptor.alignment == SelectionHandleStyle.ALIGN_LEFT ? 1 : -1);
+                        y = mEditor.getEventHandler().mMotionY - descriptor.position.height() * 2 / 3f;
+                    }
                 }
             }
 
