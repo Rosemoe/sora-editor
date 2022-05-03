@@ -494,7 +494,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         mMatrix = new Matrix();
         mHandleStyle = new HandleStyleSideDrop(getContext());
         mSearcher = new EditorSearcher(this);
-        mCursorAnimator = new CursorAnimator(this);
+        mCursorAnimator = new MoveCursorAnimator(this);
         setCursorBlinkPeriod(DEFAULT_CURSOR_BLINK_PERIOD);
         mAnchorInfoBuilder = new CursorAnchorInfo.Builder();
 
@@ -882,6 +882,10 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             mCursorAnimator.cancel();
         }
         mCursorAnimation = enabled;
+    }
+
+    public void setCursorAnimator(CursorAnimator cursorAnimator) {
+        mCursorAnimator = cursorAnimator;
     }
 
     public CursorAnimator getCursorAnimator() {
@@ -2697,7 +2701,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         updateCursor();
         mPainter.invalidateInCursor();
         if (!mEventHandler.hasAnyHeldHandle()) {
-            mCursorAnimator.markEndPosAndStart();
+            mCursorAnimator.markEndPos();
+            mCursorAnimator.start();
         }
         if (makeItVisible) {
             ensurePositionVisible(line, column);
@@ -3845,7 +3850,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         mEventHandler.hideInsertHandle();
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
         if (!mCursor.isSelected()) {
-            mCursorAnimator.markEndPosAndStart();
+            mCursorAnimator.markEndPos();
+            mCursorAnimator.start();
         }
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_INSERT, start, end, insertedContent));
     }
@@ -3899,7 +3905,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             mEventHandler.hideInsertHandle();
         }
         if (!mCursor.isSelected()) {
-            mCursorAnimator.markEndPosAndStart();
+            mCursorAnimator.markEndPos();
+            mCursorAnimator.start();
         }
         mLanguage.getAnalyzeManager().delete(start, end, deletedContent);
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);

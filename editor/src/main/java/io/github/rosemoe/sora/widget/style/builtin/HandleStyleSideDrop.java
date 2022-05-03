@@ -44,7 +44,7 @@ public class HandleStyleSideDrop extends HandleStyleDrop {
     
     @Override
     public void draw(@NonNull Canvas canvas, int handleType, float x, float y, int rowHeight, int color, @NonNull HandleDescriptor descriptor) {
-        float radius = size / 2;
+        float radius = size / 2f;
         paint.setColor(color);
         if (handleType == HANDLE_TYPE_INSERT || handleType == HANDLE_TYPE_UNDEFINED) {
             super.draw(canvas, handleType, x, y, rowHeight, color, descriptor);
@@ -56,5 +56,4 @@ public class HandleStyleSideDrop extends HandleStyleDrop {
             descriptor.set(cx - radius, y, cx + radius, y + 2 * radius, type ? ALIGN_LEFT : ALIGN_RIGHT);
         }
     }
-    
 }
