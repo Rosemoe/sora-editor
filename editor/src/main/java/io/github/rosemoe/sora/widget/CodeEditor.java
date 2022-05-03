@@ -267,6 +267,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private boolean mFirstLineNumberAlwaysVisible;
     private boolean mLigatureEnabled;
     private boolean mLastCursorState;
+    private boolean mStickyTextSelection;
     private SelectionHandleStyle.HandleDescriptor mLeftHandle;
     private SelectionHandleStyle.HandleDescriptor mRightHandle;
     private SelectionHandleStyle.HandleDescriptor mInsertHandle;
@@ -759,6 +760,22 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             mCursorPosition = findCursorBlock();
         }
         invalidate();
+    }
+
+    /**
+     * Returns whether the cursor should stick to the text row while selecting the text
+     * @see CodeEditor#setStickyTextSelection(boolean)
+     */
+    public boolean isStickyTextSelection() {
+        return mStickyTextSelection;
+    }
+
+    /**
+     * Whether the cursor should stick to the text row while selecting the text.
+     * @param stickySelection value
+     */
+    public void setStickyTextSelection(boolean stickySelection) {
+        this.mStickyTextSelection = stickySelection;
     }
 
     /**
