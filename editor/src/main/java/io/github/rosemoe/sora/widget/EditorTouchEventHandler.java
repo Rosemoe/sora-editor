@@ -521,7 +521,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         if (mEditor.getCursor().isSelected() || e.getPointerCount() != 1) {
             return;
         }
-        mEditor.performHapicFeedback(HapticFeedbackConstants.LONG_PRESS);
+        mEditor.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
         selectWord(line, column);
     }
 
