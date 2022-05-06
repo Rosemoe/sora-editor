@@ -3921,7 +3921,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             ensureSelectionVisible();
             mEventHandler.hideInsertHandle();
         }
-        if (!mCursor.isSelected()) {
+        if (!mCursor.isSelected() && !mWait) {
             mCursorAnimator.markEndPos();
             mCursorAnimator.start();
         }
