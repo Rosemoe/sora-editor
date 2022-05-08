@@ -1161,9 +1161,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         return mHardwareAccAllowed;
     }
 
-    /*private char[] bidiBuffer;
-    private byte[] bidiLevels;*/
-
     /**
      * As the name is, we find where leading spaces end and trailing spaces start
      * Before calling this, the line should be prepared
