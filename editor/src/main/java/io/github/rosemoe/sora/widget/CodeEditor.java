@@ -1163,7 +1163,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
     /**
      * As the name is, we find where leading spaces end and trailing spaces start
-     * Before calling this, the line should be prepared
      *
      * @param line The line to search
      */
@@ -1466,10 +1465,12 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      *
      * @param line Line going to draw or measure
      */
+    @UnsupportedUserUsage
     protected void prepareLine(int line) {
         mBuffer = mText.getLine(line);
     }
 
+    @UnsupportedUserUsage
     ContentLine getLineBuffer() {
         return mBuffer;
     }

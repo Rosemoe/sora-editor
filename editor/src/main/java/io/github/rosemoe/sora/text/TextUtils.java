@@ -25,9 +25,16 @@ package io.github.rosemoe.sora.text;
 
 import androidx.annotation.NonNull;
 
+/**
+ * Utility class for texts
+ */
 public class TextUtils {
 
-    public static int countLeadingSpaceCount(CharSequence text, int tabWidth) {
+    /**
+     * Compute leading space count
+     * @param tabWidth Tab is considered in {@code tabWidth} spaces
+     */
+    public static int countLeadingSpaceCount(@NonNull CharSequence text, int tabWidth) {
         int p = 0, count = 0;
         while (p < text.length()) {
             if (isWhitespace(text.charAt(p))) {
