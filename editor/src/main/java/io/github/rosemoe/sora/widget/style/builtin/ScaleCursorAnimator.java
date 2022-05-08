@@ -130,6 +130,9 @@ public class ScaleCursorAnimator implements CursorAnimator, ValueAnimator.Animat
 
     @Override
     public void start() {
+        if (!editor.isCursorAnimationEnabled()) {
+            return;
+        }
         scaleDownAnimator.start();
         scaleUpAnimator.start();
         lastAnimateTime = System.currentTimeMillis();

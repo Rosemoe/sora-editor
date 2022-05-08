@@ -130,6 +130,9 @@ public class FadeCursorAnimator implements CursorAnimator, ValueAnimator.Animato
 
     @Override
     public void start() {
+        if (!editor.isCursorAnimationEnabled()) {
+            return;
+        }
         fadeOutAnimator.start();
         fadeInAnimator.start();
         lastAnimateTime = System.currentTimeMillis();

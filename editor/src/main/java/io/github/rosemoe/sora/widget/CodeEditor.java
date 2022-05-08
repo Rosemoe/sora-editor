@@ -896,6 +896,9 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
     }
 
+    /**
+     * Set cursor animation enabled
+     */
     public void setCursorAnimationEnabled(boolean enabled) {
         if (!enabled) {
             mCursorAnimator.cancel();
@@ -903,16 +906,27 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         mCursorAnimation = enabled;
     }
 
-    public void setCursorAnimator(CursorAnimator cursorAnimator) {
+    /**
+     * @see #setCursorAnimationEnabled(boolean) 
+     */
+    public boolean isCursorAnimationEnabled() {
+        return mCursorAnimation;
+    }
+
+    /**
+     * Set cursor animation
+     * @see CursorAnimator
+     * @see #getCursorAnimator() 
+     */
+    public void setCursorAnimator(@NonNull CursorAnimator cursorAnimator) {
         mCursorAnimator = cursorAnimator;
     }
 
+    /**
+     * @see #setCursorAnimator(CursorAnimator) 
+     */
     public CursorAnimator getCursorAnimator() {
         return mCursorAnimator;
-    }
-
-    public boolean isCursorAnimationEnabled() {
-        return mCursorAnimation;
     }
 
     /**

@@ -113,6 +113,9 @@ public class MoveCursorAnimator implements CursorAnimator, ValueAnimator.Animato
 
     @Override
     public void start() {
+        if (!editor.isCursorAnimationEnabled()) {
+            return;
+        }
         animatorX.start();
         animatorY.start();
         animatorBackground.start();
