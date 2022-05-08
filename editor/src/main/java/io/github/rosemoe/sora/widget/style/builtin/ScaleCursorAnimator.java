@@ -21,10 +21,13 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
+package io.github.rosemoe.sora.widget.style.builtin;
 
 import android.animation.Animator;
 import android.animation.ValueAnimator;
+
+import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.style.CursorAnimator;
 
 /**
  * Scale-Up/Scale-Down cursor animation
@@ -54,10 +57,10 @@ public class ScaleCursorAnimator implements CursorAnimator, ValueAnimator.Animat
     @Override
     public void markStartPos() {
         int line = editor.getCursor().getLeftLine();
-        lineHeight = editor.mLayout.getRowCountForLine(line) * editor.getRowHeight();
-        lineBottom = editor.mLayout.getCharLayoutOffset(line, editor.getText().getColumnCount(line))[0];
+        lineHeight = editor.getLayout().getRowCountForLine(line) * editor.getRowHeight();
+        lineBottom = editor.getLayout().getCharLayoutOffset(line, editor.getText().getColumnCount(line))[0];
 
-        float[] pos = editor.mLayout.getCharLayoutOffset(
+        float[] pos = editor.getLayout().getCharLayoutOffset(
                 editor.getCursor().getLeftLine(),
                 editor.getCursor().getLeftColumn()
         );
@@ -91,10 +94,10 @@ public class ScaleCursorAnimator implements CursorAnimator, ValueAnimator.Animat
         scaleUpAnimator.removeAllUpdateListeners();
 
         int line = editor.getCursor().getLeftLine();
-        lineHeight = editor.mLayout.getRowCountForLine(line) * editor.getRowHeight();
-        lineBottom = editor.mLayout.getCharLayoutOffset(line, editor.getText().getColumnCount(line))[0];
+        lineHeight = editor.getLayout().getRowCountForLine(line) * editor.getRowHeight();
+        lineBottom = editor.getLayout().getCharLayoutOffset(line, editor.getText().getColumnCount(line))[0];
 
-        float[] pos = editor.mLayout.getCharLayoutOffset(
+        float[] pos = editor.getLayout().getCharLayoutOffset(
                 editor.getCursor().getLeftLine(),
                 editor.getCursor().getLeftColumn()
         );

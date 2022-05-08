@@ -251,7 +251,7 @@ public class EditorPainter {
     /**
      * Invalidate the region in hardware-accelerated renderer
      */
-    void invalidateChanged(int startLine, int endLine) {
+    public void invalidateChanged(int startLine, int endLine) {
         if (mRenderer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mCursor != null) {
             if (mRenderer.invalidateInRegion(startLine, Integer.MAX_VALUE)) {
                 mEditor.invalidate();
@@ -262,7 +262,7 @@ public class EditorPainter {
     /**
      * Invalidate the cursor region in hardware-accelerated renderer
      */
-    void invalidateInCursor() {
+    public void invalidateInCursor() {
         invalidateChanged(mCursor.getLeftLine(), mCursor.getRightLine());
     }
 

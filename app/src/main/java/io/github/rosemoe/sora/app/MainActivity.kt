@@ -47,14 +47,13 @@ import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.theme.TextMateColorScheme
 import io.github.rosemoe.sora.text.ContentCreator
 import io.github.rosemoe.sora.textmate.core.internal.theme.reader.ThemeReader
-import io.github.rosemoe.sora.textmate.languageconfiguration.internal.supports.CharacterPair
 import io.github.rosemoe.sora.utils.CrashHandler
 import io.github.rosemoe.sora.widget.*
 import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.schemes.*
+import io.github.rosemoe.sora.widget.style.builtin.ScaleCursorAnimator
 import io.github.rosemoe.sorakt.subscribeEvent
 import java.io.*
-import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 
 class MainActivity : AppCompatActivity() {
@@ -120,7 +119,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Custom cursor animator
-        binding.editor.cursorAnimator = ScaleCursorAnimator(binding.editor)
+        binding.editor.cursorAnimator =
+            ScaleCursorAnimator(
+                binding.editor
+            )
 
         val editor = binding.editor
         var editorColorScheme = editor.colorScheme

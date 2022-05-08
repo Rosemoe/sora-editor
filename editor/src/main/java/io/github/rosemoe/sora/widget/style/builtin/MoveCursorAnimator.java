@@ -21,9 +21,12 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
+package io.github.rosemoe.sora.widget.style.builtin;
 
 import android.animation.ValueAnimator;
+
+import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.style.CursorAnimator;
 
 /**
  * Default cursor animation implementation
@@ -55,11 +58,11 @@ public class MoveCursorAnimator implements CursorAnimator, ValueAnimator.Animato
     @Override
     public void markStartPos() {
         var line = editor.getCursor().getLeftLine();
-        float[] pos = editor.mLayout.getCharLayoutOffset(line, editor.getCursor().getLeftColumn());
+        float[] pos = editor.getLayout().getCharLayoutOffset(line, editor.getCursor().getLeftColumn());
         startX = editor.measureTextRegionOffset() + pos[1];
         startY = pos[0];
-        startSize = editor.mLayout.getRowCountForLine(line) * editor.getRowHeight();
-        startBottom = editor.mLayout.getCharLayoutOffset(line, editor.getText().getColumnCount(line))[0];
+        startSize = editor.getLayout().getRowCountForLine(line) * editor.getRowHeight();
+        startBottom = editor.getLayout().getCharLayoutOffset(line, editor.getText().getColumnCount(line))[0];
     }
 
     @Override
@@ -92,13 +95,13 @@ public class MoveCursorAnimator implements CursorAnimator, ValueAnimator.Animato
         }
         var line = editor.getCursor().getLeftLine();
         animatorX.removeAllUpdateListeners();
-        float[] pos = editor.mLayout.getCharLayoutOffset(editor.getCursor().getLeftLine(), editor.getCursor().getLeftColumn());
+        float[] pos = editor.getLayout().getCharLayoutOffset(editor.getCursor().getLeftLine(), editor.getCursor().getLeftColumn());
 
         animatorX = ValueAnimator.ofFloat(startX, (pos[1] + editor.measureTextRegionOffset()));
         animatorY = ValueAnimator.ofFloat(startY, pos[0]);
 
-        animatorBackground = ValueAnimator.ofFloat(startSize, editor.mLayout.getRowCountForLine(editor.getCursor().getLeftLine()) * editor.getRowHeight());
-        animatorBgBottom = ValueAnimator.ofFloat(startBottom, editor.mLayout.getCharLayoutOffset(line, editor.getText().getColumnCount(line))[0]);
+        animatorBackground = ValueAnimator.ofFloat(startSize, editor.getLayout().getRowCountForLine(editor.getCursor().getLeftLine()) * editor.getRowHeight());
+        animatorBgBottom = ValueAnimator.ofFloat(startBottom, editor.getLayout().getCharLayoutOffset(line, editor.getText().getColumnCount(line))[0]);
 
         animatorX.addUpdateListener(this);
 
