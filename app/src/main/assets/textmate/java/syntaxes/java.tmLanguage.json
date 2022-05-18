@@ -50,7 +50,7 @@
       ]
     },
     {
-      "begin": "\\b(import)\\b\\s*\\b(static)?\\b\\s",
+      "begin": "\\b(import)\\b",
       "beginCaptures": {
         "1": {
           "name": "keyword.other.import.java"
