@@ -141,7 +141,7 @@ public class FadeCursorAnimator implements CursorAnimator, ValueAnimator.Animato
 
     @Override
     public float animatedX() {
-        if (phaseEnded || editor.getInsertHandleDescriptor().isEmpty()) {
+        if (phaseEnded || editor.getInsertHandleDescriptor().position.isEmpty()) {
             return endX;
         }
         return startX;
@@ -149,7 +149,7 @@ public class FadeCursorAnimator implements CursorAnimator, ValueAnimator.Animato
 
     @Override
     public float animatedY() {
-        if (phaseEnded || editor.getInsertHandleDescriptor().isEmpty()) {
+        if (phaseEnded || editor.getInsertHandleDescriptor().position.isEmpty()) {
             return endY;
         }
         return startY;
