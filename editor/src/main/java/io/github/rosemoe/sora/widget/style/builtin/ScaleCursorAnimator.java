@@ -130,7 +130,8 @@ public class ScaleCursorAnimator implements CursorAnimator, ValueAnimator.Animat
 
     @Override
     public void start() {
-        if (!editor.isCursorAnimationEnabled()) {
+        if (!editor.isCursorAnimationEnabled() || System.currentTimeMillis() - lastAnimateTime < 100) {
+            lastAnimateTime = System.currentTimeMillis();
             return;
         }
         scaleDownAnimator.start();
@@ -140,7 +141,7 @@ public class ScaleCursorAnimator implements CursorAnimator, ValueAnimator.Animat
 
     @Override
     public float animatedX() {
-        if (phaseEnded) {
+        if (phaseEnded || editor.getInsertHandleDescriptor().isEmpty()) {
             return endX;
         }
         return startX;
@@ -148,7 +149,7 @@ public class ScaleCursorAnimator implements CursorAnimator, ValueAnimator.Animat
 
     @Override
     public float animatedY() {
-        if (phaseEnded) {
+        if (phaseEnded || editor.getInsertHandleDescriptor().isEmpty()) {
             return endY;
         }
         return startY;
