@@ -9,13 +9,13 @@
   "scopeName": "source.java",
   "patterns": [
     {
-      "begin": "\\b(package)\\b\\s*",
+      "begin": "\\b(package)\\b",
       "beginCaptures": {
         "1": {
           "name": "keyword.other.package.java"
         }
       },
-      "end": "\\s*(;)",
+      "end": "\\s",
       "endCaptures": {
         "1": {
           "name": "punctuation.terminator.java"
@@ -50,7 +50,7 @@
       ]
     },
     {
-      "begin": "\\b(import)\\b\\s*\\b(static)?\\b\\s",
+      "begin": "\\b(import)\\b",
       "beginCaptures": {
         "1": {
           "name": "keyword.other.import.java"
@@ -59,7 +59,7 @@
           "name": "storage.modifier.java"
         }
       },
-      "end": "\\s*(;)",
+      "end": "\\s",
       "endCaptures": {
         "1": {
           "name": "punctuation.terminator.java"
