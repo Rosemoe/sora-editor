@@ -48,7 +48,7 @@ public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
     private static int sThreadId = 0;
 
     private StyleReceiver receiver;
-    private ContentReference ref;
+    private volatile ContentReference ref;
     private Bundle extraArguments;
     private volatile long newestRequestId;
     private AnalyzeThread thread;
@@ -155,13 +155,17 @@ public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
             Log.v(LOG_TAG, "Analyze thread started");
             try {
                 while (!isInterrupted()) {
-                    final var text = ref;
+                    var text = ref;
                     if (text != null) {
                         var requestId = 0L;
-                        Styles result;
-                        V newData;
+                        Styles result = null;
+                        V newData = null;
                         // Do the analysis, until the requestId matches
                         do {
+                            text = ref;
+                            if (text == null) {
+                                break;
+                            }
                             requestId = newestRequestId;
                             var delegate = new Delegate<V>(requestId);
 
@@ -181,7 +185,7 @@ public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
                         } while (requestId != newestRequestId);
                         // Send result
                         final var receiver = SimpleAnalyzeManager.this.receiver;
-                        if (receiver != null) {
+                        if (receiver != null && result != null) {
                             receiver.setStyles(SimpleAnalyzeManager.this, result);
                         }
                         data = newData;
