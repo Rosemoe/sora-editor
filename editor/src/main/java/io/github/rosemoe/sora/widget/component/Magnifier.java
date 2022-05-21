@@ -61,6 +61,7 @@ public class Magnifier implements EditorBuiltinComponent {
     private final float maxTextSize;
     private long expectedRequestTime;
     private boolean enabled = true;
+    private boolean withinEditorForcibly = false;
 
     /**
      * Scale factor for regions
@@ -94,6 +95,23 @@ public class Magnifier implements EditorBuiltinComponent {
         }
     }
 
+    /***
+     * @see #setWithinEditorForcibly(boolean)
+     */
+    public boolean isWithinEditorForcibly() {
+        return withinEditorForcibly;
+    }
+
+    /**
+     * If true, the magnifier will never try to copy pixels by system and create the image by
+     * editor.
+     * If you are trying to add the view into an activity by WindowManager, this should be enabled.
+     * Otherwise, the generated image may be wrong.
+     */
+    public void setWithinEditorForcibly(boolean withinEditorForcibly) {
+        this.withinEditorForcibly = withinEditorForcibly;
+    }
+
     /**
      * Show the magnifier according to the given position.
      * X and Y are relative to the code editor view
@@ -114,19 +132,17 @@ public class Magnifier implements EditorBuiltinComponent {
         popup.setWidth(Math.min(view.getWidth() * 3 / 5, (int)view.getDpUnit()) * 250);
         this.x = x;
         this.y = y;
-        int[] pos = new int[2];
-        view.getLocationInWindow(pos);
-        var left = Math.max(pos[0] + x - popup.getWidth() / 2, 0);
+        var left = Math.max(x - popup.getWidth() / 2, 0);
         var right = left + popup.getWidth();
-        if (right > view.getWidth() + pos[0]) {
-            right = view.getWidth() + pos[0];
+        if (right > view.getWidth()) {
+            right = view.getWidth();
             left = Math.max(0, right - popup.getWidth());
         }
-        var top = Math.max(pos[1] + y - popup.getHeight() - (int) (view.getRowHeight()), 0);
+        var top = Math.max(y - popup.getHeight() - (int) (view.getRowHeight()), 0);
         if (popup.isShowing()) {
             popup.update(left, top, popup.getWidth(), popup.getHeight());
         } else {
-            popup.showAtLocation(view, Gravity.START | Gravity.TOP, left, top);
+            popup.showAsDropDown(view, left, top, Gravity.START | Gravity.TOP);
         }
         updateDisplay();
     }
@@ -158,7 +174,7 @@ public class Magnifier implements EditorBuiltinComponent {
         if (!isShowing()) {
             return;
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && view.getContext() instanceof Activity) {
+        if (!withinEditorForcibly && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && view.getContext() instanceof Activity) {
             updateDisplayOreo((Activity)view.getContext());
         } else {
             updateDisplayWithinEditor();

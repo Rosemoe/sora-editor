@@ -31,9 +31,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
+import android.view.*
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
@@ -48,13 +46,16 @@ import io.github.rosemoe.sora.langs.textmate.theme.TextMateColorScheme
 import io.github.rosemoe.sora.text.ContentCreator
 import io.github.rosemoe.sora.textmate.core.internal.theme.reader.ThemeReader
 import io.github.rosemoe.sora.utils.CrashHandler
-import io.github.rosemoe.sora.widget.*
+import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.EditorSearcher
 import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.schemes.*
 import io.github.rosemoe.sora.widget.style.builtin.ScaleCursorAnimator
+import io.github.rosemoe.sorakt.getComponent
 import io.github.rosemoe.sorakt.subscribeEvent
 import java.io.*
 import java.util.regex.PatternSyntaxException
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding

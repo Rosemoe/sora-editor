@@ -201,17 +201,14 @@ public class EditorPopupWindow {
             }
         }
         // Show/update if needed
-        mEditor.getLocationInWindow(mLocationBuffer);
         int width = right - left;
         int height = bottom - top;
-        left += mLocationBuffer[0];
-        top += mLocationBuffer[1];
         if (mWindow.isShowing()) {
             mWindow.update(left, top, width, height);
         } else if (show) {
             mWindow.setHeight(height);
             mWindow.setWidth(width);
-            mWindow.showAtLocation(mEditor, Gravity.START | Gravity.TOP, left, top);
+            mWindow.showAsDropDown(mEditor, left, top, Gravity.LEFT | Gravity.TOP);
         }
     }
 
