@@ -94,6 +94,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         maxSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 26, Resources.getSystem().getDisplayMetrics());
         minSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 8, Resources.getSystem().getDisplayMetrics());
         mMagnifier = new Magnifier(editor);
+        this.left = new SelectionHandle(SelectionHandle.LEFT);
+        this.right = new SelectionHandle(SelectionHandle.RIGHT);
+        insert = new SelectionHandle(SelectionHandle.BOTH);
     }
 
     public boolean hasAnyHeldHandle() {
@@ -271,7 +274,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     downY = e.getY();
                     downX = e.getX();
                     updateMagnifier(e);
-                    insert = new SelectionHandle(SelectionHandle.BOTH);
                     dispatchHandle(HandleStateChangeEvent.HANDLE_TYPE_INSERT, true);
                 }
                 boolean left = mEditor.getLeftHandleDescriptor().position.contains(e.getX(), e.getY());
@@ -288,9 +290,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     downY = e.getY();
                     downX = e.getX();
                     updateMagnifier(e);
-
-                    this.left = new SelectionHandle(SelectionHandle.LEFT);
-                    this.right = new SelectionHandle(SelectionHandle.RIGHT);
                 }
                 return true;
             }
