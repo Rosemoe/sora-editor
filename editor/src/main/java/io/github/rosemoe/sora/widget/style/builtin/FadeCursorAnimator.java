@@ -51,7 +51,7 @@ public class FadeCursorAnimator implements CursorAnimator, ValueAnimator.Animato
         this.editor = editor;
         this.fadeInAnimator = new ValueAnimator();
         this.fadeOutAnimator = new ValueAnimator();
-        this.duration = 100;
+        this.duration = 200;
     }
 
     @Override

@@ -51,7 +51,7 @@ public class ScaleCursorAnimator implements CursorAnimator, ValueAnimator.Animat
         this.editor = editor;
         this.scaleUpAnimator = new ValueAnimator();
         this.scaleDownAnimator = new ValueAnimator();
-        this.duration = 100;
+        this.duration = 200;
     }
 
     @Override
