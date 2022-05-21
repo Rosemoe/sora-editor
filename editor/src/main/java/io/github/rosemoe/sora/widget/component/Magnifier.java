@@ -78,7 +78,7 @@ public class Magnifier implements EditorBuiltinComponent {
         popup.setWidth((int) (editor.getDpUnit() * 100));
         popup.setContentView(view);
         maxTextSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 28, view.getResources().getDisplayMetrics());
-        scaleFactor = 1.35f;
+        scaleFactor = 1.25f;
         paint = new Paint();
     }
 
