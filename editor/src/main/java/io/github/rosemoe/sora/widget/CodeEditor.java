@@ -2731,7 +2731,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
         updateCursor();
         mPainter.invalidateInCursor();
-        if (!mEventHandler.hasAnyHeldHandle()) {
+        if (!mEventHandler.hasAnyHeldHandle() && mConnection.mComposingLine == -1) {
             mCursorAnimator.markEndPos();
             mCursorAnimator.start();
         }
@@ -3880,7 +3880,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         mLanguage.getAnalyzeManager().insert(start, end, insertedContent);
         mEventHandler.hideInsertHandle();
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
-        if (!mCursor.isSelected()) {
+        if (!mCursor.isSelected() && mConnection.mComposingLine == -1) {
             mCursorAnimator.markEndPos();
             mCursorAnimator.start();
         }
@@ -3935,7 +3935,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             ensureSelectionVisible();
             mEventHandler.hideInsertHandle();
         }
-        if (!mCursor.isSelected() && !mWait) {
+        if (!mCursor.isSelected() && !mWait && mConnection.mComposingLine == -1) {
             mCursorAnimator.markEndPos();
             mCursorAnimator.start();
         }
