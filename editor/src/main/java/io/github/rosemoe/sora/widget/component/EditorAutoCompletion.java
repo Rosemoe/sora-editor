@@ -225,6 +225,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             item.performCompletion(mEditor, mEditor.getText(), mThread.mPosition.line, mThread.mPosition.column);
             mEditor.getText().endBatchEdit();
             mCancelShowUp = false;
+            mEditor.restartInput();
         }
         hide();
     }
