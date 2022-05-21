@@ -132,13 +132,15 @@ public class Magnifier implements EditorBuiltinComponent {
         popup.setWidth(Math.min(view.getWidth() * 3 / 5, (int)view.getDpUnit()) * 250);
         this.x = x;
         this.y = y;
-        var left = Math.max(x - popup.getWidth() / 2, 0);
+        int[] pos = new int[2];
+        view.getLocationInWindow(pos);
+        var left = Math.max(pos[0] + x - popup.getWidth() / 2, 0);
         var right = left + popup.getWidth();
-        if (right > view.getWidth()) {
-            right = view.getWidth();
+        if (right > view.getWidth() + pos[0]) {
+            right = view.getWidth() + pos[0];
             left = Math.max(0, right - popup.getWidth());
         }
-        var top = Math.max(y - popup.getHeight() - (int) (view.getRowHeight()), 0);
+        var top = Math.max(pos[1] + y - popup.getHeight() - (int) (view.getRowHeight()), 0);
         if (popup.isShowing()) {
             popup.update(left, top, popup.getWidth(), popup.getHeight());
         } else {
