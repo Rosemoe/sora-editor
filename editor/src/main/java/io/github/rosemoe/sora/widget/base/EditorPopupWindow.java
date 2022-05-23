@@ -293,4 +293,8 @@ public class EditorPopupWindow {
         mParentView = Objects.requireNonNull(view);
     }
 
+    @NonNull
+    public View getParentView() {
+        return mParentView;
+    }
 }

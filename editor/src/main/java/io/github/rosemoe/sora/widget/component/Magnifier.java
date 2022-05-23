@@ -37,10 +37,14 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.PixelCopy;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+
+import java.util.Objects;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.widget.CodeEditor;
@@ -62,6 +66,7 @@ public class Magnifier implements EditorBuiltinComponent {
     private long expectedRequestTime;
     private boolean enabled = true;
     private boolean withinEditorForcibly = false;
+    private View parentView;
 
     /**
      * Scale factor for regions
@@ -70,6 +75,7 @@ public class Magnifier implements EditorBuiltinComponent {
 
     public Magnifier(CodeEditor editor) {
         view = editor;
+        parentView = editor;
         popup = new PopupWindow(editor);
         popup.setElevation(view.getDpUnit() * 8);
         @SuppressLint("InflateParams") var view = LayoutInflater.from(editor.getContext()).inflate(R.layout.magnifier_popup, null);
@@ -80,6 +86,18 @@ public class Magnifier implements EditorBuiltinComponent {
         maxTextSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 28, view.getResources().getDisplayMetrics());
         scaleFactor = 1.25f;
         paint = new Paint();
+    }
+
+    /**
+     * @see io.github.rosemoe.sora.widget.base.EditorPopupWindow#setParentView(View)
+     */
+    public void setParentView(@NonNull View parentView) {
+        this.parentView = Objects.requireNonNull(parentView);
+    }
+
+    @NonNull
+    public View getParentView() {
+        return parentView;
     }
 
     @Override
@@ -144,7 +162,7 @@ public class Magnifier implements EditorBuiltinComponent {
         if (popup.isShowing()) {
             popup.update(left, top, popup.getWidth(), popup.getHeight());
         } else {
-            popup.showAsDropDown(view, left, top, Gravity.START | Gravity.TOP);
+            popup.showAtLocation(view, Gravity.START | Gravity.TOP, left, top);
         }
         updateDisplay();
     }
