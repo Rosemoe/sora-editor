@@ -2730,6 +2730,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             mCursorPosition = findCursorBlock();
         }
         updateCursor();
+        updateSelection();
         mPainter.invalidateInCursor();
         if (!mEventHandler.hasAnyHeldHandle() && mConnection.mComposingLine == -1) {
             mCursorAnimator.markEndPos();
@@ -2835,6 +2836,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         mCursor.setRight(lineRight, columnRight);
         mPainter.invalidateInCursor();
         updateCursor();
+        updateSelection();
         mCompletionWindow.hide();
         if (makeRightVisible) {
             ensurePositionVisible(lineRight, columnRight);
