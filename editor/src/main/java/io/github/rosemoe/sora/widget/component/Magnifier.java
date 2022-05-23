@@ -76,7 +76,7 @@ public class Magnifier implements EditorBuiltinComponent {
     public Magnifier(CodeEditor editor) {
         view = editor;
         parentView = editor;
-        popup = new PopupWindow(editor);
+        popup = new PopupWindow();
         popup.setElevation(view.getDpUnit() * 8);
         @SuppressLint("InflateParams") var view = LayoutInflater.from(editor.getContext()).inflate(R.layout.magnifier_popup, null);
         image = view.findViewById(R.id.magnifier_image_view);

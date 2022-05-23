@@ -81,7 +81,7 @@ public class EditorPopupWindow {
         mEditor = Objects.requireNonNull(editor);
         mFeatures = features;
         mParentView = editor;
-        mWindow = new PopupWindow(editor.getContext());
+        mWindow = new PopupWindow();
         mWindow.setElevation(editor.getDpUnit() * 8);
         mScrollListener = ((event, unsubscribe) -> {
             if (!mRegisterFlag) {
