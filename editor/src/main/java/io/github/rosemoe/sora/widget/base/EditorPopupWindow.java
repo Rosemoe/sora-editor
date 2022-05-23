@@ -66,6 +66,7 @@ public class EditorPopupWindow {
     private boolean mShowState;
     private boolean mRegisterFlag;
     private boolean mRegistered;
+    private View mParentView;
     private int mOffsetX, mOffsetY, mX, mY, mWidth, mHeight;
 
     /**
@@ -79,7 +80,8 @@ public class EditorPopupWindow {
     public EditorPopupWindow(@NonNull CodeEditor editor, int features) {
         mEditor = Objects.requireNonNull(editor);
         mFeatures = features;
-        mWindow = new PopupWindow(editor);
+        mParentView = editor;
+        mWindow = new PopupWindow(editor.getContext());
         mWindow.setElevation(editor.getDpUnit() * 8);
         mScrollListener = ((event, unsubscribe) -> {
             if (!mRegisterFlag) {
@@ -211,7 +213,7 @@ public class EditorPopupWindow {
         } else if (show) {
             mWindow.setHeight(height);
             mWindow.setWidth(width);
-            mWindow.showAsDropDown(mEditor, left, top, Gravity.LEFT | Gravity.TOP);
+            mWindow.showAtLocation(mParentView, Gravity.LEFT | Gravity.TOP, left, top);
         }
     }
 
@@ -281,6 +283,14 @@ public class EditorPopupWindow {
             mShowState = false;
             mWindow.dismiss();
         }
+    }
+
+    /**
+     * Set parent view of popup.
+     * @param view View for {@link PopupWindow#showAtLocation(View, int, int, int)}
+     */
+    public void setParentView(@NonNull View view) {
+        mParentView = Objects.requireNonNull(view);
     }
 
 }
