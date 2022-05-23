@@ -445,6 +445,7 @@ class EditorInputConnection extends BaseInputConnection {
             return false;
         }
         mComposingLine = mComposingStart = mComposingEnd = -1;
+        mEditor.updateCursor();
         mEditor.invalidate();
         return true;
     }

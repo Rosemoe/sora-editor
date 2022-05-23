@@ -3194,6 +3194,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             }
         }
         mInputMethodManager.updateSelection(this, mCursor.getLeft(), mCursor.getRight(), candidatesStart, candidatesEnd);
+        Thread.dumpStack();
     }
 
     /**
@@ -3268,7 +3269,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     public void updateCursor() {
         updateCursorAnchor();
         updateExtractedText();
-        if (!mText.isInBatchEdit()) {
+        if (!mText.isInBatchEdit() && mConnection.mComposingLine == -1) {
             updateSelection();
         }
     }
