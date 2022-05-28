@@ -718,6 +718,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         mPainter.getPaintOther().setFontFeatureSettings(features);
         mPainter.getPaintGraph().setFontFeatureSettings(features);
         mPainter.updateTimestamp();
+        invalidate();
     }
 
     /**

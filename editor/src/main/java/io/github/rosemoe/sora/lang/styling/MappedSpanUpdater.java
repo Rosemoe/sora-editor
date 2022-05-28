@@ -31,7 +31,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 /**
  * Update spans on text change event
  *
- * @author Rose
+ * @author Rosemoe
  */
 public class MappedSpanUpdater {
 
