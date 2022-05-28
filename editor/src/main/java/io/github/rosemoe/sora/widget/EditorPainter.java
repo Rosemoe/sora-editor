@@ -1588,9 +1588,9 @@ public class EditorPainter {
         float all = mEditor.getLayout().getLayoutHeight() + height / 2f;
         float length = height / all * height;
         float topY;
-        if (length < mEditor.getDpUnit() * 30) {
-            length = mEditor.getDpUnit() * 30;
-            topY = (mEditor.getOffsetY() + height / 2f) / all * (height - length);
+        if (length < mEditor.getDpUnit() * 45) {
+            length = mEditor.getDpUnit() * 45;
+            topY = (mEditor.getOffsetY()) / all * (height - length);
         } else {
             topY = mEditor.getOffsetY() / all * height;
         }
@@ -1599,7 +1599,7 @@ public class EditorPainter {
             drawLineInfoPanel(canvas, centerY, mRect.left - mEditor.getDpUnit() * 5);
         }
         mRect.right = mEditor.getWidth();
-        mRect.left = mEditor.getWidth() - mEditor.getDpUnit() * 10;
+        mRect.left = mEditor.getWidth() - mEditor.getDpUnit() * 13;
         mRect.top = topY;
         mRect.bottom = topY + length;
         mVerticalScrollBar.set(mRect);
