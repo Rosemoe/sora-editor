@@ -162,7 +162,7 @@ public class Magnifier implements EditorBuiltinComponent {
         if (popup.isShowing()) {
             popup.update(left, top, popup.getWidth(), popup.getHeight());
         } else {
-            popup.showAtLocation(view, Gravity.START | Gravity.TOP, left, top);
+            popup.showAtLocation(parentView, Gravity.START | Gravity.TOP, left, top);
         }
         updateDisplay();
     }
