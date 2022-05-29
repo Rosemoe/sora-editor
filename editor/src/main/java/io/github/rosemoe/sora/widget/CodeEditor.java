@@ -2177,7 +2177,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                         new AlertDialog.Builder(getContext())
                                 .setTitle(replaceAll ? R.string.replaceAll : R.string.replace)
                                 .setView(et)
-                                .setNegativeButton(R.string.cancel, null)
+                                .setNegativeButton(android.R.string.cancel, null)
                                 .setPositiveButton(R.string.replace, (dialog, which) -> {
                                     if (replaceAll) {
                                         getSearcher().replaceAll(et.getText().toString(), am::finish);
