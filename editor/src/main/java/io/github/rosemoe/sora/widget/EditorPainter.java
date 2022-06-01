@@ -90,6 +90,9 @@ public class EditorPainter {
     private final RectF mVerticalScrollBar;
     private final RectF mHorizontalScrollBar;
 
+    private final LongArrayList mPostDrawLineNumbers = new LongArrayList();
+    private final LongArrayList mPostDrawCurrentLines = new LongArrayList();
+
     private final CodeEditor mEditor;
     private Paint.FontMetricsInt mLineNumberMetrics;
     private Paint.FontMetricsInt mGraphMetrics;
@@ -484,9 +487,9 @@ public class EditorPainter {
 
         boolean lineNumberNotPinned = mEditor.isLineNumberEnabled() && (mEditor.isWordwrap() || !mEditor.isLineNumberPinned());
 
-        LongArrayList postDrawLineNumbers = mEditor.getPostDrawLineNumbers();
+        LongArrayList postDrawLineNumbers = mPostDrawLineNumbers;
         postDrawLineNumbers.clear();
-        LongArrayList postDrawCurrentLines = mEditor.getPostDrawCurrentLines();
+        LongArrayList postDrawCurrentLines = mPostDrawCurrentLines;
         postDrawCurrentLines.clear();
         List<DrawCursorTask> postDrawCursor = new ArrayList<>(3);
         MutableInt firstLn = mEditor.isFirstLineNumberAlwaysVisible() && mEditor.isWordwrap() ? new MutableInt(-1) : null;
@@ -1370,8 +1373,8 @@ public class EditorPainter {
             // Follow the thumb or stick to text row
             if (!descriptor.position.isEmpty()) {
                 boolean isSingleHandle = mEditor.getEventHandler().holdInsertHandle() && handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT;
-                boolean isLeftHandle = mEditor.getEventHandler().mSelHandleType == EditorTouchEventHandler.SelectionHandle.LEFT && handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT;
-                boolean isRightHandle = mEditor.getEventHandler().mSelHandleType == EditorTouchEventHandler.SelectionHandle.RIGHT && handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT;
+                boolean isLeftHandle = mEditor.getEventHandler().selHandleType == EditorTouchEventHandler.SelectionHandle.LEFT && handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT;
+                boolean isRightHandle = mEditor.getEventHandler().selHandleType == EditorTouchEventHandler.SelectionHandle.RIGHT && handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT;
                 if (mEditor.isStickyTextSelection()) {
                     if (isLeftHandle) {
                         x = mCursor.getLeftColumn() * mEditor.getTextPaint().getSpaceWidth() +
@@ -1390,8 +1393,8 @@ public class EditorPainter {
                     }
                 } else {
                     if (isSingleHandle || isLeftHandle || isRightHandle) {
-                        x = mEditor.getEventHandler().mMotionX + (descriptor.alignment != SelectionHandleStyle.ALIGN_CENTER ? descriptor.position.width() : 0) * (descriptor.alignment == SelectionHandleStyle.ALIGN_LEFT ? 1 : -1);
-                        y = mEditor.getEventHandler().mMotionY - descriptor.position.height() * 2 / 3f;
+                        x = mEditor.getEventHandler().motionX + (descriptor.alignment != SelectionHandleStyle.ALIGN_CENTER ? descriptor.position.width() : 0) * (descriptor.alignment == SelectionHandleStyle.ALIGN_LEFT ? 1 : -1);
+                        y = mEditor.getEventHandler().motionY - descriptor.position.height() * 2 / 3f;
                     }
                 }
             }
@@ -1421,7 +1424,7 @@ public class EditorPainter {
         MaterialEdgeEffect verticalEdgeEffect = mEditor.getVerticalEdgeEffect();
         MaterialEdgeEffect horizontalEdgeEffect = mEditor.getHorizontalEdgeEffect();
         if (!verticalEdgeEffect.isFinished()) {
-            boolean bottom = mEditor.getEventHandler().topOrBottom;
+            boolean bottom = mEditor.getEventHandler().glowTopOrBottom;
             if (bottom) {
                 canvas.save();
                 canvas.translate(-mEditor.getMeasuredWidth(), mEditor.getMeasuredHeight());
@@ -1437,7 +1440,7 @@ public class EditorPainter {
         }
         if (!horizontalEdgeEffect.isFinished()) {
             canvas.save();
-            boolean right = mEditor.getEventHandler().leftOrRight;
+            boolean right = mEditor.getEventHandler().glowLeftOrRight;
             if (right) {
                 canvas.rotate(90);
                 canvas.translate(0, -mEditor.getMeasuredWidth());
@@ -1451,12 +1454,12 @@ public class EditorPainter {
         OverScroller scroller = mEditor.getScroller();
         if (scroller.isOverScrolled()) {
             if (verticalEdgeEffect.isFinished() && (scroller.getCurrY() < 0 || scroller.getCurrY() > mEditor.getScrollMaxY())) {
-                mEditor.getEventHandler().topOrBottom = scroller.getCurrY() >= mEditor.getScrollMaxY();
+                mEditor.getEventHandler().glowTopOrBottom = scroller.getCurrY() >= mEditor.getScrollMaxY();
                 verticalEdgeEffect.onAbsorb((int) scroller.getCurrVelocity());
                 postDraw = true;
             }
             if (horizontalEdgeEffect.isFinished() && (scroller.getCurrX() < 0 || scroller.getCurrX() > mEditor.getScrollMaxX())) {
-                mEditor.getEventHandler().leftOrRight = scroller.getCurrX() >= mEditor.getScrollMaxX();
+                mEditor.getEventHandler().glowLeftOrRight = scroller.getCurrX() >= mEditor.getScrollMaxX();
                 horizontalEdgeEffect.onAbsorb((int) scroller.getCurrVelocity());
                 postDraw = true;
             }

@@ -304,8 +304,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private SelectionHandleStyle mHandleStyle;
     private CursorBlink mCursorBlink;
     protected List<Span> defSpans = new ArrayList<>(2);
-    private final LongArrayList mPostDrawLineNumbers = new LongArrayList();
-    private final LongArrayList mPostDrawCurrentLines = new LongArrayList();
     private CharPosition mSelectionAnchor;
     private HwAcceleratedRenderer mRenderer;
     private DirectAccessProps mProps;
@@ -934,7 +932,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     /**
      * Set cursor animation
      * @see CursorAnimator
-     * @see #getCursorAnimator() 
+     * @see #getCursorAnimator()
+     * @see #setCursorAnimationEnabled(boolean)  for disabling the animation
      */
     public void setCursorAnimator(@NonNull CursorAnimator cursorAnimator) {
         mCursorAnimator = cursorAnimator;
@@ -1064,14 +1063,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
     public EditorPainter getEditorPainter() {
         return mPainter;
-    }
-
-    public LongArrayList getPostDrawLineNumbers() {
-        return mPostDrawLineNumbers;
-    }
-
-    public LongArrayList getPostDrawCurrentLines() {
-        return mPostDrawCurrentLines;
     }
 
     public Paint.FontMetricsInt getLineNumberMetrics() {
@@ -2027,8 +2018,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         if (minSize < 2f) {
             throw new IllegalArgumentException("min size must be at least 2px");
         }
-        mEventHandler.minSize = minSize;
-        mEventHandler.maxSize = maxSize;
+        mEventHandler.scaleMinSize = minSize;
+        mEventHandler.scaleMaxSize = maxSize;
     }
 
     /**
@@ -3823,22 +3814,22 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             }
             if (scroller.getCurrX() <= 0 && scrollerFinalX <= 0 && mHorizontalGlow.isFinished() && horizontalAbsorb) {
                 mHorizontalGlow.onAbsorb((int) scroller.getCurrVelocity());
-                mEventHandler.leftOrRight = false;
+                mEventHandler.glowLeftOrRight = false;
             } else {
                 var max = getScrollMaxX();
                 if (scroller.getCurrX() >= max && scrollerFinalX >= max && mHorizontalGlow.isFinished() && horizontalAbsorb) {
                     mHorizontalGlow.onAbsorb((int) scroller.getCurrVelocity());
-                    mEventHandler.leftOrRight = true;
+                    mEventHandler.glowLeftOrRight = true;
                 }
             }
             if (scroller.getCurrY() <= 0 && scrollerFinalY <= 0 && mVerticalGlow.isFinished() && verticalAbsorb) {
                 mVerticalGlow.onAbsorb((int) scroller.getCurrVelocity());
-                mEventHandler.topOrBottom = false;
+                mEventHandler.glowTopOrBottom = false;
             } else {
                 var max = getScrollMaxY();
                 if (scroller.getCurrY() >= max && scrollerFinalY >= max && mVerticalGlow.isFinished() && verticalAbsorb) {
                     mVerticalGlow.onAbsorb((int) scroller.getCurrVelocity());
-                    mEventHandler.topOrBottom = true;
+                    mEventHandler.glowTopOrBottom = true;
                 }
             }
             postInvalidateOnAnimation();
