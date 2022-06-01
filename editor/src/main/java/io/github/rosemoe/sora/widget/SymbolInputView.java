@@ -114,9 +114,9 @@ public class SymbolInputView extends LinearLayout {
         for (int i = 0; i < count; i++) {
             Button btn = new Button(getContext(), null, android.R.attr.buttonStyleSmall);
             btn.setText(display[i]);
-            btn.setBackground(new ColorDrawable(0));
+            btn.setBackground(new ColorDrawable(Color.TRANSPARENT));
             btn.setTextColor(textColor);
-            addView(btn, new LayoutParams(-2, -1));
+            addView(btn, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
             int finalI = i;
             btn.setOnClickListener((view) -> {
                 if (editor != null)
