@@ -468,7 +468,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * Initialize variants
      */
     private void initialize(AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        Log.i(LOG_TAG, COPYRIGHT);
+        Log.v(LOG_TAG, COPYRIGHT);
 
         mPainter = new EditorPainter(this);
 
@@ -3754,7 +3754,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             warn = true;
         }
         if (warn) {
-            Log.i(LOG_TAG, "onMeasure():Code editor does not support wrap_content mode when measuring.It will just fill the whole space.");
+            Log.w(LOG_TAG, "onMeasure():CodeEditor does not support wrap_content mode when measuring.It will just fill the whole space.");
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
