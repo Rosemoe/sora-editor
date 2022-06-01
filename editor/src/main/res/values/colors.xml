@@ -24,4 +24,6 @@
 
 <resources>
     <color name="textActionNameColor">@android:color/tertiary_text_light</color>
+    <color name="defaultSymbolInputBackgroundColor">@android:color/background_light</color>
+    <color name="defaultSymbolInputTextColor">@android:color/black</color>
 </resources>

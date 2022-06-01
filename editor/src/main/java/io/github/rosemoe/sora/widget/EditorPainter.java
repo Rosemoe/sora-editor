@@ -441,7 +441,7 @@ public class EditorPainter {
      */
     public void drawView(Canvas canvas) {
         if (mEditor.isFormatting()) {
-            String text = "Formatting your code...";
+            String text = mEditor.getFormatTip();
             float centerY = mEditor.getHeight() / 2f;
             drawColor(canvas, mEditor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL), mRect);
             float baseline = centerY - mEditor.getRowHeight() / 2f + mEditor.getRowBaseline(0);

@@ -280,7 +280,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private ContentLine mBuffer;
     private Matrix mMatrix;
     private EditorColorScheme mColors;
-    private String mLnTip = "Line:";
+    private String mLnTip;
+    private String mFormatTip;
     private Language mLanguage;
     private long mLastMakeVisible = 0;
     private EditorAutoCompletion mCompletionWindow;
@@ -487,6 +488,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             mRenderer = new HwAcceleratedRenderer(this);
         }
+        mLnTip = getContext().getString(R.string.editor_line_number_tip_prefix);
+        mFormatTip = getContext().getString(R.string.editor_formatting);
         mProps = new DirectAccessProps();
         mEventManager = new EventManager();
         mDpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10F;
@@ -583,6 +586,20 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      */
     public DirectAccessProps getProps() {
         return mProps;
+    }
+
+    /**
+     * Set the tip text while formatting
+     */
+    public void setFormatTip(@NonNull String formatTip) {
+        this.mFormatTip = Objects.requireNonNull(formatTip);
+    }
+
+    /**
+     * @see #setFormatTip(String)
+     */
+    public String getFormatTip() {
+        return mFormatTip;
     }
 
     /**

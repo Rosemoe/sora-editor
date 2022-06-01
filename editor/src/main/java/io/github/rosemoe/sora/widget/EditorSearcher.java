@@ -31,6 +31,7 @@ import androidx.annotation.Nullable;
 
 import java.util.regex.Pattern;
 
+import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.text.Content;
@@ -224,10 +225,11 @@ public class EditorSearcher {
     public void replaceAll(@NonNull String replacement, @Nullable final Runnable whenFinished) {
         checkState();
         if (!isResultValid()) {
-            Toast.makeText(mEditor.getContext(), "Editor is still preparing", Toast.LENGTH_SHORT).show();
+            Toast.makeText(mEditor.getContext(), R.string.editor_search_busy, Toast.LENGTH_SHORT).show();
             return;
         }
-        final var dialog = ProgressDialog.show(mEditor.getContext(), "Replace All", "Replacing...", true, false);
+        var context = mEditor.getContext();
+        final var dialog = ProgressDialog.show(context, context.getString(R.string.replaceAll), context.getString(R.string.editor_search_replacing), true, false);
         final var res = mLastResults;
         new Thread(() -> {
             try {

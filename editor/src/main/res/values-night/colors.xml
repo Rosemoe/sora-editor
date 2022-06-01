@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<?xml version="1.0" encoding="utf-8"?><!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ~    sora-editor - the awesome code editor for Android
   ~    https://github.com/Rosemoe/sora-editor
   ~    Copyright (C) 2020-2022  Rosemoe
@@ -24,17 +23,6 @@
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
 <resources>
-
-    <string name="last">Last</string>
-    <string name="next">Next</string>
-    <string name="replace">Replace</string>
-    <string name="replaceAll">Replace All</string>
-    <string name="replacement">Replacement</string>
-    <string name="text_to_search">Text to search</string>
-    <string name="editor_search_replacing">Replacing texts…</string>
-    <string name="editor_search_busy">Editor is still preparing…</string>
-    <string name="editor_line_number_tip_prefix" translatable="false">Line:</string>
-    <string name="editor_formatting">Formatting your code…</string>
-    <string name="more">More</string>
-
+    <color name="defaultSymbolInputBackgroundColor">@android:color/background_dark</color>
+    <color name="defaultSymbolInputTextColor">@android:color/white</color>
 </resources>
