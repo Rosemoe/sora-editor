@@ -277,7 +277,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private InputMethodManager mInputMethodManager;
     private Cursor mCursor;
     private Content mText;
-    private ContentLine mBuffer;
     private Matrix mMatrix;
     private EditorColorScheme mColors;
     private String mLnTip;
@@ -1470,21 +1469,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
-     * Switch current drawing context to the given line
-     *
-     * @param line Line going to draw or measure
-     */
-    @UnsupportedUserUsage
-    protected void prepareLine(int line) {
-        mBuffer = mText.getLine(line);
-    }
-
-    @UnsupportedUserUsage
-    ContentLine getLineBuffer() {
-        return mBuffer;
-    }
-
-    /**
      * Get the width of line number region
      *
      * @return width of line number region
@@ -1595,7 +1579,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         builder.setSelectionRange(mCursor.getLeft(), mCursor.getRight());
         int l = mCursor.getRightLine();
         int column = mCursor.getRightColumn();
-        prepareLine(l);
         boolean visible = true;
         float x = measureTextRegionOffset();
         x = x + mLayout.getCharLayoutOffset(l, column)[1];
