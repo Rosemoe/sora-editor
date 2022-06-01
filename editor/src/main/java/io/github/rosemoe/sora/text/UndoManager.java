@@ -37,6 +37,11 @@ import java.util.List;
  */
 public final class UndoManager implements ContentListener, Parcelable {
 
+    /**
+     * The max time span limit for merging actions
+     */
+    private static long sMergeTimeLimit = 8000L;
+
     public final static Creator<UndoManager> CREATOR = new Creator<>() {
         @Override
         public UndoManager createFromParcel(Parcel parcel) {
@@ -47,7 +52,7 @@ public final class UndoManager implements ContentListener, Parcelable {
             var count = parcel.readInt();
             while (count > 0) {
                 o.mActionStack.add(parcel.readParcelable(UndoManager.class.getClassLoader()));
-                count --;
+                count--;
             }
             return o;
         }
@@ -57,6 +62,21 @@ public final class UndoManager implements ContentListener, Parcelable {
             return new UndoManager[flags];
         }
     };
+
+    /**
+     * Set max time span limit for merging actions
+     * @param mergeTimeLimit Time in millisecond
+     */
+    public static void setMergeTimeLimit(long mergeTimeLimit) {
+        UndoManager.sMergeTimeLimit = mergeTimeLimit;
+    }
+
+    /**
+     * @see #setMergeTimeLimit(long)
+     */
+    public static long getMergeTimeLimit() {
+        return sMergeTimeLimit;
+    }
 
     private final List<ContentAction> mActionStack;
     private boolean mUndoEnabled;
@@ -182,7 +202,7 @@ public final class UndoManager implements ContentListener, Parcelable {
     public void setMaxUndoStackSize(int maxSize) {
         if (maxSize <= 0) {
             throw new IllegalArgumentException(
-                    "max size can not be zero or smaller.Did you want to disable undo module by calling set_undoEnabled(false)?");
+                    "max size can not be zero or smaller.Did you want to disable undo module by calling setUndoEnabled()?");
         }
         mMaxStackSize = maxSize;
         cleanStack();
@@ -354,7 +374,7 @@ public final class UndoManager implements ContentListener, Parcelable {
     public static final class InsertAction implements ContentAction {
 
         public int startLine, endLine, startColumn, endColumn;
-
+        public transient long createTime = System.currentTimeMillis();
         public CharSequence text;
 
         @Override
@@ -371,7 +391,9 @@ public final class UndoManager implements ContentListener, Parcelable {
         public boolean canMerge(ContentAction action) {
             if (action instanceof InsertAction) {
                 InsertAction ac = (InsertAction) action;
-                return (ac.startColumn == endColumn && ac.startLine == endLine && ac.text.length() + text.length() < 10000);
+                return (ac.startColumn == endColumn && ac.startLine == endLine
+                        && ac.text.length() + text.length() < 10000
+                        && Math.abs(ac.createTime - createTime) < sMergeTimeLimit);
             }
             return false;
         }
@@ -513,7 +535,7 @@ public final class UndoManager implements ContentListener, Parcelable {
     public static final class DeleteAction implements ContentAction {
 
         public int startLine, endLine, startColumn, endColumn;
-
+        public transient long createTime = System.currentTimeMillis();
         public CharSequence text;
 
         @Override
@@ -530,7 +552,9 @@ public final class UndoManager implements ContentListener, Parcelable {
         public boolean canMerge(ContentAction action) {
             if (action instanceof DeleteAction) {
                 DeleteAction ac = (DeleteAction) action;
-                return (ac.endColumn == startColumn && ac.endLine == startLine && ac.text.length() + text.length() < 10000);
+                return (ac.endColumn == startColumn && ac.endLine == startLine
+                        && ac.text.length() + text.length() < 10000
+                        && Math.abs(ac.createTime - createTime) < sMergeTimeLimit);
             }
             return false;
         }
