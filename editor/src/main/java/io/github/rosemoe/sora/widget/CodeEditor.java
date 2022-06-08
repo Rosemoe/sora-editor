@@ -105,6 +105,7 @@ import io.github.rosemoe.sora.text.TextLayoutHelper;
 import io.github.rosemoe.sora.text.TextUtils;
 import io.github.rosemoe.sora.util.Floats;
 import io.github.rosemoe.sora.util.IntPair;
+import io.github.rosemoe.sora.util.Logger;
 import io.github.rosemoe.sora.util.LongArrayList;
 import io.github.rosemoe.sora.util.TemporaryFloatBuffer;
 import io.github.rosemoe.sora.util.ThemeUtils;
@@ -135,6 +136,8 @@ import io.github.rosemoe.sora.widget.style.builtin.MoveCursorAnimator;
  */
 @SuppressWarnings("unused")
 public class CodeEditor extends View implements ContentListener, StyleReceiver, FormatThread.FormatResultReceiver, LineRemoveListener {
+
+    private final static Logger logger = Logger.instance("CodeEditor");
 
     /**
      * Digits for line number measuring
@@ -3188,7 +3191,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             }
         }
         mInputMethodManager.updateSelection(this, mCursor.getLeft(), mCursor.getRight(), candidatesStart, candidatesEnd);
-        Thread.dumpStack();
     }
 
     /**
@@ -3196,8 +3198,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      */
     protected void updateExtractedText() {
         if (mExtracting != null) {
-            //Logs.log("Send extracted text updates");
-            mInputMethodManager.updateExtractedText(this, mExtracting.token, extractText(mExtracting));
+            var text = extractText(mExtracting);
+            mInputMethodManager.updateExtractedText(this, mExtracting.token, text);
         }
     }
 
@@ -3216,11 +3218,15 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         ExtractedText text = new ExtractedText();
         int selBegin = cur.getLeft();
         int selEnd = cur.getRight();
-        int startOffset;
+        int startOffset = 0;
         if (request.hintMaxChars == 0) {
             request.hintMaxChars = mProps.maxIPCTextLength;
         }
-        startOffset = 0;
+        if (request.hintMaxChars < mProps.maxIPCTextLength) {
+            if (startOffset + request.hintMaxChars < selBegin) {
+                startOffset = selBegin - request.hintMaxChars / 2;
+            }
+        }
         text.text = mConnection.getTextRegion(startOffset, startOffset + request.hintMaxChars, request.flags);
         text.startOffset = startOffset;
         text.selectionStart = selBegin - startOffset;

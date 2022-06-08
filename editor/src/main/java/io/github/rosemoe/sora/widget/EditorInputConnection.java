@@ -28,7 +28,6 @@ import android.os.SystemClock;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.inputmethod.BaseInputConnection;
@@ -43,6 +42,7 @@ import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.Cursor;
+import io.github.rosemoe.sora.util.Logger;
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 
 /**
@@ -52,8 +52,8 @@ import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
  */
 class EditorInputConnection extends BaseInputConnection {
 
-    private final static String LOG_TAG = "EditorInputConnection";
-
+    private final static Logger logger = Logger.instance("EditorInputConnection");
+    private final static boolean DEBUG = false;
     private final CodeEditor mEditor;
     protected int mComposingLine = -1;
     protected int mComposingStart = -1;
@@ -171,7 +171,7 @@ class EditorInputConnection extends BaseInputConnection {
         try {
             return getTextRegionInternal(start, end, flags);
         } catch (IndexOutOfBoundsException e) {
-            Log.w(LOG_TAG, "Failed to get text region for IME", e);
+            logger.w("Failed to get text region for IME", e);
             return "";
         }
     }
@@ -199,6 +199,8 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean commitText(CharSequence text, int newCursorPosition) {
+        if (DEBUG)
+            logger.d("commitText text = " + text + ", pos = " + newCursorPosition);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
@@ -268,7 +270,7 @@ class EditorInputConnection extends BaseInputConnection {
                 mEditor.getText().insert(getCursor().getRightLine(), getCursor().getRightColumn(), autoSurroundPair[1]);
                 mEditor.getText().endBatchEdit();
                 //cancel selected
-                mEditor.setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length()-1, SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
+                mEditor.setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length() - 1, SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
 
             } else {
                 mEditor.commitText(replacement.text, applyAutoIndent);
@@ -299,6 +301,8 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean deleteSurroundingText(int beforeLength, int afterLength) {
+        if (DEBUG)
+            logger.d("deleteSurroundingText, before = " + beforeLength + ", after = " + afterLength);
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
@@ -385,11 +389,15 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public synchronized boolean beginBatchEdit() {
+        if (DEBUG)
+            logger.d("beginBatchEdit");
         return mEditor.getText().beginBatchEdit();
     }
 
     @Override
     public synchronized boolean endBatchEdit() {
+        if (DEBUG)
+            logger.d("endBatchEdit");
         boolean inBatch = mEditor.getText().endBatchEdit();
         if (!inBatch) {
             mEditor.updateSelection();
@@ -410,7 +418,9 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setComposingText(CharSequence text, int newCursorPosition) {
-        if (!mEditor.isEditable() || mInvalid || shouldRejectComposing()|| mEditor.getProps().disallowSuggestions) {
+        if (DEBUG)
+            logger.d("setComposingText, text = " + text + ", pos = " + newCursorPosition);
+        if (!mEditor.isEditable() || mInvalid || shouldRejectComposing() || mEditor.getProps().disallowSuggestions) {
             return false;
         }
         if (TextUtils.indexOf(text, '\n') != -1) {
@@ -440,7 +450,8 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean finishComposingText() {
-        //Logs.log("Finish composing text");
+        if (DEBUG)
+            logger.d("finishComposingText");
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
@@ -462,6 +473,8 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setSelection(int start, int end) {
+        if (DEBUG)
+            logger.d("setSelection, s = " + start + ", e = " + end);
         if (!mEditor.isEditable() || mInvalid || mComposingLine != -1) {
             return false;
         }
@@ -485,6 +498,8 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean setComposingRegion(int start, int end) {
+        if (DEBUG)
+            logger.d("setComposingRegion, s = " + start + ", e = " + end);
         if (!mEditor.isEditable() || mInvalid || shouldRejectComposing() || mEditor.getProps().disallowSuggestions) {
             return false;
         }
@@ -512,7 +527,7 @@ class EditorInputConnection extends BaseInputConnection {
             mComposingEnd = endPos.column;
             mEditor.invalidate();
         } catch (IndexOutOfBoundsException e) {
-            Log.w(LOG_TAG, "set composing region for IME failed", e);
+            logger.w("set composing region for IME failed", e);
             return false;
         }
         return true;
@@ -555,6 +570,8 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public ExtractedText getExtractedText(ExtractedTextRequest request, int flags) {
+        if (DEBUG)
+            logger.d("getExtractedText, flags = " + flags);
         if ((flags & GET_EXTRACTED_TEXT_MONITOR) != 0) {
             mEditor.setExtracting(request);
         } else {
