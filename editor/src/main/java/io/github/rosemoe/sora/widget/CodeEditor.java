@@ -1476,7 +1476,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      *
      * @return width of line number region
      */
-    protected float measureLineNumber() {
+    public float measureLineNumber() {
         if (!isLineNumberEnabled()) {
             return 0f;
         }
@@ -3068,6 +3068,14 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     @NonNull
     public Paint getTextPaint() {
         return mPainter.getPaint();
+    }
+
+    public Paint getOtherPaint() {
+        return mPainter.getPaintOther();
+    }
+
+    public Paint getGraphPaint() {
+        return mPainter.getPaintGraph();
     }
 
     /**
