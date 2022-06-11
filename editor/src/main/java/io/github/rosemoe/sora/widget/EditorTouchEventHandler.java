@@ -238,16 +238,19 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 boolean isLeftHandle = selHandleType == SelectionHandle.LEFT;
                 boolean isRightHandle = selHandleType == SelectionHandle.RIGHT;
 
-                float y = 0;
+                float x = 0, y = 0;
                 var height = Math.max(Math.max(insertHandlePos.height(), leftHandlePos.height()), rightHandlePos.height());
                 if (holdInsertHandle()) {
+                    x = Math.abs(insertHandlePos.left - e.getX()) > mEditor.getRowHeight() ? insertHandlePos.left : e.getX();
                     y = insertHandlePos.top;
                 } else if (isLeftHandle) {
+                    x = Math.abs(leftHandlePos.left - e.getX()) > mEditor.getRowHeight() ? leftHandlePos.left : e.getX();
                     y = leftHandlePos.top;
                 } else if (isRightHandle) {
+                    x = Math.abs(rightHandlePos.left - e.getX()) > mEditor.getRowHeight() ? rightHandlePos.left : e.getX();
                     y = rightHandlePos.top;
                 }
-                mMagnifier.show((int) e.getX(), (int) (y - height / 2));
+                mMagnifier.show((int) x, (int) (y - height / 2));
             } else {
                 var height = Math.max(Math.max(insertHandlePos.height(), leftHandlePos.height()), rightHandlePos.height());
                 mMagnifier.show((int) e.getX(), (int) (e.getY() - height / 2 - mEditor.getRowHeight()));
@@ -294,10 +297,10 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 }
                 if (shouldDrawInsertHandle() && mEditor.getInsertHandleDescriptor().position.contains(e.getX(), e.getY())) {
                     mHoldingInsertHandle = true;
+                    dispatchHandle(HandleStateChangeEvent.HANDLE_TYPE_INSERT, true);
+                    updateMagnifier(e);
                     mThumbDownY = e.getY();
                     mThumbDownX = e.getX();
-                    updateMagnifier(e);
-                    dispatchHandle(HandleStateChangeEvent.HANDLE_TYPE_INSERT, true);
                 }
                 boolean left = mEditor.getLeftHandleDescriptor().position.contains(e.getX(), e.getY());
                 boolean right = mEditor.getRightHandleDescriptor().position.contains(e.getX(), e.getY());
@@ -310,9 +313,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                         mTouchedHandleType = SelectionHandle.RIGHT;
                     }
                     dispatchHandle(selHandleType, true);
+                    updateMagnifier(e);
                     mThumbDownY = e.getY();
                     mThumbDownX = e.getX();
-                    updateMagnifier(e);
                 }
                 return true;
             }
