@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.widget;
 
 import android.content.res.Resources;
 import android.graphics.RectF;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.HapticFeedbackConstants;
 import android.view.GestureDetector;
@@ -230,8 +231,27 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             return;
         }
         if (mMagnifier.isEnabled()) {
-            var height = Math.max(Math.max(mEditor.getInsertHandleDescriptor().position.height(), mEditor.getLeftHandleDescriptor().position.height()), mEditor.getRightHandleDescriptor().position.height());
-            mMagnifier.show((int) e.getX(), (int) (e.getY() - height / 2 - mEditor.getRowHeight()));
+            var insertHandlePos = mEditor.getInsertHandleDescriptor().position;
+            var leftHandlePos = mEditor.getLeftHandleDescriptor().position;
+            var rightHandlePos = mEditor.getRightHandleDescriptor().position;
+            if (mEditor.isStickyTextSelection()) {
+                boolean isLeftHandle = selHandleType == SelectionHandle.LEFT;
+                boolean isRightHandle = selHandleType == SelectionHandle.RIGHT;
+
+                float y = 0;
+                var height = Math.max(Math.max(insertHandlePos.height(), leftHandlePos.height()), rightHandlePos.height());
+                if (holdInsertHandle()) {
+                    y = insertHandlePos.top;
+                } else if (isLeftHandle) {
+                    y = leftHandlePos.top;
+                } else if (isRightHandle) {
+                    y = rightHandlePos.top;
+                }
+                mMagnifier.show((int) e.getX(), (int) (y - height / 2));
+            } else {
+                var height = Math.max(Math.max(insertHandlePos.height(), leftHandlePos.height()), rightHandlePos.height());
+                mMagnifier.show((int) e.getX(), (int) (e.getY() - height / 2 - mEditor.getRowHeight()));
+            }
         }
     }
 
