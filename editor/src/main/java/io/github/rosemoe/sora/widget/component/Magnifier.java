@@ -77,8 +77,9 @@ public class Magnifier implements EditorBuiltinComponent {
         view = editor;
         parentView = editor;
         popup = new PopupWindow();
-        popup.setElevation(view.getDpUnit() * 8);
-        @SuppressLint("InflateParams") var view = LayoutInflater.from(editor.getContext()).inflate(R.layout.magnifier_popup, null);
+        popup.setElevation(view.getDpUnit() * 4);
+        @SuppressLint("InflateParams")
+        var view = LayoutInflater.from(editor.getContext()).inflate(R.layout.magnifier_popup, null);
         image = view.findViewById(R.id.magnifier_image_view);
         popup.setHeight((int) (editor.getDpUnit() * 70));
         popup.setWidth((int) (editor.getDpUnit() * 100));
@@ -181,7 +182,7 @@ public class Magnifier implements EditorBuiltinComponent {
             right = view.getWidth() + pos[0];
             left = Math.max(0, right - popup.getWidth());
         }
-        var top = Math.max(pos[1] + y - popup.getHeight() - (int) (view.getRowHeight()), 0);
+        var top = Math.max(pos[1] + y - popup.getHeight() - view.getRowHeight(), 0);
         if (popup.isShowing()) {
             popup.update(left, top, popup.getWidth(), popup.getHeight());
         } else {
@@ -261,7 +262,7 @@ public class Magnifier implements EditorBuiltinComponent {
                 }
                 if (statusCode == PixelCopy.SUCCESS) {
                     var dest = Bitmap.createBitmap(popup.getWidth(), popup.getHeight(), Bitmap.Config.ARGB_8888);
-                    var scaled = Bitmap.createScaledBitmap(clip, popup.getWidth(), popup.getHeight(), false);
+                    var scaled = Bitmap.createScaledBitmap(clip, popup.getWidth(), popup.getHeight(), true);
                     clip.recycle();
 
                     Canvas canvas = new Canvas(dest);
@@ -318,7 +319,7 @@ public class Magnifier implements EditorBuiltinComponent {
         var viewCanvas = new Canvas(clip);
         viewCanvas.translate(-left, -top);
         view.draw(viewCanvas);
-        var scaled = Bitmap.createScaledBitmap(clip, popup.getWidth(), popup.getHeight(), false);
+        var scaled = Bitmap.createScaledBitmap(clip, popup.getWidth(), popup.getHeight(), true);
         clip.recycle();
 
         Canvas canvas = new Canvas(dest);
