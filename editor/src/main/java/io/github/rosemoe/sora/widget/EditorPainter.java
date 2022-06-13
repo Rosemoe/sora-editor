@@ -1384,7 +1384,7 @@ public class EditorPainter {
             }
             // Follow the thumb or stick to text row
             if (!descriptor.position.isEmpty()) {
-                boolean isSingleHandle = mEditor.getEventHandler().holdInsertHandle() && handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT;
+                boolean isInsertHandle = mEditor.getEventHandler().holdInsertHandle() && handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT;
                 boolean isLeftHandle = mEditor.getEventHandler().selHandleType == EditorTouchEventHandler.SelectionHandle.LEFT && handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT;
                 boolean isRightHandle = mEditor.getEventHandler().selHandleType == EditorTouchEventHandler.SelectionHandle.RIGHT && handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT;
                 if (mEditor.isStickyTextSelection()) {
@@ -1404,7 +1404,7 @@ public class EditorPainter {
                                 mEditor.getOffsetY();
                     }
                 } else {
-                    if (isSingleHandle || isLeftHandle || isRightHandle) {
+                    if (isInsertHandle || isLeftHandle || isRightHandle) {
                         x = mEditor.getEventHandler().motionX + (descriptor.alignment != SelectionHandleStyle.ALIGN_CENTER ? descriptor.position.width() : 0) * (descriptor.alignment == SelectionHandleStyle.ALIGN_LEFT ? 1 : -1);
                         y = mEditor.getEventHandler().motionY - descriptor.position.height() * 2 / 3f;
                     }

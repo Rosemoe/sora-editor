@@ -23,15 +23,9 @@
   ~     additional information or have any questions
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:elevation="4dp"
-    android:background="@drawable/magnifier_background">
-
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/magnifier_image_view"/>
-
-</LinearLayout>
+    android:id="@+id/magnifier_image_view"
+    android:background="@drawable/magnifier_background" />
