@@ -159,9 +159,10 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
             return;
         }
         if (event.isSelected()) {
-            if (!isShowing()) {
+            //#193
+            //if (!isShowing()) {
                 mEditor.post(this::displayWindow);
-            }
+            //}
             mLastPosition = -1;
         } else {
             var show = false;
