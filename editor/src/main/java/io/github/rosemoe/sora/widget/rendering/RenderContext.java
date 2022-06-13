@@ -27,6 +27,11 @@ import android.graphics.Canvas;
 
 import io.github.rosemoe.sora.graphics.Paint;
 
+/**
+ * Context for a single rendering task
+ *
+ * @author Rosemoe
+ */
 public class RenderContext {
 
     public Canvas canvas;
