@@ -74,9 +74,11 @@ public class EditorRenderer {
      * Render the editor on the given canvas
      */
     public void render(@NonNull Canvas canvas) {
+        long t = System.currentTimeMillis();
         var context = createRenderContext(canvas);
         renderProcedures(context);
         recycleContext(context);
+        android.util.Log.d("Renderer", "t = " + (System.currentTimeMillis() - t));
     }
 
     public RenderContext createRenderContext(@NonNull Canvas canvas) {
@@ -117,6 +119,7 @@ public class EditorRenderer {
         if (color == 0) {
             return;
         }
+        context.otherPaint.setColor(color);
         context.canvas.drawRect(l, t, r, b, context.otherPaint);
     }
 
@@ -164,7 +167,7 @@ public class EditorRenderer {
             var layout = editor.getLayout();
             if (!cursor.isSelected()) {
                 var line = cursor.getLeftLine();
-                height = layout.getRowCountForLine(line);
+                height = layout.getRowCountForLine(line) * editor.getRowHeight();
                 bottom = layout.getCharLayoutOffset(line, editor.getText().getColumnCount(line))[0];
                 draw = true;
             }
@@ -190,6 +193,7 @@ public class EditorRenderer {
                         || (row == context.firstVisibleRow && editor.isFirstLineNumberAlwaysVisible())) {
                     drawLineNumber(context, rowInfo.lineIndex, row, offset, lineNumberWidth, color);
                 }
+                row ++;
             }
         }
     }
@@ -229,7 +233,31 @@ public class EditorRenderer {
     }
 
     protected void renderTextBackground(RenderContext context) {
-        //TODO
+
+    }
+
+    protected void renderText(RenderContext context) {
+
+    }
+
+    protected void renderWhitespaces(RenderContext context) {
+
+    }
+
+    protected void renderErrorIndicators(RenderContext context) {
+
+    }
+
+    protected void renderCodeBlocks(RenderContext context) {
+
+    }
+
+    protected void renderScrollbars(RenderContext context) {
+
+    }
+
+    protected void renderEdgeEffects(RenderContext context) {
+
     }
 
 }

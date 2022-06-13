@@ -1068,7 +1068,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     public Paint.FontMetricsInt getLineNumberMetrics() {
-        return mLineNumberMetrics;
+        return mPainter.getLineNumberMetrics();
     }
 
     /**

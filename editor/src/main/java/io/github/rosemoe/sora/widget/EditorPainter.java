@@ -69,6 +69,7 @@ import io.github.rosemoe.sora.util.Numbers;
 import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 import io.github.rosemoe.sora.widget.layout.Row;
 import io.github.rosemoe.sora.widget.layout.RowIterator;
+import io.github.rosemoe.sora.widget.rendering.EditorRenderer;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 
@@ -588,6 +589,8 @@ public class EditorPainter {
         drawEdgeEffect(canvas);
 
         mEditor.rememberDisplayedLines();
+        //canvas.drawColor(0xffffffff);
+        //new EditorRenderer(mEditor).render(canvas);
     }
 
     /**
@@ -1354,6 +1357,10 @@ public class EditorPainter {
 
     public long getTimestamp() {
         return mTimestamp;
+    }
+
+    public android.graphics.Paint.FontMetricsInt getLineNumberMetrics() {
+        return mLineNumberMetrics;
     }
 
     class DrawCursorTask {
