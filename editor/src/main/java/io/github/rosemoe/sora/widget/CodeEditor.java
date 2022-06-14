@@ -886,7 +886,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         return event.isCtrlPressed()
                 && (keyCode == KeyEvent.KEYCODE_A || keyCode == KeyEvent.KEYCODE_C
                 || keyCode == KeyEvent.KEYCODE_X || keyCode == KeyEvent.KEYCODE_V
-                || keyCode == KeyEvent.KEYCODE_U || keyCode == KeyEvent.KEYCODE_R);
+                || keyCode == KeyEvent.KEYCODE_U || keyCode == KeyEvent.KEYCODE_R
+                || keyCode == KeyEvent.KEYCODE_D);
     }
 
     /**
@@ -2926,6 +2927,64 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
+     * Duplicates the current line.
+     * Does not selects the duplicated line.
+     */
+    public void duplicateLine() {
+        final var cursor = getCursor();
+        if (cursor.isSelected()) {
+            duplicateSelection();
+            return;
+        }
+
+        final var left = cursor.left();
+        setSelectionRegion(left.line, 0, left.line, getText().getLineString(left.line).length(), true);
+        duplicateSelection("\n", false);
+    }
+
+    /**
+     * Copies the current selection and pastes it at the right selection handle,
+     * then selects the duplicated content.
+     */
+    public void duplicateSelection() {
+        duplicateSelection(true);
+    }
+
+    /**
+     * Copies the current selection and pastes it at the right selection handle.
+     * @param selectDuplicate Whether to select the duplicated content.
+     */
+    public void duplicateSelection(boolean selectDuplicate) {
+        duplicateSelection("", selectDuplicate);
+    }
+
+    /**
+     * Copies the current selection, add the <code>prefix</code> to it
+     * and pastes it at the right selection handle.
+     *
+     * @param prefix The prefix for the selected content.
+     * @param selectDuplicate Whether to select the duplicated content.
+     */
+    public void duplicateSelection(String prefix, boolean selectDuplicate) {
+        final var cursor = getCursor();
+        if (!cursor.isSelected()) {
+            return;
+        }
+
+        final var left = cursor.left();
+        final var right = cursor.right().fromThis();
+        final var sub = getText().subContent(left.line, left.column, right.line, right.column);
+
+        setSelection(right.line, right.column);
+        commitText(prefix + sub);
+
+        if (selectDuplicate) {
+            final var r = cursor.right();
+            setSelectionRegion(right.line, right.column, r.line, r.column);
+        }
+    }
+
+    /**
      * @return Text displaying, the result is read-only. You should not make changes to this object as it is used internally
      * @see CodeEditor#setText(CharSequence)
      * @see CodeEditor#setText(CharSequence, Bundle)
@@ -3688,6 +3747,11 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                         case KeyEvent.KEYCODE_Y:
                             if (isEditable()) {
                                 redo();
+                            }
+                            return e.result(true);
+                        case KeyEvent.KEYCODE_D:
+                            if (isEditable()) {
+                                duplicateLine();
                             }
                             return e.result(true);
                     }
