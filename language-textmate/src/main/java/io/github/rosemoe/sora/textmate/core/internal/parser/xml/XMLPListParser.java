@@ -34,7 +34,6 @@ public class XMLPListParser<T> {
     public T parse(InputStream contents) throws Exception {
         SAXParserFactory spf = SAXParserFactory.newInstance();
         spf.setNamespaceAware(true);
-        spf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
         SAXParser saxParser = spf.newSAXParser();
         XMLReader xmlReader = saxParser.getXMLReader();
         xmlReader.setEntityResolver((arg0, arg1) -> new InputSource(new ByteArrayInputStream("<?xml version='1.0' encoding='UTF-8'?>".getBytes())));
