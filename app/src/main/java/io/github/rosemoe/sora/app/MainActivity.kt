@@ -37,6 +37,7 @@ import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
 import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
 import io.github.rosemoe.sora.event.ContentChangeEvent
+import io.github.rosemoe.sora.event.KeyBindingEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
@@ -51,7 +52,6 @@ import io.github.rosemoe.sora.widget.EditorSearcher
 import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.schemes.*
 import io.github.rosemoe.sora.widget.style.builtin.ScaleCursorAnimator
-import io.github.rosemoe.sorakt.getComponent
 import io.github.rosemoe.sorakt.subscribeEvent
 import java.io.*
 import java.util.regex.PatternSyntaxException
@@ -117,6 +117,10 @@ class MainActivity : AppCompatActivity() {
                     50
                 )
             }
+
+            subscribeEvent<KeyBindingEvent> { event, _ ->
+                Toast.makeText(context, "Keybinding event: " + generateKeybindingString(event), Toast.LENGTH_LONG).show()
+            }
         }
 
         // Custom cursor animator
@@ -145,6 +149,24 @@ class MainActivity : AppCompatActivity() {
         openAssetsFile("sample.txt")
         updatePositionText()
         updateBtnState()
+    }
+
+    private fun generateKeybindingString(event: KeyBindingEvent): String {
+        val sb = StringBuilder()
+        if (event.isCtrlPressed) {
+            sb.append("Ctrl + ")
+        }
+
+        if (event.isAltPressed) {
+            sb.append("Alt + ")
+        }
+
+        if (event.isShiftPressed) {
+            sb.append("Shift + ")
+        }
+
+        sb.append(KeyEvent.keyCodeToString(event.keyCode))
+        return sb.toString()
     }
 
     private fun openAssetsFile(name: String) {

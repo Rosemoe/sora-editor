@@ -79,6 +79,7 @@ import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.EventManager;
 import io.github.rosemoe.sora.event.EventReceiver;
 import io.github.rosemoe.sora.event.InterceptTarget;
+import io.github.rosemoe.sora.event.KeyBindingEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.SubscriptionReceipt;
@@ -784,6 +785,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
     /**
      * Returns whether the cursor should stick to the text row while selecting the text
+     *
      * @see CodeEditor#setStickyTextSelection(boolean)
      */
     public boolean isStickyTextSelection() {
@@ -792,6 +794,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
     /**
      * Whether the cursor should stick to the text row while selecting the text.
+     *
      * @param stickySelection value
      */
     public void setStickyTextSelection(boolean stickySelection) {
@@ -872,6 +875,21 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
+     * Internal callback to check if the editor is capable of handling the given
+     * keybinding {@link KeyEvent}
+     *
+     * @param keyCode The keycode for the keybinding event.
+     * @param event   The {@link KeyEvent} for the keybinding.
+     * @return <code>true</code> if the editor can handle the keybinding, <code>false</code> otherwise.
+     */
+    protected boolean canHandleKeyBinding(int keyCode, @NonNull KeyEvent event) {
+        return event.isCtrlPressed()
+                && (keyCode == KeyEvent.KEYCODE_A || keyCode == KeyEvent.KEYCODE_C
+                || keyCode == KeyEvent.KEYCODE_X || keyCode == KeyEvent.KEYCODE_V
+                || keyCode == KeyEvent.KEYCODE_U || keyCode == KeyEvent.KEYCODE_R);
+    }
+
+    /**
      * Getter
      *
      * @return The width in dp unit
@@ -925,7 +943,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
-     * @see #setCursorAnimationEnabled(boolean) 
+     * @see #setCursorAnimationEnabled(boolean)
      */
     public boolean isCursorAnimationEnabled() {
         return mCursorAnimation;
@@ -933,6 +951,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
     /**
      * Set cursor animation
+     *
      * @see CursorAnimator
      * @see #getCursorAnimator()
      * @see #setCursorAnimationEnabled(boolean)  for disabling the animation
@@ -942,7 +961,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
-     * @see #setCursorAnimator(CursorAnimator) 
+     * @see #setCursorAnimator(CursorAnimator)
      */
     public CursorAnimator getCursorAnimator() {
         return mCursorAnimator;
@@ -3498,7 +3517,19 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         if ((mEventManager.dispatchEvent(e) & InterceptTarget.TARGET_EDITOR) != 0) {
             return e.result(false);
         }
+
         boolean isShiftPressed = mKeyMetaStates.isShiftPressed();
+
+        // Currently, KeyBindingEvent is triggered only for (Shift | Ctrl | Alt) + alphabet keys
+        // Should we add support for more keys?
+        if ((isShiftPressed || event.isCtrlPressed() || event.isAltPressed())
+                && keyCode >= KeyEvent.KEYCODE_A && keyCode <= KeyEvent.KEYCODE_Z) {
+            final var keybindingEvent = new KeyBindingEvent(this, event, keyCode, canHandleKeyBinding(keyCode, event));
+            if ((mEventManager.dispatchEvent(keybindingEvent) & InterceptTarget.TARGET_EDITOR) != 0) {
+                return keybindingEvent.result(false);
+            }
+        }
+
         switch (keyCode) {
             case KeyEvent.KEYCODE_DPAD_DOWN:
             case KeyEvent.KEYCODE_DPAD_UP:
