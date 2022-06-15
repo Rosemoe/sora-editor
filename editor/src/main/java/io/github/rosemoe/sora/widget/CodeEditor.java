@@ -3761,6 +3761,15 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                     notifyIMEExternalCursorChange();
                 }
                 return e.result(true);
+            case KeyEvent.KEYCODE_ESCAPE :
+                final var cursor = getCursor();
+                if (cursor.isSelected()) {
+                    // TODO Maybe we could add a flag in DirectAccessProps to change this behaviour
+                    //    So that user can select whether left or right cursor should be selected
+                    final var left = cursor.right();
+                    setSelection(left.line, left.column, true);
+                }
+                return e.result(true);
             default:
                 if (event.isCtrlPressed() && !event.isAltPressed()) {
                     switch (keyCode) {
