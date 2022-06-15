@@ -42,10 +42,12 @@ import io.github.rosemoe.sora.widget.CodeEditor;
 public class EditorKeyEvent extends ResultedEvent<Boolean> {
 
     private final KeyEvent src;
+    private final Type type;
 
-    public EditorKeyEvent(CodeEditor editor, KeyEvent src) {
+    public EditorKeyEvent(CodeEditor editor, KeyEvent src, Type type) {
         super(editor);
         this.src = src;
+        this.type = type;
     }
 
     public int getAction() {
@@ -70,6 +72,15 @@ public class EditorKeyEvent extends ResultedEvent<Boolean> {
 
     public long getDownTime() {
         return src.getDownTime();
+    }
+
+    /**
+     * Get the key event type.
+     *
+     * @return The key event type.
+     */
+    public Type getEventType() {
+        return this.type;
     }
 
     @Override
@@ -102,5 +113,26 @@ public class EditorKeyEvent extends ResultedEvent<Boolean> {
         } else {
             return userResult || editorResult;
         }
+    }
+
+    /**
+     * The type of an {@link EditorKeyEvent}.
+     */
+    public enum Type {
+
+        /**
+         * Used for {@link CodeEditor#onKeyUp(int, KeyEvent)}.
+         */
+        UP,
+
+        /**
+         * Used for {@link CodeEditor#onKeyDown(int, KeyEvent)}.
+         */
+        DOWN,
+
+        /**
+         * Used for {@link CodeEditor#onKeyMultiple(int, int, KeyEvent)}.
+         */
+        MULTIPLE
     }
 }

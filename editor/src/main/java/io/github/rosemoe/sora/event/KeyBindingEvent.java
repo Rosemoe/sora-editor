@@ -56,10 +56,12 @@ public class KeyBindingEvent extends EditorKeyEvent {
      *
      * @param editor          The editor.
      * @param src             The source {@link KeyEvent}.
+     * @param keyCode         The key code.
+     * @param type            The key event type.
      * @param canEditorHandle <code>true</code> if the editor can handle this event, <code>false</code> otherwise.
      */
-    public KeyBindingEvent(CodeEditor editor, KeyEvent src, int keyCode, boolean canEditorHandle) {
-        super(editor, src);
+    public KeyBindingEvent(CodeEditor editor, KeyEvent src, Type type, int keyCode, boolean canEditorHandle) {
+        super(editor, src, type);
         this.keyCode = keyCode;
         this.canEditorHandle = canEditorHandle;
     }
