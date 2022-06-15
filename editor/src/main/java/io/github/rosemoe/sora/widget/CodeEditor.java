@@ -2923,7 +2923,32 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         if (mCursor.isSelected()) {
             deleteText();
             notifyIMEExternalCursorChange();
+        } else {
+            cutLine();
         }
+    }
+
+    /**
+     * Copy the current line to clipboard and delete it.
+     */
+    public void cutLine() {
+        final var cursor = getCursor();
+        if (cursor.isSelected()) {
+            cutText();
+            return;
+        }
+
+        final var left = cursor.left();
+        final var line = left.line;
+        final var column = getText().getColumnCount(left.line);
+
+        if (line + 1 == getText().getLineCount()) {
+            // Should not cut text if the cursor is alt the last line of content
+            return;
+        }
+
+        setSelectionRegion(line, 0, line + 1, 0);
+        cutText();
     }
 
     /**
@@ -2938,7 +2963,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
 
         final var left = cursor.left();
-        setSelectionRegion(left.line, 0, left.line, getText().getLineString(left.line).length(), true);
+        setSelectionRegion(left.line, 0, left.line, getText().getColumnCount(left.line), true);
         duplicateSelection("\n", false);
     }
 
@@ -2952,6 +2977,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
     /**
      * Copies the current selection and pastes it at the right selection handle.
+     *
      * @param selectDuplicate Whether to select the duplicated content.
      */
     public void duplicateSelection(boolean selectDuplicate) {
@@ -2962,7 +2988,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * Copies the current selection, add the <code>prefix</code> to it
      * and pastes it at the right selection handle.
      *
-     * @param prefix The prefix for the selected content.
+     * @param prefix          The prefix for the selected content.
      * @param selectDuplicate Whether to select the duplicated content.
      */
     public void duplicateSelection(String prefix, boolean selectDuplicate) {

@@ -31,7 +31,10 @@ import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.*
+import android.view.KeyEvent
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
@@ -119,7 +122,11 @@ class MainActivity : AppCompatActivity() {
             }
 
             subscribeEvent<KeyBindingEvent> { event, _ ->
-                Toast.makeText(context, "Keybinding event: " + generateKeybindingString(event), Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    context,
+                    "Keybinding event: " + generateKeybindingString(event),
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
 
@@ -196,10 +203,26 @@ class MainActivity : AppCompatActivity() {
     private fun updatePositionText() {
         val cursor = binding.editor.cursor
         var text = (1 + cursor.leftLine).toString() + ":" + cursor.leftColumn
-        if (cursor.isSelected) {
-            text += "(" + (cursor.right - cursor.left) + " chars)"
+        text += if (cursor.isSelected) {
+            "(" + (cursor.right - cursor.left) + " chars)"
+        } else {
+            "(" + escapeIfNecessary(
+                binding.editor.text.charAt(
+                    cursor.leftLine,
+                    cursor.leftColumn
+                )
+            ) + ")"
         }
         binding.positionDisplay.text = text
+    }
+
+    private fun escapeIfNecessary(c: Char): String {
+        return when (c) {
+            '\n' -> "\\n"
+            '\t' -> "\\t"
+            ' ' -> "<ws>"
+            else -> c.toString()
+        }
     }
 
     private val loadTMLLauncher = registerForActivityResult(GetContent()) { result: Uri? ->
@@ -225,6 +248,7 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
         }
     }
+
     private val loadTMTLauncher = registerForActivityResult(GetContent()) { result: Uri? ->
         try {
             if (result == null) return@registerForActivityResult
