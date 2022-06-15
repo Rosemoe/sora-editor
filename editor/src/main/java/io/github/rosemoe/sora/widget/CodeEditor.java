@@ -2908,11 +2908,28 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                         mCursor.getRightLine(),
                         mCursor.getRightColumn()).toString();
                 mClipboardManager.setPrimaryClip(ClipData.newPlainText(clip, clip));
+            } else {
+                copyLine();
             }
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(getContext(), e.toString(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /**
+     * Copies the current line to clipboard.
+     */
+    private void copyLine() {
+        final var cursor = getCursor();
+        if (cursor.isSelected()) {
+            copyText();
+            return;
+        }
+
+        final var line = cursor.left().line;
+        setSelectionRegion(line, 0, line, getText().getColumnCount(line));
+        copyText();
     }
 
     /**
