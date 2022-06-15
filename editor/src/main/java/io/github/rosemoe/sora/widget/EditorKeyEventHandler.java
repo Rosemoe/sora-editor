@@ -108,7 +108,9 @@ class EditorKeyEventHandler {
             return e.result(false);
         }
 
-        boolean isShiftPressed = mKeyMetaStates.isShiftPressed();
+        final var isShiftPressed = mKeyMetaStates.isShiftPressed();
+        final var isAltPressed = mKeyMetaStates.isAltPressed();
+        final var isCtrlPressed = event.isCtrlPressed();
 
         // Currently, KeyBindingEvent is triggered only for (Shift | Ctrl | Alt) + alphabet keys
         // Should we add support for more keys?
@@ -169,10 +171,18 @@ class EditorKeyEventHandler {
                         return true;
                     }
 
-                    if (isShiftPressed) {
+                    if (isShiftPressed && !isAltPressed && !isCtrlPressed) {
                         final var line = editorCursor.right().line;
                         editor.setSelection(line, editorText.getColumnCount(line));
                         editor.commitText("\n");
+                        editor.ensureSelectionVisible();
+                        return e.result(true);
+                    }
+
+                    if (isCtrlPressed && !isShiftPressed && !isAltPressed) {
+                        final var left = editorCursor.left().fromThis();
+                        editor.commitText("\n");
+                        editor.setSelection(left.line, left.column);
                         editor.ensureSelectionVisible();
                         return e.result(true);
                     }
