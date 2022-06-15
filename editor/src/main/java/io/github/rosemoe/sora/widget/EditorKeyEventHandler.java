@@ -323,6 +323,7 @@ class EditorKeyEventHandler {
                             return keybindingEvent.result(true) || e.result(true);
                         case KeyEvent.KEYCODE_J:
                             if (!isShiftPressed || editorCursor.isSelected()) {
+                                // TODO If the cursor is selected, then the selected lines must be joined.
                                 return keybindingEvent.result(false) || e.result(false);
                             }
 
