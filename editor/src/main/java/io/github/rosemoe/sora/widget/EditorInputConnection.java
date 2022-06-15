@@ -583,7 +583,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public boolean clearMetaKeyStates(int states) {
-        mEditor.mKeyMetaStates.clearMetaStates(states);
+        mEditor.getKeyMetaStates().clearMetaStates(states);
         return true;
     }
 

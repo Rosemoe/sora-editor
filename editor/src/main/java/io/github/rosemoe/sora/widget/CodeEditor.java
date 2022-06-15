@@ -74,12 +74,9 @@ import java.util.Objects;
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
-import io.github.rosemoe.sora.event.EditorKeyEvent;
 import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.EventManager;
 import io.github.rosemoe.sora.event.EventReceiver;
-import io.github.rosemoe.sora.event.InterceptTarget;
-import io.github.rosemoe.sora.event.KeyBindingEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.SubscriptionReceipt;
@@ -89,8 +86,6 @@ import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver;
-import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
-import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Styles;
@@ -239,8 +234,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     static final int ACTION_MODE_SELECT_TEXT = 2;
     private static final String LOG_TAG = "CodeEditor";
     protected SymbolPairMatch mLanguageSymbolPairs;
-    Layout mLayout;
-    int mStartedActionMode;
     private int mTabWidth;
     private int mCursorPosition;
     private int mDownX = 0;
@@ -293,26 +286,28 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private GestureDetector mBasicDetector;
     protected EditorTextActionWindow mTextActionWindow;
     private ScaleGestureDetector mScaleDetector;
-    EditorInputConnection mConnection;
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;
     private MaterialEdgeEffect mVerticalGlow;
     private MaterialEdgeEffect mHorizontalGlow;
     private ExtractedTextRequest mExtracting;
     private FormatThread mFormatThread;
     private EditorSearcher mSearcher;
-    private EventManager mEventManager;
     private CursorAnimator mCursorAnimator;
     private Paint.FontMetricsInt mLineNumberMetrics;
     private Paint.FontMetricsInt mGraphMetrics;
     private SelectionHandleStyle mHandleStyle;
     private CursorBlink mCursorBlink;
     protected List<Span> defSpans = new ArrayList<>(2);
-    private CharPosition mSelectionAnchor;
     private HwAcceleratedRenderer mRenderer;
     private DirectAccessProps mProps;
     private Bundle mExtraArguments;
     private Styles mStyles;
-    final KeyMetaStates mKeyMetaStates = new KeyMetaStates(this);
+    final EditorKeyEventHandler mKeyEventHandler = new EditorKeyEventHandler(this);
+    int mStartedActionMode;
+    CharPosition mSelectionAnchor;
+    EditorInputConnection mConnection;
+    EventManager mEventManager;
+    Layout mLayout;
 
     private EditorPainter mPainter;
 
@@ -380,7 +375,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * Get KeyMetaStates, which manages alt/shift state in editor
      */
     public KeyMetaStates getKeyMetaStates() {
-        return mKeyMetaStates;
+        return mKeyEventHandler.getKeyMetaStates();
     }
 
     /**
@@ -1538,7 +1533,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     /**
      * Commit a tab to cursor
      */
-    private void commitTab() {
+    void commitTab() {
         if (mConnection != null && isEditable()) {
             mConnection.commitTextInternal("\t", true);
         }
@@ -3614,265 +3609,29 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        mKeyMetaStates.onKeyDown(event);
-        var e = new EditorKeyEvent(this, event);
-        if ((mEventManager.dispatchEvent(e) & InterceptTarget.TARGET_EDITOR) != 0) {
-            return e.result(false);
-        }
-
-        boolean isShiftPressed = mKeyMetaStates.isShiftPressed();
-
-        // Currently, KeyBindingEvent is triggered only for (Shift | Ctrl | Alt) + alphabet keys
-        // Should we add support for more keys?
-        if ((isShiftPressed || event.isCtrlPressed() || event.isAltPressed())
-                && keyCode >= KeyEvent.KEYCODE_A && keyCode <= KeyEvent.KEYCODE_Z) {
-            final var keybindingEvent = new KeyBindingEvent(this, event, keyCode, canHandleKeyBinding(keyCode, event));
-            if ((mEventManager.dispatchEvent(keybindingEvent) & InterceptTarget.TARGET_EDITOR) != 0) {
-                return keybindingEvent.result(false);
-            }
-        }
-
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-            case KeyEvent.KEYCODE_DPAD_UP:
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-            case KeyEvent.KEYCODE_MOVE_HOME:
-            case KeyEvent.KEYCODE_MOVE_END:
-                if (isShiftPressed && (!mCursor.isSelected())) {
-                    mSelectionAnchor = mCursor.left();
-                } else if (!isShiftPressed && mSelectionAnchor != null) {
-                    mSelectionAnchor = null;
-                }
-                mKeyMetaStates.adjust();
-        }
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_BACK: {
-                if (mCursor.isSelected()) {
-                    setSelection(mCursor.getLeftLine(), mCursor.getLeftColumn());
-                    return e.result(true);
-                }
-                return e.result(false);
-            }
-            case KeyEvent.KEYCODE_DEL:
-                if (isEditable()) {
-                    deleteText();
-                    notifyIMEExternalCursorChange();
-                }
-                return e.result(true);
-            case KeyEvent.KEYCODE_FORWARD_DEL: {
-                if (isEditable()) {
-                    mConnection.deleteSurroundingText(0, 1);
-                    notifyIMEExternalCursorChange();
-                }
-                return e.result(true);
-            }
-            case KeyEvent.KEYCODE_ENTER: {
-                if (isEditable()) {
-                    if (mCompletionWindow.isShowing()) {
-                        mCompletionWindow.select();
-                        return true;
-                    }
-                    NewlineHandler[] handlers = mLanguage.getNewlineHandlers();
-                    if (handlers == null || getCursor().isSelected()) {
-                        commitText("\n", true);
-                    } else {
-                        ContentLine line = mText.getLine(mCursor.getLeftLine());
-                        int index = mCursor.getLeftColumn();
-                        String beforeText = line.subSequence(0, index).toString();
-                        String afterText = line.subSequence(index, line.length()).toString();
-                        boolean consumed = false;
-                        for (NewlineHandler handler : handlers) {
-                            if (handler != null) {
-                                if (handler.matchesRequirement(beforeText, afterText)) {
-                                    try {
-                                        NewlineHandleResult result = handler.handleNewline(beforeText, afterText, getTabWidth());
-                                        if (result != null) {
-                                            commitText(result.text, false);
-                                            int delta = result.shiftLeft;
-                                            if (delta != 0) {
-                                                int newSel = Math.max(getCursor().getLeft() - delta, 0);
-                                                CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
-                                                setSelection(charPosition.line, charPosition.column);
-                                            }
-                                            consumed = true;
-                                        } else {
-                                            continue;
-                                        }
-                                    } catch (Exception ex) {
-                                        Log.w(LOG_TAG, "Error occurred while calling Language's NewlineHandler", ex);
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                        if (!consumed) {
-                            commitText("\n", true);
-                        }
-                    }
-                    notifyIMEExternalCursorChange();
-                }
-                return e.result(true);
-            }
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-                moveSelectionDown();
-                return e.result(true);
-            case KeyEvent.KEYCODE_DPAD_UP:
-                moveSelectionUp();
-                return e.result(true);
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-                moveSelectionLeft();
-                return e.result(true);
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-                moveSelectionRight();
-                return e.result(true);
-            case KeyEvent.KEYCODE_MOVE_END:
-                moveSelectionEnd();
-                return e.result(true);
-            case KeyEvent.KEYCODE_MOVE_HOME:
-                moveSelectionHome();
-                return e.result(true);
-            case KeyEvent.KEYCODE_PAGE_DOWN:
-                movePageDown();
-                return e.result(true);
-            case KeyEvent.KEYCODE_PAGE_UP:
-                movePageUp();
-                return e.result(true);
-            case KeyEvent.KEYCODE_TAB:
-                if (isEditable()) {
-                    if (mCompletionWindow.isShowing()) {
-                        mCompletionWindow.select();
-                    } else {
-                        commitTab();
-                    }
-                }
-                return e.result(true);
-            case KeyEvent.KEYCODE_PASTE:
-                if (isEditable()) {
-                    pasteText();
-                }
-                return e.result(true);
-            case KeyEvent.KEYCODE_COPY:
-                copyText();
-                return e.result(true);
-            case KeyEvent.KEYCODE_SPACE:
-                if (isEditable()) {
-                    commitText(" ");
-                    notifyIMEExternalCursorChange();
-                }
-                return e.result(true);
-            case KeyEvent.KEYCODE_ESCAPE :
-                final var cursor = getCursor();
-                if (cursor.isSelected()) {
-                    // TODO Maybe we could add a flag in DirectAccessProps to change this behaviour
-                    //    So that user can select whether left or right cursor should be selected
-                    final var left = cursor.right();
-                    setSelection(left.line, left.column, true);
-                }
-                return e.result(true);
-            default:
-                if (event.isCtrlPressed() && !event.isAltPressed()) {
-                    switch (keyCode) {
-                        case KeyEvent.KEYCODE_V:
-                            if (isEditable()) {
-                                pasteText();
-                            }
-                            return e.result(true);
-                        case KeyEvent.KEYCODE_C:
-                            copyText();
-                            return e.result(true);
-                        case KeyEvent.KEYCODE_X:
-                            if (isEditable()) {
-                                cutText();
-                            } else {
-                                copyText();
-                            }
-                            return e.result(true);
-                        case KeyEvent.KEYCODE_A:
-                            selectAll();
-                            return e.result(true);
-                        case KeyEvent.KEYCODE_Z:
-                            if (isEditable()) {
-                                undo();
-                            }
-                            return e.result(true);
-                        case KeyEvent.KEYCODE_Y:
-                            if (isEditable()) {
-                                redo();
-                            }
-                            return e.result(true);
-                        case KeyEvent.KEYCODE_D:
-                            if (isEditable()) {
-                                duplicateLine();
-                            }
-                            return e.result(true);
-                    }
-                } else if (!event.isCtrlPressed() && !event.isAltPressed()) {
-                    if (event.isPrintingKey() && isEditable()) {
-                        String text = new String(Character.toChars(event.getUnicodeChar(event.getMetaState())));
-                        SymbolPairMatch.Replacement replacement = null;
-                        if (text.length() == 1 && mProps.symbolPairAutoCompletion) {
-                            replacement = mLanguageSymbolPairs.getCompletion(text.charAt(0));
-                        }
-                        if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
-                                || (replacement.shouldNotDoReplace(getText()) && replacement.notHasAutoSurroundPair())) {
-                            commitText(text);
-                            notifyIMEExternalCursorChange();
-                        } else {
-                            String[] autoSurroundPair;
-                            if (getCursor().isSelected() && (autoSurroundPair = replacement.getAutoSurroundPair()) != null) {
-                                getText().beginBatchEdit();
-                                //insert left
-                                getText().insert(getCursor().getLeftLine(), getCursor().getLeftColumn(), autoSurroundPair[0]);
-                                //insert right
-                                getText().insert(getCursor().getRightLine(), getCursor().getRightColumn(), autoSurroundPair[1]);
-                                getText().endBatchEdit();
-                                //cancel selected
-                                setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length() - 1);
-
-                                notifyIMEExternalCursorChange();
-                            } else {
-                                commitText(replacement.text);
-                                int delta = (replacement.text.length() - replacement.selection);
-                                if (delta != 0) {
-                                    int newSel = Math.max(getCursor().getLeft() - delta, 0);
-                                    CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
-                                    setSelection(charPosition.line, charPosition.column);
-                                    notifyIMEExternalCursorChange();
-                                }
-                            }
-
-                        }
-                    } else {
-                        return super.onKeyDown(keyCode, event);
-                    }
-                    return e.result(true);
-                }
-        }
-        return e.result(super.onKeyDown(keyCode, event));
+        return mKeyEventHandler.onKeyDown(keyCode, event);
     }
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        mKeyMetaStates.onKeyUp(event);
-        var e = new EditorKeyEvent(this, event);
-        if ((mEventManager.dispatchEvent(e) & InterceptTarget.TARGET_EDITOR) != 0) {
-            return e.result(false);
-        }
-        if (!mKeyMetaStates.isShiftPressed() && mSelectionAnchor != null && !mCursor.isSelected()) {
-            mSelectionAnchor = null;
-            return e.result(true);
-        }
-        return e.result(super.onKeyUp(keyCode, event));
+        return mKeyEventHandler.onKeyUp(keyCode, event);
     }
 
     @Override
     public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
-        var e = new EditorKeyEvent(this, event);
-        if ((mEventManager.dispatchEvent(e) & InterceptTarget.TARGET_EDITOR) != 0) {
-            return e.result(false);
-        }
-        return e.result(super.onKeyMultiple(keyCode, repeatCount, event));
+        return mKeyEventHandler.onKeyMultiple(keyCode, repeatCount, event);
+    }
+
+    boolean onSuperKeyDown(int keyCode, KeyEvent event) {
+        return super.onKeyDown(keyCode, event);
+    }
+
+    boolean onSuperKeyUp(int keyCode, KeyEvent event) {
+        return super.onKeyUp(keyCode, event);
+    }
+
+    boolean onSuperKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
+        return super.onKeyMultiple(keyCode, repeatCount, event);
     }
 
     @Override
