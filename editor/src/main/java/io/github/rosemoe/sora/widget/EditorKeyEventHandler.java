@@ -301,6 +301,9 @@ class EditorKeyEventHandler {
                                 editor.duplicateLine();
                             }
                             return e.result(true);
+                        case KeyEvent.KEYCODE_W:
+                            editor.selectCurrentWord();
+                            return e.result(true);
                     }
                 } else if (!event.isCtrlPressed() && !event.isAltPressed()) {
                     if (event.isPrintingKey() && editor.isEditable()) {

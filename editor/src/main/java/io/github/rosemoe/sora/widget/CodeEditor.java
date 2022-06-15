@@ -883,7 +883,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                 && (keyCode == KeyEvent.KEYCODE_A || keyCode == KeyEvent.KEYCODE_C
                 || keyCode == KeyEvent.KEYCODE_X || keyCode == KeyEvent.KEYCODE_V
                 || keyCode == KeyEvent.KEYCODE_U || keyCode == KeyEvent.KEYCODE_R
-                || keyCode == KeyEvent.KEYCODE_D);
+                || keyCode == KeyEvent.KEYCODE_D || keyCode == KeyEvent.KEYCODE_W);
     }
 
     /**
