@@ -122,7 +122,7 @@ class EditorKeyEventHandler {
         // Should we add support for more keys?
         if (isKeyBindingEvent(keyCode, event)) {
             if ((eventManager.dispatchEvent(keybindingEvent) & InterceptTarget.TARGET_EDITOR) != 0) {
-                return keybindingEvent.result(false) || e.result(true);
+                return keybindingEvent.result(false) || e.result(false);
             }
         }
 
@@ -175,7 +175,7 @@ class EditorKeyEventHandler {
                         editor.setSelection(line, editorText.getColumnCount(line));
                         editor.commitText("\n");
                         editor.ensureSelectionVisible();
-                        return keybindingEvent.result(true) || e.result(false);
+                        return keybindingEvent.result(true) || e.result(true);
                     }
 
                     if (isCtrlPressed && !isShiftPressed && !isAltPressed) {
@@ -183,7 +183,7 @@ class EditorKeyEventHandler {
                         editor.commitText("\n");
                         editor.setSelection(left.line, left.column);
                         editor.ensureSelectionVisible();
-                        return keybindingEvent.result(true) || e.result(false);
+                        return keybindingEvent.result(true) || e.result(true);
                     }
 
                     NewlineHandler[] handlers = editorLanguage.getNewlineHandlers();
@@ -289,38 +289,48 @@ class EditorKeyEventHandler {
                             if (editor.isEditable()) {
                                 editor.pasteText();
                             }
-                            return keybindingEvent.result(true) || e.result(false);
+                            return keybindingEvent.result(true) || e.result(true);
                         case KeyEvent.KEYCODE_C:
                             editor.copyText();
-                            return keybindingEvent.result(true) || e.result(false);
+                            return keybindingEvent.result(true) || e.result(true);
                         case KeyEvent.KEYCODE_X:
                             if (editor.isEditable()) {
                                 editor.cutText();
                             } else {
                                 editor.copyText();
                             }
-                            return keybindingEvent.result(true) || e.result(false);
+                            return keybindingEvent.result(true) || e.result(true);
                         case KeyEvent.KEYCODE_A:
                             editor.selectAll();
-                            return keybindingEvent.result(true) || e.result(false);
+                            return keybindingEvent.result(true) || e.result(true);
                         case KeyEvent.KEYCODE_Z:
                             if (editor.isEditable()) {
                                 editor.undo();
                             }
-                            return keybindingEvent.result(true) || e.result(false);
+                            return keybindingEvent.result(true) || e.result(true);
                         case KeyEvent.KEYCODE_Y:
                             if (editor.isEditable()) {
                                 editor.redo();
                             }
-                            return keybindingEvent.result(true) || e.result(false);
+                            return keybindingEvent.result(true) || e.result(true);
                         case KeyEvent.KEYCODE_D:
                             if (editor.isEditable()) {
                                 editor.duplicateLine();
                             }
-                            return keybindingEvent.result(true) || e.result(false);
+                            return keybindingEvent.result(true) || e.result(true);
                         case KeyEvent.KEYCODE_W:
                             editor.selectCurrentWord();
-                            return keybindingEvent.result(true) || e.result(false);
+                            return keybindingEvent.result(true) || e.result(true);
+                        case KeyEvent.KEYCODE_J:
+                            if (!isShiftPressed || editorCursor.isSelected()) {
+                                return keybindingEvent.result(false) || e.result(false);
+                            }
+
+                            final var line = editorCursor.getLeftLine();
+                            editor.setSelection(line, editorText.getColumnCount(line));
+                            connection.deleteSurroundingText(0, 1);
+                            editor.ensureSelectionVisible();
+                            return keybindingEvent.result(true) || e.result(true);
                     }
                 } else if (!event.isCtrlPressed() && !event.isAltPressed()) {
                     if (event.isPrintingKey() && editor.isEditable()) {

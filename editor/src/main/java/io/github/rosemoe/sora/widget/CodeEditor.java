@@ -888,8 +888,14 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                     || keyCode == KeyEvent.KEYCODE_D || keyCode == KeyEvent.KEYCODE_W;
         }
 
-        if (shiftPressed && !ctrlPressed && !altPressed) {
-            return keyCode == KeyEvent.KEYCODE_ENTER;
+        if (shiftPressed && !altPressed) {
+            if (ctrlPressed) {
+                // Ctrl + Shift + J
+                return keyCode == KeyEvent.KEYCODE_J;
+            } else {
+                // Shift + Enter
+                return keyCode == KeyEvent.KEYCODE_ENTER;
+            }
         }
 
         return false;
