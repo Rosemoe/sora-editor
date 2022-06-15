@@ -2903,10 +2903,10 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     /**
      * Copy text to clipboard.
      *
-     * @param shouldSelectLine State whether the editor should select whole line if
+     * @param shouldCopyLine State whether the editor should select whole line if
      *                         cursor is not in selection mode.
      */
-    public void copyText(boolean shouldSelectLine) {
+    public void copyText(boolean shouldCopyLine) {
         try {
             if (mCursor.isSelected()) {
                 String clip = getText().subContent(mCursor.getLeftLine(),
@@ -2914,7 +2914,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                         mCursor.getRightLine(),
                         mCursor.getRightColumn()).toString();
                 mClipboardManager.setPrimaryClip(ClipData.newPlainText(clip, clip));
-            } else if (shouldSelectLine) {
+            } else if (shouldCopyLine) {
                 copyLine();
             }
         } catch (Exception e) {
