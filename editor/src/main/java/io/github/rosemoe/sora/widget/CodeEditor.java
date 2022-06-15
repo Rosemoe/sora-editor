@@ -2894,9 +2894,19 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
-     * Copy text to clip board
+     * Copy text to clipboard.
      */
     public void copyText() {
+        copyText(true);
+    }
+
+    /**
+     * Copy text to clipboard.
+     *
+     * @param shouldSelectLine State whether the editor should select whole line if
+     *                         cursor is not in selection mode.
+     */
+    public void copyText(boolean shouldSelectLine) {
         try {
             if (mCursor.isSelected()) {
                 String clip = getText().subContent(mCursor.getLeftLine(),
@@ -2904,7 +2914,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                         mCursor.getRightLine(),
                         mCursor.getRightColumn()).toString();
                 mClipboardManager.setPrimaryClip(ClipData.newPlainText(clip, clip));
-            } else {
+            } else if (shouldSelectLine) {
                 copyLine();
             }
         } catch (Exception e) {
@@ -2932,8 +2942,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * Copy text to clipboard and delete them
      */
     public void cutText() {
-        copyText();
         if (mCursor.isSelected()) {
+            copyText();
             deleteText();
             notifyIMEExternalCursorChange();
         } else {
@@ -2955,7 +2965,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         final var line = left.line;
         final var column = getText().getColumnCount(left.line);
 
-        if (line + 1 == getText().getLineCount()) {
+        if (line + 1 == getLineCount()) {
             setSelectionRegion(line, 0, line, getText().getColumnCount(line));
         } else {
             setSelectionRegion(line, 0, line + 1, 0);
