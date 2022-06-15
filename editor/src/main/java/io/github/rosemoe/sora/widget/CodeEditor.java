@@ -96,6 +96,7 @@ import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.FormatThread;
+import io.github.rosemoe.sora.text.ICUUtils;
 import io.github.rosemoe.sora.text.LineRemoveListener;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
 import io.github.rosemoe.sora.text.TextUtils;
@@ -3020,6 +3021,46 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
             final var r = cursor.right();
             setSelectionRegion(right.line, right.column, r.line, r.column);
         }
+    }
+
+    /**
+     * Selects the word at the left selection handle.
+     */
+    public void selectCurrentWord() {
+        final var left = getCursor().left();
+        selectWord(left.line, left.column);
+    }
+
+    /**
+     * Selects the word at the given character position.
+     *
+     * @param line   The line.
+     * @param column The column.
+     */
+    public void selectWord(int line, int column) {
+        // Find word edges
+        int startLine = line, endLine = line;
+        var lineObj = getText().getLine(line);
+        long edges = ICUUtils.getWordEdges(lineObj, column);
+        int startColumn = IntPair.getFirst(edges);
+        int endColumn = IntPair.getSecond(edges);
+        if (startColumn == endColumn) {
+            if (startColumn > 0) {
+                startColumn--;
+            } else if (endColumn < lineObj.length()) {
+                endColumn++;
+            } else {
+                if (line > 0) {
+                    int lastColumn = getText().getColumnCount(line - 1);
+                    startLine = line - 1;
+                    startColumn = lastColumn;
+                } else if (line < getLineCount() - 1) {
+                    endLine = line + 1;
+                    endColumn = 0;
+                }
+            }
+        }
+        setSelectionRegion(startLine, startColumn, endLine, endColumn, SelectionChangeEvent.CAUSE_LONG_PRESS);
     }
 
     /**
