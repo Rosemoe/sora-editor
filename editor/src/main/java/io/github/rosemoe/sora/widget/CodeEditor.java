@@ -2960,11 +2960,11 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         final var column = getText().getColumnCount(left.line);
 
         if (line + 1 == getText().getLineCount()) {
-            // Should not cut text if the cursor is alt the last line of content
-            return;
+            setSelectionRegion(line, 0, line, getText().getColumnCount(line));
+        } else {
+            setSelectionRegion(line, 0, line + 1, 0);
         }
 
-        setSelectionRegion(line, 0, line + 1, 0);
         cutText();
     }
 
