@@ -874,16 +874,25 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * Internal callback to check if the editor is capable of handling the given
      * keybinding {@link KeyEvent}
      *
-     * @param keyCode The keycode for the keybinding event.
-     * @param event   The {@link KeyEvent} for the keybinding.
+     * @param keyCode      The keycode for the keybinding event.
+     * @param ctrlPressed  Is 'Ctrl' key pressed?
+     * @param shiftPressed Is 'Shift' key pressed?
+     * @param altPressed   Is 'Alt' key pressed?
      * @return <code>true</code> if the editor can handle the keybinding, <code>false</code> otherwise.
      */
-    protected boolean canHandleKeyBinding(int keyCode, @NonNull KeyEvent event) {
-        return event.isCtrlPressed()
-                && (keyCode == KeyEvent.KEYCODE_A || keyCode == KeyEvent.KEYCODE_C
-                || keyCode == KeyEvent.KEYCODE_X || keyCode == KeyEvent.KEYCODE_V
-                || keyCode == KeyEvent.KEYCODE_U || keyCode == KeyEvent.KEYCODE_R
-                || keyCode == KeyEvent.KEYCODE_D || keyCode == KeyEvent.KEYCODE_W);
+    protected boolean canHandleKeyBinding(int keyCode, boolean ctrlPressed, boolean shiftPressed, boolean altPressed) {
+        if (ctrlPressed && !shiftPressed && altPressed) {
+            return keyCode == KeyEvent.KEYCODE_A || keyCode == KeyEvent.KEYCODE_C
+                    || keyCode == KeyEvent.KEYCODE_X || keyCode == KeyEvent.KEYCODE_V
+                    || keyCode == KeyEvent.KEYCODE_U || keyCode == KeyEvent.KEYCODE_R
+                    || keyCode == KeyEvent.KEYCODE_D || keyCode == KeyEvent.KEYCODE_W;
+        }
+
+        if (shiftPressed && !ctrlPressed && !altPressed) {
+            return keyCode == KeyEvent.KEYCODE_ENTER;
+        }
+
+        return false;
     }
 
     /**

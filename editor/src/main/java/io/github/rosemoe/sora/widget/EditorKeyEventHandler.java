@@ -74,8 +74,7 @@ class EditorKeyEventHandler {
         return (mKeyMetaStates.isShiftPressed()
                 || mKeyMetaStates.isAltPressed()
                 || event.isCtrlPressed())
-                && keyCode >= KeyEvent.KEYCODE_A
-                && keyCode <= KeyEvent.KEYCODE_Z;
+                && ((keyCode >= KeyEvent.KEYCODE_A && keyCode <= KeyEvent.KEYCODE_Z) || keyCode == KeyEvent.KEYCODE_ENTER);
     }
 
     /**
@@ -119,7 +118,7 @@ class EditorKeyEventHandler {
                             event,
                             EditorKeyEvent.Type.DOWN,
                             keyCode,
-                            editor.canHandleKeyBinding(keyCode, event));
+                            editor.canHandleKeyBinding(keyCode, event.isCtrlPressed(), mKeyMetaStates.isShiftPressed(), mKeyMetaStates.isAltPressed()));
 
             if ((eventManager.dispatchEvent(keybindingEvent) & InterceptTarget.TARGET_EDITOR) != 0) {
                 return keybindingEvent.result(false);
@@ -169,6 +168,15 @@ class EditorKeyEventHandler {
                         completionWindow.select();
                         return true;
                     }
+
+                    if (isShiftPressed) {
+                        final var line = editorCursor.right().line;
+                        editor.setSelection(line, editorText.getColumnCount(line));
+                        editor.commitText("\n");
+                        editor.ensureSelectionVisible();
+                        return e.result(true);
+                    }
+
                     NewlineHandler[] handlers = editorLanguage.getNewlineHandlers();
                     if (handlers == null || editorCursor.isSelected()) {
                         editor.commitText("\n", true);
@@ -374,7 +382,7 @@ class EditorKeyEventHandler {
                             event,
                             EditorKeyEvent.Type.UP,
                             keyCode,
-                            editor.canHandleKeyBinding(keyCode, event));
+                            editor.canHandleKeyBinding(keyCode, event.isCtrlPressed(), mKeyMetaStates.isShiftPressed(), mKeyMetaStates.isAltPressed()));
 
             if ((eventManager.dispatchEvent(keybindingEvent) & InterceptTarget.TARGET_EDITOR) != 0) {
                 return keybindingEvent.result(false);
