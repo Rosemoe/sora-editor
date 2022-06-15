@@ -60,4 +60,5 @@
     <string name="pin_line_number">Pin LineNumber</string>
     <string name="feature_switches">Feature Switches</string>
     <string name="magnifier">Magnifier</string>
+    <string name="use_icu_library">Use ICU library</string>
 </resources>

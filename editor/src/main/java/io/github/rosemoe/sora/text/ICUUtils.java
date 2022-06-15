@@ -43,8 +43,8 @@ public class ICUUtils {
      * @param offset Required char offset of word
      * @return Packed value of (start, end) pair. Always contains the position {@code offset}
      */
-    public static long getWordEdges(CharSequence text, int offset) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+    public static long getWordEdges(CharSequence text, int offset, boolean useIcu) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && useIcu) {
             var itr = BreakIterator.getWordInstance();
             itr.setText(new CharSequenceIterator(text));
             int end = itr.following(offset);
@@ -62,7 +62,7 @@ public class ICUUtils {
     /**
      * Primitive implementation of {@link #getWordEdges(CharSequence, int)}
      */
-    private static long getWordEdgesFallback(CharSequence text, int offset) {
+    public static long getWordEdgesFallback(CharSequence text, int offset) {
         int start = offset;
         int end = offset;
         while (start > 0 && MyCharacter.isJavaIdentifierPart(text.charAt(start - 1))) {

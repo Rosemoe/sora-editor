@@ -126,7 +126,7 @@ class MainActivity : AppCompatActivity() {
                 if (event.eventType != EditorKeyEvent.Type.DOWN) {
                     return@subscribeEvent
                 }
-                
+
                 Toast.makeText(
                     context,
                     "Keybinding event: " + generateKeybindingString(event),
@@ -312,6 +312,9 @@ class MainActivity : AppCompatActivity() {
         } else if (id == R.id.magnifier) {
             item.isChecked = !item.isChecked
             editor.getComponent(Magnifier::class.java).isEnabled = item.isChecked
+        } else if (id == R.id.useIcu) {
+            item.isChecked = !item.isChecked
+            editor.props.useICULibToSelectWords = item.isChecked
         } else if (id == R.id.code_format) {
             editor.formatCodeAsync()
         } else if (id == R.id.switch_language) {

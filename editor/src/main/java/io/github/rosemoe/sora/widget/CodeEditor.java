@@ -2904,7 +2904,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * Copy text to clipboard.
      *
      * @param shouldCopyLine State whether the editor should select whole line if
-     *                         cursor is not in selection mode.
+     *                       cursor is not in selection mode.
      */
     public void copyText(boolean shouldCopyLine) {
         try {
@@ -3051,7 +3051,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         // Find word edges
         int startLine = line, endLine = line;
         var lineObj = getText().getLine(line);
-        long edges = ICUUtils.getWordEdges(lineObj, column);
+        long edges = ICUUtils.getWordEdges(lineObj, column, mProps.useICULibToSelectWords);
         int startColumn = IntPair.getFirst(edges);
         int endColumn = IntPair.getSecond(edges);
         if (startColumn == endColumn) {
