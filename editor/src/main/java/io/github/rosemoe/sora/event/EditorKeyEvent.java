@@ -31,13 +31,13 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  * Receives key related events in editor.
  * <p>
  * You may set a boolean for editor to return to the Android KeyEvent framework.
+ *
+ * @author Rosemoe
  * @see ResultedEvent#setResult(Object)
  * <p>
  * This class mirrors methods of {@link KeyEvent}, but some methods are changed:
  * @see #isAltPressed()
  * @see #isShiftPressed()
- *
- * @author Rosemoe
  */
 public class EditorKeyEvent extends ResultedEvent<Boolean> {
 

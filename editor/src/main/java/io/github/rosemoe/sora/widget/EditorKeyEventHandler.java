@@ -31,6 +31,7 @@ import androidx.annotation.NonNull;
 import java.util.Objects;
 
 import io.github.rosemoe.sora.event.EditorKeyEvent;
+import io.github.rosemoe.sora.event.EventManager;
 import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.KeyBindingEvent;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
@@ -59,6 +60,23 @@ class EditorKeyEventHandler {
         Objects.requireNonNull(editor, "Cannot setup KeyEvent with null editor instance.");
         this.editor = editor;
         this.mKeyMetaStates = new KeyMetaStates(editor);
+    }
+
+    /**
+     * Check if the given {@link KeyEvent} is a key binding event.
+     * {@link EditorKeyEventHandler#mKeyMetaStates} must be notified about the key event before this
+     * method is called.
+     *
+     * @param keyCode The keycode.
+     * @param event   The keyevent.
+     * @return <code>true</code> if the event is a key binding event. <code>false</code> otherwise.
+     */
+    private boolean isKeyBindingEvent(int keyCode, KeyEvent event) {
+        return (mKeyMetaStates.isShiftPressed()
+                || mKeyMetaStates.isAltPressed()
+                || event.isCtrlPressed())
+                && keyCode >= KeyEvent.KEYCODE_A
+                && keyCode <= KeyEvent.KEYCODE_Z;
     }
 
     /**
@@ -96,8 +114,7 @@ class EditorKeyEventHandler {
 
         // Currently, KeyBindingEvent is triggered only for (Shift | Ctrl | Alt) + alphabet keys
         // Should we add support for more keys?
-        if ((isShiftPressed || event.isCtrlPressed() || event.isAltPressed())
-                && keyCode >= KeyEvent.KEYCODE_A && keyCode <= KeyEvent.KEYCODE_Z) {
+        if (isKeyBindingEvent(keyCode, event)) {
             final var keybindingEvent = new KeyBindingEvent(editor, event, keyCode, editor.canHandleKeyBinding(keyCode, event));
             if ((eventManager.dispatchEvent(keybindingEvent) & InterceptTarget.TARGET_EDITOR) != 0) {
                 return keybindingEvent.result(false);
@@ -342,6 +359,14 @@ class EditorKeyEventHandler {
         if ((eventManager.dispatchEvent(e) & InterceptTarget.TARGET_EDITOR) != 0) {
             return e.result(false);
         }
+
+        if (isKeyBindingEvent(keyCode, event)) {
+            final var keybindingEvent = new KeyBindingEvent(editor, event, keyCode, editor.canHandleKeyBinding(keyCode, event));
+            if ((eventManager.dispatchEvent(keybindingEvent) & InterceptTarget.TARGET_EDITOR) != 0) {
+                return keybindingEvent.result(false);
+            }
+        }
+
         if (!mKeyMetaStates.isShiftPressed() && this.editor.mSelectionAnchor != null && !cursor.isSelected()) {
             this.editor.mSelectionAnchor = null;
             return e.result(true);
@@ -358,10 +383,12 @@ class EditorKeyEventHandler {
      * @return <code>true</code> if the event was handled, <code>false</code> otherwise.
      */
     public boolean onKeyMultiple(int keyCode, int repeatCount, @NonNull KeyEvent event) {
-        var e = new EditorKeyEvent(this.editor, event);
-        if ((this.editor.mEventManager.dispatchEvent(e) & InterceptTarget.TARGET_EDITOR) != 0) {
+        final var e = new EditorKeyEvent(this.editor, event);
+        final var eventManager = this.editor.mEventManager;
+        if ((eventManager.dispatchEvent(e) & InterceptTarget.TARGET_EDITOR) != 0) {
             return e.result(false);
         }
+
         return e.result(this.editor.onSuperKeyMultiple(keyCode, repeatCount, event));
     }
 }
