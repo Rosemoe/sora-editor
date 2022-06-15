@@ -36,7 +36,9 @@ import io.github.rosemoe.sora.event.KeyBindingEvent;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
+import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 
 /**
@@ -171,14 +173,27 @@ class EditorKeyEventHandler {
                     }
 
                     if (isShiftPressed && !isAltPressed && !isCtrlPressed) {
-                        final var line = editorCursor.right().line;
-                        editor.setSelection(line, editorText.getColumnCount(line));
-                        editor.commitText("\n");
-                        editor.ensureSelectionVisible();
-                        return keybindingEvent.result(true) || e.result(true);
+                        // Shift + Enter
+                        return startNewLIne(editor, editorCursor, editorText, e, keybindingEvent);
                     }
 
-                    if (isCtrlPressed && !isShiftPressed && !isAltPressed) {
+                    if (isCtrlPressed && !isShiftPressed) {
+                        if (isAltPressed) {
+                            // Ctrl + Alt + Enter
+                            var line = editorCursor.left().line;
+                            if (line == 0) {
+                                editorText.insert(0, 0, "\n");
+                                editor.setSelection(0, 0);
+                                editor.ensureSelectionVisible();
+                                return keybindingEvent.result(true) || e.result(true);
+                            } else {
+                                line--;
+                                editor.setSelection(line, editorText.getColumnCount(line));
+                                return startNewLIne(editor, editorCursor, editorText, e, keybindingEvent);
+                            }
+                        }
+
+                        // Ctrl + Enter
                         final var left = editorCursor.left().fromThis();
                         editor.commitText("\n");
                         editor.setSelection(left.line, left.column);
@@ -376,6 +391,14 @@ class EditorKeyEventHandler {
                 }
         }
         return e.result(editor.onSuperKeyDown(keyCode, event));
+    }
+
+    private boolean startNewLIne(CodeEditor editor, Cursor editorCursor, Content editorText, EditorKeyEvent e, KeyBindingEvent keybindingEvent) {
+        final var line = editorCursor.right().line;
+        editor.setSelection(line, editorText.getColumnCount(line));
+        editor.commitText("\n");
+        editor.ensureSelectionVisible();
+        return keybindingEvent.result(true) || e.result(true);
     }
 
     /**
