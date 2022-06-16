@@ -36,7 +36,7 @@ import io.github.rosemoe.sora.annotations.InvalidateRequired;
 
 /**
  * Direct-access properties.
- *
+ * <p>
  * This object saves some feature settings of editor. These features are not accessed unless the user
  * does something that requires to check the state of the feature. So we save them here by public fields
  * so that you can modify them easily and do not have to call so many methods.
@@ -46,7 +46,7 @@ public class DirectAccessProps implements Serializable {
     /**
      * If set to be true, the editor will delete the whole line if the current line is empty (only tabs or spaces)
      * when the users press the DELETE key.
-     *
+     * <p>
      * Default value is {@code true}
      */
     public boolean deleteEmptyLineFast = true;
@@ -54,7 +54,7 @@ public class DirectAccessProps implements Serializable {
     /**
      * Delete multiple spaces at a time when the user press the DELETE key.
      * This only takes effect when selection is in leading spaces.
-     *
+     * <p>
      * Default Value: {@code 1}  -> The editor will always delete only 1 space.
      * Special Value: {@code -1} -> Follow tab size
      */
@@ -70,14 +70,14 @@ public class DirectAccessProps implements Serializable {
 
     /**
      * Control whether auto-completes for symbol pairs.
-     *
+     * <p>
      * Such as automatically adding a ')' when '(' is entered
      */
     public boolean symbolPairAutoCompletion = true;
 
     /**
      * Show auto-completion even when there is composing text set by the IME in editor.
-     *
+     * <p>
      * Note: composing text is usually a small piece of text you are typing. It is displayed with an
      * underline in editor.
      * This is useful when the user uses an input method that does not support the attitude {@link EditorInfo#TYPE_TEXT_FLAG_NO_SUGGESTIONS}.
@@ -89,7 +89,7 @@ public class DirectAccessProps implements Serializable {
     /**
      * Set whether auto indent should be executed when user enters
      * a NEWLINE.
-     *
+     * <p>
      * Enabling this will automatically copy the leading spaces on this line to the new line.
      */
     public boolean autoIndent = true;
@@ -158,7 +158,7 @@ public class DirectAccessProps implements Serializable {
 
     /**
      * Wave length of problem indicators.
-     *
+     * <p>
      * Unit DIP.
      */
     @InvalidateRequired
@@ -167,7 +167,7 @@ public class DirectAccessProps implements Serializable {
 
     /**
      * Wave width of problem indicators.
-     *
+     * <p>
      * Unit DIP.
      */
     @InvalidateRequired
@@ -176,7 +176,7 @@ public class DirectAccessProps implements Serializable {
 
     /**
      * Wave amplitude of problem indicators.
-     *
+     * <p>
      * Unit DIP.
      */
     @InvalidateRequired
@@ -185,7 +185,7 @@ public class DirectAccessProps implements Serializable {
 
     /**
      * Compare the text to commit with composing text.
-     *
+     * <p>
      * See detailed issue: #155
      */
     public boolean trackComposingTextOnCommit = true;
@@ -201,5 +201,10 @@ public class DirectAccessProps implements Serializable {
      * This costs some memory, but improves performance.
      */
     public boolean cacheRenderNodeForLongLines = true;
+
+    /**
+     * Use the ICU library to find range of words on double tap or long press.
+     */
+    public boolean useICULibToSelectWords = true;
 
 }

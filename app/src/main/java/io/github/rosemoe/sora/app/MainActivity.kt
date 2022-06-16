@@ -31,12 +31,17 @@ import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.*
+import android.view.KeyEvent
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
 import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
 import io.github.rosemoe.sora.event.ContentChangeEvent
+import io.github.rosemoe.sora.event.EditorKeyEvent
+import io.github.rosemoe.sora.event.KeyBindingEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
@@ -51,7 +56,6 @@ import io.github.rosemoe.sora.widget.EditorSearcher
 import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.schemes.*
 import io.github.rosemoe.sora.widget.style.builtin.ScaleCursorAnimator
-import io.github.rosemoe.sorakt.getComponent
 import io.github.rosemoe.sorakt.subscribeEvent
 import java.io.*
 import java.util.regex.PatternSyntaxException
@@ -117,6 +121,18 @@ class MainActivity : AppCompatActivity() {
                     50
                 )
             }
+
+            subscribeEvent<KeyBindingEvent> { event, _ ->
+                if (event.eventType != EditorKeyEvent.Type.DOWN) {
+                    return@subscribeEvent
+                }
+
+                Toast.makeText(
+                    context,
+                    "Keybinding event: " + generateKeybindingString(event),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
 
         // Custom cursor animator
@@ -147,6 +163,24 @@ class MainActivity : AppCompatActivity() {
         updateBtnState()
     }
 
+    private fun generateKeybindingString(event: KeyBindingEvent): String {
+        val sb = StringBuilder()
+        if (event.isCtrlPressed) {
+            sb.append("Ctrl + ")
+        }
+
+        if (event.isAltPressed) {
+            sb.append("Alt + ")
+        }
+
+        if (event.isShiftPressed) {
+            sb.append("Shift + ")
+        }
+
+        sb.append(KeyEvent.keyCodeToString(event.keyCode))
+        return sb.toString()
+    }
+
     private fun openAssetsFile(name: String) {
         Thread {
             try {
@@ -174,10 +208,26 @@ class MainActivity : AppCompatActivity() {
     private fun updatePositionText() {
         val cursor = binding.editor.cursor
         var text = (1 + cursor.leftLine).toString() + ":" + cursor.leftColumn
-        if (cursor.isSelected) {
-            text += "(" + (cursor.right - cursor.left) + " chars)"
+        text += if (cursor.isSelected) {
+            "(" + (cursor.right - cursor.left) + " chars)"
+        } else {
+            "(" + escapeIfNecessary(
+                binding.editor.text.charAt(
+                    cursor.leftLine,
+                    cursor.leftColumn
+                )
+            ) + ")"
         }
         binding.positionDisplay.text = text
+    }
+
+    private fun escapeIfNecessary(c: Char): String {
+        return when (c) {
+            '\n' -> "\\n"
+            '\t' -> "\\t"
+            ' ' -> "<ws>"
+            else -> c.toString()
+        }
     }
 
     private val loadTMLLauncher = registerForActivityResult(GetContent()) { result: Uri? ->
@@ -203,6 +253,7 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
         }
     }
+
     private val loadTMTLauncher = registerForActivityResult(GetContent()) { result: Uri? ->
         try {
             if (result == null) return@registerForActivityResult
@@ -261,6 +312,9 @@ class MainActivity : AppCompatActivity() {
         } else if (id == R.id.magnifier) {
             item.isChecked = !item.isChecked
             editor.getComponent(Magnifier::class.java).isEnabled = item.isChecked
+        } else if (id == R.id.useIcu) {
+            item.isChecked = !item.isChecked
+            editor.props.useICULibToSelectWords = item.isChecked
         } else if (id == R.id.code_format) {
             editor.formatCodeAsync()
         } else if (id == R.id.switch_language) {

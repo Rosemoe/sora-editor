@@ -74,11 +74,9 @@ import java.util.Objects;
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
-import io.github.rosemoe.sora.event.EditorKeyEvent;
 import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.EventManager;
 import io.github.rosemoe.sora.event.EventReceiver;
-import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.SubscriptionReceipt;
@@ -88,8 +86,6 @@ import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver;
-import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
-import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Styles;
@@ -100,6 +96,7 @@ import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.FormatThread;
+import io.github.rosemoe.sora.text.ICUUtils;
 import io.github.rosemoe.sora.text.LineRemoveListener;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
 import io.github.rosemoe.sora.text.TextUtils;
@@ -238,8 +235,6 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     static final int ACTION_MODE_SELECT_TEXT = 2;
     private static final String LOG_TAG = "CodeEditor";
     protected SymbolPairMatch mLanguageSymbolPairs;
-    Layout mLayout;
-    int mStartedActionMode;
     private int mTabWidth;
     private int mCursorPosition;
     private int mDownX = 0;
@@ -292,26 +287,28 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private GestureDetector mBasicDetector;
     protected EditorTextActionWindow mTextActionWindow;
     private ScaleGestureDetector mScaleDetector;
-    EditorInputConnection mConnection;
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;
     private MaterialEdgeEffect mVerticalGlow;
     private MaterialEdgeEffect mHorizontalGlow;
     private ExtractedTextRequest mExtracting;
     private FormatThread mFormatThread;
     private EditorSearcher mSearcher;
-    private EventManager mEventManager;
     private CursorAnimator mCursorAnimator;
     private Paint.FontMetricsInt mLineNumberMetrics;
     private Paint.FontMetricsInt mGraphMetrics;
     private SelectionHandleStyle mHandleStyle;
     private CursorBlink mCursorBlink;
     protected List<Span> defSpans = new ArrayList<>(2);
-    private CharPosition mSelectionAnchor;
     private HwAcceleratedRenderer mRenderer;
     private DirectAccessProps mProps;
     private Bundle mExtraArguments;
     private Styles mStyles;
-    final KeyMetaStates mKeyMetaStates = new KeyMetaStates(this);
+    final EditorKeyEventHandler mKeyEventHandler = new EditorKeyEventHandler(this);
+    int mStartedActionMode;
+    CharPosition mSelectionAnchor;
+    EditorInputConnection mConnection;
+    EventManager mEventManager;
+    Layout mLayout;
 
     private EditorPainter mPainter;
 
@@ -379,7 +376,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
      * Get KeyMetaStates, which manages alt/shift state in editor
      */
     public KeyMetaStates getKeyMetaStates() {
-        return mKeyMetaStates;
+        return mKeyEventHandler.getKeyMetaStates();
     }
 
     /**
@@ -784,6 +781,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
     /**
      * Returns whether the cursor should stick to the text row while selecting the text
+     *
      * @see CodeEditor#setStickyTextSelection(boolean)
      */
     public boolean isStickyTextSelection() {
@@ -792,6 +790,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
     /**
      * Whether the cursor should stick to the text row while selecting the text.
+     *
      * @param stickySelection value
      */
     public void setStickyTextSelection(boolean stickySelection) {
@@ -872,6 +871,37 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
+     * Internal callback to check if the editor is capable of handling the given
+     * keybinding {@link KeyEvent}
+     *
+     * @param keyCode      The keycode for the keybinding event.
+     * @param ctrlPressed  Is 'Ctrl' key pressed?
+     * @param shiftPressed Is 'Shift' key pressed?
+     * @param altPressed   Is 'Alt' key pressed?
+     * @return <code>true</code> if the editor can handle the keybinding, <code>false</code> otherwise.
+     */
+    protected boolean canHandleKeyBinding(int keyCode, boolean ctrlPressed, boolean shiftPressed, boolean altPressed) {
+        if (ctrlPressed && !shiftPressed && altPressed) {
+            return keyCode == KeyEvent.KEYCODE_A || keyCode == KeyEvent.KEYCODE_C
+                    || keyCode == KeyEvent.KEYCODE_X || keyCode == KeyEvent.KEYCODE_V
+                    || keyCode == KeyEvent.KEYCODE_U || keyCode == KeyEvent.KEYCODE_R
+                    || keyCode == KeyEvent.KEYCODE_D || keyCode == KeyEvent.KEYCODE_W;
+        }
+
+        if (shiftPressed && !altPressed) {
+            if (ctrlPressed) {
+                // Ctrl + Shift + J
+                return keyCode == KeyEvent.KEYCODE_J;
+            } else {
+                // Shift + Enter
+                return keyCode == KeyEvent.KEYCODE_ENTER;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Getter
      *
      * @return The width in dp unit
@@ -925,7 +955,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
-     * @see #setCursorAnimationEnabled(boolean) 
+     * @see #setCursorAnimationEnabled(boolean)
      */
     public boolean isCursorAnimationEnabled() {
         return mCursorAnimation;
@@ -933,6 +963,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
     /**
      * Set cursor animation
+     *
      * @see CursorAnimator
      * @see #getCursorAnimator()
      * @see #setCursorAnimationEnabled(boolean)  for disabling the animation
@@ -942,7 +973,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
-     * @see #setCursorAnimator(CursorAnimator) 
+     * @see #setCursorAnimator(CursorAnimator)
      */
     public CursorAnimator getCursorAnimator() {
         return mCursorAnimator;
@@ -1518,7 +1549,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     /**
      * Commit a tab to cursor
      */
-    private void commitTab() {
+    void commitTab() {
         if (mConnection != null && isEditable()) {
             mConnection.commitTextInternal("\t", true);
         }
@@ -2878,9 +2909,19 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
-     * Copy text to clip board
+     * Copy text to clipboard.
      */
     public void copyText() {
+        copyText(true);
+    }
+
+    /**
+     * Copy text to clipboard.
+     *
+     * @param shouldCopyLine State whether the editor should select whole line if
+     *                       cursor is not in selection mode.
+     */
+    public void copyText(boolean shouldCopyLine) {
         try {
             if (mCursor.isSelected()) {
                 String clip = getText().subContent(mCursor.getLeftLine(),
@@ -2888,6 +2929,8 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
                         mCursor.getRightLine(),
                         mCursor.getRightColumn()).toString();
                 mClipboardManager.setPrimaryClip(ClipData.newPlainText(clip, clip));
+            } else if (shouldCopyLine) {
+                copyLine();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -2896,14 +2939,153 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     }
 
     /**
+     * Copies the current line to clipboard.
+     */
+    private void copyLine() {
+        final var cursor = getCursor();
+        if (cursor.isSelected()) {
+            copyText();
+            return;
+        }
+
+        final var line = cursor.left().line;
+        setSelectionRegion(line, 0, line, getText().getColumnCount(line));
+        copyText();
+    }
+
+    /**
      * Copy text to clipboard and delete them
      */
     public void cutText() {
-        copyText();
         if (mCursor.isSelected()) {
+            copyText();
             deleteText();
             notifyIMEExternalCursorChange();
+        } else {
+            cutLine();
         }
+    }
+
+    /**
+     * Copy the current line to clipboard and delete it.
+     */
+    public void cutLine() {
+        final var cursor = getCursor();
+        if (cursor.isSelected()) {
+            cutText();
+            return;
+        }
+
+        final var left = cursor.left();
+        final var line = left.line;
+        final var column = getText().getColumnCount(left.line);
+
+        if (line + 1 == getLineCount()) {
+            setSelectionRegion(line, 0, line, getText().getColumnCount(line));
+        } else {
+            setSelectionRegion(line, 0, line + 1, 0);
+        }
+
+        cutText();
+    }
+
+    /**
+     * Duplicates the current line.
+     * Does not selects the duplicated line.
+     */
+    public void duplicateLine() {
+        final var cursor = getCursor();
+        if (cursor.isSelected()) {
+            duplicateSelection();
+            return;
+        }
+
+        final var left = cursor.left();
+        setSelectionRegion(left.line, 0, left.line, getText().getColumnCount(left.line), true);
+        duplicateSelection("\n", false);
+    }
+
+    /**
+     * Copies the current selection and pastes it at the right selection handle,
+     * then selects the duplicated content.
+     */
+    public void duplicateSelection() {
+        duplicateSelection(true);
+    }
+
+    /**
+     * Copies the current selection and pastes it at the right selection handle.
+     *
+     * @param selectDuplicate Whether to select the duplicated content.
+     */
+    public void duplicateSelection(boolean selectDuplicate) {
+        duplicateSelection("", selectDuplicate);
+    }
+
+    /**
+     * Copies the current selection, add the <code>prefix</code> to it
+     * and pastes it at the right selection handle.
+     *
+     * @param prefix          The prefix for the selected content.
+     * @param selectDuplicate Whether to select the duplicated content.
+     */
+    public void duplicateSelection(String prefix, boolean selectDuplicate) {
+        final var cursor = getCursor();
+        if (!cursor.isSelected()) {
+            return;
+        }
+
+        final var left = cursor.left();
+        final var right = cursor.right().fromThis();
+        final var sub = getText().subContent(left.line, left.column, right.line, right.column);
+
+        setSelection(right.line, right.column);
+        commitText(prefix + sub);
+
+        if (selectDuplicate) {
+            final var r = cursor.right();
+            setSelectionRegion(right.line, right.column, r.line, r.column);
+        }
+    }
+
+    /**
+     * Selects the word at the left selection handle.
+     */
+    public void selectCurrentWord() {
+        final var left = getCursor().left();
+        selectWord(left.line, left.column);
+    }
+
+    /**
+     * Selects the word at the given character position.
+     *
+     * @param line   The line.
+     * @param column The column.
+     */
+    public void selectWord(int line, int column) {
+        // Find word edges
+        int startLine = line, endLine = line;
+        var lineObj = getText().getLine(line);
+        long edges = ICUUtils.getWordEdges(lineObj, column, mProps.useICULibToSelectWords);
+        int startColumn = IntPair.getFirst(edges);
+        int endColumn = IntPair.getSecond(edges);
+        if (startColumn == endColumn) {
+            if (startColumn > 0) {
+                startColumn--;
+            } else if (endColumn < lineObj.length()) {
+                endColumn++;
+            } else {
+                if (line > 0) {
+                    int lastColumn = getText().getColumnCount(line - 1);
+                    startLine = line - 1;
+                    startColumn = lastColumn;
+                } else if (line < getLineCount() - 1) {
+                    endLine = line + 1;
+                    endColumn = 0;
+                }
+            }
+        }
+        setSelectionRegion(startLine, startColumn, endLine, endColumn, SelectionChangeEvent.CAUSE_LONG_PRESS);
     }
 
     /**
@@ -3493,239 +3675,29 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        mKeyMetaStates.onKeyDown(event);
-        var e = new EditorKeyEvent(this, event);
-        if ((mEventManager.dispatchEvent(e) & InterceptTarget.TARGET_EDITOR) != 0) {
-            return e.result(false);
-        }
-        boolean isShiftPressed = mKeyMetaStates.isShiftPressed();
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-            case KeyEvent.KEYCODE_DPAD_UP:
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-            case KeyEvent.KEYCODE_MOVE_HOME:
-            case KeyEvent.KEYCODE_MOVE_END:
-                if (isShiftPressed && (!mCursor.isSelected())) {
-                    mSelectionAnchor = mCursor.left();
-                } else if (!isShiftPressed && mSelectionAnchor != null) {
-                    mSelectionAnchor = null;
-                }
-                mKeyMetaStates.adjust();
-        }
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_BACK: {
-                if (mCursor.isSelected()) {
-                    setSelection(mCursor.getLeftLine(), mCursor.getLeftColumn());
-                    return e.result(true);
-                }
-                return e.result(false);
-            }
-            case KeyEvent.KEYCODE_DEL:
-                if (isEditable()) {
-                    deleteText();
-                    notifyIMEExternalCursorChange();
-                }
-                return e.result(true);
-            case KeyEvent.KEYCODE_FORWARD_DEL: {
-                if (isEditable()) {
-                    mConnection.deleteSurroundingText(0, 1);
-                    notifyIMEExternalCursorChange();
-                }
-                return e.result(true);
-            }
-            case KeyEvent.KEYCODE_ENTER: {
-                if (isEditable()) {
-                    if (mCompletionWindow.isShowing()) {
-                        mCompletionWindow.select();
-                        return true;
-                    }
-                    NewlineHandler[] handlers = mLanguage.getNewlineHandlers();
-                    if (handlers == null || getCursor().isSelected()) {
-                        commitText("\n", true);
-                    } else {
-                        ContentLine line = mText.getLine(mCursor.getLeftLine());
-                        int index = mCursor.getLeftColumn();
-                        String beforeText = line.subSequence(0, index).toString();
-                        String afterText = line.subSequence(index, line.length()).toString();
-                        boolean consumed = false;
-                        for (NewlineHandler handler : handlers) {
-                            if (handler != null) {
-                                if (handler.matchesRequirement(beforeText, afterText)) {
-                                    try {
-                                        NewlineHandleResult result = handler.handleNewline(beforeText, afterText, getTabWidth());
-                                        if (result != null) {
-                                            commitText(result.text, false);
-                                            int delta = result.shiftLeft;
-                                            if (delta != 0) {
-                                                int newSel = Math.max(getCursor().getLeft() - delta, 0);
-                                                CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
-                                                setSelection(charPosition.line, charPosition.column);
-                                            }
-                                            consumed = true;
-                                        } else {
-                                            continue;
-                                        }
-                                    } catch (Exception ex) {
-                                        Log.w(LOG_TAG, "Error occurred while calling Language's NewlineHandler", ex);
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                        if (!consumed) {
-                            commitText("\n", true);
-                        }
-                    }
-                    notifyIMEExternalCursorChange();
-                }
-                return e.result(true);
-            }
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-                moveSelectionDown();
-                return e.result(true);
-            case KeyEvent.KEYCODE_DPAD_UP:
-                moveSelectionUp();
-                return e.result(true);
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-                moveSelectionLeft();
-                return e.result(true);
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-                moveSelectionRight();
-                return e.result(true);
-            case KeyEvent.KEYCODE_MOVE_END:
-                moveSelectionEnd();
-                return e.result(true);
-            case KeyEvent.KEYCODE_MOVE_HOME:
-                moveSelectionHome();
-                return e.result(true);
-            case KeyEvent.KEYCODE_PAGE_DOWN:
-                movePageDown();
-                return e.result(true);
-            case KeyEvent.KEYCODE_PAGE_UP:
-                movePageUp();
-                return e.result(true);
-            case KeyEvent.KEYCODE_TAB:
-                if (isEditable()) {
-                    if (mCompletionWindow.isShowing()) {
-                        mCompletionWindow.select();
-                    } else {
-                        commitTab();
-                    }
-                }
-                return e.result(true);
-            case KeyEvent.KEYCODE_PASTE:
-                if (isEditable()) {
-                    pasteText();
-                }
-                return e.result(true);
-            case KeyEvent.KEYCODE_COPY:
-                copyText();
-                return e.result(true);
-            case KeyEvent.KEYCODE_SPACE:
-                if (isEditable()) {
-                    commitText(" ");
-                    notifyIMEExternalCursorChange();
-                }
-                return e.result(true);
-            default:
-                if (event.isCtrlPressed() && !event.isAltPressed()) {
-                    switch (keyCode) {
-                        case KeyEvent.KEYCODE_V:
-                            if (isEditable()) {
-                                pasteText();
-                            }
-                            return e.result(true);
-                        case KeyEvent.KEYCODE_C:
-                            copyText();
-                            return e.result(true);
-                        case KeyEvent.KEYCODE_X:
-                            if (isEditable()) {
-                                cutText();
-                            } else {
-                                copyText();
-                            }
-                            return e.result(true);
-                        case KeyEvent.KEYCODE_A:
-                            selectAll();
-                            return e.result(true);
-                        case KeyEvent.KEYCODE_Z:
-                            if (isEditable()) {
-                                undo();
-                            }
-                            return e.result(true);
-                        case KeyEvent.KEYCODE_Y:
-                            if (isEditable()) {
-                                redo();
-                            }
-                            return e.result(true);
-                    }
-                } else if (!event.isCtrlPressed() && !event.isAltPressed()) {
-                    if (event.isPrintingKey() && isEditable()) {
-                        String text = new String(Character.toChars(event.getUnicodeChar(event.getMetaState())));
-                        SymbolPairMatch.Replacement replacement = null;
-                        if (text.length() == 1 && mProps.symbolPairAutoCompletion) {
-                            replacement = mLanguageSymbolPairs.getCompletion(text.charAt(0));
-                        }
-                        if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
-                                || (replacement.shouldNotDoReplace(getText()) && replacement.notHasAutoSurroundPair())) {
-                            commitText(text);
-                            notifyIMEExternalCursorChange();
-                        } else {
-                            String[] autoSurroundPair;
-                            if (getCursor().isSelected() && (autoSurroundPair = replacement.getAutoSurroundPair()) != null) {
-                                getText().beginBatchEdit();
-                                //insert left
-                                getText().insert(getCursor().getLeftLine(), getCursor().getLeftColumn(), autoSurroundPair[0]);
-                                //insert right
-                                getText().insert(getCursor().getRightLine(), getCursor().getRightColumn(), autoSurroundPair[1]);
-                                getText().endBatchEdit();
-                                //cancel selected
-                                setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length() - 1);
-
-                                notifyIMEExternalCursorChange();
-                            } else {
-                                commitText(replacement.text);
-                                int delta = (replacement.text.length() - replacement.selection);
-                                if (delta != 0) {
-                                    int newSel = Math.max(getCursor().getLeft() - delta, 0);
-                                    CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
-                                    setSelection(charPosition.line, charPosition.column);
-                                    notifyIMEExternalCursorChange();
-                                }
-                            }
-
-                        }
-                    } else {
-                        return super.onKeyDown(keyCode, event);
-                    }
-                    return e.result(true);
-                }
-        }
-        return e.result(super.onKeyDown(keyCode, event));
+        return mKeyEventHandler.onKeyDown(keyCode, event);
     }
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        mKeyMetaStates.onKeyUp(event);
-        var e = new EditorKeyEvent(this, event);
-        if ((mEventManager.dispatchEvent(e) & InterceptTarget.TARGET_EDITOR) != 0) {
-            return e.result(false);
-        }
-        if (!mKeyMetaStates.isShiftPressed() && mSelectionAnchor != null && !mCursor.isSelected()) {
-            mSelectionAnchor = null;
-            return e.result(true);
-        }
-        return e.result(super.onKeyUp(keyCode, event));
+        return mKeyEventHandler.onKeyUp(keyCode, event);
     }
 
     @Override
     public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
-        var e = new EditorKeyEvent(this, event);
-        if ((mEventManager.dispatchEvent(e) & InterceptTarget.TARGET_EDITOR) != 0) {
-            return e.result(false);
-        }
-        return e.result(super.onKeyMultiple(keyCode, repeatCount, event));
+        return mKeyEventHandler.onKeyMultiple(keyCode, repeatCount, event);
+    }
+
+    boolean onSuperKeyDown(int keyCode, KeyEvent event) {
+        return super.onKeyDown(keyCode, event);
+    }
+
+    boolean onSuperKeyUp(int keyCode, KeyEvent event) {
+        return super.onKeyUp(keyCode, event);
+    }
+
+    boolean onSuperKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
+        return super.onKeyMultiple(keyCode, repeatCount, event);
     }
 
     @Override

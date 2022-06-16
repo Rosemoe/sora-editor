@@ -509,32 +509,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         return true;
     }
 
-    private void selectWord(int line, int column) {
-        // Find word edges
-        int startLine = line, endLine = line;
-        var lineObj = mEditor.getText().getLine(line);
-        long edges = ICUUtils.getWordEdges(lineObj, column);
-        int startColumn = IntPair.getFirst(edges);
-        int endColumn = IntPair.getSecond(edges);
-        if (startColumn == endColumn) {
-            if (startColumn > 0) {
-                startColumn--;
-            } else if (endColumn < lineObj.length()) {
-                endColumn++;
-            } else {
-                if (line > 0) {
-                    int lastColumn = mEditor.getText().getColumnCount(line - 1);
-                    startLine = line - 1;
-                    startColumn = lastColumn;
-                } else if (line < mEditor.getLineCount() - 1) {
-                    endLine = line + 1;
-                    endColumn = 0;
-                }
-            }
-        }
-        mEditor.setSelectionRegion(startLine, startColumn, endLine, endColumn, SelectionChangeEvent.CAUSE_LONG_PRESS);
-    }
-
     @Override
     public void onLongPress(MotionEvent e) {
         long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
@@ -547,7 +521,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             return;
         }
         mEditor.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
-        selectWord(line, column);
+        mEditor.selectWord(line, column);
     }
 
     @Override
@@ -704,7 +678,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         if (mEditor.getCursor().isSelected() || e.getPointerCount() != 1) {
             return true;
         }
-        selectWord(line, column);
+        mEditor.selectWord(line, column);
         return true;
     }
 
