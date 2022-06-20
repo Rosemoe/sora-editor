@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.lang.analysis;
 
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.styling.Styles;
 
 /**
@@ -33,6 +34,8 @@ import io.github.rosemoe.sora.lang.styling.Styles;
  *
  * Also, the implementations of the class should pay attention to concurrent invocations due not to
  * corrupt the information it maintains.
+ *
+ * @author Rosemoe
  */
 public interface StyleReceiver {
 
@@ -41,5 +44,9 @@ public interface StyleReceiver {
      * The implementation of this should make sure that concurrent invocations to it are safe.
      */
     void setStyles(AnalyzeManager sourceManager, Styles styles);
+
+    default void setDiagnostics(DiagnosticsContainer diagnostics) {
+
+    }
 
 }

@@ -27,9 +27,9 @@ import android.graphics.Color;
 
 import java.util.List;
 
-import io.github.rosemoe.sora.textmate.core.internal.theme.ThemeRaw;
-import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
-import io.github.rosemoe.sora.textmate.core.theme.Theme;
+import org.eclipse.tm4e.core.internal.theme.ThemeRaw;
+import org.eclipse.tm4e.core.theme.IRawTheme;
+import org.eclipse.tm4e.core.theme.Theme;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 public class TextMateColorScheme extends EditorColorScheme {

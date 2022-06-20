@@ -27,8 +27,6 @@ import android.util.SparseIntArray;
 
 import java.util.Stack;
 
-import io.github.rosemoe.sora.textmate.languageconfiguration.internal.supports.Folding;
-
 public class FoldingRegions {
     private final SparseIntArray _startIndexes;
     private final SparseIntArray _endIndexes;

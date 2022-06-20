@@ -31,7 +31,7 @@ import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.langs.textmate.analyzer.TextMateAnalyzer;
 import io.github.rosemoe.sora.langs.textmate.theme.TextMateColorScheme;
-import io.github.rosemoe.sora.textmate.core.theme.IRawTheme;
+import org.eclipse.tm4e.core.theme.IRawTheme;
 
 @Experimental
 public class TextMateLanguage extends EmptyLanguage {

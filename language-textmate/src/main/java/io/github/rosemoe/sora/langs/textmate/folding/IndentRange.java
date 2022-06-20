@@ -25,14 +25,13 @@ package io.github.rosemoe.sora.langs.textmate.folding;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 
 import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager;
 import io.github.rosemoe.sora.text.Content;
-import io.github.rosemoe.sora.textmate.core.internal.oniguruma.OnigRegExp;
-import io.github.rosemoe.sora.textmate.core.internal.oniguruma.OnigResult;
-import io.github.rosemoe.sora.textmate.core.internal.oniguruma.OnigString;
-import io.github.rosemoe.sora.textmate.languageconfiguration.internal.supports.Folding;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigRegExp;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
+import org.eclipse.tm4e.languageconfiguration.internal.supports.Folding;
 
 public class IndentRange {
     public static final int MAX_LINE_NUMBER = 0xFFFFFF;
