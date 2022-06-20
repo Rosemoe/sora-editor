@@ -120,18 +120,30 @@ public class ScaleCursorAnimator implements CursorAnimator, ValueAnimator.Animat
             }
         });
         scaleDownAnimator.addUpdateListener(this);
-        scaleDownAnimator.setDuration(duration);
+        if (!editor.getInsertHandleDescriptor().position.isEmpty()) {
+            scaleDownAnimator.setDuration(duration);
+            scaleUpAnimator = ValueAnimator.ofFloat(0f, 1.0f);
+            scaleUpAnimator.addUpdateListener(this);
+            scaleUpAnimator.setStartDelay(duration);
+            scaleUpAnimator.setDuration(duration);
+        } else {
+            scaleDownAnimator.setDuration(0);
+            scaleUpAnimator = ValueAnimator.ofFloat(0f, 1.0f);
+            scaleUpAnimator.addUpdateListener(this);
+            scaleUpAnimator.setStartDelay(0);
+            scaleUpAnimator.setDuration(duration);
+        }
 
-        scaleUpAnimator = ValueAnimator.ofFloat(0f, 1.0f);
-        scaleUpAnimator.addUpdateListener(this);
-        scaleUpAnimator.setStartDelay(duration);
-        scaleUpAnimator.setDuration(duration);
+
     }
 
     @Override
     public void start() {
         if (!editor.isCursorAnimationEnabled() || System.currentTimeMillis() - lastAnimateTime < 100) {
             lastAnimateTime = System.currentTimeMillis();
+            return;
+        }
+        if (startX == endX && startY == endY && !editor.getInsertHandleDescriptor().position.isEmpty()) {
             return;
         }
         scaleDownAnimator.start();
