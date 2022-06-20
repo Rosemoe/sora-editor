@@ -23,7 +23,6 @@
  */
 package io.github.rosemoe.sora.widget.style.builtin;
 
-import android.animation.Animator;
 import android.animation.ValueAnimator;
 
 import io.github.rosemoe.sora.widget.CodeEditor;
