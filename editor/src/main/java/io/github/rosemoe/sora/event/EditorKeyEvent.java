@@ -43,11 +43,15 @@ public class EditorKeyEvent extends ResultedEvent<Boolean> {
 
     private final KeyEvent src;
     private final Type type;
+    private final boolean shiftPressed;
+    private final boolean altPressed;
 
     public EditorKeyEvent(CodeEditor editor, KeyEvent src, Type type) {
         super(editor);
         this.src = src;
         this.type = type;
+        shiftPressed = getEditor().getKeyMetaStates().isShiftPressed();
+        altPressed = getEditor().getKeyMetaStates().isAltPressed();
     }
 
     public int getAction() {
@@ -92,14 +96,14 @@ public class EditorKeyEvent extends ResultedEvent<Boolean> {
      * editor change: track shift/alt by {@link io.github.rosemoe.sora.widget.KeyMetaStates}
      */
     public boolean isShiftPressed() {
-        return getEditor().getKeyMetaStates().isShiftPressed();
+        return shiftPressed;
     }
 
     /**
      * editor change: track shift/alt by {@link io.github.rosemoe.sora.widget.KeyMetaStates}
      */
     public boolean isAltPressed() {
-        return getEditor().getKeyMetaStates().isAltPressed();
+        return altPressed;
     }
 
     public boolean isCtrlPressed() {
@@ -116,7 +120,7 @@ public class EditorKeyEvent extends ResultedEvent<Boolean> {
     }
 
     /**
-     * The type of an {@link EditorKeyEvent}.
+     * The type of {@link EditorKeyEvent}.
      */
     public enum Type {
 
