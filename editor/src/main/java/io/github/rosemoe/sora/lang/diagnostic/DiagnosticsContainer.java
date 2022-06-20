@@ -23,5 +23,38 @@
  */
 package io.github.rosemoe.sora.lang.diagnostic;
 
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
+/**
+ * Class for containing diagnostics
+ *
+ * @author Rosemoe
+ */
 public class DiagnosticsContainer {
+
+    private final SortedSet<DiagnosticRegion> regions = new TreeSet<>();
+
+    public synchronized void addDiagnostic(DiagnosticRegion diagnostic) {
+        regions.add(diagnostic);
+    }
+
+    public List<DiagnosticRegion> queryInRegion(int startIndex, int endIndex) {
+        return null;
+    }
+
+    public synchronized void shiftOnInsert(int insertStart, int insertEnd) {
+
+    }
+
+    public synchronized void shiftOnDelete(int deleteStart, int deleteEnd) {
+
+    }
+
+    public void reset() {
+        regions.clear();
+    }
+
 }

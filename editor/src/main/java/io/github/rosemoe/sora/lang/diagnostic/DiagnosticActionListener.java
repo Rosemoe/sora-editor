@@ -23,5 +23,15 @@
  */
 package io.github.rosemoe.sora.lang.diagnostic;
 
+import io.github.rosemoe.sora.widget.CodeEditor;
+
+/**
+ * The listener is called when the text in the diagnostic is selected.
+ *
+ * @author Rosemoe
+ */
 public interface DiagnosticActionListener {
+
+    void onDiagnosticSelected(DiagnosticRegion diagnosticRegion, CodeEditor editor);
+
 }

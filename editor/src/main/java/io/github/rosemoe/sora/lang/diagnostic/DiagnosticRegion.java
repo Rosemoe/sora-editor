@@ -23,12 +23,69 @@
  */
 package io.github.rosemoe.sora.lang.diagnostic;
 
-public class DiagnosticRegion {
+/**
+ * Class for describing a diagnostic region.
+ *
+ * @author Rosemoe
+ */
+public final class DiagnosticRegion implements Comparable<DiagnosticRegion> {
 
+    public final static short SEVERITY_NONE = 0;
+    public final static short SEVERITY_TYPO = 1;
+    public final static short SEVERITY_WEAK_WARNING = 2;
+    public final static short SEVERITY_WARNING = 3;
+    public final static short SEVERITY_ERROR = 4;
+
+    public long id;
+    public String description;
     public int startIndex;
     public int endIndex;
-    public int severity;
+    public short severity;
 
+    public DiagnosticRegion(int startIndex, int endIndex, short severity) {
+        this(startIndex, endIndex, severity, null, 0);
+    }
 
+    public DiagnosticRegion(int startIndex, int endIndex, short severity, String description, long id) {
+        this.startIndex = startIndex;
+        this.endIndex = endIndex;
+        this.severity = severity;
+        this.description = description;
+        this.id = id;
+    }
 
+    public int getSeverity() {
+        return severity;
+    }
+
+    public int getStartIndex() {
+        return startIndex;
+    }
+
+    public int getEndIndex() {
+        return endIndex;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    @Override
+    public int compareTo(DiagnosticRegion o) {
+        var cmp = Integer.compare(startIndex, o.startIndex);
+        if (cmp == 0) {
+            cmp = Integer.compare(endIndex, o.endIndex);
+            if (cmp == 0) {
+                cmp = Short.compare(severity, o.severity);
+                if (cmp == 0) {
+                    cmp = Long.compare(id, o.id);
+                }
+            }
+        }
+        return cmp;
+    }
 }
