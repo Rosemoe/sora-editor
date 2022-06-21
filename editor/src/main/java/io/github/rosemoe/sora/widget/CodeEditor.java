@@ -66,6 +66,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Px;
+import androidx.annotation.UiThread;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -86,6 +87,7 @@ import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver;
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Styles;
@@ -116,6 +118,7 @@ import io.github.rosemoe.sora.widget.layout.LineBreakLayout;
 import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.style.CursorAnimator;
+import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 import io.github.rosemoe.sora.widget.style.builtin.HandleStyleSideDrop;
 import io.github.rosemoe.sora.widget.style.builtin.MoveCursorAnimator;
@@ -132,7 +135,7 @@ import io.github.rosemoe.sora.widget.style.builtin.MoveCursorAnimator;
  * @author Rosemoe
  */
 @SuppressWarnings("unused")
-public class CodeEditor extends View implements ContentListener, StyleReceiver, FormatThread.FormatResultReceiver, LineRemoveListener {
+public class CodeEditor extends View implements ContentListener, FormatThread.FormatResultReceiver, LineRemoveListener {
 
     private final static Logger logger = Logger.instance("CodeEditor");
 
@@ -280,6 +283,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private String mLnTip;
     private String mFormatTip;
     private Language mLanguage;
+    private DiagnosticIndicatorStyle mDiagnosticStyle = DiagnosticIndicatorStyle.WAVY_LINE;
     private long mLastMakeVisible = 0;
     private EditorAutoCompletion mCompletionWindow;
     private EditorTouchEventHandler mEventHandler;
@@ -302,7 +306,9 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
     private HwAcceleratedRenderer mRenderer;
     private DirectAccessProps mProps;
     private Bundle mExtraArguments;
+    private EditorStyleDelegate mStyleDelegate;
     private Styles mStyles;
+    private DiagnosticsContainer mDiagnostics;
     final EditorKeyEventHandler mKeyEventHandler = new EditorKeyEventHandler(this);
     int mStartedActionMode;
     CharPosition mSelectionAnchor;
@@ -468,15 +474,17 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         Log.v(LOG_TAG, COPYRIGHT);
 
         mPainter = new EditorPainter(this);
+        mStyleDelegate = new EditorStyleDelegate(this);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             var configuration = ViewConfiguration.get(getContext());
             mVerticalScrollFactor = configuration.getScaledVerticalScrollFactor();
         } else {
             try {
-                var a = getContext().obtainStyledAttributes(new int[]{android.R.attr.listPreferredItemHeight});
-                mVerticalScrollFactor = a.getFloat(0, 32);
-                a.recycle();
+                try (var a = getContext().obtainStyledAttributes(new int[]{android.R.attr.listPreferredItemHeight})) {
+                    mVerticalScrollFactor = a.getFloat(0, 32);
+                    a.recycle();
+                }
             } catch (Exception e) {
                 Log.e(LOG_TAG, "Failed to get scroll factor", e);
                 mVerticalScrollFactor = 32;
@@ -850,7 +858,7 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
         // Setup new one
         var mgr = lang.getAnalyzeManager();
-        mgr.setReceiver(this);
+        mgr.setReceiver(mStyleDelegate);
         if (mText != null) {
             mgr.reset(new ContentReference(mText), mExtraArguments);
         }
@@ -2136,6 +2144,15 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
     }
 
+    public void setDiagnosticIndicatorStyle(@NonNull DiagnosticIndicatorStyle diagnosticIndicatorStyle) {
+        this.mDiagnosticStyle = diagnosticIndicatorStyle;
+        invalidate();
+    }
+
+    public DiagnosticIndicatorStyle getDiagnosticStyle() {
+        return mDiagnosticStyle;
+    }
+
     /**
      * Start search action mode
      */
@@ -3321,6 +3338,11 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         return mStyles;
     }
 
+    @Nullable
+    public DiagnosticsContainer getDiagnostics() {
+        return mDiagnostics;
+    }
+
     /**
      * Hide auto complete window if shown
      */
@@ -3971,24 +3993,21 @@ public class CodeEditor extends View implements ContentListener, StyleReceiver, 
         }
     }
 
-    @Override
-    public void setStyles(final AnalyzeManager sourceManager, Styles styles) {
-        if (sourceManager == mLanguage.getAnalyzeManager()) {
-            Runnable operation = () -> {
-                mStyles = styles;
-                if (mHighlightCurrentBlock) {
-                    mCursorPosition = findCursorBlock();
-                }
-                mPainter.invalidateHwRenderer();
-                mPainter.updateTimestamp();
-                invalidate();
-            };
-            if (Looper.getMainLooper().getThread() == Thread.currentThread()) {
-                operation.run();
-            } else {
-                post(operation);
-            }
+    @UiThread
+    public void setStyles(@Nullable Styles styles) {
+        mStyles = styles;
+        if (mHighlightCurrentBlock) {
+            mCursorPosition = findCursorBlock();
         }
+        mPainter.invalidateHwRenderer();
+        mPainter.updateTimestamp();
+        invalidate();
+    }
+
+    @UiThread
+    public void setDiagnostics(@Nullable DiagnosticsContainer diagnostics) {
+        mDiagnostics = diagnostics;
+        invalidate();
     }
 
     private final static String COPYRIGHT = "sora-editor\nCopyright (C) Rosemoe roses2020@qq.com\nThis project is distributed under the LGPL v2.1 license";

@@ -58,6 +58,11 @@ public interface Layout extends LineRemoveListener, ContentListener {
     RowIterator obtainRowIterator(int initialRow);
 
     /**
+     * Get the specific Row
+     */
+    Row getRowAt(int rowIndex);
+
+    /**
      * Get the width of this layout
      * Editor will use this to compute scroll range
      *

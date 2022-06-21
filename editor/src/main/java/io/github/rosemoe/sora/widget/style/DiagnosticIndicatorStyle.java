@@ -21,17 +21,16 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lang.diagnostic;
-
-import io.github.rosemoe.sora.widget.CodeEditor;
+package io.github.rosemoe.sora.widget.style;
 
 /**
- * The listener is called when the text in the diagnostic is selected.
+ * Style for diagnostic displaying
  *
  * @author Rosemoe
  */
-public interface DiagnosticActionListener {
-
-    void onDiagnosticSelected(DiagnosticRegion diagnosticRegion, CodeEditor editor);
-
+public enum DiagnosticIndicatorStyle {
+    NONE,
+    LINE,
+    DOUBLE_LINE,
+    WAVY_LINE
 }

@@ -201,6 +201,11 @@ public class WordwrapLayout extends AbstractLayout {
     }
 
     @Override
+    public Row getRowAt(int rowIndex) {
+        return rowTable.get(rowIndex).toRow();
+    }
+
+    @Override
     public int getLineNumberForRow(int row) {
         return row >= rowTable.size() ? rowTable.get(rowTable.size() - 1).line : rowTable.get(row).line;
     }
@@ -318,6 +323,15 @@ public class WordwrapLayout extends AbstractLayout {
             this.line = line;
             startColumn = start;
             endColumn = end;
+        }
+
+        public Row toRow() {
+            var row = new Row();
+            row.isLeadingRow = startColumn == 0;
+            row.startColumn = startColumn;
+            row.endColumn = endColumn;
+            row.lineIndex = line;
+            return row;
         }
 
         @NonNull

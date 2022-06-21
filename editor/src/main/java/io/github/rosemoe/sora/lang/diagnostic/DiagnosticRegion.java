@@ -32,46 +32,45 @@ public final class DiagnosticRegion implements Comparable<DiagnosticRegion> {
 
     public final static short SEVERITY_NONE = 0;
     public final static short SEVERITY_TYPO = 1;
-    public final static short SEVERITY_WEAK_WARNING = 2;
-    public final static short SEVERITY_WARNING = 3;
-    public final static short SEVERITY_ERROR = 4;
+    public final static short SEVERITY_WARNING = 2;
+    public final static short SEVERITY_ERROR = 3;
 
+    /**
+     * Id specified by diagnostic provider
+     */
     public long id;
-    public String description;
+    /*
+     * The description of the problem
+     * public String description;
+     */
+    /**
+     * The start index of the diagnostic
+     */
     public int startIndex;
+    /**
+     * The end index of the diagnostic
+     */
     public int endIndex;
+    /**
+     * One diagnostic has only one severity specification
+     *
+     * @see #SEVERITY_NONE
+     * @see #SEVERITY_TYPO
+     * @see #SEVERITY_WARNING
+     * @see #SEVERITY_ERROR
+     */
     public short severity;
 
     public DiagnosticRegion(int startIndex, int endIndex, short severity) {
-        this(startIndex, endIndex, severity, null, 0);
+        this(startIndex, endIndex, severity, 0);
     }
 
-    public DiagnosticRegion(int startIndex, int endIndex, short severity, String description, long id) {
+    public DiagnosticRegion(int startIndex, int endIndex, short severity, long id) {
         this.startIndex = startIndex;
         this.endIndex = endIndex;
         this.severity = severity;
-        this.description = description;
+        //this.description = description;
         this.id = id;
-    }
-
-    public int getSeverity() {
-        return severity;
-    }
-
-    public int getStartIndex() {
-        return startIndex;
-    }
-
-    public int getEndIndex() {
-        return endIndex;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public long getId() {
-        return id;
     }
 
     @Override

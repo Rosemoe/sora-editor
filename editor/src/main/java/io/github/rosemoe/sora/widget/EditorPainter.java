@@ -54,6 +54,7 @@ import java.util.List;
 
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
 import io.github.rosemoe.sora.graphics.Paint;
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.EmptyReader;
 import io.github.rosemoe.sora.lang.styling.ExternalRenderer;
@@ -61,6 +62,7 @@ import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Spans;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.text.AndroidBidi;
+import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.util.IntPair;
@@ -70,6 +72,7 @@ import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 import io.github.rosemoe.sora.widget.layout.Row;
 import io.github.rosemoe.sora.widget.layout.RowIterator;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
+import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 
 public class EditorPainter {
@@ -98,10 +101,11 @@ public class EditorPainter {
     private Paint.FontMetricsInt mGraphMetrics;
 
     private int mCachedLineNumberWidth;
-    private android.graphics.Paint.FontMetricsInt mTextMetrics;
+    private Paint.FontMetricsInt mTextMetrics;
     
     private Cursor mCursor;
     private ContentLine mBuffer;
+    private List<DiagnosticRegion> mCollectedDiagnostics = new ArrayList<>();
 
     public EditorPainter(@NonNull CodeEditor editor) {
         mEditor = editor;
@@ -277,20 +281,10 @@ public class EditorPainter {
 
     @RequiresApi(29)
     protected void updateLineDisplayList(RenderNode renderNode, int line, Spans.Reader spans) {
-        final float waveLength = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveLength;
-        final float amplitude = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveAmplitude;
-        final float waveWidth = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveWidth;
         prepareLine(line);
-        /*if (bidiBuffer == null || bidiBuffer.length != mBuffer.length()) {
-            bidiBuffer = new char[mBuffer.length()];
-            bidiLevels = new byte[mBuffer.length()];
-        }
-        mBuffer.getChars(0, mBuffer.length(), bidiBuffer, 0);
-        var dir = AndroidBidi.bidi(AndroidBidi.DIR_LEFT_TO_RIGHT, bidiBuffer, bidiLevels);
-        var dirs = AndroidBidi.directions(dir, bidiLevels, 0, bidiBuffer, 0, bidiBuffer.length);*/
         int columnCount = mEditor.getText().getColumnCount(line);
         float widthLine = mEditor.measureText(mBuffer, 0, columnCount, line) + mEditor.getDpUnit() * 20;
-        renderNode.setPosition(0, 0, (int) widthLine, mEditor.getRowHeight() + (int) amplitude);
+        renderNode.setPosition(0, 0, (int) widthLine, mEditor.getRowHeight());
         Canvas canvas = renderNode.beginRecording();
         if (spans == null) {
             spans = new EmptyReader();
@@ -298,7 +292,6 @@ public class EditorPainter {
         int spanOffset = 0;
         float paintingOffset = 0;
         int row = 0;
-        float phi = 0f;
         Span span = spans.getSpanAt(spanOffset);
         // Draw by spans
         long lastStyle = 0;
@@ -352,7 +345,7 @@ public class EditorPainter {
             drawRegionTextDirectional(canvas, null, paintingOffset, mEditor.getRowBaseline(row), line, paintStart, paintEnd, span.column, spanEnd, columnCount, mEditor.getColorScheme().getColor(span.getForegroundColorId()));
 
             // Draw strikethrough
-            if ((span.problemFlags & Span.FLAG_DEPRECATED) != 0 || TextStyle.isStrikeThrough(span.style)) {
+            if (TextStyle.isStrikeThrough(span.style)) {
                 mPaintOther.setColor(Color.BLACK);
                 canvas.drawLine(paintingOffset, mEditor.getRowTop(row) + mEditor.getRowHeight() / 2f, paintingOffset + width, mEditor.getRowTop(row) + mEditor.getRowHeight() / 2f, mPaintOther);
             }
@@ -364,50 +357,6 @@ public class EditorPainter {
                 mRect.left = paintingOffset;
                 mRect.right = paintingOffset + width;
                 drawColor(canvas, span.underlineColor, mRect);
-            }
-
-            // Draw issue curly underline
-            if (waveWidth > 0 && span.problemFlags > 0 && Integer.highestOneBit(span.problemFlags) != Span.FLAG_DEPRECATED) {
-                int color = 0;
-                switch (Integer.highestOneBit(span.problemFlags)) {
-                    case Span.FLAG_ERROR:
-                        color = mEditor.getColorScheme().getColor(EditorColorScheme.PROBLEM_ERROR);
-                        break;
-                    case Span.FLAG_WARNING:
-                        color = mEditor.getColorScheme().getColor(EditorColorScheme.PROBLEM_WARNING);
-                        break;
-                    case Span.FLAG_TYPO:
-                        color = mEditor.getColorScheme().getColor(EditorColorScheme.PROBLEM_TYPO);
-                        break;
-                }
-                if (color != 0 && span.column >= 0 && spanEnd - span.column >= 0) {
-                    // Start and end X offset
-                    float startOffset = mEditor.measureText(mBuffer, 0, span.column, line);
-                    float lineWidth = mEditor.measureText(mBuffer, Math.max(0, span.column), spanEnd - span.column, line) + phi;
-                    float centerY = mEditor.getRowBottom(row);
-                    // Clip region due not to draw outside the horizontal region
-                    canvas.save();
-                    canvas.clipRect(paintingOffset, 0, paintingOffset + width , canvas.getHeight());
-                    canvas.translate(startOffset - phi, centerY);
-                    // Draw waves
-                    mPath.reset();
-                    mPath.moveTo(0, 0);
-                    int waveCount = (int) Math.ceil(lineWidth / waveLength);
-                    for (int i = 0; i < waveCount; i++) {
-                        mPath.quadTo(waveLength * i + waveLength / 4, amplitude, waveLength * i + waveLength / 2, 0);
-                        mPath.quadTo(waveLength * i + waveLength * 3 / 4, -amplitude, waveLength * i + waveLength, 0);
-                    }
-                    phi = waveLength - (waveCount * waveLength - lineWidth);
-                    // Draw path
-                    mPaintOther.setStrokeWidth(mEditor.getDpUnit() * waveWidth);
-                    mPaintOther.setStyle(Paint.Style.STROKE);
-                    mPaintOther.setColor(color);
-                    canvas.drawPath(mPath, mPaintOther);
-                    canvas.restore();
-                }
-                mPaintOther.setStyle(Paint.Style.FILL);
-            } else {
-                phi = 0f;
             }
 
             // Invoke external renderer postDraw
@@ -500,6 +449,7 @@ public class EditorPainter {
         MutableInt firstLn = mEditor.isFirstLineNumberAlwaysVisible() && mEditor.isWordwrap() ? new MutableInt(-1) : null;
 
         drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor, postDrawCurrentLines, firstLn);
+        drawDiagnosticIndicators(canvas, offsetX);
 
         offsetX = -mEditor.getOffsetX();
 
@@ -740,9 +690,6 @@ public class EditorPainter {
      */
     protected void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<DrawCursorTask> postDrawCursor, LongArrayList postDrawCurrentLines, MutableInt requiredFirstLn) {
         int firstVis = mEditor.getFirstVisibleRow();
-        final float waveLength = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveLength;
-        final float amplitude = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveAmplitude;
-        final float waveWidth = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveWidth;
         RowIterator rowIterator = mEditor.getLayout().obtainRowIterator(firstVis);
         Spans spans = mEditor.getStyles() == null ? null : mEditor.getStyles().spans;
         var matchedPositions = new LongArrayList();
@@ -874,24 +821,8 @@ public class EditorPainter {
                     reader = new EmptyReader();
                 }
                 // Seek for first span
-                float phi = 0f;
                 while (spanOffset + 1 < reader.getSpanCount()) {
                     if (reader.getSpanAt(spanOffset + 1).column <= firstVisibleChar) {
-                        // Update phi
-                        Span span = reader.getSpanAt(spanOffset);
-                        if (span.problemFlags > 0 && Integer.highestOneBit(span.problemFlags) != Span.FLAG_DEPRECATED) {
-                            float lineWidth;
-                            int spanEnd = Math.min(rowInf.endColumn, reader.getSpanAt(spanOffset + 1).column);
-                            if (mEditor.isWordwrap()) {
-                                lineWidth = mEditor.measureText(mBuffer, Math.max(firstVisibleChar, span.column), spanEnd - Math.max(firstVisibleChar, span.column), line) + phi;
-                            } else {
-                                lineWidth = mEditor.measureText(mBuffer, span.column, spanEnd - span.column, line) + phi;
-                            }
-                            int waveCount = (int) Math.ceil(lineWidth / waveLength);
-                            phi = waveLength - (waveCount * waveLength - lineWidth);
-                        } else {
-                            phi = 0f;
-                        }
                         spanOffset++;
                     } else {
                         break;
@@ -954,7 +885,7 @@ public class EditorPainter {
                     drawRegionText(canvas, paintingOffset, mEditor.getRowBaseline(row) - mEditor.getOffsetY(), line, paintStart, paintEnd, span.column, spanEnd, false, columnCount, mEditor.getColorScheme().getColor(span.getForegroundColorId()));
 
                     // Draw strikethrough
-                    if ((span.problemFlags & Span.FLAG_DEPRECATED) != 0 || TextStyle.isStrikeThrough(styleBits)) {
+                    if (TextStyle.isStrikeThrough(styleBits)) {
                         mPaintOther.setColor(Color.BLACK);
                         canvas.drawLine(paintingOffset, mEditor.getRowTop(row) + mEditor.getRowHeight() / 2f - mEditor.getOffsetY(),
                                 paintingOffset + width, mEditor.getRowTop(row) + mEditor.getRowHeight() / 2f - mEditor.getOffsetY(), mPaintOther);
@@ -967,57 +898,6 @@ public class EditorPainter {
                         mRect.left = paintingOffset;
                         mRect.right = paintingOffset + width;
                         drawColor(canvas, span.underlineColor, mRect);
-                    }
-
-                    // Draw issue curly underline
-                    if (waveWidth > 0 && span.problemFlags > 0 && Integer.highestOneBit(span.problemFlags) != Span.FLAG_DEPRECATED) {
-                        int color = 0;
-                        switch (Integer.highestOneBit(span.problemFlags)) {
-                            case Span.FLAG_ERROR:
-                                color = mEditor.getColorScheme().getColor(EditorColorScheme.PROBLEM_ERROR);
-                                break;
-                            case Span.FLAG_WARNING:
-                                color = mEditor.getColorScheme().getColor(EditorColorScheme.PROBLEM_WARNING);
-                                break;
-                            case Span.FLAG_TYPO:
-                                color = mEditor.getColorScheme().getColor(EditorColorScheme.PROBLEM_TYPO);
-                                break;
-                        }
-                        if (color != 0 && span.column >= 0 && spanEnd - span.column >= 0) {
-                            // Start and end X offset
-                            float startOffset;
-                            float lineWidth;
-                            if (mEditor.isWordwrap()) {
-                                startOffset = mEditor.measureTextRegionOffset() + mEditor.measureText(mBuffer, firstVisibleChar, Math.max(0, span.column - firstVisibleChar), line) - mEditor.getOffsetX();
-                                lineWidth = mEditor.measureText(mBuffer, Math.max(firstVisibleChar, span.column), spanEnd - Math.max(firstVisibleChar, span.column), line) + phi;
-                            } else {
-                                startOffset = mEditor.measureTextRegionOffset() + mEditor.measureText(mBuffer, 0, span.column, line) - mEditor.getOffsetX();
-                                lineWidth = mEditor.measureText(mBuffer, span.column, spanEnd - span.column, line) + phi;
-                            }
-                            float centerY = mEditor.getRowBottom(row) - mEditor.getOffsetY();
-                            // Clip region due not to draw outside the horizontal region
-                            canvas.save();
-                            canvas.clipRect(paintingOffset, 0, paintingOffset + width, canvas.getHeight());
-                            canvas.translate(startOffset - phi, centerY);
-                            // Draw waves
-                            mPath.reset();
-                            mPath.moveTo(0, 0);
-                            int waveCount = (int) Math.ceil(lineWidth / waveLength);
-                            for (int i = 0; i < waveCount; i++) {
-                                mPath.quadTo(waveLength * i + waveLength / 4, amplitude, waveLength * i + waveLength / 2, 0);
-                                mPath.quadTo(waveLength * i + waveLength * 3 / 4, -amplitude, waveLength * i + waveLength, 0);
-                            }
-                            phi = waveLength - (waveCount * waveLength - lineWidth);
-                            // Draw path
-                            mPaintOther.setStrokeWidth(waveWidth);
-                            mPaintOther.setStyle(Paint.Style.STROKE);
-                            mPaintOther.setColor(color);
-                            canvas.drawPath(mPath, mPaintOther);
-                            canvas.restore();
-                        }
-                        mPaintOther.setStyle(Paint.Style.FILL);
-                    } else {
-                        phi = 0f;
                     }
 
                     // Invoke external renderer postDraw
@@ -1136,6 +1016,108 @@ public class EditorPainter {
         mPaint.setTextSkewX(0);
         mPaintOther.setStrokeWidth(circleRadius * 2);
         mDrawPoints.commitPoints(canvas, mPaintOther);
+    }
+
+    private final static int[] sDiagnosticsColorMapping = {
+            0,
+            EditorColorScheme.PROBLEM_TYPO,
+            EditorColorScheme.PROBLEM_WARNING,
+            EditorColorScheme.PROBLEM_ERROR
+    };
+
+    protected void drawDiagnosticIndicators(Canvas canvas, float offset) {
+        var diagnosticsContainer = mEditor.getDiagnostics();
+        var style = mEditor.getDiagnosticStyle();
+        if (diagnosticsContainer != null && style != DiagnosticIndicatorStyle.NONE && style != null) {
+            var text = mEditor.getText();
+            var firstIndex = text.getCharIndex(mEditor.getFirstVisibleLine(), 0);
+            var lastIndex = text.getCharIndex(Math.min(text.getLineCount() - 1, mEditor.getLastVisibleLine()), 0);
+            diagnosticsContainer.queryInRegion(mCollectedDiagnostics, firstIndex, lastIndex);
+            if (mCollectedDiagnostics.isEmpty()) {
+                return;
+            }
+            final float waveLength = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveLength;
+            final float amplitude = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveAmplitude;
+            final float waveWidth = mEditor.getDpUnit() * mEditor.getProps().indicatorWaveWidth;
+            var start = new CharPosition();
+            var end = new CharPosition();
+            var indexer = mCursor.getIndexer();
+            var startPos = new float[2];
+            var endPos = new float[2];
+            var rowHeight = mEditor.getRowHeight();
+            for (var region : mCollectedDiagnostics) {
+                var startIndex = Math.max(firstIndex, region.startIndex);
+                var endIndex = Math.min(lastIndex, region.endIndex);
+                indexer.getCharPosition(startIndex, start);
+                indexer.getCharPosition(endIndex, end);
+                var startRow = (int) (mEditor.getLayout().getCharLayoutOffset(start.line, start.column, startPos)[0] / rowHeight);
+                var endRow = (int) (mEditor.getLayout().getCharLayoutOffset(end.line, end.column, endPos)[0] / rowHeight);
+                // Setup color
+                var colorId = (region.severity >= 0 && region.severity <= 3) ? sDiagnosticsColorMapping[region.severity] : 0;
+                if (colorId == 0) {
+                    break;
+                }
+                mPaintOther.setColor(mEditor.getColorScheme().getColor(colorId));
+                for (int i = startRow;i <= endRow;i++) {
+                    var startX = 0f;
+                    if (i == startRow) {
+                        startX = startPos[1];
+                    }
+                    var endX = endPos[1];
+                    if (i != endRow) {
+                        var row = mEditor.getLayout().getRowAt(i);
+                        endX = mEditor.measureText(text.getLine(row.lineIndex), row.startColumn, row.endColumn - row.startColumn, row.lineIndex);
+                    }
+                    startX += offset;
+                    endX += offset;
+                    // Make it always visible
+                    if (Math.abs(startX - endX) < 1e2) {
+                        endX = startX + mPaint.measureText("a");
+                    }
+                    if (endX > 0 && startX < mEditor.getWidth()) {
+                        // Draw
+                        float centerY = mEditor.getRowBottom(i) - mEditor.getOffsetY();
+                        switch (style) {
+                            case WAVY_LINE:{
+                                var lineWidth = 0 - startX;
+                                var waveCount = (int) Math.ceil(lineWidth / waveLength);
+                                var phi = lineWidth < 0 ? 0f : (waveLength - (waveCount * waveLength - lineWidth));
+                                lineWidth = endX - startX;
+                                canvas.save();
+                                canvas.clipRect(offset, 0, offset + lineWidth, canvas.getHeight());
+                                canvas.translate(startX - phi, centerY);
+                                mPath.reset();
+                                mPath.moveTo(0, 0);
+                                waveCount = (int) Math.ceil(lineWidth / waveLength);
+                                for (int j = 0;j < waveCount; j++) {
+                                    mPath.quadTo(waveLength * j + waveLength / 4, amplitude, waveLength * j + waveLength / 2, 0);
+                                    mPath.quadTo(waveLength * j + waveLength * 3 / 4, -amplitude, waveLength * j + waveLength, 0);
+                                }
+                                // Draw path
+                                mPaintOther.setStrokeWidth(waveWidth);
+                                mPaintOther.setStyle(Paint.Style.STROKE);
+                                canvas.drawPath(mPath, mPaintOther);
+                                canvas.restore();
+                                mPaintOther.setStyle(Paint.Style.STROKE);
+                                break;
+                            }
+                            case LINE: {
+                                mPaintOther.setStrokeWidth(waveWidth);
+                                canvas.drawLine(startX, centerY, endX, centerY, mPaintOther);
+                                break;
+                            }
+                            case DOUBLE_LINE: {
+                                mPaintOther.setStrokeWidth(waveWidth / 3f);
+                                canvas.drawLine(startX, centerY, endX, centerY, mPaintOther);
+                                canvas.drawLine(startX, centerY - waveWidth / 5f, endX, centerY - waveWidth / 5f, mPaintOther);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        mCollectedDiagnostics.clear();
     }
 
     /**

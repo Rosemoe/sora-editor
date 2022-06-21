@@ -127,6 +127,16 @@ public class LineBreakLayout extends AbstractLayout {
     }
 
     @Override
+    public Row getRowAt(int rowIndex) {
+        var row = new Row();
+        row.lineIndex = rowIndex;
+        row.startColumn = 0;
+        row.isLeadingRow = true;
+        row.endColumn = text.getColumnCount(rowIndex);
+        return row;
+    }
+
+    @Override
     public void destroyLayout() {
         super.destroyLayout();
         widthMaintainer = null;

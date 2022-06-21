@@ -23,6 +23,9 @@
  */
 package io.github.rosemoe.sora.lang.analysis;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.styling.Styles;
 
@@ -41,12 +44,16 @@ public interface StyleReceiver {
 
     /**
      * Send the styles to the receiver. You can call it in any thread.
-     * The implementation of this should make sure that concurrent invocations to it are safe.
+     * The implementation of this method should make sure that concurrent invocations to it are safe.
+     * @param sourceManager Source AnalyzeManager. The receiver may ignore the request if some checks on
+     *                      the sourceManager fail
      */
-    void setStyles(AnalyzeManager sourceManager, Styles styles);
+    void setStyles(@NonNull AnalyzeManager sourceManager, @Nullable Styles styles);
 
-    default void setDiagnostics(DiagnosticsContainer diagnostics) {
-
-    }
+    /**
+     * Specify new diagnostics. You can call it in any thread.
+     * The implementation of this method should make sure that concurrent invocations to it are safe.
+     */
+    void setDiagnostics(@NonNull AnalyzeManager sourceManager, @Nullable DiagnosticsContainer diagnostics);
 
 }

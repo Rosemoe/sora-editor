@@ -39,50 +39,14 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
  */
 public class Span {
 
-    /**
-     * Flag for {@link Span#problemFlags}.
-     *
-     * Indicates this span is in ERROR region
-     */
-    public static final int FLAG_ERROR = 1 << 3;
-    /**
-     * Flag for {@link Span#problemFlags}.
-     *
-     * Indicates this span is in WARNING region
-     */
-    public static final int FLAG_WARNING = 1 << 2;
-    /**
-     * Flag for {@link Span#problemFlags}.
-     *
-     * Indicates this span is in TYPO region
-     */
-    public static final int FLAG_TYPO = 1 << 1;
-    /**
-     * Flag for {@link Span#problemFlags}.
-     *
-     * Indicates this span is in DEPRECATED region
-     */
-    public static final int FLAG_DEPRECATED = 1;
-
-
     private static final BlockingQueue<Span> cacheQueue = new ArrayBlockingQueue<>(8192 * 2);
+
     public int column;
     /**
      * @see TextStyle
      */
     public long style;
     public int underlineColor;
-
-    /**
-     * Set this value to draw curly lines for this span to indicate code problems.
-     *
-     * @see Span#FLAG_ERROR
-     * @see Span#FLAG_WARNING
-     * @see Span#FLAG_TYPO
-     * @see Span#FLAG_DEPRECATED
-     * @see MappedSpans.Builder#markProblemRegion(int, int, int, int, int) 
-     */
-    public int problemFlags = 0;
     public ExternalRenderer renderer = null;
 
     /**
@@ -113,6 +77,9 @@ public class Span {
         }
     }
 
+    /**
+     * Recycle all spans in the given collection
+     */
     public static void recycleAll(Collection<Span> spans) {
         for (Span span : spans) {
             if (!span.recycle()) {
@@ -127,8 +94,9 @@ public class Span {
      *
      * @param color Color for this underline (not color id of {@link EditorColorScheme})
      */
-    public void setUnderlineColor(int color) {
+    public Span setUnderlineColor(int color) {
         underlineColor = color;
+        return this;
     }
 
     /**
@@ -152,9 +120,8 @@ public class Span {
      * Make a copy of this span
      */
     public Span copy() {
-        Span copy = obtain(column, style);
+        var copy = obtain(column, style);
         copy.setUnderlineColor(underlineColor);
-        copy.problemFlags = problemFlags;
         copy.renderer = renderer;
         return copy;
     }
@@ -164,7 +131,7 @@ public class Span {
      * @return Is successful?
      */
     public boolean recycle() {
-        problemFlags = column = underlineColor = 0;
+        column = underlineColor = 0;
         style = 0;
         renderer = null;
         return cacheQueue.offer(this);
@@ -186,8 +153,8 @@ public class Span {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Span span = (Span) o;
-        return column == span.column && style == span.style && underlineColor == span.underlineColor && problemFlags == span.problemFlags && Objects.equals(renderer, span.renderer);
+        var span = (Span) o;
+        return column == span.column && style == span.style && underlineColor == span.underlineColor && Objects.equals(renderer, span.renderer);
     }
 
     @Override
@@ -195,7 +162,6 @@ public class Span {
         int hash = 31 * column;
         hash = 31 * hash + Long.hashCode(style);
         hash = 31 * hash + underlineColor;
-        hash = 31 * hash + problemFlags;
         hash = 31 * hash + (renderer == null ? 0 : renderer.hashCode());
         return hash;
     }
@@ -207,7 +173,6 @@ public class Span {
                 "column=" + column +
                 ", style=" + style +
                 ", underlineColor=" + underlineColor +
-                ", problemFlags=" + problemFlags +
                 ", renderer=" + renderer +
                 "}";
     }

@@ -33,7 +33,7 @@ import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
- * Store spans by map.
+ * Store spans by mapping.
  *
  * @see Builder
  */
@@ -92,64 +92,12 @@ public class MappedSpans implements Spans {
     }
 
     /**
-     * A mirror method of {@link Builder#markProblemRegion(int, int, int, int, int)}
-     */
-    public void markProblemRegion(int newFlag, int startLine, int startColumn, int endLine, int endColumn) {
-        for (int line = startLine; line <= endLine; line++) {
-            int start = (line == startLine ? startColumn : 0);
-            int end = (line == endLine ? endColumn : Integer.MAX_VALUE);
-            List<Span> spans = spanMap.get(line);
-            int increment;
-            for (int i = 0; i < spans.size(); i += increment) {
-                Span span = spans.get(i);
-                increment = 1;
-                if (span.column >= end) {
-                    break;
-                }
-                int spanEnd = (i + 1 >= spans.size() ? Integer.MAX_VALUE : spans.get(i + 1).column);
-                if (spanEnd >= start) {
-                    int regionStartInSpan = Math.max(span.column, start);
-                    int regionEndInSpan = Math.min(end, spanEnd);
-                    if (regionStartInSpan == span.column) {
-                        if (regionEndInSpan != spanEnd) {
-                            increment = 2;
-                            Span nSpan = span.copy();
-                            nSpan.column = regionEndInSpan;
-                            spans.add(i + 1, nSpan);
-                        }
-                        span.problemFlags |= newFlag;
-                    } else {
-                        //regionStartInSpan > span.column
-                        if (regionEndInSpan == spanEnd) {
-                            increment = 2;
-                            Span nSpan = span.copy();
-                            nSpan.column = regionStartInSpan;
-                            spans.add(i + 1, nSpan);
-                            nSpan.problemFlags |= newFlag;
-                        } else {
-                            increment = 3;
-                            Span span1 = span.copy();
-                            span1.column = regionStartInSpan;
-                            span1.problemFlags |= newFlag;
-                            Span span2 = span.copy();
-                            span2.column = regionEndInSpan;
-                            spans.add(i + 1, span1);
-                            spans.add(i + 2, span2);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * Allow you to build a span map linearly.
      */
     public static class Builder {
 
         private final List<List<Span>> spans;
         private Span last;
-        private boolean determined = false;
 
         public Builder() {
             this(128);
@@ -229,7 +177,6 @@ public class MappedSpans implements Spans {
                 spans.add(lineSpans);
                 mapLine++;
             }
-            determined = true;
         }
 
         /**
@@ -240,61 +187,6 @@ public class MappedSpans implements Spans {
                 List<Span> spanList = new ArrayList<>();
                 spanList.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
                 spans.add(spanList);
-            }
-        }
-
-        /**
-         * Marks a region with the given flag.
-         * This can only be called after {@link Builder#determine(int)} is called.
-         */
-        public void markProblemRegion(int newFlag, int startLine, int startColumn, int endLine, int endColumn) {
-            if (!determined) {
-                throw new IllegalStateException("determine() has not been successfully called");
-            }
-            for (int line = startLine; line <= endLine; line++) {
-                int start = (line == startLine ? startColumn : 0);
-                int end = (line == endLine ? endColumn : Integer.MAX_VALUE);
-                List<Span> spans = this.spans.get(line);
-                int increment;
-                for (int i = 0; i < spans.size(); i += increment) {
-                    Span span = spans.get(i);
-                    increment = 1;
-                    if (span.column >= end) {
-                        break;
-                    }
-                    int spanEnd = (i + 1 >= spans.size() ? Integer.MAX_VALUE : spans.get(i + 1).column);
-                    if (spanEnd >= start) {
-                        int regionStartInSpan = Math.max(span.column, start);
-                        int regionEndInSpan = Math.min(end, spanEnd);
-                        if (regionStartInSpan == span.column) {
-                            if (regionEndInSpan != spanEnd) {
-                                increment = 2;
-                                Span nSpan = span.copy();
-                                nSpan.column = regionEndInSpan;
-                                spans.add(i + 1, nSpan);
-                            }
-                            span.problemFlags |= newFlag;
-                        } else {
-                            //regionStartInSpan > span.column
-                            if (regionEndInSpan == spanEnd) {
-                                increment = 2;
-                                Span nSpan = span.copy();
-                                nSpan.column = regionStartInSpan;
-                                spans.add(i + 1, nSpan);
-                                nSpan.problemFlags |= newFlag;
-                            } else {
-                                increment = 3;
-                                Span span1 = span.copy();
-                                span1.column = regionStartInSpan;
-                                span1.problemFlags |= newFlag;
-                                Span span2 = span.copy();
-                                span2.column = regionEndInSpan;
-                                spans.add(i + 1, span1);
-                                spans.add(i + 2, span2);
-                            }
-                        }
-                    }
-                }
             }
         }
 
