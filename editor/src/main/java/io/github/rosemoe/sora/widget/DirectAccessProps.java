@@ -172,7 +172,7 @@ public class DirectAccessProps implements Serializable {
      */
     @InvalidateRequired
     @FloatRange(from = 0.0f, fromInclusive = false)
-    public float indicatorWaveWidth = 0.6f;
+    public float indicatorWaveWidth = 0.9f;
 
     /**
      * Wave amplitude of problem indicators.

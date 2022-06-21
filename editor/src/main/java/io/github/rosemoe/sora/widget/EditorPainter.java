@@ -1027,7 +1027,7 @@ public class EditorPainter {
 
     protected void drawDiagnosticIndicators(Canvas canvas, float offset) {
         var diagnosticsContainer = mEditor.getDiagnostics();
-        var style = mEditor.getDiagnosticStyle();
+        var style = mEditor.getDiagnosticIndicatorStyle();
         if (diagnosticsContainer != null && style != DiagnosticIndicatorStyle.NONE && style != null) {
             var text = mEditor.getText();
             var firstIndex = text.getCharIndex(mEditor.getFirstVisibleLine(), 0);
@@ -1050,8 +1050,8 @@ public class EditorPainter {
                 var endIndex = Math.min(lastIndex, region.endIndex);
                 indexer.getCharPosition(startIndex, start);
                 indexer.getCharPosition(endIndex, end);
-                var startRow = (int) (mEditor.getLayout().getCharLayoutOffset(start.line, start.column, startPos)[0] / rowHeight);
-                var endRow = (int) (mEditor.getLayout().getCharLayoutOffset(end.line, end.column, endPos)[0] / rowHeight);
+                var startRow = (int) (mEditor.getLayout().getCharLayoutOffset(start.line, start.column, startPos)[0] / rowHeight) - 1;
+                var endRow = (int) (mEditor.getLayout().getCharLayoutOffset(end.line, end.column, endPos)[0] / rowHeight) - 1;
                 // Setup color
                 var colorId = (region.severity >= 0 && region.severity <= 3) ? sDiagnosticsColorMapping[region.severity] : 0;
                 if (colorId == 0) {
@@ -1071,7 +1071,7 @@ public class EditorPainter {
                     startX += offset;
                     endX += offset;
                     // Make it always visible
-                    if (Math.abs(startX - endX) < 1e2) {
+                    if (Math.abs(startX - endX) < 1e-2) {
                         endX = startX + mPaint.measureText("a");
                     }
                     if (endX > 0 && startX < mEditor.getWidth()) {
@@ -1081,14 +1081,14 @@ public class EditorPainter {
                             case WAVY_LINE:{
                                 var lineWidth = 0 - startX;
                                 var waveCount = (int) Math.ceil(lineWidth / waveLength);
-                                var phi = lineWidth < 0 ? 0f : (waveLength - (waveCount * waveLength - lineWidth));
+                                var phi = lineWidth < 0 ? 0f : (waveLength * waveCount - lineWidth);
                                 lineWidth = endX - startX;
                                 canvas.save();
-                                canvas.clipRect(offset, 0, offset + lineWidth, canvas.getHeight());
-                                canvas.translate(startX - phi, centerY);
+                                canvas.clipRect(startX, 0, endX, canvas.getHeight());
+                                canvas.translate(startX, centerY);
                                 mPath.reset();
                                 mPath.moveTo(0, 0);
-                                waveCount = (int) Math.ceil(lineWidth / waveLength);
+                                waveCount = (int) Math.ceil((phi + lineWidth) / waveLength);
                                 for (int j = 0;j < waveCount; j++) {
                                     mPath.quadTo(waveLength * j + waveLength / 4, amplitude, waveLength * j + waveLength / 2, 0);
                                     mPath.quadTo(waveLength * j + waveLength * 3 / 4, -amplitude, waveLength * j + waveLength, 0);
@@ -1098,7 +1098,7 @@ public class EditorPainter {
                                 mPaintOther.setStyle(Paint.Style.STROKE);
                                 canvas.drawPath(mPath, mPaintOther);
                                 canvas.restore();
-                                mPaintOther.setStyle(Paint.Style.STROKE);
+                                mPaintOther.setStyle(Paint.Style.FILL);
                                 break;
                             }
                             case LINE: {
@@ -1109,7 +1109,7 @@ public class EditorPainter {
                             case DOUBLE_LINE: {
                                 mPaintOther.setStrokeWidth(waveWidth / 3f);
                                 canvas.drawLine(startX, centerY, endX, centerY, mPaintOther);
-                                canvas.drawLine(startX, centerY - waveWidth / 5f, endX, centerY - waveWidth / 5f, mPaintOther);
+                                canvas.drawLine(startX, centerY - waveWidth, endX, centerY - waveWidth, mPaintOther);
                                 break;
                             }
                         }

@@ -2147,7 +2147,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         invalidate();
     }
 
-    public DiagnosticIndicatorStyle getDiagnosticStyle() {
+    public DiagnosticIndicatorStyle getDiagnosticIndicatorStyle() {
         return mDiagnosticStyle;
     }
 
