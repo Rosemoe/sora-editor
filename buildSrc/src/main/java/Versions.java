@@ -39,10 +39,10 @@ public final class Versions {
 
 
     // TextMate Dependency versions(from tm4e 0.4.2)
-    public final static String gsonVersion = "2.8.6";
-    public final static String jcodingsVersion = "1.0.18";
-    public final static String joniVersion = "2.1.11";
+    public final static String gsonVersion = "2.9.0";
+    public final static String jcodingsVersion = "1.0.57";
+    public final static String joniVersion = "2.1.43";
     public final static String batikCssVersion = "1.14";
     public final static String batikUtilVersion = "1.14";
-    public final static String xercesImplVersion = "2.12.1";
+    public final static String xercesImplVersion = "2.12.2";
 }
