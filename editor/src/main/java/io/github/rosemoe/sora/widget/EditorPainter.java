@@ -105,7 +105,7 @@ public class EditorPainter {
     
     private Cursor mCursor;
     private ContentLine mBuffer;
-    private List<DiagnosticRegion> mCollectedDiagnostics = new ArrayList<>();
+    private final List<DiagnosticRegion> mCollectedDiagnostics = new ArrayList<>();
 
     public EditorPainter(@NonNull CodeEditor editor) {
         mEditor = editor;
