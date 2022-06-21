@@ -849,6 +849,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
 
         this.mLanguage = lang;
         this.mStyles = null;
+        this.mDiagnostics = null;
 
         if (mCompletionWindow != null) {
             mCompletionWindow.hide();
