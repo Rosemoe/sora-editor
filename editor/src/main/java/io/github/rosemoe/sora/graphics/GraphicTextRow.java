@@ -144,6 +144,9 @@ public class GraphicTextRow {
                     break;
                 }
             }
+            if (cache[left] - base > advance) {
+                left--;
+            }
             left = Math.max(start, Math.min(end, left));
             mBuffer[0] = left;
             mBuffer[1] = cache[left] - base;
