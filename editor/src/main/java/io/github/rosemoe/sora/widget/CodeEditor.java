@@ -3848,6 +3848,9 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
             if (mStyles != null) {
                 mStyles.adjustOnInsert(start, end);
             }
+            if (mDiagnostics != null) {
+                mDiagnostics.shiftOnInsert(start.index, end.index);
+            }
         } catch (Exception e) {
             Log.w(LOG_TAG, "Update failure", e);
         }
@@ -3904,6 +3907,9 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         try {
             if (mStyles != null) {
                 mStyles.adjustOnDelete(start, end);
+            }
+            if (mDiagnostics != null) {
+                mDiagnostics.shiftOnDelete(start.index, end.index);
             }
         } catch (Exception e) {
             Log.w(LOG_TAG, "Update failure", e);
