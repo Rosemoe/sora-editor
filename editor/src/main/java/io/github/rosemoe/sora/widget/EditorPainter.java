@@ -95,6 +95,7 @@ public class EditorPainter {
 
     private final LongArrayList mPostDrawLineNumbers = new LongArrayList();
     private final LongArrayList mPostDrawCurrentLines = new LongArrayList();
+    private final LongArrayList mMatchedPositions = new LongArrayList();
 
     private final CodeEditor mEditor;
     private Paint.FontMetricsInt mLineNumberMetrics;
@@ -692,7 +693,8 @@ public class EditorPainter {
         int firstVis = mEditor.getFirstVisibleRow();
         RowIterator rowIterator = mEditor.getLayout().obtainRowIterator(firstVis);
         Spans spans = mEditor.getStyles() == null ? null : mEditor.getStyles().spans;
-        var matchedPositions = new LongArrayList();
+        var matchedPositions = mMatchedPositions;
+        matchedPositions.clear();
         int currentLine = mCursor.isSelected() ? -1 : mCursor.getLeftLine();
         int currentLineBgColor = mEditor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE);
         int lastPreparedLine = -1;
