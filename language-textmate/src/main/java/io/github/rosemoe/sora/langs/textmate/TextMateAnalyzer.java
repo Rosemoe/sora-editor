@@ -34,7 +34,6 @@ import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
-import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.langs.textmate.folding.IndentRange;
 import io.github.rosemoe.sora.text.Content;
 import org.eclipse.tm4e.core.grammar.IGrammar;
@@ -132,7 +131,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<StackElemen
     }
 
     @Override
-    public synchronized LineTokenizeResult<StackElement, Span> tokenizeLine(CharSequence lineC, StackElement state) {
+    public synchronized LineTokenizeResult<StackElement, Span> tokenizeLine(CharSequence lineC, StackElement state, int lineIndex) {
         String line = lineC.toString();
         var tokens = new ArrayList<Span>();
         ITokenizeLineResult2 lineTokens = grammar.tokenizeLine2(line, state);

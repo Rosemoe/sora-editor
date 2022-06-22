@@ -55,13 +55,22 @@ public interface IncrementalAnalyzeManager<S, T> extends AnalyzeManager {
 
     /**
      * Tokenize for the given line
+     * @param lineIndex -1 for unknown
      */
-    LineTokenizeResult<S, T> tokenizeLine(CharSequence line, S state);
+    LineTokenizeResult<S, T> tokenizeLine(CharSequence line, S state, int lineIndex);
 
     /**
      * Generate spans for the line
      */
     List<Span> generateSpansForLine(LineTokenizeResult<S, T> tokens);
+
+    default void onAbandonState(S state) {
+
+    }
+
+    default void onAddState(S state) {
+
+    }
 
     /**
      * Saved state

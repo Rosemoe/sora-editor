@@ -23,8 +23,6 @@
  */
 package io.github.rosemoe.sora.langs.java;
 
-import android.util.SparseArray;
-
 import androidx.annotation.NonNull;
 
 import java.util.List;
@@ -46,7 +44,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
     private final static int STATE_INCOMPLETE_COMMENT = 1;
 
     private final ThreadLocal<JavaTextTokenizer> tokenizerProvider = new ThreadLocal<>();
-    protected IdentifierAutoComplete.Identifiers identifiers;
+    protected IdentifierAutoComplete.SyncIdentifiers identifiers = new IdentifierAutoComplete.SyncIdentifiers();
 
     private synchronized JavaTextTokenizer obtainTokenizer() {
         var res = tokenizerProvider.get();
@@ -63,8 +61,6 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
         var blocks = new ArrayList<CodeBlock>();
         var maxSwitch = 0;
         var currSwitch = 0;
-        var identifiers = new IdentifierAutoComplete.Identifiers();
-        identifiers.begin();
         for (int i = 0; i < text.getLineCount() && delegate.isNotCancelled(); i++) {
             var state = getState(i);
             boolean checkForIdentifiers = state.state.state == STATE_NORMAL || (state.state.state == STATE_INCOMPLETE_COMMENT && state.tokens.size() > 1);
@@ -96,17 +92,9 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                                 blocks.add(block);
                             }
                         }
-                    } else if (token == ORDINAL_IDT) {
-                        var offset = IntPair.getSecond(tokenRecord);
-                        var end = i1 + 1 < state.tokens.size() ? IntPair.getSecond(state.tokens.get(i1 + 1)) : text.getColumnCount(i);
-                        identifiers.addIdentifier(new String(text.getLine(i).getRawData(), offset, end - offset));
                     }
                 }
             }
-        }
-        identifiers.finish();
-        if (delegate.isNotCancelled()) {
-            this.identifiers = identifiers;
         }
         return blocks;
     }
@@ -123,7 +111,25 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
     }
 
     @Override
-    public LineTokenizeResult<State, Long> tokenizeLine(CharSequence line, State state) {
+    public void onAddState(State state) {
+        if (state.identifiers != null) {
+            for (String identifier : state.identifiers) {
+                identifiers.identifierIncrease(identifier);
+            }
+        }
+    }
+
+    @Override
+    public void onAbandonState(State state) {
+        if (state.identifiers != null) {
+            for (String identifier : state.identifiers) {
+                identifiers.identifierDecrease(identifier);
+            }
+        }
+    }
+
+    @Override
+    public LineTokenizeResult<State, Long> tokenizeLine(CharSequence line, State state, int lineIndex) {
         var tokens = new ArrayList<Long>();
         int newState = 0;
         var stateObj = new State();
@@ -174,6 +180,9 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
             tokens.add(token(token, tokenizer.offset));
             if (token == Tokens.LBRACE || token == Tokens.RBRACE) {
                 st.hasBraces = true;
+            }
+            if (token == Tokens.IDENTIFIER) {
+                st.addIdentifier(tokenizer.getTokenText());
             }
             if (token == Tokens.LONG_COMMENT_INCOMPLETE) {
                 state = STATE_INCOMPLETE_COMMENT;

@@ -112,6 +112,21 @@ public class TextUtils {
         return -1;
     }
 
+    public static boolean startsWith(@NonNull CharSequence text, @NonNull CharSequence pattern, boolean ignoreCase) {
+        if (text.length() < pattern.length()) {
+            return false;
+        }
+        var len = pattern.length();
+        for (int i = 0;i < len;i++) {
+            char s = text.charAt(i);
+            char p = pattern.charAt(i);
+            if (!((s == p) || (ignoreCase && Character.toLowerCase(s) == Character.toLowerCase(p)))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private static boolean isWhitespace(char ch) {
         return ch == '\t' || ch == ' ';
     }

@@ -21,42 +21,22 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.java;
+package io.github.rosemoe.sora.util;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+public class MutableInt {
 
-public class State {
+    public int value;
 
-    public int state = 0;
-
-    public boolean hasBraces = false;
-
-    public List<String> identifiers = null;
-
-    public void addIdentifier(CharSequence idt) {
-        if (identifiers == null) {
-            identifiers = new ArrayList<>();
-        }
-        if (idt instanceof String) {
-            identifiers.add((String) idt);
-        } else {
-            identifiers.add(idt.toString());
-        }
+    public MutableInt(int v) {
+        value = v;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        // `identifiers` is ignored because it is unrelated to tokenization for next line
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        State state1 = (State) o;
-        return state == state1.state && hasBraces == state1.hasBraces;
+    public int decreaseAndGet() {
+        return --value;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(state, hasBraces);
+    public void increase() {
+        value++;
     }
+
 }

@@ -135,11 +135,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Custom cursor animator
-        binding.editor.cursorAnimator =
-            ScaleCursorAnimator(binding.editor)
-        binding.editor.isStickyTextSelection = true
-
         val editor = binding.editor
         var editorColorScheme = editor.colorScheme
         if (editorColorScheme !is TextMateColorScheme) {

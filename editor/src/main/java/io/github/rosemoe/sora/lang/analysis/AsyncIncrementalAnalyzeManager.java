@@ -116,7 +116,10 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
     public LineTokenizeResult<S, T> getState(int line) {
         final var thread = this.thread;
         if (thread == Thread.currentThread()) {
-            return thread.states.get(line);
+            if (line >= 0 && line < thread.states.size()) {
+                return thread.states.get(line);
+            }
+            return null;
         }
         throw new SecurityException("Can not get state from non-analytical or abandoned thread");
     }
@@ -221,10 +224,11 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
             var mdf = spans.modify();
             for (int i = 0;i < shadowed.getLineCount();i++) {
                 var line = shadowed.getLine(i);
-                var result = tokenizeLine(line, state);
+                var result = tokenizeLine(line, state, i);
                 state = result.state;
                 var spans = result.spans != null ? result. spans :generateSpansForLine(result);
                 states.add(result.clearSpans());
+                onAddState(result.state);
                 mdf.addLineAt(i, spans);
             }
             styles.blocks = computeBlocks(shadowed, delegate);
@@ -262,7 +266,11 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                                         S state = startLine == 0 ? getInitialState() : states.get(startLine - 1).state;
                                         // Remove states
                                         if (endLine >= startLine + 1) {
-                                            states.subList(startLine + 1, endLine + 1).clear();
+                                            var subList = states.subList(startLine + 1, endLine + 1);
+                                            for (LineTokenizeResult<S, T> stLineTokenizeResult : subList) {
+                                                onAbandonState(stLineTokenizeResult.state);
+                                            }
+                                            subList.clear();
                                         }
                                         var mdf = spans.modify();
                                         for (int i = startLine + 1;i <= endLine;i++) {
@@ -270,10 +278,14 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                                         }
                                         int line = startLine;
                                         while (line < shadowed.getLineCount()){
-                                            var res = tokenizeLine(shadowed.getLine(line), state);
+                                            var res = tokenizeLine(shadowed.getLine(line), state, line);
                                             mdf.setSpansOnLine(line, res.spans != null ? res.spans : generateSpansForLine(res));
                                             var old = states.set(line, res.clearSpans());
-                                            if (stateEquals(old.state, res.state)) {
+                                            if (old != null) {
+                                                onAbandonState(old.state);
+                                            }
+                                            onAddState(res.state);
+                                            if (stateEquals(old == null ? null : old.state, res.state)) {
                                                 break;
                                             }
                                             state = res.state;
@@ -286,25 +298,33 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                                         var spans = styles.spans.modify();
                                         // Add Lines
                                         while (line <= endLine) {
-                                            var res = tokenizeLine(shadowed.getLine(line), state);
+                                            var res = tokenizeLine(shadowed.getLine(line), state, line);
                                             if (line == startLine) {
                                                 spans.setSpansOnLine(line, res.spans != null ? res.spans : generateSpansForLine(res));
-                                                states.set(line, res.clearSpans());
+                                                var old = states.set(line, res.clearSpans());
+                                                if (old != null) {
+                                                    onAbandonState(old.state);
+                                                }
                                             } else {
                                                 spans.addLineAt(line, res.spans != null ? res.spans : generateSpansForLine(res));
                                                 states.add(line, res.clearSpans());
                                             }
+                                            onAddState(res.state);
                                             state = res.state;
                                             line++;
                                         }
                                         // line = end.line + 1, check whether the state equals
                                         while (line < shadowed.getLineCount()) {
-                                            var res = tokenizeLine(shadowed.getLine(line), state);
+                                            var res = tokenizeLine(shadowed.getLine(line), state, line);
                                             if (stateEquals(res.state, states.get(line).state)) {
                                                 break;
                                             } else {
                                                 spans.setSpansOnLine(line, res.spans != null ? res.spans : generateSpansForLine(res));
-                                                states.set(line, res.clearSpans());
+                                                var old = states.set(line, res.clearSpans());
+                                                if (old != null) {
+                                                    onAbandonState(old.state);
+                                                }
+                                                onAddState(res.state);
                                             }
                                             line ++;
                                         }

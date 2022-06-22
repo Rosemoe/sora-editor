@@ -88,7 +88,7 @@ public class JavaTextTokenizer {
         return MyCharacter.isJavaIdentifierStart(ch);
     }
 
-    public CharSequence getTokenString() {
+    public CharSequence getTokenText() {
         return source.subSequence(offset, offset + length);
     }
 
