@@ -820,6 +820,7 @@ public class EditorPainter {
                 try {
                     reader.moveToLine(line);
                 } catch (Exception e) {
+                    e.printStackTrace();
                     reader = new EmptyReader();
                 }
                 // Seek for first span
