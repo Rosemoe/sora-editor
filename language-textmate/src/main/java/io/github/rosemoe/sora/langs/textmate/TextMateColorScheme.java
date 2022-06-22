@@ -107,7 +107,7 @@ public class TextMateColorScheme extends EditorColorScheme {
                 if (theme != null) {
                     String color = theme.getColor(type - 255);
                     var newColor = color != null ? Color.parseColor(color) : super.getColor(TEXT_NORMAL);
-                    super.setColor(type, newColor);
+                    super.mColors.put(type, newColor);
                     return newColor;
                 }
                 return super.getColor(TEXT_NORMAL);
