@@ -52,11 +52,6 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<StackElement, Span> {
 
-    /**
-     * Maximum for code block count
-     */
-    public static int MAX_FOLDING_REGIONS_FOR_INDENT_LIMIT = 5000;
-
     private final Registry registry = new Registry();
     private final IGrammar grammar;
     private Theme theme;
@@ -114,7 +109,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<StackElemen
 
     public void analyzeCodeBlocks( Content model, List<CodeBlock> blocks, CodeBlockAnalyzeDelegate delegate) {
         try {
-            var foldingRegions = IndentRange.computeRanges(model, language.getTabSize(), foldingOffside, cachedRegExp, MAX_FOLDING_REGIONS_FOR_INDENT_LIMIT, delegate);
+            var foldingRegions = IndentRange.computeRanges(model, language.getTabSize(), foldingOffside, cachedRegExp, delegate);
             for (int i = 0; i < foldingRegions.length() && delegate.isNotCancelled(); i++) {
                 int startLine = foldingRegions.getStartLineNumber(i);
                 int endLine = foldingRegions.getEndLineNumber(i);

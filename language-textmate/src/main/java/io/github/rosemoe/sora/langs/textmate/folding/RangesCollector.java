@@ -56,6 +56,8 @@ public class RangesCollector {
     }
 
     public FoldingRegions toIndentRanges(Content model) throws Exception {
+        return new FoldingRegions(_startIndexes, _endIndexes);
+        /*
         // reverse and create arrays of the exact length
         SparseIntArray startIndexes = new SparseIntArray(this._length);
         SparseIntArray endIndexes = new SparseIntArray(this._length);
@@ -63,6 +65,6 @@ public class RangesCollector {
             startIndexes.put(k, this._startIndexes.get(i));
             endIndexes.put(k, this._endIndexes.get(i));
         }
-        return new FoldingRegions(startIndexes, endIndexes);
+        return new FoldingRegions(startIndexes, endIndexes);*/
     }
 }
