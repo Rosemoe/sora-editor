@@ -1123,7 +1123,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         var start = IntPair.getFirst(mAvailableFloatArrayRegion);
         var end = IntPair.getSecond(mAvailableFloatArrayRegion);
         var firstVis = getFirstVisibleLine();
-        var lastVis = getLastVisibleRow();
+        var lastVis = getLastVisibleLine();
         start = Math.max(0, start - 5);
         end = Math.min(end + 5, getLineCount());
         for (int i = start; i < end; i++) {
@@ -1155,8 +1155,8 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
             var line = text.getLine(startLine);
             if (line.timestamp < timestamp) {
                 var gtr = GraphicTextRow.obtain();
-                if (line.widthCache == null) {
-                    line.widthCache = obtainFloatArray(Math.max(line.length(), 128));
+                if (line.widthCache == null || line.widthCache.length < line.length()) {
+                    line.widthCache = obtainFloatArray(Math.max(line.length() + 8, 90));
                 }
                 gtr.set(line, 0, line.length(), getTabWidth(), getSpansForLine(startLine), mPainter.getPaint());
                 gtr.buildMeasureCache();
