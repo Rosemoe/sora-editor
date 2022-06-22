@@ -96,7 +96,7 @@ public class IndentRange {
         return indent;
     }
 
-    public static FoldingRegions computeRanges(Content model, int tabSize, boolean offSide, OnigRegExp pattern, AsyncIncrementalAnalyzeManager<?, ?>.CodeBlockAnalyzeDelegate delegate) throws Exception {
+    public static FoldingRegions computeRanges(Content model, int tabSize, boolean offSide, FoldingHelper helper, OnigRegExp pattern, AsyncIncrementalAnalyzeManager<?, ?>.CodeBlockAnalyzeDelegate delegate) throws Exception {
 
         RangesCollector result = new RangesCollector(/*tabSize*/);
 
@@ -106,8 +106,7 @@ public class IndentRange {
         previousRegions.add(new PreviousRegion(-1, line, line));
 
         for (line = model.getLineCount() - 1; line >= 0 && delegate.isNotCancelled(); line--) {
-            String lineContent = model.getLineString(line);
-            int indent = computeIndentLevel(model.getLine(line).getRawData(), model.getColumnCount(line), tabSize);
+            int indent = helper.getIndentFor(line);//computeIndentLevel(model.getLine(line).getRawData(), model.getColumnCount(line), tabSize);
             PreviousRegion previous = previousRegions.get(previousRegions.size() - 1);
             if (indent == -1) {
                 if (offSide) {
@@ -119,7 +118,7 @@ public class IndentRange {
                 continue; // only whitespace
             }
             OnigResult m;
-            if (pattern != null && (m = pattern.search(new OnigString(lineContent), 0)) != null) {
+            if (pattern != null && (m = helper.getResultFor(line)) != null) {
                 // folding pattern match
                 if (m.count() >= 2) { // start pattern match
                     // discard all regions until the folding pattern

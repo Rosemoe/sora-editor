@@ -349,6 +349,14 @@ public class ContentLine implements CharSequence, GetChars {
         return new String(value, 0, length);
     }
 
+    public String toStringWithNewline() {
+        if (value.length == length) {
+            ensureCapacity(length + 1);
+        }
+        value[length] = '\n';
+        return new String(value, 0, length + 1);
+    }
+
     public char[] getRawData() {
         return value;
     }

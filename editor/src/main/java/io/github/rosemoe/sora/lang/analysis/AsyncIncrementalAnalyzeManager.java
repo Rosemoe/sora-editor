@@ -330,8 +330,12 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                                         }
                                     }
                                 }
-                                styles.blocks = computeBlocks(shadowed, delegate);
-                                styles.setSuppressSwitch(delegate.suppressSwitch);
+                                // Do not update incomplete code blocks
+                                var blocks = computeBlocks(shadowed, delegate);
+                                if (delegate.isNotCancelled()) {
+                                    styles.blocks = blocks;
+                                    styles.setSuppressSwitch(delegate.suppressSwitch);
+                                }
                                 tryUpdate();
                                 break;
                             case MSG_EXIT:
