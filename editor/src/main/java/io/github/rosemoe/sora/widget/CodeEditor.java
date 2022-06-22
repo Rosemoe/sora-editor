@@ -3557,6 +3557,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      */
     protected void onSelectionChanged(int cause) {
         dispatchEvent(new SelectionChangeEvent(this, cause));
+
     }
 
     protected void releaseEdgeEffects() {
