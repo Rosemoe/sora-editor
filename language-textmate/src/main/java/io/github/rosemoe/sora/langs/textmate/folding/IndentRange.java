@@ -98,7 +98,7 @@ public class IndentRange {
 
     public static FoldingRegions computeRanges(Content model, int tabSize, boolean offSide, OnigRegExp pattern, AsyncIncrementalAnalyzeManager<?, ?>.CodeBlockAnalyzeDelegate delegate) throws Exception {
 
-        RangesCollector result = new RangesCollector(tabSize);
+        RangesCollector result = new RangesCollector(/*tabSize*/);
 
         List<PreviousRegion> previousRegions = new ArrayList<>();
         int line = model.getLineCount() + 1;

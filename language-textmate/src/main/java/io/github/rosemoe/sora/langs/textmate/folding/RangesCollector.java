@@ -30,15 +30,15 @@ import io.github.rosemoe.sora.text.Content;
 public class RangesCollector {
     private final SparseIntArray _startIndexes;
     private final SparseIntArray _endIndexes;
-    private final SparseIntArray _indentOccurrences;
+    //private final SparseIntArray _indentOccurrences;
     private int _length;
-    private final int tabSize;
+    //private final int tabSize;
 
-    public RangesCollector(int tabSize) {
-        this.tabSize = tabSize;
+    public RangesCollector(/*int tabSize*/) {
+        //this.tabSize = tabSize;
         this._startIndexes = new SparseIntArray();
         this._endIndexes = new SparseIntArray();
-        this._indentOccurrences = new SparseIntArray();
+        //this._indentOccurrences = new SparseIntArray();
         this._length = 0;
     }
 
@@ -50,9 +50,9 @@ public class RangesCollector {
         this._startIndexes.put(index, startLineNumber);
         this._endIndexes.put(index, endLineNumber);
         this._length++;
-        if (indent < 1000) {
+        /*if (indent < 1000) {
             this._indentOccurrences.put(indent, (this._indentOccurrences.get(indent)) + 1);
-        }
+        }*/
     }
 
     public FoldingRegions toIndentRanges(Content model) throws Exception {
