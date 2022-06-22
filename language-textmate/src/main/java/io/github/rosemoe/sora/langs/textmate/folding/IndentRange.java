@@ -96,9 +96,9 @@ public class IndentRange {
         return indent;
     }
 
-    public static FoldingRegions computeRanges(Content model, int tabSize, boolean offSide, OnigRegExp pattern, int foldingRangesLimit, AsyncIncrementalAnalyzeManager<?, ?>.CodeBlockAnalyzeDelegate delegate) throws Exception {
+    public static FoldingRegions computeRanges(Content model, int tabSize, boolean offSide, OnigRegExp pattern, AsyncIncrementalAnalyzeManager<?, ?>.CodeBlockAnalyzeDelegate delegate) throws Exception {
 
-        RangesCollector result = new RangesCollector(foldingRangesLimit, tabSize);
+        RangesCollector result = new RangesCollector(tabSize);
 
         List<PreviousRegion> previousRegions = new ArrayList<>();
         int line = model.getLineCount() + 1;

@@ -31,16 +31,15 @@ public class RangesCollector {
     private final SparseIntArray _startIndexes;
     private final SparseIntArray _endIndexes;
     private final SparseIntArray _indentOccurrences;
-    private final int _foldingRangesLimit;
     private int _length;
     private final int tabSize;
-    public RangesCollector(int foldingRangesLimit, int tabSize) {
+
+    public RangesCollector(int tabSize) {
         this.tabSize = tabSize;
         this._startIndexes = new SparseIntArray();
         this._endIndexes = new SparseIntArray();
         this._indentOccurrences = new SparseIntArray();
         this._length = 0;
-        this._foldingRangesLimit = foldingRangesLimit;
     }
 
     public void insertFirst(int startLineNumber, int endLineNumber, int indent) {
@@ -57,42 +56,13 @@ public class RangesCollector {
     }
 
     public FoldingRegions toIndentRanges(Content model) throws Exception {
-        if (this._length <= this._foldingRangesLimit) {
-            // reverse and create arrays of the exact length
-            SparseIntArray startIndexes = new SparseIntArray(this._length);
-            SparseIntArray endIndexes = new SparseIntArray(this._length);
-            for (int i = this._length - 1, k = 0; i >= 0; i--, k++) {
-                startIndexes.put(k, this._startIndexes.get(i));
-                endIndexes.put(k, this._endIndexes.get(i));
-            }
-            return new FoldingRegions(startIndexes, endIndexes);
-        } else {
-            int entries = 0;
-            int maxIndent = this._indentOccurrences.size();
-            for (int i = 0; i < this._indentOccurrences.size(); i++) {
-                int n = this._indentOccurrences.get(i);
-                if (n != 0) {
-                    if (n + entries > this._foldingRangesLimit) {
-                        maxIndent = i;
-                        break;
-                    }
-                    entries += n;
-                }
-            }
-            // reverse and create arrays of the exact length
-            SparseIntArray startIndexes = new SparseIntArray(this._foldingRangesLimit);
-            SparseIntArray endIndexes = new SparseIntArray(this._foldingRangesLimit);
-            for (int i = this._length - 1, k = 0; i >= 0; i--) {
-                int startIndex = this._startIndexes.get(i);
-                int indent = IndentRange.computeIndentLevel(model.getLine(startIndex).getRawData(), model.getColumnCount(startIndex), tabSize);
-                if (indent < maxIndent || (indent == maxIndent && entries++ < this._foldingRangesLimit)) {
-                    startIndexes.put(k, startIndex);
-                    endIndexes.put(k, this._endIndexes.get(i));
-                    k++;
-                }
-            }
-            return new FoldingRegions(startIndexes, endIndexes);
+        // reverse and create arrays of the exact length
+        SparseIntArray startIndexes = new SparseIntArray(this._length);
+        SparseIntArray endIndexes = new SparseIntArray(this._length);
+        for (int i = this._length - 1, k = 0; i >= 0; i--, k++) {
+            startIndexes.put(k, this._startIndexes.get(i));
+            endIndexes.put(k, this._endIndexes.get(i));
         }
-
+        return new FoldingRegions(startIndexes, endIndexes);
     }
 }
