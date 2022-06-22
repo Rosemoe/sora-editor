@@ -40,6 +40,7 @@ import org.eclipse.tm4e.core.grammar.IGrammar;
 import org.eclipse.tm4e.core.grammar.ITokenizeLineResult2;
 import org.eclipse.tm4e.core.grammar.StackElement;
 import org.eclipse.tm4e.core.internal.grammar.StackElementMetadata;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigRegExp;
 import org.eclipse.tm4e.core.registry.Registry;
 import org.eclipse.tm4e.core.theme.FontStyle;
 import org.eclipse.tm4e.core.theme.IRawTheme;
@@ -61,6 +62,8 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<StackElemen
     private Theme theme;
     private final TextMateLanguage language;
     private final ILanguageConfiguration configuration;
+    private OnigRegExp cachedRegExp;
+    private boolean foldingOffside;
 
     public TextMateAnalyzer(TextMateLanguage language, String grammarName, InputStream grammarIns, Reader languageConfiguration, IRawTheme theme) throws Exception {
         registry.setTheme(theme);
@@ -73,6 +76,17 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<StackElemen
         } else {
             configuration = null;
         }
+        createFoldingExp();
+    }
+
+    private void createFoldingExp() {
+        if (configuration == null) {
+            return;
+        }
+        var markers = configuration.getFolding();
+        if (markers == null) return;
+        foldingOffside = markers.getOffSide();
+        cachedRegExp = new OnigRegExp("(" + markers.getMarkersStart() + ")|(?:" + markers.getMarkersEnd() + ")");
     }
 
     @Override
@@ -99,13 +113,8 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<StackElemen
     }
 
     public void analyzeCodeBlocks( Content model, List<CodeBlock> blocks, CodeBlockAnalyzeDelegate delegate) {
-        if (configuration == null) {
-            return;
-        }
-        var folding = configuration.getFolding();
-        if (folding == null) return;
         try {
-            var foldingRegions = IndentRange.computeRanges(model, language.getTabSize(), folding.getOffSide(), folding, MAX_FOLDING_REGIONS_FOR_INDENT_LIMIT, delegate);
+            var foldingRegions = IndentRange.computeRanges(model, language.getTabSize(), foldingOffside, cachedRegExp, MAX_FOLDING_REGIONS_FOR_INDENT_LIMIT, delegate);
             for (int i = 0; i < foldingRegions.length() && delegate.isNotCancelled(); i++) {
                 int startLine = foldingRegions.getStartLineNumber(i);
                 int endLine = foldingRegions.getEndLineNumber(i);

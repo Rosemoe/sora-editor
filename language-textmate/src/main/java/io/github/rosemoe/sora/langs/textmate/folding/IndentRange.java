@@ -28,6 +28,7 @@ import java.util.List;
 
 import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager;
 import io.github.rosemoe.sora.text.Content;
+
 import org.eclipse.tm4e.core.internal.oniguruma.OnigRegExp;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
@@ -95,15 +96,9 @@ public class IndentRange {
         return indent;
     }
 
-    @SuppressWarnings("rawtype")
-    public static FoldingRegions computeRanges(Content model, int tabSize , boolean offSide, Folding markers, int foldingRangesLimit, AsyncIncrementalAnalyzeManager.CodeBlockAnalyzeDelegate delegate) throws Exception {
+    public static FoldingRegions computeRanges(Content model, int tabSize, boolean offSide, OnigRegExp pattern, int foldingRangesLimit, AsyncIncrementalAnalyzeManager<?, ?>.CodeBlockAnalyzeDelegate delegate) throws Exception {
 
         RangesCollector result = new RangesCollector(foldingRangesLimit, tabSize);
-
-        OnigRegExp pattern = null;
-        if (markers != null) {
-            pattern = new OnigRegExp("(" + markers.getMarkersStart() + ")|(?:" + markers.getMarkersEnd() + ")");
-        }
 
         List<PreviousRegion> previousRegions = new ArrayList<>();
         int line = model.getLineCount() + 1;
