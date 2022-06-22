@@ -43,7 +43,7 @@ buildscript {
         println "No props file, loading env vars"
     }
     ext {
-        kotlin_version = '1.6.20'
+        kotlin_version = '1.7.0'
     }
     repositories {
         google()
