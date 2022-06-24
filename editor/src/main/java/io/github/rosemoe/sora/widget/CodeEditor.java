@@ -62,6 +62,7 @@ import android.widget.OverScroller;
 import android.widget.SearchView;
 import android.widget.Toast;
 
+import androidx.annotation.FloatRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Px;
@@ -249,6 +250,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     private float mBlockLineWidth;
     private float mVerticalScrollFactor;
     private float mLineInfoTextSize;
+    private float mLineSpacingMultiplier = 1f;
     private boolean mWait;
     private boolean mScalable;
     private boolean mEditable;
@@ -2474,13 +2476,31 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     }
 
     /**
+     *
+     * @param lineSpacingMultiplier Default 1.0f
+     */
+    public void setLineSpacingMultiplier(float lineSpacingMultiplier) {
+        this.mLineSpacingMultiplier = lineSpacingMultiplier;
+        invalidate();
+    }
+
+    public float getLineSpacingMultiplier() {
+        return mLineSpacingMultiplier;
+    }
+
+    public int getLineSpacingPixels() {
+        var metrics = mPainter.getTextMetrics();
+        return (int) ((metrics.descent - metrics.ascent) * (mLineSpacingMultiplier - 1f)) / 2 * 2;
+    }
+
+    /**
      * Get baseline directly
      *
      * @param row Row
      * @return baseline y offset
      */
     public int getRowBaseline(int row) {
-        return getRowHeight() * (row + 1) - mPainter.getTextMetrics().descent;
+        return getRowHeight() * (row + 1) - mPainter.getTextMetrics().descent - getLineSpacingPixels() / 2;
     }
 
     /**
@@ -2490,7 +2510,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      */
     public int getRowHeight() {
         var metrics = mPainter.getTextMetrics();
-        return metrics.descent - metrics.ascent;
+        return metrics.descent - metrics.ascent + getLineSpacingPixels();
     }
 
     /**
