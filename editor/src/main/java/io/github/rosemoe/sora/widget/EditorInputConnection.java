@@ -38,6 +38,7 @@ import android.view.inputmethod.SurroundingText;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
@@ -55,9 +56,7 @@ class EditorInputConnection extends BaseInputConnection {
     private final static Logger logger = Logger.instance("EditorInputConnection");
     private final static boolean DEBUG = false;
     private final CodeEditor mEditor;
-    protected int mComposingLine = -1;
-    protected int mComposingStart = -1;
-    protected int mComposingEnd = -1;
+    protected ComposingText mComposingText = new ComposingText();
     protected boolean mImeConsumingInput = false;
     private boolean mInvalid;
 
@@ -70,11 +69,18 @@ class EditorInputConnection extends BaseInputConnection {
         super(targetView, true);
         mEditor = targetView;
         mInvalid = false;
+        targetView.subscribeEvent(ContentChangeEvent.class, (event, __) -> {
+           if (event.getAction() == ContentChangeEvent.ACTION_INSERT) {
+               mComposingText.shiftOnInsert(event.getChangeStart().index, event.getChangeEnd().index);
+           } else if (event.getAction() == ContentChangeEvent.ACTION_DELETE) {
+               mComposingText.shiftOnDelete(event.getChangeStart().index, event.getChangeEnd().index);
+           }
+        });
     }
 
     protected void invalid() {
         mInvalid = true;
-        mComposingEnd = mComposingStart = mComposingLine = -1;
+        mComposingText.reset();
         mEditor.invalidate();
     }
 
@@ -82,7 +88,7 @@ class EditorInputConnection extends BaseInputConnection {
      * Reset the state of this connection
      */
     protected void reset() {
-        mComposingEnd = mComposingStart = mComposingLine = -1;
+        mComposingText.reset();
         mInvalid = false;
         mImeConsumingInput = false;
     }
@@ -104,7 +110,7 @@ class EditorInputConnection extends BaseInputConnection {
         while (content.isInBatchEdit()) {
             content.endBatchEdit();
         }
-        mComposingLine = mComposingEnd = mComposingStart = -1;
+        mComposingText.reset();
         mEditor.onCloseConnection();
     }
 
@@ -139,10 +145,10 @@ class EditorInputConnection extends BaseInputConnection {
         if (flags == GET_TEXT_WITH_STYLES) {
             SpannableStringBuilder text = new SpannableStringBuilder(sub);
             // Apply composing span
-            if (mComposingLine != -1) {
+            if (mComposingText.isComposing()) {
                 try {
-                    int originalComposingStart = getCursor().getIndexer().getCharIndex(mComposingLine, mComposingStart);
-                    int originalComposingEnd = getCursor().getIndexer().getCharIndex(mComposingLine, mComposingEnd);
+                    int originalComposingStart = mComposingText.startIndex;
+                    int originalComposingEnd = mComposingText.endIndex;
                     int transferredStart = originalComposingStart - start;
                     if (transferredStart >= text.length()) {
                         return text;
@@ -236,18 +242,17 @@ class EditorInputConnection extends BaseInputConnection {
         // NOTE: Text styles are ignored by editor
         // Remove composing text first if there is
         if (mEditor.getProps().trackComposingTextOnCommit) {
-            final var composingLine = mComposingLine;
-            if (composingLine != -1) {
-                var composingText = mEditor.getText().getLine(composingLine).subSequence(mComposingStart, mComposingEnd).toString();
+            if (mComposingText.isComposing()) {
+                var composingText = mEditor.getText().subSequence(mComposingText.startIndex, mComposingText.endIndex).toString();
                 var commitText = text.toString();
                 if (commitText.startsWith(composingText) && commitText.length() > composingText.length()) {
                     text = commitText.substring(composingText.length());
-                    mComposingLine = mComposingStart = mComposingEnd = -1;
+                    mComposingText.reset();
                 } else {
                     deleteComposingText();
                 }
             }
-        } else if (mComposingLine != -1) {
+        } else if (mComposingText.isComposing()) {
             deleteComposingText();
         }
         // Replace text
@@ -288,15 +293,15 @@ class EditorInputConnection extends BaseInputConnection {
      * Delete composing region
      */
     private void deleteComposingText() {
-        if (mComposingLine == -1) {
+        if (!mComposingText.isComposing()) {
             return;
         }
         try {
-            mEditor.getText().delete(mComposingLine, mComposingStart, mComposingLine, mComposingEnd);
+            mEditor.getText().delete(mComposingText.startIndex, mComposingText.endIndex);
         } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();
         }
-        mComposingLine = mComposingStart = mComposingEnd = -1;
+        mComposingText.reset();
     }
 
     @Override
@@ -311,7 +316,7 @@ class EditorInputConnection extends BaseInputConnection {
         }
 
         // #170 Gboard compatible
-        if (beforeLength == 1 && afterLength == 0 && mComposingLine == -1) {
+        if (beforeLength == 1 && afterLength == 0 && !mComposingText.isComposing()) {
             mEditor.deleteText();
             return true;
         }
@@ -321,9 +326,9 @@ class EditorInputConnection extends BaseInputConnection {
             beginBatchEdit();
         }
 
-        boolean composing = mComposingLine != -1;
-        int composingStart = composing ? getCursor().getIndexer().getCharIndex(mComposingLine, mComposingStart) : 0;
-        int composingEnd = composing ? getCursor().getIndexer().getCharIndex(mComposingLine, mComposingEnd) : 0;
+        boolean composing = mComposingText.isComposing();
+        int composingStart = composing ? mComposingText.startIndex : 0;
+        int composingEnd = composing ? mComposingText.endIndex : 0;
 
         int rangeEnd = getCursor().getLeft();
         int rangeStart = rangeEnd - beforeLength;
@@ -359,22 +364,6 @@ class EditorInputConnection extends BaseInputConnection {
 
         if (beforeLength > 0 && afterLength > 0) {
             endBatchEdit();
-        }
-
-        if (composing) {
-            CharPosition start = getCursor().getIndexer().getCharPosition(composingStart);
-            CharPosition end = getCursor().getIndexer().getCharPosition(composingEnd);
-            if (start.line != end.line) {
-                invalid();
-                return false;
-            }
-            if (start.column == end.column) {
-                mComposingLine = -1;
-            } else {
-                mComposingLine = start.line;
-                mComposingStart = start.column;
-                mComposingEnd = end.column;
-            }
         }
 
         return true;
@@ -426,19 +415,17 @@ class EditorInputConnection extends BaseInputConnection {
         if (TextUtils.indexOf(text, '\n') != -1) {
             return false;
         }
-        if (mComposingLine == -1) {
+        if (!mComposingText.isComposing()) {
             // Create composing info
             deleteSelected();
-            mComposingLine = getCursor().getLeftLine();
-            mComposingStart = getCursor().getLeftColumn();
-            mComposingEnd = mComposingStart + text.length();
             mEditor.commitText(text);
+            mComposingText.set(getCursor().getLeft(), getCursor().getLeft() + text.length());
         } else {
             // Already have composing text
-            if (mComposingStart != mComposingEnd) {
-                mEditor.getText().replace(mComposingLine, mComposingStart, mComposingLine, mComposingEnd, text);
+            if (mComposingText.isComposing()) {
+                mEditor.getText().replace(mComposingText.startIndex, mComposingText.endIndex, text);
                 // Reset range
-                mComposingEnd = mComposingStart + text.length();
+                mComposingText.adjustLength(text.length());
             }
         }
         if (text.length() == 0) {
@@ -455,7 +442,7 @@ class EditorInputConnection extends BaseInputConnection {
         if (!mEditor.isEditable() || mInvalid) {
             return false;
         }
-        mComposingLine = mComposingStart = mComposingEnd = -1;
+        mComposingText.reset();
         mEditor.updateCursor();
         mEditor.invalidate();
         return true;
@@ -475,7 +462,7 @@ class EditorInputConnection extends BaseInputConnection {
     public boolean setSelection(int start, int end) {
         if (DEBUG)
             logger.d("setSelection, s = " + start + ", e = " + end);
-        if (!mEditor.isEditable() || mInvalid || mComposingLine != -1) {
+        if (!mEditor.isEditable() || mInvalid || mComposingText.isComposing()) {
             return false;
         }
         start = getWrappedIndex(start);
@@ -516,15 +503,7 @@ class EditorInputConnection extends BaseInputConnection {
             if (end > content.length()) {
                 end = content.length();
             }
-            CharPosition startPos = content.getIndexer().getCharPosition(start);
-            CharPosition endPos = content.getIndexer().getCharPosition(end);
-            if (startPos.line != endPos.line) {
-                mEditor.restartInput();
-                return false;
-            }
-            mComposingLine = startPos.line;
-            mComposingStart = startPos.column;
-            mComposingEnd = endPos.column;
+            mComposingText.set(start, end);
             mEditor.invalidate();
         } catch (IndexOutOfBoundsException e) {
             logger.w("set composing region for IME failed", e);

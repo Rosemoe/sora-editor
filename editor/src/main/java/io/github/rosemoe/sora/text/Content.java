@@ -920,4 +920,9 @@ public class Content implements CharSequence {
         return n;
     }
 
+    public void replace(int startIndex, int endIndex, CharSequence text) {
+        var start = getIndexer().getCharPosition(startIndex);
+        var end = getIndexer().getCharPosition(endIndex);
+        replace(start.line, start.column, end.line, end.column, text);
+    }
 }

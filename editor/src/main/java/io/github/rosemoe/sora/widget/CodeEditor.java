@@ -470,6 +470,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     private void initialize(AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         Log.v(LOG_TAG, COPYRIGHT);
 
+        mEventManager = new EventManager();
         mPainter = new EditorPainter(this);
         mStyleDelegate = new EditorStyleDelegate(this);
 
@@ -493,7 +494,6 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         mLnTip = getContext().getString(R.string.editor_line_number_tip_prefix);
         mFormatTip = getContext().getString(R.string.editor_formatting);
         mProps = new DirectAccessProps();
-        mEventManager = new EventManager();
         mDpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10F;
         mDividerWidth = 2 * mDpUnit;
         mInsertSelWidth = mDividerWidth / 2;
@@ -2773,7 +2773,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         updateCursor();
         updateSelection();
         mPainter.invalidateInCursor();
-        if (!mEventHandler.hasAnyHeldHandle() && mConnection.mComposingLine == -1) {
+        if (!mEventHandler.hasAnyHeldHandle() && !mConnection.mComposingText.isComposing()) {
             mCursorAnimator.markEndPos();
             mCursorAnimator.start();
         }
@@ -3392,10 +3392,10 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      */
     protected void updateSelection() {
         int candidatesStart = -1, candidatesEnd = -1;
-        if (mConnection.mComposingLine != -1) {
+        if (mConnection.mComposingText.isComposing()) {
             try {
-                candidatesStart = mText.getCharIndex(mConnection.mComposingLine, mConnection.mComposingStart);
-                candidatesEnd = mText.getCharIndex(mConnection.mComposingLine, mConnection.mComposingEnd);
+                candidatesStart = mConnection.mComposingText.startIndex;
+                candidatesEnd = mConnection.mComposingText.endIndex;
             } catch (IndexOutOfBoundsException e) {
                 //Ignored
             }
@@ -3455,7 +3455,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         updateSelection();
         updateCursorAnchor();
         // Restart if composing
-        if (mConnection.mComposingLine != -1) {
+        if (mConnection.mComposingText.isComposing()) {
             restartInput();
         }
     }
@@ -3479,7 +3479,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     public void updateCursor() {
         updateCursorAnchor();
         updateExtractedText();
-        if (!mText.isInBatchEdit() && mConnection.mComposingLine == -1) {
+        if (!mText.isInBatchEdit() && !mConnection.mComposingText.isComposing()) {
             updateSelection();
         }
     }
@@ -3867,7 +3867,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
 
         // Auto completion
         if (mCompletionWindow.isEnabled() && !mText.isUndoOrRedo()) {
-            if ((mConnection.mComposingLine == -1 || mProps.autoCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
+            if ((!mConnection.mComposingText.isComposing() || mProps.autoCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
                 mCompletionWindow.requireCompletion();
             } else {
                 mCompletionWindow.hide();
@@ -3885,7 +3885,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         mLanguage.getAnalyzeManager().insert(start, end, insertedContent);
         mEventHandler.hideInsertHandle();
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
-        if (!mCursor.isSelected() && mConnection.mComposingLine == -1) {
+        if (!mCursor.isSelected() && !mConnection.mComposingText.isComposing()) {
             mCursorAnimator.markEndPos();
             mCursorAnimator.start();
         }
@@ -3924,7 +3924,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         updateCursor();
 
         if (mCompletionWindow.isEnabled() && !mText.isUndoOrRedo()) {
-            if (mConnection.mComposingLine == -1 && mCompletionWindow.isShowing()) {
+            if (!mConnection.mComposingText.isComposing() && mCompletionWindow.isShowing()) {
                 if (startLine != endLine || startColumn != endColumn - 1) {
                     mCompletionWindow.hide();
                 } else {
@@ -3943,7 +3943,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
             ensureSelectionVisible();
             mEventHandler.hideInsertHandle();
         }
-        if (!mCursor.isSelected() && !mWait && mConnection.mComposingLine == -1) {
+        if (!mCursor.isSelected() && !mWait && !mConnection.mComposingText.isComposing()) {
             mCursorAnimator.markEndPos();
             mCursorAnimator.start();
         }

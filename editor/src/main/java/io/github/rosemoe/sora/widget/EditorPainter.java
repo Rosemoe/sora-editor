@@ -702,6 +702,8 @@ public class EditorPainter {
         int leadingWhitespaceEnd = 0;
         int trailingWhitespaceStart = 0;
         float circleRadius = 0f;
+        var composingPosition = mEditor.mConnection.mComposingText.isComposing() ? mEditor.getText().getIndexer().getCharPosition(mEditor.mConnection.mComposingText.startIndex) : null;
+        var composingLength = mEditor.mConnection.mComposingText.endIndex - mEditor.mConnection.mComposingText.startIndex;
         if (mEditor.shouldInitializeNonPrintable()) {
             float spaceWidth = mPaint.getSpaceWidth();
             float maxD = Math.min(mEditor.getRowHeight(), spaceWidth);
@@ -985,12 +987,12 @@ public class EditorPainter {
             }
 
             // Draw composing text underline
-            if (line == mEditor.mConnection.mComposingLine) {
-                int composingStart = mEditor.mConnection.mComposingStart;
-                int composingEnd = mEditor.mConnection.mComposingEnd;
+            if (composingPosition != null && line == composingPosition.line) {
+                int composingStart = composingPosition.column;
+                int composingEnd = composingStart + composingLength;
                 int paintStart = Math.min(Math.max(composingStart, firstVisibleChar), lastVisibleChar);
                 int paintEnd = Math.min(Math.max(composingEnd, firstVisibleChar), lastVisibleChar);
-                if (paintStart != paintEnd) {
+                if (paintStart < paintEnd) {
                     mRect.top = mEditor.getRowBottom(row) - mEditor.getOffsetY();
                     mRect.bottom = mRect.top + mEditor.getRowHeight() * 0.06f;
                     mRect.left = paintingOffset + mEditor.measureText(mBuffer, firstVisibleChar, paintStart - firstVisibleChar, line);
