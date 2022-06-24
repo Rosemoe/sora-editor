@@ -224,6 +224,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             mEditor.getText().beginBatchEdit();
             item.performCompletion(mEditor, mEditor.getText(), mThread.mPosition.line, mThread.mPosition.column);
             mEditor.getText().endBatchEdit();
+            mEditor.updateCursor();
             mCancelShowUp = false;
             mEditor.restartInput();
         }
