@@ -303,7 +303,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     private HwAcceleratedRenderer mRenderer;
     private DirectAccessProps mProps;
     private Bundle mExtraArguments;
-    private EditorStyleDelegate mStyleDelegate;
+    protected EditorStyleDelegate mStyleDelegate;
     private Styles mStyles;
     private DiagnosticsContainer mDiagnostics;
     final EditorKeyEventHandler mKeyEventHandler = new EditorKeyEventHandler(this);

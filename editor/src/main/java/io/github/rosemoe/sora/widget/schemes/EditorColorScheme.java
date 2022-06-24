@@ -98,6 +98,8 @@ public class EditorColorScheme {
      */
     public static final int LINE_BLOCK_LABEL = 18;
 
+    public static final int HIGHLIGHTED_DELIMITERS_BACKGROUND = 40;
+    public static final int HIGHLIGHTED_DELIMITERS_FOREGROUND = 39;
     public static final int LINE_NUMBER_PANEL_TEXT = 17;
     public static final int LINE_NUMBER_PANEL = 16;
     public static final int BLOCK_LINE_CURRENT = 15;
@@ -124,7 +126,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 38;
+    protected static final int END_COLOR_ID = 39;
     /**
      * Real color saver
      */
@@ -288,6 +290,11 @@ public class EditorColorScheme {
             case PROBLEM_TYPO:
                 color = 0x6600ff11;
                 break;
+            case HIGHLIGHTED_DELIMITERS_FOREGROUND:
+                color = 0xdd000000;
+                break;
+            case HIGHLIGHTED_DELIMITERS_BACKGROUND:
+                color = 0xffffec47;
         }
         setColor(type, color);
     }

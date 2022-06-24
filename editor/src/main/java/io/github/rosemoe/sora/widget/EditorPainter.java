@@ -450,6 +450,7 @@ public class EditorPainter {
         MutableInt firstLn = mEditor.isFirstLineNumberAlwaysVisible() && mEditor.isWordwrap() ? new MutableInt(-1) : null;
 
         drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor, postDrawCurrentLines, firstLn);
+        patchHighlightedDelimiters(canvas, textOffset);
         drawDiagnosticIndicators(canvas, offsetX);
 
         offsetX = -mEditor.getOffsetX();
@@ -1655,6 +1656,22 @@ public class EditorPainter {
             mRect.left = 0;
             drawColor(canvas, mEditor.getColorScheme().getColor(EditorColorScheme.SCROLL_BAR_TRACK), mRect);
         }
+    }
+
+    protected void patchHighlightedDelimiters(Canvas canvas, float textOffset) {
+        if (mEditor.mConnection.mComposingText.isComposing() || !mEditor.getProps().highlightMatchingDelimiters) {
+            return;
+        }
+        var paired = mEditor.mStyleDelegate.getFoundBracketPair();
+        if (paired != null) {
+            var color = 0;
+            patchTextRegionWithColor(canvas, textOffset, paired.leftIndex, paired.leftIndex + paired.leftLength, color);
+            patchTextRegionWithColor(canvas, textOffset, paired.rightIndex, paired.rightIndex + paired.rightLength, color);
+        }
+    }
+
+    protected void patchTextRegionWithColor(Canvas canvas, float textOffset, int start, int end, int color) {
+        // TODO
     }
 
     protected void drawSelectionOnAnimation(Canvas canvas) {

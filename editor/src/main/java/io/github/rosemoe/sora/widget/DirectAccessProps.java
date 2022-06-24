@@ -207,4 +207,10 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean useICULibToSelectWords = true;
 
+    /**
+     * Highlight matching delimiters. This requires language support.
+     */
+    @InvalidateRequired
+    public boolean highlightMatchingDelimiters = true;
+
 }
