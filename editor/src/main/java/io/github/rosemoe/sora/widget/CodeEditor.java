@@ -2773,7 +2773,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         updateCursor();
         updateSelection();
         mPainter.invalidateInCursor();
-        if (!mEventHandler.hasAnyHeldHandle() && !mConnection.mComposingText.isComposing()) {
+        if (!mEventHandler.hasAnyHeldHandle() && !mConnection.mComposingText.isComposing() && !mCompletionWindow.shouldRejectComposing()) {
             mCursorAnimator.markEndPos();
             mCursorAnimator.start();
         }
@@ -3885,7 +3885,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         mLanguage.getAnalyzeManager().insert(start, end, insertedContent);
         mEventHandler.hideInsertHandle();
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
-        if (!mCursor.isSelected() && !mConnection.mComposingText.isComposing()) {
+        if (!mCursor.isSelected() && !mConnection.mComposingText.isComposing() && !mCompletionWindow.shouldRejectComposing()) {
             mCursorAnimator.markEndPos();
             mCursorAnimator.start();
         }
@@ -3943,7 +3943,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
             ensureSelectionVisible();
             mEventHandler.hideInsertHandle();
         }
-        if (!mCursor.isSelected() && !mWait && !mConnection.mComposingText.isComposing()) {
+        if (!mCursor.isSelected() && !mWait && !mConnection.mComposingText.isComposing() && !mCompletionWindow.shouldRejectComposing()) {
             mCursorAnimator.markEndPos();
             mCursorAnimator.start();
         }
