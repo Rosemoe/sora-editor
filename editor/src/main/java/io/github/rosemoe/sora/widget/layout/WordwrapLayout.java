@@ -261,6 +261,31 @@ public class WordwrapLayout extends AbstractLayout {
     }
 
     @Override
+    public int getRowIndexForPosition(int index) {
+        var pos = editor.getText().getIndexer().getCharPosition(index);
+        var line = pos.line;
+        var column = pos.column;
+        int row = findRow(line);
+        if (row < rowTable.size()) {
+            RowRegion region = rowTable.get(row);
+            if (region.line != line) {
+                return 0;
+            }
+            while (region.startColumn < column && row + 1 < rowTable.size()) {
+                row++;
+                region = rowTable.get(row);
+                if (region.line != line || region.startColumn > column) {
+                    row--;
+                    region = rowTable.get(row);
+                    break;
+                }
+            }
+            return row;
+        }
+        return 0;
+    }
+
+    @Override
     public long getCharPositionForLayoutOffset(float xOffset, float yOffset) {
         int row = (int) (yOffset / editor.getRowHeight());
         row = Math.max(0, Math.min(row, rowTable.size() - 1));

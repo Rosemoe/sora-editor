@@ -1047,16 +1047,14 @@ public class EditorPainter {
             var start = new CharPosition();
             var end = new CharPosition();
             var indexer = mCursor.getIndexer();
-            var startPos = new float[2];
-            var endPos = new float[2];
             var rowHeight = mEditor.getRowHeight();
             for (var region : mCollectedDiagnostics) {
                 var startIndex = Math.max(firstIndex, region.startIndex);
                 var endIndex = Math.min(lastIndex, region.endIndex);
                 indexer.getCharPosition(startIndex, start);
                 indexer.getCharPosition(endIndex, end);
-                var startRow = (int) (mEditor.getLayout().getCharLayoutOffset(start.line, start.column, startPos)[0] / rowHeight) - 1;
-                var endRow = (int) (mEditor.getLayout().getCharLayoutOffset(end.line, end.column, endPos)[0] / rowHeight) - 1;
+                var startRow = mEditor.getLayout().getRowIndexForPosition(startIndex);
+                var endRow = mEditor.getLayout().getRowIndexForPosition(endIndex);
                 // Setup color
                 var colorId = (region.severity >= 0 && region.severity <= 3) ? sDiagnosticsColorMapping[region.severity] : 0;
                 if (colorId == 0) {
@@ -1064,14 +1062,16 @@ public class EditorPainter {
                 }
                 mPaintOther.setColor(mEditor.getColorScheme().getColor(colorId));
                 for (int i = startRow;i <= endRow;i++) {
+                    var row = mEditor.getLayout().getRowAt(i);
                     var startX = 0f;
                     if (i == startRow) {
-                        startX = startPos[1];
+                        startX = mEditor.measureText(text.getLine(row.lineIndex), row.startColumn, start.column - row.startColumn, row.lineIndex);
                     }
-                    var endX = endPos[1];
+                    float endX ;
                     if (i != endRow) {
-                        var row = mEditor.getLayout().getRowAt(i);
                         endX = mEditor.measureText(text.getLine(row.lineIndex), row.startColumn, row.endColumn - row.startColumn, row.lineIndex);
+                    } else {
+                        endX = mEditor.measureText(text.getLine(row.lineIndex), row.startColumn, end.column - row.startColumn, row.lineIndex);
                     }
                     startX += offset;
                     endX += offset;

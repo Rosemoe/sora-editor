@@ -126,4 +126,9 @@ public interface Layout extends LineRemoveListener, ContentListener {
      */
     long getDownPosition(int line, int column);
 
+    /**
+     * Get row index for text index
+     */
+    int getRowIndexForPosition(int index);
+
 }

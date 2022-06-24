@@ -137,6 +137,11 @@ public class LineBreakLayout extends AbstractLayout {
     }
 
     @Override
+    public int getRowIndexForPosition(int index) {
+        return editor.getText().getIndexer().getCharPosition(index).line;
+    }
+
+    @Override
     public void destroyLayout() {
         super.destroyLayout();
         widthMaintainer = null;
