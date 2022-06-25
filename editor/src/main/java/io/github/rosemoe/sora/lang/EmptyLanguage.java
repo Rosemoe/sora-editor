@@ -50,7 +50,7 @@ public class EmptyLanguage implements Language {
 
     @Override
     public SymbolPairMatch getSymbolPairs() {
-        return new SymbolPairMatch.DefaultSymbolPairs();
+        return EMPTY_SYMBOL_PAIRS;
     }
 
     @Override
@@ -89,7 +89,7 @@ public class EmptyLanguage implements Language {
         return false;
     }
 
-
+    public final static SymbolPairMatch EMPTY_SYMBOL_PAIRS = new SymbolPairMatch();
 
     public static class EmptyAnalyzeManager implements AnalyzeManager {
 
