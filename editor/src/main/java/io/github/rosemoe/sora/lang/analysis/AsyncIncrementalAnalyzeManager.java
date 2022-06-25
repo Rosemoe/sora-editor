@@ -124,6 +124,16 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         throw new SecurityException("Can not get state from non-analytical or abandoned thread");
     }
 
+    @Override
+    public void onAbandonState(S state) {
+
+    }
+
+    @Override
+    public void onAddState(S state) {
+
+    }
+
     private synchronized void increaseRunCount() {
         runCount ++;
     }

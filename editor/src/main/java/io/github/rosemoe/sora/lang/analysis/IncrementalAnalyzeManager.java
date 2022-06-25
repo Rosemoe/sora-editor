@@ -64,13 +64,15 @@ public interface IncrementalAnalyzeManager<S, T> extends AnalyzeManager {
      */
     List<Span> generateSpansForLine(LineTokenizeResult<S, T> tokens);
 
-    default void onAbandonState(S state) {
+    /**
+     * Called when a State object is to be abandoned
+     */
+    void onAbandonState(S state);
 
-    }
-
-    default void onAddState(S state) {
-
-    }
+    /**
+     * Called when a State object is to be added
+     */
+    void onAddState(S state);
 
     /**
      * Saved state
