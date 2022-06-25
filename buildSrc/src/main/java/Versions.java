@@ -25,14 +25,14 @@
 public final class Versions {
 
     // Project versions
-    public final static String versionName = "0.12.0";
-    public final static int versionCode = 52;
+    public final static String versionName = "0.13.0";
+    public final static int versionCode = 53;
 
     // Platform & Tool versions
     public final static String buildToolsVersion = "32.0.0";
-    public final static int compileSdkVersion = 32;
+    public final static int compileSdkVersion = 33;
     public final static int minSdkVersion = 21;
-    public final static int targetSdkVersion = 32;
+    public final static int targetSdkVersion = 33;
 
     // Dependency versions
     public final static String antlrVersion = "4.9.2";
