@@ -223,6 +223,6 @@ public class DirectAccessProps implements Serializable {
      * The text background wraps the actual text, but not the whole line
      */
     @InvalidateRequired
-    public boolean textBackgroundWrapTextOnly = true;
+    public boolean textBackgroundWrapTextOnly = false;
 
 }
