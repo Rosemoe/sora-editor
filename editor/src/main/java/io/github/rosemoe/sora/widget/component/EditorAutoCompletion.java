@@ -216,7 +216,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             return;
         }
         var adpView = mLayout.getCompletionList();
-        CompletionItem item = ((EditorCompletionAdapter) adpView.getAdapter()).getItem(pos);
+        var item = ((EditorCompletionAdapter) adpView.getAdapter()).getItem(pos);
         Cursor cursor = mEditor.getCursor();
         if (!cursor.isSelected()) {
             mCancelShowUp = true;

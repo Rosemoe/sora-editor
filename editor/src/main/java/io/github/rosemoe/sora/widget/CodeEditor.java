@@ -2555,7 +2555,8 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      */
     public int getRowHeight() {
         var metrics = mPainter.getTextMetrics();
-        return metrics.descent - metrics.ascent + getLineSpacingPixels();
+        // Do not let the row height be zero...
+        return Math.max(1, metrics.descent - metrics.ascent + getLineSpacingPixels());
     }
 
     /**
