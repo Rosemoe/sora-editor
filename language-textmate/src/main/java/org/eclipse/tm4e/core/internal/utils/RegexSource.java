@@ -25,6 +25,7 @@ package org.eclipse.tm4e.core.internal.utils;
 
 import org.eclipse.tm4e.core.internal.oniguruma.IOnigCaptureIndex;
 
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -81,9 +82,9 @@ public class RegexSource {
                 result = result.substring(1);
             }
             if ("downcase".equals(command)) {
-                return result.toLowerCase();
+                return result.toLowerCase(Locale.ROOT);
             } else if ("upcase".equals(command)) {
-                return result.toUpperCase();
+                return result.toUpperCase(Locale.ROOT);
             } else {
                 return result;
             }
