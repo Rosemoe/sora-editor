@@ -213,7 +213,7 @@ public class EditorPopupWindow {
         } else if (show) {
             mWindow.setHeight(height);
             mWindow.setWidth(width);
-            mWindow.showAtLocation(mParentView, Gravity.LEFT | Gravity.TOP, left, top);
+            mWindow.showAtLocation(mParentView, Gravity.START | Gravity.TOP, left, top);
         }
     }
 
