@@ -29,6 +29,7 @@ import java.io.Reader;
 import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
+import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
 import org.eclipse.tm4e.core.theme.IRawTheme;
 
@@ -87,5 +88,10 @@ public class TextMateLanguage extends EmptyLanguage {
 
     public int getTabSize() {
         return tabSize;
+    }
+
+    @Override
+    public SymbolPairMatch getSymbolPairs() {
+        return new SymbolPairMatch.DefaultSymbolPairs();
     }
 }
