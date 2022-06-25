@@ -251,6 +251,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     private float mVerticalScrollFactor;
     private float mLineInfoTextSize;
     private float mLineSpacingMultiplier = 1f;
+    private float mLineSpacingAdd = 0f;
     private boolean mWait;
     private boolean mScalable;
     private boolean mEditable;
@@ -2476,21 +2477,65 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     }
 
     /**
+     * Sets line spacing for this TextView.  Each line other than the last line will have its height
+     * multiplied by {@code mult} and have {@code add} added to it.
      *
-     * @param lineSpacingMultiplier Default 1.0f
+     * @param add The value in pixels that should be added to each line other than the last line.
+     *            This will be applied after the multiplier
+     * @param mult The value by which each line height other than the last line will be multiplied
+     *             by
+     *
+     */
+    public void setLineSpacing(float add, float mult) {
+        mLineSpacingAdd = add;
+        mLineSpacingMultiplier = mult;
+    }
+
+    /**
+     * Gets the line spacing extra space
+     *
+     * @return the extra space that is added to the height of each lines of this TextView.
+     *
+     * @see #setLineSpacing(float, float)
+     * @see #getLineSpacingMultiplier()
+     */
+    public float getLineSpacingExtra() {
+        return mLineSpacingAdd;
+    }
+
+    /**
+     * @param lineSpacingExtra The value in pixels that should be added to each line other than the last line.
+     *      *            This will be applied after the multiplier
+     */
+    public void setLineSpacingExtra(float lineSpacingExtra) {
+        mLineSpacingAdd = lineSpacingExtra;
+        invalidate();
+    }
+
+
+    /**
+     * @param lineSpacingMultiplier The value by which each line height other than the last line will be multiplied
+     *      *             by. Default 1.0f
      */
     public void setLineSpacingMultiplier(float lineSpacingMultiplier) {
         this.mLineSpacingMultiplier = lineSpacingMultiplier;
         invalidate();
     }
 
+    /**
+     * @see #setLineSpacingMultiplier(float)
+     * @return the value by which each line's height is multiplied to get its actual height.
+     */
     public float getLineSpacingMultiplier() {
         return mLineSpacingMultiplier;
     }
 
+    /**
+     * Get actual line spacing in pixels.
+     */
     public int getLineSpacingPixels() {
         var metrics = mPainter.getTextMetrics();
-        return (int) ((metrics.descent - metrics.ascent) * (mLineSpacingMultiplier - 1f)) / 2 * 2;
+        return ((int) ((metrics.descent - metrics.ascent) * (mLineSpacingMultiplier - 1f) + mLineSpacingAdd)) / 2 * 2;
     }
 
     /**
