@@ -213,4 +213,16 @@ public class DirectAccessProps implements Serializable {
     @InvalidateRequired
     public boolean highlightMatchingDelimiters = true;
 
+    /**
+     * Whether the editor will use round rectangle for text background
+     */
+    @InvalidateRequired
+    public boolean enableRoundTextBackground = true;
+
+    /**
+     * The text background wraps the actual text, but not the whole line
+     */
+    @InvalidateRequired
+    public boolean textBackgroundWrapTextOnly = true;
+
 }

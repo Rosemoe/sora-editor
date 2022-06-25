@@ -2580,6 +2580,28 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     }
 
     /**
+     * Get the top of text in target row
+     */
+    public int getRowTopOfText(int row) {
+        return getRowTop(row) + getLineSpacingPixels() / 2;
+    }
+
+    /**
+     * Get the bottom of text in target row
+     */
+    public int getRowBottomOfText(int row) {
+        return getRowBottom(row) - getLineSpacingPixels() / 2;
+    }
+
+    /**
+     * Get the height of text in row
+     */
+    public int getRowHeightOfText() {
+        var metrics = mPainter.getTextMetrics();
+        return metrics.descent - metrics.ascent;
+    }
+
+    /**
      * Get scroll x
      *
      * @return scroll x

@@ -315,7 +315,7 @@ public class WordwrapLayout extends AbstractLayout {
                     break;
                 }
             }
-            dest[0] = editor.getRowHeight() * (row + 1);
+            dest[0] = editor.getRowBottom(row);
             var sequence = text.getLine(region.line);
             var gtr = GraphicTextRow.obtain();
             gtr.set(sequence, region.startColumn, region.endColumn, editor.getTabWidth(), getSpans(line), editor.getTextPaint());

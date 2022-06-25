@@ -55,13 +55,17 @@ public class MoveCursorAnimator implements CursorAnimator, ValueAnimator.Animato
         duration = 120;
     }
 
+    private int getHeightOfRows(int rowCount) {
+        return editor.getRowHeight() * rowCount;
+    }
+
     @Override
     public void markStartPos() {
         var line = editor.getCursor().getLeftLine();
         float[] pos = editor.getLayout().getCharLayoutOffset(line, editor.getCursor().getLeftColumn());
         startX = editor.measureTextRegionOffset() + pos[1];
-        startY = pos[0];
-        startSize = editor.getLayout().getRowCountForLine(line) * editor.getRowHeight();
+        startY = pos[0] - minusHeight();
+        startSize = getHeightOfRows(editor.getLayout().getRowCountForLine(line));
         startBottom = editor.getLayout().getCharLayoutOffset(line, editor.getText().getColumnCount(line))[0];
     }
 
@@ -76,6 +80,10 @@ public class MoveCursorAnimator implements CursorAnimator, ValueAnimator.Animato
         animatorY.cancel();
         animatorBackground.cancel();
         animatorBgBottom.cancel();
+    }
+
+    private float minusHeight() {
+        return editor.getProps().textBackgroundWrapTextOnly ? editor.getLineSpacingPixels() / 2f : 0f;
     }
 
     @Override
@@ -98,9 +106,9 @@ public class MoveCursorAnimator implements CursorAnimator, ValueAnimator.Animato
         float[] pos = editor.getLayout().getCharLayoutOffset(editor.getCursor().getLeftLine(), editor.getCursor().getLeftColumn());
 
         animatorX = ValueAnimator.ofFloat(startX, (pos[1] + editor.measureTextRegionOffset()));
-        animatorY = ValueAnimator.ofFloat(startY, pos[0]);
+        animatorY = ValueAnimator.ofFloat(startY, pos[0] - minusHeight());
 
-        animatorBackground = ValueAnimator.ofFloat(startSize, editor.getLayout().getRowCountForLine(editor.getCursor().getLeftLine()) * editor.getRowHeight());
+        animatorBackground = ValueAnimator.ofFloat(startSize, getHeightOfRows(editor.getLayout().getRowCountForLine(editor.getCursor().getLeftLine())));
         animatorBgBottom = ValueAnimator.ofFloat(startBottom, editor.getLayout().getCharLayoutOffset(line, editor.getText().getColumnCount(line))[0]);
 
         animatorX.addUpdateListener(this);

@@ -177,7 +177,7 @@ public class LineBreakLayout extends AbstractLayout {
             dest = new float[2];
         }
         var sequence = text.getLine(line);
-        dest[0] = editor.getRowHeight() * (line + 1);
+        dest[0] = editor.getRowBottom(line);
         var gtr = GraphicTextRow.obtain();
         gtr.set(sequence, 0, sequence.length(), editor.getTabWidth(), getSpans(line), editor.getTextPaint());
         dest[1] = gtr.measureText(0, column);

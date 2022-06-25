@@ -1006,15 +1006,15 @@ public class EditorPainter {
             if (mCursor.isSelected()) {
                 if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
                     float centerX = paintingOffset + mEditor.measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar, line);
-                    postDrawCursor.add(new DrawCursorTask(centerX, mEditor.getRowBottom(row) - mEditor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_LEFT, mEditor.getLeftHandleDescriptor()));
+                    postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - mEditor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_LEFT, mEditor.getLeftHandleDescriptor()));
                 }
                 if (mCursor.getRightLine() == line && isInside(mCursor.getRightColumn(), firstVisibleChar, lastVisibleChar, line)) {
                     float centerX = paintingOffset + mEditor.measureText(mBuffer, firstVisibleChar, mCursor.getRightColumn() - firstVisibleChar, line);
-                    postDrawCursor.add(new DrawCursorTask(centerX, mEditor.getRowBottom(row) - mEditor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_RIGHT, mEditor.getRightHandleDescriptor()));
+                    postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - mEditor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_RIGHT, mEditor.getRightHandleDescriptor()));
                 }
             } else if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
                 float centerX = paintingOffset + mEditor.measureText(mBuffer, firstVisibleChar, mCursor.getLeftColumn() - firstVisibleChar, line);
-                postDrawCursor.add(new DrawCursorTask(centerX, mEditor.getRowBottom(row) - mEditor.getOffsetY(), mEditor.getEventHandler().shouldDrawInsertHandle() ? SelectionHandleStyle.HANDLE_TYPE_INSERT : SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, mEditor.getInsertHandleDescriptor()));
+                postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - mEditor.getOffsetY(), mEditor.getEventHandler().shouldDrawInsertHandle() ? SelectionHandleStyle.HANDLE_TYPE_INSERT : SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, mEditor.getInsertHandleDescriptor()));
             }
         }
 
@@ -1187,6 +1187,22 @@ public class EditorPainter {
         canvas.drawText(graph, 0, graph.length(), offset, baseline, mPaintGraph);
     }
 
+    protected int getRowTopForBackground(int row) {
+        if (!mEditor.getProps().textBackgroundWrapTextOnly) {
+            return mEditor.getRowTop(row);
+        } else {
+            return mEditor.getRowTopOfText(row);
+        }
+    }
+
+    protected int getRowBottomForBackground(int row) {
+        if (!mEditor.getProps().textBackgroundWrapTextOnly) {
+            return mEditor.getRowBottom(row);
+        } else {
+            return mEditor.getRowBottomOfText(row);
+        }
+    }
+
     /**
      * Draw background of a text region
      *
@@ -1203,12 +1219,16 @@ public class EditorPainter {
         int paintStart = Math.min(Math.max(firstVis, highlightStart), lastVis);
         int paintEnd = Math.min(Math.max(firstVis, highlightEnd), lastVis);
         if (paintStart != paintEnd) {
-            mRect.top = mEditor.getRowTop(row) - mEditor.getOffsetY();
-            mRect.bottom = mEditor.getRowBottom(row) - mEditor.getOffsetY();
+            mRect.top = getRowTopForBackground(row) - mEditor.getOffsetY();
+            mRect.bottom = getRowBottomForBackground(row) - mEditor.getOffsetY();
             mRect.left = paintingOffset + mEditor.measureText(mBuffer, firstVis, paintStart - firstVis, line);
             mRect.right = mRect.left + mEditor.measureText(mBuffer, paintStart, paintEnd - paintStart, line);
             mPaint.setColor(color);
-            canvas.drawRoundRect(mRect, mEditor.getRowHeight() * 0.13f, mEditor.getRowHeight() * 0.13f, mPaint);
+            if (mEditor.getProps().enableRoundTextBackground) {
+                canvas.drawRoundRect(mRect, mEditor.getRowHeight() * 0.13f, mEditor.getRowHeight() * 0.13f, mPaint);
+            } else {
+                canvas.drawRect(mRect, mPaint);
+            }
         }
     }
 
@@ -1375,21 +1395,14 @@ public class EditorPainter {
                 boolean isLeftHandle = mEditor.getEventHandler().selHandleType == EditorTouchEventHandler.SelectionHandle.LEFT && handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT;
                 boolean isRightHandle = mEditor.getEventHandler().selHandleType == EditorTouchEventHandler.SelectionHandle.RIGHT && handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT;
                 if (mEditor.isStickyTextSelection()) {
+                    float[] result = new float[2];
                     if (isLeftHandle) {
-                        x = mCursor.getLeftColumn() * mEditor.getTextPaint().getSpaceWidth() +
-                                mEditor.measureTextRegionOffset() -
-                                mEditor.getOffsetX();
-                        y = mCursor.getLeftLine() * mEditor.getRowHeight() +
-                                mEditor.getRowHeight() -
-                                mEditor.getOffsetY();
+                        result = mEditor.getLayout().getCharLayoutOffset(mCursor.getLeftLine(), mCursor.getLeftColumn());
                     } else if (isRightHandle) {
-                        x = mCursor.getRightColumn() * mEditor.getTextPaint().getSpaceWidth() +
-                                mEditor.measureTextRegionOffset() -
-                                mEditor.getOffsetX();
-                        y = mCursor.getRightLine() * mEditor.getRowHeight() +
-                                mEditor.getRowHeight() -
-                                mEditor.getOffsetY();
+                        result = mEditor.getLayout().getCharLayoutOffset(mCursor.getRightLine(), mCursor.getRightColumn());
                     }
+                    y = result[0] - mEditor.getOffsetY();
+                    x = result[1] - mEditor.getOffsetX();
                 } else {
                     if (isInsertHandle || isLeftHandle || isRightHandle) {
                         x = mEditor.getEventHandler().motionX + (descriptor.alignment != SelectionHandleStyle.ALIGN_CENTER ? descriptor.position.width() : 0) * (descriptor.alignment == SelectionHandleStyle.ALIGN_LEFT ? 1 : -1);
@@ -1399,7 +1412,7 @@ public class EditorPainter {
             }
 
             if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED || mEditor.getCursorBlink().visibility || mEditor.getEventHandler().holdInsertHandle()) {
-                mRect.top = y - mEditor.getRowHeight();
+                mRect.top = y - (mEditor.getProps().textBackgroundWrapTextOnly ? mEditor.getRowHeightOfText() : mEditor.getRowHeight());
                 mRect.bottom = y;
                 mRect.left = x - mEditor.getInsertSelectionWidth() / 2f;
                 mRect.right = x + mEditor.getInsertSelectionWidth() / 2f;
@@ -1676,7 +1689,7 @@ public class EditorPainter {
 
     protected void drawSelectionOnAnimation(Canvas canvas) {
         mRect.bottom = mEditor.getCursorAnimator().animatedY() - mEditor.getOffsetY();
-        mRect.top = mRect.bottom - mEditor.getRowHeight();
+        mRect.top = mRect.bottom - (mEditor.getProps().textBackgroundWrapTextOnly ? mEditor.getRowHeightOfText() : mEditor.getRowHeight());
         float centerX = mEditor.getCursorAnimator().animatedX() - mEditor.getOffsetX();
         mRect.left = centerX - mEditor.getInsertSelectionWidth() / 2;
         mRect.right = centerX + mEditor.getInsertSelectionWidth() / 2;
