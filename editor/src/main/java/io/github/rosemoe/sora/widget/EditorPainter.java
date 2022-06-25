@@ -450,7 +450,7 @@ public class EditorPainter {
         MutableInt firstLn = mEditor.isFirstLineNumberAlwaysVisible() && mEditor.isWordwrap() ? new MutableInt(-1) : null;
 
         drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor, postDrawCurrentLines, firstLn);
-        patchHighlightedDelimiters(canvas, textOffset);
+        //patchHighlightedDelimiters(canvas, textOffset);
         drawDiagnosticIndicators(canvas, offsetX);
 
         offsetX = -mEditor.getOffsetX();
@@ -1683,8 +1683,35 @@ public class EditorPainter {
         }
     }
 
+    protected List<TextDisplayPosition> getTextRegionPositions(int start, int end) {
+        var layout = mEditor.getLayout();
+        var startRow = layout.getRowIndexForPosition(start);
+        var endRow = layout.getRowIndexForPosition(end);
+        var posStart = mCursor.getIndexer().getCharPosition(start);
+        var posEnd = mCursor.getIndexer().getCharPosition(end);
+        var itr = layout.obtainRowIterator(startRow);
+        var list = new ArrayList<TextDisplayPosition>();
+        for (int i = startRow;i <= endRow && itr.hasNext();i++) {
+            var row = itr.next();
+            var startOnRow = (i == startRow ? posStart.column : row.startColumn);
+            var endOnRow = (i == endRow ? posEnd.column : row.endColumn);
+            var position = new TextDisplayPosition();
+            list.add(position);
+            position.row = i;
+            var line = mEditor.getText().getLine(row.lineIndex);
+            position.left = mEditor.measureText(line, row.startColumn, startOnRow, row.lineIndex);
+            position.right = position.left + mEditor.measureText(line, startOnRow, endOnRow, row.lineIndex);
+            position.start = startOnRow;
+            position.end = endOnRow;
+        }
+        return list;
+    }
+
     protected void patchTextRegionWithColor(Canvas canvas, float textOffset, int start, int end, int color) {
-        // TODO
+        var positions = getTextRegionPositions(start, end);
+        for (var position : positions) {
+            // TODO
+        }
     }
 
     protected void drawSelectionOnAnimation(Canvas canvas) {
@@ -1715,5 +1742,11 @@ public class EditorPainter {
         mRect.left = leftX;
         mHorizontalScrollBar.set(mRect);
         drawColor(canvas, mEditor.getColorScheme().getColor(mEditor.getEventHandler().holdHorizontalScrollBar() ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED : EditorColorScheme.SCROLL_BAR_THUMB), mRect);
+    }
+
+    private static class TextDisplayPosition {
+        int row, start, end;
+        float left;
+        float right;
     }
 }
