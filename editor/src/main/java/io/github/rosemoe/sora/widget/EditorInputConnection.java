@@ -418,8 +418,9 @@ class EditorInputConnection extends BaseInputConnection {
         if (!mComposingText.isComposing()) {
             // Create composing info
             deleteSelected();
+            mComposingText.preSetComposing = true;
             mEditor.commitText(text);
-            mComposingText.set(getCursor().getLeft(), getCursor().getLeft() + text.length());
+            mComposingText.set(getCursor().getLeft() - text.length(), getCursor().getLeft());
         } else {
             // Already have composing text
             if (mComposingText.isComposing()) {

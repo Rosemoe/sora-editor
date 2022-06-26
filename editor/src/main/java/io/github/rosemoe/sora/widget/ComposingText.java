@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.widget;
 public class ComposingText {
 
     public int startIndex, endIndex;
+    public boolean preSetComposing;
 
     public void set(int start, int end) {
         this.startIndex = start;
@@ -41,7 +42,9 @@ public class ComposingText {
     }
 
     public boolean isComposing() {
-        return startIndex >= 0 && endIndex >= 0;
+        var r = preSetComposing || startIndex >= 0 && endIndex >= 0;
+        preSetComposing = false;
+        return r;
     }
 
     public void shiftOnInsert(int insertStart, int insertEnd) {
