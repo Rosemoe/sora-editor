@@ -1394,16 +1394,7 @@ public class EditorPainter {
                 boolean isInsertHandle = mEditor.getEventHandler().holdInsertHandle() && handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT;
                 boolean isLeftHandle = mEditor.getEventHandler().selHandleType == EditorTouchEventHandler.SelectionHandle.LEFT && handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT;
                 boolean isRightHandle = mEditor.getEventHandler().selHandleType == EditorTouchEventHandler.SelectionHandle.RIGHT && handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT;
-                if (mEditor.isStickyTextSelection()) {
-                    float[] result = new float[2];
-                    if (isLeftHandle) {
-                        result = mEditor.getLayout().getCharLayoutOffset(mCursor.getLeftLine(), mCursor.getLeftColumn());
-                    } else if (isRightHandle) {
-                        result = mEditor.getLayout().getCharLayoutOffset(mCursor.getRightLine(), mCursor.getRightColumn());
-                    }
-                    y = result[0] - mEditor.getOffsetY();
-                    x = result[1] - mEditor.getOffsetX();
-                } else {
+                if (!mEditor.isStickyTextSelection()) {
                     if (isInsertHandle || isLeftHandle || isRightHandle) {
                         x = mEditor.getEventHandler().motionX + (descriptor.alignment != SelectionHandleStyle.ALIGN_CENTER ? descriptor.position.width() : 0) * (descriptor.alignment == SelectionHandleStyle.ALIGN_LEFT ? 1 : -1);
                         y = mEditor.getEventHandler().motionY - descriptor.position.height() * 2 / 3f;
