@@ -2096,6 +2096,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      */
     public void undo() {
         mText.undo();
+        notifyIMEExternalCursorChange();
         mCompletionWindow.hide();
     }
 
@@ -2104,6 +2105,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      */
     public void redo() {
         mText.redo();
+        notifyIMEExternalCursorChange();
         mCompletionWindow.hide();
     }
 
