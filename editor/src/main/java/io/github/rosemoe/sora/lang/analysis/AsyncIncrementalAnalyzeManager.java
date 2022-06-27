@@ -66,6 +66,10 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         this.receiver = receiver;
     }
 
+    protected StyleReceiver getReceiver() {
+        return receiver;
+    }
+
     @Override
     public void reset(@NonNull ContentReference content, @NonNull Bundle extraArguments) {
         this.ref = content;

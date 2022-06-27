@@ -96,6 +96,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                 }
             }
         }
+
         return blocks;
     }
 
