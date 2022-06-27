@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Stack;
 
 import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager;
+import io.github.rosemoe.sora.lang.brackets.SimpleBracketsCollector;
 import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
@@ -61,6 +62,8 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
         var blocks = new ArrayList<CodeBlock>();
         var maxSwitch = 0;
         var currSwitch = 0;
+        var brackets = new SimpleBracketsCollector();
+        var bracketsStack = new Stack<Long>();
         for (int i = 0; i < text.getLineCount() && delegate.isNotCancelled(); i++) {
             var state = getState(i);
             boolean checkForIdentifiers = state.state.state == STATE_NORMAL || (state.state.state == STATE_INCOMPLETE_COMMENT && state.tokens.size() > 1);
@@ -93,11 +96,56 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                             }
                         }
                     }
+                    var type = getType(token);
+                    if (type > 0) {
+                        if (isStart(token)) {
+                            bracketsStack.push(IntPair.pack(type, text.getCharIndex(i, IntPair.getSecond(tokenRecord))));
+                        } else {
+                            if (!bracketsStack.isEmpty()) {
+                                var record = bracketsStack.pop();
+                                var typeRecord = IntPair.getFirst(record);
+                                if (typeRecord == type) {
+                                    brackets.add(IntPair.getSecond(record), text.getCharIndex(i, IntPair.getSecond(tokenRecord)));
+                                } else if (type == 3) {
+                                    // Bad syntax, try to find type 3
+                                    while (!bracketsStack.isEmpty()) {
+                                        record = bracketsStack.pop();
+                                        if (IntPair.getFirst(record) == 3) {
+                                            brackets.add(IntPair.getSecond(record), text.getCharIndex(i, IntPair.getSecond(tokenRecord)));
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-
+        if (delegate.isNotCancelled()) {
+            var r = getReceiver();
+            if (r != null) {
+                r.updateBracketProvider(brackets);
+            }
+        }
         return blocks;
+    }
+
+    private static int getType(int token) {
+        if (token == Tokens.LBRACE.ordinal() || token == Tokens.RBRACE.ordinal()) {
+            return 3;
+        }
+        if (token == Tokens.LBRACK.ordinal() || token == Tokens.RBRACK.ordinal()) {
+            return 2;
+        }
+        if (token == Tokens.LPAREN.ordinal() || token == Tokens.RPAREN.ordinal()) {
+            return 1;
+        }
+        return 0;
+    }
+
+    private static boolean isStart(int token) {
+        return token == Tokens.LBRACE.ordinal() || token == Tokens.LBRACK.ordinal() || token == Tokens.LPAREN.ordinal();
     }
 
     @Override
