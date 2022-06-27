@@ -22,52 +22,40 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-apply plugin: 'com.android.library'
-//apply plugin: 'kotlin-android'
+plugins {
+    id("com.android.library")
+    id("com.vanniktech.maven.publish.base")
+    // id("kotlin-android")
+}
 
 group = "io.github.Rosemoe.sora-editor"
 version = Versions.versionName
 
-ext {
-    PUBLISH_ARTIFACT_ID= "editor"
-}
-
-apply from:'../maven-publish.gradle'
-
 android {
-    namespace 'io.github.rosemoe.sora'
-    compileSdk Versions.compileSdkVersion
-    buildToolsVersion Versions.buildToolsVersion
+    namespace = "io.github.rosemoe.sora"
 
     defaultConfig {
-        minSdk Versions.minSdkVersion
-        targetSdk Versions.targetSdkVersion
-
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles "consumer-rules.pro"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
     }
     /*
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = "1.8"
     }*/
 }
 
 dependencies {
-    //implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.9.0.M3'
-    implementation 'androidx.annotation:annotation:1.4.0'
+    //implementation "org.eclipse.lsp4j:org.eclipse.lsp4j:0.9.0.M3"
+    implementation("androidx.annotation:annotation:1.4.0")
     //implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.3")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
 }

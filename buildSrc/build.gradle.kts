@@ -23,15 +23,11 @@
  ******************************************************************************/
 
 plugins {
-
+    `kotlin-dsl`
 }
 
 repositories {
+    google()
+    gradlePluginPortal()
     mavenCentral()
-    mavenLocal()
-}
-
-
-dependencies {
-
 }
