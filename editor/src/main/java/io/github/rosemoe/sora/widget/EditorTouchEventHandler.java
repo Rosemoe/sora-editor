@@ -40,6 +40,7 @@ import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.LongPressEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
+import io.github.rosemoe.sora.graphics.RectUtils;
 import io.github.rosemoe.sora.text.ICUUtils;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.component.Magnifier;
@@ -278,7 +279,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             case MotionEvent.ACTION_DOWN: {
                 mHoldingScrollbarVertical = mHoldingScrollbarHorizontal = false;
                 RectF rect = mEditor.getEditorPainter().getVerticalScrollBarRect();
-                if (rect.contains(e.getX(), e.getY())) {
+                if (RectUtils.contains(rect, e.getX(), e.getY(), mEditor.getDpUnit() * 10)) {
                     mHoldingScrollbarVertical = true;
                     mThumbDownY = e.getY();
                     mEditor.hideAutoCompleteWindow();
