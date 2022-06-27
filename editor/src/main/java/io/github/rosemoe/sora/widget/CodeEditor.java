@@ -3928,6 +3928,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
         mPainter.updateTimestamp();
+        mStyleDelegate.onTextChange();
         var start = mText.getIndexer().getCharPosition(startLine, startColumn);
         var end = mText.getIndexer().getCharPosition(endLine, endColumn);
         for (int i = startLine; i <= endLine && i < getLineCount(); i++) {
@@ -3985,6 +3986,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
         mPainter.updateTimestamp();
+        mStyleDelegate.onTextChange();
         var start = mText.getIndexer().getCharPosition(startLine, startColumn);
         var end = start.fromThis();
         end.column = endColumn;

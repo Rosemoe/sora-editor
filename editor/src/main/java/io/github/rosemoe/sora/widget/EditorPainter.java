@@ -1668,7 +1668,10 @@ public class EditorPainter {
         }
         var paired = mEditor.mStyleDelegate.getFoundBracketPair();
         if (paired != null) {
-            var color = 0;
+            var color = mEditor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_FOREGROUND);
+            if (paired.rightIndex + paired.rightLength > mEditor.getText().length()) {
+                return;
+            }
             patchTextRegionWithColor(canvas, textOffset, paired.leftIndex, paired.leftIndex + paired.leftLength, color);
             patchTextRegionWithColor(canvas, textOffset, paired.rightIndex, paired.rightIndex + paired.rightLength, color);
         }
@@ -1680,7 +1683,7 @@ public class EditorPainter {
             mPaint.setFakeBoldText(TextStyle.isBold(style));
             mPaint.setTextSkewX(TextStyle.isItalics(style) ? -0.2f : 0f);
             mPaint.setStrikeThruText(TextStyle.isStrikeThrough(style));
-            drawText(canvas, mEditor.getText().getLine(line), start, end - start, start, end - start, false, horizontalOffset, mEditor.getRowBaseline(row) - mEditor.getOffsetY(), line);
+            drawText(canvas, mEditor.getText().getLine(line), startCol, endCol - startCol, startCol, endCol - startCol, false, horizontalOffset, mEditor.getRowBaseline(row) - mEditor.getOffsetY(), line);
         });
         mPaint.setFakeBoldText(false);
         mPaint.setTextSkewX(0f);
@@ -1703,11 +1706,12 @@ public class EditorPainter {
             list.add(position);
             position.row = i;
             var line = mEditor.getText().getLine(row.lineIndex);
-            position.left = mEditor.measureText(line, row.startColumn, startOnRow, row.lineIndex);
-            position.right = position.left + mEditor.measureText(line, startOnRow, endOnRow, row.lineIndex);
+            position.left = mEditor.measureText(line, row.startColumn, startOnRow - row.startColumn, row.lineIndex);
+            position.right = position.left + mEditor.measureText(line, startOnRow, endOnRow - startOnRow, row.lineIndex);
             position.startColumn = startOnRow;
             position.endColumn = endOnRow;
             position.line = row.lineIndex;
+            position.rowStart = row.startColumn;
         }
         return list;
     }
@@ -1735,12 +1739,16 @@ public class EditorPainter {
             // Find spans to draw
             for (int i = 0;i < reader.getSpanCount(); i++) {
                 var span = reader.getSpanAt(i);
-                var sharedStart = Math.max(startCol, span.column);
+                var spanStart = Math.max(span.column, position.rowStart);
+                var sharedStart = Math.max(startCol, spanStart);
                 var spanEnd = i + 1 == reader.getSpanCount() ? column : reader.getSpanAt(i + 1).column;
+                if (spanEnd < position.rowStart) {
+                    continue;
+                }
                 var sharedEnd = Math.min(endCol, spanEnd);
                 if (sharedEnd - sharedStart > 0) {
                     // Patch the text
-                    patch.draw(canvas, horizontalOffset, position.row, line, span.column, spanEnd, span.style);
+                    patch.draw(canvas, horizontalOffset, position.row, line, spanStart, spanEnd, span.style);
                 }
                 if (span.column >= endCol) {
                     break;
@@ -1787,9 +1795,22 @@ public class EditorPainter {
     }
 
     private static class TextDisplayPosition {
-        int row, startColumn, endColumn, line;
+        int row, startColumn, endColumn, line, rowStart;
         float left;
         float right;
+
+        @Override
+        public String toString() {
+            return "TextDisplayPosition{" +
+                    "row=" + row +
+                    ", startColumn=" + startColumn +
+                    ", endColumn=" + endColumn +
+                    ", line=" + line +
+                    ", rowStart=" + rowStart +
+                    ", left=" + left +
+                    ", right=" + right +
+                    '}';
+        }
     }
 
     protected interface PatchDraw {

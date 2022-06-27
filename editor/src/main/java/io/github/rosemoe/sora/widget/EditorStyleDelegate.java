@@ -47,19 +47,17 @@ public class EditorStyleDelegate implements StyleReceiver {
 
     EditorStyleDelegate(@NonNull CodeEditor editor) {
         editorRef = new WeakReference<>(editor);
-        editor.subscribeEvent(ContentChangeEvent.class, (_1, _2) -> {
-            bracketsProvider = null;
-            var hasPair = foundPair != null;
-            foundPair = null;
-            if (hasPair) {
-                editor.invalidate();
-            }
-        });
         editor.subscribeEvent(SelectionChangeEvent.class, (event, __) -> {
             if (!event.isSelected()) {
                 postUpdateBracketPair();
             }
         });
+    }
+
+    void onTextChange() {
+        // Should we do this?
+        //bracketsProvider = null;
+        //foundPair = null;
     }
 
     private void postUpdateBracketPair() {
