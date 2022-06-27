@@ -884,7 +884,7 @@ public class Content implements CharSequence {
      * @param index Index to check
      */
     protected void checkIndex(int index) {
-        if (index > length()) {
+        if (index > length() || index < 0) {
             throw new StringIndexOutOfBoundsException("Index " + index + " out of bounds. length:" + length());
         }
     }
@@ -895,7 +895,7 @@ public class Content implements CharSequence {
      * @param line Line to check
      */
     protected void checkLine(int line) {
-        if (line >= getLineCount()) {
+        if (line >= getLineCount() || line < 0) {
             throw new StringIndexOutOfBoundsException("Line " + line + " out of bounds. line count:" + getLineCount());
         }
     }
@@ -910,7 +910,7 @@ public class Content implements CharSequence {
     protected void checkLineAndColumn(int line, int column, boolean allowEqual) {
         checkLine(line);
         int len = lines.get(line).length();
-        if (column > len || (!allowEqual && column == len)) {
+        if (column > len || (!allowEqual && column == len) || column < 0) {
             throw new StringIndexOutOfBoundsException(
                     "Column " + column + " out of bounds.line: " + line + " ,column count:" + len);
         }

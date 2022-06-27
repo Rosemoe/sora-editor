@@ -201,7 +201,7 @@ public class CachedIndexer implements Indexer, ContentListener {
             if (workLine != -1) {
                 workColumn = mContent.getColumnCount(workLine);
             } else {
-                //Reached the start of text,we have to use findIndexForward() as this method can not handle it
+                // Reached the start of text,we have to use findIndexForward() as this method can not handle it
                 findIndexForward(mZeroPoint, index, dest);
                 return;
             }
