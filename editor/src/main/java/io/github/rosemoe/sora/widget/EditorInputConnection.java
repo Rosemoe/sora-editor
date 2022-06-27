@@ -123,7 +123,7 @@ class EditorInputConnection extends BaseInputConnection {
      * Get content region internally
      */
     private CharSequence getTextRegionInternal(int start, int end, int flags) {
-        Content origin = mEditor.getText();
+        var origin = mEditor.getText();
         if (start > end) {
             int tmp = start;
             start = end;
@@ -139,11 +139,11 @@ class EditorInputConnection extends BaseInputConnection {
             start = end = 0;
         }
         if (end - start > mEditor.getProps().maxIPCTextLength) {
-            end = start + mEditor.getProps().maxIPCTextLength;
+            end = start + Math.max(0, mEditor.getProps().maxIPCTextLength);
         }
-        Content sub = (Content) origin.subSequence(start, end);
+        var sub = (Content) origin.subSequence(start, end);
         if (flags == GET_TEXT_WITH_STYLES) {
-            SpannableStringBuilder text = new SpannableStringBuilder(sub);
+            var text = new SpannableStringBuilder(sub);
             // Apply composing span
             if (mComposingText.isComposing()) {
                 try {

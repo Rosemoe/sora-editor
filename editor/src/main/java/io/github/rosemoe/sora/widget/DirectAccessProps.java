@@ -28,6 +28,7 @@ import android.view.inputmethod.ExtractedTextRequest;
 import android.widget.OverScroller;
 
 import androidx.annotation.FloatRange;
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 
 import java.io.Serializable;
@@ -124,6 +125,7 @@ public class DirectAccessProps implements Serializable {
      * <p>
      * Set it to 0 to send no text to IME.
      */
+    @IntRange(from = 0)
     public int maxIPCTextLength = 500000;
 
     /**

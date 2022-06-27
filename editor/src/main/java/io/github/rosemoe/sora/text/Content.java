@@ -716,7 +716,7 @@ public class Content implements CharSequence {
             c.lines.add(new ContentLine().insert(0, end, 0, endColumn));
             c.textLength += endColumn + 1;
         } else {
-            throw new IllegalArgumentException("start > end");
+            throw new StringIndexOutOfBoundsException("start > end");
         }
         c.setUndoEnabled(true);
         return c;
