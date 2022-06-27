@@ -1679,12 +1679,18 @@ public class EditorPainter {
 
     protected void patchTextRegionWithColor(Canvas canvas, float textOffset, int start, int end, int color) {
         mPaint.setColor(color);
+        mPaintOther.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_UNDERLINE));
+        mPaintOther.setStrokeWidth(mEditor.getRowHeightOfText() * 0.1f);
+        mPaint.setStyle(android.graphics.Paint.Style.FILL_AND_STROKE);
+        mPaint.setFakeBoldText(true);
         patchTextRegions(canvas, textOffset, getTextRegionPositions(start, end), (canvasLocal, horizontalOffset, row, line, startCol, endCol, style) -> {
-            mPaint.setFakeBoldText(TextStyle.isBold(style));
             mPaint.setTextSkewX(TextStyle.isItalics(style) ? -0.2f : 0f);
             mPaint.setStrikeThruText(TextStyle.isStrikeThrough(style));
             drawText(canvas, mEditor.getText().getLine(line), startCol, endCol - startCol, startCol, endCol - startCol, false, horizontalOffset, mEditor.getRowBaseline(row) - mEditor.getOffsetY(), line);
+            var bottom = mEditor.getRowBottomOfText(row) - mEditor.getOffsetY() - mEditor.getRowHeightOfText() * 0.05f;
+            canvas.drawLine(0, bottom, mEditor.getWidth(), bottom, mPaintOther);
         });
+        mPaint.setStyle(android.graphics.Paint.Style.FILL);
         mPaint.setFakeBoldText(false);
         mPaint.setTextSkewX(0f);
         mPaint.setStrikeThruText(false);
@@ -1720,7 +1726,12 @@ public class EditorPainter {
         var styles = mEditor.getStyles();
         var spans = styles != null ? styles.getSpans() : null;
         var reader = spans != null ? spans.read() : new EmptyReader();
+        var firstVisRow = mEditor.getFirstVisibleRow();
+        var lastVisRow = mEditor.getLastVisibleRow();
         for (var position : positions) {
+            if (!(firstVisRow <= position.row && position.row <= lastVisRow)) {
+                continue;
+            }
             // First, get the line
             var line = position.line;
             try {
