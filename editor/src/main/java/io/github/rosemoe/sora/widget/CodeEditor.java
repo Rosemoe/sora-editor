@@ -271,6 +271,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     private boolean mLigatureEnabled;
     private boolean mLastCursorState;
     private boolean mStickyTextSelection;
+    private boolean mHighlightBracketPair;
     private SelectionHandleStyle.HandleDescriptor mLeftHandle;
     private SelectionHandleStyle.HandleDescriptor mRightHandle;
     private SelectionHandleStyle.HandleDescriptor mInsertHandle;
@@ -531,6 +532,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         setScalable(true);
         setFocusable(true);
         setFocusableInTouchMode(true);
+        mHighlightBracketPair = true;
         mConnection = new EditorInputConnection(this);
         mCompletionWindow = new EditorAutoCompletion(this);
         mVerticalGlow = new MaterialEdgeEffect();
@@ -2070,6 +2072,26 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
                 parent.requestDisallowInterceptTouchEvent(false);
             }
         }
+    }
+
+    /**
+     * Whether to highlight brackets pairs
+     */
+    public void setHighlightBracketPair(boolean highlightBracketPair) {
+        this.mHighlightBracketPair = highlightBracketPair;
+        if (!highlightBracketPair) {
+            mStyleDelegate.clearFoundBracketPair();
+        } else {
+            mStyleDelegate.postUpdateBracketPair();
+        }
+        invalidate();
+    }
+
+    /**
+     * @see #setHighlightBracketPair(boolean)
+     */
+    public boolean isHighlightBracketPair() {
+        return mHighlightBracketPair;
     }
 
     /**

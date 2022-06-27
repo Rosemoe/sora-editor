@@ -60,11 +60,11 @@ public class EditorStyleDelegate implements StyleReceiver {
         //foundPair = null;
     }
 
-    private void postUpdateBracketPair() {
+    void postUpdateBracketPair() {
         runOnUiThread(() -> {
             final var provider = bracketsProvider;
             final var editor = editorRef.get();
-            if (provider != null && editor != null && !editor.getCursor().isSelected()) {
+            if (provider != null && editor != null && !editor.getCursor().isSelected() && editor.isHighlightBracketPair()) {
                 foundPair = provider.getPairedBracketAt(editor.getText(), editor.getCursor().getLeft());
                 editor.invalidate();
             }
@@ -108,5 +108,9 @@ public class EditorStyleDelegate implements StyleReceiver {
     public void updateBracketProvider(@Nullable BracketsProvider provider) {
         this.bracketsProvider = provider;
         postUpdateBracketPair();
+    }
+
+    public void clearFoundBracketPair() {
+        this.foundPair = null;
     }
 }
