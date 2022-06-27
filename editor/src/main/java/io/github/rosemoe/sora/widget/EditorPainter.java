@@ -1669,12 +1669,17 @@ public class EditorPainter {
         var paired = mEditor.mStyleDelegate.getFoundBracketPair();
         if (paired != null) {
             var color = mEditor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_FOREGROUND);
-            if (paired.rightIndex + paired.rightLength > mEditor.getText().length()) {
+            if (!checkBounds(paired.leftIndex, paired.leftLength) || !checkBounds(paired.rightIndex, paired.rightLength))  {
+                // Index out of bounds
                 return;
             }
             patchTextRegionWithColor(canvas, textOffset, paired.leftIndex, paired.leftIndex + paired.leftLength, color);
             patchTextRegionWithColor(canvas, textOffset, paired.rightIndex, paired.rightIndex + paired.rightLength, color);
         }
+    }
+
+    protected boolean checkBounds(int index, int length) {
+        return (index >= 0 && length >= 0 && index + length <= mEditor.getText().length());
     }
 
     protected void patchTextRegionWithColor(Canvas canvas, float textOffset, int start, int end, int color) {

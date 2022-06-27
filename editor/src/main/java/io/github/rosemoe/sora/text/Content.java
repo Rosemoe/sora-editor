@@ -387,6 +387,9 @@ public class Content implements CharSequence {
         lines.addAll(line + 1, newLines);
         helper.recycle();
         textLength += text.length() - minusLength;
+        if (minusLength != 0) {
+            text = text.toString().replace("\r\n", "\n").replace('\r', '\n');
+        }
         this.dispatchAfterInsert(line, column, workLine, workIndex, text);
     }
 

@@ -71,7 +71,7 @@ public class SimpleBracketsCollector implements BracketsProvider {
 
     @Override
     public PairedBracket getPairedBracketAt(Content text, int index) {
-        var res = getForIndex(index - 1);
+        var res = index - 1 >= 0 ? getForIndex(index - 1) : null;
         if (res == null) {
             res = getForIndex(index);
         }
