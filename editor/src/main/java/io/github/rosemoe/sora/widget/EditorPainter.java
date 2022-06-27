@@ -1764,7 +1764,7 @@ public class EditorPainter {
                 if (span.column >= endCol) {
                     break;
                 }
-                horizontalOffset += mEditor.measureText(lineText, span.column, spanEnd - span.column, line);
+                horizontalOffset += mEditor.measureText(lineText, spanStart, spanEnd - spanStart, line);
             }
             canvas.restore();
         }
