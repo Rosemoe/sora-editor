@@ -361,7 +361,7 @@ public class CachedIndexer implements Indexer, ContentListener {
     }
 
     @Override
-    public void getCharPosition(int index, @NonNull CharPosition dest) {
+    public synchronized void getCharPosition(int index, @NonNull CharPosition dest) {
         throwIfHas();
         mContent.checkIndex(index);
         CharPosition pos = findNearestByIndex(index);
@@ -386,7 +386,7 @@ public class CachedIndexer implements Indexer, ContentListener {
     }
 
     @Override
-    public void getCharPosition(int line, int column, @NonNull CharPosition dest) {
+    public synchronized void getCharPosition(int line, int column, @NonNull CharPosition dest) {
         throwIfHas();
         mContent.checkLineAndColumn(line, column, true);
         CharPosition pos = findNearestByLine(line);
@@ -412,7 +412,7 @@ public class CachedIndexer implements Indexer, ContentListener {
     }
 
     @Override
-    public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn,
+    public synchronized void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn,
                             CharSequence insertedContent) {
         if (isHandleEvent()) {
             for (CharPosition pos : mCachePositions) {
@@ -432,7 +432,7 @@ public class CachedIndexer implements Indexer, ContentListener {
     }
 
     @Override
-    public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn,
+    public synchronized void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn,
                             CharSequence deletedContent) {
         if (isHandleEvent()) {
             List<CharPosition> garbage = new ArrayList<>();
