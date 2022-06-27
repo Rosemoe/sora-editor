@@ -48,6 +48,7 @@ import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
+import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.text.ContentCreator
 import org.eclipse.tm4e.core.internal.theme.reader.ThemeReader
 import io.github.rosemoe.sora.utils.CrashHandler
@@ -179,6 +180,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun openAssetsFile(name: String) {
         Thread {
+
             try {
                 val stream = assets.open(name)
                 val text = ContentCreator.fromStream(stream)
@@ -187,6 +189,18 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: IOException) {
                 e.printStackTrace()
+            }
+            // Test Content class
+            val text = assets.open(name).bufferedReader().readText()
+            val startTime = System.currentTimeMillis()
+            val target = Content()
+            target.isUndoEnabled = false
+            for (i in 1..50) {
+                target.insert(0, 0, text)
+            }
+            val time = System.currentTimeMillis() - startTime
+            runOnUiThread {
+                Toast.makeText(this, "Content test time usage: $time ms", Toast.LENGTH_SHORT).show()
             }
         }.start()
         updatePositionText()
