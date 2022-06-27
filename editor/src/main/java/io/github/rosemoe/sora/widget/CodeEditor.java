@@ -852,6 +852,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
             old.destroy();
         }
 
+        mStyleDelegate.reset();
         this.mLanguage = lang;
         this.mStyles = null;
         this.mDiagnostics = null;
@@ -3279,6 +3280,8 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         } else {
             mText = new Content(text);
         }
+        mStyleDelegate.reset();
+        mStyles = null;
         mCursor = mText.getCursor();
         mEventHandler.reset();
         mText.addContentListener(this);

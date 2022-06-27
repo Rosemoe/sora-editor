@@ -76,6 +76,11 @@ public class EditorStyleDelegate implements StyleReceiver {
         return foundPair;
     }
 
+    void reset() {
+        foundPair = null;
+        bracketsProvider = null;
+    }
+
     private void runOnUiThread(Runnable operation) {
         var editor = editorRef.get();
         if (editor == null) {
