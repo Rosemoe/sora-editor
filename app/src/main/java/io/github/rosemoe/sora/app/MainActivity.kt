@@ -191,7 +191,7 @@ class MainActivity : AppCompatActivity() {
                 e.printStackTrace()
             }
             // Test Content class
-            val text = assets.open(name).bufferedReader().readText()
+            /*val text = assets.open(name).bufferedReader().readText()
             val startTime = System.currentTimeMillis()
             val target = Content()
             target.isUndoEnabled = false
@@ -201,7 +201,7 @@ class MainActivity : AppCompatActivity() {
             val time = System.currentTimeMillis() - startTime
             runOnUiThread {
                 Toast.makeText(this, "Content test time usage: $time ms", Toast.LENGTH_SHORT).show()
-            }
+            }*/
         }.start()
         updatePositionText()
         updateBtnState()
