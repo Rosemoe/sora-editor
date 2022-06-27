@@ -32,11 +32,13 @@ public class RoughBufferedMeasure {
     private final float[] cache;
     public final float[] widths;
     public final char[] buffer;
+    private final int tabWidth;
 
-    public RoughBufferedMeasure() {
+    public RoughBufferedMeasure(int tabWidth) {
         cache = new float[65536];
         buffer = new char[5];
         widths = new float[10];
+        this.tabWidth = tabWidth;
     }
 
     /**
@@ -50,13 +52,18 @@ public class RoughBufferedMeasure {
      * Measure a single character
      */
     public float measureChar(char ch, Paint p) {
+        var rate = 1;
+        if (ch == '\t') {
+            ch = ' ';
+            rate = tabWidth;
+        }
         float width = cache[ch];
         if (width == 0) {
             buffer[0] = ch;
             width = p.measureText(buffer, 0, 1);
             cache[ch] = width;
         }
-        return width;
+        return width * rate;
     }
 
     /*

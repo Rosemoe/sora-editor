@@ -46,7 +46,7 @@ public class LineBreakLayout extends AbstractLayout {
 
     public LineBreakLayout(CodeEditor editor, Content text) {
         super(editor, text);
-        measurer = new RoughBufferedMeasure();
+        measurer = new RoughBufferedMeasure(editor.getTabWidth());
         measureAllLines();
     }
 
