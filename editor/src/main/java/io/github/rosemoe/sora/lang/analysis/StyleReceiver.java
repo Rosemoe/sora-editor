@@ -57,6 +57,9 @@ public interface StyleReceiver {
      */
     void setDiagnostics(@NonNull AnalyzeManager sourceManager, @Nullable DiagnosticsContainer diagnostics);
 
+    /**
+     * Set new provider for brackets highlighting
+     */
     void updateBracketProvider(@Nullable BracketsProvider provider);
 
 }
