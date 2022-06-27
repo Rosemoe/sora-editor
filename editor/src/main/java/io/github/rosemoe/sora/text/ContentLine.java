@@ -63,6 +63,13 @@ public class ContentLine implements CharSequence, GetChars {
         insert(0, text);
     }
 
+    public ContentLine(int size) {
+        length = 0;
+        value = new char[size];
+        id = -1;
+        width = 0;
+    }
+
     private ContentLine(boolean initialize) {
         if (initialize) {
             length = 0;

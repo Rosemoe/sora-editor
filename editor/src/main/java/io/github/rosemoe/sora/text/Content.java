@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.text;
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -352,23 +353,40 @@ public class Content implements CharSequence {
         if (workIndex == -1) {
             workIndex = 0;
         }
-        ContentLine currLine = lines.get(workLine);
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            if (c == '\n') {
-                ContentLine newLine = new ContentLine();
-                newLine.append(currLine, workIndex, currLine.length());
-                currLine.delete(workIndex, currLine.length());
-                lines.add(workLine + 1, newLine);
-                currLine = newLine;
-                workIndex = 0;
-                workLine++;
+        var currLine = lines.get(workLine);
+        var helper = InsertTextHelper.forInsertion(text);
+        int type, peekType = InsertTextHelper.TYPE_EOF;
+        boolean fromPeek = false;
+        var minusLength = 0;
+        var newLines = new LinkedList<ContentLine>();
+        while (true) {
+            type = fromPeek ? peekType : helper.forward();
+            fromPeek = false;
+            if (type == InsertTextHelper.TYPE_EOF) {
+                break;
+            }
+            if (type == InsertTextHelper.TYPE_LINE_CONTENT) {
+                currLine.insert(workIndex, text, helper.getIndex(), helper.getIndexNext());
+                workIndex += helper.getIndexNext() - helper.getIndex();
             } else {
-                currLine.insert(workIndex, c);
-                workIndex++;
+                minusLength += helper.getIndexNext() - helper.getIndex() - 1;
+
+                // Peek!
+                peekType = helper.forward();
+                fromPeek = true;
+
+                var newLine = new ContentLine(currLine.length() - workIndex + helper.getIndexNext() - helper.getIndex() + 10);
+                newLine.insert(0, currLine, workIndex, currLine.length());
+                currLine.delete(workIndex, currLine.length());
+                workIndex = 0;
+                currLine = newLine;
+                newLines.add(newLine);
+                workLine ++;
             }
         }
-        textLength += text.length();
+        lines.addAll(line + 1, newLines);
+        helper.recycle();
+        textLength += text.length() - minusLength;
         this.dispatchAfterInsert(line, column, workLine, workIndex, text);
     }
 
