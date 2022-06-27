@@ -29,6 +29,7 @@ Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEdito
 - [x] Error/Warning/Typo/Deprecated indicators
 - [x] Text magnifier
 - [x] Incremental highlight Analysis 
+- [x] Highlight bracket pairs 
 - [x] Event System
 ## Screenshots
 <div style="overflow: hidden">
