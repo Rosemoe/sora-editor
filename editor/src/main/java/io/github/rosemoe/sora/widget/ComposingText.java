@@ -23,7 +23,7 @@
  */
 package io.github.rosemoe.sora.widget;
 
-public class ComposingText {
+class ComposingText {
 
     public int startIndex, endIndex;
     public boolean preSetComposing;
