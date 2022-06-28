@@ -29,9 +29,10 @@ import java.io.IOException;
 import java.io.Reader;
 
 /**
- * Reference of a content due to accessed in read-only mode.
+ * Reference of a content due to be accessed in read-only mode.
  * Access can be validated during accesses.
  * {@link io.github.rosemoe.sora.text.TextReference.ValidateFailedException} may be thrown if the check is failed.
+ * The result of methods may be dirty when the content is modified.
  *
  * @author Rosemoe
  */
@@ -54,6 +55,28 @@ public class ContentReference extends TextReference {
         validateAccess();
         indexer.getCharPosition(index, cached);
         return content.charAt(cached.line, cached.column);
+    }
+
+    public char charAt(int line, int column) {
+        validateAccess();
+        return content.charAt(line, column);
+    }
+
+    public int getCharIndex(int line, int column) {
+        validateAccess();
+        return indexer.getCharIndex(line, column);
+    }
+
+    public CharPosition getCharPosition(int index) {
+        validateAccess();
+        return indexer.getCharPosition(index);
+    }
+
+    /**
+     * Get the indexer for this reference
+     */
+    public Indexer getIndexer() {
+        return indexer;
     }
 
     /**
