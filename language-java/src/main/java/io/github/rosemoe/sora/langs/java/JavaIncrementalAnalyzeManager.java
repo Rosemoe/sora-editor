@@ -125,7 +125,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
         if (delegate.isNotCancelled()) {
             var r = getReceiver();
             if (r != null) {
-                r.updateBracketProvider(brackets);
+                r.updateBracketProvider(this, brackets);
             }
         }
         return blocks;

@@ -110,9 +110,12 @@ public class EditorStyleDelegate implements StyleReceiver {
     }
 
     @Override
-    public void updateBracketProvider(@Nullable BracketsProvider provider) {
-        this.bracketsProvider = provider;
-        postUpdateBracketPair();
+    public void updateBracketProvider(@NonNull AnalyzeManager sourceManager, @Nullable BracketsProvider provider) {
+        var editor = editorRef.get();
+        if (editor != null && sourceManager == editor.getEditorLanguage().getAnalyzeManager()) {
+            this.bracketsProvider = provider;
+            postUpdateBracketPair();
+        }
     }
 
     public void clearFoundBracketPair() {

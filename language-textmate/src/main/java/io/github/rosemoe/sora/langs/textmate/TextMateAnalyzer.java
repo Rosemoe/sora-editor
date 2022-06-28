@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Objects;
 
 import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager;
+import io.github.rosemoe.sora.lang.brackets.BracketsProvider;
 import io.github.rosemoe.sora.lang.brackets.OnlineBracketsMatcher;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
@@ -41,7 +42,6 @@ import io.github.rosemoe.sora.langs.textmate.folding.IndentRange;
 import io.github.rosemoe.sora.text.Content;
 import org.eclipse.tm4e.core.grammar.IGrammar;
 import org.eclipse.tm4e.core.grammar.ITokenizeLineResult2;
-import org.eclipse.tm4e.core.grammar.StackElement;
 import org.eclipse.tm4e.core.internal.grammar.StackElementMetadata;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigRegExp;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
@@ -52,7 +52,6 @@ import org.eclipse.tm4e.core.theme.IRawTheme;
 import org.eclipse.tm4e.core.theme.Theme;
 import org.eclipse.tm4e.languageconfiguration.ILanguageConfiguration;
 import org.eclipse.tm4e.languageconfiguration.internal.LanguageConfigurator;
-import org.eclipse.tm4e.languageconfiguration.internal.supports.CharacterPair;
 
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.ArrayList;
@@ -67,7 +66,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     private final ILanguageConfiguration configuration;
     private OnigRegExp cachedRegExp;
     private boolean foldingOffside;
-    private char[] pairs;
+    private BracketsProvider bracketsProvider;
 
     public TextMateAnalyzer(TextMateLanguage language, String grammarName, InputStream grammarIns, Reader languageConfiguration, IRawTheme theme) throws Exception {
         registry.setTheme(theme);
@@ -78,14 +77,15 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
             LanguageConfigurator languageConfigurator = new LanguageConfigurator(languageConfiguration);
             configuration = languageConfigurator.getLanguageConfiguration();
             var pairs = configuration.getBrackets();
-            if (pairs != null) {
-                this.pairs = new char[pairs.size() * 2];
+            if (pairs != null && pairs.size() != 0) {
+                var pairArr = new char[pairs.size() * 2];
                 int i = 0;
                 for (var pair : pairs) {
-                    this.pairs[i * 2] = pair.getKey().charAt(0);
-                    this.pairs[i * 2 + 1] = pair.getValue().charAt(0);
+                    pairArr[i * 2] = pair.getKey().charAt(0);
+                    pairArr[i * 2 + 1] = pair.getValue().charAt(0);
                     i++;
                 }
+                bracketsProvider = new OnlineBracketsMatcher(pairArr, 100000);
             }
         } else {
             configuration = null;
@@ -136,7 +136,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
         if (delegate.isNotCancelled()) {
             var r = getReceiver();
             if (r != null) {
-                r.updateBracketProvider(new OnlineBracketsMatcher(pairs, 100000));
+                r.updateBracketProvider(this, bracketsProvider);
             }
         }
         return list;

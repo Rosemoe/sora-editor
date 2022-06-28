@@ -60,6 +60,6 @@ public interface StyleReceiver {
     /**
      * Set new provider for brackets highlighting
      */
-    void updateBracketProvider(@Nullable BracketsProvider provider);
+    void updateBracketProvider(@NonNull AnalyzeManager sourceManager, @Nullable BracketsProvider provider);
 
 }
