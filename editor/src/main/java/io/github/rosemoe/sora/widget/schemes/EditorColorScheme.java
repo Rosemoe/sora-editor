@@ -294,7 +294,7 @@ public class EditorColorScheme {
                 color = 0xdd000000;
                 break;
             case HIGHLIGHTED_DELIMITERS_UNDERLINE:
-                color = 0xffffff00;
+                color = 0xff3f51b5;
                 break;
         }
         setColor(type, color);
