@@ -654,6 +654,10 @@ public class Content implements CharSequence {
         return isInBatchEdit();
     }
 
+    public void resetBatchEdit() {
+        nestedBatchEdit = 0;
+    }
+
     /**
      * Returns whether we are in batch edit
      *
@@ -941,7 +945,10 @@ public class Content implements CharSequence {
         return n;
     }
 
-    public void replace(int startIndex, int endIndex, CharSequence text) {
+    /**
+     * Replace text in the given region with the
+     */
+    public void replace(int startIndex, int endIndex, @NonNull CharSequence text) {
         var start = getIndexer().getCharPosition(startIndex);
         var end = getIndexer().getCharPosition(endIndex);
         replace(start.line, start.column, end.line, end.column, text);

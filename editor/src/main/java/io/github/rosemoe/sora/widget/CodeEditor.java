@@ -3272,10 +3272,12 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         if (mText != null) {
             mText.removeContentListener(this);
             mText.setLineListener(null);
+            mText.resetBatchEdit();
         }
         mExtraArguments = extraArguments == null ? new Bundle() : extraArguments;
         if (reuseContentObject && text instanceof Content) {
             mText = (Content) text;
+            mText.resetBatchEdit();
             mPainter.updateTimestamp();
         } else {
             mText = new Content(text);
@@ -3784,6 +3786,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         }
 
         mConnection.reset();
+        mText.resetBatchEdit();
         setExtracting(null);
         return mConnection;
     }
