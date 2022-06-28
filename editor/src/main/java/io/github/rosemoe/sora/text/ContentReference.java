@@ -39,22 +39,16 @@ import java.io.Reader;
 public class ContentReference extends TextReference {
 
     private final Content content;
-    private final Indexer indexer;
-    private final CharPosition cached;
 
     public ContentReference(@NonNull Content ref) {
         super(ref);
         this.content = ref;
-        cached = new CharPosition();
-        // Use another Indexer to query characters by index, avoiding concurrent modification to cache list
-        this.indexer = new CachedIndexer(content);
     }
 
     @Override
     public char charAt(int index) {
         validateAccess();
-        indexer.getCharPosition(index, cached);
-        return content.charAt(cached.line, cached.column);
+        return content.charAt(index);
     }
 
     public char charAt(int line, int column) {
@@ -64,19 +58,17 @@ public class ContentReference extends TextReference {
 
     public int getCharIndex(int line, int column) {
         validateAccess();
-        return indexer.getCharIndex(line, column);
+        return content.getCharIndex(line, column);
+    }
+
+    public CharPosition getCharPosition(int line, int column) {
+        validateAccess();
+        return content.getIndexer().getCharPosition(line, column);
     }
 
     public CharPosition getCharPosition(int index) {
         validateAccess();
-        return indexer.getCharPosition(index);
-    }
-
-    /**
-     * Get the indexer for this reference
-     */
-    public Indexer getIndexer() {
-        return indexer;
+        return content.getIndexer().getCharPosition(index);
     }
 
     /**

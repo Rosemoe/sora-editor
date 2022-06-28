@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
+
 /**
  * Indexer Impl for Content
  * With cache
@@ -361,19 +363,24 @@ public class CachedIndexer implements Indexer, ContentListener {
     }
 
     @Override
-    public synchronized void getCharPosition(int index, @NonNull CharPosition dest) {
+    public void getCharPosition(int index, @NonNull CharPosition dest) {
         throwIfHas();
         mContent.checkIndex(index);
-        CharPosition pos = findNearestByIndex(index);
-        if (pos.index == index) {
-            dest.set(pos);
-        } else if (pos.index < index) {
-            findIndexForward(pos, index, dest);
-        } else {
-            findIndexBackward(pos, index, dest);
-        }
-        if (Math.abs(index - pos.index) >= mSwitchIndex) {
-            push(dest.fromThis());
+        mContent.lock(false);
+        try {
+            CharPosition pos = findNearestByIndex(index);
+            if (pos.index == index) {
+                dest.set(pos);
+            } else if (pos.index < index) {
+                findIndexForward(pos, index, dest);
+            } else {
+                findIndexBackward(pos, index, dest);
+            }
+            if (Math.abs(index - pos.index) >= mSwitchIndex) {
+                push(dest.fromThis());
+            }
+        } finally {
+            mContent.unlock(false);
         }
     }
 
@@ -386,33 +393,40 @@ public class CachedIndexer implements Indexer, ContentListener {
     }
 
     @Override
-    public synchronized void getCharPosition(int line, int column, @NonNull CharPosition dest) {
+    public void getCharPosition(int line, int column, @NonNull CharPosition dest) {
         throwIfHas();
         mContent.checkLineAndColumn(line, column, true);
-        CharPosition pos = findNearestByLine(line);
-        if (pos.line == line) {
-            dest.set(pos);
-            if (pos.column == column) {
-                return;
+        mContent.lock(false);
+        try {
+            CharPosition pos = findNearestByLine(line);
+            if (pos.line == line) {
+                dest.set(pos);
+                if (pos.column == column) {
+                    return;
+                }
+                findInLine(dest, line, column);
+            } else if (pos.line < line) {
+                findLiCoForward(pos, line, column, dest);
+            } else {
+                findLiCoBackward(pos, line, column, dest);
             }
-            findInLine(dest, line, column);
-        } else if (pos.line < line) {
-            findLiCoForward(pos, line, column, dest);
-        } else {
-            findLiCoBackward(pos, line, column, dest);
-        }
-        if (Math.abs(pos.line - line) > mSwitchLine) {
-            push(dest.fromThis());
+            if (Math.abs(pos.line - line) > mSwitchLine) {
+                push(dest.fromThis());
+            }
+        } finally {
+            mContent.unlock(false);
         }
     }
 
     @Override
+    @UnsupportedUserUsage
     public void beforeReplace(Content content) {
         //Do nothing
     }
 
     @Override
-    public synchronized void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn,
+    @UnsupportedUserUsage
+    public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn,
                             CharSequence insertedContent) {
         if (isHandleEvent()) {
             for (CharPosition pos : mCachePositions) {
@@ -432,7 +446,8 @@ public class CachedIndexer implements Indexer, ContentListener {
     }
 
     @Override
-    public synchronized void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn,
+    @UnsupportedUserUsage
+    public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn,
                             CharSequence deletedContent) {
         if (isHandleEvent()) {
             List<CharPosition> garbage = new ArrayList<>();

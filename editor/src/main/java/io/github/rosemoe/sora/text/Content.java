@@ -109,14 +109,14 @@ public class Content implements CharSequence {
         return lock != null;
     }
 
-    private void lock(boolean write) {
+    protected void lock(boolean write) {
         if (lock == null) {
             return;
         }
         (write ? lock.writeLock() : lock.readLock()).lock();
     }
 
-    private void unlock(boolean write) {
+    protected void unlock(boolean write) {
         if (lock == null) {
             return;
         }
@@ -698,7 +698,7 @@ public class Content implements CharSequence {
      * @return Indexer for this object
      */
     public Indexer getIndexer() {
-        if (indexer.getClass() != CachedIndexer.class && cursor != null) {
+        if (cursor != null) {
             return cursor.getIndexer();
         }
         return indexer;
