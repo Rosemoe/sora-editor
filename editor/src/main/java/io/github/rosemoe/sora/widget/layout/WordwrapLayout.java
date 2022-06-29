@@ -23,9 +23,11 @@
  */
 package io.github.rosemoe.sora.widget.layout;
 
+import android.util.SparseArray;
 import android.util.TypedValue;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -211,7 +213,7 @@ public class WordwrapLayout extends AbstractLayout {
     }
 
     @Override
-    public RowIterator obtainRowIterator(int initialRow) {
+    public RowIterator obtainRowIterator(int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
         return new WordwrapLayoutRowItr(initialRow);
     }
 

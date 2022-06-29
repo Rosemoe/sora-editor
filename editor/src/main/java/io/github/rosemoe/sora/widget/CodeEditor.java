@@ -1125,7 +1125,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      * Obtain a float array from previously displayed lines, or either create a new one
      * if no float array matches the requirement.
      */
-    private float[] obtainFloatArray(int desiredSize) {
+    private float[] obtainFloatArray(int desiredSize, boolean usePainter) {
         var start = IntPair.getFirst(mAvailableFloatArrayRegion);
         var end = IntPair.getSecond(mAvailableFloatArrayRegion);
         var firstVis = getFirstVisibleLine();
@@ -1135,7 +1135,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         for (int i = start; i < end; i++) {
             // Find line that is not displaying currently
             if (i < firstVis || i > lastVis) {
-                var line = mText.getLine(i);
+                var line = usePainter ? mPainter.getLine(i) : mText.getLine(i);
                 if (line.widthCache != null && line.widthCache.length >= desiredSize) {
                     line.timestamp = 0;
                     var res = line.widthCache;
@@ -1155,14 +1155,14 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     /**
      * Build measure cache for the given lines, if the timestamp indicates that it is outdated.
      */
-    void buildMeasureCacheForLines(int startLine, int endLine, long timestamp) {
+    void buildMeasureCacheForLines(int startLine, int endLine, long timestamp, boolean usePainter) {
         var text = mText;
         while (startLine <= endLine && startLine < text.getLineCount()) {
-            var line = text.getLine(startLine);
+            var line = usePainter ? mPainter.getLine(startLine) : mText.getLine(startLine);
             if (line.timestamp < timestamp) {
                 var gtr = GraphicTextRow.obtain();
                 if (line.widthCache == null || line.widthCache.length < line.length()) {
-                    line.widthCache = obtainFloatArray(Math.max(line.length() + 8, 90));
+                    line.widthCache = obtainFloatArray(Math.max(line.length() + 8, 90), usePainter);
                 }
                 gtr.set(line, 0, line.length(), getTabWidth(), getSpansForLine(startLine), mPainter.getPaint());
                 gtr.buildMeasureCache();
@@ -1505,7 +1505,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
             return new float[]{end, 0};
         }
         if (line.widthCache != null && line.timestamp < mPainter.getTimestamp()) {
-            buildMeasureCacheForLines(lineNumber, lineNumber, mPainter.getTimestamp());
+            buildMeasureCacheForLines(lineNumber, lineNumber, mPainter.getTimestamp(), false);
         }
         var gtr = GraphicTextRow.obtain();
         gtr.set(line, contextStart, end, mTabWidth, line.widthCache == null ? getSpansForLine(lineNumber) : null, mPainter.getPaint());
@@ -2559,7 +2559,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      * Get actual line spacing in pixels.
      */
     public int getLineSpacingPixels() {
-        var metrics = mPainter.getTextMetrics();
+        var metrics = mPainter.mTextMetrics;
         return ((int) ((metrics.descent - metrics.ascent) * (mLineSpacingMultiplier - 1f) + mLineSpacingAdd)) / 2 * 2;
     }
 
@@ -2570,7 +2570,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      * @return baseline y offset
      */
     public int getRowBaseline(int row) {
-        return getRowHeight() * (row + 1) - mPainter.getTextMetrics().descent - getLineSpacingPixels() / 2;
+        return getRowHeight() * (row + 1) - mPainter.mTextMetrics.descent - getLineSpacingPixels() / 2;
     }
 
     /**
@@ -2579,7 +2579,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      * @return height of single row
      */
     public int getRowHeight() {
-        var metrics = mPainter.getTextMetrics();
+        var metrics = mPainter.mTextMetrics;
         // Do not let the row height be zero...
         return Math.max(1, metrics.descent - metrics.ascent + getLineSpacingPixels());
     }
@@ -2622,7 +2622,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      * Get the height of text in row
      */
     public int getRowHeightOfText() {
-        var metrics = mPainter.getTextMetrics();
+        var metrics = mPainter.mTextMetrics;
         return metrics.descent - metrics.ascent;
     }
 
@@ -3687,9 +3687,11 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     //-------------------------------------------------------------------------------
     @Override
     protected void onDraw(Canvas canvas) {
+        var startTime = System.currentTimeMillis();
         super.onDraw(canvas);
 
         mPainter.draw(canvas);
+        logger.d("Frame time usage = " + (System.currentTimeMillis() - startTime) + " ms");
         // Update magnifier
         if ((mLastCursorState != mCursorBlink.visibility || !mEventHandler.getScroller().isFinished()) && mEventHandler.mMagnifier.isShowing()) {
             mLastCursorState = mCursorBlink.visibility;

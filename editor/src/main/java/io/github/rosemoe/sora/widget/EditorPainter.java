@@ -44,6 +44,7 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.util.Log;
 import android.util.MutableInt;
+import android.util.SparseArray;
 import android.widget.OverScroller;
 
 import androidx.annotation.NonNull;
@@ -96,13 +97,14 @@ public class EditorPainter {
     private final LongArrayList mPostDrawLineNumbers = new LongArrayList();
     private final LongArrayList mPostDrawCurrentLines = new LongArrayList();
     private final LongArrayList mMatchedPositions = new LongArrayList();
+    private final SparseArray<ContentLine> mPreloadedLines = new SparseArray<>();
 
     private final CodeEditor mEditor;
     private Paint.FontMetricsInt mLineNumberMetrics;
     private Paint.FontMetricsInt mGraphMetrics;
 
     private int mCachedLineNumberWidth;
-    private Paint.FontMetricsInt mTextMetrics;
+    Paint.FontMetricsInt mTextMetrics;
     
     private Cursor mCursor;
     private ContentLine mBuffer;
@@ -161,10 +163,6 @@ public class EditorPainter {
 
     Paint getPaintGraph() {
         return mPaintGraph;
-    }
-
-    android.graphics.Paint.FontMetricsInt getTextMetrics() {
-        return mTextMetrics;
     }
 
     int getCachedLineNumberWidth() {
@@ -248,8 +246,21 @@ public class EditorPainter {
         mTimestamp = System.nanoTime();
     }
     
-    private void prepareLine(int line) {
-        mBuffer = mEditor.getText().getLine(line);
+    void prepareLine(int line) {
+        mBuffer = getLine(line);
+    }
+
+    ContentLine getLine(int line) {
+        var line2 = mPreloadedLines.get(line);
+        if (line2 == null) {
+            line2 = mEditor.getText().getLine(line);
+            mPreloadedLines.put(line, line2);
+        }
+        return line2;
+    }
+
+    int getColumnCount(int line) {
+        return getLine(line).length();
     }
 
     /**
@@ -283,9 +294,9 @@ public class EditorPainter {
     @RequiresApi(29)
     protected void updateLineDisplayList(RenderNode renderNode, int line, Spans.Reader spans) {
         prepareLine(line);
-        int columnCount = mEditor.getText().getColumnCount(line);
+        int columnCount = getColumnCount(line);
         float widthLine = mEditor.measureText(mBuffer, 0, columnCount, line) + mEditor.getDpUnit() * 20;
-        renderNode.setPosition(0, 0, (int) widthLine, mEditor.getRowHeight());
+        renderNode.setPosition(0, 0, (int) (widthLine + mPaintGraph.measureText("\u21B5") * 1.5f), mEditor.getRowHeight());
         Canvas canvas = renderNode.beginRecording();
         if (spans == null) {
             spans = new EmptyReader();
@@ -385,6 +396,12 @@ public class EditorPainter {
                 spanOffset--;
             }
         }
+
+        int nonPrintableFlags = mEditor.getNonPrintablePaintingFlags();
+        // Draw hard wrap
+        if ((nonPrintableFlags & FLAG_DRAW_LINE_SEPARATOR) != 0) {
+            drawMiniGraph(canvas, paintingOffset, 0, "\u21B5");
+        }
         renderNode.endRecording();
         mPaint.setTextSkewX(0);
         mPaint.setFakeBoldText(false);
@@ -430,7 +447,8 @@ public class EditorPainter {
             mCachedLineNumberWidth = 0;
         }
 
-        mEditor.buildMeasureCacheForLines(mEditor.getFirstVisibleLine(), mEditor.getLastVisibleLine(), mTimestamp);
+        prepareLines(mEditor.getFirstVisibleLine(), mEditor.getLastVisibleLine());
+        mEditor.buildMeasureCacheForLines(mEditor.getFirstVisibleLine(), mEditor.getLastVisibleLine(), mTimestamp, true);
 
         if (mCursor.isSelected()) {
             mEditor.getInsertHandleDescriptor().setEmpty();
@@ -540,8 +558,7 @@ public class EditorPainter {
         drawEdgeEffect(canvas);
 
         mEditor.rememberDisplayedLines();
-        //canvas.drawColor(0xffffffff);
-        //new EditorRenderer(mEditor).render(canvas);
+        mPreloadedLines.clear();
     }
 
     /**
@@ -682,6 +699,11 @@ public class EditorPainter {
         }
     }
 
+    private void prepareLines(int start, int end) {
+        mPreloadedLines.clear();
+        mEditor.getText().runReadActionsOnLines(Math.max(0, start - 5), Math.min(mEditor.getText().getLineCount() - 1, end + 5), mPreloadedLines::put);
+    }
+
     /**
      * Draw rows with a {@link RowIterator}
      *
@@ -692,7 +714,7 @@ public class EditorPainter {
      */
     protected void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<DrawCursorTask> postDrawCursor, LongArrayList postDrawCurrentLines, MutableInt requiredFirstLn) {
         int firstVis = mEditor.getFirstVisibleRow();
-        RowIterator rowIterator = mEditor.getLayout().obtainRowIterator(firstVis);
+        RowIterator rowIterator = mEditor.getLayout().obtainRowIterator(firstVis, mPreloadedLines);
         Spans spans = mEditor.getStyles() == null ? null : mEditor.getStyles().spans;
         var matchedPositions = mMatchedPositions;
         matchedPositions.clear();
@@ -721,7 +743,7 @@ public class EditorPainter {
         for (int row = firstVis; row <= mEditor.getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
             int line = rowInf.lineIndex;
-            int columnCount = mEditor.getText().getColumnCount(line);
+            int columnCount = getColumnCount(line);
             if (lastPreparedLine != line) {
                 mEditor.computeMatchedPositions(line, matchedPositions);
                 prepareLine(line);
@@ -759,7 +781,7 @@ public class EditorPainter {
                 if (line == mCursor.getRightLine()) {
                     selectionEnd = mCursor.getRightColumn();
                 }
-                if (mEditor.getText().getColumnCount(line) == 0 && line != mCursor.getRightLine()) {
+                if (getColumnCount(line) == 0 && line != mCursor.getRightLine()) {
                     mRect.top = mEditor.getRowTop(row) - mEditor.getOffsetY();
                     mRect.bottom = mEditor.getRowBottom(row) - mEditor.getOffsetY();
                     mRect.left = paintingOffset;
@@ -787,7 +809,7 @@ public class EditorPainter {
         for (int row = firstVis; row <= mEditor.getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
             int line = rowInf.lineIndex;
-            ContentLine contentLine = mEditor.getText().getLine(line);
+            ContentLine contentLine = getLine(line);
             int columnCount = contentLine.length();
             if (row == firstVis && requiredFirstLn != null) {
                 requiredFirstLn.value = line;
@@ -814,6 +836,7 @@ public class EditorPainter {
             int lastVisibleChar = (int) mEditor.findFirstVisibleChar(offset2 + mEditor.getWidth() - offset3, firstVisibleChar + 1, rowInf.endColumn, mBuffer, line)[0];
 
             float backupOffset = paintingOffset;
+            int nonPrintableFlags = mEditor.getNonPrintablePaintingFlags();
 
             // Draw text here
             if (!mEditor.isHardwareAcceleratedDrawAllowed() || !canvas.isHardwareAccelerated() || mEditor.isWordwrap() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || (rowInf.endColumn - rowInf.startColumn > 256 && !mEditor.getProps().cacheRenderNodeForLongLines) /* Save memory */) {
@@ -937,15 +960,14 @@ public class EditorPainter {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+
+                // Draw hard wrap
+                if (lastVisibleChar == columnCount && (nonPrintableFlags & FLAG_DRAW_LINE_SEPARATOR) != 0) {
+                    drawMiniGraph(canvas, paintingOffset, row, "\u21B5");
+                }
             } else {
                 paintingOffset = offset + mRenderer.drawLineHardwareAccelerated(canvas, line, offset) - mEditor.getDpUnit() * 20;
                 lastVisibleChar = columnCount;
-            }
-
-            int nonPrintableFlags = mEditor.getNonPrintablePaintingFlags();
-            // Draw hard wrap
-            if (lastVisibleChar == columnCount && (nonPrintableFlags & FLAG_DRAW_LINE_SEPARATOR) != 0) {
-                drawMiniGraph(canvas, paintingOffset, row, "\u21B5");
             }
 
             // Recover the offset
@@ -1066,13 +1088,13 @@ public class EditorPainter {
                     var row = mEditor.getLayout().getRowAt(i);
                     var startX = 0f;
                     if (i == startRow) {
-                        startX = mEditor.measureText(text.getLine(row.lineIndex), row.startColumn, start.column - row.startColumn, row.lineIndex);
+                        startX = mEditor.measureText(getLine(row.lineIndex), row.startColumn, start.column - row.startColumn, row.lineIndex);
                     }
                     float endX ;
                     if (i != endRow) {
-                        endX = mEditor.measureText(text.getLine(row.lineIndex), row.startColumn, row.endColumn - row.startColumn, row.lineIndex);
+                        endX = mEditor.measureText(getLine(row.lineIndex), row.startColumn, row.endColumn - row.startColumn, row.lineIndex);
                     } else {
-                        endX = mEditor.measureText(text.getLine(row.lineIndex), row.startColumn, end.column - row.startColumn, row.lineIndex);
+                        endX = mEditor.measureText(getLine(row.lineIndex), row.startColumn, end.column - row.startColumn, row.lineIndex);
                     }
                     startX += offset;
                     endX += offset;
@@ -1497,9 +1519,9 @@ public class EditorPainter {
             CodeBlock block = blocks.get(curr);
             if (CodeEditor.hasVisibleRegion(block.startLine, block.endLine, first, last)) {
                 try {
-                    var lineContent = mEditor.getText().getLine(block.endLine);
+                    var lineContent = getLine(block.endLine);
                     float offset1 = mEditor.measureText(lineContent, 0, Math.min(block.endColumn, lineContent.length()), block.endLine);
-                    lineContent = mEditor.getText().getLine(block.startLine);
+                    lineContent = getLine(block.startLine);
                     float offset2 = mEditor.measureText(lineContent, 0, Math.min(block.startColumn, lineContent.length()), block.startLine);
                     float offset = Math.min(offset1, offset2);
                     float centerX = offset + offsetX;
@@ -1691,7 +1713,7 @@ public class EditorPainter {
         patchTextRegions(canvas, textOffset, getTextRegionPositions(start, end), (canvasLocal, horizontalOffset, row, line, startCol, endCol, style) -> {
             mPaint.setTextSkewX(TextStyle.isItalics(style) ? -0.2f : 0f);
             mPaint.setStrikeThruText(TextStyle.isStrikeThrough(style));
-            drawText(canvas, mEditor.getText().getLine(line), startCol, endCol - startCol, startCol, endCol - startCol, false, horizontalOffset, mEditor.getRowBaseline(row) - mEditor.getOffsetY(), line);
+            drawText(canvas, getLine(line), startCol, endCol - startCol, startCol, endCol - startCol, false, horizontalOffset, mEditor.getRowBaseline(row) - mEditor.getOffsetY(), line);
             var bottom = mEditor.getRowBottomOfText(row) - mEditor.getOffsetY() - mEditor.getRowHeightOfText() * 0.05f;
             canvas.drawLine(0, bottom, mEditor.getWidth(), bottom, mPaintOther);
         });
@@ -1707,7 +1729,7 @@ public class EditorPainter {
         var endRow = layout.getRowIndexForPosition(end);
         var posStart = mCursor.getIndexer().getCharPosition(start);
         var posEnd = mCursor.getIndexer().getCharPosition(end);
-        var itr = layout.obtainRowIterator(startRow);
+        var itr = layout.obtainRowIterator(startRow, mPreloadedLines);
         var list = new ArrayList<TextDisplayPosition>();
         for (int i = startRow;i <= endRow && itr.hasNext();i++) {
             var row = itr.next();
@@ -1747,7 +1769,7 @@ public class EditorPainter {
             }
             var startCol = position.startColumn;
             var endCol = position.endColumn;
-            var lineText = mEditor.getText().getLine(line);
+            var lineText = getLine(line);
             var column = lineText.length();
             canvas.save();
             canvas.clipRect(textOffset + position.left, 0, textOffset + position.right, mEditor.getHeight());

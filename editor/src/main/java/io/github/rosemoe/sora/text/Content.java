@@ -953,4 +953,25 @@ public class Content implements CharSequence {
         var end = getIndexer().getCharPosition(endIndex);
         replace(start.line, start.column, end.line, end.column, text);
     }
+
+    protected int getColumnCountUnchecked(int line) {
+        return lines.get(line).length();
+    }
+
+    public void runReadActionsOnLines(int startLine, int endLine, @NonNull ContentLineConsumer consumer) {
+        lock(false);
+        try {
+            for (int i = startLine;i <= endLine;i++) {
+                consumer.consume(i, lines.get(i));
+            }
+        } finally {
+            unlock(false);
+        }
+    }
+
+    public interface ContentLineConsumer {
+
+        void consume(int lineIndex, @NonNull ContentLine line);
+
+    }
 }

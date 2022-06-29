@@ -23,6 +23,11 @@
  */
 package io.github.rosemoe.sora.widget.layout;
 
+import android.util.SparseArray;
+
+import androidx.annotation.Nullable;
+
+import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.text.LineRemoveListener;
 
@@ -49,13 +54,17 @@ public interface Layout extends LineRemoveListener, ContentListener {
      */
     int getLineNumberForRow(int row);
 
+    default RowIterator obtainRowIterator(int initialRow) {
+        return obtainRowIterator(initialRow, null);
+    }
+
     /**
      * Return a {@link RowIterator} object for editor to draw text rows
      *
      * @param initialRow The first row in result iterator
      * @return Iterator contains rows
      */
-    RowIterator obtainRowIterator(int initialRow);
+    RowIterator obtainRowIterator(int initialRow, @Nullable SparseArray<ContentLine> preloadedLines);
 
     /**
      * Get the specific Row

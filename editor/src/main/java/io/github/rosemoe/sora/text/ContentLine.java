@@ -321,9 +321,14 @@ public class ContentLine implements CharSequence, GetChars {
         return length;
     }
 
+    /**
+     * {@inheritDoc}
+     * <strong>Index is unchecked for performance</strong>
+     */
     @Override
+    @UnsupportedUserUsage
     public char charAt(int index) {
-        checkIndex(index);
+        // checkIndex(index);
         return value[index];
     }
 

@@ -29,6 +29,7 @@ import android.graphics.RenderNode;
 import androidx.annotation.RequiresApi;
 
 import java.util.Collections;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.github.rosemoe.sora.annotations.Experimental;
@@ -48,6 +49,7 @@ class HwAcceleratedRenderer implements ContentListener {
 
     private final CodeEditor editor;
     private final ArrayList<TextRenderNode> cache;
+    private final Stack<TextRenderNode> pool = new Stack<>();
 
     public HwAcceleratedRenderer(CodeEditor editor) {
         this.editor = editor;
@@ -62,8 +64,11 @@ class HwAcceleratedRenderer implements ContentListener {
         var res = false;
         var itr = cache.iterator();
         while (itr.hasNext()) {
-            if (itr.next().line >= startLine) {
+            var element = itr.next();
+            if (element.line >= startLine) {
                 itr.remove();
+                element.renderNode.discardDisplayList();
+                pool.push(element);
                 res = true;
             }
         }
@@ -92,7 +97,9 @@ class HwAcceleratedRenderer implements ContentListener {
                 return node;
             }
         }
-        var node = new TextRenderNode(line);
+        var node = pool.isEmpty() ? new TextRenderNode(line) : pool.pop();
+        node.line = line;
+        node.isDirty = true;
         cache.add(0, node);
         return node;
     }

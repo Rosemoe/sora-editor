@@ -23,6 +23,10 @@
  */
 package io.github.rosemoe.sora.widget.layout;
 
+import android.util.SparseArray;
+
+import androidx.annotation.Nullable;
+
 import java.util.NoSuchElementException;
 
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
@@ -65,7 +69,7 @@ public class LineBreakLayout extends AbstractLayout {
             line.setId(widthMaintainer.push(width));
         }
         GraphicTextRow.recycle(gtr);*/
-        for (int i = 0;i < text.getLineCount(); i++) {
+        for (int i = 0; i < text.getLineCount(); i++) {
             ContentLine line = text.getLine(i);
             var width = (int) measurer.measureText(line, 0, line.length(), editor.getTextPaint());
             line.setWidth(width);
@@ -100,8 +104,8 @@ public class LineBreakLayout extends AbstractLayout {
     }
 
     @Override
-    public RowIterator obtainRowIterator(int initialRow) {
-        return new LineBreakLayoutRowItr(initialRow);
+    public RowIterator obtainRowIterator(int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
+        return new LineBreakLayoutRowItr(initialRow, preloadedLines);
     }
 
     @Override
@@ -221,12 +225,14 @@ public class LineBreakLayout extends AbstractLayout {
         private final Row result;
         private int currentRow;
         private final int initRow;
+        private final SparseArray<ContentLine> preloadedLines;
 
-        LineBreakLayoutRowItr(int initialRow) {
+        LineBreakLayoutRowItr(int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
             initRow = currentRow = initialRow;
             result = new Row();
             result.isLeadingRow = true;
             result.startColumn = 0;
+            this.preloadedLines = preloadedLines;
         }
 
         @Override
@@ -235,7 +241,12 @@ public class LineBreakLayout extends AbstractLayout {
                 throw new NoSuchElementException();
             }
             result.lineIndex = currentRow;
-            result.endColumn = text.getColumnCount(currentRow++);
+            var line = preloadedLines != null ? preloadedLines.get(currentRow) : null;
+            if (line == null) {
+                line = text.getLine(currentRow);
+            }
+            result.endColumn = line.length();
+            currentRow ++;
             return result;
         }
 

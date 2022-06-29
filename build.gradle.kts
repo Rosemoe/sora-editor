@@ -62,24 +62,6 @@ subprojects {
         configureBaseExtension()
     }
 
-    val signingPropsFile = rootProject.file("publish.properties")
-    if (signingPropsFile.exists()) {
-        println("Found secret props file, loading props")
-        val localProperties = Properties()
-        with(signingPropsFile.inputStream()) {
-            localProperties.load(this)
-        }
-        localProperties.forEach { key, value ->
-            if (key == "signing.secretKeyRingFile") {
-                project.ext.set(key as String, rootProject.file(value).absolutePath)
-            } else {
-                project.ext.set(key as String, value)
-            }
-        }
-    } else {
-        println("No props file, loading env vars")
-    }
-
     plugins.withId("com.vanniktech.maven.publish.base") {
         configure<MavenPublishBaseExtension> {
             group = "io.github.Rosemoe.sora-editor"
