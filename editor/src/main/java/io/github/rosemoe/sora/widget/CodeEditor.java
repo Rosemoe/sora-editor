@@ -3687,11 +3687,10 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     //-------------------------------------------------------------------------------
     @Override
     protected void onDraw(Canvas canvas) {
-        var startTime = System.currentTimeMillis();
         super.onDraw(canvas);
 
         mPainter.draw(canvas);
-        logger.d("Frame time usage = " + (System.currentTimeMillis() - startTime) + " ms");
+
         // Update magnifier
         if ((mLastCursorState != mCursorBlink.visibility || !mEventHandler.getScroller().isFinished()) && mEventHandler.mMagnifier.isShowing()) {
             mLastCursorState = mCursorBlink.visibility;
