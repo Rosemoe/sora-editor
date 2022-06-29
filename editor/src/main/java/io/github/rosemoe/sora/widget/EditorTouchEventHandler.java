@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.widget;
 
 import android.content.res.Resources;
 import android.graphics.RectF;
+import android.os.Build;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.HapticFeedbackConstants;
@@ -535,25 +536,33 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         endX = Math.min(endX, mEditor.getScrollMaxX());
         boolean notifyY = true;
         boolean notifyX = true;
-        if (!mEditor.getVerticalEdgeEffect().isFinished() && !mEditor.getVerticalEdgeEffect().isRecede()) {
-            endY = mScroller.getCurrY();
+        if (!mEditor.getVerticalEdgeEffect().isFinished()) {
             float displacement = Math.max(0, Math.min(1, e2.getX() / mEditor.getWidth()));
             float distance = (glowTopOrBottom ? distanceY : -distanceY) / mEditor.getMeasuredHeight();
-            if (distance < -0.001) {
-                mEditor.getVerticalEdgeEffect().finish();
-            } else {
+            if (distance > 0) {
+                endY = mScroller.getCurrY();
                 mEditor.getVerticalEdgeEffect().onPull(distance, !glowTopOrBottom ? displacement : 1 - displacement);
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                var edgeEffect = mEditor.getVerticalEdgeEffect();
+                edgeEffect.onPullDistance(distance, !glowTopOrBottom ? displacement : 1 - displacement);
+                if (edgeEffect.getDistance() != 0) {
+                    endY = mScroller.getCurrY();
+                }
             }
             notifyY = false;
         }
-        if (!mEditor.getHorizontalEdgeEffect().isFinished() && !mEditor.getHorizontalEdgeEffect().isRecede()) {
-            endX = mScroller.getCurrX();
+        if (!mEditor.getHorizontalEdgeEffect().isFinished()) {
             float displacement = Math.max(0, Math.min(1, e2.getY() / mEditor.getHeight()));
             float distance = (glowLeftOrRight ? distanceX : -distanceX) / mEditor.getMeasuredWidth();
-            if (distance < -0.001) {
-                mEditor.getHorizontalEdgeEffect().finish();
-            } else {
+            if (distance > 0) {
+                endX = mScroller.getCurrX();
                 mEditor.getHorizontalEdgeEffect().onPull(distance, !glowLeftOrRight ? 1 - displacement : displacement);
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                var edgeEffect = mEditor.getHorizontalEdgeEffect();
+                edgeEffect.onPullDistance(distance, !glowLeftOrRight ? 1 - displacement : displacement);
+                if (edgeEffect.getDistance() != 0) {
+                    endX = mScroller.getCurrX();
+                }
             }
             notifyX = false;
         }

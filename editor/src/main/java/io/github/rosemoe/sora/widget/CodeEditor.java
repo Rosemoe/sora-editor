@@ -57,6 +57,7 @@ import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.EdgeEffect;
 import android.widget.EditText;
 import android.widget.OverScroller;
 import android.widget.SearchView;
@@ -293,8 +294,8 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     protected EditorTextActionWindow mTextActionWindow;
     private ScaleGestureDetector mScaleDetector;
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;
-    private MaterialEdgeEffect mVerticalGlow;
-    private MaterialEdgeEffect mHorizontalGlow;
+    private EdgeEffect mVerticalGlow;
+    private EdgeEffect mHorizontalGlow;
     private ExtractedTextRequest mExtracting;
     private FormatThread mFormatThread;
     private EditorSearcher mSearcher;
@@ -499,9 +500,10 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         mFormatTip = getContext().getString(R.string.editor_formatting);
         mProps = new DirectAccessProps();
         mDpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10F;
-        mDividerWidth = 2 * mDpUnit;
-        mInsertSelWidth = mDividerWidth / 2;
-        mDividerMargin = mDpUnit * 6;
+        mDividerWidth = mDpUnit;
+        mInsertSelWidth = mDpUnit;
+        mDividerMargin = mDpUnit * 2;
+
 
         mMatrix = new Matrix();
         mHandleStyle = new HandleStyleSideDrop(getContext());
@@ -535,8 +537,8 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         mHighlightBracketPair = true;
         mConnection = new EditorInputConnection(this);
         mCompletionWindow = new EditorAutoCompletion(this);
-        mVerticalGlow = new MaterialEdgeEffect();
-        mHorizontalGlow = new MaterialEdgeEffect();
+        mVerticalGlow = new EdgeEffect(getContext());
+        mHorizontalGlow = new EdgeEffect(getContext());
         mTextActionWindow = new EditorTextActionWindow(this);
         setEditorLanguage(null);
         setText(null);
@@ -1322,7 +1324,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      *
      * @return EdgeEffect
      */
-    protected MaterialEdgeEffect getVerticalEdgeEffect() {
+    protected EdgeEffect getVerticalEdgeEffect() {
         return mVerticalGlow;
     }
 
@@ -1331,7 +1333,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      *
      * @return EdgeEffect
      */
-    protected MaterialEdgeEffect getHorizontalEdgeEffect() {
+    protected EdgeEffect getHorizontalEdgeEffect() {
         return mHorizontalGlow;
     }
 

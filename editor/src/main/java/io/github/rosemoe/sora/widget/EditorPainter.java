@@ -1446,8 +1446,8 @@ public class EditorPainter {
      */
     protected void drawEdgeEffect(Canvas canvas) {
         boolean postDraw = false;
-        MaterialEdgeEffect verticalEdgeEffect = mEditor.getVerticalEdgeEffect();
-        MaterialEdgeEffect horizontalEdgeEffect = mEditor.getHorizontalEdgeEffect();
+        var verticalEdgeEffect = mEditor.getVerticalEdgeEffect();
+        var horizontalEdgeEffect = mEditor.getHorizontalEdgeEffect();
         if (!verticalEdgeEffect.isFinished()) {
             boolean bottom = mEditor.getEventHandler().glowTopOrBottom;
             if (bottom) {
