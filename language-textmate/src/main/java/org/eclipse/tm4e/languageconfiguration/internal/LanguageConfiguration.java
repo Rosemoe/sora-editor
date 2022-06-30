@@ -70,8 +70,8 @@ public class LanguageConfiguration implements ILanguageConfiguration {
 						JsonElement actionElement = object.get("action"); //$NON-NLS-1$
 						if (actionElement != null && actionElement.isJsonObject()) {
 							JsonObject actionObject = actionElement.getAsJsonObject();
-							IndentAction indentAction = IndentAction
-									.valueOf(getAsString(actionObject.get("indentAction"))); //$NON-NLS-1$
+							var v = getAsString(actionObject.get("indentAction"));
+							IndentAction indentAction = v == null ? null : IndentAction.valueOf(v);  //$NON-NLS-1$
 							Integer removeText = getAsInt(actionObject.get("removeText")); //$NON-NLS-1$
 							String appendText = getAsString(actionObject.get("appendText")); //$NON-NLS-1$
 							if (indentAction != null) {

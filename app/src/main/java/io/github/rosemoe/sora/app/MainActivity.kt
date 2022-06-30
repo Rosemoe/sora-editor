@@ -49,14 +49,12 @@ import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.text.Content
-import io.github.rosemoe.sora.text.ContentCreator
 import org.eclipse.tm4e.core.internal.theme.reader.ThemeReader
 import io.github.rosemoe.sora.utils.CrashHandler
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorSearcher
 import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.schemes.*
-import io.github.rosemoe.sora.widget.style.builtin.ScaleCursorAnimator
 import io.github.rosemoe.sorakt.subscribeEvent
 import java.io.*
 import java.util.regex.PatternSyntaxException
@@ -183,7 +181,7 @@ class MainActivity : AppCompatActivity() {
 
             try {
                 val stream = assets.open(name)
-                val text = Content(stream.bufferedReader().readText().repeat(15))
+                val text = Content(stream.bufferedReader().readText())
                 runOnUiThread {
                     binding.editor.setText(text, null)
                 }
@@ -335,6 +333,7 @@ class MainActivity : AppCompatActivity() {
                         "Java",
                         "TextMate Java",
                         "TextMate Kotlin",
+                        "TextMate Python",
                         "TM Language from file",
                         "None"
                     ), -1
@@ -383,7 +382,28 @@ class MainActivity : AppCompatActivity() {
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
-                        3 -> loadTMLLauncher.launch("*/*")
+                        3 -> try {
+                            //TextMateLanguage only support TextMateColorScheme
+                            var editorColorScheme = editor.colorScheme
+                            if (editorColorScheme !is TextMateColorScheme) {
+                                val iRawTheme = ThemeReader.readThemeSync(
+                                    "QuietLight.tmTheme",
+                                    assets.open("textmate/QuietLight.tmTheme")
+                                )
+                                editorColorScheme = TextMateColorScheme.create(iRawTheme)
+                                editor.colorScheme = editorColorScheme
+                            }
+                            val language: Language = TextMateLanguage.create(
+                                "Python.tmLanguage.json",
+                                assets.open("textmate/python/syntaxes/python.tmLanguage.json"),
+                                InputStreamReader(assets.open("textmate/python/language-configuration.json")),
+                                (editorColorScheme as TextMateColorScheme).rawTheme
+                            )
+                            editor.setEditorLanguage(language)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                        4 -> loadTMLLauncher.launch("*/*")
                         else -> editor.setEditorLanguage(EmptyLanguage())
                     }
                     dialog.dismiss()
