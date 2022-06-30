@@ -258,6 +258,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     private boolean mEditable;
     private boolean mWordwrap;
     private boolean mUndoEnabled;
+    private boolean mLayoutBusy;
     private boolean mDisplayLnPanel;
     private boolean mLineNumberEnabled;
     private boolean mBlockLineEnabled;
@@ -1517,6 +1518,25 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     }
 
     /**
+     * Find first visible character
+     */
+    @UnsupportedUserUsage
+    public float[] findFirstVisibleCharNoCache(float target, int start, int end, int contextStart, ContentLine line, int lineNumber, Paint paint) {
+        if (start >= end) {
+            return new float[]{end, 0};
+        }
+        var gtr = GraphicTextRow.obtain();
+        if (defSpans.size() == 0) {
+            defSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
+        }
+        gtr.set(line, contextStart, end, mTabWidth,defSpans, paint);
+        gtr.disableCache();
+        var res = gtr.findOffsetByAdvance(start, target);
+        GraphicTextRow.recycle(gtr);
+        return res;
+    }
+
+    /**
      * Get the width of line number region
      *
      * @return width of line number region
@@ -1547,11 +1567,21 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      */
     protected void createLayout() {
         if (mLayout != null) {
+            if (mLayout instanceof LineBreakLayout && !mWordwrap) {
+                ((LineBreakLayout) mLayout).reuse(mText);
+                return;
+            }
+            if (mLayout instanceof WordwrapLayout && mWordwrap) {
+                var newLayout = new WordwrapLayout(this, mText, ((WordwrapLayout) mLayout).getRowTable());
+                mLayout.destroyLayout();
+                mLayout = newLayout;
+                return;
+            }
             mLayout.destroyLayout();
         }
         if (mWordwrap) {
             mPainter.setCachedLineNumberWidth((int) measureLineNumber());
-            mLayout = new WordwrapLayout(this, mText);
+            mLayout = new WordwrapLayout(this, mText, null);
         } else {
             mLayout = new LineBreakLayout(this, mText);
         }
@@ -2647,11 +2677,20 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     }
 
     /**
+     * Indicate whether the layout is working
+     */
+    @UnsupportedUserUsage
+    public void setLayoutBusy(boolean busy) {
+        this.mLayoutBusy = busy;
+    }
+
+    /**
      * @return Whether editable
      * @see CodeEditor#setEditable(boolean)
+     * @see CodeEditor#setLayoutBusy(boolean)
      */
     public boolean isEditable() {
-        return mEditable;
+        return mEditable && !mLayoutBusy;
     }
 
     /**

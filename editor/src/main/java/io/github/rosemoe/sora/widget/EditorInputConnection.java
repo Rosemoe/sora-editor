@@ -141,7 +141,7 @@ class EditorInputConnection extends BaseInputConnection {
         if (end - start > mEditor.getProps().maxIPCTextLength) {
             end = start + Math.max(0, mEditor.getProps().maxIPCTextLength);
         }
-        var sub = (Content) origin.subSequence(start, end);
+        var sub = origin.subSequence(start, end).toString();
         if (flags == GET_TEXT_WITH_STYLES) {
             var text = new SpannableStringBuilder(sub);
             // Apply composing span

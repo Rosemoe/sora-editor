@@ -25,10 +25,15 @@ package io.github.rosemoe.sora.util;
 
 import android.util.SparseIntArray;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import static io.github.rosemoe.sora.util.IntPair.*;
+
 /**
- * A General implementation of big root heap
+ * A general implementation of big root heap
  *
- * @author Rose
+ * @author Rosemoe
  */
 public class BinaryHeap {
 
@@ -48,9 +53,16 @@ public class BinaryHeap {
     private int nodeCount;
 
     /**
-     * Node array for heap
+     * Node array for heap.
+     * first:  id
+     * second: data
      */
-    private Node[] nodes;
+    private long[] nodes;
+
+    /**
+     * Lock for multi-thread reusing
+     */
+    public final Lock lock = new ReentrantLock();
 
     /**
      * Create a binary heap
@@ -59,7 +71,16 @@ public class BinaryHeap {
     public BinaryHeap() {
         idToPosition = new SparseIntArray();
         nodeCount = 0;
-        nodes = new Node[129];
+        nodes = new long[129];
+    }
+
+    /**
+     * Clear all the nodes in the heap
+     */
+    public void clear() {
+        nodeCount = 0;
+        idToPosition.clear();
+        idAllocator = -1;
     }
 
     /**
@@ -70,18 +91,18 @@ public class BinaryHeap {
     public void ensureCapacity(int capacity) {
         capacity++;
         if (nodes.length < capacity) {
-            Node[] origin = nodes;
+            var origin = nodes;
             if (nodes.length << 1 >= capacity) {
-                nodes = new Node[nodes.length << 1];
+                nodes = new long[nodes.length << 1];
             } else {
-                nodes = new Node[capacity];
+                nodes = new long[capacity];
             }
             System.arraycopy(origin, 0, nodes, 0, nodeCount + 1);
         }
     }
 
     /**
-     * Get the max value in this heap
+     * Get the max value in this heap or zero if no node is in heap
      *
      * @return Max value
      */
@@ -89,7 +110,14 @@ public class BinaryHeap {
         if (nodeCount == 0) {
             return 0;
         }
-        return nodes[1].data;
+        return data(nodes[1]);
+    }
+
+    /**
+     * Get total node count in heap
+     */
+    public int getNodeCount() {
+        return nodeCount;
     }
 
     /**
@@ -99,14 +127,14 @@ public class BinaryHeap {
      */
     private void heapifyDown(int position) {
         for (int child = position * 2; child <= nodeCount; child = position * 2) {
-            Node parentNode = nodes[position], childNode;
-            if (child + 1 <= nodeCount && nodes[child + 1].data > nodes[child].data) {
+            long parentNode = nodes[position], childNode;
+            if (child + 1 <= nodeCount && data(nodes[child + 1]) > data(nodes[child])) {
                 child = child + 1;
             }
             childNode = nodes[child];
-            if (parentNode.data < childNode.data) {
-                idToPosition.put(childNode.id, position);
-                idToPosition.put(parentNode.id, child);
+            if (data(parentNode) < data(childNode)) {
+                idToPosition.put(id(childNode), position);
+                idToPosition.put(id(parentNode), child);
                 nodes[child] = parentNode;
                 nodes[position] = childNode;
                 position = child;
@@ -123,10 +151,10 @@ public class BinaryHeap {
      */
     private void heapifyUp(int position) {
         for (int parent = position / 2; parent >= 1; parent = position / 2) {
-            Node childNode = nodes[position], parentNode = nodes[parent];
-            if (childNode.data > parentNode.data) {
-                idToPosition.put(childNode.id, parent);
-                idToPosition.put(parentNode.id, position);
+            long childNode = nodes[position], parentNode = nodes[parent];
+            if (data(childNode) > data(parentNode)) {
+                idToPosition.put(id(childNode), parent);
+                idToPosition.put(id(parentNode), position);
                 nodes[position] = parentNode;
                 nodes[parent] = childNode;
                 position = parent;
@@ -149,7 +177,7 @@ public class BinaryHeap {
         }
         int id = idAllocator++;
         nodeCount++;
-        nodes[nodeCount] = new Node(id, value);
+        nodes[nodeCount] = pack(id, value);
         idToPosition.put(id, nodeCount);
         heapifyUp(nodeCount);
         return id;
@@ -167,8 +195,8 @@ public class BinaryHeap {
         if (position == 0) {
             throw new IllegalArgumentException("trying to update with an invalid id");
         }
-        int origin = nodes[position].data;
-        nodes[position].data = newValue;
+        int origin = data(nodes[position]);
+        nodes[position]= pack(id(nodes[position]), newValue);
         if (origin < newValue) {
             heapifyUp(position);
         } else if (origin > newValue) {
@@ -191,68 +219,22 @@ public class BinaryHeap {
         //Replace removed node with last node
         nodes[position] = nodes[nodeCount];
         //Release node
-        nodes[nodeCount--] = null;
+        nodes[nodeCount--] = 0;
         //Do not update heap if it is just the last node
         if (position == nodeCount + 1) {
             return;
         }
-        idToPosition.put(nodes[position].id, position);
+        idToPosition.put(id(nodes[position]), position);
         heapifyUp(position);
         heapifyDown(position);
     }
 
-    /**
-     * Print elements of this heap
-     * They are printed layer by layer to system out
-     */
-    public void print() {
-        int start = 1;
-        int count = 1;
-        while (start <= nodeCount) {
-            printRegion(start, count);
-            start += count;
-            count *= 2;
-        }
+    private static int id(long value) {
+        return getFirst(value);
     }
 
-    /**
-     * Print elements and turn to new line
-     *
-     * @param start Start position in array
-     * @param count Element count to print
-     */
-    private void printRegion(int start, int count) {
-        for (int i = 0; i < count; i++) {
-            if (start + i <= nodeCount) {
-                System.out.print((nodes[start + i] != null ? nodes[start + i].data : -1) + ", ");
-            } else {
-                break;
-            }
-        }
-        System.out.println();
-    }
-
-    /**
-     * Data node of the heap
-     *
-     * @author Rose
-     */
-    private static class Node {
-
-        /**
-         * A final id of node
-         */
-        final int id;
-        /**
-         * Saved value of this node
-         */
-        int data;
-
-        Node(int id, int value) {
-            this.data = value;
-            this.id = id;
-        }
-
+    private static int data(long value) {
+        return getSecond(value);
     }
 
 }

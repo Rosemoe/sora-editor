@@ -45,6 +45,7 @@ public class GraphicTextRow {
     private int mEnd;
     private int mTabWidth;
     private List<Span> mSpans;
+    private boolean mCache = true;
     private final float[] mBuffer;
 
     private final static GraphicTextRow[] sCached = new GraphicTextRow[5];
@@ -73,6 +74,7 @@ public class GraphicTextRow {
         st.mSpans = null;
         st.mPaint = null;
         st.mStart = st.mEnd = st.mTabWidth = 0;
+        st.mCache = true;
         synchronized (sCached) {
             for (int i = 0; i < sCached.length; ++i) {
                 if (sCached[i] == null) {
@@ -93,6 +95,10 @@ public class GraphicTextRow {
         mStart = start;
         mEnd = end;
         mSpans = spans;
+    }
+
+    public void disableCache() {
+        mCache = false;
     }
 
     /**
@@ -123,7 +129,7 @@ public class GraphicTextRow {
      * @return Element 0 is offset, Element 1 is measured width
      */
     public float[] findOffsetByAdvance(int start, float advance) {
-        if (mText.widthCache != null) {
+        if (mText.widthCache != null && mCache) {
             var cache = mText.widthCache;
             var end = mEnd;
             int left = start, right = end;
@@ -188,7 +194,7 @@ public class GraphicTextRow {
                         // Here is a tab
                         // Try to find advance
                         if (lastStart != i) {
-                            int idx = mPaint.findOffsetByRunAdvance(mText, lastStart, i, advance - currentPosition);
+                            int idx = mPaint.findOffsetByRunAdvance(mText, lastStart, i, advance - currentPosition, mCache);
                             currentPosition += mPaint.measureTextRunAdvance(chars, lastStart, idx, regionStart, regionEnd);
                             if (idx < i) {
                                 res = idx;
@@ -213,7 +219,7 @@ public class GraphicTextRow {
                     }
                 }
                 if (res == -1) {
-                    int idx = mPaint.findOffsetByRunAdvance(mText, lastStart, regionEnd, advance - currentPosition);
+                    int idx = mPaint.findOffsetByRunAdvance(mText, lastStart, regionEnd, advance - currentPosition, mCache);
                     currentPosition += measureText(lastStart, idx);
                     res = idx;
                 }
@@ -247,7 +253,7 @@ public class GraphicTextRow {
         if (start == end) {
             return 0f;
         }
-        if (mText.widthCache != null) {
+        if (mText.widthCache != null && mCache) {
             var cache = mText.widthCache;
             return cache[end] - cache[start];
         }

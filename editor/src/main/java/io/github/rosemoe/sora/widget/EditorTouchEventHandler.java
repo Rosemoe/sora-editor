@@ -486,6 +486,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     mScroller.getCurrY(),
                     endX - mScroller.getCurrX(),
                     endY - mScroller.getCurrY(), 0);
+            mScroller.abortAnimation();
         }
         mEditor.invalidate();
     }

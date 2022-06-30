@@ -28,8 +28,11 @@ import android.util.SparseArray;
 import androidx.annotation.Nullable;
 
 import java.util.NoSuchElementException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
+import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.graphics.RoughBufferedMeasure;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
@@ -46,35 +49,68 @@ import io.github.rosemoe.sora.widget.CodeEditor;
 public class LineBreakLayout extends AbstractLayout {
 
     private BinaryHeap widthMaintainer;
-    private final RoughBufferedMeasure measurer;
+    private RoughBufferedMeasure measurer;
+    private final AtomicInteger reuseCount = new AtomicInteger(0);
 
     public LineBreakLayout(CodeEditor editor, Content text) {
         super(editor, text);
         measurer = new RoughBufferedMeasure(editor.getTabWidth());
-        measureAllLines();
+        widthMaintainer = new BinaryHeap();
+        measureAllLines(widthMaintainer);
     }
 
-    private void measureAllLines() {
+    private void measureAllLines(BinaryHeap widthMaintainer) {
         if (text == null) {
             return;
         }
-        widthMaintainer = new BinaryHeap();
         widthMaintainer.ensureCapacity(text.getLineCount());
-        /*var gtr = GraphicTextRow.obtain();
-        for (int i = 0; i < text.getLineCount(); i++) {
-            ContentLine line = text.getLine(i);
-            gtr.set(line, 0, line.length(), editor.getTabWidth(), getSpans(i), editor.getTextPaint());
-            int width = (int) gtr.measureText(0, line.length());
-            line.setWidth(width);
-            line.setId(widthMaintainer.push(width));
-        }
-        GraphicTextRow.recycle(gtr);*/
-        for (int i = 0; i < text.getLineCount(); i++) {
-            ContentLine line = text.getLine(i);
-            var width = (int) measurer.measureText(line, 0, line.length(), editor.getTextPaint());
-            line.setWidth(width);
-            line.setId(widthMaintainer.push(width));
-        }
+        var shadowPaint = new Paint();
+        shadowPaint.set(editor.getTextPaint());
+        shadowPaint.onAttributeUpdate();
+        var reuseCountLocal = reuseCount.get();
+        var measurerLocal = measurer;
+        final var monitor = new TaskMonitor(1, (results) -> {
+            final var editor = this.editor;
+            if (editor == null) {
+                System.out.println("Canceled");
+                return;
+            }
+            System.out.println("Completed");
+            editor.post(() -> {
+                editor.setLayoutBusy(false);
+                editor.getEventHandler().scrollBy(0, 0);
+            });
+        });
+        var task = new LayoutTask<Void>(monitor) {
+
+            @Override
+            protected Void compute() {
+                widthMaintainer.lock.lock();
+                try {
+                    editor.setLayoutBusy(true);
+                    text.runReadActionsOnLines(0, text.getLineCount() - 1, (index, line) -> {
+                        var width = (int) measurerLocal.measureText(line, 0, line.length(), shadowPaint);
+                        if (shouldRun()) {
+                            line.setWidth(width);
+                            line.setId(widthMaintainer.push(width));
+                        } else {
+                            throw new RuntimeException();
+                        }
+                    });
+                } catch (RuntimeException ignored) {
+
+                } finally {
+                    widthMaintainer.lock.unlock();
+                }
+                return null;
+            }
+
+            @Override
+            protected boolean shouldRun() {
+                return super.shouldRun() && reuseCount.get() == reuseCountLocal;
+            }
+        };
+        submitTask(task);
     }
 
     private void measureLines(int startLine, int endLine) {
@@ -105,7 +141,7 @@ public class LineBreakLayout extends AbstractLayout {
 
     @Override
     public RowIterator obtainRowIterator(int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
-        return new LineBreakLayoutRowItr(initialRow, preloadedLines);
+        return new LineBreakLayoutRowItr(text, initialRow, preloadedLines);
     }
 
     @Override
@@ -158,7 +194,7 @@ public class LineBreakLayout extends AbstractLayout {
 
     @Override
     public int getLayoutWidth() {
-        return widthMaintainer.top();
+        return widthMaintainer.getNodeCount() == 0 ? Integer.MAX_VALUE / 10 : widthMaintainer.top();
     }
 
     @Override
@@ -220,16 +256,35 @@ public class LineBreakLayout extends AbstractLayout {
         return IntPair.pack(line - 1, column);
     }
 
-    class LineBreakLayoutRowItr implements RowIterator {
+    public void reuse(Content text) {
+        this.text = text;
+        reuseCount.getAndIncrement();
+        measurer = new RoughBufferedMeasure(editor.getTabWidth());
+        try {
+            if (widthMaintainer.lock.tryLock(5, TimeUnit.MILLISECONDS)) {
+                widthMaintainer.lock.unlock();
+                widthMaintainer.clear();
+                measureAllLines(widthMaintainer);
+            } else {
+                measureAllLines(widthMaintainer = new BinaryHeap());
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Unable to wait for lock", e);
+        }
+    }
 
+    static class LineBreakLayoutRowItr implements RowIterator {
+
+        private final Content text;
         private final Row result;
         private int currentRow;
         private final int initRow;
         private final SparseArray<ContentLine> preloadedLines;
 
-        LineBreakLayoutRowItr(int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
+        LineBreakLayoutRowItr(Content text, int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
             initRow = currentRow = initialRow;
             result = new Row();
+            this.text = text;
             result.isLeadingRow = true;
             result.startColumn = 0;
             this.preloadedLines = preloadedLines;

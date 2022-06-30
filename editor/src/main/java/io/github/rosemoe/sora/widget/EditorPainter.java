@@ -1616,8 +1616,8 @@ public class EditorPainter {
         float all = mEditor.getLayout().getLayoutHeight() + height / 2f;
         float length = height / all * height;
         float topY;
-        if (length < mEditor.getDpUnit() * 45) {
-            length = mEditor.getDpUnit() * 45;
+        if (length < mEditor.getDpUnit() * 60) {
+            length = mEditor.getDpUnit() * 60;
             topY = (mEditor.getOffsetY()) / all * (height - length);
         } else {
             topY = mEditor.getOffsetY() / all * height;

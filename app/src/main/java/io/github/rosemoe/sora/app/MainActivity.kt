@@ -183,7 +183,7 @@ class MainActivity : AppCompatActivity() {
 
             try {
                 val stream = assets.open(name)
-                val text = ContentCreator.fromStream(stream)
+                val text = Content(stream.bufferedReader().readText().repeat(15))
                 runOnUiThread {
                     binding.editor.setText(text, null)
                 }
