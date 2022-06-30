@@ -38,16 +38,6 @@ public class ContentLine implements CharSequence, GetChars {
     private int length;
 
     /**
-     * Id in BinaryHeap
-     */
-    private int id;
-
-    /**
-     * Measured width of line
-     */
-    private int width;
-
-    /**
      * Width of each character inside
      */
     @UnsupportedUserUsage
@@ -66,8 +56,6 @@ public class ContentLine implements CharSequence, GetChars {
     public ContentLine(int size) {
         length = 0;
         value = new char[size];
-        id = -1;
-        width = 0;
     }
 
     private ContentLine(boolean initialize) {
@@ -75,8 +63,6 @@ public class ContentLine implements CharSequence, GetChars {
             length = 0;
             value = new char[32];
         }
-        id = -1;
-        width = 0;
     }
 
     static int lastIndexOf(char[] source, int sourceCount,
@@ -123,22 +109,6 @@ public class ContentLine implements CharSequence, GetChars {
             }
             return start + 1;
         }
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public void setWidth(int width) {
-        this.width = width;
     }
 
     private void checkIndex(int index) {

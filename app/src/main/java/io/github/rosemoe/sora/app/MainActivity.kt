@@ -57,6 +57,8 @@ import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.schemes.*
 import io.github.rosemoe.sorakt.subscribeEvent
 import java.io.*
+import java.time.Duration
+import java.time.Instant
 import java.util.regex.PatternSyntaxException
 
 
@@ -178,12 +180,21 @@ class MainActivity : AppCompatActivity() {
 
     private fun openAssetsFile(name: String) {
         Thread {
-
             try {
                 val stream = assets.open(name)
-                val text = Content(stream.bufferedReader().readText())
+                val read = stream.bufferedReader().readText().repeat(60)
+                val text = Content(read)
                 runOnUiThread {
+                    println("length:${text.length}")
+                    var st = Instant.now()
                     binding.editor.setText(text, null)
+                    println("setText:${(Duration.between(st, Instant.now())).toMillis()} ms")
+                    st = Instant.now()
+                    text.insert(0, 0, read)
+                    println("repeat:${(Duration.between(st, Instant.now())).toMillis()} ms")
+                    st = Instant.now()
+                    text.delete(0, text.length);
+                    println("delete:${(Duration.between(st, Instant.now())).toMillis()} ms")
                 }
             } catch (e: IOException) {
                 e.printStackTrace()

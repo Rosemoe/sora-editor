@@ -37,6 +37,7 @@ import io.github.rosemoe.sora.graphics.RoughBufferedMeasure;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.BinaryHeap;
+import io.github.rosemoe.sora.util.BlockIntList;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
@@ -48,22 +49,21 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  */
 public class LineBreakLayout extends AbstractLayout {
 
-    private BinaryHeap widthMaintainer;
+    private BlockIntList widthMaintainer;
     private RoughBufferedMeasure measurer;
     private final AtomicInteger reuseCount = new AtomicInteger(0);
 
     public LineBreakLayout(CodeEditor editor, Content text) {
         super(editor, text);
         measurer = new RoughBufferedMeasure(editor.getTabWidth());
-        widthMaintainer = new BinaryHeap();
+        widthMaintainer = new BlockIntList();
         measureAllLines(widthMaintainer);
     }
 
-    private void measureAllLines(BinaryHeap widthMaintainer) {
+    private void measureAllLines(BlockIntList widthMaintainer) {
         if (text == null) {
             return;
         }
-        widthMaintainer.ensureCapacity(text.getLineCount());
         var shadowPaint = new Paint();
         shadowPaint.set(editor.getTextPaint());
         shadowPaint.onAttributeUpdate();
@@ -91,8 +91,7 @@ public class LineBreakLayout extends AbstractLayout {
                     text.runReadActionsOnLines(0, text.getLineCount() - 1, (index, line) -> {
                         var width = (int) measurerLocal.measureText(line, 0, line.length(), shadowPaint);
                         if (shouldRun()) {
-                            line.setWidth(width);
-                            line.setId(widthMaintainer.push(width));
+                            widthMaintainer.add(width);
                         } else {
                             throw new RuntimeException();
                         }
@@ -113,30 +112,9 @@ public class LineBreakLayout extends AbstractLayout {
         submitTask(task);
     }
 
-    private void measureLines(int startLine, int endLine) {
-        if (text == null) {
-            return;
-        }
-        //var gtr = GraphicTextRow.obtain();
-        while (startLine <= endLine && startLine < text.getLineCount()) {
-            ContentLine line = text.getLine(startLine);
-            //gtr.set(line, 0, line.length(), editor.getTabWidth(), getSpans(startLine), editor.getTextPaint());
-            //int width = (int) gtr.measureText(0, line.length());
-            var width = (int) measurer.measureText(line, 0, line.length(), editor.getTextPaint());
-            if (line.getId() != -1) {
-                if (line.getWidth() == width) {
-                    startLine++;
-                    continue;
-                }
-                widthMaintainer.update(line.getId(), width);
-                startLine++;
-                continue;
-            }
-            line.setId(widthMaintainer.push(width));
-            line.setWidth(width);
-            startLine++;
-        }
-        //GraphicTextRow.recycle(gtr);
+    private int measureLine(int lineIndex) {
+        ContentLine line = text.getLine(lineIndex);
+        return  (int) measurer.measureText(line, 0, line.length(), editor.getTextPaint());
     }
 
     @Override
@@ -152,18 +130,27 @@ public class LineBreakLayout extends AbstractLayout {
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
         super.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
-        measureLines(startLine, endLine);
+        for (int i = startLine;i <= endLine;i++) {
+            if (i == startLine) {
+                widthMaintainer.set(i, measureLine(i));
+            } else {
+                widthMaintainer.add(i, measureLine(i));
+            }
+        }
     }
 
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
         super.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
-        measureLines(startLine, startLine);
+        if (startLine < endLine) {
+            widthMaintainer.removeRange(startLine + 1, endLine + 1);
+        }
+        widthMaintainer.set(startLine, measureLine(startLine));
     }
 
     @Override
     public void onRemove(Content content, ContentLine line) {
-        widthMaintainer.remove(line.getId());
+
     }
 
     @Override
@@ -194,7 +181,7 @@ public class LineBreakLayout extends AbstractLayout {
 
     @Override
     public int getLayoutWidth() {
-        return widthMaintainer.getNodeCount() == 0 ? Integer.MAX_VALUE / 10 : widthMaintainer.top();
+        return widthMaintainer.size() == 0 ? Integer.MAX_VALUE / 10 : widthMaintainer.getMax();
     }
 
     @Override
@@ -266,7 +253,7 @@ public class LineBreakLayout extends AbstractLayout {
                 widthMaintainer.clear();
                 measureAllLines(widthMaintainer);
             } else {
-                measureAllLines(widthMaintainer = new BinaryHeap());
+                measureAllLines(widthMaintainer = new BlockIntList());
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("Unable to wait for lock", e);

@@ -1408,7 +1408,7 @@ public class EditorPainter {
 
         void execute(Canvas canvas) {
             // Hide cursors (API level 31)
-            if (mEditor.mConnection.mImeConsumingInput) {
+            if (mEditor.mConnection.mImeConsumingInput || !mEditor.hasFocus()) {
                 return;
             }
             // Follow the thumb or stick to text row

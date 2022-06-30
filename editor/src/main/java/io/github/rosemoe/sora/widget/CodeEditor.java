@@ -31,6 +31,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
@@ -504,7 +505,6 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         mDividerWidth = mDpUnit;
         mInsertSelWidth = mDpUnit;
         mDividerMargin = mDpUnit * 2;
-
 
         mMatrix = new Matrix();
         mHandleStyle = new HandleStyleSideDrop(getContext());
@@ -3932,19 +3932,29 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     }
 
     @Override
-    protected void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        mCursorBlink.valid = mCursorBlink.period > 0;
-        if (mCursorBlink.valid) {
-            post(mCursorBlink);
-        }
-    }
-
-    @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         mCursorBlink.valid = false;
         removeCallbacks(mCursorBlink);
+    }
+
+    @Override
+    protected void onFocusChanged(boolean gainFocus, int direction, @Nullable Rect previouslyFocusedRect) {
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
+        if (gainFocus) {
+            mCursorBlink.valid = mCursorBlink.period > 0;
+            if (mCursorBlink.valid) {
+                post(mCursorBlink);
+            }
+        } else {
+            mCursorBlink.valid = false;
+            mCursorBlink.visibility = false;
+            mCompletionWindow.hide();
+            mTextActionWindow.dismiss();
+            mEventHandler.hideInsertHandle();
+            removeCallbacks(mCursorBlink);
+        }
+        invalidate();
     }
 
     private float scrollerFinalX;
