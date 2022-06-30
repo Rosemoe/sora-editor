@@ -48,7 +48,7 @@ import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
-import io.github.rosemoe.sora.text.Content
+import io.github.rosemoe.sora.text.ContentCreator
 import org.eclipse.tm4e.core.internal.theme.reader.ThemeReader
 import io.github.rosemoe.sora.utils.CrashHandler
 import io.github.rosemoe.sora.widget.CodeEditor
@@ -57,8 +57,6 @@ import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.schemes.*
 import io.github.rosemoe.sorakt.subscribeEvent
 import java.io.*
-import java.time.Duration
-import java.time.Instant
 import java.util.regex.PatternSyntaxException
 
 
@@ -137,6 +135,22 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        ensureTextmateTheme()
+        val editor = binding.editor
+        val language: Language = TextMateLanguage.create(
+            "java.tmLanguage.json",
+            assets.open("textmate/java/syntaxes/java.tmLanguage.json"),
+            InputStreamReader(assets.open("textmate/java/language-configuration.json")),
+            (editor.colorScheme as TextMateColorScheme).rawTheme
+        )
+        editor.setEditorLanguage(language)
+
+        openAssetsFile("sample.txt")
+        updatePositionText()
+        updateBtnState()
+    }
+
+    private fun ensureTextmateTheme() {
         val editor = binding.editor
         var editorColorScheme = editor.colorScheme
         if (editorColorScheme !is TextMateColorScheme) {
@@ -147,17 +161,6 @@ class MainActivity : AppCompatActivity() {
             editorColorScheme = TextMateColorScheme.create(iRawTheme)
             editor.colorScheme = editorColorScheme
         }
-        val language: Language = TextMateLanguage.create(
-            "java.tmLanguage.json",
-            assets.open("textmate/java/syntaxes/java.tmLanguage.json"),
-            InputStreamReader(assets.open("textmate/java/language-configuration.json")),
-            (editorColorScheme as TextMateColorScheme).rawTheme
-        )
-        editor.setEditorLanguage(language)
-
-        openAssetsFile("sample.txt")
-        updatePositionText()
-        updateBtnState()
     }
 
     private fun generateKeybindingString(event: KeyBindingEvent): String {
@@ -181,36 +184,13 @@ class MainActivity : AppCompatActivity() {
     private fun openAssetsFile(name: String) {
         Thread {
             try {
-                val stream = assets.open(name)
-                val read = stream.bufferedReader().readText().repeat(60)
-                val text = Content(read)
+                val text = ContentCreator.fromStream(assets.open(name))
                 runOnUiThread {
-                    println("length:${text.length}")
-                    var st = Instant.now()
                     binding.editor.setText(text, null)
-                    println("setText:${(Duration.between(st, Instant.now())).toMillis()} ms")
-                    st = Instant.now()
-                    text.insert(0, 0, read)
-                    println("repeat:${(Duration.between(st, Instant.now())).toMillis()} ms")
-                    st = Instant.now()
-                    text.delete(0, text.length);
-                    println("delete:${(Duration.between(st, Instant.now())).toMillis()} ms")
                 }
             } catch (e: IOException) {
                 e.printStackTrace()
             }
-            // Test Content class
-            /*val text = assets.open(name).bufferedReader().readText()
-            val startTime = System.currentTimeMillis()
-            val target = Content()
-            target.isUndoEnabled = false
-            for (i in 1..50) {
-                target.insert(0, 0, text)
-            }
-            val time = System.currentTimeMillis() - startTime
-            runOnUiThread {
-                Toast.makeText(this, "Content test time usage: $time ms", Toast.LENGTH_SHORT).show()
-            }*/
         }.start()
         updatePositionText()
         updateBtnState()
@@ -244,6 +224,7 @@ class MainActivity : AppCompatActivity() {
         return when (c) {
             '\n' -> "\\n"
             '\t' -> "\\t"
+            '\r' -> "\\r"
             ' ' -> "<ws>"
             else -> c.toString()
         }
@@ -353,62 +334,36 @@ class MainActivity : AppCompatActivity() {
                         0 -> editor.setEditorLanguage(JavaLanguage())
                         1 -> try {
                             //TextMateLanguage only support TextMateColorScheme
-                            var editorColorScheme = editor.colorScheme
-                            if (editorColorScheme !is TextMateColorScheme) {
-                                val iRawTheme = ThemeReader.readThemeSync(
-                                    "QuietLight.tmTheme",
-                                    assets.open("textmate/QuietLight.tmTheme")
-                                )
-                                editorColorScheme = TextMateColorScheme.create(iRawTheme)
-                                editor.colorScheme = editorColorScheme
-                            }
+                            ensureTextmateTheme()
                             val language: Language = TextMateLanguage.create(
                                 "java.tmLanguage.json",
                                 assets.open("textmate/java/syntaxes/java.tmLanguage.json"),
                                 InputStreamReader(assets.open("textmate/java/language-configuration.json")),
-                                (editorColorScheme as TextMateColorScheme).rawTheme
+                                (editor.colorScheme as TextMateColorScheme).rawTheme
                             )
                             editor.setEditorLanguage(language)
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
                         2 -> try {
-                            //TextMateLanguage only support TextMateColorScheme
-                            var editorColorScheme = editor.colorScheme
-                            if (editorColorScheme !is TextMateColorScheme) {
-                                val iRawTheme = ThemeReader.readThemeSync(
-                                    "QuietLight.tmTheme",
-                                    assets.open("textmate/QuietLight.tmTheme")
-                                )
-                                editorColorScheme = TextMateColorScheme.create(iRawTheme)
-                                editor.colorScheme = editorColorScheme
-                            }
+                            ensureTextmateTheme()
                             val language: Language = TextMateLanguage.create(
                                 "Kotlin.tmLanguage",
                                 assets.open("textmate/kotlin/syntaxes/Kotlin.tmLanguage"),
                                 InputStreamReader(assets.open("textmate/kotlin/language-configuration.json")),
-                                (editorColorScheme as TextMateColorScheme).rawTheme
+                                (editor.colorScheme as TextMateColorScheme).rawTheme
                             )
                             editor.setEditorLanguage(language)
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
                         3 -> try {
-                            //TextMateLanguage only support TextMateColorScheme
-                            var editorColorScheme = editor.colorScheme
-                            if (editorColorScheme !is TextMateColorScheme) {
-                                val iRawTheme = ThemeReader.readThemeSync(
-                                    "QuietLight.tmTheme",
-                                    assets.open("textmate/QuietLight.tmTheme")
-                                )
-                                editorColorScheme = TextMateColorScheme.create(iRawTheme)
-                                editor.colorScheme = editorColorScheme
-                            }
+                            ensureTextmateTheme()
                             val language: Language = TextMateLanguage.create(
                                 "Python.tmLanguage.json",
                                 assets.open("textmate/python/syntaxes/python.tmLanguage.json"),
                                 InputStreamReader(assets.open("textmate/python/language-configuration.json")),
-                                (editorColorScheme as TextMateColorScheme).rawTheme
+                                (editor.colorScheme as TextMateColorScheme).rawTheme
                             )
                             editor.setEditorLanguage(language)
                         } catch (e: Exception) {
