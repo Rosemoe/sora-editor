@@ -1691,12 +1691,14 @@ public class EditorPainter {
         var paired = mEditor.mStyleDelegate.getFoundBracketPair();
         if (paired != null) {
             var color = mEditor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_FOREGROUND);
+            var backgroundColor = mEditor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_BACKGROUND);
             if (!checkBounds(paired.leftIndex, paired.leftLength) || !checkBounds(paired.rightIndex, paired.rightLength))  {
                 // Index out of bounds
                 return;
             }
-            patchTextRegionWithColor(canvas, textOffset, paired.leftIndex, paired.leftIndex + paired.leftLength, color);
-            patchTextRegionWithColor(canvas, textOffset, paired.rightIndex, paired.rightIndex + paired.rightLength, color);
+
+            patchTextRegionWithColor(canvas, textOffset, paired.leftIndex, paired.leftIndex + paired.leftLength, color, backgroundColor);
+            patchTextRegionWithColor(canvas, textOffset, paired.rightIndex, paired.rightIndex + paired.rightLength, color, backgroundColor);
         }
     }
 
@@ -1704,18 +1706,35 @@ public class EditorPainter {
         return (index >= 0 && length >= 0 && index + length <= mEditor.getText().length());
     }
 
-    protected void patchTextRegionWithColor(Canvas canvas, float textOffset, int start, int end, int color) {
+    protected void patchTextRegionWithColor(Canvas canvas, float textOffset, int start, int end, int color, int backgroundColor) {
         mPaint.setColor(color);
-        mPaintOther.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_UNDERLINE));
+        var underlineColor = mEditor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_UNDERLINE);
         mPaintOther.setStrokeWidth(mEditor.getRowHeightOfText() * 0.1f);
         mPaint.setStyle(android.graphics.Paint.Style.FILL_AND_STROKE);
         mPaint.setFakeBoldText(true);
         patchTextRegions(canvas, textOffset, getTextRegionPositions(start, end), (canvasLocal, horizontalOffset, row, line, startCol, endCol, style) -> {
-            mPaint.setTextSkewX(TextStyle.isItalics(style) ? -0.2f : 0f);
-            mPaint.setStrikeThruText(TextStyle.isStrikeThrough(style));
-            drawText(canvas, getLine(line), startCol, endCol - startCol, startCol, endCol - startCol, false, horizontalOffset, mEditor.getRowBaseline(row) - mEditor.getOffsetY(), line);
-            var bottom = mEditor.getRowBottomOfText(row) - mEditor.getOffsetY() - mEditor.getRowHeightOfText() * 0.05f;
-            canvas.drawLine(0, bottom, mEditor.getWidth(), bottom, mPaintOther);
+            if (backgroundColor != 0) {
+                mRect.top = getRowTopForBackground(row) - mEditor.getOffsetY();
+                mRect.bottom = getRowBottomForBackground(row) - mEditor.getOffsetY();
+                mRect.left = 0;
+                mRect.right = mEditor.getWidth();
+                mPaintOther.setColor(backgroundColor);
+                if (mEditor.getProps().enableRoundTextBackground) {
+                    canvas.drawRoundRect(mRect, mEditor.getRowHeight() * 0.13f, mEditor.getRowHeight() * 0.13f, mPaintOther);
+                } else {
+                    canvas.drawRect(mRect, mPaintOther);
+                }
+            }
+            if (color != 0) {
+                mPaint.setTextSkewX(TextStyle.isItalics(style) ? -0.2f : 0f);
+                mPaint.setStrikeThruText(TextStyle.isStrikeThrough(style));
+                drawText(canvas, getLine(line), startCol, endCol - startCol, startCol, endCol - startCol, false, horizontalOffset, mEditor.getRowBaseline(row) - mEditor.getOffsetY(), line);
+            }
+            if (underlineColor != 0) {
+                mPaintOther.setColor(underlineColor);
+                var bottom = mEditor.getRowBottomOfText(row) - mEditor.getOffsetY() - mEditor.getRowHeightOfText() * 0.05f;
+                canvas.drawLine(0, bottom, mEditor.getWidth(), bottom, mPaintOther);
+            }
         });
         mPaint.setStyle(android.graphics.Paint.Style.FILL);
         mPaint.setFakeBoldText(false);
