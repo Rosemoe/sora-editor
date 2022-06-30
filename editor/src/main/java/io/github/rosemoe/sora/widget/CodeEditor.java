@@ -2038,7 +2038,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         if (mFormatThread != null) {
             return false;
         }
-        mFormatThread = new FormatThread(mText, mLanguage, this);
+        mFormatThread = new FormatThread(mText, mLanguage, this, start, end);
         mFormatThread.start();
         return true;
     }
