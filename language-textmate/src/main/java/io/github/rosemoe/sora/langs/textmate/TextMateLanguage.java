@@ -23,12 +23,20 @@
  */
 package io.github.rosemoe.sora.langs.textmate;
 
+import android.os.Bundle;
+
 import java.io.InputStream;
 import java.io.Reader;
 
 import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
+import io.github.rosemoe.sora.lang.completion.CompletionHelper;
+import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
+import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
+import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.ContentReference;
+import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
 import org.eclipse.tm4e.core.theme.IRawTheme;
@@ -38,28 +46,41 @@ public class TextMateLanguage extends EmptyLanguage {
 
     private TextMateAnalyzer textMateAnalyzer;
     private int tabSize = 4;
+    private final IdentifierAutoComplete autoComplete = new IdentifierAutoComplete();
+    boolean autoCompleteEnabled;
+    final boolean createIdentifiers;
 
-    private TextMateLanguage(String grammarName, InputStream grammarIns, Reader languageConfiguration, IRawTheme theme) {
+    private TextMateLanguage(String grammarName, InputStream grammarIns, Reader languageConfiguration, IRawTheme theme, boolean createIdentifiers) {
         try {
             textMateAnalyzer = new TextMateAnalyzer(this,grammarName, grammarIns,languageConfiguration, theme);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        this.createIdentifiers = createIdentifiers;
+        autoCompleteEnabled = true;
     }
 
     public static TextMateLanguage create(String grammarName, InputStream grammarIns,Reader languageConfiguration, IRawTheme theme) {
-        return new TextMateLanguage(grammarName, grammarIns,languageConfiguration, theme);
+        return new TextMateLanguage(grammarName, grammarIns,languageConfiguration, theme, true);
     }
 
     public static TextMateLanguage create(String grammarName, InputStream grammarIns, IRawTheme theme) {
-        return new TextMateLanguage(grammarName, grammarIns,null, theme);
+        return new TextMateLanguage(grammarName, grammarIns,null, theme, true);
     }
+
+    public static TextMateLanguage createNoCompletion(String grammarName, InputStream grammarIns,Reader languageConfiguration, IRawTheme theme) {
+        return new TextMateLanguage(grammarName, grammarIns,languageConfiguration, theme, false);
+    }
+
+    public static TextMateLanguage createNoCompletion(String grammarName, InputStream grammarIns, IRawTheme theme) {
+        return new TextMateLanguage(grammarName, grammarIns,null, theme, false);
+    }
+
     /**
      * When you update the {@link TextMateColorScheme} for editor, you need to synchronize the updates here
      *
      * @param theme IRawTheme creates from file
      */
-
     public void updateTheme(IRawTheme theme) {
         if (textMateAnalyzer != null) {
             textMateAnalyzer.updateTheme(theme);
@@ -93,5 +114,23 @@ public class TextMateLanguage extends EmptyLanguage {
     @Override
     public SymbolPairMatch getSymbolPairs() {
         return new SymbolPairMatch.DefaultSymbolPairs();
+    }
+
+    public boolean isAutoCompleteEnabled() {
+        return autoCompleteEnabled;
+    }
+
+    public void setAutoCompleteEnabled(boolean autoCompleteEnabled) {
+        this.autoCompleteEnabled = autoCompleteEnabled;
+    }
+
+    @Override
+    public void requireAutoComplete(ContentReference content, CharPosition position, CompletionPublisher publisher, Bundle extraArguments) {
+        if (!autoCompleteEnabled) {
+            return;
+        }
+        var prefix = CompletionHelper.computePrefix(content, position, MyCharacter::isJavaIdentifierPart);
+        final var idt = textMateAnalyzer.syncIdentifiers;
+        autoComplete.requireAutoComplete(prefix, publisher, idt);
     }
 }

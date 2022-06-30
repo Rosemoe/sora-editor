@@ -34,6 +34,7 @@ import java.util.Objects;
 import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager;
 import io.github.rosemoe.sora.lang.brackets.BracketsProvider;
 import io.github.rosemoe.sora.lang.brackets.OnlineBracketsMatcher;
+import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
@@ -43,6 +44,7 @@ import io.github.rosemoe.sora.text.Content;
 import org.eclipse.tm4e.core.grammar.IGrammar;
 import org.eclipse.tm4e.core.grammar.ITokenizeLineResult2;
 import org.eclipse.tm4e.core.internal.grammar.StackElementMetadata;
+import org.eclipse.tm4e.core.internal.grammar.StandardTokenType;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigRegExp;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
@@ -55,6 +57,7 @@ import org.eclipse.tm4e.languageconfiguration.internal.LanguageConfigurator;
 
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.ArrayList;
+import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Span> implements FoldingHelper {
@@ -67,6 +70,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     private OnigRegExp cachedRegExp;
     private boolean foldingOffside;
     private BracketsProvider bracketsProvider;
+    final IdentifierAutoComplete.SyncIdentifiers syncIdentifiers = new IdentifierAutoComplete.SyncIdentifiers();
 
     public TextMateAnalyzer(TextMateLanguage language, String grammarName, InputStream grammarIns, Reader languageConfiguration, IRawTheme theme) throws Exception {
         registry.setTheme(theme);
@@ -179,6 +183,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
         var tokens = new ArrayList<Span>();
         ITokenizeLineResult2 lineTokens = grammar.tokenizeLine2(line, state == null ? null : state.tokenizeState);
         int tokensLength = lineTokens.getTokens().length / 2;
+        var identifiers = language.createIdentifiers ? new ArrayList<String>() : null;
         for (int i = 0; i < tokensLength; i++) {
             int startIndex = lineTokens.getTokens()[2 * i];
             if (i == 0 && startIndex != 0) {
@@ -187,6 +192,24 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
             int metadata = lineTokens.getTokens()[2 * i + 1];
             int foreground = StackElementMetadata.getForeground(metadata);
             int fontStyle = StackElementMetadata.getFontStyle(metadata);
+            if (language.createIdentifiers) {
+                var type = StackElementMetadata.getTokenType(metadata);
+                if (type == StandardTokenType.Other) {
+                    var end = i + 1 == tokensLength ? lineC.length() : lineTokens.getTokens()[2 * (i + 1)];
+                    if (end > startIndex && MyCharacter.isJavaIdentifierStart(line.charAt(startIndex))) {
+                        var flag = true;
+                        for (int j = startIndex + 1; j < end; j++) {
+                            if (!MyCharacter.isJavaIdentifierPart(line.charAt(j))) {
+                                flag = false;
+                                break;
+                            }
+                        }
+                        if (flag) {
+                            identifiers.add(line.substring(startIndex, end));
+                        }
+                    }
+                }
+            }
             Span span = Span.obtain(startIndex, TextStyle.makeStyle(foreground + 255, 0, (fontStyle & FontStyle.Bold) != 0, (fontStyle & FontStyle.Italic) != 0, false));
 
             if ((fontStyle & FontStyle.Underline) != 0) {
@@ -198,7 +221,27 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
 
             tokens.add(span);
         }
-        return new LineTokenizeResult<>(new MyState(lineTokens.getRuleStack(), cachedRegExp == null ? null : cachedRegExp.search(new OnigString(line), 0), IndentRange.computeIndentLevel(((ContentLine) lineC).getRawData(), line.length() - 1, language.getTabSize())), null, tokens);
+        return new LineTokenizeResult<>(new MyState(lineTokens.getRuleStack(), cachedRegExp == null ? null : cachedRegExp.search(new OnigString(line), 0), IndentRange.computeIndentLevel(((ContentLine) lineC).getRawData(), line.length() - 1, language.getTabSize()), identifiers), null, tokens);
+    }
+
+    @Override
+    public void onAddState(MyState state) {
+        super.onAddState(state);
+        if (language.createIdentifiers) {
+            for (String identifier : state.identifiers) {
+                syncIdentifiers.identifierIncrease(identifier);
+            }
+        }
+    }
+
+    @Override
+    public void onAbandonState(MyState state) {
+        super.onAbandonState(state);
+        if (language.createIdentifiers) {
+            for (String identifier : state.identifiers) {
+                syncIdentifiers.identifierDecrease(identifier);
+            }
+        }
     }
 
     @Override
@@ -210,4 +253,5 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
         registry.setTheme(theme);
         this.theme = Theme.createFromRawTheme(theme);
     }
+
 }
