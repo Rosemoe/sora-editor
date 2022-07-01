@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2022  Rosemoe
@@ -20,33 +20,41 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
-@file:Suppress("UnstableApiUsage")
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+ */
+package io.github.rosemoe.sora.lsp.client;
 
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
+import org.eclipse.lsp4j.MessageActionItem;
+import org.eclipse.lsp4j.MessageParams;
+import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.ShowMessageRequestParams;
+import org.eclipse.lsp4j.services.LanguageClient;
+
+import java.util.concurrent.CompletableFuture;
+
+public class DefaultLanguageClient implements LanguageClient {
+
+    @Override
+    public void telemetryEvent(Object object) {
+
+    }
+
+    @Override
+    public void publishDiagnostics(PublishDiagnosticsParams diagnostics) {
+
+    }
+
+    @Override
+    public void showMessage(MessageParams messageParams) {
+
+    }
+
+    @Override
+    public CompletableFuture<MessageActionItem> showMessageRequest(ShowMessageRequestParams requestParams) {
+        return null;
+    }
+
+    @Override
+    public void logMessage(MessageParams message) {
+
     }
 }
-
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://maven.aliyun.com/nexus/content/groups/public/")
-    }
-}
-
-rootProject.name="sora-editor"
-include(
-    ":editor",
-    ":editor-kt",
-    ":app",
-    ":language-java",
-    ":language-textmate",
-    ":editor-lsp"
-)
