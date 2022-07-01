@@ -152,7 +152,11 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         if (thread != null) {
             thread.callback = () -> { throw new CancelledException(); };
             if (thread.isAlive()) {
-                thread.handler.sendMessage(Message.obtain(thread.handler, MSG_EXIT));
+                thread.interrupt();
+                var handler = thread.handler;
+                if (handler != null) {
+                    handler.sendMessage(Message.obtain(thread.handler, MSG_EXIT));
+                }
                 thread.abort = true;
             }
         }
@@ -200,11 +204,11 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         }
 
         public boolean isCancelled() {
-            return thread.myRunCount != runCount;
+            return thread.myRunCount != runCount || thread.abort || thread.isInterrupted();
         }
 
         public boolean isNotCancelled() {
-            return thread.myRunCount == runCount;
+            return !isCancelled();
         }
 
     }
@@ -236,7 +240,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
             styles = new Styles(spans = new LockedSpans());
             S state = getInitialState();
             var mdf = spans.modify();
-            for (int i = 0;i < shadowed.getLineCount();i++) {
+            for (int i = 0;i < shadowed.getLineCount() && !abort && !isInterrupted();i++) {
                 var line = shadowed.getLine(i);
                 var result = tokenizeLine(line, state, i);
                 state = result.state;
@@ -265,12 +269,12 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                         switch (msg.what) {
                             case MSG_INIT:
                                 shadowed = (Content) msg.obj;
-                                if (!abort) {
+                                if (!abort && !isInterrupted()) {
                                     initialize();
                                 }
                                 break;
                             case MSG_MOD:
-                                if (!abort) {
+                                if (!abort && !isInterrupted()) {
                                     var mod = (TextModification) msg.obj;
                                     int startLine = IntPair.getFirst(mod.start);
                                     int endLine = IntPair.getFirst(mod.end);
