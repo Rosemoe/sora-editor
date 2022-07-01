@@ -45,6 +45,8 @@ import io.github.rosemoe.sora.event.KeyBindingEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
@@ -150,6 +152,20 @@ class MainActivity : AppCompatActivity() {
         updateBtnState()
     }
 
+    private fun setupDiagnostics() {
+        val editor = binding.editor
+        val container = DiagnosticsContainer()
+        for (i in 0 until editor.text.lineCount) {
+            val index = editor.text.getCharIndex(i, 0)
+            container.addDiagnostic(DiagnosticRegion(
+                index,
+                index + editor.text.getColumnCount(i),
+                DiagnosticRegion.SEVERITY_ERROR
+            ))
+        }
+        editor.diagnostics = container
+    }
+
     private fun ensureTextmateTheme() {
         val editor = binding.editor
         var editorColorScheme = editor.colorScheme
@@ -187,6 +203,7 @@ class MainActivity : AppCompatActivity() {
                 val text = ContentCreator.fromStream(assets.open(name))
                 runOnUiThread {
                     binding.editor.setText(text, null)
+                    //setupDiagnostics()
                 }
             } catch (e: IOException) {
                 e.printStackTrace()

@@ -1058,6 +1058,8 @@ public class EditorPainter {
         var style = mEditor.getDiagnosticIndicatorStyle();
         if (diagnosticsContainer != null && style != DiagnosticIndicatorStyle.NONE && style != null) {
             var text = mEditor.getText();
+            var firstVisRow = mEditor.getFirstVisibleRow();
+            var lastVisRow = mEditor.getLastVisibleRow();
             var firstIndex = text.getCharIndex(mEditor.getFirstVisibleLine(), 0);
             var lastIndex = text.getCharIndex(Math.min(text.getLineCount() - 1, mEditor.getLastVisibleLine()), 0);
             diagnosticsContainer.queryInRegion(mCollectedDiagnostics, firstIndex, lastIndex);
@@ -1070,7 +1072,6 @@ public class EditorPainter {
             var start = new CharPosition();
             var end = new CharPosition();
             var indexer = mCursor.getIndexer();
-            var rowHeight = mEditor.getRowHeight();
             for (var region : mCollectedDiagnostics) {
                 var startIndex = Math.max(firstIndex, region.startIndex);
                 var endIndex = Math.min(lastIndex, region.endIndex);
@@ -1084,6 +1085,8 @@ public class EditorPainter {
                     break;
                 }
                 mPaintOther.setColor(mEditor.getColorScheme().getColor(colorId));
+                startRow = Math.max(firstVisRow, startRow);
+                endRow = Math.max(lastVisRow, endRow);
                 for (int i = startRow;i <= endRow;i++) {
                     var row = mEditor.getLayout().getRowAt(i);
                     var startX = 0f;
