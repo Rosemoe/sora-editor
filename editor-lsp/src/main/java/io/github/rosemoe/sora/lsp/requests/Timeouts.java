@@ -21,41 +21,22 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.client;
+package io.github.rosemoe.sora.lsp.requests;
 
-import androidx.annotation.Nullable;
+public enum Timeouts {
+    CODEACTION(2000), CODELENS(2000), COMPLETION(1000),
+    DEFINITION(2000), DOC_HIGHLIGHT(1000),
+    EXECUTE_COMMAND(2000), FORMATTING(2000), HOVER(2000),
+    INIT(10000), REFERENCES(2000), SIGNATURE(1000),
+    SHUTDOWN(5000), SYMBOLS(2000), WILLSAVE(2000);
 
-import org.jetbrains.annotations.NotNull;
+    private final int defaultTimeout;
 
-import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
-import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler;
-import io.github.rosemoe.sora.lsp.editor.LspEditor;
+    Timeouts(final int defaultTimeout) {
+        this.defaultTimeout = defaultTimeout;
+    }
 
-/**
- * The client context which is received by {@link DefaultLanguageClient}. The context contain
- * information about the runtime and its components.
- *
- * @author dingyi
- */
-public interface ClientContext {
-
-    /**
-     * Returns the {@link LspEditor} for the given document URI.
-     */
-    @Nullable
-    LspEditor getEditorEventManagerFor(@NotNull String documentUri);
-
-    /**
-     * Returns the project path associated with the LanuageClient.
-     */
-    @Nullable
-    String getProjectPath();
-
-    /**
-     * Returns the {@link RequestManager} associated with the Language Server Connection.
-     */
-    @Nullable
-    RequestManager getRequestManager();
-
-    EventHandler.EventListener getEventListener();
+    public int getDefaultTimeout() {
+        return defaultTimeout;
+    }
 }

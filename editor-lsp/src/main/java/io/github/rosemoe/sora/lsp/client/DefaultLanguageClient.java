@@ -23,38 +23,121 @@
  */
 package io.github.rosemoe.sora.lsp.client;
 
+import android.util.Log;
+
+import org.eclipse.lsp4j.ApplyWorkspaceEditParams;
+import org.eclipse.lsp4j.ApplyWorkspaceEditResponse;
+import org.eclipse.lsp4j.ConfigurationParams;
 import org.eclipse.lsp4j.MessageActionItem;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.RegistrationParams;
 import org.eclipse.lsp4j.ShowMessageRequestParams;
+import org.eclipse.lsp4j.UnregistrationParams;
+import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class DefaultLanguageClient implements LanguageClient {
 
-    @Override
-    public void telemetryEvent(Object object) {
+    private static String TAG = "DefaultLanguageClient";
 
+    private final ClientContext context;
+
+
+    public DefaultLanguageClient(@NotNull ClientContext context) {
+        this.context = context;
     }
 
     @Override
-    public void publishDiagnostics(PublishDiagnosticsParams diagnostics) {
+    public CompletableFuture<ApplyWorkspaceEditResponse> applyEdit(ApplyWorkspaceEditParams params) {
+       /* boolean response = WorkspaceEditHandler.applyEdit(params.getEdit(), "LSP edits");*/
+        //TODO: implement applyEdit
+        return CompletableFuture.supplyAsync(() -> new ApplyWorkspaceEditResponse(false));
+    }
 
+    @Override
+    public CompletableFuture<List<Object>> configuration(ConfigurationParams configurationParams) {
+        return LanguageClient.super.configuration(configurationParams);
+    }
+
+    @Override
+    public CompletableFuture<List<WorkspaceFolder>> workspaceFolders() {
+        return LanguageClient.super.workspaceFolders();
+    }
+
+    @Override
+    public CompletableFuture<Void> registerCapability(RegistrationParams params) {
+        /*return CompletableFuture.runAsync(() -> params.getRegistrations().forEach(r -> {
+            String id = r.getId();
+            Optional<DynamicRegistrationMethods> method = DynamicRegistrationMethods.forName(r.getMethod());
+            method.ifPresent(dynamicRegistrationMethods -> registrations.put(id, dynamicRegistrationMethods));
+
+        }));*/
+        //TODO: implement registerCapability
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public CompletableFuture<Void> unregisterCapability(UnregistrationParams params) {
+       /* return CompletableFuture.runAsync(() -> params.getUnregisterations().forEach((Unregistration r) -> {
+            String id = r.getId();
+            Optional<DynamicRegistrationMethods> method = DynamicRegistrationMethods.forName(r.getMethod());
+            if (registrations.containsKey(id)) {
+                registrations.remove(id);
+            } else {
+                Map<DynamicRegistrationMethods, String> inverted = new HashMap<>();
+                for (Map.Entry<String, DynamicRegistrationMethods> entry : registrations.entrySet()) {
+                    inverted.put(entry.getValue(), entry.getKey());
+                }
+                if (method.isPresent() && inverted.containsKey(method.get())) {
+                    registrations.remove(inverted.get(method.get()));
+                }
+            }
+        }));*/
+        //TODO: implement unregisterCapability
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public void telemetryEvent(Object o) {
+        Log.i(TAG, "telemetryEvent: "+o.toString());
+    }
+
+    @Override
+    public void publishDiagnostics(PublishDiagnosticsParams publishDiagnosticsParams) {
+      /*  String uri = FileUtils.sanitizeURI(publishDiagnosticsParams.getUri());
+        List<Diagnostic> diagnostics = publishDiagnosticsParams.getDiagnostics();
+        Set<EditorEventManager> managers = EditorEventManagerBase.managersForUri(uri);
+        for (EditorEventManager manager: managers) {
+            manager.diagnostics(diagnostics);
+        }*/
+
+        //TODO: implement publishDiagnostics
     }
 
     @Override
     public void showMessage(MessageParams messageParams) {
-
+        context.getEventListener().onShowMessage(messageParams);
     }
 
     @Override
-    public CompletableFuture<MessageActionItem> showMessageRequest(ShowMessageRequestParams requestParams) {
-        return null;
+    public CompletableFuture<MessageActionItem> showMessageRequest(ShowMessageRequestParams showMessageRequestParams) {
+        //TODO: implement showMessageRequest
+        return CompletableFuture.completedFuture(null);
     }
 
-    @Override
-    public void logMessage(MessageParams message) {
 
+    @Override
+    public void logMessage(MessageParams messageParams) {
+        context.getEventListener().onLogMessage(messageParams);
+    }
+
+    @NotNull
+    protected final ClientContext getContext() {
+        return context;
     }
 }

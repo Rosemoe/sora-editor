@@ -21,41 +21,22 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.client;
+package io.github.rosemoe.sora.lsp.editor;
 
-import androidx.annotation.Nullable;
+public class LspEditorManager {
 
-import org.jetbrains.annotations.NotNull;
+    private static LspEditorManager instance;
 
-import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
-import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler;
-import io.github.rosemoe.sora.lsp.editor.LspEditor;
+    private LspEditorManager() {
+    }
 
-/**
- * The client context which is received by {@link DefaultLanguageClient}. The context contain
- * information about the runtime and its components.
- *
- * @author dingyi
- */
-public interface ClientContext {
+    public static LspEditorManager getInstance() {
+        if (instance == null) {
+            instance = new LspEditorManager();
+        }
+        return instance;
+    }
 
-    /**
-     * Returns the {@link LspEditor} for the given document URI.
-     */
-    @Nullable
-    LspEditor getEditorEventManagerFor(@NotNull String documentUri);
 
-    /**
-     * Returns the project path associated with the LanuageClient.
-     */
-    @Nullable
-    String getProjectPath();
 
-    /**
-     * Returns the {@link RequestManager} associated with the Language Server Connection.
-     */
-    @Nullable
-    RequestManager getRequestManager();
-
-    EventHandler.EventListener getEventListener();
 }

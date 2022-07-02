@@ -29,9 +29,9 @@ import org.eclipse.lsp4j.services.LanguageServer;
 
 public interface ServerListener {
 
-    ServerListener DEFAULT = new ServerListener() {
-    };
 
     default void initialize(LanguageServer server, InitializeResult result) {
     }
+
+
 }

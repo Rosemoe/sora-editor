@@ -31,10 +31,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.Collections;
+import java.util.EventListener;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.github.rosemoe.sora.lsp.client.connection.StreamConnectionProvider;
+import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler;
 
 /*
  * A trait representing a ServerDefinition
@@ -99,8 +101,8 @@ public class LanguageServerDefinition {
         throw new UnsupportedOperationException();
     }
 
-    public ServerListener getServerListener() {
-        return ServerListener.DEFAULT;
+    public EventHandler.EventListener getEventListener() {
+        return EventHandler.EventListener.DEFAULT;
     }
 
     /**

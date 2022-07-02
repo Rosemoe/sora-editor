@@ -21,41 +21,33 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.client;
+package io.github.rosemoe.sora.lsp.requests;
 
-import androidx.annotation.Nullable;
 
-import org.jetbrains.annotations.NotNull;
-
-import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
-import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler;
-import io.github.rosemoe.sora.lsp.editor.LspEditor;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * The client context which is received by {@link DefaultLanguageClient}. The context contain
- * information about the runtime and its components.
- *
- * @author dingyi
+ * An object containing the Timeout for the various requests
  */
-public interface ClientContext {
+public class Timeout {
 
-    /**
-     * Returns the {@link LspEditor} for the given document URI.
-     */
-    @Nullable
-    LspEditor getEditorEventManagerFor(@NotNull String documentUri);
+    private static Map<Timeouts, Integer> timeouts = new ConcurrentHashMap<>();
 
-    /**
-     * Returns the project path associated with the LanuageClient.
-     */
-    @Nullable
-    String getProjectPath();
+    static {
+        Arrays.stream(Timeouts.values()).forEach(t -> timeouts.put(t, t.getDefaultTimeout()));
+    }
 
-    /**
-     * Returns the {@link RequestManager} associated with the Language Server Connection.
-     */
-    @Nullable
-    RequestManager getRequestManager();
+    public static int getTimeout(Timeouts type) {
+        return timeouts.get(type);
+    }
 
-    EventHandler.EventListener getEventListener();
+    public static Map<Timeouts, Integer> getTimeouts() {
+        return timeouts;
+    }
+
+    public static void setTimeouts(Map<Timeouts, Integer> loaded) {
+        loaded.forEach((t, v) -> timeouts.replace(t, v));
+    }
 }

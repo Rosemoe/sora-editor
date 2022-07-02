@@ -25,7 +25,7 @@ package io.github.rosemoe.sora.lsp.editor;
 
 import io.github.rosemoe.sora.widget.CodeEditor;
 
-public class LspVirtualEditor {
+public class LspEditor {
 
 
     private final String projectUri;
@@ -33,7 +33,7 @@ public class LspVirtualEditor {
 
     private LspLanguage currentLanguage;
 
-    public LspVirtualEditor(CodeEditor currentEditor, String projectUri, LspLanguage currentLanguage) {
+    public LspEditor(CodeEditor currentEditor, String projectUri, LspLanguage currentLanguage) {
         this.currentEditor = currentEditor;
         this.currentLanguage = currentLanguage;
         this.projectUri = projectUri;

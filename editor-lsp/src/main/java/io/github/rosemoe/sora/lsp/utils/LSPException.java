@@ -21,41 +21,19 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.client;
+package io.github.rosemoe.sora.lsp.utils;
 
-import androidx.annotation.Nullable;
+public class LSPException extends RuntimeException {
 
-import org.jetbrains.annotations.NotNull;
+    public LSPException(String msg) {
+        super(msg);
+    }
 
-import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
-import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler;
-import io.github.rosemoe.sora.lsp.editor.LspEditor;
+    public LSPException(String msg, Throwable cause) {
+        super(msg, cause);
+    }
 
-/**
- * The client context which is received by {@link DefaultLanguageClient}. The context contain
- * information about the runtime and its components.
- *
- * @author dingyi
- */
-public interface ClientContext {
-
-    /**
-     * Returns the {@link LspEditor} for the given document URI.
-     */
-    @Nullable
-    LspEditor getEditorEventManagerFor(@NotNull String documentUri);
-
-    /**
-     * Returns the project path associated with the LanuageClient.
-     */
-    @Nullable
-    String getProjectPath();
-
-    /**
-     * Returns the {@link RequestManager} associated with the Language Server Connection.
-     */
-    @Nullable
-    RequestManager getRequestManager();
-
-    EventHandler.EventListener getEventListener();
+    public LSPException(Throwable cause) {
+        super(cause);
+    }
 }

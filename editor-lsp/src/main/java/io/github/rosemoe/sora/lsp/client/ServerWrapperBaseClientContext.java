@@ -23,39 +23,46 @@
  */
 package io.github.rosemoe.sora.lsp.client;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.jetbrains.annotations.NotNull;
 
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler;
+import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 
-/**
- * The client context which is received by {@link DefaultLanguageClient}. The context contain
- * information about the runtime and its components.
- *
- * @author dingyi
- */
-public interface ClientContext {
+public class ServerWrapperBaseClientContext implements ClientContext {
 
-    /**
-     * Returns the {@link LspEditor} for the given document URI.
-     */
+    private final LanguageServerWrapper wrapper;
+
+    public ServerWrapperBaseClientContext(@NotNull LanguageServerWrapper wrapper) {
+        this.wrapper = wrapper;
+    }
+
+
     @Nullable
-    LspEditor getEditorEventManagerFor(@NotNull String documentUri);
+    @Override
+    public RequestManager getRequestManager() {
+        return wrapper.getRequestManager();
+    }
 
-    /**
-     * Returns the project path associated with the LanuageClient.
-     */
+    @Override
+    public EventHandler.EventListener getEventListener() {
+        return wrapper.getServerDefinition().getEventListener();
+    }
+
     @Nullable
-    String getProjectPath();
+    @Override
+    public String getProjectPath() {
+        return wrapper.getProjectRootPath();
+    }
 
-    /**
-     * Returns the {@link RequestManager} associated with the Language Server Connection.
-     */
     @Nullable
-    RequestManager getRequestManager();
-
-    EventHandler.EventListener getEventListener();
+    @Override
+    public LspEditor getEditorEventManagerFor(@NonNull String documentUri) {
+        //TODO: Using LspEditorManager to get LspEditor
+        return null;
+    }
 }
