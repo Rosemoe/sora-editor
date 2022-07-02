@@ -71,6 +71,6 @@ android {
 
 dependencies {
     compileOnly(projects.editor)
-    implementation ("org.eclipse.lsp4j:org.eclipse.lsp4j:0.14.0")
-
+    implementation ("org.eclipse.lsp4j:org.eclipse.lsp4j:0.10.0")
+    implementation("androidx.annotation:annotation:1.4.0")
 }
