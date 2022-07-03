@@ -64,6 +64,7 @@ import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceEditCapabilities;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.jetbrains.annotations.NotNull;
@@ -94,6 +95,8 @@ import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.DefaultRe
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
+import io.github.rosemoe.sora.lsp.editor.LspEditorManager;
+import io.github.rosemoe.sora.lsp.editor.LspLanguage;
 import io.github.rosemoe.sora.lsp.utils.LSPException;
 
 /**
@@ -224,8 +227,8 @@ public class LanguageServerWrapper {
                 eventHandler = new EventHandler(serverDefinition.getEventListener(), () -> getStatus() != STOPPED);
 
                 client = new DefaultLanguageClient(new ServerWrapperBaseClientContext(this));
-                Launcher<LanguageServer> launcher = Launcher
-                        .createLauncher(client, LanguageServer.class, inputStream, outputStream, executorService,
+                Launcher<LanguageServer> launcher = LSPLauncher
+                        .createClientLauncher(client, inputStream, outputStream, executorService,
                                 eventHandler);
                 languageServer = launcher.getRemoteProxy();
                 launcherFuture = launcher.startListening();
@@ -313,13 +316,8 @@ public class LanguageServerWrapper {
 
         String uri = editor.getCurrentFileUri();
 
-        //TODO: call disconnect for the editor
+        editor.dispose();
 
-        /*manager.documentClosed();
-        manager.documentEventManager.removeListeners();
-
-        uriToEditorManagers.remove(uri);
-        urisUnderLspControl.remove(uri);*/
         uriToLanguageServerWrapper.remove(new Pair<>(uri, editor.getProjectUri()));
 
 
@@ -366,7 +364,6 @@ public class LanguageServerWrapper {
 
     public void crashed(Exception e) {
         crashCount += 1;
-        //TODO: implement reconnection
         if (crashCount <= 3) {
             reconnect();
         } else {
@@ -402,7 +399,6 @@ public class LanguageServerWrapper {
                 Log.w(TAG, "Capabilities are null for " + serverDefinition);
                 return;
             }
-
             initializeFuture.thenRun(() -> {
                 if (connectedEditors.contains(editor)) {
                     return;
@@ -414,7 +410,7 @@ public class LanguageServerWrapper {
                         synchronized (toConnect) {
                             toConnect.remove(editor);
                         }
-                        //TODO: Connecting the editor to the language server
+                        editor.installFeatures();
                         for (LspEditor ed : new HashSet<>(toConnect)) {
                             connect(ed);
                         }
@@ -489,7 +485,7 @@ public class LanguageServerWrapper {
     }
 
     private void connect(String uri) {
-        //TODO: get editor for LSPEditorManager
+        connect(LspEditorManager.getOrCreateEditorManager(projectRootPath).getEditor(uri));
     }
 
     public List<String> getConnectedFiles() {

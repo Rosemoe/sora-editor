@@ -305,6 +305,8 @@ class MainActivity : AppCompatActivity() {
         val editor = binding.editor
         if (id == R.id.open_test_activity) {
             startActivity(Intent(this, TestActivity::class.java))
+        } else if (id == R.id.open_lsp_activity) {
+            startActivity(Intent(this, LspTestActivity::class.java))
         } else if (id == R.id.text_undo) {
             editor.undo()
         } else if (id == R.id.text_redo) {

@@ -28,52 +28,53 @@ import android.util.Pair;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Socket;
+import java.util.function.Supplier;
 
-/**
- * A customizable connection provider, where callers provide the input and output streams.
- */
-public class CustomConnectProvider implements StreamConnectionProvider {
+public class SocketStreamConnectionProvider implements StreamConnectionProvider {
 
-    private final StreamProvider streamProvider;
-    private InputStream inputStream;
-    private OutputStream outputStream;
+    private final Supplier<Integer> portSupplier;
+    private Socket socket;
 
-    public CustomConnectProvider(StreamProvider streamProvider) {
-       this.streamProvider = streamProvider;
+    public SocketStreamConnectionProvider(Supplier<Integer> port) {
+        this.portSupplier = port;
     }
-
 
     @Override
     public void start() throws IOException {
-        Pair<InputStream,OutputStream> streams = streamProvider.getStreams();
-        inputStream = streams.first;
-        outputStream = streams.second;
+        int port = portSupplier.get();
+        socket = new Socket("localhost", port);
+        //block
+        socket.getInputStream();
+        socket.getOutputStream();
     }
 
     @Override
     public InputStream getInputStream() {
-       return inputStream;
+        try {
+            return socket.getInputStream();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
     public OutputStream getOutputStream() {
-        return outputStream;
+        try {
+            return socket.getOutputStream();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
     public void close() {
         try {
-            inputStream.close();
-            outputStream.close();
-        } catch (IOException e) {
-            // ignore
+            socket.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
     }
-
-    public interface StreamProvider {
-        Pair<InputStream,OutputStream> getStreams() throws IOException;
-    }
-
-
 }

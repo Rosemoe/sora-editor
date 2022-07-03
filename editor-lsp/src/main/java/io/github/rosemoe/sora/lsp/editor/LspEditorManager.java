@@ -23,20 +23,48 @@
  */
 package io.github.rosemoe.sora.lsp.editor;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import io.github.rosemoe.sora.widget.CodeEditor;
+
 public class LspEditorManager {
 
-    private static LspEditorManager instance;
+    private final String currentProjectPath;
 
-    private LspEditorManager() {
+    private LspEditorManager(String currentProjectPath) {
+        this.currentProjectPath = currentProjectPath;
     }
 
-    public static LspEditorManager getInstance() {
-        if (instance == null) {
-            instance = new LspEditorManager();
+    private Map<String,LspEditor> editors = new HashMap<>();
+
+    private static Map<String,LspEditorManager> managers = new HashMap<>();
+
+    public static LspEditorManager getOrCreateEditorManager(String projectPath) {
+        LspEditorManager manager = managers.get(projectPath);
+        if(manager == null) {
+            manager = new LspEditorManager(projectPath);
+            managers.put(projectPath, manager);
         }
-        return instance;
+        return manager;
     }
 
 
+    public LspEditor getEditor(String currentFileUri) {
+        return  editors.get(currentFileUri);
+    }
+
+    public LspEditor removeEditor(String currentFileUri) {
+        return editors.remove(currentFileUri);
+    }
+
+    public LspEditor createEditor(CodeEditor currentEditor, String currentFileUri) {
+        LspEditor editor = editors.get(currentFileUri);
+        if(editor == null) {
+            editor = new LspEditor(currentEditor, currentProjectPath, currentFileUri);
+            editors.put(currentFileUri, editor);
+        }
+        return editor;
+    }
 
 }

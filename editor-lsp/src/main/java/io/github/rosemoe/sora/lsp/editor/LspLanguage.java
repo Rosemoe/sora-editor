@@ -28,11 +28,13 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
+import io.github.rosemoe.sora.lsp.operations.format.LspFormattingFeature;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
@@ -42,15 +44,18 @@ public class LspLanguage implements Language {
 
 
     protected final String currentFileUri;
+    private final LspEditor editor;
 
-    public LspLanguage(String currentFileUri) {
+    public LspLanguage(String currentFileUri, LspEditor editor) {
         this.currentFileUri = currentFileUri;
+        this.editor = editor;
+
     }
 
     @NonNull
     @Override
     public AnalyzeManager getAnalyzeManager() {
-        return null;
+        return EmptyLanguage.EmptyAnalyzeManager.INSTANCE;
     }
 
     @Override
@@ -75,7 +80,7 @@ public class LspLanguage implements Language {
 
     @Override
     public CharSequence format(CharSequence text) {
-        return Language.super.format(text);
+        return editor.useFeature(LspFormattingFeature.class).execute(currentFileUri);
     }
 
     @Override
@@ -85,7 +90,7 @@ public class LspLanguage implements Language {
 
     @Override
     public SymbolPairMatch getSymbolPairs() {
-        return null;
+        return EmptyLanguage.EMPTY_SYMBOL_PAIRS;
     }
 
     @Nullable

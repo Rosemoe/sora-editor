@@ -73,7 +73,7 @@ public class CustomLanguageServerDefinition extends LanguageServerDefinition {
     public boolean equals(Object obj) {
         if (obj instanceof CustomLanguageServerDefinition) {
             CustomLanguageServerDefinition other = (CustomLanguageServerDefinition) obj;
-            return ext.equals(other.ext) && other.connectProvider.equals(connectProvider);
+            return other.connectProvider.equals(connectProvider);
         }
         return false;
     }

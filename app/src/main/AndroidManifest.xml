@@ -3,6 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="io.github.rosemoe.sora.app">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -11,11 +14,15 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <profileable android:shell="true"
+        <profileable
+            android:shell="true"
             tools:targetApi="q" />
 
         <activity
             android:name=".TestActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LspTestActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

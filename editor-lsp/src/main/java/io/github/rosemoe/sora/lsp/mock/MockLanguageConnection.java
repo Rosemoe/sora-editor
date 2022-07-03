@@ -21,59 +21,46 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.client.connection;
+package io.github.rosemoe.sora.lsp.mock;
 
 import android.util.Pair;
+
+import org.eclipse.lsp4j.jsonrpc.Launcher;
+import org.eclipse.lsp4j.launch.LSPLauncher;
+import org.eclipse.lsp4j.services.LanguageClient;
+import org.eclipse.lsp4j.services.LanguageServer;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 
-/**
- * A customizable connection provider, where callers provide the input and output streams.
- */
-public class CustomConnectProvider implements StreamConnectionProvider {
+public class MockLanguageConnection {
 
-    private final StreamProvider streamProvider;
-    private InputStream inputStream;
-    private OutputStream outputStream;
 
-    public CustomConnectProvider(StreamProvider streamProvider) {
-       this.streamProvider = streamProvider;
+    public static void createConnect(int port) throws IOException {
+
+        MockLanguageServer server = new MockLanguageServer();
+
+        ServerSocket socket = new ServerSocket(port);
+
+        Socket socketClient = socket.accept();
+
+        Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(
+                server,
+                socketClient.getInputStream(),
+                socketClient.getOutputStream()
+        );
+
+        LanguageClient client = launcher.getRemoteProxy();
+
+        launcher.startListening();
+
+        server.setSocket(socket);
+        server.connect(client);
     }
-
-
-    @Override
-    public void start() throws IOException {
-        Pair<InputStream,OutputStream> streams = streamProvider.getStreams();
-        inputStream = streams.first;
-        outputStream = streams.second;
-    }
-
-    @Override
-    public InputStream getInputStream() {
-       return inputStream;
-    }
-
-    @Override
-    public OutputStream getOutputStream() {
-        return outputStream;
-    }
-
-    @Override
-    public void close() {
-        try {
-            inputStream.close();
-            outputStream.close();
-        } catch (IOException e) {
-            // ignore
-        }
-
-    }
-
-    public interface StreamProvider {
-        Pair<InputStream,OutputStream> getStreams() throws IOException;
-    }
-
 
 }

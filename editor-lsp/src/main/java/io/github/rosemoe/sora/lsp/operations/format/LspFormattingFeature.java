@@ -21,48 +21,52 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.client;
+package io.github.rosemoe.sora.lsp.operations.format;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.FormattingOptions;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
 
-import org.jetbrains.annotations.NotNull;
+import java.util.concurrent.CompletableFuture;
 
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
-import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler;
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
-import io.github.rosemoe.sora.lsp.editor.LspEditorManager;
+import io.github.rosemoe.sora.lsp.operations.Feature;
 
-public class ServerWrapperBaseClientContext implements ClientContext {
+public class LspFormattingFeature implements Feature<String, String> {
 
-    private final LanguageServerWrapper wrapper;
+    private CompletableFuture<String> future;
+    private LspEditor editor;
 
-    public ServerWrapperBaseClientContext(@NotNull LanguageServerWrapper wrapper) {
-        this.wrapper = wrapper;
-    }
-
-
-    @Nullable
     @Override
-    public RequestManager getRequestManager() {
-        return wrapper.getRequestManager();
+    public void install(LspEditor editor) {
+        this.editor = editor;
     }
 
     @Override
-    public EventHandler.EventListener getEventListener() {
-        return wrapper.getServerDefinition().getEventListener();
+    public void uninstall(LspEditor editor) {
+        this.editor = null;
+        if (future != null) {
+            future.cancel(true);
+        }
     }
 
-    @Nullable
     @Override
-    public String getProjectPath() {
-        return wrapper.getProjectRootPath();
+    public String execute(String uri) {
+        RequestManager manager = editor.getRequestManager();
+        DocumentFormattingParams formattingParams = new DocumentFormattingParams();
+
+        formattingParams.setOptions(editor.getOption(FormattingOptions.class));
+        formattingParams.setTextDocument(new TextDocumentIdentifier(uri));
+        future = manager.formatting(formattingParams)
+                .thenApply(list -> {
+                    //get 0
+                    return list.get(0).getNewText();
+                });
+
+        //block
+        return future.join();
     }
 
-    @Nullable
-    @Override
-    public LspEditor getEditorEventManagerFor(@NonNull String documentUri) {
-        return LspEditorManager.getOrCreateEditorManager(getProjectPath()).getEditor(documentUri);
-    }
 }

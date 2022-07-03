@@ -23,21 +23,39 @@
  */
 package io.github.rosemoe.sora.lsp.editor;
 
+import org.eclipse.lsp4j.FormattingOptions;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
+import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
+import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper;
+import io.github.rosemoe.sora.lsp.operations.Feature;
+import io.github.rosemoe.sora.lsp.operations.apply.ApplyEditFeature;
+import io.github.rosemoe.sora.lsp.operations.format.LspFormattingFeature;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 public class LspEditor {
 
 
     private final String projectUri;
+
     private CodeEditor currentEditor;
 
     private LspLanguage currentLanguage;
 
-    public LspEditor(CodeEditor currentEditor, String projectUri, LspLanguage currentLanguage) {
-        this.currentEditor = currentEditor;
-        this.currentLanguage = currentLanguage;
+    private List<Feature<?, ?>> supportedFeatures = new ArrayList<>();
+
+    public LspEditor(CodeEditor currentEditor, String projectUri, String currentFileUri) {
+        this.currentEditor = null;
+        this.currentLanguage = new LspLanguage(currentFileUri, this);
         this.projectUri = projectUri;
+
+        setEditor(currentEditor);
     }
+
+    private List<Object> options = new ArrayList<>();
 
     public String getCurrentFileUri() {
         return currentLanguage.currentFileUri;
@@ -47,5 +65,99 @@ public class LspEditor {
         return projectUri;
     }
 
+    public void setEditor(CodeEditor currentEditor) {
+        this.currentEditor = currentEditor;
+        currentEditor.setEditorLanguage(currentLanguage);
+    }
 
+    public CodeEditor getEditor() {
+        return currentEditor;
+    }
+
+    public LspLanguage getLanguage() {
+        return currentLanguage;
+    }
+
+    public void installFeature(Supplier<Feature<?, ?>> featureSupplier) {
+        Feature<?, ?> feature = featureSupplier.get();
+        supportedFeatures.add(feature);
+        feature.install(this);
+    }
+
+    public void uninstallFeature(Class<?> featureClass) {
+        for (Feature<?, ?> feature : supportedFeatures) {
+            if (feature.getClass() == featureClass) {
+                feature.uninstall(this);
+                supportedFeatures.remove(feature);
+                return;
+            }
+        }
+    }
+
+    public <T> T useFeature(Class<T> featureClass) {
+        for (Feature<?, ?> feature : supportedFeatures) {
+            if (feature.getClass() == featureClass) {
+                return (T) feature;
+            }
+        }
+        return null;
+    }
+
+    public void dispose() {
+        for (Feature<?, ?> feature : supportedFeatures) {
+            feature.uninstall(this);
+        }
+        supportedFeatures.clear();
+        currentEditor = null;
+        currentLanguage.destroy();
+
+    }
+
+
+    public void installFeatures() {
+
+        //features
+        installFeature(ApplyEditFeature::new);
+        installFeature(LspFormattingFeature::new);
+
+        //options
+
+
+        // formatting
+        FormattingOptions formattingOptions = new FormattingOptions();
+        formattingOptions.setTabSize(4);
+        formattingOptions.setInsertSpaces(true);
+        options.add(formattingOptions);
+
+    }
+
+    public <T> T getOption(Class<T> optionClass) {
+        for (Object option : options) {
+            if (optionClass.isInstance(option)) {
+                return (T) option;
+            }
+        }
+        return null;
+    }
+
+    public void connect() {
+        getRequestManager();
+    }
+
+    public RequestManager getRequestManager() {
+        LanguageServerWrapper languageServerWrapper = LanguageServerWrapper.forEditor(this);
+        if (languageServerWrapper != null) {
+            return languageServerWrapper.getRequestManager();
+        }
+
+        languageServerWrapper = LanguageServerWrapper.forProject(this.projectUri);
+
+        languageServerWrapper.start();
+        //wait for language server start
+        languageServerWrapper.getServerCapabilities();
+        languageServerWrapper.connect(this);
+
+        return languageServerWrapper.getRequestManager();
+
+    }
 }

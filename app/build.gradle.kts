@@ -78,6 +78,7 @@ dependencies {
     implementation(projects.editorKt)
     implementation(projects.languageJava)
     implementation(projects.languageTextmate)
+    implementation(projects.editorLsp)
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")

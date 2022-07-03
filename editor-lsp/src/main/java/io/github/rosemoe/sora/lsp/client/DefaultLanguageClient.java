@@ -47,7 +47,6 @@ public class DefaultLanguageClient implements LanguageClient {
 
     private final ClientContext context;
 
-
     public DefaultLanguageClient(@NotNull ClientContext context) {
         this.context = context;
     }
@@ -58,6 +57,8 @@ public class DefaultLanguageClient implements LanguageClient {
         //TODO: implement applyEdit
         return CompletableFuture.supplyAsync(() -> new ApplyWorkspaceEditResponse(false));
     }
+
+
 
     @Override
     public CompletableFuture<List<Object>> configuration(ConfigurationParams configurationParams) {
