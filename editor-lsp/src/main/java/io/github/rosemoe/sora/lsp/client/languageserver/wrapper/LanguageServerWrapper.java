@@ -74,11 +74,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -96,7 +94,6 @@ import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestMa
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.editor.LspEditorManager;
-import io.github.rosemoe.sora.lsp.editor.LspLanguage;
 import io.github.rosemoe.sora.lsp.utils.LSPException;
 
 /**
@@ -316,12 +313,14 @@ public class LanguageServerWrapper {
 
         String uri = editor.getCurrentFileUri();
 
-        editor.dispose();
 
-        uriToLanguageServerWrapper.remove(new Pair<>(uri, editor.getProjectUri()));
 
+        uriToLanguageServerWrapper.remove(new Pair<>(uri, editor.getProjectPath()));
 
         connectedEditors.remove(editor);
+
+        editor.dispose();
+
         if (connectedEditors.isEmpty()) {
             stop(true);
         }
@@ -388,7 +387,7 @@ public class LanguageServerWrapper {
         if (connectedEditors.contains(editor)) {
             return;
         }
-        Pair<String, String> key = new Pair<>(uri, editor.getProjectUri());
+        Pair<String, String> key = new Pair<>(uri, editor.getProjectPath());
 
         uriToLanguageServerWrapper.put(key, this);
 
@@ -410,7 +409,13 @@ public class LanguageServerWrapper {
                         synchronized (toConnect) {
                             toConnect.remove(editor);
                         }
+                        TextDocumentSyncKind textDocumentSyncKind = syncOptions.isLeft() ? syncOptions.getLeft() : syncOptions.getRight().getChange();
+                        textDocumentSyncKind = textDocumentSyncKind == null ? TextDocumentSyncKind.Full : textDocumentSyncKind;
+
+                        editor.setSyncOptions(textDocumentSyncKind);
+
                         editor.installFeatures();
+                        editor.open();
                         for (LspEditor ed : new HashSet<>(toConnect)) {
                             connect(ed);
                         }

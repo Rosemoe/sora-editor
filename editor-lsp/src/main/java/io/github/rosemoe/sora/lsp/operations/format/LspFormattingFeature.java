@@ -23,18 +23,25 @@
  */
 package io.github.rosemoe.sora.lsp.operations.format;
 
+import android.util.Pair;
+
 import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 
 import java.util.concurrent.CompletableFuture;
 
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
-import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.operations.Feature;
+import io.github.rosemoe.sora.lsp.utils.LspUtils;
+import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.Content;
 
-public class LspFormattingFeature implements Feature<String, String> {
+public class LspFormattingFeature implements Feature<Pair<CharPosition, CharPosition>, String> {
 
     private CompletableFuture<String> future;
     private LspEditor editor;
@@ -49,24 +56,39 @@ public class LspFormattingFeature implements Feature<String, String> {
         this.editor = null;
         if (future != null) {
             future.cancel(true);
+            future = null;
         }
     }
 
     @Override
-    public String execute(String uri) {
-        RequestManager manager = editor.getRequestManager();
-        DocumentFormattingParams formattingParams = new DocumentFormattingParams();
-
+    public String execute(Pair<CharPosition, CharPosition> data) {
+        var manager = editor.getRequestManager();
+        var formattingParams = new DocumentRangeFormattingParams();
         formattingParams.setOptions(editor.getOption(FormattingOptions.class));
-        formattingParams.setTextDocument(new TextDocumentIdentifier(uri));
-        future = manager.formatting(formattingParams)
+
+        formattingParams.setTextDocument(LspUtils.createTextDocumentIdentifier(editor.getCurrentFileUri()));
+        formattingParams.setRange(new Range(
+                new Position(data.first.line, data.first.column),
+                new Position(data.second.line, data.second.column)
+        ));
+
+        //FIXME: May need to change sora-editor to implement this feature
+        future = manager.rangeFormatting(formattingParams)
                 .thenApply(list -> {
-                    //get 0
-                    return list.get(0).getNewText();
+                    StringBuilder builder = new StringBuilder();
+                    for (var item : list) {
+                        builder.append(item.getNewText());
+                    }
+                    return builder.toString();
+                })
+                .exceptionally(e -> {
+                    e.printStackTrace();
+                    return null;
                 });
 
         //block
         return future.join();
     }
+
 
 }

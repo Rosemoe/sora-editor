@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lsp.editor;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 public class LspEditorManager {
@@ -58,10 +59,10 @@ public class LspEditorManager {
         return editors.remove(currentFileUri);
     }
 
-    public LspEditor createEditor(CodeEditor currentEditor, String currentFileUri) {
+    public LspEditor createEditor(CodeEditor currentEditor, String currentFileUri, LanguageServerDefinition serverDefinition) {
         LspEditor editor = editors.get(currentFileUri);
         if(editor == null) {
-            editor = new LspEditor(currentEditor, currentProjectPath, currentFileUri);
+            editor = new LspEditor(currentEditor, currentProjectPath, currentFileUri,serverDefinition);
             editors.put(currentFileUri, editor);
         }
         return editor;

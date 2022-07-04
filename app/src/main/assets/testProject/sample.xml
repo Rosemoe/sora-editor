@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html>
+
+
+    <head>
+        <title>Sora Editor</title>
+
+          <meta charset="utf-8" />
+
+
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+
+    </head>
+
+
+    <body>
+
+
+        <h1>Sora Editor</h1>
+
+
+        <p>
+               <a href="aaa://sora-editor/">sora-editor</a>
+               is the awesome code editor for Android.
+
+
+        </p>
+
+
+     </body>
+</html>

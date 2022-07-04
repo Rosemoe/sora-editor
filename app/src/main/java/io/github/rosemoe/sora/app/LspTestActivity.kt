@@ -29,16 +29,20 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvider
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
-import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
 import io.github.rosemoe.sora.lsp.editor.LspEditor
+import io.github.rosemoe.sora.lsp.editor.LspEditorManager
 import io.github.rosemoe.sora.lsp.mock.MockLanguageConnection
+import io.github.rosemoe.sora.text.ContentCreator
 import io.github.rosemoe.sora.widget.CodeEditor
-import io.github.rosemoe.sora.widget.schemes.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.*
 import java.net.ServerSocket
-import kotlin.concurrent.thread
+import java.util.zip.ZipFile
 
 class LspTestActivity : AppCompatActivity() {
     private lateinit var editor: CodeEditor
@@ -48,52 +52,102 @@ class LspTestActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        editor = CodeEditor(this)
-        setContentView(editor)
-        editor.typefaceText = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
 
-        connectLanguageServer()
+        editor = CodeEditor(this)
+
+        setContentView(editor)
+
+        val font = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
+
+        editor.apply {
+            typefaceText = font
+            typefaceLineNumber = font
+        }
+
+        lifecycleScope.launch {
+
+            unAssets()
+
+            setEditorText()
+
+            connectToLanguageServer()
+
+        }
     }
 
-    private fun randomPort():Int {
-        val serverSocket = ServerSocket(0) //读取空闲的可用端口
+    private suspend fun setEditorText() {
+        val text = withContext(Dispatchers.IO) {
+            ContentCreator.fromStream(
+                externalCacheDir?.resolve("testProject/sample.xml")?.inputStream()
+            )
+        }
+        editor.setText(text, null)
+    }
+
+    private suspend fun unAssets() = withContext(Dispatchers.IO) {
+
+        val zipFile = ZipFile(packageResourcePath)
+        val zipEntries = zipFile.entries()
+        while (zipEntries.hasMoreElements()) {
+            val zipEntry = zipEntries.nextElement()
+            val fileName = zipEntry.name
+            if (fileName.startsWith("assets/testProject/")) {
+                val inputStream = zipFile.getInputStream(zipEntry)
+                //这里编译器会帮你优化掉 不用担心
+                val filePath = externalCacheDir?.resolve(fileName.substring("assets/".length))
+                filePath?.parentFile?.mkdirs()
+                val outputStream = FileOutputStream(filePath)
+                inputStream.copyTo(outputStream)
+                inputStream.close()
+                outputStream.close()
+            }
+        }
+        zipFile.close()
+    }
+
+    private suspend fun connectToLanguageServer() = withContext(Dispatchers.IO) {
+
+        val port = randomPort()
+
+        val projectPath = externalCacheDir?.resolve("testProject")?.absolutePath ?: ""
+
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            //FIXME: The language server should be started in another process, consider using service instead of thread
+            MockLanguageConnection.createConnect(port)
+        }
+
+        val serverDefinition = CustomLanguageServerDefinition(".xml") {
+            SocketStreamConnectionProvider {
+                port
+            }
+        }
+
+
+        withContext(Dispatchers.Main) {
+            lspEditor = LspEditorManager.getOrCreateEditorManager(projectPath).createEditor(
+                editor,
+                "$projectPath/sample.xml",
+                serverDefinition
+            )
+        }
+
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            lspEditor.connect()
+        }
+
+
+    }
+
+    private fun randomPort(): Int {
+        val serverSocket = ServerSocket(0)
 
         val port = serverSocket.localPort
         serverSocket.close()
         return port
     }
 
-    private fun connectLanguageServer() {
-
-        val port = randomPort()
-
-
-        thread {
-            MockLanguageConnection.createConnect(port)
-        }
-
-        val serverDefinition = CustomLanguageServerDefinition(".lua") {
-            SocketStreamConnectionProvider {
-                port
-            }
-        }
-
-        thread {
-            val wrapper = LanguageServerWrapper(serverDefinition, "")
-
-            wrapper.start();
-
-            runOnUiThread {
-                lspEditor = LspEditor(editor, "", "")
-                thread {
-                    wrapper.connect(lspEditor)
-                }
-            }
-
-        }
-
-
-    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_lsp, menu)

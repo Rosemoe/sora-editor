@@ -24,9 +24,12 @@
 package io.github.rosemoe.sora.lsp.editor;
 
 import android.os.Bundle;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import org.eclipse.lsp4j.TextDocumentSyncKind;
 
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
@@ -34,6 +37,7 @@ import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
+import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.operations.format.LspFormattingFeature;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
@@ -45,6 +49,7 @@ public class LspLanguage implements Language {
 
     protected final String currentFileUri;
     private final LspEditor editor;
+    private TextDocumentSyncKind syncKind;
 
     public LspLanguage(String currentFileUri, LspEditor editor) {
         this.currentFileUri = currentFileUri;
@@ -80,12 +85,30 @@ public class LspLanguage implements Language {
 
     @Override
     public CharSequence format(CharSequence text) {
-        return editor.useFeature(LspFormattingFeature.class).execute(currentFileUri);
+
+        var rangePair = new Pair<>(
+                editor.getEditor()
+                        .getText()
+                        .getIndexer()
+                        .getCharPosition(0),
+                editor.getEditor()
+                        .getText()
+                        .getIndexer()
+                        .getCharPosition(text.length() - 1)
+        );
+
+        //FIXME: May need to change sora-editor to implement this feature
+        return editor.useFeature(LspFormattingFeature.class)
+                .execute(rangePair);
     }
 
     @Override
     public CharSequence formatRegion(CharSequence text, CharPosition start, CharPosition end) {
-        return Language.super.formatRegion(text, start, end);
+        //FIXME: May need to change sora-editor to implement this feature
+        return editor.useFeature(LspFormattingFeature.class)
+                .execute(new Pair<>(
+                        start, end
+                ));
     }
 
     @Override
@@ -101,6 +124,14 @@ public class LspLanguage implements Language {
 
     @Override
     public void destroy() {
+        editor.destroy();
+    }
 
+    public void setSyncOptions(TextDocumentSyncKind textDocumentSyncKind) {
+        this.syncKind = textDocumentSyncKind;
+    }
+
+    public TextDocumentSyncKind getSyncOptions() {
+        return syncKind == null ? TextDocumentSyncKind.Full : syncKind;
     }
 }

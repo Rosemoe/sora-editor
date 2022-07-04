@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.lsp.mock;
 
 import android.util.Pair;
 
+import org.eclipse.lemminx.XMLServerLauncher;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -43,24 +44,12 @@ public class MockLanguageConnection {
 
     public static void createConnect(int port) throws IOException {
 
-        MockLanguageServer server = new MockLanguageServer();
 
         ServerSocket socket = new ServerSocket(port);
 
         Socket socketClient = socket.accept();
 
-        Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(
-                server,
-                socketClient.getInputStream(),
-                socketClient.getOutputStream()
-        );
-
-        LanguageClient client = launcher.getRemoteProxy();
-
-        launcher.startListening();
-
-        server.setSocket(socket);
-        server.connect(client);
+        XMLServerLauncher.launch(socketClient.getInputStream(), socketClient.getOutputStream());
     }
 
 }

@@ -72,7 +72,6 @@ import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RegistrationParams;
 import org.eclipse.lsp4j.RenameParams;
-import org.eclipse.lsp4j.SemanticHighlightingParams;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ShowMessageRequestParams;
 import org.eclipse.lsp4j.SignatureHelp;
@@ -288,10 +287,11 @@ public class DefaultRequestManager implements RequestManager {
         }
     }
 
+
     public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params) {
         if (checkStatus()) {
             try {
-                return serverCapabilities.getWorkspaceSymbolProvider() ? workspaceService.symbol(params) : null;
+                return serverCapabilities.getWorkspaceSymbolProvider().getRight()!=null ? workspaceService.symbol(params) : null;
             } catch (Exception e) {
                 crashed(e);
                 return null;
@@ -429,10 +429,7 @@ public class DefaultRequestManager implements RequestManager {
     public CompletableFuture<Hover> hover(HoverParams params) {
         if (checkStatus()) {
             try {
-                return (
-                        Optional.ofNullable(serverCapabilities.getHoverProvider()).orElse(false)) ?
-                        textDocumentService.hover(params) : null;
-
+                return serverCapabilities.getHoverProvider().getRight() != null ? textDocumentService.hover(params) : null;
             } catch (Exception e) {
                 crashed(e);
                 return null;
@@ -463,7 +460,7 @@ public class DefaultRequestManager implements RequestManager {
     public CompletableFuture<List<? extends Location>> references(ReferenceParams params) {
         if (checkStatus()) {
             try {
-                return (serverCapabilities.getReferencesProvider()) ? textDocumentService.references(params) : null;
+                return (serverCapabilities.getReferencesProvider().getRight() != null) ? textDocumentService.references(params) : null;
             } catch (Exception e) {
                 crashed(e);
                 return null;
@@ -481,7 +478,7 @@ public class DefaultRequestManager implements RequestManager {
     public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(DocumentHighlightParams params) {
         if (checkStatus()) {
             try {
-                return (serverCapabilities.getDocumentHighlightProvider()) ? textDocumentService.documentHighlight(params) : null;
+                return (serverCapabilities.getDocumentHighlightProvider().getRight() != null) ? textDocumentService.documentHighlight(params) : null;
             } catch (Exception e) {
                 crashed(e);
                 return null;
@@ -494,7 +491,7 @@ public class DefaultRequestManager implements RequestManager {
     public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(DocumentSymbolParams params) {
         if (checkStatus()) {
             try {
-                return (serverCapabilities.getDocumentSymbolProvider()) ? textDocumentService.documentSymbol(params) : null;
+                return (serverCapabilities.getDocumentSymbolProvider().getRight() != null) ? textDocumentService.documentSymbol(params) : null;
             } catch (Exception e) {
                 crashed(e);
                 return null;
@@ -507,7 +504,7 @@ public class DefaultRequestManager implements RequestManager {
     public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
         if (checkStatus()) {
             try {
-                return (serverCapabilities.getDocumentFormattingProvider()) ? textDocumentService.formatting(params) : null;
+                return (serverCapabilities.getDocumentFormattingProvider().getRight() != null) ? textDocumentService.formatting(params) : null;
             } catch (Exception e) {
                 crashed(e);
                 return null;
@@ -553,7 +550,7 @@ public class DefaultRequestManager implements RequestManager {
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(DefinitionParams params) {
         if (checkStatus()) {
             try {
-                return (serverCapabilities.getDefinitionProvider()) ? textDocumentService.definition(params) : null;
+                return (serverCapabilities.getDefinitionProvider().getRight() != null) ? textDocumentService.definition(params) : null;
             } catch (Exception e) {
                 crashed(e);
                 return null;

@@ -72,6 +72,8 @@ dependencies {
     implementation("com.google.android.material:material:1.6.1")
     implementation("androidx.core:core-ktx:1.8.0")
     implementation("androidx.appcompat:appcompat:1.4.2")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.3.1")
+
 
     // Editor
     implementation(projects.editor)
@@ -79,6 +81,9 @@ dependencies {
     implementation(projects.languageJava)
     implementation(projects.languageTextmate)
     implementation(projects.editorLsp)
+
+    //Kotlin coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
