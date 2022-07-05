@@ -34,8 +34,10 @@ import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
+import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
@@ -132,28 +134,13 @@ public interface Language {
     @UiThread
     boolean useTab();
 
-    /**
-     * Format the given content
-     *
-     * @param text Content to format
-     * @return Formatted code
-     */
-    @WorkerThread
-    default CharSequence format(CharSequence text) {
-        return null;
-    }
 
     /**
-     * Format the given content from {@code start} position to {@code end} position
-     * <p>
-     * Note: Make sure that you return formatted code in the given region. The original text in this region
-     * will be <strong>replaced</strong> by the returned text.
-     * @return Formatted code from {@code start} to {@code end}.
+     * Get the code formatter for the current language.
+     *
+     * @return The code formatter for the current language.
      */
-    @WorkerThread
-    default CharSequence formatRegion(CharSequence text, CharPosition start, CharPosition end) {
-        return null;
-    }
+     Formatter getFormatter();
 
     /**
      * Returns language specified symbol pairs.
