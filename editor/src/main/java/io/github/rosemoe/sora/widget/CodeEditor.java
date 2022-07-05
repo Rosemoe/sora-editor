@@ -64,7 +64,6 @@ import android.widget.OverScroller;
 import android.widget.SearchView;
 import android.widget.Toast;
 
-import androidx.annotation.FloatRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Px;
@@ -88,6 +87,7 @@ import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
+import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Styles;
@@ -97,7 +97,6 @@ import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
-import io.github.rosemoe.sora.text.FormatThread;
 import io.github.rosemoe.sora.text.ICUUtils;
 import io.github.rosemoe.sora.text.LineRemoveListener;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
@@ -135,7 +134,7 @@ import io.github.rosemoe.sora.widget.style.builtin.MoveCursorAnimator;
  * @author Rosemoe
  */
 @SuppressWarnings("unused")
-public class CodeEditor extends View implements ContentListener, FormatThread.FormatResultReceiver, LineRemoveListener {
+public class CodeEditor extends View implements ContentListener, Formatter.FormatResultReceiver, LineRemoveListener {
 
     private final static Logger logger = Logger.instance("CodeEditor");
 
@@ -299,7 +298,6 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     private EdgeEffect mVerticalGlow;
     private EdgeEffect mHorizontalGlow;
     private ExtractedTextRequest mExtracting;
-    private FormatThread mFormatThread;
     private EditorSearcher mSearcher;
     private CursorAnimator mCursorAnimator;
     private Paint.FontMetricsInt mLineNumberMetrics;
@@ -850,6 +848,8 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         // Destroy old one
         var old = mLanguage;
         if (old != null) {
+            old.getFormatter().setReceiver(null);
+            old.getFormatter().destroy();
             old.getAnalyzeManager().setReceiver(null);
             old.getAnalyzeManager().destroy();
             old.destroy();
@@ -2013,11 +2013,13 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      * @return Whether the format task is scheduled
      */
     public synchronized boolean formatCodeAsync() {
-        if (mFormatThread != null) {
+        if (mLanguage.getFormatter().isRunning()) {
             return false;
         }
-        mFormatThread = new FormatThread(mText, mLanguage, this);
-        mFormatThread.start();
+        mLanguage.getFormatter().setReceiver(this);
+        var formatContent = mText.copyText(false);
+        formatContent.setUndoEnabled(false);
+        mLanguage.getFormatter().format(formatContent);
         return true;
     }
 
@@ -2035,11 +2037,13 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         if (start.index > end.index) {
             throw new IllegalArgumentException("start > end");
         }
-        if (mFormatThread != null) {
+        if (mLanguage.getFormatter().isRunning()) {
             return false;
         }
-        mFormatThread = new FormatThread(mText, mLanguage, this, start, end);
-        mFormatThread.start();
+        mLanguage.getFormatter().setReceiver(this);
+        var formatContent = mText.copyText(false);
+        formatContent.setUndoEnabled(false);
+        mLanguage.getFormatter().formatRegion(formatContent, start, end);
         return true;
     }
 
@@ -3389,7 +3393,7 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
      * @return whether the editor is currently formatting
      */
     public boolean isFormatting() {
-        return mFormatThread != null;
+        return mLanguage.getFormatter().isRunning();
     }
 
     /**
@@ -3652,6 +3656,8 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         hideEditorWindows();
         if (mLanguage != null) {
             mLanguage.getAnalyzeManager().destroy();
+            mLanguage.getFormatter().setReceiver(null);
+            mLanguage.getFormatter().destroy();
             mLanguage.destroy();
             mLanguage = new EmptyLanguage();
         }
@@ -4130,9 +4136,26 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
     }
 
     @Override
+    public void onFormatSucceed(Content applyContent) {
+        post(() -> {
+            int line = mCursor.getLeftLine();
+            int column = mCursor.getLeftColumn();
+            //Maybe should just use Content?
+            var string = applyContent.toStringBuilder();
+            mText.beginBatchEdit();
+            mText.delete(0, 0, mText.getLineCount() - 1,
+                    mText.getColumnCount(mText.getLineCount() - 1) - 1);
+            mText.insert(0, 0, string);
+            mText.endBatchEdit();
+            getScroller().forceFinished(true);
+            mCompletionWindow.hide();
+            setSelectionAround(line, column);
+        });
+    }
+
+    @Override
     public void onFormatFail(final Throwable throwable) {
         post(() -> Toast.makeText(getContext(), throwable.toString(), Toast.LENGTH_SHORT).show());
-        mFormatThread = null;
     }
 
     @Override
@@ -4140,35 +4163,6 @@ public class CodeEditor extends View implements ContentListener, FormatThread.Fo
         mLayout.onRemove(content, line);
     }
 
-    @Override
-    public void onFormatSucceed(CharSequence originalText, final CharSequence newText) {
-        mFormatThread = null;
-        if (originalText == mText && newText != null) {
-            post(() -> {
-                int line = mCursor.getLeftLine();
-                int column = mCursor.getLeftColumn();
-                mText.replace(0, 0, getLineCount() - 1, mText.getColumnCount(getLineCount() - 1), newText);
-                getScroller().forceFinished(true);
-                mCompletionWindow.hide();
-                setSelectionAround(line, column);
-            });
-        }
-    }
-
-    @Override
-    public void onFormatSucceed(CharSequence originalText, CharSequence replaceText, CharPosition start, CharPosition end) {
-        mFormatThread = null;
-        if (originalText == mText && replaceText != null) {
-            post(() -> {
-                int line = mCursor.getLeftLine();
-                int column = mCursor.getLeftColumn();
-                mText.replace(start.line, start.column, end.line, end.column, replaceText);
-                getScroller().forceFinished(true);
-                mCompletionWindow.hide();
-                setSelectionAround(line, column);
-            });
-        }
-    }
 
     @UiThread
     public void setStyles(@Nullable Styles styles) {

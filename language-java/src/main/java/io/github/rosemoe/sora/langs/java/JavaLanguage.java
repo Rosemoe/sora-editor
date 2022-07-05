@@ -27,11 +27,13 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 
+import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
+import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -109,8 +111,8 @@ public class JavaLanguage implements Language {
     }
 
     @Override
-    public CharSequence format(CharSequence text) {
-        return text;
+    public Formatter getFormatter() {
+        return EmptyLanguage.EmptyFormatter.INSTANCE;
     }
 
     @Override
