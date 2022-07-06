@@ -310,16 +310,17 @@ public class LanguageServerWrapper {
      */
     public void disconnect(LspEditor editor) {
 
+        if (!connectedEditors.contains(editor)) {
+            return;
+        }
 
         String uri = editor.getCurrentFileUri();
-
-
 
         uriToLanguageServerWrapper.remove(new Pair<>(uri, editor.getProjectPath()));
 
         connectedEditors.remove(editor);
 
-        editor.dispose();
+        editor.close();
 
         if (connectedEditors.isEmpty()) {
             stop(true);
@@ -415,7 +416,9 @@ public class LanguageServerWrapper {
                         editor.setSyncOptions(textDocumentSyncKind);
 
                         editor.installFeatures();
+
                         editor.open();
+
                         for (LspEditor ed : new HashSet<>(toConnect)) {
                             connect(ed);
                         }

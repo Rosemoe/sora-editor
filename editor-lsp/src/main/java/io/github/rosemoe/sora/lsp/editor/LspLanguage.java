@@ -24,12 +24,9 @@
 package io.github.rosemoe.sora.lsp.editor;
 
 import android.os.Bundle;
-import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import org.eclipse.lsp4j.TextDocumentSyncKind;
 
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
@@ -38,8 +35,6 @@ import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
-import io.github.rosemoe.sora.lsp.editor.LspEditor;
-import io.github.rosemoe.sora.lsp.operations.format.LspFormattingFeature;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
@@ -48,78 +43,92 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
 public class LspLanguage implements Language {
 
 
-    protected final String currentFileUri;
-    private LspEditor editor;
-    private TextDocumentSyncKind syncKind;
+    private LspEditor currentEditor;
 
-    private LspFormatter formatter;
+    private LspFormatter lspFormatter;
 
-    public LspLanguage(String currentFileUri, LspEditor editor) {
-        this.currentFileUri = currentFileUri;
-        this.editor = editor;
-        this.formatter = new LspFormatter(this);
+    private Language wrapperLanguage = null;
+
+    public LspLanguage(LspEditor editor) {
+        this.currentEditor = editor;
+        this.lspFormatter = new LspFormatter(this);
     }
 
     @NonNull
     @Override
     public AnalyzeManager getAnalyzeManager() {
-        return EmptyLanguage.EmptyAnalyzeManager.INSTANCE;
+        return wrapperLanguage != null ? wrapperLanguage.getAnalyzeManager() : EmptyLanguage.EmptyAnalyzeManager.INSTANCE;
     }
 
     @Override
     public int getInterruptionLevel() {
-        return 0;
+        return wrapperLanguage != null ? wrapperLanguage.getInterruptionLevel() : 0;
     }
 
     @Override
     public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position, @NonNull CompletionPublisher publisher, @NonNull Bundle extraArguments) throws CompletionCancelledException {
-
+        //TODO: Use lsp auto complete
     }
 
     @Override
     public int getIndentAdvance(@NonNull ContentReference content, int line, int column) {
-        return 0;
+        return wrapperLanguage != null ? wrapperLanguage.getInterruptionLevel() : 0;
     }
 
     @Override
     public boolean useTab() {
-        return false;
+        return wrapperLanguage != null && wrapperLanguage.useTab();
     }
 
     @NonNull
     @Override
     public Formatter getFormatter() {
-        return formatter;
+        return lspFormatter;
     }
 
 
     @Override
     public SymbolPairMatch getSymbolPairs() {
-        return EmptyLanguage.EMPTY_SYMBOL_PAIRS;
+        return wrapperLanguage != null ? wrapperLanguage.getSymbolPairs() : EmptyLanguage.EMPTY_SYMBOL_PAIRS;
     }
 
     @Nullable
     @Override
     public NewlineHandler[] getNewlineHandlers() {
-        return new NewlineHandler[0];
+        return wrapperLanguage != null ? wrapperLanguage.getNewlineHandlers() : new NewlineHandler[0];
     }
+
+
+
 
     @Override
     public void destroy() {
-        editor.destroy();
+
         getFormatter().destroy();
-        editor = null;
-    }
 
-    public void setSyncOptions(TextDocumentSyncKind textDocumentSyncKind) {
-        this.syncKind = textDocumentSyncKind;
-    }
+        if (wrapperLanguage != null) {
+            wrapperLanguage.destroy();
+        }
 
-    public TextDocumentSyncKind getSyncOptions() {
-        return syncKind == null ? TextDocumentSyncKind.Full : syncKind;
+        currentEditor.close();
+
+        currentEditor = null;
+        lspFormatter = null;
+
+
     }
 
     public LspEditor getEditor() {
-        return editor;
+        return currentEditor;
+    }
+
+
+    @Nullable
+    public <T extends Language> T getWrapperLanguage() {
+        return (T) wrapperLanguage;
+    }
+
+    public void setWrapperLanguage(Language wrapperLanguage) {
+        this.wrapperLanguage = wrapperLanguage;
     }
 }

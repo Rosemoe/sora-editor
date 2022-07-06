@@ -24,12 +24,15 @@
 
 package io.github.rosemoe.sora.app
 
+import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
+import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvider
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
 import io.github.rosemoe.sora.lsp.editor.LspEditor
@@ -38,8 +41,10 @@ import io.github.rosemoe.sora.lsp.mock.MockLanguageConnection
 import io.github.rosemoe.sora.text.ContentCreator
 import io.github.rosemoe.sora.widget.CodeEditor
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.eclipse.tm4e.core.internal.theme.reader.ThemeReader
 import java.io.*
 import java.net.ServerSocket
 import java.util.zip.ZipFile
@@ -64,14 +69,15 @@ class LspTestActivity : AppCompatActivity() {
             typefaceLineNumber = font
         }
 
+        ensureTextmateTheme()
+
         lifecycleScope.launch {
 
             unAssets()
 
-            setEditorText()
-
             connectToLanguageServer()
 
+            setEditorText()
         }
     }
 
@@ -93,7 +99,7 @@ class LspTestActivity : AppCompatActivity() {
             val fileName = zipEntry.name
             if (fileName.startsWith("assets/testProject/")) {
                 val inputStream = zipFile.getInputStream(zipEntry)
-                //这里编译器会帮你优化掉 不用担心
+                //The compiler will be optimized here, don't worry
                 val filePath = externalCacheDir?.resolve(fileName.substring("assets/".length))
                 filePath?.parentFile?.mkdirs()
                 val outputStream = FileOutputStream(filePath)
@@ -105,6 +111,7 @@ class LspTestActivity : AppCompatActivity() {
         zipFile.close()
     }
 
+
     private suspend fun connectToLanguageServer() = withContext(Dispatchers.IO) {
 
         val port = randomPort()
@@ -112,10 +119,17 @@ class LspTestActivity : AppCompatActivity() {
         val projectPath = externalCacheDir?.resolve("testProject")?.absolutePath ?: ""
 
 
-        lifecycleScope.launch(Dispatchers.IO) {
+        /*lifecycleScope.launch(Dispatchers.IO) {
             //FIXME: The language server should be started in another process, consider using service instead of thread
             MockLanguageConnection.createConnect(port)
-        }
+        }*/
+
+        startService(
+            Intent(this@LspTestActivity, LspLanguageServerService::class.java)
+                .apply {
+                    putExtra("port", port)
+                }
+        )
 
         val serverDefinition = CustomLanguageServerDefinition(".xml") {
             SocketStreamConnectionProvider {
@@ -125,15 +139,23 @@ class LspTestActivity : AppCompatActivity() {
 
 
         withContext(Dispatchers.Main) {
+
             lspEditor = LspEditorManager.getOrCreateEditorManager(projectPath).createEditor(
-                editor,
                 "$projectPath/sample.xml",
                 serverDefinition
             )
+
+            val wrapperLanguage = createTextMateLanguage()
+
+            lspEditor.setWrapperLanguage(wrapperLanguage)
+
+            lspEditor.editor = editor
+
         }
 
 
         lifecycleScope.launch(Dispatchers.IO) {
+            delay(800) //wait for server start
             lspEditor.connect()
         }
 
@@ -148,6 +170,27 @@ class LspTestActivity : AppCompatActivity() {
         return port
     }
 
+    private fun createTextMateLanguage(): TextMateLanguage {
+        return TextMateLanguage.createNoCompletion(
+            "xml.tmLanguage.json",
+            assets.open("textmate/xml/syntaxes/xml.tmLanguage.json"),
+            InputStreamReader(assets.open("textmate/xml/language-configuration.json")),
+            (editor.colorScheme as TextMateColorScheme).rawTheme
+        )
+    }
+
+    private fun ensureTextmateTheme() {
+
+        var editorColorScheme = editor.colorScheme
+        if (editorColorScheme !is TextMateColorScheme) {
+            val iRawTheme = ThemeReader.readThemeSync(
+                "QuietLight.tmTheme",
+                assets.open("textmate/QuietLight.tmTheme")
+            )
+            editorColorScheme = TextMateColorScheme.create(iRawTheme)
+            editor.colorScheme = editorColorScheme
+        }
+    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_lsp, menu)
@@ -166,5 +209,6 @@ class LspTestActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         editor.release()
+        LspEditorManager.closeAllManager()
     }
 }

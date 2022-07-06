@@ -78,6 +78,7 @@ import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
+import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.TextDocumentSyncOptions;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.TypeDefinitionParams;
@@ -122,6 +123,8 @@ public class DefaultRequestManager implements RequestManager {
 
         textDocumentOptions = serverCapabilities.getTextDocumentSync().isRight() ?
                 serverCapabilities.getTextDocumentSync().getRight() : null;
+
+
         workspaceService = server.getWorkspaceService();
         textDocumentService = server.getTextDocumentService();
     }

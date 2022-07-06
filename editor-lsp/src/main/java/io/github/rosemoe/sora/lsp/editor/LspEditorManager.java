@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition;
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.lsp.utils.LspUtils;
 
 public class LspEditorManager {
 
@@ -59,13 +59,26 @@ public class LspEditorManager {
         return editors.remove(currentFileUri);
     }
 
-    public LspEditor createEditor(CodeEditor currentEditor, String currentFileUri, LanguageServerDefinition serverDefinition) {
+    public LspEditor createEditor(String currentFileUri, LanguageServerDefinition serverDefinition) {
         LspEditor editor = editors.get(currentFileUri);
-        if(editor == null) {
-            editor = new LspEditor(currentEditor, currentProjectPath, currentFileUri,serverDefinition);
+        if (editor == null) {
+            editor = new LspEditor(currentProjectPath, currentFileUri, serverDefinition);
             editors.put(currentFileUri, editor);
         }
         return editor;
     }
 
+    public void closeAllEditor() {
+        editors.forEach((key, editor) -> {
+            editor.close();
+        });
+        editors.clear();
+        //FIXME: Maybe the user should be allowed to call the method themselves
+        LspUtils.clearVersions();
+    }
+
+    public static void closeAllManager() {
+        managers.values().forEach(LspEditorManager::closeAllEditor);
+        managers.clear();
+    }
 }

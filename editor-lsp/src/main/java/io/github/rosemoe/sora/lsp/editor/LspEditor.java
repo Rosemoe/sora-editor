@@ -36,12 +36,20 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+import io.github.rosemoe.sora.event.ContentChangeEvent;
+import io.github.rosemoe.sora.event.SubscriptionReceipt;
+import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition;
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper;
 import io.github.rosemoe.sora.lsp.operations.Feature;
+import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeFeature;
 import io.github.rosemoe.sora.lsp.operations.format.LspFormattingFeature;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 import io.github.rosemoe.sora.widget.CodeEditor;
@@ -52,8 +60,11 @@ public class LspEditor {
     private final String projectPath;
 
     private final LanguageServerDefinition serverDefinition;
+    private final String currentFileUri;
 
     private WeakReference<CodeEditor> currentEditor;
+
+    private Language wrapperLanguage;
 
     private LspLanguage currentLanguage;
 
@@ -63,16 +74,28 @@ public class LspEditor {
 
     private LanguageServerWrapper languageServerWrapper;
 
-    public LspEditor(CodeEditor currentEditor, String currentProjectPath, String currentFileUri, LanguageServerDefinition serverDefinition) {
-        this.currentEditor = new WeakReference<>(currentEditor);
-        this.currentLanguage = new LspLanguage(currentFileUri, this);
+    private Boolean isClose = false;
+
+    private Runnable unsubscribeFunction = null;
+
+    private TextDocumentSyncKind textDocumentSyncKind;
+
+    private LspEditorContentChangeEventReceiver editorContentChangeEventReceiver;
+
+
+    public LspEditor(String currentProjectPath, String currentFileUri, LanguageServerDefinition serverDefinition) {
+        this.currentEditor = new WeakReference<>(null);
+        this.currentLanguage = new LspLanguage(this);
+        this.currentFileUri = currentFileUri;
         this.projectPath = currentProjectPath;
-        setEditor(currentEditor);
+
         this.serverDefinition = serverDefinition;
+
+        this.editorContentChangeEventReceiver = new LspEditorContentChangeEventReceiver(this);
     }
 
     public String getCurrentFileUri() {
-        return currentLanguage.currentFileUri;
+        return currentFileUri;
     }
 
     public String getProjectPath() {
@@ -81,7 +104,17 @@ public class LspEditor {
 
     public void setEditor(CodeEditor currentEditor) {
         this.currentEditor = new WeakReference<>(currentEditor);
+
+        if (unsubscribeFunction != null) {
+            unsubscribeFunction.run();
+        }
+
         currentEditor.setEditorLanguage(currentLanguage);
+
+        SubscriptionReceipt<ContentChangeEvent> subscriptionReceipt = currentEditor.subscribeEvent(ContentChangeEvent.class, editorContentChangeEventReceiver);
+
+        unsubscribeFunction = subscriptionReceipt::unsubscribe;
+
     }
 
     @Nullable
@@ -93,12 +126,26 @@ public class LspEditor {
         return currentLanguage;
     }
 
+    @Nullable
+    public <T extends Language> T getWrapperLanguage() {
+        return (T) wrapperLanguage;
+    }
+
+    public void setWrapperLanguage(Language wrapperLanguage) {
+        this.wrapperLanguage = wrapperLanguage;
+        currentLanguage.setWrapperLanguage(wrapperLanguage);
+        if (currentEditor.get() != null) {
+            setEditor(currentEditor.get());
+        }
+    }
+
     public void installFeature(Supplier<Feature<?, ?>> featureSupplier) {
         Feature<?, ?> feature = featureSupplier.get();
         supportedFeatures.add(feature);
         feature.install(this);
     }
 
+    @Nullable
     public void uninstallFeature(Class<?> featureClass) {
         for (Feature<?, ?> feature : supportedFeatures) {
             if (feature.getClass() == featureClass) {
@@ -109,6 +156,7 @@ public class LspEditor {
         }
     }
 
+    @Nullable
     public <T> T useFeature(Class<T> featureClass) {
         for (Feature<?, ?> feature : supportedFeatures) {
             if (feature.getClass() == featureClass) {
@@ -119,13 +167,24 @@ public class LspEditor {
     }
 
     public void dispose() {
+
+
         for (Feature<?, ?> feature : supportedFeatures) {
             feature.uninstall(this);
         }
         supportedFeatures.clear();
+
         currentEditor.clear();
         currentLanguage.destroy();
         currentLanguage = null;
+        supportedFeatures = null;
+
+        if (unsubscribeFunction != null) {
+            unsubscribeFunction.run();
+        }
+
+        editorContentChangeEventReceiver = null;
+
     }
 
 
@@ -133,6 +192,7 @@ public class LspEditor {
 
         //features
         installFeature(LspFormattingFeature::new);
+        installFeature(DocumentChangeFeature::new);
 
         //options
 
@@ -143,6 +203,7 @@ public class LspEditor {
         options.add(formattingOptions);
 
     }
+
 
     @Nullable
     public <T> T getOption(Class<T> optionClass) {
@@ -171,15 +232,16 @@ public class LspEditor {
     }
 
 
-    private String getEditorContent() {
+    public String getEditorContent() {
         return currentEditor.get().getText().toString();
     }
 
 
     public void open() {
         getRequestManagerOfOptional()
-                .ifPresent(requestManager -> requestManager.didOpen(LspUtils.createDidOpenTextDocumentParams(currentLanguage.currentFileUri,
-                        serverDefinition.ext, getEditorContent())));
+                .ifPresent(requestManager ->
+                        ForkJoinPool.commonPool().execute(() -> requestManager.didOpen(LspUtils.createDidOpenTextDocumentParams(currentFileUri,
+                        serverDefinition.ext, getEditorContent()))));
     }
 
     @Nullable
@@ -195,22 +257,43 @@ public class LspEditor {
     public void save() {
         getRequestManagerOfOptional()
                 .ifPresent(requestManager ->
-                        requestManager.didSave(LspUtils.createDidSaveTextDocumentParams(this.currentLanguage.currentFileUri,
-                        getEditorContent())));
+                        ForkJoinPool.commonPool().execute(() -> requestManager.didSave(LspUtils.createDidSaveTextDocumentParams(currentFileUri,
+                                getEditorContent()))));
     }
 
-    public void destroy() {
-
+    public void disconnent() {
         getRequestManagerOfOptional()
-                .ifPresent(requestManager -> requestManager.didClose(new DidCloseTextDocumentParams(
-                        new TextDocumentIdentifier(currentLanguage.currentFileUri)
+                .ifPresent(requestManager ->
+                        ForkJoinPool.commonPool().execute(() -> requestManager.didClose(new DidCloseTextDocumentParams(
+                        new TextDocumentIdentifier(currentFileUri))
                 )));
 
-        languageServerWrapper.disconnect(this);
+        if (languageServerWrapper != null) {
+            ForkJoinPool.commonPool()
+                    .execute(() -> languageServerWrapper.disconnect(this));
+        }
+    }
 
+    public void close() {
+
+        if (isClose) {
+            return;
+        }
+
+        isClose = true;
+
+        disconnent();
+        dispose();
+    }
+
+
+    public TextDocumentSyncKind getSyncOptions() {
+        return textDocumentSyncKind == null ? TextDocumentSyncKind.Full : textDocumentSyncKind;
     }
 
     public void setSyncOptions(TextDocumentSyncKind textDocumentSyncKind) {
-        currentLanguage.setSyncOptions(textDocumentSyncKind);
+        this.textDocumentSyncKind = textDocumentSyncKind;
     }
+
+
 }

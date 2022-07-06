@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.lsp.utils;
 
 import android.net.Uri;
 
+import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
@@ -32,11 +33,18 @@ import org.eclipse.lsp4j.DocumentColorParams;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.DocumentSymbolParams;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
+import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.TextRange;
 
 public class LspUtils {
 
@@ -48,12 +56,53 @@ public class LspUtils {
         return params;
     }
 
-    public static DidOpenTextDocumentParams createDidOpenTextDocumentParams(String uri, String languageId, String content) {
-        DidOpenTextDocumentParams params = new DidOpenTextDocumentParams();
+    public static DidChangeTextDocumentParams createDidChangeTextDocumentParams(String uri, List<TextDocumentContentChangeEvent> events) {
+        DidChangeTextDocumentParams params = new DidChangeTextDocumentParams();
+        params.setContentChanges(events);
+        params.setTextDocument(new VersionedTextDocumentIdentifier(uri, getVersion(uri)));
+        return params;
+    }
+
+    public static TextDocumentContentChangeEvent createTextDocumentContentChangeEvent(String text) {
+        return new TextDocumentContentChangeEvent(text);
+    }
+
+    public static TextDocumentContentChangeEvent createTextDocumentContentChangeEvent(Range range,int rangeLength, String text) {
+        return new TextDocumentContentChangeEvent(range, rangeLength, text);
+    }
+
+    public static Range createRange(Position start, Position end) {
+        return new Range(start, end);
+    }
+
+    public static Position createPosition(int line, int character) {
+        return new Position(line, character);
+    }
+
+    public static Position createPosition(CharPosition position) {
+        return createPosition(position.line, position.column);
+    }
+
+    public static Range createRange(CharPosition start, CharPosition end) {
+        return createRange(createPosition(start), createPosition(end));
+    }
+
+    public static Range createRange(TextRange range) {
+        return createRange(range.getStart(), range.getEnd());
+    }
+
+
+    private static int getVersion(String uri) {
         int version = versionMap.getOrDefault(uri, 0);
         version++;
         versionMap.put(uri, version);
-        params.setTextDocument(new TextDocumentItem(uri, languageId, version, content));
+        return version;
+    }
+
+    public static DidOpenTextDocumentParams createDidOpenTextDocumentParams(String uri, String languageId, String content) {
+        DidOpenTextDocumentParams params = new DidOpenTextDocumentParams();
+
+        params.setTextDocument(new TextDocumentItem(uri, languageId, getVersion(uri), content));
         return params;
     }
 
@@ -88,5 +137,9 @@ public class LspUtils {
         params.setTextDocument(createTextDocumentIdentifier(currentFileUri));
         params.setText(str);
         return params;
+    }
+
+    public static void clearVersions() {
+        versionMap.clear();
     }
 }

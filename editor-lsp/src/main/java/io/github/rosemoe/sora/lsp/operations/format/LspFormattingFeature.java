@@ -31,7 +31,11 @@ import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.TextEdit;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
@@ -44,7 +48,7 @@ import io.github.rosemoe.sora.text.TextRange;
 
 public class LspFormattingFeature implements Feature<Pair<Content, TextRange>, Void> {
 
-    private CompletableFuture<Object> future;
+    private CompletableFuture<Void> future;
     private LspEditor editor;
 
     @Override
@@ -69,16 +73,14 @@ public class LspFormattingFeature implements Feature<Pair<Content, TextRange>, V
 
         formattingParams.setTextDocument(LspUtils.createTextDocumentIdentifier(editor.getCurrentFileUri()));
         var textRange = data.second;
-        formattingParams.setRange(new Range(
-                new Position(textRange.getStart().line, textRange.getStart().column),
-                new Position(textRange.getEnd().line, textRange.getEnd().column)
-        ));
+        formattingParams.setRange(LspUtils
+                .createRange(textRange));
 
         var content = data.first;
 
         future = manager.rangeFormatting(formattingParams)
-                .thenApply(list -> {
-
+                .thenApply(list -> Optional.ofNullable(list).orElse(List.of()))
+                .thenAccept(list -> {
                     list.forEach(textEdit -> {
                         var range = textEdit.getRange();
                         var text = textEdit.getNewText();
@@ -89,12 +91,8 @@ public class LspFormattingFeature implements Feature<Pair<Content, TextRange>, V
                         );
                     });
 
-                    return null;
-                })
-                .exceptionally(e -> {
-                    e.printStackTrace();
-                    return null;
                 });
+
 
         //block
         future.join();
