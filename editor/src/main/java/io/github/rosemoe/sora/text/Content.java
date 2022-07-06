@@ -936,13 +936,18 @@ public class Content implements CharSequence {
      * Returns a new Content object with the same text as this object.
      */
     public Content copyText(boolean newContentThreadSafe) {
-        var n = new Content(null, newContentThreadSafe);
-        n.lines.remove(0);
-        for (int i = 0; i < getLineCount(); i++) {
-            var line = lines.get(i);
-            n.lines.add(line.subSequence(0, line.length()));
+        lock(false);
+        try {
+            var n = new Content(null, newContentThreadSafe);
+            n.lines.remove(0);
+            for (int i = 0; i < getLineCount(); i++) {
+                var line = lines.get(i);
+                n.lines.add(line.subSequence(0, line.length()));
+            }
+            return n;
+        } finally {
+            unlock(false);
         }
-        return n;
     }
 
     /**
@@ -958,6 +963,13 @@ public class Content implements CharSequence {
         return lines.get(line).length();
     }
 
+    /**
+     * Read the lines.
+     * This is for optimizing frequent lock acquiring
+     *
+     * @param startLine inclusive
+     * @param endLine inclusive
+     */
     public void runReadActionsOnLines(int startLine, int endLine, @NonNull ContentLineConsumer consumer) {
         lock(false);
         try {

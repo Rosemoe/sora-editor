@@ -25,6 +25,8 @@ package io.github.rosemoe.sora.langs.textmate;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+
 import java.io.InputStream;
 import java.io.Reader;
 
@@ -87,6 +89,7 @@ public class TextMateLanguage extends EmptyLanguage {
         }
     }
 
+    @NonNull
     @Override
     public AnalyzeManager getAnalyzeManager() {
         if (textMateAnalyzer != null) {
@@ -125,7 +128,7 @@ public class TextMateLanguage extends EmptyLanguage {
     }
 
     @Override
-    public void requireAutoComplete(ContentReference content, CharPosition position, CompletionPublisher publisher, Bundle extraArguments) {
+    public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position, @NonNull CompletionPublisher publisher, @NonNull Bundle extraArguments) {
         if (!autoCompleteEnabled) {
             return;
         }

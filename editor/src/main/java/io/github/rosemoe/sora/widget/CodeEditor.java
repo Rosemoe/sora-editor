@@ -100,6 +100,7 @@ import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.ICUUtils;
 import io.github.rosemoe.sora.text.LineRemoveListener;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
+import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.text.TextUtils;
 import io.github.rosemoe.sora.util.Floats;
 import io.github.rosemoe.sora.util.IntPair;
@@ -1529,7 +1530,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (defSpans.size() == 0) {
             defSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
         }
-        gtr.set(line, contextStart, end, mTabWidth,defSpans, paint);
+        gtr.set(line, contextStart, end, mTabWidth, defSpans, paint);
         gtr.disableCache();
         var res = gtr.findOffsetByAdvance(start, target);
         GraphicTextRow.recycle(gtr);
@@ -2019,7 +2020,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         mLanguage.getFormatter().setReceiver(this);
         var formatContent = mText.copyText(false);
         formatContent.setUndoEnabled(false);
-        mLanguage.getFormatter().format(formatContent);
+        mLanguage.getFormatter().format(formatContent, createCursorRange());
+        postInvalidate();
         return true;
     }
 
@@ -2043,8 +2045,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         mLanguage.getFormatter().setReceiver(this);
         var formatContent = mText.copyText(false);
         formatContent.setUndoEnabled(false);
-        mLanguage.getFormatter().formatRegion(formatContent, start, end);
+        mLanguage.getFormatter().formatRegion(formatContent, new TextRange(start, end), createCursorRange());
+        postInvalidate();
         return true;
+    }
+
+    public TextRange createCursorRange() {
+        return new TextRange(mCursor.left(), mCursor.right());
     }
 
     /**
@@ -2541,11 +2548,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Sets line spacing for this TextView.  Each line other than the last line will have its height
      * multiplied by {@code mult} and have {@code add} added to it.
      *
-     * @param add The value in pixels that should be added to each line other than the last line.
-     *            This will be applied after the multiplier
+     * @param add  The value in pixels that should be added to each line other than the last line.
+     *             This will be applied after the multiplier
      * @param mult The value by which each line height other than the last line will be multiplied
      *             by
-     *
      */
     public void setLineSpacing(float add, float mult) {
         mLineSpacingAdd = add;
@@ -2556,7 +2562,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Gets the line spacing extra space
      *
      * @return the extra space that is added to the height of each lines of this TextView.
-     *
      * @see #setLineSpacing(float, float)
      * @see #getLineSpacingMultiplier()
      */
@@ -2566,7 +2571,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     /**
      * @param lineSpacingExtra The value in pixels that should be added to each line other than the last line.
-     *      *            This will be applied after the multiplier
+     *                         *            This will be applied after the multiplier
      */
     public void setLineSpacingExtra(float lineSpacingExtra) {
         mLineSpacingAdd = lineSpacingExtra;
@@ -2576,7 +2581,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     /**
      * @param lineSpacingMultiplier The value by which each line height other than the last line will be multiplied
-     *      *             by. Default 1.0f
+     *                              *             by. Default 1.0f
      */
     public void setLineSpacingMultiplier(float lineSpacingMultiplier) {
         this.mLineSpacingMultiplier = lineSpacingMultiplier;
@@ -2584,8 +2589,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * @see #setLineSpacingMultiplier(float)
      * @return the value by which each line's height is multiplied to get its actual height.
+     * @see #setLineSpacingMultiplier(float)
      */
     public float getLineSpacingMultiplier() {
         return mLineSpacingMultiplier;
@@ -2689,12 +2694,20 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * @return Whether editable
+     * @return Whether the editor is editable, actually.
      * @see CodeEditor#setEditable(boolean)
      * @see CodeEditor#setLayoutBusy(boolean)
+     * @see #isFormatting()
      */
     public boolean isEditable() {
-        return mEditable && !mLayoutBusy;
+        return mEditable && !mLayoutBusy && !isFormatting();
+    }
+
+    /**
+     * @see #setEditable(boolean)
+     */
+    public boolean getEditable() {
+        return mEditable;
     }
 
     /**
@@ -3458,15 +3471,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param colors A non-null and free EditorColorScheme
      */
     public void setColorScheme(@NonNull EditorColorScheme colors) {
-        colors.attachEditor(this);
         if (mColors != null) {
             mColors.detachEditor(this);
         }
         mColors = colors;
-        if (mCompletionWindow != null) {
-            mCompletionWindow.applyColorScheme();
-        }
-        mPainter.invalidateHwRenderer();
+        // Automatically invoke scheme updating related methods
+        colors.attachEditor(this);
         invalidate();
     }
 
@@ -3682,7 +3692,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param type Color type changed
      */
     public void onColorUpdated(int type) {
-        if (type == EditorColorScheme.AUTO_COMP_PANEL_BG || type == EditorColorScheme.AUTO_COMP_PANEL_CORNER) {
+        if (type == EditorColorScheme.COMPLETION_WND_BACKGROUND || type == EditorColorScheme.COMPLETION_WND_CORNER
+                || type == EditorColorScheme.COMPLETION_WND_ITEM_CURRENT || type == EditorColorScheme.COMPLETION_WND_TEXT_SECONDARY
+                || type == EditorColorScheme.COMPLETION_WND_TEXT_PRIMARY) {
             if (mCompletionWindow != null)
                 mCompletionWindow.applyColorScheme();
             return;
@@ -3844,6 +3856,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public boolean onTouchEvent(MotionEvent event) {
         if (!isEnabled()) {
             return false;
+        }
+        if (isFormatting()) {
+            mEventHandler.reset2();
+            mScaleDetector.onTouchEvent(event);
+            return mBasicDetector.onTouchEvent(event);
         }
         boolean handlingBefore = mEventHandler.handlingMotions();
         boolean res = mEventHandler.onTouchEvent(event);
@@ -4136,26 +4153,42 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Override
-    public void onFormatSucceed(Content applyContent) {
+    public void onFormatSucceed(@NonNull CharSequence applyContent, @Nullable TextRange cursorRange) {
         post(() -> {
             int line = mCursor.getLeftLine();
             int column = mCursor.getLeftColumn();
-            //Maybe should just use Content?
-            var string = applyContent.toStringBuilder();
+            int x = getOffsetX();
+            int y = getOffsetY();
+            var string = (applyContent instanceof Content) ? ((Content) applyContent).toStringBuilder() : applyContent;
             mText.beginBatchEdit();
             mText.delete(0, 0, mText.getLineCount() - 1,
-                    mText.getColumnCount(mText.getLineCount() - 1) - 1);
+                    mText.getColumnCount(mText.getLineCount() - 1));
             mText.insert(0, 0, string);
             mText.endBatchEdit();
-            getScroller().forceFinished(true);
             mCompletionWindow.hide();
-            setSelectionAround(line, column);
+            mConnection.invalid();
+            if (cursorRange == null) {
+                setSelectionAround(line, column);
+            } else {
+                try {
+                    var start = cursorRange.getStart();
+                    var end = cursorRange.getEnd();
+                    setSelectionRegion(start.line, start.column, end.line, end.column);
+                } catch (IndexOutOfBoundsException e) {
+                    e.printStackTrace();
+                }
+            }
+            getScroller().forceFinished(true);
+            getScroller().startScroll(x, y, 0, 0, 0);
+            getScroller().abortAnimation();
+            // Ensure the scroll offset is valid
+            mEventHandler.scrollBy(0, 0);
         });
     }
 
     @Override
     public void onFormatFail(final Throwable throwable) {
-        post(() -> Toast.makeText(getContext(), throwable.toString(), Toast.LENGTH_SHORT).show());
+        post(() -> Toast.makeText(getContext(), "Format:" + throwable, Toast.LENGTH_SHORT).show());
     }
 
     @Override

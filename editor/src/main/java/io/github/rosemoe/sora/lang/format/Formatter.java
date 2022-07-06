@@ -23,10 +23,11 @@
  */
 package io.github.rosemoe.sora.lang.format;
 
-import androidx.annotation.WorkerThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
+import io.github.rosemoe.sora.text.TextRange;
 
 /**
  * Format content for editor
@@ -36,25 +37,30 @@ public interface Formatter {
 
     /**
      * Format the given content from {@code start} position to {@code end} position
-     *
+     * <p>
      * Format the content directly, and call {@link FormatResultReceiver} to receive the formatted content from the editor when the formatting is complete
      * *
-     * @param text the content to format
+     *
+     * @param text the content to format, but not the original Content in editor
+     * @param cursorRange the positions of cursor. Start and end position may be the same.
      */
-    void format(Content text);
+    void format(@NonNull Content text, @NonNull TextRange cursorRange);
 
     /**
      * Format the given content from {@code start} position to {@code end} position
-     *
+     * <p>
      * Format the content directly, and call {@link FormatResultReceiver} to receive the formatted content from the editor when the formatting is complete
      *
-     * @param text  the content to format
-     * @param start the start position of the content to format
-     * @param end   the end position of the content to format
+     * @param text  the content to format, but not the original Content in editor
+     * @param rangeToFormat the range in text to be formatted
+     * @param cursorRange the positions of cursor. Start and end position may be the same.
      */
-    void formatRegion(Content text, CharPosition start, CharPosition end);
+    void formatRegion(@NonNull Content text, @NonNull TextRange rangeToFormat, @NonNull TextRange cursorRange);
 
-    void setReceiver(FormatResultReceiver receiver);
+    /**
+     * Set the result receiver
+     */
+    void setReceiver(@Nullable FormatResultReceiver receiver);
 
     /**
      * Whether the current formatter is running
@@ -63,18 +69,20 @@ public interface Formatter {
 
     interface FormatResultReceiver {
         /**
-         * Called when the formatting is complete
+         * Called when the formatting is completed
          *
-         * @param applyContent the formatted content
+         * @param applyContent the formatted <strong>full</strong> text
+         * @param cursorRange The range of cursor after formatting. You may pass null for unspecified.
+         *                    Also, the start and end of the range may be the same position.
          */
-        void onFormatSucceed(Content applyContent);
+        void onFormatSucceed(@NonNull CharSequence applyContent, @Nullable TextRange cursorRange);
 
         /**
          * Called when the formatting is failed
          *
          * @param throwable the throwable that caused formatting failed
          */
-        void onFormatFail(Throwable throwable);
+        void onFormatFail(@Nullable Throwable throwable);
 
     }
 
