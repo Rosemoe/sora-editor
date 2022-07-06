@@ -30,6 +30,10 @@ package io.github.rosemoe.sora.widget.schemes;
  */
 public class SchemeDarcula extends EditorColorScheme {
 
+    public SchemeDarcula() {
+        super(true);
+    }
+
     @Override
     public void applyDefault() {
         super.applyDefault();
@@ -42,6 +46,8 @@ public class SchemeDarcula extends EditorColorScheme {
         setColor(COMMENT, 0xff808080);
         setColor(KEYWORD, 0xffcc7832);
         setColor(WHOLE_BACKGROUND, 0xff2b2b2b);
+        setColor(COMPLETION_WND_BACKGROUND, 0xff2b2b2b);
+        setColor(COMPLETION_WND_CORNER, 0xff999999);
         setColor(TEXT_NORMAL, 0xffffffff);
         setColor(LINE_NUMBER_BACKGROUND, 0xff313335);
         setColor(LINE_NUMBER, 0xff606366);

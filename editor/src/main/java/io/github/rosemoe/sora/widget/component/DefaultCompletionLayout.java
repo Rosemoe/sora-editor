@@ -29,10 +29,7 @@ import android.os.SystemClock;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Adapter;
-import android.widget.AdapterView;
 import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -44,7 +41,7 @@ public class DefaultCompletionLayout implements CompletionLayout {
 
     private ListView mListView;
     private ProgressBar mProgressBar;
-    private GradientDrawable mBackground;
+    private RelativeLayout mRoot;
     private EditorAutoCompletion mEditorAutoCompletion;
 
     @Override
@@ -65,7 +62,7 @@ public class DefaultCompletionLayout implements CompletionLayout {
         GradientDrawable gd = new GradientDrawable();
         gd.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, context.getResources().getDisplayMetrics()));
         layout.setBackground(gd);
-        mBackground = gd;
+        mRoot = layout;
         mListView.setDividerHeight(0);
         setLoading(true);
         mListView.setOnItemClickListener((parent, view, position, id) -> {
@@ -80,8 +77,11 @@ public class DefaultCompletionLayout implements CompletionLayout {
 
     @Override
     public void onApplyColorScheme(EditorColorScheme colorScheme) {
-        mBackground.setStroke(1, colorScheme.getColor(EditorColorScheme.AUTO_COMP_PANEL_CORNER));
-        mBackground.setColor(colorScheme.getColor(EditorColorScheme.AUTO_COMP_PANEL_BG));
+        GradientDrawable gd = new GradientDrawable();
+        gd.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, mEditorAutoCompletion.getContext().getResources().getDisplayMetrics()));
+        gd.setStroke(1, colorScheme.getColor(EditorColorScheme.COMPLETION_WND_CORNER));
+        gd.setColor(colorScheme.getColor(EditorColorScheme.COMPLETION_WND_BACKGROUND));
+        mRoot.setBackground(gd);
     }
 
     @Override

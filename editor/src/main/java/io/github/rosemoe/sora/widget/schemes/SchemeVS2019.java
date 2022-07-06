@@ -30,6 +30,10 @@ package io.github.rosemoe.sora.widget.schemes;
  */
 public class SchemeVS2019 extends EditorColorScheme {
 
+    public SchemeVS2019() {
+        super(true);
+    }
+
     @Override
     public void applyDefault() {
         super.applyDefault();
@@ -42,6 +46,8 @@ public class SchemeVS2019 extends EditorColorScheme {
         setColor(COMMENT, 0xff57a64a);
         setColor(KEYWORD, 0xff569cd6);
         setColor(WHOLE_BACKGROUND, 0xff1e1e1e);
+        setColor(COMPLETION_WND_BACKGROUND, 0xff1e1e1e);
+        setColor(COMPLETION_WND_CORNER, 0xff999999);
         setColor(TEXT_NORMAL, 0xffdcdcdc);
         setColor(LINE_NUMBER_BACKGROUND, 0xff1e1e1e);
         setColor(LINE_NUMBER, 0xff2b9eaf);

@@ -32,6 +32,7 @@ import android.widget.BaseAdapter;
 import java.util.List;
 
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
  * A class to make custom adapter for auto-completion window
@@ -70,6 +71,22 @@ public abstract class EditorCompletionAdapter extends BaseAdapter implements Ada
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         return getView(position, convertView, parent, position == mWindow.getCurrentPosition());
+    }
+
+    /**
+     * Get color scheme in editor
+     */
+    protected EditorColorScheme getColorScheme() {
+        return mWindow.getEditor().getColorScheme();
+    }
+
+    /**
+     * Get theme color from current color scheme
+     * @param type Type of color. Refer to {@link EditorColorScheme}
+     * @see EditorColorScheme#getColor(int)
+     */
+    protected int getThemeColor(int type) {
+        return getColorScheme().getColor(type);
     }
 
     /**

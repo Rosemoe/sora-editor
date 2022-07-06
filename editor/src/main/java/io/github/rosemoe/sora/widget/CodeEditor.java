@@ -1529,7 +1529,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (defSpans.size() == 0) {
             defSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
         }
-        gtr.set(line, contextStart, end, mTabWidth,defSpans, paint);
+        gtr.set(line, contextStart, end, mTabWidth, defSpans, paint);
         gtr.disableCache();
         var res = gtr.findOffsetByAdvance(start, target);
         GraphicTextRow.recycle(gtr);
@@ -2541,11 +2541,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Sets line spacing for this TextView.  Each line other than the last line will have its height
      * multiplied by {@code mult} and have {@code add} added to it.
      *
-     * @param add The value in pixels that should be added to each line other than the last line.
-     *            This will be applied after the multiplier
+     * @param add  The value in pixels that should be added to each line other than the last line.
+     *             This will be applied after the multiplier
      * @param mult The value by which each line height other than the last line will be multiplied
      *             by
-     *
      */
     public void setLineSpacing(float add, float mult) {
         mLineSpacingAdd = add;
@@ -2556,7 +2555,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Gets the line spacing extra space
      *
      * @return the extra space that is added to the height of each lines of this TextView.
-     *
      * @see #setLineSpacing(float, float)
      * @see #getLineSpacingMultiplier()
      */
@@ -2566,7 +2564,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     /**
      * @param lineSpacingExtra The value in pixels that should be added to each line other than the last line.
-     *      *            This will be applied after the multiplier
+     *                         *            This will be applied after the multiplier
      */
     public void setLineSpacingExtra(float lineSpacingExtra) {
         mLineSpacingAdd = lineSpacingExtra;
@@ -2576,7 +2574,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     /**
      * @param lineSpacingMultiplier The value by which each line height other than the last line will be multiplied
-     *      *             by. Default 1.0f
+     *                              *             by. Default 1.0f
      */
     public void setLineSpacingMultiplier(float lineSpacingMultiplier) {
         this.mLineSpacingMultiplier = lineSpacingMultiplier;
@@ -2584,8 +2582,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * @see #setLineSpacingMultiplier(float)
      * @return the value by which each line's height is multiplied to get its actual height.
+     * @see #setLineSpacingMultiplier(float)
      */
     public float getLineSpacingMultiplier() {
         return mLineSpacingMultiplier;
@@ -3458,15 +3456,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param colors A non-null and free EditorColorScheme
      */
     public void setColorScheme(@NonNull EditorColorScheme colors) {
-        colors.attachEditor(this);
         if (mColors != null) {
             mColors.detachEditor(this);
         }
         mColors = colors;
-        if (mCompletionWindow != null) {
-            mCompletionWindow.applyColorScheme();
-        }
-        mPainter.invalidateHwRenderer();
+        // Automatically invoke scheme updating related methods
+        colors.attachEditor(this);
         invalidate();
     }
 
@@ -3682,7 +3677,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param type Color type changed
      */
     public void onColorUpdated(int type) {
-        if (type == EditorColorScheme.AUTO_COMP_PANEL_BG || type == EditorColorScheme.AUTO_COMP_PANEL_CORNER) {
+        if (type == EditorColorScheme.COMPLETION_WND_BACKGROUND || type == EditorColorScheme.COMPLETION_WND_CORNER
+                || type == EditorColorScheme.COMPLETION_WND_ITEM_CURRENT || type == EditorColorScheme.COMPLETION_WND_TEXT_SECONDARY
+                || type == EditorColorScheme.COMPLETION_WND_TEXT_PRIMARY) {
             if (mCompletionWindow != null)
                 mCompletionWindow.applyColorScheme();
             return;
