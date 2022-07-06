@@ -259,6 +259,9 @@ public class BlockIntList {
     public void clear() {
         head = new Block();
         length = 0;
+        caches.clear();
+        foundBlock = null;
+        foundIndex = 0;
     }
 
     public int size() {
