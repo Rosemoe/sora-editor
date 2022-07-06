@@ -4,6 +4,6 @@ updates:
     directory: "/"
     schedule:
       interval: daily
-      time: "18:00"
+      time: "13:00"
     open-pull-requests-limit: 10
-    target-branch: master
+    target-branch: main
