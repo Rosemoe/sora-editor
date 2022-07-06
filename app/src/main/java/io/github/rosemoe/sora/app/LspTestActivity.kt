@@ -37,7 +37,6 @@ import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvid
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspEditorManager
-import io.github.rosemoe.sora.lsp.mock.MockLanguageConnection
 import io.github.rosemoe.sora.text.ContentCreator
 import io.github.rosemoe.sora.widget.CodeEditor
 import kotlinx.coroutines.Dispatchers
@@ -172,9 +171,9 @@ class LspTestActivity : AppCompatActivity() {
 
     private fun createTextMateLanguage(): TextMateLanguage {
         return TextMateLanguage.createNoCompletion(
-            "xml.tmLanguage.json",
-            assets.open("textmate/xml/syntaxes/xml.tmLanguage.json"),
-            InputStreamReader(assets.open("textmate/xml/language-configuration.json")),
+            "html.tmLanguage.json",
+            assets.open("textmate/html/syntaxes/html.tmLanguage.json"),
+            InputStreamReader(assets.open("textmate/html/language-configuration.json")),
             (editor.colorScheme as TextMateColorScheme).rawTheme
         )
     }

@@ -61,9 +61,11 @@ public class DocumentChangeFeature implements Feature<ContentChangeEvent, Void> 
 
         DidChangeTextDocumentParams params = createDidChangeTextDocumentParams(data);
 
-        ForkJoinPool.commonPool().execute(() -> editor.getRequestManagerOfOptional()
-                .get()
-                .didChange(params));
+        ForkJoinPool.commonPool()
+                .execute(() -> editor
+                        .getRequestManagerOfOptional()
+                        .get()
+                        .didChange(params));
 
         return null;
     }
@@ -79,7 +81,7 @@ public class DocumentChangeFeature implements Feature<ContentChangeEvent, Void> 
         return List.of(
                 LspUtils.createTextDocumentContentChangeEvent(
                         LspUtils.createRange(data.getChangeStart(), data.getChangeEnd()),
-                        text.length(),
+                        data.getAction() == ContentChangeEvent.ACTION_DELETE ? text.length() : 0,
                         data.getAction() == ContentChangeEvent.ACTION_DELETE ? "" : text
                 )
         );

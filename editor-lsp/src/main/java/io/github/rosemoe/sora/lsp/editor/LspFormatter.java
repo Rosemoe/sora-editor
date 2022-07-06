@@ -48,7 +48,9 @@ public class LspFormatter extends AsyncFormatter {
         var indexer = text.getIndexer();
         var charPositionOfStart = indexer.getCharPosition(0);
         var charPositionOfEnd = indexer.getCharPosition(
-                text.getLineCount() - 1, text.getColumnCount(text.getLineCount()-1)
+                text.getLineCount() - 1,
+                text.getColumnCount(text.getLineCount() - 1) - 1
+
         );
         language.getEditor()
                 .useFeature(LspFormattingFeature.class)
