@@ -2021,6 +2021,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         var formatContent = mText.copyText(false);
         formatContent.setUndoEnabled(false);
         mLanguage.getFormatter().format(formatContent, createCursorRange());
+        postInvalidate();
         return true;
     }
 
@@ -2045,6 +2046,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         var formatContent = mText.copyText(false);
         formatContent.setUndoEnabled(false);
         mLanguage.getFormatter().formatRegion(formatContent, new TextRange(start, end), createCursorRange());
+        postInvalidate();
         return true;
     }
 
@@ -2692,12 +2694,20 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * @return Whether editable
+     * @return Whether the editor is editable, actually.
      * @see CodeEditor#setEditable(boolean)
      * @see CodeEditor#setLayoutBusy(boolean)
+     * @see #isFormatting()
      */
     public boolean isEditable() {
-        return mEditable && !mLayoutBusy;
+        return mEditable && !mLayoutBusy && !isFormatting();
+    }
+
+    /**
+     * @see #setEditable(boolean)
+     */
+    public boolean getEditable() {
+        return mEditable;
     }
 
     /**
@@ -3847,6 +3857,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (!isEnabled()) {
             return false;
         }
+        if (isFormatting()) {
+            mEventHandler.reset2();
+            mScaleDetector.onTouchEvent(event);
+            return mBasicDetector.onTouchEvent(event);
+        }
         boolean handlingBefore = mEventHandler.handlingMotions();
         boolean res = mEventHandler.onTouchEvent(event);
         boolean handling = mEventHandler.handlingMotions();
@@ -4142,14 +4157,16 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         post(() -> {
             int line = mCursor.getLeftLine();
             int column = mCursor.getLeftColumn();
+            int x = getOffsetX();
+            int y = getOffsetY();
             var string = (applyContent instanceof Content) ? ((Content) applyContent).toStringBuilder() : applyContent;
             mText.beginBatchEdit();
             mText.delete(0, 0, mText.getLineCount() - 1,
-                    mText.getColumnCount(mText.getLineCount() - 1) - 1);
+                    mText.getColumnCount(mText.getLineCount() - 1));
             mText.insert(0, 0, string);
             mText.endBatchEdit();
-            getScroller().forceFinished(true);
             mCompletionWindow.hide();
+            mConnection.invalid();
             if (cursorRange == null) {
                 setSelectionAround(line, column);
             } else {
@@ -4161,6 +4178,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     e.printStackTrace();
                 }
             }
+            getScroller().forceFinished(true);
+            getScroller().startScroll(x, y, 0, 0, 0);
+            getScroller().abortAnimation();
+            // Ensure the scroll offset is valid
+            mEventHandler.scrollBy(0, 0);
         });
     }
 

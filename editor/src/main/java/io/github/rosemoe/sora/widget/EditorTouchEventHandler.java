@@ -225,6 +225,12 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      */
     public void reset() {
         mScroller.startScroll(0, 0, 0, 0, 0);
+        reset2();
+    }
+
+    public void reset2() {
+        mHoldingInsertHandle = mHoldingScrollbarHorizontal = mHoldingScrollbarVertical = false;
+        dismissMagnifier();
     }
 
     public void updateMagnifier(MotionEvent e) {
@@ -498,6 +504,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
         mScroller.forceFinished(true);
+        if (mEditor.isFormatting()) {
+            return true;
+        }
         long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);
@@ -514,6 +523,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     @Override
     public void onLongPress(MotionEvent e) {
+        if (mEditor.isFormatting()) {
+            return;
+        }
         long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);
@@ -626,6 +638,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
+        if (mEditor.isFormatting()) {
+            return true;
+        }
         if (mEditor.isScalable()) {
             float newSize = mEditor.getTextSizePx() * detector.getScaleFactor();
             if (newSize < scaleMinSize || newSize > scaleMaxSize) {
@@ -653,7 +668,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     @Override
     public boolean onScaleBegin(ScaleGestureDetector detector) {
         mScroller.forceFinished(true);
-        return mEditor.isScalable();
+        return mEditor.isScalable() && !mEditor.isFormatting();
     }
 
     @Override
@@ -680,6 +695,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
+        if (mEditor.isFormatting()) {
+            return true;
+        }
         long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);

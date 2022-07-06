@@ -69,7 +69,7 @@ class EditorKeyEventHandler {
      * method is called.
      *
      * @param keyCode The keycode.
-     * @param event   The keyevent.
+     * @param event   The key event.
      * @return <code>true</code> if the event is a key binding event. <code>false</code> otherwise.
      */
     private boolean isKeyBindingEvent(int keyCode, KeyEvent event) {

@@ -415,18 +415,6 @@ public class EditorPainter {
      * @param canvas Canvas you want to draw
      */
     public void drawView(Canvas canvas) {
-        if (mEditor.isFormatting()) {
-            String text = mEditor.getFormatTip();
-            float centerY = mEditor.getHeight() / 2f;
-            drawColor(canvas, mEditor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL), mRect);
-            float baseline = centerY - mEditor.getRowHeight() / 2f + mEditor.getRowBaseline(0);
-            float centerX = mEditor.getWidth() / 2f;
-            mPaint.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL_TEXT));
-            mPaint.setTextAlign(Paint.Align.CENTER);
-            canvas.drawText(text, centerX, baseline, mPaint);
-            mPaint.setTextAlign(Paint.Align.LEFT);
-            return;
-        }
         mCursor.updateCache(mEditor.getFirstVisibleLine());
 
         EditorColorScheme color = mEditor.getColorScheme();
@@ -559,6 +547,21 @@ public class EditorPainter {
 
         mEditor.rememberDisplayedLines();
         mPreloadedLines.clear();
+        drawFormatTip(canvas);
+    }
+
+    protected void drawFormatTip(Canvas canvas) {
+        if (mEditor.isFormatting()) {
+            String text = mEditor.getFormatTip();
+            float baseline = mEditor.getRowBaseline(0);
+            float rightX = mEditor.getWidth();
+            mPaint.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.TEXT_NORMAL));
+            mPaint.setFakeBoldText(true);
+            mPaint.setTextAlign(Paint.Align.RIGHT);
+            canvas.drawText(text, rightX, baseline, mPaint);
+            mPaint.setTextAlign(Paint.Align.LEFT);
+            mPaint.setFakeBoldText(false);
+        }
     }
 
     /**
