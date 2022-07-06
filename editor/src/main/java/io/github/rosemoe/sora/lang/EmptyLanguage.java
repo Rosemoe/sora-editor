@@ -36,6 +36,7 @@ import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentReference;
+import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
 /**
@@ -100,17 +101,17 @@ public class EmptyLanguage implements Language {
         public final static EmptyFormatter INSTANCE = new EmptyFormatter();
 
         @Override
-        public void format(@NonNull Content text) {
+        public void format(@NonNull Content text, @NonNull TextRange cursorRange) {
 
         }
 
         @Override
-        public void formatRegion(@NonNull Content text, @NonNull CharPosition start, @NonNull CharPosition end) {
+        public void formatRegion(@NonNull Content text, @NonNull TextRange rangeToFormat, @NonNull TextRange cursorRange) {
 
         }
 
         @Override
-        public void setReceiver(FormatResultReceiver receiver) {
+        public void setReceiver(@Nullable FormatResultReceiver receiver) {
 
         }
 

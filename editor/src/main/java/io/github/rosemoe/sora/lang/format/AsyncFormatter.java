@@ -24,37 +24,44 @@
 package io.github.rosemoe.sora.lang.format;
 
 import android.util.Log;
-import android.util.Pair;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
+import java.lang.ref.WeakReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
+import io.github.rosemoe.sora.text.TextRange;
 
+/**
+ * Base class for formatting code in another thread.
+ */
 public abstract class AsyncFormatter implements Formatter {
 
-    private FormatResultReceiver receiver;
+    private WeakReference<FormatResultReceiver> receiver;
 
     private final static String LOG_TAG = "AsyncFormatter";
     private static int sThreadId = 0;
 
-
     private final ReentrantLock lock = new ReentrantLock();
-
     private final Condition condition = lock.newCondition();
 
     private volatile Content text;
-    private volatile Pair<CharPosition, CharPosition> range;
+    private volatile TextRange range;
+    private volatile TextRange cursorRange;
 
     private FormattingThread thread;
 
     @Override
     public void setReceiver(FormatResultReceiver receiver) {
-        this.receiver = receiver;
+        if (receiver == null) {
+            this.receiver = null;
+            return;
+        }
+        this.receiver = new WeakReference<>(receiver);
     }
 
     private void run() {
@@ -72,7 +79,6 @@ public abstract class AsyncFormatter implements Formatter {
             condition.signal();
             lock.unlock();
         }
-
     }
 
     private synchronized static int nextThreadId() {
@@ -81,46 +87,57 @@ public abstract class AsyncFormatter implements Formatter {
     }
 
     @Override
-    public void format(@NonNull Content text) {
+    public void format(@NonNull Content text, @NonNull TextRange cursorRange) {
         this.text = text;
         range = null;
+        this.cursorRange = cursorRange;
         run();
     }
 
     @Override
-    public  boolean isRunning() {
+    public boolean isRunning() {
         return thread != null && thread.isAlive() && lock.isLocked();
     }
 
     @Override
-    public void formatRegion(@NonNull Content text, @NonNull CharPosition start, @NonNull CharPosition end) {
+    public void formatRegion(@NonNull Content text, @NonNull TextRange rangeToFormat, @NonNull TextRange cursorRange) {
         this.text = text;
-        range = new Pair<>(start, end);
+        range = rangeToFormat;
+        this.cursorRange = cursorRange;
         run();
     }
 
-
     /**
-     * like {@link Formatter#format(Content)}, but run in background thread
+     * like {@link Formatter#format(Content, TextRange)}, but run in background thread.
+     * <p>
+     * Implementation of this method can edit text directly to generate formatted code.
+     * @return the new cursor range to be applied to the text
      */
     @WorkerThread
-    public abstract void formatAsync(Content text);
+    @Nullable
+    public abstract TextRange formatAsync(@NonNull Content text, @NonNull TextRange cursorRange);
 
     /**
-     * like {@link Formatter#formatRegion(Content, CharPosition, CharPosition)}, but run in background thread
+     * like {@link Formatter#formatRegion(Content, TextRange, TextRange)}, but run in background thread
+     * <p>
+     * Implementation of this method can edit text directly to generate formatted code.
+     * @return the new cursor range to be applied to the text
      */
     @WorkerThread
-    public abstract void formatRegionAsync(Content text, CharPosition start, CharPosition end);
+    @Nullable
+    public abstract TextRange formatRegionAsync(@NonNull Content text, @NonNull TextRange rangeToFormat, @NonNull TextRange cursorRange);
 
-    private void sendUpdate(Content text) {
-        if (receiver != null) {
-            receiver.onFormatSucceed(text);
+    private void sendUpdate(Content text, TextRange cursorRange) {
+        FormatResultReceiver r;
+        if (receiver != null && (r = receiver.get()) != null) {
+            r.onFormatSucceed(text, cursorRange);
         }
     }
 
     private void sendFailure(Throwable throwable) {
-        if (receiver != null) {
-            receiver.onFormatFail(throwable);
+        FormatResultReceiver r;
+        if (receiver != null && (r = receiver.get()) != null) {
+            r.onFormatFail(throwable);
         }
     }
 
@@ -135,12 +152,16 @@ public abstract class AsyncFormatter implements Formatter {
                     if (text == null) {
                         continue;
                     }
+                    TextRange newRange;
                     if (range == null) {
-                        formatAsync(text);
+                        newRange = formatAsync(text, cursorRange);
                     } else {
-                        formatRegionAsync(text, range.first, range.second);
+                        newRange = formatRegionAsync(text, range, cursorRange);
                     }
-                    sendUpdate(text);
+                    sendUpdate(text, newRange);
+                    // un-refer immediately
+                    text = null;
+                    range = null;
                     // Wait for next time
                     condition.await();
                 }

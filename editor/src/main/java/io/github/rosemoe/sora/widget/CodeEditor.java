@@ -100,6 +100,7 @@ import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.ICUUtils;
 import io.github.rosemoe.sora.text.LineRemoveListener;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
+import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.text.TextUtils;
 import io.github.rosemoe.sora.util.Floats;
 import io.github.rosemoe.sora.util.IntPair;
@@ -2019,7 +2020,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         mLanguage.getFormatter().setReceiver(this);
         var formatContent = mText.copyText(false);
         formatContent.setUndoEnabled(false);
-        mLanguage.getFormatter().format(formatContent);
+        mLanguage.getFormatter().format(formatContent, createCursorRange());
         return true;
     }
 
@@ -2043,8 +2044,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         mLanguage.getFormatter().setReceiver(this);
         var formatContent = mText.copyText(false);
         formatContent.setUndoEnabled(false);
-        mLanguage.getFormatter().formatRegion(formatContent, start, end);
+        mLanguage.getFormatter().formatRegion(formatContent, new TextRange(start, end), createCursorRange());
         return true;
+    }
+
+    public TextRange createCursorRange() {
+        return new TextRange(mCursor.left(), mCursor.right());
     }
 
     /**
@@ -4133,7 +4138,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Override
-    public void onFormatSucceed(@NonNull CharSequence applyContent) {
+    public void onFormatSucceed(@NonNull CharSequence applyContent, @Nullable TextRange cursorRange) {
         post(() -> {
             int line = mCursor.getLeftLine();
             int column = mCursor.getLeftColumn();
@@ -4145,7 +4150,17 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             mText.endBatchEdit();
             getScroller().forceFinished(true);
             mCompletionWindow.hide();
-            setSelectionAround(line, column);
+            if (cursorRange == null) {
+                setSelectionAround(line, column);
+            } else {
+                try {
+                    var start = cursorRange.getStart();
+                    var end = cursorRange.getEnd();
+                    setSelectionRegion(start.line, start.column, end.line, end.column);
+                } catch (IndexOutOfBoundsException e) {
+                    e.printStackTrace();
+                }
+            }
         });
     }
 
