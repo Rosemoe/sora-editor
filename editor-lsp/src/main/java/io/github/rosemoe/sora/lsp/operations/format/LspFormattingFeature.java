@@ -40,10 +40,11 @@ import io.github.rosemoe.sora.lsp.operations.Feature;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
+import io.github.rosemoe.sora.text.TextRange;
 
-public class LspFormattingFeature implements Feature<Pair<CharPosition, CharPosition>, String> {
+public class LspFormattingFeature implements Feature<Pair<Content, TextRange>, Void> {
 
-    private CompletableFuture<String> future;
+    private CompletableFuture<Object> future;
     private LspEditor editor;
 
     @Override
@@ -61,25 +62,34 @@ public class LspFormattingFeature implements Feature<Pair<CharPosition, CharPosi
     }
 
     @Override
-    public String execute(Pair<CharPosition, CharPosition> data) {
+    public Void execute(Pair<Content, TextRange> data) {
         var manager = editor.getRequestManager();
         var formattingParams = new DocumentRangeFormattingParams();
         formattingParams.setOptions(editor.getOption(FormattingOptions.class));
 
         formattingParams.setTextDocument(LspUtils.createTextDocumentIdentifier(editor.getCurrentFileUri()));
+        var textRange = data.second;
         formattingParams.setRange(new Range(
-                new Position(data.first.line, data.first.column),
-                new Position(data.second.line, data.second.column)
+                new Position(textRange.getStart().line, textRange.getStart().column),
+                new Position(textRange.getEnd().line, textRange.getEnd().column)
         ));
 
-        //FIXME: May need to change sora-editor to implement this feature
+        var content = data.first;
+
         future = manager.rangeFormatting(formattingParams)
                 .thenApply(list -> {
-                    StringBuilder builder = new StringBuilder();
-                    for (var item : list) {
-                        builder.append(item.getNewText());
-                    }
-                    return builder.toString();
+
+                    list.forEach(textEdit -> {
+                        var range = textEdit.getRange();
+                        var text = textEdit.getNewText();
+                        content.replace(
+                                range.getStart().getLine(), range.getStart().getCharacter(),
+                                range.getEnd().getLine(), range.getEnd().getCharacter(),
+                                text
+                        );
+                    });
+
+                    return null;
                 })
                 .exceptionally(e -> {
                     e.printStackTrace();
@@ -87,7 +97,8 @@ public class LspFormattingFeature implements Feature<Pair<CharPosition, CharPosi
                 });
 
         //block
-        return future.join();
+        future.join();
+        return null;
     }
 
 

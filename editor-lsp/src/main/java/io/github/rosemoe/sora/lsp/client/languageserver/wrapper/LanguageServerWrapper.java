@@ -331,7 +331,7 @@ public class LanguageServerWrapper {
         initParams.setRootUri(Uri.fromFile(new File(projectRootPath)).toString());
 
         WorkspaceClientCapabilities workspaceClientCapabilities = new WorkspaceClientCapabilities();
-        workspaceClientCapabilities.setApplyEdit(true);
+        workspaceClientCapabilities.setApplyEdit(false); // Not ready to support this feature
         workspaceClientCapabilities.setDidChangeWatchedFiles(new DidChangeWatchedFilesCapabilities());
         workspaceClientCapabilities.setExecuteCommand(new ExecuteCommandCapabilities());
         workspaceClientCapabilities.setWorkspaceEdit(new WorkspaceEditCapabilities());
@@ -344,7 +344,7 @@ public class LanguageServerWrapper {
         textDocumentClientCapabilities.getCodeAction().setCodeActionLiteralSupport(new CodeActionLiteralSupportCapabilities());
         textDocumentClientCapabilities.setCompletion(new CompletionCapabilities(new CompletionItemCapabilities(true)));
         textDocumentClientCapabilities.setDefinition(new DefinitionCapabilities());
-        textDocumentClientCapabilities.setDocumentHighlight(new DocumentHighlightCapabilities());
+        textDocumentClientCapabilities.setDocumentHighlight(null); // The feature is not currently supported in the sora-editor
         textDocumentClientCapabilities.setFormatting(new FormattingCapabilities());
         textDocumentClientCapabilities.setHover(new HoverCapabilities());
         textDocumentClientCapabilities.setOnTypeFormatting(new OnTypeFormattingCapabilities());

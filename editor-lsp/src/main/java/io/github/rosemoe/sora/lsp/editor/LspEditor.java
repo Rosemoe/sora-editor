@@ -23,13 +23,19 @@
  */
 package io.github.rosemoe.sora.lsp.editor;
 
+import androidx.annotation.BinderThread;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
+
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
@@ -47,17 +53,18 @@ public class LspEditor {
 
     private final LanguageServerDefinition serverDefinition;
 
-    private CodeEditor currentEditor;
+    private WeakReference<CodeEditor> currentEditor;
 
     private LspLanguage currentLanguage;
 
     private List<Feature<?, ?>> supportedFeatures = new ArrayList<>();
 
-
     private List<Object> options = new ArrayList<>();
 
+    private LanguageServerWrapper languageServerWrapper;
+
     public LspEditor(CodeEditor currentEditor, String currentProjectPath, String currentFileUri, LanguageServerDefinition serverDefinition) {
-        this.currentEditor = null;
+        this.currentEditor = new WeakReference<>(currentEditor);
         this.currentLanguage = new LspLanguage(currentFileUri, this);
         this.projectPath = currentProjectPath;
         setEditor(currentEditor);
@@ -73,12 +80,13 @@ public class LspEditor {
     }
 
     public void setEditor(CodeEditor currentEditor) {
-        this.currentEditor = currentEditor;
+        this.currentEditor = new WeakReference<>(currentEditor);
         currentEditor.setEditorLanguage(currentLanguage);
     }
 
+    @Nullable
     public CodeEditor getEditor() {
-        return currentEditor;
+        return currentEditor.get();
     }
 
     public LspLanguage getLanguage() {
@@ -115,9 +123,9 @@ public class LspEditor {
             feature.uninstall(this);
         }
         supportedFeatures.clear();
-        currentEditor = null;
+        currentEditor.clear();
         currentLanguage.destroy();
-
+        currentLanguage = null;
     }
 
 
@@ -128,7 +136,6 @@ public class LspEditor {
 
         //options
 
-
         // formatting
         FormattingOptions formattingOptions = new FormattingOptions();
         formattingOptions.setTabSize(4);
@@ -137,6 +144,7 @@ public class LspEditor {
 
     }
 
+    @Nullable
     public <T> T getOption(Class<T> optionClass) {
         for (Object option : options) {
             if (optionClass.isInstance(option)) {
@@ -146,6 +154,7 @@ public class LspEditor {
         return null;
     }
 
+    @WorkerThread
     public void connect() {
         LanguageServerWrapper languageServerWrapper = LanguageServerWrapper.forProject(projectPath);
         if (languageServerWrapper != null) {
@@ -153,47 +162,52 @@ public class LspEditor {
         }
         languageServerWrapper = new LanguageServerWrapper(serverDefinition, projectPath);
 
+        this.languageServerWrapper = languageServerWrapper;
         languageServerWrapper.start();
         //wait for language server start
         languageServerWrapper.getServer();
         languageServerWrapper.connect(this);
 
+    }
 
+
+    private String getEditorContent() {
+        return currentEditor.get().getText().toString();
     }
 
 
     public void open() {
-        LanguageServerWrapper languageServerWrapper = LanguageServerWrapper.forProject(projectPath);
-
-        languageServerWrapper
-                .getRequestManager()
-                .didOpen(LspUtils.createDidOpenTextDocumentParams(currentLanguage.currentFileUri,
-                        languageServerWrapper.serverDefinition.ext, currentEditor.getText().toString()));
-
+        getRequestManagerOfOptional()
+                .ifPresent(requestManager -> requestManager.didOpen(LspUtils.createDidOpenTextDocumentParams(currentLanguage.currentFileUri,
+                        serverDefinition.ext, getEditorContent())));
     }
 
+    @Nullable
     public RequestManager getRequestManager() {
-        return LanguageServerWrapper.forProject(projectPath).getRequestManager();
+        LanguageServerWrapper serverWrapper = LanguageServerWrapper.forProject(projectPath);
+        return serverWrapper != null ? serverWrapper.getRequestManager() : null;
+    }
+
+    public Optional<RequestManager> getRequestManagerOfOptional() {
+        return Optional.ofNullable(getRequestManager());
     }
 
     public void save() {
-        getRequestManager()
-                .didSave(LspUtils.createDidSaveTextDocumentParams(this.currentLanguage.currentFileUri,
-                        this.currentEditor.getText().toString()));
+        getRequestManagerOfOptional()
+                .ifPresent(requestManager ->
+                        requestManager.didSave(LspUtils.createDidSaveTextDocumentParams(this.currentLanguage.currentFileUri,
+                        getEditorContent())));
     }
 
     public void destroy() {
-        LanguageServerWrapper languageServerWrapper = LanguageServerWrapper.forProject(projectPath);
 
-        languageServerWrapper.getRequestManager()
-                .didClose(new DidCloseTextDocumentParams(
+        getRequestManagerOfOptional()
+                .ifPresent(requestManager -> requestManager.didClose(new DidCloseTextDocumentParams(
                         new TextDocumentIdentifier(currentLanguage.currentFileUri)
-                ));
+                )));
 
+        languageServerWrapper.disconnect(this);
 
-        if (languageServerWrapper != null) {
-            languageServerWrapper.disconnect(this);
-        }
     }
 
     public void setSyncOptions(TextDocumentSyncKind textDocumentSyncKind) {

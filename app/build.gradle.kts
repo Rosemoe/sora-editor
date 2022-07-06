@@ -74,7 +74,7 @@ dependencies {
     implementation("com.google.android.material:material:1.6.1")
     implementation("androidx.core:core-ktx:1.8.0")
     implementation("androidx.appcompat:appcompat:1.4.2")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.3.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.0")
 
 
     // Editor

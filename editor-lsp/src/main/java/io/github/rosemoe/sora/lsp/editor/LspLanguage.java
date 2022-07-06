@@ -36,6 +36,7 @@ import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
+import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.operations.format.LspFormattingFeature;
@@ -48,13 +49,15 @@ public class LspLanguage implements Language {
 
 
     protected final String currentFileUri;
-    private final LspEditor editor;
+    private LspEditor editor;
     private TextDocumentSyncKind syncKind;
+
+    private LspFormatter formatter;
 
     public LspLanguage(String currentFileUri, LspEditor editor) {
         this.currentFileUri = currentFileUri;
         this.editor = editor;
-
+        this.formatter = new LspFormatter(this);
     }
 
     @NonNull
@@ -83,33 +86,12 @@ public class LspLanguage implements Language {
         return false;
     }
 
+    @NonNull
     @Override
-    public CharSequence format(CharSequence text) {
-
-        var rangePair = new Pair<>(
-                editor.getEditor()
-                        .getText()
-                        .getIndexer()
-                        .getCharPosition(0),
-                editor.getEditor()
-                        .getText()
-                        .getIndexer()
-                        .getCharPosition(text.length() - 1)
-        );
-
-        //FIXME: May need to change sora-editor to implement this feature
-        return editor.useFeature(LspFormattingFeature.class)
-                .execute(rangePair);
+    public Formatter getFormatter() {
+        return formatter;
     }
 
-    @Override
-    public CharSequence formatRegion(CharSequence text, CharPosition start, CharPosition end) {
-        //FIXME: May need to change sora-editor to implement this feature
-        return editor.useFeature(LspFormattingFeature.class)
-                .execute(new Pair<>(
-                        start, end
-                ));
-    }
 
     @Override
     public SymbolPairMatch getSymbolPairs() {
@@ -125,6 +107,8 @@ public class LspLanguage implements Language {
     @Override
     public void destroy() {
         editor.destroy();
+        getFormatter().destroy();
+        editor = null;
     }
 
     public void setSyncOptions(TextDocumentSyncKind textDocumentSyncKind) {
@@ -133,5 +117,9 @@ public class LspLanguage implements Language {
 
     public TextDocumentSyncKind getSyncOptions() {
         return syncKind == null ? TextDocumentSyncKind.Full : syncKind;
+    }
+
+    public LspEditor getEditor() {
+        return editor;
     }
 }
