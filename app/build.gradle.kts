@@ -31,6 +31,8 @@ android {
     defaultConfig {
         applicationId = "io.github.rosemoe.sora.app"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        versionCode = Versions.versionCode
+        versionName = Versions.versionName + "-" + System.currentTimeMillis()
     }
     buildTypes {
         release {
