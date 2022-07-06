@@ -179,7 +179,6 @@ class LspTestActivity : AppCompatActivity() {
     }
 
     private fun ensureTextmateTheme() {
-
         var editorColorScheme = editor.colorScheme
         if (editorColorScheme !is TextMateColorScheme) {
             val iRawTheme = ThemeReader.readThemeSync(

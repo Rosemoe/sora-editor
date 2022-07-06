@@ -34,6 +34,7 @@ import org.eclipse.lsp4j.TextDocumentSyncKind;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -50,6 +51,9 @@ import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.Languag
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper;
 import io.github.rosemoe.sora.lsp.operations.Feature;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeFeature;
+import io.github.rosemoe.sora.lsp.operations.document.DocumentCloseFeature;
+import io.github.rosemoe.sora.lsp.operations.document.DocumentOpenFeature;
+import io.github.rosemoe.sora.lsp.operations.document.DocumentSaveFeature;
 import io.github.rosemoe.sora.lsp.operations.format.LspFormattingFeature;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 import io.github.rosemoe.sora.widget.CodeEditor;
@@ -145,6 +149,10 @@ public class LspEditor {
         feature.install(this);
     }
 
+    public void installFeatures(Supplier<Feature<?, ?>>... featureSupplier) {
+        Arrays.stream(featureSupplier).forEach(this::installFeature);
+    }
+
     @Nullable
     public void uninstallFeature(Class<?> featureClass) {
         for (Feature<?, ?> feature : supportedFeatures) {
@@ -166,12 +174,12 @@ public class LspEditor {
         return null;
     }
 
-    public void dispose() {
-
+    private void dispose() {
 
         for (Feature<?, ?> feature : supportedFeatures) {
             feature.uninstall(this);
         }
+
         supportedFeatures.clear();
 
         currentEditor.clear();
@@ -191,8 +199,9 @@ public class LspEditor {
     public void installFeatures() {
 
         //features
-        installFeature(LspFormattingFeature::new);
-        installFeature(DocumentChangeFeature::new);
+        installFeatures(LspFormattingFeature::new, DocumentOpenFeature::new,
+                DocumentSaveFeature::new, DocumentChangeFeature::new,
+                DocumentCloseFeature::new);
 
         //options
 
@@ -228,7 +237,6 @@ public class LspEditor {
         //wait for language server start
         languageServerWrapper.getServer();
         languageServerWrapper.connect(this);
-
     }
 
 
@@ -238,10 +246,8 @@ public class LspEditor {
 
 
     public void open() {
-        getRequestManagerOfOptional()
-                .ifPresent(requestManager ->
-                        ForkJoinPool.commonPool().execute(() -> requestManager.didOpen(LspUtils.createDidOpenTextDocumentParams(currentFileUri,
-                        serverDefinition.ext, getEditorContent()))));
+        useFeature(DocumentOpenFeature.class)
+                .execute(null);
     }
 
     @Nullable
@@ -255,22 +261,16 @@ public class LspEditor {
     }
 
     public void save() {
-        getRequestManagerOfOptional()
-                .ifPresent(requestManager ->
-                        ForkJoinPool.commonPool().execute(() -> requestManager.didSave(LspUtils.createDidSaveTextDocumentParams(currentFileUri,
-                                getEditorContent()))));
+        useFeature(DocumentSaveFeature.class)
+                .execute(null);
     }
 
     public void disconnent() {
-        getRequestManagerOfOptional()
-                .ifPresent(requestManager ->
-                        ForkJoinPool.commonPool().execute(() -> requestManager.didClose(new DidCloseTextDocumentParams(
-                        new TextDocumentIdentifier(currentFileUri))
-                )));
+        useFeature(DocumentCloseFeature.class)
+                .execute(null);
 
         if (languageServerWrapper != null) {
-            ForkJoinPool.commonPool()
-                    .execute(() -> languageServerWrapper.disconnect(this));
+            CompletableFuture.runAsync(() -> languageServerWrapper.disconnect(this));
         }
     }
 
@@ -296,4 +296,7 @@ public class LspEditor {
     }
 
 
+    public String getFileExt() {
+        return serverDefinition.ext;
+    }
 }

@@ -29,7 +29,6 @@ import org.eclipse.lsp4j.TextDocumentSyncKind;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
@@ -37,6 +36,7 @@ import io.github.rosemoe.sora.lsp.operations.Feature;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 
 public class DocumentChangeFeature implements Feature<ContentChangeEvent, Void> {
+
     private CompletableFuture<Void> future;
     private LspEditor editor;
 
@@ -61,9 +61,8 @@ public class DocumentChangeFeature implements Feature<ContentChangeEvent, Void> 
 
         DidChangeTextDocumentParams params = createDidChangeTextDocumentParams(data);
 
-        ForkJoinPool.commonPool()
-                .execute(() -> editor
-                        .getRequestManagerOfOptional()
+        future = CompletableFuture.runAsync(() ->
+                editor.getRequestManagerOfOptional()
                         .get()
                         .didChange(params));
 

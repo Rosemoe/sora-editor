@@ -110,14 +110,7 @@ public class DefaultLanguageClient implements LanguageClient {
 
     @Override
     public void publishDiagnostics(PublishDiagnosticsParams publishDiagnosticsParams) {
-      /*  String uri = FileUtils.sanitizeURI(publishDiagnosticsParams.getUri());
-        List<Diagnostic> diagnostics = publishDiagnosticsParams.getDiagnostics();
-        Set<EditorEventManager> managers = EditorEventManagerBase.managersForUri(uri);
-        for (EditorEventManager manager: managers) {
-            manager.diagnostics(diagnostics);
-        }*/
-
-        //TODO: implement publishDiagnostics
+      System.out.println(publishDiagnosticsParams);
     }
 
     @Override
@@ -128,7 +121,7 @@ public class DefaultLanguageClient implements LanguageClient {
     @Override
     public CompletableFuture<MessageActionItem> showMessageRequest(ShowMessageRequestParams showMessageRequestParams) {
         //TODO: implement showMessageRequest
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.completedFuture(new MessageActionItem());
     }
 
 
