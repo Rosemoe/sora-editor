@@ -53,7 +53,7 @@ android {
 
 dependencies {
     //implementation "org.eclipse.lsp4j:org.eclipse.lsp4j:0.9.0.M3"
-    implementation("androidx.annotation:annotation:1.4.0")
+    api("androidx.annotation:annotation:1.4.0")
     //implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")

@@ -110,6 +110,7 @@ public class JavaLanguage implements Language {
         return false;
     }
 
+    @NonNull
     @Override
     public Formatter getFormatter() {
         return EmptyLanguage.EmptyFormatter.INSTANCE;

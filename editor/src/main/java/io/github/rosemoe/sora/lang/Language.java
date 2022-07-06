@@ -58,24 +58,24 @@ public interface Language {
 
     /**
      * Set the thread's interrupted flag by calling {@link Thread#interrupt()}.
-     *
+     * <p>
      * Throw {@link io.github.rosemoe.sora.lang.completion.CompletionCancelledException} exceptions
      * from {@link ContentReference} and {@link CompletionPublisher}.
-     *
+     * <p>
      * Set thread's flag for abortion.
      */
     int INTERRUPTION_LEVEL_STRONG = 0;
     /**
      * Throw {@link io.github.rosemoe.sora.lang.completion.CompletionCancelledException} exceptions
      * from {@link ContentReference} and {@link CompletionPublisher}.
-     *
+     * <p>
      * Set thread's flag for abortion.
      */
     int INTERRUPTION_LEVEL_SLIGHT = 1;
     /**
      * Throw {@link io.github.rosemoe.sora.lang.completion.CompletionCancelledException} exceptions
      * from {@link ContentReference}
-     *
+     * <p>
      * Set thread's flag for abortion.
      */
     int INTERRUPTION_LEVEL_NONE = 2;
@@ -100,19 +100,19 @@ public interface Language {
      * Request to auto-complete the code at the given {@code position}.
      * This is called in a worker thread other than UI thread.
      *
+     * @param content        Read-only reference of content
+     * @param position       The position for auto-complete
+     * @param publisher      The publisher used to update items
+     * @param extraArguments Arguments set by {@link io.github.rosemoe.sora.widget.CodeEditor#setText(CharSequence, Bundle)}
+     * @throws io.github.rosemoe.sora.lang.completion.CompletionCancelledException This thread can be abandoned
+     *                                                                             by the editor framework because the auto-completion items of
+     *                                                                             this invocation are no longer needed by the user. This can either be thrown
+     *                                                                             by {@link ContentReference} or {@link CompletionPublisher}. How the exceptions will be thrown is according to
+     *                                                                             your settings: {@link #getInterruptionLevel()}
      * @see ContentReference
      * @see CompletionPublisher
      * @see #getInterruptionLevel()
      * @see CompletionHelper#checkCancelled()
-     * @param content Read-only reference of content
-     * @param position The position for auto-complete
-     * @param publisher The publisher used to update items
-     * @param extraArguments Arguments set by {@link io.github.rosemoe.sora.widget.CodeEditor#setText(CharSequence, Bundle)}
-     * @throws io.github.rosemoe.sora.lang.completion.CompletionCancelledException This thread can be abandoned
-     * by the editor framework because the auto-completion items of
-     *  this invocation are no longer needed by the user. This can either be thrown
-     * by {@link ContentReference} or {@link CompletionPublisher}. How the exceptions will be thrown is according to
-     * your settings: {@link #getInterruptionLevel()}
      */
     @WorkerThread
     void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position,
@@ -140,7 +140,9 @@ public interface Language {
      *
      * @return The code formatter for the current language.
      */
-     Formatter getFormatter();
+    @UiThread
+    @NonNull
+    Formatter getFormatter();
 
     /**
      * Returns language specified symbol pairs.

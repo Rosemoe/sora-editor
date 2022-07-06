@@ -46,6 +46,7 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
 public class EmptyLanguage implements Language {
 
 
+    @NonNull
     @Override
     public Formatter getFormatter() {
         return EmptyFormatter.INSTANCE;
