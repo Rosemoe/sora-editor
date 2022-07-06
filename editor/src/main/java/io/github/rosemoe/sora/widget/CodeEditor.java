@@ -4133,12 +4133,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Override
-    public void onFormatSucceed(Content applyContent) {
+    public void onFormatSucceed(@NonNull CharSequence applyContent) {
         post(() -> {
             int line = mCursor.getLeftLine();
             int column = mCursor.getLeftColumn();
-            //Maybe should just use Content?
-            var string = applyContent.toStringBuilder();
+            var string = (applyContent instanceof Content) ? ((Content) applyContent).toStringBuilder() : applyContent;
             mText.beginBatchEdit();
             mText.delete(0, 0, mText.getLineCount() - 1,
                     mText.getColumnCount(mText.getLineCount() - 1) - 1);
@@ -4152,7 +4151,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     @Override
     public void onFormatFail(final Throwable throwable) {
-        post(() -> Toast.makeText(getContext(), throwable.toString(), Toast.LENGTH_SHORT).show());
+        post(() -> Toast.makeText(getContext(), "Format:" + throwable, Toast.LENGTH_SHORT).show());
     }
 
     @Override

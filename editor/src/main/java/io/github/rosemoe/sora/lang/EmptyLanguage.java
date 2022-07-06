@@ -99,12 +99,12 @@ public class EmptyLanguage implements Language {
         public final static EmptyFormatter INSTANCE = new EmptyFormatter();
 
         @Override
-        public void format(Content text) {
+        public void format(@NonNull Content text) {
 
         }
 
         @Override
-        public void formatRegion(Content text, CharPosition start, CharPosition end) {
+        public void formatRegion(@NonNull Content text, @NonNull CharPosition start, @NonNull CharPosition end) {
 
         }
 

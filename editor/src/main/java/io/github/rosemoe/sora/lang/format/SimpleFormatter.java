@@ -30,7 +30,6 @@ import io.github.rosemoe.sora.text.Content;
 
 public abstract class SimpleFormatter extends AsyncFormatter {
 
-
     @Override
     public void formatAsync(Content text) {
         var newText = format(text.toStringBuilder());

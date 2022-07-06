@@ -23,7 +23,8 @@
  */
 package io.github.rosemoe.sora.lang.format;
 
-import androidx.annotation.WorkerThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
@@ -41,7 +42,7 @@ public interface Formatter {
      * *
      * @param text the content to format
      */
-    void format(Content text);
+    void format(@NonNull Content text);
 
     /**
      * Format the given content from {@code start} position to {@code end} position
@@ -52,9 +53,9 @@ public interface Formatter {
      * @param start the start position of the content to format
      * @param end   the end position of the content to format
      */
-    void formatRegion(Content text, CharPosition start, CharPosition end);
+    void formatRegion(@NonNull Content text, @NonNull CharPosition start, @NonNull CharPosition end);
 
-    void setReceiver(FormatResultReceiver receiver);
+    void setReceiver(@Nullable FormatResultReceiver receiver);
 
     /**
      * Whether the current formatter is running
@@ -65,16 +66,16 @@ public interface Formatter {
         /**
          * Called when the formatting is complete
          *
-         * @param applyContent the formatted content
+         * @param applyContent the formatted text
          */
-        void onFormatSucceed(Content applyContent);
+        void onFormatSucceed(@NonNull CharSequence applyContent);
 
         /**
          * Called when the formatting is failed
          *
          * @param throwable the throwable that caused formatting failed
          */
-        void onFormatFail(Throwable throwable);
+        void onFormatFail(@Nullable Throwable throwable);
 
     }
 

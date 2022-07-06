@@ -23,30 +23,17 @@
  */
 package io.github.rosemoe.sora.lang.format;
 
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager;
-import io.github.rosemoe.sora.lang.analysis.IncrementalAnalyzeManager;
-import io.github.rosemoe.sora.lang.analysis.SimpleAnalyzeManager;
-import io.github.rosemoe.sora.lang.analysis.StyleReceiver;
-import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
-import io.github.rosemoe.sora.text.ContentReference;
-import io.github.rosemoe.sora.util.IntPair;
 
 public abstract class AsyncFormatter implements Formatter {
 
@@ -71,7 +58,6 @@ public abstract class AsyncFormatter implements Formatter {
     }
 
     private void run() {
-
         if (thread == null || !thread.isAlive()) {
             // Create new thread
             Log.v(LOG_TAG, "Starting a new thread for formatting");
@@ -95,7 +81,7 @@ public abstract class AsyncFormatter implements Formatter {
     }
 
     @Override
-    public void format(Content text) {
+    public void format(@NonNull Content text) {
         this.text = text;
         range = null;
         run();
@@ -107,7 +93,7 @@ public abstract class AsyncFormatter implements Formatter {
     }
 
     @Override
-    public void formatRegion(Content text, CharPosition start, CharPosition end) {
+    public void formatRegion(@NonNull Content text, @NonNull CharPosition start, @NonNull CharPosition end) {
         this.text = text;
         range = new Pair<>(start, end);
         run();
