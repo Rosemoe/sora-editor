@@ -241,6 +241,9 @@ public class ContentLine implements CharSequence, GetChars {
     @UnsupportedUserUsage
     public char charAt(int index) {
         // checkIndex(index);
+        if (index == length) {
+            return '\n';
+        }
         return value[index];
     }
 
