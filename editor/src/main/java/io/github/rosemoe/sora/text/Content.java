@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -50,14 +51,14 @@ public class Content implements CharSequence {
     }
 
     private final List<ContentLine> lines;
+    private final List<ContentListener> contentListeners;
+    private final ReadWriteLock lock;
     private int textLength;
     private int nestedBatchEdit;
-    private final List<ContentListener> contentListeners;
     private Indexer indexer;
     private UndoManager undoManager;
     private Cursor cursor;
     private LineRemoveListener lineListener;
-    private final ReadWriteLock lock;
 
     /**
      * This constructor will create a Content object with no text
@@ -105,24 +106,6 @@ public class Content implements CharSequence {
         setUndoEnabled(true);
     }
 
-    public boolean isThreadSafe() {
-        return lock != null;
-    }
-
-    protected void lock(boolean write) {
-        if (lock == null) {
-            return;
-        }
-        (write ? lock.writeLock() : lock.readLock()).lock();
-    }
-
-    protected void unlock(boolean write) {
-        if (lock == null) {
-            return;
-        }
-        (write ? lock.writeLock() : lock.readLock()).unlock();
-    }
-
     /**
      * Returns the default capacity of text line list
      *
@@ -163,13 +146,53 @@ public class Content implements CharSequence {
         return true;
     }
 
+    public boolean isThreadSafe() {
+        return lock != null;
+    }
+
+    protected void lock(boolean write) {
+        if (lock == null) {
+            return;
+        }
+        (write ? lock.writeLock() : lock.readLock()).lock();
+    }
+
+    protected void unlock(boolean write) {
+        if (lock == null) {
+            return;
+        }
+        (write ? lock.writeLock() : lock.readLock()).unlock();
+    }
+
     @Override
     public char charAt(int index) {
         checkIndex(index);
         lock(false);
         try {
-            CharPosition p = getIndexer().getCharPosition(index);
-            return charAt(p.line, p.column);
+            var p = getIndexer().getCharPosition(index);
+            return lines.get(p.line).charAt(p.column);
+        } finally {
+            unlock(false);
+        }
+    }
+
+    /**
+     * Get the character at the given position
+     * If (column == getColumnCount(line)),it returns '\n'
+     * IndexOutOfBoundsException is thrown
+     *
+     * @param line   The line position of character
+     * @param column The column position of character
+     * @return The character at the given position
+     */
+    public char charAt(int line, int column) {
+        lock(false);
+        try {
+            checkLineAndColumn(line, column, true);
+            if (column == getColumnCount(line)) {
+                return '\n';
+            }
+            return lines.get(line).charAt(column);
         } finally {
             unlock(false);
         }
@@ -204,28 +227,6 @@ public class Content implements CharSequence {
      */
     public void setLineListener(LineRemoveListener lis) {
         this.lineListener = lis;
-    }
-
-    /**
-     * Get the character at the given position
-     * If (column == getColumnCount(line)),it returns '\n'
-     * IndexOutOfBoundsException is thrown
-     *
-     * @param line   The line position of character
-     * @param column The column position of character
-     * @return The character at the given position
-     */
-    public char charAt(int line, int column) {
-        lock(false);
-        try {
-            checkLineAndColumn(line, column, true);
-            if (column == getColumnCount(line)) {
-                return '\n';
-            }
-            return lines.get(line).charAt(column);
-        } finally {
-            unlock(false);
-        }
     }
 
     /**
@@ -381,7 +382,7 @@ public class Content implements CharSequence {
                 workIndex = 0;
                 currLine = newLine;
                 newLines.add(newLine);
-                workLine ++;
+                workLine++;
             }
         }
         lines.addAll(line + 1, newLines);
@@ -551,6 +552,15 @@ public class Content implements CharSequence {
     }
 
     /**
+     * Replace text in the given region with the
+     */
+    public void replace(int startIndex, int endIndex, @NonNull CharSequence text) {
+        var start = getIndexer().getCharPosition(startIndex);
+        var end = getIndexer().getCharPosition(endIndex);
+        replace(start.line, start.column, end.line, end.column, text);
+    }
+
+    /**
      * Undo the last modification
      * NOTE:When there are too much modification,old modification will be deleted from UndoManager
      */
@@ -568,7 +578,7 @@ public class Content implements CharSequence {
     /**
      * Check whether the {@link UndoManager} is working to undo/redo
      */
-    public boolean isUndoOrRedo() {
+    public boolean isUndoManagerWorking() {
         return undoManager.isModifyingContent();
     }
 
@@ -765,6 +775,11 @@ public class Content implements CharSequence {
         }
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(lines, textLength, undoManager, cursor);
+    }
+
     @NonNull
     @Override
     public String toString() {
@@ -785,17 +800,17 @@ public class Content implements CharSequence {
     }
 
     /**
-     * Set undo manager. You may use this to recover to a previously saved state of undo stack.
-     */
-    public void setUndoManager(UndoManager manager) {
-        this.undoManager = manager;
-    }
-
-    /**
      * Get UndoManager instance in use
      */
     public UndoManager getUndoManager() {
         return undoManager;
+    }
+
+    /**
+     * Set undo manager. You may use this to recover to a previously saved state of undo stack.
+     */
+    public void setUndoManager(UndoManager manager) {
+        this.undoManager = manager;
     }
 
     /**
@@ -950,31 +965,22 @@ public class Content implements CharSequence {
         }
     }
 
-    /**
-     * Replace text in the given region with the
-     */
-    public void replace(int startIndex, int endIndex, @NonNull CharSequence text) {
-        var start = getIndexer().getCharPosition(startIndex);
-        var end = getIndexer().getCharPosition(endIndex);
-        replace(start.line, start.column, end.line, end.column, text);
-    }
-
     protected int getColumnCountUnchecked(int line) {
         return lines.get(line).length();
     }
 
     /**
-     * Read the lines.
-     * This is for optimizing frequent lock acquiring
+     * Read the lines (ordered).
+     * This is for optimizing frequent lock acquiring.
      *
      * @param startLine inclusive
-     * @param endLine inclusive
+     * @param endLine   inclusive
      */
     public void runReadActionsOnLines(int startLine, int endLine, @NonNull ContentLineConsumer consumer) {
         lock(false);
         try {
-            for (int i = startLine;i <= endLine;i++) {
-                consumer.consume(i, lines.get(i));
+            for (int i = startLine; i <= endLine; i++) {
+                consumer.accept(i, lines.get(i));
             }
         } finally {
             unlock(false);
@@ -983,7 +989,7 @@ public class Content implements CharSequence {
 
     public interface ContentLineConsumer {
 
-        void consume(int lineIndex, @NonNull ContentLine line);
+        void accept(int lineIndex, @NonNull ContentLine line);
 
     }
 }

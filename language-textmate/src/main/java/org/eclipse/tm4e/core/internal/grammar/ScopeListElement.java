@@ -44,16 +44,6 @@ public class ScopeListElement {
         this.metadata = metadata;
     }
 
-    private static boolean equals(ScopeListElement a, ScopeListElement b) {
-        if (a == b) {
-            return true;
-        }
-        if (a == null || b == null) {
-            return false;
-        }
-        return Objects.equals(a.scope, b.scope) && a.metadata == b.metadata && equals(a.parent, b.parent);
-    }
-
     private static boolean matchesScope(String scope, String selector, String selectorWithDot) {
         return (selector.equals(scope) || scope.startsWith(selectorWithDot));
     }
@@ -108,6 +98,19 @@ public class ScopeListElement {
                 background);
     }
 
+    public ScopeListElement push(Grammar grammar, String scope) {
+        if (scope == null) {
+            return this;
+        }
+        if (scope.indexOf(' ') >= 0) {
+            // there are multiple scopes to push
+            return ScopeListElement.push(this, grammar, Arrays.asList(scope.split(" ")));// scope.split(/
+            // /g));
+        }
+        // there is a single scope to push
+        return ScopeListElement.push(this, grammar, Arrays.asList(scope));
+    }
+
     private static ScopeListElement push(ScopeListElement target, Grammar grammar, List<String> scopes) {
         for (String scope : scopes) {
             ScopeMetadata rawMetadata = grammar.getMetadataForScope(scope);
@@ -115,6 +118,10 @@ public class ScopeListElement {
             target = new ScopeListElement(target, scope, metadata);
         }
         return target;
+    }
+
+    public List<String> generateScopes() {
+        return ScopeListElement.generateScopes(this);
     }
 
     private static List<String> generateScopes(ScopeListElement scopesList) {
@@ -125,6 +132,11 @@ public class ScopeListElement {
         }
         Collections.reverse(result);
         return result;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(scope, metadata, parent);
     }
 
     @Override
@@ -141,25 +153,14 @@ public class ScopeListElement {
         return ScopeListElement.equals(this, (ScopeListElement) other);
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(scope, metadata, parent);
+    private static boolean equals(ScopeListElement a, ScopeListElement b) {
+        if (a == b) {
+            return true;
+        }
+        if (a == null || b == null) {
+            return false;
+        }
+        return Objects.equals(a.scope, b.scope) && a.metadata == b.metadata && equals(a.parent, b.parent);
     }
 
-    public ScopeListElement push(Grammar grammar, String scope) {
-        if (scope == null) {
-            return this;
-        }
-        if (scope.indexOf(' ') >= 0) {
-            // there are multiple scopes to push
-            return ScopeListElement.push(this, grammar, Arrays.asList(scope.split(" ")));// scope.split(/
-            // /g));
-        }
-        // there is a single scope to push
-        return ScopeListElement.push(this, grammar, Arrays.asList(scope));
-    }
-
-    public List<String> generateScopes() {
-        return ScopeListElement.generateScopes(this);
-    }
 }

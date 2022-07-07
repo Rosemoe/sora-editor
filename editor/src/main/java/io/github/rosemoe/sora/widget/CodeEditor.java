@@ -4060,7 +4060,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         mWait = false;
 
         // Auto completion
-        if (mCompletionWindow.isEnabled() && !mText.isUndoOrRedo()) {
+        if (mCompletionWindow.isEnabled() && !mText.isUndoManagerWorking()) {
             if ((!mConnection.mComposingText.isComposing() || mProps.autoCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
                 mCompletionWindow.requireCompletion();
             } else {
@@ -4118,7 +4118,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         updateCursor();
 
-        if (mCompletionWindow.isEnabled() && !mText.isUndoOrRedo()) {
+        if (mCompletionWindow.isEnabled() && !mText.isUndoManagerWorking()) {
             if (!mConnection.mComposingText.isComposing() && mCompletionWindow.isShowing()) {
                 if (startLine != endLine || startColumn != endColumn - 1) {
                     mCompletionWindow.hide();

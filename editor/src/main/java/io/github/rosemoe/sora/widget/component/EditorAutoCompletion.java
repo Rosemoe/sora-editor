@@ -103,6 +103,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void setAdapter(EditorCompletionAdapter adapter) {
         mAdapter = adapter;
         if (adapter == null) {
@@ -192,17 +193,17 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     }
 
     /**
+     * Reject the requests from IME to set composing region/text
+     */
+    public boolean shouldRejectComposing() {
+        return mCancelShowUp;
+    }
+
+    /**
      * Select current position
      */
     public void select() {
         select(mCurrent);
-    }
-
-    /**
-     * Reject the IME's requests to set composing region/text
-     */
-    public boolean shouldRejectComposing() {
-        return mCancelShowUp;
     }
 
     /**

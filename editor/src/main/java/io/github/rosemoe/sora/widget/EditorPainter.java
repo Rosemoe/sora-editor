@@ -295,7 +295,7 @@ public class EditorPainter {
         prepareLine(line);
         int columnCount = getColumnCount(line);
         float widthLine = mEditor.measureText(mBuffer, 0, columnCount, line) + mEditor.getDpUnit() * 20;
-        renderNode.setPosition(0, 0, (int) (widthLine + mPaintGraph.measureText("\u21B5") * 1.5f), mEditor.getRowHeight());
+        renderNode.setPosition(0, 0, (int) (widthLine + mPaintGraph.measureText("↵") * 1.5f), mEditor.getRowHeight());
         Canvas canvas = renderNode.beginRecording();
         if (spans == null) {
             spans = new EmptyReader();
@@ -399,7 +399,7 @@ public class EditorPainter {
         int nonPrintableFlags = mEditor.getNonPrintablePaintingFlags();
         // Draw hard wrap
         if ((nonPrintableFlags & FLAG_DRAW_LINE_SEPARATOR) != 0) {
-            drawMiniGraph(canvas, paintingOffset, 0, "\u21B5");
+            drawMiniGraph(canvas, paintingOffset, 0, "↵");
         }
         renderNode.endRecording();
         mPaint.setTextSkewX(0);
@@ -965,7 +965,7 @@ public class EditorPainter {
 
                 // Draw hard wrap
                 if (lastVisibleChar == columnCount && (nonPrintableFlags & FLAG_DRAW_LINE_SEPARATOR) != 0) {
-                    drawMiniGraph(canvas, paintingOffset, row, "\u21B5");
+                    drawMiniGraph(canvas, paintingOffset, row, "↵");
                 }
             } else {
                 paintingOffset = offset + mRenderer.drawLineHardwareAccelerated(canvas, line, offset) - mEditor.getDpUnit() * 20;
