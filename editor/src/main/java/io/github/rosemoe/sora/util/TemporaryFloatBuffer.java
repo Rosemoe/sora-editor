@@ -25,6 +25,8 @@ package io.github.rosemoe.sora.util;
 
 public class TemporaryFloatBuffer {
 
+    private static float[] sTemp = null;
+
     public static float[] obtain(int len) {
         float[] buf;
 
@@ -48,6 +50,4 @@ public class TemporaryFloatBuffer {
         }
     }
 
-    private static float[] sTemp = null;
-    
 }

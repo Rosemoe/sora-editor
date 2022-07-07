@@ -88,6 +88,11 @@ public interface Layout extends LineRemoveListener, ContentListener {
     int getLayoutHeight();
 
     /**
+     * Get the total row count
+     */
+    int getRowCount();
+
+    /**
      * Get character line and column for offsets in layout
      *
      * @param xOffset Horizontal offset on layout
@@ -113,7 +118,7 @@ public interface Layout extends LineRemoveListener, ContentListener {
      *
      * @param line   The line index
      * @param column Column on line
-     * @param array If the array is given, it will try to save the two elements in this array. Otherwise, a new array is created
+     * @param array  If the array is given, it will try to save the two elements in this array. Otherwise, a new array is created
      * @return An array containing layout offset, first element is the bottom of character and second element is the left of character
      */
     float[] getCharLayoutOffset(int line, int column, float[] array);
@@ -125,12 +130,14 @@ public interface Layout extends LineRemoveListener, ContentListener {
 
     /**
      * Get position after moving up once
+     *
      * @return A packed pair (line, column) describing the result position
      */
     long getUpPosition(int line, int column);
 
     /**
      * Get position after moving down once
+     *
      * @return A packed pair (line, column) describing the result position
      */
     long getDownPosition(int line, int column);

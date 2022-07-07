@@ -82,6 +82,7 @@ public abstract class EditorCompletionAdapter extends BaseAdapter implements Ada
 
     /**
      * Get theme color from current color scheme
+     *
      * @param type Type of color. Refer to {@link EditorColorScheme}
      * @see EditorColorScheme#getColor(int)
      */
@@ -98,14 +99,14 @@ public abstract class EditorCompletionAdapter extends BaseAdapter implements Ada
 
     /**
      * Implementation of this class should provide exact height of its item
-     *
+     * <p>
      * The value will be used to calculate the height of completion window
      */
     public abstract int getItemHeight();
 
     /**
-     * @see BaseAdapter#getView(int, View, ViewGroup)
      * @param isCurrentCursorPosition Is the {@param position} currently selected
+     * @see BaseAdapter#getView(int, View, ViewGroup)
      */
     protected abstract View getView(int position, View convertView, ViewGroup parent, boolean isCurrentCursorPosition);
 

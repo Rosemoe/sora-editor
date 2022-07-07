@@ -36,7 +36,6 @@ import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.graphics.RoughBufferedMeasure;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
-import io.github.rosemoe.sora.util.BinaryHeap;
 import io.github.rosemoe.sora.util.BlockIntList;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.CodeEditor;
@@ -49,9 +48,9 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  */
 public class LineBreakLayout extends AbstractLayout {
 
+    private final AtomicInteger reuseCount = new AtomicInteger(0);
     private BlockIntList widthMaintainer;
     private RoughBufferedMeasure measurer;
-    private final AtomicInteger reuseCount = new AtomicInteger(0);
 
     public LineBreakLayout(CodeEditor editor, Content text) {
         super(editor, text);
@@ -114,12 +113,17 @@ public class LineBreakLayout extends AbstractLayout {
 
     private int measureLine(int lineIndex) {
         ContentLine line = text.getLine(lineIndex);
-        return  (int) measurer.measureText(line, 0, line.length(), editor.getTextPaint());
+        return (int) measurer.measureText(line, 0, line.length(), editor.getTextPaint());
     }
 
     @Override
     public RowIterator obtainRowIterator(int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
         return new LineBreakLayoutRowItr(text, initialRow, preloadedLines);
+    }
+
+    @Override
+    public int getRowCount() {
+        return text.getLineCount();
     }
 
     @Override
@@ -130,7 +134,7 @@ public class LineBreakLayout extends AbstractLayout {
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
         super.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
-        for (int i = startLine;i <= endLine;i++) {
+        for (int i = startLine; i <= endLine; i++) {
             if (i == startLine) {
                 widthMaintainer.set(i, measureLine(i));
             } else {
@@ -264,9 +268,9 @@ public class LineBreakLayout extends AbstractLayout {
 
         private final Content text;
         private final Row result;
-        private int currentRow;
         private final int initRow;
         private final SparseArray<ContentLine> preloadedLines;
+        private int currentRow;
 
         LineBreakLayoutRowItr(Content text, int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
             initRow = currentRow = initialRow;
@@ -288,7 +292,7 @@ public class LineBreakLayout extends AbstractLayout {
                 line = text.getLine(currentRow);
             }
             result.endColumn = line.length();
-            currentRow ++;
+            currentRow++;
             return result;
         }
 

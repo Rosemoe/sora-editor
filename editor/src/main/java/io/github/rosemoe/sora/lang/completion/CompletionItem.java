@@ -33,11 +33,11 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  * For functionality, this class only manages the information to be displayed in list view.
  * You can implement {@link CompletionItem#performCompletion(CodeEditor, Content, int, int)} to customize
  * your own completion method so that you can develop complex actions.
- *
+ * <p>
  * For the simplest usage, see {@link SimpleCompletionItem}
  *
- * @see SimpleCompletionItem
  * @author Rosemoe
+ * @see SimpleCompletionItem
  */
 @SuppressWarnings("CanBeFinal")
 public abstract class CompletionItem {
@@ -95,8 +95,8 @@ public abstract class CompletionItem {
      * this method. Feel free to update the text by multiple calls to {@code text}.
      *
      * @param editor The editor. You can set cursor position with that.
-     * @param text The text in editor. You can make modifications to it.
-     * @param line  The auto-completion line
+     * @param text   The text in editor. You can make modifications to it.
+     * @param line   The auto-completion line
      * @param column The auto-completion column
      */
     public abstract void performCompletion(CodeEditor editor, Content text, int line, int column);

@@ -30,7 +30,6 @@ import androidx.annotation.Nullable;
 
 import java.lang.ref.WeakReference;
 
-import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver;

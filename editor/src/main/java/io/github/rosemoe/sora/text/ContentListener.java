@@ -72,7 +72,7 @@ public interface ContentListener {
      */
     @UnsupportedUserUsage
     default void beforeModification(Content content) {
-        
+
     }
 
 }

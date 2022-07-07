@@ -35,10 +35,10 @@ import io.github.rosemoe.sora.event.Unsubscribe;
 final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent> {
 
     final CodeEditor editor;
-    long lastSelectionModificationTime = 0;
-    int period;
     public boolean visibility;
     public boolean valid;
+    long lastSelectionModificationTime = 0;
+    int period;
     private float[] buffer;
 
     public CursorBlink(CodeEditor editor, int period) {
@@ -78,15 +78,10 @@ final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent>
         if (valid && period > 0) {
             if (System.currentTimeMillis() - lastSelectionModificationTime >= period * 2L) {
                 visibility = !visibility;
-                buffer = editor.mLayout.getCharLayoutOffset(editor.getCursor().getLeftLine(), editor.getCursor().getLeftColumn(), buffer);
+                var left = editor.getCursor().left();
+                buffer = editor.getLayout().getCharLayoutOffset(left.line, left.column, buffer);
                 if (!editor.getCursor().isSelected() && isSelectionVisible()) {
-                    // Invalidate dirty region
-                    var delta = (int)(editor.getDpUnit() * 10);
-                    var l = (int)buffer[1] - delta;
-                    var r = l + delta * 2;
-                    var b = (int)buffer[0] + delta;
-                    var t = b - delta * 2;
-                    editor.postInvalidate(l, t, r, b);
+                    editor.postInvalidate();
                 }
             } else {
                 visibility = true;

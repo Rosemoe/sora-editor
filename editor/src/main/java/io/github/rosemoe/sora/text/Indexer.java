@@ -77,14 +77,14 @@ public interface Indexer {
     CharPosition getCharPosition(int line, int column);
 
     /**
-     * @see #getCharPosition(int)
      * @param dest Destination of result
+     * @see #getCharPosition(int)
      */
     void getCharPosition(int index, @NonNull CharPosition dest);
 
     /**
-     * @see #getCharPosition(int, int)
      * @param dest Destination of result
+     * @see #getCharPosition(int, int)
      */
     void getCharPosition(int line, int column, @NonNull CharPosition dest);
 

@@ -107,13 +107,18 @@ public class FadeCursorAnimator implements CursorAnimator, ValueAnimator.Animato
         fadeOutAnimator = ValueAnimator.ofInt(255, 0);
         fadeOutAnimator.addListener(new Animator.AnimatorListener() {
             @Override
-            public void onAnimationCancel(Animator animator) {}
+            public void onAnimationCancel(Animator animator) {
+            }
+
             @Override
-            public void onAnimationRepeat(Animator animator) {}
+            public void onAnimationRepeat(Animator animator) {
+            }
+
             @Override
             public void onAnimationStart(Animator animator) {
                 phaseEnded = false;
             }
+
             @Override
             public void onAnimationEnd(Animator animator) {
                 phaseEnded = true;

@@ -162,7 +162,7 @@ public class MappedSpanUpdater {
         // Add original spans to new line
         List<Span> endLineSpans = map.get(endLine);
         int idx = extendedSpanIndex;
-        while (idx  < startLineSpans.size()) {
+        while (idx < startLineSpans.size()) {
             Span span = startLineSpans.get(idx++);
             endLineSpans.add(span.copy().setColumn(Math.max(0, span.column - startColumn + endColumn)));
         }

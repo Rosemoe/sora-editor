@@ -46,7 +46,7 @@ import io.github.rosemoe.sora.util.MutableInt;
 
 /**
  * Identifier auto-completion.
- *
+ * <p>
  * You can use it to provide identifiers, but you can't update the given {@link CompletionPublisher}
  * if it is used. If you have to mix the result, then you should call {@link CompletionPublisher#setComparator(Comparator)}
  * with null first. Otherwise, your completion list may be corrupted. And in that case, you must do the sorting
@@ -56,6 +56,15 @@ import io.github.rosemoe.sora.util.MutableInt;
  */
 public class IdentifierAutoComplete {
 
+    private final static Comparator<CompletionItem> COMPARATOR = (p1, p2) -> {
+        var cmp1 = asString(p1.desc).compareTo(asString(p2.desc));
+        if (cmp1 < 0) {
+            return 1;
+        } else if (cmp1 > 0) {
+            return -1;
+        }
+        return asString(p1.label).compareTo(asString(p2.label));
+    };
     private String[] mKeywords;
     private boolean mKeywordsAreLowCase;
 
@@ -65,6 +74,10 @@ public class IdentifierAutoComplete {
     public IdentifierAutoComplete(String[] keywords) {
         this();
         setKeywords(keywords, true);
+    }
+
+    private static String asString(CharSequence str) {
+        return (str instanceof String ? (String) str : str.toString());
     }
 
     public void setKeywords(String[] keywords, boolean lowCase) {
@@ -78,7 +91,8 @@ public class IdentifierAutoComplete {
 
     /**
      * Make completion items for the given arguments.
-     * Provide the required arguments passed by {@link Language#requireAutoComplete(ContentReference, CharPosition, CompletionPublisher,  Bundle)}
+     * Provide the required arguments passed by {@link Language#requireAutoComplete(ContentReference, CharPosition, CompletionPublisher, Bundle)}
+     *
      * @param prefix The prefix to make completions for.
      */
     public void requireAutoComplete(@NonNull String prefix, @NonNull CompletionPublisher publisher, @Nullable Identifiers userIdentifiers) {
@@ -116,33 +130,19 @@ public class IdentifierAutoComplete {
         }
     }
 
-    private static String asString(CharSequence str) {
-        return (str instanceof String ? (String) str : str.toString());
-    }
-
-    private final static Comparator<CompletionItem> COMPARATOR = (p1, p2) -> {
-        var cmp1 = asString(p1.desc).compareTo(asString(p2.desc));
-        if (cmp1 < 0) {
-            return 1;
-        } else if (cmp1 > 0) {
-            return -1;
-        }
-        return asString(p1.label).compareTo(asString(p2.label));
-    };
-
     /**
      * Interface for saving identifiers
      *
-     * @see IdentifierAutoComplete.DisposableIdentifiers
      * @author Rosemoe
+     * @see IdentifierAutoComplete.DisposableIdentifiers
      */
-    public interface  Identifiers {
+    public interface Identifiers {
 
         /**
          * Filter identifiers with the given prefix
          *
          * @param prefix The prefix to filter
-         * @param dest Result list
+         * @param dest   Result list
          */
         void filterIdentifiers(@NonNull String prefix, @NonNull List<String> dest);
 
@@ -151,7 +151,7 @@ public class IdentifierAutoComplete {
     /**
      * This object is used only once. In other words, the object is generated every time the
      * text changes, and is abandoned when next time the text change.
-     *
+     * <p>
      * In this case, the frequent allocation of memory is unavoidable.
      * And also, this class is not thread-safe.
      *
@@ -159,9 +159,9 @@ public class IdentifierAutoComplete {
      */
     public static class DisposableIdentifiers implements Identifiers {
 
+        private final static Object SIGN = new Object();
         private final List<String> identifiers = new ArrayList<>(128);
         private HashMap<String, Object> cache;
-        private final static Object SIGN = new Object();
 
         public void addIdentifier(String identifier) {
             if (cache == null) {

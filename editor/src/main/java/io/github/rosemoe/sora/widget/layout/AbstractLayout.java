@@ -24,12 +24,7 @@
 package io.github.rosemoe.sora.widget.layout;
 
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -47,11 +42,11 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  */
 public abstract class AbstractLayout implements Layout {
 
-    protected CodeEditor editor;
-    protected Content text;
     protected static final int SUBTASK_COUNT = 8;
     protected static final int MIN_LINE_COUNT_FOR_SUBTASK = 3000;
     private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(2, Runtime.getRuntime().availableProcessors(), 1, TimeUnit.MINUTES, new LinkedBlockingQueue<>(128));
+    protected CodeEditor editor;
+    protected Content text;
 
     public AbstractLayout(CodeEditor editor, Content text) {
         this.editor = editor;
@@ -71,7 +66,7 @@ public abstract class AbstractLayout implements Layout {
     }
 
     protected float[] orderedFindCharIndex(float targetOffset, ContentLine str, int line) {
-       return orderedFindCharIndex(targetOffset, str, line, 0, str.length());
+        return orderedFindCharIndex(targetOffset, str, line, 0, str.length());
     }
 
 
@@ -99,8 +94,8 @@ public abstract class AbstractLayout implements Layout {
 
         private final int taskCount;
         private final Object[] results;
-        private int completedCount = 0;
         private final Callback callback;
+        private int completedCount = 0;
 
         public TaskMonitor(int totalTask, Callback callback) {
             taskCount = totalTask;

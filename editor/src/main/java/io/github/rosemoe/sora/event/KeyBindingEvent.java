@@ -47,23 +47,20 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  */
 public class KeyBindingEvent extends EditorKeyEvent {
 
-    // TODO This should be renamed.
-    private final boolean canEditorHandle;
-    private final int keyCode;
+    private final boolean editorAbleToHandle;
 
     /**
      * Creates a new {@code KeyBindingEvent} instance.
      *
-     * @param editor          The editor.
-     * @param src             The source {@link KeyEvent}.
-     * @param keyCode         The key code.
-     * @param type            The key event type.
-     * @param canEditorHandle <code>true</code> if the editor can handle this event, <code>false</code> otherwise.
+     * @param editor             The editor.
+     * @param src                The source {@link KeyEvent}.
+     * @param keyCode            The key code.
+     * @param type               The key event type.
+     * @param editorAbleToHandle <code>true</code> if the editor can handle this event, <code>false</code> otherwise.
      */
-    public KeyBindingEvent(CodeEditor editor, KeyEvent src, Type type, int keyCode, boolean canEditorHandle) {
+    public KeyBindingEvent(CodeEditor editor, KeyEvent src, Type type, int keyCode, boolean editorAbleToHandle) {
         super(editor, src, type);
-        this.keyCode = keyCode;
-        this.canEditorHandle = canEditorHandle;
+        this.editorAbleToHandle = editorAbleToHandle;
     }
 
     /**
@@ -72,6 +69,7 @@ public class KeyBindingEvent extends EditorKeyEvent {
      * @return <code>true</code> if the editor can handle this event. <code>false</code> otherwise.
      */
     public boolean canEditorHandle() {
-        return this.canEditorHandle;
+        return this.editorAbleToHandle;
     }
+
 }

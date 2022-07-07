@@ -25,6 +25,8 @@ package io.github.rosemoe.sora.util;
 
 public class TemporaryCharBuffer {
 
+    private static char[] sTemp = null;
+
     public static char[] obtain(int len) {
         char[] buf;
 
@@ -47,6 +49,4 @@ public class TemporaryCharBuffer {
             sTemp = temp;
         }
     }
-
-    private static char[] sTemp = null;
 }

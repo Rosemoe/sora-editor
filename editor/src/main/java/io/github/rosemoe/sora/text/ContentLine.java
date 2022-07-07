@@ -24,7 +24,6 @@
 package io.github.rosemoe.sora.text;
 
 import android.text.GetChars;
-import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
@@ -34,15 +33,13 @@ public class ContentLine implements CharSequence, GetChars {
 
     @UnsupportedUserUsage
     public char[] value;
-
-    private int length;
-
     /**
      * Width of each character inside
      */
     @UnsupportedUserUsage
     public float[] widthCache;
     public long timestamp;
+    private int length;
 
     public ContentLine() {
         this(true);
@@ -62,52 +59,6 @@ public class ContentLine implements CharSequence, GetChars {
         if (initialize) {
             length = 0;
             value = new char[32];
-        }
-    }
-
-    static int lastIndexOf(char[] source, int sourceCount,
-                           char[] target, int targetCount,
-                           int fromIndex) {
-        /*
-         * Check arguments; return immediately where possible. For
-         * consistency, don't check for null str.
-         */
-        int rightIndex = sourceCount - targetCount;
-        if (fromIndex < 0) {
-            return -1;
-        }
-        if (fromIndex > rightIndex) {
-            fromIndex = rightIndex;
-        }
-        /* Empty string always matches. */
-        if (targetCount == 0) {
-            return fromIndex;
-        }
-
-        int strLastIndex = targetCount - 1;
-        char strLastChar = target[strLastIndex];
-        int min = targetCount - 1;
-        int i = min + fromIndex;
-
-        startSearchForLastChar:
-        while (true) {
-            while (i >= min && source[i] != strLastChar) {
-                i--;
-            }
-            if (i < min) {
-                return -1;
-            }
-            int j = i - 1;
-            int start = j - (targetCount - 1);
-            int k = strLastIndex - 1;
-
-            while (j > start) {
-                if (source[j--] != target[k--]) {
-                    i--;
-                    continue startSearchForLastChar;
-                }
-            }
-            return start + 1;
         }
     }
 
@@ -219,6 +170,16 @@ public class ContentLine implements CharSequence, GetChars {
         return this;
     }
 
+    public ContentLine insert(int offset, char c) {
+        ensureCapacity(length + 1);
+        if (offset < length) {
+            System.arraycopy(value, offset, value, offset + 1, length - offset);
+        }
+        value[offset] = c;
+        length += 1;
+        return this;
+    }
+
     /**
      * Removes the characters in a substring of this sequence.
      * The substring begins at the specified {@code start} and extends to
@@ -248,16 +209,6 @@ public class ContentLine implements CharSequence, GetChars {
         return this;
     }
 
-    public ContentLine insert(int offset, char c) {
-        ensureCapacity(length + 1);
-        if (offset < length) {
-            System.arraycopy(value, offset, value, offset + 1, length - offset);
-        }
-        value[offset] = c;
-        length += 1;
-        return this;
-    }
-
     public ContentLine append(CharSequence s, int start, int end) {
         if (s == null)
             s = "null";
@@ -277,15 +228,6 @@ public class ContentLine implements CharSequence, GetChars {
         return this.insert(length, text);
     }
 
-    public int indexOf(CharSequence text, int index) {
-        return TextUtils.indexOf(this, text, index);
-    }
-
-    public int lastIndexOf(String str, int fromIndex) {
-        return lastIndexOf(value, length,
-                str.toCharArray(), str.length(), fromIndex);
-    }
-
     @Override
     public int length() {
         return length;
@@ -299,6 +241,9 @@ public class ContentLine implements CharSequence, GetChars {
     @UnsupportedUserUsage
     public char charAt(int index) {
         // checkIndex(index);
+        if (index == length) {
+            return '\n';
+        }
         return value[index];
     }
 

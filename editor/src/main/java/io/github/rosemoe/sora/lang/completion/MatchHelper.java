@@ -46,7 +46,7 @@ public class MatchHelper {
     public boolean ignoreCase = false;
     /**
      * Match case of first letter if ignoreCase=true
-     *
+     * <p>
      * for {@link #startsWith(CharSequence, CharSequence)} only
      */
     public boolean matchFirstCase = false;
@@ -59,7 +59,7 @@ public class MatchHelper {
         if (name.length() >= pattern.length()) {
             final var len = pattern.length();
             var matches = true;
-            for (int i = 0;i < len;i++) {
+            for (int i = 0; i < len; i++) {
                 char a = name.charAt(i);
                 char b = name.charAt(i);
                 if (!(a == b || ((ignoreCase && (i != 0 || !matchFirstCase)) && Character.toLowerCase(a) == Character.toLowerCase(b)))) {
@@ -105,10 +105,10 @@ public class MatchHelper {
             SpannableString spanned = null;
             var len = pattern.length();
             int j = 0;
-            for (int i = 0;i < len;i++) {
+            for (int i = 0; i < len; i++) {
                 char p = pattern.charAt(i);
                 var matched = false;
-                for (;j < name.length() && !matched;j++) {
+                for (; j < name.length() && !matched; j++) {
                     char s = name.charAt(j);
                     if (s == j || (ignoreCase && Character.toLowerCase(s) == Character.toLowerCase(p))) {
                         matched = true;

@@ -41,7 +41,7 @@ public class CompletionHelper {
     public static String computePrefix(ContentReference ref, CharPosition pos, PrefixChecker checker) {
         int begin = pos.column;
         var line = ref.getLine(pos.line);
-        for (;begin > 0;begin--) {
+        for (; begin > 0; begin--) {
             if (!checker.check(line.charAt(begin - 1))) {
                 break;
             }

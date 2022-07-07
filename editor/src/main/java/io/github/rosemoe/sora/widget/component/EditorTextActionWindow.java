@@ -47,13 +47,13 @@ import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
  * @author Rosemoe
  */
 public class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickListener, EventReceiver<SelectionChangeEvent>, EditorBuiltinComponent {
+    private final static long DELAY = 200;
     private final CodeEditor mEditor;
     private final Button mPasteBtn;
     private final Button mCopyBtn;
     private final Button mCutBtn;
     private final View mRootView;
     private final EditorTouchEventHandler mHandler;
-    private final static long DELAY = 200;
     private long mLastScroll;
     private int mLastPosition;
     private boolean mEnabled = true;
@@ -103,6 +103,11 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
     }
 
     @Override
+    public boolean isEnabled() {
+        return mEnabled;
+    }
+
+    @Override
     public void setEnabled(boolean enabled) {
         mEnabled = enabled;
         if (!enabled) {
@@ -110,14 +115,9 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         }
     }
 
-    @Override
-    public boolean isEnabled() {
-        return mEnabled;
-    }
-
     /**
      * Get the view root of the panel.
-     *
+     * <p>
      * Root view is {@link android.widget.LinearLayout}
      * Inside is a {@link android.widget.HorizontalScrollView}
      *
@@ -161,7 +161,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         if (event.isSelected()) {
             //#193
             //if (!isShowing()) {
-                mEditor.post(this::displayWindow);
+            mEditor.post(this::displayWindow);
             //}
             mLastPosition = -1;
         } else {

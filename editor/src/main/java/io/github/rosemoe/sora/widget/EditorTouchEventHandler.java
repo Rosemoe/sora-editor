@@ -26,10 +26,9 @@ package io.github.rosemoe.sora.widget;
 import android.content.res.Resources;
 import android.graphics.RectF;
 import android.os.Build;
-import android.util.Log;
 import android.util.TypedValue;
-import android.view.HapticFeedbackConstants;
 import android.view.GestureDetector;
+import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.widget.OverScroller;
@@ -42,7 +41,6 @@ import io.github.rosemoe.sora.event.LongPressEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.graphics.RectUtils;
-import io.github.rosemoe.sora.text.ICUUtils;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.component.Magnifier;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
@@ -65,20 +63,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     private final CodeEditor mEditor;
     private final OverScroller mScroller;
-    private long mLastScroll = 0;
-    private long mLastSetSelection = 0;
-    private boolean mHoldingScrollbarVertical = false;
-    private boolean mHoldingScrollbarHorizontal = false;
-    private boolean mHoldingInsertHandle = false;
-    private float mThumbDownY = 0;
-    private float mThumbDownX = 0;
     private final SelectionHandle mInsertHandle;
-    private SelectionHandle mLeftHandle;
-    private SelectionHandle mRightHandle;
-    private int mTouchedHandleType = -1;
-    private float mEdgeFieldSize;
-    private int mEdgeFlags;
-    private MotionEvent mThumbRecord;
     Magnifier mMagnifier;
     int selHandleType = -1;
     float motionX;
@@ -88,6 +73,19 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     boolean isScaling = false;
     float scaleMaxSize;
     float scaleMinSize;
+    private long mLastScroll = 0;
+    private long mLastSetSelection = 0;
+    private boolean mHoldingScrollbarVertical = false;
+    private boolean mHoldingScrollbarHorizontal = false;
+    private boolean mHoldingInsertHandle = false;
+    private float mThumbDownY = 0;
+    private float mThumbDownX = 0;
+    private SelectionHandle mLeftHandle;
+    private SelectionHandle mRightHandle;
+    private int mTouchedHandleType = -1;
+    private float mEdgeFieldSize;
+    private int mEdgeFlags;
+    private MotionEvent mThumbRecord;
 
     /**
      * Create an event handler for the given editor
@@ -656,7 +654,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             afterScrollX = Math.max(0, Math.min(afterScrollX, mEditor.getScrollMaxX()));
             afterScrollY = Math.max(0, Math.min(afterScrollY, mEditor.getScrollMaxY()));
             mEditor.dispatchEvent(new ScrollEvent(mEditor, mScroller.getCurrX(),
-                    mScroller.getCurrY(), (int)afterScrollX, (int)afterScrollY, ScrollEvent.CAUSE_SCALE_TEXT));
+                    mScroller.getCurrY(), (int) afterScrollX, (int) afterScrollY, ScrollEvent.CAUSE_SCALE_TEXT));
             mScroller.startScroll((int) afterScrollX, (int) afterScrollY, 0, 0, 0);
             isScaling = true;
             mEditor.invalidate();

@@ -53,9 +53,9 @@ import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
  */
 class EditorKeyEventHandler {
 
+    private static final String TAG = "EditorKeyEventHandler";
     private final CodeEditor editor;
     private final KeyMetaStates mKeyMetaStates;
-    private static final String TAG = "EditorKeyEventHandler";
 
     EditorKeyEventHandler(CodeEditor editor) {
         Objects.requireNonNull(editor, "Cannot setup KeyEvent with null editor instance.");
@@ -291,10 +291,8 @@ class EditorKeyEventHandler {
                 return e.result(true);
             case KeyEvent.KEYCODE_ESCAPE:
                 if (editorCursor.isSelected()) {
-                    // TODO Maybe we could add a flag in DirectAccessProps to change this behaviour
-                    //    So that user can select whether left or right cursor should be selected
-                    final var left = editorCursor.right();
-                    editor.setSelection(left.line, left.column, true);
+                    final var newPosition = editor.getProps().positionOfCursorWhenExitSelecting ? editorCursor.right() : editorCursor.left();
+                    editor.setSelection(newPosition.line, newPosition.column, true);
                 }
                 return e.result(true);
             default:

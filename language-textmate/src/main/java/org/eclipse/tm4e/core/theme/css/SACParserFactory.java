@@ -71,6 +71,14 @@ public abstract class SACParserFactory extends ParserFactory implements ISACPars
     }
 
     /**
+     * Return instance of SAC Parser registered into the factory with name
+     * <code>name</code>.
+     */
+    @Override
+    public abstract Parser makeParser(String name) throws ClassNotFoundException, IllegalAccessException,
+            InstantiationException, NullPointerException, ClassCastException;
+
+    /**
      * Return preferred SAC parser name if it is filled and null otherwise.
      *
      * @return
@@ -87,20 +95,4 @@ public abstract class SACParserFactory extends ParserFactory implements ISACPars
     public void setPreferredParserName(String preferredParserName) {
         this.preferredParserName = preferredParserName;
     }
-
-    /**
-     * Return instance of SAC Parser registered into the factory with name
-     * <code>name</code>.
-     *
-     * @param name
-     * @return
-     * @throws ClassNotFoundException
-     * @throws IllegalAccessException
-     * @throws InstantiationException
-     * @throws NullPointerException
-     * @throws ClassCastException
-     */
-    @Override
-    public abstract Parser makeParser(String name) throws ClassNotFoundException, IllegalAccessException,
-            InstantiationException, NullPointerException, ClassCastException;
 }

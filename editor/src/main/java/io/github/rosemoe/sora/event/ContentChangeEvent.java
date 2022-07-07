@@ -29,7 +29,7 @@ import io.github.rosemoe.sora.widget.CodeEditor;
 /**
  * This event happens when {@link CodeEditor#setText(CharSequence)} is called or
  * user edited the displaying content.
- *
+ * <p>
  * Note that you should not update the content at this time. Otherwise, there might be some
  * exceptions causing the editor framework to crash. If you do need to update the content, you should
  * post your actions to the main thread so that the user's modification will be successful.
@@ -66,6 +66,7 @@ public class ContentChangeEvent extends Event {
 
     /**
      * Get action code of the event.
+     *
      * @see #ACTION_SET_NEW_TEXT
      * @see #ACTION_INSERT
      * @see #ACTION_DELETE
@@ -76,7 +77,7 @@ public class ContentChangeEvent extends Event {
 
     /**
      * Return the CharPosition indicating the start of changed region.
-     *
+     * <p>
      * Note that you can not modify the values in the returned instance.
      */
     public CharPosition getChangeStart() {
@@ -85,7 +86,7 @@ public class ContentChangeEvent extends Event {
 
     /**
      * Return the CharPosition indicating the end of changed region.
-     *
+     * <p>
      * Note that you can not modify the values in the returned instance.
      */
     public CharPosition getChangeEnd() {

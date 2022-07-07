@@ -55,14 +55,14 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
 
     private final CodeEditor mEditor;
     protected boolean mCancelShowUp = false;
-    private int mCurrent = -1;
     protected long mRequestTime;
     protected int mMaxHeight;
-    private EditorCompletionAdapter mAdapter;
-    private CompletionLayout mLayout;
     protected CompletionThread mThread;
     protected CompletionPublisher mPublisher;
     protected WeakReference<List<CompletionItem>> mLastAttachedItems;
+    private int mCurrent = -1;
+    private EditorCompletionAdapter mAdapter;
+    private CompletionLayout mLayout;
     private long requestShow = 0;
     private long requestHide = -1;
     private boolean enabled = true;
@@ -103,6 +103,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void setAdapter(EditorCompletionAdapter adapter) {
         mAdapter = adapter;
         if (adapter == null) {
@@ -192,17 +193,17 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     }
 
     /**
+     * Reject the requests from IME to set composing region/text
+     */
+    public boolean shouldRejectComposing() {
+        return mCancelShowUp;
+    }
+
+    /**
      * Select current position
      */
     public void select() {
         select(mCurrent);
-    }
-
-    /**
-     * Reject the IME's requests to set composing region/text
-     */
-    public boolean shouldRejectComposing() {
-        return mCancelShowUp;
     }
 
     /**
@@ -336,12 +337,12 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
      */
     public final class CompletionThread extends Thread implements TextReference.Validator {
 
-        private long mTime;
         private final Bundle mExtra;
         private final CharPosition mPosition;
         private final Language mLanguage;
         private final ContentReference mRef;
         private final CompletionPublisher mLocalPublisher;
+        private long mTime;
         private boolean mAborted;
 
         public CompletionThread(long requestTime, CompletionPublisher publisher) {

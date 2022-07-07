@@ -36,7 +36,6 @@ public class OnlineBracketsMatcher implements BracketsProvider {
     private final int limit;
 
     /**
-     *
      * @param pairs Pairs. For example: {'(', ')', '{', '}'}
      * @param limit Max length to search
      */
@@ -65,30 +64,30 @@ public class OnlineBracketsMatcher implements BracketsProvider {
             int stack = 0;
             if ((symbolIndex & 1) == 0) {
                 // Find forward
-                for (int i = index + 1;i < text.length() && i - index < limit;i++) {
+                for (int i = index + 1; i < text.length() && i - index < limit; i++) {
                     char ch = text.charAt(i);
                     if (ch == b) {
                         if (stack <= 0) {
                             return new PairedBracket(index, i);
                         } else {
-                            stack --;
+                            stack--;
                         }
                     } else if (ch == a) {
-                        stack ++;
+                        stack++;
                     }
                 }
             } else {
                 // Find backward
-                for (int i = index - 1;i >= 0 && index - i < limit;i--) {
+                for (int i = index - 1; i >= 0 && index - i < limit; i--) {
                     char ch = text.charAt(i);
                     if (ch == b) {
                         if (stack <= 0) {
                             return new PairedBracket(i, index);
                         } else {
-                            stack --;
+                            stack--;
                         }
                     } else if (ch == a) {
-                        stack ++;
+                        stack++;
                     }
                 }
             }

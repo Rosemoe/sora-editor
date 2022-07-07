@@ -33,7 +33,6 @@ class DecodeMap {
     Map<String /* token */, Integer /* id */> tokenToTokenId;
     Map<Integer /* id */, String /* id */> tokenIdToToken;
     TMTokenDecodeData prevToken;
-    ;
 
     public DecodeMap() {
         this.lastAssignedId = 0;

@@ -62,7 +62,6 @@ import io.github.rosemoe.sora.lang.styling.ExternalRenderer;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Spans;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
-import io.github.rosemoe.sora.text.AndroidBidi;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.Cursor;
@@ -79,12 +78,13 @@ import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 public class EditorPainter {
 
     private static final String LOG_TAG = EditorPainter.class.getSimpleName();
-
-    private HwAcceleratedRenderer mRenderer;
+    private final static int[] sDiagnosticsColorMapping = {
+            0,
+            EditorColorScheme.PROBLEM_TYPO,
+            EditorColorScheme.PROBLEM_WARNING,
+            EditorColorScheme.PROBLEM_ERROR
+    };
     private final BufferedDrawPoints mDrawPoints;
-
-    private long mTimestamp;
-
     private final Paint mPaint;
     private final Paint mPaintOther;
     private final Rect mViewRect;
@@ -93,22 +93,20 @@ public class EditorPainter {
     private final Paint mPaintGraph;
     private final RectF mVerticalScrollBar;
     private final RectF mHorizontalScrollBar;
-
     private final LongArrayList mPostDrawLineNumbers = new LongArrayList();
     private final LongArrayList mPostDrawCurrentLines = new LongArrayList();
     private final LongArrayList mMatchedPositions = new LongArrayList();
     private final SparseArray<ContentLine> mPreloadedLines = new SparseArray<>();
-
     private final CodeEditor mEditor;
+    private final List<DiagnosticRegion> mCollectedDiagnostics = new ArrayList<>();
+    Paint.FontMetricsInt mTextMetrics;
+    private HwAcceleratedRenderer mRenderer;
+    private long mTimestamp;
     private Paint.FontMetricsInt mLineNumberMetrics;
     private Paint.FontMetricsInt mGraphMetrics;
-
     private int mCachedLineNumberWidth;
-    Paint.FontMetricsInt mTextMetrics;
-    
     private Cursor mCursor;
     private ContentLine mBuffer;
-    private final List<DiagnosticRegion> mCollectedDiagnostics = new ArrayList<>();
 
     public EditorPainter(@NonNull CodeEditor editor) {
         mEditor = editor;
@@ -136,10 +134,10 @@ public class EditorPainter {
         mViewRect = new Rect();
         mRect = new RectF();
         mPath = new Path();
-        
+
         notifyFullTextUpdate();
     }
-    
+
     public void notifyFullTextUpdate() {
         mCursor = mEditor.getCursor();
     }
@@ -245,7 +243,7 @@ public class EditorPainter {
     protected void updateTimestamp() {
         mTimestamp = System.nanoTime();
     }
-    
+
     void prepareLine(int line) {
         mBuffer = getLine(line);
     }
@@ -290,13 +288,14 @@ public class EditorPainter {
         invalidateChanged(mCursor.getLeftLine(), mCursor.getRightLine());
     }
 
+    // draw methods
 
     @RequiresApi(29)
     protected void updateLineDisplayList(RenderNode renderNode, int line, Spans.Reader spans) {
         prepareLine(line);
         int columnCount = getColumnCount(line);
         float widthLine = mEditor.measureText(mBuffer, 0, columnCount, line) + mEditor.getDpUnit() * 20;
-        renderNode.setPosition(0, 0, (int) (widthLine + mPaintGraph.measureText("\u21B5") * 1.5f), mEditor.getRowHeight());
+        renderNode.setPosition(0, 0, (int) (widthLine + mPaintGraph.measureText("↵") * 1.5f), mEditor.getRowHeight());
         Canvas canvas = renderNode.beginRecording();
         if (spans == null) {
             spans = new EmptyReader();
@@ -354,7 +353,7 @@ public class EditorPainter {
 
 
             // Draw text
-            drawRegionTextDirectional(canvas, null, paintingOffset, mEditor.getRowBaseline(row), line, paintStart, paintEnd, span.column, spanEnd, columnCount, mEditor.getColorScheme().getColor(span.getForegroundColorId()));
+            drawRegionTextDirectional(canvas, paintingOffset, mEditor.getRowBaseline(row), line, paintStart, paintEnd, span.column, spanEnd, columnCount, mEditor.getColorScheme().getColor(span.getForegroundColorId()));
 
             // Draw strikethrough
             if (TextStyle.isStrikeThrough(span.style)) {
@@ -400,14 +399,12 @@ public class EditorPainter {
         int nonPrintableFlags = mEditor.getNonPrintablePaintingFlags();
         // Draw hard wrap
         if ((nonPrintableFlags & FLAG_DRAW_LINE_SEPARATOR) != 0) {
-            drawMiniGraph(canvas, paintingOffset, 0, "\u21B5");
+            drawMiniGraph(canvas, paintingOffset, 0, "↵");
         }
         renderNode.endRecording();
         mPaint.setTextSkewX(0);
         mPaint.setFakeBoldText(false);
     }
-
-    // draw methods
 
     /**
      * Paint the view on given Canvas
@@ -766,7 +763,7 @@ public class EditorPainter {
 
             // Draw matched text background
             if (matchedPositions.size() > 0) {
-                for (int i = 0;i < matchedPositions.size();i++) {
+                for (int i = 0; i < matchedPositions.size(); i++) {
                     var position = matchedPositions.get(i);
                     var start = IntPair.getFirst(position);
                     var end = IntPair.getSecond(position);
@@ -966,7 +963,7 @@ public class EditorPainter {
 
                 // Draw hard wrap
                 if (lastVisibleChar == columnCount && (nonPrintableFlags & FLAG_DRAW_LINE_SEPARATOR) != 0) {
-                    drawMiniGraph(canvas, paintingOffset, row, "\u21B5");
+                    drawMiniGraph(canvas, paintingOffset, row, "↵");
                 }
             } else {
                 paintingOffset = offset + mRenderer.drawLineHardwareAccelerated(canvas, line, offset) - mEditor.getDpUnit() * 20;
@@ -1049,13 +1046,6 @@ public class EditorPainter {
         mDrawPoints.commitPoints(canvas, mPaintOther);
     }
 
-    private final static int[] sDiagnosticsColorMapping = {
-            0,
-            EditorColorScheme.PROBLEM_TYPO,
-            EditorColorScheme.PROBLEM_WARNING,
-            EditorColorScheme.PROBLEM_ERROR
-    };
-
     protected void drawDiagnosticIndicators(Canvas canvas, float offset) {
         var diagnosticsContainer = mEditor.getDiagnostics();
         var style = mEditor.getDiagnosticIndicatorStyle();
@@ -1089,14 +1079,14 @@ public class EditorPainter {
                 }
                 mPaintOther.setColor(mEditor.getColorScheme().getColor(colorId));
                 startRow = Math.max(firstVisRow, startRow);
-                endRow = Math.max(lastVisRow, endRow);
-                for (int i = startRow;i <= endRow;i++) {
+                endRow = Math.min(lastVisRow, endRow);
+                for (int i = startRow; i <= endRow; i++) {
                     var row = mEditor.getLayout().getRowAt(i);
                     var startX = 0f;
                     if (i == startRow) {
                         startX = mEditor.measureText(getLine(row.lineIndex), row.startColumn, start.column - row.startColumn, row.lineIndex);
                     }
-                    float endX ;
+                    float endX;
                     if (i != endRow) {
                         endX = mEditor.measureText(getLine(row.lineIndex), row.startColumn, row.endColumn - row.startColumn, row.lineIndex);
                     } else {
@@ -1112,7 +1102,7 @@ public class EditorPainter {
                         // Draw
                         float centerY = mEditor.getRowBottom(i) - mEditor.getOffsetY();
                         switch (style) {
-                            case WAVY_LINE:{
+                            case WAVY_LINE: {
                                 var lineWidth = 0 - startX;
                                 var waveCount = (int) Math.ceil(lineWidth / waveLength);
                                 var phi = lineWidth < 0 ? 0f : (waveLength * waveCount - lineWidth);
@@ -1123,7 +1113,7 @@ public class EditorPainter {
                                 mPath.reset();
                                 mPath.moveTo(0, 0);
                                 waveCount = (int) Math.ceil((phi + lineWidth) / waveLength);
-                                for (int j = 0;j < waveCount; j++) {
+                                for (int j = 0; j < waveCount; j++) {
                                     mPath.quadTo(waveLength * j + waveLength / 4, amplitude, waveLength * j + waveLength / 2, 0);
                                     mPath.quadTo(waveLength * j + waveLength * 3 / 4, -amplitude, waveLength * j + waveLength, 0);
                                 }
@@ -1330,17 +1320,7 @@ public class EditorPainter {
         }
     }
 
-    protected void drawRegionTextDirectional(Canvas canvas, AndroidBidi.Directions dirs, float offsetX, float baseline, int line, int startIndex, int endIndex, int contextStart, int contextEnd, int columnCount, int color) {
-        // TODO
-        /* float accumulatedWidth = 0f;
-        for (int i = 0; i < dirs.getRunCount(); i++) {
-            int paintStart = Math.max(dirs.getRunStart(i), startIndex);
-            int paintEnd = Math.min(dirs.getRunStart(i) + dirs.getRunLength(i), endIndex);
-            if (startIndex < endIndex) {
-                drawRegionText(canvas, offsetX + accumulatedWidth, baseline, line, paintStart, paintEnd, contextStart, contextEnd, dirs.isRunRtl(i), columnCount, color);
-                accumulatedWidth += measureText(mBuffer, paintStart, paintEnd, line);
-            }
-        }*/
+    protected void drawRegionTextDirectional(Canvas canvas, float offsetX, float baseline, int line, int startIndex, int endIndex, int contextStart, int contextEnd, int columnCount, int color) {
         drawRegionText(canvas, offsetX, baseline, line, startIndex, endIndex, contextStart, contextEnd, false, columnCount, color);
     }
 
@@ -1396,53 +1376,6 @@ public class EditorPainter {
 
     public android.graphics.Paint.FontMetricsInt getLineNumberMetrics() {
         return mLineNumberMetrics;
-    }
-
-    class DrawCursorTask {
-
-        float x;
-        float y;
-        int handleType;
-        SelectionHandleStyle.HandleDescriptor descriptor;
-
-        public DrawCursorTask(float x, float y, int handleType, SelectionHandleStyle.HandleDescriptor descriptor) {
-            this.x = x;
-            this.y = y;
-            this.handleType = handleType;
-            this.descriptor = descriptor;
-        }
-
-        void execute(Canvas canvas) {
-            // Hide cursors (API level 31)
-            if (mEditor.mConnection.mImeConsumingInput || !mEditor.hasFocus()) {
-                return;
-            }
-            // Follow the thumb or stick to text row
-            if (!descriptor.position.isEmpty()) {
-                boolean isInsertHandle = mEditor.getEventHandler().holdInsertHandle() && handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT;
-                boolean isLeftHandle = mEditor.getEventHandler().selHandleType == EditorTouchEventHandler.SelectionHandle.LEFT && handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT;
-                boolean isRightHandle = mEditor.getEventHandler().selHandleType == EditorTouchEventHandler.SelectionHandle.RIGHT && handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT;
-                if (!mEditor.isStickyTextSelection()) {
-                    if (isInsertHandle || isLeftHandle || isRightHandle) {
-                        x = mEditor.getEventHandler().motionX + (descriptor.alignment != SelectionHandleStyle.ALIGN_CENTER ? descriptor.position.width() : 0) * (descriptor.alignment == SelectionHandleStyle.ALIGN_LEFT ? 1 : -1);
-                        y = mEditor.getEventHandler().motionY - descriptor.position.height() * 2 / 3f;
-                    }
-                }
-            }
-
-            if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED || mEditor.getCursorBlink().visibility || mEditor.getEventHandler().holdInsertHandle()) {
-                mRect.top = y - (mEditor.getProps().textBackgroundWrapTextOnly ? mEditor.getRowHeightOfText() : mEditor.getRowHeight());
-                mRect.bottom = y;
-                mRect.left = x - mEditor.getInsertSelectionWidth() / 2f;
-                mRect.right = x + mEditor.getInsertSelectionWidth() / 2f;
-                drawColor(canvas, mEditor.getColorScheme().getColor(EditorColorScheme.SELECTION_INSERT), mRect);
-            }
-            if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED) {
-                mEditor.getHandleStyle().draw(canvas, handleType, x, y, mEditor.getRowHeight(), mEditor.getColorScheme().getColor(EditorColorScheme.SELECTION_HANDLE), descriptor);
-            } else if (descriptor != null) {
-                descriptor.setEmpty();
-            }
-        }
     }
 
     /**
@@ -1698,7 +1631,7 @@ public class EditorPainter {
         if (paired != null) {
             var color = mEditor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_FOREGROUND);
             var backgroundColor = mEditor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_BACKGROUND);
-            if (!checkBounds(paired.leftIndex, paired.leftLength) || !checkBounds(paired.rightIndex, paired.rightLength))  {
+            if (!checkBounds(paired.leftIndex, paired.leftLength) || !checkBounds(paired.rightIndex, paired.rightLength)) {
                 // Index out of bounds
                 return;
             }
@@ -1756,7 +1689,7 @@ public class EditorPainter {
         var posEnd = mCursor.getIndexer().getCharPosition(end);
         var itr = layout.obtainRowIterator(startRow, mPreloadedLines);
         var list = new ArrayList<TextDisplayPosition>();
-        for (int i = startRow;i <= endRow && itr.hasNext();i++) {
+        for (int i = startRow; i <= endRow && itr.hasNext(); i++) {
             var row = itr.next();
             var startOnRow = (i == startRow ? posStart.column : row.startColumn);
             var endOnRow = (i == endRow ? posEnd.column : row.endColumn);
@@ -1800,7 +1733,7 @@ public class EditorPainter {
             canvas.clipRect(textOffset + position.left, 0, textOffset + position.right, mEditor.getHeight());
             var horizontalOffset = textOffset;
             // Find spans to draw
-            for (int i = 0;i < reader.getSpanCount(); i++) {
+            for (int i = 0; i < reader.getSpanCount(); i++) {
                 var span = reader.getSpanAt(i);
                 var spanStart = Math.max(span.column, position.rowStart);
                 var sharedStart = Math.max(startCol, spanStart);
@@ -1857,6 +1790,12 @@ public class EditorPainter {
         drawColor(canvas, mEditor.getColorScheme().getColor(mEditor.getEventHandler().holdHorizontalScrollBar() ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED : EditorColorScheme.SCROLL_BAR_THUMB), mRect);
     }
 
+    protected interface PatchDraw {
+
+        void draw(Canvas canvas, float horizontalOffset, int row, int line, int start, int end, long style);
+
+    }
+
     private static class TextDisplayPosition {
         int row, startColumn, endColumn, line, rowStart;
         float left;
@@ -1876,9 +1815,50 @@ public class EditorPainter {
         }
     }
 
-    protected interface PatchDraw {
+    class DrawCursorTask {
 
-        void draw(Canvas canvas, float horizontalOffset, int row, int line, int start, int end, long style);
+        float x;
+        float y;
+        int handleType;
+        SelectionHandleStyle.HandleDescriptor descriptor;
 
+        public DrawCursorTask(float x, float y, int handleType, SelectionHandleStyle.HandleDescriptor descriptor) {
+            this.x = x;
+            this.y = y;
+            this.handleType = handleType;
+            this.descriptor = descriptor;
+        }
+
+        void execute(Canvas canvas) {
+            // Hide cursors (API level 31)
+            if (mEditor.mConnection.mImeConsumingInput || !mEditor.hasFocus()) {
+                return;
+            }
+            // Follow the thumb or stick to text row
+            if (!descriptor.position.isEmpty()) {
+                boolean isInsertHandle = mEditor.getEventHandler().holdInsertHandle() && handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT;
+                boolean isLeftHandle = mEditor.getEventHandler().selHandleType == EditorTouchEventHandler.SelectionHandle.LEFT && handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT;
+                boolean isRightHandle = mEditor.getEventHandler().selHandleType == EditorTouchEventHandler.SelectionHandle.RIGHT && handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT;
+                if (!mEditor.isStickyTextSelection()) {
+                    if (isInsertHandle || isLeftHandle || isRightHandle) {
+                        x = mEditor.getEventHandler().motionX + (descriptor.alignment != SelectionHandleStyle.ALIGN_CENTER ? descriptor.position.width() : 0) * (descriptor.alignment == SelectionHandleStyle.ALIGN_LEFT ? 1 : -1);
+                        y = mEditor.getEventHandler().motionY - descriptor.position.height() * 2 / 3f;
+                    }
+                }
+            }
+
+            if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED || mEditor.getCursorBlink().visibility || mEditor.getEventHandler().holdInsertHandle()) {
+                mRect.top = y - (mEditor.getProps().textBackgroundWrapTextOnly ? mEditor.getRowHeightOfText() : mEditor.getRowHeight());
+                mRect.bottom = y;
+                mRect.left = x - mEditor.getInsertSelectionWidth() / 2f;
+                mRect.right = x + mEditor.getInsertSelectionWidth() / 2f;
+                drawColor(canvas, mEditor.getColorScheme().getColor(EditorColorScheme.SELECTION_INSERT), mRect);
+            }
+            if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED) {
+                mEditor.getHandleStyle().draw(canvas, handleType, x, y, mEditor.getRowHeight(), mEditor.getColorScheme().getColor(EditorColorScheme.SELECTION_HANDLE), descriptor);
+            } else if (descriptor != null) {
+                descriptor.setEmpty();
+            }
+        }
     }
 }

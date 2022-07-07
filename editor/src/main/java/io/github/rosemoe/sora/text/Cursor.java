@@ -198,6 +198,7 @@ public final class Cursor {
 
     /**
      * Get position after moving left once
+     *
      * @param position A packed pair (line, column) describing the original position
      * @return A packed pair (line, column) describing the result position
      */
@@ -219,6 +220,7 @@ public final class Cursor {
 
     /**
      * Get position after moving right once
+     *
      * @param position A packed pair (line, column) describing the original position
      * @return A packed pair (line, column) describing the result position
      */

@@ -26,6 +26,8 @@ package io.github.rosemoe.sora.text;
 
 import androidx.annotation.NonNull;
 
+import java.util.Objects;
+
 import io.github.rosemoe.sora.util.IntPair;
 
 /**
@@ -89,10 +91,16 @@ public final class CharPosition {
         return false;
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(index, line, column);
+    }
+
     /**
      * Convert {@link CharPosition#line} and {@link CharPosition#column} to a Long number
-     *
+     * <p>
      * First integer is line and second integer is column
+     *
      * @return A Long integer describing the position
      */
     public long toIntPair() {

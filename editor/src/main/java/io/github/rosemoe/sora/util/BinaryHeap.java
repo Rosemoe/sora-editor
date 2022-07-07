@@ -23,12 +23,14 @@
  */
 package io.github.rosemoe.sora.util;
 
+import static io.github.rosemoe.sora.util.IntPair.getFirst;
+import static io.github.rosemoe.sora.util.IntPair.getSecond;
+import static io.github.rosemoe.sora.util.IntPair.pack;
+
 import android.util.SparseIntArray;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static io.github.rosemoe.sora.util.IntPair.*;
 
 /**
  * A general implementation of big root heap
@@ -38,31 +40,27 @@ import static io.github.rosemoe.sora.util.IntPair.*;
 public class BinaryHeap {
 
     /**
+     * Lock for multi-thread reusing
+     */
+    public final Lock lock = new ReentrantLock();
+    /**
      * Map from id to its position in heap array
      */
     private final SparseIntArray idToPosition;
-
     /**
      * Id allocator
      */
     private int idAllocator = 1;
-
     /**
      * Current node count in heap
      */
     private int nodeCount;
-
     /**
      * Node array for heap.
      * first:  id
      * second: data
      */
     private long[] nodes;
-
-    /**
-     * Lock for multi-thread reusing
-     */
-    public final Lock lock = new ReentrantLock();
 
     /**
      * Create a binary heap
@@ -72,6 +70,14 @@ public class BinaryHeap {
         idToPosition = new SparseIntArray();
         nodeCount = 0;
         nodes = new long[129];
+    }
+
+    private static int id(long value) {
+        return getFirst(value);
+    }
+
+    private static int data(long value) {
+        return getSecond(value);
     }
 
     /**
@@ -196,7 +202,7 @@ public class BinaryHeap {
             throw new IllegalArgumentException("trying to update with an invalid id");
         }
         int origin = data(nodes[position]);
-        nodes[position]= pack(id(nodes[position]), newValue);
+        nodes[position] = pack(id(nodes[position]), newValue);
         if (origin < newValue) {
             heapifyUp(position);
         } else if (origin > newValue) {
@@ -227,14 +233,6 @@ public class BinaryHeap {
         idToPosition.put(id(nodes[position]), position);
         heapifyUp(position);
         heapifyDown(position);
-    }
-
-    private static int id(long value) {
-        return getFirst(value);
-    }
-
-    private static int data(long value) {
-        return getSecond(value);
     }
 
 }

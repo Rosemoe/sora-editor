@@ -23,8 +23,6 @@
  */
 package io.github.rosemoe.sora.util;
 
-import androidx.annotation.NonNull;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -32,23 +30,19 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class BlockIntList {
 
-    private int length;
-    private int modCount;
-    private final int blockSize;
-    private Block head;
-    private final List<Block> recycled = new java.util.ArrayList<>();
-
-    // These are for caching
-    private final List<Cache> caches;
-    private int foundIndex;
-    private Block foundBlock;
     private final static int CACHE_COUNT = 8;
     private final static int CACHE_SWITCH = 30;
-
+    public final Lock lock = new ReentrantLock();
+    private final int blockSize;
+    private final List<Block> recycled = new java.util.ArrayList<>();
+    private final List<Cache> caches;
+    private int length;
+    private int modCount;
+    private Block head;
+    private int foundIndex;
+    private Block foundBlock;
     private int updateTime;
     private int max;
-
-    public final Lock lock = new ReentrantLock();
 
     public BlockIntList() {
         this(1000);
@@ -89,7 +83,7 @@ public class BlockIntList {
         int distance = index;
         int usedNo = -1;
         Block fromBlock = head;
-        for (int i = 0;i < caches.size();i++) {
+        for (int i = 0; i < caches.size(); i++) {
             Cache c = caches.get(i);
             if (c.indexOfStart < index && (index - c.indexOfStart) < distance) {
                 distance = index - c.indexOfStart;
@@ -121,7 +115,7 @@ public class BlockIntList {
     }
 
     private void invalidateCacheFrom(int index) {
-        for (int i = 0;i < caches.size();i++) {
+        for (int i = 0; i < caches.size(); i++) {
             if (caches.get(i).indexOfStart >= index) {
                 caches.remove(i);
                 i--;
@@ -139,7 +133,7 @@ public class BlockIntList {
     public void add(int element) {
         add(length, element);
     }
-    
+
     public void add(int index, int element) {
         if (index < 0 || index > size()) {
             throw new ArrayIndexOutOfBoundsException("index = " + index + ", length = " + size());
@@ -199,7 +193,7 @@ public class BlockIntList {
         }
         modCount++;
         length--;
-        return  removedValue;
+        return removedValue;
     }
 
     public int set(int index, int element) {
@@ -217,7 +211,7 @@ public class BlockIntList {
         findBlock1(index);
         return (int) foundBlock.get(foundIndex);
     }
-    
+
     public void removeRange(int fromIndex, int toIndex) {
         if (toIndex > length || fromIndex < 0 || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
@@ -235,7 +229,7 @@ public class BlockIntList {
         int deleteLength = toIndex - fromIndex;
         int begin = fromIndex;
         while (deleteLength > 0) {
-           if (begin == 0 && deleteLength >= block.size()) {
+            if (begin == 0 && deleteLength >= block.size()) {
                 // Covers whole region
                 if (previous != null) {
                     previous.next = block.next;
@@ -268,19 +262,27 @@ public class BlockIntList {
         return length;
     }
 
+    private Cache cache(int index, Block block) {
+        Cache c = new Cache();
+        c.indexOfStart = index;
+        c.block = block;
+        return c;
+    }
+
     private class Block {
 
-        public int size() {
-            return size;
-        }
-
-        private int size;
         private final int[] data;
+        private int size;
         private int max;
+        private Block next;
 
         public Block() {
             data = new int[blockSize + 5];
             size = 0;
+        }
+
+        public int size() {
+            return size;
         }
 
         public void add(int index, int element) {
@@ -336,24 +338,15 @@ public class BlockIntList {
 
         private void compute() {
             max = 0;
-            for (int i = 0;i < size;i++) {
+            for (int i = 0; i < size; i++) {
                 max = Math.max(max, data[i]);
             }
         }
-
-        private Block next;
     }
 
     private class Cache {
         public Block block;
         public int indexOfStart;
-    }
-
-    private Cache cache(int index, Block block) {
-        Cache c = new Cache();
-        c.indexOfStart = index;
-        c.block = block;
-        return c;
     }
 
 

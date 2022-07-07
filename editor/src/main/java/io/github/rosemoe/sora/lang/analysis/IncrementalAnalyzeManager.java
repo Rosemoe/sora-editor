@@ -32,6 +32,7 @@ import io.github.rosemoe.sora.lang.styling.Span;
 
 /**
  * Interface for line based analyze managers
+ *
  * @param <S> State type at line endings
  * @param <T> Token type
  */
@@ -55,6 +56,7 @@ public interface IncrementalAnalyzeManager<S, T> extends AnalyzeManager {
 
     /**
      * Tokenize for the given line
+     *
      * @param lineIndex -1 for unknown
      */
     LineTokenizeResult<S, T> tokenizeLine(CharSequence line, S state, int lineIndex);
@@ -112,7 +114,6 @@ public interface IncrementalAnalyzeManager<S, T> extends AnalyzeManager {
         }
 
     }
-
 
 
 }

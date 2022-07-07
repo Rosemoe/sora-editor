@@ -45,9 +45,17 @@ public class TextRange {
         return start;
     }
 
+    public void setStart(@NonNull CharPosition start) {
+        this.start = start;
+    }
+
     @NonNull
     public CharPosition getEnd() {
         return end;
+    }
+
+    public void setEnd(@NonNull CharPosition end) {
+        this.end = end;
     }
 
     public int getStartIndex() {
@@ -56,13 +64,5 @@ public class TextRange {
 
     public int getEndIndex() {
         return end.index;
-    }
-
-    public void setStart(@NonNull CharPosition start) {
-        this.start = start;
-    }
-
-    public void setEnd(@NonNull CharPosition end) {
-        this.end = end;
     }
 }

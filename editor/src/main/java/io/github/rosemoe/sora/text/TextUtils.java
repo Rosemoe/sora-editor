@@ -32,6 +32,7 @@ public class TextUtils {
 
     /**
      * Compute leading space count
+     *
      * @param tabWidth Tab is considered in {@code tabWidth} spaces
      */
     public static int countLeadingSpaceCount(@NonNull CharSequence text, int tabWidth) {
@@ -117,7 +118,7 @@ public class TextUtils {
             return false;
         }
         var len = pattern.length();
-        for (int i = 0;i < len;i++) {
+        for (int i = 0; i < len; i++) {
             char s = text.charAt(i);
             char p = pattern.charAt(i);
             if (!((s == p) || (ignoreCase && Character.toLowerCase(s) == Character.toLowerCase(p)))) {

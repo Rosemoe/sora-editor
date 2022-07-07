@@ -45,13 +45,20 @@ import io.github.rosemoe.sora.annotations.InvalidateRequired;
 public class DirectAccessProps implements Serializable {
 
     /**
+     * Define symbol pairs for any language,
+     * Override language settings.
+     * <p>
+     * Use {@link SymbolPairMatch.Replacement#NO_REPLACEMENT} to force no completion for a character
+     */
+    @NonNull
+    public final SymbolPairMatch overrideSymbolPairs = new SymbolPairMatch();
+    /**
      * If set to be true, the editor will delete the whole line if the current line is empty (only tabs or spaces)
      * when the users press the DELETE key.
      * <p>
      * Default value is {@code true}
      */
     public boolean deleteEmptyLineFast = true;
-
     /**
      * Delete multiple spaces at a time when the user press the DELETE key.
      * This only takes effect when selection is in leading spaces.
@@ -60,7 +67,6 @@ public class DirectAccessProps implements Serializable {
      * Special Value: {@code -1} -> Follow tab size
      */
     public int deleteMultiSpaces = 1;
-
     /**
      * Set to {@code false} if you don't want the editor to go fullscreen on devices with smaller screen size.
      * Otherwise, set to {@code true}
@@ -68,14 +74,12 @@ public class DirectAccessProps implements Serializable {
      * Default value is {@code false}
      */
     public boolean allowFullscreen = false;
-
     /**
      * Control whether auto-completes for symbol pairs.
      * <p>
      * Such as automatically adding a ')' when '(' is entered
      */
     public boolean symbolPairAutoCompletion = true;
-
     /**
      * Show auto-completion even when there is composing text set by the IME in editor.
      * <p>
@@ -86,7 +90,6 @@ public class DirectAccessProps implements Serializable {
      * when there is any composing text in editor.
      */
     public boolean autoCompletionOnComposing = true;
-
     /**
      * Set whether auto indent should be executed when user enters
      * a NEWLINE.
@@ -94,16 +97,6 @@ public class DirectAccessProps implements Serializable {
      * Enabling this will automatically copy the leading spaces on this line to the new line.
      */
     public boolean autoIndent = true;
-
-    /**
-     * Define symbol pairs for any language,
-     * Override language settings.
-     * <p>
-     * Use {@link SymbolPairMatch.Replacement#NO_REPLACEMENT} to force no completion for a character
-     */
-    @NonNull
-    public final SymbolPairMatch overrideSymbolPairs = new SymbolPairMatch();
-
     /**
      * Disallow suggestions from keyboard forcibly by preventing
      * {@link android.view.inputmethod.InputConnection#setComposingText(CharSequence, int)} and
@@ -226,5 +219,12 @@ public class DirectAccessProps implements Serializable {
      */
     @InvalidateRequired
     public boolean textBackgroundWrapTextOnly = false;
+
+    /**
+     * The new cursor position when the user exits selecting mode.
+     * {@code true} for the current right cursor
+     * {@code false} for the current left cursor
+     */
+    public boolean positionOfCursorWhenExitSelecting = true;
 
 }

@@ -32,7 +32,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 /**
  * Manages layout of {@link EditorAutoCompletion}
  * Can be set by {@link EditorAutoCompletion#setLayout(CompletionLayout)}
- *
+ * <p>
  * The implementation of this class must call {@link EditorAutoCompletion#select(int)} to select the
  * item in completion list when the user clicks one.
  */
@@ -68,7 +68,8 @@ public interface CompletionLayout {
 
     /**
      * Make the given position visible
-     * @param position Item index
+     *
+     * @param position        Item index
      * @param incrementPixels If you scroll the layout, this is a recommended value of each scroll. {@link EditorCompletionAdapter#getItemHeight()}
      */
     void ensureListPositionVisible(int position, int incrementPixels);

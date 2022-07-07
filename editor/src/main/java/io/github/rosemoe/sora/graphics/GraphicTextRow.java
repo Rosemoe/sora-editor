@@ -27,6 +27,7 @@ import static io.github.rosemoe.sora.lang.styling.TextStyle.isBold;
 import static io.github.rosemoe.sora.lang.styling.TextStyle.isItalics;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 
 import java.util.List;
 
@@ -39,6 +40,8 @@ import io.github.rosemoe.sora.text.ContentLine;
 public class GraphicTextRow {
 
     private final static float SKEW_X = -0.2f;
+    private final static GraphicTextRow[] sCached = new GraphicTextRow[5];
+    private final float[] mBuffer;
     private Paint mPaint;
     private ContentLine mText;
     private int mStart;
@@ -46,9 +49,6 @@ public class GraphicTextRow {
     private int mTabWidth;
     private List<Span> mSpans;
     private boolean mCache = true;
-    private final float[] mBuffer;
-
-    private final static GraphicTextRow[] sCached = new GraphicTextRow[5];
 
     private GraphicTextRow() {
         mBuffer = new float[2];
@@ -106,14 +106,14 @@ public class GraphicTextRow {
      */
     public void buildMeasureCache() {
         if (mText.widthCache == null || mText.widthCache.length < mEnd + 4) {
-            mText.widthCache = new float[Math.max(128, mText.length() + 16)];
+            mText.widthCache = new float[Math.max(90, mText.length() + 16)];
         }
         measureTextInternal(mStart, mEnd, mText.widthCache);
         // Generate prefix sum
         var cache = mText.widthCache;
         var pending = cache[0];
         cache[0] = 0f;
-        for (int i = 1; i <= mEnd;i++) {
+        for (int i = 1; i <= mEnd; i++) {
             var tmp = cache[i];
             cache[i] = cache[i - 1] + pending;
             pending = tmp;
@@ -123,7 +123,7 @@ public class GraphicTextRow {
     /**
      * From {@code start} to measure characters, until measured width add next char's width is bigger
      * than {@code advance}.
-     *
+     * <p>
      * Note that the result array should not be stored.
      *
      * @return Element 0 is offset, Element 1 is measured width
@@ -134,7 +134,7 @@ public class GraphicTextRow {
             var end = mEnd;
             int left = start, right = end;
             var base = cache[start];
-            while(left <= right) {
+            while (left <= right) {
                 var mid = (left + right) / 2;
                 if (mid < start || mid >= end) {
                     left = mid;
@@ -230,7 +230,7 @@ public class GraphicTextRow {
                 break;
             }
 
-            index ++;
+            index++;
             regionStart = regionEnd;
             if (regionEnd == mEnd) {
                 break;
@@ -250,7 +250,9 @@ public class GraphicTextRow {
     }
 
     public float measureText(int start, int end) {
-        if (start == end) {
+        if (start >= end) {
+            if (start != end)
+                Log.w("GraphicTextRow", "start > end");
             return 0f;
         }
         if (mText.widthCache != null && mCache) {
