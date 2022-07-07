@@ -26,6 +26,8 @@ package io.github.rosemoe.sora.text;
 
 import androidx.annotation.NonNull;
 
+import java.util.Objects;
+
 import io.github.rosemoe.sora.util.IntPair;
 
 /**
@@ -87,6 +89,11 @@ public final class CharPosition {
                     a.index == index;
         }
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(index, line, column);
     }
 
     /**
