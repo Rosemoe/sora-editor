@@ -54,25 +54,21 @@ public class CSSDocumentHandler implements DocumentHandler {
 
     @Override
     public void endDocument(InputSource arg0) throws CSSException {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public void endFontFace() throws CSSException {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public void endMedia(SACMediaList arg0) throws CSSException {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public void endPage(String arg0, String arg1) throws CSSException {
-        // TODO Auto-generated method stub
 
     }
 
@@ -83,19 +79,16 @@ public class CSSDocumentHandler implements DocumentHandler {
 
     @Override
     public void ignorableAtRule(String arg0) throws CSSException {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public void importStyle(String arg0, SACMediaList arg1, String arg2) throws CSSException {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public void namespaceDeclaration(String arg0, String arg1) throws CSSException {
-        // TODO Auto-generated method stub
 
     }
 
@@ -133,25 +126,21 @@ public class CSSDocumentHandler implements DocumentHandler {
 
     @Override
     public void startDocument(InputSource arg0) throws CSSException {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public void startFontFace() throws CSSException {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public void startMedia(SACMediaList arg0) throws CSSException {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public void startPage(String arg0, String arg1) throws CSSException {
-        // TODO Auto-generated method stub
 
     }
 

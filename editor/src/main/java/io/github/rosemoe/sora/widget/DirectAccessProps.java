@@ -227,4 +227,11 @@ public class DirectAccessProps implements Serializable {
     @InvalidateRequired
     public boolean textBackgroundWrapTextOnly = false;
 
+    /**
+     * The new cursor position when the user exits selecting mode.
+     * {@code true} for the current right cursor
+     * {@code false} for the current left cursor
+     */
+    public boolean positionOfCursorWhenExitSelecting = true;
+
 }
