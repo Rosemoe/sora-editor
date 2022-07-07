@@ -41,7 +41,7 @@ import io.github.rosemoe.sora.lang.Language;
 
 /**
  * CompletionPublisher manages completion items to be added in one completion analyzing process.
- *
+ * <p>
  * You can only add items to the publisher, but no deletion is allowed. As you add more items, the
  * publisher will update the list in UI from time to time, which is related to your threshold
  * settings.({@link CompletionPublisher#setUpdateThreshold(int)}).
@@ -51,34 +51,33 @@ import io.github.rosemoe.sora.lang.Language;
  * with forced flag to command the UI thread update the completion list, by waiting for the lock from
  * your side to release.
  * If you want to disable this feature, you may want to set it to {@link Integer#MAX_VALUE}
- *
+ * <p>
  * You can set a comparator by {@link CompletionPublisher#setComparator(Comparator)} to sort your
  * result items, but you should not make it too complex, which will cause laggy in UI thread. It is
  * recommended that you set the comparator before all your actions.
  * Leaving the comparator null results the completion to be unsorted. They will be ordered by the order
  * you add them.
- *
+ * <p>
  * After all you additions, you do not need to explicitly invoke {@link CompletionPublisher#updateList(boolean)}.
  * This will automatically be called by editor framework.
- *
+ * <p>
  * Note that your actions may be interrupted because of {@link Thread#interrupted()}.
  */
 public class CompletionPublisher {
-
-    private Comparator<CompletionItem> comparator;
-    private final List<CompletionItem> items;
-    private final List<CompletionItem> candidates;
-    private final Lock lock;
-    private final Handler handler;
-    private int updateThreshold;
-    private boolean invalid = false;
-    private final Runnable callback;
-    private final int languageInterruptionLevel;
 
     /**
      * Default value for {@link CompletionPublisher#setUpdateThreshold(int)}
      */
     public final static int DEFAULT_UPDATE_THRESHOLD = 5;
+    private final List<CompletionItem> items;
+    private final List<CompletionItem> candidates;
+    private final Lock lock;
+    private final Handler handler;
+    private final Runnable callback;
+    private final int languageInterruptionLevel;
+    private Comparator<CompletionItem> comparator;
+    private int updateThreshold;
+    private boolean invalid = false;
 
     public CompletionPublisher(@NonNull Handler handler, @NonNull Runnable callback, int languageInterruptionLevel) {
         this.handler = handler;
@@ -115,7 +114,7 @@ public class CompletionPublisher {
 
     /**
      * Set the result's comparator.
-     *
+     * <p>
      * The comparator is used when publishing the completion to user.
      */
     public void setComparator(@Nullable Comparator<CompletionItem> comparator) {
@@ -139,7 +138,7 @@ public class CompletionPublisher {
 
     /**
      * Add items in the completion list.
-     *
+     * <p>
      * According to your settings and the lock's state, these items may not immediately
      * be displayed to the user.
      *
@@ -163,7 +162,7 @@ public class CompletionPublisher {
 
     /**
      * Add a single item in completion list.
-     *
+     * <p>
      * According to your settings and the lock's state, this item may not immediately
      * be displayed to the user.
      *
@@ -187,7 +186,7 @@ public class CompletionPublisher {
 
     /**
      * Try to update completion in main thread.
-     *
+     * <p>
      * If {@link Lock#tryLock()} failed, nothing will happen.
      */
     public void updateList() {

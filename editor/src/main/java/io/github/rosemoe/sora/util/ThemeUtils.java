@@ -28,7 +28,7 @@ import android.view.ContextThemeWrapper;
 
 public class ThemeUtils {
 
-    public static int getColorPrimary(ContextThemeWrapper context){
+    public static int getColorPrimary(ContextThemeWrapper context) {
         TypedValue typedValue = new TypedValue();
         context.getTheme().resolveAttribute(android.R.attr.colorPrimary, typedValue, true);
         return typedValue.data;

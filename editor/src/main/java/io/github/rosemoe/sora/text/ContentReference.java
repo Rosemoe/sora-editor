@@ -152,7 +152,7 @@ public class ContentReference extends TextReference {
                 read += toRead;
                 if (read < length && columnCount == column) {
                     chars[offset + read] = '\n';
-                    read ++;
+                    read++;
                     line++;
                     column = 0;
                 }

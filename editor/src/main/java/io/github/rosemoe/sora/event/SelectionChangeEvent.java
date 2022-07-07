@@ -29,49 +29,43 @@ import io.github.rosemoe.sora.widget.CodeEditor;
 /**
  * This event happens when text is edited by the user, or the user click the view to change the
  * position of selection. Even when the actual values of CharPosition are not changed, you may receive the event.
- *
+ * <p>
  * Note that you should not change returned CharPosition objects because they are shared in an event
  * dispatch.
  */
 public class SelectionChangeEvent extends Event {
 
-    private final CharPosition left;
-    private final CharPosition right;
-    private final int cause;
     /**
      * Unknown cause
      */
     public final static int CAUSE_UNKNOWN = 0;
-
     /**
      * Selection change caused by text modifications
      */
     public final static int CAUSE_TEXT_MODIFICATION = 1;
-
     /**
      * Set selection by handle
      */
     public final static int CAUSE_SELECTION_HANDLE = 2;
-
     /**
      * Set selection by single tap
      */
     public final static int CAUSE_TAP = 3;
-
     /**
      * Set selection because of {@link android.view.inputmethod.InputConnection#setSelection(int, int)}
      */
     public final static int CAUSE_IME = 4;
-
     /**
-     *  Long press
+     * Long press
      */
     public final static int CAUSE_LONG_PRESS = 5;
-
     /**
      * Search text by {@link io.github.rosemoe.sora.widget.EditorSearcher}
      */
     public final static int CAUSE_SEARCH = 6;
+    private final CharPosition left;
+    private final CharPosition right;
+    private final int cause;
 
     public SelectionChangeEvent(CodeEditor editor, int cause) {
         super(editor);
@@ -83,6 +77,7 @@ public class SelectionChangeEvent extends Event {
 
     /**
      * Get cause of the change
+     *
      * @see #CAUSE_UNKNOWN
      * @see #CAUSE_TEXT_MODIFICATION
      * @see #CAUSE_SELECTION_HANDLE

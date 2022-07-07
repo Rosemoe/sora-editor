@@ -57,7 +57,7 @@ public interface Spans {
 
     /**
      * Modify the content.
-     *
+     * <p>
      * Optional to implement.
      */
     Modifier modify();
@@ -75,7 +75,7 @@ public interface Spans {
         /**
          * Start reading the spans on the given line.
          * You may prepare some data here if the actual spans are not stored by {@link Span} objects.
-         *
+         * <p>
          * line may be -1 to release the reader.
          */
         void moveToLine(int line);

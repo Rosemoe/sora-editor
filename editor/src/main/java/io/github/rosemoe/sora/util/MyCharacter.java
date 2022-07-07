@@ -31,19 +31,18 @@ import java.util.Arrays;
  */
 public class MyCharacter {
 
-    static {
-        initMapInternal();
-    }
-
     /**
      * Compressed bit set for isJavaIdentifierStart()
      */
     private static int[] bitsIsStart;
-
     /**
      * Compressed bit set for isJavaIdentifierPart()
      */
     private static int[] bitsIsPart;
+
+    static {
+        initMapInternal();
+    }
 
     /**
      * Get bit in compressed bit set

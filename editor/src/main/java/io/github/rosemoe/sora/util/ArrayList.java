@@ -25,7 +25,7 @@ package io.github.rosemoe.sora.util;
 
 /**
  * Expose {@link java.util.ArrayList#removeRange(int, int)} to public.
- *
+ * <p>
  * {@inheritDoc}
  */
 public class ArrayList<E> extends java.util.ArrayList<E> {

@@ -162,6 +162,7 @@ public class EditorColorScheme {
 
     /**
      * For subclass
+     *
      * @param isDark Whether this is a dark theme
      */
     protected EditorColorScheme(boolean isDark) {
@@ -173,7 +174,7 @@ public class EditorColorScheme {
 
     /**
      * Subscribe changes
-     *
+     * <p>
      * Called by editor
      */
     @UnsupportedUserUsage

@@ -80,6 +80,13 @@ public class SymbolInputView extends LinearLayout {
     }
 
     /**
+     * @see #setTextColor(int)
+     */
+    public int getTextColor() {
+        return textColor;
+    }
+
+    /**
      * Set text color in the panel
      */
     public void setTextColor(int color) {
@@ -87,13 +94,6 @@ public class SymbolInputView extends LinearLayout {
             ((Button) getChildAt(i)).setTextColor(color);
         }
         textColor = color;
-    }
-
-    /**
-     * @see #setTextColor(int) 
-     */
-    public int getTextColor() {
-        return textColor;
     }
 
     /**

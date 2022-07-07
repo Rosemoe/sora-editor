@@ -61,8 +61,8 @@ public class Magnifier implements EditorBuiltinComponent {
     private final PopupWindow popup;
     private final ImageView image;
     private final Paint paint;
-    private int x, y;
     private final float maxTextSize;
+    private int x, y;
     private long expectedRequestTime;
     private boolean enabled = true;
     private boolean withinEditorForcibly = false;
@@ -90,14 +90,6 @@ public class Magnifier implements EditorBuiltinComponent {
     }
 
     /**
-     * Set parent view for popup
-     * @see io.github.rosemoe.sora.widget.base.EditorPopupWindow#setParentView(View)
-     */
-    public void setParentView(@NonNull View parentView) {
-        this.parentView = Objects.requireNonNull(parentView);
-    }
-
-    /**
      * @see #setParentView(View)
      */
     @NonNull
@@ -106,7 +98,26 @@ public class Magnifier implements EditorBuiltinComponent {
     }
 
     /**
+     * Set parent view for popup
+     *
+     * @see io.github.rosemoe.sora.widget.base.EditorPopupWindow#setParentView(View)
+     */
+    public void setParentView(@NonNull View parentView) {
+        this.parentView = Objects.requireNonNull(parentView);
+    }
+
+    /**
+     * Get the scale factor of the image to be displayed in magnifier
+     *
+     * @see #setScaleFactor(float)
+     */
+    public float getScaleFactor() {
+        return scaleFactor;
+    }
+
+    /**
      * Set the scale factor of the image to be displayed in magnifier
+     *
      * @param scaleFactor Scale factor. Must not be under 1.0
      */
     public void setScaleFactor(float scaleFactor) {
@@ -114,14 +125,6 @@ public class Magnifier implements EditorBuiltinComponent {
             throw new IllegalArgumentException("factor can not be under 1.0");
         }
         this.scaleFactor = scaleFactor;
-    }
-
-    /**
-     * Get the scale factor of the image to be displayed in magnifier
-     * @see #setScaleFactor(float)
-     */
-    public float getScaleFactor() {
-        return scaleFactor;
     }
 
     @Override
@@ -171,7 +174,7 @@ public class Magnifier implements EditorBuiltinComponent {
             }
             return;
         }
-        popup.setWidth(Math.min(view.getWidth() * 3 / 5, (int)view.getDpUnit()) * 250);
+        popup.setWidth(Math.min(view.getWidth() * 3 / 5, (int) view.getDpUnit()) * 250);
         this.x = x;
         this.y = y;
         int[] pos = new int[2];
@@ -208,10 +211,10 @@ public class Magnifier implements EditorBuiltinComponent {
     /**
      * Update the display of the magnifier without updating the window's
      * location on screen.
-     *
+     * <p>
      * This should be called when new content has been drawn on the target view so
      * that the content in magnifier will not be invalid.
-     *
+     * <p>
      * This method does not take effect if the magnifier is not currently shown
      */
     public void updateDisplay() {
@@ -219,7 +222,7 @@ public class Magnifier implements EditorBuiltinComponent {
             return;
         }
         if (!withinEditorForcibly && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && view.getContext() instanceof Activity) {
-            updateDisplayOreo((Activity)view.getContext());
+            updateDisplayOreo((Activity) view.getContext());
         } else {
             updateDisplayWithinEditor();
         }
@@ -227,7 +230,7 @@ public class Magnifier implements EditorBuiltinComponent {
 
     /**
      * Update display on API 26 or later.
-     *
+     * <p>
      * This will include other view in the window as {@link PixelCopy} is used to capture the
      * screen.
      */
@@ -291,7 +294,7 @@ public class Magnifier implements EditorBuiltinComponent {
 
     /**
      * Update display on low API devices
-     *
+     * <p>
      * This method does not include other views as it obtain editor's display by
      * directly calling {@link EditorPainter#drawView(Canvas)}
      */

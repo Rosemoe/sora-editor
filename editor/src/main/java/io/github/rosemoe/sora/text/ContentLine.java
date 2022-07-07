@@ -24,7 +24,6 @@
 package io.github.rosemoe.sora.text;
 
 import android.text.GetChars;
-import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
@@ -34,15 +33,13 @@ public class ContentLine implements CharSequence, GetChars {
 
     @UnsupportedUserUsage
     public char[] value;
-
-    private int length;
-
     /**
      * Width of each character inside
      */
     @UnsupportedUserUsage
     public float[] widthCache;
     public long timestamp;
+    private int length;
 
     public ContentLine() {
         this(true);

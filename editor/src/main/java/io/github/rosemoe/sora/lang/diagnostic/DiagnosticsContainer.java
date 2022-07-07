@@ -46,6 +46,7 @@ public class DiagnosticsContainer {
 
     /**
      * Create a new DiagnosticsContainer
+     *
      * @param shiftEnabled Whether shift the positions when text is modified
      */
     public DiagnosticsContainer(boolean shiftEnabled) {
@@ -68,9 +69,10 @@ public class DiagnosticsContainer {
 
     /**
      * Query diagnostics that can be displayed either partly or fully in the given region
-     * @param result Destination of result
+     *
+     * @param result     Destination of result
      * @param startIndex Start index of query
-     * @param endIndex End index of query
+     * @param endIndex   End index of query
      */
     public synchronized void queryInRegion(List<DiagnosticRegion> result, int startIndex, int endIndex) {
         for (var region : regions) {

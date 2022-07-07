@@ -28,7 +28,7 @@ import io.github.rosemoe.sora.widget.CodeEditor;
 /**
  * Reports a scroll in editor.
  * The scrolling action can either have run or be running when this event is generated and sent.
- *
+ * <p>
  * The returned x,y positions are usually positive when over-scrolling is disabled. They represent
  * the left-top position's pixel in editor.
  */

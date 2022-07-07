@@ -32,16 +32,17 @@ public class BlocksUpdater {
 
     /**
      * Update blocks
+     *
      * @param blocks   Block lines to update
      * @param restrict Min line to update
-     * @param delta Delta for line index
+     * @param delta    Delta for line index
      */
     public static void update(List<CodeBlock> blocks, int restrict, int delta) {
         if (delta == 0) {
             return;
         }
         var itr = blocks.iterator();
-        while(itr.hasNext()) {
+        while (itr.hasNext()) {
             var block = itr.next();
             if (block.startLine >= restrict) {
                 block.startLine += delta;

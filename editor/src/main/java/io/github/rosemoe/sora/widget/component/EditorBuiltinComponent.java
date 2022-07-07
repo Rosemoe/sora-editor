@@ -26,21 +26,21 @@ package io.github.rosemoe.sora.widget.component;
 /**
  * Builtin editor component.
  *
+ * @author Rosemoe
  * @see EditorAutoCompletion
  * @see EditorTextActionWindow
  * @see Magnifier
- * @author Rosemoe
  */
 public interface EditorBuiltinComponent {
-
-    /**
-     * Enable/disable this builtin component
-     */
-    void setEnabled(boolean enabled);
 
     /**
      * Check whether this component is enabled
      */
     boolean isEnabled();
+
+    /**
+     * Enable/disable this builtin component
+     */
+    void setEnabled(boolean enabled);
 
 }

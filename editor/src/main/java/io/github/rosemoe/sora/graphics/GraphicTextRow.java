@@ -40,6 +40,8 @@ import io.github.rosemoe.sora.text.ContentLine;
 public class GraphicTextRow {
 
     private final static float SKEW_X = -0.2f;
+    private final static GraphicTextRow[] sCached = new GraphicTextRow[5];
+    private final float[] mBuffer;
     private Paint mPaint;
     private ContentLine mText;
     private int mStart;
@@ -47,9 +49,6 @@ public class GraphicTextRow {
     private int mTabWidth;
     private List<Span> mSpans;
     private boolean mCache = true;
-    private final float[] mBuffer;
-
-    private final static GraphicTextRow[] sCached = new GraphicTextRow[5];
 
     private GraphicTextRow() {
         mBuffer = new float[2];
@@ -114,7 +113,7 @@ public class GraphicTextRow {
         var cache = mText.widthCache;
         var pending = cache[0];
         cache[0] = 0f;
-        for (int i = 1; i <= mEnd;i++) {
+        for (int i = 1; i <= mEnd; i++) {
             var tmp = cache[i];
             cache[i] = cache[i - 1] + pending;
             pending = tmp;
@@ -124,7 +123,7 @@ public class GraphicTextRow {
     /**
      * From {@code start} to measure characters, until measured width add next char's width is bigger
      * than {@code advance}.
-     *
+     * <p>
      * Note that the result array should not be stored.
      *
      * @return Element 0 is offset, Element 1 is measured width
@@ -135,7 +134,7 @@ public class GraphicTextRow {
             var end = mEnd;
             int left = start, right = end;
             var base = cache[start];
-            while(left <= right) {
+            while (left <= right) {
                 var mid = (left + right) / 2;
                 if (mid < start || mid >= end) {
                     left = mid;
@@ -231,7 +230,7 @@ public class GraphicTextRow {
                 break;
             }
 
-            index ++;
+            index++;
             regionStart = regionEnd;
             if (regionEnd == mEnd) {
                 break;

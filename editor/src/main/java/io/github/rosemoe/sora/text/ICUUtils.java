@@ -39,7 +39,8 @@ public class ICUUtils {
 
     /**
      * Get word edges for the given offset
-     * @param text Text to analyze
+     *
+     * @param text   Text to analyze
      * @param offset Required char offset of word
      * @return Packed value of (start, end) pair. Always contains the position {@code offset}
      */
@@ -73,7 +74,6 @@ public class ICUUtils {
         }
         return IntPair.pack(start, end);
     }
-
 
 
 }

@@ -99,11 +99,9 @@ public class TrieTree<T> {
      */
     public static class HashCharMap<V> {
 
-        private final LinkedPair<V>[] columns;
-
-        private final LinkedPair<V>[] ends;
-
         private final static int CAPACITY = 64;
+        private final LinkedPair<V>[] columns;
+        private final LinkedPair<V>[] ends;
 
         @SuppressWarnings("unchecked")
         public HashCharMap() {

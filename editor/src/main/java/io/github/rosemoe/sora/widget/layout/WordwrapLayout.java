@@ -53,8 +53,8 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  */
 public class WordwrapLayout extends AbstractLayout {
 
-    private List<RowRegion> rowTable;
     private final int width;
+    private List<RowRegion> rowTable;
 
     public WordwrapLayout(CodeEditor editor, Content text, List<RowRegion> extended) {
         super(editor, text);
@@ -460,11 +460,27 @@ public class WordwrapLayout extends AbstractLayout {
         }
     }
 
+    private static class WordwrapResult implements Comparable<WordwrapResult> {
+
+        int index;
+        List<RowRegion> regions;
+
+        public WordwrapResult(int idx, List<RowRegion> r) {
+            index = idx;
+            regions = r;
+        }
+
+        @Override
+        public int compareTo(WordwrapResult wordwrapResult) {
+            return Integer.compare(index, wordwrapResult.index);
+        }
+    }
+
     class WordwrapLayoutRowItr implements RowIterator {
 
         private final Row result;
-        private int currentRow;
         private final int initRow;
+        private int currentRow;
 
         WordwrapLayoutRowItr(int initialRow) {
             initRow = currentRow = initialRow;
@@ -493,22 +509,6 @@ public class WordwrapLayout extends AbstractLayout {
         @Override
         public void reset() {
             currentRow = initRow;
-        }
-    }
-
-    private static class WordwrapResult implements Comparable<WordwrapResult> {
-
-        int index;
-        List<RowRegion> regions;
-
-        public WordwrapResult(int idx, List<RowRegion> r) {
-            index = idx;
-            regions = r;
-        }
-
-        @Override
-        public int compareTo(WordwrapResult wordwrapResult) {
-            return Integer.compare(index, wordwrapResult.index);
         }
     }
 

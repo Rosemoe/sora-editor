@@ -35,25 +35,30 @@ import io.github.rosemoe.sora.text.ContentReference;
 
 /**
  * Built-in implementation of {@link AnalyzeManager}.
- *
+ * <p>
  * This is a simple version without any incremental actions.
- *
+ * <p>
  * The analysis will always re-run when the text changes. Hopefully, it will stop previous outdated
  * runs by provide a {@link Delegate} object.
+ *
  * @param <V> The shared object type that we get for auto-completion.
  */
 public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
 
     private final static String LOG_TAG = "SimpleAnalyzeManager";
     private static int sThreadId = 0;
-
+    private final Object lock = new Object();
     private StyleReceiver receiver;
     private volatile ContentReference ref;
     private Bundle extraArguments;
     private volatile long newestRequestId;
     private AnalyzeThread thread;
-    private final Object lock = new Object();
     private V data;
+
+    private synchronized static int nextThreadId() {
+        sThreadId++;
+        return sThreadId;
+    }
 
     @Override
     public void setReceiver(@Nullable StyleReceiver receiver) {
@@ -79,7 +84,7 @@ public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
 
     @Override
     public synchronized void rerun() {
-        newestRequestId ++;
+        newestRequestId++;
         if (thread == null || !thread.isAlive()) {
             // Create new thread
             Log.v(LOG_TAG, "Starting a new thread for analysis");
@@ -106,11 +111,6 @@ public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
         receiver = null;
     }
 
-    private synchronized static int nextThreadId() {
-        sThreadId++;
-        return sThreadId;
-    }
-
     /**
      * Get extra arguments set by {@link io.github.rosemoe.sora.widget.CodeEditor#setText(CharSequence, Bundle)}
      */
@@ -129,8 +129,8 @@ public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
     /**
      * Analyze the given input.
      *
-     * @param text A {@link StringBuilder} instance containing the text in editor. DO NOT SAVE THE INSTANCE OR
-     *             UPDATE IT. It is continuously used by this analyzer.
+     * @param text     A {@link StringBuilder} instance containing the text in editor. DO NOT SAVE THE INSTANCE OR
+     *                 UPDATE IT. It is continuously used by this analyzer.
      * @param delegate A delegate used to check whether this invocation is outdated. You should stop your logic
      *                 if {@link Delegate#isCancelled()} returns true.
      * @return Styles created according to the text.
@@ -139,7 +139,7 @@ public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
 
     /**
      * Analyze thread.
-     *
+     * <p>
      * The thread will keep alive unless there is any exception or {@link AnalyzeManager#destroy()}
      * is called.
      */
@@ -172,7 +172,7 @@ public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
                             // Collect line contents
                             textContainer.setLength(0);
                             textContainer.ensureCapacity(text.length());
-                            for (int i = 0;i < text.getLineCount() && requestId == newestRequestId;i++) {
+                            for (int i = 0; i < text.getLineCount() && requestId == newestRequestId; i++) {
                                 if (i != 0) {
                                     textContainer.append('\n');
                                 }

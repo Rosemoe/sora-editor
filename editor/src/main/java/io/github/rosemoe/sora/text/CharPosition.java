@@ -98,8 +98,9 @@ public final class CharPosition {
 
     /**
      * Convert {@link CharPosition#line} and {@link CharPosition#column} to a Long number
-     *
+     * <p>
      * First integer is line and second integer is column
+     *
      * @return A Long integer describing the position
      */
     public long toIntPair() {

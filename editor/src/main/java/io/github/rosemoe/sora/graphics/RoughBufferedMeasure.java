@@ -25,13 +25,11 @@ package io.github.rosemoe.sora.graphics;
 
 import java.util.Arrays;
 
-import io.github.rosemoe.sora.text.TextUtils;
-
 public class RoughBufferedMeasure {
 
-    private final float[] cache;
     public final float[] widths;
     public final char[] buffer;
+    private final float[] cache;
     private final int tabWidth;
 
     public RoughBufferedMeasure(int tabWidth) {
@@ -39,6 +37,10 @@ public class RoughBufferedMeasure {
         buffer = new char[5];
         widths = new float[10];
         this.tabWidth = tabWidth;
+    }
+
+    public static boolean isEmoji(char ch) {
+        return ch == 0xd83c || ch == 0xd83d || ch == 0xd83e;
     }
 
     /**
@@ -124,10 +126,6 @@ public class RoughBufferedMeasure {
             }
         }
         return width;
-    }
-
-    public static boolean isEmoji(char ch) {
-        return ch == 0xd83c || ch == 0xd83d || ch == 0xd83e;
     }
 
 }

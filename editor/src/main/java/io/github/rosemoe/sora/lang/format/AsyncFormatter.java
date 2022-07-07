@@ -41,19 +41,21 @@ import io.github.rosemoe.sora.text.TextRange;
  */
 public abstract class AsyncFormatter implements Formatter {
 
-    private WeakReference<FormatResultReceiver> receiver;
-
     private final static String LOG_TAG = "AsyncFormatter";
     private static int sThreadId = 0;
-
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition condition = lock.newCondition();
-
+    private WeakReference<FormatResultReceiver> receiver;
     private volatile Content text;
     private volatile TextRange range;
     private volatile TextRange cursorRange;
 
     private FormattingThread thread;
+
+    private synchronized static int nextThreadId() {
+        sThreadId++;
+        return sThreadId;
+    }
 
     @Override
     public void setReceiver(FormatResultReceiver receiver) {
@@ -81,11 +83,6 @@ public abstract class AsyncFormatter implements Formatter {
         }
     }
 
-    private synchronized static int nextThreadId() {
-        sThreadId++;
-        return sThreadId;
-    }
-
     @Override
     public void format(@NonNull Content text, @NonNull TextRange cursorRange) {
         this.text = text;
@@ -111,6 +108,7 @@ public abstract class AsyncFormatter implements Formatter {
      * like {@link Formatter#format(Content, TextRange)}, but run in background thread.
      * <p>
      * Implementation of this method can edit text directly to generate formatted code.
+     *
      * @return the new cursor range to be applied to the text
      */
     @WorkerThread
@@ -121,6 +119,7 @@ public abstract class AsyncFormatter implements Formatter {
      * like {@link Formatter#formatRegion(Content, TextRange, TextRange)}, but run in background thread
      * <p>
      * Implementation of this method can edit text directly to generate formatted code.
+     *
      * @return the new cursor range to be applied to the text
      */
     @WorkerThread
@@ -139,6 +138,17 @@ public abstract class AsyncFormatter implements Formatter {
         if (receiver != null && (r = receiver.get()) != null) {
             r.onFormatFail(throwable);
         }
+    }
+
+    @Override
+    public void destroy() {
+        if (thread != null && thread.isAlive()) {
+            thread.interrupt();
+        }
+        thread = null;
+        receiver = null;
+        text = null;
+        range = null;
     }
 
     private class FormattingThread extends Thread {
@@ -172,16 +182,5 @@ public abstract class AsyncFormatter implements Formatter {
                 sendFailure(e);
             }
         }
-    }
-
-    @Override
-    public void destroy() {
-        if (thread != null && thread.isAlive()) {
-            thread.interrupt();
-        }
-        thread = null;
-        receiver = null;
-        text = null;
-        range = null;
     }
 }

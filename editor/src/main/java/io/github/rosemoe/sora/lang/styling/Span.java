@@ -52,8 +52,8 @@ public class Span {
     /**
      * Create a new span
      *
-     * @param column  Start column of span
-     * @param style Style made from {@link TextStyle}
+     * @param column Start column of span
+     * @param style  Style made from {@link TextStyle}
      * @see Span#obtain(int, long)
      * @see TextStyle
      */
@@ -128,6 +128,7 @@ public class Span {
 
     /**
      * Recycle the object
+     *
      * @return Is successful?
      */
     public boolean recycle() {

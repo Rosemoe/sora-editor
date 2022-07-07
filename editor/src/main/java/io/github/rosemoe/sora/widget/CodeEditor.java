@@ -137,23 +137,14 @@ import io.github.rosemoe.sora.widget.style.builtin.MoveCursorAnimator;
 @SuppressWarnings("unused")
 public class CodeEditor extends View implements ContentListener, Formatter.FormatResultReceiver, LineRemoveListener {
 
-    private final static Logger logger = Logger.instance("CodeEditor");
-
-    /**
-     * Digits for line number measuring
-     */
-    private final static String NUMBER_DIGITS = "0 1 2 3 4 5 6 7 8 9";
-
     /**
      * The default size when creating the editor object. Unit is sp.
      */
     public static final int DEFAULT_TEXT_SIZE = 18;
-
     /**
      * The default cursor blinking period
      */
     public static final int DEFAULT_CURSOR_BLINK_PERIOD = 500;
-
     /**
      * Draw whitespace characters before line content start
      * <strong>Whitespace here only means space and tab</strong>
@@ -161,7 +152,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #setNonPrintablePaintingFlags(int)
      */
     public static final int FLAG_DRAW_WHITESPACE_LEADING = 1;
-
     /**
      * Draw whitespace characters inside line content
      * <strong>Whitespace here only means space and tab</strong>
@@ -169,7 +159,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #setNonPrintablePaintingFlags(int)
      */
     public static final int FLAG_DRAW_WHITESPACE_INNER = 1 << 1;
-
     /**
      * Draw whitespace characters after line content end
      * <strong>Whitespace here only means space and tab</strong>
@@ -177,7 +166,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #setNonPrintablePaintingFlags(int)
      */
     public static final int FLAG_DRAW_WHITESPACE_TRAILING = 1 << 2;
-
     /**
      * Draw whitespace characters even if it is a line full of whitespaces
      * To apply this, you must enable {@link #FLAG_DRAW_WHITESPACE_LEADING}
@@ -186,14 +174,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #setNonPrintablePaintingFlags(int)
      */
     public static final int FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE = 1 << 3;
-
     /**
      * Draw newline signals in text
      *
      * @see #setNonPrintablePaintingFlags(int)
      */
     public static final int FLAG_DRAW_LINE_SEPARATOR = 1 << 4;
-
     /**
      * Draw the tab character the same as space.
      * If not set, tab will be display to be a line.
@@ -201,43 +187,52 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #setNonPrintablePaintingFlags(int)
      */
     public static final int FLAG_DRAW_TAB_SAME_AS_SPACE = 1 << 5;
-
     /**
      * Draw the whitespaces in selected text
      *
      * @see #setNonPrintablePaintingFlags(int)
      */
     public static final int FLAG_DRAW_WHITESPACE_IN_SELECTION = 1 << 6;
-
     /**
      * Adjust the completion window's position scheme according to the device's screen size.
      */
     public static final int WINDOW_POS_MODE_AUTO = 0;
-
     /**
      * Completion window always follow the cursor
      */
     public static final int WINDOW_POS_MODE_FOLLOW_CURSOR_ALWAYS = 1;
-
     /**
      * Completion window always stay at the bottom of view and occupies the
      * horizontal viewport
      */
     public static final int WINDOW_POS_MODE_FULL_WIDTH_ALWAYS = 2;
-
     /**
      * Text size scale of small graph
      */
     static final float SCALE_MINI_GRAPH = 0.9f;
-
     /*
      * Internal state identifiers of action mode
      */
     static final int ACTION_MODE_NONE = 0;
     static final int ACTION_MODE_SEARCH_TEXT = 1;
     static final int ACTION_MODE_SELECT_TEXT = 2;
+    private final static Logger logger = Logger.instance("CodeEditor");
+    /**
+     * Digits for line number measuring
+     */
+    private final static String NUMBER_DIGITS = "0 1 2 3 4 5 6 7 8 9";
     private static final String LOG_TAG = "CodeEditor";
+    private final static String COPYRIGHT = "sora-editor\nCopyright (C) Rosemoe roses2020@qq.com\nThis project is distributed under the LGPL v2.1 license";
+    final EditorKeyEventHandler mKeyEventHandler = new EditorKeyEventHandler(this);
     protected SymbolPairMatch mLanguageSymbolPairs;
+    protected EditorTextActionWindow mTextActionWindow;
+    protected List<Span> defSpans = new ArrayList<>(2);
+    protected EditorStyleDelegate mStyleDelegate;
+    int mStartedActionMode;
+    CharPosition mSelectionAnchor;
+    EditorInputConnection mConnection;
+    EventManager mEventManager;
+    Layout mLayout;
     private int mTabWidth;
     private int mCursorPosition;
     private int mDownX = 0;
@@ -293,7 +288,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private EditorTouchEventHandler mEventHandler;
     private Paint.Align mLineNumberAlign;
     private GestureDetector mBasicDetector;
-    protected EditorTextActionWindow mTextActionWindow;
     private ScaleGestureDetector mScaleDetector;
     private CursorAnchorInfo.Builder mAnchorInfoBuilder;
     private EdgeEffect mVerticalGlow;
@@ -305,21 +299,17 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private Paint.FontMetricsInt mGraphMetrics;
     private SelectionHandleStyle mHandleStyle;
     private CursorBlink mCursorBlink;
-    protected List<Span> defSpans = new ArrayList<>(2);
     private HwAcceleratedRenderer mRenderer;
     private DirectAccessProps mProps;
     private Bundle mExtraArguments;
-    protected EditorStyleDelegate mStyleDelegate;
     private Styles mStyles;
     private DiagnosticsContainer mDiagnostics;
-    final EditorKeyEventHandler mKeyEventHandler = new EditorKeyEventHandler(this);
-    int mStartedActionMode;
-    CharPosition mSelectionAnchor;
-    EditorInputConnection mConnection;
-    EventManager mEventManager;
-    Layout mLayout;
-
     private EditorPainter mPainter;
+    private boolean mHardwareAccAllowed;
+    private float scrollerFinalX;
+    private float scrollerFinalY;
+    private boolean verticalAbsorb;
+    private boolean horizontalAbsorb;
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -336,6 +326,19 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initialize(attrs, defStyleAttr, defStyleRes);
+    }
+
+    /**
+     * Checks whether this region has visible region on screen
+     *
+     * @param begin The start line of code block
+     * @param end   The end line of code block
+     * @param first The first visible line on screen
+     * @param last  The last visible line on screen
+     * @return Whether this block can be seen
+     */
+    static boolean hasVisibleRegion(int begin, int end, int first, int last) {
+        return (end > first && begin < last);
     }
 
     /**
@@ -386,19 +389,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public KeyMetaStates getKeyMetaStates() {
         return mKeyEventHandler.getKeyMetaStates();
-    }
-
-    /**
-     * Checks whether this region has visible region on screen
-     *
-     * @param begin The start line of code block
-     * @param end   The end line of code block
-     * @param first The first visible line on screen
-     * @param last  The last visible line on screen
-     * @return Whether this block can be seen
-     */
-    static boolean hasVisibleRegion(int begin, int end, int first, int last) {
-        return (end > first && begin < last);
     }
 
     /**
@@ -570,6 +560,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * @see #setCompletionWndPositionMode(int)
+     */
+    public int getCompletionWndPositionMode() {
+        return mCompletionPosMode;
+    }
+
+    /**
      * Set how should we control the position&size of completion window
      *
      * @see #WINDOW_POS_MODE_AUTO
@@ -582,13 +579,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * @see #setCompletionWndPositionMode(int)
-     */
-    public int getCompletionWndPositionMode() {
-        return mCompletionPosMode;
-    }
-
-    /**
      * Get {@code DirectAccessProps} object of the editor.
      * <p>
      * You can update some features in editor with the instance without disturb to call methods.
@@ -598,17 +588,17 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * Set the tip text while formatting
-     */
-    public void setFormatTip(@NonNull String formatTip) {
-        this.mFormatTip = Objects.requireNonNull(formatTip);
-    }
-
-    /**
      * @see #setFormatTip(String)
      */
     public String getFormatTip() {
         return mFormatTip;
+    }
+
+    /**
+     * Set the tip text while formatting
+     */
+    public void setFormatTip(@NonNull String formatTip) {
+        this.mFormatTip = Objects.requireNonNull(formatTip);
     }
 
     /**
@@ -631,6 +621,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * @see CodeEditor#setFirstLineNumberAlwaysVisible(boolean)
+     */
+    public boolean isFirstLineNumberAlwaysVisible() {
+        return mFirstLineNumberAlwaysVisible;
+    }
+
+    /**
      * Show first line number in screen in word wrap mode
      *
      * @see CodeEditor#isFirstLineNumberAlwaysVisible()
@@ -640,13 +637,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (isWordwrap()) {
             invalidate();
         }
-    }
-
-    /**
-     * @see CodeEditor#setFirstLineNumberAlwaysVisible(boolean)
-     */
-    public boolean isFirstLineNumberAlwaysVisible() {
-        return mFirstLineNumberAlwaysVisible;
     }
 
     /**
@@ -710,6 +700,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * @see CodeEditor#setLigatureEnabled(boolean)
+     */
+    public boolean isLigatureEnabled() {
+        return mLigatureEnabled;
+    }
+
+    /**
      * Enable/disable ligature of all types(except 'rlig').
      * Generally you should disable them unless enabling this will have no effect on text measuring.
      * <p>
@@ -725,13 +722,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void setLigatureEnabled(boolean enabled) {
         this.mLigatureEnabled = enabled;
         setFontFeatureSettings(enabled ? null : "'liga' 0,'calt' 0,'hlig' 0,'dlig' 0,'clig' 0");
-    }
-
-    /**
-     * @see CodeEditor#setLigatureEnabled(boolean)
-     */
-    public boolean isLigatureEnabled() {
-        return mLigatureEnabled;
     }
 
     /**
@@ -810,19 +800,19 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * @see CodeEditor#setHighlightCurrentLine(boolean)
+     */
+    public boolean isHighlightCurrentLine() {
+        return mHighlightCurrentLine;
+    }
+
+    /**
      * Specify whether the editor should use a different color to draw
      * the background of current line
      */
     public void setHighlightCurrentLine(boolean highlightCurrentLine) {
         mHighlightCurrentLine = highlightCurrentLine;
         invalidate();
-    }
-
-    /**
-     * @see CodeEditor#setHighlightCurrentLine(boolean)
-     */
-    public boolean isHighlightCurrentLine() {
-        return mHighlightCurrentLine;
     }
 
     /**
@@ -961,6 +951,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * @see #setCursorAnimationEnabled(boolean)
+     */
+    public boolean isCursorAnimationEnabled() {
+        return mCursorAnimation;
+    }
+
+    /**
      * Set cursor animation enabled
      */
     public void setCursorAnimationEnabled(boolean enabled) {
@@ -971,10 +968,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * @see #setCursorAnimationEnabled(boolean)
+     * @see #setCursorAnimator(CursorAnimator)
      */
-    public boolean isCursorAnimationEnabled() {
-        return mCursorAnimation;
+    public CursorAnimator getCursorAnimator() {
+        return mCursorAnimator;
     }
 
     /**
@@ -986,13 +983,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void setCursorAnimator(@NonNull CursorAnimator cursorAnimator) {
         mCursorAnimator = cursorAnimator;
-    }
-
-    /**
-     * @see #setCursorAnimator(CursorAnimator)
-     */
-    public CursorAnimator getCursorAnimator() {
-        return mCursorAnimator;
     }
 
     /**
@@ -1196,7 +1186,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return clearFlag(clearFlag(mNonPrintableOptions, FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE), FLAG_DRAW_TAB_SAME_AS_SPACE) != 0;
     }
 
-    private boolean mHardwareAccAllowed;
+    /**
+     * @see #setHardwareAcceleratedDrawAllowed(boolean)
+     */
+    public boolean isHardwareAcceleratedDrawAllowed() {
+        return mHardwareAccAllowed;
+    }
 
     /**
      * Set whether allow the editor to use RenderNode to draw its text.
@@ -1210,13 +1205,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (acceleratedDraw && !isWordwrap()) {
             mPainter.invalidateHwRenderer();
         }
-    }
-
-    /**
-     * @see #setHardwareAcceleratedDrawAllowed(boolean)
-     */
-    public boolean isHardwareAcceleratedDrawAllowed() {
-        return mHardwareAccAllowed;
     }
 
     /**
@@ -1292,7 +1280,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
         }
     }
-
 
     /**
      * Get the color of EdgeEffect
@@ -1806,6 +1793,19 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * @see #setNonPrintablePaintingFlags(int)
+     * @see #FLAG_DRAW_WHITESPACE_LEADING
+     * @see #FLAG_DRAW_WHITESPACE_INNER
+     * @see #FLAG_DRAW_WHITESPACE_TRAILING
+     * @see #FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE
+     * @see #FLAG_DRAW_LINE_SEPARATOR
+     * @see #FLAG_DRAW_WHITESPACE_IN_SELECTION
+     */
+    public int getNonPrintablePaintingFlags() {
+        return mNonPrintableOptions;
+    }
+
+    /**
      * Sets non-printable painting flags.
      * Specify where they should be drawn and some other properties.
      * <p>
@@ -1822,19 +1822,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void setNonPrintablePaintingFlags(int flags) {
         this.mNonPrintableOptions = flags;
         invalidate();
-    }
-
-    /**
-     * @see #setNonPrintablePaintingFlags(int)
-     * @see #FLAG_DRAW_WHITESPACE_LEADING
-     * @see #FLAG_DRAW_WHITESPACE_INNER
-     * @see #FLAG_DRAW_WHITESPACE_TRAILING
-     * @see #FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE
-     * @see #FLAG_DRAW_LINE_SEPARATOR
-     * @see #FLAG_DRAW_WHITESPACE_IN_SELECTION
-     */
-    public int getNonPrintablePaintingFlags() {
-        return mNonPrintableOptions;
     }
 
     /**
@@ -2119,6 +2106,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * @see #setHighlightBracketPair(boolean)
+     */
+    public boolean isHighlightBracketPair() {
+        return mHighlightBracketPair;
+    }
+
+    /**
      * Whether to highlight brackets pairs
      */
     public void setHighlightBracketPair(boolean highlightBracketPair) {
@@ -2129,13 +2123,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             mStyleDelegate.postUpdateBracketPair();
         }
         invalidate();
-    }
-
-    /**
-     * @see #setHighlightBracketPair(boolean)
-     */
-    public boolean isHighlightBracketPair() {
-        return mHighlightBracketPair;
     }
 
     /**
@@ -2213,13 +2200,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
     }
 
+    public DiagnosticIndicatorStyle getDiagnosticIndicatorStyle() {
+        return mDiagnosticStyle;
+    }
+
     public void setDiagnosticIndicatorStyle(@NonNull DiagnosticIndicatorStyle diagnosticIndicatorStyle) {
         this.mDiagnosticStyle = diagnosticIndicatorStyle;
         invalidate();
-    }
-
-    public DiagnosticIndicatorStyle getDiagnosticIndicatorStyle() {
-        return mDiagnosticStyle;
     }
 
     /**
@@ -2399,6 +2386,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * @see #setTextScaleX(float)
+     */
+    public float getTextScaleX() {
+        return mPainter.getPaint().getTextScaleX();
+    }
+
+    /**
      * Set text scale x of Paint
      *
      * @see Paint#setTextScaleX(float)
@@ -2409,10 +2403,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * @see #setTextScaleX(float)
+     * @see #setTextLetterSpacing(float)
      */
-    public float getTextScaleX() {
-        return mPainter.getPaint().getTextScaleX();
+    public float getTextLetterSpacing() {
+        return mPainter.getPaint().getLetterSpacing();
     }
 
     /**
@@ -2423,13 +2417,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void setTextLetterSpacing(float textLetterSpacing) {
         mPainter.setLetterSpacing(textLetterSpacing);
-    }
-
-    /**
-     * @see #setTextLetterSpacing(float)
-     */
-    public float getTextLetterSpacing() {
-        return mPainter.getPaint().getLetterSpacing();
     }
 
     /**
@@ -2578,6 +2565,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         invalidate();
     }
 
+    /**
+     * @return the value by which each line's height is multiplied to get its actual height.
+     * @see #setLineSpacingMultiplier(float)
+     */
+    public float getLineSpacingMultiplier() {
+        return mLineSpacingMultiplier;
+    }
 
     /**
      * @param lineSpacingMultiplier The value by which each line height other than the last line will be multiplied
@@ -2586,14 +2580,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void setLineSpacingMultiplier(float lineSpacingMultiplier) {
         this.mLineSpacingMultiplier = lineSpacingMultiplier;
         invalidate();
-    }
-
-    /**
-     * @return the value by which each line's height is multiplied to get its actual height.
-     * @see #setLineSpacingMultiplier(float)
-     */
-    public float getLineSpacingMultiplier() {
-        return mLineSpacingMultiplier;
     }
 
     /**
@@ -2723,6 +2709,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * @return Whether allow scaling
+     * @see CodeEditor#setScalable(boolean)
+     */
+    public boolean isScalable() {
+        return mScalable;
+    }
+
+    /**
      * Allow scale text size by thumb
      *
      * @param scale Whether allow
@@ -2731,21 +2725,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         mScalable = scale;
     }
 
-    /**
-     * @return Whether allow scaling
-     * @see CodeEditor#setScalable(boolean)
-     */
-    public boolean isScalable() {
-        return mScalable;
+    public boolean isBlockLineEnabled() {
+        return mBlockLineEnabled;
     }
 
     public void setBlockLineEnabled(boolean enabled) {
         mBlockLineEnabled = enabled;
         invalidate();
-    }
-
-    public boolean isBlockLineEnabled() {
-        return mBlockLineEnabled;
     }
 
     /**
@@ -3285,14 +3271,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * Get extra argument set by {@link CodeEditor#setText(CharSequence, Bundle)}
-     */
-    @NonNull
-    public Bundle getExtraArguments() {
-        return mExtraArguments;
-    }
-
-    /**
      * Set the text to be displayed.
      * With no extra arguments.
      *
@@ -3300,6 +3278,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void setText(@Nullable CharSequence text) {
         setText(text, true, null);
+    }
+
+    /**
+     * Get extra argument set by {@link CodeEditor#setText(CharSequence, Bundle)}
+     */
+    @NonNull
+    public Bundle getExtraArguments() {
+        return mExtraArguments;
     }
 
     /**
@@ -3312,7 +3298,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void setText(@Nullable CharSequence text, @Nullable Bundle extraArguments) {
         setText(text, true, extraArguments);
     }
-
 
     /**
      * Sets the text to be displayed.
@@ -3398,7 +3383,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public <T extends Event> int dispatchEvent(T event) {
         return mEventManager.dispatchEvent(event);
     }
-
 
     /**
      * Check whether the editor is currently performing a format operation
@@ -3490,6 +3474,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
 
+    //-------------------------------------------------------------------------------
+    //-------------------------IME Interaction---------------------------------------
+    //-------------------------------------------------------------------------------
+
     /**
      * Rerun analysis forcibly
      */
@@ -3508,9 +3496,26 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return mStyles;
     }
 
+    @UiThread
+    public void setStyles(@Nullable Styles styles) {
+        mStyles = styles;
+        if (mHighlightCurrentBlock) {
+            mCursorPosition = findCursorBlock();
+        }
+        mPainter.invalidateHwRenderer();
+        mPainter.updateTimestamp();
+        invalidate();
+    }
+
     @Nullable
     public DiagnosticsContainer getDiagnostics() {
         return mDiagnostics;
+    }
+
+    @UiThread
+    public void setDiagnostics(@Nullable DiagnosticsContainer diagnostics) {
+        mDiagnostics = diagnostics;
+        invalidate();
     }
 
     /**
@@ -3530,11 +3535,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public int getBlockIndex() {
         return mCursorPosition;
     }
-
-
-    //-------------------------------------------------------------------------------
-    //-------------------------IME Interaction---------------------------------------
-    //-------------------------------------------------------------------------------
 
     /**
      * Display soft input method for self
@@ -3584,6 +3584,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             mInputMethodManager.updateExtractedText(this, mExtracting.token, text);
         }
     }
+
+    //-------------------------------------------------------------------------------
+    //------------------------Internal Callbacks-------------------------------------
+    //-------------------------------------------------------------------------------
 
     /**
      * Set request needed to update when editor updates selection
@@ -3681,10 +3685,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         mTextActionWindow.dismiss();
         mEventHandler.mMagnifier.dismiss();
     }
-
-    //-------------------------------------------------------------------------------
-    //------------------------Internal Callbacks-------------------------------------
-    //-------------------------------------------------------------------------------
 
     /**
      * Called by ColorScheme to notify invalidate
@@ -3980,11 +3980,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         invalidate();
     }
 
-    private float scrollerFinalX;
-    private float scrollerFinalY;
-    private boolean verticalAbsorb;
-    private boolean horizontalAbsorb;
-
     @Override
     public void computeScroll() {
         var scroller = mEventHandler.getScroller();
@@ -4195,25 +4190,5 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void onRemove(Content content, ContentLine line) {
         mLayout.onRemove(content, line);
     }
-
-
-    @UiThread
-    public void setStyles(@Nullable Styles styles) {
-        mStyles = styles;
-        if (mHighlightCurrentBlock) {
-            mCursorPosition = findCursorBlock();
-        }
-        mPainter.invalidateHwRenderer();
-        mPainter.updateTimestamp();
-        invalidate();
-    }
-
-    @UiThread
-    public void setDiagnostics(@Nullable DiagnosticsContainer diagnostics) {
-        mDiagnostics = diagnostics;
-        invalidate();
-    }
-
-    private final static String COPYRIGHT = "sora-editor\nCopyright (C) Rosemoe roses2020@qq.com\nThis project is distributed under the LGPL v2.1 license";
 
 }

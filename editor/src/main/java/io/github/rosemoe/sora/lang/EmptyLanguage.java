@@ -47,6 +47,8 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
 public class EmptyLanguage implements Language {
 
 
+    public final static SymbolPairMatch EMPTY_SYMBOL_PAIRS = new SymbolPairMatch();
+
     @NonNull
     @Override
     public Formatter getFormatter() {
@@ -93,8 +95,6 @@ public class EmptyLanguage implements Language {
     public boolean useTab() {
         return false;
     }
-
-    public final static SymbolPairMatch EMPTY_SYMBOL_PAIRS = new SymbolPairMatch();
 
     public static class EmptyFormatter implements Formatter {
 

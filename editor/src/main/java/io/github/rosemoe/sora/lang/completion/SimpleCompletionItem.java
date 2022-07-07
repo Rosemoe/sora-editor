@@ -33,7 +33,7 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  * {@code prefixLength} is the length of prefix (text length you want to replace before the
  * auto-completion position).
  * {@code commitText} is the text you want to replace the original text.
- *
+ * <p>
  * Note that you must make sure the start position of replacement is on the same line as auto-completion's
  * required position.
  *

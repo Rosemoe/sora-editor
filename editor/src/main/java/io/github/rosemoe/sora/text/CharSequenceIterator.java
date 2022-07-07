@@ -69,7 +69,7 @@ public class CharSequenceIterator implements CharacterIterator {
 
     @Override
     public char previous() {
-        index --;
+        index--;
         if (index < 0) {
             index = 0;
         }

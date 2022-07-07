@@ -34,7 +34,8 @@ public interface BracketsProvider {
 
     /**
      * Get left and right brackets position in text
-     * @param text The text in editor
+     *
+     * @param text  The text in editor
      * @param index Index of cursor in text
      * @return Paired positions or null if not matched
      */

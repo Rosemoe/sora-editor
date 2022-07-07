@@ -159,7 +159,7 @@ public class EditorPopupWindow {
 
     /**
      * Get the actual {@link PopupWindow} instance.
-     *
+     * <p>
      * Note that you should not manage its visibility but update that by invoking methods in this
      * class. Otherwise, there may be some abnormal display.
      */
@@ -219,7 +219,7 @@ public class EditorPopupWindow {
 
     /**
      * Get width you've set for this window.
-     *
+     * <p>
      * Note that, according to you feature switches, this may be different from the actual size of the window on screen.
      */
     public int getWidth() {
@@ -228,7 +228,7 @@ public class EditorPopupWindow {
 
     /**
      * Get height you've set for this window.
-     *
+     * <p>
      * Note that, according to you feature switches, this may be different from the actual size of the window on screen.
      */
     public int getHeight() {
@@ -237,7 +237,7 @@ public class EditorPopupWindow {
 
     /**
      * Set the size of this window.
-     *
+     * <p>
      * Note that, according to you feature switches, the window can have a different size on screen.
      */
     public void setSize(int width, int height) {
@@ -285,16 +285,17 @@ public class EditorPopupWindow {
         }
     }
 
+    @NonNull
+    public View getParentView() {
+        return mParentView;
+    }
+
     /**
      * Set parent view of popup.
+     *
      * @param view View for {@link PopupWindow#showAtLocation(View, int, int, int)}
      */
     public void setParentView(@NonNull View view) {
         mParentView = Objects.requireNonNull(view);
-    }
-
-    @NonNull
-    public View getParentView() {
-        return mParentView;
     }
 }

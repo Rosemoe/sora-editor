@@ -71,6 +71,7 @@ public abstract class Event {
      * Check whether this event can be intercepted (so that the event is not sent to other
      * receivers after being intercepted)
      * Intercept-able events:
+     *
      * @see LongPressEvent
      * @see ClickEvent
      * @see DoubleClickEvent
@@ -82,7 +83,7 @@ public abstract class Event {
 
     /**
      * Intercept the event for all targets.
-     *
+     * <p>
      * Make sure {@link #canIntercept()} returns true. Otherwise, an {@link UnsupportedOperationException}
      * will be thrown.
      *
@@ -97,6 +98,7 @@ public abstract class Event {
 
     /**
      * Intercept the event for some targets
+     *
      * @param targets Masks for target types
      * @see InterceptTarget
      */
@@ -109,6 +111,7 @@ public abstract class Event {
 
     /**
      * Get intercepted dispatch targets
+     *
      * @see #intercept(int)
      * @see InterceptTarget
      */
@@ -118,6 +121,7 @@ public abstract class Event {
 
     /**
      * Check whether this event is intercepted for some types of targets
+     *
      * @see #getInterceptTargets()
      */
     public boolean isIntercepted() {

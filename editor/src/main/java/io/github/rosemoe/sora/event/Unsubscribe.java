@@ -25,7 +25,7 @@ package io.github.rosemoe.sora.event;
 
 /**
  * Instance for unsubscribing for a receiver.
- *
+ * <p>
  * Note that this instance can be reused during an event dispatch, so
  * it is not a valid behavior to save the instance in event receivers.
  * Always use the one given by {@link EventReceiver#onReceive(Event, Unsubscribe)}.

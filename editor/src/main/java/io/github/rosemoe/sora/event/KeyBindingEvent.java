@@ -52,10 +52,10 @@ public class KeyBindingEvent extends EditorKeyEvent {
     /**
      * Creates a new {@code KeyBindingEvent} instance.
      *
-     * @param editor          The editor.
-     * @param src             The source {@link KeyEvent}.
-     * @param keyCode         The key code.
-     * @param type            The key event type.
+     * @param editor             The editor.
+     * @param src                The source {@link KeyEvent}.
+     * @param keyCode            The key code.
+     * @param type               The key event type.
      * @param editorAbleToHandle <code>true</code> if the editor can handle this event, <code>false</code> otherwise.
      */
     public KeyBindingEvent(CodeEditor editor, KeyEvent src, Type type, int keyCode, boolean editorAbleToHandle) {

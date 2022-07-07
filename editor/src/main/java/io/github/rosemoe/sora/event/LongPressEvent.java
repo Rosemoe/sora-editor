@@ -32,7 +32,7 @@ import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
  * Long press event.
- *
+ * <p>
  * This event can be intercepted so that the editor framework will do nothing (such as selecting a word). You can take over the
  * procedure. Note that after intercepting an event, it will not be sent to other listeners, either.
  *

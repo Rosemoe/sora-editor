@@ -23,7 +23,6 @@
  */
 package io.github.rosemoe.sora.widget.component;
 
-import android.graphics.Color;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,7 +31,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import io.github.rosemoe.sora.R;
-import io.github.rosemoe.sora.lang.completion.CompletionItem;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
@@ -45,7 +43,7 @@ public final class DefaultCompletionItemAdapter extends EditorCompletionAdapter 
     @Override
     public int getItemHeight() {
         // 45 dp
-        return (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 45, getContext().getResources().getDisplayMetrics());
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 45, getContext().getResources().getDisplayMetrics());
     }
 
     @Override

@@ -31,6 +31,11 @@ import java.util.WeakHashMap;
 public class Logger {
 
     private static Map<String, Logger> map = new WeakHashMap<>();
+    private final String name;
+
+    private Logger(String name) {
+        this.name = name;
+    }
 
     public synchronized static Logger instance(String name) {
         var logger = map.get(name);
@@ -39,12 +44,6 @@ public class Logger {
             map.put(name, logger);
         }
         return logger;
-    }
-
-    private final String name;
-
-    private Logger(String name) {
-        this.name = name;
     }
 
     public void d(String msg) {

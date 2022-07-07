@@ -31,7 +31,7 @@ import android.util.TypedValue;
 import androidx.annotation.NonNull;
 
 public class HandleStyleSideDrop extends HandleStyleDrop {
-    
+
     private final int size;
     private final Paint paint;
 
@@ -41,7 +41,7 @@ public class HandleStyleSideDrop extends HandleStyleDrop {
         paint = new Paint();
         paint.setAntiAlias(true);
     }
-    
+
     @Override
     public void draw(@NonNull Canvas canvas, int handleType, float x, float y, int rowHeight, int color, @NonNull HandleDescriptor descriptor) {
         float radius = size / 2f;

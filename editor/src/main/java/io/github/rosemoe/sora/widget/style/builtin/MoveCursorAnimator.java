@@ -35,15 +35,13 @@ import io.github.rosemoe.sora.widget.style.CursorAnimator;
  */
 public class MoveCursorAnimator implements CursorAnimator, ValueAnimator.AnimatorUpdateListener {
 
+    private final CodeEditor editor;
+    private final long duration;
     private ValueAnimator animatorX;
     private ValueAnimator animatorY;
     private ValueAnimator animatorBgBottom;
     private ValueAnimator animatorBackground;
-
-    private final CodeEditor editor;
     private float startX, startY, startSize, startBottom;
-
-    private final long duration;
     private long lastAnimateTime;
 
     public MoveCursorAnimator(CodeEditor editor) {

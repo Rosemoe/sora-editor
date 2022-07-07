@@ -53,9 +53,9 @@ import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
  */
 class EditorKeyEventHandler {
 
+    private static final String TAG = "EditorKeyEventHandler";
     private final CodeEditor editor;
     private final KeyMetaStates mKeyMetaStates;
-    private static final String TAG = "EditorKeyEventHandler";
 
     EditorKeyEventHandler(CodeEditor editor) {
         Objects.requireNonNull(editor, "Cannot setup KeyEvent with null editor instance.");

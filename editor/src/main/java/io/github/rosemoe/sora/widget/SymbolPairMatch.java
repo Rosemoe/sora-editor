@@ -80,46 +80,16 @@ public class SymbolPairMatch {
     /**
      * Defines a replacement of input
      */
-    public static class Replacement  {
+    public static class Replacement {
 
-
-
-        public interface IReplacement {
-            /**
-             * The method will be called
-             * to decide whether to perform the replacement or not.
-             * It may be same as vscode language-configuration Auto-closing 'notIn'
-             * also see <a href="https://code.visualstudio.com/api/language-extensions/language-configuration-guide#autoclosing">this</a>
-             * If not implemented,always return true
-             * @param currentLine The current line edit in the editor,quick analysis it to decide whether to replaced
-             * @param leftColumn return current cursor column
-             */
-            default boolean shouldDoReplace(ContentLine currentLine,int leftColumn) {
-                return true;
-            }
-
-            /**
-             * when before the replaced and select a range,surrounds the selected content with return pair if return pair not null.
-             * If not implemented,always return null
-             * also see <a href="https://code.visualstudio.com/api/language-extensions/language-configuration-guide#autosurrounding">this</a>
-             */
-             default String[] getAutoSurroundPair() {
-                 return null;
-             }
-
-        }
 
         /**
          * Defines that this character does not have to be replaced
          */
         public final static Replacement NO_REPLACEMENT = new Replacement("", 0);
-
         public final String text;
-
         public final int selection;
-
         private String[] autoSurroundPair;
-
         /*
          *
          */
@@ -138,20 +108,18 @@ public class SymbolPairMatch {
             }
         }
 
-
-        public Replacement(String text, int selection,IReplacement iReplacement) {
-            this(text,selection);
+        public Replacement(String text, int selection, IReplacement iReplacement) {
+            this(text, selection);
             //cache pair
-            this.autoSurroundPair = iReplacement!=null ? iReplacement.getAutoSurroundPair() : null;
+            this.autoSurroundPair = iReplacement != null ? iReplacement.getAutoSurroundPair() : null;
         }
 
         public String[] getAutoSurroundPair() {
             return autoSurroundPair;
         }
 
-
         protected boolean notHasAutoSurroundPair() {
-            return iReplacement==null && autoSurroundPair==null;
+            return iReplacement == null && autoSurroundPair == null;
         }
 
         protected boolean shouldNotDoReplace(Content content) {
@@ -160,6 +128,32 @@ public class SymbolPairMatch {
             }
             ContentLine currentLine = content.getLine(content.getCursor().getLeftLine());
             return !iReplacement.shouldDoReplace(currentLine, content.getCursor().getLeftColumn());
+        }
+
+        public interface IReplacement {
+            /**
+             * The method will be called
+             * to decide whether to perform the replacement or not.
+             * It may be same as vscode language-configuration Auto-closing 'notIn'
+             * also see <a href="https://code.visualstudio.com/api/language-extensions/language-configuration-guide#autoclosing">this</a>
+             * If not implemented,always return true
+             *
+             * @param currentLine The current line edit in the editor,quick analysis it to decide whether to replaced
+             * @param leftColumn  return current cursor column
+             */
+            default boolean shouldDoReplace(ContentLine currentLine, int leftColumn) {
+                return true;
+            }
+
+            /**
+             * when before the replaced and select a range,surrounds the selected content with return pair if return pair not null.
+             * If not implemented,always return null
+             * also see <a href="https://code.visualstudio.com/api/language-extensions/language-configuration-guide#autosurrounding">this</a>
+             */
+            default String[] getAutoSurroundPair() {
+                return null;
+            }
+
         }
 
     }

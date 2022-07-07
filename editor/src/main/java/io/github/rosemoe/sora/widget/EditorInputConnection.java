@@ -70,11 +70,11 @@ class EditorInputConnection extends BaseInputConnection {
         mEditor = targetView;
         mInvalid = false;
         targetView.subscribeEvent(ContentChangeEvent.class, (event, __) -> {
-           if (event.getAction() == ContentChangeEvent.ACTION_INSERT) {
-               mComposingText.shiftOnInsert(event.getChangeStart().index, event.getChangeEnd().index);
-           } else if (event.getAction() == ContentChangeEvent.ACTION_DELETE) {
-               mComposingText.shiftOnDelete(event.getChangeStart().index, event.getChangeEnd().index);
-           }
+            if (event.getAction() == ContentChangeEvent.ACTION_INSERT) {
+                mComposingText.shiftOnInsert(event.getChangeStart().index, event.getChangeEnd().index);
+            } else if (event.getAction() == ContentChangeEvent.ACTION_DELETE) {
+                mComposingText.shiftOnDelete(event.getChangeStart().index, event.getChangeEnd().index);
+            }
         });
     }
 

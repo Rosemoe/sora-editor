@@ -54,7 +54,7 @@ public interface RowIterator {
 
     /**
      * Reset the position to its original position.
-     *
+     * <p>
      * This can be useful when the elements should be iterated for
      * several times.
      */

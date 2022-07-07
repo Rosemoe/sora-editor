@@ -28,6 +28,7 @@ import android.view.KeyEvent;
 
 /**
  * Handles key events such as SHIFT
+ *
  * @author Rosemoe
  */
 public class KeyMetaStates extends android.text.method.MetaKeyKeyListener {

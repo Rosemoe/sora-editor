@@ -35,10 +35,10 @@ import io.github.rosemoe.sora.event.Unsubscribe;
 final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent> {
 
     final CodeEditor editor;
-    long lastSelectionModificationTime = 0;
-    int period;
     public boolean visibility;
     public boolean valid;
+    long lastSelectionModificationTime = 0;
+    int period;
     private float[] buffer;
 
     public CursorBlink(CodeEditor editor, int period) {

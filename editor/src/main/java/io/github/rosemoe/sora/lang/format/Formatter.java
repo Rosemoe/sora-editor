@@ -41,7 +41,7 @@ public interface Formatter {
      * Format the content directly, and call {@link FormatResultReceiver} to receive the formatted content from the editor when the formatting is complete
      * *
      *
-     * @param text the content to format, but not the original Content in editor
+     * @param text        the content to format, but not the original Content in editor
      * @param cursorRange the positions of cursor. Start and end position may be the same.
      */
     void format(@NonNull Content text, @NonNull TextRange cursorRange);
@@ -51,9 +51,9 @@ public interface Formatter {
      * <p>
      * Format the content directly, and call {@link FormatResultReceiver} to receive the formatted content from the editor when the formatting is complete
      *
-     * @param text  the content to format, but not the original Content in editor
+     * @param text          the content to format, but not the original Content in editor
      * @param rangeToFormat the range in text to be formatted
-     * @param cursorRange the positions of cursor. Start and end position may be the same.
+     * @param cursorRange   the positions of cursor. Start and end position may be the same.
      */
     void formatRegion(@NonNull Content text, @NonNull TextRange rangeToFormat, @NonNull TextRange cursorRange);
 
@@ -67,13 +67,20 @@ public interface Formatter {
      */
     boolean isRunning();
 
+    /**
+     * Destroy the formatter. Release any resources held.
+     * Make sure that you will not call the receiver anymore.
+     */
+    void destroy();
+
+
     interface FormatResultReceiver {
         /**
          * Called when the formatting is completed
          *
          * @param applyContent the formatted <strong>full</strong> text
-         * @param cursorRange The range of cursor after formatting. You may pass null for unspecified.
-         *                    Also, the start and end of the range may be the same position.
+         * @param cursorRange  The range of cursor after formatting. You may pass null for unspecified.
+         *                     Also, the start and end of the range may be the same position.
          */
         void onFormatSucceed(@NonNull CharSequence applyContent, @Nullable TextRange cursorRange);
 
@@ -85,12 +92,5 @@ public interface Formatter {
         void onFormatFail(@Nullable Throwable throwable);
 
     }
-
-
-    /**
-     * Destroy the formatter. Release any resources held.
-     * Make sure that you will not call the receiver anymore.
-     */
-    void destroy();
 
 }
