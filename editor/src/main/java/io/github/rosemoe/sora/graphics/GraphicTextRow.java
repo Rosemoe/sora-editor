@@ -27,6 +27,7 @@ import static io.github.rosemoe.sora.lang.styling.TextStyle.isBold;
 import static io.github.rosemoe.sora.lang.styling.TextStyle.isItalics;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 
 import java.util.List;
 
@@ -106,7 +107,7 @@ public class GraphicTextRow {
      */
     public void buildMeasureCache() {
         if (mText.widthCache == null || mText.widthCache.length < mEnd + 4) {
-            mText.widthCache = new float[Math.max(128, mText.length() + 16)];
+            mText.widthCache = new float[Math.max(90, mText.length() + 16)];
         }
         measureTextInternal(mStart, mEnd, mText.widthCache);
         // Generate prefix sum
@@ -250,7 +251,9 @@ public class GraphicTextRow {
     }
 
     public float measureText(int start, int end) {
-        if (start == end) {
+        if (start >= end) {
+            if (start != end)
+                Log.w("GraphicTextRow", "start > end");
             return 0f;
         }
         if (mText.widthCache != null && mCache) {

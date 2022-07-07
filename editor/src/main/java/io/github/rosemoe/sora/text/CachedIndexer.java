@@ -46,8 +46,6 @@ public class CachedIndexer implements Indexer, ContentListener {
     private final int mSwitchLine = 50;
     private int mSwitchIndex = 50;
     private int mMaxCacheSize = 50;
-    private boolean mHandleEvent = true;
-    private boolean mHasException = false;
 
     /**
      * Create a new CachedIndexer for the given content
@@ -56,7 +54,7 @@ public class CachedIndexer implements Indexer, ContentListener {
      */
     CachedIndexer(Content content) {
         mContent = content;
-        detectException();
+        updateEnd();
     }
 
     /**
@@ -70,28 +68,16 @@ public class CachedIndexer implements Indexer, ContentListener {
     }
 
     /**
-     * Find out whether things unexpected happened
+     * Update the end position
      */
-    private void detectException() {
-        if (!isHandleEvent() && !mCachePositions.isEmpty()) {
-            mHasException = true;
-        }
+    private void updateEnd() {
         mEndPoint.index = mContent.length();
         mEndPoint.line = mContent.getLineCount() - 1;
         mEndPoint.column = mContent.getColumnCount(mEndPoint.line);
     }
 
     /**
-     * Throw a new exception for illegal state
-     */
-    protected void throwIfHas() {
-        if (mHasException) {
-            throw new IllegalStateException("there is cache but the content changed");
-        }
-    }
-
-    /**
-     * Get nearest cache for the given index
+     * Get the nearest cache for the given index
      *
      * @param index Querying index
      * @return Nearest cache
@@ -100,7 +86,7 @@ public class CachedIndexer implements Indexer, ContentListener {
         int min = index, dis = index;
         CharPosition nearestCharPosition = mZeroPoint;
         int targetIndex = 0;
-        for (int i = 0;i < mCachePositions.size();i++) {
+        for (int i = 0; i < mCachePositions.size(); i++) {
             CharPosition pos = mCachePositions.get(i);
             dis = Math.abs(pos.index - index);
             if (dis < min) {
@@ -122,7 +108,7 @@ public class CachedIndexer implements Indexer, ContentListener {
     }
 
     /**
-     * Get nearest cache for the given line
+     * Get the nearest cache for the given line
      *
      * @param line Querying line
      * @return Nearest cache
@@ -131,7 +117,7 @@ public class CachedIndexer implements Indexer, ContentListener {
         int min = line, dis = line;
         CharPosition nearestCharPosition = mZeroPoint;
         int targetIndex = 0;
-        for (int i = 0;i < mCachePositions.size();i++) {
+        for (int i = 0; i < mCachePositions.size(); i++) {
             CharPosition pos = mCachePositions.get(i);
             dis = Math.abs(pos.line - line);
             if (dis < min) {
@@ -284,7 +270,6 @@ public class CachedIndexer implements Indexer, ContentListener {
             throw new IllegalArgumentException("can not find other lines with findInLine()");
         }
         pos.index = pos.index - pos.column + column;
-        pos.line = line;
         pos.column = column;
     }
 
@@ -298,7 +283,7 @@ public class CachedIndexer implements Indexer, ContentListener {
             return;
         }
         mCachePositions.add(pos);
-        while (mCachePositions.size() > mMaxCacheSize) {
+        if (mCachePositions.size() > mMaxCacheSize) {
             mCachePositions.remove(0);
         }
     }
@@ -319,24 +304,6 @@ public class CachedIndexer implements Indexer, ContentListener {
      */
     protected void setMaxCacheSize(int maxSize) {
         mMaxCacheSize = maxSize;
-    }
-
-    /**
-     * For NoCacheIndexer
-     *
-     * @return whether handle changes
-     */
-    protected boolean isHandleEvent() {
-        return mHandleEvent;
-    }
-
-    /**
-     * For NoCacheIndexer
-     *
-     * @param handle Whether handle changes to refresh cache
-     */
-    protected void setHandleEvent(boolean handle) {
-        mHandleEvent = handle;
     }
 
     @Override
@@ -364,7 +331,6 @@ public class CachedIndexer implements Indexer, ContentListener {
 
     @Override
     public void getCharPosition(int index, @NonNull CharPosition dest) {
-        throwIfHas();
         mContent.checkIndex(index);
         mContent.lock(false);
         try {
@@ -394,7 +360,6 @@ public class CachedIndexer implements Indexer, ContentListener {
 
     @Override
     public void getCharPosition(int line, int column, @NonNull CharPosition dest) {
-        throwIfHas();
         mContent.checkLineAndColumn(line, column, true);
         mContent.lock(false);
         try {
@@ -428,47 +393,43 @@ public class CachedIndexer implements Indexer, ContentListener {
     @UnsupportedUserUsage
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn,
                             CharSequence insertedContent) {
-        if (isHandleEvent()) {
-            for (CharPosition pos : mCachePositions) {
-                if (pos.line == startLine) {
-                    if (pos.column >= startColumn) {
-                        pos.index += insertedContent.length();
-                        pos.line += endLine - startLine;
-                        pos.column = endColumn + pos.column - startColumn;
-                    }
-                } else if (pos.line > startLine) {
+        for (var pos : mCachePositions) {
+            if (pos.line == startLine) {
+                if (pos.column >= startColumn) {
                     pos.index += insertedContent.length();
                     pos.line += endLine - startLine;
+                    pos.column = endColumn + pos.column - startColumn;
                 }
+            } else if (pos.line > startLine) {
+                pos.index += insertedContent.length();
+                pos.line += endLine - startLine;
             }
         }
-        detectException();
+        updateEnd();
     }
 
     @Override
     @UnsupportedUserUsage
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn,
                             CharSequence deletedContent) {
-        if (isHandleEvent()) {
-            List<CharPosition> garbage = new ArrayList<>();
-            for (CharPosition pos : mCachePositions) {
-                if (pos.line == startLine) {
-                    if (pos.column >= startColumn)
-                        garbage.add(pos);
-                } else if (pos.line > startLine) {
-                    if (pos.line < endLine) {
-                        garbage.add(pos);
-                    } else if (pos.line == endLine) {
-                        garbage.add(pos);
-                    } else {
-                        pos.index -= deletedContent.length();
-                        pos.line -= endLine - startLine;
-                    }
+        List<CharPosition> garbage = new ArrayList<>();
+        for (CharPosition pos : mCachePositions) {
+            if (pos.line == startLine) {
+                if (pos.column >= startColumn)
+                    garbage.add(pos);
+            } else if (pos.line > startLine) {
+                if (pos.line < endLine) {
+                    garbage.add(pos);
+                } else if (pos.line == endLine) {
+                    garbage.add(pos);
+                } else {
+                    pos.index -= deletedContent.length();
+                    pos.line -= endLine - startLine;
                 }
             }
-            mCachePositions.removeAll(garbage);
         }
-        detectException();
+        mCachePositions.removeAll(garbage);
+        updateEnd();
     }
 
 }
