@@ -95,6 +95,7 @@ import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.Languag
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.editor.LspEditorManager;
 import io.github.rosemoe.sora.lsp.utils.LSPException;
+import io.github.rosemoe.sora.lsp.utils.URIUtils;
 
 /**
  * The implementation of a LanguageServerWrapper (specific to a serverDefinition and a project)
@@ -329,7 +330,7 @@ public class LanguageServerWrapper {
 
     private InitializeParams getInitParams() {
         InitializeParams initParams = new InitializeParams();
-        initParams.setRootUri(Uri.fromFile(new File(projectRootPath)).toString());
+        initParams.setRootUri(URIUtils.fileToURI(projectRootPath).toString());
 
         WorkspaceClientCapabilities workspaceClientCapabilities = new WorkspaceClientCapabilities();
         workspaceClientCapabilities.setApplyEdit(false); // Not ready to support this feature

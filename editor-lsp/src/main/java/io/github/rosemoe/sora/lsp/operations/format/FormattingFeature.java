@@ -46,7 +46,7 @@ import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.TextRange;
 
-public class LspFormattingFeature implements Feature<Pair<Content, TextRange>, Void> {
+public class FormattingFeature implements Feature<Pair<Content, TextRange>, Void> {
 
     private CompletableFuture<Void> future;
     private LspEditor editor;

@@ -23,13 +23,11 @@
  */
 package io.github.rosemoe.sora.lsp.editor;
 
-import androidx.annotation.BinderThread;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
-import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.FormattingOptions;
-import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 
 import java.lang.ref.WeakReference;
@@ -38,9 +36,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import io.github.rosemoe.sora.event.ContentChangeEvent;
@@ -50,12 +45,12 @@ import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestMa
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition;
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper;
 import io.github.rosemoe.sora.lsp.operations.Feature;
+import io.github.rosemoe.sora.lsp.operations.diagnostics.PublishDiagnosticsFeature;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeFeature;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentCloseFeature;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentOpenFeature;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentSaveFeature;
-import io.github.rosemoe.sora.lsp.operations.format.LspFormattingFeature;
-import io.github.rosemoe.sora.lsp.utils.LspUtils;
+import io.github.rosemoe.sora.lsp.operations.format.FormattingFeature;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 public class LspEditor {
@@ -86,6 +81,7 @@ public class LspEditor {
 
     private LspEditorContentChangeEventReceiver editorContentChangeEventReceiver;
 
+    private PublishDiagnosticsParams diagnosticsParams = null;
 
     public LspEditor(String currentProjectPath, String currentFileUri, LanguageServerDefinition serverDefinition) {
         this.currentEditor = new WeakReference<>(null);
@@ -153,7 +149,6 @@ public class LspEditor {
         Arrays.stream(featureSupplier).forEach(this::installFeature);
     }
 
-    @Nullable
     public void uninstallFeature(Class<?> featureClass) {
         for (Feature<?, ?> feature : supportedFeatures) {
             if (feature.getClass() == featureClass) {
@@ -165,7 +160,7 @@ public class LspEditor {
     }
 
     @Nullable
-    public <T> T useFeature(Class<T> featureClass) {
+    public <T extends Feature> T useFeature(Class<T> featureClass) {
         for (Feature<?, ?> feature : supportedFeatures) {
             if (feature.getClass() == featureClass) {
                 return (T) feature;
@@ -199,9 +194,9 @@ public class LspEditor {
     public void installFeatures() {
 
         //features
-        installFeatures(LspFormattingFeature::new, DocumentOpenFeature::new,
+        installFeatures(FormattingFeature::new, DocumentOpenFeature::new,
                 DocumentSaveFeature::new, DocumentChangeFeature::new,
-                DocumentCloseFeature::new);
+                DocumentCloseFeature::new, PublishDiagnosticsFeature::new);
 
         //options
 
@@ -242,6 +237,18 @@ public class LspEditor {
 
     public String getEditorContent() {
         return currentEditor.get().getText().toString();
+    }
+
+
+    @Nullable
+    public PublishDiagnosticsParams getDiagnostics() {
+        return diagnosticsParams;
+    }
+
+    public void publishDiagnostics(PublishDiagnosticsParams publishDiagnosticsParams) {
+        this.diagnosticsParams = publishDiagnosticsParams;
+        useFeature(PublishDiagnosticsFeature.class)
+                .execute(publishDiagnosticsParams);
     }
 
 

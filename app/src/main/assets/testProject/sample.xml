@@ -1,33 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<html>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="io.github.rosemoe.sora.app">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <head>
-        <title>Sora Editor</title>
+    <application
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:largeHeap="true"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <service
+            android:name=".LspLanguageServerService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":remote" />
 
-          <meta charset="utf-8" />
+        <profileable
+            android:shell="true"
+            tools:targetApi="q" />
 
+        <activity
+            android:name=".TestActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LspTestActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.ACTION_VIEW" />
 
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
 
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-
-    </head>
-
-
-    <body>
-
-
-        <h1>Sora Editor</h1>
-
-
-        <p>
-               <a href="aaa://sora-editor/">sora-editor</a>
-               is the awesome code editor for Android.
-
-
-        </p>
-
-
-     </body>
-</html>
+</manifest>

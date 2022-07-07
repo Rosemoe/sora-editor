@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.lsp.client;
 
+import android.net.Uri;
 import android.util.Log;
 
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams;
@@ -38,8 +39,12 @@ import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.jetbrains.annotations.NotNull;
 
+import java.net.URL;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+
+import io.github.rosemoe.sora.lsp.editor.LspEditor;
+import io.github.rosemoe.sora.lsp.editor.LspEditorManager;
 
 public class DefaultLanguageClient implements LanguageClient {
 
@@ -110,7 +115,15 @@ public class DefaultLanguageClient implements LanguageClient {
 
     @Override
     public void publishDiagnostics(PublishDiagnosticsParams publishDiagnosticsParams) {
-      System.out.println(publishDiagnosticsParams);
+        LspEditor editor = LspEditorManager
+                .getOrCreateEditorManager(getContext().getProjectPath())
+                .getEditor(publishDiagnosticsParams.getUri());
+
+        if (editor == null) {
+            return;
+        }
+
+        editor.publishDiagnostics(publishDiagnosticsParams);
     }
 
     @Override

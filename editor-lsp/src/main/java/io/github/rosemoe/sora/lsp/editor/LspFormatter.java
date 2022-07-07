@@ -29,7 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.lang.format.AsyncFormatter;
-import io.github.rosemoe.sora.lsp.operations.format.LspFormattingFeature;
+import io.github.rosemoe.sora.lsp.operations.format.FormattingFeature;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.TextRange;
 
@@ -53,15 +53,16 @@ public class LspFormatter extends AsyncFormatter {
 
         );
         language.getEditor()
-                .useFeature(LspFormattingFeature.class)
+                .useFeature(FormattingFeature.class)
                 .execute(new Pair<>(text, new TextRange(charPositionOfStart, charPositionOfEnd)));
+
         return null;
     }
 
     @Nullable
     @Override
     public TextRange formatRegionAsync(@NonNull Content text, @NonNull TextRange rangeToFormat, @NonNull TextRange cursorRange) {
-        language.getEditor().useFeature(LspFormattingFeature.class).execute(new Pair<>(text, cursorRange));
+        language.getEditor().useFeature(FormattingFeature.class).execute(new Pair<>(text, cursorRange));
         return null;
     }
 
