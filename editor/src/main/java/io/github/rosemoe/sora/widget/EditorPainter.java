@@ -62,7 +62,6 @@ import io.github.rosemoe.sora.lang.styling.ExternalRenderer;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Spans;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
-import io.github.rosemoe.sora.text.AndroidBidi;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.Cursor;
@@ -354,7 +353,7 @@ public class EditorPainter {
 
 
             // Draw text
-            drawRegionTextDirectional(canvas, null, paintingOffset, mEditor.getRowBaseline(row), line, paintStart, paintEnd, span.column, spanEnd, columnCount, mEditor.getColorScheme().getColor(span.getForegroundColorId()));
+            drawRegionTextDirectional(canvas, paintingOffset, mEditor.getRowBaseline(row), line, paintStart, paintEnd, span.column, spanEnd, columnCount, mEditor.getColorScheme().getColor(span.getForegroundColorId()));
 
             // Draw strikethrough
             if (TextStyle.isStrikeThrough(span.style)) {
@@ -1330,17 +1329,7 @@ public class EditorPainter {
         }
     }
 
-    protected void drawRegionTextDirectional(Canvas canvas, AndroidBidi.Directions dirs, float offsetX, float baseline, int line, int startIndex, int endIndex, int contextStart, int contextEnd, int columnCount, int color) {
-        // TODO
-        /* float accumulatedWidth = 0f;
-        for (int i = 0; i < dirs.getRunCount(); i++) {
-            int paintStart = Math.max(dirs.getRunStart(i), startIndex);
-            int paintEnd = Math.min(dirs.getRunStart(i) + dirs.getRunLength(i), endIndex);
-            if (startIndex < endIndex) {
-                drawRegionText(canvas, offsetX + accumulatedWidth, baseline, line, paintStart, paintEnd, contextStart, contextEnd, dirs.isRunRtl(i), columnCount, color);
-                accumulatedWidth += measureText(mBuffer, paintStart, paintEnd, line);
-            }
-        }*/
+    protected void drawRegionTextDirectional(Canvas canvas, float offsetX, float baseline, int line, int startIndex, int endIndex, int contextStart, int contextEnd, int columnCount, int color) {
         drawRegionText(canvas, offsetX, baseline, line, startIndex, endIndex, contextStart, contextEnd, false, columnCount, color);
     }
 
