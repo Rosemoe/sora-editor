@@ -3593,6 +3593,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Set request needed to update when editor updates selection
      */
     protected void setExtracting(@Nullable ExtractedTextRequest request) {
+        if (getProps().disallowSuggestions) {
+            mExtracting = null;
+            return;
+        }
         mExtracting = request;
     }
 
@@ -3600,6 +3604,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Extract text in editor for input method
      */
     protected ExtractedText extractText(@NonNull ExtractedTextRequest request) {
+        if (getProps().disallowSuggestions) {
+            return null;
+        }
         Cursor cur = getCursor();
         ExtractedText text = new ExtractedText();
         int selBegin = cur.getLeft();

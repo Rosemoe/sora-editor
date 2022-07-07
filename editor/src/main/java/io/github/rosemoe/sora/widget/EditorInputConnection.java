@@ -184,6 +184,9 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public CharSequence getSelectedText(int flags) {
+        if (mEditor.getProps().disallowSuggestions) {
+            return null;
+        }
         //This text should be limited because when the user try to select all text
         //it can be quite large text and costs time, which will finally cause ANR
         int left = getCursor().getLeft();
@@ -193,12 +196,18 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public CharSequence getTextBeforeCursor(int length, int flags) {
+        if (mEditor.getProps().disallowSuggestions) {
+            return null;
+        }
         int start = getCursor().getLeft();
         return getTextRegion(start - length, start, flags);
     }
 
     @Override
     public CharSequence getTextAfterCursor(int length, int flags) {
+        if (mEditor.getProps().disallowSuggestions) {
+            return null;
+        }
         int end = getCursor().getRight();
         return getTextRegion(end, end + length, flags);
     }
@@ -409,7 +418,11 @@ class EditorInputConnection extends BaseInputConnection {
     public boolean setComposingText(CharSequence text, int newCursorPosition) {
         if (DEBUG)
             logger.d("setComposingText, text = " + text + ", pos = " + newCursorPosition);
-        if (!mEditor.isEditable() || mInvalid || shouldRejectComposing() || mEditor.getProps().disallowSuggestions) {
+        if (!mEditor.isEditable() || mInvalid || shouldRejectComposing()) {
+            return false;
+        }
+        if (mEditor.getProps().disallowSuggestions) {
+            commitText(text, newCursorPosition);
             return false;
         }
         if (TextUtils.indexOf(text, '\n') != -1) {
@@ -581,6 +594,9 @@ class EditorInputConnection extends BaseInputConnection {
     @Override
     @RequiresApi(31)
     public SurroundingText getSurroundingText(int beforeLength, int afterLength, int flags) {
+        if (mEditor.getProps().disallowSuggestions) {
+            return null;
+        }
         if ((beforeLength | afterLength) < 0) {
             throw new IllegalArgumentException("length < 0");
         }
