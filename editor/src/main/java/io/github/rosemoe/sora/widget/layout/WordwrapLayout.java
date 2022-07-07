@@ -420,6 +420,14 @@ public class WordwrapLayout extends AbstractLayout {
         return count;
     }
 
+    @Override
+    public int getRowCount() {
+        if (rowTable.isEmpty()) {
+            return text.getLineCount();
+        }
+        return rowTable.size();
+    }
+
     static class RowRegion {
 
         final int startColumn;

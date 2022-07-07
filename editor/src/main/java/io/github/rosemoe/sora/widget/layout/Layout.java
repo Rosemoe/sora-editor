@@ -88,6 +88,11 @@ public interface Layout extends LineRemoveListener, ContentListener {
     int getLayoutHeight();
 
     /**
+     * Get the total row count
+     */
+    int getRowCount();
+
+    /**
      * Get character line and column for offsets in layout
      *
      * @param xOffset Horizontal offset on layout

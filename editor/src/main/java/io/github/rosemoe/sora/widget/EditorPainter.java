@@ -1088,7 +1088,7 @@ public class EditorPainter {
                 }
                 mPaintOther.setColor(mEditor.getColorScheme().getColor(colorId));
                 startRow = Math.max(firstVisRow, startRow);
-                endRow = Math.max(lastVisRow, endRow);
+                endRow = Math.min(lastVisRow, endRow);
                 for (int i = startRow;i <= endRow;i++) {
                     var row = mEditor.getLayout().getRowAt(i);
                     var startX = 0f;

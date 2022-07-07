@@ -123,6 +123,11 @@ public class LineBreakLayout extends AbstractLayout {
     }
 
     @Override
+    public int getRowCount() {
+        return text.getLineCount();
+    }
+
+    @Override
     public void beforeReplace(Content content) {
         // Intentionally empty
     }

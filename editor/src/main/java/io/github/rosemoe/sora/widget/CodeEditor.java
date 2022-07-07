@@ -2518,7 +2518,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return last visible row
      */
     public int getLastVisibleRow() {
-        return Math.max(0, Math.min(mLayout.getLayoutHeight(), getOffsetY() + getHeight()) / getRowHeight());
+        return Math.max(0, Math.min(mLayout.getRowCount() - 1, getOffsetY() + getHeight() / getRowHeight()));
     }
 
     /**
