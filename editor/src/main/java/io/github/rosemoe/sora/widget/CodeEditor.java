@@ -1153,6 +1153,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         var text = mText;
         while (startLine <= endLine && startLine < text.getLineCount()) {
             var line = usePainter ? mPainter.getLine(startLine) : mText.getLine(startLine);
+            if (isWordwrap()) {
+                line.widthCache = null;
+                startLine++;
+                continue;
+            }
             if (line.timestamp < timestamp) {
                 var gtr = GraphicTextRow.obtain();
                 if (line.widthCache == null || line.widthCache.length < line.length()) {
