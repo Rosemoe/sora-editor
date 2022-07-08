@@ -21,12 +21,13 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.editor;
+package io.github.rosemoe.sora.lsp.editor.event;
 
 
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.EventReceiver;
 import io.github.rosemoe.sora.event.Unsubscribe;
+import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeFeature;
 
 public class LspEditorContentChangeEventReceiver implements EventReceiver<ContentChangeEvent> {

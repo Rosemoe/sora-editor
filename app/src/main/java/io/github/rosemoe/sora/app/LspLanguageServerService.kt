@@ -27,7 +27,8 @@ package io.github.rosemoe.sora.app
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import io.github.rosemoe.sora.lsp.mock.MockLanguageConnection
+import org.eclipse.lemminx.XMLServerLauncher
+import java.net.ServerSocket
 import kotlin.concurrent.thread
 
 class LspLanguageServerService : Service() {
@@ -40,7 +41,12 @@ class LspLanguageServerService : Service() {
         //Only used in test
         thread {
             val port = intent?.getIntExtra("port", 0) ?: 0
-            MockLanguageConnection.createConnect(port)
+
+            val socket = ServerSocket(port)
+
+            val socketClient = socket.accept()
+
+            XMLServerLauncher.launch(socketClient.getInputStream(), socketClient.getOutputStream())
         }
         return START_STICKY
     }

@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.editor;
+package io.github.rosemoe.sora.lsp.editor.completion;
 
 import org.eclipse.lsp4j.TextEdit;
 
@@ -34,12 +34,10 @@ public class LspCompletionItem extends CompletionItem implements Comparable<LspC
 
     private final org.eclipse.lsp4j.CompletionItem commitItem;
 
-
     public LspCompletionItem(org.eclipse.lsp4j.CompletionItem completionItem) {
         super(completionItem.getLabel(), completionItem.getDetail());
         this.commitItem = completionItem;
     }
-
 
     @Override
     public void performCompletion(CodeEditor editor, Content text, int line, int column) {

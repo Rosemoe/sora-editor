@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.editor;
+package io.github.rosemoe.sora.lsp.editor.format;
 
 import android.util.Pair;
 
@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.lang.format.AsyncFormatter;
+import io.github.rosemoe.sora.lsp.editor.LspLanguage;
 import io.github.rosemoe.sora.lsp.operations.format.FormattingFeature;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.TextRange;

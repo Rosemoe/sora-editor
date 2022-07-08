@@ -73,6 +73,4 @@ dependencies {
     implementation ("org.eclipse.lsp4j:org.eclipse.lsp4j:0.11.0")
     implementation("androidx.annotation:annotation:1.4.0")
 
-    debugImplementation("org.eclipse.lemminx:org.eclipse.lemminx:0.17.0")
-
 }

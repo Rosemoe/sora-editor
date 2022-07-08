@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.lsp.operations.document;
 
+import androidx.annotation.Nullable;
+
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
@@ -57,6 +59,7 @@ public class DocumentChangeFeature implements Feature<ContentChangeEvent, Void> 
     }
 
 
+    @Nullable
     public CompletableFuture<Void> getFuture() {
         return future;
     }
@@ -67,11 +70,16 @@ public class DocumentChangeFeature implements Feature<ContentChangeEvent, Void> 
         DidChangeTextDocumentParams params = createDidChangeTextDocumentParams(data);
 
         editor.getRequestManagerOfOptional()
-                .ifPresent(requestManager -> future = CompletableFuture.runAsync(() ->
-                        requestManager.didChange(
-                                params)));
+                .ifPresent(requestManager ->
+                        future = CompletableFuture.runAsync(() -> requestManager.didChange(
+                                params)
+                        ));
 
-        ForkJoinPool.commonPool().execute(future::join);
+        ForkJoinPool.commonPool().execute(() -> {
+                    future.join();
+                    future = null;
+                }
+        );
 
         return null;
     }

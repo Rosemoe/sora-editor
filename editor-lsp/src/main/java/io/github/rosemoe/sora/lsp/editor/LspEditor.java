@@ -45,6 +45,7 @@ import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition;
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper;
+import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEventReceiver;
 import io.github.rosemoe.sora.lsp.operations.Feature;
 import io.github.rosemoe.sora.lsp.operations.completion.CompletionFeature;
 import io.github.rosemoe.sora.lsp.operations.diagnostics.PublishDiagnosticsFeature;
@@ -62,6 +63,7 @@ public class LspEditor {
     private final String projectPath;
 
     private final LanguageServerDefinition serverDefinition;
+
     private final String currentFileUri;
 
     private WeakReference<CodeEditor> currentEditor;
