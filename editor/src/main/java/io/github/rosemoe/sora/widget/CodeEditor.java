@@ -2500,12 +2500,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     /**
      * Get last visible row on screen.
-     * The result is <strong>unchecked</strong>. It can be bigger than the max row count in layout
      *
      * @return last visible row
      */
     public int getLastVisibleRow() {
-        return Math.max(0, Math.min(mLayout.getRowCount() - 1, getOffsetY() + getHeight() / getRowHeight()));
+        return Math.max(0, Math.min(mLayout.getRowCount() - 1, (getOffsetY() + getHeight()) / getRowHeight()));
     }
 
     /**
