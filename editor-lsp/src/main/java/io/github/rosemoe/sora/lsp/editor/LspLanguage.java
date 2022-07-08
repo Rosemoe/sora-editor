@@ -51,7 +51,6 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
 @Experimental
 public class LspLanguage implements Language {
 
-
     private LspEditor currentEditor;
 
     private LspFormatter lspFormatter;

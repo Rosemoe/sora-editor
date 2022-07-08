@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.lsp.editor;
 
+import androidx.annotation.Nullable;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,7 +57,12 @@ public class LspEditorManager {
         return  editors.get(currentFileUri);
     }
 
+    @Nullable
     public LspEditor removeEditor(String currentFileUri) {
+        if (editors.get(currentFileUri) == null) {
+            return null;
+        }
+        getEditor(currentFileUri).close();
         return editors.remove(currentFileUri);
     }
 
