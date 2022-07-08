@@ -38,6 +38,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
+import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.SubscriptionReceipt;
 import io.github.rosemoe.sora.lang.Language;
@@ -45,6 +46,7 @@ import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestMa
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition;
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper;
 import io.github.rosemoe.sora.lsp.operations.Feature;
+import io.github.rosemoe.sora.lsp.operations.completion.CompletionFeature;
 import io.github.rosemoe.sora.lsp.operations.diagnostics.PublishDiagnosticsFeature;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeFeature;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentCloseFeature;
@@ -53,6 +55,7 @@ import io.github.rosemoe.sora.lsp.operations.document.DocumentSaveFeature;
 import io.github.rosemoe.sora.lsp.operations.format.FormattingFeature;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
+@Experimental
 public class LspEditor {
 
 
@@ -196,7 +199,7 @@ public class LspEditor {
         //features
         installFeatures(FormattingFeature::new, DocumentOpenFeature::new,
                 DocumentSaveFeature::new, DocumentChangeFeature::new,
-                DocumentCloseFeature::new, PublishDiagnosticsFeature::new);
+                DocumentCloseFeature::new, PublishDiagnosticsFeature::new, CompletionFeature::new);
 
         //options
 
@@ -273,11 +276,15 @@ public class LspEditor {
     }
 
     public void disconnent() {
-        useFeature(DocumentCloseFeature.class)
-                .execute(null);
+
 
         if (languageServerWrapper != null) {
-            CompletableFuture.runAsync(() -> languageServerWrapper.disconnect(this));
+            CompletableFuture.runAsync(() -> {
+                        useFeature(DocumentCloseFeature.class)
+                                .execute(null).join();
+                        languageServerWrapper.disconnect(this);
+                    }
+            );
         }
     }
 

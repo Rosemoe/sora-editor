@@ -21,18 +21,22 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.operations.document;
+package io.github.rosemoe.sora.lsp.operations.completion;
 
+import org.eclipse.lsp4j.CompletionItem;
+
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 
+import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.operations.Feature;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
+import io.github.rosemoe.sora.text.CharPosition;
 
-public class DocumentSaveFeature implements Feature<Void, Void> {
+public class CompletionFeature implements Feature<CharPosition, CompletableFuture<List<CompletionItem>>> {
 
-    private CompletableFuture<Void> future;
+    private CompletableFuture<List<CompletionItem>> future;
     private LspEditor editor;
 
 
@@ -52,19 +56,28 @@ public class DocumentSaveFeature implements Feature<Void, Void> {
 
 
     @Override
-    public Void execute(Void data) {
+    public CompletableFuture<List<CompletionItem>> execute(CharPosition data) {
+        if (future != null) {
+            future.cancel(true);
+            future = null;
+        }
 
-        editor.getRequestManagerOfOptional()
-                .ifPresent(requestManager -> future = CompletableFuture.runAsync(() ->
-                        requestManager.didSave(
-                                LspUtils.createDidSaveTextDocumentParams(
-                                        editor.getCurrentFileUri(), editor.getEditorContent()
-                                ))));
+        RequestManager manager = editor.getRequestManager();
 
-        ForkJoinPool.commonPool().execute(future::join);
+        if (manager == null) {
+            return null;
+        }
 
-        return null;
+        future = editor.getRequestManager().completion(
+                LspUtils.createCompletionParams(
+                        editor.getCurrentFileUri(),
+                        LspUtils.createPosition(data)
+                )
+        ).thenApply(listCompletionListEither ->
+                listCompletionListEither.isLeft() ? listCompletionListEither.getLeft() :
+                        listCompletionListEither.getRight().getItems());
+
+
+        return future;
     }
-
-
 }

@@ -24,12 +24,14 @@
 package io.github.rosemoe.sora.lsp.operations.document;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.operations.Feature;
+import io.github.rosemoe.sora.lsp.operations.completion.CompletionFeature;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 
-public class DocumentCloseFeature implements Feature<Void, Void> {
+public class DocumentCloseFeature implements Feature<Void, CompletableFuture<Void>> {
 
     private CompletableFuture<Void> future;
     private LspEditor editor;
@@ -51,7 +53,7 @@ public class DocumentCloseFeature implements Feature<Void, Void> {
 
 
     @Override
-    public Void execute(Void data) {
+    public CompletableFuture<Void> execute(Void data) {
 
         editor.getRequestManagerOfOptional()
                 .ifPresent(requestManager -> future = CompletableFuture.runAsync(() ->
@@ -60,8 +62,9 @@ public class DocumentCloseFeature implements Feature<Void, Void> {
                                         editor.getCurrentFileUri()
                                 ))));
 
+        ForkJoinPool.commonPool().execute(future::join);
 
-        return null;
+        return future;
     }
 
 

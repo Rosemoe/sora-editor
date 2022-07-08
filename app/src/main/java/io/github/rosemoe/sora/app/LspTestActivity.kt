@@ -155,7 +155,7 @@ class LspTestActivity : AppCompatActivity() {
 
 
         lifecycleScope.launch(Dispatchers.IO) {
-            delay(800) //wait for server start
+            delay(3000) //wait for server start
             lspEditor.connect()
         }
 
@@ -208,6 +208,7 @@ class LspTestActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         editor.release()
+        stopService(Intent(this@LspTestActivity, LspLanguageServerService::class.java))
         LspEditorManager.closeAllManager()
     }
 }

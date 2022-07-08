@@ -25,6 +25,8 @@ package io.github.rosemoe.sora.lsp.operations.format;
 
 import android.util.Pair;
 
+import androidx.annotation.WorkerThread;
+
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
@@ -66,17 +68,23 @@ public class FormattingFeature implements Feature<Pair<Content, TextRange>, Void
     }
 
     @Override
+    @WorkerThread
     public Void execute(Pair<Content, TextRange> data) {
-        var manager = editor.getRequestManager();
-        var formattingParams = new DocumentRangeFormattingParams();
+        RequestManager manager = editor.getRequestManager();
+
+        if (manager == null) {
+            return null;
+        }
+
+        DocumentRangeFormattingParams formattingParams = new DocumentRangeFormattingParams();
         formattingParams.setOptions(editor.getOption(FormattingOptions.class));
 
         formattingParams.setTextDocument(LspUtils.createTextDocumentIdentifier(editor.getCurrentFileUri()));
-        var textRange = data.second;
+        TextRange textRange = data.second;
         formattingParams.setRange(LspUtils
                 .createRange(textRange));
 
-        var content = data.first;
+        Content content = data.first;
 
         future = manager.rangeFormatting(formattingParams)
                 .thenApply(list -> Optional.ofNullable(list).orElse(List.of()))

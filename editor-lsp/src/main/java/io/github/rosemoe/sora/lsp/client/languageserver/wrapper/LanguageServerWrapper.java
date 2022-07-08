@@ -275,7 +275,6 @@ public class LanguageServerWrapper {
             if (languageServer != null) {
                 CompletableFuture<Object> shutdown = languageServer.shutdown();
                 shutdown.get(getTimeout(SHUTDOWN), TimeUnit.MILLISECONDS);
-
                 if (exit) {
                     languageServer.exit();
                 }
@@ -324,7 +323,7 @@ public class LanguageServerWrapper {
         editor.close();
 
         if (connectedEditors.isEmpty()) {
-            stop(true);
+            stop(false);
         }
     }
 
@@ -464,7 +463,7 @@ public class LanguageServerWrapper {
 
     private void reconnect() {
         // Need to copy by value since connected editors gets cleared during 'stop()' invocation.
-        stop(true);
+        stop(false);
         for (String uri : connectedEditors.stream().map(LspEditor::getCurrentFileUri).collect(Collectors.toList())) {
             connect(uri);
         }
@@ -488,7 +487,7 @@ public class LanguageServerWrapper {
             alreadyShownCrash = false;
             alreadyShownTimeout = false;
         } else {
-            stop(true);
+            stop(false);
         }
         start();
     }

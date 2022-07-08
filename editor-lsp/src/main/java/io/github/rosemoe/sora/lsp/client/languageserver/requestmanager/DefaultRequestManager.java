@@ -124,7 +124,6 @@ public class DefaultRequestManager implements RequestManager {
         textDocumentOptions = serverCapabilities.getTextDocumentSync().isRight() ?
                 serverCapabilities.getTextDocumentSync().getRight() : null;
 
-
         workspaceService = server.getWorkspaceService();
         textDocumentService = server.getTextDocumentService();
     }

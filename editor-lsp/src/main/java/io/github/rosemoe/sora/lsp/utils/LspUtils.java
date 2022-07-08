@@ -25,6 +25,8 @@ package io.github.rosemoe.sora.lsp.utils;
 
 import android.net.Uri;
 
+import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -110,6 +112,14 @@ public class LspUtils {
         TextDocumentIdentifier identifier = new TextDocumentIdentifier();
         identifier.setUri(uri);
         return identifier;
+    }
+
+
+    public static CompletionParams createCompletionParams(String uri, Position position) {
+        CompletionParams params = new CompletionParams();
+        params.setTextDocument(createTextDocumentIdentifier(uri));
+        params.setPosition(position);
+        return params;
     }
 
     public static DocumentHighlightParams createDocumentHighlightParams(String uri, int line, int character) {

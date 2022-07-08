@@ -73,7 +73,7 @@ public class LspEditorManager {
             editor.close();
         });
         editors.clear();
-        //FIXME: Maybe the user should be allowed to call the method themselves
+        // Maybe the user should be allowed to call the method themselves
         LspUtils.clearVersions();
     }
 

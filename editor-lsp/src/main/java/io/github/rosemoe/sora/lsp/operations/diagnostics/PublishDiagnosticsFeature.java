@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.lsp.operations.diagnostics;
 
+import android.util.Log;
+
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
@@ -45,9 +47,7 @@ public class PublishDiagnosticsFeature implements Feature<PublishDiagnosticsPara
 
     @Override
     public void install(LspEditor editor) {
-
         this.editor = editor;
-
     }
 
 
@@ -85,12 +85,16 @@ public class PublishDiagnosticsFeature implements Feature<PublishDiagnosticsPara
         AtomicInteger id = new AtomicInteger();
 
 
-        List<DiagnosticRegion> diagnosticRegionList = data.getDiagnostics()
+        List<DiagnosticRegion> diagnosticRegionList = data
+                .getDiagnostics()
                 .stream()
-                .map(diagnostic -> new DiagnosticRegion(
-                        getIndexForPosition(diagnostic.getRange().getStart()),
-                        getIndexForPosition(diagnostic.getRange().getEnd()),
-                        transformToEditorDiagnosticSeverity(diagnostic.getSeverity()), id.incrementAndGet())
+                .map(it -> {
+                            Log.w("diagnostic message", "diagnostic: " + it.getMessage());
+                            return new DiagnosticRegion(
+                                    getIndexForPosition(it.getRange().getStart()),
+                                    getIndexForPosition(it.getRange().getEnd()),
+                                    transformToEditorDiagnosticSeverity(it.getSeverity()), id.incrementAndGet());
+                        }
                 )
                 .collect(Collectors.toList());
 

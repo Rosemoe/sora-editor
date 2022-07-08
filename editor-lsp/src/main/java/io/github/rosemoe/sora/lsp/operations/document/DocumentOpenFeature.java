@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.lsp.operations.document;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.operations.Feature;
@@ -58,6 +59,9 @@ public class DocumentOpenFeature implements Feature<Void, Void> {
                         requestManager.didOpen(LspUtils.createDidOpenTextDocumentParams(
                                 editor.getCurrentFileUri(),
                                 editor.getFileExt(), editor.getEditorContent()))));
+
+
+        ForkJoinPool.commonPool().execute(future::join);
 
         return null;
     }

@@ -23,23 +23,33 @@
  */
 package io.github.rosemoe.sora.lsp.editor;
 
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.Comparator;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
+
+import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
+import io.github.rosemoe.sora.lang.completion.CompletionItem;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
+import io.github.rosemoe.sora.lang.completion.SimpleCompletionItem;
 import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
+import io.github.rosemoe.sora.lsp.operations.completion.CompletionFeature;
+import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeFeature;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
-//TODO: implement LspLanguage
+@Experimental
 public class LspLanguage implements Language {
 
 
@@ -67,7 +77,46 @@ public class LspLanguage implements Language {
 
     @Override
     public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position, @NonNull CompletionPublisher publisher, @NonNull Bundle extraArguments) throws CompletionCancelledException {
-        //TODO: Use lsp auto complete
+
+        publisher.setComparator(new Comparator<>() {
+            @Override
+            public int compare(CompletionItem o1, CompletionItem o2) {
+                if (o1 instanceof LspCompletionItem && o2 instanceof LspCompletionItem) {
+                    return ((LspCompletionItem) o1).compareTo(((LspCompletionItem) o2));
+                }
+                return 0;
+            }
+        });
+
+        CompletableFuture<Void> documentChangeFuture = currentEditor.useFeature(DocumentChangeFeature.class).getFuture();
+
+        if (documentChangeFuture != null) {
+            if (!documentChangeFuture.isDone() || !documentChangeFuture.isCompletedExceptionally() || !documentChangeFuture.isCancelled()) {
+                documentChangeFuture.join();
+            }
+        }
+
+        currentEditor
+                .useFeature(CompletionFeature.class)
+                .execute(position)
+                .thenAccept(completions -> {
+                    completions
+                            .forEach(completionItem -> {
+                                publisher.addItem(new LspCompletionItem(
+                                        completionItem
+                                ));
+                            });
+
+                })
+                .exceptionally(throwable -> {
+                    publisher.cancel();
+                    throw new CompletionCancelledException(throwable.getMessage());
+                })
+                .join();
+
+        publisher.updateList();
+
+
     }
 
     @Override
@@ -97,8 +146,6 @@ public class LspLanguage implements Language {
     public NewlineHandler[] getNewlineHandlers() {
         return wrapperLanguage != null ? wrapperLanguage.getNewlineHandlers() : new NewlineHandler[0];
     }
-
-
 
 
     @Override

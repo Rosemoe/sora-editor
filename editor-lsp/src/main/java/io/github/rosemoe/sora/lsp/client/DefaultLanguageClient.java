@@ -59,7 +59,7 @@ public class DefaultLanguageClient implements LanguageClient {
     @Override
     public CompletableFuture<ApplyWorkspaceEditResponse> applyEdit(ApplyWorkspaceEditParams params) {
        /* boolean response = WorkspaceEditHandler.applyEdit(params.getEdit(), "LSP edits");*/
-        //TODO: implement applyEdit
+        //FIXME: Support it?
         return CompletableFuture.supplyAsync(() -> new ApplyWorkspaceEditResponse(false));
     }
 
@@ -83,7 +83,6 @@ public class DefaultLanguageClient implements LanguageClient {
             method.ifPresent(dynamicRegistrationMethods -> registrations.put(id, dynamicRegistrationMethods));
 
         }));*/
-        //TODO: implement registerCapability
         return CompletableFuture.completedFuture(null);
     }
 
@@ -104,7 +103,6 @@ public class DefaultLanguageClient implements LanguageClient {
                 }
             }
         }));*/
-        //TODO: implement unregisterCapability
         return CompletableFuture.completedFuture(null);
     }
 
@@ -133,7 +131,6 @@ public class DefaultLanguageClient implements LanguageClient {
 
     @Override
     public CompletableFuture<MessageActionItem> showMessageRequest(ShowMessageRequestParams showMessageRequestParams) {
-        //TODO: implement showMessageRequest
         return CompletableFuture.completedFuture(new MessageActionItem());
     }
 
