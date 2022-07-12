@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition;
+import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 
 public class LspEditorManager {

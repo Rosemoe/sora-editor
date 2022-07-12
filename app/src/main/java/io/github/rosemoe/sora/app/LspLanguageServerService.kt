@@ -26,12 +26,19 @@ package io.github.rosemoe.sora.app
 
 import android.app.Service
 import android.content.Intent
+import android.os.Debug
 import android.os.IBinder
+import kotlinx.coroutines.runBlocking
 import org.eclipse.lemminx.XMLServerLauncher
+import java.lang.RuntimeException
 import java.net.ServerSocket
+import java.security.Permission
 import kotlin.concurrent.thread
 
 class LspLanguageServerService : Service() {
+
+
+    private lateinit var hookThread: Thread
 
     override fun onBind(intent: Intent): IBinder? {
         return null
@@ -39,6 +46,9 @@ class LspLanguageServerService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         //Only used in test
+
+
+
         thread {
             val port = intent?.getIntExtra("port", 0) ?: 0
 
@@ -46,10 +56,28 @@ class LspLanguageServerService : Service() {
 
             val socketClient = socket.accept()
 
-            XMLServerLauncher.launch(socketClient.getInputStream(), socketClient.getOutputStream())
+
+            runCatching {
+
+                XMLServerLauncher.launch(
+                    socketClient.getInputStream(),
+                    socketClient.getOutputStream()
+                ).get()
+            }.onFailure {
+                it.printStackTrace()
+            }
+
+            socketClient.close()
+
+            socket.close()
+
+
         }
+
         return START_STICKY
     }
 
 
+
 }
+

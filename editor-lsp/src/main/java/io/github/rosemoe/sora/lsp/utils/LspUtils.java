@@ -23,9 +23,6 @@
  */
 package io.github.rosemoe.sora.lsp.utils;
 
-import android.net.Uri;
-
-import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;

@@ -37,6 +37,7 @@ import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvid
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspEditorManager
+import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.URIUtils
 import io.github.rosemoe.sora.text.ContentCreator
 import io.github.rosemoe.sora.widget.CodeEditor
@@ -140,10 +141,12 @@ class LspTestActivity : AppCompatActivity() {
 
         withContext(Dispatchers.Main) {
 
-            lspEditor = LspEditorManager.getOrCreateEditorManager(projectPath).createEditor(
-                URIUtils.fileToURI("$projectPath/sample.xml").toString(),
-                serverDefinition
-            )
+            lspEditor = LspEditorManager
+                .getOrCreateEditorManager(projectPath)
+                .createEditor(
+                    URIUtils.fileToURI("$projectPath/sample.xml").toString(),
+                    serverDefinition
+                )
 
             val wrapperLanguage = createTextMateLanguage()
 
@@ -155,7 +158,7 @@ class LspTestActivity : AppCompatActivity() {
 
 
         lifecycleScope.launch(Dispatchers.IO) {
-            delay(3000) //wait for server start
+            delay(Timeouts.INIT.defaultTimeout.toLong()) //wait for server start
             lspEditor.connect()
         }
 
@@ -172,7 +175,7 @@ class LspTestActivity : AppCompatActivity() {
 
     private fun createTextMateLanguage(): TextMateLanguage {
         return TextMateLanguage.createNoCompletion(
-            "html.tmLanguage.json",
+            "xml.tmLanguage.json",
             assets.open("textmate/xml/syntaxes/xml.tmLanguage.json"),
             InputStreamReader(assets.open("textmate/xml/language-configuration.json")),
             (editor.colorScheme as TextMateColorScheme).rawTheme
@@ -198,7 +201,6 @@ class LspTestActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
-
         if (id == R.id.code_format) {
             editor.formatCodeAsync()
         }
@@ -207,8 +209,9 @@ class LspTestActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+
         editor.release()
-        stopService(Intent(this@LspTestActivity, LspLanguageServerService::class.java))
         LspEditorManager.closeAllManager()
+        stopService(Intent(this@LspTestActivity, LspLanguageServerService::class.java))
     }
 }

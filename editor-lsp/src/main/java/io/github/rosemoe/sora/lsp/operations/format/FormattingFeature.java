@@ -39,10 +39,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.operations.Feature;
+import io.github.rosemoe.sora.lsp.requests.Timeout;
+import io.github.rosemoe.sora.lsp.requests.Timeouts;
+import io.github.rosemoe.sora.lsp.utils.LSPException;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
@@ -76,6 +81,7 @@ public class FormattingFeature implements Feature<Pair<Content, TextRange>, Void
             return null;
         }
 
+        //TODO: Separate features for full format and range formatting
         DocumentRangeFormattingParams formattingParams = new DocumentRangeFormattingParams();
         formattingParams.setOptions(editor.getOption(FormattingOptions.class));
 
@@ -102,8 +108,11 @@ public class FormattingFeature implements Feature<Pair<Content, TextRange>, Void
                 });
 
 
-        //block
-        future.join();
+        try {
+            future.get(Timeout.getTimeout(Timeouts.FORMATTING), TimeUnit.MILLISECONDS);
+        } catch (Exception exception) {
+            throw new LSPException("Formatting code timeout");
+        }
         return null;
     }
 

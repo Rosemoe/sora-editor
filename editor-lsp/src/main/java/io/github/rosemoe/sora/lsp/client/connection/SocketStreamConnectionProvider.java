@@ -23,19 +23,23 @@
  */
 package io.github.rosemoe.sora.lsp.client.connection;
 
-import android.util.Pair;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.function.Supplier;
 
+/**
+ * Socket-based language server connection
+ */
 public class SocketStreamConnectionProvider implements StreamConnectionProvider {
 
     private final Supplier<Integer> portSupplier;
     private Socket socket;
 
+    /**
+     * @param port Provide a port number for connection
+     */
     public SocketStreamConnectionProvider(Supplier<Integer> port) {
         this.portSupplier = port;
     }

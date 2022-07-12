@@ -30,6 +30,8 @@ import androidx.annotation.Nullable;
 
 import java.util.Comparator;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
@@ -44,6 +46,9 @@ import io.github.rosemoe.sora.lsp.editor.completion.LspCompletionItem;
 import io.github.rosemoe.sora.lsp.editor.format.LspFormatter;
 import io.github.rosemoe.sora.lsp.operations.completion.CompletionFeature;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeFeature;
+import io.github.rosemoe.sora.lsp.requests.Timeout;
+import io.github.rosemoe.sora.lsp.requests.Timeouts;
+import io.github.rosemoe.sora.lsp.utils.LSPException;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
@@ -94,23 +99,28 @@ public class LspLanguage implements Language {
             }
         }
 
-        currentEditor
-                .useFeature(CompletionFeature.class)
-                .execute(position)
-                .thenAccept(completions -> {
-                    completions
-                            .forEach(completionItem -> {
-                                publisher.addItem(new LspCompletionItem(
-                                        completionItem
-                                ));
-                            });
+        try {
 
-                })
-                .exceptionally(throwable -> {
-                    publisher.cancel();
-                    throw new CompletionCancelledException(throwable.getMessage());
-                })
-                .join();
+            currentEditor
+                    .useFeature(CompletionFeature.class)
+                    .execute(position)
+                    .thenAccept(completions -> {
+                        completions
+                                .forEach(completionItem -> {
+                                    publisher.addItem(new LspCompletionItem(
+                                            completionItem
+                                    ));
+                                });
+
+                    })
+                    .exceptionally(throwable -> {
+                        publisher.cancel();
+                        throw new CompletionCancelledException(throwable.getMessage());
+                    })
+                    .get(Timeout.getTimeout(Timeouts.COMPLETION), TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            throw new LSPException(e);
+        }
 
         publisher.updateList();
 

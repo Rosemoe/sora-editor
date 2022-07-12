@@ -71,8 +71,14 @@ public class CustomConnectProvider implements StreamConnectionProvider {
 
     }
 
+    /**
+     * Provider of language server connection
+     */
     public interface StreamProvider {
-        Pair<InputStream,OutputStream> getStreams() throws IOException;
+        /**
+         * Returns the connection stream for the language server client, usually an output stream and an input stream
+         */
+        Pair<InputStream, OutputStream> getStreams() throws IOException;
     }
 
 

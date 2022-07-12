@@ -275,7 +275,7 @@ public class LanguageServerWrapper {
             if (languageServer != null) {
                 CompletableFuture<Object> shutdown = languageServer.shutdown();
                 shutdown.get(getTimeout(SHUTDOWN), TimeUnit.MILLISECONDS);
-                if (exit) {
+                if (exit && serverDefinition.callExitForLanguageServer()) {
                     languageServer.exit();
                 }
             }

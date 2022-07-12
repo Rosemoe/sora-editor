@@ -67,6 +67,10 @@ public class LanguageServerDefinition {
         }
     }
 
+
+
+    public boolean callExitForLanguageServer() { return false; }
+
     /**
      * Stops the Language server corresponding to the given working directory
      *

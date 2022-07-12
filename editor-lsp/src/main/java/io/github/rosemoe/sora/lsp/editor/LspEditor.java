@@ -36,6 +36,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Supplier;
 
 import io.github.rosemoe.sora.annotations.Experimental;
@@ -228,11 +230,8 @@ public class LspEditor {
     @WorkerThread
     public void connect() {
         LanguageServerWrapper languageServerWrapper = LanguageServerWrapper.forProject(projectPath);
-        if (languageServerWrapper != null) {
-            return;
-        }
-        languageServerWrapper = new LanguageServerWrapper(serverDefinition, projectPath);
-
+        languageServerWrapper = languageServerWrapper != null ? languageServerWrapper : new LanguageServerWrapper(serverDefinition, projectPath);
+        languageServerWrapper.serverDefinition = serverDefinition;
         this.languageServerWrapper = languageServerWrapper;
         languageServerWrapper.start();
         //wait for language server start
@@ -282,12 +281,23 @@ public class LspEditor {
 
 
         if (languageServerWrapper != null) {
-            CompletableFuture.runAsync(() -> {
-                        useFeature(DocumentCloseFeature.class)
-                                .execute(null).join();
-                        languageServerWrapper.disconnect(this);
-                    }
-            );
+
+            try {
+                useFeature(DocumentCloseFeature.class)
+                        .execute(null)
+                        .get();
+
+                ForkJoinPool
+                        .commonPool()
+                        .execute(() ->
+                                languageServerWrapper.disconnect(this));
+
+
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
+
+
         }
     }
 
@@ -298,6 +308,7 @@ public class LspEditor {
         }
 
         isClose = true;
+
 
         disconnent();
         dispose();

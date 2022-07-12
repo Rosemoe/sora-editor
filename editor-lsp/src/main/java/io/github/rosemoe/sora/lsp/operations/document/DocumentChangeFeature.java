@@ -36,6 +36,8 @@ import java.util.concurrent.ForkJoinPool;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.operations.Feature;
+import io.github.rosemoe.sora.lsp.requests.Timeout;
+import io.github.rosemoe.sora.lsp.requests.Timeouts;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 
 public class DocumentChangeFeature implements Feature<ContentChangeEvent, Void> {
