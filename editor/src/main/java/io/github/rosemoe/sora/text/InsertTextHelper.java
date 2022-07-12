@@ -27,14 +27,14 @@ import androidx.annotation.NonNull;
 
 class InsertTextHelper {
 
-    public static final InsertTextHelper[] sCached = new InsertTextHelper[8];
+    private static final InsertTextHelper[] sCached = new InsertTextHelper[8];
     static int TYPE_LINE_CONTENT = 0;
     static int TYPE_NEWLINE = 1;
     static int TYPE_EOF = 2;
     private CharSequence text;
     private int index, indexNext, length;
 
-    private static synchronized InsertTextHelper obtain() {
+    private synchronized static InsertTextHelper obtain() {
         for (int i = 0; i < sCached.length; i++) {
             if (sCached[i] != null) {
                 var cache = sCached[i];
@@ -52,11 +52,12 @@ class InsertTextHelper {
     }
 
     public void recycle() {
-        reset();
         synchronized (InsertTextHelper.class) {
             for (int i = 0; i < sCached.length; i++) {
                 if (sCached[i] == null) {
                     sCached[i] = this;
+                    reset();
+                    break;
                 }
             }
         }

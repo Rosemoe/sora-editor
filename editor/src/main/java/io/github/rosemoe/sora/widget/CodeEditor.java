@@ -1153,6 +1153,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         var text = mText;
         while (startLine <= endLine && startLine < text.getLineCount()) {
             var line = usePainter ? mPainter.getLine(startLine) : mText.getLine(startLine);
+            if (isWordwrap()) {
+                line.widthCache = null;
+                startLine++;
+                continue;
+            }
             if (line.timestamp < timestamp) {
                 var gtr = GraphicTextRow.obtain();
                 if (line.widthCache == null || line.widthCache.length < line.length()) {
@@ -2500,12 +2505,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     /**
      * Get last visible row on screen.
-     * The result is <strong>unchecked</strong>. It can be bigger than the max row count in layout
      *
      * @return last visible row
      */
     public int getLastVisibleRow() {
-        return Math.max(0, Math.min(mLayout.getRowCount() - 1, getOffsetY() + getHeight() / getRowHeight()));
+        return Math.max(0, Math.min(mLayout.getRowCount() - 1, (getOffsetY() + getHeight()) / getRowHeight()));
     }
 
     /**
