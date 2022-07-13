@@ -19,6 +19,6 @@ We recommend to use socket to connect to the language server, you can let the la
 another process without worrying that a crash of the language server will cause the main process to
 crash.
 
-See [this](https://github.com/dingyi222666/sora-editor/blob/5bf156ce45252eefb09028810b6685c2827baa90/app/src/main/java/io/github/rosemoe/sora/app/LspTestActivity.kt#L134)
+See [this](https://github.com/Rosemoe/sora-editor/blob/main/app/src/main/java/io/github/rosemoe/sora/app/LspTestActivity.kt#L135)
 to see example of connecting to a language server
 
