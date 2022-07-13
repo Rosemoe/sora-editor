@@ -109,6 +109,8 @@
         android:title="@string/open_debug_logs"/>
     <item android:id="@+id/open_test_activity"
         android:title="Open new activity"/>
+    <item android:id="@+id/open_lsp_activity"
+        android:title="Open lsp activity"/>
     <item
        android:id="@+id/text_undo"
        android:title="@string/undo" 

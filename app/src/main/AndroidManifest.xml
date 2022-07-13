@@ -3,19 +3,34 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="io.github.rosemoe.sora.app">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:largeHeap="true"
+        android:networkSecurityConfig="@xml/network_security_config"
+
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <service
+            android:name=".LspLanguageServerService"
+            android:enabled="true"
 
-        <profileable android:shell="true"
+            android:exported="false"
+            android:process=":remote" />
+
+        <profileable
+            android:shell="true"
             tools:targetApi="q" />
 
         <activity
             android:name=".TestActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LspTestActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

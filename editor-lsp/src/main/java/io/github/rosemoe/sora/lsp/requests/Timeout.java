@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2022  Rosemoe
@@ -20,34 +20,34 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
-@file:Suppress("UnstableApiUsage")
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+ */
+package io.github.rosemoe.sora.lsp.requests;
 
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * An object containing the Timeout for the various requests
+ */
+public class Timeout {
+
+    private static Map<Timeouts, Integer> timeouts = new ConcurrentHashMap<>();
+
+    static {
+        Arrays.stream(Timeouts.values()).forEach(t -> timeouts.put(t, t.getDefaultTimeout()));
+    }
+
+    public static int getTimeout(Timeouts type) {
+        return timeouts.get(type);
+    }
+
+    public static Map<Timeouts, Integer> getTimeouts() {
+        return timeouts;
+    }
+
+    public static void setTimeouts(Map<Timeouts, Integer> loaded) {
+        loaded.forEach((t, v) -> timeouts.replace(t, v));
     }
 }
-
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://repo.eclipse.org/content/groups/releases/")
-        maven("https://maven.aliyun.com/nexus/content/groups/public/")
-    }
-}
-
-rootProject.name="sora-editor"
-include(
-    ":editor",
-    ":editor-kt",
-    ":app",
-    ":language-java",
-    ":language-textmate",
-    ":editor-lsp"
-)

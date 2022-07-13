@@ -21,33 +21,63 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-@file:Suppress("UnstableApiUsage")
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
+package io.github.rosemoe.sora.app
+
+import android.app.Service
+import android.content.Intent
+import android.os.Debug
+import android.os.IBinder
+import kotlinx.coroutines.runBlocking
+import org.eclipse.lemminx.XMLServerLauncher
+import java.lang.RuntimeException
+import java.net.ServerSocket
+import java.security.Permission
+import kotlin.concurrent.thread
+
+class LspLanguageServerService : Service() {
+
+
+    private lateinit var hookThread: Thread
+
+    override fun onBind(intent: Intent): IBinder? {
+        return null
     }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        //Only used in test
+
+
+
+        thread {
+            val port = intent?.getIntExtra("port", 0) ?: 0
+
+            val socket = ServerSocket(port)
+
+            val socketClient = socket.accept()
+
+
+            runCatching {
+
+                XMLServerLauncher.launch(
+                    socketClient.getInputStream(),
+                    socketClient.getOutputStream()
+                ).get()
+            }.onFailure {
+                it.printStackTrace()
+            }
+
+            socketClient.close()
+
+            socket.close()
+
+
+        }
+
+        return START_STICKY
+    }
+
+
+
 }
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://repo.eclipse.org/content/groups/releases/")
-        maven("https://maven.aliyun.com/nexus/content/groups/public/")
-    }
-}
-
-rootProject.name="sora-editor"
-include(
-    ":editor",
-    ":editor-kt",
-    ":app",
-    ":language-java",
-    ":language-textmate",
-    ":editor-lsp"
-)

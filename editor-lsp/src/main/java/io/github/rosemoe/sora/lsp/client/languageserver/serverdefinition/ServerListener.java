@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2022  Rosemoe
@@ -20,34 +20,18 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
-@file:Suppress("UnstableApiUsage")
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+ */
+package io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition;
 
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
+
+import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.services.LanguageServer;
+
+public interface ServerListener {
+
+
+    default void initialize(LanguageServer server, InitializeResult result) {
     }
-}
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://repo.eclipse.org/content/groups/releases/")
-        maven("https://maven.aliyun.com/nexus/content/groups/public/")
-    }
-}
 
-rootProject.name="sora-editor"
-include(
-    ":editor",
-    ":editor-kt",
-    ":app",
-    ":language-java",
-    ":language-textmate",
-    ":editor-lsp"
-)
+}
