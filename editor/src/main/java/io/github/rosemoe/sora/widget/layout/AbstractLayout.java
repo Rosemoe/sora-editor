@@ -60,6 +60,9 @@ public abstract class AbstractLayout implements Layout {
     protected float[] orderedFindCharIndex(float targetOffset, ContentLine str, int line, int index, int end) {
         var gtr = GraphicTextRow.obtain();
         gtr.set(str, index, end, editor.getTabWidth(), getSpans(line), editor.getTextPaint());
+        if (this instanceof WordwrapLayout && str.widthCache == null) {
+            gtr.setSoftBreaks(((WordwrapLayout) this).getSoftBreaksForLine(line));
+        }
         var res = gtr.findOffsetByAdvance(index, targetOffset);
         GraphicTextRow.recycle(gtr);
         return res;

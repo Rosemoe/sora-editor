@@ -167,7 +167,7 @@ public class WordwrapLayout extends AbstractLayout {
         int len = sequence.length();
 
         while (start < len) {
-            var next = (int) (paint == null ? editor.findFirstVisibleChar(width, start, len, 0, sequence, line)[0] : editor.findFirstVisibleCharNoCache(width, start, len, 0, sequence, line, paint)[0]);
+            var next = (int) editor.findFirstVisibleCharNoCache(width, start, len, 0, sequence, line, paint == null ? editor.getTextPaint() : paint)[0];
             // Force to break the text, though no space is available
             if (next == start) {
                 next++;
@@ -398,6 +398,9 @@ public class WordwrapLayout extends AbstractLayout {
             var sequence = text.getLine(region.line);
             var gtr = GraphicTextRow.obtain();
             gtr.set(sequence, region.startColumn, region.endColumn, editor.getTabWidth(), getSpans(line), editor.getTextPaint());
+            if (sequence.widthCache == null) {
+                gtr.setSoftBreaks(getSoftBreaksForLine(line));
+            }
             dest[1] = gtr.measureText(region.startColumn, column);
             GraphicTextRow.recycle(gtr);
         } else {
@@ -418,6 +421,25 @@ public class WordwrapLayout extends AbstractLayout {
             row++;
         }
         return count;
+    }
+
+    /**
+     * Get soft breaks on the given line
+     */
+    public List<Integer> getSoftBreaksForLine(int line) {
+        if (rowTable.isEmpty()) {
+            return Collections.emptyList();
+        }
+        int row = findRow(line);
+        var list = new ArrayList<Integer>();
+        while (row < rowTable.size() && rowTable.get(row).line == line) {
+            var column = rowTable.get(row).startColumn;
+            if (column != 0) {
+                list.add(column);
+            }
+            row++;
+        }
+        return list;
     }
 
     @Override

@@ -1153,17 +1153,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         var text = mText;
         while (startLine <= endLine && startLine < text.getLineCount()) {
             var line = usePainter ? mPainter.getLine(startLine) : mText.getLine(startLine);
-            if (isWordwrap()) {
-                line.widthCache = null;
-                startLine++;
-                continue;
-            }
             if (line.timestamp < timestamp) {
                 var gtr = GraphicTextRow.obtain();
                 if (line.widthCache == null || line.widthCache.length < line.length()) {
                     line.widthCache = obtainFloatArray(Math.max(line.length() + 8, 90), usePainter);
                 }
                 gtr.set(line, 0, line.length(), getTabWidth(), getSpansForLine(startLine), mPainter.getPaint());
+                if (mLayout instanceof WordwrapLayout) {
+                    gtr.setSoftBreaks(((WordwrapLayout) mLayout).getSoftBreaksForLine(startLine));
+                }
                 gtr.buildMeasureCache();
                 GraphicTextRow.recycle(gtr);
                 line.timestamp = timestamp;
@@ -1430,11 +1428,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @UnsupportedUserUsage
     public float measureText(ContentLine text, int index, int count, int line) {
         var gtr = GraphicTextRow.obtain();
-        List<Span> spans = null;
+        List<Span> spans = defSpans;
         if (text.widthCache == null) {
             spans = getSpansForLine(line);
         }
         gtr.set(text, 0, text.length(), mTabWidth, spans, mPainter.getPaint());
+        if (mLayout instanceof WordwrapLayout && text.widthCache == null) {
+            gtr.setSoftBreaks(((WordwrapLayout) mLayout).getSoftBreaksForLine(line));
+        }
         var res = gtr.measureText(index, index + count);
         GraphicTextRow.recycle(gtr);
         return res;
@@ -1443,6 +1444,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Get spans on the given line
      */
+    @NonNull
     public List<Span> getSpansForLine(int line) {
         var spanMap = mStyles == null ? null : mStyles.spans;
         if (defSpans.size() == 0) {
@@ -1505,6 +1507,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         var gtr = GraphicTextRow.obtain();
         gtr.set(line, contextStart, end, mTabWidth, line.widthCache == null ? getSpansForLine(lineNumber) : null, mPainter.getPaint());
+        if (mLayout instanceof WordwrapLayout && line.widthCache == null) {
+            gtr.setSoftBreaks(((WordwrapLayout) mLayout).getSoftBreaksForLine(lineNumber));
+        }
         var res = gtr.findOffsetByAdvance(start, target);
         GraphicTextRow.recycle(gtr);
         return res;
