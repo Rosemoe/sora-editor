@@ -29,6 +29,9 @@ import static io.github.rosemoe.sora.lang.styling.TextStyle.isItalics;
 import android.annotation.SuppressLint;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.util.List;
 
 import io.github.rosemoe.sora.lang.styling.Span;
@@ -48,7 +51,9 @@ public class GraphicTextRow {
     private int mEnd;
     private int mTabWidth;
     private List<Span> mSpans;
+    private final TextRegionIterator mRegionItr = new TextRegionIterator();
     private boolean mCache = true;
+    private List<Integer> mSoftBreaks;
 
     private GraphicTextRow() {
         mBuffer = new float[2];
@@ -75,6 +80,8 @@ public class GraphicTextRow {
         st.mPaint = null;
         st.mStart = st.mEnd = st.mTabWidth = 0;
         st.mCache = true;
+        st.mRegionItr.reset();
+        st.mSoftBreaks = null;
         synchronized (sCached) {
             for (int i = 0; i < sCached.length; ++i) {
                 if (sCached[i] == null) {
@@ -88,13 +95,17 @@ public class GraphicTextRow {
     /**
      * Reset
      */
-    public void set(ContentLine line, int start, int end, int tabWidth, List<Span> spans, Paint paint) {
+    public void set(@NonNull ContentLine line, int start, int end, int tabWidth, @Nullable List<Span> spans, @NonNull Paint paint) {
         mPaint = paint;
         mText = line;
         mTabWidth = tabWidth;
         mStart = start;
         mEnd = end;
         mSpans = spans;
+    }
+
+    public void setSoftBreaks(@Nullable List<Integer> softBreaks) {
+        mSoftBreaks = softBreaks;
     }
 
     public void disableCache() {
@@ -158,23 +169,20 @@ public class GraphicTextRow {
             mBuffer[1] = cache[left] - base;
             return mBuffer;
         }
-        int regionStart = start;
-        int index = 0;
-        // Skip leading spans
-        while (index < mSpans.size() && mSpans.get(index).column < regionStart) {
-            index++;
-        }
+        mRegionItr.set(mEnd, mSpans, mSoftBreaks);
+        mRegionItr.requireStartOffset(start);
         float currentPosition = 0f;
         // Find in each region
         var lastStyle = 0L;
         var chars = mText.value;
         float tabAdvance = mPaint.getSpaceWidth() * mTabWidth;
         int offset = start;
-        while (index <= mSpans.size() && currentPosition < advance) {
-            var regionEnd = index < mSpans.size() ? mSpans.get(index).column : mEnd;
+        while (mRegionItr.hasNextRegion() && currentPosition < advance) {
+            mRegionItr.nextRegion();
+            var regionStart = mRegionItr.getStartIndex();
+            var regionEnd = mRegionItr.getEndIndex();
             regionEnd = Math.min(mEnd, regionEnd);
-            int styleSpanIndex = Math.max(0, index - 1);
-            var style = mSpans.get(styleSpanIndex).getStyleBits();
+            var style = mRegionItr.getSpan().getStyleBits();
             if (style != lastStyle) {
                 if (isBold(style) != isBold(lastStyle)) {
                     mPaint.setFakeBoldText(isBold(style));
@@ -230,7 +238,6 @@ public class GraphicTextRow {
                 break;
             }
 
-            index++;
             regionStart = regionEnd;
             if (regionEnd == mEnd) {
                 break;
@@ -269,23 +276,17 @@ public class GraphicTextRow {
 
         start = Math.max(start, mStart);
         end = Math.min(end, mEnd);
-        if (mSpans.size() == 0) {
-            throw new IllegalArgumentException("At least one span is needed");
-        }
-        int regionStart = start;
-        int index = 0;
-        // Skip leading spans
-        while (index < mSpans.size() && mSpans.get(index).column < regionStart) {
-            index++;
-        }
+        mRegionItr.set(end, mSpans, mSoftBreaks);
+        mRegionItr.requireStartOffset(start);
         float width = 0f;
         // Measure for each region
         var lastStyle = 0L;
-        while (index <= mSpans.size()) {
-            var regionEnd = index < mSpans.size() ? mSpans.get(index).column : mEnd;
+        while (mRegionItr.hasNextRegion()) {
+            mRegionItr.nextRegion();
+            var regionStart = mRegionItr.getStartIndex();
+            var regionEnd = mRegionItr.getEndIndex();
             regionEnd = Math.min(end, regionEnd);
-            int styleSpanIndex = Math.max(0, index - 1);
-            var style = mSpans.get(styleSpanIndex).getStyleBits();
+            var style = mRegionItr.getSpan().getStyleBits();
             if (style != lastStyle) {
                 if (isBold(style) != isBold(lastStyle)) {
                     mPaint.setFakeBoldText(isBold(style));
@@ -296,14 +297,13 @@ public class GraphicTextRow {
                 lastStyle = style;
             }
             width += measureTextInner(regionStart, regionEnd, widths);
-            index++;
-            regionStart = regionEnd;
-            if (regionEnd == end) {
+            if (regionEnd >= end) {
                 break;
             }
         }
         mPaint.setFakeBoldText(originalBold);
         mPaint.setTextSkewX(originalSkew);
+        mRegionItr.reset();
         return width;
     }
 
