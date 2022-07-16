@@ -85,7 +85,7 @@ dependencies {
     implementation(projects.editorLsp)
 
     //Kotlin coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
 
     //Xml language server
     implementation("org.eclipse.lemminx:org.eclipse.lemminx:0.17.0")
