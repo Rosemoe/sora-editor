@@ -399,7 +399,7 @@ public class EditorPainter {
         int nonPrintableFlags = mEditor.getNonPrintablePaintingFlags();
         // Draw hard wrap
         if ((nonPrintableFlags & FLAG_DRAW_LINE_SEPARATOR) != 0) {
-            drawMiniGraph(canvas, paintingOffset, 0, "↵");
+            drawMiniGraph(canvas, paintingOffset, -1, "↵");
         }
         renderNode.endRecording();
         mPaint.setTextSkewX(0);
@@ -1201,7 +1201,7 @@ public class EditorPainter {
     protected void drawMiniGraph(Canvas canvas, float offset, int row, String graph) {
         // Draw
         mPaintGraph.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
-        float baseline = mEditor.getRowBottom(row) - mEditor.getOffsetY() - mGraphMetrics.descent;
+        float baseline = row == -1 ? (mEditor.getRowBottom(0) - mGraphMetrics.descent) : (mEditor.getRowBottom(row) - mEditor.getOffsetY() - mGraphMetrics.descent);
         canvas.drawText(graph, 0, graph.length(), offset, baseline, mPaintGraph);
     }
 

@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.widget.layout;
 
 import android.util.SparseArray;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.NoSuchElementException;
@@ -71,10 +72,8 @@ public class LineBreakLayout extends AbstractLayout {
         final var monitor = new TaskMonitor(1, (results) -> {
             final var editor = this.editor;
             if (editor == null) {
-                System.out.println("Canceled");
                 return;
             }
-            System.out.println("Completed");
             editor.post(() -> {
                 editor.setLayoutBusy(false);
                 editor.getEventHandler().scrollBy(0, 0);
@@ -270,7 +269,7 @@ public class LineBreakLayout extends AbstractLayout {
         private final SparseArray<ContentLine> preloadedLines;
         private int currentRow;
 
-        LineBreakLayoutRowItr(Content text, int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
+        LineBreakLayoutRowItr(@NonNull Content text, int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
             initRow = currentRow = initialRow;
             result = new Row();
             this.text = text;
