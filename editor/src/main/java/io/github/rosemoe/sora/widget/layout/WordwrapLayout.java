@@ -554,22 +554,18 @@ public class WordwrapLayout extends AbstractLayout {
             editor.setLayoutBusy(true);
             var list = new ArrayList<RowRegion>();
             var breakpoints = new ArrayList<Integer>();
-            try {
-                text.runReadActionsOnLines(start, end, (index, line) -> {
-                    breakLine(index, line, breakpoints, paint);
-                    for (int j = -1; j < breakpoints.size(); j++) {
-                        int start = j == -1 ? 0 : breakpoints.get(j);
-                        int end = j + 1 < breakpoints.size() ? breakpoints.get(j + 1) : line.length();
-                        list.add(new RowRegion(index, start, end));
-                    }
-                    if (!shouldRun()) {
-                        throw new RuntimeException();
-                    }
-                    breakpoints.clear();
-                });
-            } catch (RuntimeException ignored) {
-
-            }
+            text.runReadActionsOnLines(start, end, (index, line, abortFlag) -> {
+                breakLine(index, line, breakpoints, paint);
+                for (int j = -1; j < breakpoints.size(); j++) {
+                    int start = j == -1 ? 0 : breakpoints.get(j);
+                    int end = j + 1 < breakpoints.size() ? breakpoints.get(j + 1) : line.length();
+                    list.add(new RowRegion(index, start, end));
+                }
+                if (!shouldRun()) {
+                    abortFlag.set = true;
+                }
+                breakpoints.clear();
+            });
             return new WordwrapResult(id, list);
         }
     }

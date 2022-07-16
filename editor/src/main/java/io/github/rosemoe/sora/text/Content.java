@@ -987,9 +987,39 @@ public class Content implements CharSequence {
         }
     }
 
+    /**
+     * Read the lines (ordered).
+     * This is for optimizing frequent lock acquiring.
+     *
+     * @param startLine inclusive
+     * @param endLine   inclusive
+     */
+    public void runReadActionsOnLines(int startLine, int endLine, @NonNull ContentLineConsumer2 consumer) {
+        lock(false);
+        try {
+            var flag = new ContentLineConsumer2.AbortFlag();
+            for (int i = startLine; i <= endLine && !flag.set; i++) {
+                consumer.accept(i, lines.get(i), flag);
+            }
+        } finally {
+            unlock(false);
+        }
+    }
+
+
     public interface ContentLineConsumer {
 
         void accept(int lineIndex, @NonNull ContentLine line);
+
+    }
+
+    public interface ContentLineConsumer2 {
+
+        void accept(int lineIndex, @NonNull ContentLine line, @NonNull AbortFlag flag);
+
+        class AbortFlag {
+            public boolean set = false;
+        }
 
     }
 }

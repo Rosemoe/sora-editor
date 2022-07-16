@@ -87,16 +87,14 @@ public class LineBreakLayout extends AbstractLayout {
                 widthMaintainer.lock.lock();
                 try {
                     editor.setLayoutBusy(true);
-                    text.runReadActionsOnLines(0, text.getLineCount() - 1, (index, line) -> {
+                    text.runReadActionsOnLines(0, text.getLineCount() - 1, (index, line, abortFlag) -> {
                         var width = (int) measurerLocal.measureText(line, 0, line.length(), shadowPaint);
                         if (shouldRun()) {
                             widthMaintainer.add(width);
                         } else {
-                            throw new RuntimeException();
+                            abortFlag.set = true;
                         }
                     });
-                } catch (RuntimeException ignored) {
-
                 } finally {
                     widthMaintainer.lock.unlock();
                 }
