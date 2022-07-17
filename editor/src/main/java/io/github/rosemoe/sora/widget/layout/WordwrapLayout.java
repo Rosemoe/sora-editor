@@ -255,7 +255,7 @@ public class WordwrapLayout extends AbstractLayout {
     @Override
     public int getLineNumberForRow(int row) {
         if (rowTable.isEmpty()) {
-            return row;
+            return  Math.max(0, Math.min(row, text.getLineCount() - 1));
         }
         return row >= rowTable.size() ? rowTable.get(rowTable.size() - 1).line : rowTable.get(row).line;
     }
