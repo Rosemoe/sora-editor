@@ -895,10 +895,12 @@ public class EditorPainter {
                     int spanEnd = spanOffset + 1 >= reader.getSpanCount() ? columnCount : reader.getSpanAt(spanOffset + 1).column;
                     spanEnd = Math.min(columnCount, spanEnd);
                     int paintStart = Math.max(firstVisibleChar, span.column);
+                    paintStart = Math.max(0, paintStart);
                     if (paintStart >= columnCount) {
                         break;
                     }
                     int paintEnd = Math.min(lastVisibleChar, spanEnd);
+                    paintEnd = Math.min(columnCount, paintEnd);
                     if (paintStart > paintEnd) {
                         break;
                     }
@@ -976,7 +978,7 @@ public class EditorPainter {
 
                     paintingOffset += width;
 
-                    if (paintEnd >= lastVisibleChar) {
+                    if (paintEnd >= lastVisibleChar || paintEnd >= columnCount) {
                         break;
                     }
                     spanOffset++;
