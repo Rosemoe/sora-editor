@@ -45,7 +45,6 @@ dependencyResolutionManagement {
 rootProject.name="sora-editor"
 include(
     ":editor",
-    ":editor-kt",
     ":app",
     ":language-java",
     ":language-textmate",

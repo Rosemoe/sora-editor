@@ -68,7 +68,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
     // Desugar
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.0")
 
     // androidx & material
     implementation("com.google.android.material:material:1.6.1")
@@ -79,7 +79,6 @@ dependencies {
 
     // Editor
     implementation(projects.editor)
-    implementation(projects.editorKt)
     implementation(projects.languageJava)
     implementation(projects.languageTextmate)
     implementation(projects.editorLsp)
