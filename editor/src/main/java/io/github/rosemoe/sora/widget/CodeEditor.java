@@ -3266,6 +3266,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 }
             }
         }
+        requestFocusFromTouch();
         setSelectionRegion(startLine, startColumn, endLine, endColumn, SelectionChangeEvent.CAUSE_LONG_PRESS);
     }
 
