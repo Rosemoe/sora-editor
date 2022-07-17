@@ -72,16 +72,18 @@ public class DocumentChangeFeature implements Feature<ContentChangeEvent, Void> 
         DidChangeTextDocumentParams params = createDidChangeTextDocumentParams(data);
 
         editor.getRequestManagerOfOptional()
-                .ifPresent(requestManager ->
-                        future = CompletableFuture.runAsync(() -> requestManager.didChange(
-                                params)
-                        ));
+                .ifPresent(requestManager -> {
+                    future = CompletableFuture.runAsync(() -> requestManager.didChange(
+                            params));
 
-        ForkJoinPool.commonPool().execute(() -> {
-                    future.join();
-                    future = null;
-                }
-        );
+                    ForkJoinPool.commonPool().execute(() -> {
+                                future.join();
+                                future = null;
+                            }
+                    );
+
+                });
+
 
         return null;
     }
