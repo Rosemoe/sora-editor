@@ -51,6 +51,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
@@ -59,9 +60,13 @@ import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.EmptyReader;
 import io.github.rosemoe.sora.lang.styling.ExternalRenderer;
+import io.github.rosemoe.sora.lang.styling.LineBackground;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Spans;
+import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
+import io.github.rosemoe.sora.lang.styling.color.ConstColor;
+import io.github.rosemoe.sora.lang.styling.color.ResolvableColor;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.Cursor;
@@ -704,6 +709,24 @@ public class EditorPainter {
         mEditor.getText().runReadActionsOnLines(Math.max(0, start - 5), Math.min(mEditor.getText().getLineCount() - 1, end + 5), mPreloadedLines::put);
     }
 
+    private final LineBackground coordinateLine = new LineBackground(0, new ConstColor(0));
+    protected ResolvableColor getUserBackgroundForLine(int line) {
+        Styles styles;
+        List<LineBackground> lineBackgrounds;
+        if ((styles = mEditor.getStyles()) == null || (lineBackgrounds = styles.getLineBackgrounds()) == null) {
+            return null;
+        }
+        coordinateLine.setLine(line);
+        var index = Collections.binarySearch(lineBackgrounds, coordinateLine);
+        if (index >= 0 && index < lineBackgrounds.size()) {
+            var bg = lineBackgrounds.get(index);
+            if (bg.getLine() == line) {
+                return bg.getColor();
+            }
+        }
+        return null;
+    }
+
     /**
      * Draw rows with a {@link RowIterator}
      *
@@ -755,8 +778,17 @@ public class EditorPainter {
             float paintingOffset = charPos[1] - offset2;
             int lastVisibleChar = (int) mEditor.findFirstVisibleChar(offset2 + mEditor.getWidth() - offset3, firstVisibleChar + 1, rowInf.endColumn, mBuffer, line)[0];
 
-            // Draw current line background
-            if (line == currentLine && !mEditor.getCursorAnimator().isRunning()) {
+            var drawCurrentLineBg = line == currentLine && !mEditor.getCursorAnimator().isRunning();
+            if (!drawCurrentLineBg || mEditor.getProps().drawCustomLineBgOnCurrentLine){
+                // Draw custom background
+                var customBackground = getUserBackgroundForLine(line);
+                if (customBackground != null) {
+                    var color = customBackground.resolve(mEditor);
+                    drawRowBackground(canvas, color, row);
+                }
+            }
+            if (drawCurrentLineBg) {
+                // Draw current line background
                 drawRowBackground(canvas, currentLineBgColor, row);
                 postDrawCurrentLines.add(row);
             }

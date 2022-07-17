@@ -227,4 +227,10 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean positionOfCursorWhenExitSelecting = true;
 
+    /**
+     * Draw custom line background color (specified by {@link io.github.rosemoe.sora.lang.styling.Styles#lineBackgrounds})
+     * on current line
+     */
+    public boolean drawCustomLineBgOnCurrentLine = false;
+
 }

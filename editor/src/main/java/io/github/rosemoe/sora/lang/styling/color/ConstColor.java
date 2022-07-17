@@ -21,31 +21,40 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-@SuppressWarnings("unused")
-public final class Versions {
+package io.github.rosemoe.sora.lang.styling.color;
 
-    // Project versions
-    public final static String versionName = "0.15.0-dev-1";
-    public final static int versionCode = 56;
+import android.graphics.Color;
 
-    // Platform & Tool versions
-    public final static String buildToolsVersion = "33.0.0";
-    public final static int compileSdkVersion = 33;
-    public final static int minSdkVersion = 21;
-    public final static int minSdkVersionHighApi = 26;
-    public final static int targetSdkVersion = 33;
+import androidx.annotation.NonNull;
 
-    public final static String kotlinVersion = "1.7.10";
+import io.github.rosemoe.sora.widget.CodeEditor;
 
-    // Dependency versions
-    public final static String antlrVersion = "4.9.2";
+/**
+ * An implementation of {@link ResolvableColor} containing a constant color
+ *
+ * @author Rosemoe
+ */
+public class ConstColor implements ResolvableColor {
 
+    private final int color;
 
-    // TextMate Dependency versions(from tm4e 0.4.2)
-    public final static String gsonVersion = "2.9.0";
-    public final static String jcodingsVersion = "1.0.57";
-    public final static String joniVersion = "2.1.43";
-    public final static String batikCssVersion = "1.14";
-    public final static String batikUtilVersion = "1.14";
-    public final static String xercesImplVersion = "2.12.2";
+    /**
+     * @param color Color int
+     */
+    public ConstColor(int color) {
+        this.color = color;
+    }
+
+    /**
+     * @param color Hex color string
+     * @see Color#parseColor(String)
+     */
+    public ConstColor(String color) {
+        this.color = Color.parseColor(color);
+    }
+
+    @Override
+    public int resolve(@NonNull CodeEditor editor) {
+        return color;
+    }
 }

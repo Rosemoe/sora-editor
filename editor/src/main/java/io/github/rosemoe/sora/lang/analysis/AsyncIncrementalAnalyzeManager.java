@@ -188,6 +188,14 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         return extraArguments;
     }
 
+    public Styles getManagedStyles() {
+        var thread = Thread.currentThread();
+        if (thread.getClass() != AsyncIncrementalAnalyzeManager.LooperThread.class) {
+            throw new IllegalThreadStateException();
+        }
+        return ((AsyncIncrementalAnalyzeManager<?,?>.LooperThread) thread).styles;
+    }
+
     private static class LockedSpans implements Spans {
 
         private final Lock lock;
@@ -431,7 +439,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
 
     }
 
-    private class LooperThread extends Thread {
+    private final class LooperThread extends Thread {
 
         volatile boolean abort;
         Looper looper;

@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.lang.styling;
 
+import androidx.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,6 +41,8 @@ import io.github.rosemoe.sora.text.CharPosition;
 public class Styles {
 
     public Spans spans;
+
+    public List<LineBackground> lineBackgrounds;
 
     public List<CodeBlock> blocks;
 
@@ -120,8 +124,16 @@ public class Styles {
      */
     public void adjustOnInsert(CharPosition start, CharPosition end) {
         spans.adjustOnInsert(start, end);
+        var delta = end.line - start.line;
         if (blocks != null)
-            BlocksUpdater.update(blocks, start.line, end.line - start.line);
+            BlocksUpdater.update(blocks, start.line, delta);
+        if (lineBackgrounds != null) {
+            for (var lineBackground : lineBackgrounds) {
+                if (lineBackground.getLine() > start.line) {
+                    lineBackground.setLine(lineBackground.getLine() + delta);
+                }
+            }
+        }
     }
 
     /**
@@ -129,26 +141,60 @@ public class Styles {
      */
     public void adjustOnDelete(CharPosition start, CharPosition end) {
         spans.adjustOnDelete(start, end);
+        var delta = start.line - end.line;
         if (blocks != null)
-            BlocksUpdater.update(blocks, start.line, start.line - end.line);
+            BlocksUpdater.update(blocks, start.line, delta);
+        if (lineBackgrounds != null) {
+            var itr = lineBackgrounds.iterator();
+            while (itr.hasNext()){
+                var lineBackground = itr.next();
+                var line = lineBackground.getLine();
+                if (line > end.line) {
+                    lineBackground.setLine(line + delta);
+                } else if (line > start.line /* line <= end.line */) {
+                    itr.remove();
+                }
+            }
+        }
     }
 
     /**
-     * Do some extra work before finally send the result to editor.
+     * Set special background for the given lines
+     *
+     * @param lineBackgrounds A <strong>sorted</strong> list of line backgrounds
+     */
+    public void setLineBackgrounds(@Nullable List<LineBackground> lineBackgrounds) {
+        this.lineBackgrounds = lineBackgrounds;
+    }
+
+    /**
+     * @see #setLineBackgrounds(List)
+     */
+    public List<LineBackground> getLineBackgrounds() {
+        return lineBackgrounds;
+    }
+
+    /**
+     * Do some extra work before finally sending the result to editor.
      */
     public void finishBuilding() {
-        int pre = -1;
-        var sort = false;
-        for (int i = 0; i < blocks.size() - 1; i++) {
-            var cur = blocks.get(i + 1).endLine;
-            if (pre > cur) {
-                sort = true;
-                break;
+        if (blocks != null) {
+            int pre = -1;
+            var sort = false;
+            for (int i = 0; i < blocks.size() - 1; i++) {
+                var cur = blocks.get(i + 1).endLine;
+                if (pre > cur) {
+                    sort = true;
+                    break;
+                }
+                pre = cur;
             }
-            pre = cur;
+            if (sort) {
+                Collections.sort(blocks, CodeBlock.COMPARATOR_END);
+            }
         }
-        if (sort) {
-            Collections.sort(blocks, CodeBlock.COMPARATOR_END);
+        if (lineBackgrounds != null) {
+            Collections.sort(lineBackgrounds);
         }
     }
 

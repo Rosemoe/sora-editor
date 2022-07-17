@@ -21,31 +21,23 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-@SuppressWarnings("unused")
-public final class Versions {
+package io.github.rosemoe.sora.lang.styling.color;
 
-    // Project versions
-    public final static String versionName = "0.15.0-dev-1";
-    public final static int versionCode = 56;
+import androidx.annotation.NonNull;
 
-    // Platform & Tool versions
-    public final static String buildToolsVersion = "33.0.0";
-    public final static int compileSdkVersion = 33;
-    public final static int minSdkVersion = 21;
-    public final static int minSdkVersionHighApi = 26;
-    public final static int targetSdkVersion = 33;
+import io.github.rosemoe.sora.widget.CodeEditor;
 
-    public final static String kotlinVersion = "1.7.10";
+/**
+ * Describe a color that can be resolved when rendering.
+ *
+ * @author Rosemoe
+ */
+public interface ResolvableColor {
 
-    // Dependency versions
-    public final static String antlrVersion = "4.9.2";
+    /**
+     * Resolve this color
+     * @return Color int
+     */
+    int resolve(@NonNull CodeEditor editor);
 
-
-    // TextMate Dependency versions(from tm4e 0.4.2)
-    public final static String gsonVersion = "2.9.0";
-    public final static String jcodingsVersion = "1.0.57";
-    public final static String joniVersion = "2.1.43";
-    public final static String batikCssVersion = "1.14";
-    public final static String batikUtilVersion = "1.14";
-    public final static String xercesImplVersion = "2.12.2";
 }
