@@ -1535,7 +1535,7 @@ public class EditorPainter {
                 float right = left + mEditor.getDividerMargin();
                 float center = (left + right) / 2 - mEditor.getOffsetX();
                 mPaint.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.SIDE_BLOCK_LINE));
-                mPaint.setStrokeWidth(mEditor.getDpUnit() / 2f);
+                mPaint.setStrokeWidth(mEditor.getDpUnit() * mEditor.getBlockLineWidth());
                 canvas.drawLine(center, top, center, bottom, mPaint);
             } catch (IndexOutOfBoundsException e) {
                 //ignored

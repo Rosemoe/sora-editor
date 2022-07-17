@@ -516,7 +516,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         mLineNumberAlign = Paint.Align.RIGHT;
         mWait = false;
         mBlockLineEnabled = true;
-        mBlockLineWidth = 1.5f;
+        mBlockLineWidth = 1f;
         mInputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         mClipboardManager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         setUndoEnabled(true);

@@ -243,7 +243,6 @@ public class EditorColorScheme {
                 color = 0xdd536dfe;
                 break;
             case UNDERLINE:
-            case SIDE_BLOCK_LINE:
                 color = 0xff000000;
                 break;
             case SELECTION_HANDLE:
@@ -286,6 +285,7 @@ public class EditorColorScheme {
                 color = 0xdd000000;
                 break;
             case BLOCK_LINE_CURRENT:
+            case SIDE_BLOCK_LINE:
                 color = 0xff999999;
                 break;
             case IDENTIFIER_VAR:
