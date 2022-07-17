@@ -24,6 +24,7 @@
 
 import com.android.build.gradle.BaseExtension
 import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
+import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
 import java.util.Properties
@@ -71,7 +72,7 @@ subprojects {
             pomFromGradleProperties()
             publishToMavenCentral(SonatypeHost.S01)
             signAllPublications()
-            configure(AndroidSingleVariantLibrary())
+            configure(AndroidSingleVariantLibrary(publishJavadocJar = false))
         }
     }
 }
