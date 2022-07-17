@@ -48,7 +48,7 @@ import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 /**
  * Handles touch events of editor
  *
- * @author Rose
+ * @author Rosemoe
  */
 @SuppressWarnings("CanBeFinal")
 public final class EditorTouchEventHandler implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
@@ -73,6 +73,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     boolean isScaling = false;
     float scaleMaxSize;
     float scaleMinSize;
+    private float textSizeStart;
     private long mLastScroll = 0;
     private long mLastSetSelection = 0;
     private boolean mHoldingScrollbarVertical = false;
@@ -666,12 +667,16 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     @Override
     public boolean onScaleBegin(ScaleGestureDetector detector) {
         mScroller.forceFinished(true);
+        textSizeStart = mEditor.getTextSizePx();
         return mEditor.isScalable() && !mEditor.isFormatting();
     }
 
     @Override
     public void onScaleEnd(ScaleGestureDetector detector) {
         isScaling = false;
+        if (textSizeStart == mEditor.getTextSizePx()) {
+            return;
+        }
         mEditor.getEditorPainter().updateTimestamp();
         mEditor.createLayout();
         mEditor.invalidate();
