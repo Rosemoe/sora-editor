@@ -211,6 +211,9 @@ public class EditorSearcher {
     }
 
     public void replaceThis(@NonNull String replacement) {
+        if (!mEditor.isEditable()) {
+            return;
+        }
         if (isMatchedPositionSelected()) {
             mEditor.commitText(replacement);
         } else {
@@ -223,6 +226,9 @@ public class EditorSearcher {
     }
 
     public void replaceAll(@NonNull String replacement, @Nullable final Runnable whenFinished) {
+        if (!mEditor.isEditable()) {
+            return;
+        }
         checkState();
         if (!isResultValid()) {
             Toast.makeText(mEditor.getContext(), R.string.editor_search_busy, Toast.LENGTH_SHORT).show();
