@@ -52,7 +52,6 @@ class TextRegionIterator {
         this.spans = spans;
         this.softBreaks = softBreaks;
         this.length = length;
-        System.out.println("New itr");
     }
 
     public void reset() {
@@ -113,7 +112,6 @@ class TextRegionIterator {
                 pointerSpan++;
             }
         }
-        System.out.println("region: " + startIndex + ".." + endIndex);
     }
 
     public Span getSpan() {
