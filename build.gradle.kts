@@ -35,13 +35,15 @@ plugins {
     id("com.vanniktech.maven.publish.base") version "0.20.0" apply false
 }
 
+val highApiProjects = arrayOf("editor-lsp")
+
 fun Project.configureBaseExtension() {
     extensions.findByType(BaseExtension::class)?.run {
         compileSdkVersion(Versions.compileSdkVersion)
         buildToolsVersion = Versions.buildToolsVersion
 
         defaultConfig {
-            minSdk = Versions.minSdkVersion
+            minSdk = if (highApiProjects.contains(this@configureBaseExtension.name)) Versions.minSdkVersionHighApi else Versions.minSdkVersion
             targetSdk = Versions.targetSdkVersion
             versionCode = Versions.versionCode
             versionName = Versions.versionName

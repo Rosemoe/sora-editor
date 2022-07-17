@@ -725,8 +725,8 @@ public class EditorPainter {
         int leadingWhitespaceEnd = 0;
         int trailingWhitespaceStart = 0;
         float circleRadius = 0f;
-        var composingPosition = mEditor.mConnection.mComposingText.isComposing() ? mEditor.getText().getIndexer().getCharPosition(mEditor.mConnection.mComposingText.startIndex) : null;
-        var composingLength = mEditor.mConnection.mComposingText.endIndex - mEditor.mConnection.mComposingText.startIndex;
+        var composingPosition = mEditor.mConnection.composingText.isComposing() ? mEditor.getText().getIndexer().getCharPosition(mEditor.mConnection.composingText.startIndex) : null;
+        var composingLength = mEditor.mConnection.composingText.endIndex - mEditor.mConnection.composingText.startIndex;
         if (mEditor.shouldInitializeNonPrintable()) {
             float spaceWidth = mPaint.getSpaceWidth();
             float maxD = Math.min(mEditor.getRowHeight(), spaceWidth);
@@ -1624,7 +1624,7 @@ public class EditorPainter {
     }
 
     protected void patchHighlightedDelimiters(Canvas canvas, float textOffset) {
-        if (mEditor.mConnection.mComposingText.isComposing() || !mEditor.getProps().highlightMatchingDelimiters) {
+        if (mEditor.mConnection.composingText.isComposing() || !mEditor.getProps().highlightMatchingDelimiters) {
             return;
         }
         var paired = mEditor.mStyleDelegate.getFoundBracketPair();
@@ -1831,7 +1831,7 @@ public class EditorPainter {
 
         void execute(Canvas canvas) {
             // Hide cursors (API level 31)
-            if (mEditor.mConnection.mImeConsumingInput || !mEditor.hasFocus()) {
+            if (mEditor.mConnection.imeConsumingInput || !mEditor.hasFocus()) {
                 return;
             }
             // Follow the thumb or stick to text row

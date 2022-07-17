@@ -2939,7 +2939,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         updateCursor();
         updateSelection();
         mPainter.invalidateInCursor();
-        if (!mEventHandler.hasAnyHeldHandle() && !mConnection.mComposingText.isComposing() && !mCompletionWindow.shouldRejectComposing()) {
+        if (!mEventHandler.hasAnyHeldHandle() && !mConnection.composingText.isComposing() && !mCompletionWindow.shouldRejectComposing()) {
             mCursorAnimator.markEndPos();
             mCursorAnimator.start();
         }
@@ -3573,10 +3573,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     protected void updateSelection() {
         int candidatesStart = -1, candidatesEnd = -1;
-        if (mConnection.mComposingText.isComposing()) {
+        if (mConnection.composingText.isComposing()) {
             try {
-                candidatesStart = mConnection.mComposingText.startIndex;
-                candidatesEnd = mConnection.mComposingText.endIndex;
+                candidatesStart = mConnection.composingText.startIndex;
+                candidatesEnd = mConnection.composingText.endIndex;
             } catch (IndexOutOfBoundsException e) {
                 //Ignored
             }
@@ -3647,7 +3647,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         updateSelection();
         updateCursorAnchor();
         // Restart if composing
-        if (mConnection.mComposingText.isComposing()) {
+        if (mConnection.composingText.isComposing()) {
             restartInput();
         }
     }
@@ -3671,7 +3671,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void updateCursor() {
         updateCursorAnchor();
         updateExtractedText();
-        if (!mText.isInBatchEdit() && !mConnection.mComposingText.isComposing()) {
+        if (!mText.isInBatchEdit() && !mConnection.composingText.isComposing()) {
             updateSelection();
         }
     }
@@ -4072,7 +4072,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         // Auto completion
         if (mCompletionWindow.isEnabled() && !mText.isUndoManagerWorking()) {
-            if ((!mConnection.mComposingText.isComposing() || mProps.autoCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
+            if ((!mConnection.composingText.isComposing() || mProps.autoCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
                 mCompletionWindow.requireCompletion();
             } else {
                 mCompletionWindow.hide();
@@ -4090,7 +4090,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         mLanguage.getAnalyzeManager().insert(start, end, insertedContent);
         mEventHandler.hideInsertHandle();
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
-        if (!mCursor.isSelected() && !mConnection.mComposingText.isComposing() && !mCompletionWindow.shouldRejectComposing()) {
+        if (!mCursor.isSelected() && !mConnection.composingText.isComposing() && !mCompletionWindow.shouldRejectComposing()) {
             mCursorAnimator.markEndPos();
             mCursorAnimator.start();
         }
@@ -4130,7 +4130,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         updateCursor();
 
         if (mCompletionWindow.isEnabled() && !mText.isUndoManagerWorking()) {
-            if (!mConnection.mComposingText.isComposing() && mCompletionWindow.isShowing()) {
+            if (!mConnection.composingText.isComposing() && mCompletionWindow.isShowing()) {
                 if (startLine != endLine || startColumn != endColumn - 1) {
                     mCompletionWindow.hide();
                 } else {
@@ -4149,7 +4149,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             ensureSelectionVisible();
             mEventHandler.hideInsertHandle();
         }
-        if (!mCursor.isSelected() && !mWait && !mConnection.mComposingText.isComposing() && !mCompletionWindow.shouldRejectComposing()) {
+        if (!mCursor.isSelected() && !mWait && !mConnection.composingText.isComposing() && !mCompletionWindow.shouldRejectComposing()) {
             mCursorAnimator.markEndPos();
             mCursorAnimator.start();
         }
