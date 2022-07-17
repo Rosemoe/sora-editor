@@ -778,7 +778,7 @@ public class EditorPainter {
             float paintingOffset = charPos[1] - offset2;
             int lastVisibleChar = (int) mEditor.findFirstVisibleChar(offset2 + mEditor.getWidth() - offset3, firstVisibleChar + 1, rowInf.endColumn, mBuffer, line)[0];
 
-            var drawCurrentLineBg = line == currentLine && !mEditor.getCursorAnimator().isRunning();
+            var drawCurrentLineBg = line == currentLine && !mEditor.getCursorAnimator().isRunning() && mEditor.isEditable();
             if (!drawCurrentLineBg || mEditor.getProps().drawCustomLineBgOnCurrentLine){
                 // Draw custom background
                 var customBackground = getUserBackgroundForLine(line);
