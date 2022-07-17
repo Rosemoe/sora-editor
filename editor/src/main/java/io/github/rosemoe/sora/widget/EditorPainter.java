@@ -976,7 +976,7 @@ public class EditorPainter {
 
                     paintingOffset += width;
 
-                    if (paintEnd == lastVisibleChar) {
+                    if (paintEnd >= lastVisibleChar) {
                         break;
                     }
                     spanOffset++;

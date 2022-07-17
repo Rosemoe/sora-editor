@@ -59,6 +59,7 @@ public class WordwrapLayout extends AbstractLayout {
     public WordwrapLayout(CodeEditor editor, Content text, List<RowRegion> extended) {
         super(editor, text);
         rowTable = extended != null ? extended : new ArrayList<>();
+        rowTable.clear();
         width = editor.getWidth() - (int) (editor.measureTextRegionOffset() + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5.0f, editor.getResources().getDisplayMetrics()));
         breakAllLines();
     }
@@ -79,7 +80,11 @@ public class WordwrapLayout extends AbstractLayout {
                 }
                 Collections.sort(r2);
                 editor.post(() -> {
-                    rowTable.clear();
+                    if (rowTable != null) {
+                        rowTable.clear();
+                    } else {
+                        rowTable = new ArrayList<>();
+                    }
                     for (WordwrapResult wordwrapResult : r2) {
                         rowTable.addAll(wordwrapResult.regions);
                     }
@@ -231,6 +236,7 @@ public class WordwrapLayout extends AbstractLayout {
     public void destroyLayout() {
         super.destroyLayout();
         rowTable = null;
+        Thread.dumpStack();
     }
 
     @Override

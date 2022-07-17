@@ -50,7 +50,9 @@ android {
     buildFeatures {
         viewBinding = true
     }
-
+    kotlinOptions {
+        jvmTarget = "11"
+    }
     packagingOptions {
         resources.pickFirsts.addAll(
             arrayOf(
@@ -68,7 +70,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
     // Desugar
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.0")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
 
     // androidx & material
     implementation("com.google.android.material:material:1.6.1")

@@ -51,7 +51,6 @@ public class GraphicTextRow {
     private int mEnd;
     private int mTabWidth;
     private List<Span> mSpans;
-    private final TextRegionIterator mRegionItr = new TextRegionIterator();
     private boolean mCache = true;
     private List<Integer> mSoftBreaks;
 
@@ -80,7 +79,6 @@ public class GraphicTextRow {
         st.mPaint = null;
         st.mStart = st.mEnd = st.mTabWidth = 0;
         st.mCache = true;
-        st.mRegionItr.reset();
         st.mSoftBreaks = null;
         synchronized (sCached) {
             for (int i = 0; i < sCached.length; ++i) {
@@ -169,6 +167,7 @@ public class GraphicTextRow {
             mBuffer[1] = cache[left] - base;
             return mBuffer;
         }
+        var mRegionItr = new TextRegionIterator();
         mRegionItr.set(mEnd, mSpans, mSoftBreaks);
         mRegionItr.requireStartOffset(start);
         float currentPosition = 0f;
@@ -238,7 +237,6 @@ public class GraphicTextRow {
                 break;
             }
 
-            regionStart = regionEnd;
             if (regionEnd == mEnd) {
                 break;
             }
@@ -276,6 +274,7 @@ public class GraphicTextRow {
 
         start = Math.max(start, mStart);
         end = Math.min(end, mEnd);
+        var mRegionItr = new TextRegionIterator();
         mRegionItr.set(end, mSpans, mSoftBreaks);
         mRegionItr.requireStartOffset(start);
         float width = 0f;
