@@ -166,7 +166,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
             mLastPosition = -1;
         } else {
             var show = false;
-            if (event.getCause() == SelectionChangeEvent.CAUSE_TAP && event.getLeft().index == mLastPosition && !isShowing() && !mEditor.getText().isInBatchEdit()) {
+            if (event.getCause() == SelectionChangeEvent.CAUSE_TAP && event.getLeft().index == mLastPosition && !isShowing() && !mEditor.getText().isInBatchEdit() && mEditor.isEditable()) {
                 mEditor.post(this::displayWindow);
                 show = true;
             } else {

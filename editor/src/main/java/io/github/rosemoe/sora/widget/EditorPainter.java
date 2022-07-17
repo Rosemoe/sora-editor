@@ -1868,6 +1868,9 @@ public class EditorPainter {
             if (mEditor.mConnection.imeConsumingInput || !mEditor.hasFocus()) {
                 return;
             }
+            if (handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT && !mEditor.isEditable()) {
+                return;
+            }
             // Follow the thumb or stick to text row
             if (!descriptor.position.isEmpty()) {
                 boolean isInsertHandle = mEditor.getEventHandler().holdInsertHandle() && handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT;
