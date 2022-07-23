@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.List;
 
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
+import io.github.rosemoe.sora.graphics.GraphicsConstants;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
@@ -333,7 +334,7 @@ public class EditorPainter {
             if (span.getStyleBits() != lastStyle) {
                 mPaint.setFakeBoldText(TextStyle.isBold(styleBits));
                 if (TextStyle.isItalics(styleBits)) {
-                    mPaint.setTextSkewX(-0.2f);
+                    mPaint.setTextSkewX(GraphicsConstants.TEXT_SKEW_X);
                 } else {
                     mPaint.setTextSkewX(0);
                 }
@@ -921,7 +922,7 @@ public class EditorPainter {
                     if (span.getStyleBits() != lastStyle) {
                         mPaint.setFakeBoldText(TextStyle.isBold(styleBits));
                         if (TextStyle.isItalics(styleBits)) {
-                            mPaint.setTextSkewX(-0.2f);
+                            mPaint.setTextSkewX(GraphicsConstants.TEXT_SKEW_X);
                         } else {
                             mPaint.setTextSkewX(0);
                         }
@@ -1695,7 +1696,7 @@ public class EditorPainter {
                 }
             }
             if (color != 0) {
-                mPaint.setTextSkewX(TextStyle.isItalics(style) ? -0.2f : 0f);
+                mPaint.setTextSkewX(TextStyle.isItalics(style) ? GraphicsConstants.TEXT_SKEW_X : 0f);
                 mPaint.setStrikeThruText(TextStyle.isStrikeThrough(style));
                 drawText(canvas, getLine(line), startCol, endCol - startCol, startCol, endCol - startCol, false, horizontalOffset, mEditor.getRowBaseline(row) - mEditor.getOffsetY(), line);
             }
@@ -1773,13 +1774,14 @@ public class EditorPainter {
                 }
                 var sharedEnd = Math.min(endCol, spanEnd);
                 if (sharedEnd - sharedStart > 0) {
+                    // Clip canvas to patch the requested region
                     if (first) {
                         first = false;
                         if (TextStyle.isItalics(span.getStyleBits())) {
                             var path = new Path();
                             var y = mEditor.getRowBottomOfText(position.row) - mEditor.getOffsetY();
                             path.moveTo(textOffset + position.left, y);
-                            path.lineTo(textOffset + position.left + 0.2f * y, 0f);
+                            path.lineTo(textOffset + position.left - GraphicsConstants.TEXT_SKEW_X * y, 0f);
                             path.lineTo(mEditor.getWidth(), 0f);
                             path.lineTo(mEditor.getWidth(), mEditor.getHeight());
                             path.close();
@@ -1793,7 +1795,7 @@ public class EditorPainter {
                             var path = new Path();
                             var y = mEditor.getRowBottomOfText(position.row) - mEditor.getOffsetY();
                             path.moveTo(textOffset + position.right, y);
-                            path.lineTo(textOffset + position.right + 0.2f * y, 0f);
+                            path.lineTo(textOffset + position.right - GraphicsConstants.TEXT_SKEW_X * y, 0f);
                             path.lineTo(0, 0f);
                             path.lineTo(0, mEditor.getHeight());
                             path.close();

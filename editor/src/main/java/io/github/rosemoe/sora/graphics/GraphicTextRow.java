@@ -42,7 +42,6 @@ import io.github.rosemoe.sora.text.ContentLine;
  */
 public class GraphicTextRow {
 
-    private final static float SKEW_X = -0.2f;
     private final static GraphicTextRow[] sCached = new GraphicTextRow[5];
     private final float[] mBuffer;
     private Paint mPaint;
@@ -187,7 +186,7 @@ public class GraphicTextRow {
                     mPaint.setFakeBoldText(isBold(style));
                 }
                 if (isItalics(style) != isItalics(lastStyle)) {
-                    mPaint.setTextSkewX(isItalics(style) ? SKEW_X : 0f);
+                    mPaint.setTextSkewX(isItalics(style) ? GraphicsConstants.TEXT_SKEW_X : 0f);
                 }
                 lastStyle = style;
             }
@@ -291,7 +290,7 @@ public class GraphicTextRow {
                     mPaint.setFakeBoldText(isBold(style));
                 }
                 if (isItalics(style) != isItalics(lastStyle)) {
-                    mPaint.setTextSkewX(isItalics(style) ? SKEW_X : 0f);
+                    mPaint.setTextSkewX(isItalics(style) ? GraphicsConstants.TEXT_SKEW_X : 0f);
                 }
                 lastStyle = style;
             }
