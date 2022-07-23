@@ -1788,7 +1788,7 @@ public class EditorPainter {
                             canvas.clipRect(textOffset + position.left, 0, mEditor.getWidth(), mEditor.getHeight());
                         }
                     }
-                    if (span.column >= endCol || i + 1 >= reader.getSpanCount()) {
+                    if (spanEnd >= endCol || i + 1 >= reader.getSpanCount()) {
                         if (TextStyle.isItalics(span.getStyleBits())) {
                             var path = new Path();
                             var y = mEditor.getRowBottomOfText(position.row) - mEditor.getOffsetY();
@@ -1805,7 +1805,7 @@ public class EditorPainter {
                     // Patch the text
                     patch.draw(canvas, horizontalOffset, position.row, line, spanStart, spanEnd, span.style);
                 }
-                if (span.column >= endCol) {
+                if (spanEnd >= endCol) {
                     break;
                 }
                 horizontalOffset += mEditor.measureText(lineText, spanStart, spanEnd - spanStart, line);
