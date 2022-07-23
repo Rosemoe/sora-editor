@@ -24,6 +24,9 @@
 package io.github.rosemoe.sora.langs.textmate;
 
 import android.graphics.Color;
+import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -56,6 +59,7 @@ import org.eclipse.tm4e.languageconfiguration.ILanguageConfiguration;
 import org.eclipse.tm4e.languageconfiguration.internal.LanguageConfigurator;
 
 import io.github.rosemoe.sora.text.ContentLine;
+import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.util.ArrayList;
 import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
@@ -242,6 +246,12 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
                 syncIdentifiers.identifierDecrease(identifier);
             }
         }
+    }
+
+    @Override
+    public void reset(@NonNull ContentReference content, @NonNull Bundle extraArguments) {
+        super.reset(content, extraArguments);
+        syncIdentifiers.clear();
     }
 
     @Override

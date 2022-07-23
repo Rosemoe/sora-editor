@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.langs.java;
 
+import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 
 import java.util.List;
@@ -35,6 +37,7 @@ import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.text.Content;
+import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.util.ArrayList;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
@@ -175,6 +178,12 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                 identifiers.identifierDecrease(identifier);
             }
         }
+    }
+
+    @Override
+    public void reset(@NonNull ContentReference content, @NonNull Bundle extraArguments) {
+        super.reset(content, extraArguments);
+        identifiers.clear();
     }
 
     @Override

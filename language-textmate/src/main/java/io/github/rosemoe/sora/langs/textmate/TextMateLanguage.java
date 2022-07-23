@@ -136,4 +136,8 @@ public class TextMateLanguage extends EmptyLanguage {
         final var idt = textMateAnalyzer.syncIdentifiers;
         autoComplete.requireAutoComplete(prefix, publisher, idt);
     }
+
+    public IdentifierAutoComplete getAutoCompleter() {
+        return autoComplete;
+    }
 }
