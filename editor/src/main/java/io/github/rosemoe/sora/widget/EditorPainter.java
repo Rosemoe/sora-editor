@@ -1764,8 +1764,8 @@ public class EditorPainter {
             var lineText = getLine(line);
             var column = lineText.length();
             canvas.save();
-            canvas.clipRect(textOffset + position.left, 0, textOffset + position.right, mEditor.getHeight());
             var horizontalOffset = textOffset;
+            var first = true;
             // Find spans to draw
             for (int i = 0; i < reader.getSpanCount(); i++) {
                 var span = reader.getSpanAt(i);
@@ -1777,6 +1777,35 @@ public class EditorPainter {
                 }
                 var sharedEnd = Math.min(endCol, spanEnd);
                 if (sharedEnd - sharedStart > 0) {
+                    if (first) {
+                        first = false;
+                        if (TextStyle.isItalics(span.getStyleBits())) {
+                            var path = new Path();
+                            var y = mEditor.getRowBottomOfText(position.row) - mEditor.getOffsetY();
+                            path.moveTo(textOffset + position.left, y);
+                            path.lineTo(textOffset + position.left + 0.2f * y, 0f);
+                            path.lineTo(mEditor.getWidth(), 0f);
+                            path.lineTo(mEditor.getWidth(), mEditor.getHeight());
+                            path.close();
+                            canvas.clipPath(path);
+                        } else {
+                            canvas.clipRect(textOffset + position.left, 0, mEditor.getWidth(), mEditor.getHeight());
+                        }
+                    }
+                    if (span.column >= endCol || i + 1 >= reader.getSpanCount()) {
+                        if (TextStyle.isItalics(span.getStyleBits())) {
+                            var path = new Path();
+                            var y = mEditor.getRowBottomOfText(position.row) - mEditor.getOffsetY();
+                            path.moveTo(textOffset + position.right, y);
+                            path.lineTo(textOffset + position.right + 0.2f * y, 0f);
+                            path.lineTo(0, 0f);
+                            path.lineTo(0, mEditor.getHeight());
+                            path.close();
+                            canvas.clipPath(path);
+                        } else {
+                            canvas.clipRect(0, 0, textOffset + position.right, mEditor.getHeight());
+                        }
+                    }
                     // Patch the text
                     patch.draw(canvas, horizontalOffset, position.row, line, spanStart, spanEnd, span.style);
                 }
