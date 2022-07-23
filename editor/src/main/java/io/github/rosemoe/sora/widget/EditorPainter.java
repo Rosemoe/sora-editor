@@ -82,7 +82,7 @@ import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 
 public class EditorPainter {
 
-    private static final String LOG_TAG = EditorPainter.class.getSimpleName();
+    private static final String LOG_TAG = "EditorPainter";
     private final static int[] sDiagnosticsColorMapping = {
             0,
             EditorColorScheme.PROBLEM_TYPO,
@@ -1752,7 +1752,7 @@ public class EditorPainter {
             try {
                 reader.moveToLine(line);
             } catch (Exception e) {
-                Log.e("EditorPainter", "patchTextRegions: Unable to get spans", e);
+                Log.e(LOG_TAG, "patchTextRegions: Unable to get spans", e);
                 break;
             }
             var startCol = position.startColumn;
