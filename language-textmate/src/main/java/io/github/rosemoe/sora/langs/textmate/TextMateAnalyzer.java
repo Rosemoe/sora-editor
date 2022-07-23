@@ -142,10 +142,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
         var list = new ArrayList<CodeBlock>();
         analyzeCodeBlocks(text, list, delegate);
         if (delegate.isNotCancelled()) {
-            var r = getReceiver();
-            if (r != null) {
-                r.updateBracketProvider(this, bracketsProvider);
-            }
+            withReceiver(r -> r.updateBracketProvider(this, bracketsProvider));
         }
         return list;
     }

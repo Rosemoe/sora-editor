@@ -30,6 +30,7 @@ import android.os.Message;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
@@ -66,8 +68,22 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         return sThreadId;
     }
 
+    /**
+     * Get receiver
+     */
+    @Nullable
     protected StyleReceiver getReceiver() {
         return receiver;
+    }
+
+    /**
+     * Run the given code block only when the receiver is currently non-null
+     */
+    protected void withReceiver(@NonNull ReceiverConsumer consumer) {
+        var r = getReceiver();
+        if (r != null) {
+            consumer.accept(r);
+        }
     }
 
     @Override
@@ -600,6 +616,13 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                 //ignored
             }
         }
+    }
+
+
+    public interface ReceiverConsumer {
+
+        void accept(@NonNull StyleReceiver receiver);
+
     }
 
 
