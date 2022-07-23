@@ -151,7 +151,7 @@ public class EditorPainter {
         drawView(canvas);
     }
 
-    public void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
+    public void onSizeChanged(int width, int height) {
         mViewRect.right = width;
         mViewRect.bottom = height;
     }
@@ -166,10 +166,6 @@ public class EditorPainter {
 
     Paint getPaintGraph() {
         return mPaintGraph;
-    }
-
-    int getCachedLineNumberWidth() {
-        return mCachedLineNumberWidth;
     }
 
     void setCachedLineNumberWidth(int width) {
@@ -278,7 +274,7 @@ public class EditorPainter {
     /**
      * Invalidate the region in hardware-accelerated renderer
      */
-    public void invalidateChanged(int startLine, int endLine) {
+    public void invalidateChanged(int startLine) {
         if (mRenderer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mCursor != null) {
             if (mRenderer.invalidateInRegion(startLine, Integer.MAX_VALUE)) {
                 mEditor.invalidate();
@@ -290,7 +286,7 @@ public class EditorPainter {
      * Invalidate the cursor region in hardware-accelerated renderer
      */
     public void invalidateInCursor() {
-        invalidateChanged(mCursor.getLeftLine(), mCursor.getRightLine());
+        invalidateChanged(mCursor.getLeftLine());
     }
 
     // draw methods

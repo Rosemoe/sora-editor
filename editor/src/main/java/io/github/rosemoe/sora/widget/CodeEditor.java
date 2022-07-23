@@ -3954,7 +3954,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @Override
     protected void onSizeChanged(int w, int h, int oldWidth, int oldHeight) {
         super.onSizeChanged(w, h, oldWidth, oldHeight);
-        mPainter.onSizeChanged(w, h, oldWidth, oldHeight);
+        mPainter.onSizeChanged(w, h);
         getVerticalEdgeEffect().setSize(w, h);
         getHorizontalEdgeEffect().setSize(h, w);
         getVerticalEdgeEffect().finish();
