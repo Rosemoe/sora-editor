@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.lang.completion;
 
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -203,11 +204,28 @@ public class IdentifierAutoComplete {
         private final Lock lock = new ReentrantLock(true);
         private final Map<String, MutableInt> identifierMap = new HashMap<>();
 
+        public void clear() {
+            lock.lock();
+            try {
+                identifierMap.clear();
+            } finally {
+                lock.unlock();
+            }
+        }
 
         public void identifierIncrease(@NonNull String identifier) {
             lock.lock();
             try {
-                identifierMap.computeIfAbsent(identifier, (x) -> new MutableInt(0)).increase();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    identifierMap.computeIfAbsent(identifier, (x) -> new MutableInt(0)).increase();
+                } else {
+                    var counter = identifierMap.get(identifier);
+                    if (counter == null) {
+                        counter = new MutableInt(0);
+                        identifierMap.put(identifier, counter);
+                    }
+                    counter.increase();
+                }
             } finally {
                 lock.unlock();
             }
