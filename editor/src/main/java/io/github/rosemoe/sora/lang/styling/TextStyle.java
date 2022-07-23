@@ -67,7 +67,7 @@ public class TextStyle {
      */
     public static long makeStyle(int foregroundColorId, boolean noCompletion) {
         checkColorId(foregroundColorId);
-        return ((long) foregroundColorId) | NO_COMPLETION_BIT;
+        return ((long) foregroundColorId) | (noCompletion ? NO_COMPLETION_BIT : 0);
     }
 
     /**
