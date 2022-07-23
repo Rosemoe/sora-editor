@@ -21,23 +21,19 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lang.styling.color;
+package io.github.rosemoe.sora.lang.styling.color
 
-import androidx.annotation.NonNull;
-
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditor
 
 /**
  * Describe a color that can be resolved when rendering.
  *
  * @author Rosemoe
  */
-public interface ResolvableColor {
-
+interface ResolvableColor {
     /**
      * Resolve this color
      * @return Color int
      */
-    int resolve(@NonNull CodeEditor editor);
-
+    fun resolve(editor: CodeEditor): Int
 }

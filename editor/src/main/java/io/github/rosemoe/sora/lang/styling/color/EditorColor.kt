@@ -21,30 +21,20 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lang.styling.color;
+package io.github.rosemoe.sora.lang.styling.color
 
-import androidx.annotation.NonNull;
-
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditor
 
 /**
- * An implementation of {@link ResolvableColor} describing a color based on editor's scheme
+ * An implementation of [ResolvableColor] describing a color based on editor's scheme
  *
  * @author Rosemoe
  */
-public class EditorColor implements ResolvableColor {
-
-    private final int colorId;
-
-    /**
-     * @param colorId The color ID in {@link io.github.rosemoe.sora.widget.schemes.EditorColorScheme}
-     */
-    public EditorColor(int colorId) {
-        this.colorId = colorId;
-    }
-
-    @Override
-    public int resolve(@NonNull CodeEditor editor) {
-        return editor.getColorScheme().getColor(colorId);
+class EditorColor
+/**
+ * @param colorId The color ID in [io.github.rosemoe.sora.widget.schemes.EditorColorScheme]
+ */(private val colorId: Int) : ResolvableColor {
+    override fun resolve(editor: CodeEditor): Int {
+        return editor.colorScheme.getColor(colorId)
     }
 }

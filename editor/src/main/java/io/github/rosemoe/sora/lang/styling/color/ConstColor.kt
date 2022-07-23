@@ -21,40 +21,35 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lang.styling.color;
+package io.github.rosemoe.sora.lang.styling.color
 
-import android.graphics.Color;
-
-import androidx.annotation.NonNull;
-
-import io.github.rosemoe.sora.widget.CodeEditor;
+import android.graphics.Color
+import io.github.rosemoe.sora.widget.CodeEditor
 
 /**
- * An implementation of {@link ResolvableColor} containing a constant color
+ * An implementation of [ResolvableColor] containing a constant color
  *
  * @author Rosemoe
  */
-public class ConstColor implements ResolvableColor {
-
-    private final int color;
+class ConstColor : ResolvableColor {
+    private val color: Int
 
     /**
      * @param color Color int
      */
-    public ConstColor(int color) {
-        this.color = color;
+    constructor(color: Int) {
+        this.color = color
     }
 
     /**
      * @param color Hex color string
-     * @see Color#parseColor(String)
+     * @see Color.parseColor
      */
-    public ConstColor(String color) {
-        this.color = Color.parseColor(color);
+    constructor(color: String) {
+        this.color = Color.parseColor(color)
     }
 
-    @Override
-    public int resolve(@NonNull CodeEditor editor) {
-        return color;
+    override fun resolve(editor: CodeEditor): Int {
+        return color
     }
 }
