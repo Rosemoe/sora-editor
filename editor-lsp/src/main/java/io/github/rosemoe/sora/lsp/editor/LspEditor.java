@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.Supplier;
@@ -229,7 +228,7 @@ public class LspEditor {
 
     @WorkerThread
     public void connect() {
-        LanguageServerWrapper languageServerWrapper = LanguageServerWrapper.forProject(projectPath);
+        var languageServerWrapper = LanguageServerWrapper.forProject(projectPath);
         languageServerWrapper = languageServerWrapper != null ? languageServerWrapper : new LanguageServerWrapper(serverDefinition, projectPath);
         languageServerWrapper.serverDefinition = serverDefinition;
         this.languageServerWrapper = languageServerWrapper;
@@ -277,27 +276,21 @@ public class LspEditor {
                 .execute(null);
     }
 
-    public void disconnent() {
-
-
+    public void disconnect() {
         if (languageServerWrapper != null) {
-
             try {
-                useFeature(DocumentCloseFeature.class)
-                        .execute(null)
-                        .get();
+                var feature = useFeature(DocumentCloseFeature.class);
+                if (feature != null)
+                    feature.execute(null).get();
 
                 ForkJoinPool
                         .commonPool()
                         .execute(() ->
                                 languageServerWrapper.disconnect(this));
 
-
             } catch (ExecutionException | InterruptedException e) {
                 e.printStackTrace();
             }
-
-
         }
     }
 
@@ -310,7 +303,7 @@ public class LspEditor {
         isClose = true;
 
 
-        disconnent();
+        disconnect();
         dispose();
     }
 
