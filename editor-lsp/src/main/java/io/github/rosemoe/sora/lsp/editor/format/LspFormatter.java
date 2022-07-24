@@ -56,7 +56,6 @@ public class LspFormatter extends AsyncFormatter {
         language.getEditor()
                 .useFeature(FormattingFeature.class)
                 .execute(new Pair<>(text, new TextRange(charPositionOfStart, charPositionOfEnd)));
-
         return null;
     }
 

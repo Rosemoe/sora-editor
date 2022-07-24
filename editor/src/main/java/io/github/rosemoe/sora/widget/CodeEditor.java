@@ -3274,6 +3274,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return Text displaying, the result is read-only. You should not make changes to this object as it is used internally
      * @see CodeEditor#setText(CharSequence)
      * @see CodeEditor#setText(CharSequence, Bundle)
+     * @see #setText(CharSequence, boolean, Bundle) 
      */
     @NonNull
     public Content getText() {

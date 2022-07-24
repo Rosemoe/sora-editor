@@ -89,8 +89,7 @@
     </item>
     <item
         android:id="@+id/code_format"
-        android:title="@string/format"
-        android:visible="false"/>
+        android:title="@string/format"/>
     <item
         android:id="@+id/switch_language"
         android:title="@string/switch_language" />
@@ -108,9 +107,9 @@
         android:visible="false"
         android:title="@string/open_debug_logs"/>
     <item android:id="@+id/open_test_activity"
-        android:title="Open new activity"/>
+        android:title="@string/open_new_activity"/>
     <item android:id="@+id/open_lsp_activity"
-        android:title="Open lsp activity"/>
+        android:title="@string/open_lsp_activity"/>
     <item
        android:id="@+id/text_undo"
        android:title="@string/undo" 
