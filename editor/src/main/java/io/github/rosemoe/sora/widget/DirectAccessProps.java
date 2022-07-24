@@ -233,4 +233,10 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean drawCustomLineBgOnCurrentLine = false;
 
+    /**
+     * If RTL language should be displayed in editor, this should be true to correctly reorder characters
+     * in display
+     */
+    public boolean computeDirectionsForRtl = true;
+
 }

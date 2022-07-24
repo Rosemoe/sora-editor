@@ -61,7 +61,7 @@ public class ICUUtils {
     }
 
     /**
-     * Primitive implementation of {@link #getWordEdges(CharSequence, int)}
+     * Primitive implementation of {@link #getWordEdges(CharSequence, int, boolean)} when ICU is not enabled
      */
     public static long getWordEdgesFallback(CharSequence text, int offset) {
         int start = offset;

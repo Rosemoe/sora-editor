@@ -71,6 +71,8 @@ import io.github.rosemoe.sora.lang.styling.color.ResolvableColor;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.Cursor;
+import io.github.rosemoe.sora.text.bidi.ContentBidi;
+import io.github.rosemoe.sora.text.bidi.TextBidi;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
 import io.github.rosemoe.sora.util.Numbers;
@@ -114,6 +116,8 @@ public class EditorPainter {
     private Cursor mCursor;
     private ContentLine mBuffer;
 
+    private ContentBidi mBidi;
+
     public EditorPainter(@NonNull CodeEditor editor) {
         mEditor = editor;
         mVerticalScrollBar = new RectF();
@@ -146,6 +150,12 @@ public class EditorPainter {
 
     public void notifyFullTextUpdate() {
         mCursor = mEditor.getCursor();
+        if (mBidi != null) {
+            mBidi.destroy();
+        }
+        if (mEditor.getText() != null) {
+            mBidi = new ContentBidi(mEditor.getText());
+        }
     }
 
     public void draw(@NonNull Canvas canvas) {
@@ -942,7 +952,7 @@ public class EditorPainter {
                     }
 
                     // Draw text
-                    drawRegionText(canvas, paintingOffset, mEditor.getRowBaseline(row) - mEditor.getOffsetY(), line, paintStart, paintEnd, span.column, spanEnd, false, columnCount, mEditor.getColorScheme().getColor(span.getForegroundColorId()));
+                    drawRegionTextDirectional(canvas, paintingOffset, mEditor.getRowBaseline(row) - mEditor.getOffsetY(), line, paintStart, paintEnd, span.column, spanEnd, columnCount, mEditor.getColorScheme().getColor(span.getForegroundColorId()));
 
                     // Draw strikethrough
                     if (TextStyle.isStrikeThrough(styleBits)) {
@@ -1352,7 +1362,21 @@ public class EditorPainter {
     }
 
     protected void drawRegionTextDirectional(Canvas canvas, float offsetX, float baseline, int line, int startIndex, int endIndex, int contextStart, int contextEnd, int columnCount, int color) {
-        drawRegionText(canvas, offsetX, baseline, line, startIndex, endIndex, contextStart, contextEnd, false, columnCount, color);
+        if (mEditor.getProps().computeDirectionsForRtl && mBidi != null) {
+            var directions = mBidi.getLineBidi(line);
+            var width = 0f;
+            for (int i = 0; i < directions.getRunCount(); i++) {
+                int sharedStart = Math.max(directions.getRunStart(i), startIndex);
+                int sharedEnd = Math.min(directions.getRunEnd(i), endIndex);
+                if (sharedEnd > sharedStart) {
+                    drawRegionText(canvas, offsetX + width, baseline, line, sharedStart, sharedEnd, contextStart, contextEnd, directions.isRunRtl(i), columnCount, color);
+                }
+                if (i + 1 < directions.getRunCount())
+                    width += mEditor.measureText(getLine(line), sharedStart, sharedEnd - sharedStart, line);
+            }
+        } else {
+            drawRegionText(canvas, offsetX, baseline, line, startIndex, endIndex, contextStart, contextEnd, false, columnCount, color);
+        }
     }
 
     /**
