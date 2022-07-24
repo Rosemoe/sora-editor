@@ -231,12 +231,20 @@ public class DirectAccessProps implements Serializable {
      * Draw custom line background color (specified by {@link io.github.rosemoe.sora.lang.styling.Styles#lineBackgrounds})
      * on current line
      */
+    @InvalidateRequired
     public boolean drawCustomLineBgOnCurrentLine = false;
 
     /**
      * If RTL language should be displayed in editor, this should be true to correctly reorder characters
      * in display
      */
+    @InvalidateRequired
     public boolean computeDirectionsForRtl = true;
+
+    /**
+     * The factor of round rectangle, affecting the corner radius of the resulting display
+     */
+    @InvalidateRequired
+    public float roundTextBackgroundFactor = 0.13f;
 
 }

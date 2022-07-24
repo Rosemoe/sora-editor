@@ -359,7 +359,7 @@ public class EditorPainter {
                     mRect.left = paintingOffset;
                     mRect.right = mRect.left + width;
                     mPaint.setColor(mEditor.getColorScheme().getColor(backgroundColorId));
-                    canvas.drawRoundRect(mRect, mEditor.getRowHeight() * 0.13f, mEditor.getRowHeight() * 0.13f, mPaint);
+                    canvas.drawRoundRect(mRect, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mPaint);
                 }
             }
 
@@ -826,7 +826,7 @@ public class EditorPainter {
                     mRect.left = paintingOffset;
                     mRect.right = mRect.left + mPaint.getSpaceWidth() * 2;
                     mPaint.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
-                    canvas.drawRoundRect(mRect, mEditor.getRowHeight() * 0.13f, mEditor.getRowHeight() * 0.13f, mPaint);
+                    canvas.drawRoundRect(mRect, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mPaint);
                 } else {
                     drawRowRegionBackground(canvas, paintingOffset, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd, mEditor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND), line);
                 }
@@ -947,7 +947,7 @@ public class EditorPainter {
                             mRect.left = paintingOffset;
                             mRect.right = mRect.left + width;
                             mPaint.setColor(mEditor.getColorScheme().getColor(backgroundColorId));
-                            canvas.drawRoundRect(mRect, mEditor.getRowHeight() * 0.13f, mEditor.getRowHeight() * 0.13f, mPaint);
+                            canvas.drawRoundRect(mRect, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mPaint);
                         }
                     }
 
@@ -1284,7 +1284,7 @@ public class EditorPainter {
             mRect.right = mRect.left + mEditor.measureText(mBuffer, paintStart, paintEnd - paintStart, line);
             mPaint.setColor(color);
             if (mEditor.getProps().enableRoundTextBackground) {
-                canvas.drawRoundRect(mRect, mEditor.getRowHeight() * 0.13f, mEditor.getRowHeight() * 0.13f, mPaint);
+                canvas.drawRoundRect(mRect, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mPaint);
             } else {
                 canvas.drawRect(mRect, mPaint);
             }
@@ -1714,7 +1714,7 @@ public class EditorPainter {
                 mRect.right = mEditor.getWidth();
                 mPaintOther.setColor(backgroundColor);
                 if (mEditor.getProps().enableRoundTextBackground) {
-                    canvas.drawRoundRect(mRect, mEditor.getRowHeight() * 0.13f, mEditor.getRowHeight() * 0.13f, mPaintOther);
+                    canvas.drawRoundRect(mRect, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mPaintOther);
                 } else {
                     canvas.drawRect(mRect, mPaintOther);
                 }
