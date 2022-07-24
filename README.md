@@ -45,8 +45,8 @@ implementation 'io.github.Rosemoe.sora-editor:<moduleName>:<versionName>'
 Available modules:
 - editor   
 Widget library containing all basic things of the framework
-- editor-kt   
-Provide some convenient methods for Kotlin developers such as default arguments
+- editor-lsp   
+A convenient library for creating languages by using Language Server Protocol (aka LSP)
 - language-java   
 A simple implementation for Java highlighting and identifier auto-completion
 - language-textmate   
