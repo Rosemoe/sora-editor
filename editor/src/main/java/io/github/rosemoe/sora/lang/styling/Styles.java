@@ -23,8 +23,6 @@
  */
 package io.github.rosemoe.sora.lang.styling;
 
-import android.annotation.SuppressLint;
-
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
