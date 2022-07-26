@@ -43,6 +43,4 @@ public class MyState {
     public List<String> identifiers;
     public int indent;
 
-
-
 }

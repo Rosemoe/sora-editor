@@ -51,7 +51,7 @@ public class TextMateLanguage extends EmptyLanguage {
     boolean autoCompleteEnabled;
     final boolean createIdentifiers;
 
-    private TextMateLanguage(String grammarName, InputStream grammarIns, Reader languageConfiguration, IRawTheme theme, boolean createIdentifiers) {
+    protected TextMateLanguage(String grammarName, InputStream grammarIns, Reader languageConfiguration, IRawTheme theme, boolean createIdentifiers) {
         try {
             textMateAnalyzer = new TextMateAnalyzer(this,grammarName, grammarIns,languageConfiguration, theme);
         } catch (Exception e) {

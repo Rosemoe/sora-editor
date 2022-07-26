@@ -41,7 +41,6 @@ public class TextMateColorScheme extends EditorColorScheme {
         this.iRawTheme = iRawTheme;
         this.theme = Theme.createFromRawTheme(iRawTheme);
         applyDefault();
-
     }
 
     public static TextMateColorScheme create(IRawTheme iRawTheme) {
