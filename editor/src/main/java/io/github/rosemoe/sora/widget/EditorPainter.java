@@ -114,7 +114,7 @@ public class EditorPainter {
     private long mTimestamp;
     private Paint.FontMetricsInt mLineNumberMetrics;
     private Paint.FontMetricsInt mGraphMetrics;
-    private int mCachedLineNumberWidth;
+    private int mCachedGutterWidth;
     private Cursor mCursor;
     private ContentLine mBuffer;
 
@@ -183,7 +183,7 @@ public class EditorPainter {
     }
 
     void setCachedLineNumberWidth(int width) {
-        mCachedLineNumberWidth = width;
+        mCachedGutterWidth = width;
     }
 
     public RectF getVerticalScrollBarRect() {
@@ -424,8 +424,8 @@ public class EditorPainter {
     public boolean hasSideHintIcons() {
         Styles styles;
         if ((styles = mEditor.getStyles()) != null) {
-            if (styles.lineStyles != null) {
-                return styles.lineStyles.contains(LineHintIcon.class);
+            if (styles.styleTypes != null) {
+                return styles.styleTypes.contains(LineHintIcon.class);
             }
         }
         return false;
@@ -443,18 +443,20 @@ public class EditorPainter {
         drawColor(canvas, color.getColor(EditorColorScheme.WHOLE_BACKGROUND), mViewRect);
 
         float lineNumberWidth = mEditor.measureLineNumber();
+        var sideIconWidth = hasSideHintIcons() ? mEditor.getRowHeight() : 0f;
         float offsetX = -mEditor.getOffsetX() + mEditor.measureTextRegionOffset();
         float textOffset = offsetX;
 
+        var gutterWidth = (int) (lineNumberWidth + sideIconWidth + mEditor.getDividerWidth() + mEditor.getDividerMargin() * 2);
         if (mEditor.isWordwrap()) {
-            if (mCachedLineNumberWidth == 0) {
-                mCachedLineNumberWidth = (int) lineNumberWidth;
-            } else if (mCachedLineNumberWidth != (int) lineNumberWidth && !mEditor.getEventHandler().isScaling) {
-                mCachedLineNumberWidth = (int) lineNumberWidth;
+            if (mCachedGutterWidth == 0) {
+                mCachedGutterWidth = (int) gutterWidth;
+            } else if (mCachedGutterWidth != gutterWidth && !mEditor.getEventHandler().isScaling) {
+                mCachedGutterWidth = gutterWidth;
                 mEditor.createLayout();
             }
         } else {
-            mCachedLineNumberWidth = 0;
+            mCachedGutterWidth = 0;
         }
 
         prepareLines(mEditor.getFirstVisibleLine(), mEditor.getLastVisibleLine());
@@ -462,8 +464,7 @@ public class EditorPainter {
 
         if (mCursor.isSelected()) {
             mEditor.getInsertHandleDescriptor().setEmpty();
-        }
-        if (!mCursor.isSelected()) {
+        } else {
             mEditor.getLeftHandleDescriptor().setEmpty();
             mEditor.getRightHandleDescriptor().setEmpty();
         }
@@ -482,7 +483,6 @@ public class EditorPainter {
         drawDiagnosticIndicators(canvas, offsetX);
 
         offsetX = -mEditor.getOffsetX();
-        var sideIconWidth = hasSideHintIcons() ? mEditor.getRowHeight() : 0f;
 
         if (lineNumberNotPinned) {
             drawLineNumberBackground(canvas, offsetX, lineNumberWidth + mEditor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
@@ -498,7 +498,7 @@ public class EditorPainter {
             for (int i = 0; i < postDrawCurrentLines.size(); i++) {
                 drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - mEditor.getDividerMargin()));
             }
-            // TODO Draw side icons
+            drawSideIcons(canvas, offsetX + lineNumberWidth);
             drawDivider(canvas, offsetX + lineNumberWidth + sideIconWidth + mEditor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_DIVIDER));
             if (firstLn != null && firstLn.value != -1) {
                 int bottom = mEditor.getRowBottom(0);
@@ -512,15 +512,16 @@ public class EditorPainter {
                 }
                 mPaintOther.setTextAlign(mEditor.getLineNumberAlign());
                 mPaintOther.setColor(lineNumberColor);
+                var text = Integer.toString(firstLn.value + 1);
                 switch (mEditor.getLineNumberAlign()) {
                     case LEFT:
-                        canvas.drawText(Integer.toString(firstLn.value + 1), offsetX, y, mPaintOther);
+                        canvas.drawText(text, offsetX, y, mPaintOther);
                         break;
                     case RIGHT:
-                        canvas.drawText(Integer.toString(firstLn.value + 1), offsetX + lineNumberWidth, y, mPaintOther);
+                        canvas.drawText(text, offsetX + lineNumberWidth, y, mPaintOther);
                         break;
                     case CENTER:
-                        canvas.drawText(Integer.toString(firstLn.value + 1), offsetX + (lineNumberWidth + mEditor.getDividerMargin()) / 2f, y, mPaintOther);
+                        canvas.drawText(text, offsetX + (lineNumberWidth + mEditor.getDividerMargin()) / 2f, y, mPaintOther);
                 }
             }
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
@@ -559,7 +560,7 @@ public class EditorPainter {
             for (int i = 0; i < postDrawCurrentLines.size(); i++) {
                 drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - mEditor.getDividerMargin() + mEditor.getOffsetX()));
             }
-            // TODO Draw side icons
+            drawSideIcons(canvas, offsetX + lineNumberWidth);
             drawDivider(canvas, lineNumberWidth + sideIconWidth + mEditor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_DIVIDER));
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
@@ -573,6 +574,28 @@ public class EditorPainter {
         mEditor.rememberDisplayedLines();
         mPreloadedLines.clear();
         drawFormatTip(canvas);
+    }
+
+    protected void drawSideIcons(Canvas canvas, float offset) {
+        var row = mEditor.getFirstVisibleRow();
+        var itr = mEditor.getLayout().obtainRowIterator(row);
+        final var iconSize = 0.75f;
+        var size = (int) (mEditor.getRowHeight() * iconSize);
+        var offsetToLeftTop = (int) (mEditor.getRowHeight() * (1 - iconSize) / 2f);
+        while (row <= mEditor.getLastVisibleRow() && itr.hasNext()) {
+            var rowInf = itr.next();
+            if (rowInf.isLeadingRow) {
+                var hint = getLineStyle(rowInf.lineIndex, LineHintIcon.class);
+                if (hint != null) {
+                    var drawable = hint.getDrawable();
+                    var rect = new Rect(0, 0, size, size);
+                    rect.offsetTo((int) offset + offsetToLeftTop, mEditor.getRowTop(row) - mEditor.getOffsetY() + offsetToLeftTop);
+                    drawable.setBounds(rect);
+                    drawable.draw(canvas);
+                }
+            }
+            row++;
+        }
     }
 
     protected void drawFormatTip(Canvas canvas) {
@@ -1918,6 +1941,7 @@ public class EditorPainter {
         float right;
 
         @Override
+        @NonNull
         public String toString() {
             return "TextDisplayPosition{" +
                     "row=" + row +
