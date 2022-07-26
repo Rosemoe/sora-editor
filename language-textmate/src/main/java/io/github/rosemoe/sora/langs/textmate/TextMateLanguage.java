@@ -43,7 +43,6 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
 import org.eclipse.tm4e.core.theme.IRawTheme;
 
-@Experimental
 public class TextMateLanguage extends EmptyLanguage {
 
     private TextMateAnalyzer textMateAnalyzer;
