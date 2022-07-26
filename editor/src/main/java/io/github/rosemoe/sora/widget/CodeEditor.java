@@ -404,7 +404,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return The width
      */
     public float measureTextRegionOffset() {
-        return isLineNumberEnabled() ? measureLineNumber() + mDividerMargin * 2 + mDividerWidth : mDpUnit * 5;
+        return isLineNumberEnabled() ?
+                measureLineNumber() + mDividerMargin * 2 + mDividerWidth +
+                        (mPainter.hasSideHintIcons() ? getRowHeight() : 0) :
+                mDpUnit * 5;
     }
 
     /**
@@ -2011,7 +2014,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return Whether the format task is scheduled
      */
     public synchronized boolean formatCodeAsync() {
-        if (mLanguage.getFormatter().isRunning()) {
+        if (isFormatting()) {
             return false;
         }
         mLanguage.getFormatter().setReceiver(this);
@@ -2036,7 +2039,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (start.index > end.index) {
             throw new IllegalArgumentException("start > end");
         }
-        if (mLanguage.getFormatter().isRunning()) {
+        if (isFormatting()) {
             return false;
         }
         mLanguage.getFormatter().setReceiver(this);
@@ -3274,7 +3277,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return Text displaying, the result is read-only. You should not make changes to this object as it is used internally
      * @see CodeEditor#setText(CharSequence)
      * @see CodeEditor#setText(CharSequence, Bundle)
-     * @see #setText(CharSequence, boolean, Bundle) 
      */
     @NonNull
     public Content getText() {
@@ -4196,6 +4198,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             getScroller().abortAnimation();
             // Ensure the scroll offset is valid
             mEventHandler.scrollBy(0, 0);
+            mConnection.reset();
         });
     }
 

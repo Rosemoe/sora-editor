@@ -48,6 +48,7 @@ import android.util.SparseArray;
 import android.widget.OverScroller;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
@@ -61,18 +62,19 @@ import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.EmptyReader;
 import io.github.rosemoe.sora.lang.styling.ExternalRenderer;
-import io.github.rosemoe.sora.lang.styling.LineBackground;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Spans;
 import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
-import io.github.rosemoe.sora.lang.styling.color.ConstColor;
 import io.github.rosemoe.sora.lang.styling.color.ResolvableColor;
+import io.github.rosemoe.sora.lang.styling.line.LineAnchorStyle;
+import io.github.rosemoe.sora.lang.styling.line.LineBackground;
+import io.github.rosemoe.sora.lang.styling.line.LineHintIcon;
+import io.github.rosemoe.sora.lang.styling.line.LineStyles;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.bidi.ContentBidi;
-import io.github.rosemoe.sora.text.bidi.TextBidi;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
 import io.github.rosemoe.sora.util.Numbers;
@@ -153,6 +155,7 @@ public class EditorPainter {
         if (mBidi != null) {
             mBidi.destroy();
         }
+        // this may be null when the editor is still initializing
         if (mEditor.getText() != null) {
             mBidi = new ContentBidi(mEditor.getText());
         }
@@ -418,6 +421,16 @@ public class EditorPainter {
         mPaint.setFakeBoldText(false);
     }
 
+    public boolean hasSideHintIcons() {
+        Styles styles;
+        if ((styles = mEditor.getStyles()) != null) {
+            if (styles.lineStyles != null) {
+                return styles.lineStyles.contains(LineHintIcon.class);
+            }
+        }
+        return false;
+    }
+
     /**
      * Paint the view on given Canvas
      *
@@ -469,6 +482,7 @@ public class EditorPainter {
         drawDiagnosticIndicators(canvas, offsetX);
 
         offsetX = -mEditor.getOffsetX();
+        var sideIconWidth = hasSideHintIcons() ? mEditor.getRowHeight() : 0f;
 
         if (lineNumberNotPinned) {
             drawLineNumberBackground(canvas, offsetX, lineNumberWidth + mEditor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
@@ -484,7 +498,8 @@ public class EditorPainter {
             for (int i = 0; i < postDrawCurrentLines.size(); i++) {
                 drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - mEditor.getDividerMargin()));
             }
-            drawDivider(canvas, offsetX + lineNumberWidth + mEditor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_DIVIDER));
+            // TODO Draw side icons
+            drawDivider(canvas, offsetX + lineNumberWidth + sideIconWidth + mEditor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_DIVIDER));
             if (firstLn != null && firstLn.value != -1) {
                 int bottom = mEditor.getRowBottom(0);
                 float y;
@@ -544,7 +559,8 @@ public class EditorPainter {
             for (int i = 0; i < postDrawCurrentLines.size(); i++) {
                 drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - mEditor.getDividerMargin() + mEditor.getOffsetX()));
             }
-            drawDivider(canvas, lineNumberWidth + mEditor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_DIVIDER));
+            // TODO Draw side icons
+            drawDivider(canvas, lineNumberWidth + sideIconWidth + mEditor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_DIVIDER));
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
                 drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), 0, lineNumberWidth, lineNumberColor);
@@ -716,20 +732,37 @@ public class EditorPainter {
         mEditor.getText().runReadActionsOnLines(Math.max(0, start - 5), Math.min(mEditor.getText().getLineCount() - 1, end + 5), mPreloadedLines::put);
     }
 
-    private final LineBackground coordinateLine = new LineBackground(0, new ConstColor(0));
-    protected ResolvableColor getUserBackgroundForLine(int line) {
+    private final LineStyles coordinateLine = new LineStyles(0);
+
+    @Nullable
+    protected LineStyles getLineStyles(int line) {
         Styles styles;
-        List<LineBackground> lineBackgrounds;
-        if ((styles = mEditor.getStyles()) == null || (lineBackgrounds = styles.getLineBackgrounds()) == null) {
+        List<LineStyles> lineStylesList;
+        if ((styles = mEditor.getStyles()) == null || (lineStylesList = styles.lineStyles) == null) {
             return null;
         }
         coordinateLine.setLine(line);
-        var index = Collections.binarySearch(lineBackgrounds, coordinateLine);
-        if (index >= 0 && index < lineBackgrounds.size()) {
-            var bg = lineBackgrounds.get(index);
-            if (bg.getLine() == line) {
-                return bg.getColor();
-            }
+        var index = Collections.binarySearch(lineStylesList, coordinateLine);
+        if (index >= 0 && index < lineStylesList.size()) {
+            return lineStylesList.get(index);
+        }
+        return null;
+    }
+
+    @Nullable
+    protected <T extends LineAnchorStyle> T getLineStyle(int line, Class<T> type) {
+        var lineStyles = getLineStyles(line);
+        if (lineStyles != null) {
+            return lineStyles.findOne(type);
+        }
+        return null;
+    }
+
+    @Nullable
+    protected ResolvableColor getUserBackgroundForLine(int line) {
+        var bg = getLineStyle(line, LineBackground.class);
+        if (bg != null) {
+            return bg.getColor();
         }
         return null;
     }
@@ -759,9 +792,7 @@ public class EditorPainter {
         var composingLength = mEditor.mConnection.composingText.endIndex - mEditor.mConnection.composingText.startIndex;
         if (mEditor.shouldInitializeNonPrintable()) {
             float spaceWidth = mPaint.getSpaceWidth();
-            float maxD = Math.min(mEditor.getRowHeight(), spaceWidth);
-            maxD *= 0.25f;
-            circleRadius = maxD / 2;
+            circleRadius = Math.min(mEditor.getRowHeight(), spaceWidth) * 0.125f;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !mEditor.isWordwrap() && canvas.isHardwareAccelerated() && mEditor.isHardwareAcceleratedDrawAllowed()) {
             mRenderer.keepCurrentInDisplay(firstVis, mEditor.getLastVisibleRow());
@@ -786,7 +817,7 @@ public class EditorPainter {
             int lastVisibleChar = (int) mEditor.findFirstVisibleChar(offset2 + mEditor.getWidth() - offset3, firstVisibleChar + 1, rowInf.endColumn, mBuffer, line)[0];
 
             var drawCurrentLineBg = line == currentLine && !mEditor.getCursorAnimator().isRunning() && mEditor.isEditable();
-            if (!drawCurrentLineBg || mEditor.getProps().drawCustomLineBgOnCurrentLine){
+            if (!drawCurrentLineBg || mEditor.getProps().drawCustomLineBgOnCurrentLine) {
                 // Draw custom background
                 var customBackground = getUserBackgroundForLine(line);
                 if (customBackground != null) {

@@ -23,13 +23,19 @@
  */
 package io.github.rosemoe.sora.lang.styling;
 
-import androidx.annotation.Nullable;
+import android.annotation.SuppressLint;
+
+import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import io.github.rosemoe.sora.data.ObjectAllocator;
+import io.github.rosemoe.sora.lang.styling.line.LineAnchorStyle;
+import io.github.rosemoe.sora.lang.styling.line.LineStyles;
 import io.github.rosemoe.sora.text.CharPosition;
 
 /**
@@ -38,11 +44,13 @@ import io.github.rosemoe.sora.text.CharPosition;
  * Note that this does not save any information related to languages. No extra space is provided
  * for communication between analyzers and auto-completion. You should manage it by yourself.
  */
+@SuppressWarnings("unused")
 public class Styles {
 
     public Spans spans;
 
-    public List<LineBackground> lineBackgrounds;
+    public List<LineStyles> lineStyles;
+    public Set<Class<?>> styleTypes;
 
     public List<CodeBlock> blocks;
 
@@ -125,12 +133,16 @@ public class Styles {
     public void adjustOnInsert(CharPosition start, CharPosition end) {
         spans.adjustOnInsert(start, end);
         var delta = end.line - start.line;
+        if (delta == 0) {
+            return;
+        }
         if (blocks != null)
             BlocksUpdater.update(blocks, start.line, delta);
-        if (lineBackgrounds != null) {
-            for (var lineBackground : lineBackgrounds) {
-                if (lineBackground.getLine() > start.line) {
-                    lineBackground.setLine(lineBackground.getLine() + delta);
+        if (lineStyles != null) {
+            for (var styles : lineStyles) {
+                if (styles.getLine() > start.line) {
+                    styles.setLine(styles.getLine() + delta);
+                    styles.updateElements();
                 }
             }
         }
@@ -142,15 +154,19 @@ public class Styles {
     public void adjustOnDelete(CharPosition start, CharPosition end) {
         spans.adjustOnDelete(start, end);
         var delta = start.line - end.line;
+        if (delta == 0) {
+            return;
+        }
         if (blocks != null)
             BlocksUpdater.update(blocks, start.line, delta);
-        if (lineBackgrounds != null) {
-            var itr = lineBackgrounds.iterator();
-            while (itr.hasNext()){
-                var lineBackground = itr.next();
-                var line = lineBackground.getLine();
+        if (lineStyles != null) {
+            var itr = lineStyles.iterator();
+            while (itr.hasNext()) {
+                var styles = itr.next();
+                var line = styles.getLine();
                 if (line > end.line) {
-                    lineBackground.setLine(line + delta);
+                    styles.setLine(line + delta);
+                    styles.updateElements();
                 } else if (line > start.line /* line <= end.line */) {
                     itr.remove();
                 }
@@ -158,20 +174,21 @@ public class Styles {
         }
     }
 
-    /**
-     * Set special background for the given lines
-     *
-     * @param lineBackgrounds A <strong>sorted</strong> list of line backgrounds
-     */
-    public void setLineBackgrounds(@Nullable List<LineBackground> lineBackgrounds) {
-        this.lineBackgrounds = lineBackgrounds;
-    }
-
-    /**
-     * @see #setLineBackgrounds(List)
-     */
-    public List<LineBackground> getLineBackgrounds() {
-        return lineBackgrounds;
+    public void addLineStyle(@NonNull LineAnchorStyle style) {
+        if (lineStyles == null) {
+            lineStyles = new ArrayList<>();
+            styleTypes = new HashSet<>();
+        }
+        styleTypes.add(style.getClass());
+        for (var lineStyle : lineStyles) {
+            if (lineStyle.getLine() == style.getLine()) {
+                lineStyle.addStyle(style);
+                return;
+            }
+        }
+        var lineStyle = new LineStyles(style.getLine());
+        lineStyles.add(lineStyle);
+        lineStyle.addStyle(style);
     }
 
     /**
@@ -193,8 +210,8 @@ public class Styles {
                 Collections.sort(blocks, CodeBlock.COMPARATOR_END);
             }
         }
-        if (lineBackgrounds != null) {
-            Collections.sort(lineBackgrounds);
+        if (lineStyles != null) {
+            Collections.sort(lineStyles);
         }
     }
 

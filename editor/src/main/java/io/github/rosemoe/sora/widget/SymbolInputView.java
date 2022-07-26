@@ -119,7 +119,7 @@ public class SymbolInputView extends LinearLayout {
             addView(btn, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
             int finalI = i;
             btn.setOnClickListener((view) -> {
-                if (editor != null && editor.isEditable() && !editor.isFormatting())
+                if (editor != null)
                     editor.insertText(insertText[finalI], 1);
             });
         }
