@@ -412,7 +412,6 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
 
     private static final int ORDINAL_LBRACE = Tokens.LBRACE.ordinal();
     private static final int ORDINAL_RBRACE = Tokens.RBRACE.ordinal();
-    private static final int ORDINAL_IDT = Tokens.IDENTIFIER.ordinal();
     private static Tokens[] mapping;
 
 }
