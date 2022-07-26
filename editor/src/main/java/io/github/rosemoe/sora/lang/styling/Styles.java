@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.lang.styling;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,11 +59,11 @@ public class Styles {
         this(null);
     }
 
-    public Styles(Spans spans) {
+    public Styles(@Nullable Spans spans) {
         this(spans, true);
     }
 
-    public Styles(Spans spans, boolean initCodeBlocks) {
+    public Styles(@Nullable Spans spans, boolean initCodeBlocks) {
         this.spans = spans;
         if (initCodeBlocks) {
             blocks = new ArrayList<>(128);
@@ -72,6 +73,7 @@ public class Styles {
     /**
      * Get analyzed spans
      */
+    @Nullable
     public Spans getSpans() {
         return spans;
     }
@@ -81,6 +83,7 @@ public class Styles {
      *
      * @return An idle BlockLine
      */
+    @NonNull
     public CodeBlock obtainNewBlock() {
         return ObjectAllocator.obtainBlockLine();
     }
@@ -90,7 +93,7 @@ public class Styles {
      *
      * @param block Info of code block
      */
-    public void addCodeBlock(CodeBlock block) {
+    public void addCodeBlock(@NonNull CodeBlock block) {
         blocks.add(block);
     }
 
@@ -128,7 +131,7 @@ public class Styles {
     /**
      * Adjust styles on insert.
      */
-    public void adjustOnInsert(CharPosition start, CharPosition end) {
+    public void adjustOnInsert(@NonNull CharPosition start, @NonNull CharPosition end) {
         spans.adjustOnInsert(start, end);
         var delta = end.line - start.line;
         if (delta == 0) {
@@ -149,7 +152,7 @@ public class Styles {
     /**
      * Adjust styles on delete.
      */
-    public void adjustOnDelete(CharPosition start, CharPosition end) {
+    public void adjustOnDelete(@NonNull CharPosition start, @NonNull CharPosition end) {
         spans.adjustOnDelete(start, end);
         var delta = start.line - end.line;
         if (delta == 0) {
