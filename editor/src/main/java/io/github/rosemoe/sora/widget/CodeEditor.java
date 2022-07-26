@@ -387,6 +387,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Get KeyMetaStates, which manages alt/shift state in editor
      */
+    @NonNull
     public KeyMetaStates getKeyMetaStates() {
         return mKeyEventHandler.getKeyMetaStates();
     }
