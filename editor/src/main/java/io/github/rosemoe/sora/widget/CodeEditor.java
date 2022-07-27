@@ -125,7 +125,7 @@ import io.github.rosemoe.sora.widget.style.builtin.MoveCursorAnimator;
 
 /**
  * CodeEditor is an editor that can highlight text regions by doing basic syntax analyzing
- * This project in GitHub: https://github.com/Rosemoe/sora-editor
+ * This project in <a href="https://github.com/Rosemoe/sora-editor">GitHub</a>
  * <p>
  * Note:
  * Row and line are different in this editor
