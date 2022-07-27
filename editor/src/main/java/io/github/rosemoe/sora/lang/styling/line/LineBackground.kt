@@ -53,6 +53,8 @@ import io.github.rosemoe.sora.lang.styling.color.ResolvableColor
 /**
  * Set custom line background color for the given line
  *
+ * @param line the line index
+ * @param color the background color of this line
  * @author Rosemoe
  */
 data class LineBackground(override var line: Int, var color: ResolvableColor) : LineAnchorStyle(line)

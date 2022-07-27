@@ -24,10 +24,19 @@
 
 package io.github.rosemoe.sora.lang.styling.line
 
+/**
+ * Store the styles on a given line
+ *
+ * @author Rosemoe
+ */
 class LineStyles(override var line: Int) : LineAnchorStyle(line) {
 
     private val styles = mutableListOf<LineAnchorStyle>()
 
+    /**
+     * Add a new style object. Note that style object of a given class is allowed to add once.
+     * eg. You can not add two [LineBackground] objects even when they are exactly the same
+     */
     fun addStyle(style: LineAnchorStyle) {
         if (style is LineStyles) {
             throw IllegalArgumentException("Can not add LineStyles object")
@@ -40,6 +49,15 @@ class LineStyles(override var line: Int) : LineAnchorStyle(line) {
         }
         if (!styles.contains(style))
             styles.add(style)
+    }
+
+    /**
+     * Erase style of the given type
+     */
+    fun eraseStyle(type: Class<LineAnchorStyle>) : Boolean {
+        val all = findAll(type)
+        styles.removeAll(all)
+        return all.isNotEmpty()
     }
 
     fun updateElements() {

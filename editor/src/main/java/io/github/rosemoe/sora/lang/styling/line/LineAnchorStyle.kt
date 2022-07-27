@@ -48,7 +48,18 @@
 
 package io.github.rosemoe.sora.lang.styling.line
 
+/**
+ * The super class of all styles that are based on lines.
+ * It is expected to be a sealed class.
+ *
+ * @author Rosemoe
+ */
 abstract class LineAnchorStyle(open var line: Int) : Comparable<LineAnchorStyle> {
+
+    /**
+     * Custom data from language
+     */
+    var customData: Any? = null
 
     override fun compareTo(other: LineAnchorStyle) = line.compareTo(other.line)
 

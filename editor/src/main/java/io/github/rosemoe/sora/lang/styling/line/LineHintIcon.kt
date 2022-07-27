@@ -27,7 +27,8 @@ package io.github.rosemoe.sora.lang.styling.line
 import android.graphics.drawable.Drawable
 
 /**
- * A small icon shown at the left of line
+ * A small icon shown at the left of line.
+ * Note that the bounds of the drawable is specified every time the drawable is drawn on screen.
  *
  * @author Rosemoe
  */
