@@ -21,9 +21,12 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget;
+package io.github.rosemoe.sora.text;
 
-class ComposingText {
+import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
+
+@UnsupportedUserUsage
+public class ComposingText {
 
     public int startIndex, endIndex;
     public boolean preSetComposing;

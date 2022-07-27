@@ -506,6 +506,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         if (mEditor.isFormatting()) {
             return true;
         }
+        var resolved = RegionResolverKt.resolveTouchRegion(mEditor, e);
+        var selectText = (IntPair.getFirst(resolved) == RegionResolverKt.REGION_TEXT);
         long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);
@@ -515,7 +517,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         }
         mEditor.showSoftInput();
         notifyLater();
-        mEditor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
+        if (selectText) {
+            mEditor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
+        }
         mEditor.hideAutoCompleteWindow();
         return true;
     }

@@ -31,7 +31,6 @@ import static io.github.rosemoe.sora.widget.CodeEditor.FLAG_DRAW_WHITESPACE_INNE
 import static io.github.rosemoe.sora.widget.CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION;
 import static io.github.rosemoe.sora.widget.CodeEditor.FLAG_DRAW_WHITESPACE_LEADING;
 import static io.github.rosemoe.sora.widget.CodeEditor.FLAG_DRAW_WHITESPACE_TRAILING;
-import static io.github.rosemoe.sora.widget.CodeEditor.SCALE_MINI_GRAPH;
 
 import android.annotation.SuppressLint;
 import android.graphics.Canvas;
@@ -69,7 +68,7 @@ import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.lang.styling.color.ResolvableColor;
 import io.github.rosemoe.sora.lang.styling.line.LineAnchorStyle;
 import io.github.rosemoe.sora.lang.styling.line.LineBackground;
-import io.github.rosemoe.sora.lang.styling.line.LineHintIcon;
+import io.github.rosemoe.sora.lang.styling.line.LineSideIcon;
 import io.github.rosemoe.sora.lang.styling.line.LineStyles;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentLine;
@@ -197,7 +196,7 @@ public class EditorPainter {
     public void setTextSizePxDirect(float size) {
         mPaint.setTextSizeWrapped(size);
         mPaintOther.setTextSize(size);
-        mPaintGraph.setTextSize(size * SCALE_MINI_GRAPH);
+        mPaintGraph.setTextSize(size * mEditor.getProps().miniMarkerSizeFactor);
         mTextMetrics = mPaint.getFontMetricsInt();
         mLineNumberMetrics = mPaintOther.getFontMetricsInt();
         mGraphMetrics = mPaintGraph.getFontMetricsInt();
@@ -425,7 +424,7 @@ public class EditorPainter {
         Styles styles;
         if ((styles = mEditor.getStyles()) != null) {
             if (styles.styleTypes != null) {
-                return styles.styleTypes.contains(LineHintIcon.class);
+                return styles.styleTypes.contains(LineSideIcon.class);
             }
         }
         return false;
@@ -585,7 +584,7 @@ public class EditorPainter {
         while (row <= mEditor.getLastVisibleRow() && itr.hasNext()) {
             var rowInf = itr.next();
             if (rowInf.isLeadingRow) {
-                var hint = getLineStyle(rowInf.lineIndex, LineHintIcon.class);
+                var hint = getLineStyle(rowInf.lineIndex, LineSideIcon.class);
                 if (hint != null) {
                     var drawable = hint.getDrawable();
                     var rect = new Rect(0, 0, size, size);

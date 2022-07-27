@@ -41,6 +41,7 @@ import androidx.annotation.RequiresApi;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.ComposingText;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.util.Logger;

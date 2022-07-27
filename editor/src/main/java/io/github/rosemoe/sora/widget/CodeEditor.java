@@ -206,10 +206,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * horizontal viewport
      */
     public static final int WINDOW_POS_MODE_FULL_WIDTH_ALWAYS = 2;
-    /**
-     * Text size scale of small graph
-     */
-    static final float SCALE_MINI_GRAPH = 0.9f;
     /*
      * Internal state identifiers of action mode
      */

@@ -254,4 +254,12 @@ public class DirectAccessProps implements Serializable {
     @FloatRange(from = 0.0f, to = 1.0f)
     public float sideIconSizeFactor = 0.7f;
 
+    /**
+     * Specify the marker text size factor, such as hardwrap markers.
+     * not available for setting now
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, to = 1.0f)
+    public final float miniMarkerSizeFactor = 0.9f;
+
 }
