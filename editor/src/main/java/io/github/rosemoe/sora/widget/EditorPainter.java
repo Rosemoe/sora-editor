@@ -560,7 +560,7 @@ public class EditorPainter {
             for (int i = 0; i < postDrawCurrentLines.size(); i++) {
                 drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - mEditor.getDividerMargin() + mEditor.getOffsetX()));
             }
-            drawSideIcons(canvas, offsetX + lineNumberWidth);
+            drawSideIcons(canvas, lineNumberWidth);
             drawDivider(canvas, lineNumberWidth + sideIconWidth + mEditor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_DIVIDER));
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
