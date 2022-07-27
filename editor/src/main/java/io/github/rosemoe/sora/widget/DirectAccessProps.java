@@ -247,4 +247,11 @@ public class DirectAccessProps implements Serializable {
     @InvalidateRequired
     public float roundTextBackgroundFactor = 0.13f;
 
+    /**
+     * Specify the icon size factor. result size = row height * sideIconSizeFactor
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, to = 1.0f)
+    public float sideIconSizeFactor = 0.7f;
+
 }

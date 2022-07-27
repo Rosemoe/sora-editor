@@ -471,9 +471,9 @@ public class EditorPainter {
 
         boolean lineNumberNotPinned = mEditor.isLineNumberEnabled() && (mEditor.isWordwrap() || !mEditor.isLineNumberPinned());
 
-        LongArrayList postDrawLineNumbers = mPostDrawLineNumbers;
+        var postDrawLineNumbers = mPostDrawLineNumbers;
         postDrawLineNumbers.clear();
-        LongArrayList postDrawCurrentLines = mPostDrawCurrentLines;
+        var postDrawCurrentLines = mPostDrawCurrentLines;
         postDrawCurrentLines.clear();
         List<DrawCursorTask> postDrawCursor = new ArrayList<>(3);
         MutableInt firstLn = mEditor.isFirstLineNumberAlwaysVisible() && mEditor.isWordwrap() ? new MutableInt(-1) : null;
@@ -485,7 +485,7 @@ public class EditorPainter {
         offsetX = -mEditor.getOffsetX();
 
         if (lineNumberNotPinned) {
-            drawLineNumberBackground(canvas, offsetX, lineNumberWidth + mEditor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
+            drawLineNumberBackground(canvas, offsetX, lineNumberWidth + sideIconWidth + mEditor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
             int lineNumberColor = mEditor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = mEditor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE);
             if (mEditor.getCursorAnimator().isRunning()) {
@@ -547,7 +547,7 @@ public class EditorPainter {
         }
 
         if (mEditor.isLineNumberEnabled() && !lineNumberNotPinned) {
-            drawLineNumberBackground(canvas, 0, lineNumberWidth + mEditor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
+            drawLineNumberBackground(canvas, 0, lineNumberWidth + sideIconWidth + mEditor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
             int lineNumberColor = mEditor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = mEditor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE);
             if (mEditor.getCursorAnimator().isRunning()) {
@@ -579,9 +579,9 @@ public class EditorPainter {
     protected void drawSideIcons(Canvas canvas, float offset) {
         var row = mEditor.getFirstVisibleRow();
         var itr = mEditor.getLayout().obtainRowIterator(row);
-        final var iconSize = 0.75f;
-        var size = (int) (mEditor.getRowHeight() * iconSize);
-        var offsetToLeftTop = (int) (mEditor.getRowHeight() * (1 - iconSize) / 2f);
+        final var iconSizeFactor = mEditor.getProps().sideIconSizeFactor;
+        var size = (int) (mEditor.getRowHeight() * iconSizeFactor);
+        var offsetToLeftTop = (int) (mEditor.getRowHeight() * (1 - iconSizeFactor) / 2f);
         while (row <= mEditor.getLastVisibleRow() && itr.hasNext()) {
             var rowInf = itr.next();
             if (rowInf.isLeadingRow) {
