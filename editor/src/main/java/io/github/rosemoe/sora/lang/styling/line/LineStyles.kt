@@ -24,7 +24,7 @@
 
 package io.github.rosemoe.sora.lang.styling.line
 
-class LineStyles(override var line: Int) : LineAnchorStyle {
+class LineStyles(override var line: Int) : LineAnchorStyle(line) {
 
     private val styles = mutableListOf<LineAnchorStyle>()
 

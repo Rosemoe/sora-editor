@@ -48,9 +48,7 @@
 
 package io.github.rosemoe.sora.lang.styling.line
 
-interface LineAnchorStyle : Comparable<LineAnchorStyle> {
-
-    var line: Int
+abstract class LineAnchorStyle(open var line: Int) : Comparable<LineAnchorStyle> {
 
     override fun compareTo(other: LineAnchorStyle) = line.compareTo(other.line)
 
