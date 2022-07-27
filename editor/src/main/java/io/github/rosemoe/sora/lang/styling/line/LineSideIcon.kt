@@ -32,4 +32,4 @@ import android.graphics.drawable.Drawable
  *
  * @author Rosemoe
  */
-data class LineHintIcon(override var line: Int, val drawable: Drawable) : LineAnchorStyle(line)
+data class LineSideIcon(override var line: Int, val drawable: Drawable) : LineAnchorStyle(line)
