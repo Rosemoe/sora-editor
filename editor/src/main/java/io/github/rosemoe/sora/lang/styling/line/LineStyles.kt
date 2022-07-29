@@ -45,16 +45,15 @@ class LineStyles(override var line: Int) : LineAnchorStyle(line) {
             throw IllegalArgumentException("target line differs from this object")
         }
         if (findOne(style.javaClass) != null) {
-            throw IllegalStateException("another instance of the same type is in")
+            eraseStyle(style.javaClass)
         }
-        if (!styles.contains(style))
-            styles.add(style)
+        styles.add(style)
     }
 
     /**
      * Erase style of the given type
      */
-    fun eraseStyle(type: Class<LineAnchorStyle>) : Boolean {
+    fun <T : LineAnchorStyle> eraseStyle(type: Class<T>) : Boolean {
         val all = findAll(type)
         styles.removeAll(all)
         return all.isNotEmpty()

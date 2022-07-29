@@ -34,6 +34,7 @@ import java.util.Set;
 
 import io.github.rosemoe.sora.data.ObjectAllocator;
 import io.github.rosemoe.sora.lang.styling.line.LineAnchorStyle;
+import io.github.rosemoe.sora.lang.styling.line.LineBackground;
 import io.github.rosemoe.sora.lang.styling.line.LineStyles;
 import io.github.rosemoe.sora.text.CharPosition;
 
@@ -190,6 +191,18 @@ public class Styles {
         var lineStyle = new LineStyles(style.getLine());
         lineStyles.add(lineStyle);
         lineStyle.addStyle(style);
+    }
+
+    /**
+     * Remove the style of given kind from line
+     */
+    public void eraseLineStyle(int line, Class<? extends LineAnchorStyle> type) {
+        for (var lineStyle : lineStyles) {
+            if (lineStyle.getLine() == line) {
+                lineStyle.eraseStyle(type);
+                break;
+            }
+        }
     }
 
     /**
