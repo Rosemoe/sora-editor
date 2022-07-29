@@ -29,7 +29,7 @@ import io.github.rosemoe.sora.widget.CodeEditor
 
 /**
  * Called when side icon is clicked.
- * If you would like to avoid [ClickEvent] to be triggered, you are expected to call [SideIconClickEvent.setResult]
- * with value true.
+ * If you would like to avoid [ClickEvent] to be triggered, you are expected to intercept editor by
+ * calling [SideIconClickEvent.intercept]
  */
-class SideIconClickEvent(editor: CodeEditor, val clickedIcon: LineSideIcon) : ResultedEvent<Boolean>(editor)
+class SideIconClickEvent(editor: CodeEditor, val clickedIcon: LineSideIcon) : Event(editor)

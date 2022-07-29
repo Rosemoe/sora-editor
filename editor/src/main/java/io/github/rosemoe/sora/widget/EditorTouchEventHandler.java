@@ -35,12 +35,15 @@ import android.widget.OverScroller;
 
 import io.github.rosemoe.sora.event.ClickEvent;
 import io.github.rosemoe.sora.event.DoubleClickEvent;
+import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.HandleStateChangeEvent;
 import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.LongPressEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
+import io.github.rosemoe.sora.event.SideIconClickEvent;
 import io.github.rosemoe.sora.graphics.RectUtils;
+import io.github.rosemoe.sora.lang.styling.line.LineSideIcon;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.component.Magnifier;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
@@ -507,18 +510,45 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             return true;
         }
         var resolved = RegionResolverKt.resolveTouchRegion(mEditor, e);
-        var selectText = (IntPair.getFirst(resolved) == RegionResolverKt.REGION_TEXT);
+        var region = IntPair.getFirst(resolved);
         long res = mEditor.getPointPositionOnScreen(e.getX(), e.getY());
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);
         mEditor.performClick();
+        if (region == RegionResolverKt.REGION_SIDE_ICON) {
+            int row = (int) (e.getY() + mEditor.getOffsetX()) / mEditor.getRowHeight();
+            row = Math.max(0, Math.min(row, mEditor.getLayout().getRowCount() - 1));
+            var inf = mEditor.getLayout().getRowAt(row);
+            if (inf.isLeadingRow) {
+                var style = mEditor.getEditorPainter().getLineStyle(inf.lineIndex, LineSideIcon.class);
+                if (style != null) {
+                    if ((mEditor.dispatchEvent(new SideIconClickEvent(mEditor, style)) & InterceptTarget.TARGET_EDITOR) != 0) {
+                        mEditor.hideAutoCompleteWindow();
+                        return true;
+                    }
+                }
+            }
+        }
         if ((mEditor.dispatchEvent(new ClickEvent(mEditor, mEditor.getText().getIndexer().getCharPosition(line, column), e)) & InterceptTarget.TARGET_EDITOR) != 0) {
             return true;
         }
         mEditor.showSoftInput();
         notifyLater();
-        if (selectText) {
+        var lnAction = mEditor.getProps().actionWhenLineNumberClicked;
+        if (region == RegionResolverKt.REGION_TEXT) {
             mEditor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
+        } else if (region == RegionResolverKt.REGION_LINE_NUMBER) {
+            switch (lnAction) {
+                case DirectAccessProps.LN_ACTION_SELECT_LINE:
+                    mEditor.setSelectionRegion(line, 0, line, mEditor.getText().getColumnCount(line), false, SelectionChangeEvent.CAUSE_TAP);
+                    break;
+                case DirectAccessProps.LN_ACTION_PLACE_SELECTION_HOME:
+                    mEditor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
+                    break;
+                case DirectAccessProps.LN_ACTION_NOTHING:
+                default:
+                    // do nothing
+            }
         }
         mEditor.hideAutoCompleteWindow();
         return true;

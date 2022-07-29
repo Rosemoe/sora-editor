@@ -262,4 +262,26 @@ public class DirectAccessProps implements Serializable {
     @FloatRange(from = 0.0f, to = 1.0f)
     public final float miniMarkerSizeFactor = 0.9f;
 
+    /**
+     * Specify editor behavior when line number is clicked.
+     *
+     * @see #LN_ACTION_NOTHING
+     * @see #LN_ACTION_SELECT_LINE
+     * @see #LN_ACTION_PLACE_SELECTION_HOME
+     */
+    public int actionWhenLineNumberClicked = LN_ACTION_SELECT_LINE;
+    /**
+     * Do nothing
+     */
+    public final static int LN_ACTION_NOTHING = 0;
+    /**
+     * Select the whole line
+     */
+    public final static int LN_ACTION_SELECT_LINE = 1;
+    /**
+     * Set selection to line start
+     */
+    public final static int LN_ACTION_PLACE_SELECTION_HOME = 2;
+
+
 }

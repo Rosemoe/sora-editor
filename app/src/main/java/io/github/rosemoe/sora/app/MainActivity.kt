@@ -39,10 +39,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
 import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
-import io.github.rosemoe.sora.event.ContentChangeEvent
-import io.github.rosemoe.sora.event.EditorKeyEvent
-import io.github.rosemoe.sora.event.KeyBindingEvent
-import io.github.rosemoe.sora.event.SelectionChangeEvent
+import io.github.rosemoe.sora.event.*
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
@@ -122,6 +119,9 @@ class MainActivity : AppCompatActivity() {
                     ::updateBtnState,
                     50
                 )
+            }
+            subscribeEvent<SideIconClickEvent> { _, _ ->
+                Toast.makeText(this@MainActivity, "Side icon clicked", Toast.LENGTH_SHORT).show()
             }
 
             subscribeEvent<KeyBindingEvent> { event, _ ->
