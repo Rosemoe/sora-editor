@@ -30,27 +30,36 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.github.rosemoe.sora.data.ObjectAllocator;
 import io.github.rosemoe.sora.lang.styling.line.LineAnchorStyle;
 import io.github.rosemoe.sora.lang.styling.line.LineBackground;
 import io.github.rosemoe.sora.lang.styling.line.LineStyles;
 import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.util.MutableInt;
 
 /**
  * This class stores styles of text and other decorations in editor related to code.
  * <p>
  * Note that this does not save any information related to languages. No extra space is provided
  * for communication between analyzers and auto-completion. You should manage it by yourself.
+ * <p>
+ *     If you are going to extend this class, please read the source code carefully in advance
+ * </p>
  */
 @SuppressWarnings("unused")
 public class Styles {
 
     public Spans spans;
 
+    /**
+     * <strong>Sorted</strong> list of LineStyles
+     */
     public List<LineStyles> lineStyles;
-    public Set<Class<?>> styleTypes;
+    public Map<Class<?>, MutableInt> styleTypeCount;
 
     public List<CodeBlock> blocks;
 
@@ -179,30 +188,47 @@ public class Styles {
     public void addLineStyle(@NonNull LineAnchorStyle style) {
         if (lineStyles == null) {
             lineStyles = new ArrayList<>();
-            styleTypes = new HashSet<>();
+            styleTypeCount = new ConcurrentHashMap<>();
         }
-        styleTypes.add(style.getClass());
+        var type = style.getClass();
         for (var lineStyle : lineStyles) {
             if (lineStyle.getLine() == style.getLine()) {
-                lineStyle.addStyle(style);
+                styleCountUpdate(type, lineStyle.addStyle(style));
                 return;
             }
         }
         var lineStyle = new LineStyles(style.getLine());
         lineStyles.add(lineStyle);
-        lineStyle.addStyle(style);
+        styleCountUpdate(type, lineStyle.addStyle(style));
+    }
+
+    private void styleCountUpdate(@NonNull Class<?> type, int delta) {
+        var res = styleTypeCount.get(type);
+        if (res == null) {
+            res = new MutableInt(0);
+            styleTypeCount.put(type, res);
+        }
+        res.value += delta;
     }
 
     /**
      * Remove the style of given kind from line
      */
-    public void eraseLineStyle(int line, Class<? extends LineAnchorStyle> type) {
+    public void eraseLineStyle(int line, @NonNull Class<? extends LineAnchorStyle> type) {
+        if (lineStyles == null) {
+            return;
+        }
         for (var lineStyle : lineStyles) {
             if (lineStyle.getLine() == line) {
-                lineStyle.eraseStyle(type);
+                styleCountUpdate(type, -lineStyle.eraseStyle(type));
                 break;
             }
         }
+    }
+
+    public void eraseAllLineStyles() {
+        lineStyles.clear();
+        styleTypeCount.clear();
     }
 
     /**

@@ -423,8 +423,12 @@ public class EditorPainter {
     public boolean hasSideHintIcons() {
         Styles styles;
         if ((styles = mEditor.getStyles()) != null) {
-            if (styles.styleTypes != null) {
-                return styles.styleTypes.contains(LineSideIcon.class);
+            if (styles.styleTypeCount != null) {
+                var count = styles.styleTypeCount.get(LineSideIcon.class);
+                if (count == null) {
+                    return false;
+                }
+                return count.value > 0;
             }
         }
         return false;

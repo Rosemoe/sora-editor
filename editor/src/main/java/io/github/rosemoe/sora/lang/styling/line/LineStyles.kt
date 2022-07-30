@@ -37,26 +37,29 @@ class LineStyles(override var line: Int) : LineAnchorStyle(line) {
      * Add a new style object. Note that style object of a given class is allowed to add once.
      * eg. You can not add two [LineBackground] objects even when they are exactly the same
      */
-    fun addStyle(style: LineAnchorStyle) {
+    fun addStyle(style: LineAnchorStyle) : Int {
         if (style is LineStyles) {
             throw IllegalArgumentException("Can not add LineStyles object")
         }
         if (style.line != line) {
             throw IllegalArgumentException("target line differs from this object")
         }
+        var result = 1
         if (findOne(style.javaClass) != null) {
             eraseStyle(style.javaClass)
+            result = 0
         }
         styles.add(style)
+        return result
     }
 
     /**
      * Erase style of the given type
      */
-    fun <T : LineAnchorStyle> eraseStyle(type: Class<T>) : Boolean {
+    fun <T : LineAnchorStyle> eraseStyle(type: Class<T>) : Int {
         val all = findAll(type)
         styles.removeAll(all)
-        return all.isNotEmpty()
+        return all.size
     }
 
     fun updateElements() {
