@@ -52,7 +52,7 @@ fun CodeEditor.resolveTouchRegion(event: MotionEvent): Long {
         -> REGION_DIVIDER_MARGIN
         x in lineNumberWidth + iconWidth + dividerMargin..lineNumberWidth + iconWidth + dividerMargin + dividerWidth -> REGION_DIVIDER
         x in textOffset..scrollMaxX+width/2f -> REGION_TEXT
-        else -> REGION_OUTBOUND
+        else -> if (isWordwrap && x in 0f..width.toFloat()) REGION_TEXT else REGION_OUTBOUND
     }
     val bound = if (y >= 0 && y <= scrollMaxY + height/2) {
         IN_BOUND
