@@ -35,7 +35,6 @@ import android.widget.OverScroller;
 
 import io.github.rosemoe.sora.event.ClickEvent;
 import io.github.rosemoe.sora.event.DoubleClickEvent;
-import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.HandleStateChangeEvent;
 import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.LongPressEvent;

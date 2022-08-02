@@ -28,15 +28,12 @@ import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.github.rosemoe.sora.data.ObjectAllocator;
 import io.github.rosemoe.sora.lang.styling.line.LineAnchorStyle;
-import io.github.rosemoe.sora.lang.styling.line.LineBackground;
 import io.github.rosemoe.sora.lang.styling.line.LineStyles;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.util.MutableInt;
