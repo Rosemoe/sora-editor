@@ -167,7 +167,6 @@ public class WordwrapLayout extends AbstractLayout {
     }
 
     private void breakLine(int line, ContentLine sequence, List<Integer> breakpoints, @Nullable Paint paint) {
-        //ContentLine sequence = text.getLine(line);
         int start = 0;
         int len = sequence.length();
 
@@ -225,11 +224,6 @@ public class WordwrapLayout extends AbstractLayout {
             }
         }
         breakLines(startLine, startLine);
-    }
-
-    @Override
-    public void onRemove(Content content, ContentLine line) {
-
     }
 
     @Override
@@ -359,14 +353,13 @@ public class WordwrapLayout extends AbstractLayout {
         if (rowTable.isEmpty()) {
             int lineCount = text.getLineCount();
             int line = Math.min(lineCount - 1, Math.max((int) (yOffset / editor.getRowHeight()), 0));
-            ContentLine str = text.getLine(line);
-            float[] res = orderedFindCharIndex(xOffset, str, line);
-            return IntPair.pack(line, (int) res[0]);
+            int res = BidiLayout.horizontalIndex(editor, this, text, line, 0, text.getColumnCount(line), xOffset);
+            return IntPair.pack(line, res);
         }
         int row = (int) (yOffset / editor.getRowHeight());
         row = Math.max(0, Math.min(row, rowTable.size() - 1));
         RowRegion region = rowTable.get(row);
-        int column = (int) orderedFindCharIndex(xOffset, text.getLine(region.line), region.line, region.startColumn, region.endColumn)[0];
+        int column = BidiLayout.horizontalIndex(editor, this, text, region.line, region.startColumn, region.endColumn, xOffset);
         return IntPair.pack(region.line, column);
     }
 
@@ -376,12 +369,8 @@ public class WordwrapLayout extends AbstractLayout {
             dest = new float[2];
         }
         if (rowTable.isEmpty()) {
-            var sequence = text.getLine(line);
             dest[0] = editor.getRowBottom(line);
-            var gtr = GraphicTextRow.obtain();
-            gtr.set(sequence, 0, sequence.length(), editor.getTabWidth(), getSpans(line), editor.getTextPaint());
-            dest[1] = gtr.measureText(0, column);
-            GraphicTextRow.recycle(gtr);
+            dest[1] = BidiLayout.horizontalOffset(editor, this, text, line, 0, text.getColumnCount(line), column);
             return dest;
         }
         int row = findRow(line);
@@ -401,14 +390,7 @@ public class WordwrapLayout extends AbstractLayout {
                 }
             }
             dest[0] = editor.getRowBottom(row);
-            var sequence = text.getLine(region.line);
-            var gtr = GraphicTextRow.obtain();
-            gtr.set(sequence, region.startColumn, region.endColumn, editor.getTabWidth(), getSpans(line), editor.getTextPaint());
-            if (sequence.widthCache == null) {
-                gtr.setSoftBreaks(getSoftBreaksForLine(line));
-            }
-            dest[1] = gtr.measureText(region.startColumn, column);
-            GraphicTextRow.recycle(gtr);
+            dest[1] = BidiLayout.horizontalOffset(editor, this, text, region.line, region.startColumn, region.endColumn, column);
         } else {
             dest[0] = dest[1] = 0;
         }

@@ -32,7 +32,6 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.graphics.RoughBufferedMeasure;
 import io.github.rosemoe.sora.text.Content;
@@ -150,11 +149,6 @@ public class LineBreakLayout extends AbstractLayout {
     }
 
     @Override
-    public void onRemove(Content content, ContentLine line) {
-
-    }
-
-    @Override
     public Row getRowAt(int rowIndex) {
         var row = new Row();
         row.lineIndex = rowIndex;
@@ -194,9 +188,8 @@ public class LineBreakLayout extends AbstractLayout {
     public long getCharPositionForLayoutOffset(float xOffset, float yOffset) {
         int lineCount = text.getLineCount();
         int line = Math.min(lineCount - 1, Math.max((int) (yOffset / editor.getRowHeight()), 0));
-        ContentLine str = text.getLine(line);
-        float[] res = orderedFindCharIndex(xOffset, str, line);
-        return IntPair.pack(line, (int) res[0]);
+        int res = BidiLayout.horizontalIndex(editor, this, text, line, 0, text.getColumnCount(line), xOffset);
+        return IntPair.pack(line, res);
     }
 
     @Override
@@ -204,12 +197,8 @@ public class LineBreakLayout extends AbstractLayout {
         if (dest == null || dest.length < 2) {
             dest = new float[2];
         }
-        var sequence = text.getLine(line);
         dest[0] = editor.getRowBottom(line);
-        var gtr = GraphicTextRow.obtain();
-        gtr.set(sequence, 0, sequence.length(), editor.getTabWidth(), getSpans(line), editor.getTextPaint());
-        dest[1] = gtr.measureText(0, column);
-        GraphicTextRow.recycle(gtr);
+        dest[1] = BidiLayout.horizontalOffset(editor, this, text, line, 0, text.getColumnCount(line), column);
         return dest;
     }
 

@@ -45,6 +45,7 @@ public class TextLayoutHelper {
 
     private final Editable text = Editable.Factory.getInstance().newEditable("");
     private final DynamicLayout layout;
+    private final static int CHAR_FACTOR = 64;
     private TextLayoutHelper() {
         layout = new DynamicLayout(text, new TextPaint(), Integer.MAX_VALUE / 2, Layout.Alignment.ALIGN_NORMAL, 0, 0, true);
     }
@@ -59,9 +60,9 @@ public class TextLayoutHelper {
     }
 
     public int getCurPosLeft(int offset, CharSequence s) {
-        int left = Math.max(0, offset - 20);
+        int left = Math.max(0, offset - CHAR_FACTOR);
         int index = offset - left;
-        text.append(s, left, Math.min(s.length(), offset + 20));
+        text.append(s, left, Math.min(s.length(), offset + CHAR_FACTOR));
         Selection.setSelection(text, index);
         Selection.moveLeft(text, layout);
         index = Selection.getSelectionStart(text);
@@ -71,9 +72,9 @@ public class TextLayoutHelper {
     }
 
     public int getCurPosRight(int offset, CharSequence s) {
-        int left = Math.max(0, offset - 20);
+        int left = Math.max(0, offset - CHAR_FACTOR);
         int index = offset - left;
-        text.append(s, left, Math.min(s.length(), offset + 20));
+        text.append(s, left, Math.min(s.length(), offset + CHAR_FACTOR));
         Selection.setSelection(text, index);
         Selection.moveRight(text, layout);
         index = Selection.getSelectionStart(text);

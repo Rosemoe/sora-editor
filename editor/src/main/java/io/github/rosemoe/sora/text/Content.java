@@ -762,6 +762,7 @@ public class Content implements CharSequence {
         return c;
     }
 
+    @NonNull
     public Directions getLineBidi(int line) {
         lock(false);
         try {
