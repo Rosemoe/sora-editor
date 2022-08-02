@@ -32,6 +32,9 @@ import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import io.github.rosemoe.sora.text.bidi.ContentBidi;
+import io.github.rosemoe.sora.text.bidi.Directions;
+
 /**
  * This class saves the text content for editor and maintains line widths.
  * It is thread-safe by default. Use {@link #Content(CharSequence, boolean)} constructor to
@@ -55,7 +58,8 @@ public class Content implements CharSequence {
     private final ReadWriteLock lock;
     private int textLength;
     private int nestedBatchEdit;
-    private Indexer indexer;
+    private final Indexer indexer;
+    private final ContentBidi bidi;
     private UndoManager undoManager;
     private Cursor cursor;
     private LineRemoveListener lineListener;
@@ -94,6 +98,7 @@ public class Content implements CharSequence {
         lines = new ArrayList<>(getInitialLineCapacity());
         lines.add(new ContentLine());
         contentListeners = new ArrayList<>();
+        bidi = new ContentBidi(this);
         undoManager = new UndoManager();
         setMaxUndoStackSize(Content.DEFAULT_MAX_UNDO_STACK_SIZE);
         indexer = new CachedIndexer(this);
@@ -755,6 +760,15 @@ public class Content implements CharSequence {
         }
         c.setUndoEnabled(true);
         return c;
+    }
+
+    public Directions getLineBidi(int line) {
+        lock(false);
+        try {
+            return bidi.getLineBidi(line);
+        } finally {
+            unlock(false);
+        }
     }
 
     @Override

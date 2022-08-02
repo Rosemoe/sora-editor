@@ -73,7 +73,6 @@ import io.github.rosemoe.sora.lang.styling.line.LineStyles;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.Cursor;
-import io.github.rosemoe.sora.text.bidi.ContentBidi;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
 import io.github.rosemoe.sora.util.Numbers;
@@ -117,8 +116,6 @@ public class EditorPainter {
     private Cursor mCursor;
     private ContentLine mBuffer;
 
-    private ContentBidi mBidi;
-
     public EditorPainter(@NonNull CodeEditor editor) {
         mEditor = editor;
         mVerticalScrollBar = new RectF();
@@ -151,13 +148,6 @@ public class EditorPainter {
 
     public void notifyFullTextUpdate() {
         mCursor = mEditor.getCursor();
-        if (mBidi != null) {
-            mBidi.destroy();
-        }
-        // this may be null when the editor is still initializing
-        if (mEditor.getText() != null) {
-            mBidi = new ContentBidi(mEditor.getText());
-        }
     }
 
     public void draw(@NonNull Canvas canvas) {
@@ -1419,8 +1409,8 @@ public class EditorPainter {
     }
 
     protected void drawRegionTextDirectional(Canvas canvas, float offsetX, float baseline, int line, int startIndex, int endIndex, int contextStart, int contextEnd, int columnCount, int color) {
-        if (mEditor.getProps().computeDirectionsForRtl && mBidi != null) {
-            var directions = mBidi.getLineBidi(line);
+        if (mEditor.getProps().computeDirectionsForRtl) {
+            var directions = mEditor.getText().getLineBidi(line);
             var width = 0f;
             for (int i = 0; i < directions.getRunCount(); i++) {
                 int sharedStart = Math.max(directions.getRunStart(i), startIndex);
@@ -1743,7 +1733,7 @@ public class EditorPainter {
         if (paired != null) {
             var color = mEditor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_FOREGROUND);
             var backgroundColor = mEditor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_BACKGROUND);
-            if (!checkBounds(paired.leftIndex, paired.leftLength) || !checkBounds(paired.rightIndex, paired.rightLength)) {
+            if (!checkTextBounds(paired.leftIndex, paired.leftLength) || !checkTextBounds(paired.rightIndex, paired.rightLength)) {
                 // Index out of bounds
                 return;
             }
@@ -1753,7 +1743,7 @@ public class EditorPainter {
         }
     }
 
-    protected boolean checkBounds(int index, int length) {
+    protected boolean checkTextBounds(int index, int length) {
         return (index >= 0 && length >= 0 && index + length <= mEditor.getText().length());
     }
 

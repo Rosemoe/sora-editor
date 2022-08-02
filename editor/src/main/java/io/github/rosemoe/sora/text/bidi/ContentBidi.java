@@ -34,7 +34,9 @@ import io.github.rosemoe.sora.text.ContentListener;
 
 public class ContentBidi implements ContentListener {
 
-    private List<DirectionsEntry> entries = new ArrayList<>();
+    public final static int MAX_BIDI_CACHE_ENTRY_COUNT = 128;
+
+    private final List<DirectionsEntry> entries = new ArrayList<>();
     private final Content text;
 
     public ContentBidi(@NonNull Content content) {
@@ -50,7 +52,7 @@ public class ContentBidi implements ContentListener {
         }
         var dir = TextBidi.getDirections(text.getLine(line));
         entries.add(new DirectionsEntry(dir, line));
-        if (entries.size() > 100) {
+        if (MAX_BIDI_CACHE_ENTRY_COUNT >= 0 && entries.size() > MAX_BIDI_CACHE_ENTRY_COUNT) {
             entries.remove(0);
         }
         return dir;
