@@ -44,7 +44,7 @@ public class ContentBidi implements ContentListener {
         text.addContentListener(this);
     }
 
-    public Directions getLineBidi(int line) {
+    public Directions getLineDirections(int line) {
         for (DirectionsEntry entry : entries) {
             if (entry.line == line) {
                 return entry.dir;

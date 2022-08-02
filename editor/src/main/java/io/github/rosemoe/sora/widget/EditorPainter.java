@@ -1115,15 +1115,15 @@ public class EditorPainter {
             final var layout = mEditor.getLayout();
             // Draw cursors
             if (mCursor.isSelected()) {
-                if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
+                if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), rowInf.startColumn, rowInf.endColumn, line)) {
                     float centerX = mEditor.measureTextRegionOffset() + layout.getCharLayoutOffset(mCursor.getLeftLine(), mCursor.getLeftColumn())[1] - mEditor.getOffsetX();
                     postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - mEditor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_LEFT, mEditor.getLeftHandleDescriptor()));
                 }
-                if (mCursor.getRightLine() == line && isInside(mCursor.getRightColumn(), firstVisibleChar, lastVisibleChar, line)) {
+                if (mCursor.getRightLine() == line && isInside(mCursor.getRightColumn(), rowInf.startColumn, rowInf.endColumn, line)) {
                     float centerX = mEditor.measureTextRegionOffset() + layout.getCharLayoutOffset(mCursor.getRightLine(), mCursor.getRightColumn())[1] - mEditor.getOffsetX();
                     postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - mEditor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_RIGHT, mEditor.getRightHandleDescriptor()));
                 }
-            } else if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), firstVisibleChar, lastVisibleChar, line)) {
+            } else if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), rowInf.startColumn, rowInf.endColumn, line)) {
                 float centerX = mEditor.measureTextRegionOffset() + layout.getCharLayoutOffset(mCursor.getLeftLine(), mCursor.getLeftColumn())[1] - mEditor.getOffsetX();
                 postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - mEditor.getOffsetY(), mEditor.getEventHandler().shouldDrawInsertHandle() ? SelectionHandleStyle.HANDLE_TYPE_INSERT : SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, mEditor.getInsertHandleDescriptor()));
             }
@@ -1410,20 +1410,16 @@ public class EditorPainter {
     }
 
     protected void drawRegionTextDirectional(Canvas canvas, float offsetX, float baseline, int line, int startIndex, int endIndex, int contextStart, int contextEnd, int columnCount, int color) {
-        if (mEditor.getProps().computeDirectionsForRtl) {
-            var directions = mEditor.getText().getLineBidi(line);
-            var width = 0f;
-            for (int i = 0; i < directions.getRunCount(); i++) {
-                int sharedStart = Math.max(directions.getRunStart(i), startIndex);
-                int sharedEnd = Math.min(directions.getRunEnd(i), endIndex);
-                if (sharedEnd > sharedStart) {
-                    drawRegionText(canvas, offsetX + width, baseline, line, sharedStart, sharedEnd, contextStart, contextEnd, directions.isRunRtl(i), columnCount, color);
-                }
-                if (i + 1 < directions.getRunCount())
-                    width += mEditor.measureText(getLine(line), sharedStart, sharedEnd - sharedStart, line);
+        var directions = mEditor.getText().getLineDirections(line);
+        var width = 0f;
+        for (int i = 0; i < directions.getRunCount(); i++) {
+            int sharedStart = Math.max(directions.getRunStart(i), startIndex);
+            int sharedEnd = Math.min(directions.getRunEnd(i), endIndex);
+            if (sharedEnd > sharedStart) {
+                drawRegionText(canvas, offsetX + width, baseline, line, sharedStart, sharedEnd, contextStart, contextEnd, directions.isRunRtl(i), columnCount, color);
             }
-        } else {
-            drawRegionText(canvas, offsetX, baseline, line, startIndex, endIndex, contextStart, contextEnd, false, columnCount, color);
+            if (i + 1 < directions.getRunCount())
+                width += mEditor.measureText(getLine(line), sharedStart, sharedEnd - sharedStart, line);
         }
     }
 

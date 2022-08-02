@@ -27,6 +27,7 @@ import android.text.DynamicLayout;
 import android.text.Editable;
 import android.text.Layout;
 import android.text.Selection;
+import android.text.StaticLayout;
 import android.text.TextPaint;
 
 /**
@@ -47,7 +48,8 @@ public class TextLayoutHelper {
     private final DynamicLayout layout;
     private final static int CHAR_FACTOR = 64;
     private TextLayoutHelper() {
-        layout = new DynamicLayout(text, new TextPaint(), Integer.MAX_VALUE / 2, Layout.Alignment.ALIGN_NORMAL, 0, 0, true);
+        layout = new DynamicLayout(text, new TextPaint(), Integer.MAX_VALUE / 2,
+                Layout.Alignment.ALIGN_NORMAL, 0, 0, true);
     }
 
     public static TextLayoutHelper get() {

@@ -39,7 +39,7 @@ object BidiLayoutHelper {
         rowEnd: Int,
         targetColumn: Int
     ): Float {
-        val dirs = text.getLineBidi(line)
+        val dirs = text.getLineDirections(line)
         val lineText = text.getLine(line)
         val gtr = GraphicTextRow.obtain()
         gtr.set(
@@ -85,7 +85,7 @@ object BidiLayoutHelper {
         rowEnd: Int,
         targetOffset: Float
     ): Int {
-        val dirs = text.getLineBidi(line)
+        val dirs = text.getLineDirections(line)
         val lineText = text.getLine(line)
         val gtr = GraphicTextRow.obtain()
         gtr.set(

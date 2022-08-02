@@ -235,13 +235,6 @@ public class DirectAccessProps implements Serializable {
     public boolean drawCustomLineBgOnCurrentLine = false;
 
     /**
-     * If RTL language should be displayed in editor, this should be true to correctly reorder characters
-     * in display
-     */
-    @InvalidateRequired
-    public boolean computeDirectionsForRtl = true;
-
-    /**
      * The factor of round rectangle, affecting the corner radius of the resulting display
      */
     @InvalidateRequired
@@ -269,7 +262,7 @@ public class DirectAccessProps implements Serializable {
      * @see #LN_ACTION_SELECT_LINE
      * @see #LN_ACTION_PLACE_SELECTION_HOME
      */
-    public int actionWhenLineNumberClicked = LN_ACTION_SELECT_LINE;
+    public int actionWhenLineNumberClicked = LN_ACTION_PLACE_SELECTION_HOME;
     /**
      * Do nothing
      */

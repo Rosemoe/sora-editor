@@ -763,10 +763,10 @@ public class Content implements CharSequence {
     }
 
     @NonNull
-    public Directions getLineBidi(int line) {
+    public Directions getLineDirections(int line) {
         lock(false);
         try {
-            return bidi.getLineBidi(line);
+            return bidi.getLineDirections(line);
         } finally {
             unlock(false);
         }
