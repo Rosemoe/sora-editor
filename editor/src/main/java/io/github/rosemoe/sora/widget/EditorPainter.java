@@ -1117,11 +1117,13 @@ public class EditorPainter {
             if (mCursor.isSelected()) {
                 if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), rowInf.startColumn, rowInf.endColumn, line)) {
                     float centerX = mEditor.measureTextRegionOffset() + layout.getCharLayoutOffset(mCursor.getLeftLine(), mCursor.getLeftColumn())[1] - mEditor.getOffsetX();
-                    postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - mEditor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_LEFT, mEditor.getLeftHandleDescriptor()));
+                    var type = mEditor.getText().isRtlAt(mCursor.getLeftLine(), mCursor.getLeftColumn()) ? SelectionHandleStyle.HANDLE_TYPE_RIGHT : SelectionHandleStyle.HANDLE_TYPE_LEFT;
+                    postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - mEditor.getOffsetY(), type, mEditor.getLeftHandleDescriptor()));
                 }
                 if (mCursor.getRightLine() == line && isInside(mCursor.getRightColumn(), rowInf.startColumn, rowInf.endColumn, line)) {
                     float centerX = mEditor.measureTextRegionOffset() + layout.getCharLayoutOffset(mCursor.getRightLine(), mCursor.getRightColumn())[1] - mEditor.getOffsetX();
-                    postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - mEditor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_RIGHT, mEditor.getRightHandleDescriptor()));
+                    var type = mEditor.getText().isRtlAt(mCursor.getRightLine(), mCursor.getRightColumn()) ? SelectionHandleStyle.HANDLE_TYPE_LEFT : SelectionHandleStyle.HANDLE_TYPE_RIGHT;
+                    postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - mEditor.getOffsetY(), type, mEditor.getRightHandleDescriptor()));
                 }
             } else if (mCursor.getLeftLine() == line && isInside(mCursor.getLeftColumn(), rowInf.startColumn, rowInf.endColumn, line)) {
                 float centerX = mEditor.measureTextRegionOffset() + layout.getCharLayoutOffset(mCursor.getLeftLine(), mCursor.getLeftColumn())[1] - mEditor.getOffsetX();
@@ -1323,19 +1325,58 @@ public class EditorPainter {
      * @param color          Color of background
      */
     protected void drawRowRegionBackground(Canvas canvas, float paintingOffset, int row, int firstVis, int lastVis, int highlightStart, int highlightEnd, int color, int line) {
-        int paintStart = Math.min(Math.max(firstVis, highlightStart), lastVis);
-        int paintEnd = Math.min(Math.max(firstVis, highlightEnd), lastVis);
-        if (paintStart != paintEnd) {
+        if (highlightStart != highlightEnd) {
             mRect.top = getRowTopForBackground(row) - mEditor.getOffsetY();
             mRect.bottom = getRowBottomForBackground(row) - mEditor.getOffsetY();
-            mRect.left = paintingOffset + mEditor.measureText(mBuffer, firstVis, paintStart - firstVis, line);
-            mRect.right = mRect.left + mEditor.measureText(mBuffer, paintStart, paintEnd - paintStart, line);
+            var dirs = mEditor.getText().getLineDirections(line);
+            var empty = true;
+            var layout = mEditor.getLayout();
             mPaint.setColor(color);
-            if (mEditor.getProps().enableRoundTextBackground) {
-                canvas.drawRoundRect(mRect, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mPaint);
-            } else {
-                canvas.drawRect(mRect, mPaint);
+            paintingOffset = mEditor.measureTextRegionOffset() - mEditor.getOffsetX();
+            for (int i = 0;i < dirs.getRunCount();i++) {
+                int sharedStart = Math.max(highlightStart, dirs.getRunStart(i));
+                int sharedEnd = Math.min(highlightEnd, dirs.getRunEnd(i));
+                if (dirs.getRunStart(i) >= highlightEnd) {
+                    break;
+                }
+                if (sharedStart >= sharedEnd) {
+                    continue;
+                }
+                var left = paintingOffset + layout.getCharLayoutOffset(line, sharedStart)[1];
+                var right = paintingOffset + layout.getCharLayoutOffset(line, sharedEnd)[1];
+                System.out.println("l:" + left + " r:" + right);
+                if (left > right) {
+                    var tmp = left;
+                    left = right;
+                    right = tmp;
+                }
+                if (empty) {
+                    mRect.left = left;
+                    mRect.right = right;
+                    empty = false;
+                } else {
+                    if (Math.abs(left - mRect.right) < 1e-2) {
+                        mRect.right = right;
+                    } else if (Math.abs(right - mRect.left) < 1e-2) {
+                        mRect.left = left;
+                    } else {
+                        drawRowBackgroundRect(canvas, mRect);
+                        mRect.left = left;
+                        mRect.right = right;
+                    }
+                }
             }
+            if (!empty) {
+                drawRowBackgroundRect(canvas, mRect);
+            }
+        }
+    }
+
+    protected void drawRowBackgroundRect(Canvas canvas, RectF rect) {
+        if (mEditor.getProps().enableRoundTextBackground) {
+            canvas.drawRoundRect(mRect, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mPaint);
+        } else {
+            canvas.drawRect(mRect, mPaint);
         }
     }
 

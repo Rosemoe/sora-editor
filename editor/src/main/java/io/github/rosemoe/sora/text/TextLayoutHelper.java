@@ -23,12 +23,17 @@
  */
 package io.github.rosemoe.sora.text;
 
+import android.annotation.SuppressLint;
+import android.os.Build;
 import android.text.DynamicLayout;
 import android.text.Editable;
 import android.text.Layout;
 import android.text.Selection;
 import android.text.StaticLayout;
+import android.text.TextDirectionHeuristic;
+import android.text.TextDirectionHeuristics;
 import android.text.TextPaint;
+import android.widget.TextView;
 
 /**
  * Helper class for indirectly calling Paint#getTextRunCursor(), which is
@@ -48,8 +53,25 @@ public class TextLayoutHelper {
     private final DynamicLayout layout;
     private final static int CHAR_FACTOR = 64;
     private TextLayoutHelper() {
-        layout = new DynamicLayout(text, new TextPaint(), Integer.MAX_VALUE / 2,
-                Layout.Alignment.ALIGN_NORMAL, 0, 0, true);
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            layout = new DynamicLayout(text, new TextPaint(), Integer.MAX_VALUE / 2,
+                    Layout.Alignment.ALIGN_NORMAL, 0, 0, true);
+            try {
+                @SuppressLint("DiscouragedPrivateApi")
+                var field = Layout.class.getDeclaredField("mTextDir");
+                field.setAccessible(true);
+                field.set(layout, TextDirectionHeuristics.LTR);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            layout = DynamicLayout.Builder.obtain(text, new TextPaint(), Integer.MAX_VALUE / 2)
+                    .setIncludePad(true)
+                    .setLineSpacing(0, 0)
+                    .setTextDirection(TextDirectionHeuristics.LTR)
+                    .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                    .build();
+        }
     }
 
     public static TextLayoutHelper get() {

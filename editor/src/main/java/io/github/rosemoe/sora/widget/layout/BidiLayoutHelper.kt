@@ -65,8 +65,7 @@ object BidiLayoutHelper {
                 gtr.measureText(runStart, runEnd)
             } else { //runEnd > targetColumn
                 if (dirs.isRunRtl(i)) {
-                    //gtr.measureText(runStart, runEnd) - gtr.measureText(runStart, targetColumn)
-                    gtr.measureText(column, runEnd)
+                    gtr.measureText(runStart, runEnd) - gtr.measureText(runStart, targetColumn)
                 } else {
                     gtr.measureText(runStart, column)
                 }

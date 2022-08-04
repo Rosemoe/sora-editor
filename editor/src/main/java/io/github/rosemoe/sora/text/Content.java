@@ -772,6 +772,16 @@ public class Content implements CharSequence {
         }
     }
 
+    public boolean isRtlAt(int line, int column) {
+        var dirs = getLineDirections(line);
+        for (int i = 0;i < dirs.getRunCount();i++) {
+            if (column >= dirs.getRunStart(i) && column < dirs.getRunEnd(i)) {
+                return dirs.isRunRtl(i);
+            }
+        }
+        return false;
+    }
+
     @Override
     public boolean equals(Object anotherObject) {
         if (anotherObject instanceof Content) {

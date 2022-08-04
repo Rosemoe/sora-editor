@@ -29,100 +29,89 @@ import androidx.annotation.Nullable;
 import java.util.List;
 
 import io.github.rosemoe.sora.lang.styling.Span;
+import io.github.rosemoe.sora.util.RegionIterator;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
  * Helper class for {@link GraphicTextRow} to iterate text regions
  *
  * @author Rosemoe
  */
-class TextRegionIterator {
+class TextRegionIterator extends RegionIterator {
 
-    private List<Span> spans;
+    private final List<Span> spans;
 
-    private List<Integer> softBreaks;
-
-    private int pointerSpan;
-    private int pointerSoftBreak;
-    private int startIndex;
-    private int endIndex;
-    private int length;
-
-    public void set(int length, @NonNull List<Span> spans, @Nullable List<Integer> softBreaks) {
-        resetPrimitives();
+    public TextRegionIterator(int length, @NonNull List<Span> spans, @Nullable List<Integer> softBreaks) {
+        super(length, new SpansPoints(spans), new SoftBreaksPoints(softBreaks));
         this.spans = spans;
-        this.softBreaks = softBreaks;
-        this.length = length;
-    }
-
-    public void reset() {
-        spans = null;
-        softBreaks = null;
-        resetPrimitives();
-    }
-
-    private void resetPrimitives() {
-        startIndex = endIndex = length = pointerSpan = pointerSoftBreak = 0;
     }
 
     public void requireStartOffset(int index) {
-        if (index > length) {
+        if (index > getMax()) {
             throw new IllegalArgumentException();
         }
-        if (startIndex != 0) {
+        if (getStartIndex() != 0) {
             throw new IllegalStateException();
         }
-        while (pointerSpan < spans.size() &&  spans.get(pointerSpan).column <= index) {
-            pointerSpan++;
-        }
-        if (softBreaks != null) {
-            while (pointerSoftBreak < softBreaks.size() && softBreaks.get(pointerSoftBreak) <= index) {
-                pointerSoftBreak++;
-            }
-        }
-        startIndex = endIndex = index;
-    }
-
-    public boolean hasNextRegion() {
-        return endIndex < length;
-    }
-
-    public void nextRegion() {
-        if (endIndex == 0 && spans.size() > 0 && spans.get(0).column == 0) {
-            pointerSpan++;
-        }
-        if (softBreaks == null) {
-            startIndex = endIndex;
-            endIndex = pointerSpan >= spans.size() ? length : spans.get(pointerSpan).column;
-            pointerSpan++;
-        } else {
-            startIndex = endIndex;
-            var nextIndexSpan = pointerSpan >= spans.size() ? length : spans.get(pointerSpan).column;
-            var nextIndexSoftBreak = pointerSoftBreak >= softBreaks.size() ? length : softBreaks.get(pointerSoftBreak);
-            nextIndexSpan = Math.min(length, nextIndexSpan);
-            nextIndexSoftBreak = Math.min(length, nextIndexSoftBreak);
-            if (nextIndexSpan < nextIndexSoftBreak) {
-                endIndex = nextIndexSpan;
-                pointerSpan++;
-            } else if (nextIndexSoftBreak < nextIndexSpan) {
-                endIndex = nextIndexSoftBreak;
-                pointerSoftBreak++;
-            } else {
-                endIndex = nextIndexSpan;
-                pointerSoftBreak++;
-                pointerSpan++;
-            }
-        }
+        do {
+            nextRegion();
+        } while (getEndIndex() <= index && hasNextRegion());
+        startIndex = index;
     }
 
     public Span getSpan() {
-        return spans.get(Math.min(spans.size() - 1, Math.max(0, pointerSpan - 1)));
+        var idx = getRegionSourcePointer(0) - 1;
+        if (idx < 0) {
+            return Span.obtain(0, EditorColorScheme.TEXT_NORMAL);
+        }
+        return spans.get(idx);
     }
 
-    public int getStartIndex() {
-        return startIndex;
+    public int getSpanStart() {
+        return getPointerValue(0, getRegionSourcePointer(0) - 1);
     }
 
-    public int getEndIndex() {
-        return endIndex;
+    public int getSpanEnd() {
+        return getPointerValue(0, getRegionSourcePointer(0));
     }
+
+    private static class SpansPoints implements RegionProvider {
+
+        private final List<Span> spans;
+
+        public SpansPoints(List<Span> spans) {
+            this.spans = spans;
+        }
+
+        @Override
+        public int getPointCount() {
+            return spans == null ? 0 : spans.size();
+        }
+
+        @Override
+        public int getPointAt(int index) {
+            return spans.get(index).column;
+        }
+
+    }
+
+    private static class SoftBreaksPoints implements RegionProvider {
+
+        private final List<Integer> points;
+
+        public SoftBreaksPoints(List<Integer> points) {
+            this.points = points;
+        }
+
+        @Override
+        public int getPointCount() {
+            return points == null ? 0 : points.size();
+        }
+
+        @Override
+        public int getPointAt(int index) {
+            return points.get(index);
+        }
+    }
+
 }

@@ -36,6 +36,8 @@ import java.util.List;
 
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.text.ContentLine;
+import io.github.rosemoe.sora.text.bidi.Directions;
+import io.github.rosemoe.sora.text.bidi.TextBidi;
 
 /**
  * Manages graphical(actually measuring) operations of a text row
@@ -166,21 +168,25 @@ public class GraphicTextRow {
             mBuffer[1] = cache[left] - base;
             return mBuffer;
         }
-        var mRegionItr = new TextRegionIterator();
-        mRegionItr.set(mEnd, mSpans, mSoftBreaks);
-        mRegionItr.requireStartOffset(start);
+        var regionItr = new TextRegionIterator(mEnd, mSpans, mSoftBreaks);
         float currentPosition = 0f;
         // Find in each region
         var lastStyle = 0L;
         var chars = mText.value;
         float tabAdvance = mPaint.getSpaceWidth() * mTabWidth;
         int offset = start;
-        while (mRegionItr.hasNextRegion() && currentPosition < advance) {
-            mRegionItr.nextRegion();
-            var regionStart = mRegionItr.getStartIndex();
-            var regionEnd = mRegionItr.getEndIndex();
+        var first = true;
+        while (regionItr.hasNextRegion() && currentPosition < advance) {
+            if (first) {
+                regionItr.requireStartOffset(start);
+                first = false;
+            } else {
+                regionItr.nextRegion();
+            }
+            var regionStart = regionItr.getStartIndex();
+            var regionEnd = regionItr.getEndIndex();
             regionEnd = Math.min(mEnd, regionEnd);
-            var style = mRegionItr.getSpan().getStyleBits();
+            var style = regionItr.getSpan().getStyleBits();
             if (style != lastStyle) {
                 if (isBold(style) != isBold(lastStyle)) {
                     mPaint.setFakeBoldText(isBold(style));
@@ -273,18 +279,22 @@ public class GraphicTextRow {
 
         start = Math.max(start, mStart);
         end = Math.min(end, mEnd);
-        var mRegionItr = new TextRegionIterator();
-        mRegionItr.set(end, mSpans, mSoftBreaks);
-        mRegionItr.requireStartOffset(start);
+        var regionItr = new TextRegionIterator(end, mSpans, mSoftBreaks);
         float width = 0f;
         // Measure for each region
         var lastStyle = 0L;
-        while (mRegionItr.hasNextRegion()) {
-            mRegionItr.nextRegion();
-            var regionStart = mRegionItr.getStartIndex();
-            var regionEnd = mRegionItr.getEndIndex();
+        var first = true;
+        while (regionItr.hasNextRegion()) {
+            if (first) {
+                regionItr.requireStartOffset(start);
+                first = false;
+            } else {
+                regionItr.nextRegion();
+            }
+            var regionStart = regionItr.getStartIndex();
+            var regionEnd = regionItr.getEndIndex();
             regionEnd = Math.min(end, regionEnd);
-            var style = mRegionItr.getSpan().getStyleBits();
+            var style = regionItr.getSpan().getStyleBits();
             if (style != lastStyle) {
                 if (isBold(style) != isBold(lastStyle)) {
                     mPaint.setFakeBoldText(isBold(style));
@@ -294,24 +304,34 @@ public class GraphicTextRow {
                 }
                 lastStyle = style;
             }
-            width += measureTextInner(regionStart, regionEnd, widths);
+            width += measureTextInner(regionStart, regionEnd, regionItr.getSpanStart(), regionItr.getSpanEnd(), widths);
             if (regionEnd >= end) {
                 break;
             }
         }
         mPaint.setFakeBoldText(originalBold);
         mPaint.setTextSkewX(originalSkew);
-        mRegionItr.reset();
         return width;
     }
 
     @SuppressLint("NewApi")
-    private float measureTextInner(int start, int end, float[] widths) {
+    private float measureTextInner(int start, int end, int ctxStart, int ctxEnd, float[] widths) {
         if (start >= end) {
             return 0f;
         }
         // Can be called directly
-        float width = mPaint.getTextRunAdvances(mText.value, start, end - start, start, end - start, false, widths, widths == null ? 0 : start);
+        var dirs = TextBidi.getDirections(mText);
+        float width = 0;
+        for (int i = 0;i < dirs.getRunCount();i++) {
+            int start1 = Math.max(start, dirs.getRunStart(i));
+            int end1 = Math.min(end, dirs.getRunEnd(i));
+            if (end1 > start1) {
+                width += mPaint.getTextRunAdvances(mText.value, start1, end1 - start1, ctxStart, ctxEnd - ctxStart, dirs.isRunRtl(i), widths, widths == null ? 0 : start1);
+            }
+            if (dirs.getRunStart(i) >= end) {
+                break;
+            }
+        }
         float tabWidth = mPaint.getSpaceWidth() * mTabWidth;
         int tabCount = 0;
         for (int i = start; i < end; i++) {
