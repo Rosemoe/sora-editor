@@ -112,7 +112,7 @@ public class EditorPainter {
     private final CodeEditor mEditor;
     private final List<DiagnosticRegion> mCollectedDiagnostics = new ArrayList<>();
     Paint.FontMetricsInt mTextMetrics;
-    private HwAcceleratedRenderer mRenderer;
+    private RenderNodeHolder mRenderNodeHolder;
     private long mTimestamp;
     private Paint.FontMetricsInt mLineNumberMetrics;
     private Paint.FontMetricsInt mGraphMetrics;
@@ -127,7 +127,7 @@ public class EditorPainter {
         mHorizontalScrollBar = new RectF();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            mRenderer = new HwAcceleratedRenderer(editor);
+            mRenderNodeHolder = new RenderNodeHolder(editor);
         }
         mDrawPoints = new BufferedDrawPoints();
 
@@ -279,8 +279,8 @@ public class EditorPainter {
      * Invalidate the whole hardware-accelerated renderer
      */
     public void invalidateHwRenderer() {
-        if (mRenderer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            mRenderer.invalidate();
+        if (mRenderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mRenderNodeHolder.invalidate();
         }
     }
 
@@ -288,8 +288,8 @@ public class EditorPainter {
      * Invalidate the region in hardware-accelerated renderer
      */
     public void invalidateChanged(int startLine) {
-        if (mRenderer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mCursor != null) {
-            if (mRenderer.invalidateInRegion(startLine, Integer.MAX_VALUE)) {
+        if (mRenderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mCursor != null) {
+            if (mRenderNodeHolder.invalidateInRegion(startLine, Integer.MAX_VALUE)) {
                 mEditor.invalidate();
             }
         }
@@ -821,7 +821,7 @@ public class EditorPainter {
             circleRadius = Math.min(mEditor.getRowHeight(), spaceWidth) * 0.125f;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !mEditor.isWordwrap() && canvas.isHardwareAccelerated() && mEditor.isHardwareAcceleratedDrawAllowed()) {
-            mRenderer.keepCurrentInDisplay(firstVis, mEditor.getLastVisibleRow());
+            mRenderNodeHolder.keepCurrentInDisplay(firstVis, mEditor.getLastVisibleRow());
         }
         float offset2 = mEditor.getOffsetX() - mEditor.measureTextRegionOffset();
         float offset3 = offset2 - mEditor.getDpUnit() * 15;
@@ -1064,7 +1064,7 @@ public class EditorPainter {
                     drawMiniGraph(canvas, paintingOffset, row, "↵");
                 }
             } else {
-                paintingOffset = offset + mRenderer.drawLineHardwareAccelerated(canvas, line, offset) - mEditor.getDpUnit() * 20;
+                paintingOffset = offset + mRenderNodeHolder.drawLineHardwareAccelerated(canvas, line, offset) - mEditor.getDpUnit() * 20;
                 lastVisibleChar = columnCount;
             }
 

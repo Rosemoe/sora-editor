@@ -82,7 +82,6 @@ import io.github.rosemoe.sora.event.EventReceiver;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.SubscriptionReceipt;
-import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
@@ -296,7 +295,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private Paint.FontMetricsInt mGraphMetrics;
     private SelectionHandleStyle mHandleStyle;
     private CursorBlink mCursorBlink;
-    private HwAcceleratedRenderer mRenderer;
     private DirectAccessProps mProps;
     private Bundle mExtraArguments;
     private Styles mStyles;
@@ -484,9 +482,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 Log.e(LOG_TAG, "Failed to get scroll factor", e);
                 mVerticalScrollFactor = 32;
             }
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            mRenderer = new HwAcceleratedRenderer(this);
         }
         mLnTip = getContext().getString(R.string.editor_line_number_tip_prefix);
         mFormatTip = getContext().getString(R.string.editor_formatting);
@@ -1095,10 +1090,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     protected void setTextSizePxDirect(float size) {
         mPainter.setTextSizePxDirect(size);
-    }
-
-    public HwAcceleratedRenderer getRenderer() {
-        return mRenderer;
     }
 
     public EditorPainter getEditorPainter() {
@@ -3901,9 +3892,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @Override
     public void beforeReplace(Content content) {
         mWait = true;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            mRenderer.beforeReplace(content);
-        }
         mLayout.beforeReplace(content);
     }
 
@@ -3929,9 +3917,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             Log.w(LOG_TAG, "Update failure", e);
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            mRenderer.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
-        }
         mLayout.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
 
         // Notify input method
@@ -3990,9 +3975,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             Log.w(LOG_TAG, "Update failure", e);
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            mRenderer.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
-        }
         mLayout.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
 
         updateCursor();

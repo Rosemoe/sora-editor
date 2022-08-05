@@ -43,13 +43,13 @@ import io.github.rosemoe.sora.util.ArrayList;
  * @author Rosemoe
  */
 @RequiresApi(29)
-class HwAcceleratedRenderer implements ContentListener {
+class RenderNodeHolder implements ContentListener {
 
     private final CodeEditor editor;
     private final ArrayList<TextRenderNode> cache;
     private final Stack<TextRenderNode> pool = new Stack<>();
 
-    public HwAcceleratedRenderer(CodeEditor editor) {
+    public RenderNodeHolder(CodeEditor editor) {
         this.editor = editor;
         cache = new ArrayList<>(64);
     }
