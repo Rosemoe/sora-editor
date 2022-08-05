@@ -43,7 +43,8 @@ object BidiLayoutHelper {
         val lineText = text.getLine(line)
         val gtr = GraphicTextRow.obtain()
         gtr.set(
-            lineText,
+            text,
+            line,
             0,
             lineText.length,
             editor.tabWidth,
@@ -61,11 +62,11 @@ object BidiLayoutHelper {
             if (runStart > column || runStart >= runEnd) {
                 break
             }
-            offset += if (runEnd <= column) {
+            offset += if (runEnd < column) {
                 gtr.measureText(runStart, runEnd)
             } else { //runEnd > targetColumn
                 if (dirs.isRunRtl(i)) {
-                    gtr.measureText(runStart, runEnd) - gtr.measureText(runStart, targetColumn)
+                    gtr.measureText(targetColumn, runEnd)
                 } else {
                     gtr.measureText(runStart, column)
                 }
@@ -88,7 +89,8 @@ object BidiLayoutHelper {
         val lineText = text.getLine(line)
         val gtr = GraphicTextRow.obtain()
         gtr.set(
-            lineText,
+            text,
+            line,
             0,
             lineText.length,
             editor.tabWidth,

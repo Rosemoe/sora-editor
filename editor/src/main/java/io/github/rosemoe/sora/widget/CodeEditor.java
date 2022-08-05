@@ -106,6 +106,7 @@ import io.github.rosemoe.sora.util.Floats;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.Logger;
 import io.github.rosemoe.sora.util.LongArrayList;
+import io.github.rosemoe.sora.util.Numbers;
 import io.github.rosemoe.sora.util.TemporaryFloatBuffer;
 import io.github.rosemoe.sora.util.ThemeUtils;
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
@@ -1111,7 +1112,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Update displayed lines after drawing
      */
-    void rememberDisplayedLines() {
+    protected void rememberDisplayedLines() {
         mAvailableFloatArrayRegion = IntPair.pack(getFirstVisibleLine(), getLastVisibleLine());
     }
 
@@ -1119,7 +1120,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Obtain a float array from previously displayed lines, or either create a new one
      * if no float array matches the requirement.
      */
-    private float[] obtainFloatArray(int desiredSize, boolean usePainter) {
+    protected float[] obtainFloatArray(int desiredSize, boolean usePainter) {
         var start = IntPair.getFirst(mAvailableFloatArrayRegion);
         var end = IntPair.getSecond(mAvailableFloatArrayRegion);
         var firstVis = getFirstVisibleLine();
@@ -1142,51 +1143,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 i = lastVis;
             }
         }
-        //Log.d(LOG_TAG, "Allocate float[], size = " + desiredSize);
         return new float[desiredSize];
-    }
-
-    /**
-     * Build measure cache for the given lines, if the timestamp indicates that it is outdated.
-     */
-    void buildMeasureCacheForLines(int startLine, int endLine, long timestamp, boolean usePainter) {
-        var text = mText;
-        while (startLine <= endLine && startLine < text.getLineCount()) {
-            var line = usePainter ? mPainter.getLine(startLine) : mText.getLine(startLine);
-            if (line.timestamp < timestamp) {
-                var gtr = GraphicTextRow.obtain();
-                if (line.widthCache == null || line.widthCache.length < line.length()) {
-                    line.widthCache = obtainFloatArray(Math.max(line.length() + 8, 90), usePainter);
-                }
-                gtr.set(line, 0, line.length(), getTabWidth(), getSpansForLine(startLine), mPainter.getPaint());
-                if (mLayout instanceof WordwrapLayout) {
-                    gtr.setSoftBreaks(((WordwrapLayout) mLayout).getSoftBreaksForLine(startLine));
-                }
-                gtr.buildMeasureCache();
-                GraphicTextRow.recycle(gtr);
-                line.timestamp = timestamp;
-            }
-            startLine++;
-        }
-    }
-
-    /**
-     * Clear flag in flags
-     * The flag must be power of two
-     *
-     * @param flags Flags to filter
-     * @param flag  The flag to clear
-     * @return Cleared flags
-     */
-    private int clearFlag(int flags, int flag) {
-        return (flags & flag) != 0 ? flags ^ flag : flags;
     }
 
     /**
      * Whether non-printable is to be drawn
      */
     protected boolean shouldInitializeNonPrintable() {
-        return clearFlag(clearFlag(mNonPrintableOptions, FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE), FLAG_DRAW_TAB_SAME_AS_SPACE) != 0;
+        return Numbers.clearBit(Numbers.clearBit(mNonPrintableOptions, FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE), FLAG_DRAW_TAB_SAME_AS_SPACE) != 0;
     }
 
     /**
@@ -1418,30 +1382,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * Measure text width with editor's text paint
-     *
-     * @param text  Source string
-     * @param index Start index in array
-     * @param count Count of characters
-     * @return The width measured
-     */
-    @UnsupportedUserUsage
-    public float measureText(ContentLine text, int index, int count, int line) {
-        var gtr = GraphicTextRow.obtain();
-        List<Span> spans = defSpans;
-        if (text.widthCache == null) {
-            spans = getSpansForLine(line);
-        }
-        gtr.set(text, 0, text.length(), mTabWidth, spans, mPainter.getPaint());
-        if (mLayout instanceof WordwrapLayout && text.widthCache == null) {
-            gtr.setSoftBreaks(((WordwrapLayout) mLayout).getSoftBreaksForLine(line));
-        }
-        var res = gtr.measureText(index, index + count);
-        GraphicTextRow.recycle(gtr);
-        return res;
-    }
-
-    /**
      * Get spans on the given line
      */
     @NonNull
@@ -1459,79 +1399,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         } catch (Exception e) {
             return defSpans;
         }
-    }
-
-    /**
-     * Draw text on the given position
-     *
-     * @param canvas Canvas to draw
-     * @param line   Source of characters
-     * @param index  The index in array
-     * @param count  Count of characters
-     * @param offX   Offset x for paint
-     * @param offY   Offset y for paint(baseline)
-     */
-    @SuppressLint("NewApi")
-    protected void drawText(Canvas canvas, ContentLine line, int index, int count, int contextStart, int contextCount, boolean isRtl, float offX, float offY, int lineNumber) {
-        // drawTextRun() can be called directly on low API systems
-        int end = index + count;
-        var src = line.value;
-        int st = index;
-        for (int i = index; i < end; i++) {
-            if (src[i] == '\t') {
-                canvas.drawTextRun(src, st, i - st, contextStart, contextCount, offX, offY, isRtl, mPainter.getPaint());
-                offX = offX + measureText(line, st, i - st + 1, lineNumber);
-                st = i + 1;
-            }
-        }
-        if (st < end) {
-            canvas.drawTextRun(src, st, end - st, contextStart, contextCount, offX, offY, isRtl, mPainter.getPaint());
-        }
-    }
-
-    @UnsupportedUserUsage
-    public float[] findFirstVisibleChar(float target, int start, int end, ContentLine line, int lineNumber) {
-        return findFirstVisibleChar(target, start, end, start, line, lineNumber);
-    }
-
-    /**
-     * Find first visible character
-     */
-    @UnsupportedUserUsage
-    public float[] findFirstVisibleChar(float target, int start, int end, int contextStart, ContentLine line, int lineNumber) {
-        if (start >= end) {
-            return new float[]{end, 0};
-        }
-        if (line.widthCache != null && line.timestamp < mPainter.getTimestamp()) {
-            buildMeasureCacheForLines(lineNumber, lineNumber, mPainter.getTimestamp(), false);
-        }
-        var gtr = GraphicTextRow.obtain();
-        gtr.set(line, contextStart, end, mTabWidth, line.widthCache == null ? getSpansForLine(lineNumber) : null, mPainter.getPaint());
-        if (mLayout instanceof WordwrapLayout && line.widthCache == null) {
-            gtr.setSoftBreaks(((WordwrapLayout) mLayout).getSoftBreaksForLine(lineNumber));
-        }
-        var res = gtr.findOffsetByAdvance(start, target);
-        GraphicTextRow.recycle(gtr);
-        return res;
-    }
-
-    /**
-     * Find first visible character
-     */
-    @UnsupportedUserUsage
-    public float[] findFirstVisibleCharNoCache(float target, int start, int end, int contextStart, ContentLine line, int lineNumber, Paint paint) {
-        if (start >= end) {
-            return new float[]{end, 0};
-        }
-        var gtr = GraphicTextRow.obtain();
-        if (defSpans.size() == 0) {
-            defSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
-        }
-        gtr.set(line, contextStart, end, mTabWidth, defSpans, paint);
-        gtr.disableCache();
-        var res = gtr.findOffsetByAdvance(start, target);
-        GraphicTextRow.recycle(gtr);
-        return res;
     }
 
     /**
@@ -1865,7 +1732,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             //bottom invisible
             targetY = yOffset - getHeight() + getRowHeight() * 0.1f;
         }
-        float charWidth = column == 0 ? 0 : measureText(mText.getLine(line), column - 1, 1, line);
+        float charWidth = column == 0 ? 0 : mPainter.measureText(mText.getLine(line), line, column - 1, 1);
         if (xOffset < getOffsetX() + (mPinLineNumber ? measureTextRegionOffset() : 0)) {
             targetX = xOffset + (mPinLineNumber ? -measureTextRegionOffset() : 0) - charWidth * 0.2f;
         }

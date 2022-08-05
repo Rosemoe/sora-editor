@@ -171,7 +171,7 @@ public class WordwrapLayout extends AbstractLayout {
         int len = sequence.length();
 
         while (start < len) {
-            var next = (int) editor.findFirstVisibleCharNoCache(width, start, len, 0, sequence, line, paint == null ? editor.getTextPaint() : paint)[0];
+            var next = (int) editor.getEditorPainter().findFirstVisibleCharNoCache(width, line, start, len, 0, paint == null ? editor.getTextPaint() : paint)[0];
             // Force to break the text, though no space is available
             if (next == start) {
                 next++;
@@ -230,7 +230,6 @@ public class WordwrapLayout extends AbstractLayout {
     public void destroyLayout() {
         super.destroyLayout();
         rowTable = null;
-        Thread.dumpStack();
     }
 
     @Override

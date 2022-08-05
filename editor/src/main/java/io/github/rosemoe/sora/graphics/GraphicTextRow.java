@@ -35,6 +35,7 @@ import androidx.annotation.Nullable;
 import java.util.List;
 
 import io.github.rosemoe.sora.lang.styling.Span;
+import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.bidi.Directions;
 import io.github.rosemoe.sora.text.bidi.TextBidi;
@@ -48,6 +49,7 @@ public class GraphicTextRow {
     private final float[] mBuffer;
     private Paint mPaint;
     private ContentLine mText;
+    private Directions mDirs;
     private int mStart;
     private int mEnd;
     private int mTabWidth;
@@ -81,6 +83,7 @@ public class GraphicTextRow {
         st.mStart = st.mEnd = st.mTabWidth = 0;
         st.mCache = true;
         st.mSoftBreaks = null;
+        st.mDirs = null;
         synchronized (sCached) {
             for (int i = 0; i < sCached.length; ++i) {
                 if (sCached[i] == null) {
@@ -91,12 +94,20 @@ public class GraphicTextRow {
         }
     }
 
-    /**
-     * Reset
-     */
-    public void set(@NonNull ContentLine line, int start, int end, int tabWidth, @Nullable List<Span> spans, @NonNull Paint paint) {
+    public void set(@NonNull Content content, int line, int start, int end, int tabWidth, @Nullable List<Span> spans, @NonNull Paint paint) {
         mPaint = paint;
-        mText = line;
+        mText = content.getLine(line);
+        mDirs = content.getLineDirections(line);
+        mTabWidth = tabWidth;
+        mStart = start;
+        mEnd = end;
+        mSpans = spans;
+    }
+
+    public void set(@NonNull ContentLine text, @Nullable Directions dirs, int start, int end, int tabWidth, @Nullable List<Span> spans, @NonNull Paint paint) {
+        mPaint = paint;
+        mText = text;
+        mDirs = dirs;
         mTabWidth = tabWidth;
         mStart = start;
         mEnd = end;
@@ -319,13 +330,13 @@ public class GraphicTextRow {
         if (start >= end) {
             return 0f;
         }
-        // Can be called directly
-        var dirs = TextBidi.getDirections(mText);
+        var dirs = mDirs == null ? TextBidi.getDirections(mText) : mDirs;
         float width = 0;
         for (int i = 0;i < dirs.getRunCount();i++) {
             int start1 = Math.max(start, dirs.getRunStart(i));
             int end1 = Math.min(end, dirs.getRunEnd(i));
             if (end1 > start1) {
+                // Can be called directly
                 width += mPaint.getTextRunAdvances(mText.value, start1, end1 - start1, ctxStart, ctxEnd - ctxStart, dirs.isRunRtl(i), widths, widths == null ? 0 : start1);
             }
             if (dirs.getRunStart(i) >= end) {

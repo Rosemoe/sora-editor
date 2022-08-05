@@ -110,4 +110,16 @@ public class Numbers {
         }
     }
 
+    /**
+     * Clear flag in flags
+     * The flag must be power of two
+     *
+     * @param flags Flags to filter
+     * @param flag  The flag to clear
+     * @return Cleared flags
+     */
+    public static int clearBit(int flags, int flag) {
+        return (flags & flag) != 0 ? flags ^ flag : flags;
+    }
+
 }
