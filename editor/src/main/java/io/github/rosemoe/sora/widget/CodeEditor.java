@@ -868,7 +868,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         mLanguageSymbolPairs.setParent(mProps.overrideSymbolPairs);
 
-        mRenderer.invalidateHwRenderer();
+        mRenderer.invalidateRenderNodes();
         invalidate();
     }
 
@@ -940,7 +940,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             mWordwrap = wordwrap;
             createLayout();
             if (!wordwrap) {
-                mRenderer.invalidateHwRenderer();
+                mRenderer.invalidateRenderNodes();
             }
             invalidate();
         }
@@ -1161,7 +1161,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void setHardwareAcceleratedDrawAllowed(boolean acceleratedDraw) {
         mHardwareAccAllowed = acceleratedDraw;
         if (acceleratedDraw && !isWordwrap()) {
-            mRenderer.invalidateHwRenderer();
+            mRenderer.invalidateRenderNodes();
         }
     }
 
@@ -1928,7 +1928,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             throw new IllegalArgumentException("width can not be under 1");
         }
         mTabWidth = width;
-        mRenderer.invalidateHwRenderer();
+        mRenderer.invalidateRenderNodes();
         mRenderer.updateTimestamp();
         invalidate();
     }
@@ -3212,7 +3212,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         createLayout();
         requestLayout();
-        mRenderer.invalidateHwRenderer();
+        mRenderer.invalidateRenderNodes();
         invalidate();
     }
 
@@ -3370,7 +3370,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (mHighlightCurrentBlock) {
             mCursorPosition = findCursorBlock();
         }
-        mRenderer.invalidateHwRenderer();
+        mRenderer.invalidateRenderNodes();
         mRenderer.updateTimestamp();
         invalidate();
     }
@@ -3574,7 +3574,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 mCompletionWindow.applyColorScheme();
             return;
         }
-        mRenderer.invalidateHwRenderer();
+        mRenderer.invalidateRenderNodes();
         invalidate();
     }
 
@@ -3584,7 +3584,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void onColorFullUpdate() {
         if (mCompletionWindow != null)
             mCompletionWindow.applyColorScheme();
-        mRenderer.invalidateHwRenderer();
+        mRenderer.invalidateRenderNodes();
         invalidate();
     }
 
@@ -3937,7 +3937,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         //Log.d(LOG_TAG, "Ins: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + insertedContent);
         updateCursorAnchor();
-        mRenderer.invalidateHwRenderer();
+        mRenderer.invalidateRenderNodes();
         ensureSelectionVisible();
 
         mLanguage.getAnalyzeManager().insert(start, end, insertedContent);
@@ -3993,7 +3993,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
 
         //Log.d(LOG_TAG, "Del: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + deletedContent);
-        mRenderer.invalidateHwRenderer();
+        mRenderer.invalidateRenderNodes();
         if (!mWait) {
             updateCursorAnchor();
             ensureSelectionVisible();

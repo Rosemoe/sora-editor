@@ -120,6 +120,7 @@ public class EditorRenderer {
     private Cursor mCursor;
     protected ContentLine mBuffer;
     protected Content mContent;
+    private boolean mRendering;
 
     public EditorRenderer(@NonNull CodeEditor editor) {
         mEditor = editor;
@@ -157,7 +158,12 @@ public class EditorRenderer {
     }
 
     public void draw(@NonNull Canvas canvas) {
-        drawView(canvas);
+        mRendering = true;
+        try {
+            drawView(canvas);
+        } finally {
+            mRendering = false;
+        }
     }
 
     public void onSizeChanged(int width, int height) {
@@ -196,7 +202,7 @@ public class EditorRenderer {
         mTextMetrics = mPaint.getFontMetricsInt();
         mLineNumberMetrics = mPaintOther.getFontMetricsInt();
         mGraphMetrics = mPaintGraph.getFontMetricsInt();
-        invalidateHwRenderer();
+        invalidateRenderNodes();
         updateTimestamp();
     }
 
@@ -211,7 +217,7 @@ public class EditorRenderer {
         }
         mPaint.setTypefaceWrapped(typefaceText);
         mTextMetrics = mPaint.getFontMetricsInt();
-        invalidateHwRenderer();
+        invalidateRenderNodes();
         updateTimestamp();
         mEditor.createLayout();
         mEditor.invalidate();
@@ -241,7 +247,7 @@ public class EditorRenderer {
     protected void onTextStyleUpdate() {
         mLineNumberMetrics = mPaintOther.getFontMetricsInt();
         mTextMetrics = mPaint.getFontMetricsInt();
-        invalidateHwRenderer();
+        invalidateRenderNodes();
         updateTimestamp();
         mEditor.createLayout();
         mEditor.invalidate();
@@ -259,6 +265,9 @@ public class EditorRenderer {
     }
 
     ContentLine getLine(int line) {
+        if (!mRendering) {
+            return getLineDirect(line);
+        }
         var line2 = mPreloadedLines.get(line);
         if (line2 == null) {
             line2 = mContent.getLine(line);
@@ -278,7 +287,7 @@ public class EditorRenderer {
     /**
      * Invalidate the whole hardware-accelerated renderer
      */
-    public void invalidateHwRenderer() {
+    public void invalidateRenderNodes() {
         if (mRenderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             mRenderNodeHolder.invalidate();
         }
