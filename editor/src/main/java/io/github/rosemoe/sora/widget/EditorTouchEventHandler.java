@@ -286,13 +286,13 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN: {
                 mHoldingScrollbarVertical = mHoldingScrollbarHorizontal = false;
-                RectF rect = mEditor.getEditorPainter().getVerticalScrollBarRect();
+                RectF rect = mEditor.getRenderer().getVerticalScrollBarRect();
                 if (RectUtils.contains(rect, e.getX(), e.getY(), mEditor.getDpUnit() * 10)) {
                     mHoldingScrollbarVertical = true;
                     mThumbDownY = e.getY();
                     mEditor.hideAutoCompleteWindow();
                 }
-                rect = mEditor.getEditorPainter().getHorizontalScrollBarRect();
+                rect = mEditor.getRenderer().getHorizontalScrollBarRect();
                 if (rect.contains(e.getX(), e.getY())) {
                     mHoldingScrollbarHorizontal = true;
                     mThumbDownX = e.getX();
@@ -333,7 +333,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     float movedDis = e.getY() - mThumbDownY;
                     mThumbDownY = e.getY();
                     float all = mEditor.mLayout.getLayoutHeight() - mEditor.getHeight() / 2f;
-                    float dy = movedDis / (mEditor.getHeight() - mEditor.getEditorPainter().getVerticalScrollBarRect().height()) * all;
+                    float dy = movedDis / (mEditor.getHeight() - mEditor.getRenderer().getVerticalScrollBarRect().height()) * all;
                     scrollBy(0, dy);
                     return true;
                 }
@@ -519,7 +519,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             row = Math.max(0, Math.min(row, mEditor.getLayout().getRowCount() - 1));
             var inf = mEditor.getLayout().getRowAt(row);
             if (inf.isLeadingRow) {
-                var style = mEditor.getEditorPainter().getLineStyle(inf.lineIndex, LineSideIcon.class);
+                var style = mEditor.getRenderer().getLineStyle(inf.lineIndex, LineSideIcon.class);
                 if (style != null) {
                     if ((mEditor.dispatchEvent(new SideIconClickEvent(mEditor, style)) & InterceptTarget.TARGET_EDITOR) != 0) {
                         mEditor.hideAutoCompleteWindow();
@@ -710,7 +710,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         if (textSizeStart == mEditor.getTextSizePx()) {
             return;
         }
-        mEditor.getEditorPainter().updateTimestamp();
+        mEditor.getRenderer().updateTimestamp();
         mEditor.createLayout();
         mEditor.invalidate();
     }

@@ -48,7 +48,7 @@ import java.util.Objects;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.widget.CodeEditor;
-import io.github.rosemoe.sora.widget.EditorPainter;
+import io.github.rosemoe.sora.widget.EditorRenderer;
 
 /**
  * Magnifier specially designed for CodeEditor
@@ -296,7 +296,7 @@ public class Magnifier implements EditorBuiltinComponent {
      * Update display on low API devices
      * <p>
      * This method does not include other views as it obtain editor's display by
-     * directly calling {@link EditorPainter#drawView(Canvas)}
+     * directly calling {@link EditorRenderer#drawView(Canvas)}
      */
     private void updateDisplayWithinEditor() {
         var dest = Bitmap.createBitmap(popup.getWidth(), popup.getHeight(), Bitmap.Config.ARGB_8888);

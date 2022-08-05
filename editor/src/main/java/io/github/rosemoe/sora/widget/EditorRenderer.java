@@ -87,7 +87,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 
-public class EditorPainter {
+public class EditorRenderer {
 
     private static final String LOG_TAG = "EditorPainter";
     private final static int[] sDiagnosticsColorMapping = {
@@ -121,7 +121,7 @@ public class EditorPainter {
     protected ContentLine mBuffer;
     protected Content mContent;
 
-    public EditorPainter(@NonNull CodeEditor editor) {
+    public EditorRenderer(@NonNull CodeEditor editor) {
         mEditor = editor;
         mVerticalScrollBar = new RectF();
         mHorizontalScrollBar = new RectF();

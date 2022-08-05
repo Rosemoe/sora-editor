@@ -41,7 +41,7 @@ fun CodeEditor.resolveTouchRegion(event: MotionEvent): Long {
     val x = event.x + offsetX
     val y = event.y + offsetY
     val lineNumberWidth = measureLineNumber()
-    val iconWidth = if (editorPainter.hasSideHintIcons()) rowHeight else 0
+    val iconWidth = if (renderer.hasSideHintIcons()) rowHeight else 0
     val textOffset = measureTextRegionOffset()
     val region = when {
         x < 0f -> REGION_OUTBOUND

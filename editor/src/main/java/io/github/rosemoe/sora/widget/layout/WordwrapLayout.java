@@ -34,7 +34,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
@@ -171,7 +170,7 @@ public class WordwrapLayout extends AbstractLayout {
         int len = sequence.length();
 
         while (start < len) {
-            var next = (int) editor.getEditorPainter().findFirstVisibleCharNoCache(width, line, start, len, 0, paint == null ? editor.getTextPaint() : paint)[0];
+            var next = (int) editor.getRenderer().findFirstVisibleCharNoCache(width, line, start, len, 0, paint == null ? editor.getTextPaint() : paint)[0];
             // Force to break the text, though no space is available
             if (next == start) {
                 next++;

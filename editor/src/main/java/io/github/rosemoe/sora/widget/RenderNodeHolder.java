@@ -128,7 +128,7 @@ class RenderNodeHolder implements ContentListener {
             } catch (Exception e) {
                 reader = new EmptyReader();
             }
-            editor.getEditorPainter().updateLineDisplayList(node.renderNode, line, reader);
+            editor.getRenderer().updateLineDisplayList(node.renderNode, line, reader);
             try {
                 reader.moveToLine(-1);
             } catch (Exception e) {
