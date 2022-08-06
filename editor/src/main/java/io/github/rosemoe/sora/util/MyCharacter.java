@@ -101,7 +101,7 @@ public class MyCharacter {
      * @return Whether a identifier part
      * @see Character#isJavaIdentifierPart(char)
      */
-    public static boolean isJavaIdentifierPart(int key) {
+    public static boolean isJavaIdentifierPart(char key) {
         return get(bitsIsPart, key);
     }
 
@@ -110,8 +110,28 @@ public class MyCharacter {
      * @return Whether a identifier start
      * @see Character#isJavaIdentifierStart(char)
      */
-    public static boolean isJavaIdentifierStart(int key) {
+    public static boolean isJavaIdentifierStart(char key) {
         return get(bitsIsStart, key);
+    }
+
+    public static boolean couldBeEmoji(int cp) {
+        return cp >= 0x1F000 && cp <= 0x1FAFF;
+    }
+
+    public static boolean isFitzpatrick(int cp) {
+        return cp >= 0x1F3FB && cp <= 0x1F3FF;
+    }
+
+    public static boolean isZWJ(int cp) {
+        return cp == 0x200D;
+    }
+
+    public static boolean isZWNJ(int cp) {
+        return cp == 0x200C;
+    }
+
+    public static boolean isVariationSelector(int cp) {
+        return cp == 0xFE0E || cp == 0xFE0F;
     }
 
 }
