@@ -2161,15 +2161,17 @@ public class EditorRenderer {
             var line = usePainter ? getLine(startLine) : getLineDirect(startLine);
             if (line.timestamp < timestamp) {
                 var gtr = GraphicTextRow.obtain(fastMode);
+                var forced = false;
                 if (line.widthCache == null || line.widthCache.length < line.length()) {
                     line.widthCache = mEditor.obtainFloatArray(Math.max(line.length() + 8, 90), usePainter);
+                    forced = true;
                 }
                 var spans = mEditor.getSpansForLine(startLine);
                 gtr.set(text, startLine, 0, line.length(), mEditor.getTabWidth(), spans, mPaint);
                 var softBreaks = (mEditor.mLayout instanceof WordwrapLayout) ? ((WordwrapLayout) mEditor.mLayout).getSoftBreaksForLine(startLine) : null;
                 gtr.setSoftBreaks(softBreaks);
-                var hash = Objects.hash(spans, line.length(), mEditor.getTabWidth(), fastMode, softBreaks);
-                if (line.styleHash != hash) {
+                var hash = Objects.hash(spans, line.length(), mEditor.getTabWidth(), fastMode, softBreaks, mPaint.getFlags(), mPaint.getTextSize(), mPaint.getTextScaleX(), mPaint.getLetterSpacing());
+                if (line.styleHash != hash || forced) {
                     gtr.buildMeasureCache();
                     line.styleHash = hash;
                 }
