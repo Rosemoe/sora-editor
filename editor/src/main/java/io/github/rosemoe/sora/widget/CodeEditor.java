@@ -1853,7 +1853,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         mRenderer.invalidateRenderNodes();
         mRenderer.fastMode = true;
         mRenderer.updateTimestamp();
-        setLigatureEnabled(false);
         invalidate();
     }
 

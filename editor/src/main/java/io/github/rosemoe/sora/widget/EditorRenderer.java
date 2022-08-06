@@ -54,6 +54,7 @@ import androidx.annotation.RequiresApi;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
@@ -1516,21 +1517,32 @@ public class EditorRenderer {
      * @param offX   Offset x for paint
      * @param offY   Offset y for paint(baseline)
      */
-    @SuppressLint("NewApi")
     protected void drawText(Canvas canvas, ContentLine line, int index, int count, int contextStart, int contextCount, boolean isRtl, float offX, float offY, int lineNumber) {
         int end = index + count;
         var src = line.value;
         int st = index;
         for (int i = index; i < end; i++) {
             if (src[i] == '\t') {
-                canvas.drawTextRun(src, st, i - st, contextStart, contextCount, offX, offY, isRtl, mPaint);
+                drawTextRunDirect(canvas, src, st, i - st, contextStart, contextCount, offX, offY, isRtl);
                 offX = offX + measureText(line, lineNumber, st, i - st + 1);
                 st = i + 1;
             }
         }
         if (st < end) {
-            canvas.drawTextRun(src, st, end - st, contextStart, contextCount, offX, offY, isRtl, mPaint);
+            drawTextRunDirect(canvas, src, st, end - st, contextStart, contextCount, offX, offY, isRtl);
         }
+    }
+
+    @SuppressLint("NewApi")
+    protected void drawTextRunDirect(Canvas canvas, char[] src, int index, int count, int contextStart, int contextCount, float offX, float offY, boolean isRtl) {
+        /*if (fastMode) {
+            for (int i = 0; i < count; i++) {
+                canvas.drawText(src, index + i, 1, offX, offY, mPaint);
+                offX += mPaint.myGetTextRunAdvances(src, index + i, 1, index + i, 1, false, null, 0, true);
+            }
+        } else {*/
+            canvas.drawTextRun(src, index, count, contextStart, contextCount, offX, offY, isRtl, mPaint);
+        //}
     }
 
     /**
@@ -2115,7 +2127,7 @@ public class EditorRenderer {
             }
         }
         offset = Math.min(end, Math.max(start, offset));
-        res = new float[] {offset, gtr.measureText(start, offset)};
+        res = new float[]{offset, gtr.measureText(start, offset)};
 
         GraphicTextRow.recycle(gtr);
         return res;
@@ -2152,11 +2164,15 @@ public class EditorRenderer {
                 if (line.widthCache == null || line.widthCache.length < line.length()) {
                     line.widthCache = mEditor.obtainFloatArray(Math.max(line.length() + 8, 90), usePainter);
                 }
-                gtr.set(text, startLine, 0, line.length(), mEditor.getTabWidth(), mEditor.getSpansForLine(startLine), mPaint);
-                if (mEditor.mLayout instanceof WordwrapLayout) {
-                    gtr.setSoftBreaks(((WordwrapLayout) mEditor.mLayout).getSoftBreaksForLine(startLine));
+                var spans = mEditor.getSpansForLine(startLine);
+                gtr.set(text, startLine, 0, line.length(), mEditor.getTabWidth(), spans, mPaint);
+                var softBreaks = (mEditor.mLayout instanceof WordwrapLayout) ? ((WordwrapLayout) mEditor.mLayout).getSoftBreaksForLine(startLine) : null;
+                gtr.setSoftBreaks(softBreaks);
+                var hash = Objects.hash(spans, line.length(), mEditor.getTabWidth(), fastMode, softBreaks);
+                if (line.styleHash != hash) {
+                    gtr.buildMeasureCache();
+                    line.styleHash = hash;
                 }
-                gtr.buildMeasureCache();
                 GraphicTextRow.recycle(gtr);
                 line.timestamp = timestamp;
             }

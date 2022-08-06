@@ -83,7 +83,7 @@ public class Paint extends android.graphics.Paint {
     @SuppressLint("NewApi")
     public float myGetTextRunAdvances(@NonNull char[] chars, int index, int count, int contextIndex, int contextCount, boolean isRtl, @Nullable float[] advances, int advancesIndex, boolean fast) {
         if (fast) {
-            var itr = new UnicodeIterator(new CharArrayWrapper(chars, index, count));
+            /*var itr = new UnicodeIterator(new CharArrayWrapper(chars, index, count));
             char[] candidates = null;
             int offset = 0;
             var width = 0f;
@@ -118,19 +118,29 @@ public class Paint extends android.graphics.Paint {
             if (offset != 0) {
                 width += getTextRunAdvances(candidates, 0, offset, 0, offset, isRtl, advances, advances != null ? advancesIndex + itr.getStartIndex() - offset : 0);
             }
+            return width;*/
+            var width = 0f;
+            for (int i = 0;i < count;i++) {
+                char ch = chars[i + index];
+                float charWidth = (ch == '\t') ? tabWidth : widths.measureChar(ch, this);
+                width += charWidth;
+                if (advances != null) {
+                    advances[advancesIndex + i] = charWidth;
+                }
+            }
             return width;
         } else {
             return getTextRunAdvances(chars, index, count, contextIndex, contextCount, isRtl, advances, advancesIndex);
         }
     }
 
-    private static char[] appendCodePoint(char[] chars, int offset, int codePoint) {
+    /*private static char[] appendCodePoint(char[] chars, int offset, int codePoint) {
         if (chars == null) {
             chars = TemporaryCharBuffer.obtain(16);
         }
         Character.toChars(codePoint, chars, offset);
         return chars;
-    }
+    }*/
 
     /**
      * Get the advance of text with the context positions related to shaping the characters
@@ -157,7 +167,16 @@ public class Paint extends android.graphics.Paint {
             return Math.max(offset, start);
         }
         if (fast) {
-            // TODO
+            var width = 0f;
+            for (int i = start;i < end;i++) {
+                char ch = text.value[i];
+                float charWidth = (ch == '\t') ? tabWidth : widths.measureChar(ch, this);
+                width += charWidth;
+                if (width > advance) {
+                    return Math.max(start, i - 1);
+                }
+            }
+            return end;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return getOffsetForAdvance(text, start, end, start, end, false, advance);

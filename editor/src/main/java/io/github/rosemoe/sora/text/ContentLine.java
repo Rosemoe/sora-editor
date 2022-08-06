@@ -42,6 +42,8 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
     public float[] widthCache;
     @UnsupportedUserUsage
     public long timestamp;
+    @UnsupportedUserUsage
+    public int styleHash;
     private int length;
 
     private int rtlAffectingCount;
