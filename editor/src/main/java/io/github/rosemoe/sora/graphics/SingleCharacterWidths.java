@@ -23,11 +23,14 @@
  */
 package io.github.rosemoe.sora.graphics;
 
+import android.util.SparseArray;
+
 import java.util.Arrays;
 
 public class SingleCharacterWidths {
 
     public final float[] widths;
+    public final SparseArray<Float> cpWidths;
     public final char[] buffer;
     private final float[] cache;
     private final int tabWidth;
@@ -36,6 +39,7 @@ public class SingleCharacterWidths {
         cache = new float[65536];
         buffer = new char[10];
         widths = new float[10];
+        cpWidths = new SparseArray<>();
         this.tabWidth = tabWidth;
     }
 
@@ -48,6 +52,7 @@ public class SingleCharacterWidths {
      */
     public void clearCache() {
         Arrays.fill(cache, 0);
+        cpWidths.clear();
     }
 
     /**
@@ -66,6 +71,22 @@ public class SingleCharacterWidths {
             cache[ch] = width;
         }
         return width * rate;
+    }
+
+    /**
+     * Measure a single character
+     */
+    public float measureCodePoint(int cp, Paint p) {
+        if (cp < 65535) {
+            return measureChar((char)cp, p);
+        }
+        var width = cpWidths.get(cp);
+        if (width == null) {
+            var count = Character.toChars(cp, buffer, 0);
+            width = p.measureText(buffer, 0, count);
+            cpWidths.put(cp, width);
+        }
+        return width;
     }
 
     /*
