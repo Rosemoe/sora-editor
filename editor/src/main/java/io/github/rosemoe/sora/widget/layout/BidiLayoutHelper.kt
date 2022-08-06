@@ -41,7 +41,7 @@ object BidiLayoutHelper {
     ): Float {
         val dirs = text.getLineDirections(line)
         val lineText = text.getLine(line)
-        val gtr = GraphicTextRow.obtain()
+        val gtr = GraphicTextRow.obtain(editor.renderer.isFastMode)
         gtr.set(
             text,
             line,
@@ -87,7 +87,7 @@ object BidiLayoutHelper {
     ): Int {
         val dirs = text.getLineDirections(line)
         val lineText = text.getLine(line)
-        val gtr = GraphicTextRow.obtain()
+        val gtr = GraphicTextRow.obtain(editor.renderer.isFastMode)
         gtr.set(
             text,
             line,

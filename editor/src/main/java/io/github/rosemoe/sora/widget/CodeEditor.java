@@ -1848,6 +1848,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return mSearcher;
     }
 
+    public void applyFastDisplay() {
+        mText.setBidiEnabled(false);
+        mRenderer.invalidateRenderNodes();
+        mRenderer.fastMode = true;
+        mRenderer.updateTimestamp();
+        setLigatureEnabled(false);
+        invalidate();
+    }
+
     /**
      * Set selection around the given position
      * It will try to set selection as near as possible (Exactly the position if that position exists)
@@ -3902,9 +3911,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         mStyleDelegate.onTextChange();
         var start = mText.getIndexer().getCharPosition(startLine, startColumn);
         var end = mText.getIndexer().getCharPosition(endLine, endColumn);
-        for (int i = startLine; i <= endLine && i < getLineCount(); i++) {
-            mText.getLine(i).widthCache = null;
-        }
+        mRenderer.buildMeasureCacheForLines(startLine, endLine);
 
         // Update spans
         try {
@@ -3960,10 +3967,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         end.column = endColumn;
         end.line = endLine;
         end.index = start.index + deletedContent.length();
-
-        for (int i = startLine; i <= startLine + 1 && i < getLineCount(); i++) {
-            mText.getLine(i).widthCache = null;
-        }
+        mRenderer.buildMeasureCacheForLines(startLine, startLine + 1);
 
         try {
             if (mStyles != null) {

@@ -41,6 +41,10 @@ public class UnicodeIterator {
         limit = end;
     }
 
+    public boolean hasNext() {
+        return end < limit;
+    }
+
     public int nextCodePoint() {
         start = end;
         if (start >= limit) {

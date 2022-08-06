@@ -193,9 +193,9 @@ public class DirectAccessProps implements Serializable {
 
     /**
      * Cache RenderNode of long text lines
-     * This costs some memory, but improves performance.
+     * This costs some memory, but improves performance when the line is not too long.
      */
-    public boolean cacheRenderNodeForLongLines = true;
+    public boolean cacheRenderNodeForLongLines = false;
 
     /**
      * Use the ICU library to find range of words on double tap or long press.

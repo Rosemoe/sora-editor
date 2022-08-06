@@ -56,23 +56,25 @@ public class GraphicTextRow {
     private List<Span> mSpans;
     private boolean mCache = true;
     private List<Integer> mSoftBreaks;
-
+    private boolean mQuickMeasure;
     private GraphicTextRow() {
         mBuffer = new float[2];
     }
 
-    public static GraphicTextRow obtain() {
+    public static GraphicTextRow obtain(boolean quickMeasure) {
         GraphicTextRow st;
         synchronized (sCached) {
             for (int i = sCached.length; --i >= 0; ) {
                 if (sCached[i] != null) {
                     st = sCached[i];
                     sCached[i] = null;
+                    st.mQuickMeasure = quickMeasure;
                     return st;
                 }
             }
         }
         st = new GraphicTextRow();
+        st.mQuickMeasure = quickMeasure;
         return st;
     }
 
@@ -217,8 +219,8 @@ public class GraphicTextRow {
                         // Here is a tab
                         // Try to find advance
                         if (lastStart != i) {
-                            int idx = mPaint.findOffsetByRunAdvance(mText, lastStart, i, advance - currentPosition, mCache);
-                            currentPosition += mPaint.measureTextRunAdvance(chars, lastStart, idx, regionStart, regionEnd);
+                            int idx = mPaint.findOffsetByRunAdvance(mText, lastStart, i, advance - currentPosition, mCache, mQuickMeasure);
+                            currentPosition += mPaint.measureTextRunAdvance(chars, lastStart, idx, regionStart, regionEnd, mQuickMeasure);
                             if (idx < i) {
                                 res = idx;
                                 break;
@@ -242,7 +244,7 @@ public class GraphicTextRow {
                     }
                 }
                 if (res == -1) {
-                    int idx = mPaint.findOffsetByRunAdvance(mText, lastStart, regionEnd, advance - currentPosition, mCache);
+                    int idx = mPaint.findOffsetByRunAdvance(mText, lastStart, regionEnd, advance - currentPosition, mCache, mQuickMeasure);
                     currentPosition += measureText(lastStart, idx);
                     res = idx;
                 }
@@ -337,7 +339,7 @@ public class GraphicTextRow {
             int end1 = Math.min(end, dirs.getRunEnd(i));
             if (end1 > start1) {
                 // Can be called directly
-                width += mPaint.getTextRunAdvances(mText.value, start1, end1 - start1, ctxStart, ctxEnd - ctxStart, dirs.isRunRtl(i), widths, widths == null ? 0 : start1);
+                width += mPaint.myGetTextRunAdvances(mText.value, start1, end1 - start1, ctxStart, ctxEnd - ctxStart, dirs.isRunRtl(i), widths, widths == null ? 0 : start1, mQuickMeasure);
             }
             if (dirs.getRunStart(i) >= end) {
                 break;

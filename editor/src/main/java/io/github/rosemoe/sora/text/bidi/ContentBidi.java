@@ -31,6 +31,7 @@ import java.util.Objects;
 
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentListener;
+import io.github.rosemoe.sora.util.IntPair;
 
 public class ContentBidi implements ContentListener {
 
@@ -38,13 +39,28 @@ public class ContentBidi implements ContentListener {
 
     private final List<DirectionsEntry> entries = new ArrayList<>();
     private final Content text;
+    private boolean enabled;
 
     public ContentBidi(@NonNull Content content) {
         text = Objects.requireNonNull(content);
         text.addContentListener(this);
     }
 
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        if (!enabled) {
+            entries.clear();
+        }
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
     public Directions getLineDirections(int line) {
+        if (!enabled) {
+            return new Directions(new long[]{IntPair.pack(0, 0)}, text.getLine(line).length());
+        }
         for (DirectionsEntry entry : entries) {
             if (entry.line == line) {
                 return entry.dir;

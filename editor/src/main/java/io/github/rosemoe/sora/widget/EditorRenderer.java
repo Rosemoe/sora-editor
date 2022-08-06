@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import static io.github.rosemoe.sora.graphics.GraphicCharacter.*;
 import static io.github.rosemoe.sora.util.Numbers.stringSize;
 import static io.github.rosemoe.sora.widget.CodeEditor.FLAG_DRAW_LINE_SEPARATOR;
 import static io.github.rosemoe.sora.widget.CodeEditor.FLAG_DRAW_TAB_SAME_AS_SPACE;
@@ -80,7 +81,6 @@ import io.github.rosemoe.sora.text.UnicodeIterator;
 import io.github.rosemoe.sora.text.bidi.Directions;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
-import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.util.Numbers;
 import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 import io.github.rosemoe.sora.widget.layout.Row;
@@ -125,6 +125,7 @@ public class EditorRenderer {
     protected ContentLine mBuffer;
     protected Content mContent;
     private boolean mRendering;
+    protected boolean fastMode;
 
     public EditorRenderer(@NonNull CodeEditor editor) {
         mEditor = editor;
@@ -154,6 +155,10 @@ public class EditorRenderer {
         mPath = new Path();
 
         notifyFullTextUpdate();
+    }
+
+    public boolean isFastMode() {
+        return fastMode;
     }
 
     public void notifyFullTextUpdate() {
@@ -871,9 +876,7 @@ public class EditorRenderer {
             }
             // Get visible region on the line
             float[] charPos = findDesiredVisibleChar(offset3, line, rowInf.startColumn, rowInf.endColumn);
-            int firstVisibleChar = (int) charPos[0];
             float paintingOffset = charPos[1] - offset2;
-            int lastVisibleChar = (int) findDesiredVisibleChar(offset2 + mEditor.getWidth() - offset3, line, firstVisibleChar + 1, rowInf.endColumn, rowInf.startColumn, true)[0];
 
             var drawCurrentLineBg = line == currentLine && !mEditor.getCursorAnimator().isRunning() && mEditor.isEditable();
             if (!drawCurrentLineBg || mEditor.getProps().drawCustomLineBgOnCurrentLine) {
@@ -962,7 +965,7 @@ public class EditorRenderer {
             float[] charPos = findDesiredVisibleChar(offset3, line, rowInf.startColumn, rowInf.endColumn);
             int firstVisibleChar = (int) charPos[0];
             float paintingOffset = charPos[1] - offset2;
-            int lastVisibleChar = (int) findDesiredVisibleChar(offset2 + mEditor.getWidth() - offset3, line, firstVisibleChar + 1, rowInf.endColumn, rowInf.startColumn, true)[0];
+            int lastVisibleChar = (int) findDesiredVisibleChar(mEditor.getWidth() - paintingOffset, line, firstVisibleChar, rowInf.endColumn, rowInf.startColumn, true)[0];
 
             float backupOffset = paintingOffset;
             int nonPrintableFlags = mEditor.getNonPrintablePaintingFlags();
@@ -1520,7 +1523,6 @@ public class EditorRenderer {
         int st = index;
         for (int i = index; i < end; i++) {
             if (src[i] == '\t') {
-                //canvas.drawText(src, st, i - st, offX, offY, mPaint);
                 canvas.drawTextRun(src, st, i - st, contextStart, contextCount, offX, offY, isRtl, mPaint);
                 offX = offX + measureText(line, lineNumber, st, i - st + 1);
                 st = i + 1;
@@ -1528,7 +1530,6 @@ public class EditorRenderer {
         }
         if (st < end) {
             canvas.drawTextRun(src, st, end - st, contextStart, contextCount, offX, offY, isRtl, mPaint);
-            //canvas.drawText(src, st, end - st, offX, offY, mPaint);
         }
     }
 
@@ -2027,7 +2028,7 @@ public class EditorRenderer {
         if (line.widthCache != null && line.timestamp < mTimestamp) {
             buildMeasureCacheForLines(lineIndex, lineIndex, mTimestamp, false);
         }
-        var gtr = GraphicTextRow.obtain();
+        var gtr = GraphicTextRow.obtain(fastMode);
         gtr.set(mContent, lineIndex, contextStart, end, mEditor.getTabWidth(), line.widthCache == null ? mEditor.getSpansForLine(lineIndex) : null, mPaint);
         if (mEditor.getLayout() instanceof WordwrapLayout && line.widthCache == null) {
             gtr.setSoftBreaks(((WordwrapLayout) mEditor.getLayout()).getSoftBreaksForLine(lineIndex));
@@ -2068,9 +2069,11 @@ public class EditorRenderer {
                 if (offset + 1 < end) {
                     var itr = new UnicodeIterator(line, offset + 1, end);
                     int codePoint;
+                    var first = true;
                     while ((codePoint = itr.nextCodePoint()) != 0) {
-                        if (isCombiningCharacter(codePoint)) {
+                        if (isCombiningCharacter(codePoint) || first) {
                             offset = itr.getEndIndex();
+                            first = false;
                         } else {
                             break;
                         }
@@ -2100,18 +2103,22 @@ public class EditorRenderer {
                 }
             }
         }
+        if (!rtl && !forLast && offset > start) {
+            // Try to combine one character again
+            var chars = line.getRawData();
+            if (Character.isLowSurrogate(chars[offset - 1])) {
+                if (offset - 1 > start && !couldBeEmojiPart(Character.toCodePoint(chars[offset - 2], chars[offset - 1]))) {
+                    offset -= 2;
+                }
+            } else if (!Character.isHighSurrogate(chars[offset - 1])) {
+                offset -= 1;
+            }
+        }
         offset = Math.min(end, Math.max(start, offset));
         res = new float[] {offset, gtr.measureText(start, offset)};
 
         GraphicTextRow.recycle(gtr);
         return res;
-    }
-
-    protected static boolean isCombiningCharacter(int codePoint) {
-        return MyCharacter.isVariationSelector(codePoint) || MyCharacter.isFitzpatrick(codePoint)
-                || MyCharacter.isZWJ(codePoint) || MyCharacter.isZWNJ(codePoint) ||
-                MyCharacter.couldBeEmoji(codePoint)
-                || (Character.charCount(codePoint) == 1 && Character.isSurrogate((char) codePoint));
     }
 
     /**
@@ -2122,7 +2129,7 @@ public class EditorRenderer {
         if (start >= end) {
             return new float[]{end, 0};
         }
-        var gtr = GraphicTextRow.obtain();
+        var gtr = GraphicTextRow.obtain(fastMode);
         if (mEditor.defSpans.size() == 0) {
             mEditor.defSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
         }
@@ -2141,7 +2148,7 @@ public class EditorRenderer {
         while (startLine <= endLine && startLine < text.getLineCount()) {
             var line = usePainter ? getLine(startLine) : getLineDirect(startLine);
             if (line.timestamp < timestamp) {
-                var gtr = GraphicTextRow.obtain();
+                var gtr = GraphicTextRow.obtain(fastMode);
                 if (line.widthCache == null || line.widthCache.length < line.length()) {
                     line.widthCache = mEditor.obtainFloatArray(Math.max(line.length() + 8, 90), usePainter);
                 }
@@ -2157,6 +2164,10 @@ public class EditorRenderer {
         }
     }
 
+    protected void buildMeasureCacheForLines(int startLine, int endLine) {
+        buildMeasureCacheForLines(startLine, endLine, mTimestamp, false);
+    }
+
     /**
      * Measure text width with editor's text paint
      *
@@ -2167,7 +2178,7 @@ public class EditorRenderer {
      */
     @UnsupportedUserUsage
     public float measureText(ContentLine text, int line, int index, int count) {
-        var gtr = GraphicTextRow.obtain();
+        var gtr = GraphicTextRow.obtain(fastMode);
         List<Span> spans = mEditor.defSpans;
         if (text.widthCache == null) {
             spans = mEditor.getSpansForLine(line);

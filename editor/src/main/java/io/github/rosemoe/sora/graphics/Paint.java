@@ -23,23 +23,36 @@
  */
 package io.github.rosemoe.sora.graphics;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import android.annotation.SuppressLint;
 import android.graphics.Typeface;
 import android.os.Build;
 
+import io.github.rosemoe.sora.text.CharArrayWrapper;
 import io.github.rosemoe.sora.text.ContentLine;
+import io.github.rosemoe.sora.text.UnicodeIterator;
+import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 
 public class Paint extends android.graphics.Paint {
 
     private float spaceWidth;
+    private float tabWidth;
+
+    private SingleCharacterWidths widths;
 
     public Paint() {
         super();
+        widths = new SingleCharacterWidths(1);
         spaceWidth = measureText(" ");
+        tabWidth = measureText("\t");
     }
 
     public void onAttributeUpdate() {
         spaceWidth = measureText(" ");
+        tabWidth = measureText("\t");
+        widths.clearCache();
     }
 
     public float getSpaceWidth() {
@@ -67,23 +80,70 @@ public class Paint extends android.graphics.Paint {
         onAttributeUpdate();
     }
 
+    @SuppressLint("NewApi")
+    public float myGetTextRunAdvances(@NonNull char[] chars, int index, int count, int contextIndex, int contextCount, boolean isRtl, @Nullable float[] advances, int advancesIndex, boolean fast) {
+        if (fast) {
+            var itr = new UnicodeIterator(new CharArrayWrapper(chars, index, count));
+            char[] candidates = null;
+            int offset = 0;
+            var width = 0f;
+            while (itr.hasNext()) {
+                int codePoint = itr.nextCodePoint();
+                if (GraphicCharacter.couldBeEmojiPart(codePoint)) {
+                    candidates = appendCodePoint(candidates, offset, codePoint);
+                    offset += Character.charCount(codePoint);
+                } else {
+                    if (offset != 0) {
+                        width += getTextRunAdvances(candidates, 0, offset, 0, offset, isRtl, advances, advances != null ? advancesIndex + itr.getStartIndex() - offset : 0);
+                        offset = 0;
+                    }
+                    float textWidth;
+                    var flag = true;
+                    if (codePoint == '\t') {
+                        textWidth = tabWidth;
+                    } else if (Character.charCount(codePoint) == 1) {
+                        textWidth = widths.measureChar((char) codePoint, this);
+                    } else {
+                        flag = false;
+                        var start = itr.getStartIndex();
+                        var count2 = itr.getEndIndex() - start;
+                        textWidth = getTextRunAdvances(chars, index + start, count2, index + start, count2, isRtl, advances, advances != null ? advancesIndex + itr.getStartIndex() - offset : 0);
+                    }
+                    width += textWidth;
+                    if (flag && advances != null) {
+                        advances[advancesIndex + itr.getStartIndex()] = textWidth;
+                    }
+                }
+            }
+            if (offset != 0) {
+                width += getTextRunAdvances(candidates, 0, offset, 0, offset, isRtl, advances, advances != null ? advancesIndex + itr.getStartIndex() - offset : 0);
+            }
+            return width;
+        } else {
+            return getTextRunAdvances(chars, index, count, contextIndex, contextCount, isRtl, advances, advancesIndex);
+        }
+    }
+
+    private static char[] appendCodePoint(char[] chars, int offset, int codePoint) {
+        if (chars == null) {
+            chars = TemporaryCharBuffer.obtain(16);
+        }
+        Character.toChars(codePoint, chars, offset);
+        return chars;
+    }
+
     /**
      * Get the advance of text with the context positions related to shaping the characters
      */
     @SuppressLint("NewApi")
-    public float measureTextRunAdvance(char[] text, int start, int end, int contextStart, int contextEnd) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return getRunAdvance(text, start, end, contextStart, contextEnd, false, end);
-        } else {
-            // Hidden, but we can call it directly on Android 21 - 22
-            return getTextRunAdvances(text, start, end - start, contextStart, contextEnd - contextStart, false, null, 0);
-        }
+    public float measureTextRunAdvance(char[] text, int start, int end, int contextStart, int contextEnd, boolean fast) {
+        return myGetTextRunAdvances(text, start, end - start, contextStart, contextEnd - contextStart, false, null, 0, fast);
     }
 
     /**
-     * Find offset for a certain advance returned by {@link #measureTextRunAdvance(char[], int, int, int, int)}
+     * Find offset for a certain advance returned by {@link #measureTextRunAdvance(char[], int, int, int, int, boolean)}
      */
-    public int findOffsetByRunAdvance(ContentLine text, int start, int end, float advance, boolean useCache) {
+    public int findOffsetByRunAdvance(ContentLine text, int start, int end, float advance, boolean useCache, boolean fast) {
         if (text.widthCache != null && useCache) {
             var cache = text.widthCache;
             var offset = start;
@@ -95,6 +155,9 @@ public class Paint extends android.graphics.Paint {
                 offset--;
             }
             return Math.max(offset, start);
+        }
+        if (fast) {
+            // TODO
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return getOffsetForAdvance(text, start, end, start, end, false, advance);

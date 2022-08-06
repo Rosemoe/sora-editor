@@ -37,11 +37,17 @@ import java.nio.CharBuffer;
 public class CharArrayWrapper implements CharSequence, GetChars {
 
     private final char[] data;
+    private final int offset;
     private int count;
 
     public CharArrayWrapper(char[] array, int dataCount) {
+        this(array, 0, dataCount);
+    }
+
+    public CharArrayWrapper(char[] array, int startOffset, int dataCount) {
         data = array;
         count = dataCount;
+        offset = startOffset;
     }
 
     public void setDataCount(int count) {
@@ -55,13 +61,13 @@ public class CharArrayWrapper implements CharSequence, GetChars {
 
     @Override
     public char charAt(int index) {
-        return data[index];
+        return data[offset + index];
     }
 
     @NonNull
     @Override
     public CharSequence subSequence(int start, int end) {
-        return CharBuffer.wrap(data, start, end - start);
+        return CharBuffer.wrap(data, start + start, end - start);
     }
 
     @Override
@@ -69,6 +75,6 @@ public class CharArrayWrapper implements CharSequence, GetChars {
         if (end > count) {
             throw new StringIndexOutOfBoundsException();
         }
-        System.arraycopy(data, start, dest, destOffset, end - start);
+        System.arraycopy(data, start + this.offset, dest, destOffset, end - start);
     }
 }

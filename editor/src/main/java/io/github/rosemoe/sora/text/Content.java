@@ -772,6 +772,14 @@ public class Content implements CharSequence {
         }
     }
 
+    public void setBidiEnabled(boolean enabled) {
+        bidi.setEnabled(enabled);
+    }
+
+    public boolean isBidiEnabled() {
+        return bidi.isEnabled();
+    }
+
     public boolean isRtlAt(int line, int column) {
         var dirs = getLineDirections(line);
         for (int i = 0;i < dirs.getRunCount();i++) {
