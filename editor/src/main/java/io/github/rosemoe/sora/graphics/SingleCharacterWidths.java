@@ -25,16 +25,16 @@ package io.github.rosemoe.sora.graphics;
 
 import java.util.Arrays;
 
-public class RoughBufferedMeasure {
+public class SingleCharacterWidths {
 
     public final float[] widths;
     public final char[] buffer;
     private final float[] cache;
     private final int tabWidth;
 
-    public RoughBufferedMeasure(int tabWidth) {
+    public SingleCharacterWidths(int tabWidth) {
         cache = new float[65536];
-        buffer = new char[5];
+        buffer = new char[10];
         widths = new float[10];
         this.tabWidth = tabWidth;
     }

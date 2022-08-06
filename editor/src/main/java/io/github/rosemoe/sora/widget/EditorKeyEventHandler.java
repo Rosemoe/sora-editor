@@ -39,6 +39,7 @@ import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.Cursor;
+import io.github.rosemoe.sora.text.method.KeyMetaStates;
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 
 /**

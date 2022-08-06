@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.event;
 
 import android.view.KeyEvent;
 
+import io.github.rosemoe.sora.text.method.KeyMetaStates;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
@@ -93,14 +94,14 @@ public class EditorKeyEvent extends ResultedEvent<Boolean> {
     }
 
     /**
-     * editor change: track shift/alt by {@link io.github.rosemoe.sora.widget.KeyMetaStates}
+     * editor change: track shift/alt by {@link KeyMetaStates}
      */
     public boolean isShiftPressed() {
         return shiftPressed;
     }
 
     /**
-     * editor change: track shift/alt by {@link io.github.rosemoe.sora.widget.KeyMetaStates}
+     * editor change: track shift/alt by {@link KeyMetaStates}
      */
     public boolean isAltPressed() {
         return altPressed;

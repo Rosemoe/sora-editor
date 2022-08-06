@@ -61,6 +61,12 @@ public class Paint extends android.graphics.Paint {
         onAttributeUpdate();
     }
 
+    @Override
+    public void setLetterSpacing(float letterSpacing) {
+        super.setLetterSpacing(letterSpacing);
+        onAttributeUpdate();
+    }
+
     /**
      * Get the advance of text with the context positions related to shaping the characters
      */

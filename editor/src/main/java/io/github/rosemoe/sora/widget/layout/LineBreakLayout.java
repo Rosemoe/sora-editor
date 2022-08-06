@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.github.rosemoe.sora.graphics.Paint;
-import io.github.rosemoe.sora.graphics.RoughBufferedMeasure;
+import io.github.rosemoe.sora.graphics.SingleCharacterWidths;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.BlockIntList;
@@ -50,11 +50,11 @@ public class LineBreakLayout extends AbstractLayout {
 
     private final AtomicInteger reuseCount = new AtomicInteger(0);
     private BlockIntList widthMaintainer;
-    private RoughBufferedMeasure measurer;
+    private SingleCharacterWidths measurer;
 
     public LineBreakLayout(CodeEditor editor, Content text) {
         super(editor, text);
-        measurer = new RoughBufferedMeasure(editor.getTabWidth());
+        measurer = new SingleCharacterWidths(editor.getTabWidth());
         widthMaintainer = new BlockIntList();
         measureAllLines(widthMaintainer);
     }
@@ -236,7 +236,7 @@ public class LineBreakLayout extends AbstractLayout {
     public void reuse(Content text) {
         this.text = text;
         reuseCount.getAndIncrement();
-        measurer = new RoughBufferedMeasure(editor.getTabWidth());
+        measurer = new SingleCharacterWidths(editor.getTabWidth());
         try {
             if (widthMaintainer.lock.tryLock(5, TimeUnit.MILLISECONDS)) {
                 widthMaintainer.lock.unlock();

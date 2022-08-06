@@ -101,6 +101,7 @@ import io.github.rosemoe.sora.text.LineRemoveListener;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
 import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.text.TextUtils;
+import io.github.rosemoe.sora.text.method.KeyMetaStates;
 import io.github.rosemoe.sora.util.Floats;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.Logger;
