@@ -69,22 +69,16 @@ public class TextBidi {
                 (0xFE70 <= c && c <= 0xFEFE);  // Arabic presentation forms
     }
 
-    // Returns true if there is no character present that may potentially affect RTL layout.
-    // Since this calls couldAffectRtl() above, it's also quite conservative, in the way that
-    // it may return 'false' (needs bidi) although careful consideration may tell us it should
-    // return 'true' (does not need bidi).
-    /* package */
-    public static boolean doesNotNeedBidi(char[] text, int start, int len) {
-        final int end = start + len;
-        for (int i = start; i < end; i++) {
-            if (couldAffectRtl(text[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
-
+    /**
+     * Returns true if there is no character present that may potentially affect RTL layout.
+     * Since this calls couldAffectRtl() above, it's also quite conservative, in the way that
+     * it may return 'false' (needs bidi) although careful consideration may tell us it should
+     * return 'true' (does not need bidi).
+     */
     public static boolean doesNotNeedBidi(@NonNull CharSequence text) {
+        if (text instanceof BidiRequirementChecker) {
+            return !((BidiRequirementChecker) text).mayNeedBidi();
+        }
         final var len = text.length();
         for (int i = 0; i < len; i++) {
             if (couldAffectRtl(text.charAt(i))) {

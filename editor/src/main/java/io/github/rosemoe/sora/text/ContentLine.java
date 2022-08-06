@@ -28,8 +28,10 @@ import android.text.GetChars;
 import androidx.annotation.NonNull;
 
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
+import io.github.rosemoe.sora.text.bidi.BidiRequirementChecker;
+import io.github.rosemoe.sora.text.bidi.TextBidi;
 
-public class ContentLine implements CharSequence, GetChars {
+public class ContentLine implements CharSequence, GetChars, BidiRequirementChecker {
 
     @UnsupportedUserUsage
     public char[] value;
@@ -38,8 +40,11 @@ public class ContentLine implements CharSequence, GetChars {
      */
     @UnsupportedUserUsage
     public float[] widthCache;
+    @UnsupportedUserUsage
     public long timestamp;
     private int length;
+
+    private int rtlAffectingCount;
 
     public ContentLine() {
         this(true);
@@ -101,8 +106,6 @@ public class ContentLine implements CharSequence, GetChars {
     public ContentLine insert(int dstOffset, CharSequence s) {
         if (s == null)
             s = "null";
-        if (s instanceof String)
-            return this.insert(dstOffset, (String) s);
         return this.insert(dstOffset, s, 0, s.length());
     }
 
@@ -164,8 +167,13 @@ public class ContentLine implements CharSequence, GetChars {
         ensureCapacity(length + len);
         System.arraycopy(value, dstOffset, value, dstOffset + len,
                 length - dstOffset);
-        for (int i = start; i < end; i++)
-            value[dstOffset++] = s.charAt(i);
+        for (int i = start; i < end; i++) {
+            var ch = s.charAt(i);
+            value[dstOffset++] = ch;
+            if (TextBidi.couldAffectRtl(ch)) {
+                rtlAffectingCount ++;
+            }
+        }
         length += len;
         return this;
     }
@@ -174,6 +182,9 @@ public class ContentLine implements CharSequence, GetChars {
         ensureCapacity(length + 1);
         if (offset < length) {
             System.arraycopy(value, offset, value, offset + 1, length - offset);
+        }
+        if (TextBidi.couldAffectRtl(c)) {
+            rtlAffectingCount ++;
         }
         value[offset] = c;
         length += 1;
@@ -203,25 +214,19 @@ public class ContentLine implements CharSequence, GetChars {
             throw new StringIndexOutOfBoundsException();
         int len = end - start;
         if (len > 0) {
+            for (int i = start;i < end;i++) {
+                if (TextBidi.couldAffectRtl(value[i])) {
+                    rtlAffectingCount --;
+                }
+            }
             System.arraycopy(value, start + len, value, start, length - end);
             length -= len;
         }
         return this;
     }
 
-    public ContentLine append(CharSequence s, int start, int end) {
-        if (s == null)
-            s = "null";
-        if ((start < 0) || (start > end) || (end > s.length()))
-            throw new IndexOutOfBoundsException(
-                    "start " + start + ", end " + end + ", s.length() "
-                            + s.length());
-        int len = end - start;
-        ensureCapacity(length + len);
-        for (int i = start, j = length; i < end; i++, j++)
-            value[j] = s.charAt(i);
-        length += len;
-        return this;
+    public boolean mayNeedBidi() {
+        return rtlAffectingCount > 0;
     }
 
     public ContentLine append(CharSequence text) {
@@ -260,6 +265,11 @@ public class ContentLine implements CharSequence, GetChars {
         ContentLine res = new ContentLine(false);
         res.value = newValue;
         res.length = end - start;
+        for (int i = 0;i < res.length;i++) {
+            if (TextBidi.couldAffectRtl(newValue[i])) {
+                res.rtlAffectingCount ++;
+            }
+        }
         return res;
     }
 
