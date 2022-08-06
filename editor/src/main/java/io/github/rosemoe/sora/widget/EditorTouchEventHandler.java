@@ -534,6 +534,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         mEditor.showSoftInput();
         notifyLater();
         var lnAction = mEditor.getProps().actionWhenLineNumberClicked;
+        System.out.println(region);
         if (region == RegionResolverKt.REGION_TEXT) {
             mEditor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
         } else if (region == RegionResolverKt.REGION_LINE_NUMBER) {

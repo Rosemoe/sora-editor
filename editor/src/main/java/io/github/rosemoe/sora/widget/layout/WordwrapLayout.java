@@ -170,7 +170,7 @@ public class WordwrapLayout extends AbstractLayout {
         int len = sequence.length();
 
         while (start < len) {
-            var next = (int) editor.getRenderer().findFirstVisibleCharNoCache(width, line, start, len, 0, paint == null ? editor.getTextPaint() : paint)[0];
+            var next = (int) editor.getRenderer().findFirstVisibleCharForWordwrap(width, line, start, len, 0, paint == null ? editor.getTextPaint() : paint)[0];
             // Force to break the text, though no space is available
             if (next == start) {
                 next++;
@@ -540,7 +540,7 @@ public class WordwrapLayout extends AbstractLayout {
             editor.setLayoutBusy(true);
             var list = new ArrayList<RowRegion>();
             var breakpoints = new ArrayList<Integer>();
-            text.runReadActionsOnLines(start, end, (index, line, abortFlag) -> {
+            text.runReadActionsOnLines(start, end, (int index, ContentLine line, Content.ContentLineConsumer2.AbortFlag abortFlag) -> {
                 breakLine(index, line, breakpoints, paint);
                 for (int j = -1; j < breakpoints.size(); j++) {
                     int start = j == -1 ? 0 : breakpoints.get(j);

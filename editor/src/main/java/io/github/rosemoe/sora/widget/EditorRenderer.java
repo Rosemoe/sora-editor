@@ -76,8 +76,11 @@ import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.Cursor;
+import io.github.rosemoe.sora.text.UnicodeIterator;
+import io.github.rosemoe.sora.text.bidi.Directions;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
+import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.util.Numbers;
 import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 import io.github.rosemoe.sora.widget.layout.Row;
@@ -109,6 +112,7 @@ public class EditorRenderer {
     private final LongArrayList mPostDrawCurrentLines = new LongArrayList();
     private final LongArrayList mMatchedPositions = new LongArrayList();
     private final SparseArray<ContentLine> mPreloadedLines = new SparseArray<>();
+    private final SparseArray<Directions> mPreloadedDirections = new SparseArray<>();
     private final CodeEditor mEditor;
     private final List<DiagnosticRegion> mCollectedDiagnostics = new ArrayList<>();
     Paint.FontMetricsInt mTextMetrics;
@@ -272,6 +276,18 @@ public class EditorRenderer {
         if (line2 == null) {
             line2 = mContent.getLine(line);
             mPreloadedLines.put(line, line2);
+        }
+        return line2;
+    }
+
+    Directions getLineDirections(int line) {
+        if (!mRendering) {
+            return mContent.getLineDirections(line);
+        }
+        var line2 = mPreloadedDirections.get(line);
+        if (line2 == null) {
+            line2 = mContent.getLineDirections(line);
+            mPreloadedDirections.put(line, line2);
         }
         return line2;
     }
@@ -584,7 +600,7 @@ public class EditorRenderer {
         drawEdgeEffect(canvas);
 
         mEditor.rememberDisplayedLines();
-        mPreloadedLines.clear();
+        releasePreloadedData();
         drawFormatTip(canvas);
     }
 
@@ -763,8 +779,16 @@ public class EditorRenderer {
     }
 
     private void prepareLines(int start, int end) {
+        releasePreloadedData();
+        mContent.runReadActionsOnLines(Math.max(0, start - 5), Math.min(mContent.getLineCount() - 1, end + 5), (int i, ContentLine line, Directions dirs) -> {
+            mPreloadedLines.put(i, line);
+            mPreloadedDirections.put(i, dirs);
+        });
+    }
+
+    private void releasePreloadedData() {
         mPreloadedLines.clear();
-        mContent.runReadActionsOnLines(Math.max(0, start - 5), Math.min(mContent.getLineCount() - 1, end + 5), mPreloadedLines::put);
+        mPreloadedDirections.clear();
     }
 
     private final LineStyles coordinateLine = new LineStyles(0);
@@ -846,10 +870,10 @@ public class EditorRenderer {
                 lastPreparedLine = line;
             }
             // Get visible region on the line
-            float[] charPos = findFirstVisibleChar(offset3, line, rowInf.startColumn, rowInf.endColumn);
+            float[] charPos = findDesiredVisibleChar(offset3, line, rowInf.startColumn, rowInf.endColumn);
             int firstVisibleChar = (int) charPos[0];
             float paintingOffset = charPos[1] - offset2;
-            int lastVisibleChar = (int) findFirstVisibleChar(offset2 + mEditor.getWidth() - offset3, line, firstVisibleChar + 1, rowInf.endColumn)[0];
+            int lastVisibleChar = (int) findDesiredVisibleChar(offset2 + mEditor.getWidth() - offset3, line, firstVisibleChar + 1, rowInf.endColumn, rowInf.startColumn, true)[0];
 
             var drawCurrentLineBg = line == currentLine && !mEditor.getCursorAnimator().isRunning() && mEditor.isEditable();
             if (!drawCurrentLineBg || mEditor.getProps().drawCustomLineBgOnCurrentLine) {
@@ -872,7 +896,7 @@ public class EditorRenderer {
                     var position = matchedPositions.get(i);
                     var start = IntPair.getFirst(position);
                     var end = IntPair.getSecond(position);
-                    drawRowRegionBackground(canvas, row, firstVisibleChar, lastVisibleChar, start, end, mEditor.getColorScheme().getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND), line);
+                    drawRowRegionBackground(canvas, row, line, start, end, mEditor.getColorScheme().getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND));
                 }
             }
 
@@ -894,7 +918,7 @@ public class EditorRenderer {
                     mPaint.setColor(mEditor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
                     canvas.drawRoundRect(mRect, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mPaint);
                 } else {
-                    drawRowRegionBackground(canvas, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd, mEditor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND), line);
+                    drawRowRegionBackground(canvas, row, line, selectionStart, selectionEnd, mEditor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
                 }
             }
         }
@@ -935,10 +959,10 @@ public class EditorRenderer {
             }
 
             // Get visible region on the line
-            float[] charPos = findFirstVisibleChar(offset3, line, rowInf.startColumn, rowInf.endColumn);
+            float[] charPos = findDesiredVisibleChar(offset3, line, rowInf.startColumn, rowInf.endColumn);
             int firstVisibleChar = (int) charPos[0];
             float paintingOffset = charPos[1] - offset2;
-            int lastVisibleChar = (int) findFirstVisibleChar(offset2 + mEditor.getWidth() - offset3, line, firstVisibleChar + 1, rowInf.endColumn)[0];
+            int lastVisibleChar = (int) findDesiredVisibleChar(offset2 + mEditor.getWidth() - offset3, line, firstVisibleChar + 1, rowInf.endColumn, rowInf.startColumn, true)[0];
 
             float backupOffset = paintingOffset;
             int nonPrintableFlags = mEditor.getNonPrintablePaintingFlags();
@@ -1336,13 +1360,11 @@ public class EditorRenderer {
      *
      * @param canvas         Canvas to draw
      * @param row            The row index
-     * @param firstVis       First visible character
-     * @param lastVis        Last visible character
      * @param highlightStart Region start
      * @param highlightEnd   Region end
      * @param color          Color of background
      */
-    protected void drawRowRegionBackground(Canvas canvas, int row, int firstVis, int lastVis, int highlightStart, int highlightEnd, int color, int line) {
+    protected void drawRowRegionBackground(Canvas canvas, int row, int line, int highlightStart, int highlightEnd, int color) {
         if (highlightStart != highlightEnd) {
             mRect.top = getRowTopForBackground(row) - mEditor.getOffsetY();
             mRect.bottom = getRowBottomForBackground(row) - mEditor.getOffsetY();
@@ -1351,7 +1373,7 @@ public class EditorRenderer {
             var layout = mEditor.getLayout();
             mPaint.setColor(color);
             float paintingOffset = mEditor.measureTextRegionOffset() - mEditor.getOffsetX();
-            for (int i = 0;i < dirs.getRunCount();i++) {
+            for (int i = 0; i < dirs.getRunCount(); i++) {
                 int sharedStart = Math.max(highlightStart, dirs.getRunStart(i));
                 int sharedEnd = Math.min(highlightEnd, dirs.getRunEnd(i));
                 if (dirs.getRunStart(i) >= highlightEnd) {
@@ -1362,7 +1384,6 @@ public class EditorRenderer {
                 }
                 var left = paintingOffset + layout.getCharLayoutOffset(line, sharedStart)[1];
                 var right = paintingOffset + layout.getCharLayoutOffset(line, sharedEnd)[1];
-                System.out.println("l:" + left + " r:" + right);
                 if (left > right) {
                     var tmp = left;
                     left = right;
@@ -1891,12 +1912,20 @@ public class EditorRenderer {
             var horizontalOffset = textOffset;
             var first = true;
             // Find spans to draw
-            for (int i = 0; i < reader.getSpanCount(); i++) {
-                var span = reader.getSpanAt(i);
+            Span nextSpan = null;
+            int spanCount = reader.getSpanCount();
+            for (int i = 0; i < spanCount; i++) {
+                Span span;
+                if (nextSpan == null) {
+                    span = reader.getSpanAt(i);
+                } else {
+                    span = nextSpan;
+                }
+                nextSpan = i + 1 == spanCount ? null : reader.getSpanAt(i + 1);
                 var spanStart = Math.max(span.column, position.rowStart);
                 var sharedStart = Math.max(startCol, spanStart);
-                var spanEnd = i + 1 == reader.getSpanCount() ? column : reader.getSpanAt(i + 1).column;
-                if (spanEnd < position.rowStart) {
+                var spanEnd = nextSpan == null ? column : nextSpan.column;
+                if (spanEnd < position.startColumn) {
                     continue;
                 }
                 var sharedEnd = Math.min(endCol, spanEnd);
@@ -1904,6 +1933,7 @@ public class EditorRenderer {
                     // Clip canvas to patch the requested region
                     if (first) {
                         first = false;
+                        horizontalOffset += measureText(lineText, line, position.rowStart, spanStart - position.rowStart);
                         if (TextStyle.isItalics(span.getStyleBits())) {
                             var path = new Path();
                             var y = mEditor.getRowBottomOfText(position.row) - mEditor.getOffsetY();
@@ -1981,15 +2011,15 @@ public class EditorRenderer {
     // BEGIN Measure-------------------------------------
 
     @UnsupportedUserUsage
-    public float[] findFirstVisibleChar(float target, int lineIndex, int start, int end) {
-        return findFirstVisibleChar(target, lineIndex, start, end, start);
+    public float[] findDesiredVisibleChar(float target, int lineIndex, int start, int end) {
+        return findDesiredVisibleChar(target, lineIndex, start, end, start, false);
     }
 
     /**
      * Find first visible character
      */
     @UnsupportedUserUsage
-    public float[] findFirstVisibleChar(float target, int lineIndex, int start, int end, int contextStart) {
+    public float[] findDesiredVisibleChar(float target, int lineIndex, int start, int end, int contextStart, boolean forLast) {
         if (start >= end) {
             return new float[]{end, 0};
         }
@@ -2003,15 +2033,92 @@ public class EditorRenderer {
             gtr.setSoftBreaks(((WordwrapLayout) mEditor.getLayout()).getSoftBreaksForLine(lineIndex));
         }
         var res = gtr.findOffsetByAdvance(start, target);
+
+        // Do some additional work here
+
+        var offset = (int) res[0];
+        // Check RTL context
+        var rtl = false;
+        int runIndex = -1;
+        Directions dirs = null;
+        if (line.mayNeedBidi()) {
+            dirs = mContent.getLineDirections(lineIndex);
+            if (offset == line.length()) {
+                runIndex = dirs.getRunCount() - 1;
+            } else {
+                for (int i = 0; i < dirs.getRunCount(); i++) {
+                    if (offset >= dirs.getRunStart(i) && offset < dirs.getRunEnd(i)) {
+                        runIndex = i;
+                        rtl = dirs.isRunRtl(i);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Find actual desired position
+        if (rtl) {
+            if (forLast) {
+                offset = dirs.getRunEnd(runIndex);
+            } else {
+                offset = dirs.getRunStart(runIndex);
+            }
+        } else {
+            if (forLast) {
+                if (offset + 1 < end) {
+                    var itr = new UnicodeIterator(line, offset + 1, end);
+                    int codePoint;
+                    while ((codePoint = itr.nextCodePoint()) != 0) {
+                        if (isCombiningCharacter(codePoint)) {
+                            offset = itr.getEndIndex();
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            } else {
+                if (offset < end) {
+                    var chars = line.getRawData();
+                    while (offset > start) {
+                        char ch = chars[offset];
+                        if (Character.isLowSurrogate(ch)) {
+                            if (offset - 1 >= start) {
+                                if (isCombiningCharacter(Character.toCodePoint(chars[offset - 1], ch))) {
+                                    offset -= 2;
+                                } else if (isCombiningCharacter(ch)) {
+                                    offset -= 1;
+                                } else {
+                                    break;
+                                }
+                            }
+                        } else if (Character.isHighSurrogate(ch) || isCombiningCharacter(ch)) {
+                            offset -= 1;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        offset = Math.min(end, Math.max(start, offset));
+        res = new float[] {offset, gtr.measureText(start, offset)};
+
         GraphicTextRow.recycle(gtr);
         return res;
+    }
+
+    protected static boolean isCombiningCharacter(int codePoint) {
+        return MyCharacter.isVariationSelector(codePoint) || MyCharacter.isFitzpatrick(codePoint)
+                || MyCharacter.isZWJ(codePoint) || MyCharacter.isZWNJ(codePoint) ||
+                MyCharacter.couldBeEmoji(codePoint)
+                || (Character.charCount(codePoint) == 1 && Character.isSurrogate((char) codePoint));
     }
 
     /**
      * Find first visible character
      */
     @UnsupportedUserUsage
-    public float[] findFirstVisibleCharNoCache(float target, int lineIndex, int start, int end, int contextStart, Paint paint) {
+    public float[] findFirstVisibleCharForWordwrap(float target, int lineIndex, int start, int end, int contextStart, Paint paint) {
         if (start >= end) {
             return new float[]{end, 0};
         }
@@ -2065,7 +2172,7 @@ public class EditorRenderer {
         if (text.widthCache == null) {
             spans = mEditor.getSpansForLine(line);
         }
-        gtr.set(text, mContent.getLineDirections(line), 0, text.length(),mEditor.getTabWidth(), spans, mPaint);
+        gtr.set(text, getLineDirections(line), 0, text.length(), mEditor.getTabWidth(), spans, mPaint);
         if (mEditor.mLayout instanceof WordwrapLayout && text.widthCache == null) {
             gtr.setSoftBreaks(((WordwrapLayout) mEditor.mLayout).getSoftBreaksForLine(line));
         }

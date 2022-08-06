@@ -1005,7 +1005,7 @@ public class Content implements CharSequence {
         lock(false);
         try {
             for (int i = startLine; i <= endLine; i++) {
-                consumer.accept(i, lines.get(i));
+                consumer.accept(i, lines.get(i), bidi.getLineDirections(i));
             }
         } finally {
             unlock(false);
@@ -1034,7 +1034,7 @@ public class Content implements CharSequence {
 
     public interface ContentLineConsumer {
 
-        void accept(int lineIndex, @NonNull ContentLine line);
+        void accept(int lineIndex, @NonNull ContentLine line, @NonNull Directions dirs);
 
     }
 
