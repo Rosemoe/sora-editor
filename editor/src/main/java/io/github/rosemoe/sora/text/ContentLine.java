@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.text;
 import android.text.GetChars;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.text.bidi.BidiRequirementChecker;
@@ -47,6 +48,7 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
     private int length;
 
     private int rtlAffectingCount;
+    private LineSeparator lineSeparator;
 
     public ContentLine() {
         this(true);
@@ -248,8 +250,9 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
     @UnsupportedUserUsage
     public char charAt(int index) {
         // checkIndex(index);
-        if (index == length) {
-            return '\n';
+        if (index >= length) {
+            var separator = getLineSeparator();
+            return separator.getLength() > 0 ? getLineSeparator().getContent().charAt(index - length) : '\n';
         }
         return value[index];
     }
@@ -310,4 +313,15 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
         System.arraycopy(value, srcBegin, dst, dstBegin, srcEnd - srcBegin);
     }
 
+    public void setLineSeparator(@Nullable LineSeparator separator) {
+        this.lineSeparator = separator;
+    }
+
+    @NonNull
+    public LineSeparator getLineSeparator() {
+        if (lineSeparator == null) {
+            return LineSeparator.NONE;
+        }
+        return lineSeparator;
+    }
 }

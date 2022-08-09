@@ -98,6 +98,7 @@ import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.ICUUtils;
 import io.github.rosemoe.sora.text.LineRemoveListener;
+import io.github.rosemoe.sora.text.LineSeparator;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
 import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.text.TextUtils;
@@ -306,6 +307,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private float scrollerFinalY;
     private boolean verticalAbsorb;
     private boolean horizontalAbsorb;
+    private LineSeparator lineSeparator;
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -484,6 +486,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 mVerticalScrollFactor = 32;
             }
         }
+        lineSeparator = LineSeparator.LF;
         mLnTip = getContext().getString(R.string.editor_line_number_tip_prefix);
         mFormatTip = getContext().getString(R.string.editor_formatting);
         mProps = new DirectAccessProps();
@@ -2018,6 +2021,26 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             mStyleDelegate.postUpdateBracketPair();
         }
         invalidate();
+    }
+
+    /**
+     * Set line separator when new lines are created in editor (only texts from IME. texts from clipboard
+     * or other strategies are not encountered). Must not be{@link LineSeparator#NONE}
+     * @see #getLineSeparator()
+     * @see LineSeparator
+     */
+    public void setLineSeparator(@NonNull LineSeparator lineSeparator) {
+        if (Objects.requireNonNull(lineSeparator) == LineSeparator.NONE) {
+            throw new IllegalArgumentException();
+        }
+        this.lineSeparator = lineSeparator;
+    }
+
+    /**
+     * @see #setLineSeparator(LineSeparator)
+     */
+    public LineSeparator getLineSeparator() {
+        return lineSeparator;
     }
 
     /**

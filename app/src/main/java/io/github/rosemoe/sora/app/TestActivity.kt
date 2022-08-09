@@ -39,15 +39,17 @@ class TestActivity : AppCompatActivity() {
         setContentView(editor)
         editor.typefaceText = Typeface.createFromAsset(assets, "Roboto-Regular.ttf")
         editor.setEditorLanguage(JavaLanguage())
-        editor.setText("private final PopupWindow mWindow;\n" +
-                "    private final CodeEditor mEditor;\n" +
-                "    private final int mFeatures;\n" +
-                "    private final int[] mLocationBuffer = new int[2];\n" +
-                "    private final EventReceiver<ScrollEvent> mScrollListener;\n" +
-                "    private boolean mShowState;\n" +
+        val text = "    private final PopupWindow mWindow;\r\n" +
+                "    private final CodeEditor mEditor;\r\n" +
+                "    private final int mFeatures;\n\r" +
+                "    private final int[] mLocationBuffer = new int[2];\r" +
+                "    private final EventReceiver<ScrollEvent> mScrollListener;\r\n" +
+                "    private boolean mShowState;\r" +
                 "    private boolean mRegisterFlag;\n" +
                 "    private boolean mRegistered;\n" +
-                "    private int mOffsetX, mOffsetY, mX, mY, mWidth, mHeight;")
+                "    private int mOffsetX, mOffsetY, mX, mY, mWidth, mHeight;"
+        editor.setText(text)
+        assert(text == editor.text.toString()) { "Text check failed" }
     }
 
     override fun onDestroy() {

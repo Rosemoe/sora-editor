@@ -153,13 +153,15 @@ public class CachedIndexer implements Indexer, ContentListener {
         int workIndex = start.index;
         //Move the column to the line end
         {
-            int column = mContent.getColumnCountUnchecked(workLine);
+            var addition = Math.max(mContent.getLineSeparatorUnsafe(workLine).getLength() - 1, 0);
+            int column = mContent.getColumnCountUnsafe(workLine) + addition;
             workIndex += column - workColumn;
             workColumn = column;
         }
         while (workIndex < index) {
             workLine++;
-            workColumn = mContent.getColumnCountUnchecked(workLine);
+            var addition = Math.max(mContent.getLineSeparatorUnsafe(workLine).getLength() - 1, 0);
+            workColumn = mContent.getColumnCountUnsafe(workLine) + addition;
             workIndex += workColumn + 1;
         }
         if (workIndex > index) {
@@ -187,7 +189,8 @@ public class CachedIndexer implements Indexer, ContentListener {
             workIndex -= workColumn + 1;
             workLine--;
             if (workLine != -1) {
-                workColumn = mContent.getColumnCountUnchecked(workLine);
+                var addition = Math.max(mContent.getLineSeparatorUnsafe(workLine).getLength() - 1, 0);
+                workColumn = mContent.getColumnCountUnsafe(workLine) + addition;
             } else {
                 // Reached the start of text,we have to use findIndexForward() as this method can not handle it
                 findIndexForward(mZeroPoint, index, dest);
@@ -222,7 +225,7 @@ public class CachedIndexer implements Indexer, ContentListener {
             workIndex = workIndex - start.column;
         }
         while (workLine < line) {
-            workIndex += mContent.getColumnCountUnchecked(workLine) + 1;
+            workIndex += mContent.getColumnCountUnsafe(workLine) + mContent.getLineSeparatorUnsafe(workLine).getLength();
             workLine++;
         }
         dest.column = 0;
@@ -249,7 +252,7 @@ public class CachedIndexer implements Indexer, ContentListener {
             workIndex = workIndex - start.column;
         }
         while (workLine > line) {
-            workIndex -= mContent.getColumnCountUnchecked(workLine - 1) + 1;
+            workIndex -= mContent.getColumnCountUnsafe(workLine - 1) + mContent.getLineSeparatorUnsafe(workLine - 1).getLength();
             workLine--;
         }
         dest.column = 0;

@@ -183,8 +183,6 @@ public class Content implements CharSequence {
 
     /**
      * Get the character at the given position
-     * If (column == getColumnCount(line)),it returns '\n'
-     * IndexOutOfBoundsException is thrown
      *
      * @param line   The line position of character
      * @param column The column position of character
@@ -194,9 +192,6 @@ public class Content implements CharSequence {
         lock(false);
         try {
             checkLineAndColumn(line, column, true);
-            if (column == getColumnCount(line)) {
-                return '\n';
-            }
             return lines.get(line).charAt(column);
         } finally {
             unlock(false);
@@ -363,8 +358,8 @@ public class Content implements CharSequence {
         var helper = InsertTextHelper.forInsertion(text);
         int type, peekType = InsertTextHelper.TYPE_EOF;
         boolean fromPeek = false;
-        var minusLength = 0;
         var newLines = new LinkedList<ContentLine>();
+        var startSeparator = currLine.getLineSeparator();
         while (true) {
             type = fromPeek ? peekType : helper.forward();
             fromPeek = false;
@@ -375,7 +370,8 @@ public class Content implements CharSequence {
                 currLine.insert(workIndex, text, helper.getIndex(), helper.getIndexNext());
                 workIndex += helper.getIndexNext() - helper.getIndex();
             } else {
-                minusLength += helper.getIndexNext() - helper.getIndex() - 1;
+                var separator = LineSeparator.fromSeparatorString(text, helper.getIndex(), helper.getIndexNext());
+                currLine.setLineSeparator(separator);
 
                 // Peek!
                 peekType = helper.forward();
@@ -390,12 +386,10 @@ public class Content implements CharSequence {
                 workLine++;
             }
         }
+        currLine.setLineSeparator(startSeparator);
         lines.addAll(line + 1, newLines);
         helper.recycle();
-        textLength += text.length() - minusLength;
-        if (minusLength != 0 && !contentListeners.isEmpty()) {
-            text = text.toString().replace("\r\n", "\n").replace('\r', '\n');
-        }
+        textLength += text.length();
         this.dispatchAfterInsert(line, column, workLine, workIndex, text);
     }
 
@@ -438,56 +432,27 @@ public class Content implements CharSequence {
     }
 
     private void deleteInternal(int startLine, int columnOnStartLine, int endLine, int columnOnEndLine) {
-        if (startLine == 0 && columnOnStartLine == -1) {
-            return;
-        }
-        StringBuilder changedContent = new StringBuilder();
+        var changedContent = new StringBuilder();
         if (startLine == endLine) {
             checkLineAndColumn(endLine, columnOnEndLine, true);
-            checkLineAndColumn(startLine, columnOnStartLine == -1 ? 0 : columnOnStartLine, true);
-            int beginIdx = columnOnStartLine;
-            if (columnOnStartLine == -1) {
-                beginIdx = 0;
-            }
-            if (beginIdx > columnOnEndLine) {
-                throw new IllegalArgumentException("start > end");
-            }
-            ContentLine curr = lines.get(startLine);
+            checkLineAndColumn(startLine, columnOnStartLine, true);
+            var curr = lines.get(startLine);
             int len = curr.length();
-            if (beginIdx < 0 || beginIdx > len || columnOnEndLine > len) {
-                throw new StringIndexOutOfBoundsException("column start or column end is out of bounds");
+            if (columnOnStartLine < 0 || columnOnEndLine > len || columnOnStartLine > columnOnEndLine) {
+                throw new StringIndexOutOfBoundsException("invalid bounds");
             }
 
             //-----Notify------
             if (cursor != null) {
-                if (columnOnStartLine != -1) {
-                    cursor.beforeDelete(startLine, columnOnStartLine, endLine, columnOnEndLine);
-                } else {
-                    cursor.beforeDelete(startLine == 0 ? 0 : startLine - 1, startLine == 0 ? 0 : getColumnCount(startLine - 1), endLine, columnOnEndLine);
-                }
+                cursor.beforeDelete(startLine, columnOnStartLine, endLine, columnOnEndLine);
             }
             for (var lis : contentListeners) {
                 lis.beforeModification(this);
             }
 
-            changedContent.append(curr, beginIdx, columnOnEndLine);
-            curr.delete(beginIdx, columnOnEndLine);
+            changedContent.append(curr, columnOnStartLine, columnOnEndLine);
+            curr.delete(columnOnStartLine, columnOnEndLine);
             textLength -= columnOnEndLine - columnOnStartLine;
-            if (columnOnStartLine == -1) {
-                if (startLine == 0) {
-                    textLength++;
-                } else {
-                    ContentLine previous = lines.get(startLine - 1);
-                    columnOnStartLine = previous.length();
-                    previous.append(curr);
-                    ContentLine rm = lines.remove(startLine);
-                    if (lineListener != null) {
-                        lineListener.onRemove(this, rm);
-                    }
-                    changedContent.insert(0, '\n');
-                    startLine--;
-                }
-            }
         } else if (startLine < endLine) {
             checkLineAndColumn(startLine, columnOnStartLine, true);
             checkLineAndColumn(endLine, columnOnEndLine, true);
@@ -504,8 +469,9 @@ public class Content implements CharSequence {
                 if (lineListener != null) {
                     lineListener.onRemove(this, line);
                 }
-                textLength -= line.length() + 1;
-                changedContent.append('\n').append(line);
+                var separator = lines.get(i).getLineSeparator();
+                textLength -= line.length() + separator.getLength();
+                changedContent.append(line).append(separator.getContent());
             }
             if (lineListener != null) {
                 lineListener.onRemove(this, lines.get(endLine));
@@ -515,17 +481,19 @@ public class Content implements CharSequence {
             }
 
             int currEnd = startLine + 1;
-            ContentLine start = lines.get(startLine);
-            ContentLine end = lines.get(currEnd);
+            var start = lines.get(startLine);
+            var end = lines.get(currEnd);
             textLength -= start.length() - columnOnStartLine;
-            changedContent.insert(0, start, columnOnStartLine, start.length());
+            changedContent.insert(0, start, columnOnStartLine, start.length())
+                    .insert(start.length() - columnOnStartLine, start.getLineSeparator().getContent());
             start.delete(columnOnStartLine, start.length());
             textLength -= columnOnEndLine;
-            changedContent.append('\n').append(end, 0, columnOnEndLine);
+            changedContent.append(end, 0, columnOnEndLine);
             end.delete(0, columnOnEndLine);
-            textLength--;
+            textLength -= start.getLineSeparator().getLength();
             lines.remove(currEnd);
             start.append(end);
+            start.setLineSeparator(end.getLineSeparator());
         } else {
             throw new IllegalArgumentException("start line > end line");
         }
@@ -557,7 +525,7 @@ public class Content implements CharSequence {
     }
 
     /**
-     * Replace text in the given region with the
+     * Replace text in the given region with the text
      */
     public void replace(int startIndex, int endIndex, @NonNull CharSequence text) {
         var start = getIndexer().getCharPosition(startIndex);
@@ -782,7 +750,7 @@ public class Content implements CharSequence {
 
     public boolean isRtlAt(int line, int column) {
         var dirs = getLineDirections(line);
-        for (int i = 0;i < dirs.getRunCount();i++) {
+        for (int i = 0; i < dirs.getRunCount(); i++) {
             if (column >= dirs.getRunStart(i) && column < dirs.getRunEnd(i)) {
                 return dirs.isRunRtl(i);
             }
@@ -810,7 +778,7 @@ public class Content implements CharSequence {
 
     @Override
     public int hashCode() {
-        return Objects.hash(lines, textLength, undoManager, cursor);
+        return Objects.hash(lines, textLength);
     }
 
     @NonNull
@@ -851,16 +819,11 @@ public class Content implements CharSequence {
      */
     public void appendToStringBuilder(StringBuilder sb) {
         sb.ensureCapacity(sb.length() + length());
-        boolean first = true;
         final int lines = getLineCount();
         for (int i = 0; i < lines; i++) {
-            ContentLine line = this.lines.get(i);
-            if (!first) {
-                sb.append('\n');
-            } else {
-                first = false;
-            }
+            var line = this.lines.get(i);
             line.appendTo(sb);
+            sb.append(line.getLineSeparator().getContent());
         }
     }
 
@@ -998,8 +961,13 @@ public class Content implements CharSequence {
         }
     }
 
-    protected int getColumnCountUnchecked(int line) {
+    protected int getColumnCountUnsafe(int line) {
         return lines.get(line).length();
+    }
+
+    @NonNull
+    protected LineSeparator getLineSeparatorUnsafe(int line) {
+        return lines.get(line).getLineSeparator();
     }
 
     /**
