@@ -1901,6 +1901,7 @@ public class EditorRenderer {
             position.line = row.lineIndex;
             position.rowStart = row.startColumn;
         }
+        System.out.println(list);
         return list;
     }
 
@@ -1943,7 +1944,7 @@ public class EditorRenderer {
                 var spanStart = Math.max(span.column, position.rowStart);
                 var sharedStart = Math.max(startCol, spanStart);
                 var spanEnd = nextSpan == null ? column : nextSpan.column;
-                if (spanEnd < position.startColumn) {
+                if (spanEnd <= position.startColumn) {
                     continue;
                 }
                 var sharedEnd = Math.min(endCol, spanEnd);
