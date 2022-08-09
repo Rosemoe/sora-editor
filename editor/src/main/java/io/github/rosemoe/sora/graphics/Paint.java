@@ -83,64 +83,30 @@ public class Paint extends android.graphics.Paint {
     @SuppressLint("NewApi")
     public float myGetTextRunAdvances(@NonNull char[] chars, int index, int count, int contextIndex, int contextCount, boolean isRtl, @Nullable float[] advances, int advancesIndex, boolean fast) {
         if (fast) {
-            /*var itr = new UnicodeIterator(new CharArrayWrapper(chars, index, count));
-            char[] candidates = null;
-            int offset = 0;
-            var width = 0f;
-            while (itr.hasNext()) {
-                int codePoint = itr.nextCodePoint();
-                if (GraphicCharacter.couldBeEmojiPart(codePoint)) {
-                    candidates = appendCodePoint(candidates, offset, codePoint);
-                    offset += Character.charCount(codePoint);
-                } else {
-                    if (offset != 0) {
-                        width += getTextRunAdvances(candidates, 0, offset, 0, offset, isRtl, advances, advances != null ? advancesIndex + itr.getStartIndex() - offset : 0);
-                        offset = 0;
-                    }
-                    float textWidth;
-                    var flag = true;
-                    if (codePoint == '\t') {
-                        textWidth = tabWidth;
-                    } else if (Character.charCount(codePoint) == 1) {
-                        textWidth = widths.measureChar((char) codePoint, this);
-                    } else {
-                        flag = false;
-                        var start = itr.getStartIndex();
-                        var count2 = itr.getEndIndex() - start;
-                        textWidth = getTextRunAdvances(chars, index + start, count2, index + start, count2, isRtl, advances, advances != null ? advancesIndex + itr.getStartIndex() - offset : 0);
-                    }
-                    width += textWidth;
-                    if (flag && advances != null) {
-                        advances[advancesIndex + itr.getStartIndex()] = textWidth;
-                    }
-                }
-            }
-            if (offset != 0) {
-                width += getTextRunAdvances(candidates, 0, offset, 0, offset, isRtl, advances, advances != null ? advancesIndex + itr.getStartIndex() - offset : 0);
-            }
-            return width;*/
             var width = 0f;
             for (int i = 0;i < count;i++) {
                 char ch = chars[i + index];
-                float charWidth = (ch == '\t') ? tabWidth : widths.measureChar(ch, this);
-                width += charWidth;
-                if (advances != null) {
-                    advances[advancesIndex + i] = charWidth;
+                float charWidth;
+                if (Character.isHighSurrogate(ch) && i + 1 < count && Character.isLowSurrogate(chars[index + i + 1])) {
+                    charWidth = widths.measureCodePoint(Character.toCodePoint(ch, chars[index + i + 1]), this);
+                    if (advances != null) {
+                        advances[advancesIndex + i] = charWidth;
+                        advances[advancesIndex + i + 1] = 0f;
+                    }
+                    i++;
+                } else {
+                    charWidth = (ch == '\t') ? tabWidth : widths.measureChar(ch, this);
+                    if (advances != null) {
+                        advances[advancesIndex + i] = charWidth;
+                    }
                 }
+                width += charWidth;
             }
             return width;
         } else {
             return getTextRunAdvances(chars, index, count, contextIndex, contextCount, isRtl, advances, advancesIndex);
         }
     }
-
-    /*private static char[] appendCodePoint(char[] chars, int offset, int codePoint) {
-        if (chars == null) {
-            chars = TemporaryCharBuffer.obtain(16);
-        }
-        Character.toChars(codePoint, chars, offset);
-        return chars;
-    }*/
 
     /**
      * Get the advance of text with the context positions related to shaping the characters
@@ -170,10 +136,17 @@ public class Paint extends android.graphics.Paint {
             var width = 0f;
             for (int i = start;i < end;i++) {
                 char ch = text.value[i];
-                float charWidth = (ch == '\t') ? tabWidth : widths.measureChar(ch, this);
+                float charWidth;
+                int j = i;
+                if (Character.isHighSurrogate(ch) && i + 1 < end && Character.isLowSurrogate(text.value[i + 1])) {
+                    charWidth = widths.measureCodePoint(Character.toCodePoint(ch, text.value[i + 1]), this);
+                    i++;
+                } else {
+                    charWidth = (ch == '\t') ? tabWidth : widths.measureChar(ch, this);
+                }
                 width += charWidth;
                 if (width > advance) {
-                    return Math.max(start, i - 1);
+                    return Math.max(start, j - 1);
                 }
             }
             return end;

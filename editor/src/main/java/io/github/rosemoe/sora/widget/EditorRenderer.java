@@ -126,7 +126,7 @@ public class EditorRenderer {
     protected ContentLine mBuffer;
     protected Content mContent;
     private boolean mRendering;
-    protected boolean fastMode;
+    protected boolean basicDisplayMode;
 
     public EditorRenderer(@NonNull CodeEditor editor) {
         mEditor = editor;
@@ -158,8 +158,8 @@ public class EditorRenderer {
         notifyFullTextUpdate();
     }
 
-    public boolean isFastMode() {
-        return fastMode;
+    public boolean isBasicDisplayMode() {
+        return basicDisplayMode;
     }
 
     public void notifyFullTextUpdate() {
@@ -484,7 +484,7 @@ public class EditorRenderer {
         var gutterWidth = (int) (lineNumberWidth + sideIconWidth + mEditor.getDividerWidth() + mEditor.getDividerMargin() * 2);
         if (mEditor.isWordwrap()) {
             if (mCachedGutterWidth == 0) {
-                mCachedGutterWidth = (int) gutterWidth;
+                mCachedGutterWidth = gutterWidth;
             } else if (mCachedGutterWidth != gutterWidth && !mEditor.getEventHandler().isScaling) {
                 mCachedGutterWidth = gutterWidth;
                 mEditor.createLayout();
@@ -1417,9 +1417,9 @@ public class EditorRenderer {
 
     protected void drawRowBackgroundRect(Canvas canvas, RectF rect) {
         if (mEditor.getProps().enableRoundTextBackground) {
-            canvas.drawRoundRect(mRect, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mPaint);
+            canvas.drawRoundRect(rect, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mEditor.getRowHeight() * mEditor.getProps().roundTextBackgroundFactor, mPaint);
         } else {
-            canvas.drawRect(mRect, mPaint);
+            canvas.drawRect(rect, mPaint);
         }
     }
 
@@ -1535,14 +1535,19 @@ public class EditorRenderer {
 
     @SuppressLint("NewApi")
     protected void drawTextRunDirect(Canvas canvas, char[] src, int index, int count, int contextStart, int contextCount, float offX, float offY, boolean isRtl) {
-        /*if (fastMode) {
-            for (int i = 0; i < count; i++) {
-                canvas.drawText(src, index + i, 1, offX, offY, mPaint);
-                offX += mPaint.myGetTextRunAdvances(src, index + i, 1, index + i, 1, false, null, 0, true);
+        if (basicDisplayMode) {
+            int charCount;
+            for (int i = 0; i < count; i += charCount) {
+                charCount = 1;
+                if (Character.isHighSurrogate(src[index + i]) && i + 1 < count && Character.isLowSurrogate(src[index + i + 1])) {
+                    charCount = 2;
+                }
+                canvas.drawText(src, index + i, charCount, offX, offY, mPaint);
+                offX += mPaint.myGetTextRunAdvances(src, index + i, charCount, index + i, charCount, false, null, 0, true);
             }
-        } else {*/
+        } else {
             canvas.drawTextRun(src, index, count, contextStart, contextCount, offX, offY, isRtl, mPaint);
-        //}
+        }
     }
 
     /**
@@ -2040,7 +2045,7 @@ public class EditorRenderer {
         if (line.widthCache != null && line.timestamp < mTimestamp) {
             buildMeasureCacheForLines(lineIndex, lineIndex, mTimestamp, false);
         }
-        var gtr = GraphicTextRow.obtain(fastMode);
+        var gtr = GraphicTextRow.obtain(basicDisplayMode);
         gtr.set(mContent, lineIndex, contextStart, end, mEditor.getTabWidth(), line.widthCache == null ? mEditor.getSpansForLine(lineIndex) : null, mPaint);
         if (mEditor.getLayout() instanceof WordwrapLayout && line.widthCache == null) {
             gtr.setSoftBreaks(((WordwrapLayout) mEditor.getLayout()).getSoftBreaksForLine(lineIndex));
@@ -2141,7 +2146,7 @@ public class EditorRenderer {
         if (start >= end) {
             return new float[]{end, 0};
         }
-        var gtr = GraphicTextRow.obtain(fastMode);
+        var gtr = GraphicTextRow.obtain(basicDisplayMode);
         if (mEditor.defSpans.size() == 0) {
             mEditor.defSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
         }
@@ -2155,22 +2160,22 @@ public class EditorRenderer {
     /**
      * Build measure cache for the given lines, if the timestamp indicates that it is outdated.
      */
-    protected void buildMeasureCacheForLines(int startLine, int endLine, long timestamp, boolean usePainter) {
+    protected void buildMeasureCacheForLines(int startLine, int endLine, long timestamp, boolean useCachedContent) {
         var text = mContent;
         while (startLine <= endLine && startLine < text.getLineCount()) {
-            var line = usePainter ? getLine(startLine) : getLineDirect(startLine);
+            var line = useCachedContent ? getLine(startLine) : getLineDirect(startLine);
             if (line.timestamp < timestamp) {
-                var gtr = GraphicTextRow.obtain(fastMode);
+                var gtr = GraphicTextRow.obtain(basicDisplayMode);
                 var forced = false;
                 if (line.widthCache == null || line.widthCache.length < line.length()) {
-                    line.widthCache = mEditor.obtainFloatArray(Math.max(line.length() + 8, 90), usePainter);
+                    line.widthCache = mEditor.obtainFloatArray(Math.max(line.length() + 8, 90), useCachedContent);
                     forced = true;
                 }
                 var spans = mEditor.getSpansForLine(startLine);
                 gtr.set(text, startLine, 0, line.length(), mEditor.getTabWidth(), spans, mPaint);
                 var softBreaks = (mEditor.mLayout instanceof WordwrapLayout) ? ((WordwrapLayout) mEditor.mLayout).getSoftBreaksForLine(startLine) : null;
                 gtr.setSoftBreaks(softBreaks);
-                var hash = Objects.hash(spans, line.length(), mEditor.getTabWidth(), fastMode, softBreaks, mPaint.getFlags(), mPaint.getTextSize(), mPaint.getTextScaleX(), mPaint.getLetterSpacing());
+                var hash = Objects.hash(spans, line.length(), mEditor.getTabWidth(), basicDisplayMode, softBreaks, mPaint.getFlags(), mPaint.getTextSize(), mPaint.getTextScaleX(), mPaint.getLetterSpacing());
                 if (line.styleHash != hash || forced) {
                     gtr.buildMeasureCache();
                     line.styleHash = hash;
@@ -2196,7 +2201,7 @@ public class EditorRenderer {
      */
     @UnsupportedUserUsage
     public float measureText(ContentLine text, int line, int index, int count) {
-        var gtr = GraphicTextRow.obtain(fastMode);
+        var gtr = GraphicTextRow.obtain(basicDisplayMode);
         List<Span> spans = mEditor.defSpans;
         if (text.widthCache == null) {
             spans = mEditor.getSpansForLine(line);

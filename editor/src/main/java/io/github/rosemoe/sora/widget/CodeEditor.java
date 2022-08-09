@@ -1848,12 +1848,30 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return mSearcher;
     }
 
-    public void applyFastDisplay() {
-        mText.setBidiEnabled(false);
+    /**
+     * Set whether the editor use basic display mode to render and measure texts.<br/>
+     * When basic display mode is enabled, the following changes will take:<br/>
+     * 1. Ligatures are divided into single characters.<br/>
+     * 2. Text direction is always LTR (left-to-right).<br/>
+     * 3. Some emojis with variation selector or fitzpatrick can not be shown correctly with specified attributes.<br/>
+     * 4. ZWJ and ZWNJ takes no effect.<br/>
+     * Benefits:<br/>
+     * Better performance when the text is very big, especially when you are displaying a text with long lines.
+     * @see #isBasicDisplayMode()
+     */
+    public void setBasicDisplayMode(boolean enabled) {
+        mText.setBidiEnabled(!enabled);
         mRenderer.invalidateRenderNodes();
-        mRenderer.fastMode = true;
+        mRenderer.basicDisplayMode = enabled;
         mRenderer.updateTimestamp();
         invalidate();
+    }
+
+    /**
+     * @see #setBasicDisplayMode(boolean)
+     */
+    public boolean isBasicDisplayMode() {
+        return mRenderer.basicDisplayMode;
     }
 
     /**
@@ -3202,6 +3220,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         } else {
             mText = new Content(text);
         }
+        mText.setBidiEnabled(!mRenderer.basicDisplayMode);
         mStyleDelegate.reset();
         mStyles = null;
         mCursor = mText.getCursor();
