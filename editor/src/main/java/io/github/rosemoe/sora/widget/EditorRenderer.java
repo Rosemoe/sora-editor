@@ -1901,7 +1901,6 @@ public class EditorRenderer {
             position.line = row.lineIndex;
             position.rowStart = row.startColumn;
         }
-        System.out.println(list);
         return list;
     }
 

@@ -715,18 +715,33 @@ public class Content implements CharSequence {
         if (startLine == endLine) {
             var line = lines.get(startLine);
             if (endColumn == line.length() + 1 && line.getLineSeparator() == LineSeparator.CRLF) {
-                c.insert(0, 0, lines.get(startLine).subSequence(startColumn, line.length()));
-                c.lines.get(0).setLineSeparator(LineSeparator.CR);
-                c.textLength ++;
-                c.lines.add(new ContentLine());
+                if (startColumn < endColumn) {
+                    c.insert(0, 0, lines.get(startLine).subSequence(startColumn, line.length()));
+                    c.lines.get(0).setLineSeparator(LineSeparator.CR);
+                    c.textLength++;
+                    c.lines.add(new ContentLine());
+                }
             } else {
                 c.insert(0, 0, lines.get(startLine).subSequence(startColumn, endColumn));
             }
         } else if (startLine < endLine) {
             var firstLine = lines.get(startLine);
-            c.insert(0, 0, firstLine.subSequence(startColumn, firstLine.length()));
-            c.lines.get(0).setLineSeparator(firstLine.getLineSeparator());
-            c.textLength += firstLine.getLineSeparator().getLength();
+            if (firstLine.getLineSeparator() == LineSeparator.CRLF) {
+                if (startColumn <= firstLine.length()) {
+                    c.insert(0, 0, firstLine.subSequence(startColumn, firstLine.length()));
+                    c.lines.get(0).setLineSeparator(firstLine.getLineSeparator());
+                    c.textLength += firstLine.getLineSeparator().getLength();
+                } else if (startColumn == firstLine.length() + 1) {
+                    c.lines.get(0).setLineSeparator(LineSeparator.LF);
+                    c.textLength += LineSeparator.LF.getLength();
+                } else {
+                    throw new IndexOutOfBoundsException();
+                }
+            } else {
+                c.insert(0, 0, firstLine.subSequence(startColumn, firstLine.length()));
+                c.lines.get(0).setLineSeparator(firstLine.getLineSeparator());
+                c.textLength += firstLine.getLineSeparator().getLength();
+            }
             for (int i = startLine + 1; i < endLine; i++) {
                 var line = lines.get(i);
                 c.lines.add(new ContentLine(line));
