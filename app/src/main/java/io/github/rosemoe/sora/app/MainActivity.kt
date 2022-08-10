@@ -225,19 +225,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun updatePositionText() {
         val cursor = binding.editor.cursor
-        var text = (1 + cursor.leftLine).toString() + ":" + cursor.leftColumn
+        var text = (1 + cursor.leftLine).toString() + ":" + cursor.leftColumn + " "
         text += if (cursor.isSelected) {
             "(" + (cursor.right - cursor.left) + " chars)"
         } else {
             var content = binding.editor.text
             if (content.getColumnCount(cursor.leftLine) == cursor.leftColumn) {
-                "(" + content.getLine(cursor.leftLine).lineSeparator.let {
+                "(<" + content.getLine(cursor.leftLine).lineSeparator.let {
                     if (it == LineSeparator.NONE) {
                         "EOF"
                     } else {
                         it.name
                     }
-                } + ")"
+                } + ">)"
             } else {
                 "(" + escapeIfNecessary(
                     binding.editor.text.charAt(
