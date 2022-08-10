@@ -1821,7 +1821,7 @@ public class EditorRenderer {
     }
 
     protected void patchHighlightedDelimiters(Canvas canvas, float textOffset) {
-        if (mEditor.mConnection.composingText.isComposing() || !mEditor.getProps().highlightMatchingDelimiters) {
+        if (mEditor.mConnection.composingText.isComposing() || !mEditor.getProps().highlightMatchingDelimiters || mEditor.getCursor().isSelected()) {
             return;
         }
         var paired = mEditor.mStyleDelegate.getFoundBracketPair();
