@@ -109,6 +109,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
         binding.editor.apply {
+            lineSeparator = LineSeparator.CRLF
             typefaceText = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
             setLineSpacing(2f, 1.1f)
             nonPrintablePaintingFlags =

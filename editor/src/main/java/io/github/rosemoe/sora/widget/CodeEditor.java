@@ -1616,7 +1616,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         } else {
             if (mProps.autoIndent && text.length() != 0 && applyAutoIndent) {
                 char first = text.charAt(0);
-                if (first == '\n') {
+                if (first == '\n' || first == '\r') {
                     String line = mText.getLineString(cur.getLeftLine());
                     int p = 0, count = 0;
                     while (p < cur.getLeftColumn()) {
@@ -1636,8 +1636,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     } catch (Exception e) {
                         Log.w(LOG_TAG, "Language object error", e);
                     }
+                    var index = 1;
+                    if (first == '\r' && text.length() >= 2 && text.charAt(1) == '\n') {
+                        index = 2;
+                    }
                     StringBuilder sb = new StringBuilder(text);
-                    sb.insert(1, TextUtils.createIndent(count, mTabWidth, mLanguage.useTab()));
+                    sb.insert(index, TextUtils.createIndent(count, mTabWidth, mLanguage.useTab()));
                     text = sb;
                 }
             }
