@@ -469,7 +469,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         Log.v(LOG_TAG, COPYRIGHT);
 
         mEventManager = new EventManager();
-        mRenderer = new EditorRenderer(this);
+        mRenderer = onCreateRenderer();
         mStyleDelegate = new EditorStyleDelegate(this);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -3655,11 +3655,18 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * This method is called once when the editor is created.
+     */
+    @NonNull
+    protected EditorRenderer onCreateRenderer() {
+        return new EditorRenderer(this);
+    }
+
+    /**
      * Called when the text is edited or {@link CodeEditor#setSelection} is called
      */
     protected void onSelectionChanged(int cause) {
         dispatchEvent(new SelectionChangeEvent(this, cause));
-
     }
 
     protected void releaseEdgeEffects() {

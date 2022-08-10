@@ -100,13 +100,13 @@ public class EditorRenderer {
             EditorColorScheme.PROBLEM_WARNING,
             EditorColorScheme.PROBLEM_ERROR
     };
-    private final BufferedDrawPoints mDrawPoints;
-    private final Paint mPaint;
-    private final Paint mPaintOther;
-    private final Rect mViewRect;
+    protected final BufferedDrawPoints mDrawPoints;
+    protected final Paint mPaint;
+    protected final Paint mPaintOther;
+    protected final Rect mViewRect;
     private final RectF mRect;
     private final Path mPath;
-    private final Paint mPaintGraph;
+    protected final Paint mPaintGraph;
     private final RectF mVerticalScrollBar;
     private final RectF mHorizontalScrollBar;
     private final LongArrayList mPostDrawLineNumbers = new LongArrayList();
@@ -274,7 +274,7 @@ public class EditorRenderer {
         mBuffer = getLine(line);
     }
 
-    ContentLine getLine(int line) {
+    protected ContentLine getLine(int line) {
         if (!mRendering) {
             return getLineDirect(line);
         }
@@ -286,7 +286,7 @@ public class EditorRenderer {
         return line2;
     }
 
-    Directions getLineDirections(int line) {
+    protected Directions getLineDirections(int line) {
         if (!mRendering) {
             return mContent.getLineDirections(line);
         }
