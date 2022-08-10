@@ -267,12 +267,16 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
         }
         char[] newValue = new char[end - start + 16];
         System.arraycopy(value, start, newValue, 0, end - start);
-        ContentLine res = new ContentLine(false);
+        var res = new ContentLine(false);
         res.value = newValue;
         res.length = end - start;
-        for (int i = 0;i < res.length;i++) {
-            if (TextBidi.couldAffectRtl(newValue[i])) {
-                res.rtlAffectingCount ++;
+
+        // Compute new value when required
+        if (rtlAffectingCount > 0) {
+            for (int i = 0; i < res.length; i++) {
+                if (TextBidi.couldAffectRtl(newValue[i])) {
+                    res.rtlAffectingCount++;
+                }
             }
         }
         return res;
