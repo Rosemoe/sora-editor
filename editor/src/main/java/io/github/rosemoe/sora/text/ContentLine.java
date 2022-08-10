@@ -59,6 +59,12 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
         insert(0, text);
     }
 
+    public ContentLine(ContentLine src) {
+        this(true);
+        insert(0, src);
+        lineSeparator = src.lineSeparator;
+    }
+
     public ContentLine(int size) {
         length = 0;
         value = new char[size];

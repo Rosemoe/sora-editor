@@ -211,8 +211,8 @@ public class Content implements CharSequence {
         }
         lock(false);
         try {
-            CharPosition s = getIndexer().getCharPosition(start);
-            CharPosition e = getIndexer().getCharPosition(end);
+            var s = getIndexer().getCharPosition(start);
+            var e = getIndexer().getCharPosition(end);
             return subContentInternal(s.getLine(), s.getColumn(), e.getLine(), e.getColumn());
         } finally {
             unlock(false);
@@ -710,19 +710,38 @@ public class Content implements CharSequence {
     }
 
     private Content subContentInternal(int startLine, int startColumn, int endLine, int endColumn) {
-        Content c = new Content();
+        var c = new Content();
         c.setUndoEnabled(false);
         if (startLine == endLine) {
-            c.insert(0, 0, lines.get(startLine).subSequence(startColumn, endColumn));
-        } else if (startLine < endLine) {
-            c.insert(0, 0, lines.get(startLine).subSequence(startColumn, lines.get(startLine).length()));
-            for (int i = startLine + 1; i < endLine; i++) {
-                c.lines.add(new ContentLine(lines.get(i)));
-                c.textLength += lines.get(i).length() + 1;
+            var line = lines.get(startLine);
+            if (endColumn == line.length() + 1 && line.getLineSeparator() == LineSeparator.CRLF) {
+                c.insert(0, 0, lines.get(startLine).subSequence(startColumn, line.length()));
+                c.lines.get(0).setLineSeparator(LineSeparator.CR);
+                c.textLength ++;
+                c.lines.add(new ContentLine());
+            } else {
+                c.insert(0, 0, lines.get(startLine).subSequence(startColumn, endColumn));
             }
-            ContentLine end = lines.get(endLine);
-            c.lines.add(new ContentLine().insert(0, end, 0, endColumn));
-            c.textLength += endColumn + 1;
+        } else if (startLine < endLine) {
+            var firstLine = lines.get(startLine);
+            c.insert(0, 0, firstLine.subSequence(startColumn, firstLine.length()));
+            c.lines.get(0).setLineSeparator(firstLine.getLineSeparator());
+            c.textLength += firstLine.getLineSeparator().getLength();
+            for (int i = startLine + 1; i < endLine; i++) {
+                var line = lines.get(i);
+                c.lines.add(new ContentLine(line));
+                c.textLength += line.length() + line.getLineSeparator().getLength();
+            }
+            var end = lines.get(endLine);
+            if (endColumn == end.length() + 1 && end.getLineSeparator() == LineSeparator.CRLF) {
+                var newLine = new ContentLine().insert(0, end, 0, endColumn - 1);
+                c.lines.add(newLine);
+                newLine.setLineSeparator(LineSeparator.CR);
+                c.textLength += endColumn + 1;
+            } else {
+                c.lines.add(new ContentLine().insert(0, end, 0, endColumn));
+                c.textLength += endColumn;
+            }
         } else {
             throw new StringIndexOutOfBoundsException("start > end");
         }
