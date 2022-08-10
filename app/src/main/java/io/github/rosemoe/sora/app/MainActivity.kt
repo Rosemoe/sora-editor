@@ -48,6 +48,7 @@ import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.text.ContentCreator
+import io.github.rosemoe.sora.text.LineSeparator
 import org.eclipse.tm4e.core.internal.theme.reader.ThemeReader
 import io.github.rosemoe.sora.utils.CrashHandler
 import io.github.rosemoe.sora.widget.CodeEditor
@@ -227,12 +228,23 @@ class MainActivity : AppCompatActivity() {
         text += if (cursor.isSelected) {
             "(" + (cursor.right - cursor.left) + " chars)"
         } else {
-            "(" + escapeIfNecessary(
-                binding.editor.text.charAt(
-                    cursor.leftLine,
-                    cursor.leftColumn
-                )
-            ) + ")"
+            var content = binding.editor.text
+            if (content.getColumnCount(cursor.leftLine) == cursor.leftColumn) {
+                "(" + content.getLine(cursor.leftLine).lineSeparator.let {
+                    if (it == LineSeparator.NONE) {
+                        "EOF"
+                    } else {
+                        it.name
+                    }
+                } + ")"
+            } else {
+                "(" + escapeIfNecessary(
+                    binding.editor.text.charAt(
+                        cursor.leftLine,
+                        cursor.leftColumn
+                    )
+                ) + ")"
+            }
         }
         binding.positionDisplay.text = text
     }

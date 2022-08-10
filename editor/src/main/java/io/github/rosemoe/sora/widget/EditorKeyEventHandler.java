@@ -167,6 +167,7 @@ class EditorKeyEventHandler {
             }
             case KeyEvent.KEYCODE_ENTER: {
                 if (editor.isEditable()) {
+                    var lineSeparator = editor.getLineSeparator().getContent();
                     final var editorLanguage = editor.getEditorLanguage();
                     if (completionWindow.isShowing()) {
                         completionWindow.select();
@@ -183,7 +184,7 @@ class EditorKeyEventHandler {
                             // Ctrl + Alt + Enter
                             var line = editorCursor.left().line;
                             if (line == 0) {
-                                editorText.insert(0, 0, "\n");
+                                editorText.insert(0, 0, lineSeparator);
                                 editor.setSelection(0, 0);
                                 editor.ensureSelectionVisible();
                                 return keybindingEvent.result(true) || e.result(true);
@@ -196,7 +197,7 @@ class EditorKeyEventHandler {
 
                         // Ctrl + Enter
                         final var left = editorCursor.left().fromThis();
-                        editor.commitText("\n");
+                        editor.commitText(lineSeparator);
                         editor.setSelection(left.line, left.column);
                         editor.ensureSelectionVisible();
                         return keybindingEvent.result(true) || e.result(true);
@@ -204,7 +205,7 @@ class EditorKeyEventHandler {
 
                     NewlineHandler[] handlers = editorLanguage.getNewlineHandlers();
                     if (handlers == null || editorCursor.isSelected()) {
-                        editor.commitText("\n", true);
+                        editor.commitText(lineSeparator, true);
                     } else {
                         ContentLine line = editorText.getLine(editorCursor.getLeftLine());
                         int index = editorCursor.getLeftColumn();
@@ -236,7 +237,7 @@ class EditorKeyEventHandler {
                             }
                         }
                         if (!consumed) {
-                            editor.commitText("\n", true);
+                            editor.commitText(lineSeparator, true);
                         }
                     }
                     editor.notifyIMEExternalCursorChange();
@@ -395,7 +396,7 @@ class EditorKeyEventHandler {
     private boolean startNewLIne(CodeEditor editor, Cursor editorCursor, Content editorText, EditorKeyEvent e, KeyBindingEvent keybindingEvent) {
         final var line = editorCursor.right().line;
         editor.setSelection(line, editorText.getColumnCount(line));
-        editor.commitText("\n");
+        editor.commitText(editor.getLineSeparator().getContent());
         editor.ensureSelectionVisible();
         return keybindingEvent.result(true) || e.result(true);
     }

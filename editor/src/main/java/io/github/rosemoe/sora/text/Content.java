@@ -946,10 +946,11 @@ public class Content implements CharSequence {
      */
     protected void checkLineAndColumn(int line, int column, boolean allowEqual) {
         checkLine(line);
-        int len = lines.get(line).length();
+        var text = lines.get(line);
+        int len = text.length() + text.getLineSeparator().getLength();
         if (column > len || (!allowEqual && column == len) || column < 0) {
             throw new StringIndexOutOfBoundsException(
-                    "Column " + column + " out of bounds.line: " + line + " ,column count:" + len);
+                    "Column " + column + " out of bounds. line: " + line + " , column count ('\r' included if CRLF):" + len);
         }
     }
 
