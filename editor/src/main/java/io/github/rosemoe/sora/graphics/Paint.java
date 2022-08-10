@@ -40,7 +40,7 @@ public class Paint extends android.graphics.Paint {
     private float spaceWidth;
     private float tabWidth;
 
-    private SingleCharacterWidths widths;
+    private final SingleCharacterWidths widths;
 
     public Paint() {
         super();
@@ -111,7 +111,6 @@ public class Paint extends android.graphics.Paint {
     /**
      * Get the advance of text with the context positions related to shaping the characters
      */
-    @SuppressLint("NewApi")
     public float measureTextRunAdvance(char[] text, int start, int end, int contextStart, int contextEnd, boolean fast) {
         return myGetTextRunAdvances(text, start, end - start, contextStart, contextEnd - contextStart, false, null, 0, fast);
     }
