@@ -250,7 +250,7 @@ class EditorInputConnection extends BaseInputConnection {
             if (composingText.isComposing()) {
                 var composingText = editor.getText().subSequence(this.composingText.startIndex, this.composingText.endIndex).toString();
                 var commitText = text.toString();
-                if (commitText.startsWith(composingText) && commitText.length() > composingText.length()) {
+                if (this.composingText.endIndex == getCursor().getLeft() && !getCursor().isSelected() && commitText.startsWith(composingText) && commitText.length() > composingText.length()) {
                     text = commitText.substring(composingText.length());
                     this.composingText.reset();
                 } else {
