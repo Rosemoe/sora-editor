@@ -988,8 +988,9 @@ public class Content implements CharSequence {
             n.lines.remove(0);
             for (int i = 0; i < getLineCount(); i++) {
                 var line = lines.get(i);
-                n.lines.add(line.subSequence(0, line.length()));
+                n.lines.add(new ContentLine(line));
             }
+            n.textLength = textLength;
             return n;
         } finally {
             unlock(false);
