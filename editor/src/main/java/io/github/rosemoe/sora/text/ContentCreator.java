@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.CharBuffer;
 
 /**
  * Utility class for creating {@link Content} objects
@@ -52,9 +53,29 @@ public class ContentCreator {
         var wrapper = new CharArrayWrapper(buffer, 0);
         int count;
         while ((count = reader.read(buffer)) != -1) {
-            wrapper.setDataCount(count);
-            var line = content.getLineCount() - 1;
-            content.insert(line, content.getColumnCount(line), wrapper);
+            if (count > 0) {
+                if (buffer[count - 1] == '\r') {
+                    var peek = reader.read();
+                    if (peek == '\n') {
+                        wrapper.setDataCount(count - 1);
+                        var line = content.getLineCount() - 1;
+                        content.insert(line, content.getColumnCount(line), wrapper);
+                        line = content.getLineCount() - 1;
+                        content.insert(line, content.getColumnCount(line), "\r\n");
+                        continue;
+                    } else if (peek != -1) {
+                        wrapper.setDataCount(count);
+                        var line = content.getLineCount() - 1;
+                        content.insert(line, content.getColumnCount(line), wrapper);
+                        line = content.getLineCount() - 1;
+                        content.insert(line, content.getColumnCount(line), String.valueOf((char) peek));
+                        continue;
+                    }
+                }
+                wrapper.setDataCount(count);
+                var line = content.getLineCount() - 1;
+                content.insert(line, content.getColumnCount(line), wrapper);
+            }
         }
         reader.close();
         content.setUndoEnabled(true);
