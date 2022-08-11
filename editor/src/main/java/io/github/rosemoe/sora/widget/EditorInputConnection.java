@@ -82,6 +82,7 @@ class EditorInputConnection extends BaseInputConnection {
     protected void invalid() {
         connectionInvalid = true;
         composingText.reset();
+        resetBatchEdit();
         editor.invalidate();
     }
 
@@ -89,9 +90,17 @@ class EditorInputConnection extends BaseInputConnection {
      * Reset the state of this connection
      */
     protected void reset() {
+        resetBatchEdit();
         composingText.reset();
         connectionInvalid = false;
         imeConsumingInput = false;
+    }
+
+    private void resetBatchEdit() {
+        Content content = editor.getText();
+        while (content.isInBatchEdit()) {
+            content.endBatchEdit();
+        }
     }
 
     /**
@@ -125,10 +134,7 @@ class EditorInputConnection extends BaseInputConnection {
     @Override
     public synchronized void closeConnection() {
         super.closeConnection();
-        Content content = editor.getText();
-        while (content.isInBatchEdit()) {
-            content.endBatchEdit();
-        }
+        resetBatchEdit();
         composingText.reset();
         editor.onCloseConnection();
     }

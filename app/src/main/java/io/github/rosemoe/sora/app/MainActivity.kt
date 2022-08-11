@@ -229,7 +229,7 @@ class MainActivity : AppCompatActivity() {
         text += if (cursor.isSelected) {
             "(" + (cursor.right - cursor.left) + " chars)"
         } else {
-            var content = binding.editor.text
+            val content = binding.editor.text
             if (content.getColumnCount(cursor.leftLine) == cursor.leftColumn) {
                 "(<" + content.getLine(cursor.leftLine).lineSeparator.let {
                     if (it == LineSeparator.NONE) {
