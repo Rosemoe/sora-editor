@@ -2507,7 +2507,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Get actual line spacing in pixels.
      */
     public int getLineSpacingPixels() {
-        var metrics = mRenderer.mTextMetrics;
+        var metrics = mRenderer.metricsText;
         return ((int) ((metrics.descent - metrics.ascent) * (mLineSpacingMultiplier - 1f) + mLineSpacingAdd)) / 2 * 2;
     }
 
@@ -2518,7 +2518,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return baseline y offset
      */
     public int getRowBaseline(int row) {
-        return getRowHeight() * (row + 1) - mRenderer.mTextMetrics.descent - getLineSpacingPixels() / 2;
+        return getRowHeight() * (row + 1) - mRenderer.metricsText.descent - getLineSpacingPixels() / 2;
     }
 
     /**
@@ -2527,7 +2527,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return height of single row
      */
     public int getRowHeight() {
-        var metrics = mRenderer.mTextMetrics;
+        var metrics = mRenderer.metricsText;
         // Do not let the row height be zero...
         return Math.max(1, metrics.descent - metrics.ascent + getLineSpacingPixels());
     }
@@ -2570,7 +2570,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Get the height of text in row
      */
     public int getRowHeightOfText() {
-        var metrics = mRenderer.mTextMetrics;
+        var metrics = mRenderer.metricsText;
         return metrics.descent - metrics.ascent;
     }
 
