@@ -82,7 +82,7 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param index Querying index
      * @return Nearest cache
      */
-    private CharPosition findNearestByIndex(int index) {
+    private synchronized CharPosition findNearestByIndex(int index) {
         int min = index, dis = index;
         CharPosition nearestCharPosition = mZeroPoint;
         int targetIndex = 0;
@@ -113,7 +113,7 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param line Querying line
      * @return Nearest cache
      */
-    private CharPosition findNearestByLine(int line) {
+    private synchronized CharPosition findNearestByLine(int line) {
         int min = line, dis = line;
         CharPosition nearestCharPosition = mZeroPoint;
         int targetIndex = 0;
@@ -281,7 +281,7 @@ public class CachedIndexer implements Indexer, ContentListener {
      *
      * @param pos New cache
      */
-    private void push(CharPosition pos) {
+    private synchronized void push(CharPosition pos) {
         if (mMaxCacheSize <= 0) {
             return;
         }
@@ -394,7 +394,7 @@ public class CachedIndexer implements Indexer, ContentListener {
 
     @Override
     @UnsupportedUserUsage
-    public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn,
+    public synchronized void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn,
                             CharSequence insertedContent) {
         for (var pos : mCachePositions) {
             if (pos.line == startLine) {
@@ -413,7 +413,7 @@ public class CachedIndexer implements Indexer, ContentListener {
 
     @Override
     @UnsupportedUserUsage
-    public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn,
+    public synchronized void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn,
                             CharSequence deletedContent) {
         List<CharPosition> garbage = new ArrayList<>();
         for (CharPosition pos : mCachePositions) {

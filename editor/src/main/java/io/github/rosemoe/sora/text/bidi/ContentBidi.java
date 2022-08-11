@@ -61,21 +61,25 @@ public class ContentBidi implements ContentListener {
         if (!enabled) {
             return new Directions(new long[]{IntPair.pack(0, 0)}, text.getLine(line).length());
         }
-        for (DirectionsEntry entry : entries) {
-            if (entry.line == line) {
-                return entry.dir;
+        synchronized (this) {
+            for (DirectionsEntry entry : entries) {
+                if (entry.line == line) {
+                    return entry.dir;
+                }
             }
         }
         var dir = TextBidi.getDirections(text.getLine(line));
-        entries.add(new DirectionsEntry(dir, line));
-        if (MAX_BIDI_CACHE_ENTRY_COUNT >= 0 && entries.size() > MAX_BIDI_CACHE_ENTRY_COUNT) {
-            entries.remove(0);
+        synchronized (this) {
+            entries.add(new DirectionsEntry(dir, line));
+            if (MAX_BIDI_CACHE_ENTRY_COUNT >= 0 && entries.size() > MAX_BIDI_CACHE_ENTRY_COUNT) {
+                entries.remove(0);
+            }
         }
         return dir;
     }
 
     @Override
-    public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
+    public synchronized void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
         var itr = entries.iterator();
         var delta = endLine - startLine;
         while (itr.hasNext()) {
@@ -91,7 +95,7 @@ public class ContentBidi implements ContentListener {
     }
 
     @Override
-    public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
+    public synchronized void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
         var itr = entries.iterator();
         var delta = endLine - startLine;
         while (itr.hasNext()) {
