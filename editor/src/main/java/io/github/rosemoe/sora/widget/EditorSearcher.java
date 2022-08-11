@@ -48,16 +48,16 @@ import io.github.rosemoe.sora.util.LongArrayList;
 @SuppressWarnings("deprecated")
 public class EditorSearcher {
 
-    private final CodeEditor mEditor;
-    protected String mPattern;
-    protected SearchOptions mOptions;
-    protected Thread mThread;
-    protected LongArrayList mLastResults;
+    private final CodeEditor editor;
+    protected String currentPattern;
+    protected SearchOptions searchOptions;
+    protected Thread currentThread;
+    protected LongArrayList lastResults;
 
     EditorSearcher(@NonNull CodeEditor editor) {
-        mEditor = editor;
-        mEditor.subscribeEvent(ContentChangeEvent.class, ((event, unsubscribe) -> {
-            if (hasQuery() && mOptions.useRegex) {
+        this.editor = editor;
+        this.editor.subscribeEvent(ContentChangeEvent.class, ((event, unsubscribe) -> {
+            if (hasQuery() && searchOptions.useRegex) {
                 runRegexMatch();
             }
         }));
@@ -72,39 +72,39 @@ public class EditorSearcher {
             //noinspection ResultOfMethodCallIgnored
             Pattern.compile(pattern);
         }
-        mPattern = pattern;
-        mOptions = options;
+        currentPattern = pattern;
+        searchOptions = options;
         if (options.useRegex) {
             runRegexMatch();
-        } else if (mThread != null && mThread.isAlive()) {
-            mThread.interrupt();
+        } else if (currentThread != null && currentThread.isAlive()) {
+            currentThread.interrupt();
         }
-        mEditor.postInvalidate();
+        editor.postInvalidate();
     }
 
     private void runRegexMatch() {
-        if (mThread != null) {
-            mThread.interrupt();
+        if (currentThread != null) {
+            currentThread.interrupt();
         }
-        var options = mOptions;
-        var regex = options.ignoreCase ? Pattern.compile(mPattern, Pattern.CASE_INSENSITIVE) : Pattern.compile(mPattern);
-        var runnable = new SearchRunnable(mEditor.getText(), regex);
-        mThread = new Thread(runnable);
-        mThread.start();
+        var options = searchOptions;
+        var regex = options.ignoreCase ? Pattern.compile(currentPattern, Pattern.CASE_INSENSITIVE) : Pattern.compile(currentPattern);
+        var runnable = new SearchRunnable(editor.getText(), regex);
+        currentThread = new Thread(runnable);
+        currentThread.start();
     }
 
     public void stopSearch() {
-        if (mThread != null && mThread.isAlive()) {
-            mThread.interrupt();
+        if (currentThread != null && currentThread.isAlive()) {
+            currentThread.interrupt();
         }
-        mThread = null;
-        mLastResults = null;
-        mPattern = null;
-        mOptions = null;
+        currentThread = null;
+        lastResults = null;
+        currentPattern = null;
+        searchOptions = null;
     }
 
     public boolean hasQuery() {
-        return mPattern != null;
+        return currentPattern != null;
     }
 
     private void checkState() {
@@ -115,30 +115,30 @@ public class EditorSearcher {
 
     public boolean gotoNext() {
         checkState();
-        if (mOptions.useRegex) {
+        if (searchOptions.useRegex) {
             if (isResultValid()) {
-                var res = mLastResults;
-                var right = mEditor.getCursor().getRight();
+                var res = lastResults;
+                var right = editor.getCursor().getRight();
                 for (int i = 0; i < res.size(); i++) {
                     var data = res.get(i);
                     var start = IntPair.getFirst(data);
                     if (start >= right) {
-                        var pos1 = mEditor.getText().getIndexer().getCharPosition(start);
-                        var pos2 = mEditor.getText().getIndexer().getCharPosition(IntPair.getSecond(data));
-                        mEditor.setSelectionRegion(pos1.line, pos1.column, pos2.line, pos2.column, SelectionChangeEvent.CAUSE_SEARCH);
+                        var pos1 = editor.getText().getIndexer().getCharPosition(start);
+                        var pos2 = editor.getText().getIndexer().getCharPosition(IntPair.getSecond(data));
+                        editor.setSelectionRegion(pos1.line, pos1.column, pos2.line, pos2.column, SelectionChangeEvent.CAUSE_SEARCH);
                         return true;
                     }
                 }
             }
         } else {
-            Content text = mEditor.getText();
+            Content text = editor.getText();
             Cursor cursor = text.getCursor();
             int line = cursor.getRightLine();
             int column = cursor.getRightColumn();
             for (int i = line; i < text.getLineCount(); i++) {
-                int idx = column >= text.getColumnCount(i) ? -1 : TextUtils.indexOf(text.getLine(i), mPattern, mOptions.ignoreCase, column);
+                int idx = column >= text.getColumnCount(i) ? -1 : TextUtils.indexOf(text.getLine(i), currentPattern, searchOptions.ignoreCase, column);
                 if (idx != -1) {
-                    mEditor.setSelectionRegion(i, idx, i, idx + mPattern.length(), SelectionChangeEvent.CAUSE_SEARCH);
+                    editor.setSelectionRegion(i, idx, i, idx + currentPattern.length(), SelectionChangeEvent.CAUSE_SEARCH);
                     return true;
                 }
                 column = 0;
@@ -149,30 +149,30 @@ public class EditorSearcher {
 
     public boolean gotoPrevious() {
         checkState();
-        if (mOptions.useRegex) {
+        if (searchOptions.useRegex) {
             if (isResultValid()) {
-                var res = mLastResults;
-                var left = mEditor.getCursor().getLeft();
+                var res = lastResults;
+                var left = editor.getCursor().getLeft();
                 for (int i = 0; i < res.size(); i++) {
                     var data = res.get(i);
                     var end = IntPair.getSecond(data);
                     if (end <= left) {
-                        var pos1 = mEditor.getText().getIndexer().getCharPosition(IntPair.getFirst(data));
-                        var pos2 = mEditor.getText().getIndexer().getCharPosition(end);
-                        mEditor.setSelectionRegion(pos1.line, pos1.column, pos2.line, pos2.column, SelectionChangeEvent.CAUSE_SEARCH);
+                        var pos1 = editor.getText().getIndexer().getCharPosition(IntPair.getFirst(data));
+                        var pos2 = editor.getText().getIndexer().getCharPosition(end);
+                        editor.setSelectionRegion(pos1.line, pos1.column, pos2.line, pos2.column, SelectionChangeEvent.CAUSE_SEARCH);
                         return true;
                     }
                 }
             }
         } else {
-            Content text = mEditor.getText();
+            Content text = editor.getText();
             Cursor cursor = text.getCursor();
             int line = cursor.getLeftLine();
             int column = cursor.getLeftColumn();
             for (int i = line; i >= 0; i--) {
-                int idx = column - 1 < 0 ? -1 : TextUtils.lastIndexOf(text.getLine(i), mPattern, mOptions.ignoreCase, column - 1);
+                int idx = column - 1 < 0 ? -1 : TextUtils.lastIndexOf(text.getLine(i), currentPattern, searchOptions.ignoreCase, column - 1);
                 if (idx != -1) {
-                    mEditor.setSelectionRegion(i, idx, i, idx + mPattern.length(), SelectionChangeEvent.CAUSE_SEARCH);
+                    editor.setSelectionRegion(i, idx, i, idx + currentPattern.length(), SelectionChangeEvent.CAUSE_SEARCH);
                     return true;
                 }
                 column = i - 1 >= 0 ? text.getColumnCount(i - 1) : 0;
@@ -183,15 +183,15 @@ public class EditorSearcher {
 
     public boolean isMatchedPositionSelected() {
         checkState();
-        var cur = mEditor.getCursor();
+        var cur = editor.getCursor();
         if (!cur.isSelected()) {
             return false;
         }
         var left = cur.getLeft();
         var right = cur.getRight();
-        if (mOptions.useRegex) {
+        if (searchOptions.useRegex) {
             if (isResultValid()) {
-                var res = mLastResults;
+                var res = lastResults;
                 var packed = IntPair.pack(left, right);
                 for (int i = 0; i < res.size(); i++) {
                     var value = res.get(i);
@@ -204,18 +204,18 @@ public class EditorSearcher {
                 }
             }
         } else {
-            var selected = mEditor.getText().subSequence(left, right).toString();
-            return mOptions.ignoreCase ? selected.equalsIgnoreCase(mPattern) : selected.equals(mPattern);
+            var selected = editor.getText().subSequence(left, right).toString();
+            return searchOptions.ignoreCase ? selected.equalsIgnoreCase(currentPattern) : selected.equals(currentPattern);
         }
         return false;
     }
 
     public void replaceThis(@NonNull String replacement) {
-        if (!mEditor.isEditable()) {
+        if (!editor.isEditable()) {
             return;
         }
         if (isMatchedPositionSelected()) {
-            mEditor.commitText(replacement);
+            editor.commitText(replacement);
         } else {
             gotoNext();
         }
@@ -226,22 +226,22 @@ public class EditorSearcher {
     }
 
     public void replaceAll(@NonNull String replacement, @Nullable final Runnable whenFinished) {
-        if (!mEditor.isEditable()) {
+        if (!editor.isEditable()) {
             return;
         }
         checkState();
         if (!isResultValid()) {
-            Toast.makeText(mEditor.getContext(), R.string.editor_search_busy, Toast.LENGTH_SHORT).show();
+            Toast.makeText(editor.getContext(), R.string.editor_search_busy, Toast.LENGTH_SHORT).show();
             return;
         }
-        var context = mEditor.getContext();
+        var context = editor.getContext();
         final var dialog = ProgressDialog.show(context, context.getString(R.string.replaceAll), context.getString(R.string.editor_search_replacing), true, false);
-        final var res = mLastResults;
+        final var res = lastResults;
         new Thread(() -> {
             try {
-                var sb = mEditor.getText().toStringBuilder();
+                var sb = editor.getText().toStringBuilder();
                 int newLength = replacement.length();
-                if (mOptions.useRegex) {
+                if (searchOptions.useRegex) {
                     int delta = 0;
                     for (int i = 0; i < res.size(); i++) {
                         var region = res.get(i);
@@ -254,16 +254,16 @@ public class EditorSearcher {
                 } else {
                     int fromIndex = 0;
                     int foundIndex;
-                    while ((foundIndex = TextUtils.indexOf(sb, mPattern, mOptions.ignoreCase, fromIndex)) != -1) {
-                        sb.replace(foundIndex, foundIndex + mPattern.length(), replacement);
+                    while ((foundIndex = TextUtils.indexOf(sb, currentPattern, searchOptions.ignoreCase, fromIndex)) != -1) {
+                        sb.replace(foundIndex, foundIndex + currentPattern.length(), replacement);
                         fromIndex = foundIndex + newLength;
                     }
                 }
-                mEditor.post(() -> {
-                    var pos = mEditor.getCursor().left();
+                editor.post(() -> {
+                    var pos = editor.getCursor().left();
                     //stopSearch();
-                    mEditor.getText().replace(0, 0, mEditor.getLineCount() - 1, mEditor.getText().getColumnCount(mEditor.getLineCount() - 1), sb);
-                    mEditor.setSelectionAround(pos.line, pos.column);
+                    editor.getText().replace(0, 0, editor.getLineCount() - 1, editor.getText().getColumnCount(editor.getLineCount() - 1), sb);
+                    editor.setSelectionAround(pos.line, pos.column);
                     dialog.dismiss();
 
                     if (whenFinished != null) {
@@ -271,8 +271,8 @@ public class EditorSearcher {
                     }
                 });
             } catch (Exception e) {
-                mEditor.post(() -> {
-                    Toast.makeText(mEditor.getContext(), "Replace failed:" + e, Toast.LENGTH_SHORT).show();
+                editor.post(() -> {
+                    Toast.makeText(editor.getContext(), "Replace failed:" + e, Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
                 });
             }
@@ -280,7 +280,7 @@ public class EditorSearcher {
     }
 
     protected boolean isResultValid() {
-        return mThread == null || !mThread.isAlive();
+        return currentThread == null || !currentThread.isAlive();
     }
 
     public static class SearchOptions {
@@ -310,7 +310,7 @@ public class EditorSearcher {
         }
 
         private boolean checkNotCancelled() {
-            return mThread == mLocalThread && !Thread.interrupted();
+            return currentThread == mLocalThread && !Thread.interrupted();
         }
 
         @Override
@@ -325,8 +325,8 @@ public class EditorSearcher {
                 results.add(IntPair.pack(matcher.start(), start));
             }
             if (checkNotCancelled()) {
-                mLastResults = results;
-                mEditor.postInvalidate();
+                lastResults = results;
+                editor.postInvalidate();
             }
         }
     }

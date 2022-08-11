@@ -350,7 +350,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (clazz == EditorAutoCompletion.class) {
             return (T) mCompletionWindow;
         } else if (clazz == Magnifier.class) {
-            return (T) mEventHandler.mMagnifier;
+            return (T) mEventHandler.magnifier;
         } else if (clazz == EditorTextActionWindow.class) {
             return (T) mTextActionWindow;
         } else {
@@ -373,7 +373,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (clazz == EditorAutoCompletion.class) {
             mCompletionWindow = (EditorAutoCompletion) replacement;
         } else if (clazz == Magnifier.class) {
-            mEventHandler.mMagnifier = (Magnifier) replacement;
+            mEventHandler.magnifier = (Magnifier) replacement;
         } else if (clazz == EditorTextActionWindow.class) {
             mTextActionWindow = (EditorTextActionWindow) replacement;
         } else {
@@ -1206,14 +1206,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     protected void computeMatchedPositions(int line, LongArrayList positions) {
         positions.clear();
-        if (mSearcher.mPattern == null || mSearcher.mOptions == null) {
+        if (mSearcher.currentPattern == null || mSearcher.searchOptions == null) {
             return;
         }
-        if (mSearcher.mOptions.useRegex) {
+        if (mSearcher.searchOptions.useRegex) {
             if (!mSearcher.isResultValid()) {
                 return;
             }
-            var res = mSearcher.mLastResults;
+            var res = mSearcher.lastResults;
             var lineLeft = mText.getCharIndex(line, 0);
             var lineRight = lineLeft + mText.getColumnCount(line);
             for (int i = 0; i < res.size(); i++) {
@@ -1233,9 +1233,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         ContentLine seq = mText.getLine(line);
         int index = 0;
-        var len = mSearcher.mPattern.length();
+        var len = mSearcher.currentPattern.length();
         while (index != -1) {
-            index = TextUtils.indexOf(seq, mSearcher.mPattern, mSearcher.mOptions.ignoreCase, index);
+            index = TextUtils.indexOf(seq, mSearcher.currentPattern, mSearcher.searchOptions.ignoreCase, index);
             if (index != -1) {
                 positions.add(IntPair.pack(index, index + len));
                 index += len;
@@ -3613,7 +3613,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void hideEditorWindows() {
         mCompletionWindow.cancelCompletion();
         mTextActionWindow.dismiss();
-        mEventHandler.mMagnifier.dismiss();
+        mEventHandler.magnifier.dismiss();
     }
 
     /**
@@ -3688,9 +3688,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         mRenderer.draw(canvas);
 
         // Update magnifier
-        if ((mLastCursorState != mCursorBlink.visibility || !mEventHandler.getScroller().isFinished()) && mEventHandler.mMagnifier.isShowing()) {
+        if ((mLastCursorState != mCursorBlink.visibility || !mEventHandler.getScroller().isFinished()) && mEventHandler.magnifier.isShowing()) {
             mLastCursorState = mCursorBlink.visibility;
-            post(mEventHandler.mMagnifier::updateDisplay);
+            post(mEventHandler.magnifier::updateDisplay);
         }
     }
 

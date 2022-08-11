@@ -30,7 +30,7 @@ import java.util.WeakHashMap;
 
 public class Logger {
 
-    private static Map<String, Logger> map = new WeakHashMap<>();
+    private static final Map<String, Logger> map = new WeakHashMap<>();
     private final String name;
 
     private Logger(String name) {

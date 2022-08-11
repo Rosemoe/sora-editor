@@ -26,7 +26,10 @@ package io.github.rosemoe.sora.text;
 public class UnicodeIterator {
 
     private final CharSequence text;
-    private int codePoint, start, end, limit;
+    private int codePoint;
+    private int start;
+    private int end;
+    private final int limit;
 
     public UnicodeIterator(CharSequence text) {
         this(text, 0, text.length());
@@ -59,6 +62,10 @@ public class UnicodeIterator {
                 codePoint = ch;
             }
         }
+        return codePoint;
+    }
+
+    public int getCodePoint() {
         return codePoint;
     }
 

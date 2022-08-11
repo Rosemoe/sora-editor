@@ -30,11 +30,11 @@ package io.github.rosemoe.sora.text;
  */
 public class LineNumberCalculator {
 
-    private final CharSequence mTarget;
-    private final int mLength;
-    private int mOffset;
-    private int mLine;
-    private int mColumn;
+    private final CharSequence target;
+    private final int length;
+    private int offset;
+    private int line;
+    private int column;
 
     /**
      * Create a new helper for the given text and set offset to start
@@ -42,9 +42,9 @@ public class LineNumberCalculator {
      * @param target Target text
      */
     public LineNumberCalculator(CharSequence target) {
-        mTarget = target;
-        mOffset = mLine = mColumn = 0;
-        mLength = mTarget.length();
+        this.target = target;
+        offset = line = column = 0;
+        length = this.target.length();
     }
 
     /**
@@ -54,17 +54,17 @@ public class LineNumberCalculator {
      */
     public void update(int length) {
         for (int i = 0; i < length; i++) {
-            if (mOffset + i == mLength) {
+            if (offset + i == this.length) {
                 break;
             }
-            if (mTarget.charAt(mOffset + i) == '\n') {
-                mLine++;
-                mColumn = 0;
+            if (target.charAt(offset + i) == '\n') {
+                line++;
+                column = 0;
             } else {
-                mColumn++;
+                column++;
             }
         }
-        mOffset = mOffset + length;
+        offset = offset + length;
     }
 
     /**
@@ -73,7 +73,7 @@ public class LineNumberCalculator {
      * @return line start index
      */
     public int findLineStart() {
-        return mOffset - mColumn;
+        return offset - column;
     }
 
     /**
@@ -83,12 +83,12 @@ public class LineNumberCalculator {
      */
     public int findLineEnd() {
         int i = 0;
-        for (; i + mOffset < mLength; i++) {
-            if (mTarget.charAt(mOffset + i) == '\n') {
+        for (; i + offset < length; i++) {
+            if (target.charAt(offset + i) == '\n') {
                 break;
             }
         }
-        return mOffset + i;
+        return offset + i;
     }
 
     /**
@@ -97,7 +97,7 @@ public class LineNumberCalculator {
      * @return line
      */
     public int getLine() {
-        return mLine;
+        return line;
     }
 
     /**
@@ -106,7 +106,7 @@ public class LineNumberCalculator {
      * @return column
      */
     public int getColumn() {
-        return mColumn;
+        return column;
     }
 
 }

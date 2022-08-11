@@ -41,12 +41,12 @@ public final class UndoManager implements ContentListener, Parcelable {
         @Override
         public UndoManager createFromParcel(Parcel parcel) {
             var o = new UndoManager();
-            o.mMaxStackSize = parcel.readInt();
-            o.mStackPointer = parcel.readInt();
-            o.mUndoEnabled = parcel.readInt() > 0;
+            o.maxStackSize = parcel.readInt();
+            o.stackPointer = parcel.readInt();
+            o.undoEnabled = parcel.readInt() > 0;
             var count = parcel.readInt();
             while (count > 0) {
-                o.mActionStack.add(parcel.readParcelable(UndoManager.class.getClassLoader()));
+                o.actionStack.add(parcel.readParcelable(UndoManager.class.getClassLoader()));
                 count--;
             }
             return o;
@@ -61,24 +61,24 @@ public final class UndoManager implements ContentListener, Parcelable {
      * The max time span limit for merging actions
      */
     private static long sMergeTimeLimit = 8000L;
-    private final List<ContentAction> mActionStack;
-    private boolean mUndoEnabled;
-    private int mMaxStackSize;
-    private InsertAction mInsertAction;
-    private DeleteAction mDeleteAction;
-    private boolean mReplaceMark;
-    private int mStackPointer;
-    private boolean mIgnoreModification;
+    private final List<ContentAction> actionStack;
+    private boolean undoEnabled;
+    private int maxStackSize;
+    private InsertAction insertAction;
+    private DeleteAction deleteAction;
+    private boolean replaceMark;
+    private int stackPointer;
+    private boolean ignoreModification;
     /**
      * Create an UndoManager
      */
     UndoManager() {
-        mActionStack = new ArrayList<>();
-        mReplaceMark = false;
-        mInsertAction = null;
-        mDeleteAction = null;
-        mStackPointer = 0;
-        mIgnoreModification = false;
+        actionStack = new ArrayList<>();
+        replaceMark = false;
+        insertAction = null;
+        deleteAction = null;
+        stackPointer = 0;
+        ignoreModification = false;
     }
 
     /**
@@ -104,11 +104,11 @@ public final class UndoManager implements ContentListener, Parcelable {
 
     @Override
     public void writeToParcel(Parcel parcel, int flags) {
-        parcel.writeInt(mMaxStackSize);
-        parcel.writeInt(mStackPointer);
-        parcel.writeInt(mUndoEnabled ? 1 : 0);
-        parcel.writeInt(mActionStack.size());
-        for (ContentAction contentAction : mActionStack) {
+        parcel.writeInt(maxStackSize);
+        parcel.writeInt(stackPointer);
+        parcel.writeInt(undoEnabled ? 1 : 0);
+        parcel.writeInt(actionStack.size());
+        for (ContentAction contentAction : actionStack) {
             parcel.writeParcelable(contentAction, flags);
         }
     }
@@ -117,7 +117,7 @@ public final class UndoManager implements ContentListener, Parcelable {
      * Check whether we are currently in undo/redo operations
      */
     public boolean isModifyingContent() {
-        return mIgnoreModification;
+        return ignoreModification;
     }
 
     /**
@@ -127,10 +127,10 @@ public final class UndoManager implements ContentListener, Parcelable {
      */
     public void undo(Content content) {
         if (canUndo()) {
-            mIgnoreModification = true;
-            mActionStack.get(mStackPointer - 1).undo(content);
-            mStackPointer--;
-            mIgnoreModification = false;
+            ignoreModification = true;
+            actionStack.get(stackPointer - 1).undo(content);
+            stackPointer--;
+            ignoreModification = false;
         }
     }
 
@@ -141,10 +141,10 @@ public final class UndoManager implements ContentListener, Parcelable {
      */
     public void redo(Content content) {
         if (canRedo()) {
-            mIgnoreModification = true;
-            mActionStack.get(mStackPointer).redo(content);
-            mStackPointer++;
-            mIgnoreModification = false;
+            ignoreModification = true;
+            actionStack.get(stackPointer).redo(content);
+            stackPointer++;
+            ignoreModification = false;
         }
     }
 
@@ -152,14 +152,14 @@ public final class UndoManager implements ContentListener, Parcelable {
      * Whether it can undo
      */
     public boolean canUndo() {
-        return isUndoEnabled() && (mStackPointer > 0);
+        return isUndoEnabled() && (stackPointer > 0);
     }
 
     /**
      * Whether it can redo
      */
     public boolean canRedo() {
-        return isUndoEnabled() && (mStackPointer < mActionStack.size());
+        return isUndoEnabled() && (stackPointer < actionStack.size());
     }
 
     /**
@@ -168,7 +168,7 @@ public final class UndoManager implements ContentListener, Parcelable {
      * @return Whether enabled
      */
     public boolean isUndoEnabled() {
-        return mUndoEnabled;
+        return undoEnabled;
     }
 
     /**
@@ -177,7 +177,7 @@ public final class UndoManager implements ContentListener, Parcelable {
      * @param enabled Enable or disable
      */
     public void setUndoEnabled(boolean enabled) {
-        mUndoEnabled = enabled;
+        undoEnabled = enabled;
         if (!enabled) {
             cleanStack();
         }
@@ -189,7 +189,7 @@ public final class UndoManager implements ContentListener, Parcelable {
      * @return max stack size
      */
     public int getMaxUndoStackSize() {
-        return mMaxStackSize;
+        return maxStackSize;
     }
 
     /**
@@ -202,7 +202,7 @@ public final class UndoManager implements ContentListener, Parcelable {
             throw new IllegalArgumentException(
                     "max size can not be zero or smaller.Did you want to disable undo module by calling setUndoEnabled()?");
         }
-        mMaxStackSize = maxSize;
+        maxStackSize = maxSize;
         cleanStack();
     }
 
@@ -211,13 +211,13 @@ public final class UndoManager implements ContentListener, Parcelable {
      * This is to limit stack size
      */
     private void cleanStack() {
-        if (!mUndoEnabled) {
-            mActionStack.clear();
-            mStackPointer = 0;
+        if (!undoEnabled) {
+            actionStack.clear();
+            stackPointer = 0;
         } else {
-            while (mStackPointer > 1 && mActionStack.size() > mMaxStackSize) {
-                mActionStack.remove(0);
-                mStackPointer--;
+            while (stackPointer > 1 && actionStack.size() > maxStackSize) {
+                actionStack.remove(0);
+                stackPointer--;
             }
         }
     }
@@ -227,8 +227,8 @@ public final class UndoManager implements ContentListener, Parcelable {
      * If we are not at the end(Undo action executed),remove those actions
      */
     private void cleanBeforePush() {
-        while (mStackPointer < mActionStack.size()) {
-            mActionStack.remove(mActionStack.size() - 1);
+        while (stackPointer < actionStack.size()) {
+            actionStack.remove(actionStack.size() - 1);
         }
     }
 
@@ -244,34 +244,34 @@ public final class UndoManager implements ContentListener, Parcelable {
         }
         cleanBeforePush();
         if (content.isInBatchEdit()) {
-            if (mActionStack.isEmpty()) {
+            if (actionStack.isEmpty()) {
                 MultiAction a = new MultiAction();
                 a.addAction(action);
-                mActionStack.add(a);
-                mStackPointer++;
+                actionStack.add(a);
+                stackPointer++;
             } else {
-                ContentAction a = mActionStack.get(mActionStack.size() - 1);
+                ContentAction a = actionStack.get(actionStack.size() - 1);
                 if (a instanceof MultiAction) {
                     MultiAction ac = (MultiAction) a;
                     ac.addAction(action);
                 } else {
                     MultiAction ac = new MultiAction();
                     ac.addAction(action);
-                    mActionStack.add(ac);
-                    mStackPointer++;
+                    actionStack.add(ac);
+                    stackPointer++;
                 }
             }
         } else {
-            if (mActionStack.isEmpty()) {
-                mActionStack.add(action);
-                mStackPointer++;
+            if (actionStack.isEmpty()) {
+                actionStack.add(action);
+                stackPointer++;
             } else {
-                ContentAction last = mActionStack.get(mActionStack.size() - 1);
+                ContentAction last = actionStack.get(actionStack.size() - 1);
                 if (last.canMerge(action)) {
                     last.merge(action);
                 } else {
-                    mActionStack.add(action);
-                    mStackPointer++;
+                    actionStack.add(action);
+                    stackPointer++;
                 }
             }
         }
@@ -280,49 +280,49 @@ public final class UndoManager implements ContentListener, Parcelable {
 
     @Override
     public void beforeReplace(Content content) {
-        if (mIgnoreModification) {
+        if (ignoreModification) {
             return;
         }
-        mReplaceMark = true;
+        replaceMark = true;
     }
 
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn,
                             CharSequence insertedContent) {
-        if (mIgnoreModification) {
+        if (ignoreModification) {
             return;
         }
-        mInsertAction = new InsertAction();
-        mInsertAction.startLine = startLine;
-        mInsertAction.startColumn = startColumn;
-        mInsertAction.endLine = endLine;
-        mInsertAction.endColumn = endColumn;
-        mInsertAction.text = insertedContent;
-        if (mReplaceMark) {
+        insertAction = new InsertAction();
+        insertAction.startLine = startLine;
+        insertAction.startColumn = startColumn;
+        insertAction.endLine = endLine;
+        insertAction.endColumn = endColumn;
+        insertAction.text = insertedContent;
+        if (replaceMark) {
             ReplaceAction rep = new ReplaceAction();
-            rep._delete = mDeleteAction;
-            rep._insert = mInsertAction;
+            rep._delete = deleteAction;
+            rep._insert = insertAction;
             pushAction(content, rep);
         } else {
-            pushAction(content, mInsertAction);
+            pushAction(content, insertAction);
         }
-        mReplaceMark = false;
+        replaceMark = false;
     }
 
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn,
                             CharSequence deletedContent) {
-        if (mIgnoreModification) {
+        if (ignoreModification) {
             return;
         }
-        mDeleteAction = new DeleteAction();
-        mDeleteAction.endColumn = endColumn;
-        mDeleteAction.startColumn = startColumn;
-        mDeleteAction.endLine = endLine;
-        mDeleteAction.startLine = startLine;
-        mDeleteAction.text = deletedContent;
-        if (!mReplaceMark) {
-            pushAction(content, mDeleteAction);
+        deleteAction = new DeleteAction();
+        deleteAction.endColumn = endColumn;
+        deleteAction.startColumn = startColumn;
+        deleteAction.endLine = endLine;
+        deleteAction.startLine = startLine;
+        deleteAction.text = deletedContent;
+        if (!replaceMark) {
+            pushAction(content, deleteAction);
         }
     }
 
