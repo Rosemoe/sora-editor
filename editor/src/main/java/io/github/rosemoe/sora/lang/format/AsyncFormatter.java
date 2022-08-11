@@ -128,15 +128,25 @@ public abstract class AsyncFormatter implements Formatter {
 
     private void sendUpdate(Content text, TextRange cursorRange) {
         FormatResultReceiver r;
-        if (receiver != null && (r = receiver.get()) != null) {
+        if (!Thread.currentThread().isInterrupted() && receiver != null && (r = receiver.get()) != null) {
             r.onFormatSucceed(text, cursorRange);
         }
     }
 
     private void sendFailure(Throwable throwable) {
         FormatResultReceiver r;
-        if (receiver != null && (r = receiver.get()) != null) {
+        if (!Thread.currentThread().isInterrupted() && receiver != null && (r = receiver.get()) != null) {
             r.onFormatFail(throwable);
+        }
+    }
+
+    @Override
+    public void cancel() {
+        if (thread != null) {
+            final var t = thread;
+            if (t.isAlive()) {
+                t.interrupt();
+            }
         }
     }
 

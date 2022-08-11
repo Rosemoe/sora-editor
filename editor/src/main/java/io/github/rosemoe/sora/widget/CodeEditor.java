@@ -839,8 +839,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         // Destroy old one
         var old = mLanguage;
         if (old != null) {
-            old.getFormatter().setReceiver(null);
-            old.getFormatter().destroy();
+            var formatter = old.getFormatter();
+            formatter.setReceiver(null);
+            formatter.destroy();
             old.getAnalyzeManager().setReceiver(null);
             old.getAnalyzeManager().destroy();
             old.destroy();
@@ -1906,10 +1907,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (isFormatting()) {
             return false;
         }
-        mLanguage.getFormatter().setReceiver(this);
+        var formatter = mLanguage.getFormatter();
+        formatter.setReceiver(this);
         var formatContent = mText.copyText(false);
         formatContent.setUndoEnabled(false);
-        mLanguage.getFormatter().format(formatContent, createCursorRange());
+        formatter.format(formatContent, createCursorRange());
         postInvalidate();
         return true;
     }
@@ -1931,10 +1933,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (isFormatting()) {
             return false;
         }
-        mLanguage.getFormatter().setReceiver(this);
+        var formatter = mLanguage.getFormatter();
+        formatter.setReceiver(this);
         var formatContent = mText.copyText(false);
         formatContent.setUndoEnabled(false);
-        mLanguage.getFormatter().formatRegion(formatContent, new TextRange(start, end), createCursorRange());
+        formatter.formatRegion(formatContent, new TextRange(start, end), createCursorRange());
         postInvalidate();
         return true;
     }
@@ -3259,6 +3262,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         if (mLanguage != null) {
             mLanguage.getAnalyzeManager().reset(new ContentReference(mText), mExtraArguments);
+            mLanguage.getFormatter().cancel();
         }
 
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_SET_NEW_TEXT, new CharPosition(), mText.getIndexer().getCharPosition(getLineCount() - 1, mText.getColumnCount(getLineCount() - 1)), mText));
