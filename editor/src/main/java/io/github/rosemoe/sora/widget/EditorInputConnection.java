@@ -250,6 +250,7 @@ class EditorInputConnection extends BaseInputConnection {
     }
 
     protected void commitTextInternal(CharSequence text, boolean applyAutoIndent) {
+        var composingStateBefore = composingText.isComposing();
         // NOTE: Text styles are ignored by editor
         // Remove composing text first if there is
         if (editor.getProps().trackComposingTextOnCommit) {
@@ -297,6 +298,9 @@ class EditorInputConnection extends BaseInputConnection {
                     editor.setSelection(charPosition.line, charPosition.column, SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
                 }
             }
+        }
+        if (composingStateBefore) {
+            endBatchEdit();
         }
     }
 
@@ -436,6 +440,7 @@ class EditorInputConnection extends BaseInputConnection {
             composingText.preSetComposing = true;
             editor.commitText(text);
             composingText.set(getCursor().getLeft() - text.length(), getCursor().getLeft());
+            beginBatchEdit();
         } else {
             // Already have composing text
             if (composingText.isComposing()) {
@@ -525,6 +530,7 @@ class EditorInputConnection extends BaseInputConnection {
             logger.w("set composing region for IME failed", e);
             return false;
         }
+        beginBatchEdit();
         return true;
     }
 
