@@ -191,7 +191,7 @@ public class Content implements CharSequence {
     public char charAt(int line, int column) {
         lock(false);
         try {
-            checkLineAndColumn(line, column, true);
+            checkLineAndColumn(line, column);
             return lines.get(line).charAt(column);
         } finally {
             unlock(false);
@@ -337,7 +337,7 @@ public class Content implements CharSequence {
     }
 
     private void insertInternal(int line, int column, CharSequence text) {
-        checkLineAndColumn(line, column, true);
+        checkLineAndColumn(line, column);
         if (text == null) {
             throw new IllegalArgumentException("text can not be null");
         }
@@ -434,8 +434,8 @@ public class Content implements CharSequence {
     private void deleteInternal(int startLine, int columnOnStartLine, int endLine, int columnOnEndLine) {
         var changedContent = new StringBuilder();
         if (startLine == endLine) {
-            checkLineAndColumn(endLine, columnOnEndLine, true);
-            checkLineAndColumn(startLine, columnOnStartLine, true);
+            checkLineAndColumn(endLine, columnOnEndLine);
+            checkLineAndColumn(startLine, columnOnStartLine);
             var curr = lines.get(startLine);
             int len = curr.length();
             if (columnOnStartLine < 0 || columnOnEndLine > len || columnOnStartLine > columnOnEndLine) {
@@ -454,8 +454,8 @@ public class Content implements CharSequence {
             curr.delete(columnOnStartLine, columnOnEndLine);
             textLength -= columnOnEndLine - columnOnStartLine;
         } else if (startLine < endLine) {
-            checkLineAndColumn(startLine, columnOnStartLine, true);
-            checkLineAndColumn(endLine, columnOnEndLine, true);
+            checkLineAndColumn(startLine, columnOnStartLine);
+            checkLineAndColumn(endLine, columnOnEndLine);
 
             //-----Notify------
             if (cursor != null)
@@ -955,17 +955,16 @@ public class Content implements CharSequence {
     /**
      * Check whether the line and column is valid
      *
-     * @param line       The line to check
-     * @param column     The column to check
-     * @param allowEqual Whether allow (column == getColumnCount(line))
+     * @param line   The line to check
+     * @param column The column to check
      */
-    protected void checkLineAndColumn(int line, int column, boolean allowEqual) {
+    protected void checkLineAndColumn(int line, int column) {
         checkLine(line);
         var text = lines.get(line);
         int len = text.length() + text.getLineSeparator().getLength();
-        if (column > len || (!allowEqual && column == len) || column < 0) {
+        if (column > len || column < 0) {
             throw new StringIndexOutOfBoundsException(
-                    "Column " + column + " out of bounds. line: " + line + " , column count ('\r' included if CRLF):" + len);
+                    "Column " + column + " out of bounds. line: " + line + " , column count (line separator included):" + len);
         }
     }
 

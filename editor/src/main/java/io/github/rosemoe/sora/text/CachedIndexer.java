@@ -363,7 +363,7 @@ public class CachedIndexer implements Indexer, ContentListener {
 
     @Override
     public void getCharPosition(int line, int column, @NonNull CharPosition dest) {
-        content.checkLineAndColumn(line, column, true);
+        content.checkLineAndColumn(line, column);
         content.lock(false);
         try {
             CharPosition pos = findNearestByLine(line);
