@@ -3464,7 +3464,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void showSoftInput() {
         if (isEditable() && isEnabled()) {
-            if (isInTouchMode()) {
+            if (isInTouchMode() && !hasFocus()) {
                 requestFocusFromTouch();
             }
             if (!hasFocus()) {
