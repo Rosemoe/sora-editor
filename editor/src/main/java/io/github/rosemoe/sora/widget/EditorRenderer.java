@@ -900,7 +900,7 @@ public class EditorRenderer {
                     var position = matchedPositions.get(i);
                     var start = IntPair.getFirst(position);
                     var end = IntPair.getSecond(position);
-                    drawRowRegionBackground(canvas, row, line, start, end, editor.getColorScheme().getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND));
+                    drawRowRegionBackground(canvas, row, line, start, end, rowInf.startColumn, rowInf.endColumn, editor.getColorScheme().getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND));
                 }
             }
 
@@ -921,8 +921,8 @@ public class EditorRenderer {
                     tmpRect.right = tmpRect.left + paintGeneral.getSpaceWidth() * 2;
                     paintGeneral.setColor(editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
                     canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintGeneral);
-                } else {
-                    drawRowRegionBackground(canvas, row, line, selectionStart, selectionEnd, editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
+                } else if (selectionStart < selectionEnd) {
+                    drawRowRegionBackground(canvas, row, line, selectionStart, selectionEnd, rowInf.startColumn, rowInf.endColumn, editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
                 }
             }
         }
@@ -1368,11 +1368,14 @@ public class EditorRenderer {
      * @param highlightEnd   Region end
      * @param color          Color of background
      */
-    protected void drawRowRegionBackground(Canvas canvas, int row, int line, int highlightStart, int highlightEnd, int color) {
-        if (highlightStart != highlightEnd) {
+    protected void drawRowRegionBackground(Canvas canvas, int row, int line, int highlightStart, int highlightEnd, int rowStart, int rowEnd, int color) {
+        highlightStart = Math.max(highlightStart, rowStart);
+        highlightEnd = Math.min(highlightEnd, rowEnd);
+        if (highlightStart < highlightEnd) {
             tmpRect.top = getRowTopForBackground(row) - editor.getOffsetY();
             tmpRect.bottom = getRowBottomForBackground(row) - editor.getOffsetY();
-            var dirs = mContent.getLineDirections(line);
+            var dirs = getLineDirections(line);
+            var lineObj = getLine(line);
             var empty = true;
             var layout = editor.getLayout();
             paintGeneral.setColor(color);
@@ -1383,11 +1386,22 @@ public class EditorRenderer {
                 if (dirs.getRunStart(i) >= highlightEnd) {
                     break;
                 }
+                var measureStart = Math.max(rowStart, dirs.getRunStart(i));
+                var measureEnd = Math.min(rowEnd, dirs.getRunEnd(i));
+                var runWidth = measureText(lineObj, line, measureStart, measureEnd - measureStart);
                 if (sharedStart >= sharedEnd) {
+                    paintingOffset += runWidth;
                     continue;
                 }
-                var left = paintingOffset + layout.getCharLayoutOffset(line, sharedStart)[1];
-                var right = paintingOffset + layout.getCharLayoutOffset(line, sharedEnd)[1];
+                var rtl = dirs.isRunRtl(i);
+                float left, right;
+                if (rtl) {
+                    left = paintingOffset + runWidth - measureText(lineObj, line, measureStart, sharedStart - measureStart);
+                    right = paintingOffset + runWidth - measureText(lineObj, line, measureStart, sharedEnd - measureStart);
+                } else {
+                    left = paintingOffset + measureText(lineObj, line, measureStart, sharedStart - measureStart);
+                    right = paintingOffset + measureText(lineObj, line, measureStart, sharedEnd - measureStart);
+                }
                 if (left > right) {
                     var tmp = left;
                     left = right;
@@ -1408,6 +1422,7 @@ public class EditorRenderer {
                         tmpRect.right = right;
                     }
                 }
+                paintingOffset += runWidth;
             }
             if (!empty) {
                 drawRowBackgroundRect(canvas, tmpRect);
