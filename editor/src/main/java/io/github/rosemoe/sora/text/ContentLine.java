@@ -60,9 +60,11 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
     }
 
     public ContentLine(ContentLine src) {
-        this(true);
-        insert(0, src);
+        this(src.length + 16);
+        length = src.length;
+        rtlAffectingCount = src.rtlAffectingCount;
         lineSeparator = src.lineSeparator;
+        System.arraycopy(value, 0, src.value, 0, length);
     }
 
     public ContentLine(int size) {
