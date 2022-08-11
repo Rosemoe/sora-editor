@@ -30,7 +30,7 @@ import java.util.Arrays;
 public class SingleCharacterWidths {
 
     public final float[] widths;
-    public final SparseArray<Float> cpWidths;
+    public final SparseArray<Float> codePointWidths;
     public final char[] buffer;
     private final float[] cache;
     private final int tabWidth;
@@ -39,7 +39,7 @@ public class SingleCharacterWidths {
         cache = new float[65536];
         buffer = new char[10];
         widths = new float[10];
-        cpWidths = new SparseArray<>();
+        codePointWidths = new SparseArray<>();
         this.tabWidth = tabWidth;
     }
 
@@ -52,7 +52,7 @@ public class SingleCharacterWidths {
      */
     public void clearCache() {
         Arrays.fill(cache, 0);
-        cpWidths.clear();
+        codePointWidths.clear();
     }
 
     /**
@@ -80,11 +80,11 @@ public class SingleCharacterWidths {
         if (cp <= 65535) {
             return measureChar((char)cp, p);
         }
-        var width = cpWidths.get(cp);
+        var width = codePointWidths.get(cp);
         if (width == null) {
             var count = Character.toChars(cp, buffer, 0);
             width = p.measureText(buffer, 0, count);
-            cpWidths.put(cp, width);
+            codePointWidths.put(cp, width);
         }
         return width;
     }

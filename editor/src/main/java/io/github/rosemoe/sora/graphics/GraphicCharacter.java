@@ -36,7 +36,8 @@ public class GraphicCharacter {
     }
 
     public static boolean isASCIICombiningSymbol(int codePoint) {
-        return  codePoint == '.' || codePoint == '/' || codePoint == '!' || codePoint == '=';/*!(codePoint >= '0' && codePoint <= '9')
+        return  codePoint == '.' || codePoint == '/' || codePoint == '!' || codePoint == '=' ||
+                codePoint == '<' || codePoint == '>' || codePoint == '-';/*!(codePoint >= '0' && codePoint <= '9')
                 && !(codePoint >= 'a' && codePoint <= 'z')
                 && !(codePoint >= 'A' && codePoint <= 'Z');*/
     }
