@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.Objects;
 
 import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
@@ -91,10 +92,7 @@ public class TextMateLanguage extends EmptyLanguage {
     @NonNull
     @Override
     public AnalyzeManager getAnalyzeManager() {
-        if (textMateAnalyzer != null) {
-            return textMateAnalyzer;
-        }
-        return EmptyAnalyzeManager.INSTANCE;
+        return Objects.requireNonNullElse(textMateAnalyzer, EmptyAnalyzeManager.INSTANCE);
     }
 
     @Override
@@ -138,5 +136,9 @@ public class TextMateLanguage extends EmptyLanguage {
 
     public IdentifierAutoComplete getAutoCompleter() {
         return autoComplete;
+    }
+
+    public void setCompleterKeywords(String[] keywords) {
+        autoComplete.setKeywords(keywords, false);
     }
 }
