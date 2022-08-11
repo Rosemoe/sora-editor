@@ -75,7 +75,7 @@ public final class CharPosition {
      *
      * @return self
      */
-    public CharPosition zero() {
+    public CharPosition toBOF() {
         index = line = column = 0;
         return this;
     }

@@ -45,8 +45,8 @@ public final class Cursor {
     public Cursor(Content content) {
         mContent = content;
         mIndexer = new CachedIndexer(content);
-        mLeft = new CharPosition().zero();
-        mRight = new CharPosition().zero();
+        mLeft = new CharPosition().toBOF();
+        mRight = new CharPosition().toBOF();
     }
 
     /**

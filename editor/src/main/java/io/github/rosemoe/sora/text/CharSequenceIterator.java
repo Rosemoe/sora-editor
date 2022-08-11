@@ -34,11 +34,11 @@ import java.text.CharacterIterator;
  */
 public class CharSequenceIterator implements CharacterIterator {
 
-    private final CharSequence s;
+    private final CharSequence src;
     private int index;
 
     public CharSequenceIterator(CharSequence source) {
-        s = source;
+        src = source;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class CharSequenceIterator implements CharacterIterator {
 
     @Override
     public char last() {
-        index = s.length() - 1;
+        index = src.length() - 1;
         if (index < 0) {
             index = 0;
         }
@@ -58,7 +58,7 @@ public class CharSequenceIterator implements CharacterIterator {
 
     @Override
     public char current() {
-        return index == getEndIndex() ? CharacterIterator.DONE : s.charAt(index);
+        return index == getEndIndex() ? CharacterIterator.DONE : src.charAt(index);
     }
 
     @Override
@@ -89,7 +89,7 @@ public class CharSequenceIterator implements CharacterIterator {
 
     @Override
     public int getEndIndex() {
-        return s.length();
+        return src.length();
     }
 
     @Override
@@ -100,7 +100,7 @@ public class CharSequenceIterator implements CharacterIterator {
     @NonNull
     @Override
     public Object clone() {
-        var another = new CharSequenceIterator(s);
+        var another = new CharSequenceIterator(src);
         another.index = index;
         return another;
     }

@@ -39,13 +39,13 @@ import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
  */
 public class CachedIndexer implements Indexer, ContentListener {
 
-    private final Content mContent;
-    private final CharPosition mZeroPoint = new CharPosition().zero();
-    private final CharPosition mEndPoint = new CharPosition();
-    private final List<CharPosition> mCachePositions = new ArrayList<>();
-    private final int mSwitchLine = 50;
-    private int mSwitchIndex = 50;
-    private int mMaxCacheSize = 50;
+    private final Content content;
+    private final CharPosition startPosition = new CharPosition().toBOF();
+    private final CharPosition endPosition = new CharPosition();
+    private final List<CharPosition> cachedPositions = new ArrayList<>();
+    private final int thresholdLine = 50;
+    private int thresholdIndex = 50;
+    private int maxCacheCount = 50;
 
     /**
      * Create a new CachedIndexer for the given content
@@ -53,7 +53,7 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param content Content to manage
      */
     CachedIndexer(Content content) {
-        mContent = content;
+        this.content = content;
         updateEnd();
     }
 
@@ -63,17 +63,17 @@ public class CachedIndexer implements Indexer, ContentListener {
      *
      * @param s Switch
      */
-    public void setSwitchIndex(int s) {
-        mSwitchIndex = s;
+    public void setThresholdIndex(int s) {
+        thresholdIndex = s;
     }
 
     /**
      * Update the end position
      */
     private void updateEnd() {
-        mEndPoint.index = mContent.length();
-        mEndPoint.line = mContent.getLineCount() - 1;
-        mEndPoint.column = mContent.getColumnCount(mEndPoint.line);
+        endPosition.index = content.length();
+        endPosition.line = content.getLineCount() - 1;
+        endPosition.column = content.getColumnCount(endPosition.line);
     }
 
     /**
@@ -84,25 +84,25 @@ public class CachedIndexer implements Indexer, ContentListener {
      */
     private synchronized CharPosition findNearestByIndex(int index) {
         int min = index, dis = index;
-        CharPosition nearestCharPosition = mZeroPoint;
+        CharPosition nearestCharPosition = startPosition;
         int targetIndex = 0;
-        for (int i = 0; i < mCachePositions.size(); i++) {
-            CharPosition pos = mCachePositions.get(i);
+        for (int i = 0; i < cachedPositions.size(); i++) {
+            CharPosition pos = cachedPositions.get(i);
             dis = Math.abs(pos.index - index);
             if (dis < min) {
                 min = dis;
                 nearestCharPosition = pos;
                 targetIndex = i;
             }
-            if (dis <= mSwitchIndex) {
+            if (dis <= thresholdIndex) {
                 break;
             }
         }
-        if (Math.abs(mEndPoint.index - index) < dis) {
-            nearestCharPosition = mEndPoint;
+        if (Math.abs(endPosition.index - index) < dis) {
+            nearestCharPosition = endPosition;
         }
-        if (nearestCharPosition != mZeroPoint && nearestCharPosition != mEndPoint) {
-            Collections.swap(mCachePositions, targetIndex, 0);
+        if (nearestCharPosition != startPosition && nearestCharPosition != endPosition) {
+            Collections.swap(cachedPositions, targetIndex, 0);
         }
         return nearestCharPosition;
     }
@@ -115,25 +115,25 @@ public class CachedIndexer implements Indexer, ContentListener {
      */
     private synchronized CharPosition findNearestByLine(int line) {
         int min = line, dis = line;
-        CharPosition nearestCharPosition = mZeroPoint;
+        CharPosition nearestCharPosition = startPosition;
         int targetIndex = 0;
-        for (int i = 0; i < mCachePositions.size(); i++) {
-            CharPosition pos = mCachePositions.get(i);
+        for (int i = 0; i < cachedPositions.size(); i++) {
+            CharPosition pos = cachedPositions.get(i);
             dis = Math.abs(pos.line - line);
             if (dis < min) {
                 min = dis;
                 nearestCharPosition = pos;
                 targetIndex = i;
             }
-            if (min <= mSwitchLine) {
+            if (min <= thresholdLine) {
                 break;
             }
         }
-        if (Math.abs(mEndPoint.line - line) < dis) {
-            nearestCharPosition = mEndPoint;
+        if (Math.abs(endPosition.line - line) < dis) {
+            nearestCharPosition = endPosition;
         }
-        if (nearestCharPosition != mZeroPoint && nearestCharPosition != mEndPoint) {
-            Collections.swap(mCachePositions, 0, targetIndex);
+        if (nearestCharPosition != startPosition && nearestCharPosition != endPosition) {
+            Collections.swap(cachedPositions, 0, targetIndex);
         }
         return nearestCharPosition;
     }
@@ -153,15 +153,15 @@ public class CachedIndexer implements Indexer, ContentListener {
         int workIndex = start.index;
         //Move the column to the line end
         {
-            var addition = Math.max(mContent.getLineSeparatorUnsafe(workLine).getLength() - 1, 0);
-            int column = mContent.getColumnCountUnsafe(workLine) + addition;
+            var addition = Math.max(content.getLineSeparatorUnsafe(workLine).getLength() - 1, 0);
+            int column = content.getColumnCountUnsafe(workLine) + addition;
             workIndex += column - workColumn;
             workColumn = column;
         }
         while (workIndex < index) {
             workLine++;
-            var addition = Math.max(mContent.getLineSeparatorUnsafe(workLine).getLength() - 1, 0);
-            workColumn = mContent.getColumnCountUnsafe(workLine) + addition;
+            var addition = Math.max(content.getLineSeparatorUnsafe(workLine).getLength() - 1, 0);
+            workColumn = content.getColumnCountUnsafe(workLine) + addition;
             workIndex += workColumn + 1;
         }
         if (workIndex > index) {
@@ -189,11 +189,11 @@ public class CachedIndexer implements Indexer, ContentListener {
             workIndex -= workColumn + 1;
             workLine--;
             if (workLine != -1) {
-                var addition = Math.max(mContent.getLineSeparatorUnsafe(workLine).getLength() - 1, 0);
-                workColumn = mContent.getColumnCountUnsafe(workLine) + addition;
+                var addition = Math.max(content.getLineSeparatorUnsafe(workLine).getLength() - 1, 0);
+                workColumn = content.getColumnCountUnsafe(workLine) + addition;
             } else {
                 // Reached the start of text,we have to use findIndexForward() as this method can not handle it
-                findIndexForward(mZeroPoint, index, dest);
+                findIndexForward(startPosition, index, dest);
                 return;
             }
         }
@@ -225,7 +225,7 @@ public class CachedIndexer implements Indexer, ContentListener {
             workIndex = workIndex - start.column;
         }
         while (workLine < line) {
-            workIndex += mContent.getColumnCountUnsafe(workLine) + mContent.getLineSeparatorUnsafe(workLine).getLength();
+            workIndex += content.getColumnCountUnsafe(workLine) + content.getLineSeparatorUnsafe(workLine).getLength();
             workLine++;
         }
         dest.column = 0;
@@ -252,7 +252,7 @@ public class CachedIndexer implements Indexer, ContentListener {
             workIndex = workIndex - start.column;
         }
         while (workLine > line) {
-            workIndex -= mContent.getColumnCountUnsafe(workLine - 1) + mContent.getLineSeparatorUnsafe(workLine - 1).getLength();
+            workIndex -= content.getColumnCountUnsafe(workLine - 1) + content.getLineSeparatorUnsafe(workLine - 1).getLength();
             workLine--;
         }
         dest.column = 0;
@@ -282,12 +282,12 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param pos New cache
      */
     private synchronized void push(CharPosition pos) {
-        if (mMaxCacheSize <= 0) {
+        if (maxCacheCount <= 0) {
             return;
         }
-        mCachePositions.add(pos);
-        if (mCachePositions.size() > mMaxCacheSize) {
-            mCachePositions.remove(0);
+        cachedPositions.add(pos);
+        if (cachedPositions.size() > maxCacheCount) {
+            cachedPositions.remove(0);
         }
     }
 
@@ -296,8 +296,8 @@ public class CachedIndexer implements Indexer, ContentListener {
      *
      * @return max cache size
      */
-    protected int getMaxCacheSize() {
-        return mMaxCacheSize;
+    protected int getMaxCacheCount() {
+        return maxCacheCount;
     }
 
     /**
@@ -305,8 +305,8 @@ public class CachedIndexer implements Indexer, ContentListener {
      *
      * @param maxSize max cache size
      */
-    protected void setMaxCacheSize(int maxSize) {
-        mMaxCacheSize = maxSize;
+    protected void setMaxCacheCount(int maxSize) {
+        maxCacheCount = maxSize;
     }
 
     @Override
@@ -334,8 +334,8 @@ public class CachedIndexer implements Indexer, ContentListener {
 
     @Override
     public void getCharPosition(int index, @NonNull CharPosition dest) {
-        mContent.checkIndex(index);
-        mContent.lock(false);
+        content.checkIndex(index);
+        content.lock(false);
         try {
             CharPosition pos = findNearestByIndex(index);
             if (pos.index == index) {
@@ -345,11 +345,11 @@ public class CachedIndexer implements Indexer, ContentListener {
             } else {
                 findIndexBackward(pos, index, dest);
             }
-            if (Math.abs(index - pos.index) >= mSwitchIndex) {
+            if (Math.abs(index - pos.index) >= thresholdIndex) {
                 push(dest.fromThis());
             }
         } finally {
-            mContent.unlock(false);
+            content.unlock(false);
         }
     }
 
@@ -363,8 +363,8 @@ public class CachedIndexer implements Indexer, ContentListener {
 
     @Override
     public void getCharPosition(int line, int column, @NonNull CharPosition dest) {
-        mContent.checkLineAndColumn(line, column, true);
-        mContent.lock(false);
+        content.checkLineAndColumn(line, column, true);
+        content.lock(false);
         try {
             CharPosition pos = findNearestByLine(line);
             if (pos.line == line) {
@@ -378,11 +378,11 @@ public class CachedIndexer implements Indexer, ContentListener {
             } else {
                 findLiCoBackward(pos, line, column, dest);
             }
-            if (Math.abs(pos.line - line) > mSwitchLine) {
+            if (Math.abs(pos.line - line) > thresholdLine) {
                 push(dest.fromThis());
             }
         } finally {
-            mContent.unlock(false);
+            content.unlock(false);
         }
     }
 
@@ -396,7 +396,7 @@ public class CachedIndexer implements Indexer, ContentListener {
     @UnsupportedUserUsage
     public synchronized void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn,
                             CharSequence insertedContent) {
-        for (var pos : mCachePositions) {
+        for (var pos : cachedPositions) {
             if (pos.line == startLine) {
                 if (pos.column >= startColumn) {
                     pos.index += insertedContent.length();
@@ -416,7 +416,7 @@ public class CachedIndexer implements Indexer, ContentListener {
     public synchronized void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn,
                             CharSequence deletedContent) {
         List<CharPosition> garbage = new ArrayList<>();
-        for (CharPosition pos : mCachePositions) {
+        for (CharPosition pos : cachedPositions) {
             if (pos.line == startLine) {
                 if (pos.column >= startColumn)
                     garbage.add(pos);
@@ -431,7 +431,7 @@ public class CachedIndexer implements Indexer, ContentListener {
                 }
             }
         }
-        mCachePositions.removeAll(garbage);
+        cachedPositions.removeAll(garbage);
         updateEnd();
     }
 
