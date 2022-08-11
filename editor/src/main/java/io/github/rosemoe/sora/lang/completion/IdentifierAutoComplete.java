@@ -66,8 +66,9 @@ public class IdentifierAutoComplete {
         }
         return asString(p1.label).compareTo(asString(p2.label));
     };
-    private String[] mKeywords;
-    private boolean mKeywordsAreLowCase;
+    private String[] keywords;
+    private boolean keywordsAreLowCase;
+    private Map<String, Object> keywordMap;
 
     public IdentifierAutoComplete() {
     }
@@ -82,12 +83,19 @@ public class IdentifierAutoComplete {
     }
 
     public void setKeywords(String[] keywords, boolean lowCase) {
-        mKeywords = keywords;
-        mKeywordsAreLowCase = lowCase;
+        this.keywords = keywords;
+        keywordsAreLowCase = lowCase;
+        var map = new HashMap<String, Object>();
+        if (keywords != null) {
+            for (var keyword : keywords) {
+                map.put(keyword, true);
+            }
+        }
+        keywordMap = map;
     }
 
     public String[] getKeywords() {
-        return mKeywords;
+        return keywords;
     }
 
     /**
@@ -103,18 +111,19 @@ public class IdentifierAutoComplete {
         if (prefixLength == 0) {
             return;
         }
-        final String[] keywordArray = mKeywords;
-        final boolean lowCase = mKeywordsAreLowCase;
-        String match = prefix.toLowerCase(Locale.ROOT);
+        final var keywordArray = keywords;
+        final var lowCase = keywordsAreLowCase;
+        final var keywordMap = this.keywordMap;
+        var match = prefix.toLowerCase(Locale.ROOT);
         if (keywordArray != null) {
             if (lowCase) {
-                for (String kw : keywordArray) {
+                for (var kw : keywordArray) {
                     if (kw.startsWith(match)) {
                         publisher.addItem(new SimpleCompletionItem(kw, "Keyword", prefixLength, kw));
                     }
                 }
             } else {
-                for (String kw : keywordArray) {
+                for (var kw : keywordArray) {
                     if (kw.toLowerCase(Locale.ROOT).startsWith(match)) {
                         publisher.addItem(new SimpleCompletionItem(kw, "Keyword", prefixLength, kw));
                     }
@@ -125,8 +134,9 @@ public class IdentifierAutoComplete {
             List<CompletionItem> words = new ArrayList<>();
             List<String> dest = new ArrayList<>();
             userIdentifiers.filterIdentifiers(prefix, dest);
-            for (String word : dest) {
-                publisher.addItem(new SimpleCompletionItem(word, "Identifier", prefixLength, word));
+            for (var word : dest) {
+                if (!keywordMap.containsKey(word))
+                    publisher.addItem(new SimpleCompletionItem(word, "Identifier", prefixLength, word));
             }
         }
     }
