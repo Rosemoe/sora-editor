@@ -55,10 +55,12 @@ public class WordwrapLayout extends AbstractLayout {
     private final int width;
     private List<RowRegion> rowTable;
 
-    public WordwrapLayout(CodeEditor editor, Content text, List<RowRegion> extended) {
+    public WordwrapLayout(CodeEditor editor, Content text, List<RowRegion> extended, boolean clearCache) {
         super(editor, text);
         rowTable = extended != null ? extended : new ArrayList<>();
-        rowTable.clear();
+        if (clearCache) {
+            rowTable.clear();
+        }
         width = editor.getWidth() - (int) (editor.measureTextRegionOffset() + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5.0f, editor.getResources().getDisplayMetrics()));
         breakAllLines();
     }

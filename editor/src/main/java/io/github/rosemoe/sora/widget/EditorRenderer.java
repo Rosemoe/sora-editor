@@ -127,6 +127,7 @@ public class EditorRenderer {
     protected Content mContent;
     private boolean renderingFlag;
     protected boolean basicDisplayMode;
+    protected boolean forcedRecreateLayout;
 
     public EditorRenderer(@NonNull CodeEditor editor) {
         this.editor = editor;
@@ -487,11 +488,15 @@ public class EditorRenderer {
                 cachedGutterWidth = gutterWidth;
             } else if (cachedGutterWidth != gutterWidth && !editor.getEventHandler().isScaling) {
                 cachedGutterWidth = gutterWidth;
-                editor.createLayout();
+                editor.createLayout(false);
             }
         } else {
             cachedGutterWidth = 0;
+            if (forcedRecreateLayout) {
+                editor.createLayout();
+            }
         }
+        forcedRecreateLayout = false;
 
         prepareLines(editor.getFirstVisibleLine(), editor.getLastVisibleLine());
         buildMeasureCacheForLines(editor.getFirstVisibleLine(), editor.getLastVisibleLine(), displayTimestamp, true);

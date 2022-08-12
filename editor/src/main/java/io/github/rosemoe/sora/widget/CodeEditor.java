@@ -1423,17 +1423,21 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return single * count;
     }
 
+    protected void createLayout() {
+        createLayout(true);
+    }
+
     /**
      * Create layout for text
      */
-    protected void createLayout() {
+    protected void createLayout(boolean clearWordwrapCache) {
         if (mLayout != null) {
             if (mLayout instanceof LineBreakLayout && !mWordwrap) {
                 ((LineBreakLayout) mLayout).reuse(mText);
                 return;
             }
             if (mLayout instanceof WordwrapLayout && mWordwrap) {
-                var newLayout = new WordwrapLayout(this, mText, ((WordwrapLayout) mLayout).getRowTable());
+                var newLayout = new WordwrapLayout(this, mText, ((WordwrapLayout) mLayout).getRowTable(), clearWordwrapCache);
                 mLayout.destroyLayout();
                 mLayout = newLayout;
                 return;
@@ -1442,7 +1446,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         if (mWordwrap) {
             mRenderer.setCachedLineNumberWidth((int) measureLineNumber());
-            mLayout = new WordwrapLayout(this, mText, null);
+            mLayout = new WordwrapLayout(this, mText, null, false);
         } else {
             mLayout = new LineBreakLayout(this, mText);
         }

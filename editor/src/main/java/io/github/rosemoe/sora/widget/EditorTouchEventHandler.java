@@ -72,7 +72,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     float motionY;
     boolean glowTopOrBottom; //true for bottom
     boolean glowLeftOrRight; //true for right
-    boolean isScaling = false;
+    public boolean isScaling = false;
     float scaleMaxSize;
     float scaleMinSize;
     private float textSizeStart;
@@ -710,8 +710,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         if (textSizeStart == editor.getTextSizePx()) {
             return;
         }
+        editor.getRenderer().forcedRecreateLayout = true;
         editor.getRenderer().updateTimestamp();
-        editor.createLayout();
         editor.invalidate();
     }
 
