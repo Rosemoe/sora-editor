@@ -37,19 +37,25 @@ public class Paint extends android.graphics.Paint {
     private float spaceWidth;
     private float tabWidth;
 
-    private final SingleCharacterWidths widths;
+    private SingleCharacterWidths widths;
 
     public Paint() {
         super();
-        widths = new SingleCharacterWidths(1);
         spaceWidth = measureText(" ");
         tabWidth = measureText("\t");
+    }
+
+    private void ensureCacheObject() {
+        if (widths == null) {
+            widths = new SingleCharacterWidths(1);
+        }
     }
 
     public void onAttributeUpdate() {
         spaceWidth = measureText(" ");
         tabWidth = measureText("\t");
-        widths.clearCache();
+        if (widths != null)
+            widths.clearCache();
     }
 
     public float getSpaceWidth() {
@@ -80,6 +86,7 @@ public class Paint extends android.graphics.Paint {
     @SuppressLint("NewApi")
     public float myGetTextRunAdvances(@NonNull char[] chars, int index, int count, int contextIndex, int contextCount, boolean isRtl, @Nullable float[] advances, int advancesIndex, boolean fast) {
         if (fast) {
+            ensureCacheObject();
             var width = 0f;
             for (int i = 0; i < count; i++) {
                 char ch = chars[i + index];
@@ -129,6 +136,7 @@ public class Paint extends android.graphics.Paint {
             return Math.max(offset, start);
         }
         if (fast) {
+            ensureCacheObject();
             var width = 0f;
             for (int i = start; i < end; i++) {
                 char ch = text.value[i];
