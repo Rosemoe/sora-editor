@@ -38,6 +38,7 @@ import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
+import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
 /**
@@ -102,7 +103,7 @@ public interface Language {
      * @param content        Read-only reference of content
      * @param position       The position for auto-complete
      * @param publisher      The publisher used to update items
-     * @param extraArguments Arguments set by {@link io.github.rosemoe.sora.widget.CodeEditor#setText(CharSequence, Bundle)}
+     * @param extraArguments Arguments set by {@link CodeEditor#setText(CharSequence, Bundle)}
      * @throws io.github.rosemoe.sora.lang.completion.CompletionCancelledException This thread can be abandoned
      *                                                                             by the editor framework because the auto-completion items of
      *                                                                             this invocation are no longer needed by the user. This can either be thrown

@@ -29,11 +29,8 @@ import android.text.DynamicLayout;
 import android.text.Editable;
 import android.text.Layout;
 import android.text.Selection;
-import android.text.StaticLayout;
-import android.text.TextDirectionHeuristic;
 import android.text.TextDirectionHeuristics;
 import android.text.TextPaint;
-import android.widget.TextView;
 
 /**
  * Helper class for indirectly calling Paint#getTextRunCursor(), which is
@@ -52,6 +49,7 @@ public class TextLayoutHelper {
     private final Editable text = Editable.Factory.getInstance().newEditable("");
     private final DynamicLayout layout;
     private final static int CHAR_FACTOR = 64;
+
     private TextLayoutHelper() {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
             layout = new DynamicLayout(text, new TextPaint(), Integer.MAX_VALUE / 2,

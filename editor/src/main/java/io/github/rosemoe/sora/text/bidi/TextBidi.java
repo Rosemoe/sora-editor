@@ -51,7 +51,7 @@ public class TextBidi {
         TextUtils.getChars(text, 0, len, chars, 0);
         var bidi = new Bidi(chars, 0, null, 0, text.length(), Bidi.DIRECTION_LEFT_TO_RIGHT);
         var runs = new long[bidi.getRunCount()];
-        for (int i = 0;i < runs.length;i++) {
+        for (int i = 0; i < runs.length; i++) {
             runs[i] = IntPair.pack(bidi.getRunStart(i), bidi.getRunLevel(i));
         }
         TemporaryCharBuffer.recycle(chars);

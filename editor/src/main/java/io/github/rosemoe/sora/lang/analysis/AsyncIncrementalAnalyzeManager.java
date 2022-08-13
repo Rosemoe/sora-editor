@@ -208,7 +208,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         if (thread.getClass() != AsyncIncrementalAnalyzeManager.LooperThread.class) {
             throw new IllegalThreadStateException();
         }
-        return ((AsyncIncrementalAnalyzeManager<?,?>.LooperThread) thread).styles;
+        return ((AsyncIncrementalAnalyzeManager<?, ?>.LooperThread) thread).styles;
     }
 
     private static class LockedSpans implements Spans {

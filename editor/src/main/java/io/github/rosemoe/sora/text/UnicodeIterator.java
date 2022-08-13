@@ -53,11 +53,11 @@ public class UnicodeIterator {
         if (start >= limit) {
             codePoint = 0;
         } else {
-            end ++;
+            end++;
             var ch = text.charAt(start);
             if (Character.isHighSurrogate(ch) && end < limit) {
                 codePoint = Character.toCodePoint(ch, text.charAt(end));
-                end ++;
+                end++;
             } else {
                 codePoint = ch;
             }

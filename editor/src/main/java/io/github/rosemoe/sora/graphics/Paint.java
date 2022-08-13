@@ -23,17 +23,14 @@
  */
 package io.github.rosemoe.sora.graphics;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import android.annotation.SuppressLint;
 import android.graphics.Typeface;
 import android.os.Build;
 
-import io.github.rosemoe.sora.text.CharArrayWrapper;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import io.github.rosemoe.sora.text.ContentLine;
-import io.github.rosemoe.sora.text.UnicodeIterator;
-import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 
 public class Paint extends android.graphics.Paint {
 
@@ -84,7 +81,7 @@ public class Paint extends android.graphics.Paint {
     public float myGetTextRunAdvances(@NonNull char[] chars, int index, int count, int contextIndex, int contextCount, boolean isRtl, @Nullable float[] advances, int advancesIndex, boolean fast) {
         if (fast) {
             var width = 0f;
-            for (int i = 0;i < count;i++) {
+            for (int i = 0; i < count; i++) {
                 char ch = chars[i + index];
                 float charWidth;
                 if (Character.isHighSurrogate(ch) && i + 1 < count && Character.isLowSurrogate(chars[index + i + 1])) {
@@ -133,7 +130,7 @@ public class Paint extends android.graphics.Paint {
         }
         if (fast) {
             var width = 0f;
-            for (int i = start;i < end;i++) {
+            for (int i = start; i < end; i++) {
                 char ch = text.value[i];
                 float charWidth;
                 int j = i;

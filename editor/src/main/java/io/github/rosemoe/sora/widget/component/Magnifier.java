@@ -49,6 +49,7 @@ import java.util.Objects;
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.EditorRenderer;
+import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
 
 /**
  * Magnifier specially designed for CodeEditor
@@ -100,7 +101,7 @@ public class Magnifier implements EditorBuiltinComponent {
     /**
      * Set parent view for popup
      *
-     * @see io.github.rosemoe.sora.widget.base.EditorPopupWindow#setParentView(View)
+     * @see EditorPopupWindow#setParentView(View)
      */
     public void setParentView(@NonNull View parentView) {
         this.parentView = Objects.requireNonNull(parentView);

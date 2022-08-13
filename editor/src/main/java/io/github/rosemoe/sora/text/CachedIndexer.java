@@ -395,7 +395,7 @@ public class CachedIndexer implements Indexer, ContentListener {
     @Override
     @UnsupportedUserUsage
     public synchronized void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn,
-                            CharSequence insertedContent) {
+                                         CharSequence insertedContent) {
         for (var pos : cachedPositions) {
             if (pos.line == startLine) {
                 if (pos.column >= startColumn) {
@@ -414,7 +414,7 @@ public class CachedIndexer implements Indexer, ContentListener {
     @Override
     @UnsupportedUserUsage
     public synchronized void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn,
-                            CharSequence deletedContent) {
+                                         CharSequence deletedContent) {
         List<CharPosition> garbage = new ArrayList<>();
         for (CharPosition pos : cachedPositions) {
             if (pos.line == startLine) {

@@ -32,6 +32,7 @@ import androidx.annotation.Nullable;
 import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
+import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
  * Built-in implementation of {@link AnalyzeManager}.
@@ -112,7 +113,7 @@ public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
     }
 
     /**
-     * Get extra arguments set by {@link io.github.rosemoe.sora.widget.CodeEditor#setText(CharSequence, Bundle)}
+     * Get extra arguments set by {@link CodeEditor#setText(CharSequence, Bundle)}
      */
     public Bundle getExtraArguments() {
         return extraArguments;

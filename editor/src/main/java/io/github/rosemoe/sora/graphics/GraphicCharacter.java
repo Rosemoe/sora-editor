@@ -36,7 +36,7 @@ public class GraphicCharacter {
     }
 
     public static boolean isASCIICombiningSymbol(int codePoint) {
-        return  codePoint == '.' || codePoint == '/' || codePoint == '!' || codePoint == '=' ||
+        return codePoint == '.' || codePoint == '/' || codePoint == '!' || codePoint == '=' ||
                 codePoint == '<' || codePoint == '>' || codePoint == '-';/*!(codePoint >= '0' && codePoint <= '9')
                 && !(codePoint >= 'a' && codePoint <= 'z')
                 && !(codePoint >= 'A' && codePoint <= 'Z');*/
@@ -47,5 +47,5 @@ public class GraphicCharacter {
                 || MyCharacter.isZWJ(codePoint) || MyCharacter.isZWNJ(codePoint) ||
                 MyCharacter.couldBeEmoji(codePoint);
     }
-    
+
 }

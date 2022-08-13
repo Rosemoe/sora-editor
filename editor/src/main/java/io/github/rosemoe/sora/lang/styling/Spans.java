@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lang.styling;
 import java.util.List;
 
 import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
  * Spans object saves spans in editor.
@@ -109,7 +110,7 @@ public interface Spans {
          * but the content of it can be copied.
          * <p>
          * If the line index exceeds the current capacity, implementation of this should expand the capacity
-         * without throwing an exception. Set spans of the filled lines to color {@link io.github.rosemoe.sora.widget.schemes.EditorColorScheme#TEXT_NORMAL}
+         * without throwing an exception. Set spans of the filled lines to color {@link EditorColorScheme#TEXT_NORMAL}
          * or extends previous styles.
          */
         void setSpansOnLine(int line, List<Span> spans);

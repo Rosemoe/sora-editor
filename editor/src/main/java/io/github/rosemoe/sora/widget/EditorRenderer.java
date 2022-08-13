@@ -23,15 +23,9 @@
  */
 package io.github.rosemoe.sora.widget;
 
-import static io.github.rosemoe.sora.graphics.GraphicCharacter.*;
+import static io.github.rosemoe.sora.graphics.GraphicCharacter.couldBeEmojiPart;
+import static io.github.rosemoe.sora.graphics.GraphicCharacter.isCombiningCharacter;
 import static io.github.rosemoe.sora.util.Numbers.stringSize;
-import static io.github.rosemoe.sora.widget.CodeEditor.FLAG_DRAW_LINE_SEPARATOR;
-import static io.github.rosemoe.sora.widget.CodeEditor.FLAG_DRAW_TAB_SAME_AS_SPACE;
-import static io.github.rosemoe.sora.widget.CodeEditor.FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE;
-import static io.github.rosemoe.sora.widget.CodeEditor.FLAG_DRAW_WHITESPACE_INNER;
-import static io.github.rosemoe.sora.widget.CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION;
-import static io.github.rosemoe.sora.widget.CodeEditor.FLAG_DRAW_WHITESPACE_LEADING;
-import static io.github.rosemoe.sora.widget.CodeEditor.FLAG_DRAW_WHITESPACE_TRAILING;
 
 import android.annotation.SuppressLint;
 import android.graphics.Canvas;
@@ -444,7 +438,7 @@ public class EditorRenderer {
 
         int nonPrintableFlags = editor.getNonPrintablePaintingFlags();
         // Draw hard wrap
-        if ((nonPrintableFlags & FLAG_DRAW_LINE_SEPARATOR) != 0) {
+        if ((nonPrintableFlags & CodeEditor.FLAG_DRAW_LINE_SEPARATOR) != 0) {
             drawMiniGraph(canvas, paintingOffset, -1, "↵");
         }
         renderNode.endRecording();
@@ -1102,7 +1096,7 @@ public class EditorRenderer {
                 }
 
                 // Draw hard wrap
-                if (lastVisibleChar == columnCount && (nonPrintableFlags & FLAG_DRAW_LINE_SEPARATOR) != 0) {
+                if (lastVisibleChar == columnCount && (nonPrintableFlags & CodeEditor.FLAG_DRAW_LINE_SEPARATOR) != 0) {
                     drawMiniGraph(canvas, paintingOffset, row, "↵");
                 }
             } else {
@@ -1114,17 +1108,17 @@ public class EditorRenderer {
             paintingOffset = backupOffset;
 
             // Draw non-printable characters
-            if (circleRadius != 0f && (leadingWhitespaceEnd != columnCount || (nonPrintableFlags & FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE) != 0)) {
-                if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_LEADING) != 0) {
+            if (circleRadius != 0f && (leadingWhitespaceEnd != columnCount || (nonPrintableFlags & CodeEditor.FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE) != 0)) {
+                if ((nonPrintableFlags & CodeEditor.FLAG_DRAW_WHITESPACE_LEADING) != 0) {
                     drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, 0, leadingWhitespaceEnd);
                 }
-                if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_INNER) != 0) {
+                if ((nonPrintableFlags & CodeEditor.FLAG_DRAW_WHITESPACE_INNER) != 0) {
                     drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, leadingWhitespaceEnd, trailingWhitespaceStart);
                 }
-                if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_TRAILING) != 0) {
+                if ((nonPrintableFlags & CodeEditor.FLAG_DRAW_WHITESPACE_TRAILING) != 0) {
                     drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, trailingWhitespaceStart, columnCount);
                 }
-                if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_IN_SELECTION) != 0 && cursor.isSelected() && line >= cursor.getLeftLine() && line <= cursor.getRightLine()) {
+                if ((nonPrintableFlags & CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION) != 0 && cursor.isSelected() && line >= cursor.getLeftLine() && line <= cursor.getRightLine()) {
                     int selectionStart = 0;
                     int selectionEnd = columnCount;
                     if (line == cursor.getLeftLine()) {
@@ -1136,13 +1130,13 @@ public class EditorRenderer {
                     if ((nonPrintableFlags & 0b1110) == 0) {
                         drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, selectionStart, selectionEnd);
                     } else {
-                        if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_LEADING) == 0) {
+                        if ((nonPrintableFlags & CodeEditor.FLAG_DRAW_WHITESPACE_LEADING) == 0) {
                             drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, selectionStart, Math.min(leadingWhitespaceEnd, selectionEnd));
                         }
-                        if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_INNER) == 0) {
+                        if ((nonPrintableFlags & CodeEditor.FLAG_DRAW_WHITESPACE_INNER) == 0) {
                             drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, Math.max(leadingWhitespaceEnd, selectionStart), Math.min(trailingWhitespaceStart, selectionEnd));
                         }
-                        if ((nonPrintableFlags & FLAG_DRAW_WHITESPACE_TRAILING) == 0) {
+                        if ((nonPrintableFlags & CodeEditor.FLAG_DRAW_WHITESPACE_TRAILING) == 0) {
                             drawWhitespaces(canvas, paintingOffset, line, row, firstVisibleChar, lastVisibleChar, Math.max(trailingWhitespaceStart, selectionStart), selectionEnd);
                         }
                     }
@@ -1245,7 +1239,7 @@ public class EditorRenderer {
                         // Draw
                         float centerY = editor.getRowBottom(i) - editor.getOffsetY();
                         switch (style) {
-                            case WAVY_LINE: {
+                            case DiagnosticIndicatorStyle.WAVY_LINE: {
                                 var lineWidth = 0 - startX;
                                 var waveCount = (int) Math.ceil(lineWidth / waveLength);
                                 var phi = lineWidth < 0 ? 0f : (waveLength * waveCount - lineWidth);
@@ -1268,12 +1262,12 @@ public class EditorRenderer {
                                 paintOther.setStyle(Paint.Style.FILL);
                                 break;
                             }
-                            case LINE: {
+                            case DiagnosticIndicatorStyle.LINE: {
                                 paintOther.setStrokeWidth(waveWidth);
                                 canvas.drawLine(startX, centerY, endX, centerY, paintOther);
                                 break;
                             }
-                            case DOUBLE_LINE: {
+                            case DiagnosticIndicatorStyle.DOUBLE_LINE: {
                                 paintOther.setStrokeWidth(waveWidth / 3f);
                                 canvas.drawLine(startX, centerY, endX, centerY, paintOther);
                                 canvas.drawLine(startX, centerY - waveWidth, endX, centerY - waveWidth, paintOther);
@@ -1311,7 +1305,7 @@ public class EditorRenderer {
                 if (ch == ' ') {
                     paintCount = 1;
                 } else if (ch == '\t') {
-                    if ((editor.getNonPrintablePaintingFlags() & FLAG_DRAW_TAB_SAME_AS_SPACE) != 0) {
+                    if ((editor.getNonPrintablePaintingFlags() & CodeEditor.FLAG_DRAW_TAB_SAME_AS_SPACE) != 0) {
                         paintCount = editor.getTabWidth();
                     } else {
                         paintLine = true;

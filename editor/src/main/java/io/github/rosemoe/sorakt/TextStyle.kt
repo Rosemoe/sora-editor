@@ -31,7 +31,9 @@ import io.github.rosemoe.sora.lang.styling.TextStyle
  *
  * @see io.github.rosemoe.sora.lang.styling.TextStyle.makeStyle
  */
-fun textStyle(foreground: Int, background: Int = 0, bold: Boolean = false,
-              italic: Boolean = false, strikethrough: Boolean = false, noCompletion: Boolean = false) : Long {
+fun textStyle(
+    foreground: Int, background: Int = 0, bold: Boolean = false,
+    italic: Boolean = false, strikethrough: Boolean = false, noCompletion: Boolean = false
+): Long {
     return TextStyle.makeStyle(foreground, background, bold, italic, strikethrough, noCompletion)
 }

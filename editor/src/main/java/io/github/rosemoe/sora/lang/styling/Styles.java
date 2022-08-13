@@ -44,7 +44,7 @@ import io.github.rosemoe.sora.util.MutableInt;
  * Note that this does not save any information related to languages. No extra space is provided
  * for communication between analyzers and auto-completion. You should manage it by yourself.
  * <p>
- *     If you are going to extend this class, please read the source code carefully in advance
+ * If you are going to extend this class, please read the source code carefully in advance
  * </p>
  */
 @SuppressWarnings("unused")

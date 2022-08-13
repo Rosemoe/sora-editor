@@ -32,7 +32,7 @@ import io.github.rosemoe.sora.text.Content
  * @see Content.beginBatchEdit
  * @see Content.endBatchEdit
  */
-fun Content.batchEdit(block:(Content)->Unit):Content {
+fun Content.batchEdit(block: (Content) -> Unit): Content {
     this.beginBatchEdit()
     block(this)
     this.endBatchEdit()

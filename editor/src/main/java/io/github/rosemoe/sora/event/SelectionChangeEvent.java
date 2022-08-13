@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.event;
 
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.EditorSearcher;
 
 /**
  * This event happens when text is edited by the user, or the user click the view to change the
@@ -60,7 +61,7 @@ public class SelectionChangeEvent extends Event {
      */
     public final static int CAUSE_LONG_PRESS = 5;
     /**
-     * Search text by {@link io.github.rosemoe.sora.widget.EditorSearcher}
+     * Search text by {@link EditorSearcher}
      */
     public final static int CAUSE_SEARCH = 6;
     private final CharPosition left;

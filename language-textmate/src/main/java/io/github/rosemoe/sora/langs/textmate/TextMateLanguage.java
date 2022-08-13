@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.util.Objects;
 
-import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;

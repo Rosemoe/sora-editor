@@ -56,17 +56,17 @@ class EditorKeyEventHandler {
 
     private static final String TAG = "EditorKeyEventHandler";
     private final CodeEditor editor;
-    private final KeyMetaStates mKeyMetaStates;
+    private final KeyMetaStates keyMetaStates;
 
     EditorKeyEventHandler(CodeEditor editor) {
         Objects.requireNonNull(editor, "Cannot setup KeyEvent with null editor instance.");
         this.editor = editor;
-        this.mKeyMetaStates = new KeyMetaStates(editor);
+        this.keyMetaStates = new KeyMetaStates(editor);
     }
 
     /**
      * Check if the given {@link KeyEvent} is a key binding event.
-     * {@link EditorKeyEventHandler#mKeyMetaStates} must be notified about the key event before this
+     * {@link EditorKeyEventHandler#keyMetaStates} must be notified about the key event before this
      * method is called.
      *
      * @param keyCode The keycode.
@@ -74,8 +74,8 @@ class EditorKeyEventHandler {
      * @return <code>true</code> if the event is a key binding event. <code>false</code> otherwise.
      */
     private boolean isKeyBindingEvent(int keyCode, KeyEvent event) {
-        return (mKeyMetaStates.isShiftPressed()
-                || mKeyMetaStates.isAltPressed()
+        return (keyMetaStates.isShiftPressed()
+                || keyMetaStates.isAltPressed()
                 || event.isCtrlPressed())
                 && ((keyCode >= KeyEvent.KEYCODE_A && keyCode <= KeyEvent.KEYCODE_Z) || keyCode == KeyEvent.KEYCODE_ENTER);
     }
@@ -87,7 +87,7 @@ class EditorKeyEventHandler {
      */
     @NonNull
     public KeyMetaStates getKeyMetaStates() {
-        return mKeyMetaStates;
+        return keyMetaStates;
     }
 
     /**
@@ -98,7 +98,7 @@ class EditorKeyEventHandler {
      * @return <code>true</code> if the event was handled, <code>false</code> otherwise.
      */
     public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
-        mKeyMetaStates.onKeyDown(event);
+        keyMetaStates.onKeyDown(event);
         final var editor = this.editor;
         final var eventManager = editor.mEventManager;
         final var connection = editor.mConnection;
@@ -112,13 +112,13 @@ class EditorKeyEventHandler {
                         event,
                         EditorKeyEvent.Type.DOWN,
                         keyCode,
-                        editor.canHandleKeyBinding(keyCode, event.isCtrlPressed(), mKeyMetaStates.isShiftPressed(), mKeyMetaStates.isAltPressed()));
+                        editor.canHandleKeyBinding(keyCode, event.isCtrlPressed(), keyMetaStates.isShiftPressed(), keyMetaStates.isAltPressed()));
         if ((eventManager.dispatchEvent(e) & InterceptTarget.TARGET_EDITOR) != 0) {
             return e.result(false);
         }
 
-        final var isShiftPressed = mKeyMetaStates.isShiftPressed();
-        final var isAltPressed = mKeyMetaStates.isAltPressed();
+        final var isShiftPressed = keyMetaStates.isShiftPressed();
+        final var isAltPressed = keyMetaStates.isAltPressed();
         final var isCtrlPressed = event.isCtrlPressed();
 
         // Currently, KeyBindingEvent is triggered only for (Shift | Ctrl | Alt) + alphabet keys
@@ -141,7 +141,7 @@ class EditorKeyEventHandler {
                 } else if (!isShiftPressed && editor.mSelectionAnchor != null) {
                     editor.mSelectionAnchor = null;
                 }
-                mKeyMetaStates.adjust();
+                keyMetaStates.adjust();
         }
 
         switch (keyCode) {
@@ -409,7 +409,7 @@ class EditorKeyEventHandler {
      * @return <code>true</code> if the event was handled, <code>false</code> otherwise.
      */
     public boolean onKeyUp(int keyCode, @NonNull KeyEvent event) {
-        mKeyMetaStates.onKeyUp(event);
+        keyMetaStates.onKeyUp(event);
 
         final var eventManager = this.editor.mEventManager;
         final var cursor = this.editor.getCursor();
@@ -425,14 +425,14 @@ class EditorKeyEventHandler {
                             event,
                             EditorKeyEvent.Type.UP,
                             keyCode,
-                            editor.canHandleKeyBinding(keyCode, event.isCtrlPressed(), mKeyMetaStates.isShiftPressed(), mKeyMetaStates.isAltPressed()));
+                            editor.canHandleKeyBinding(keyCode, event.isCtrlPressed(), keyMetaStates.isShiftPressed(), keyMetaStates.isAltPressed()));
 
             if ((eventManager.dispatchEvent(keybindingEvent) & InterceptTarget.TARGET_EDITOR) != 0) {
                 return keybindingEvent.result(false) || e.result(false);
             }
         }
 
-        if (!mKeyMetaStates.isShiftPressed() && this.editor.mSelectionAnchor != null && !cursor.isSelected()) {
+        if (!keyMetaStates.isShiftPressed() && this.editor.mSelectionAnchor != null && !cursor.isSelected()) {
             this.editor.mSelectionAnchor = null;
             return e.result(true);
         }

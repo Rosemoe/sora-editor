@@ -35,7 +35,7 @@ import io.github.rosemoe.sora.widget.component.EditorBuiltinComponent
  *
  * @see CodeEditor.subscribeEvent
  */
-inline fun <reified T : Event> CodeEditor.subscribeEvent(receiver: EventReceiver<T>) : SubscriptionReceipt<T> {
+inline fun <reified T : Event> CodeEditor.subscribeEvent(receiver: EventReceiver<T>): SubscriptionReceipt<T> {
     return subscribeEvent(T::class.java, receiver)
 }
 
@@ -44,7 +44,7 @@ inline fun <reified T : Event> CodeEditor.subscribeEvent(receiver: EventReceiver
  *
  * @see CodeEditor.getComponent
  */
-inline fun <reified T:EditorBuiltinComponent> CodeEditor.getComponent():T {
+inline fun <reified T : EditorBuiltinComponent> CodeEditor.getComponent(): T {
     return getComponent(T::class.java)
 }
 
@@ -53,6 +53,6 @@ inline fun <reified T:EditorBuiltinComponent> CodeEditor.getComponent():T {
  *
  * @see CodeEditor.replaceComponent
  */
-inline fun <reified T:EditorBuiltinComponent> CodeEditor.replaceComponent(component:T) {
-    replaceComponent(T::class.java,component)
+inline fun <reified T : EditorBuiltinComponent> CodeEditor.replaceComponent(component: T) {
+    replaceComponent(T::class.java, component)
 }

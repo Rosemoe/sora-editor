@@ -69,6 +69,7 @@ public final class UndoManager implements ContentListener, Parcelable {
     private boolean replaceMark;
     private int stackPointer;
     private boolean ignoreModification;
+
     /**
      * Create an UndoManager
      */

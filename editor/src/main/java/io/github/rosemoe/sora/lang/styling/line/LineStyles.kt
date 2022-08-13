@@ -37,7 +37,7 @@ class LineStyles(override var line: Int) : LineAnchorStyle(line) {
      * Add a new style object. Note that style object of a given class is allowed to add once.
      * eg. You can not add two [LineBackground] objects even when they are exactly the same
      */
-    fun addStyle(style: LineAnchorStyle) : Int {
+    fun addStyle(style: LineAnchorStyle): Int {
         if (style is LineStyles) {
             throw IllegalArgumentException("Can not add LineStyles object")
         }
@@ -56,7 +56,7 @@ class LineStyles(override var line: Int) : LineAnchorStyle(line) {
     /**
      * Erase style of the given type
      */
-    fun <T : LineAnchorStyle> eraseStyle(type: Class<T>) : Int {
+    fun <T : LineAnchorStyle> eraseStyle(type: Class<T>): Int {
         val all = findAll(type)
         styles.removeAll(all)
         return all.size
@@ -72,13 +72,13 @@ class LineStyles(override var line: Int) : LineAnchorStyle(line) {
 
     fun getElementAt(index: Int) = styles[index]
 
-    fun <T : LineAnchorStyle> findOne(type: Class<T>) : T? {
-        return styles.find{ type.isInstance(it) } as T?
+    fun <T : LineAnchorStyle> findOne(type: Class<T>): T? {
+        return styles.find { type.isInstance(it) } as T?
     }
 
-    fun <T : LineAnchorStyle> findAll(type: Class<T>)  = styles.filter { type.isInstance(it) }
+    fun <T : LineAnchorStyle> findAll(type: Class<T>) = styles.filter { type.isInstance(it) }
 
-    fun typedElementCount(type: Class<Any>) : Int {
+    fun typedElementCount(type: Class<Any>): Int {
         return styles.filter { type.isInstance(it) }.size
     }
 

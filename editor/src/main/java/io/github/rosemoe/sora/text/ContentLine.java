@@ -183,7 +183,7 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
             var ch = s.charAt(i);
             value[dstOffset++] = ch;
             if (TextBidi.couldAffectRtl(ch)) {
-                rtlAffectingCount ++;
+                rtlAffectingCount++;
             }
         }
         length += len;
@@ -196,7 +196,7 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
             System.arraycopy(value, offset, value, offset + 1, length - offset);
         }
         if (TextBidi.couldAffectRtl(c)) {
-            rtlAffectingCount ++;
+            rtlAffectingCount++;
         }
         value[offset] = c;
         length += 1;
@@ -226,9 +226,9 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
             throw new StringIndexOutOfBoundsException();
         int len = end - start;
         if (len > 0) {
-            for (int i = start;i < end;i++) {
+            for (int i = start; i < end; i++) {
                 if (TextBidi.couldAffectRtl(value[i])) {
-                    rtlAffectingCount --;
+                    rtlAffectingCount--;
                 }
             }
             System.arraycopy(value, start + len, value, start, length - end);

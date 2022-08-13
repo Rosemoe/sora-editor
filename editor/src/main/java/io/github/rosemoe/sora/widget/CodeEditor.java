@@ -122,6 +122,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.style.CursorAnimator;
 import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
+import io.github.rosemoe.sora.widget.style.builtin.HandleStyleDrop;
 import io.github.rosemoe.sora.widget.style.builtin.HandleStyleSideDrop;
 import io.github.rosemoe.sora.widget.style.builtin.MoveCursorAnimator;
 
@@ -741,7 +742,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Set the style of selection handler.
      *
      * @see SelectionHandleStyle
-     * @see io.github.rosemoe.sora.widget.style.builtin.HandleStyleDrop
+     * @see HandleStyleDrop
      * @see HandleStyleSideDrop
      */
     public void setSelectionHandleStyle(@NonNull SelectionHandleStyle style) {
@@ -1869,6 +1870,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * 4. ZWJ and ZWNJ takes no effect.<br/>
      * Benefits:<br/>
      * Better performance when the text is very big, especially when you are displaying a text with long lines.
+     *
      * @see #isBasicDisplayMode()
      */
     public void setBasicDisplayMode(boolean enabled) {
@@ -2037,6 +2039,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Set line separator when new lines are created in editor (only texts from IME. texts from clipboard
      * or other strategies are not encountered). Must not be{@link LineSeparator#NONE}
+     *
      * @see #getLineSeparator()
      * @see LineSeparator
      */

@@ -78,7 +78,7 @@ public class SingleCharacterWidths {
      */
     public float measureCodePoint(int cp, Paint p) {
         if (cp <= 65535) {
-            return measureChar((char)cp, p);
+            return measureChar((char) cp, p);
         }
         var width = codePointWidths.get(cp);
         if (width == null) {

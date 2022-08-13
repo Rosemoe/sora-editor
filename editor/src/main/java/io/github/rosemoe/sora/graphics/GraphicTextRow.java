@@ -57,6 +57,7 @@ public class GraphicTextRow {
     private boolean mCache = true;
     private List<Integer> mSoftBreaks;
     private boolean mQuickMeasure;
+
     private GraphicTextRow() {
         mBuffer = new float[2];
     }
@@ -334,7 +335,7 @@ public class GraphicTextRow {
         }
         var dirs = mDirs == null ? TextBidi.getDirections(mText) : mDirs;
         float width = 0;
-        for (int i = 0;i < dirs.getRunCount();i++) {
+        for (int i = 0; i < dirs.getRunCount(); i++) {
             int start1 = Math.max(start, dirs.getRunStart(i));
             int end1 = Math.min(end, dirs.getRunEnd(i));
             if (end1 > start1) {

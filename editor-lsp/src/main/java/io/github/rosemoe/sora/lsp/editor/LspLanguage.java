@@ -31,7 +31,6 @@ import androidx.annotation.Nullable;
 import java.util.Comparator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.lang.EmptyLanguage;

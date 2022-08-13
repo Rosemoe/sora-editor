@@ -61,10 +61,14 @@ public enum LineSeparator {
     public static LineSeparator fromSeparatorString(String str) {
         Objects.requireNonNull(str, "text must not be null");
         switch (str) {
-            case "\r": return CR;
-            case "\n": return LF;
-            case "\r\n": return CRLF;
-            case "": return NONE;
+            case "\r":
+                return CR;
+            case "\n":
+                return LF;
+            case "\r\n":
+                return CRLF;
+            case "":
+                return NONE;
             default:
                 throw new IllegalArgumentException("unknown line separator type");
         }
