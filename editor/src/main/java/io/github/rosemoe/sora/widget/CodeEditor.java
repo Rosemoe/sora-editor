@@ -1716,10 +1716,21 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Make the given character position visible
      *
-     * @param line   Line of char
-     * @param column Column of char
+     * @param line   Line in text
+     * @param column Column in text
      */
     public void ensurePositionVisible(int line, int column) {
+        ensurePositionVisible(line, column, false);
+    }
+
+    /**
+     * Make the given character position visible
+     *
+     * @param line   Line in text
+     * @param column Column in text
+     * @param noAnimation true if no animation should be applied
+     */
+    public void ensurePositionVisible(int line, int column, boolean noAnimation) {
         float[] layoutOffset = mLayout.getCharLayoutOffset(line, column);
         // x offset is the left of character
         float xOffset = layoutOffset[1] + measureTextRegionOffset();
@@ -1756,14 +1767,16 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         boolean animation = System.currentTimeMillis() - mLastMakeVisible >= 100;
         mLastMakeVisible = System.currentTimeMillis();
 
-        if (animation) {
-            getScroller().forceFinished(true);
-            getScroller().startScroll(getOffsetX(), getOffsetY(), (int) (targetX - getOffsetX()), (int) (targetY - getOffsetY()));
+        var scroller = getScroller();
+        if (animation && !noAnimation) {
+            scroller.forceFinished(true);
+            scroller.startScroll(getOffsetX(), getOffsetY(), (int) (targetX - getOffsetX()), (int) (targetY - getOffsetY()));
             if (mProps.awareScrollbarWhenAdjust && Math.abs(getOffsetY() - targetY) > mDpUnit * 100) {
                 mEventHandler.notifyScrolled();
             }
         } else {
-            getScroller().startScroll(getOffsetX(), getOffsetY(), (int) (targetX - getOffsetX()), (int) (targetY - getOffsetY()), 0);
+            scroller.startScroll(getOffsetX(), getOffsetY(), (int) (targetX - getOffsetX()), (int) (targetY - getOffsetY()), 0);
+            scroller.abortAnimation();
         }
 
         dispatchEvent(new ScrollEvent(this, getOffsetX(),
