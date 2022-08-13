@@ -1239,7 +1239,7 @@ public class EditorRenderer {
                         // Draw
                         float centerY = editor.getRowBottom(i) - editor.getOffsetY();
                         switch (style) {
-                            case DiagnosticIndicatorStyle.WAVY_LINE: {
+                            case WAVY_LINE: {
                                 var lineWidth = 0 - startX;
                                 var waveCount = (int) Math.ceil(lineWidth / waveLength);
                                 var phi = lineWidth < 0 ? 0f : (waveLength * waveCount - lineWidth);
@@ -1262,12 +1262,12 @@ public class EditorRenderer {
                                 paintOther.setStyle(Paint.Style.FILL);
                                 break;
                             }
-                            case DiagnosticIndicatorStyle.LINE: {
+                            case LINE: {
                                 paintOther.setStrokeWidth(waveWidth);
                                 canvas.drawLine(startX, centerY, endX, centerY, paintOther);
                                 break;
                             }
-                            case DiagnosticIndicatorStyle.DOUBLE_LINE: {
+                            case DOUBLE_LINE: {
                                 paintOther.setStrokeWidth(waveWidth / 3f);
                                 canvas.drawLine(startX, centerY, endX, centerY, paintOther);
                                 canvas.drawLine(startX, centerY - waveWidth, endX, centerY - waveWidth, paintOther);
