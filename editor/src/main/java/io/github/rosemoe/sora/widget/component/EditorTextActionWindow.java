@@ -100,6 +100,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
                 postDisplay();
             }
         }));
+        getPopup().setAnimationStyle(R.style.text_action_popup_animation);
     }
 
     @Override
