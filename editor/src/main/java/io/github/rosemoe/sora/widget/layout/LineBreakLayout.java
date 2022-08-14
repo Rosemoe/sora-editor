@@ -155,7 +155,7 @@ public class LineBreakLayout extends AbstractLayout {
             widthMaintainer.removeRange(startLine + 1, endLine + 1);
         }
         if (startLine == endLine) {
-            widthMaintainer.set(startLine, widthMaintainer.get(startLine) - (int)measurer.measureText(deletedContent, 0, endColumn - startColumn, editor.getTextPaint()));
+            widthMaintainer.set(startLine, widthMaintainer.get(startLine) - (int) measurer.measureText(deletedContent, 0, endColumn - startColumn, editor.getTextPaint()));
         } else {
             widthMaintainer.set(startLine, measureLine(startLine));
         }

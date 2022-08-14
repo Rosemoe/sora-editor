@@ -1727,8 +1727,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Make the given character position visible
      *
-     * @param line   Line in text
-     * @param column Column in text
+     * @param line        Line in text
+     * @param column      Column in text
      * @param noAnimation true if no animation should be applied
      */
     public void ensurePositionVisible(int line, int column, boolean noAnimation) {
@@ -2274,7 +2274,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Set divider line's left and right margin
      *
-     * @param marginLeft Margin left for divider line
+     * @param marginLeft  Margin left for divider line
      * @param marginRight Margin right for divider line
      */
     public void setDividerMargin(@Px float marginLeft, @Px float marginRight) {

@@ -33,8 +33,6 @@ import java.util.List;
 import java.util.Stack;
 
 import io.github.rosemoe.sora.lang.styling.EmptyReader;
-import io.github.rosemoe.sora.text.Content;
-import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.util.ArrayList;
 
 /**
@@ -139,6 +137,7 @@ class RenderNodeHolder {
         canvas.restore();
         return node.renderNode.getWidth();
     }
+
     public void afterInsert(int startLine, int endLine) {
         cache.forEach(node -> {
             if (node.line == startLine) {
@@ -157,7 +156,7 @@ class RenderNodeHolder {
             } else if (node.line > startLine && node.line <= endLine) {
                 garbage.add(node);
                 node.renderNode.discardDisplayList();
-            } else if(node.line > endLine) {
+            } else if (node.line > endLine) {
                 node.line -= endLine - startLine;
             }
         });

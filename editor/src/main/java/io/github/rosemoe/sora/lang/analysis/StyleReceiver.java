@@ -56,9 +56,9 @@ public interface StyleReceiver {
      * Notify the receiver the given styles object is updated, and line range is given by {@code range}
      *
      * @param sourceManager Source AnalyzeManager. The receiver may ignore the request if some checks on
-     *                            the sourceManager fail
-     * @param styles The Styles object previously set by {@link #setStyles(AnalyzeManager, Styles)}
-     * @param range The line range of this update
+     *                      the sourceManager fail
+     * @param styles        The Styles object previously set by {@link #setStyles(AnalyzeManager, Styles)}
+     * @param range         The line range of this update
      */
     default void updateStyles(@NonNull AnalyzeManager sourceManager, @NonNull Styles styles, @NonNull StyleUpdateRange range) {
         setStyles(sourceManager, styles);
