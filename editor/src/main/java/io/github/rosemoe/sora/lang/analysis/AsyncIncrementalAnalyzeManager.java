@@ -102,7 +102,6 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         if (thread != null) {
             increaseRunCount();
             thread.handler.sendMessage(thread.handler.obtainMessage(MSG_MOD, new TextModification(IntPair.pack(start.line, start.column), IntPair.pack(end.line, end.column), insertedText)));
-            sendUpdate(thread.styles);
         }
     }
 
@@ -111,7 +110,6 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         if (thread != null) {
             increaseRunCount();
             thread.handler.sendMessage(thread.handler.obtainMessage(MSG_MOD, new TextModification(IntPair.pack(start.line, start.column), IntPair.pack(end.line, end.column), null)));
-            sendUpdate(thread.styles);
         }
     }
 
@@ -134,8 +132,8 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         thread = new LooperThread(() -> thread.handler.sendMessage(thread.handler.obtainMessage(MSG_INIT, text)));
         thread.setName("AsyncAnalyzer-" + nextThreadId());
         increaseRunCount();
+        sendNewStyles(null);
         thread.start();
-        sendUpdate(null);
     }
 
     @Override
@@ -185,10 +183,17 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         thread = null;
     }
 
-    private void sendUpdate(Styles styles) {
+    private void sendNewStyles(Styles styles) {
         final var r = receiver;
         if (r != null) {
             r.setStyles(this, styles);
+        }
+    }
+
+    private void sendUpdate(Styles styles, int startLine, int endLine) {
+        final var r = receiver;
+        if (r != null) {
+            r.updateStyles(this, styles, new StyleUpdateRange(startLine, endLine));
         }
     }
 
@@ -472,11 +477,6 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
             this.callback = callback;
         }
 
-        private void tryUpdate() {
-            if (!abort)
-                sendUpdate(styles);
-        }
-
         private void initialize() {
             styles = new Styles(spans = new LockedSpans());
             S state = getInitialState();
@@ -492,7 +492,8 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
             }
             styles.blocks = computeBlocks(shadowed, delegate);
             styles.setSuppressSwitch(delegate.suppressSwitch);
-            tryUpdate();
+            if (!abort)
+                sendNewStyles(styles);
         }
 
         @Override
@@ -515,10 +516,13 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                                 }
                                 break;
                             case MSG_MOD:
+                                int updateStart = 0, updateEnd = 0;
                                 if (!abort && !isInterrupted()) {
                                     var mod = (TextModification) msg.obj;
                                     int startLine = IntPair.getFirst(mod.start);
                                     int endLine = IntPair.getFirst(mod.end);
+
+                                    updateStart = startLine;
                                     if (mod.changedText == null) {
                                         shadowed.delete(IntPair.getFirst(mod.start), IntPair.getSecond(mod.start),
                                                 IntPair.getFirst(mod.end), IntPair.getSecond(mod.end));
@@ -550,6 +554,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                                             state = res.state;
                                             line++;
                                         }
+                                        updateEnd = line;
                                     } else {
                                         shadowed.insert(IntPair.getFirst(mod.start), IntPair.getSecond(mod.start), mod.changedText);
                                         S state = startLine == 0 ? getInitialState() : states.get(startLine - 1).state;
@@ -587,6 +592,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                                             }
                                             line++;
                                         }
+                                        updateEnd = line;
                                     }
                                 }
                                 // Do not update incomplete code blocks
@@ -595,7 +601,9 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                                     styles.blocks = blocks;
                                     styles.setSuppressSwitch(delegate.suppressSwitch);
                                 }
-                                tryUpdate();
+                                if (!abort) {
+                                    sendUpdate(styles, updateStart, updateEnd);
+                                }
                                 break;
                             case MSG_EXIT:
                                 looper.quit();

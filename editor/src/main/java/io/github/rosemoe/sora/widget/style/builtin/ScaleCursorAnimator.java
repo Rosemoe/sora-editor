@@ -160,7 +160,6 @@ public class ScaleCursorAnimator implements CursorAnimator, ValueAnimator.Animat
     @Override
     public void onAnimationUpdate(ValueAnimator animation) {
         editor.getHandleStyle().setScale((float) animation.getAnimatedValue());
-        editor.getRenderer().invalidateInCursor();
         editor.postInvalidateOnAnimation();
     }
 }

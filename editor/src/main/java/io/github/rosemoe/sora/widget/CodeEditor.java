@@ -85,6 +85,7 @@ import io.github.rosemoe.sora.event.SubscriptionReceipt;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
+import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
@@ -2877,7 +2878,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param makeItVisible Make the character visible
      */
     public void setSelection(int line, int column, boolean makeItVisible, int cause) {
-        renderer.invalidateInCursor();
         cursorAnimator.markStartPos();
         if (column > 0 && Character.isHighSurrogate(text.charAt(line, column - 1))) {
             column++;
@@ -2891,7 +2891,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         updateCursor();
         updateSelection();
-        renderer.invalidateInCursor();
         if (!touchHandler.hasAnyHeldHandle() && !inputConnection.composingText.isComposing() && !completionWindow.shouldRejectComposing()) {
             cursorAnimator.markEndPos();
             cursorAnimator.start();
@@ -2958,7 +2957,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param makeRightVisible Whether to make right cursor visible
      */
     public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight, int columnRight, boolean makeRightVisible, int cause) {
-        renderer.invalidateInCursor();
         int start = getText().getCharIndex(lineLeft, columnLeft);
         int end = getText().getCharIndex(lineRight, columnRight);
         if (start == end) {
@@ -2994,7 +2992,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         cursor.setLeft(lineLeft, columnLeft);
         cursor.setRight(lineRight, columnRight);
-        renderer.invalidateInCursor();
         updateCursor();
         updateSelection();
         completionWindow.hide();
@@ -3468,6 +3465,20 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             cursorPosition = findCursorBlock();
         }
         renderer.invalidateRenderNodes();
+        renderer.updateTimestamp();
+        invalidate();
+    }
+
+    @UiThread
+    public void updateStyles(@NonNull Styles styles, StyleUpdateRange range) {
+        if (textStyles != styles) {
+            setStyles(styles);
+            return;
+        }
+        if (highlightCurrentBlock) {
+            cursorPosition = findCursorBlock();
+        }
+        renderer.invalidateInRegion(range.getStartLine(), range.getEndLine());
         renderer.updateTimestamp();
         invalidate();
     }
@@ -4039,7 +4050,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         //Log.d(LOG_TAG, "Ins: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + insertedContent);
         updateCursorAnchor();
-        renderer.invalidateRenderNodes();
+        renderer.invalidateOnInsert(startLine, endLine);
         ensureSelectionVisible();
 
         editorLanguage.getAnalyzeManager().insert(start, end, insertedContent);
@@ -4092,7 +4103,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
 
         //Log.d(LOG_TAG, "Del: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + deletedContent);
-        renderer.invalidateRenderNodes();
+        renderer.invalidateOnDelete(startLine, endLine);
         if (!waitForNextChange) {
             updateCursorAnchor();
             ensureSelectionVisible();

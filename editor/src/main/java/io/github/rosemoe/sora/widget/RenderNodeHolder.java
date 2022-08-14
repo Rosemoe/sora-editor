@@ -29,6 +29,7 @@ import android.graphics.RenderNode;
 import androidx.annotation.RequiresApi;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Stack;
 
 import io.github.rosemoe.sora.lang.styling.EmptyReader;
@@ -43,7 +44,7 @@ import io.github.rosemoe.sora.util.ArrayList;
  * @author Rosemoe
  */
 @RequiresApi(29)
-class RenderNodeHolder implements ContentListener {
+class RenderNodeHolder {
 
     private final CodeEditor editor;
     private final ArrayList<TextRenderNode> cache;
@@ -79,10 +80,6 @@ class RenderNodeHolder implements ContentListener {
      * Also called when wordwrap state changes from true to false
      */
     public void invalidate() {
-        invalidateDirectly();
-    }
-
-    public void invalidateDirectly() {
         cache.forEach(node -> node.isDirty = true);
     }
 
@@ -142,20 +139,30 @@ class RenderNodeHolder implements ContentListener {
         canvas.restore();
         return node.renderNode.getWidth();
     }
-
-    @Override
-    public void beforeReplace(Content content) {
-        //Intentionally empty
+    public void afterInsert(int startLine, int endLine) {
+        cache.forEach(node -> {
+            if (node.line == startLine) {
+                node.isDirty = true;
+            } else if (node.line > startLine) {
+                node.line += endLine - startLine;
+            }
+        });
     }
 
-    @Override
-    public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
-        invalidateInRegion(startLine, Integer.MAX_VALUE);
-    }
-
-    @Override
-    public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
-        invalidateInRegion(startLine, Integer.MAX_VALUE);
+    public void afterDelete(int startLine, int endLine) {
+        List<TextRenderNode> garbage = new ArrayList<>();
+        cache.forEach(node -> {
+            if (node.line == startLine) {
+                node.isDirty = true;
+            } else if (node.line > startLine && node.line <= endLine) {
+                garbage.add(node);
+                node.renderNode.discardDisplayList();
+            } else if(node.line > endLine) {
+                node.line -= endLine - startLine;
+            }
+        });
+        cache.removeAll(garbage);
+        pool.addAll(garbage);
     }
 
     protected static class TextRenderNode {

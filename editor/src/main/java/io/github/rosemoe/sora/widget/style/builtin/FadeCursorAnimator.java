@@ -173,7 +173,6 @@ public class FadeCursorAnimator implements CursorAnimator, ValueAnimator.Animato
     @Override
     public void onAnimationUpdate(ValueAnimator animation) {
         editor.getHandleStyle().setAlpha((int) animation.getAnimatedValue());
-        editor.getRenderer().invalidateInCursor();
         editor.postInvalidateOnAnimation();
     }
 }

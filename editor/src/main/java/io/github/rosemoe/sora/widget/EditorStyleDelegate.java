@@ -33,6 +33,7 @@ import java.lang.ref.WeakReference;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver;
+import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.lang.brackets.BracketsProvider;
 import io.github.rosemoe.sora.lang.brackets.PairedBracket;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
@@ -114,6 +115,14 @@ class EditorStyleDelegate implements StyleReceiver {
         if (editor != null && sourceManager == editor.getEditorLanguage().getAnalyzeManager() && bracketsProvider != provider) {
             this.bracketsProvider = provider;
             postUpdateBracketPair();
+        }
+    }
+
+    @Override
+    public void updateStyles(@NonNull AnalyzeManager sourceManager, @NonNull Styles styles, @NonNull StyleUpdateRange range) {
+        var editor = editorRef.get();
+        if (editor != null && sourceManager == editor.getEditorLanguage().getAnalyzeManager()) {
+            runOnUiThread(() -> editor.updateStyles(styles, range));
         }
     }
 

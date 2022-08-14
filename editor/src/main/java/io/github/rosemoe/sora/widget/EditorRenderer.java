@@ -111,7 +111,7 @@ public class EditorRenderer {
     private final CodeEditor editor;
     private final List<DiagnosticRegion> collectedDiagnostics = new ArrayList<>();
     Paint.FontMetricsInt metricsText;
-    private RenderNodeHolder renderNodeHolder;
+    protected RenderNodeHolder renderNodeHolder;
     private long displayTimestamp;
     private Paint.FontMetricsInt metricsLineNumber;
     private Paint.FontMetricsInt metricsGraph;
@@ -310,6 +310,12 @@ public class EditorRenderer {
         }
     }
 
+    public void invalidateInRegion(int start, int end) {
+        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            renderNodeHolder.invalidateInRegion(start, end);
+        }
+    }
+
     /**
      * Invalidate the region in hardware-accelerated renderer
      */
@@ -321,11 +327,16 @@ public class EditorRenderer {
         }
     }
 
-    /**
-     * Invalidate the cursor region in hardware-accelerated renderer
-     */
-    public void invalidateInCursor() {
-        invalidateChanged(cursor.getLeftLine());
+    public void invalidateOnInsert(int startLine, int endLine) {
+        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            renderNodeHolder.afterInsert(startLine, endLine);
+        }
+    }
+
+    public void invalidateOnDelete(int startLine, int endLine) {
+        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            renderNodeHolder.afterDelete(startLine, endLine);
+        }
     }
 
     // draw methods
