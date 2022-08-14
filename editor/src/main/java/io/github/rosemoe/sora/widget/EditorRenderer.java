@@ -2165,7 +2165,7 @@ public class EditorRenderer {
         offset = Math.min(end, Math.max(start, offset));
         res = new float[]{offset, gtr.measureText(start, offset)};
 
-        GraphicTextRow.recycle(gtr);
+        gtr.recycle();
         return res;
     }
 
@@ -2184,7 +2184,7 @@ public class EditorRenderer {
         gtr.set(mContent, lineIndex, contextStart, end, editor.getTabWidth(), editor.defaultSpans, paint);
         gtr.disableCache();
         var res = gtr.findOffsetByAdvance(start, target);
-        GraphicTextRow.recycle(gtr);
+        gtr.recycle();
         return res;
     }
 
@@ -2211,7 +2211,7 @@ public class EditorRenderer {
                     gtr.buildMeasureCache();
                     line.styleHash = hash;
                 }
-                GraphicTextRow.recycle(gtr);
+                gtr.recycle();
                 line.timestamp = timestamp;
             }
             startLine++;
@@ -2242,7 +2242,7 @@ public class EditorRenderer {
             gtr.setSoftBreaks(((WordwrapLayout) editor.layout).getSoftBreaksForLine(line));
         }
         var res = gtr.measureText(index, index + count);
-        GraphicTextRow.recycle(gtr);
+        gtr.recycle();
         return res;
     }
 

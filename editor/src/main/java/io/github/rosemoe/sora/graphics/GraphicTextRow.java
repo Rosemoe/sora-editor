@@ -99,6 +99,10 @@ public class GraphicTextRow {
         }
     }
 
+    public void recycle() {
+        recycle(this);
+    }
+
     public void set(@NonNull Content content, int line, int start, int end, int tabWidth, @Nullable List<Span> spans, @NonNull Paint paint) {
         this.paint = paint;
         text = content.getLine(line);

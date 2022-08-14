@@ -72,7 +72,7 @@ object BidiLayoutHelper {
                 }
             }
         }
-        GraphicTextRow.recycle(gtr)
+        gtr.recycle()
         return offset
     }
 
@@ -122,13 +122,13 @@ object BidiLayoutHelper {
                 } else {
                     gtr.findOffsetByAdvance(runStart, targetOffset - offset)[0].toInt()
                 }
-                GraphicTextRow.recycle(gtr)
+                gtr.recycle()
                 return res
             } else {
                 offset += width
             }
         }
-        GraphicTextRow.recycle(gtr)
+        gtr.recycle()
         // Fallback
         val j = dirs.runCount - 1
         return if (dirs.isRunRtl(j)) {
