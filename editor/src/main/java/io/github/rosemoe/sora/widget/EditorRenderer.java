@@ -985,7 +985,10 @@ public class EditorRenderer {
             int nonPrintableFlags = editor.getNonPrintablePaintingFlags();
 
             // Draw text here
-            if (!editor.isHardwareAcceleratedDrawAllowed() || editor.getEventHandler().isScaling || !canvas.isHardwareAccelerated() || editor.isWordwrap() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || (rowInf.endColumn - rowInf.startColumn > 256 && !editor.getProps().cacheRenderNodeForLongLines) /* Save memory */) {
+            if (!editor.isHardwareAcceleratedDrawAllowed() || editor.getEventHandler().isScaling
+                    || !canvas.isHardwareAccelerated() || editor.isWordwrap()
+                    || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
+                    (rowInf.endColumn - rowInf.startColumn > 128 && !editor.getProps().cacheRenderNodeForLongLines) /* Save memory */) {
                 // Draw without hardware acceleration
                 // Get spans
                 var reader = spans == null ? new EmptyReader() : spans.read();
