@@ -30,8 +30,8 @@ import com.vanniktech.maven.publish.SonatypeHost
 import java.util.Properties
 
 plugins {
-    id("com.android.application") version "7.2.1" apply false
-    id("com.android.library") version "7.2.1" apply false
+    id("com.android.application") version "7.2.2" apply false
+    id("com.android.library") version "7.2.2" apply false
     id("org.jetbrains.kotlin.android") version Versions.kotlinVersion apply false
     id("com.vanniktech.maven.publish.base") version "0.21.0" apply false
 }
