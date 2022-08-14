@@ -29,7 +29,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageButton;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.event.EventReceiver;
@@ -49,9 +49,9 @@ import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
 public class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickListener, EventReceiver<SelectionChangeEvent>, EditorBuiltinComponent {
     private final static long DELAY = 200;
     private final CodeEditor mEditor;
-    private final Button mPasteBtn;
-    private final Button mCopyBtn;
-    private final Button mCutBtn;
+    private final ImageButton mPasteBtn;
+    private final ImageButton mCopyBtn;
+    private final ImageButton mCutBtn;
     private final View mRootView;
     private final EditorTouchEventHandler mHandler;
     private long mLastScroll;
@@ -70,9 +70,9 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         // Since popup window does provide decor view, we have to pass null to this method
         @SuppressLint("InflateParams")
         View root = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_panel, null);
-        Button selectAll = root.findViewById(R.id.panel_btn_select_all);
-        Button cut = root.findViewById(R.id.panel_btn_cut);
-        Button copy = root.findViewById(R.id.panel_btn_copy);
+        ImageButton selectAll = root.findViewById(R.id.panel_btn_select_all);
+        ImageButton cut = root.findViewById(R.id.panel_btn_cut);
+        ImageButton copy = root.findViewById(R.id.panel_btn_copy);
         mPasteBtn = root.findViewById(R.id.panel_btn_paste);
         mCopyBtn = copy;
         mCutBtn = cut;

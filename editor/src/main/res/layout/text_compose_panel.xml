@@ -43,52 +43,32 @@
 			android:orientation="horizontal"
 			android:gravity="center_vertical">
 
-			<Button
+			<ImageButton
 				android:id="@+id/panel_btn_select_all"
-				android:layout_width="55dp"
-				android:layout_height="wrap_content"
-				android:text="@android:string/selectAll"
-				android:textColor="@color/textActionNameColor"
-				android:textSize="9sp"
-				android:drawableTop="@drawable/round_select_all_20"
-				android:drawablePadding="-4dp"
-				android:paddingTop="4dp"
+				android:layout_width="45dp"
+				android:layout_height="45dp"
+				android:src="@drawable/round_select_all_20"
 				android:background="#00000000" />
 
-			<Button
+			<ImageButton
 				android:id="@+id/panel_btn_copy"
-				android:layout_width="55dp"
-				android:layout_height="wrap_content"
-				android:text="@android:string/copy"
-				android:textColor="@color/textActionNameColor"
-				android:textSize="9sp"
-				android:drawableTop="@drawable/round_content_copy_20"
-				android:drawablePadding="-4dp"
-				android:paddingTop="4dp"
+				android:layout_width="45dp"
+				android:layout_height="45dp"
+				android:src="@drawable/round_content_copy_20"
 				android:background="#00000000" />
 
-			<Button
+			<ImageButton
 				android:id="@+id/panel_btn_paste"
-				android:layout_width="55dp"
-				android:layout_height="wrap_content"
-				android:text="@android:string/paste"
-				android:textColor="@color/textActionNameColor"
-				android:textSize="9sp"
-				android:drawableTop="@drawable/round_content_paste_20"
-				android:drawablePadding="-4dp"
-				android:paddingTop="4dp"
+				android:layout_width="45dp"
+				android:layout_height="45dp"
+				android:src="@drawable/round_content_paste_20"
 				android:background="#00000000" />
 
-			<Button
+			<ImageButton
 				android:id="@+id/panel_btn_cut"
-				android:layout_width="55dp"
-				android:layout_height="wrap_content"
-				android:text="@android:string/cut"
-				android:textColor="@color/textActionNameColor"
-				android:textSize="9sp"
-				android:drawableTop="@drawable/round_content_cut_20"
-				android:drawablePadding="-4dp"
-				android:paddingTop="4dp"
+				android:layout_width="45dp"
+				android:layout_height="45dp"
+				android:src="@drawable/round_content_cut_20"
 				android:background="#00000000" />
 
 		</LinearLayout>
