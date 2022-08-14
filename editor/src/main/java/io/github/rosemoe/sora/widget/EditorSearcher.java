@@ -45,7 +45,6 @@ import io.github.rosemoe.sora.util.LongArrayList;
  *
  * @author Rosemoe
  */
-@SuppressWarnings("deprecated")
 public class EditorSearcher {
 
     private final CodeEditor editor;

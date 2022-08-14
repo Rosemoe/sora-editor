@@ -42,20 +42,20 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
  */
 public abstract class EditorCompletionAdapter extends BaseAdapter implements Adapter {
 
-    private EditorAutoCompletion mWindow;
-    private List<CompletionItem> mItems;
+    private EditorAutoCompletion window;
+    private List<CompletionItem> items;
 
     /**
      * Called by {@link EditorAutoCompletion} to attach some arguments
      */
     public void attachValues(EditorAutoCompletion window, List<CompletionItem> items) {
-        mWindow = window;
-        mItems = items;
+        this.window = window;
+        this.items = items;
     }
 
     @Override
     public CompletionItem getItem(int position) {
-        return mItems.get(position);
+        return items.get(position);
     }
 
     @Override
@@ -65,19 +65,19 @@ public abstract class EditorCompletionAdapter extends BaseAdapter implements Ada
 
     @Override
     public int getCount() {
-        return mItems == null ? 0 : mItems.size();
+        return items == null ? 0 : items.size();
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        return getView(position, convertView, parent, position == mWindow.getCurrentPosition());
+        return getView(position, convertView, parent, position == window.getCurrentPosition());
     }
 
     /**
      * Get color scheme in editor
      */
     protected EditorColorScheme getColorScheme() {
-        return mWindow.getEditor().getColorScheme();
+        return window.getEditor().getColorScheme();
     }
 
     /**
@@ -94,7 +94,7 @@ public abstract class EditorCompletionAdapter extends BaseAdapter implements Ada
      * Get context from editor
      */
     protected Context getContext() {
-        return mWindow.getContext();
+        return window.getContext();
     }
 
     /**

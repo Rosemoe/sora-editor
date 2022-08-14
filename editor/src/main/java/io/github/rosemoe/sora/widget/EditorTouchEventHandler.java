@@ -332,7 +332,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 if (holdingScrollbarVertical) {
                     float movedDis = e.getY() - thumbDownY;
                     thumbDownY = e.getY();
-                    float all = editor.mLayout.getLayoutHeight() - editor.getHeight() / 2f;
+                    float all = editor.layout.getLayoutHeight() - editor.getHeight() / 2f;
                     float dy = movedDis / (editor.getHeight() - editor.getRenderer().getVerticalScrollBarRect().height()) * all;
                     scrollBy(0, dy);
                     return true;
@@ -887,7 +887,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 }
                 int column = editor.getText().getColumnCount(line);
                 // Do not scroll too far from text region of this line
-                float maxOffset = editor.measureTextRegionOffset() + editor.mLayout.getCharLayoutOffset(line, column)[1] - editor.getWidth() * 0.85f;
+                float maxOffset = editor.measureTextRegionOffset() + editor.layout.getCharLayoutOffset(line, column)[1] - editor.getWidth() * 0.85f;
                 if (scroller.getCurrX() > maxOffset) {
                     dx = 0;
                 }

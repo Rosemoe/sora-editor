@@ -222,89 +222,87 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private final static String NUMBER_DIGITS = "0 1 2 3 4 5 6 7 8 9";
     private static final String LOG_TAG = "CodeEditor";
     private final static String COPYRIGHT = "sora-editor\nCopyright (C) Rosemoe roses2020@qq.com\nThis project is distributed under the LGPL v2.1 license";
-    final EditorKeyEventHandler mKeyEventHandler = new EditorKeyEventHandler(this);
-    protected SymbolPairMatch mLanguageSymbolPairs;
-    protected EditorTextActionWindow mTextActionWindow;
-    protected List<Span> defSpans = new ArrayList<>(2);
-    protected EditorStyleDelegate mStyleDelegate;
-    int mStartedActionMode;
-    CharPosition mSelectionAnchor;
-    EditorInputConnection mConnection;
-    EventManager mEventManager;
-    Layout mLayout;
-    private int mTabWidth;
-    private int mCursorPosition;
-    private int mDownX = 0;
-    private int mInputType;
-    private int mNonPrintableOptions;
-    private int mCompletionPosMode;
-    private long mAvailableFloatArrayRegion;
-    private float mDpUnit;
-    private float mDividerWidth;
-    private float mDividerMarginLeft;
-    private float mDividerMarginRight;
-    private float mInsertSelWidth;
-    private float mBlockLineWidth;
-    private float mVerticalScrollFactor;
-    private float mLineInfoTextSize;
-    private float mLineSpacingMultiplier = 1f;
-    private float mLineSpacingAdd = 0f;
-    private boolean mWait;
-    private boolean mScalable;
-    private boolean mEditable;
-    private boolean mWordwrap;
-    private boolean mUndoEnabled;
-    private boolean mLayoutBusy;
-    private boolean mDisplayLnPanel;
-    private boolean mLineNumberEnabled;
-    private boolean mBlockLineEnabled;
-    private boolean mForceHorizontalScrollable;
-    private boolean mHighlightCurrentBlock;
-    private boolean mHighlightCurrentLine;
-    private boolean mVerticalScrollBarEnabled;
-    private boolean mHorizontalScrollBarEnabled;
-    private boolean mCursorAnimation;
-    private boolean mPinLineNumber;
-    private boolean mFirstLineNumberAlwaysVisible;
-    private boolean mLigatureEnabled;
-    private boolean mLastCursorState;
-    private boolean mStickyTextSelection;
-    private boolean mHighlightBracketPair;
-    private SelectionHandleStyle.HandleDescriptor mLeftHandle;
-    private SelectionHandleStyle.HandleDescriptor mRightHandle;
-    private SelectionHandleStyle.HandleDescriptor mInsertHandle;
-    private ClipboardManager mClipboardManager;
-    private InputMethodManager mInputMethodManager;
-    private Cursor mCursor;
-    private Content mText;
-    private Matrix mMatrix;
-    private EditorColorScheme mColors;
-    private String mLnTip;
-    private String mFormatTip;
-    private Language mLanguage;
-    private DiagnosticIndicatorStyle mDiagnosticStyle = DiagnosticIndicatorStyle.WAVY_LINE;
-    private long mLastMakeVisible = 0;
-    private EditorAutoCompletion mCompletionWindow;
-    private EditorTouchEventHandler mEventHandler;
-    private Paint.Align mLineNumberAlign;
-    private GestureDetector mBasicDetector;
-    private ScaleGestureDetector mScaleDetector;
-    private CursorAnchorInfo.Builder mAnchorInfoBuilder;
-    private EdgeEffect mVerticalGlow;
-    private EdgeEffect mHorizontalGlow;
-    private ExtractedTextRequest mExtracting;
-    private EditorSearcher mSearcher;
-    private CursorAnimator mCursorAnimator;
-    private Paint.FontMetricsInt mLineNumberMetrics;
-    private Paint.FontMetricsInt mGraphMetrics;
-    private SelectionHandleStyle mHandleStyle;
-    private CursorBlink mCursorBlink;
-    private DirectAccessProps mProps;
-    private Bundle mExtraArguments;
-    private Styles mStyles;
-    private DiagnosticsContainer mDiagnostics;
-    private EditorRenderer mRenderer;
-    private boolean mHardwareAccAllowed;
+    protected final EditorKeyEventHandler keyEventHandler = new EditorKeyEventHandler(this);
+    protected SymbolPairMatch languageSymbolPairs;
+    protected EditorTextActionWindow textActionWindow;
+    protected List<Span> defaultSpans = new ArrayList<>(2);
+    protected EditorStyleDelegate styleDelegate;
+    int startedActionMode;
+    CharPosition selectionAnchor;
+    EditorInputConnection inputConnection;
+    EventManager eventManager;
+    Layout layout;
+    private int tabWidth;
+    private int cursorPosition;
+    private int downX = 0;
+    private int inputType;
+    private int nonPrintableOptions;
+    private int completionWndPosMode;
+    private long availableFloatArrayRegion;
+    private float dpUnit;
+    private float dividerWidth;
+    private float dividerMarginLeft;
+    private float dividerMarginRight;
+    private float insertSelectionWidth;
+    private float blockLineWidth;
+    private float verticalScrollFactor;
+    private float lineInfoTextSize;
+    private float lineSpacingMultiplier = 1f;
+    private float lineSpacingAdd = 0f;
+    private boolean waitForNextChange;
+    private boolean scalable;
+    private boolean editable;
+    private boolean wordwrap;
+    private boolean undoEnabled;
+    private boolean layoutBusy;
+    private boolean displayLnPanel;
+    private boolean lineNumberEnabled;
+    private boolean blockLineEnabled;
+    private boolean forceHorizontalScrollable;
+    private boolean highlightCurrentBlock;
+    private boolean highlightCurrentLine;
+    private boolean verticalScrollBarEnabled;
+    private boolean horizontalScrollBarEnabled;
+    private boolean cursorAnimation;
+    private boolean pinLineNumber;
+    private boolean firstLineNumberAlwaysVisible;
+    private boolean ligatureEnabled;
+    private boolean lastCursorState;
+    private boolean stickyTextSelection;
+    private boolean highlightBracketPair;
+    private SelectionHandleStyle.HandleDescriptor handleDescLeft;
+    private SelectionHandleStyle.HandleDescriptor handleDescRight;
+    private SelectionHandleStyle.HandleDescriptor handleDescInsert;
+    private ClipboardManager clipboardManager;
+    private InputMethodManager inputMethodManager;
+    private Cursor cursor;
+    private Content text;
+    private Matrix matrix;
+    private EditorColorScheme colorScheme;
+    private String lnTipPrefix;
+    private String formatTip;
+    private Language editorLanguage;
+    private DiagnosticIndicatorStyle diagnosticStyle = DiagnosticIndicatorStyle.WAVY_LINE;
+    private long lastMakeVisible = 0;
+    private EditorAutoCompletion completionWindow;
+    private EditorTouchEventHandler touchHandler;
+    private Paint.Align lineNumberAlign;
+    private GestureDetector basicDetector;
+    private ScaleGestureDetector scaleDetector;
+    private CursorAnchorInfo.Builder anchorInfoBuilder;
+    private EdgeEffect edgeEffectVertical;
+    private EdgeEffect edgeEffectHorizontal;
+    private ExtractedTextRequest extractingTextRequest;
+    private EditorSearcher editorSearcher;
+    private CursorAnimator cursorAnimator;
+    private SelectionHandleStyle handleStyle;
+    private CursorBlink cursorBlink;
+    private DirectAccessProps props;
+    private Bundle extraArguments;
+    private Styles textStyles;
+    private DiagnosticsContainer diagnostics;
+    private EditorRenderer renderer;
+    private boolean hardwareAccAllowed;
     private float scrollerFinalX;
     private float scrollerFinalY;
     private boolean verticalAbsorb;
@@ -350,11 +348,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @NonNull
     public <T extends EditorBuiltinComponent> T getComponent(@NonNull Class<T> clazz) {
         if (clazz == EditorAutoCompletion.class) {
-            return (T) mCompletionWindow;
+            return (T) completionWindow;
         } else if (clazz == Magnifier.class) {
-            return (T) mEventHandler.magnifier;
+            return (T) touchHandler.magnifier;
         } else if (clazz == EditorTextActionWindow.class) {
-            return (T) mTextActionWindow;
+            return (T) textActionWindow;
         } else {
             throw new IllegalArgumentException("Unknown component type");
         }
@@ -373,11 +371,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         var isEnabled = old.isEnabled();
         old.setEnabled(false);
         if (clazz == EditorAutoCompletion.class) {
-            mCompletionWindow = (EditorAutoCompletion) replacement;
+            completionWindow = (EditorAutoCompletion) replacement;
         } else if (clazz == Magnifier.class) {
-            mEventHandler.magnifier = (Magnifier) replacement;
+            touchHandler.magnifier = (Magnifier) replacement;
         } else if (clazz == EditorTextActionWindow.class) {
-            mTextActionWindow = (EditorTextActionWindow) replacement;
+            textActionWindow = (EditorTextActionWindow) replacement;
         } else {
             throw new IllegalArgumentException("Unknown component type");
         }
@@ -389,14 +387,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     @NonNull
     public KeyMetaStates getKeyMetaStates() {
-        return mKeyEventHandler.getKeyMetaStates();
+        return keyEventHandler.getKeyMetaStates();
     }
 
     /**
      * Cancel the next animation for {@link CodeEditor#ensurePositionVisible(int, int)}
      */
     protected void cancelAnimation() {
-        mLastMakeVisible = System.currentTimeMillis();
+        lastMakeVisible = System.currentTimeMillis();
     }
 
     /**
@@ -406,9 +404,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public float measureTextRegionOffset() {
         return isLineNumberEnabled() ?
-                measureLineNumber() + mDividerMarginLeft + mDividerMarginRight + mDividerWidth +
-                        (mRenderer.hasSideHintIcons() ? getRowHeight() : 0) :
-                mDpUnit * 5;
+                measureLineNumber() + dividerMarginLeft + dividerMarginRight + dividerWidth +
+                        (renderer.hasSideHintIcons() ? getRowHeight() : 0) :
+                dpUnit * 5;
     }
 
     /**
@@ -417,7 +415,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return Descriptor of left handle
      */
     public SelectionHandleStyle.HandleDescriptor getLeftHandleDescriptor() {
-        return mLeftHandle;
+        return handleDescLeft;
     }
 
     /**
@@ -426,7 +424,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return Descriptor of right handle
      */
     public SelectionHandleStyle.HandleDescriptor getRightHandleDescriptor() {
-        return mRightHandle;
+        return handleDescRight;
     }
 
     /**
@@ -437,7 +435,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return The x offset on view
      */
     public float getOffset(int line, int column) {
-        return mLayout.getCharLayoutOffset(line, column)[1] + measureTextRegionOffset() - getOffsetX();
+        return layout.getCharLayoutOffset(line, column)[1] + measureTextRegionOffset() - getOffsetX();
     }
 
     /**
@@ -448,7 +446,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return The x offset on view
      */
     public float getCharOffsetX(int line, int column) {
-        return mLayout.getCharLayoutOffset(line, column)[1] + measureTextRegionOffset() - getOffsetX();
+        return layout.getCharLayoutOffset(line, column)[1] + measureTextRegionOffset() - getOffsetX();
     }
 
     /**
@@ -459,7 +457,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return The y offset on view
      */
     public float getCharOffsetY(int line, int column) {
-        return mLayout.getCharLayoutOffset(line, column)[0] - getOffsetY();
+        return layout.getCharLayoutOffset(line, column)[0] - getOffsetY();
     }
 
     /**
@@ -470,68 +468,68 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private void initialize(AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         Log.v(LOG_TAG, COPYRIGHT);
 
-        mEventManager = new EventManager();
-        mRenderer = onCreateRenderer();
-        mStyleDelegate = new EditorStyleDelegate(this);
+        eventManager = new EventManager();
+        renderer = onCreateRenderer();
+        styleDelegate = new EditorStyleDelegate(this);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             var configuration = ViewConfiguration.get(getContext());
-            mVerticalScrollFactor = configuration.getScaledVerticalScrollFactor();
+            verticalScrollFactor = configuration.getScaledVerticalScrollFactor();
         } else {
             try {
                 try (var a = getContext().obtainStyledAttributes(new int[]{android.R.attr.listPreferredItemHeight})) {
-                    mVerticalScrollFactor = a.getFloat(0, 32);
+                    verticalScrollFactor = a.getFloat(0, 32);
                     a.recycle();
                 }
             } catch (Exception e) {
                 Log.e(LOG_TAG, "Failed to get scroll factor", e);
-                mVerticalScrollFactor = 32;
+                verticalScrollFactor = 32;
             }
         }
         lineSeparator = LineSeparator.LF;
-        mLnTip = getContext().getString(R.string.editor_line_number_tip_prefix);
-        mFormatTip = getContext().getString(R.string.editor_formatting);
-        mProps = new DirectAccessProps();
-        mDpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10f;
-        mDividerWidth = mDpUnit;
-        mInsertSelWidth = mDpUnit;
-        mDividerMarginLeft = mDividerMarginRight = mDpUnit * 2;
+        lnTipPrefix = getContext().getString(R.string.editor_line_number_tip_prefix);
+        formatTip = getContext().getString(R.string.editor_formatting);
+        props = new DirectAccessProps();
+        dpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10f;
+        dividerWidth = dpUnit;
+        insertSelectionWidth = dpUnit;
+        dividerMarginLeft = dividerMarginRight = dpUnit * 2;
 
-        mMatrix = new Matrix();
-        mHandleStyle = new HandleStyleSideDrop(getContext());
-        mSearcher = new EditorSearcher(this);
-        mCursorAnimator = new MoveCursorAnimator(this);
+        matrix = new Matrix();
+        handleStyle = new HandleStyleSideDrop(getContext());
+        editorSearcher = new EditorSearcher(this);
+        cursorAnimator = new MoveCursorAnimator(this);
         setCursorBlinkPeriod(DEFAULT_CURSOR_BLINK_PERIOD);
-        mAnchorInfoBuilder = new CursorAnchorInfo.Builder();
+        anchorInfoBuilder = new CursorAnchorInfo.Builder();
 
-        mStartedActionMode = ACTION_MODE_NONE;
+        startedActionMode = ACTION_MODE_NONE;
         setTextSize(DEFAULT_TEXT_SIZE);
-        setLineInfoTextSize(mRenderer.getPaint().getTextSize());
-        mColors = new EditorColorScheme(this);
-        mEventHandler = new EditorTouchEventHandler(this);
-        mBasicDetector = new GestureDetector(getContext(), mEventHandler);
-        mBasicDetector.setOnDoubleTapListener(mEventHandler);
-        mScaleDetector = new ScaleGestureDetector(getContext(), mEventHandler);
-        mInsertHandle = new SelectionHandleStyle.HandleDescriptor();
-        mLeftHandle = new SelectionHandleStyle.HandleDescriptor();
-        mRightHandle = new SelectionHandleStyle.HandleDescriptor();
-        mLineNumberAlign = Paint.Align.RIGHT;
-        mWait = false;
-        mBlockLineEnabled = true;
-        mBlockLineWidth = 1f;
-        mInputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        mClipboardManager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        setLineInfoTextSize(renderer.getPaint().getTextSize());
+        colorScheme = new EditorColorScheme(this);
+        touchHandler = new EditorTouchEventHandler(this);
+        basicDetector = new GestureDetector(getContext(), touchHandler);
+        basicDetector.setOnDoubleTapListener(touchHandler);
+        scaleDetector = new ScaleGestureDetector(getContext(), touchHandler);
+        handleDescInsert = new SelectionHandleStyle.HandleDescriptor();
+        handleDescLeft = new SelectionHandleStyle.HandleDescriptor();
+        handleDescRight = new SelectionHandleStyle.HandleDescriptor();
+        lineNumberAlign = Paint.Align.RIGHT;
+        waitForNextChange = false;
+        blockLineEnabled = true;
+        blockLineWidth = 1f;
+        inputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        clipboardManager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         setUndoEnabled(true);
-        mCursorPosition = -1;
+        cursorPosition = -1;
         setScalable(true);
         setFocusable(true);
         setFocusableInTouchMode(true);
-        mHighlightBracketPair = true;
-        mConnection = new EditorInputConnection(this);
-        mCompletionWindow = new EditorAutoCompletion(this);
-        mVerticalGlow = new EdgeEffect(getContext());
-        mHorizontalGlow = new EdgeEffect(getContext());
-        mTextActionWindow = new EditorTextActionWindow(this);
+        highlightBracketPair = true;
+        inputConnection = new EditorInputConnection(this);
+        completionWindow = new EditorAutoCompletion(this);
+        edgeEffectVertical = new EdgeEffect(getContext());
+        edgeEffectHorizontal = new EdgeEffect(getContext());
+        textActionWindow = new EditorTextActionWindow(this);
         setEditorLanguage(null);
         setText(null);
         setTabWidth(4);
@@ -558,14 +556,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
 
         // Config scale detector
-        mScaleDetector.setQuickScaleEnabled(false);
+        scaleDetector.setQuickScaleEnabled(false);
     }
 
     /**
      * @see #setCompletionWndPositionMode(int)
      */
     public int getCompletionWndPositionMode() {
-        return mCompletionPosMode;
+        return completionWndPosMode;
     }
 
     /**
@@ -576,7 +574,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #WINDOW_POS_MODE_FULL_WIDTH_ALWAYS
      */
     public void setCompletionWndPositionMode(int mode) {
-        mCompletionPosMode = mode;
+        completionWndPosMode = mode;
         updateCompletionWindowPosition();
     }
 
@@ -586,21 +584,21 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * You can update some features in editor with the instance without disturb to call methods.
      */
     public DirectAccessProps getProps() {
-        return mProps;
+        return props;
     }
 
     /**
      * @see #setFormatTip(String)
      */
     public String getFormatTip() {
-        return mFormatTip;
+        return formatTip;
     }
 
     /**
      * Set the tip text while formatting
      */
     public void setFormatTip(@NonNull String formatTip) {
-        this.mFormatTip = Objects.requireNonNull(formatTip);
+        this.formatTip = Objects.requireNonNull(formatTip);
     }
 
     /**
@@ -609,7 +607,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#isLineNumberPinned()
      */
     public void setPinLineNumber(boolean pinLineNumber) {
-        mPinLineNumber = pinLineNumber;
+        this.pinLineNumber = pinLineNumber;
         if (isLineNumberEnabled()) {
             invalidate();
         }
@@ -619,14 +617,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#setPinLineNumber(boolean)
      */
     public boolean isLineNumberPinned() {
-        return mPinLineNumber;
+        return pinLineNumber;
     }
 
     /**
      * @see CodeEditor#setFirstLineNumberAlwaysVisible(boolean)
      */
     public boolean isFirstLineNumberAlwaysVisible() {
-        return mFirstLineNumberAlwaysVisible;
+        return firstLineNumberAlwaysVisible;
     }
 
     /**
@@ -635,7 +633,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#isFirstLineNumberAlwaysVisible()
      */
     public void setFirstLineNumberAlwaysVisible(boolean enabled) {
-        mFirstLineNumberAlwaysVisible = enabled;
+        firstLineNumberAlwaysVisible = enabled;
         if (isWordwrap()) {
             invalidate();
         }
@@ -661,10 +659,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             deleteText();
             notifyIMEExternalCursorChange();
         }
-        mText.insert(cur.getRightLine(), cur.getRightColumn(), text);
+        this.text.insert(cur.getRightLine(), cur.getRightColumn(), text);
         notifyIMEExternalCursorChange();
         if (selectionOffset != text.length()) {
-            var pos = mText.getIndexer().getCharPosition(cur.getRight() - (text.length() - selectionOffset));
+            var pos = this.text.getIndexer().getCharPosition(cur.getRight() - (text.length() - selectionOffset));
             setSelection(pos.line, pos.column);
         }
     }
@@ -676,7 +674,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param adapter New adapter, maybe null
      */
     public void setAutoCompletionItemAdapter(@Nullable EditorCompletionAdapter adapter) {
-        mCompletionWindow.setAdapter(adapter);
+        completionWindow.setAdapter(adapter);
     }
 
     /**
@@ -686,26 +684,26 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param period The period time of cursor blinking
      */
     public void setCursorBlinkPeriod(int period) {
-        if (mCursorBlink == null) {
-            mCursorBlink = new CursorBlink(this, period);
+        if (cursorBlink == null) {
+            cursorBlink = new CursorBlink(this, period);
         } else {
-            int before = mCursorBlink.period;
-            mCursorBlink.setPeriod(period);
-            if (before <= 0 && mCursorBlink.valid && isAttachedToWindow()) {
-                post(mCursorBlink);
+            int before = cursorBlink.period;
+            cursorBlink.setPeriod(period);
+            if (before <= 0 && cursorBlink.valid && isAttachedToWindow()) {
+                post(cursorBlink);
             }
         }
     }
 
     protected CursorBlink getCursorBlink() {
-        return mCursorBlink;
+        return cursorBlink;
     }
 
     /**
      * @see CodeEditor#setLigatureEnabled(boolean)
      */
     public boolean isLigatureEnabled() {
-        return mLigatureEnabled;
+        return ligatureEnabled;
     }
 
     /**
@@ -722,7 +720,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * </pre>
      */
     public void setLigatureEnabled(boolean enabled) {
-        this.mLigatureEnabled = enabled;
+        this.ligatureEnabled = enabled;
         setFontFeatureSettings(enabled ? null : "'liga' 0,'calt' 0,'hlig' 0,'dlig' 0,'clig' 0");
     }
 
@@ -732,10 +730,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see Paint#setFontFeatureSettings(String)
      */
     public void setFontFeatureSettings(String features) {
-        mRenderer.getPaint().setFontFeatureSettingsWrapped(features);
-        mRenderer.getPaintOther().setFontFeatureSettings(features);
-        mRenderer.getPaintGraph().setFontFeatureSettings(features);
-        mRenderer.updateTimestamp();
+        renderer.getPaint().setFontFeatureSettingsWrapped(features);
+        renderer.getPaintOther().setFontFeatureSettings(features);
+        renderer.getPaintGraph().setFontFeatureSettings(features);
+        renderer.updateTimestamp();
         invalidate();
     }
 
@@ -747,13 +745,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see HandleStyleSideDrop
      */
     public void setSelectionHandleStyle(@NonNull SelectionHandleStyle style) {
-        mHandleStyle = Objects.requireNonNull(style);
+        handleStyle = Objects.requireNonNull(style);
         invalidate();
     }
 
     @NonNull
     public SelectionHandleStyle getHandleStyle() {
-        return mHandleStyle;
+        return handleStyle;
     }
 
     /**
@@ -763,7 +761,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#setHighlightCurrentBlock(boolean)
      */
     public boolean isHighlightCurrentBlock() {
-        return mHighlightCurrentBlock;
+        return highlightCurrentBlock;
     }
 
     /**
@@ -774,11 +772,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param highlightCurrentBlock Enabled / Disabled this module
      */
     public void setHighlightCurrentBlock(boolean highlightCurrentBlock) {
-        this.mHighlightCurrentBlock = highlightCurrentBlock;
-        if (!mHighlightCurrentBlock) {
-            mCursorPosition = -1;
+        this.highlightCurrentBlock = highlightCurrentBlock;
+        if (!this.highlightCurrentBlock) {
+            cursorPosition = -1;
         } else {
-            mCursorPosition = findCursorBlock();
+            cursorPosition = findCursorBlock();
         }
         invalidate();
     }
@@ -789,7 +787,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#setStickyTextSelection(boolean)
      */
     public boolean isStickyTextSelection() {
-        return mStickyTextSelection;
+        return stickyTextSelection;
     }
 
     /**
@@ -798,14 +796,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param stickySelection value
      */
     public void setStickyTextSelection(boolean stickySelection) {
-        this.mStickyTextSelection = stickySelection;
+        this.stickyTextSelection = stickySelection;
     }
 
     /**
      * @see CodeEditor#setHighlightCurrentLine(boolean)
      */
     public boolean isHighlightCurrentLine() {
-        return mHighlightCurrentLine;
+        return highlightCurrentLine;
     }
 
     /**
@@ -813,7 +811,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * the background of current line
      */
     public void setHighlightCurrentLine(boolean highlightCurrentLine) {
-        mHighlightCurrentLine = highlightCurrentLine;
+        this.highlightCurrentLine = highlightCurrentLine;
         invalidate();
     }
 
@@ -824,7 +822,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     @NonNull
     public Language getEditorLanguage() {
-        return mLanguage;
+        return editorLanguage;
     }
 
     /**
@@ -839,7 +837,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
 
         // Destroy old one
-        var old = mLanguage;
+        var old = editorLanguage;
         if (old != null) {
             var formatter = old.getFormatter();
             formatter.setReceiver(null);
@@ -849,33 +847,33 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             old.destroy();
         }
 
-        mStyleDelegate.reset();
-        this.mLanguage = lang;
-        this.mStyles = null;
-        this.mDiagnostics = null;
+        styleDelegate.reset();
+        this.editorLanguage = lang;
+        this.textStyles = null;
+        this.diagnostics = null;
 
-        if (mCompletionWindow != null) {
-            mCompletionWindow.hide();
+        if (completionWindow != null) {
+            completionWindow.hide();
         }
         // Setup new one
         var mgr = lang.getAnalyzeManager();
-        mgr.setReceiver(mStyleDelegate);
-        if (mText != null) {
-            mgr.reset(new ContentReference(mText), mExtraArguments);
+        mgr.setReceiver(styleDelegate);
+        if (text != null) {
+            mgr.reset(new ContentReference(text), extraArguments);
         }
 
         // Symbol pairs
-        if (mLanguageSymbolPairs != null) {
-            mLanguageSymbolPairs.setParent(null);
+        if (languageSymbolPairs != null) {
+            languageSymbolPairs.setParent(null);
         }
-        mLanguageSymbolPairs = mLanguage.getSymbolPairs();
-        if (mLanguageSymbolPairs == null) {
-            Log.w(LOG_TAG, "Language(" + mLanguage.toString() + ") returned null for symbol pairs. It is a mistake.");
-            mLanguageSymbolPairs = new SymbolPairMatch();
+        languageSymbolPairs = editorLanguage.getSymbolPairs();
+        if (languageSymbolPairs == null) {
+            Log.w(LOG_TAG, "Language(" + editorLanguage.toString() + ") returned null for symbol pairs. It is a mistake.");
+            languageSymbolPairs = new SymbolPairMatch();
         }
-        mLanguageSymbolPairs.setParent(mProps.overrideSymbolPairs);
+        languageSymbolPairs.setParent(props.overrideSymbolPairs);
 
-        mRenderer.invalidateRenderNodes();
+        renderer.invalidateRenderNodes();
         invalidate();
     }
 
@@ -917,7 +915,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#setBlockLineWidth(float)
      */
     public float getBlockLineWidth() {
-        return mBlockLineWidth;
+        return blockLineWidth;
     }
 
     /**
@@ -926,7 +924,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param dp Width in dp unit
      */
     public void setBlockLineWidth(float dp) {
-        mBlockLineWidth = dp;
+        blockLineWidth = dp;
         invalidate();
     }
 
@@ -934,7 +932,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #setWordwrap(boolean)
      */
     public boolean isWordwrap() {
-        return mWordwrap;
+        return wordwrap;
     }
 
     /**
@@ -943,11 +941,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param wordwrap Whether to wrap words
      */
     public void setWordwrap(boolean wordwrap) {
-        if (mWordwrap != wordwrap) {
-            mWordwrap = wordwrap;
+        if (this.wordwrap != wordwrap) {
+            this.wordwrap = wordwrap;
             createLayout();
             if (!wordwrap) {
-                mRenderer.invalidateRenderNodes();
+                renderer.invalidateRenderNodes();
             }
             invalidate();
         }
@@ -957,7 +955,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #setCursorAnimationEnabled(boolean)
      */
     public boolean isCursorAnimationEnabled() {
-        return mCursorAnimation;
+        return cursorAnimation;
     }
 
     /**
@@ -965,16 +963,16 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void setCursorAnimationEnabled(boolean enabled) {
         if (!enabled) {
-            mCursorAnimator.cancel();
+            cursorAnimator.cancel();
         }
-        mCursorAnimation = enabled;
+        cursorAnimation = enabled;
     }
 
     /**
      * @see #setCursorAnimator(CursorAnimator)
      */
     public CursorAnimator getCursorAnimator() {
-        return mCursorAnimator;
+        return cursorAnimator;
     }
 
     /**
@@ -985,7 +983,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #setCursorAnimationEnabled(boolean)  for disabling the animation
      */
     public void setCursorAnimator(@NonNull CursorAnimator cursorAnimator) {
-        mCursorAnimator = cursorAnimator;
+        this.cursorAnimator = cursorAnimator;
     }
 
     /**
@@ -994,7 +992,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param enabled Enabled / disabled
      */
     public void setScrollBarEnabled(boolean enabled) {
-        mVerticalScrollBarEnabled = mHorizontalScrollBarEnabled = enabled;
+        verticalScrollBarEnabled = horizontalScrollBarEnabled = enabled;
         invalidate();
     }
 
@@ -1003,7 +1001,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#setDisplayLnPanel(boolean)
      */
     public boolean isDisplayLnPanel() {
-        return mDisplayLnPanel;
+        return displayLnPanel;
     }
 
     /**
@@ -1013,7 +1011,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param displayLnPanel Enabled / disabled
      */
     public void setDisplayLnPanel(boolean displayLnPanel) {
-        this.mDisplayLnPanel = displayLnPanel;
+        this.displayLnPanel = displayLnPanel;
         invalidate();
     }
 
@@ -1022,7 +1020,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#setLnTip(String)
      */
     public String getLnTip() {
-        return mLnTip;
+        return lnTipPrefix;
     }
 
     /**
@@ -1034,28 +1032,28 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (prefix == null) {
             prefix = "";
         }
-        mLnTip = prefix;
+        lnTipPrefix = prefix;
         invalidate();
     }
 
     @Override
     public boolean isHorizontalScrollBarEnabled() {
-        return mHorizontalScrollBarEnabled;
+        return horizontalScrollBarEnabled;
     }
 
     @Override
     public void setHorizontalScrollBarEnabled(boolean horizontalScrollBarEnabled) {
-        mHorizontalScrollBarEnabled = horizontalScrollBarEnabled;
+        this.horizontalScrollBarEnabled = horizontalScrollBarEnabled;
     }
 
     @Override
     public boolean isVerticalScrollBarEnabled() {
-        return mVerticalScrollBarEnabled;
+        return verticalScrollBarEnabled;
     }
 
     @Override
     public void setVerticalScrollBarEnabled(boolean verticalScrollBarEnabled) {
-        mVerticalScrollBarEnabled = verticalScrollBarEnabled;
+        this.verticalScrollBarEnabled = verticalScrollBarEnabled;
     }
 
     /**
@@ -1064,7 +1062,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return Rect of insert handle
      */
     public SelectionHandleStyle.HandleDescriptor getInsertHandleDescriptor() {
-        return mInsertHandle;
+        return handleDescInsert;
     }
 
     /**
@@ -1076,7 +1074,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     @Px
     public float getTextSizePx() {
-        return mRenderer.getPaint().getTextSize();
+        return renderer.getPaint().getTextSize();
     }
 
     /**
@@ -1096,22 +1094,22 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param size Text size in pixel unit
      */
     protected void setTextSizePxDirect(float size) {
-        mRenderer.setTextSizePxDirect(size);
+        renderer.setTextSizePxDirect(size);
     }
 
     public EditorRenderer getRenderer() {
-        return mRenderer;
+        return renderer;
     }
 
     public Paint.FontMetricsInt getLineNumberMetrics() {
-        return mRenderer.getLineNumberMetrics();
+        return renderer.getLineNumberMetrics();
     }
 
     /**
      * Update displayed lines after drawing
      */
     protected void rememberDisplayedLines() {
-        mAvailableFloatArrayRegion = IntPair.pack(getFirstVisibleLine(), getLastVisibleLine());
+        availableFloatArrayRegion = IntPair.pack(getFirstVisibleLine(), getLastVisibleLine());
     }
 
     /**
@@ -1119,8 +1117,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * if no float array matches the requirement.
      */
     protected float[] obtainFloatArray(int desiredSize, boolean usePainter) {
-        var start = IntPair.getFirst(mAvailableFloatArrayRegion);
-        var end = IntPair.getSecond(mAvailableFloatArrayRegion);
+        var start = IntPair.getFirst(availableFloatArrayRegion);
+        var end = IntPair.getSecond(availableFloatArrayRegion);
         var firstVis = getFirstVisibleLine();
         var lastVis = getLastVisibleLine();
         start = Math.max(0, start - 5);
@@ -1128,7 +1126,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         for (int i = start; i < end; i++) {
             // Find line that is not displaying currently
             if (i < firstVis || i > lastVis) {
-                var line = usePainter ? mRenderer.getLine(i) : mText.getLine(i);
+                var line = usePainter ? renderer.getLine(i) : text.getLine(i);
                 if (line.widthCache != null && line.widthCache.length >= desiredSize) {
                     line.timestamp = 0;
                     var res = line.widthCache;
@@ -1148,14 +1146,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Whether non-printable is to be drawn
      */
     protected boolean shouldInitializeNonPrintable() {
-        return Numbers.clearBit(Numbers.clearBit(mNonPrintableOptions, FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE), FLAG_DRAW_TAB_SAME_AS_SPACE) != 0;
+        return Numbers.clearBit(Numbers.clearBit(nonPrintableOptions, FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE), FLAG_DRAW_TAB_SAME_AS_SPACE) != 0;
     }
 
     /**
      * @see #setHardwareAcceleratedDrawAllowed(boolean)
      */
     public boolean isHardwareAcceleratedDrawAllowed() {
-        return mHardwareAccAllowed;
+        return hardwareAccAllowed;
     }
 
     /**
@@ -1166,9 +1164,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * make a difference.
      */
     public void setHardwareAcceleratedDrawAllowed(boolean acceleratedDraw) {
-        mHardwareAccAllowed = acceleratedDraw;
+        hardwareAccAllowed = acceleratedDraw;
         if (acceleratedDraw && !isWordwrap()) {
-            mRenderer.invalidateRenderNodes();
+            renderer.invalidateRenderNodes();
         }
     }
 
@@ -1186,7 +1184,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             leading++;
         }
         // Only them this action is needed
-        if (leading != column && (mNonPrintableOptions & (FLAG_DRAW_WHITESPACE_INNER | FLAG_DRAW_WHITESPACE_TRAILING)) != 0) {
+        if (leading != column && (nonPrintableOptions & (FLAG_DRAW_WHITESPACE_INNER | FLAG_DRAW_WHITESPACE_TRAILING)) != 0) {
             while (trailing > 0 && isWhitespace(buffer[trailing - 1])) {
                 trailing--;
             }
@@ -1209,16 +1207,16 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     protected void computeMatchedPositions(int line, LongArrayList positions) {
         positions.clear();
-        if (mSearcher.currentPattern == null || mSearcher.searchOptions == null) {
+        if (editorSearcher.currentPattern == null || editorSearcher.searchOptions == null) {
             return;
         }
-        if (mSearcher.searchOptions.useRegex) {
-            if (!mSearcher.isResultValid()) {
+        if (editorSearcher.searchOptions.useRegex) {
+            if (!editorSearcher.isResultValid()) {
                 return;
             }
-            var res = mSearcher.lastResults;
-            var lineLeft = mText.getCharIndex(line, 0);
-            var lineRight = lineLeft + mText.getColumnCount(line);
+            var res = editorSearcher.lastResults;
+            var lineLeft = text.getCharIndex(line, 0);
+            var lineRight = lineLeft + text.getColumnCount(line);
             for (int i = 0; i < res.size(); i++) {
                 var region = res.get(i);
                 var start = IntPair.getFirst(region);
@@ -1234,11 +1232,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
             return;
         }
-        ContentLine seq = mText.getLine(line);
+        ContentLine seq = text.getLine(line);
         int index = 0;
-        var len = mSearcher.currentPattern.length();
+        var len = editorSearcher.currentPattern.length();
         while (index != -1) {
-            index = TextUtils.indexOf(seq, mSearcher.currentPattern, mSearcher.searchOptions.ignoreCase, index);
+            index = TextUtils.indexOf(seq, editorSearcher.currentPattern, editorSearcher.searchOptions.ignoreCase, index);
             if (index != -1) {
                 positions.add(IntPair.pack(index, index + len));
                 index += len;
@@ -1252,7 +1250,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return The color of EdgeEffect.
      */
     public int getEdgeEffectColor() {
-        return mVerticalGlow.getColor();
+        return edgeEffectVertical.getColor();
     }
 
     /**
@@ -1261,8 +1259,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param color The color of EdgeEffect
      */
     public void setEdgeEffectColor(int color) {
-        mVerticalGlow.setColor(color);
-        mHorizontalGlow.setColor(color);
+        edgeEffectVertical.setColor(color);
+        edgeEffectHorizontal.setColor(color);
     }
 
     /**
@@ -1270,7 +1268,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     @UnsupportedUserUsage
     public Layout getLayout() {
-        return mLayout;
+        return layout;
     }
 
     /**
@@ -1279,7 +1277,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return EdgeEffect
      */
     protected EdgeEffect getVerticalEdgeEffect() {
-        return mVerticalGlow;
+        return edgeEffectVertical;
     }
 
     /**
@@ -1288,7 +1286,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return EdgeEffect
      */
     protected EdgeEffect getHorizontalEdgeEffect() {
-        return mHorizontalGlow;
+        return edgeEffectHorizontal;
     }
 
     /**
@@ -1298,7 +1296,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * If cursor is not in any code block,just -1.
      */
     private int findCursorBlock() {
-        List<CodeBlock> blocks = mStyles == null ? null : mStyles.blocks;
+        List<CodeBlock> blocks = textStyles == null ? null : textStyles.blocks;
         if (blocks == null || blocks.isEmpty()) {
             return -1;
         }
@@ -1313,15 +1311,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * If cursor is not in any code block,just -1.
      */
     private int findCursorBlock(List<CodeBlock> blocks) {
-        int line = mCursor.getLeftLine();
+        int line = cursor.getLeftLine();
         int min = binarySearchEndBlock(line, blocks);
         int max = blocks.size() - 1;
         int minDis = Integer.MAX_VALUE;
         int found = -1;
         int invalidCount = 0;
         int maxCount = Integer.MAX_VALUE;
-        if (mStyles != null) {
-            maxCount = mStyles.getSuppressSwitch();
+        if (textStyles != null) {
+            maxCount = textStyles.getSuppressSwitch();
         }
         for (int i = min; i <= max; i++) {
             CodeBlock block = blocks.get(i);
@@ -1345,7 +1343,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #findCursorBlock()
      */
     public int getCurrentCursorBlock() {
-        return mCursorPosition;
+        return cursorPosition;
     }
 
     /**
@@ -1384,18 +1382,18 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     @NonNull
     public List<Span> getSpansForLine(int line) {
-        var spanMap = mStyles == null ? null : mStyles.spans;
-        if (defSpans.size() == 0) {
-            defSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
+        var spanMap = textStyles == null ? null : textStyles.spans;
+        if (defaultSpans.size() == 0) {
+            defaultSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
         }
         try {
             if (spanMap != null) {
                 return spanMap.read().getSpansOnLine(line);
             } else {
-                return defSpans;
+                return defaultSpans;
             }
         } catch (Exception e) {
-            return defSpans;
+            return defaultSpans;
         }
     }
 
@@ -1416,7 +1414,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         var len = NUMBER_DIGITS.length();
         var buffer = TemporaryFloatBuffer.obtain(len);
-        mRenderer.getPaintOther().getTextWidths(NUMBER_DIGITS, buffer);
+        renderer.getPaintOther().getTextWidths(NUMBER_DIGITS, buffer);
         TemporaryFloatBuffer.recycle(buffer);
         float single = 0f;
         for (int i = 0; i < len; i += 2) {
@@ -1433,27 +1431,27 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Create layout for text
      */
     protected void createLayout(boolean clearWordwrapCache) {
-        if (mLayout != null) {
-            if (mLayout instanceof LineBreakLayout && !mWordwrap) {
-                ((LineBreakLayout) mLayout).reuse(mText);
+        if (layout != null) {
+            if (layout instanceof LineBreakLayout && !wordwrap) {
+                ((LineBreakLayout) layout).reuse(text);
                 return;
             }
-            if (mLayout instanceof WordwrapLayout && mWordwrap) {
-                var newLayout = new WordwrapLayout(this, mText, ((WordwrapLayout) mLayout).getRowTable(), clearWordwrapCache);
-                mLayout.destroyLayout();
-                mLayout = newLayout;
+            if (layout instanceof WordwrapLayout && wordwrap) {
+                var newLayout = new WordwrapLayout(this, text, ((WordwrapLayout) layout).getRowTable(), clearWordwrapCache);
+                layout.destroyLayout();
+                layout = newLayout;
                 return;
             }
-            mLayout.destroyLayout();
+            layout.destroyLayout();
         }
-        if (mWordwrap) {
-            mRenderer.setCachedLineNumberWidth((int) measureLineNumber());
-            mLayout = new WordwrapLayout(this, mText, null, false);
+        if (wordwrap) {
+            renderer.setCachedLineNumberWidth((int) measureLineNumber());
+            layout = new WordwrapLayout(this, text, null, false);
         } else {
-            mLayout = new LineBreakLayout(this, mText);
+            layout = new LineBreakLayout(this, text);
         }
-        if (mEventHandler != null) {
-            mEventHandler.scrollBy(0, 0);
+        if (touchHandler != null) {
+            touchHandler.scrollBy(0, 0);
         }
     }
 
@@ -1461,8 +1459,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Commit a tab to cursor
      */
     void commitTab() {
-        if (mConnection != null && isEditable()) {
-            mConnection.commitTextInternal("\t", true);
+        if (inputConnection != null && isEditable()) {
+            inputConnection.commitTextInternal("\t", true);
         }
     }
 
@@ -1474,15 +1472,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Apply new position of auto-completion window
      */
     protected void updateCompletionWindowPosition(boolean shift) {
-        float panelX = updateCursorAnchor() + mDpUnit * 20;
-        float[] rightLayoutOffset = mLayout.getCharLayoutOffset(mCursor.getRightLine(), mCursor.getRightColumn());
+        float panelX = updateCursorAnchor() + dpUnit * 20;
+        float[] rightLayoutOffset = layout.getCharLayoutOffset(cursor.getRightLine(), cursor.getRightColumn());
         float panelY = rightLayoutOffset[0] - getOffsetY() + getRowHeight() / 2f;
         float restY = getHeight() - panelY;
-        if (restY > mDpUnit * 200) {
-            restY = mDpUnit * 200;
-        } else if (restY < mDpUnit * 100 && shift) {
+        if (restY > dpUnit * 200) {
+            restY = dpUnit * 200;
+        } else if (restY < dpUnit * 100 && shift) {
             float offset = 0;
-            while (restY < mDpUnit * 100) {
+            while (restY < dpUnit * 100) {
                 restY += getRowHeight();
                 panelY -= getRowHeight();
                 offset += getRowHeight();
@@ -1490,21 +1488,21 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             getScroller().startScroll(getOffsetX(), getOffsetY(), 0, (int) offset, 0);
         }
         int width;
-        if ((getWidth() < 500 * mDpUnit && mCompletionPosMode == WINDOW_POS_MODE_AUTO) || mCompletionPosMode == WINDOW_POS_MODE_FULL_WIDTH_ALWAYS) {
+        if ((getWidth() < 500 * dpUnit && completionWndPosMode == WINDOW_POS_MODE_AUTO) || completionWndPosMode == WINDOW_POS_MODE_FULL_WIDTH_ALWAYS) {
             // center mode
             width = getWidth() * 7 / 8;
             panelX = getWidth() / 8f / 2f;
         } else {
             // follow cursor mode
-            width = (int) Math.min(300 * mDpUnit, getWidth() / 2f);
+            width = (int) Math.min(300 * dpUnit, getWidth() / 2f);
         }
-        int height = mCompletionWindow.getHeight();
-        if (!mCompletionWindow.isShowing()) {
+        int height = completionWindow.getHeight();
+        if (!completionWindow.isShowing()) {
             height = (int) restY;
         }
-        mCompletionWindow.setMaxHeight((int) restY);
-        mCompletionWindow.setSize(width, height);
-        mCompletionWindow.setLocation((int) panelX + getOffsetX(), (int) panelY + getOffsetY());
+        completionWindow.setMaxHeight((int) restY);
+        completionWindow.setSize(width, height);
+        completionWindow.setLocation((int) panelX + getOffsetX(), (int) panelY + getOffsetY());
     }
 
     /**
@@ -1514,26 +1512,26 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return The offset x of right cursor on view
      */
     protected float updateCursorAnchor() {
-        CursorAnchorInfo.Builder builder = mAnchorInfoBuilder;
+        CursorAnchorInfo.Builder builder = anchorInfoBuilder;
         builder.reset();
-        mMatrix.set(getMatrix());
+        matrix.set(getMatrix());
         int[] b = new int[2];
         getLocationOnScreen(b);
-        mMatrix.postTranslate(b[0], b[1]);
-        builder.setMatrix(mMatrix);
-        builder.setSelectionRange(mCursor.getLeft(), mCursor.getRight());
-        int l = mCursor.getRightLine();
-        int column = mCursor.getRightColumn();
+        matrix.postTranslate(b[0], b[1]);
+        builder.setMatrix(matrix);
+        builder.setSelectionRange(cursor.getLeft(), cursor.getRight());
+        int l = cursor.getRightLine();
+        int column = cursor.getRightColumn();
         boolean visible = true;
         float x = measureTextRegionOffset();
-        x = x + mLayout.getCharLayoutOffset(l, column)[1];
+        x = x + layout.getCharLayoutOffset(l, column)[1];
         x = x - getOffsetX();
         if (x < 0) {
             visible = false;
             x = 0;
         }
         builder.setInsertionMarkerLocation(x, getRowTop(l) - getOffsetY(), getRowBaseline(l) - getOffsetY(), getRowBottom(l) - getOffsetY(), visible ? CursorAnchorInfo.FLAG_HAS_VISIBLE_REGION : CursorAnchorInfo.FLAG_HAS_INVISIBLE_REGION);
-        mInputMethodManager.updateCursorAnchorInfo(this, builder.build());
+        inputMethodManager.updateCursorAnchorInfo(this, builder.build());
         return x;
     }
 
@@ -1541,15 +1539,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Delete text before cursor or selected text (if there is)
      */
     public void deleteText() {
-        var cur = mCursor;
+        var cur = cursor;
         if (cur.isSelected()) {
-            mText.delete(cur.getLeftLine(), cur.getLeftColumn(), cur.getRightLine(), cur.getRightColumn());
+            text.delete(cur.getLeftLine(), cur.getLeftColumn(), cur.getRightLine(), cur.getRightColumn());
         } else {
             int col = cur.getLeftColumn();
             int line = cur.getLeftLine();
-            if (mProps.deleteEmptyLineFast || (mProps.deleteMultiSpaces != 1 && col > 0 && mText.charAt(line, col - 1) == ' ')) {
+            if (props.deleteEmptyLineFast || (props.deleteMultiSpaces != 1 && col > 0 && text.charAt(line, col - 1) == ' ')) {
                 // Check whether selection is in leading spaces
-                var text = mText.getLine(cur.getLeftLine()).value;
+                var text = this.text.getLine(cur.getLeftLine()).value;
                 var inLeading = true;
                 for (int i = col - 1; i >= 0; i--) {
                     char ch = text[i];
@@ -1562,7 +1560,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 if (inLeading) {
                     // Check empty line
                     var emptyLine = true;
-                    var max = mText.getColumnCount(line);
+                    var max = this.text.getColumnCount(line);
                     for (int i = col; i < max; i++) {
                         char ch = text[i];
                         if (ch != ' ' && ch != '\t') {
@@ -1570,24 +1568,24 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                             break;
                         }
                     }
-                    if (mProps.deleteEmptyLineFast && emptyLine) {
+                    if (props.deleteEmptyLineFast && emptyLine) {
                         if (line == 0) {
                             // Just delete whitespaces before
-                            mText.delete(line, 0, line, col);
+                            this.text.delete(line, 0, line, col);
                         } else {
-                            mText.delete(line - 1, mText.getColumnCount(line - 1), line, max);
+                            this.text.delete(line - 1, this.text.getColumnCount(line - 1), line, max);
                         }
                         return;
                     }
 
-                    if (mProps.deleteMultiSpaces != 1 && col > 0 && mText.charAt(line, col - 1) == ' ') {
-                        mText.delete(line, Math.max(0, col - (mProps.deleteMultiSpaces == -1 ? getTabWidth() : mProps.deleteMultiSpaces)), line, col);
+                    if (props.deleteMultiSpaces != 1 && col > 0 && this.text.charAt(line, col - 1) == ' ') {
+                        this.text.delete(line, Math.max(0, col - (props.deleteMultiSpaces == -1 ? getTabWidth() : props.deleteMultiSpaces)), line, col);
                         return;
                     }
                 }
             }
             // Do not put cursor inside combined characters
-            int begin = TextLayoutHelper.get().getCurPosLeft(col, mText.getLine(cur.getLeftLine()));
+            int begin = TextLayoutHelper.get().getCurPosLeft(col, text.getLine(cur.getLeftLine()));
             int end = cur.getLeftColumn();
             if (begin > end) {
                 int tmp = begin;
@@ -1596,10 +1594,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
             if (begin == end) {
                 if (cur.getLeftLine() > 0) {
-                    mText.delete(cur.getLeftLine() - 1, mText.getColumnCount(cur.getLeftLine() - 1), cur.getLeftLine(), 0);
+                    text.delete(cur.getLeftLine() - 1, text.getColumnCount(cur.getLeftLine() - 1), cur.getLeftLine(), 0);
                 }
             } else {
-                mText.delete(cur.getLeftLine(), begin, cur.getLeftLine(), end);
+                text.delete(cur.getLeftLine(), begin, cur.getLeftLine(), end);
             }
         }
     }
@@ -1617,19 +1615,19 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param text Text commit by InputConnection
      */
     public void commitText(CharSequence text, boolean applyAutoIndent) {
-        var cur = mCursor;
+        var cur = cursor;
         if (cur.isSelected()) {
-            mText.replace(cur.getLeftLine(), cur.getLeftColumn(), cur.getRightLine(), cur.getRightColumn(), text);
+            this.text.replace(cur.getLeftLine(), cur.getLeftColumn(), cur.getRightLine(), cur.getRightColumn(), text);
         } else {
-            if (mProps.autoIndent && text.length() != 0 && applyAutoIndent) {
+            if (props.autoIndent && text.length() != 0 && applyAutoIndent) {
                 char first = text.charAt(0);
                 if (first == '\n' || first == '\r') {
-                    String line = mText.getLineString(cur.getLeftLine());
+                    String line = this.text.getLineString(cur.getLeftLine());
                     int p = 0, count = 0;
                     while (p < cur.getLeftColumn()) {
                         if (isWhitespace(line.charAt(p))) {
                             if (line.charAt(p) == '\t') {
-                                count += mTabWidth;
+                                count += tabWidth;
                             } else {
                                 count++;
                             }
@@ -1639,7 +1637,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                         }
                     }
                     try {
-                        count += mLanguage.getIndentAdvance(new ContentReference(mText), cur.getLeftLine(), cur.getLeftColumn());
+                        count += editorLanguage.getIndentAdvance(new ContentReference(this.text), cur.getLeftLine(), cur.getLeftColumn());
                     } catch (Exception e) {
                         Log.w(LOG_TAG, "Language object error", e);
                     }
@@ -1648,11 +1646,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                         index = 2;
                     }
                     StringBuilder sb = new StringBuilder(text);
-                    sb.insert(index, TextUtils.createIndent(count, mTabWidth, mLanguage.useTab()));
+                    sb.insert(index, TextUtils.createIndent(count, tabWidth, editorLanguage.useTab()));
                     text = sb;
                 }
             }
-            mText.insert(cur.getLeftLine(), cur.getLeftColumn(), text);
+            this.text.insert(cur.getLeftLine(), cur.getLeftColumn(), text);
         }
     }
 
@@ -1660,7 +1658,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #setLineInfoTextSize(float)
      */
     public float getLineInfoTextSize() {
-        return mLineInfoTextSize;
+        return lineInfoTextSize;
     }
 
     /**
@@ -1672,7 +1670,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (size <= 0) {
             throw new IllegalArgumentException();
         }
-        mLineInfoTextSize = size;
+        lineInfoTextSize = size;
     }
 
     /**
@@ -1685,7 +1683,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #FLAG_DRAW_WHITESPACE_IN_SELECTION
      */
     public int getNonPrintablePaintingFlags() {
-        return mNonPrintableOptions;
+        return nonPrintableOptions;
     }
 
     /**
@@ -1703,7 +1701,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #FLAG_DRAW_WHITESPACE_IN_SELECTION
      */
     public void setNonPrintablePaintingFlags(int flags) {
-        this.mNonPrintableOptions = flags;
+        this.nonPrintableOptions = flags;
         invalidate();
     }
 
@@ -1732,7 +1730,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param noAnimation true if no animation should be applied
      */
     public void ensurePositionVisible(int line, int column, boolean noAnimation) {
-        float[] layoutOffset = mLayout.getCharLayoutOffset(line, column);
+        float[] layoutOffset = layout.getCharLayoutOffset(line, column);
         // x offset is the left of character
         float xOffset = layoutOffset[1] + measureTextRegionOffset();
         // y offset is the bottom of row
@@ -1749,9 +1747,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             //bottom invisible
             targetY = yOffset - getHeight() + getRowHeight() * 0.1f;
         }
-        float charWidth = column == 0 ? 0 : mRenderer.measureText(mText.getLine(line), line, column - 1, 1);
-        if (xOffset < getOffsetX() + (mPinLineNumber ? measureTextRegionOffset() : 0)) {
-            targetX = xOffset + (mPinLineNumber ? -measureTextRegionOffset() : 0) - charWidth * 0.2f;
+        float charWidth = column == 0 ? 0 : renderer.measureText(text.getLine(line), line, column - 1, 1);
+        if (xOffset < getOffsetX() + (pinLineNumber ? measureTextRegionOffset() : 0)) {
+            targetX = xOffset + (pinLineNumber ? -measureTextRegionOffset() : 0) - charWidth * 0.2f;
         }
         if (xOffset + charWidth > getOffsetX() + getWidth()) {
             targetX = xOffset + charWidth * 0.8f - getWidth();
@@ -1765,15 +1763,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             return;
         }
 
-        boolean animation = System.currentTimeMillis() - mLastMakeVisible >= 100;
-        mLastMakeVisible = System.currentTimeMillis();
+        boolean animation = System.currentTimeMillis() - lastMakeVisible >= 100;
+        lastMakeVisible = System.currentTimeMillis();
 
         var scroller = getScroller();
         if (animation && !noAnimation) {
             scroller.forceFinished(true);
             scroller.startScroll(getOffsetX(), getOffsetY(), (int) (targetX - getOffsetX()), (int) (targetY - getOffsetY()));
-            if (mProps.awareScrollbarWhenAdjust && Math.abs(getOffsetY() - targetY) > mDpUnit * 100) {
-                mEventHandler.notifyScrolled();
+            if (props.awareScrollbarWhenAdjust && Math.abs(getOffsetY() - targetY) > dpUnit * 100) {
+                touchHandler.notifyScrolled();
             }
         } else {
             scroller.startScroll(getOffsetX(), getOffsetY(), (int) (targetX - getOffsetX()), (int) (targetY - getOffsetY()), 0);
@@ -1792,7 +1790,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return whether clip in clip board
      */
     public boolean hasClip() {
-        return mClipboardManager.hasPrimaryClip();
+        return clipboardManager.hasPrimaryClip();
     }
 
     /**
@@ -1801,7 +1799,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return 1dp in pixel
      */
     public float getDpUnit() {
-        return mDpUnit;
+        return dpUnit;
     }
 
     /**
@@ -1811,7 +1809,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return The scroller
      */
     public OverScroller getScroller() {
-        return mEventHandler.getScroller();
+        return touchHandler.getScroller();
     }
 
     /**
@@ -1821,7 +1819,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return Whether over max Y
      */
     public boolean isOverMaxY(float posOnScreen) {
-        return posOnScreen + getOffsetY() > mLayout.getLayoutHeight();
+        return posOnScreen + getOffsetY() > layout.getLayoutHeight();
     }
 
     /**
@@ -1833,7 +1831,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see IntPair
      */
     public long getPointPosition(float xOffset, float yOffset) {
-        return mLayout.getCharPositionForLayoutOffset(xOffset - measureTextRegionOffset(), yOffset);
+        return layout.getCharPositionForLayoutOffset(xOffset - measureTextRegionOffset(), yOffset);
     }
 
     /**
@@ -1854,7 +1852,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return max scroll y
      */
     public int getScrollMaxY() {
-        return Math.max(0, mLayout.getLayoutHeight() - getHeight() / 2);
+        return Math.max(0, layout.getLayoutHeight() - getHeight() / 2);
     }
 
     /**
@@ -1863,7 +1861,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return max scroll x
      */
     public int getScrollMaxX() {
-        return (int) Math.max(0, mLayout.getLayoutWidth() + measureTextRegionOffset() - getWidth() / 2f);
+        return (int) Math.max(0, layout.getLayoutWidth() + measureTextRegionOffset() - getWidth() / 2f);
     }
 
     /**
@@ -1872,7 +1870,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return EditorSearcher
      */
     public EditorSearcher getSearcher() {
-        return mSearcher;
+        return editorSearcher;
     }
 
     /**
@@ -1888,10 +1886,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #isBasicDisplayMode()
      */
     public void setBasicDisplayMode(boolean enabled) {
-        mText.setBidiEnabled(!enabled);
-        mRenderer.invalidateRenderNodes();
-        mRenderer.basicDisplayMode = enabled;
-        mRenderer.updateTimestamp();
+        text.setBidiEnabled(!enabled);
+        renderer.invalidateRenderNodes();
+        renderer.basicDisplayMode = enabled;
+        renderer.updateTimestamp();
         invalidate();
     }
 
@@ -1899,7 +1897,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #setBasicDisplayMode(boolean)
      */
     public boolean isBasicDisplayMode() {
-        return mRenderer.basicDisplayMode;
+        return renderer.basicDisplayMode;
     }
 
     /**
@@ -1908,13 +1906,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     protected void setSelectionAround(int line, int column) {
         if (line < getLineCount()) {
-            int columnCount = mText.getColumnCount(line);
+            int columnCount = text.getColumnCount(line);
             if (column > columnCount) {
                 column = columnCount;
             }
             setSelection(line, column);
         } else {
-            setSelection(getLineCount() - 1, mText.getColumnCount(getLineCount() - 1));
+            setSelection(getLineCount() - 1, text.getColumnCount(getLineCount() - 1));
         }
     }
 
@@ -1927,9 +1925,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (isFormatting()) {
             return false;
         }
-        var formatter = mLanguage.getFormatter();
+        var formatter = editorLanguage.getFormatter();
         formatter.setReceiver(this);
-        var formatContent = mText.copyText(false);
+        var formatContent = text.copyText(false);
         formatContent.setUndoEnabled(false);
         formatter.format(formatContent, createCursorRange());
         postInvalidate();
@@ -1953,9 +1951,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (isFormatting()) {
             return false;
         }
-        var formatter = mLanguage.getFormatter();
+        var formatter = editorLanguage.getFormatter();
         formatter.setReceiver(this);
-        var formatContent = mText.copyText(false);
+        var formatContent = text.copyText(false);
         formatContent.setUndoEnabled(false);
         formatter.formatRegion(formatContent, new TextRange(start, end), createCursorRange());
         postInvalidate();
@@ -1963,7 +1961,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     public TextRange createCursorRange() {
-        return new TextRange(mCursor.left(), mCursor.right());
+        return new TextRange(cursor.left(), cursor.right());
     }
 
     /**
@@ -1972,7 +1970,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return tab width
      */
     public int getTabWidth() {
-        return mTabWidth;
+        return tabWidth;
     }
 
     /**
@@ -1984,9 +1982,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (width < 1) {
             throw new IllegalArgumentException("width can not be under 1");
         }
-        mTabWidth = width;
-        mRenderer.invalidateRenderNodes();
-        mRenderer.updateTimestamp();
+        tabWidth = width;
+        renderer.invalidateRenderNodes();
+        renderer.updateTimestamp();
         invalidate();
     }
 
@@ -2002,15 +2000,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (minSize < 2f) {
             throw new IllegalArgumentException("min size must be at least 2px");
         }
-        mEventHandler.scaleMinSize = minSize;
-        mEventHandler.scaleMaxSize = maxSize;
+        touchHandler.scaleMinSize = minSize;
+        touchHandler.scaleMaxSize = maxSize;
     }
 
     /**
      * @see CodeEditor#setInterceptParentHorizontalScrollIfNeeded(boolean)
      */
     public boolean isInterceptParentHorizontalScrollEnabled() {
-        return mForceHorizontalScrollable;
+        return forceHorizontalScrollable;
     }
 
     /**
@@ -2021,7 +2019,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param forceHorizontalScrollable Whether force horizontal scrolling
      */
     public void setInterceptParentHorizontalScrollIfNeeded(boolean forceHorizontalScrollable) {
-        this.mForceHorizontalScrollable = forceHorizontalScrollable;
+        this.forceHorizontalScrollable = forceHorizontalScrollable;
         if (!forceHorizontalScrollable) {
             ViewParent parent = getParent();
             if (parent != null) {
@@ -2034,18 +2032,18 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #setHighlightBracketPair(boolean)
      */
     public boolean isHighlightBracketPair() {
-        return mHighlightBracketPair;
+        return highlightBracketPair;
     }
 
     /**
      * Whether to highlight brackets pairs
      */
     public void setHighlightBracketPair(boolean highlightBracketPair) {
-        this.mHighlightBracketPair = highlightBracketPair;
+        this.highlightBracketPair = highlightBracketPair;
         if (!highlightBracketPair) {
-            mStyleDelegate.clearFoundBracketPair();
+            styleDelegate.clearFoundBracketPair();
         } else {
-            mStyleDelegate.postUpdateBracketPair();
+            styleDelegate.postUpdateBracketPair();
         }
         invalidate();
     }
@@ -2075,7 +2073,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#setInputType(int)
      */
     public int getInputType() {
-        return mInputType;
+        return inputType;
     }
 
     /**
@@ -2086,7 +2084,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see EditorInfo#inputType
      */
     public void setInputType(int inputType) {
-        mInputType = inputType;
+        this.inputType = inputType;
         restartInput();
     }
 
@@ -2094,18 +2092,18 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Undo last action
      */
     public void undo() {
-        mText.undo();
+        text.undo();
         notifyIMEExternalCursorChange();
-        mCompletionWindow.hide();
+        completionWindow.hide();
     }
 
     /**
      * Redo last action
      */
     public void redo() {
-        mText.redo();
+        text.redo();
         notifyIMEExternalCursorChange();
-        mCompletionWindow.hide();
+        completionWindow.hide();
     }
 
     /**
@@ -2114,7 +2112,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return true if we can undo
      */
     public boolean canUndo() {
-        return mText.canUndo();
+        return text.canUndo();
     }
 
     /**
@@ -2123,7 +2121,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return true if we can redo
      */
     public boolean canRedo() {
-        return mText.canRedo();
+        return text.canRedo();
     }
 
     /**
@@ -2131,7 +2129,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#setUndoEnabled(boolean)
      */
     public boolean isUndoEnabled() {
-        return mUndoEnabled;
+        return undoEnabled;
     }
 
     /**
@@ -2140,18 +2138,18 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param enabled Enable/Disable
      */
     public void setUndoEnabled(boolean enabled) {
-        mUndoEnabled = enabled;
-        if (mText != null) {
-            mText.setUndoEnabled(enabled);
+        undoEnabled = enabled;
+        if (text != null) {
+            text.setUndoEnabled(enabled);
         }
     }
 
     public DiagnosticIndicatorStyle getDiagnosticIndicatorStyle() {
-        return mDiagnosticStyle;
+        return diagnosticStyle;
     }
 
     public void setDiagnosticIndicatorStyle(@NonNull DiagnosticIndicatorStyle diagnosticIndicatorStyle) {
-        this.mDiagnosticStyle = diagnosticIndicatorStyle;
+        this.diagnosticStyle = diagnosticIndicatorStyle;
         invalidate();
     }
 
@@ -2163,7 +2161,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
             @Override
             public boolean onCreateActionMode(ActionMode p1, Menu p2) {
-                mStartedActionMode = ACTION_MODE_SEARCH_TEXT;
+                startedActionMode = ACTION_MODE_SEARCH_TEXT;
                 p2.add(0, 0, 0, R.string.next).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
                 p2.add(0, 1, 0, R.string.last).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
                 p2.add(0, 2, 0, R.string.replace).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
@@ -2239,7 +2237,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
             @Override
             public void onDestroyActionMode(ActionMode p1) {
-                mStartedActionMode = ACTION_MODE_NONE;
+                startedActionMode = ACTION_MODE_NONE;
                 getSearcher().stopSearch();
             }
 
@@ -2252,7 +2250,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Get {@link EditorTouchEventHandler} of the editor
      */
     public EditorTouchEventHandler getEventHandler() {
-        return mEventHandler;
+        return touchHandler;
     }
 
     /**
@@ -2260,7 +2258,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#setDividerMargin(float, float)
      */
     public float getDividerMarginLeft() {
-        return mDividerMarginLeft;
+        return dividerMarginLeft;
     }
 
     /**
@@ -2268,7 +2266,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#setDividerMargin(float, float)
      */
     public float getDividerMarginRight() {
-        return mDividerMarginRight;
+        return dividerMarginRight;
     }
 
     /**
@@ -2281,8 +2279,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (marginLeft < 0 || marginRight < 0) {
             throw new IllegalArgumentException("margin can not be under zero");
         }
-        mDividerMarginLeft = marginLeft;
-        mDividerMarginRight = marginRight;
+        dividerMarginLeft = marginLeft;
+        dividerMarginRight = marginRight;
         invalidate();
     }
 
@@ -2300,7 +2298,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#setDividerWidth(float)
      */
     public float getDividerWidth() {
-        return mDividerWidth;
+        return dividerWidth;
     }
 
     /**
@@ -2312,7 +2310,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (dividerWidth < 0) {
             throw new IllegalArgumentException("width can not be under zero");
         }
-        this.mDividerWidth = dividerWidth;
+        this.dividerWidth = dividerWidth;
         invalidate();
     }
 
@@ -2321,7 +2319,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#setTypefaceLineNumber(Typeface)
      */
     public Typeface getTypefaceLineNumber() {
-        return mRenderer.getPaintOther().getTypeface();
+        return renderer.getPaintOther().getTypeface();
     }
 
     /**
@@ -2330,7 +2328,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param typefaceLineNumber New typeface
      */
     public void setTypefaceLineNumber(Typeface typefaceLineNumber) {
-        mRenderer.setTypefaceLineNumber(typefaceLineNumber);
+        renderer.setTypefaceLineNumber(typefaceLineNumber);
     }
 
     /**
@@ -2338,7 +2336,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#setTypefaceText(Typeface)
      */
     public Typeface getTypefaceText() {
-        return mRenderer.getPaint().getTypeface();
+        return renderer.getPaint().getTypeface();
     }
 
     /**
@@ -2347,14 +2345,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param typefaceText New typeface
      */
     public void setTypefaceText(Typeface typefaceText) {
-        mRenderer.setTypefaceText(typefaceText);
+        renderer.setTypefaceText(typefaceText);
     }
 
     /**
      * @see #setTextScaleX(float)
      */
     public float getTextScaleX() {
-        return mRenderer.getPaint().getTextScaleX();
+        return renderer.getPaint().getTextScaleX();
     }
 
     /**
@@ -2364,14 +2362,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #getTextScaleX()
      */
     public void setTextScaleX(float textScaleX) {
-        mRenderer.setTextScaleX(textScaleX);
+        renderer.setTextScaleX(textScaleX);
     }
 
     /**
      * @see #setTextLetterSpacing(float)
      */
     public float getTextLetterSpacing() {
-        return mRenderer.getPaint().getLetterSpacing();
+        return renderer.getPaint().getLetterSpacing();
     }
 
     /**
@@ -2381,7 +2379,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #getTextLetterSpacing()
      */
     public void setTextLetterSpacing(float textLetterSpacing) {
-        mRenderer.setLetterSpacing(textLetterSpacing);
+        renderer.setLetterSpacing(textLetterSpacing);
     }
 
     /**
@@ -2389,7 +2387,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#setLineNumberAlign(Paint.Align)
      */
     public Paint.Align getLineNumberAlign() {
-        return mLineNumberAlign;
+        return lineNumberAlign;
     }
 
     /**
@@ -2401,7 +2399,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (align == null) {
             align = Paint.Align.LEFT;
         }
-        mLineNumberAlign = align;
+        lineNumberAlign = align;
         invalidate();
     }
 
@@ -2414,12 +2412,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (width < 0) {
             throw new IllegalArgumentException("width can not be under zero");
         }
-        mInsertSelWidth = width;
+        insertSelectionWidth = width;
         invalidate();
     }
 
     public float getInsertSelectionWidth() {
-        return mInsertSelWidth;
+        return insertSelectionWidth;
     }
 
     /**
@@ -2429,7 +2427,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return Cursor of text
      */
     public Cursor getCursor() {
-        return mCursor;
+        return cursor;
     }
 
     /**
@@ -2438,7 +2436,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return line count
      */
     public int getLineCount() {
-        return mText.getLineCount();
+        return text.getLineCount();
     }
 
     /**
@@ -2448,7 +2446,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public int getFirstVisibleLine() {
         try {
-            return mLayout.getLineNumberForRow(getFirstVisibleRow());
+            return layout.getLineNumberForRow(getFirstVisibleRow());
         } catch (IndexOutOfBoundsException e) {
             return 0;
         }
@@ -2469,7 +2467,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return last visible row
      */
     public int getLastVisibleRow() {
-        return Math.max(0, Math.min(mLayout.getRowCount() - 1, (getOffsetY() + getHeight()) / getRowHeight()));
+        return Math.max(0, Math.min(layout.getRowCount() - 1, (getOffsetY() + getHeight()) / getRowHeight()));
     }
 
     /**
@@ -2479,7 +2477,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public int getLastVisibleLine() {
         try {
-            return mLayout.getLineNumberForRow(getLastVisibleRow());
+            return layout.getLineNumberForRow(getLastVisibleRow());
         } catch (IndexOutOfBoundsException e) {
             return getLineCount() - 1;
         }
@@ -2505,8 +2503,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      *             by
      */
     public void setLineSpacing(float add, float mult) {
-        mLineSpacingAdd = add;
-        mLineSpacingMultiplier = mult;
+        lineSpacingAdd = add;
+        lineSpacingMultiplier = mult;
     }
 
     /**
@@ -2517,7 +2515,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #getLineSpacingMultiplier()
      */
     public float getLineSpacingExtra() {
-        return mLineSpacingAdd;
+        return lineSpacingAdd;
     }
 
     /**
@@ -2525,7 +2523,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      *                         *            This will be applied after the multiplier
      */
     public void setLineSpacingExtra(float lineSpacingExtra) {
-        mLineSpacingAdd = lineSpacingExtra;
+        lineSpacingAdd = lineSpacingExtra;
         invalidate();
     }
 
@@ -2534,7 +2532,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #setLineSpacingMultiplier(float)
      */
     public float getLineSpacingMultiplier() {
-        return mLineSpacingMultiplier;
+        return lineSpacingMultiplier;
     }
 
     /**
@@ -2542,7 +2540,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      *                              *             by. Default 1.0f
      */
     public void setLineSpacingMultiplier(float lineSpacingMultiplier) {
-        this.mLineSpacingMultiplier = lineSpacingMultiplier;
+        this.lineSpacingMultiplier = lineSpacingMultiplier;
         invalidate();
     }
 
@@ -2550,8 +2548,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Get actual line spacing in pixels.
      */
     public int getLineSpacingPixels() {
-        var metrics = mRenderer.metricsText;
-        return ((int) ((metrics.descent - metrics.ascent) * (mLineSpacingMultiplier - 1f) + mLineSpacingAdd)) / 2 * 2;
+        var metrics = renderer.metricsText;
+        return ((int) ((metrics.descent - metrics.ascent) * (lineSpacingMultiplier - 1f) + lineSpacingAdd)) / 2 * 2;
     }
 
     /**
@@ -2561,7 +2559,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return baseline y offset
      */
     public int getRowBaseline(int row) {
-        return getRowHeight() * (row + 1) - mRenderer.metricsText.descent - getLineSpacingPixels() / 2;
+        return getRowHeight() * (row + 1) - renderer.metricsText.descent - getLineSpacingPixels() / 2;
     }
 
     /**
@@ -2570,7 +2568,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return height of single row
      */
     public int getRowHeight() {
-        var metrics = mRenderer.metricsText;
+        var metrics = renderer.metricsText;
         // Do not let the row height be zero...
         return Math.max(1, metrics.descent - metrics.ascent + getLineSpacingPixels());
     }
@@ -2613,7 +2611,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Get the height of text in row
      */
     public int getRowHeightOfText() {
-        var metrics = mRenderer.metricsText;
+        var metrics = renderer.metricsText;
         return metrics.descent - metrics.ascent;
     }
 
@@ -2623,7 +2621,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return scroll x
      */
     public int getOffsetX() {
-        return mEventHandler.getScroller().getCurrX();
+        return touchHandler.getScroller().getCurrX();
     }
 
     /**
@@ -2632,7 +2630,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return scroll y
      */
     public int getOffsetY() {
-        return mEventHandler.getScroller().getCurrY();
+        return touchHandler.getScroller().getCurrY();
     }
 
     /**
@@ -2640,7 +2638,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     @UnsupportedUserUsage
     public void setLayoutBusy(boolean busy) {
-        this.mLayoutBusy = busy;
+        this.layoutBusy = busy;
     }
 
     /**
@@ -2650,14 +2648,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #isFormatting()
      */
     public boolean isEditable() {
-        return mEditable && !mLayoutBusy && !isFormatting();
+        return editable && !layoutBusy && !isFormatting();
     }
 
     /**
      * @see #setEditable(boolean)
      */
     public boolean getEditable() {
-        return mEditable;
+        return editable;
     }
 
     /**
@@ -2666,7 +2664,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param editable Editable
      */
     public void setEditable(boolean editable) {
-        mEditable = editable;
+        this.editable = editable;
         if (!editable) {
             hideSoftInput();
         }
@@ -2677,7 +2675,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see CodeEditor#setScalable(boolean)
      */
     public boolean isScalable() {
-        return mScalable;
+        return scalable;
     }
 
     /**
@@ -2686,15 +2684,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param scale Whether allow
      */
     public void setScalable(boolean scale) {
-        mScalable = scale;
+        scalable = scale;
     }
 
     public boolean isBlockLineEnabled() {
-        return mBlockLineEnabled;
+        return blockLineEnabled;
     }
 
     public void setBlockLineEnabled(boolean enabled) {
-        mBlockLineEnabled = enabled;
+        blockLineEnabled = enabled;
         invalidate();
     }
 
@@ -2702,10 +2700,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Get the target cursor to move when shift is pressed
      */
     private CharPosition getSelectingTarget() {
-        if (mCursor.left().equals(mSelectionAnchor)) {
-            return mCursor.right();
+        if (cursor.left().equals(selectionAnchor)) {
+            return cursor.right();
         } else {
-            return mCursor.left();
+            return cursor.left();
         }
     }
 
@@ -2713,11 +2711,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Make sure the moving selection is visible
      */
     private void ensureSelectingTargetVisible() {
-        if (mCursor.left().equals(mSelectionAnchor)) {
+        if (cursor.left().equals(selectionAnchor)) {
             // Ensure right selection visible
             ensureSelectionVisible();
         } else {
-            ensurePositionVisible(mCursor.getLeftLine(), mCursor.getLeftColumn());
+            ensurePositionVisible(cursor.getLeftLine(), cursor.getLeftColumn());
         }
     }
 
@@ -2726,17 +2724,17 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * If the auto complete panel is shown,move the selection in panel to next
      */
     public void moveSelectionDown() {
-        if (mSelectionAnchor == null) {
-            if (mCompletionWindow.isShowing()) {
-                mCompletionWindow.moveDown();
+        if (selectionAnchor == null) {
+            if (completionWindow.isShowing()) {
+                completionWindow.moveDown();
                 return;
             }
-            long pos = mLayout.getDownPosition(mCursor.getLeftLine(), mCursor.getLeftColumn());
+            long pos = layout.getDownPosition(cursor.getLeftLine(), cursor.getLeftColumn());
             setSelection(IntPair.getFirst(pos), IntPair.getSecond(pos));
         } else {
-            mCompletionWindow.hide();
-            long pos = mLayout.getDownPosition(getSelectingTarget().getLine(), getSelectingTarget().getColumn());
-            setSelectionRegion(mSelectionAnchor.line, mSelectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
+            completionWindow.hide();
+            long pos = layout.getDownPosition(getSelectingTarget().getLine(), getSelectingTarget().getColumn());
+            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
             ensureSelectingTargetVisible();
         }
     }
@@ -2746,17 +2744,17 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * If Auto complete panel is shown,move the selection in panel to last
      */
     public void moveSelectionUp() {
-        if (mSelectionAnchor == null) {
-            if (mCompletionWindow.isShowing()) {
-                mCompletionWindow.moveUp();
+        if (selectionAnchor == null) {
+            if (completionWindow.isShowing()) {
+                completionWindow.moveUp();
                 return;
             }
-            long pos = mLayout.getUpPosition(mCursor.getLeftLine(), mCursor.getLeftColumn());
+            long pos = layout.getUpPosition(cursor.getLeftLine(), cursor.getLeftColumn());
             setSelection(IntPair.getFirst(pos), IntPair.getSecond(pos));
         } else {
-            mCompletionWindow.hide();
-            long pos = mLayout.getUpPosition(getSelectingTarget().getLine(), getSelectingTarget().getColumn());
-            setSelectionRegion(mSelectionAnchor.line, mSelectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
+            completionWindow.hide();
+            long pos = layout.getUpPosition(getSelectingTarget().getLine(), getSelectingTarget().getColumn());
+            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
             ensureSelectingTargetVisible();
         }
     }
@@ -2765,27 +2763,27 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Move the selection left
      */
     public void moveSelectionLeft() {
-        if (mSelectionAnchor == null) {
+        if (selectionAnchor == null) {
             Cursor c = getCursor();
             int line = c.getLeftLine();
             int column = c.getLeftColumn();
-            long pos = mCursor.getLeftOf(IntPair.pack(line, column));
+            long pos = cursor.getLeftOf(IntPair.pack(line, column));
             int lineAfter = IntPair.getFirst(pos);
             int columnAfter = IntPair.getSecond(pos);
             setSelection(lineAfter, columnAfter);
             if (line == lineAfter) {
-                if (mCompletionWindow.isShowing()) {
+                if (completionWindow.isShowing()) {
                     if (columnAfter == 0) {
-                        mCompletionWindow.hide();
+                        completionWindow.hide();
                     } else {
-                        mCompletionWindow.requireCompletion();
+                        completionWindow.requireCompletion();
                     }
                 }
             }
         } else {
-            mCompletionWindow.hide();
-            long pos = mCursor.getLeftOf(getSelectingTarget().toIntPair());
-            setSelectionRegion(mSelectionAnchor.line, mSelectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
+            completionWindow.hide();
+            long pos = cursor.getLeftOf(getSelectingTarget().toIntPair());
+            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
             ensureSelectingTargetVisible();
         }
     }
@@ -2794,22 +2792,22 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Move the selection right
      */
     public void moveSelectionRight() {
-        if (mSelectionAnchor == null) {
+        if (selectionAnchor == null) {
             Cursor c = getCursor();
             int line = c.getLeftLine();
             int column = c.getLeftColumn();
             int c_column = getText().getColumnCount(line);
-            long pos = mCursor.getRightOf(IntPair.pack(line, column));
+            long pos = cursor.getRightOf(IntPair.pack(line, column));
             int lineAfter = IntPair.getFirst(pos);
             int columnAfter = IntPair.getSecond(pos);
             setSelection(lineAfter, columnAfter);
-            if (line == lineAfter && mCompletionWindow.isShowing()) {
-                mCompletionWindow.requireCompletion();
+            if (line == lineAfter && completionWindow.isShowing()) {
+                completionWindow.requireCompletion();
             }
         } else {
-            mCompletionWindow.hide();
-            long pos = mCursor.getRightOf(getSelectingTarget().toIntPair());
-            setSelectionRegion(mSelectionAnchor.line, mSelectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
+            completionWindow.hide();
+            long pos = cursor.getRightOf(getSelectingTarget().toIntPair());
+            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
             ensureSelectingTargetVisible();
         }
     }
@@ -2818,12 +2816,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Move selection to end of line
      */
     public void moveSelectionEnd() {
-        if (mSelectionAnchor == null) {
-            int line = mCursor.getLeftLine();
+        if (selectionAnchor == null) {
+            int line = cursor.getLeftLine();
             setSelection(line, getText().getColumnCount(line));
         } else {
             int line = getSelectingTarget().line;
-            setSelectionRegion(mSelectionAnchor.line, mSelectionAnchor.column, line, getText().getColumnCount(line), false);
+            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, line, getText().getColumnCount(line), false);
             ensureSelectingTargetVisible();
         }
     }
@@ -2832,10 +2830,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Move selection to start of line
      */
     public void moveSelectionHome() {
-        if (mSelectionAnchor == null) {
-            setSelection(mCursor.getLeftLine(), 0);
+        if (selectionAnchor == null) {
+            setSelection(cursor.getLeftLine(), 0);
         } else {
-            setSelectionRegion(mSelectionAnchor.line, mSelectionAnchor.column, getSelectingTarget().line, 0, false);
+            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, getSelectingTarget().line, 0, false);
             ensureSelectingTargetVisible();
         }
     }
@@ -2879,24 +2877,24 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param makeItVisible Make the character visible
      */
     public void setSelection(int line, int column, boolean makeItVisible, int cause) {
-        mRenderer.invalidateInCursor();
-        mCursorAnimator.markStartPos();
-        if (column > 0 && Character.isHighSurrogate(mText.charAt(line, column - 1))) {
+        renderer.invalidateInCursor();
+        cursorAnimator.markStartPos();
+        if (column > 0 && Character.isHighSurrogate(text.charAt(line, column - 1))) {
             column++;
-            if (column > mText.getColumnCount(line)) {
+            if (column > text.getColumnCount(line)) {
                 column--;
             }
         }
-        mCursor.set(line, column);
-        if (mHighlightCurrentBlock) {
-            mCursorPosition = findCursorBlock();
+        cursor.set(line, column);
+        if (highlightCurrentBlock) {
+            cursorPosition = findCursorBlock();
         }
         updateCursor();
         updateSelection();
-        mRenderer.invalidateInCursor();
-        if (!mEventHandler.hasAnyHeldHandle() && !mConnection.composingText.isComposing() && !mCompletionWindow.shouldRejectComposing()) {
-            mCursorAnimator.markEndPos();
-            mCursorAnimator.start();
+        renderer.invalidateInCursor();
+        if (!touchHandler.hasAnyHeldHandle() && !inputConnection.composingText.isComposing() && !completionWindow.shouldRejectComposing()) {
+            cursorAnimator.markEndPos();
+            cursorAnimator.start();
         }
         if (makeItVisible) {
             ensurePositionVisible(line, column);
@@ -2960,7 +2958,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param makeRightVisible Whether to make right cursor visible
      */
     public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight, int columnRight, boolean makeRightVisible, int cause) {
-        mRenderer.invalidateInCursor();
+        renderer.invalidateInCursor();
         int start = getText().getCharIndex(lineLeft, columnLeft);
         int end = getText().getCharIndex(lineRight, columnRight);
         if (start == end) {
@@ -2972,34 +2970,34 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             Log.w(LOG_TAG, "setSelectionRegion() error: start > end:start = " + start + " end = " + end + " lineLeft = " + lineLeft + " columnLeft = " + columnLeft + " lineRight = " + lineRight + " columnRight = " + columnRight);
             return;
         }
-        mCursorAnimator.cancel();
-        boolean lastState = mCursor.isSelected();
+        cursorAnimator.cancel();
+        boolean lastState = cursor.isSelected();
         if (columnLeft > 0) {
             int column = columnLeft - 1;
-            char ch = mText.charAt(lineLeft, column);
+            char ch = text.charAt(lineLeft, column);
             if (Character.isHighSurrogate(ch)) {
                 columnLeft++;
-                if (columnLeft > mText.getColumnCount(lineLeft)) {
+                if (columnLeft > text.getColumnCount(lineLeft)) {
                     columnLeft--;
                 }
             }
         }
         if (columnRight > 0) {
             int column = columnRight - 1;
-            char ch = mText.charAt(lineRight, column);
+            char ch = text.charAt(lineRight, column);
             if (Character.isHighSurrogate(ch)) {
                 columnRight++;
-                if (columnRight > mText.getColumnCount(lineRight)) {
+                if (columnRight > text.getColumnCount(lineRight)) {
                     columnRight--;
                 }
             }
         }
-        mCursor.setLeft(lineLeft, columnLeft);
-        mCursor.setRight(lineRight, columnRight);
-        mRenderer.invalidateInCursor();
+        cursor.setLeft(lineLeft, columnLeft);
+        cursor.setRight(lineRight, columnRight);
+        renderer.invalidateInCursor();
         updateCursor();
         updateSelection();
-        mCompletionWindow.hide();
+        completionWindow.hide();
         if (makeRightVisible) {
             ensurePositionVisible(lineRight, columnRight);
         } else {
@@ -3012,16 +3010,16 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Move to next page
      */
     public void movePageDown() {
-        mEventHandler.scrollBy(0, getHeight(), true);
-        mCompletionWindow.hide();
+        touchHandler.scrollBy(0, getHeight(), true);
+        completionWindow.hide();
     }
 
     /**
      * Move to previous page
      */
     public void movePageUp() {
-        mEventHandler.scrollBy(0, -getHeight(), true);
-        mCompletionWindow.hide();
+        touchHandler.scrollBy(0, -getHeight(), true);
+        completionWindow.hide();
     }
 
     /**
@@ -3029,13 +3027,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void pasteText() {
         try {
-            if (!mClipboardManager.hasPrimaryClip() || mClipboardManager.getPrimaryClip() == null) {
+            if (!clipboardManager.hasPrimaryClip() || clipboardManager.getPrimaryClip() == null) {
                 return;
             }
-            ClipData.Item data = mClipboardManager.getPrimaryClip().getItemAt(0);
+            ClipData.Item data = clipboardManager.getPrimaryClip().getItemAt(0);
             CharSequence text = data.getText();
-            if (text != null && mConnection != null) {
-                mConnection.commitText(text, 0);
+            if (text != null && inputConnection != null) {
+                inputConnection.commitText(text, 0);
             }
             notifyIMEExternalCursorChange();
         } catch (Exception e) {
@@ -3059,12 +3057,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void copyText(boolean shouldCopyLine) {
         try {
-            if (mCursor.isSelected()) {
-                String clip = getText().subContent(mCursor.getLeftLine(),
-                        mCursor.getLeftColumn(),
-                        mCursor.getRightLine(),
-                        mCursor.getRightColumn()).toString();
-                mClipboardManager.setPrimaryClip(ClipData.newPlainText(clip, clip));
+            if (cursor.isSelected()) {
+                String clip = getText().subContent(cursor.getLeftLine(),
+                        cursor.getLeftColumn(),
+                        cursor.getRightLine(),
+                        cursor.getRightColumn()).toString();
+                clipboardManager.setPrimaryClip(ClipData.newPlainText(clip, clip));
             } else if (shouldCopyLine) {
                 copyLine();
             }
@@ -3093,7 +3091,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Copy text to clipboard and delete them
      */
     public void cutText() {
-        if (mCursor.isSelected()) {
+        if (cursor.isSelected()) {
             copyText();
             deleteText();
             notifyIMEExternalCursorChange();
@@ -3202,7 +3200,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         // Find word edges
         int startLine = line, endLine = line;
         var lineObj = getText().getLine(line);
-        long edges = ICUUtils.getWordEdges(lineObj, column, mProps.useICULibToSelectWords);
+        long edges = ICUUtils.getWordEdges(lineObj, column, props.useICULibToSelectWords);
         int startColumn = IntPair.getFirst(edges);
         int endColumn = IntPair.getSecond(edges);
         if (startColumn == endColumn) {
@@ -3232,7 +3230,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     @NonNull
     public Content getText() {
-        return mText;
+        return text;
     }
 
     /**
@@ -3250,7 +3248,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     @NonNull
     public Bundle getExtraArguments() {
-        return mExtraArguments;
+        return extraArguments;
     }
 
     /**
@@ -3277,41 +3275,41 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             text = "";
         }
 
-        if (mText != null) {
-            mText.removeContentListener(this);
-            mText.setLineListener(null);
-            mText.resetBatchEdit();
+        if (this.text != null) {
+            this.text.removeContentListener(this);
+            this.text.setLineListener(null);
+            this.text.resetBatchEdit();
         }
-        mExtraArguments = extraArguments == null ? new Bundle() : extraArguments;
+        this.extraArguments = extraArguments == null ? new Bundle() : extraArguments;
         if (reuseContentObject && text instanceof Content) {
-            mText = (Content) text;
-            mText.resetBatchEdit();
-            mRenderer.updateTimestamp();
+            this.text = (Content) text;
+            this.text.resetBatchEdit();
+            renderer.updateTimestamp();
         } else {
-            mText = new Content(text);
+            this.text = new Content(text);
         }
-        mText.setBidiEnabled(!mRenderer.basicDisplayMode);
-        mStyleDelegate.reset();
-        mStyles = null;
-        mCursor = mText.getCursor();
-        mEventHandler.reset();
-        mText.addContentListener(this);
-        mText.setUndoEnabled(mUndoEnabled);
-        mText.setLineListener(this);
-        mRenderer.notifyFullTextUpdate();
+        this.text.setBidiEnabled(!renderer.basicDisplayMode);
+        styleDelegate.reset();
+        textStyles = null;
+        cursor = this.text.getCursor();
+        touchHandler.reset();
+        this.text.addContentListener(this);
+        this.text.setUndoEnabled(undoEnabled);
+        this.text.setLineListener(this);
+        renderer.notifyFullTextUpdate();
 
-        if (mLanguage != null) {
-            mLanguage.getAnalyzeManager().reset(new ContentReference(mText), mExtraArguments);
-            mLanguage.getFormatter().cancel();
+        if (editorLanguage != null) {
+            editorLanguage.getAnalyzeManager().reset(new ContentReference(this.text), this.extraArguments);
+            editorLanguage.getFormatter().cancel();
         }
 
-        dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_SET_NEW_TEXT, new CharPosition(), mText.getIndexer().getCharPosition(getLineCount() - 1, mText.getColumnCount(getLineCount() - 1)), mText));
-        if (mInputMethodManager != null) {
-            mInputMethodManager.restartInput(this);
+        dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_SET_NEW_TEXT, new CharPosition(), this.text.getIndexer().getCharPosition(getLineCount() - 1, this.text.getColumnCount(getLineCount() - 1)), this.text));
+        if (inputMethodManager != null) {
+            inputMethodManager.restartInput(this);
         }
         createLayout();
         requestLayout();
-        mRenderer.invalidateRenderNodes();
+        renderer.invalidateRenderNodes();
         invalidate();
     }
 
@@ -3339,7 +3337,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see EventManager#subscribeEvent(Class, EventReceiver)
      */
     public <T extends Event> SubscriptionReceipt<T> subscribeEvent(Class<T> eventType, EventReceiver<T> receiver) {
-        return mEventManager.subscribeEvent(eventType, receiver);
+        return eventManager.subscribeEvent(eventType, receiver);
     }
 
     /**
@@ -3348,7 +3346,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see EventManager#dispatchEvent(Event)
      */
     public <T extends Event> int dispatchEvent(T event) {
-        return mEventManager.dispatchEvent(event);
+        return eventManager.dispatchEvent(event);
     }
 
     /**
@@ -3357,7 +3355,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return whether the editor is currently formatting
      */
     public boolean isFormatting() {
-        return mLanguage.getFormatter().isRunning();
+        return editorLanguage.getFormatter().isRunning();
     }
 
     /**
@@ -3366,7 +3364,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return The state of line number displaying
      */
     public boolean isLineNumberEnabled() {
-        return mLineNumberEnabled;
+        return lineNumberEnabled;
     }
 
     /**
@@ -3375,10 +3373,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param lineNumberEnabled The state of line number displaying
      */
     public void setLineNumberEnabled(boolean lineNumberEnabled) {
-        if (lineNumberEnabled != mLineNumberEnabled && isWordwrap()) {
+        if (lineNumberEnabled != this.lineNumberEnabled && isWordwrap()) {
             createLayout();
         }
-        mLineNumberEnabled = lineNumberEnabled;
+        this.lineNumberEnabled = lineNumberEnabled;
         invalidate();
     }
 
@@ -3390,15 +3388,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     @NonNull
     public Paint getTextPaint() {
-        return mRenderer.getPaint();
+        return renderer.getPaint();
     }
 
     public Paint getOtherPaint() {
-        return mRenderer.getPaintOther();
+        return renderer.getPaintOther();
     }
 
     public Paint getGraphPaint() {
-        return mRenderer.getPaintGraph();
+        return renderer.getPaintGraph();
     }
 
     /**
@@ -3409,7 +3407,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     @NonNull
     public EditorColorScheme getColorScheme() {
-        return mColors;
+        return colorScheme;
     }
 
     /**
@@ -3422,10 +3420,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param colors A non-null and free EditorColorScheme
      */
     public void setColorScheme(@NonNull EditorColorScheme colors) {
-        if (mColors != null) {
-            mColors.detachEditor(this);
+        if (colorScheme != null) {
+            colorScheme.detachEditor(this);
         }
-        mColors = colors;
+        colorScheme = colors;
         // Automatically invoke scheme updating related methods
         colors.attachEditor(this);
         invalidate();
@@ -3449,8 +3447,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Rerun analysis forcibly
      */
     public void rerunAnalysis() {
-        if (mLanguage != null) {
-            mLanguage.getAnalyzeManager().rerun();
+        if (editorLanguage != null) {
+            editorLanguage.getAnalyzeManager().rerun();
         }
     }
 
@@ -3460,28 +3458,28 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     @Nullable
     public Styles getStyles() {
-        return mStyles;
+        return textStyles;
     }
 
     @UiThread
     public void setStyles(@Nullable Styles styles) {
-        mStyles = styles;
-        if (mHighlightCurrentBlock) {
-            mCursorPosition = findCursorBlock();
+        textStyles = styles;
+        if (highlightCurrentBlock) {
+            cursorPosition = findCursorBlock();
         }
-        mRenderer.invalidateRenderNodes();
-        mRenderer.updateTimestamp();
+        renderer.invalidateRenderNodes();
+        renderer.updateTimestamp();
         invalidate();
     }
 
     @Nullable
     public DiagnosticsContainer getDiagnostics() {
-        return mDiagnostics;
+        return diagnostics;
     }
 
     @UiThread
     public void setDiagnostics(@Nullable DiagnosticsContainer diagnostics) {
-        mDiagnostics = diagnostics;
+        this.diagnostics = diagnostics;
         invalidate();
     }
 
@@ -3489,8 +3487,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Hide auto complete window if shown
      */
     public void hideAutoCompleteWindow() {
-        if (mCompletionWindow != null) {
-            mCompletionWindow.hide();
+        if (completionWindow != null) {
+            completionWindow.hide();
         }
     }
 
@@ -3500,7 +3498,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return index of cursor's code block
      */
     public int getBlockIndex() {
-        return mCursorPosition;
+        return cursorPosition;
     }
 
     /**
@@ -3514,7 +3512,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             if (!hasFocus()) {
                 requestFocus();
             }
-            mInputMethodManager.showSoftInput(this, 0);
+            inputMethodManager.showSoftInput(this, 0);
         }
         invalidate();
     }
@@ -3523,7 +3521,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Hide soft input
      */
     public void hideSoftInput() {
-        mInputMethodManager.hideSoftInputFromWindow(getWindowToken(), 0);
+        inputMethodManager.hideSoftInputFromWindow(getWindowToken(), 0);
     }
 
     /**
@@ -3531,24 +3529,24 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     protected void updateSelection() {
         int candidatesStart = -1, candidatesEnd = -1;
-        if (mConnection.composingText.isComposing()) {
+        if (inputConnection.composingText.isComposing()) {
             try {
-                candidatesStart = mConnection.composingText.startIndex;
-                candidatesEnd = mConnection.composingText.endIndex;
+                candidatesStart = inputConnection.composingText.startIndex;
+                candidatesEnd = inputConnection.composingText.endIndex;
             } catch (IndexOutOfBoundsException e) {
                 //Ignored
             }
         }
-        mInputMethodManager.updateSelection(this, mCursor.getLeft(), mCursor.getRight(), candidatesStart, candidatesEnd);
+        inputMethodManager.updateSelection(this, cursor.getLeft(), cursor.getRight(), candidatesStart, candidatesEnd);
     }
 
     /**
      * Update request result for monitoring request
      */
     protected void updateExtractedText() {
-        if (mExtracting != null) {
-            var text = extractText(mExtracting);
-            mInputMethodManager.updateExtractedText(this, mExtracting.token, text);
+        if (extractingTextRequest != null) {
+            var text = extractText(extractingTextRequest);
+            inputMethodManager.updateExtractedText(this, extractingTextRequest.token, text);
         }
     }
 
@@ -3561,10 +3559,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     protected void setExtracting(@Nullable ExtractedTextRequest request) {
         if (getProps().disallowSuggestions) {
-            mExtracting = null;
+            extractingTextRequest = null;
             return;
         }
-        mExtracting = request;
+        extractingTextRequest = request;
     }
 
     /**
@@ -3580,14 +3578,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         int selEnd = cur.getRight();
         int startOffset = 0;
         if (request.hintMaxChars == 0) {
-            request.hintMaxChars = mProps.maxIPCTextLength;
+            request.hintMaxChars = props.maxIPCTextLength;
         }
-        if (request.hintMaxChars < mProps.maxIPCTextLength) {
+        if (request.hintMaxChars < props.maxIPCTextLength) {
             if (startOffset + request.hintMaxChars < selBegin) {
                 startOffset = selBegin - request.hintMaxChars / 2;
             }
         }
-        text.text = mConnection.getTextRegion(startOffset, startOffset + request.hintMaxChars, request.flags);
+        text.text = inputConnection.getTextRegion(startOffset, startOffset + request.hintMaxChars, request.flags);
         text.startOffset = startOffset;
         text.selectionStart = selBegin - startOffset;
         text.selectionEnd = selEnd - startOffset;
@@ -3605,7 +3603,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         updateSelection();
         updateCursorAnchor();
         // Restart if composing
-        if (mConnection.composingText.isComposing()) {
+        if (inputConnection.composingText.isComposing()) {
             restartInput();
         }
     }
@@ -3617,10 +3615,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see InputConnection
      */
     public void restartInput() {
-        if (mConnection != null)
-            mConnection.invalid();
-        if (mInputMethodManager != null)
-            mInputMethodManager.restartInput(this);
+        if (inputConnection != null)
+            inputConnection.invalid();
+        if (inputMethodManager != null)
+            inputMethodManager.restartInput(this);
     }
 
     /**
@@ -3629,7 +3627,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void updateCursor() {
         updateCursorAnchor();
         updateExtractedText();
-        if (!mText.isInBatchEdit() && !mConnection.composingText.isComposing()) {
+        if (!text.isInBatchEdit() && !inputConnection.composingText.isComposing()) {
             updateSelection();
         }
     }
@@ -3642,12 +3640,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void release() {
         hideEditorWindows();
-        if (mLanguage != null) {
-            mLanguage.getAnalyzeManager().destroy();
-            mLanguage.getFormatter().setReceiver(null);
-            mLanguage.getFormatter().destroy();
-            mLanguage.destroy();
-            mLanguage = new EmptyLanguage();
+        if (editorLanguage != null) {
+            editorLanguage.getAnalyzeManager().destroy();
+            editorLanguage.getFormatter().setReceiver(null);
+            editorLanguage.getFormatter().destroy();
+            editorLanguage.destroy();
+            editorLanguage = new EmptyLanguage();
         }
     }
 
@@ -3655,9 +3653,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Hide all built-in windows of the editor
      */
     public void hideEditorWindows() {
-        mCompletionWindow.cancelCompletion();
-        mTextActionWindow.dismiss();
-        mEventHandler.magnifier.dismiss();
+        completionWindow.cancelCompletion();
+        textActionWindow.dismiss();
+        touchHandler.magnifier.dismiss();
     }
 
     /**
@@ -3669,11 +3667,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (type == EditorColorScheme.COMPLETION_WND_BACKGROUND || type == EditorColorScheme.COMPLETION_WND_CORNER
                 || type == EditorColorScheme.COMPLETION_WND_ITEM_CURRENT || type == EditorColorScheme.COMPLETION_WND_TEXT_SECONDARY
                 || type == EditorColorScheme.COMPLETION_WND_TEXT_PRIMARY) {
-            if (mCompletionWindow != null)
-                mCompletionWindow.applyColorScheme();
+            if (completionWindow != null)
+                completionWindow.applyColorScheme();
             return;
         }
-        mRenderer.invalidateRenderNodes();
+        renderer.invalidateRenderNodes();
         invalidate();
     }
 
@@ -3681,9 +3679,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Called by color scheme to init colors
      */
     public void onColorFullUpdate() {
-        if (mCompletionWindow != null)
-            mCompletionWindow.applyColorScheme();
-        mRenderer.invalidateRenderNodes();
+        if (completionWindow != null)
+            completionWindow.applyColorScheme();
+        renderer.invalidateRenderNodes();
         invalidate();
     }
 
@@ -3691,7 +3689,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Get using InputMethodManager
      */
     protected InputMethodManager getInputMethodManager() {
-        return mInputMethodManager;
+        return inputMethodManager;
     }
 
     /**
@@ -3718,8 +3716,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     protected void releaseEdgeEffects() {
-        mHorizontalGlow.onRelease();
-        mVerticalGlow.onRelease();
+        edgeEffectHorizontal.onRelease();
+        edgeEffectVertical.onRelease();
     }
 
     //-------------------------------------------------------------------------------
@@ -3729,12 +3727,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        mRenderer.draw(canvas);
+        renderer.draw(canvas);
 
         // Update magnifier
-        if ((mLastCursorState != mCursorBlink.visibility || !mEventHandler.getScroller().isFinished()) && mEventHandler.magnifier.isShowing()) {
-            mLastCursorState = mCursorBlink.visibility;
-            post(mEventHandler.magnifier::updateDisplay);
+        if ((lastCursorState != cursorBlink.visibility || !touchHandler.getScroller().isFinished()) && touchHandler.magnifier.isShowing()) {
+            lastCursorState = cursorBlink.visibility;
+            post(touchHandler.magnifier::updateDisplay);
         }
     }
 
@@ -3742,7 +3740,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public AccessibilityNodeInfo createAccessibilityNodeInfo() {
         AccessibilityNodeInfo node = super.createAccessibilityNodeInfo();
         node.setEditable(isEditable());
-        node.setTextSelection(mCursor.getLeft(), mCursor.getRight());
+        node.setTextSelection(cursor.getLeft(), cursor.getRight());
         node.setScrollable(true);
         node.setInputType(InputType.TYPE_CLASS_TEXT);
         node.setMultiLine(true);
@@ -3787,14 +3785,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         int x = (int) event.getX();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                mDownX = x;
-                if (mForceHorizontalScrollable) {
+                downX = x;
+                if (forceHorizontalScrollable) {
                     getParent().requestDisallowInterceptTouchEvent(true);
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
-                int deltaX = x - mDownX;
-                if (mForceHorizontalScrollable) {
+                int deltaX = x - downX;
+                if (forceHorizontalScrollable) {
                     if (deltaX > 0 && getScroller().getCurrX() == 0
                             || deltaX < 0 && getScroller().getCurrX() == getScrollMaxX()) {
                         getParent().requestDisallowInterceptTouchEvent(false);
@@ -3815,21 +3813,21 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (!isEditable() || !isEnabled()) {
             return null;
         }
-        outAttrs.inputType = mInputType != 0 ? mInputType : EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
+        outAttrs.inputType = inputType != 0 ? inputType : EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
         outAttrs.initialSelStart = getCursor() != null ? getCursor().getLeft() : 0;
         outAttrs.initialSelEnd = getCursor() != null ? getCursor().getRight() : 0;
-        outAttrs.initialCapsMode = mConnection.getCursorCapsMode(0);
+        outAttrs.initialCapsMode = inputConnection.getCursorCapsMode(0);
 
         // Prevent fullscreen when the screen height is too small
         // Especially in landscape mode
-        if (!mProps.allowFullscreen) {
+        if (!props.allowFullscreen) {
             outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI | EditorInfo.IME_FLAG_NO_FULLSCREEN;
         }
 
-        mConnection.reset();
-        mText.resetBatchEdit();
+        inputConnection.reset();
+        text.resetBatchEdit();
         setExtracting(null);
-        return mConnection;
+        return inputConnection;
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -3839,38 +3837,38 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             return false;
         }
         if (isFormatting()) {
-            mEventHandler.reset2();
-            mScaleDetector.onTouchEvent(event);
-            return mBasicDetector.onTouchEvent(event);
+            touchHandler.reset2();
+            scaleDetector.onTouchEvent(event);
+            return basicDetector.onTouchEvent(event);
         }
-        boolean handlingBefore = mEventHandler.handlingMotions();
-        boolean res = mEventHandler.onTouchEvent(event);
-        boolean handling = mEventHandler.handlingMotions();
+        boolean handlingBefore = touchHandler.handlingMotions();
+        boolean res = touchHandler.onTouchEvent(event);
+        boolean handling = touchHandler.handlingMotions();
         boolean res2 = false;
-        boolean res3 = mScaleDetector.onTouchEvent(event);
+        boolean res3 = scaleDetector.onTouchEvent(event);
         if (!handling && !handlingBefore) {
-            res2 = mBasicDetector.onTouchEvent(event);
+            res2 = basicDetector.onTouchEvent(event);
         }
         if (event.getAction() == MotionEvent.ACTION_UP) {
-            mVerticalGlow.onRelease();
-            mHorizontalGlow.onRelease();
+            edgeEffectVertical.onRelease();
+            edgeEffectHorizontal.onRelease();
         }
         return (res3 || res2 || res);
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        return mKeyEventHandler.onKeyDown(keyCode, event);
+        return keyEventHandler.onKeyDown(keyCode, event);
     }
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        return mKeyEventHandler.onKeyUp(keyCode, event);
+        return keyEventHandler.onKeyUp(keyCode, event);
     }
 
     @Override
     public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
-        return mKeyEventHandler.onKeyMultiple(keyCode, repeatCount, event);
+        return keyEventHandler.onKeyMultiple(keyCode, repeatCount, event);
     }
 
     boolean onSuperKeyDown(int keyCode, KeyEvent event) {
@@ -3909,7 +3907,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (event.getAction() == MotionEvent.ACTION_SCROLL && event.isFromSource(InputDevice.SOURCE_CLASS_POINTER)) {
             float v_scroll = -event.getAxisValue(MotionEvent.AXIS_VSCROLL);
             float h_scroll = -event.getAxisValue(MotionEvent.AXIS_HSCROLL);
-            mEventHandler.onScroll(event, event, h_scroll * mVerticalScrollFactor, v_scroll * mVerticalScrollFactor);
+            touchHandler.onScroll(event, event, h_scroll * verticalScrollFactor, v_scroll * verticalScrollFactor);
             return true;
         }
         return super.onGenericMotionEvent(event);
@@ -3918,19 +3916,19 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @Override
     protected void onSizeChanged(int w, int h, int oldWidth, int oldHeight) {
         super.onSizeChanged(w, h, oldWidth, oldHeight);
-        mRenderer.onSizeChanged(w, h);
+        renderer.onSizeChanged(w, h);
         getVerticalEdgeEffect().setSize(w, h);
         getHorizontalEdgeEffect().setSize(h, w);
         getVerticalEdgeEffect().finish();
         getHorizontalEdgeEffect().finish();
-        if (mLayout == null || (isWordwrap() && w != oldWidth)) {
+        if (layout == null || (isWordwrap() && w != oldWidth)) {
             createLayout();
         } else {
-            mEventHandler.scrollBy(getOffsetX() > getScrollMaxX() ? getScrollMaxX() - getOffsetX() : 0, getOffsetY() > getScrollMaxY() ? getScrollMaxY() - getOffsetY() : 0);
+            touchHandler.scrollBy(getOffsetX() > getScrollMaxX() ? getScrollMaxX() - getOffsetX() : 0, getOffsetY() > getScrollMaxY() ? getScrollMaxY() - getOffsetY() : 0);
         }
         verticalAbsorb = false;
         horizontalAbsorb = false;
-        if (oldHeight > h && mProps.adjustToSelectionOnResize) {
+        if (oldHeight > h && props.adjustToSelectionOnResize) {
             ensureSelectionVisible();
         }
     }
@@ -3938,32 +3936,32 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        mCursorBlink.valid = false;
-        removeCallbacks(mCursorBlink);
+        cursorBlink.valid = false;
+        removeCallbacks(cursorBlink);
     }
 
     @Override
     protected void onFocusChanged(boolean gainFocus, int direction, @Nullable Rect previouslyFocusedRect) {
         super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
         if (gainFocus) {
-            mCursorBlink.valid = mCursorBlink.period > 0;
-            if (mCursorBlink.valid) {
-                post(mCursorBlink);
+            cursorBlink.valid = cursorBlink.period > 0;
+            if (cursorBlink.valid) {
+                post(cursorBlink);
             }
         } else {
-            mCursorBlink.valid = false;
-            mCursorBlink.visibility = false;
-            mCompletionWindow.hide();
-            mTextActionWindow.dismiss();
-            mEventHandler.hideInsertHandle();
-            removeCallbacks(mCursorBlink);
+            cursorBlink.valid = false;
+            cursorBlink.visibility = false;
+            completionWindow.hide();
+            textActionWindow.dismiss();
+            touchHandler.hideInsertHandle();
+            removeCallbacks(cursorBlink);
         }
         invalidate();
     }
 
     @Override
     public void computeScroll() {
-        var scroller = mEventHandler.getScroller();
+        var scroller = touchHandler.getScroller();
         if (scroller.computeScrollOffset()) {
             if (!scroller.isFinished() && (scroller.getStartX() != scroller.getFinalX() || scroller.getStartY() != scroller.getFinalY())) {
                 scrollerFinalX = scroller.getFinalX();
@@ -3971,24 +3969,24 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 horizontalAbsorb = Math.abs(scroller.getStartX() - scroller.getFinalX()) > getDpUnit() * 5;
                 verticalAbsorb = Math.abs(scroller.getStartY() - scroller.getFinalY()) > getDpUnit() * 5;
             }
-            if (scroller.getCurrX() <= 0 && scrollerFinalX <= 0 && mHorizontalGlow.isFinished() && horizontalAbsorb) {
-                mHorizontalGlow.onAbsorb((int) scroller.getCurrVelocity());
-                mEventHandler.glowLeftOrRight = false;
+            if (scroller.getCurrX() <= 0 && scrollerFinalX <= 0 && edgeEffectHorizontal.isFinished() && horizontalAbsorb) {
+                edgeEffectHorizontal.onAbsorb((int) scroller.getCurrVelocity());
+                touchHandler.glowLeftOrRight = false;
             } else {
                 var max = getScrollMaxX();
-                if (scroller.getCurrX() >= max && scrollerFinalX >= max && mHorizontalGlow.isFinished() && horizontalAbsorb) {
-                    mHorizontalGlow.onAbsorb((int) scroller.getCurrVelocity());
-                    mEventHandler.glowLeftOrRight = true;
+                if (scroller.getCurrX() >= max && scrollerFinalX >= max && edgeEffectHorizontal.isFinished() && horizontalAbsorb) {
+                    edgeEffectHorizontal.onAbsorb((int) scroller.getCurrVelocity());
+                    touchHandler.glowLeftOrRight = true;
                 }
             }
-            if (scroller.getCurrY() <= 0 && scrollerFinalY <= 0 && mVerticalGlow.isFinished() && verticalAbsorb) {
-                mVerticalGlow.onAbsorb((int) scroller.getCurrVelocity());
-                mEventHandler.glowTopOrBottom = false;
+            if (scroller.getCurrY() <= 0 && scrollerFinalY <= 0 && edgeEffectVertical.isFinished() && verticalAbsorb) {
+                edgeEffectVertical.onAbsorb((int) scroller.getCurrVelocity());
+                touchHandler.glowTopOrBottom = false;
             } else {
                 var max = getScrollMaxY();
-                if (scroller.getCurrY() >= max && scrollerFinalY >= max && mVerticalGlow.isFinished() && verticalAbsorb) {
-                    mVerticalGlow.onAbsorb((int) scroller.getCurrVelocity());
-                    mEventHandler.glowTopOrBottom = true;
+                if (scroller.getCurrY() >= max && scrollerFinalY >= max && edgeEffectVertical.isFinished() && verticalAbsorb) {
+                    edgeEffectVertical.onAbsorb((int) scroller.getCurrVelocity());
+                    touchHandler.glowTopOrBottom = true;
                 }
             }
             postInvalidateOnAnimation();
@@ -3997,138 +3995,138 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     @Override
     public void beforeReplace(Content content) {
-        mWait = true;
-        mLayout.beforeReplace(content);
+        waitForNextChange = true;
+        layout.beforeReplace(content);
     }
 
     @Override
     public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
-        mRenderer.updateTimestamp();
-        mStyleDelegate.onTextChange();
-        var start = mText.getIndexer().getCharPosition(startLine, startColumn);
-        var end = mText.getIndexer().getCharPosition(endLine, endColumn);
-        mRenderer.buildMeasureCacheForLines(startLine, endLine);
+        renderer.updateTimestamp();
+        styleDelegate.onTextChange();
+        var start = text.getIndexer().getCharPosition(startLine, startColumn);
+        var end = text.getIndexer().getCharPosition(endLine, endColumn);
+        renderer.buildMeasureCacheForLines(startLine, endLine);
 
         // Update spans
         try {
-            if (mStyles != null) {
-                mStyles.adjustOnInsert(start, end);
+            if (textStyles != null) {
+                textStyles.adjustOnInsert(start, end);
             }
-            if (mDiagnostics != null) {
-                mDiagnostics.shiftOnInsert(start.index, end.index);
+            if (diagnostics != null) {
+                diagnostics.shiftOnInsert(start.index, end.index);
             }
         } catch (Exception e) {
             Log.w(LOG_TAG, "Update failure", e);
         }
 
-        mLayout.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
+        layout.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
 
         // Notify input method
         updateCursor();
-        mWait = false;
+        waitForNextChange = false;
 
         // Auto completion
-        if (mCompletionWindow.isEnabled() && !mText.isUndoManagerWorking()) {
-            if ((!mConnection.composingText.isComposing() || mProps.autoCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
-                mCompletionWindow.requireCompletion();
+        if (completionWindow.isEnabled() && !text.isUndoManagerWorking()) {
+            if ((!inputConnection.composingText.isComposing() || props.autoCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
+                completionWindow.requireCompletion();
             } else {
-                mCompletionWindow.hide();
+                completionWindow.hide();
             }
-            updateCompletionWindowPosition(mCompletionWindow.isShowing());
+            updateCompletionWindowPosition(completionWindow.isShowing());
         } else {
-            mCompletionWindow.hide();
+            completionWindow.hide();
         }
 
         //Log.d(LOG_TAG, "Ins: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + insertedContent);
         updateCursorAnchor();
-        mRenderer.invalidateRenderNodes();
+        renderer.invalidateRenderNodes();
         ensureSelectionVisible();
 
-        mLanguage.getAnalyzeManager().insert(start, end, insertedContent);
-        mEventHandler.hideInsertHandle();
+        editorLanguage.getAnalyzeManager().insert(start, end, insertedContent);
+        touchHandler.hideInsertHandle();
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
-        if (!mCursor.isSelected() && !mConnection.composingText.isComposing() && !mCompletionWindow.shouldRejectComposing()) {
-            mCursorAnimator.markEndPos();
-            mCursorAnimator.start();
+        if (!cursor.isSelected() && !inputConnection.composingText.isComposing() && !completionWindow.shouldRejectComposing()) {
+            cursorAnimator.markEndPos();
+            cursorAnimator.start();
         }
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_INSERT, start, end, insertedContent));
     }
 
     @Override
     public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
-        mRenderer.updateTimestamp();
-        mStyleDelegate.onTextChange();
-        var start = mText.getIndexer().getCharPosition(startLine, startColumn);
+        renderer.updateTimestamp();
+        styleDelegate.onTextChange();
+        var start = text.getIndexer().getCharPosition(startLine, startColumn);
         var end = start.fromThis();
         end.column = endColumn;
         end.line = endLine;
         end.index = start.index + deletedContent.length();
-        mRenderer.buildMeasureCacheForLines(startLine, startLine + 1);
+        renderer.buildMeasureCacheForLines(startLine, startLine + 1);
 
         try {
-            if (mStyles != null) {
-                mStyles.adjustOnDelete(start, end);
+            if (textStyles != null) {
+                textStyles.adjustOnDelete(start, end);
             }
-            if (mDiagnostics != null) {
-                mDiagnostics.shiftOnDelete(start.index, end.index);
+            if (diagnostics != null) {
+                diagnostics.shiftOnDelete(start.index, end.index);
             }
         } catch (Exception e) {
             Log.w(LOG_TAG, "Update failure", e);
         }
 
-        mLayout.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
+        layout.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
 
         updateCursor();
 
-        if (mCompletionWindow.isEnabled() && !mText.isUndoManagerWorking()) {
-            if (!mConnection.composingText.isComposing() && mCompletionWindow.isShowing()) {
+        if (completionWindow.isEnabled() && !text.isUndoManagerWorking()) {
+            if (!inputConnection.composingText.isComposing() && completionWindow.isShowing()) {
                 if (startLine != endLine || startColumn != endColumn - 1) {
-                    mCompletionWindow.hide();
+                    completionWindow.hide();
                 } else {
-                    mCompletionWindow.requireCompletion();
+                    completionWindow.requireCompletion();
                     updateCompletionWindowPosition();
                 }
             }
         } else {
-            mCompletionWindow.hide();
+            completionWindow.hide();
         }
 
         //Log.d(LOG_TAG, "Del: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + deletedContent);
-        mRenderer.invalidateRenderNodes();
-        if (!mWait) {
+        renderer.invalidateRenderNodes();
+        if (!waitForNextChange) {
             updateCursorAnchor();
             ensureSelectionVisible();
-            mEventHandler.hideInsertHandle();
+            touchHandler.hideInsertHandle();
         }
-        if (!mCursor.isSelected() && !mWait && !mConnection.composingText.isComposing() && !mCompletionWindow.shouldRejectComposing()) {
-            mCursorAnimator.markEndPos();
-            mCursorAnimator.start();
+        if (!cursor.isSelected() && !waitForNextChange && !inputConnection.composingText.isComposing() && !completionWindow.shouldRejectComposing()) {
+            cursorAnimator.markEndPos();
+            cursorAnimator.start();
         }
-        mLanguage.getAnalyzeManager().delete(start, end, deletedContent);
+        editorLanguage.getAnalyzeManager().delete(start, end, deletedContent);
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_DELETE, start, end, deletedContent));
     }
 
     @Override
     public void beforeModification(Content content) {
-        mCursorAnimator.markStartPos();
+        cursorAnimator.markStartPos();
     }
 
     @Override
     public void onFormatSucceed(@NonNull CharSequence applyContent, @Nullable TextRange cursorRange) {
         post(() -> {
-            int line = mCursor.getLeftLine();
-            int column = mCursor.getLeftColumn();
+            int line = cursor.getLeftLine();
+            int column = cursor.getLeftColumn();
             int x = getOffsetX();
             int y = getOffsetY();
             var string = (applyContent instanceof Content) ? ((Content) applyContent).toStringBuilder() : applyContent;
-            mText.beginBatchEdit();
-            mText.delete(0, 0, mText.getLineCount() - 1,
-                    mText.getColumnCount(mText.getLineCount() - 1));
-            mText.insert(0, 0, string);
-            mText.endBatchEdit();
-            mCompletionWindow.hide();
-            mConnection.invalid();
+            text.beginBatchEdit();
+            text.delete(0, 0, text.getLineCount() - 1,
+                    text.getColumnCount(text.getLineCount() - 1));
+            text.insert(0, 0, string);
+            text.endBatchEdit();
+            completionWindow.hide();
+            inputConnection.invalid();
             if (cursorRange == null) {
                 setSelectionAround(line, column);
             } else {
@@ -4144,8 +4142,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             getScroller().startScroll(x, y, 0, 0, 0);
             getScroller().abortAnimation();
             // Ensure the scroll offset is valid
-            mEventHandler.scrollBy(0, 0);
-            mConnection.reset();
+            touchHandler.scrollBy(0, 0);
+            inputConnection.reset();
         });
     }
 
@@ -4156,7 +4154,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     @Override
     public void onRemove(Content content, ContentLine line) {
-        mLayout.onRemove(content, line);
+        layout.onRemove(content, line);
     }
 
 }

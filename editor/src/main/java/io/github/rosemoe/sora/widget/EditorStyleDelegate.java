@@ -54,7 +54,7 @@ class EditorStyleDelegate implements StyleReceiver {
     }
 
     void onTextChange() {
-        // Should we do this?
+        //  Should we do this?
         //bracketsProvider = null;
         //foundPair = null;
     }

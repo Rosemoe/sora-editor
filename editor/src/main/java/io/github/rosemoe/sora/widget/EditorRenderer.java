@@ -852,8 +852,8 @@ public class EditorRenderer {
         int leadingWhitespaceEnd = 0;
         int trailingWhitespaceStart = 0;
         float circleRadius = 0f;
-        var composingPosition = editor.mConnection.composingText.isComposing() ? mContent.getIndexer().getCharPosition(editor.mConnection.composingText.startIndex) : null;
-        var composingLength = editor.mConnection.composingText.endIndex - editor.mConnection.composingText.startIndex;
+        var composingPosition = editor.inputConnection.composingText.isComposing() ? mContent.getIndexer().getCharPosition(editor.inputConnection.composingText.startIndex) : null;
+        var composingLength = editor.inputConnection.composingText.endIndex - editor.inputConnection.composingText.startIndex;
         if (editor.shouldInitializeNonPrintable()) {
             float spaceWidth = paintGeneral.getSpaceWidth();
             circleRadius = Math.min(editor.getRowHeight(), spaceWidth) * 0.125f;
@@ -1835,10 +1835,10 @@ public class EditorRenderer {
     }
 
     protected void patchHighlightedDelimiters(Canvas canvas, float textOffset) {
-        if (editor.mConnection.composingText.isComposing() || !editor.getProps().highlightMatchingDelimiters || editor.getCursor().isSelected()) {
+        if (editor.inputConnection.composingText.isComposing() || !editor.getProps().highlightMatchingDelimiters || editor.getCursor().isSelected()) {
             return;
         }
-        var paired = editor.mStyleDelegate.getFoundBracketPair();
+        var paired = editor.styleDelegate.getFoundBracketPair();
         if (paired != null) {
             var color = editor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_FOREGROUND);
             var backgroundColor = editor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_BACKGROUND);
@@ -2161,10 +2161,10 @@ public class EditorRenderer {
             return new float[]{end, 0};
         }
         var gtr = GraphicTextRow.obtain(basicDisplayMode);
-        if (editor.defSpans.size() == 0) {
-            editor.defSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
+        if (editor.defaultSpans.size() == 0) {
+            editor.defaultSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
         }
-        gtr.set(mContent, lineIndex, contextStart, end, editor.getTabWidth(), editor.defSpans, paint);
+        gtr.set(mContent, lineIndex, contextStart, end, editor.getTabWidth(), editor.defaultSpans, paint);
         gtr.disableCache();
         var res = gtr.findOffsetByAdvance(start, target);
         GraphicTextRow.recycle(gtr);
@@ -2187,7 +2187,7 @@ public class EditorRenderer {
                 }
                 var spans = editor.getSpansForLine(startLine);
                 gtr.set(text, startLine, 0, line.length(), editor.getTabWidth(), spans, paintGeneral);
-                var softBreaks = (editor.mLayout instanceof WordwrapLayout) ? ((WordwrapLayout) editor.mLayout).getSoftBreaksForLine(startLine) : null;
+                var softBreaks = (editor.layout instanceof WordwrapLayout) ? ((WordwrapLayout) editor.layout).getSoftBreaksForLine(startLine) : null;
                 gtr.setSoftBreaks(softBreaks);
                 var hash = Objects.hash(spans, line.length(), editor.getTabWidth(), basicDisplayMode, softBreaks, paintGeneral.getFlags(), paintGeneral.getTextSize(), paintGeneral.getTextScaleX(), paintGeneral.getLetterSpacing());
                 if (line.styleHash != hash || forced) {
@@ -2216,13 +2216,13 @@ public class EditorRenderer {
     @UnsupportedUserUsage
     public float measureText(ContentLine text, int line, int index, int count) {
         var gtr = GraphicTextRow.obtain(basicDisplayMode);
-        List<Span> spans = editor.defSpans;
+        List<Span> spans = editor.defaultSpans;
         if (text.widthCache == null) {
             spans = editor.getSpansForLine(line);
         }
         gtr.set(text, getLineDirections(line), 0, text.length(), editor.getTabWidth(), spans, paintGeneral);
-        if (editor.mLayout instanceof WordwrapLayout && text.widthCache == null) {
-            gtr.setSoftBreaks(((WordwrapLayout) editor.mLayout).getSoftBreaksForLine(line));
+        if (editor.layout instanceof WordwrapLayout && text.widthCache == null) {
+            gtr.setSoftBreaks(((WordwrapLayout) editor.layout).getSoftBreaksForLine(line));
         }
         var res = gtr.measureText(index, index + count);
         GraphicTextRow.recycle(gtr);
@@ -2273,7 +2273,7 @@ public class EditorRenderer {
 
         void execute(Canvas canvas) {
             // Hide cursors (API level 31)
-            if (editor.mConnection.imeConsumingInput || !editor.hasFocus()) {
+            if (editor.inputConnection.imeConsumingInput || !editor.hasFocus()) {
                 return;
             }
             if (handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT && !editor.isEditable()) {

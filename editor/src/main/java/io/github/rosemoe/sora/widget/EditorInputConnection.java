@@ -270,7 +270,7 @@ class EditorInputConnection extends BaseInputConnection {
         // Replace text
         SymbolPairMatch.Replacement replacement = null;
         if (text.length() == 1 && editor.getProps().symbolPairAutoCompletion) {
-            replacement = editor.mLanguageSymbolPairs.getCompletion(text.charAt(0));
+            replacement = editor.languageSymbolPairs.getCompletion(text.charAt(0));
         }
         // newCursorPosition ignored
         // Call onCommitText() can make auto indent and delete text selected automatically

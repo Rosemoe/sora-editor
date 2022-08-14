@@ -100,8 +100,8 @@ class EditorKeyEventHandler {
     public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
         keyMetaStates.onKeyDown(event);
         final var editor = this.editor;
-        final var eventManager = editor.mEventManager;
-        final var connection = editor.mConnection;
+        final var eventManager = editor.eventManager;
+        final var connection = editor.inputConnection;
         final var editorCursor = editor.getCursor();
         final var editorText = editor.getText();
         final var completionWindow = editor.getComponent(EditorAutoCompletion.class);
@@ -137,9 +137,9 @@ class EditorKeyEventHandler {
             case KeyEvent.KEYCODE_MOVE_HOME:
             case KeyEvent.KEYCODE_MOVE_END:
                 if (isShiftPressed && (!editorCursor.isSelected())) {
-                    editor.mSelectionAnchor = editorCursor.left();
-                } else if (!isShiftPressed && editor.mSelectionAnchor != null) {
-                    editor.mSelectionAnchor = null;
+                    editor.selectionAnchor = editorCursor.left();
+                } else if (!isShiftPressed && editor.selectionAnchor != null) {
+                    editor.selectionAnchor = null;
                 }
                 keyMetaStates.adjust();
         }
@@ -353,7 +353,7 @@ class EditorKeyEventHandler {
                         String text = new String(Character.toChars(event.getUnicodeChar(event.getMetaState())));
                         SymbolPairMatch.Replacement replacement = null;
                         if (text.length() == 1 && editor.getProps().symbolPairAutoCompletion) {
-                            replacement = editor.mLanguageSymbolPairs.getCompletion(text.charAt(0));
+                            replacement = editor.languageSymbolPairs.getCompletion(text.charAt(0));
                         }
                         if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
                                 || (replacement.shouldNotDoReplace(editorText) && replacement.notHasAutoSurroundPair())) {
@@ -411,7 +411,7 @@ class EditorKeyEventHandler {
     public boolean onKeyUp(int keyCode, @NonNull KeyEvent event) {
         keyMetaStates.onKeyUp(event);
 
-        final var eventManager = this.editor.mEventManager;
+        final var eventManager = this.editor.eventManager;
         final var cursor = this.editor.getCursor();
 
         var e = new EditorKeyEvent(this.editor, event, EditorKeyEvent.Type.UP);
@@ -432,8 +432,8 @@ class EditorKeyEventHandler {
             }
         }
 
-        if (!keyMetaStates.isShiftPressed() && this.editor.mSelectionAnchor != null && !cursor.isSelected()) {
-            this.editor.mSelectionAnchor = null;
+        if (!keyMetaStates.isShiftPressed() && this.editor.selectionAnchor != null && !cursor.isSelected()) {
+            this.editor.selectionAnchor = null;
             return e.result(true);
         }
         return e.result(this.editor.onSuperKeyUp(keyCode, event));
@@ -449,7 +449,7 @@ class EditorKeyEventHandler {
      */
     public boolean onKeyMultiple(int keyCode, int repeatCount, @NonNull KeyEvent event) {
         final var e = new EditorKeyEvent(this.editor, event, EditorKeyEvent.Type.MULTIPLE);
-        final var eventManager = this.editor.mEventManager;
+        final var eventManager = this.editor.eventManager;
         if ((eventManager.dispatchEvent(e) & InterceptTarget.TARGET_EDITOR) != 0) {
             return e.result(false);
         }

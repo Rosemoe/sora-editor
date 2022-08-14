@@ -48,15 +48,15 @@ import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
  */
 public class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickListener, EventReceiver<SelectionChangeEvent>, EditorBuiltinComponent {
     private final static long DELAY = 200;
-    private final CodeEditor mEditor;
-    private final ImageButton mPasteBtn;
-    private final ImageButton mCopyBtn;
-    private final ImageButton mCutBtn;
-    private final View mRootView;
-    private final EditorTouchEventHandler mHandler;
-    private long mLastScroll;
-    private int mLastPosition;
-    private boolean mEnabled = true;
+    private final CodeEditor editor;
+    private final ImageButton pasteBtn;
+    private final ImageButton copyBtn;
+    private final ImageButton cutBtn;
+    private final View rootView;
+    private final EditorTouchEventHandler handler;
+    private long lastScroll;
+    private int lastPosition;
+    private boolean enabled = true;
 
     /**
      * Create a panel for the given editor
@@ -65,33 +65,33 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
      */
     public EditorTextActionWindow(CodeEditor editor) {
         super(editor, FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED);
-        mEditor = editor;
-        mHandler = editor.getEventHandler();
+        this.editor = editor;
+        handler = editor.getEventHandler();
         // Since popup window does provide decor view, we have to pass null to this method
         @SuppressLint("InflateParams")
         View root = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_panel, null);
         ImageButton selectAll = root.findViewById(R.id.panel_btn_select_all);
         ImageButton cut = root.findViewById(R.id.panel_btn_cut);
         ImageButton copy = root.findViewById(R.id.panel_btn_copy);
-        mPasteBtn = root.findViewById(R.id.panel_btn_paste);
-        mCopyBtn = copy;
-        mCutBtn = cut;
+        pasteBtn = root.findViewById(R.id.panel_btn_paste);
+        copyBtn = copy;
+        cutBtn = cut;
         selectAll.setOnClickListener(this);
         cut.setOnClickListener(this);
         copy.setOnClickListener(this);
-        mPasteBtn.setOnClickListener(this);
+        pasteBtn.setOnClickListener(this);
         GradientDrawable gd = new GradientDrawable();
         gd.setCornerRadius(5 * editor.getDpUnit());
         gd.setColor(0xffffffff);
         root.setBackground(gd);
         setContentView(root);
-        setSize(0, (int) (mEditor.getDpUnit() * 60));
-        mRootView = root;
+        setSize(0, (int) (this.editor.getDpUnit() * 60));
+        rootView = root;
         editor.subscribeEvent(SelectionChangeEvent.class, this);
         editor.subscribeEvent(ScrollEvent.class, ((event, unsubscribe) -> {
-            var last = mLastScroll;
-            mLastScroll = System.currentTimeMillis();
-            if (mLastScroll - last < DELAY) {
+            var last = lastScroll;
+            lastScroll = System.currentTimeMillis();
+            if (lastScroll - last < DELAY) {
                 postDisplay();
             }
         }));
@@ -104,12 +104,12 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
 
     @Override
     public boolean isEnabled() {
-        return mEnabled;
+        return enabled;
     }
 
     @Override
     public void setEnabled(boolean enabled) {
-        mEnabled = enabled;
+        this.enabled = enabled;
         if (!enabled) {
             dismiss();
         }
@@ -137,17 +137,17 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
             return;
         }
         dismiss();
-        if (!mEditor.getCursor().isSelected()) {
+        if (!editor.getCursor().isSelected()) {
             return;
         }
-        mEditor.postDelayed(new Runnable() {
+        editor.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (!mHandler.hasAnyHeldHandle() && System.currentTimeMillis() - mLastScroll > DELAY
-                        && mEditor.getScroller().isFinished()) {
+                if (!handler.hasAnyHeldHandle() && System.currentTimeMillis() - lastScroll > DELAY
+                        && editor.getScroller().isFinished()) {
                     displayWindow();
                 } else {
-                    mEditor.postDelayed(this, DELAY);
+                    editor.postDelayed(this, DELAY);
                 }
             }
         }, DELAY);
@@ -155,33 +155,33 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
 
     @Override
     public void onReceive(SelectionChangeEvent event, Unsubscribe unsubscribe) {
-        if (mHandler.hasAnyHeldHandle()) {
+        if (handler.hasAnyHeldHandle()) {
             return;
         }
         if (event.isSelected()) {
             //#193
             //if (!isShowing()) {
-            mEditor.post(this::displayWindow);
+            editor.post(this::displayWindow);
             //}
-            mLastPosition = -1;
+            lastPosition = -1;
         } else {
             var show = false;
-            if (event.getCause() == SelectionChangeEvent.CAUSE_TAP && event.getLeft().index == mLastPosition && !isShowing() && !mEditor.getText().isInBatchEdit() && mEditor.isEditable()) {
-                mEditor.post(this::displayWindow);
+            if (event.getCause() == SelectionChangeEvent.CAUSE_TAP && event.getLeft().index == lastPosition && !isShowing() && !editor.getText().isInBatchEdit() && editor.isEditable()) {
+                editor.post(this::displayWindow);
                 show = true;
             } else {
                 dismiss();
             }
             if (event.getCause() == SelectionChangeEvent.CAUSE_TAP && !show) {
-                mLastPosition = event.getLeft().index;
+                lastPosition = event.getLeft().index;
             } else {
-                mLastPosition = -1;
+                lastPosition = -1;
             }
         }
     }
 
     private int selectTop(RectF rect) {
-        var rowHeight = mEditor.getRowHeight();
+        var rowHeight = editor.getRowHeight();
         if (rect.top - rowHeight * 3 / 2F > getHeight()) {
             return (int) (rect.top - rowHeight * 3 / 2 - getHeight());
         } else {
@@ -191,19 +191,19 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
 
     public void displayWindow() {
         int top;
-        var cursor = mEditor.getCursor();
+        var cursor = editor.getCursor();
         if (cursor.isSelected()) {
-            var leftRect = mEditor.getLeftHandleDescriptor().position;
-            var rightRect = mEditor.getRightHandleDescriptor().position;
+            var leftRect = editor.getLeftHandleDescriptor().position;
+            var rightRect = editor.getRightHandleDescriptor().position;
             var top1 = selectTop(leftRect);
             var top2 = selectTop(rightRect);
             top = Math.min(top1, top2);
         } else {
-            top = selectTop(mEditor.getInsertHandleDescriptor().position);
+            top = selectTop(editor.getInsertHandleDescriptor().position);
         }
-        top = Math.max(0, Math.min(top, mEditor.getHeight() - getHeight() - 5));
-        float handleLeftX = mEditor.getOffset(mEditor.getCursor().getLeftLine(), mEditor.getCursor().getLeftColumn());
-        float handleRightX = mEditor.getOffset(mEditor.getCursor().getRightLine(), mEditor.getCursor().getRightColumn());
+        top = Math.max(0, Math.min(top, editor.getHeight() - getHeight() - 5));
+        float handleLeftX = editor.getOffset(editor.getCursor().getLeftLine(), editor.getCursor().getLeftColumn());
+        float handleRightX = editor.getOffset(editor.getCursor().getRightLine(), editor.getCursor().getRightColumn());
         int panelX = (int) ((handleLeftX + handleRightX) / 2f);
         setLocationAbsolutely(panelX, top);
         show();
@@ -213,17 +213,17 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
      * Update the state of paste button
      */
     private void updateBtnState() {
-        mPasteBtn.setEnabled(mEditor.hasClip());
-        mCopyBtn.setVisibility(mEditor.getCursor().isSelected() ? View.VISIBLE : View.GONE);
-        mPasteBtn.setVisibility(mEditor.isEditable() ? View.VISIBLE : View.GONE);
-        mCutBtn.setVisibility((mEditor.getCursor().isSelected() && mEditor.isEditable()) ? View.VISIBLE : View.GONE);
-        mRootView.measure(View.MeasureSpec.makeMeasureSpec(1000000, View.MeasureSpec.AT_MOST), View.MeasureSpec.makeMeasureSpec(100000, View.MeasureSpec.AT_MOST));
-        setSize(Math.min(mRootView.getMeasuredWidth(), (int) (mEditor.getDpUnit() * 230)), getHeight());
+        pasteBtn.setEnabled(editor.hasClip());
+        copyBtn.setVisibility(editor.getCursor().isSelected() ? View.VISIBLE : View.GONE);
+        pasteBtn.setVisibility(editor.isEditable() ? View.VISIBLE : View.GONE);
+        cutBtn.setVisibility((editor.getCursor().isSelected() && editor.isEditable()) ? View.VISIBLE : View.GONE);
+        rootView.measure(View.MeasureSpec.makeMeasureSpec(1000000, View.MeasureSpec.AT_MOST), View.MeasureSpec.makeMeasureSpec(100000, View.MeasureSpec.AT_MOST));
+        setSize(Math.min(rootView.getMeasuredWidth(), (int) (editor.getDpUnit() * 230)), getHeight());
     }
 
     @Override
     public void show() {
-        if (!mEnabled) {
+        if (!enabled) {
             return;
         }
         updateBtnState();
@@ -234,19 +234,19 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
     public void onClick(View p1) {
         int id = p1.getId();
         if (id == R.id.panel_btn_select_all) {
-            mEditor.selectAll();
+            editor.selectAll();
             return;
         } else if (id == R.id.panel_btn_cut) {
-            mEditor.copyText();
-            if (mEditor.getCursor().isSelected()) {
-                mEditor.deleteText();
+            editor.copyText();
+            if (editor.getCursor().isSelected()) {
+                editor.deleteText();
             }
         } else if (id == R.id.panel_btn_paste) {
-            mEditor.pasteText();
-            mEditor.setSelection(mEditor.getCursor().getRightLine(), mEditor.getCursor().getRightColumn());
+            editor.pasteText();
+            editor.setSelection(editor.getCursor().getRightLine(), editor.getCursor().getRightColumn());
         } else if (id == R.id.panel_btn_copy) {
-            mEditor.copyText();
-            mEditor.setSelection(mEditor.getCursor().getRightLine(), mEditor.getCursor().getRightColumn());
+            editor.copyText();
+            editor.setSelection(editor.getCursor().getRightLine(), editor.getCursor().getRightColumn());
         }
         dismiss();
     }
