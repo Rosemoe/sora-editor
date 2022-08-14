@@ -338,7 +338,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                 case LINE_COMMENT:
                 case LONG_COMMENT_COMPLETE:
                 case LONG_COMMENT_INCOMPLETE:
-                    spans.add(Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.COMMENT, true)));
+                    spans.add(Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.COMMENT, 0, false, true, false, true)));
                     break;
                 case IDENTIFIER: {
                     int type = EditorColorScheme.IDENTIFIER_NAME;
