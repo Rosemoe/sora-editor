@@ -250,6 +250,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private float lineInfoTextSize;
     private float lineSpacingMultiplier = 1f;
     private float lineSpacingAdd = 0f;
+    private float lineNumberMarginLeft;
     private boolean waitForNextChange;
     private boolean scalable;
     private boolean editable;
@@ -1399,7 +1400,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * Get the width of line number region
+     * Get the width of line number region (include line number margin)
      *
      * @return width of line number region
      */
@@ -1421,7 +1422,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         for (int i = 0; i < len; i += 2) {
             single = Math.max(single, buffer[i]);
         }
-        return single * count;
+        return single * count + lineNumberMarginLeft;
     }
 
     protected void createLayout() {
@@ -2292,6 +2293,21 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void setDividerMargin(@Px float margin) {
         setDividerMargin(margin, margin);
+    }
+
+    /**
+     * Set line number margin left
+     */
+    public void setLineNumberMarginLeft(@Px float lineNumberMarginLeft) {
+        this.lineNumberMarginLeft = lineNumberMarginLeft;
+        invalidate();
+    }
+
+    /**
+     * @see #setLineNumberMarginLeft(float)
+     */
+    public float getLineNumberMarginLeft() {
+        return lineNumberMarginLeft;
     }
 
     /**

@@ -482,7 +482,7 @@ public class EditorRenderer {
         EditorColorScheme color = editor.getColorScheme();
         drawColor(canvas, color.getColor(EditorColorScheme.WHOLE_BACKGROUND), viewRect);
 
-        float lineNumberWidth = editor.measureLineNumber();
+        float lineNumberWidth = editor.measureLineNumber(); // include line number margin
         var sideIconWidth = hasSideHintIcons() ? editor.getRowHeight() : 0f;
         float offsetX = -editor.getOffsetX() + editor.measureTextRegionOffset();
         float textOffset = offsetX;
