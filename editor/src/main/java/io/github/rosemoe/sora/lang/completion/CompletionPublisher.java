@@ -261,11 +261,19 @@ public class CompletionPublisher {
         });
     }
 
+
+    /**
+     * Cancel the completion
+     */
     public void cancel() {
         invalid = true;
     }
 
-    private void checkCancelled() {
+    /**
+     * Check whether the completion is cancelled. If so, an instance of {@link CompletionCancelledException}
+     * is thrown.
+     */
+    public void checkCancelled() {
         if (Thread.interrupted() || invalid) {
             invalid = true;
             if (languageInterruptionLevel <= Language.INTERRUPTION_LEVEL_SLIGHT) {
