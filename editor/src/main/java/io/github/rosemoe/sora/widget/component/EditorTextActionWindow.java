@@ -85,7 +85,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         gd.setColor(0xffffffff);
         root.setBackground(gd);
         setContentView(root);
-        setSize(0, (int) (this.editor.getDpUnit() * 60));
+        setSize(0, (int) (this.editor.getDpUnit() * 48));
         rootView = root;
         editor.subscribeEvent(SelectionChangeEvent.class, this);
         editor.subscribeEvent(ScrollEvent.class, ((event, unsubscribe) -> {
