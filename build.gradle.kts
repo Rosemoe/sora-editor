@@ -89,10 +89,3 @@ tasks.register("bundleAll") {
         .filter { it.name !in excludeProjectName }
         .forEach { dependsOn(it.getTasksByName("bundleReleaseAar", false)) }
 }
-
-tasks.register("publishAll") {
-    group = "Rosemoe"
-    allprojects
-        .filter { it.name !in excludeProjectName }
-        .forEach { dependsOn(it.getTasksByName("publish", false)) }
-}
