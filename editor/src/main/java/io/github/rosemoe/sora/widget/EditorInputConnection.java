@@ -483,7 +483,7 @@ class EditorInputConnection extends BaseInputConnection {
     public boolean setSelection(int start, int end) {
         if (DEBUG)
             logger.d("setSelection, s = " + start + ", e = " + end);
-        if (!editor.isEditable() || connectionInvalid || composingText.isComposing()) {
+        if (!editor.isEditable() || connectionInvalid) {
             return false;
         }
         start = getWrappedIndex(start);

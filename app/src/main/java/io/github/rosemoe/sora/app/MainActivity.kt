@@ -55,6 +55,7 @@ import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorSearcher
 import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.schemes.*
+import io.github.rosemoe.sora.widget.style.builtin.ScaleCursorAnimator
 import io.github.rosemoe.sorakt.subscribeEvent
 import java.io.*
 import java.util.regex.PatternSyntaxException
@@ -112,6 +113,7 @@ class MainActivity : AppCompatActivity() {
             lineSeparator = LineSeparator.CRLF
             typefaceText = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
             setLineSpacing(2f, 1.1f)
+            cursorAnimator = ScaleCursorAnimator(this)
             nonPrintablePaintingFlags =
                 CodeEditor.FLAG_DRAW_WHITESPACE_LEADING or CodeEditor.FLAG_DRAW_LINE_SEPARATOR or CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION
             // Update display dynamically

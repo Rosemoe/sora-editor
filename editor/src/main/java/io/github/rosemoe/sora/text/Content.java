@@ -637,6 +637,10 @@ public class Content implements CharSequence {
         return isInBatchEdit();
     }
 
+    public int getNestedBatchEdit() {
+        return nestedBatchEdit;
+    }
+
     public void resetBatchEdit() {
         nestedBatchEdit = 0;
     }
