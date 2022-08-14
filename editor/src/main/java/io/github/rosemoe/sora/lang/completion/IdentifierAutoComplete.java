@@ -135,7 +135,7 @@ public class IdentifierAutoComplete {
             List<String> dest = new ArrayList<>();
             userIdentifiers.filterIdentifiers(prefix, dest);
             for (var word : dest) {
-                if (!keywordMap.containsKey(word))
+                if (keywordMap == null || !keywordMap.containsKey(word))
                     publisher.addItem(new SimpleCompletionItem(word, "Identifier", prefixLength, word));
             }
         }
