@@ -705,6 +705,10 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         return editor.isScalable() && !editor.isFormatting();
     }
 
+    long memoryPosition;
+    boolean positionNotApplied;
+    float focusY;
+
     @Override
     public void onScaleEnd(ScaleGestureDetector detector) {
         isScaling = false;
@@ -712,6 +716,13 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             return;
         }
         editor.getRenderer().forcedRecreateLayout = true;
+        if (editor.isWordwrap()) {
+            focusY = detector.getFocusY();
+            memoryPosition = editor.getPointPositionOnScreen(detector.getFocusX(), detector.getFocusY());
+            positionNotApplied = true;
+        } else {
+            positionNotApplied = false;
+        }
         editor.getRenderer().invalidateRenderNodes();
         editor.getRenderer().updateTimestamp();
         editor.invalidate();

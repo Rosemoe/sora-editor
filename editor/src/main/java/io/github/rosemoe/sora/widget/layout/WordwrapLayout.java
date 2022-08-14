@@ -128,7 +128,7 @@ public class WordwrapLayout extends AbstractLayout {
         return index;
     }
 
-    private int findRow(int line, int column) {
+    public int findRow(int line, int column) {
         int row = findRow(line);
         while (rowTable.get(row).endColumn <= column && row + 1 < rowTable.size() && rowTable.get(row + 1).line == line) {
             row++;
