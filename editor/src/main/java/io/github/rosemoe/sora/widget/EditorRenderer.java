@@ -476,7 +476,7 @@ public class EditorRenderer {
         float offsetX = -editor.getOffsetX() + editor.measureTextRegionOffset();
         float textOffset = offsetX;
 
-        var gutterWidth = (int) (lineNumberWidth + sideIconWidth + editor.getDividerWidth() + editor.getDividerMargin() * 2);
+        var gutterWidth = (int) (lineNumberWidth + sideIconWidth + editor.getDividerWidth() + editor.getDividerMarginLeft() + editor.getDividerMarginRight());
         if (editor.isWordwrap()) {
             if (cachedGutterWidth == 0) {
                 cachedGutterWidth = gutterWidth;
@@ -518,21 +518,21 @@ public class EditorRenderer {
         offsetX = -editor.getOffsetX();
 
         if (lineNumberNotPinned) {
-            drawLineNumberBackground(canvas, offsetX, lineNumberWidth + sideIconWidth + editor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
+            drawLineNumberBackground(canvas, offsetX, lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
             int lineNumberColor = editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = editor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE);
             if (editor.getCursorAnimator().isRunning()) {
                 tmpRect.bottom = editor.getCursorAnimator().animatedLineBottom() - editor.getOffsetY();
                 tmpRect.top = tmpRect.bottom - editor.getCursorAnimator().animatedLineHeight();
                 tmpRect.left = 0;
-                tmpRect.right = (int) (textOffset - editor.getDividerMargin());
+                tmpRect.right = (int) (textOffset - editor.getDividerMarginRight());
                 drawColor(canvas, currentLineBgColor, tmpRect);
             }
             for (int i = 0; i < postDrawCurrentLines.size(); i++) {
-                drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - editor.getDividerMargin()));
+                drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - editor.getDividerMarginRight()));
             }
             drawSideIcons(canvas, offsetX + lineNumberWidth);
-            drawDivider(canvas, offsetX + lineNumberWidth + sideIconWidth + editor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_DIVIDER));
+            drawDivider(canvas, offsetX + lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_DIVIDER));
             if (firstLn != null && firstLn.value != -1) {
                 int bottom = editor.getRowBottom(0);
                 float y;
@@ -554,7 +554,7 @@ public class EditorRenderer {
                         canvas.drawText(text, offsetX + lineNumberWidth, y, paintOther);
                         break;
                     case CENTER:
-                        canvas.drawText(text, offsetX + (lineNumberWidth + editor.getDividerMargin()) / 2f, y, paintOther);
+                        canvas.drawText(text, offsetX + (lineNumberWidth + editor.getDividerMarginLeft()) / 2f, y, paintOther);
                 }
             }
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
@@ -580,21 +580,21 @@ public class EditorRenderer {
         }
 
         if (editor.isLineNumberEnabled() && !lineNumberNotPinned) {
-            drawLineNumberBackground(canvas, 0, lineNumberWidth + sideIconWidth + editor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
+            drawLineNumberBackground(canvas, 0, lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
             int lineNumberColor = editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = editor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE);
             if (editor.getCursorAnimator().isRunning()) {
                 tmpRect.bottom = editor.getCursorAnimator().animatedLineBottom() - editor.getOffsetY();
                 tmpRect.top = tmpRect.bottom - editor.getCursorAnimator().animatedLineHeight();
                 tmpRect.left = 0;
-                tmpRect.right = (int) (textOffset - editor.getDividerMargin());
+                tmpRect.right = (int) (textOffset - editor.getDividerMarginRight());
                 drawColor(canvas, currentLineBgColor, tmpRect);
             }
             for (int i = 0; i < postDrawCurrentLines.size(); i++) {
-                drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - editor.getDividerMargin() + editor.getOffsetX()));
+                drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - editor.getDividerMarginRight() + editor.getOffsetX()));
             }
             drawSideIcons(canvas, lineNumberWidth);
-            drawDivider(canvas, lineNumberWidth + sideIconWidth + editor.getDividerMargin(), color.getColor(EditorColorScheme.LINE_DIVIDER));
+            drawDivider(canvas, lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_DIVIDER));
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
                 drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), 0, lineNumberWidth, lineNumberColor);
@@ -717,7 +717,7 @@ public class EditorRenderer {
                 canvas.drawText(buffer, 0, i, offsetX + width, y, paintOther);
                 break;
             case CENTER:
-                canvas.drawText(buffer, 0, i, offsetX + (width + editor.getDividerMargin()) / 2f, y, paintOther);
+                canvas.drawText(buffer, 0, i, offsetX + (width + editor.getDividerMarginLeft()) / 2f, y, paintOther);
         }
         TemporaryCharBuffer.recycle(buffer);
     }
@@ -1709,7 +1709,7 @@ public class EditorRenderer {
                 float top = layout.getCharLayoutOffset(block.startLine, block.startColumn)[0] - editor.getRowHeight() - editor.getOffsetY();
                 float bottom = layout.getCharLayoutOffset(block.endLine, block.endColumn)[0] - editor.getOffsetY();
                 float left = editor.measureLineNumber();
-                float right = left + editor.getDividerMargin();
+                float right = left + editor.getDividerMarginLeft();
                 float center = (left + right) / 2 - editor.getOffsetX();
                 paintGeneral.setColor(editor.getColorScheme().getColor(EditorColorScheme.SIDE_BLOCK_LINE));
                 paintGeneral.setStrokeWidth(editor.getDpUnit() * editor.getBlockLineWidth());

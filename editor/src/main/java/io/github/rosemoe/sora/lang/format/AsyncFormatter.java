@@ -147,6 +147,7 @@ public abstract class AsyncFormatter implements Formatter {
             if (t.isAlive()) {
                 t.interrupt();
             }
+            thread = null;
         }
     }
 

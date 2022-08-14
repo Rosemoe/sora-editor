@@ -241,7 +241,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private long mAvailableFloatArrayRegion;
     private float mDpUnit;
     private float mDividerWidth;
-    private float mDividerMargin;
+    private float mDividerMarginLeft;
+    private float mDividerMarginRight;
     private float mInsertSelWidth;
     private float mBlockLineWidth;
     private float mVerticalScrollFactor;
@@ -405,7 +406,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public float measureTextRegionOffset() {
         return isLineNumberEnabled() ?
-                measureLineNumber() + mDividerMargin * 2 + mDividerWidth +
+                measureLineNumber() + mDividerMarginLeft + mDividerMarginRight + mDividerWidth +
                         (mRenderer.hasSideHintIcons() ? getRowHeight() : 0) :
                 mDpUnit * 5;
     }
@@ -491,10 +492,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         mLnTip = getContext().getString(R.string.editor_line_number_tip_prefix);
         mFormatTip = getContext().getString(R.string.editor_formatting);
         mProps = new DirectAccessProps();
-        mDpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10F;
+        mDpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10f;
         mDividerWidth = mDpUnit;
         mInsertSelWidth = mDpUnit;
-        mDividerMargin = mDpUnit * 2;
+        mDividerMarginLeft = mDividerMarginRight = mDpUnit * 2;
 
         mMatrix = new Matrix();
         mHandleStyle = new HandleStyleSideDrop(getContext());
@@ -2255,24 +2256,43 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * @return Margin of divider line
-     * @see CodeEditor#setDividerMargin(float)
+     * @return Margin left of divider line
+     * @see CodeEditor#setDividerMargin(float, float)
      */
-    public float getDividerMargin() {
-        return mDividerMargin;
+    public float getDividerMarginLeft() {
+        return mDividerMarginLeft;
+    }
+
+    /**
+     * @return Margin right of divider line
+     * @see CodeEditor#setDividerMargin(float, float)
+     */
+    public float getDividerMarginRight() {
+        return mDividerMarginRight;
     }
 
     /**
      * Set divider line's left and right margin
      *
-     * @param dividerMargin Margin for divider line
+     * @param marginLeft Margin left for divider line
+     * @param marginRight Margin right for divider line
      */
-    public void setDividerMargin(float dividerMargin) {
-        if (dividerMargin < 0) {
+    public void setDividerMargin(@Px float marginLeft, @Px float marginRight) {
+        if (marginLeft < 0 || marginRight < 0) {
             throw new IllegalArgumentException("margin can not be under zero");
         }
-        this.mDividerMargin = dividerMargin;
+        mDividerMarginLeft = marginLeft;
+        mDividerMarginRight = marginRight;
         invalidate();
+    }
+
+    /**
+     * Set divider line's left and right margin
+     *
+     * @param margin Margin left and right for divider line
+     */
+    public void setDividerMargin(@Px float margin) {
+        setDividerMargin(margin, margin);
     }
 
     /**
