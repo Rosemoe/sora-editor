@@ -62,7 +62,8 @@ public class ContentBidi implements ContentListener {
             return new Directions(new long[]{IntPair.pack(0, 0)}, text.getLine(line).length());
         }
         synchronized (this) {
-            for (DirectionsEntry entry : entries) {
+            for (int i = 0;i < entries.size();i++) {
+                var entry = entries.get(i);
                 if (entry.line == line) {
                     return entry.dir;
                 }

@@ -39,6 +39,7 @@ import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.bidi.Directions;
 import io.github.rosemoe.sora.text.bidi.TextBidi;
+import io.github.rosemoe.sora.util.IntPair;
 
 /**
  * Manages graphical(actually measuring) operations of a text row
@@ -57,6 +58,7 @@ public class GraphicTextRow {
     private boolean mCache = true;
     private List<Integer> mSoftBreaks;
     private boolean mQuickMeasure;
+    private final Directions mTmpDirections = new Directions(new long[]{IntPair.pack(0, 0)}, 0);
 
     private GraphicTextRow() {
         mBuffer = new float[2];
@@ -105,6 +107,7 @@ public class GraphicTextRow {
         mStart = start;
         mEnd = end;
         mSpans = spans;
+        mTmpDirections.setLength(mText.length());
     }
 
     public void set(@NonNull ContentLine text, @Nullable Directions dirs, int start, int end, int tabWidth, @Nullable List<Span> spans, @NonNull Paint paint) {
@@ -115,6 +118,7 @@ public class GraphicTextRow {
         mStart = start;
         mEnd = end;
         mSpans = spans;
+        mTmpDirections.setLength(mText.length());
     }
 
     public void setSoftBreaks(@Nullable List<Integer> softBreaks) {
@@ -333,7 +337,9 @@ public class GraphicTextRow {
         if (start >= end) {
             return 0f;
         }
-        var dirs = mDirs == null ? TextBidi.getDirections(mText) : mDirs;
+        var dirs = mDirs == null ?
+                (mText.mayNeedBidi() ? TextBidi.getDirections(mText) : mTmpDirections)
+                : mDirs;
         float width = 0;
         for (int i = 0; i < dirs.getRunCount(); i++) {
             int start1 = Math.max(start, dirs.getRunStart(i));

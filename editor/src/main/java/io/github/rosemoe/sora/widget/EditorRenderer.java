@@ -621,6 +621,9 @@ public class EditorRenderer {
     }
 
     protected void drawSideIcons(Canvas canvas, float offset) {
+        if (!hasSideHintIcons()) {
+            return;
+        }
         var row = editor.getFirstVisibleRow();
         var itr = editor.getLayout().obtainRowIterator(row);
         final var iconSizeFactor = editor.getProps().sideIconSizeFactor;
@@ -1519,7 +1522,7 @@ public class EditorRenderer {
     }
 
     protected void drawRegionTextDirectional(Canvas canvas, float offsetX, float baseline, int line, int startIndex, int endIndex, int contextStart, int contextEnd, int columnCount, int color) {
-        var directions = mContent.getLineDirections(line);
+        var directions = getLineDirections(line);
         var width = 0f;
         for (int i = 0; i < directions.getRunCount(); i++) {
             int sharedStart = Math.max(directions.getRunStart(i), startIndex);
@@ -2071,7 +2074,7 @@ public class EditorRenderer {
             buildMeasureCacheForLines(lineIndex, lineIndex, displayTimestamp, false);
         }
         var gtr = GraphicTextRow.obtain(basicDisplayMode);
-        gtr.set(mContent, lineIndex, contextStart, end, editor.getTabWidth(), line.widthCache == null ? editor.getSpansForLine(lineIndex) : null, paintGeneral);
+        gtr.set(line, getLineDirections(lineIndex), contextStart, end, editor.getTabWidth(), line.widthCache == null ? editor.getSpansForLine(lineIndex) : null, paintGeneral);
         if (editor.getLayout() instanceof WordwrapLayout && line.widthCache == null) {
             gtr.setSoftBreaks(((WordwrapLayout) editor.getLayout()).getSoftBreaksForLine(lineIndex));
         }
@@ -2231,7 +2234,7 @@ public class EditorRenderer {
         if (text.widthCache == null) {
             spans = editor.getSpansForLine(line);
         }
-        gtr.set(text, getLineDirections(line), 0, text.length(), editor.getTabWidth(), spans, paintGeneral);
+        gtr.set(text, text.mayNeedBidi() ? getLineDirections(line) : null, 0, text.length(), editor.getTabWidth(), spans, paintGeneral);
         if (editor.layout instanceof WordwrapLayout && text.widthCache == null) {
             gtr.setSoftBreaks(((WordwrapLayout) editor.layout).getSoftBreaksForLine(line));
         }

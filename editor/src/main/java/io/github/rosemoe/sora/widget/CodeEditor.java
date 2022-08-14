@@ -2560,7 +2560,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return baseline y offset
      */
     public int getRowBaseline(int row) {
-        return getRowHeight() * (row + 1) - renderer.metricsText.descent - getLineSpacingPixels() / 2;
+        var lineSpacing = getLineSpacingPixels();
+        var metrics = renderer.metricsText;
+        return Math.max(1, metrics.descent - metrics.ascent + lineSpacing) * (row + 1) - metrics.descent - lineSpacing / 2;
     }
 
     /**
