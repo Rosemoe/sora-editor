@@ -112,6 +112,11 @@ public class LineBreakLayout extends AbstractLayout {
         return (int) measurer.measureText(line, 0, line.length(), editor.getTextPaint());
     }
 
+    private int measureRegion(int lineIndex, int start, int end) {
+        ContentLine line = text.getLine(lineIndex);
+        return (int) measurer.measureText(line, start, end, editor.getTextPaint());
+    }
+
     @Override
     public RowIterator obtainRowIterator(int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
         return new LineBreakLayoutRowItr(text, initialRow, preloadedLines);
@@ -132,7 +137,11 @@ public class LineBreakLayout extends AbstractLayout {
         super.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
         for (int i = startLine; i <= endLine; i++) {
             if (i == startLine) {
-                widthMaintainer.set(i, measureLine(i));
+                if (endLine == startLine) {
+                    widthMaintainer.set(i, widthMaintainer.get(i) + measureRegion(i, startColumn, endColumn));
+                } else {
+                    widthMaintainer.set(i, measureLine(i));
+                }
             } else {
                 widthMaintainer.add(i, measureLine(i));
             }
@@ -145,7 +154,11 @@ public class LineBreakLayout extends AbstractLayout {
         if (startLine < endLine) {
             widthMaintainer.removeRange(startLine + 1, endLine + 1);
         }
-        widthMaintainer.set(startLine, measureLine(startLine));
+        if (startLine == endLine) {
+            widthMaintainer.set(startLine, widthMaintainer.get(startLine) - (int)measurer.measureText(deletedContent, 0, endColumn - startColumn, editor.getTextPaint()));
+        } else {
+            widthMaintainer.set(startLine, measureLine(startLine));
+        }
     }
 
     @Override
