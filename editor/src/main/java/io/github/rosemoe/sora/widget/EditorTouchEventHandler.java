@@ -690,6 +690,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             editor.dispatchEvent(new ScrollEvent(editor, scroller.getCurrX(),
                     scroller.getCurrY(), (int) afterScrollX, (int) afterScrollY, ScrollEvent.CAUSE_SCALE_TEXT));
             scroller.startScroll((int) afterScrollX, (int) afterScrollY, 0, 0, 0);
+            scroller.abortAnimation();
             isScaling = true;
             editor.invalidate();
             return true;
@@ -711,6 +712,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             return;
         }
         editor.getRenderer().forcedRecreateLayout = true;
+        editor.getRenderer().invalidateRenderNodes();
         editor.getRenderer().updateTimestamp();
         editor.invalidate();
     }
