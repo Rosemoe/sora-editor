@@ -25,8 +25,8 @@
 public final class Versions {
 
     // Project versions
-    public final static String versionName = "0.16.3";
-    public final static int versionCode = 62;
+    public final static String versionName = "0.16.4";
+    public final static int versionCode = 63;
 
     // Platform & Tool versions
     public final static String buildToolsVersion = "33.0.0";
@@ -42,7 +42,7 @@ public final class Versions {
 
 
     // TextMate Dependency versions(from tm4e 0.4.2)
-    public final static String gsonVersion = "2.9.0";
+    public final static String gsonVersion = "2.9.1";
     public final static String jcodingsVersion = "1.0.57";
     public final static String joniVersion = "2.1.43";
     public final static String batikCssVersion = "1.14";
