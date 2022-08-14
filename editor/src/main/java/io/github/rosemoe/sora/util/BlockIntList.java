@@ -201,7 +201,9 @@ public class BlockIntList {
             throw new ArrayIndexOutOfBoundsException("index = " + index + ", length = " + size());
         }
         findBlock1(index);
-        return (int) foundBlock.set(foundIndex, element);
+        var old = foundBlock.set(foundIndex, element);
+        modCount++;
+        return old;
     }
 
     public int get(int index) {
@@ -299,8 +301,14 @@ public class BlockIntList {
         public int set(int index, int element) {
             int old = data[index];
             data[index] = element;
-            if (old == max && old < element) {
-                compute();
+            if (old == max) {
+                if (element >= old) {
+                    max = element;
+                } else {
+                    compute();
+                }
+            } else if (element > max) {
+                max = element;
             }
             return old;
         }
