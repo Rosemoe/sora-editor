@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.text.bidi;
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,9 +36,9 @@ import io.github.rosemoe.sora.util.IntPair;
 
 public class ContentBidi implements ContentListener {
 
-    public final static int MAX_BIDI_CACHE_ENTRY_COUNT = 128;
+    public final static int MAX_BIDI_CACHE_ENTRY_COUNT = 64;
 
-    private final List<DirectionsEntry> entries = new ArrayList<>();
+    private final DirectionsEntry[] entries = new DirectionsEntry[MAX_BIDI_CACHE_ENTRY_COUNT];
     private final Content text;
     private boolean enabled;
 
@@ -49,7 +50,7 @@ public class ContentBidi implements ContentListener {
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
         if (!enabled) {
-            entries.clear();
+            Arrays.fill(entries, null);
         }
     }
 
@@ -62,34 +63,34 @@ public class ContentBidi implements ContentListener {
             return new Directions(new long[]{IntPair.pack(0, 0)}, text.getLine(line).length());
         }
         synchronized (this) {
-            for (int i = 0;i < entries.size();i++) {
-                var entry = entries.get(i);
-                if (entry.line == line) {
+            for (int i = 0;i < entries.length;i++) {
+                var entry = entries[i];
+                if (entry != null && entry.line == line) {
                     return entry.dir;
                 }
             }
         }
         var dir = TextBidi.getDirections(text.getLine(line));
         synchronized (this) {
-            entries.add(new DirectionsEntry(dir, line));
-            if (MAX_BIDI_CACHE_ENTRY_COUNT >= 0 && entries.size() > MAX_BIDI_CACHE_ENTRY_COUNT) {
-                entries.remove(0);
-            }
+            System.arraycopy(entries, 0, entries, 1, entries.length - 1);
+            entries[0] = new DirectionsEntry(dir, line);
         }
         return dir;
     }
 
     @Override
     public synchronized void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
-        var itr = entries.iterator();
         var delta = endLine - startLine;
-        while (itr.hasNext()) {
-            var entry = itr.next();
+        for (int i = 0;i < entries.length;i++) {
+            var entry = entries[i];
+            if (entry == null) {
+                continue;
+            }
             if (entry.line >= startLine) {
                 if (entry.line > endLine) {
                     entry.line -= delta;
                 } else {
-                    itr.remove();
+                    entries[i] = null;
                 }
             }
         }
@@ -97,14 +98,16 @@ public class ContentBidi implements ContentListener {
 
     @Override
     public synchronized void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
-        var itr = entries.iterator();
         var delta = endLine - startLine;
-        while (itr.hasNext()) {
-            var entry = itr.next();
+        for (int i = 0;i < entries.length;i++) {
+            var entry = entries[i];
+            if (entry == null) {
+                continue;
+            }
             if (entry.line > startLine) {
                 entry.line += delta;
             } else if (entry.line == startLine) {
-                itr.remove();
+                entries[i] = null;
             }
         }
     }
@@ -116,7 +119,7 @@ public class ContentBidi implements ContentListener {
 
     public void destroy() {
         text.removeContentListener(this);
-        entries.clear();
+        Arrays.fill(entries, null);
     }
 
     private static class DirectionsEntry {

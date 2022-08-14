@@ -59,21 +59,21 @@ public interface Language {
     /**
      * Set the thread's interrupted flag by calling {@link Thread#interrupt()}.
      * <p>
-     * Throw {@link io.github.rosemoe.sora.lang.completion.CompletionCancelledException} exceptions
+     * Throw {@link CompletionCancelledException} exceptions
      * from {@link ContentReference} and {@link CompletionPublisher}.
      * <p>
      * Set thread's flag for abortion.
      */
     int INTERRUPTION_LEVEL_STRONG = 0;
     /**
-     * Throw {@link io.github.rosemoe.sora.lang.completion.CompletionCancelledException} exceptions
+     * Throw {@link CompletionCancelledException} exceptions
      * from {@link ContentReference} and {@link CompletionPublisher}.
      * <p>
      * Set thread's flag for abortion.
      */
     int INTERRUPTION_LEVEL_SLIGHT = 1;
     /**
-     * Throw {@link io.github.rosemoe.sora.lang.completion.CompletionCancelledException} exceptions
+     * Throw {@link CompletionCancelledException} exceptions
      * from {@link ContentReference}
      * <p>
      * Set thread's flag for abortion.
