@@ -30,6 +30,11 @@ import android.util.AttributeSet;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+
+import java.util.function.Consumer;
+
 import io.github.rosemoe.sora.R;
 
 /**
@@ -109,10 +114,10 @@ public class SymbolInputView extends LinearLayout {
      * @param display    The texts displayed in button
      * @param insertText The actual text to be inserted to editor when the button is clicked
      */
-    public void addSymbols(String[] display, final String[] insertText) {
+    public void addSymbols(@NonNull String[] display, @NonNull final String[] insertText) {
         int count = Math.max(display.length, insertText.length);
         for (int i = 0; i < count; i++) {
-            Button btn = new Button(getContext(), null, android.R.attr.buttonStyleSmall);
+            var btn = new Button(getContext(), null, android.R.attr.buttonStyleSmall);
             btn.setText(display[i]);
             btn.setBackground(new ColorDrawable(Color.TRANSPARENT));
             btn.setTextColor(textColor);
@@ -122,6 +127,13 @@ public class SymbolInputView extends LinearLayout {
                 if (editor != null)
                     editor.insertText(insertText[finalI], 1);
             });
+        }
+    }
+
+    @RequiresApi(24)
+    public void forEachButton(@NonNull Consumer<Button> consumer) {
+        for (int i = 0;i < getChildCount();i++) {
+            consumer.accept((Button) getChildAt(i));;
         }
     }
 

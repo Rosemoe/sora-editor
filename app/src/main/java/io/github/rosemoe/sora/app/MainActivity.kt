@@ -57,6 +57,7 @@ import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.schemes.*
 import io.github.rosemoe.sora.widget.style.builtin.ScaleCursorAnimator
 import io.github.rosemoe.sorakt.subscribeEvent
+import org.w3c.dom.CharacterData
 import java.io.*
 import java.util.regex.PatternSyntaxException
 
@@ -73,6 +74,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         val inputView = binding.symbolInput
         inputView.bindEditor(binding.editor)
+        val typeface = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
         inputView.addSymbols(
             arrayOf(
                 "->",
@@ -91,6 +93,9 @@ class MainActivity : AppCompatActivity() {
                 "/"
             ), arrayOf("\t", "{}", "}", "(", ")", ",", ".", ";", "\"", "?", "+", "-", "*", "/")
         )
+        inputView.forEachButton {
+            it.typeface = typeface
+        }
         binding.searchEditor.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {}
             override fun onTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {}
@@ -111,7 +116,7 @@ class MainActivity : AppCompatActivity() {
         })
         binding.editor.apply {
             lineSeparator = LineSeparator.CRLF
-            typefaceText = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
+            typefaceText = typeface
             setLineSpacing(2f, 1.1f)
             cursorAnimator = ScaleCursorAnimator(this)
             nonPrintablePaintingFlags =
@@ -218,11 +223,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateBtnState() {
-        if (undo == null) {
-            return
-        }
-        undo!!.isEnabled = binding.editor.canUndo()
-        redo!!.isEnabled = binding.editor.canRedo()
+        undo?.isEnabled = binding.editor.canUndo()
+        redo?.isEnabled = binding.editor.canRedo()
     }
 
     private fun updatePositionText() {
@@ -241,12 +243,28 @@ class MainActivity : AppCompatActivity() {
                     }
                 } + ">)"
             } else {
-                "(" + escapeIfNecessary(
-                    binding.editor.text.charAt(
+                val char = binding.editor.text.charAt(
+                    cursor.leftLine,
+                    cursor.leftColumn
+                )
+                if (char.isLowSurrogate() && cursor.leftColumn > 0) {
+                    "(" + String(charArrayOf(binding.editor.text.charAt(
                         cursor.leftLine,
-                        cursor.leftColumn
-                    )
-                ) + ")"
+                        cursor.leftColumn - 1
+                    ), char))  + ")"
+                } else if(char.isHighSurrogate() && cursor.leftColumn + 1 < binding.editor.text.getColumnCount(cursor.leftLine)){
+                    "(" + String(charArrayOf(char, binding.editor.text.charAt(
+                        cursor.leftLine,
+                        cursor.leftColumn + 1
+                    )))  + ")"
+                } else {
+                    "(" + escapeIfNecessary(
+                        binding.editor.text.charAt(
+                            cursor.leftLine,
+                            cursor.leftColumn
+                        )
+                    ) + ")"
+                }
             }
         }
         binding.positionDisplay.text = text
