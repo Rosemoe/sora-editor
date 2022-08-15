@@ -310,6 +310,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean verticalAbsorb;
     private boolean horizontalAbsorb;
     private LineSeparator lineSeparator;
+    private TextRange lastInsertion;
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -3059,12 +3060,16 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             if (!clipboardManager.hasPrimaryClip() || clipboardManager.getPrimaryClip() == null) {
                 return;
             }
-            ClipData.Item data = clipboardManager.getPrimaryClip().getItemAt(0);
-            CharSequence text = data.getText();
+            var data = clipboardManager.getPrimaryClip().getItemAt(0);
+            var text = data.getText();
             if (text != null && inputConnection != null) {
-                inputConnection.commitText(text, 0);
+                inputConnection.commitText(text, 1);
+                if (props.formatPastedText) {
+                    formatCodeAsync(lastInsertion.getStart(), lastInsertion.getEnd());
+                }
+                notifyIMEExternalCursorChange();
             }
-            notifyIMEExternalCursorChange();
+
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(getContext(), e.toString(), Toast.LENGTH_SHORT).show();
@@ -3310,6 +3315,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             this.text.resetBatchEdit();
         }
         this.extraArguments = extraArguments == null ? new Bundle() : extraArguments;
+        lastInsertion = null;
         if (reuseContentObject && text instanceof Content) {
             this.text = (Content) text;
             this.text.resetBatchEdit();
@@ -4093,6 +4099,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             cursorAnimator.start();
         }
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_INSERT, start, end, insertedContent));
+        lastInsertion = new TextRange(start.fromThis(), end.fromThis());
     }
 
     @Override

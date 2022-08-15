@@ -276,5 +276,10 @@ public class DirectAccessProps implements Serializable {
      */
     public final static int LN_ACTION_PLACE_SELECTION_HOME = 2;
 
+    /**
+     * Format pasted text (when text is pasted by {@link CodeEditor#pasteText()})
+     */
+    public boolean formatPastedText = false;
+
 
 }
