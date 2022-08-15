@@ -182,11 +182,12 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     public synchronized LineTokenizeResult<MyState, Span> tokenizeLine(CharSequence lineC, MyState state, int lineIndex) {
         String line = (lineC instanceof ContentLine) ? ((ContentLine)lineC).toStringWithNewline() : lineC.toString();
         var tokens = new ArrayList<Span>();
+        var surrogate = StringUtil.checkSurrogate(line);
         ITokenizeLineResult2 lineTokens = grammar.tokenizeLine2(line, state == null ? null : state.tokenizeState);
         int tokensLength = lineTokens.getTokens().length / 2;
         var identifiers = language.createIdentifiers ? new ArrayList<String>() : null;
         for (int i = 0; i < tokensLength; i++) {
-            int startIndex = lineTokens.getTokens()[2 * i];
+            int startIndex = StringUtil.convertUnicodeOffsetToUtf16(line, lineTokens.getTokens()[2 * i], surrogate);
             if (i == 0 && startIndex != 0) {
                 tokens.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
             }
@@ -196,7 +197,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
             if (language.createIdentifiers) {
                 var type = StackElementMetadata.getTokenType(metadata);
                 if (type == StandardTokenType.Other) {
-                    var end = i + 1 == tokensLength ? lineC.length() : lineTokens.getTokens()[2 * (i + 1)];
+                    var end = i + 1 == tokensLength ? lineC.length() : StringUtil.convertUnicodeOffsetToUtf16(line, lineTokens.getTokens()[2 * (i + 1)], surrogate);
                     if (end > startIndex && MyCharacter.isJavaIdentifierStart(line.charAt(startIndex))) {
                         var flag = true;
                         for (int j = startIndex + 1; j < end; j++) {
