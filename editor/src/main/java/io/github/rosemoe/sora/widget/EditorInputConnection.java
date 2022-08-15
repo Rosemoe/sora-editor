@@ -464,6 +464,7 @@ class EditorInputConnection extends BaseInputConnection {
             return false;
         }
         composingText.reset();
+        endBatchEdit();
         editor.updateCursor();
         editor.invalidate();
         return true;
