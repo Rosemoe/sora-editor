@@ -40,13 +40,13 @@ public class LspEditorManager {
         this.currentProjectPath = currentProjectPath;
     }
 
-    private Map<String,LspEditor> editors = new HashMap<>();
+    private Map<String, LspEditor> editors = new HashMap<>();
 
-    private static Map<String,LspEditorManager> managers = new HashMap<>();
+    private static Map<String, LspEditorManager> managers = new HashMap<>();
 
     public static LspEditorManager getOrCreateEditorManager(String projectPath) {
         LspEditorManager manager = managers.get(projectPath);
-        if(manager == null) {
+        if (manager == null) {
             manager = new LspEditorManager(projectPath);
             managers.put(projectPath, manager);
         }
@@ -55,7 +55,7 @@ public class LspEditorManager {
 
 
     public LspEditor getEditor(String currentFileUri) {
-        return  editors.get(currentFileUri);
+        return editors.get(currentFileUri);
     }
 
     @Nullable
@@ -81,12 +81,21 @@ public class LspEditorManager {
             editor.close();
         });
         editors.clear();
-        // Maybe the user should be allowed to call the method themselves
-        LspUtils.clearVersions();
+
     }
 
     public static void closeAllManager() {
         managers.values().forEach(LspEditorManager::closeAllEditor);
         managers.clear();
+
+        // Maybe the user should be allowed to call the method themselves
+        LspUtils.clearVersions();
+
     }
+
+    public void close() {
+        closeAllEditor();
+        managers.remove(currentProjectPath);
+    }
+
 }

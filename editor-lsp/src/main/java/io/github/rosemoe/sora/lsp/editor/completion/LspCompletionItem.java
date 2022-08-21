@@ -23,10 +23,12 @@
  */
 package io.github.rosemoe.sora.lsp.editor.completion;
 
+import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.TextEdit;
 
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
 import io.github.rosemoe.sora.text.Content;
+import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 public class LspCompletionItem extends CompletionItem implements Comparable<LspCompletionItem> {
@@ -41,32 +43,52 @@ public class LspCompletionItem extends CompletionItem implements Comparable<LspC
 
     @Override
     public void performCompletion(CodeEditor editor, Content text, int line, int column) {
-        TextEdit textEdit = commitItem.getTextEdit().getLeft();
 
-        if (commitItem.getInsertText() != null) {
+        var insertText = commitItem.getInsertText();
+
+
+        //var cursor = text.getCursor();
+
+        if (insertText != null) {
+            //TODO: Support InsertTextFormat.Snippet
+
             //always insert text
-            text.insert(line, column, commitItem.getInsertText());
+            text.insert(line, column, insertText);
             return;
         }
 
-        if (textEdit != null) {
-            String commitText = textEdit.getNewText();
-            text.replace(textEdit.getRange().getStart().getLine(), textEdit.getRange().getStart().getCharacter(),
-                    textEdit.getRange().getEnd().getLine(), textEdit.getRange().getEnd().getCharacter(),
-                    commitText);
+        if (commitItem.getTextEdit() != null) {
+
+            //TODO: support InsertReplaceEdit
+
+            if (commitItem.getTextEdit().isLeft()) {
+
+                var textEdit = commitItem.getTextEdit().getLeft();
+                String commitText = textEdit.getNewText();
+                text.replace(textEdit.getRange().getStart().getLine(), textEdit.getRange().getStart().getCharacter(),
+                        textEdit.getRange().getEnd().getLine(), textEdit.getRange().getEnd().getCharacter(),
+                        commitText);
+            }
+
+            return;
+
         }
 
-        //TODO: support InsertReplaceEdit
+        insertText = commitItem.getLabel();
+
+        text.replace(text.getCharIndex(line, column), text.getCharIndex(line,
+                text.getColumnCount(line) - 1), insertText);
+
 
     }
 
 
     @Override
-    public int compareTo(LspCompletionItem lspCompletionItem) {
-        if (commitItem.getSortText() != null && lspCompletionItem.commitItem.getSortText() != null) {
-            return commitItem.getSortText().compareTo(lspCompletionItem.commitItem.getSortText());
+    public int compareTo(LspCompletionItem completionItem) {
+        if (commitItem.getSortText() != null && completionItem.commitItem.getSortText() != null) {
+            return commitItem.getSortText().compareTo(completionItem.commitItem.getSortText());
         }
-        return commitItem.getLabel().compareTo(lspCompletionItem.commitItem.getLabel());
+        return commitItem.getLabel().compareTo(completionItem.commitItem.getLabel());
     }
 }
 

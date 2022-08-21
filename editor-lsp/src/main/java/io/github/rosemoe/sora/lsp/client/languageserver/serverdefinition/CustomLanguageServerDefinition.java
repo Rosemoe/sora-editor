@@ -60,6 +60,8 @@ public class CustomLanguageServerDefinition extends LanguageServerDefinition {
         this(ext, new HashMap<>(), connectProvider);
     }
 
+
+
     public String toString() {
         return "CustomLanguageServerDefinition : " + String.join(" ", connectProvider.toString());
     }
@@ -68,6 +70,7 @@ public class CustomLanguageServerDefinition extends LanguageServerDefinition {
     public StreamConnectionProvider createConnectionProvider(String workingDir) {
         return connectProvider.createConnectionProvider(workingDir);
     }
+
 
     @Override
     public boolean equals(Object obj) {
