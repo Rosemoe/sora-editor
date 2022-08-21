@@ -26,19 +26,24 @@ package io.github.rosemoe.sora.lsp.editor.completion;
 import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.TextEdit;
 
+import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.util.IntPair;
+import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 public class LspCompletionItem extends CompletionItem implements Comparable<LspCompletionItem> {
 
 
     private final org.eclipse.lsp4j.CompletionItem commitItem;
+    private final int prefixLength;
 
-    public LspCompletionItem(org.eclipse.lsp4j.CompletionItem completionItem) {
+
+    public LspCompletionItem(org.eclipse.lsp4j.CompletionItem completionItem, int prefixLength) {
         super(completionItem.getLabel(), completionItem.getDetail());
         this.commitItem = completionItem;
+        this.prefixLength = prefixLength;
     }
 
     @Override
@@ -47,13 +52,11 @@ public class LspCompletionItem extends CompletionItem implements Comparable<LspC
         var insertText = commitItem.getInsertText();
 
 
-        //var cursor = text.getCursor();
-
         if (insertText != null) {
             //TODO: Support InsertTextFormat.Snippet
 
             //always insert text
-            text.insert(line, column, insertText);
+            text.replace(line, column - prefixLength, line, column, insertText);
             return;
         }
 
@@ -76,9 +79,8 @@ public class LspCompletionItem extends CompletionItem implements Comparable<LspC
 
         insertText = commitItem.getLabel();
 
-        text.replace(text.getCharIndex(line, column), text.getCharIndex(line,
-                text.getColumnCount(line) - 1), insertText);
 
+        text.replace(line, column - prefixLength, line, column, insertText);
 
     }
 

@@ -37,6 +37,7 @@ import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
+import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.format.Formatter;
@@ -50,6 +51,7 @@ import io.github.rosemoe.sora.lsp.requests.Timeouts;
 import io.github.rosemoe.sora.lsp.utils.LSPException;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
+import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
 @Experimental
@@ -80,17 +82,23 @@ public class LspLanguage implements Language {
     @Override
     public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position, @NonNull CompletionPublisher publisher, @NonNull Bundle extraArguments) throws CompletionCancelledException {
 
-        publisher.setComparator(new Comparator<>() {
-            @Override
-            public int compare(CompletionItem o1, CompletionItem o2) {
-                if (o1 instanceof LspCompletionItem && o2 instanceof LspCompletionItem) {
-                    return ((LspCompletionItem) o1).compareTo(((LspCompletionItem) o2));
-                }
-                return 0;
+        var prefix = CompletionHelper.computePrefix(content, position, MyCharacter::isJavaIdentifierPart);
+
+        if (prefix.length() == 0) {
+            return;
+        }
+
+        var prefixLength = prefix.length();
+
+        publisher.setComparator((o1, o2) -> {
+            if (o1 instanceof LspCompletionItem && o2 instanceof LspCompletionItem) {
+                return ((LspCompletionItem) o1).compareTo(((LspCompletionItem) o2));
             }
+            return 0;
         });
 
-        CompletableFuture<Void> documentChangeFuture = currentEditor.useFeature(DocumentChangeFeature.class).getFuture();
+
+        var documentChangeFuture = currentEditor.useFeature(DocumentChangeFeature.class).getFuture();
 
         if (documentChangeFuture != null) {
             if (!documentChangeFuture.isDone() || !documentChangeFuture.isCompletedExceptionally() || !documentChangeFuture.isCancelled()) {
@@ -100,23 +108,14 @@ public class LspLanguage implements Language {
 
         try {
 
-            currentEditor
-                    .useFeature(CompletionFeature.class)
-                    .execute(position)
-                    .thenAccept(completions -> {
-                        completions
-                                .forEach(completionItem -> {
-                                    publisher.addItem(new LspCompletionItem(
-                                            completionItem
-                                    ));
-                                });
-
-                    })
-                    .exceptionally(throwable -> {
-                        publisher.cancel();
-                        throw new CompletionCancelledException(throwable.getMessage());
-                    })
-                    .get(Timeout.getTimeout(Timeouts.COMPLETION), TimeUnit.MILLISECONDS);
+            currentEditor.useFeature(CompletionFeature.class).execute(position).thenAccept(completions -> {
+                completions.forEach(completionItem -> {
+                    publisher.addItem(new LspCompletionItem(completionItem, prefixLength));
+                });
+            }).exceptionally(throwable -> {
+                publisher.cancel();
+                throw new CompletionCancelledException(throwable.getMessage());
+            }).get(Timeout.getTimeout(Timeouts.COMPLETION), TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             throw new LSPException(e);
         }

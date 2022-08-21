@@ -42,7 +42,7 @@ import io.github.rosemoe.sora.lsp.utils.LspUtils;
 
 public class DocumentChangeFeature implements Feature<ContentChangeEvent, Void> {
 
-    private CompletableFuture<Void> future;
+    private volatile CompletableFuture<Void> future;
     private LspEditor editor;
 
 
@@ -71,38 +71,25 @@ public class DocumentChangeFeature implements Feature<ContentChangeEvent, Void> 
 
         DidChangeTextDocumentParams params = createDidChangeTextDocumentParams(data);
 
-        editor.getRequestManagerOfOptional()
-                .ifPresent(requestManager -> {
-                    future = CompletableFuture.runAsync(() -> requestManager.didChange(
-                            params));
+        editor.getRequestManagerOfOptional().ifPresent(requestManager -> {
+            ForkJoinPool.commonPool().execute(() -> {
+                future = CompletableFuture.runAsync(() -> requestManager.didChange(params));
+                future.join();
+            });
 
-                    ForkJoinPool.commonPool().execute(() -> {
-                                future.join();
-                                future = null;
-                            }
-                    );
-
-                });
+        });
 
 
         return null;
     }
 
     private List<TextDocumentContentChangeEvent> createFullTextDocumentContentChangeEvent() {
-        return List.of(LspUtils.createTextDocumentContentChangeEvent(
-                editor.getEditorContent()
-        ));
+        return List.of(LspUtils.createTextDocumentContentChangeEvent(editor.getEditorContent()));
     }
 
     private List<TextDocumentContentChangeEvent> createIncrementTextDocumentContentChangeEvent(ContentChangeEvent data) {
         String text = data.getChangedText().toString();
-        return List.of(
-                LspUtils.createTextDocumentContentChangeEvent(
-                        LspUtils.createRange(data.getChangeStart(), data.getChangeEnd()),
-                        data.getAction() == ContentChangeEvent.ACTION_DELETE ? text.length() : 0,
-                        data.getAction() == ContentChangeEvent.ACTION_DELETE ? "" : text
-                )
-        );
+        return List.of(LspUtils.createTextDocumentContentChangeEvent(LspUtils.createRange(data.getChangeStart(), data.getChangeEnd()), data.getAction() == ContentChangeEvent.ACTION_DELETE ? text.length() : 0, data.getAction() == ContentChangeEvent.ACTION_DELETE ? "" : text));
     }
 
 
@@ -111,8 +98,6 @@ public class DocumentChangeFeature implements Feature<ContentChangeEvent, Void> 
 
         boolean isFullSync = kind == TextDocumentSyncKind.None || kind == TextDocumentSyncKind.Full;
 
-        return LspUtils
-                .createDidChangeTextDocumentParams(editor.getCurrentFileUri(),
-                        isFullSync ? createFullTextDocumentContentChangeEvent() : createIncrementTextDocumentContentChangeEvent(data));
+        return LspUtils.createDidChangeTextDocumentParams(editor.getCurrentFileUri(), isFullSync ? createFullTextDocumentContentChangeEvent() : createIncrementTextDocumentContentChangeEvent(data));
     }
 }
