@@ -209,6 +209,12 @@ public class DirectAccessProps implements Serializable {
     public boolean highlightMatchingDelimiters = true;
 
     /**
+     * Bold delimiters after highlighting
+     */
+    @InvalidateRequired
+    public boolean boldHighlightMatchingDelimiters = true;
+
+    /**
      * Whether the editor will use round rectangle for text background
      */
     @InvalidateRequired
