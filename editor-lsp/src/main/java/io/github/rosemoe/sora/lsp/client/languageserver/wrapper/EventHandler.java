@@ -42,8 +42,8 @@ import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.ServerL
  */
 public class EventHandler implements Function<MessageConsumer, MessageConsumer> {
 
-    private EventListener listener;
-    private BooleanSupplier isRunning;
+    private final EventListener listener;
+    private final BooleanSupplier isRunning;
     private LanguageServer languageServer;
 
     EventHandler(@NotNull EventListener listener, @NotNull BooleanSupplier isRunning) {
@@ -61,7 +61,6 @@ public class EventHandler implements Function<MessageConsumer, MessageConsumer> 
         };
 
     }
-
 
 
     private void handleMessage(Message message) {

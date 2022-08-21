@@ -62,6 +62,7 @@ import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.TextDocumentSyncOptions;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceEditCapabilities;
+import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.launch.LSPLauncher;
@@ -233,6 +234,7 @@ public class LanguageServerWrapper {
 
                 eventHandler.setLanguageServer(languageServer);
 
+
                 initializeFuture = languageServer.initialize(initParams).thenApply(res -> {
                     initializeResult = res;
                     Log.i(TAG, "Got initializeResult for " + serverDefinition + " ; " + projectRootPath);
@@ -331,13 +333,25 @@ public class LanguageServerWrapper {
         InitializeParams initParams = new InitializeParams();
         initParams.setRootUri(URIUtils.fileToURI(projectRootPath).toString());
 
+
         WorkspaceClientCapabilities workspaceClientCapabilities = new WorkspaceClientCapabilities();
         workspaceClientCapabilities.setApplyEdit(false); // Not ready to support this feature
         workspaceClientCapabilities.setDidChangeWatchedFiles(new DidChangeWatchedFilesCapabilities());
         workspaceClientCapabilities.setExecuteCommand(new ExecuteCommandCapabilities());
         workspaceClientCapabilities.setWorkspaceEdit(new WorkspaceEditCapabilities());
+
         workspaceClientCapabilities.setSymbol(new SymbolCapabilities());
-        workspaceClientCapabilities.setWorkspaceFolders(false);
+        workspaceClientCapabilities.setWorkspaceFolders(true);
+
+
+        WorkspaceFolder workspaceFolder = new WorkspaceFolder();
+
+        workspaceFolder.setUri(initParams.getRootUri());
+        //Maybe the user should be allowed to customize the WorkspaceFolder?
+        //workspaceFolder.setName("");
+
+        initParams.setWorkspaceFolders(List.of(workspaceFolder));
+
         workspaceClientCapabilities.setConfiguration(false);
 
         TextDocumentClientCapabilities textDocumentClientCapabilities = new TextDocumentClientCapabilities();

@@ -63,8 +63,7 @@ public class PublishDiagnosticsFeature implements Feature<PublishDiagnosticsPara
             return 0;
         }
 
-        return currentEditor.getText()
-                .getCharIndex(position.getLine(), position.getCharacter());
+        return currentEditor.getText().getCharIndex(position.getLine(), position.getCharacter());
     }
 
 
@@ -77,26 +76,17 @@ public class PublishDiagnosticsFeature implements Feature<PublishDiagnosticsPara
             return null;
         }
 
-        DiagnosticsContainer diagnosticsContainer = currentEditor.getDiagnostics() != null
-                ? currentEditor.getDiagnostics() : new DiagnosticsContainer();
+        DiagnosticsContainer diagnosticsContainer = currentEditor.getDiagnostics() != null ? currentEditor.getDiagnostics() : new DiagnosticsContainer();
 
         diagnosticsContainer.reset();
 
         AtomicInteger id = new AtomicInteger();
 
 
-        List<DiagnosticRegion> diagnosticRegionList = data
-                .getDiagnostics()
-                .stream()
-                .map(it -> {
-                            Log.w("diagnostic message", "diagnostic: " + it.getMessage());
-                            return new DiagnosticRegion(
-                                    getIndexForPosition(it.getRange().getStart()),
-                                    getIndexForPosition(it.getRange().getEnd()),
-                                    transformToEditorDiagnosticSeverity(it.getSeverity()), id.incrementAndGet());
-                        }
-                )
-                .collect(Collectors.toList());
+        List<DiagnosticRegion> diagnosticRegionList = data.getDiagnostics().stream().map(it -> {
+            Log.w("diagnostic message", "diagnostic: " + it.getMessage());
+            return new DiagnosticRegion(getIndexForPosition(it.getRange().getStart()), getIndexForPosition(it.getRange().getEnd()), transformToEditorDiagnosticSeverity(it.getSeverity()), id.incrementAndGet());
+        }).collect(Collectors.toList());
 
         diagnosticsContainer.addDiagnostics(diagnosticRegionList);
 
