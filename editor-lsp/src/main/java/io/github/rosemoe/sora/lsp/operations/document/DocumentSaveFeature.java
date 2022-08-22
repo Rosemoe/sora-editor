@@ -54,12 +54,7 @@ public class DocumentSaveFeature implements Feature<Void, Void> {
     @Override
     public Void execute(Void data) {
 
-        editor.getRequestManagerOfOptional()
-                .ifPresent(requestManager -> future = CompletableFuture.runAsync(() ->
-                        requestManager.didSave(
-                                LspUtils.createDidSaveTextDocumentParams(
-                                        editor.getCurrentFileUri(), editor.getEditorContent()
-                                ))));
+        editor.getRequestManagerOfOptional().ifPresent(requestManager -> future = CompletableFuture.runAsync(() -> requestManager.didSave(LspUtils.createDidSaveTextDocumentParams(editor.getCurrentFileUri(), editor.getEditorContent()))));
 
         ForkJoinPool.commonPool().execute(future::join);
 

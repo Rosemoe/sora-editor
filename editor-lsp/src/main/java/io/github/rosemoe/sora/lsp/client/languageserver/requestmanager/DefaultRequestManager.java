@@ -480,7 +480,7 @@ public class DefaultRequestManager implements RequestManager {
     public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(DocumentHighlightParams params) {
         if (checkStatus()) {
             try {
-                return (serverCapabilities.getDocumentHighlightProvider().getRight() != null) ? textDocumentService.documentHighlight(params) : null;
+                return (serverCapabilities.getDocumentHighlightProvider() != null) ? textDocumentService.documentHighlight(params) : null;
             } catch (Exception e) {
                 crashed(e);
                 return null;
@@ -493,7 +493,7 @@ public class DefaultRequestManager implements RequestManager {
     public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(DocumentSymbolParams params) {
         if (checkStatus()) {
             try {
-                return (serverCapabilities.getDocumentSymbolProvider().getRight() != null) ? textDocumentService.documentSymbol(params) : null;
+                return (serverCapabilities.getDocumentSymbolProvider() != null) ? textDocumentService.documentSymbol(params) : null;
             } catch (Exception e) {
                 crashed(e);
                 return null;
@@ -506,7 +506,7 @@ public class DefaultRequestManager implements RequestManager {
     public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
         if (checkStatus()) {
             try {
-                return (serverCapabilities.getDocumentFormattingProvider().getRight() != null) ? textDocumentService.formatting(params) : null;
+                return (serverCapabilities.getDocumentFormattingProvider() != null) ? textDocumentService.formatting(params) : null;
             } catch (Exception e) {
                 crashed(e);
                 return null;

@@ -202,7 +202,12 @@ class LspTestActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
         if (id == R.id.code_format) {
-            editor.formatCodeAsync()
+            val cursor = editor.text.cursor
+            if (cursor.isSelected) {
+                editor.formatCodeAsync(cursor.left(), cursor.right())
+            } else {
+                editor.formatCodeAsync()
+            }
         }
         return super.onOptionsItemSelected(item)
     }

@@ -30,6 +30,7 @@ import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 
@@ -61,15 +62,14 @@ public class DocumentChangeFeature implements Feature<ContentChangeEvent, Void> 
     }
 
 
-    @Nullable
     public CompletableFuture<Void> getFuture() {
-        return future;
+        return Optional.ofNullable(future).orElse(CompletableFuture.completedFuture(null));
     }
 
     @Override
     public Void execute(ContentChangeEvent data) {
 
-        DidChangeTextDocumentParams params = createDidChangeTextDocumentParams(data);
+        var params = createDidChangeTextDocumentParams(data);
 
         editor.getRequestManagerOfOptional().ifPresent(requestManager -> {
             ForkJoinPool.commonPool().execute(() -> {
@@ -88,15 +88,15 @@ public class DocumentChangeFeature implements Feature<ContentChangeEvent, Void> 
     }
 
     private List<TextDocumentContentChangeEvent> createIncrementTextDocumentContentChangeEvent(ContentChangeEvent data) {
-        String text = data.getChangedText().toString();
+        var text = data.getChangedText().toString();
         return List.of(LspUtils.createTextDocumentContentChangeEvent(LspUtils.createRange(data.getChangeStart(), data.getChangeEnd()), data.getAction() == ContentChangeEvent.ACTION_DELETE ? text.length() : 0, data.getAction() == ContentChangeEvent.ACTION_DELETE ? "" : text));
     }
 
 
     private DidChangeTextDocumentParams createDidChangeTextDocumentParams(ContentChangeEvent data) {
-        TextDocumentSyncKind kind = editor.getSyncOptions();
+        var kind = editor.getSyncOptions();
 
-        boolean isFullSync = kind == TextDocumentSyncKind.None || kind == TextDocumentSyncKind.Full;
+        var isFullSync = kind == TextDocumentSyncKind.None || kind == TextDocumentSyncKind.Full;
 
         return LspUtils.createDidChangeTextDocumentParams(editor.getCurrentFileUri(), isFullSync ? createFullTextDocumentContentChangeEvent() : createIncrementTextDocumentContentChangeEvent(data));
     }

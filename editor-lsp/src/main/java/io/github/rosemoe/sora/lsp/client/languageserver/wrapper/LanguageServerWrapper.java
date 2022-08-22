@@ -75,6 +75,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -97,6 +98,7 @@ import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.editor.LspEditorManager;
 import io.github.rosemoe.sora.lsp.utils.LSPException;
 import io.github.rosemoe.sora.lsp.utils.URIUtils;
+import io.github.rosemoe.sora.util.MyCharacter;
 
 /**
  * The implementation of a LanguageServerWrapper (specific to a serverDefinition and a project)
@@ -398,17 +400,18 @@ public class LanguageServerWrapper {
      */
     public void connect(LspEditor editor) {
 
-        String uri = editor.getCurrentFileUri();
+        var uri = editor.getCurrentFileUri();
         if (connectedEditors.contains(editor)) {
             return;
         }
-        Pair<String, String> key = new Pair<>(uri, editor.getProjectPath());
+        var key = new Pair<>(uri, editor.getProjectPath());
 
         uriToLanguageServerWrapper.put(key, this);
 
         start();
+
         if (initializeFuture != null) {
-            ServerCapabilities capabilities = getServerCapabilities();
+            var capabilities = getServerCapabilities();
             if (capabilities == null) {
                 Log.w(TAG, "Capabilities are null for " + serverDefinition);
                 return;
@@ -424,10 +427,17 @@ public class LanguageServerWrapper {
                         synchronized (toConnect) {
                             toConnect.remove(editor);
                         }
-                        TextDocumentSyncKind textDocumentSyncKind = syncOptions.isLeft() ? syncOptions.getLeft() : syncOptions.getRight().getChange();
+                        var textDocumentSyncKind = syncOptions.isLeft() ? syncOptions.getLeft() : syncOptions.getRight().getChange();
                         textDocumentSyncKind = textDocumentSyncKind == null ? TextDocumentSyncKind.Full : textDocumentSyncKind;
 
                         editor.setSyncOptions(textDocumentSyncKind);
+
+
+                        var completionTriggers = (capabilities.getCompletionProvider() != null
+                                && capabilities.getCompletionProvider().getTriggerCharacters() != null) ?
+                                capabilities.getCompletionProvider().getTriggerCharacters() : new ArrayList<String>();
+
+                        editor.setCompletionTriggers(completionTriggers);
 
                         editor.installFeatures();
 

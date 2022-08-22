@@ -41,7 +41,6 @@ import io.github.rosemoe.sora.widget.CodeEditor;
 
 public class PublishDiagnosticsFeature implements Feature<PublishDiagnosticsParams, Void> {
 
-
     private LspEditor editor;
 
 
@@ -57,7 +56,7 @@ public class PublishDiagnosticsFeature implements Feature<PublishDiagnosticsPara
     }
 
     private int getIndexForPosition(Position position) {
-        CodeEditor currentEditor = editor.getEditor();
+        var currentEditor = editor.getEditor();
 
         if (currentEditor == null) {
             return 0;
@@ -70,18 +69,17 @@ public class PublishDiagnosticsFeature implements Feature<PublishDiagnosticsPara
     @Override
     public Void execute(PublishDiagnosticsParams data) {
 
-        CodeEditor currentEditor = editor.getEditor();
+        var currentEditor = editor.getEditor();
 
         if (currentEditor == null) {
             return null;
         }
 
-        DiagnosticsContainer diagnosticsContainer = currentEditor.getDiagnostics() != null ? currentEditor.getDiagnostics() : new DiagnosticsContainer();
+        var diagnosticsContainer = currentEditor.getDiagnostics() != null ? currentEditor.getDiagnostics() : new DiagnosticsContainer();
 
         diagnosticsContainer.reset();
 
-        AtomicInteger id = new AtomicInteger();
-
+        var id = new AtomicInteger();
 
         List<DiagnosticRegion> diagnosticRegionList = data.getDiagnostics().stream().map(it -> {
             Log.w("diagnostic message", "diagnostic: " + it.getMessage());

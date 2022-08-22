@@ -38,13 +38,9 @@ public class LspEditorContentChangeEventReceiver implements EventReceiver<Conten
         this.editor = editor;
     }
 
-
     @Override
     public void onReceive(ContentChangeEvent event, Unsubscribe unsubscribe) {
-        DocumentChangeFeature feature = editor.useFeature(DocumentChangeFeature.class);
-        if (feature == null) {
-            return;
-        }
-        feature.execute(event);
+        editor.safeUseFeature(DocumentChangeFeature.class)
+                .ifPresent(documentChangeFeature -> documentChangeFeature.execute(event));
     }
 }

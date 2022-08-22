@@ -54,11 +54,7 @@ public class DocumentOpenFeature implements Feature<Void, Void> {
     @Override
     public Void execute(Void data) {
 
-        editor.getRequestManagerOfOptional()
-                .ifPresent(requestManager -> future = CompletableFuture.runAsync(() ->
-                        requestManager.didOpen(LspUtils.createDidOpenTextDocumentParams(
-                                editor.getCurrentFileUri(),
-                                editor.getFileExt(), editor.getEditorContent()))));
+        editor.getRequestManagerOfOptional().ifPresent(requestManager -> future = CompletableFuture.runAsync(() -> requestManager.didOpen(LspUtils.createDidOpenTextDocumentParams(editor.getCurrentFileUri(), editor.getFileExt(), editor.getEditorContent()))));
 
 
         ForkJoinPool.commonPool().execute(future::join);

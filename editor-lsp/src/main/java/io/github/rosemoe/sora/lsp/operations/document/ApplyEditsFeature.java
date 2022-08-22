@@ -21,56 +21,45 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.operations.completion;
+package io.github.rosemoe.sora.lsp.operations.document;
 
-import org.eclipse.lsp4j.CompletionItem;
+import android.util.Pair;
+
+import org.eclipse.lsp4j.TextEdit;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 
-import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.operations.Feature;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
-import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.Content;
 
-public class CompletionFeature implements Feature<CharPosition, CompletableFuture<List<CompletionItem>>> {
-
-    private CompletableFuture<List<CompletionItem>> future;
-    private LspEditor editor;
-
+public class ApplyEditsFeature implements Feature<Pair<List<? extends TextEdit>, Content>, Void> {
 
     @Override
     public void install(LspEditor editor) {
-        this.editor = editor;
     }
 
     @Override
     public void uninstall(LspEditor editor) {
-        this.editor = null;
-        if (future != null) {
-            future.cancel(true);
-            future = null;
-        }
     }
 
 
     @Override
-    public CompletableFuture<List<CompletionItem>> execute(CharPosition data) {
-        if (future != null) {
-            future.cancel(true);
-            future = null;
-        }
+    public Void execute(Pair<List<? extends TextEdit>, Content> contentPair) {
 
-        var manager = editor.getRequestManager();
+        var editList = contentPair.first;
+        var content = contentPair.second;
 
-        if (manager == null) {
-            return null;
-        }
+        editList.forEach(textEdit -> {
+            var range = textEdit.getRange();
+            var text = textEdit.getNewText();
+            content.replace(range.getStart().getLine(), range.getStart().getCharacter(), range.getEnd().getLine(), range.getEnd().getCharacter(), text);
+        });
 
-        future = editor.getRequestManager().completion(LspUtils.createCompletionParams(editor.getCurrentFileUri(), LspUtils.createPosition(data))).thenApply(listCompletionListEither -> listCompletionListEither.isLeft() ? listCompletionListEither.getLeft() : listCompletionListEither.getRight().getItems());
-
-
-        return future;
+        return null;
     }
 }
+

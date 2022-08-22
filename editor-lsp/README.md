@@ -10,8 +10,9 @@ languages, such as auto-completion, formatting, etc.
 
 ## Features(already available)
 
-1. `textDocument/rangeFormatting`
-2. `textDocument/diagnostic`
+1.`textDocument/formatting`
+2.`textDocument/rangeFormatting`
+3.`textDocument/diagnostic`
 
 ## How to connect to the language server
 

@@ -45,6 +45,7 @@ import java.util.concurrent.CompletableFuture;
 
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.editor.LspEditorManager;
+import io.github.rosemoe.sora.lsp.utils.URIUtils;
 
 public class DefaultLanguageClient implements LanguageClient {
 
@@ -58,11 +59,10 @@ public class DefaultLanguageClient implements LanguageClient {
 
     @Override
     public CompletableFuture<ApplyWorkspaceEditResponse> applyEdit(ApplyWorkspaceEditParams params) {
-       /* boolean response = WorkspaceEditHandler.applyEdit(params.getEdit(), "LSP edits");*/
+        /* boolean response = WorkspaceEditHandler.applyEdit(params.getEdit(), "LSP edits");*/
         //FIXME: Support it?
         return CompletableFuture.supplyAsync(() -> new ApplyWorkspaceEditResponse(false));
     }
-
 
 
     @Override
@@ -72,43 +72,27 @@ public class DefaultLanguageClient implements LanguageClient {
 
     @Override
     public CompletableFuture<List<WorkspaceFolder>> workspaceFolders() {
-        return LanguageClient.super.workspaceFolders();
+        var workSpaceFolder = new WorkspaceFolder();
+        workSpaceFolder.setUri(URIUtils.fileToURI(context.getProjectPath()).toString());
+        // Always return the current project path
+        return CompletableFuture.completedFuture(List.of(workSpaceFolder));
     }
 
     @Override
     public CompletableFuture<Void> registerCapability(RegistrationParams params) {
-        /*return CompletableFuture.runAsync(() -> params.getRegistrations().forEach(r -> {
-            String id = r.getId();
-            Optional<DynamicRegistrationMethods> method = DynamicRegistrationMethods.forName(r.getMethod());
-            method.ifPresent(dynamicRegistrationMethods -> registrations.put(id, dynamicRegistrationMethods));
-
-        }));*/
+        //Not prepared to support this feature
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public CompletableFuture<Void> unregisterCapability(UnregistrationParams params) {
-       /* return CompletableFuture.runAsync(() -> params.getUnregisterations().forEach((Unregistration r) -> {
-            String id = r.getId();
-            Optional<DynamicRegistrationMethods> method = DynamicRegistrationMethods.forName(r.getMethod());
-            if (registrations.containsKey(id)) {
-                registrations.remove(id);
-            } else {
-                Map<DynamicRegistrationMethods, String> inverted = new HashMap<>();
-                for (Map.Entry<String, DynamicRegistrationMethods> entry : registrations.entrySet()) {
-                    inverted.put(entry.getValue(), entry.getKey());
-                }
-                if (method.isPresent() && inverted.containsKey(method.get())) {
-                    registrations.remove(inverted.get(method.get()));
-                }
-            }
-        }));*/
+        // Not prepared to support this feature
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public void telemetryEvent(Object o) {
-        Log.i(TAG, "telemetryEvent: "+o.toString());
+        Log.i(TAG, "telemetryEvent: " + o.toString());
     }
 
     @Override

@@ -25,7 +25,7 @@ package io.github.rosemoe.sora.lsp.operations;
 
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 
-public interface Feature<T,R> {
+public interface Feature<T, R> {
 
     void install(LspEditor editor);
 
