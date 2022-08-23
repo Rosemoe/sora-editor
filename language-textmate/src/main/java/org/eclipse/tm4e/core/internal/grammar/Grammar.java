@@ -1,238 +1,332 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
- *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
- *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
- *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ * <p>
+ * SPDX-License-Identifier: EPL-2.0
+ * <p>
+ * Initial code from https://github.com/microsoft/vscode-textmate/
+ * Initial copyright Copyright (C) Microsoft Corporation. All rights reserved.
+ * Initial license: MIT
+ * <p>
+ * Contributors:
+ * - Microsoft Corporation: Initial code, written in TypeScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
+ * - Fabio Zadrozny <fabiofz@gmail.com> - Not adding '\n' on tokenize if it already finished with '\n'
  */
 package org.eclipse.tm4e.core.internal.grammar;
 
-import org.eclipse.tm4e.core.grammar.GrammarHelper;
-import org.eclipse.tm4e.core.grammar.StackElement;
-import org.eclipse.tm4e.core.internal.grammar.parser.Raw;
-import org.eclipse.tm4e.core.internal.matcher.Matcher;
-import org.eclipse.tm4e.core.internal.matcher.MatcherWithPriority;
-import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
-import org.eclipse.tm4e.core.theme.IThemeProvider;
-import org.eclipse.tm4e.core.theme.ThemeTrieElementRule;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.IntFunction;
+import java.util.Objects;
+import java.util.function.Function;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.grammar.IGrammar;
-import org.eclipse.tm4e.core.grammar.IGrammarRepository;
+import org.eclipse.tm4e.core.grammar.IStateStack;
+import org.eclipse.tm4e.core.grammar.IToken;
 import org.eclipse.tm4e.core.grammar.ITokenizeLineResult;
-import org.eclipse.tm4e.core.grammar.ITokenizeLineResult2;
-import org.eclipse.tm4e.core.grammar.Injection;
+import org.eclipse.tm4e.core.internal.grammar.tokenattrs.EncodedTokenAttributes;
+import org.eclipse.tm4e.core.internal.matcher.Matcher;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
+import org.eclipse.tm4e.core.internal.registry.IGrammarRepository;
+import org.eclipse.tm4e.core.internal.registry.IThemeProvider;
 import org.eclipse.tm4e.core.internal.rule.IRuleFactoryHelper;
 import org.eclipse.tm4e.core.internal.rule.Rule;
 import org.eclipse.tm4e.core.internal.rule.RuleFactory;
+import org.eclipse.tm4e.core.internal.rule.RuleId;
 import org.eclipse.tm4e.core.internal.types.IRawGrammar;
 import org.eclipse.tm4e.core.internal.types.IRawRepository;
 import org.eclipse.tm4e.core.internal.types.IRawRule;
+import org.eclipse.tm4e.core.internal.utils.ObjectCloner;
+import org.eclipse.tm4e.core.internal.utils.StringUtils;
+
+import io.github.rosemoe.sora.langs.textmate.BuildConfig;
+import io.github.rosemoe.sora.util.Logger;
 
 /**
  * TextMate grammar implementation.
  *
- * @see https://github.com/Microsoft/vscode-textmate/blob/master/src/grammar.ts
- *
+ * @see <a href=
+ *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/grammar/grammar.ts#L99">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/grammar/grammar.ts</a>
  */
-public class Grammar implements IGrammar, IRuleFactoryHelper {
+public final class Grammar implements IGrammar, IRuleFactoryHelper {
 
-    private final Map<Integer, Rule> ruleId2desc;
-    private final Map<String, IRawGrammar> includedGrammars;
-    private final IGrammarRepository grammarRepository;
-    private final IRawGrammar grammar;
-    private final ScopeMetadataProvider scopeMetadataProvider;
-    private int rootId;
-    private int lastRuleId;
-    private List<Injection> injections;
+    private static final Logger LOGGER = Logger.instance(Grammar.class.getName());
 
-    public Grammar(IRawGrammar grammar, int initialLanguage, Map<String, Integer> embeddedLanguages,
-                   IGrammarRepository grammarRepository, IThemeProvider themeProvider) {
-        this.scopeMetadataProvider = new ScopeMetadataProvider(initialLanguage, themeProvider, embeddedLanguages);
-        this.rootId = -1;
-        this.lastRuleId = 0;
-        this.includedGrammars = new HashMap<>();
-        this.grammarRepository = grammarRepository;
-        this.grammar = initGrammar(grammar, null);
-        this.ruleId2desc = new HashMap<>();
-        this.injections = null;
+    private final String rootScopeName;
+
+    @Nullable
+    private RuleId _rootId = null;
+    private int _lastRuleId = 0;
+    private final Map<RuleId, @Nullable Rule> _ruleId2desc = new HashMap<>();
+    private final Map<String /*scopeName*/, IRawGrammar> includedGrammars = new HashMap<>();
+    private final IGrammarRepository _grammarRepository;
+    private final IRawGrammar _grammar;
+    final IThemeProvider themeProvider;
+
+    @Nullable
+    private List<Injection> _injections;
+    private final BasicScopeAttributesProvider _basicScopeAttributesProvider;
+    private final List<TokenTypeMatcher> _tokenTypeMatchers = new ArrayList<>();
+
+    @Nullable
+    private final BalancedBracketSelectors balancedBracketSelectors;
+
+    public Grammar(
+            final String rootScopeName,
+            final IRawGrammar grammar,
+            final int initialLanguage,
+            @Nullable final Map<String, Integer> embeddedLanguages,
+            @Nullable final Map<String, Integer> tokenTypes,
+            @Nullable final BalancedBracketSelectors balancedBracketSelectors,
+            final IGrammarRepository grammarRepository,
+            final IThemeProvider themeProvider) {
+
+        this.rootScopeName = rootScopeName;
+        this._basicScopeAttributesProvider = new BasicScopeAttributesProvider(
+                initialLanguage,
+                embeddedLanguages);
+        this._grammarRepository = grammarRepository;
+        this._grammar = initGrammar(grammar, null);
+        this.balancedBracketSelectors = balancedBracketSelectors;
+        this.themeProvider = themeProvider;
+
+        if (tokenTypes != null) {
+            for (final var entry : tokenTypes.entrySet()) {
+                final var selector = entry.getKey();
+                final var type = entry.getValue();
+                for (final var matcher : Matcher.createMatchers(selector)) {
+                    _tokenTypeMatchers.add(new TokenTypeMatcher(matcher.matcher, type));
+                }
+            }
+        }
     }
 
-    public void onDidChangeTheme() {
-        this.scopeMetadataProvider.onDidChangeTheme();
+    BasicScopeAttributes getMetadataForScope(final String scope) {
+        return this._basicScopeAttributesProvider.getBasicScopeAttributes(scope);
     }
 
-    public ScopeMetadata getMetadataForScope(String scope) {
-        return this.scopeMetadataProvider.getMetadataForScope(scope);
+    private void collectInjections(final List<Injection> result, final String selector, final IRawRule rule,
+                                   final IRuleFactoryHelper ruleFactoryHelper, final IRawGrammar grammar) {
+        final var matchers = Matcher.createMatchers(selector);
+        final var ruleId = RuleFactory.getCompiledRuleId(rule, ruleFactoryHelper, this._grammar.getRepository());
+        for (final var matcher : matchers) {
+            result.add(new Injection(
+                    selector,
+                    matcher.matcher,
+                    ruleId,
+                    grammar,
+                    matcher.priority));
+        }
     }
 
-    public List<Injection> getInjections() {
-        if (this.injections == null) {
-            this.injections = new ArrayList<>();
+    private List<Injection> _collectInjections() {
+        final var grammarRepository = new IGrammarRepository() {
+            @Override
+            public @Nullable IRawGrammar lookup(final String scopeName) {
+                if (Objects.equals(scopeName, Grammar.this.rootScopeName)) {
+                    return Grammar.this._grammar;
+                }
+                return getExternalGrammar(scopeName, null);
+            }
+
+            @Override
+            public @Nullable Collection<String> injections(final String targetScope) {
+                return Grammar.this._grammarRepository.injections(targetScope);
+            }
+        };
+
+        final var result = new ArrayList<Injection>();
+
+        final var scopeName = this.rootScopeName;
+
+        final var grammar = grammarRepository.lookup(scopeName);
+        if (grammar != null) {
             // add injections from the current grammar
-            Map<String, IRawRule> rawInjections = this.grammar.getInjections();
+            final var rawInjections = grammar.getInjections();
             if (rawInjections != null) {
-                for (Entry<String, IRawRule> injection : rawInjections.entrySet()) {
-                    String expression = injection.getKey();
-                    IRawRule rule = injection.getValue();
-                    collectInjections(this.injections, expression, rule, this, this.grammar);
+                for (final var e : rawInjections.entrySet()) {
+                    collectInjections(
+                            result,
+                            e.getKey(),
+                            e.getValue(),
+                            this,
+                            grammar);
                 }
             }
 
             // add injection grammars contributed for the current scope
-            if (this.grammarRepository != null) {
-                Collection<String> injectionScopeNames = this.grammarRepository
-                        .injections(this.grammar.getScopeName());
-                if (injectionScopeNames != null) {
-                    injectionScopeNames.forEach(injectionScopeName -> {
-                        IRawGrammar injectionGrammar = this.getExternalGrammar(injectionScopeName);
-                        if (injectionGrammar != null) {
-                            String selector = injectionGrammar.getInjectionSelector();
-                            if (selector != null) {
-                                collectInjections(this.injections, selector, (IRawRule) injectionGrammar, this,
-                                        injectionGrammar);
-                            }
+            final var injectionScopeNames = this._grammarRepository.injections(scopeName);
+            if (injectionScopeNames != null) {
+                injectionScopeNames.forEach(injectionScopeName -> {
+                    final var injectionGrammar = Grammar.this.getExternalGrammar(injectionScopeName, null);
+                    if (injectionGrammar != null) {
+                        final var selector = injectionGrammar.getInjectionSelector();
+                        if (selector != null) {
+                            collectInjections(
+                                    result,
+                                    selector,
+                                    injectionGrammar.toRawRule(),
+                                    this,
+                                    injectionGrammar);
                         }
-                    });
-                }
+                    }
+                });
             }
-            Collections.sort(this.injections, (i1, i2) -> i1.priority - i2.priority); // sort by priority
         }
-        if (this.injections.isEmpty()) {
-            return this.injections;
-        }
-        return this.injections;
+
+        Collections.sort(result, (i1, i2) -> i1.priority - i2.priority); // sort by priority
+
+        return result;
     }
 
-    private void collectInjections(List<Injection> result, String selector, IRawRule rule,
-                                   IRuleFactoryHelper ruleFactoryHelper, IRawGrammar grammar) {
-        Collection<MatcherWithPriority<List<String>>> matchers = Matcher.createMatchers(selector);
-        int ruleId = RuleFactory.getCompiledRuleId(rule, ruleFactoryHelper, grammar.getRepository());
+    List<Injection> getInjections() {
+        var injections = this._injections;
+        if (injections == null) {
+            injections = this._injections = this._collectInjections();
 
-        for (MatcherWithPriority<List<String>> matcher : matchers) {
-            result.add(new Injection(matcher.matcher, ruleId, grammar, matcher.priority));
+            if (BuildConfig.DEBUG && !injections.isEmpty()) {
+                LOGGER.d(
+                        "Grammar " + rootScopeName + " contains the following injections:");
+                for (final var injection : injections) {
+                    LOGGER.d("  - " + injection.debugSelector);
+                }
+            }
         }
+        return injections;
     }
 
     @Override
-    public Rule registerRule(IntFunction<Rule> factory) {
-        int id = (++this.lastRuleId);
-        Rule result = factory.apply(id);
-        this.ruleId2desc.put(id, result);
+    public <T extends Rule> T registerRule(final Function<RuleId, T> factory) {
+        final var id = RuleId.of(++this._lastRuleId);
+        final @Nullable T result = factory.apply(id);
+        this._ruleId2desc.put(id, result);
         return result;
     }
 
     @Override
-    public Rule getRule(int patternId) {
-        return this.ruleId2desc.get(patternId);
-    }
-
-    public IRawGrammar getExternalGrammar(String scopeName) {
-        return getExternalGrammar(scopeName, null);
+    public Rule getRule(final RuleId ruleId) {
+        final var rule = this._ruleId2desc.get(ruleId);
+        if (rule == null) {
+            throw new IndexOutOfBoundsException(
+                    "No rule with index " + ruleId.id + " found. Possible values: 0.." + this._ruleId2desc.size());
+        }
+        return rule;
     }
 
     @Override
-    public IRawGrammar getExternalGrammar(String scopeName, IRawRepository repository) {
+    @Nullable
+    public IRawGrammar getExternalGrammar(final String scopeName, @Nullable final IRawRepository repository) {
         if (this.includedGrammars.containsKey(scopeName)) {
             return this.includedGrammars.get(scopeName);
-        } else if (this.grammarRepository != null) {
-            IRawGrammar rawIncludedGrammar = this.grammarRepository.lookup(scopeName);
-            if (rawIncludedGrammar != null) {
-                this.includedGrammars.put(scopeName,
-                        initGrammar(rawIncludedGrammar, repository != null ? repository.getBase() : null));
-                return this.includedGrammars.get(scopeName);
-            }
+        }
+
+        final IRawGrammar rawIncludedGrammar = this._grammarRepository.lookup(scopeName);
+        if (rawIncludedGrammar != null) {
+            this.includedGrammars.put(scopeName, initGrammar(
+                    rawIncludedGrammar,
+                    repository != null ? repository.getBase() : null));
+            return this.includedGrammars.get(scopeName);
         }
         return null;
     }
 
-    private IRawGrammar initGrammar(IRawGrammar grammar, IRawRule base) {
-        grammar = clone(grammar);
-        if (grammar.getRepository() == null) {
-            ((Raw) grammar).setRepository(new Raw());
-        }
-        Raw self = new Raw();
-        self.setPatterns(grammar.getPatterns());
-        self.setName(grammar.getScopeName());
-        grammar.getRepository().setSelf(self);
-        if (base != null) {
-            grammar.getRepository().setBase(base);
-        } else {
-            grammar.getRepository().setBase(grammar.getRepository().getSelf());
-        }
+    private IRawGrammar initGrammar(IRawGrammar grammar, @Nullable final IRawRule base) {
+        grammar = ObjectCloner.deepClone(grammar);
+
+        final var repo = grammar.getRepository();
+        repo.setSelf(new RawRule()
+                .setName(grammar.getScopeName())
+                .setPatterns(grammar.getPatterns()));
+        repo.setBase(base != null ? base : repo.getSelf());
         return grammar;
     }
 
-    private IRawGrammar clone(IRawGrammar grammar) {
-        return (IRawGrammar) ((Raw) grammar).clone();
+    @Override
+    public ITokenizeLineResult<IToken[]> tokenizeLine(final String lineText) {
+        return tokenizeLine(lineText, null, null);
     }
 
     @Override
-    public ITokenizeLineResult tokenizeLine(String lineText) {
-        return tokenizeLine(lineText, null);
+    public ITokenizeLineResult<IToken[]> tokenizeLine(final String lineText,
+                                                      @Nullable final IStateStack prevState,
+                                                      @Nullable final Duration timeLimit) {
+        return _tokenize(lineText, (StateStack) prevState, false, timeLimit);
     }
 
     @Override
-    public ITokenizeLineResult tokenizeLine(String lineText, StackElement prevState) {
-        return tokenize(lineText, prevState, false);
+    public ITokenizeLineResult<int[]> tokenizeLine2(final String lineText) {
+        return tokenizeLine2(lineText, null, null);
     }
 
     @Override
-    public ITokenizeLineResult2 tokenizeLine2(String lineText) {
-        return tokenizeLine2(lineText, null);
+    public ITokenizeLineResult<int[]> tokenizeLine2(final String lineText, @Nullable final IStateStack prevState,
+                                                    @Nullable final Duration timeLimit) {
+        return _tokenize(lineText, (StateStack) prevState, true, timeLimit);
     }
 
-    @Override
-    public ITokenizeLineResult2 tokenizeLine2(String lineText, StackElement prevState) {
-        return tokenize(lineText, prevState, true);
-    }
     @SuppressWarnings("unchecked")
-    private <T> T tokenize(String lineText, StackElement prevState, boolean emitBinaryTokens) {
-        if (this.rootId == -1) {
-            this.rootId = RuleFactory.getCompiledRuleId(this.grammar.getRepository().getSelf(), this,
-                    this.grammar.getRepository());
+    private <T> T _tokenize(
+            String lineText,
+            @Nullable StateStack prevState,
+            final boolean emitBinaryTokens,
+            @Nullable final Duration timeLimit) {
+        var rootId = this._rootId;
+        if (rootId == null) {
+            rootId = this._rootId = RuleFactory.getCompiledRuleId(
+                    this._grammar.getRepository().getSelf(),
+                    this,
+                    this._grammar.getRepository());
         }
 
         boolean isFirstLine;
-        if (prevState == null || prevState.equals(StackElement.NULL)) {
+        if (prevState == null || prevState.equals(StateStack.NULL)) {
             isFirstLine = true;
-            ScopeMetadata rawDefaultMetadata = this.scopeMetadataProvider.getDefaultMetadata();
-            ThemeTrieElementRule defaultTheme = rawDefaultMetadata.themeData.get(0);
-            int defaultMetadata = StackElementMetadata.set(0, rawDefaultMetadata.languageId,
-                    rawDefaultMetadata.tokenType, defaultTheme.fontStyle, defaultTheme.foreground,
-                    defaultTheme.background);
+            final var rawDefaultMetadata = this._basicScopeAttributesProvider.getDefaultAttributes();
+            final var defaultTheme = this.themeProvider.getDefaults();
+            final int defaultMetadata = EncodedTokenAttributes.set(
+                    0,
+                    rawDefaultMetadata.languageId,
+                    rawDefaultMetadata.tokenType,
+                    null,
+                    defaultTheme.fontStyle,
+                    defaultTheme.foregroundId,
+                    defaultTheme.backgroundId);
 
-            String rootScopeName = this.getRule(this.rootId).getName(null, null);
-            ScopeMetadata rawRootMetadata = this.scopeMetadataProvider.getMetadataForScope(rootScopeName);
-            int rootMetadata = ScopeListElement.mergeMetadata(defaultMetadata, null, rawRootMetadata);
+            final var rootScopeName = this.getRule(rootId).getName(
+                    null,
+                    null);
 
-            ScopeListElement scopeList = new ScopeListElement(null, rootScopeName, rootMetadata);
+            AttributedScopeStack scopeList;
+            if (rootScopeName != null) {
+                scopeList = AttributedScopeStack.createRootAndLookUpScopeName(
+                        rootScopeName,
+                        defaultMetadata,
+                        this);
+            } else {
+                scopeList = AttributedScopeStack.createRoot(
+                        "unknown",
+                        defaultMetadata);
+            }
 
-            prevState = new StackElement(null, this.rootId, -1, null, scopeList, scopeList);
+            prevState = new StateStack(
+                    null,
+                    rootId,
+                    -1,
+                    -1,
+                    false,
+                    null,
+                    scopeList,
+                    scopeList);
         } else {
             isFirstLine = false;
             prevState.reset();
@@ -242,31 +336,51 @@ public class Grammar implements IGrammar, IRuleFactoryHelper {
             // Only add \n if the passed lineText didn't have it.
             lineText += '\n';
         }
-        OnigString onigLineText = GrammarHelper.createOnigString(lineText);
-        int lineLength = lineText.length();
-        LineTokens lineTokens = new LineTokens(emitBinaryTokens, lineText);
-        StackElement nextState = LineTokenizer.tokenizeString(this, onigLineText, isFirstLine, 0, prevState,
-                lineTokens);
+        final var onigLineText = OnigString.of(lineText);
+        final int lineLength = lineText.length();
+        final var lineTokens = new LineTokens(
+                emitBinaryTokens,
+                lineText,
+                _tokenTypeMatchers,
+                balancedBracketSelectors);
+        final var tokenizeResult = LineTokenizer.tokenizeString(
+                this,
+                onigLineText,
+                isFirstLine,
+                0,
+                prevState,
+                lineTokens,
+                true,
+                timeLimit == null ? Duration.ZERO : timeLimit);
 
         if (emitBinaryTokens) {
-            return (T) new TokenizeLineResult2(lineTokens.getBinaryResult(nextState, lineLength), nextState);
+            return (T) new TokenizeLineResult<>(lineTokens.getBinaryResult(tokenizeResult.stack, lineLength),
+                    tokenizeResult.stack, tokenizeResult.stoppedEarly);
         }
-        return (T) new TokenizeLineResult(lineTokens.getResult(nextState, lineLength), nextState);
+        return (T) new TokenizeLineResult<>(lineTokens.getResult(tokenizeResult.stack, lineLength),
+                tokenizeResult.stack, tokenizeResult.stoppedEarly);
     }
 
     @Override
+    @Nullable
     public String getName() {
-        return grammar.getName();
+        return _grammar.getName();
     }
 
     @Override
     public String getScopeName() {
-        return grammar.getScopeName();
+        return rootScopeName;
     }
 
     @Override
     public Collection<String> getFileTypes() {
-        return grammar.getFileTypes();
+        return _grammar.getFileTypes();
     }
 
+    @Override
+    public String toString() {
+        return StringUtils.toString(this, sb -> sb
+                .append("name=").append(getName()).append(", ")
+                .append("scopeName=").append(getScopeName()));
+    }
 }

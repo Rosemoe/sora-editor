@@ -1,43 +1,40 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/microsoft/vscode-textmate/
+ * Initial copyright Copyright (C) Microsoft Corporation. All rights reserved.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - Microsoft Corporation: Initial code, written in TypeScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
 package org.eclipse.tm4e.core.grammar;
 
 /**
  * Result of the line tokenization API.
  *
- * @see <a href="https://github.com/Microsoft/vscode-textmate/blob/master/src/main.ts">https://github.com/Microsoft/vscode-textmate/blob/master/src/main.ts</a>
- *
+ * @see <a href="https://github.com/microsoft/vscode-textmate/blob/main/src/main.ts">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/main.ts</a>
  */
-public interface ITokenizeLineResult {
+public interface ITokenizeLineResult<T> {
 
-    IToken[] getTokens();
+	T getTokens();
 
-    /**
-     * Returns the `prevState` to be passed on to the next line tokenization.
-     *
-     * @return the `prevState` to be passed on to the next line tokenization.
-     */
-    StackElement getRuleStack();
+	/**
+	 * Returns the `prevState` to be passed on to the next line tokenization.
+	 *
+	 * @return the `prevState` to be passed on to the next line tokenization.
+	 */
+	IStateStack getRuleStack();
 
+	/**
+	 * Did tokenization stop early due to reaching the time limit.
+	 */
+	boolean isStoppedEarly();
 }

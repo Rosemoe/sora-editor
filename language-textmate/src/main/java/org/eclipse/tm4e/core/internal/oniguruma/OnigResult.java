@@ -1,69 +1,62 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ *  Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/atom/node-oniguruma
+ * Initial copyright Copyright (c) 2013 GitHub Inc.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ *  - GitHub Inc.: Initial code, written in JavaScript, licensed under MIT license
+ *  - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
-
 package org.eclipse.tm4e.core.internal.oniguruma;
 
 import org.joni.Region;
 
-public class OnigResult {
+/**
+ * @see <a href="https://github.com/atom/node-oniguruma/blob/master/src/onig-result.cc">
+ *      github.com/atom/node-oniguruma/blob/master/src/onig-result.cc</a>
+ */
+public final class OnigResult {
 
-    private final Region region;
-    private int indexInScanner;
+	private int indexInScanner;
+	private final Region region;
 
-    public OnigResult(Region region, int indexInScanner) {
-        this.region = region;
-        this.indexInScanner = indexInScanner;
-    }
+	OnigResult(final Region region, final int indexInScanner) {
+		this.region = region;
+		this.indexInScanner = indexInScanner;
+	}
 
-    public int getIndex() {
-        return indexInScanner;
-    }
+	int getIndex() {
+		return indexInScanner;
+	}
 
-    public void setIndex(int index) {
-        this.indexInScanner = index;
-    }
+	void setIndex(final int index) {
+		indexInScanner = index;
+	}
 
-    public int locationAt(int index) {
-        int bytes = region.beg[index];
-        if (bytes > 0) {
-            return bytes;
-        } else {
-            return 0;
-        }
-    }
+	int locationAt(final int index) {
+		final int bytes = region.beg[index];
+		if (bytes > 0) {
+			return bytes;
+		}
+		return 0;
+	}
 
-    public int count() {
-        return region.numRegs;
-    }
+	public int count() {
+		return region.numRegs;
+	}
 
-    public int lengthAt(int index) {
-        int bytes = region.end[index] - region.beg[index];
-        if (bytes > 0) {
-            return bytes;
-        } else {
-            return 0;
-        }
-    }
-
+	int lengthAt(final int index) {
+		final int bytes = region.end[index] - region.beg[index];
+		if (bytes > 0) {
+			return bytes;
+		}
+		return 0;
+	}
 }

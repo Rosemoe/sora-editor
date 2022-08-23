@@ -31,8 +31,7 @@ import io.github.rosemoe.sora.text.Content;
 
 import org.eclipse.tm4e.core.internal.oniguruma.OnigRegExp;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
-import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
-import org.eclipse.tm4e.languageconfiguration.internal.supports.Folding;
+
 
 public class IndentRange {
     public static final int MAX_LINE_NUMBER = 0xFFFFFF;

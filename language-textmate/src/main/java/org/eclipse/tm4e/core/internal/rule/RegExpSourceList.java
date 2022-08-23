@@ -1,150 +1,103 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/microsoft/vscode-textmate/
+ * Initial copyright Copyright (C) Microsoft Corporation. All rights reserved.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - Microsoft Corporation: Initial code, written in TypeScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
 package org.eclipse.tm4e.core.internal.rule;
 
-import org.eclipse.tm4e.core.internal.oniguruma.OnigScanner;
-
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.eclipse.jdt.annotation.Nullable;
 
 /**
- *
- * @see https://github.com/Microsoft/vscode-textmate/blob/master/src/rule.ts
- *
+ * @see <a href=
+ *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/rule.ts#L744">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/rule.ts</a>
  */
-public class RegExpSourceList {
+final class RegExpSourceList {
 
-    private final RegExpSourceListAnchorCache _anchorCache;
-    private List<RegExpSource> _items;
-    private boolean _hasAnchors;
-    private ICompiledRule _cached;
-    public RegExpSourceList() {
-        this._items = new io.github.rosemoe.sora.util.ArrayList<RegExpSource>();
-        this._hasAnchors = false;
-        this._cached = null;
-        this._anchorCache = new RegExpSourceListAnchorCache();
-    }
+	private final List<RegExpSource> items = new ArrayList<>();
+	private boolean hasAnchors;
 
-    public void push(RegExpSource item) {
-        this._items.add(item);
-        this._hasAnchors = this._hasAnchors ? this._hasAnchors : item.hasAnchor();
-    }
+	@Nullable
+	private CompiledRule cached;
+	private final CompiledRule[][] anchorCache = new CompiledRule[2][2];
 
-    public void unshift(RegExpSource item) {
-        this._items.add(0, item);
-        this._hasAnchors = this._hasAnchors ? this._hasAnchors : item.hasAnchor();
-    }
+	private void disposeCache() {
+		cached = null;
+		anchorCache[0][0] = null;
+		anchorCache[0][1] = null;
+		anchorCache[1][0] = null;
+		anchorCache[1][1] = null;
+	}
 
-    public int length() {
-        return this._items.size();
-    }
+	void add(final RegExpSource item) {
+		items.add(item);
+		if (!hasAnchors) {
+			hasAnchors = item.hasAnchor();
+		}
+	}
 
-    public void setSource(int index, String newSource) {
-        RegExpSource r = this._items.get(index);
-        if (!r.getSource().equals(newSource)) {
-            // bust the cache
-            this._cached = null;
-            this._anchorCache.A0_G0 = null;
-            this._anchorCache.A0_G1 = null;
-            this._anchorCache.A1_G0 = null;
-            this._anchorCache.A1_G1 = null;
-            r.setSource(newSource);
-        }
-    }
+	void remove(final RegExpSource item) {
+		items.add(0, item);
+		if (!hasAnchors) {
+			hasAnchors = item.hasAnchor();
+		}
+	}
 
-    public ICompiledRule compile(IRuleRegistry grammar, boolean allowA, boolean allowG) {
-        if (!this._hasAnchors) {
-            if (this._cached == null) {
-                List<String> regexps = new ArrayList<String>();
-                for (RegExpSource regExpSource : _items) {
-                    regexps.add(regExpSource.getSource());
-                }
-                this._cached = new ICompiledRule(createOnigScanner(regexps.toArray(new String[0])), getRules());
-            }
-            return this._cached;
-        } else {
-            if (this._anchorCache.A0_G0 == null) {
-                this._anchorCache.A0_G0 = (allowA == false && allowG == false) ? this._resolveAnchors(allowA, allowG)
-                        : null;
-            }
-            if (this._anchorCache.A0_G1 == null) {
-                this._anchorCache.A0_G1 = (allowA == false && allowG == true) ? this._resolveAnchors(allowA, allowG)
-                        : null;
-            }
-            if (this._anchorCache.A1_G0 == null) {
-                this._anchorCache.A1_G0 = (allowA == true && allowG == false) ? this._resolveAnchors(allowA, allowG)
-                        : null;
-            }
-            if (this._anchorCache.A1_G1 == null) {
-                this._anchorCache.A1_G1 = (allowA == true && allowG == true) ? this._resolveAnchors(allowA, allowG)
-                        : null;
-            }
-            if (allowA) {
-                if (allowG) {
-                    return this._anchorCache.A1_G1;
-                } else {
-                    return this._anchorCache.A1_G0;
-                }
-            } else {
-                if (allowG) {
-                    return this._anchorCache.A0_G1;
-                } else {
-                    return this._anchorCache.A0_G0;
-                }
-            }
-        }
+	int length() {
+		return items.size();
+	}
 
-    }
+	void setSource(final int index, final String newSource) {
+		final RegExpSource r = items.get(index);
+		if (!Objects.equals(r.getSource(), newSource)) {
+			disposeCache();
+			r.setSource(newSource);
+		}
+	}
 
-    private ICompiledRule _resolveAnchors(boolean allowA, boolean allowG) {
-        List<String> regexps = new ArrayList<String>();
-        for (RegExpSource regExpSource : _items) {
-            regexps.add(regExpSource.resolveAnchors(allowA, allowG));
-        }
-        return new ICompiledRule(createOnigScanner(regexps.toArray(new String[0])), getRules());
-    }
+	CompiledRule compile() {
+		var cached = this.cached;
+		if (cached == null) {
+			final List<String> regexps = items.stream().map(RegExpSource::getSource).collect(Collectors.toList());
+			cached = this.cached = new CompiledRule(regexps, items.stream().map(e -> e.ruleId).toArray(RuleId[]::new));
+		}
+		return cached;
+	}
 
-    private OnigScanner createOnigScanner(String[] regexps) {
-        return new OnigScanner(regexps);
-    }
+	CompiledRule compileAG(final boolean allowA, final boolean allowG) {
+		if (!hasAnchors) {
+			return compile();
+		}
 
-    private Integer[] getRules() {
-        Collection<Integer> ruleIds = new ArrayList<Integer>();
-        for (RegExpSource item : this._items) {
-            ruleIds.add(item.getRuleId());
-        }
-        return ruleIds.toArray(new Integer[0]);
-    }
+		final var indexA = allowA ? 1 : 0;
+		final var indexG = allowG ? 1 : 0;
 
-    private class RegExpSourceListAnchorCache {
+		var rule = anchorCache[indexA][indexG];
+		if (rule == null) {
+			rule = anchorCache[indexA][indexG] = resolveAnchors(allowA, allowG);
+		}
+		return rule;
+	}
 
-        public ICompiledRule A0_G0;
-        public ICompiledRule A0_G1;
-        public ICompiledRule A1_G0;
-        public ICompiledRule A1_G1;
-
-    }
-
+	private CompiledRule resolveAnchors(final boolean allowA, final boolean allowG) {
+		final List<String> regexps = items.stream().map(e -> e.resolveAnchors(allowA, allowG))
+			.collect(Collectors.toList());
+		return new CompiledRule(regexps, items.stream().map(e -> e.ruleId).toArray(RuleId[]::new));
+	}
 }

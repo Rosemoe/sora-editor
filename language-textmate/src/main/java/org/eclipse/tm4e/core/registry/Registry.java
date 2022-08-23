@@ -1,169 +1,222 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
- *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
- *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
- *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ * <p>
+ * SPDX-License-Identifier: EPL-2.0
+ * <p>
+ * Initial code from https://github.com/microsoft/vscode-textmate/
+ * Initial copyright Copyright (C) Microsoft Corporation. All rights reserved.
+ * Initial license: MIT
+ * <p>
+ * Contributors:
+ * - Microsoft Corporation: Initial code, written in TypeScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
 package org.eclipse.tm4e.core.registry;
 
-import org.eclipse.tm4e.core.TMException;
-import org.eclipse.tm4e.core.theme.IRawTheme;
-import org.eclipse.tm4e.core.theme.Theme;
+import static org.eclipse.tm4e.core.internal.utils.MoreCollections.nullToEmpty;
+import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.castNonNull;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tm4e.core.TMException;
+import org.eclipse.tm4e.core.grammar.IGrammar;
+import org.eclipse.tm4e.core.internal.grammar.BalancedBracketSelectors;
+import org.eclipse.tm4e.core.internal.grammar.GrammarReader;
+import org.eclipse.tm4e.core.internal.grammar.dependencies.ScopeDependencyProcessor;
+import org.eclipse.tm4e.core.internal.registry.SyncRegistry;
+import org.eclipse.tm4e.core.internal.theme.IRawTheme;
+import org.eclipse.tm4e.core.internal.theme.Theme;
+import org.eclipse.tm4e.core.internal.theme.ThemeReader;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.eclipse.tm4e.core.grammar.IGrammar;
-import org.eclipse.tm4e.core.internal.grammar.reader.GrammarReader;
-import org.eclipse.tm4e.core.internal.grammars.SyncRegistry;
-import org.eclipse.tm4e.core.internal.types.IRawGrammar;
+import io.github.rosemoe.sora.util.Logger;
 
 /**
  * The registry that will hold all grammars.
  *
- * @see https://github.com/Microsoft/vscode-textmate/blob/master/src/main.ts
+ * @see <a href=
+ *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/main.ts#L51">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/main.ts</a>
  *
  */
-public class Registry {
+public final class Registry {
 
-    private final IRegistryOptions locator;
-    private final SyncRegistry syncRegistry;
+    private static final Logger LOGGER = Logger.instance(Registry.class.getName());
+
+    private final IRegistryOptions _options;
+    private final SyncRegistry _syncRegistry;
+    private final Map<String, Boolean> _ensureGrammarCache = new HashMap<>();
 
     public Registry() {
-        this(IRegistryOptions.DEFAULT_LOCATOR);
+        this(new IRegistryOptions() {
+        });
     }
 
-    public Registry(IRegistryOptions locator) {
-        this.locator = locator;
-        this.syncRegistry = new SyncRegistry(Theme.createFromRawTheme(locator.getTheme()));
+    public Registry(final IRegistryOptions options) {
+        this._options = options;
+
+        this._syncRegistry = new SyncRegistry(
+                Theme.createFromRawTheme(options.getTheme(), options.getColorMap()));
     }
 
     /**
-     * Change the theme. Once called, no previous `ruleStack` should be used
-     * anymore.
+     * Change the theme. Once called, no previous `ruleStack` should be used anymore.
      */
-    public void setTheme(IRawTheme theme) {
-        this.syncRegistry.setTheme(Theme.createFromRawTheme(theme));
+    public void setTheme(final IThemeSource source) throws TMException {
+        try {
+            this._syncRegistry.setTheme(Theme.createFromRawTheme(
+                    ThemeReader.readTheme(source),
+                    _options.getColorMap()));
+        } catch (final Exception ex) {
+            throw new TMException("Loading theme from '" + source.getFilePath() + "' failed: " + ex.getMessage(), ex);
+        }
     }
+
 
     /**
      * Returns a lookup array for color ids.
      */
-    public Set<String> getColorMap() {
-        return this.syncRegistry.getColorMap();
+    public List<String> getColorMap() {
+        return this._syncRegistry.getColorMap();
     }
 
-    public IGrammar loadGrammar(String initialScopeName) {
-        return _loadGrammar(initialScopeName);
-    }
-
-    private IGrammar _loadGrammar(String initialScopeName) {
-
-        List<String> remainingScopeNames = new ArrayList<>();
-        remainingScopeNames.add(initialScopeName);
-
-        List<String> seenScopeNames = new ArrayList<>();
-        seenScopeNames.add(initialScopeName);
-
-        while (!remainingScopeNames.isEmpty()) {
-            String scopeName = remainingScopeNames.remove(0); // shift();
-
-            if (this.syncRegistry.lookup(scopeName) != null) {
-                continue;
-            }
-
-            String filePath = this.locator.getFilePath(scopeName);
-            if (filePath == null) {
-                if (scopeName.equals(initialScopeName)) {
-                    throw new TMException("Unknown location for grammar <" + initialScopeName + ">");
-                    // callback(new Error('Unknown location for grammar <' +
-                    // initialScopeName + '>'), null);
-                    // return;
-                }
-                continue;
-            }
-
-            try {
-                InputStream in = this.locator.getInputStream(scopeName);
-                IRawGrammar grammar = GrammarReader.readGrammarSync(filePath, in);
-                Collection<String> injections = this.locator.getInjections(scopeName);
-
-                Collection<String> deps = this.syncRegistry.addGrammar(grammar, injections);
-                for (String dep : deps) {
-                    if (!seenScopeNames.contains(dep)) {
-                        seenScopeNames.add(dep);
-                        remainingScopeNames.add(dep);
+    /**
+     * Load the grammar for `scopeName` and all referenced included grammars asynchronously.
+     * Please do not use language id 0.
+     */
+    @Nullable
+    public IGrammar loadGrammarWithEmbeddedLanguages(
+            final String initialScopeName,
+            final int initialLanguage,
+            final Map<String, Integer> embeddedLanguages) {
+        return this.loadGrammarWithConfiguration(initialScopeName, initialLanguage,
+                new IGrammarConfiguration() {
+                    @Override
+                    public @Nullable Map<String, Integer> getEmbeddedLanguages() {
+                        return embeddedLanguages;
                     }
-                }
-            } catch (Throwable e) {
-                if (scopeName.equals(initialScopeName)) {
-                    // callback(new Error('Unknown location for grammar <' +
-                    // initialScopeName + '>'), null);
-                    // return;
-                    throw new TMException("Unknown location for grammar <" + initialScopeName + ">", e);
-                }
-            }
+                });
+    }
+
+    /**
+     * Load the grammar for `scopeName` and all referenced included grammars asynchronously.
+     * Please do not use language id 0.
+     */
+    @Nullable
+    public IGrammar loadGrammarWithConfiguration(
+            final String initialScopeName,
+            final int initialLanguage,
+            final IGrammarConfiguration configuration) {
+        return this._loadGrammar(
+                initialScopeName,
+                initialLanguage,
+                configuration.getEmbeddedLanguages(),
+                configuration.getTokenTypes(),
+                new BalancedBracketSelectors(
+                        nullToEmpty(configuration.getBalancedBracketSelectors()),
+                        nullToEmpty(configuration.getUnbalancedBracketSelectors())));
+    }
+
+    /**
+     * Load the grammar for `scopeName` and all referenced included grammars.
+     */
+    @Nullable
+    public IGrammar loadGrammar(final String initialScopeName) {
+        return this._loadGrammar(initialScopeName, 0, null, null, null);
+    }
+
+    @Nullable
+    private IGrammar _loadGrammar(
+            final String initialScopeName,
+            final int initialLanguage,
+            @Nullable final Map<String, Integer> embeddedLanguages,
+            @Nullable final Map<String, Integer> tokenTypes,
+            @Nullable final BalancedBracketSelectors balancedBracketSelectors) {
+        final var dependencyProcessor = new ScopeDependencyProcessor(this._syncRegistry, initialScopeName);
+        while (!dependencyProcessor.Q.isEmpty()) {
+            dependencyProcessor.Q.forEach(request -> this._loadSingleGrammar(request.scopeName));
+            dependencyProcessor.processQueue();
         }
-        return this.grammarForScopeName(initialScopeName);
+
+        return this._grammarForScopeName(
+                initialScopeName,
+                initialLanguage,
+                embeddedLanguages,
+                tokenTypes,
+                balancedBracketSelectors);
     }
 
-    public IGrammar loadGrammarFromPathSync(File file) throws Exception {
-        return loadGrammarFromPathSync(file.getPath(), new FileInputStream(file));
+    private void _loadSingleGrammar(final String scopeName) {
+        this._ensureGrammarCache.computeIfAbsent(scopeName, this::_doLoadSingleGrammar);
     }
 
-    public IGrammar loadGrammarFromPathSync(String path, InputStream in) throws Exception {
-        return loadGrammarFromPathSync(path, in, 0, null);
+    private boolean _doLoadSingleGrammar(final String scopeName) {
+        final var grammarSource = this._options.getGrammarSource(scopeName);
+        if (grammarSource == null) {
+            LOGGER.w("No grammar source for scope [%s]", scopeName);
+            return false;
+        }
+        try {
+            final var grammar = GrammarReader.readGrammar(grammarSource);
+            this._syncRegistry.addGrammar(grammar, this._options.getInjections(scopeName));
+        } catch (final Exception ex) {
+            LOGGER.w("Loading grammar for scope [%s] failed: {%s}", scopeName, ex.getMessage(), ex);
+            return false;
+        }
+        return true;
+    }
+
+    public IGrammar addGrammar(final IGrammarSource source) throws TMException {
+        return addGrammar(source, null, null, null);
+    }
+
+    public IGrammar addGrammar(
+            final IGrammarSource source,
+            @Nullable final List<String> injections,
+            @Nullable final Integer initialLanguage,
+            @Nullable final Map<String, Integer> embeddedLanguages) throws TMException {
+        try {
+            final var rawGrammar = GrammarReader.readGrammar(source);
+            this._syncRegistry.addGrammar(rawGrammar,
+                    injections == null || injections.isEmpty()
+                            ? this._options.getInjections(rawGrammar.getScopeName())
+                            : injections);
+            return castNonNull(
+                    this._grammarForScopeName(rawGrammar.getScopeName(), initialLanguage, embeddedLanguages, null, null));
+
+        } catch (final Exception ex) {
+            throw new TMException("Loading grammar from '" + source.getFilePath() + "' failed: " + ex.getMessage(), ex);
+        }
     }
 
     /**
-     * Load the grammar at `path` synchronously.
-     *
-     * @throws Exception
+     * Lookup a grammar. The grammar must first be registered via `loadGrammar` or `addGrammar`.
      */
-    public IGrammar loadGrammarFromPathSync(String path, InputStream in, int initialLanguage,
-                                            Map<String, Integer> embeddedLanguages) throws Exception {
-        IRawGrammar rawGrammar = GrammarReader.readGrammarSync(path, in);
-        Collection<String> injections = this.locator.getInjections(rawGrammar.getScopeName());
-        this.syncRegistry.addGrammar(rawGrammar, injections);
-        return this.grammarForScopeName(rawGrammar.getScopeName(), initialLanguage, embeddedLanguages);
-    }
-
-    public IGrammar grammarForScopeName(String scopeName) {
-        return grammarForScopeName(scopeName, 0, null);
+    @Nullable
+    public IGrammar grammarForScopeName(final String scopeName) {
+        return _grammarForScopeName(scopeName, null, null, null, null);
     }
 
     /**
-     * Get the grammar for `scopeName`. The grammar must first be created via
-     * `loadGrammar` or `loadGrammarFromPathSync`.
+     * Get the grammar for `scopeName`. The grammar must first be created via `loadGrammar` or `addGrammar`.
      */
-    public IGrammar grammarForScopeName(String scopeName, int initialLanguage, Map<String, Integer> embeddedLanguages) {
-        return this.syncRegistry.grammarForScopeName(scopeName, initialLanguage, embeddedLanguages);
-    }
-
-    public IRegistryOptions getLocator() {
-        return locator;
+    @Nullable
+    private IGrammar _grammarForScopeName(
+            final String scopeName,
+            @Nullable final Integer initialLanguage,
+            @Nullable final Map<String, Integer> embeddedLanguages,
+            @Nullable final Map<String, Integer> tokenTypes,
+            @Nullable final BalancedBracketSelectors balancedBracketSelectors) {
+        return this._syncRegistry.grammarForScopeName(
+                scopeName,
+                initialLanguage == null ? 0 : initialLanguage,
+                embeddedLanguages,
+                tokenTypes,
+                balancedBracketSelectors);
     }
 }

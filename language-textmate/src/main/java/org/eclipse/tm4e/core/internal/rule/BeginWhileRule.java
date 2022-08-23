@@ -1,102 +1,117 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/microsoft/vscode-textmate/
+ * Initial copyright Copyright (C) Microsoft Corporation. All rights reserved.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - Microsoft Corporation: Initial code, written in TypeScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
 package org.eclipse.tm4e.core.internal.rule;
 
-import org.eclipse.tm4e.core.internal.oniguruma.IOnigCaptureIndex;
+import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.*;
 
 import java.util.List;
 
-public class BeginWhileRule extends Rule {
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigCaptureIndex;
 
-    public final List<CaptureRule> beginCaptures;
-    public final List<CaptureRule> whileCaptures;
-    public final boolean whileHasBackReferences;
-    public final boolean hasMissingPatterns;
-    public final Integer[] patterns;
-    private RegExpSource begin;
-    private RegExpSource _while;
-    private RegExpSourceList cachedCompiledPatterns;
-    private RegExpSourceList cachedCompiledWhilePatterns;
+/**
+ * @see <a href=
+ *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/rule.ts#L290">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/rule.ts</a>
+ */
+public final class BeginWhileRule extends Rule {
 
-    public BeginWhileRule(/* $location:ILocation, */ int id, String name, String contentName, String begin,
-                                                     List<CaptureRule> beginCaptures, String _while, List<CaptureRule> whileCaptures,
-                                                     ICompilePatternsResult patterns) {
-        super(/* $location, */id, name, contentName);
-        this.begin = new RegExpSource(begin, this.id);
-        this.beginCaptures = beginCaptures;
-        this.whileCaptures = whileCaptures;
-        this._while = new RegExpSource(_while, -2);
-        this.whileHasBackReferences = this._while.hasBackReferences();
-        this.patterns = patterns.patterns;
-        this.hasMissingPatterns = patterns.hasMissingPatterns;
-        this.cachedCompiledPatterns = null;
-        this.cachedCompiledWhilePatterns = null;
-    }
+	private final RegExpSource begin;
+	public final List<@Nullable CaptureRule> beginCaptures;
+	public final List<@Nullable CaptureRule> whileCaptures;
+	private final RegExpSource _while;
+	public final boolean whileHasBackReferences;
+	final boolean hasMissingPatterns;
+	final RuleId[] patterns;
 
-    public String getWhileWithResolvedBackReferences(String lineText, IOnigCaptureIndex[] captureIndices) {
-        return this._while.resolveBackReferences(lineText, captureIndices);
-    }
+	@Nullable
+	private RegExpSourceList cachedCompiledPatterns;
 
-    @Override
-    public void collectPatternsRecursive(IRuleRegistry grammar, RegExpSourceList out, boolean isFirst) {
-        if (isFirst) {
-            Rule rule;
-            for (Integer pattern : patterns) {
-                rule = grammar.getRule(pattern);
-                rule.collectPatternsRecursive(grammar, out, false);
-            }
-        } else {
-            out.push(this.begin);
-        }
-    }
+	@Nullable
+	private RegExpSourceList cachedCompiledWhilePatterns;
 
-    @Override
-    public ICompiledRule compile(IRuleRegistry grammar, String endRegexSource, boolean allowA, boolean allowG) {
-        this.precompile(grammar);
-        return this.cachedCompiledPatterns.compile(grammar, allowA, allowG);
-    }
+	BeginWhileRule(final RuleId id, @Nullable final String name, @Nullable final String contentName, final String begin,
+		final List<@Nullable CaptureRule> beginCaptures, final String _while,
+		final List<@Nullable CaptureRule> whileCaptures, final CompilePatternsResult patterns) {
+		super(/* $location, */id, name, contentName);
+		this.begin = new RegExpSource(begin, this.id);
+		this.beginCaptures = beginCaptures;
+		this.whileCaptures = whileCaptures;
+		this._while = new RegExpSource(_while, RuleId.WHILE_RULE);
+		this.whileHasBackReferences = this._while.hasBackReferences;
+		this.patterns = patterns.patterns;
+		this.hasMissingPatterns = patterns.hasMissingPatterns;
+	}
 
-    private void precompile(IRuleRegistry grammar) {
-        if (this.cachedCompiledPatterns == null) {
-            this.cachedCompiledPatterns = new RegExpSourceList();
-            this.collectPatternsRecursive(grammar, this.cachedCompiledPatterns, true);
-        }
-    }
+	public String getWhileWithResolvedBackReferences(final CharSequence lineText,
+		final OnigCaptureIndex[] captureIndices) {
+		return this._while.resolveBackReferences(lineText, captureIndices);
+	}
 
-    public ICompiledRule compileWhile(IRuleRegistry grammar, String endRegexSource, boolean allowA, boolean allowG) {
-        this.precompileWhile();
-        if (this._while.hasBackReferences()) {
-            this.cachedCompiledWhilePatterns.setSource(0, endRegexSource);
-        }
-        return this.cachedCompiledWhilePatterns.compile(grammar, allowA, allowG);
-    }
+	@Override
+	public void collectPatterns(final IRuleRegistry grammar, final RegExpSourceList out) {
+		out.add(this.begin);
+	}
 
-    private void precompileWhile() {
-        if (this.cachedCompiledWhilePatterns == null) {
-            this.cachedCompiledWhilePatterns = new RegExpSourceList();
-            this.cachedCompiledWhilePatterns.push(this._while.hasBackReferences() ? this._while.clone() : this._while);
-        }
-    }
+	@Override
+	public CompiledRule compile(final IRuleRegistry grammar, @Nullable final String endRegexSource) {
+		return getCachedCompiledPatterns(grammar).compile();
+	}
 
+	@Override
+	public CompiledRule compileAG(final IRuleRegistry grammar, @Nullable final String endRegexSource,
+		final boolean allowA,
+		final boolean allowG) {
+		return getCachedCompiledPatterns(grammar).compileAG(allowA, allowG);
+	}
+
+	private RegExpSourceList getCachedCompiledPatterns(final IRuleRegistry grammar) {
+		var cachedCompiledPatterns = this.cachedCompiledPatterns;
+		if (cachedCompiledPatterns == null) {
+			cachedCompiledPatterns = new RegExpSourceList();
+			this.cachedCompiledPatterns = cachedCompiledPatterns;
+
+			for (final var pattern : this.patterns) {
+				final var rule = grammar.getRule(pattern);
+				rule.collectPatterns(grammar, cachedCompiledPatterns);
+			}
+		}
+		return cachedCompiledPatterns;
+	}
+
+	public CompiledRule compileWhile(@Nullable final String endRegexSource) {
+		return getCachedCompiledWhilePatterns(endRegexSource).compile();
+	}
+
+	public CompiledRule compileWhileAG(@Nullable final String endRegexSource, final boolean allowA,
+		final boolean allowG) {
+		return getCachedCompiledWhilePatterns(endRegexSource).compileAG(allowA, allowG);
+	}
+
+	private RegExpSourceList getCachedCompiledWhilePatterns(@Nullable final String endRegexSource) {
+		var cachedCompiledWhilePatterns = this.cachedCompiledWhilePatterns;
+		if (cachedCompiledWhilePatterns == null) {
+			cachedCompiledWhilePatterns = new RegExpSourceList();
+			cachedCompiledWhilePatterns.add(this.whileHasBackReferences ? this._while.clone() : this._while);
+			this.cachedCompiledWhilePatterns = cachedCompiledWhilePatterns;
+		}
+		if (whileHasBackReferences) {
+			cachedCompiledWhilePatterns.setSource(0, defaultIfNull(endRegexSource, "\uFFFF"));
+		}
+		return cachedCompiledWhilePatterns;
+	}
 }

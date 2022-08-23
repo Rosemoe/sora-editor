@@ -1,65 +1,73 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/microsoft/vscode-textmate/
+ * Initial copyright Copyright (C) Microsoft Corporation. All rights reserved.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - Microsoft Corporation: Initial code, written in TypeScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
 package org.eclipse.tm4e.core.internal.rule;
 
-import org.eclipse.tm4e.core.internal.oniguruma.IOnigCaptureIndex;
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigCaptureIndex;
 import org.eclipse.tm4e.core.internal.utils.RegexSource;
 
+/**
+ * @see <a href=
+ *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/rule.ts#L43">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/rule.ts</a>
+ */
 public abstract class Rule {
 
-    public final int id;
+	final RuleId id;
 
-    private boolean nameIsCapturing;
-    private String name;
+	@Nullable
+	private final String name;
+	private final boolean nameIsCapturing;
 
-    private boolean contentNameIsCapturing;
-    private String contentName;
+	@Nullable
+	private final String contentName;
+	private final boolean contentNameIsCapturing;
 
-    public Rule(int id, String name, String contentName) {
-        this.id = id;
-        this.name = name;
-        this.nameIsCapturing = RegexSource.hasCaptures(this.name);
-        this.contentName = contentName;
-        this.contentNameIsCapturing = RegexSource.hasCaptures(this.contentName);
-    }
+	Rule(final RuleId id, @Nullable final String name, final @Nullable String contentName) {
+		this.id = id;
+		this.name = name;
+		this.nameIsCapturing = RegexSource.hasCaptures(name);
+		this.contentName = contentName;
+		this.contentNameIsCapturing = RegexSource.hasCaptures(contentName);
+	}
 
-    public String getName(String lineText, IOnigCaptureIndex[] captureIndices) {
-        if (!this.nameIsCapturing) {
-            return this.name;
-        }
-        return RegexSource.replaceCaptures(this.name, lineText, captureIndices);
-    }
+	@Nullable
+	public String getName(@Nullable final CharSequence lineText, final OnigCaptureIndex @Nullable [] captureIndices) {
+		final var name = this.name;
+		if (!nameIsCapturing || name == null || lineText == null || captureIndices == null) {
+			return name;
+		}
+		return RegexSource.replaceCaptures(name, lineText, captureIndices);
+	}
 
-    public String getContentName(String lineText, IOnigCaptureIndex[] captureIndices) {
-        if (!this.contentNameIsCapturing) {
-            return this.contentName;
-        }
-        return RegexSource.replaceCaptures(this.contentName, lineText, captureIndices);
-    }
+	@Nullable
+	public String getContentName(final CharSequence lineText, final OnigCaptureIndex[] captureIndices) {
+		final var contentName = this.contentName;
+		if (!contentNameIsCapturing || contentName == null) {
+			return contentName;
+		}
+		return RegexSource.replaceCaptures(contentName, lineText, captureIndices);
+	}
 
-    public abstract void collectPatternsRecursive(IRuleRegistry grammar, RegExpSourceList out, boolean isFirst);
+	public abstract void collectPatterns(IRuleRegistry grammar, RegExpSourceList out);
 
-    public abstract ICompiledRule compile(IRuleRegistry grammar, String endRegexSource, boolean allowA, boolean allowG);
+	public abstract CompiledRule compile(IRuleRegistry grammar, @Nullable String endRegexSource);
+
+	public abstract CompiledRule compileAG(IRuleRegistry grammar, @Nullable String endRegexSource, boolean allowA,
+		boolean allowG);
 
 }

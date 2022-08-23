@@ -1,29 +1,28 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/atom/node-oniguruma
+ * Initial copyright Copyright (c) 2013 GitHub Inc.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - GitHub Inc.: Initial code, written in JavaScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
+ * - Fabio Zadrozny <fabiofz@gmail.com> - Convert uniqueId to Object (for identity compare)
+ * - Fabio Zadrozny <fabiofz@gmail.com> - Fix recursion error on creation of OnigRegExp with unicode chars
  */
 
 package org.eclipse.tm4e.core.internal.oniguruma;
 
+import java.nio.charset.StandardCharsets;
+
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tm4e.core.TMException;
 import org.jcodings.specific.UTF8Encoding;
 import org.joni.Matcher;
 import org.joni.Option;
@@ -31,49 +30,66 @@ import org.joni.Regex;
 import org.joni.Region;
 import org.joni.Syntax;
 import org.joni.WarnCallback;
-
-import java.nio.charset.StandardCharsets;
+import org.joni.exception.SyntaxException;
 
 /**
- *
- * @see https://github.com/atom/node-oniguruma/blob/master/src/onig-reg-exp.cc
- *
+ * @see <a href="https://github.com/atom/node-oniguruma/blob/master/src/onig-reg-exp.cc">
+ *      github.com/atom/node-oniguruma/blob/master/src/onig-reg-exp.cc</a>
  */
-public class OnigRegExp {
+public final class OnigRegExp {
 
-    private OnigString lastSearchString;
-    private int lastSearchPosition;
-    private OnigResult lastSearchResult;
-    private Regex regex;
+	@Nullable
+	private OnigString lastSearchString;
 
-    public OnigRegExp(String source) {
-        lastSearchString = null;
-        lastSearchPosition = -1;
-        lastSearchResult = null;
-        byte[] pattern = source.getBytes(StandardCharsets.UTF_8);
-        this.regex = new Regex(pattern, 0, pattern.length, Option.CAPTURE_GROUP, UTF8Encoding.INSTANCE, Syntax.DEFAULT,
-                WarnCallback.DEFAULT);
-    }
+	private int lastSearchPosition = -1;
 
-    public OnigResult search(OnigString str, int position) {
-        if (lastSearchString == str && lastSearchPosition <= position &&
-                (lastSearchResult == null || lastSearchResult.locationAt(0) >= position)) {
-            return lastSearchResult;
-        }
+	@Nullable
+	private OnigResult lastSearchResult;
 
-        lastSearchString = str;
-        lastSearchPosition = position;
-        lastSearchResult = search(str.utf8_value, position, str.utf8_value.length);
-        return lastSearchResult;
-    }
+	private final Regex regex;
 
-    private OnigResult search(byte[] data, int position, int end) {
-        Matcher matcher = regex.matcher(data);
-        int status = matcher.search(position, end, Option.DEFAULT);
-        if (status != Matcher.FAILED) {
-            Region region = matcher.getEagerRegion();
-            return new OnigResult(region, -1);
-        }
-        return null;
-    }
+	private final boolean hasGAnchor;
+
+	public OnigRegExp(final String source) {
+		hasGAnchor = source.contains("\\G");
+		final byte[] pattern = source.getBytes(StandardCharsets.UTF_8);
+		try {
+			regex = new Regex(pattern, 0, pattern.length, Option.CAPTURE_GROUP, UTF8Encoding.INSTANCE, Syntax.DEFAULT,
+				WarnCallback.DEFAULT);
+		} catch (final SyntaxException ex) {
+			throw new TMException("Parsing regex pattern \"" + source + "\" failed with " + ex, ex);
+		}
+	}
+
+	@Nullable
+	public OnigResult search(final OnigString str, final int startPosition) {
+		if (hasGAnchor) {
+			// Should not use caching, because the regular expression
+			// targets the current search position (\G)
+			return search(str.bytesUTF8, startPosition, str.bytesCount);
+		}
+
+		final var lastSearchResult0 = this.lastSearchResult;
+		if (lastSearchString == str
+			&& lastSearchPosition <= startPosition
+			&& (lastSearchResult0 == null || lastSearchResult0.locationAt(0) >= startPosition)) {
+			return lastSearchResult0;
+		}
+
+		lastSearchString = str;
+		lastSearchPosition = startPosition;
+		lastSearchResult = search(str.bytesUTF8, startPosition, str.bytesCount);
+		return lastSearchResult;
+	}
+
+	@Nullable
+	private OnigResult search(final byte[] data, final int startPosition, final int end) {
+		final Matcher matcher = regex.matcher(data);
+		final int status = matcher.search(startPosition, end, Option.DEFAULT);
+		if (status != Matcher.FAILED) {
+			final Region region = matcher.getEagerRegion();
+			return new OnigResult(region, -1);
+		}
+		return null;
+	}
 }

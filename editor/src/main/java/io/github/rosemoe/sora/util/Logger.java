@@ -50,28 +50,59 @@ public class Logger {
         Log.d(name, msg);
     }
 
+    public void d(String msg, Object... format) {
+        Log.d(name, String.format(msg, format));
+    }
+
     public void i(String msg) {
         Log.i(name, msg);
+    }
+
+    public void i(String msg, Object... format) {
+        Log.i(name, String.format(msg, format));
     }
 
     public void v(String msg) {
         Log.v(name, msg);
     }
 
+    public void v(String msg, Object... format) {
+        Log.v(name, String.format(msg, format));
+    }
+
     public void w(String msg) {
         Log.w(name, msg);
+    }
+
+
+    public void w(String msg, Object... format) {
+        Log.w(name, String.format(msg, format));
     }
 
     public void w(String msg, Throwable e) {
         Log.w(name, msg, e);
     }
 
+    public void w(String msg,Throwable e, Object... format) {
+        Log.w(name, String.format(msg, format),e);
+    }
+
     public void e(String msg) {
         Log.e(name, msg);
     }
 
+    public void e(String msg, Object... format) {
+        Log.e(name, String.format(msg, format));
+    }
+
+
     public void e(String msg, Throwable e) {
         Log.e(name, msg, e);
     }
+
+    public void e(String msg,Throwable e, Object... format) {
+        Log.e(name, String.format(msg, format),e);
+    }
+
 
 }

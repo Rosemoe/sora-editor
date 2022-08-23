@@ -1,54 +1,68 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/microsoft/vscode-textmate/
+ * Initial copyright Copyright (C) Microsoft Corporation. All rights reserved.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - Microsoft Corporation: Initial code, written in TypeScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
 package org.eclipse.tm4e.core.internal.rule;
 
 import java.util.List;
 
-public class MatchRule extends Rule {
+import org.eclipse.jdt.annotation.Nullable;
 
-    public final List<CaptureRule> captures;
-    private RegExpSource match;
-    private RegExpSourceList cachedCompiledPatterns;
+/**
+ * @see <a href=
+ *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/rule.ts#L122">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/rule.ts</a>
+ */
+public final class MatchRule extends Rule {
 
-    public MatchRule(int id, String name, String match, List<CaptureRule> captures) {
-        super(id, name, null);
-        this.match = new RegExpSource(match, this.id);
-        this.captures = captures;
-        this.cachedCompiledPatterns = null;
-    }
+	private final RegExpSource match;
+	public final List<@Nullable CaptureRule> captures;
 
-    @Override
-    public void collectPatternsRecursive(IRuleRegistry grammar, RegExpSourceList out, boolean isFirst) {
-        out.push(this.match);
-    }
+	@Nullable
+	private RegExpSourceList cachedCompiledPatterns;
 
-    @Override
-    public ICompiledRule compile(IRuleRegistry grammar, String endRegexSource, boolean allowA, boolean allowG) {
-        if (this.cachedCompiledPatterns == null) {
-            this.cachedCompiledPatterns = new RegExpSourceList();
-            this.collectPatternsRecursive(grammar, this.cachedCompiledPatterns, true);
-        }
-        return this.cachedCompiledPatterns.compile(grammar, allowA, allowG);
-    }
+	MatchRule(final RuleId id, @Nullable final String name, final String match,
+		final List<@Nullable CaptureRule> captures) {
+		super(id, name, null);
+		this.match = new RegExpSource(match, this.id);
+		this.captures = captures;
+	}
+
+	@Override
+	public void collectPatterns(final IRuleRegistry grammar, final RegExpSourceList out) {
+		out.add(this.match);
+	}
+
+	@Override
+	public CompiledRule compile(final IRuleRegistry grammar, @Nullable final String endRegexSource) {
+		return getCachedCompiledPatterns(grammar).compile();
+	}
+
+	@Override
+	public CompiledRule compileAG(final IRuleRegistry grammar, @Nullable final String endRegexSource,
+		final boolean allowA, final boolean allowG) {
+		return getCachedCompiledPatterns(grammar).compileAG(allowA, allowG);
+	}
+
+	private RegExpSourceList getCachedCompiledPatterns(final IRuleRegistry grammar) {
+		var cachedCompiledPatterns = this.cachedCompiledPatterns;
+		if (cachedCompiledPatterns == null) {
+			cachedCompiledPatterns = new RegExpSourceList();
+			this.collectPatterns(grammar, cachedCompiledPatterns);
+			this.cachedCompiledPatterns = cachedCompiledPatterns;
+		}
+		return cachedCompiledPatterns;
+	}
 }

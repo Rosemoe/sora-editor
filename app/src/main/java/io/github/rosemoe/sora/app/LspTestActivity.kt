@@ -45,7 +45,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.eclipse.tm4e.core.internal.theme.reader.ThemeReader
+import org.eclipse.tm4e.core.registry.IGrammarSource
+import org.eclipse.tm4e.core.registry.IThemeSource
 import java.io.*
 import java.net.ServerSocket
 import java.util.zip.ZipFile
@@ -175,21 +176,25 @@ class LspTestActivity : AppCompatActivity() {
 
     private fun createTextMateLanguage(): TextMateLanguage {
         return TextMateLanguage.createNoCompletion(
-            "xml.tmLanguage.json",
-            assets.open("textmate/xml/syntaxes/xml.tmLanguage.json"),
+            IGrammarSource.fromInputStream(
+                assets.open("textmate/xml/syntaxes/xml.tmLanguage.json"),
+                "xml.tmLanguage.json",
+                null
+            ),
             InputStreamReader(assets.open("textmate/xml/language-configuration.json")),
-            (editor.colorScheme as TextMateColorScheme).rawTheme
+            (editor.colorScheme as TextMateColorScheme).themeSource
         )
     }
 
     private fun ensureTextmateTheme() {
         var editorColorScheme = editor.colorScheme
         if (editorColorScheme !is TextMateColorScheme) {
-            val iRawTheme = ThemeReader.readThemeSync(
+            val themeSource = IThemeSource.fromInputStream(
+                assets.open("textmate/QuietLight.tmTheme"),
                 "QuietLight.tmTheme",
-                assets.open("textmate/QuietLight.tmTheme")
+                null
             )
-            editorColorScheme = TextMateColorScheme.create(iRawTheme)
+            editorColorScheme = TextMateColorScheme.create(themeSource)
             editor.colorScheme = editorColorScheme
         }
     }

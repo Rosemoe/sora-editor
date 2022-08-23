@@ -1,100 +1,118 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/microsoft/vscode-textmate/
+ * Initial copyright Copyright (C) Microsoft Corporation. All rights reserved.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - Microsoft Corporation: Initial code, written in TypeScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
 package org.eclipse.tm4e.core.internal.rule;
 
-import org.eclipse.tm4e.core.internal.oniguruma.IOnigCaptureIndex;
+import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.*;
 
 import java.util.List;
 
-public class BeginEndRule extends Rule {
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigCaptureIndex;
 
-    public final boolean hasMissingPatterns;
-    public List<CaptureRule> beginCaptures;
-    public boolean endHasBackReferences;
-    public List<CaptureRule> endCaptures;
-    public boolean applyEndPatternLast;
-    public Integer[] patterns;
-    private RegExpSource begin;
-    private RegExpSource end;
-    private RegExpSourceList cachedCompiledPatterns;
+/**
+ * @see <a href=
+ *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/rule.ts#L209">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/rule.ts</a>
+ */
+public final class BeginEndRule extends Rule {
 
-    public BeginEndRule(int id, String name, String contentName, String begin, List<CaptureRule> beginCaptures,
-                        String end, List<CaptureRule> endCaptures, boolean applyEndPatternLast, ICompilePatternsResult patterns) {
-        super(id, name, contentName);
-        this.begin = new RegExpSource(begin, this.id);
-        this.beginCaptures = beginCaptures;
-        this.end = new RegExpSource(end, -1);
-        this.endHasBackReferences = this.end.hasBackReferences();
-        this.endCaptures = endCaptures;
-        this.applyEndPatternLast = applyEndPatternLast;
-        this.patterns = patterns.patterns;
-        this.hasMissingPatterns = patterns.hasMissingPatterns;
-        this.cachedCompiledPatterns = null;
-    }
+	private final RegExpSource begin;
+	public final List<@Nullable CaptureRule> beginCaptures;
 
-    public String getEndWithResolvedBackReferences(String lineText, IOnigCaptureIndex[] captureIndices) {
-        return this.end.resolveBackReferences(lineText, captureIndices);
-    }
+	private final RegExpSource end;
+	public final List<@Nullable CaptureRule> endCaptures;
+	public final boolean endHasBackReferences;
+	private final boolean applyEndPatternLast;
 
-    @Override
-    public void collectPatternsRecursive(IRuleRegistry grammar, RegExpSourceList out, boolean isFirst) {
-        if (isFirst) {
-            for (Integer pattern : this.patterns) {
-                Rule rule = grammar.getRule(pattern);
-                rule.collectPatternsRecursive(grammar, out, false);
-            }
-        } else {
-            out.push(this.begin);
-        }
-    }
+	final boolean hasMissingPatterns;
+	final RuleId[] patterns;
 
-    @Override
-    public ICompiledRule compile(IRuleRegistry grammar, String endRegexSource, boolean allowA, boolean allowG) {
-        RegExpSourceList precompiled = this.precompile(grammar);
-        if (this.end.hasBackReferences()) {
-            if (this.applyEndPatternLast) {
-                precompiled.setSource(precompiled.length() - 1, endRegexSource);
-            } else {
-                precompiled.setSource(0, endRegexSource);
-            }
-        }
-        return this.cachedCompiledPatterns.compile(grammar, allowA, allowG);
-    }
+	@Nullable
+	private RegExpSourceList cachedCompiledPatterns;
 
-    private RegExpSourceList precompile(IRuleRegistry grammar) {
-        if (this.cachedCompiledPatterns == null) {
-            this.cachedCompiledPatterns = new RegExpSourceList();
+	BeginEndRule(final RuleId id, @Nullable final String name, @Nullable final String contentName, final String begin,
+		final List<@Nullable CaptureRule> beginCaptures, @Nullable final String end,
+		final List<@Nullable CaptureRule> endCaptures, final boolean applyEndPatternLast,
+		final CompilePatternsResult patterns) {
+		super(id, name, contentName);
+		this.begin = new RegExpSource(begin, this.id);
+		this.beginCaptures = beginCaptures;
+		this.end = new RegExpSource(defaultIfNull(end, "\uFFFF"), RuleId.END_RULE);
+		this.endHasBackReferences = this.end.hasBackReferences;
+		this.endCaptures = endCaptures;
+		this.applyEndPatternLast = applyEndPatternLast;
+		this.patterns = patterns.patterns;
+		this.hasMissingPatterns = patterns.hasMissingPatterns;
+	}
 
-            this.collectPatternsRecursive(grammar, this.cachedCompiledPatterns, true);
+	public String debugBeginRegExp() {
+		return this.begin.getSource();
+	}
 
-            if (this.applyEndPatternLast) {
-                this.cachedCompiledPatterns.push(this.end.hasBackReferences() ? this.end.clone() : this.end);
-            } else {
-                this.cachedCompiledPatterns.unshift(this.end.hasBackReferences() ? this.end.clone() : this.end);
-            }
-        }
-        return this.cachedCompiledPatterns;
-    }
+	public String debugEndRegExp() {
+		return this.end.getSource();
+	}
 
+	public String getEndWithResolvedBackReferences(final CharSequence lineText,
+		final OnigCaptureIndex[] captureIndices) {
+		return this.end.resolveBackReferences(lineText, captureIndices);
+	}
+
+	@Override
+	public void collectPatterns(final IRuleRegistry grammar, final RegExpSourceList out) {
+		out.add(this.begin);
+	}
+
+	@Override
+	public CompiledRule compile(final IRuleRegistry grammar, @Nullable final String endRegexSource) {
+		return getCachedCompiledPatterns(grammar, endRegexSource).compile();
+	}
+
+	@Override
+	public CompiledRule compileAG(final IRuleRegistry grammar, @Nullable final String endRegexSource,
+		final boolean allowA, final boolean allowG) {
+		return getCachedCompiledPatterns(grammar, endRegexSource).compileAG(allowA, allowG);
+	}
+
+	private RegExpSourceList getCachedCompiledPatterns(final IRuleRegistry grammar,
+		@Nullable final String endRegexSource) {
+		var cachedCompiledPatterns = this.cachedCompiledPatterns;
+		if (cachedCompiledPatterns == null) {
+			cachedCompiledPatterns = new RegExpSourceList();
+
+			for (final var pattern : this.patterns) {
+				final var rule = grammar.getRule(pattern);
+				rule.collectPatterns(grammar, cachedCompiledPatterns);
+			}
+
+			if (this.applyEndPatternLast) {
+				cachedCompiledPatterns.add(this.endHasBackReferences ? this.end.clone() : this.end);
+			} else {
+				cachedCompiledPatterns.remove(this.endHasBackReferences ? this.end.clone() : this.end);
+			}
+			this.cachedCompiledPatterns = cachedCompiledPatterns;
+		}
+		if (this.endHasBackReferences && endRegexSource != null) {
+			if (this.applyEndPatternLast) {
+				cachedCompiledPatterns.setSource(cachedCompiledPatterns.length() - 1, endRegexSource);
+			} else {
+				cachedCompiledPatterns.setSource(0, endRegexSource);
+			}
+		}
+		return cachedCompiledPatterns;
+	}
 }
