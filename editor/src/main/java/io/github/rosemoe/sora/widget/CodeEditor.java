@@ -3118,7 +3118,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         final var line = cursor.left().line;
         setSelectionRegion(line, 0, line, getText().getColumnCount(line));
-        copyText();
+        copyText(false);
     }
 
     /**
