@@ -50,11 +50,13 @@ import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEventReceiv
 import io.github.rosemoe.sora.lsp.operations.Feature;
 import io.github.rosemoe.sora.lsp.operations.completion.CompletionFeature;
 import io.github.rosemoe.sora.lsp.operations.diagnostics.PublishDiagnosticsFeature;
+import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsFeature;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeFeature;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentCloseFeature;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentOpenFeature;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentSaveFeature;
-import io.github.rosemoe.sora.lsp.operations.format.FormattingFeature;
+import io.github.rosemoe.sora.lsp.operations.format.FullFormattingFeature;
+import io.github.rosemoe.sora.lsp.operations.format.RangeFormattingFeature;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 @Experimental
@@ -86,9 +88,12 @@ public class LspEditor {
 
     private TextDocumentSyncKind textDocumentSyncKind;
 
+    private List<String> completionTriggers;
+
     private LspEditorContentChangeEventReceiver editorContentChangeEventReceiver;
 
     private PublishDiagnosticsParams diagnosticsParams = null;
+
 
     public LspEditor(String currentProjectPath, String currentFileUri, LanguageServerDefinition serverDefinition) {
         this.currentEditor = new WeakReference<>(null);
@@ -118,7 +123,7 @@ public class LspEditor {
 
         currentEditor.setEditorLanguage(currentLanguage);
 
-        SubscriptionReceipt<ContentChangeEvent> subscriptionReceipt = currentEditor.subscribeEvent(ContentChangeEvent.class, editorContentChangeEventReceiver);
+        var subscriptionReceipt = currentEditor.subscribeEvent(ContentChangeEvent.class, editorContentChangeEventReceiver);
 
         unsubscribeFunction = subscriptionReceipt::unsubscribe;
 
@@ -147,17 +152,18 @@ public class LspEditor {
     }
 
     public void installFeature(Supplier<Feature<?, ?>> featureSupplier) {
-        Feature<?, ?> feature = featureSupplier.get();
+        var feature = featureSupplier.get();
         supportedFeatures.add(feature);
         feature.install(this);
     }
 
-    public void installFeatures(Supplier<Feature<?, ?>>... featureSupplier) {
+    @SafeVarargs
+    public final void installFeatures(Supplier<Feature<?, ?>>... featureSupplier) {
         Arrays.stream(featureSupplier).forEach(this::installFeature);
     }
 
     public void uninstallFeature(Class<?> featureClass) {
-        for (Feature<?, ?> feature : supportedFeatures) {
+        for (var feature : supportedFeatures) {
             if (feature.getClass() == featureClass) {
                 feature.uninstall(this);
                 supportedFeatures.remove(feature);
@@ -168,7 +174,7 @@ public class LspEditor {
 
     @Nullable
     public <T extends Feature> T useFeature(Class<T> featureClass) {
-        for (Feature<?, ?> feature : supportedFeatures) {
+        for (var feature : supportedFeatures) {
             if (feature.getClass() == featureClass) {
                 return (T) feature;
             }
@@ -176,18 +182,26 @@ public class LspEditor {
         return null;
     }
 
+    public <T extends Feature> Optional<T> safeUseFeature(Class<T> featureClass) {
+        return Optional.ofNullable(useFeature(featureClass));
+    }
+
     private void dispose() {
 
-        for (Feature<?, ?> feature : supportedFeatures) {
+        for (var feature : supportedFeatures) {
             feature.uninstall(this);
         }
 
         supportedFeatures.clear();
-
+        options.clear();
         currentEditor.clear();
+        completionTriggers.clear();
         currentLanguage.destroy();
+
         currentLanguage = null;
         supportedFeatures = null;
+        options = null;
+        completionTriggers = null;
 
         if (unsubscribeFunction != null) {
             unsubscribeFunction.run();
@@ -201,14 +215,14 @@ public class LspEditor {
     public void installFeatures() {
 
         //features
-        installFeatures(FormattingFeature::new, DocumentOpenFeature::new,
-                DocumentSaveFeature::new, DocumentChangeFeature::new,
-                DocumentCloseFeature::new, PublishDiagnosticsFeature::new, CompletionFeature::new);
+        installFeatures(RangeFormattingFeature::new, DocumentOpenFeature::new, DocumentSaveFeature::new,
+                DocumentChangeFeature::new, DocumentCloseFeature::new, PublishDiagnosticsFeature::new,
+                CompletionFeature::new, FullFormattingFeature::new, ApplyEditsFeature::new);
 
         //options
 
         // formatting
-        FormattingOptions formattingOptions = new FormattingOptions();
+        var formattingOptions = new FormattingOptions();
         formattingOptions.setTabSize(4);
         formattingOptions.setInsertSpaces(true);
         options.add(formattingOptions);
@@ -251,14 +265,12 @@ public class LspEditor {
 
     public void publishDiagnostics(PublishDiagnosticsParams publishDiagnosticsParams) {
         this.diagnosticsParams = publishDiagnosticsParams;
-        useFeature(PublishDiagnosticsFeature.class)
-                .execute(publishDiagnosticsParams);
+        safeUseFeature(PublishDiagnosticsFeature.class).ifPresent(publishDiagnosticsFeature -> publishDiagnosticsFeature.execute(publishDiagnosticsParams));
     }
 
 
     public void open() {
-        useFeature(DocumentOpenFeature.class)
-                .execute(null);
+        safeUseFeature(DocumentOpenFeature.class).ifPresent(documentOpenFeature -> documentOpenFeature.execute(null));
     }
 
     @Nullable
@@ -272,21 +284,16 @@ public class LspEditor {
     }
 
     public void save() {
-        useFeature(DocumentSaveFeature.class)
-                .execute(null);
+        safeUseFeature(DocumentSaveFeature.class).ifPresent(documentSaveFeature -> documentSaveFeature.execute(null));
     }
 
     public void disconnect() {
         if (languageServerWrapper != null) {
             try {
                 var feature = useFeature(DocumentCloseFeature.class);
-                if (feature != null)
-                    feature.execute(null).get();
+                if (feature != null) feature.execute(null).get();
 
-                ForkJoinPool
-                        .commonPool()
-                        .execute(() ->
-                                languageServerWrapper.disconnect(this));
+                ForkJoinPool.commonPool().execute(() -> languageServerWrapper.disconnect(this));
 
             } catch (ExecutionException | InterruptedException e) {
                 e.printStackTrace();
@@ -316,8 +323,16 @@ public class LspEditor {
         this.textDocumentSyncKind = textDocumentSyncKind;
     }
 
+    public void setCompletionTriggers(List<String> completionTriggers) {
+        this.completionTriggers = new ArrayList<>(completionTriggers);
+    }
+
 
     public String getFileExt() {
         return serverDefinition.ext;
+    }
+
+    public List<String> getCompletionTriggers() {
+        return this.completionTriggers;
     }
 }

@@ -21,33 +21,13 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.requests;
+package io.github.rosemoe.sora.lsp.editor.completion;
 
+import io.github.rosemoe.sora.lang.completion.CompletionItem;
+import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsFeature;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+public interface CompletionItemProvider<T extends CompletionItem> {
 
-/**
- * An object containing the Timeout for the various requests
- */
-public class Timeout {
+    T createCompletionItem(org.eclipse.lsp4j.CompletionItem completionItem, ApplyEditsFeature applyEditsFeature, int prefixLength);
 
-    private static final Map<Timeouts, Integer> timeouts = new ConcurrentHashMap<>();
-
-    static {
-        Arrays.stream(Timeouts.values()).forEach(t -> timeouts.put(t, t.getDefaultTimeout()));
-    }
-
-    public static int getTimeout(Timeouts type) {
-        return timeouts.get(type);
-    }
-
-    public static Map<Timeouts, Integer> getTimeouts() {
-        return timeouts;
-    }
-
-    public static void setTimeouts(Map<Timeouts, Integer> loaded) {
-        loaded.forEach(timeouts::replace);
-    }
 }

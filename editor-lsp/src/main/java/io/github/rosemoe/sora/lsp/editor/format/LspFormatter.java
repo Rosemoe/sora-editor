@@ -30,7 +30,8 @@ import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.lang.format.AsyncFormatter;
 import io.github.rosemoe.sora.lsp.editor.LspLanguage;
-import io.github.rosemoe.sora.lsp.operations.format.FormattingFeature;
+import io.github.rosemoe.sora.lsp.operations.format.FullFormattingFeature;
+import io.github.rosemoe.sora.lsp.operations.format.RangeFormattingFeature;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.TextRange;
 
@@ -42,27 +43,19 @@ public class LspFormatter extends AsyncFormatter {
         this.language = currentLanguage;
     }
 
-
     @Nullable
     @Override
     public TextRange formatAsync(@NonNull Content text, @NonNull TextRange cursorRange) {
-        var indexer = text.getIndexer();
-        var charPositionOfStart = indexer.getCharPosition(0);
-        var charPositionOfEnd = indexer.getCharPosition(
-                text.getLineCount() - 1,
-                text.getColumnCount(text.getLineCount() - 1) - 1
-
-        );
-        language.getEditor()
-                .useFeature(FormattingFeature.class)
-                .execute(new Pair<>(text, new TextRange(charPositionOfStart, charPositionOfEnd)));
+        language.getEditor().safeUseFeature(FullFormattingFeature.class)
+                .ifPresent(fullFormattingFeature -> fullFormattingFeature.execute(text));
         return null;
     }
 
     @Nullable
     @Override
     public TextRange formatRegionAsync(@NonNull Content text, @NonNull TextRange rangeToFormat, @NonNull TextRange cursorRange) {
-        language.getEditor().useFeature(FormattingFeature.class).execute(new Pair<>(text, cursorRange));
+        language.getEditor().safeUseFeature(RangeFormattingFeature.class)
+                .ifPresent(rangeFormattingFeature -> rangeFormattingFeature.execute(new Pair<>(text, cursorRange)));
         return null;
     }
 

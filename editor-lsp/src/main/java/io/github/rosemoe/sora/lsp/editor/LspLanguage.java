@@ -28,9 +28,16 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 
 import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
@@ -42,14 +49,17 @@ import io.github.rosemoe.sora.lang.completion.CompletionItem;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
+import io.github.rosemoe.sora.lsp.editor.completion.CompletionItemProvider;
 import io.github.rosemoe.sora.lsp.editor.completion.LspCompletionItem;
 import io.github.rosemoe.sora.lsp.editor.format.LspFormatter;
 import io.github.rosemoe.sora.lsp.operations.completion.CompletionFeature;
+import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsFeature;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeFeature;
 import io.github.rosemoe.sora.lsp.requests.Timeout;
 import io.github.rosemoe.sora.lsp.requests.Timeouts;
 import io.github.rosemoe.sora.lsp.utils.LSPException;
 import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
@@ -63,9 +73,14 @@ public class LspLanguage implements Language {
 
     private Language wrapperLanguage = null;
 
+    private CompletionItemProvider<?> completionItemProvider;
+
     public LspLanguage(LspEditor editor) {
         this.currentEditor = editor;
         this.lspFormatter = new LspFormatter(this);
+
+        completionItemProvider = LspCompletionItem::new;
+
     }
 
     @NonNull
@@ -82,7 +97,7 @@ public class LspLanguage implements Language {
     @Override
     public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position, @NonNull CompletionPublisher publisher, @NonNull Bundle extraArguments) throws CompletionCancelledException {
 
-        var prefix = CompletionHelper.computePrefix(content, position, MyCharacter::isJavaIdentifierPart);
+        var prefix = getCompletionPrefix(content, position);
 
         if (prefix.length() == 0) {
             return;
@@ -98,19 +113,31 @@ public class LspLanguage implements Language {
         });
 
 
-        var documentChangeFuture = currentEditor.useFeature(DocumentChangeFeature.class).getFuture();
+        currentEditor.safeUseFeature(DocumentChangeFeature.class)
+                .ifPresent(documentChangeFeature -> {
+                    var documentChangeFuture = documentChangeFeature.getFuture();
+                    if (!documentChangeFuture.isDone() || !documentChangeFuture.isCompletedExceptionally() || !documentChangeFuture.isCancelled()) {
+                        try {
+                            documentChangeFuture.get(1000, TimeUnit.MILLISECONDS);
+                        } catch (ExecutionException | InterruptedException |
+                                 TimeoutException ignored) {
 
-        if (documentChangeFuture != null) {
-            if (!documentChangeFuture.isDone() || !documentChangeFuture.isCompletedExceptionally() || !documentChangeFuture.isCancelled()) {
-                documentChangeFuture.join();
-            }
-        }
+                        }
+                    }
+                });
+
 
         try {
+            var completionFeature = currentEditor.useFeature(CompletionFeature.class);
 
-            currentEditor.useFeature(CompletionFeature.class).execute(position).thenAccept(completions -> {
+            if (completionFeature == null) {
+                return;
+            }
+
+            completionFeature.execute(position).thenAccept(completions -> {
                 completions.forEach(completionItem -> {
-                    publisher.addItem(new LspCompletionItem(completionItem, prefixLength));
+                    publisher.addItem(completionItemProvider.createCompletionItem(completionItem,
+                            currentEditor.useFeature(ApplyEditsFeature.class), prefixLength));
                 });
             }).exceptionally(throwable -> {
                 publisher.cancel();
@@ -123,6 +150,32 @@ public class LspLanguage implements Language {
         publisher.updateList();
 
 
+    }
+
+
+    public String getCompletionPrefix(ContentReference text, CharPosition position) {
+
+        List<String> delimiters = new ArrayList<>(currentEditor.getCompletionTriggers());
+
+        if (delimiters.isEmpty()) {
+            return CompletionHelper.computePrefix(text, position, MyCharacter::isJavaIdentifierPart);
+        }
+
+        // add whitespace as delimiter, otherwise forced completion does not work
+        delimiters.addAll(Arrays.asList(" \t\n\r".split("")));
+
+        var offset = position.index;
+
+        StringBuilder s = new StringBuilder();
+
+        for (int i = 0; i < offset; i++) {
+            char singleLetter = text.charAt(offset - i - 1);
+            if (delimiters.contains(String.valueOf(singleLetter))) {
+                return s.reverse().toString();
+            }
+            s.append(singleLetter);
+        }
+        return "";
     }
 
     @Override
@@ -184,4 +237,16 @@ public class LspLanguage implements Language {
     public void setWrapperLanguage(Language wrapperLanguage) {
         this.wrapperLanguage = wrapperLanguage;
     }
+
+
+    @Nullable
+    public <T extends CompletionItem> CompletionItemProvider<T> getCompletionItemProvider() {
+        return (CompletionItemProvider<T>) completionItemProvider;
+    }
+
+    public void setCompletionItemProvider(CompletionItemProvider<?> completionItemProvider) {
+        this.completionItemProvider = completionItemProvider;
+    }
+
+
 }

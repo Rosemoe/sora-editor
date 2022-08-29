@@ -47,7 +47,7 @@ import io.github.rosemoe.sora.text.TextRange;
 
 public class LspUtils {
 
-    private static Map<String, Integer> versionMap = new HashMap<>();
+    private static final Map<String, Integer> versionMap = new HashMap<>();
 
     public static DidCloseTextDocumentParams createDidCloseTextDocumentParams(String uri) {
         DidCloseTextDocumentParams params = new DidCloseTextDocumentParams();
@@ -66,7 +66,7 @@ public class LspUtils {
         return new TextDocumentContentChangeEvent(text);
     }
 
-    public static TextDocumentContentChangeEvent createTextDocumentContentChangeEvent(Range range,int rangeLength, String text) {
+    public static TextDocumentContentChangeEvent createTextDocumentContentChangeEvent(Range range, int rangeLength, String text) {
         return new TextDocumentContentChangeEvent(range, rangeLength, text);
     }
 
@@ -92,7 +92,10 @@ public class LspUtils {
 
 
     private static int getVersion(String uri) {
-        int version = versionMap.getOrDefault(uri, 0);
+        Integer version = versionMap.getOrDefault(uri, 0);
+        if (version == null) {
+            version = 0;
+        }
         version++;
         versionMap.put(uri, version);
         return version;

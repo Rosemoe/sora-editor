@@ -30,30 +30,24 @@ import androidx.annotation.WorkerThread;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.TextDocumentIdentifier;
-import org.eclipse.lsp4j.TextEdit;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.operations.Feature;
+import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsFeature;
 import io.github.rosemoe.sora.lsp.requests.Timeout;
 import io.github.rosemoe.sora.lsp.requests.Timeouts;
 import io.github.rosemoe.sora.lsp.utils.LSPException;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
-import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.TextRange;
 
-public class FormattingFeature implements Feature<Pair<Content, TextRange>, Void> {
+public class FullFormattingFeature implements Feature<Content, Void> {
 
     private CompletableFuture<Void> future;
     private LspEditor editor;
@@ -74,38 +68,23 @@ public class FormattingFeature implements Feature<Pair<Content, TextRange>, Void
 
     @Override
     @WorkerThread
-    public Void execute(Pair<Content, TextRange> data) {
+    public Void execute(Content content) {
         RequestManager manager = editor.getRequestManager();
 
         if (manager == null) {
             return null;
         }
 
-        //TODO: Separate features for full format and range formatting
-        DocumentRangeFormattingParams formattingParams = new DocumentRangeFormattingParams();
+        var formattingParams = new DocumentFormattingParams();
         formattingParams.setOptions(editor.getOption(FormattingOptions.class));
 
         formattingParams.setTextDocument(LspUtils.createTextDocumentIdentifier(editor.getCurrentFileUri()));
-        TextRange textRange = data.second;
-        formattingParams.setRange(LspUtils
-                .createRange(textRange));
 
-        Content content = data.first;
-
-        future = manager.rangeFormatting(formattingParams)
-                .thenApply(list -> Optional.ofNullable(list).orElse(List.of()))
-                .thenAccept(list -> {
-                    list.forEach(textEdit -> {
-                        var range = textEdit.getRange();
-                        var text = textEdit.getNewText();
-                        content.replace(
-                                range.getStart().getLine(), range.getStart().getCharacter(),
-                                range.getEnd().getLine(), range.getEnd().getCharacter(),
-                                text
-                        );
-                    });
-
-                });
+        future = manager.formatting(formattingParams).thenApply(list -> Optional.ofNullable(list).orElse(List.of())).thenAccept(list -> {
+            editor.safeUseFeature(ApplyEditsFeature.class)
+                    .ifPresent(applyEditsFeature -> applyEditsFeature
+                            .execute(new Pair<>(list, content)));
+        });
 
 
         try {

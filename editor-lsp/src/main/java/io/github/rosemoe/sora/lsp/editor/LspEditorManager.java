@@ -40,12 +40,12 @@ public class LspEditorManager {
         this.currentProjectPath = currentProjectPath;
     }
 
-    private Map<String, LspEditor> editors = new HashMap<>();
+    private final Map<String, LspEditor> editors = new HashMap<>();
 
-    private static Map<String, LspEditorManager> managers = new HashMap<>();
+    private static final Map<String, LspEditorManager> managers = new HashMap<>();
 
     public static LspEditorManager getOrCreateEditorManager(String projectPath) {
-        LspEditorManager manager = managers.get(projectPath);
+        var manager = managers.get(projectPath);
         if (manager == null) {
             manager = new LspEditorManager(projectPath);
             managers.put(projectPath, manager);
@@ -90,6 +90,8 @@ public class LspEditorManager {
 
         // Maybe the user should be allowed to call the method themselves
         LspUtils.clearVersions();
+
+
 
     }
 

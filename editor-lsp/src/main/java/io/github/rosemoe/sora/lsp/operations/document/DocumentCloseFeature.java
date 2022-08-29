@@ -55,12 +55,7 @@ public class DocumentCloseFeature implements Feature<Void, CompletableFuture<Voi
     @Override
     public CompletableFuture<Void> execute(Void data) {
 
-        editor.getRequestManagerOfOptional()
-                .ifPresent(requestManager -> future = CompletableFuture.runAsync(() ->
-                        requestManager.didClose(
-                                LspUtils.createDidCloseTextDocumentParams(
-                                        editor.getCurrentFileUri()
-                                ))));
+        editor.getRequestManagerOfOptional().ifPresent(requestManager -> future = CompletableFuture.runAsync(() -> requestManager.didClose(LspUtils.createDidCloseTextDocumentParams(editor.getCurrentFileUri()))));
 
         ForkJoinPool.commonPool().execute(future::join);
 
