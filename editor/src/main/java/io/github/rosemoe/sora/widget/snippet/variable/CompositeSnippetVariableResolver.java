@@ -47,6 +47,14 @@ public final class CompositeSnippetVariableResolver implements ISnippetVariableR
         }
     }
 
+    public void removeResolver(@NonNull ISnippetVariableResolver resolver) {
+        for (var name : resolver.getResolvableNames()) {
+            if (resolverMap.get(name) == resolver) {
+                resolverMap.remove(name);
+            }
+        }
+    }
+
     @NonNull
     @Override
     public String[] getResolvableNames() {

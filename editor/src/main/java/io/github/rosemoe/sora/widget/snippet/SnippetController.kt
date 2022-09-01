@@ -29,12 +29,38 @@ import io.github.rosemoe.sora.widget.snippet.variable.ClipboardBasedSnippetVaria
 import io.github.rosemoe.sora.widget.snippet.variable.CommentBasedSnippetVariableResolver
 import io.github.rosemoe.sora.widget.snippet.variable.CompositeSnippetVariableResolver
 import io.github.rosemoe.sora.widget.snippet.variable.EditorBasedSnippetVariableResolver
+import io.github.rosemoe.sora.widget.snippet.variable.FileBasedSnippetVariableResolver
 import io.github.rosemoe.sora.widget.snippet.variable.RandomBasedSnippetVariableResolver
 import io.github.rosemoe.sora.widget.snippet.variable.TimeBasedSnippetVariableResolver
+import io.github.rosemoe.sora.widget.snippet.variable.WorkspaceBasedSnippetVariableResolver
 
 class SnippetController(private val editor: CodeEditor) {
 
     val commentVariableResolver = CommentBasedSnippetVariableResolver(null)
+
+    var fileVariableResolver: FileBasedSnippetVariableResolver? = null
+        set(value) {
+            val old = field
+            if (old != null) {
+                variableResolver.removeResolver(old)
+            }
+            field = value
+            if (value != null) {
+                variableResolver.addResolver(value)
+            }
+        }
+
+    var workspaceVariableResolver: WorkspaceBasedSnippetVariableResolver? = null
+        set(value) {
+            val old = field
+            if (old != null) {
+                variableResolver.removeResolver(old)
+            }
+            field = value
+            if (value != null) {
+                variableResolver.addResolver(value)
+            }
+        }
 
     private val variableResolver = CompositeSnippetVariableResolver().also {
         it.addResolver(ClipboardBasedSnippetVariableResolver(editor.clipboardManager))
