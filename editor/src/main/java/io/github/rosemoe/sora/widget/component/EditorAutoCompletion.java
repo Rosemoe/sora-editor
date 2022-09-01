@@ -289,7 +289,6 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     /**
      * Start completion at current selection position
      */
-    @SuppressWarnings("unchecked")
     public void requireCompletion() {
         if (cancelShowUp || !isEnabled()) {
             return;

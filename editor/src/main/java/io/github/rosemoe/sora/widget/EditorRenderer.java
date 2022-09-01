@@ -2232,6 +2232,9 @@ public class EditorRenderer {
      */
     @UnsupportedUserUsage
     public float measureText(ContentLine text, int line, int index, int count) {
+        if (text.timestamp < displayTimestamp && text.widthCache != null) {
+            buildMeasureCacheForLines(line, line);
+        }
         var gtr = GraphicTextRow.obtain(basicDisplayMode);
         List<Span> spans = editor.defaultSpans;
         if (text.widthCache == null) {
