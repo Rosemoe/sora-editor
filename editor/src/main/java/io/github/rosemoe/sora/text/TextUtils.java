@@ -132,4 +132,16 @@ public class TextUtils {
         return ch == '\t' || ch == ' ';
     }
 
+    public static String padStart(String src, char padChar, int length) {
+        if (src.length() >= length) {
+            return src;
+        }
+        var sb = new StringBuilder(length);
+        for (int i = 0;i < length - src.length();i++) {
+            sb.append(padChar);
+        }
+        sb.append(src);
+        return sb.toString();
+    }
+
 }
