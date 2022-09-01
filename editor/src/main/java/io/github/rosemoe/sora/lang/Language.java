@@ -137,6 +137,7 @@ public interface Language {
 
     /**
      * Get the code formatter for the current language.
+     * The formatter is expected to be the same one during the lifecycle of a language instance.
      *
      * @return The code formatter for the current language.
      */
@@ -170,6 +171,7 @@ public interface Language {
      * of editor or other objects related to editor (such as references to text in editor) to avoid
      * memory leaks and resource waste.
      */
+    @UiThread
     void destroy();
 
 }

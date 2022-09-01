@@ -3467,7 +3467,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Move selection to line start with scrolling
      *
-     * @param line Line to jump
+     * @param line Line index to jump
      */
     public void jumpToLine(int line) {
         setSelection(line, 0);
