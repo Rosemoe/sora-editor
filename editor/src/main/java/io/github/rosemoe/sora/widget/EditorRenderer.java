@@ -528,6 +528,8 @@ public class EditorRenderer {
 
         offsetX = -editor.getOffsetX();
 
+        int currentLineNumber = cursor.isSelected() ? -1 : cursor.getLeftLine();
+
         if (lineNumberNotPinned) {
             drawLineNumberBackground(canvas, offsetX, lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
             int lineNumberColor = editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER);
@@ -555,7 +557,7 @@ public class EditorRenderer {
                     y = (editor.getRowBottom(row - 1) + editor.getRowTop(row - 1)) / 2f - (metricsLineNumber.descent - metricsLineNumber.ascent) / 2f - metricsLineNumber.ascent - editor.getOffsetY();
                 }
                 paintOther.setTextAlign(editor.getLineNumberAlign());
-                paintOther.setColor(lineNumberColor);
+                paintOther.setColor(firstLn.value == currentLineNumber ? color.getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
                 var text = Integer.toString(firstLn.value + 1);
                 switch (editor.getLineNumberAlign()) {
                     case LEFT:
@@ -570,7 +572,7 @@ public class EditorRenderer {
             }
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
-                drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), offsetX, lineNumberWidth, lineNumberColor);
+                drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), offsetX, lineNumberWidth, IntPair.getFirst(packed) == currentLineNumber ? color.getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
             }
         }
 
@@ -608,7 +610,7 @@ public class EditorRenderer {
             drawDivider(canvas, lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_DIVIDER));
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
-                drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), 0, lineNumberWidth, lineNumberColor);
+                drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), 0, lineNumberWidth, IntPair.getFirst(packed) == currentLineNumber ? color.getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
             }
         }
 

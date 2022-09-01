@@ -120,6 +120,7 @@ public class EditorColorScheme {
     public static final int TEXT_NORMAL = 5;
     public static final int WHOLE_BACKGROUND = 4;
     public static final int LINE_NUMBER_BACKGROUND = 3;
+    public static final int LINE_NUMBER_CURRENT = 45;
     public static final int LINE_NUMBER = 2;
     public static final int LINE_DIVIDER = 1;
 
@@ -131,7 +132,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 44;
+    protected static final int END_COLOR_ID = 45;
     /**
      * Real color saver
      */
@@ -221,6 +222,7 @@ public class EditorColorScheme {
         int color = colors.get(type);
         switch (type) {
             case LINE_NUMBER:
+            case LINE_NUMBER_CURRENT:
                 color = 0xFF505050;
                 break;
             case LINE_NUMBER_BACKGROUND:

@@ -45,6 +45,7 @@ public class SchemeGitHub extends EditorColorScheme {
         setColor(TEXT_NORMAL, 0xff24292e);
         setColor(LINE_NUMBER_BACKGROUND, 0xffffffff);
         setColor(LINE_NUMBER, 0xffbec0c1);
+        setColor(LINE_NUMBER_CURRENT, 0xffbec0c1);
         setColor(SELECTION_INSERT, 0xffc7edcc);
         setColor(SELECTION_HANDLE, 0xffc7edcc);
     }

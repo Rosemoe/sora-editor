@@ -51,6 +51,7 @@ public class SchemeDarcula extends EditorColorScheme {
         setColor(TEXT_NORMAL, 0xffffffff);
         setColor(LINE_NUMBER_BACKGROUND, 0xff313335);
         setColor(LINE_NUMBER, 0xff606366);
+        setColor(LINE_NUMBER_CURRENT, 0xff606366);
         setColor(LINE_DIVIDER, 0xff606366);
         setColor(SCROLL_BAR_THUMB, 0xffa6a6a6);
         setColor(SCROLL_BAR_THUMB_PRESSED, 0xff565656);
