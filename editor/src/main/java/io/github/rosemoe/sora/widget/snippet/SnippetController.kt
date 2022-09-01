@@ -24,5 +24,26 @@
 
 package io.github.rosemoe.sora.widget.snippet
 
-class SnippetController {
+import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.snippet.variable.ClipboardBasedSnippetVariableResolver
+import io.github.rosemoe.sora.widget.snippet.variable.CommentBasedSnippetVariableResolver
+import io.github.rosemoe.sora.widget.snippet.variable.CompositeSnippetVariableResolver
+import io.github.rosemoe.sora.widget.snippet.variable.EditorBasedSnippetVariableResolver
+import io.github.rosemoe.sora.widget.snippet.variable.RandomBasedSnippetVariableResolver
+import io.github.rosemoe.sora.widget.snippet.variable.TimeBasedSnippetVariableResolver
+
+class SnippetController(private val editor: CodeEditor) {
+
+    val commentVariableResolver = CommentBasedSnippetVariableResolver(null)
+
+    private val variableResolver = CompositeSnippetVariableResolver().also {
+        it.addResolver(ClipboardBasedSnippetVariableResolver(editor.clipboardManager))
+        it.addResolver(EditorBasedSnippetVariableResolver(editor))
+        it.addResolver(RandomBasedSnippetVariableResolver())
+        it.addResolver(TimeBasedSnippetVariableResolver())
+        it.addResolver(commentVariableResolver)
+    }
+
+
+
 }

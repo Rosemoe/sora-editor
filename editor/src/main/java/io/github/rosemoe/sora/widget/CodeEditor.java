@@ -3056,6 +3056,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * Get system clipboard manager used by editor
+     */
+    public ClipboardManager getClipboardManager() {
+        return clipboardManager;
+    }
+
+    /**
      * Paste text from clip board
      */
     public void pasteText() {
