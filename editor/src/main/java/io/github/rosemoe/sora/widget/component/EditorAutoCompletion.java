@@ -219,7 +219,8 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         var adpView = layout.getCompletionList();
         var item = ((EditorCompletionAdapter) adpView.getAdapter()).getItem(pos);
         Cursor cursor = editor.getCursor();
-        if (!cursor.isSelected()) {
+        final var completionThread = this.completionThread;
+        if (!cursor.isSelected() && completionThread != null) {
             cancelShowUp = true;
             editor.restartInput();
             editor.getText().beginBatchEdit();
@@ -384,7 +385,9 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             try {
                 mLanguage.requireAutoComplete(mRef, mPosition, mLocalPublisher, mExtra);
                 if (mLocalPublisher.hasData()) {
-                    mLocalPublisher.updateList(true);
+                    if (completionThread == Thread.currentThread()) {
+                        mLocalPublisher.updateList(true);
+                    }
                 } else {
                     editor.post(EditorAutoCompletion.this::hide);
                 }

@@ -1932,7 +1932,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         formatter.setReceiver(this);
         var formatContent = text.copyText(false);
         formatContent.setUndoEnabled(false);
-        formatter.format(formatContent, createCursorRange());
+        formatter.format(formatContent, getCursorRange());
         postInvalidate();
         return true;
     }
@@ -1958,12 +1958,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         formatter.setReceiver(this);
         var formatContent = text.copyText(false);
         formatContent.setUndoEnabled(false);
-        formatter.formatRegion(formatContent, new TextRange(start, end), createCursorRange());
+        formatter.formatRegion(formatContent, new TextRange(start, end), getCursorRange());
         postInvalidate();
         return true;
     }
 
-    public TextRange createCursorRange() {
+    /**
+     * Get the cursor range of editor
+     */
+    public TextRange getCursorRange() {
         return new TextRange(cursor.left(), cursor.right());
     }
 
@@ -3691,8 +3694,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         hideEditorWindows();
         if (editorLanguage != null) {
             editorLanguage.getAnalyzeManager().destroy();
-            editorLanguage.getFormatter().setReceiver(null);
-            editorLanguage.getFormatter().destroy();
+            var formatter = editorLanguage.getFormatter();
+            formatter.setReceiver(null);
+            formatter.destroy();
             editorLanguage.destroy();
             editorLanguage = new EmptyLanguage();
         }
