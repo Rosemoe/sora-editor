@@ -3248,10 +3248,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         int startColumn = IntPair.getFirst(edges);
         int endColumn = IntPair.getSecond(edges);
         if (startColumn == endColumn) {
-            if (startColumn > 0) {
-                startColumn--;
-            } else if (endColumn < lineObj.length()) {
+            if (endColumn < lineObj.length()) {
                 endColumn++;
+            } else if (startColumn > 0) {
+                startColumn--;
             } else {
                 if (line > 0) {
                     int lastColumn = getText().getColumnCount(line - 1);
