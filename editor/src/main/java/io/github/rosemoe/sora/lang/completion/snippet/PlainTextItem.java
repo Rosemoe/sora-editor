@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2022  Rosemoe
@@ -20,14 +20,36 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
-
-package io.github.rosemoe.sora.lang.completion.snippet
-
-/**
- * The description of a literal
- *
- * @param id the id of the literal
- * @param defaultValue the default value of the literal
  */
-data class LiteralDesc(val id: String, val defaultValue: String)
+package io.github.rosemoe.sora.lang.completion.snippet;
+
+import androidx.annotation.NonNull;
+
+public class PlainTextItem extends SnippetItem {
+
+    private String text;
+
+    public PlainTextItem(@NonNull String text, int index) {
+        this(text, index, index + text.length());
+    }
+
+    public PlainTextItem(@NonNull String text, int start, int end) {
+        setIndex(start, end);
+        this.text = text;
+    }
+
+    @NonNull
+    public String getText() {
+        return text;
+    }
+
+    public void setText(@NonNull String text) {
+        this.text = text;
+    }
+
+    @NonNull
+    @Override
+    public PlainTextItem clone() {
+        return new PlainTextItem(text, getStartIndex(), getEndIndex());
+    }
+}
