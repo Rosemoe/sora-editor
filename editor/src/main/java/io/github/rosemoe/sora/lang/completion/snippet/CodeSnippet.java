@@ -24,8 +24,51 @@
 package io.github.rosemoe.sora.lang.completion.snippet;
 
 
+import androidx.annotation.NonNull;
+
+import java.util.List;
+import java.util.TreeSet;
+
 public class CodeSnippet {
 
+    private List<SnippetItem> items;
+    private List<LiteralDefinition> literals;
 
+    public CodeSnippet(@NonNull List<SnippetItem> items, @NonNull List<LiteralDefinition> literals) {
+        this.items = items;
+        this.literals = literals;
+    }
+
+    public boolean checkContent() {
+        int index = 0;
+        for (var item : items) {
+            if (item.getStartIndex() != index) {
+                return false;
+            }
+            if (item instanceof LiteralItem) {
+                if (!literals.contains(((LiteralItem) item).getDefinition())) {
+                    return false;
+                }
+            }
+            index = item.getEndIndex();
+        }
+        var set = new TreeSet<String>();
+        for (var literal : literals) {
+            if (!set.contains(literal.getId())) {
+                set.add(literal.getId());
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public List<SnippetItem> getItems() {
+        return items;
+    }
+
+    public List<LiteralDefinition> getLiteralDefinitions() {
+        return literals;
+    }
 
 }

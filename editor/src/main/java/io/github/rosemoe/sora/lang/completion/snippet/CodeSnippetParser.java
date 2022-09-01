@@ -24,4 +24,9 @@
 package io.github.rosemoe.sora.lang.completion.snippet;
 
 public class CodeSnippetParser {
+
+    public static CodeSnippet parse(String snippet) {
+        return null;
+    }
+
 }
