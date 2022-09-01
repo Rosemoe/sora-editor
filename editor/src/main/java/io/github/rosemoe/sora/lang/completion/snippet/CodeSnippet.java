@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lang.completion.snippet;
 
 import androidx.annotation.NonNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -69,6 +70,54 @@ public class CodeSnippet {
 
     public List<LiteralDefinition> getLiteralDefinitions() {
         return literals;
+    }
+
+    public static class Builder {
+
+        private final List<LiteralDefinition> definitions;
+        private List<SnippetItem> items = new ArrayList<>();
+        private int index;
+
+        public Builder(@NonNull List<LiteralDefinition> definitions) {
+            this.definitions = definitions;
+        }
+
+        public Builder addPlainText(String text) {
+            items.add(new PlainTextItem(text, index));
+            index += text.length();
+            return this;
+        }
+
+        public Builder addLiteral(String id) {
+            LiteralDefinition def = null;
+            for (var definition : definitions) {
+                if (definition.getId().equals(id)) {
+                    def = definition;
+                    break;
+                }
+            }
+            if (def == null) {
+                throw new IllegalArgumentException("id is not defined in definition list");
+            }
+            items.add(new LiteralItem(def, index));
+            index += def.getDefaultValue().length();
+            return this;
+        }
+
+        public Builder addSelectedText() {
+            items.add(new SelectedTextItem(index));
+            return this;
+        }
+
+        public Builder addSelectionEnd() {
+            items.add(new SelectionEndItem(index));
+            return this;
+        }
+
+        public CodeSnippet build() {
+            return new CodeSnippet(items, definitions);
+        }
+
     }
 
 }
