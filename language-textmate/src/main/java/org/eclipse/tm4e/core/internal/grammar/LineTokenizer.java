@@ -146,12 +146,12 @@ final class LineTokenizer {
     }
 
     private void scanNext() {
-        LOGGER.d("@@scanNext: |" + lineText.content.replace("\n", "\\n").substring(linePos) + '|');
+        //LOGGER.d("@@scanNext: |" + lineText.content.replace("\n", "\\n").substring(linePos) + '|');
 
         final MatchResult r = matchRuleOrInjections(grammar, lineText, isFirstLine, linePos, stack, anchorPosition);
 
         if (r == null) {
-            LOGGER.d(" no more matches.");
+            //LOGGER.d(" no more matches.");
             // No match
             lineTokens.produce(stack, lineText.bytesCount);
             stop = true;
