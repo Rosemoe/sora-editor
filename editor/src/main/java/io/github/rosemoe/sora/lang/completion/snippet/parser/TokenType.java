@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2022  Rosemoe
@@ -20,8 +20,38 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.lang.completion.snippet.parser;
 
-package io.github.rosemoe.sora.lang.completion.snippet
+public enum TokenType {
 
-data class LiteralDefinition(val id: String, val defaultValue: String)
+    Dollar('$'),
+    Colon(':'),
+    Comma(','),
+    CurlyOpen('{'),
+    CurlyClose('}'),
+    Backslash('\\'),
+    Forwardslash('/'),
+    Pipe('|'),
+    Int,
+    VariableName,
+    Format,
+    Plus('+'),
+    Dash('-'),
+    QuestionMark('?'),
+    EOF;
+
+    private final char target;
+
+    TokenType() {
+        this('\0');
+    }
+
+    TokenType(char targetChar) {
+        target = targetChar;
+    }
+
+    public char getTargetCharacter() {
+        return target;
+    }
+}

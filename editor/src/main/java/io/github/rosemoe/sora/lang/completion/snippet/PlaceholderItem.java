@@ -26,23 +26,23 @@ package io.github.rosemoe.sora.lang.completion.snippet;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class LiteralItem extends SnippetItem {
+public class PlaceholderItem extends SnippetItem {
 
-    private final LiteralDefinition definition;
+    private final PlaceholderDefinition definition;
     private String text;
 
-    public LiteralItem(@NonNull LiteralDefinition definition, int index) {
+    public PlaceholderItem(@NonNull PlaceholderDefinition definition, int index) {
         setIndex(index, index + definition.getDefaultValue().length());
         this.definition = definition;
     }
 
-    private LiteralItem(@NonNull LiteralDefinition definition, @Nullable String text, int start, int end) {
+    private PlaceholderItem(@NonNull PlaceholderDefinition definition, @Nullable String text, int start, int end) {
         setIndex(start, end);
         this.text = text;
         this.definition = definition;
     }
 
-    public LiteralDefinition getDefinition() {
+    public PlaceholderDefinition getDefinition() {
         return definition;
     }
 
@@ -57,7 +57,7 @@ public class LiteralItem extends SnippetItem {
 
     @NonNull
     @Override
-    public LiteralItem clone() {
-        return new LiteralItem(definition, text, getStartIndex(), getEndIndex());
+    public PlaceholderItem clone() {
+        return new PlaceholderItem(definition, text, getStartIndex(), getEndIndex());
     }
 }

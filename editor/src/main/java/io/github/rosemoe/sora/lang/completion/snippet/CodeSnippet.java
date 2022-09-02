@@ -32,12 +32,12 @@ import java.util.TreeSet;
 
 public class CodeSnippet {
 
-    private List<SnippetItem> items;
-    private List<LiteralDefinition> literals;
+    private final List<SnippetItem> items;
+    private final List<PlaceholderDefinition> placeholders;
 
-    public CodeSnippet(@NonNull List<SnippetItem> items, @NonNull List<LiteralDefinition> literals) {
+    public CodeSnippet(@NonNull List<SnippetItem> items, @NonNull List<PlaceholderDefinition> placeholders) {
         this.items = items;
-        this.literals = literals;
+        this.placeholders = placeholders;
     }
 
     public boolean checkContent() {
@@ -46,17 +46,17 @@ public class CodeSnippet {
             if (item.getStartIndex() != index) {
                 return false;
             }
-            if (item instanceof LiteralItem) {
-                if (!literals.contains(((LiteralItem) item).getDefinition())) {
+            if (item instanceof PlaceholderItem) {
+                if (!placeholders.contains(((PlaceholderItem) item).getDefinition())) {
                     return false;
                 }
             }
             index = item.getEndIndex();
         }
         var set = new TreeSet<String>();
-        for (var literal : literals) {
-            if (!set.contains(literal.getId())) {
-                set.add(literal.getId());
+        for (var placeholder : placeholders) {
+            if (!set.contains(placeholder.getId())) {
+                set.add(placeholder.getId());
             } else {
                 return false;
             }
@@ -68,28 +68,40 @@ public class CodeSnippet {
         return items;
     }
 
-    public List<LiteralDefinition> getLiteralDefinitions() {
-        return literals;
+    public List<PlaceholderDefinition> getPlaceholderDefinitions() {
+        return placeholders;
     }
 
     public static class Builder {
 
-        private final List<LiteralDefinition> definitions;
+        private final List<PlaceholderDefinition> definitions;
         private List<SnippetItem> items = new ArrayList<>();
         private int index;
 
-        public Builder(@NonNull List<LiteralDefinition> definitions) {
+        public Builder() {
+            this(new ArrayList<>());
+        }
+
+        public Builder(@NonNull List<PlaceholderDefinition> definitions) {
             this.definitions = definitions;
         }
 
         public Builder addPlainText(String text) {
+            if (!items.isEmpty() && items.get(items.size() - 1) instanceof PlainTextItem) {
+                // Merge plain texts
+                var item = (PlainTextItem) items.get(items.size() - 1);
+                item.setText(item.getText() + text);
+                item.setIndex(item.getStartIndex(), item.getEndIndex() + text.length());
+                index += text.length();
+                return this;
+            }
             items.add(new PlainTextItem(text, index));
             index += text.length();
             return this;
         }
 
-        public Builder addLiteral(String id) {
-            LiteralDefinition def = null;
+        public Builder addPlaceholder(String id) {
+            PlaceholderDefinition def = null;
             for (var definition : definitions) {
                 if (definition.getId().equals(id)) {
                     def = definition;
@@ -97,9 +109,10 @@ public class CodeSnippet {
                 }
             }
             if (def == null) {
-                throw new IllegalArgumentException("id is not defined in definition list");
+                def = new PlaceholderDefinition(id, id);
+                definitions.add(def);
             }
-            items.add(new LiteralItem(def, index));
+            items.add(new PlaceholderItem(def, index));
             index += def.getDefaultValue().length();
             return this;
         }
@@ -111,6 +124,11 @@ public class CodeSnippet {
 
         public Builder addSelectionEnd() {
             items.add(new SelectionEndItem(index));
+            return this;
+        }
+
+        public Builder addTabStop(int number) {
+            items.add(new TabStopItem(index, number));
             return this;
         }
 
