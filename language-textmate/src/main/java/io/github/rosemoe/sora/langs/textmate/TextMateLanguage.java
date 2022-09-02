@@ -26,8 +26,11 @@ package io.github.rosemoe.sora.langs.textmate;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
-import java.io.InputStream;
+import org.eclipse.tm4e.core.registry.IGrammarSource;
+import org.eclipse.tm4e.core.registry.IThemeSource;
+
 import java.io.Reader;
 import java.util.Objects;
 
@@ -41,8 +44,6 @@ import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
-import org.eclipse.tm4e.core.theme.IRawTheme;
-
 public class TextMateLanguage extends EmptyLanguage {
 
     private TextMateAnalyzer textMateAnalyzer;
@@ -51,9 +52,9 @@ public class TextMateLanguage extends EmptyLanguage {
     boolean autoCompleteEnabled;
     final boolean createIdentifiers;
 
-    protected TextMateLanguage(String grammarName, InputStream grammarIns, Reader languageConfiguration, IRawTheme theme, boolean createIdentifiers) {
+    protected TextMateLanguage(IGrammarSource grammarSource, Reader languageConfiguration, IThemeSource themeSource, boolean createIdentifiers) {
         try {
-            textMateAnalyzer = new TextMateAnalyzer(this,grammarName, grammarIns,languageConfiguration, theme);
+            textMateAnalyzer = new TextMateAnalyzer(this, grammarSource, languageConfiguration, themeSource);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -61,28 +62,29 @@ public class TextMateLanguage extends EmptyLanguage {
         autoCompleteEnabled = true;
     }
 
-    public static TextMateLanguage create(String grammarName, InputStream grammarIns,Reader languageConfiguration, IRawTheme theme) {
-        return new TextMateLanguage(grammarName, grammarIns,languageConfiguration, theme, true);
+    public static TextMateLanguage create(IGrammarSource grammarSource, Reader languageConfiguration, IThemeSource themeSource) {
+        return new TextMateLanguage(grammarSource, languageConfiguration, themeSource, true);
     }
 
-    public static TextMateLanguage create(String grammarName, InputStream grammarIns, IRawTheme theme) {
-        return new TextMateLanguage(grammarName, grammarIns,null, theme, true);
+    public static TextMateLanguage create(IGrammarSource grammarSource, IThemeSource themeSource) {
+        return new TextMateLanguage(grammarSource, null, themeSource, true);
     }
 
-    public static TextMateLanguage createNoCompletion(String grammarName, InputStream grammarIns,Reader languageConfiguration, IRawTheme theme) {
-        return new TextMateLanguage(grammarName, grammarIns,languageConfiguration, theme, false);
+    public static TextMateLanguage createNoCompletion(IGrammarSource grammarSource, Reader languageConfiguration, IThemeSource themeSource) {
+        return new TextMateLanguage(grammarSource, languageConfiguration, themeSource, false);
     }
 
-    public static TextMateLanguage createNoCompletion(String grammarName, InputStream grammarIns, IRawTheme theme) {
-        return new TextMateLanguage(grammarName, grammarIns,null, theme, false);
+    public static TextMateLanguage createNoCompletion(IGrammarSource grammarSource, IThemeSource themeSource) {
+        return new TextMateLanguage(grammarSource, null, themeSource, true);
     }
 
     /**
      * When you update the {@link TextMateColorScheme} for editor, you need to synchronize the updates here
      *
-     * @param theme IRawTheme creates from file
+     * @param theme IThemeSource creates from file
      */
-    public void updateTheme(IRawTheme theme) {
+    @WorkerThread
+    public void updateTheme(IThemeSource theme) throws Exception {
         if (textMateAnalyzer != null) {
             textMateAnalyzer.updateTheme(theme);
         }

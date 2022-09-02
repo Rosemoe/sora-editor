@@ -1,47 +1,48 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/atom/node-oniguruma
+ * Initial copyright Copyright (c) 2013 GitHub Inc.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - GitHub Inc.: Initial code, written in JavaScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
-
 package org.eclipse.tm4e.core.internal.oniguruma;
 
-public class OnigScanner {
+import java.util.Collection;
 
-    private final OnigSearcher searcher;
+import org.eclipse.jdt.annotation.Nullable;
 
-    public OnigScanner(String[] regexps) {
-        this.searcher = new OnigSearcher(regexps);
-    }
+/**
+ * @see <a href="https://github.com/atom/node-oniguruma/blob/master/src/onig-scanner.cc">
+ *      github.com/atom/node-oniguruma/blob/master/src/onig-scanner.cc</a>
+ */
+public final class OnigScanner {
 
-    public IOnigNextMatchResult findNextMatchSync(OnigString source, int charOffset) {
-        OnigResult bestResult = searcher.search(source, charOffset);
-        if (bestResult != null) {
-            return new OnigNextMatchResult(bestResult, source);
-        }
-        return null;
-    }
+	private final OnigSearcher searcher;
 
-    public IOnigNextMatchResult findNextMatchSync(String lin, int pos) {
-        return findNextMatchSync(new OnigString(lin), pos);
-    }
+	public OnigScanner(final Collection<String> regexps) {
+		searcher = new OnigSearcher(regexps);
+	}
 
+	@Nullable
+	public OnigNextMatchResult findNextMatchSync(final OnigString source, final int startPosition) {
+		final OnigResult bestResult = searcher.search(source, startPosition);
+		if (bestResult != null) {
+			return new OnigNextMatchResult(bestResult, source);
+		}
+		return null;
+	}
+
+	@Nullable
+	public OnigNextMatchResult findNextMatchSync(final String text, final int startPosition) {
+		return findNextMatchSync(OnigString.of(text), startPosition);
+	}
 }

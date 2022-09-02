@@ -1,137 +1,240 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2022 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/microsoft/vscode-textmate/
+ * Initial copyright Copyright (C) Microsoft Corporation. All rights reserved.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - Microsoft Corporation: Initial code, written in TypeScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
 package org.eclipse.tm4e.core.internal.grammar;
 
-import org.eclipse.tm4e.core.grammar.StackElement;
 
+import static org.eclipse.tm4e.core.internal.utils.MoreCollections.*;
+
+
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.grammar.IToken;
+import org.eclipse.tm4e.core.internal.grammar.tokenattrs.EncodedTokenAttributes;
+import org.eclipse.tm4e.core.internal.grammar.tokenattrs.OptionalStandardTokenType;
+import org.eclipse.tm4e.core.internal.theme.FontStyle;
 
-class LineTokens {
+import io.github.rosemoe.sora.util.Logger;
 
-    private static final Logger LOGGER = Logger.getLogger(LineTokens.class.getName());
+/**
+ * @see <a href=
+ *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/grammar.ts#L855">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/grammar.ts</a>
+ */
+final class LineTokens {
 
-    private final String lineText;
+	private static final Logger LOGGER = Logger.instance(LineTokens.class.getName());
 
-    /**
-     * used only if `_emitBinaryTokens` is false.
-     */
-    private final List<IToken> tokens;
-    /**
-     * used only if `_emitBinaryTokens` is true.
-     */
-    private final List<Integer> binaryTokens;
-    private boolean emitBinaryTokens;
-    private int lastTokenEndIndex;
+	private static final Deque<IToken> EMPTY_DEQUE = new ArrayDeque<>(0);
 
-    LineTokens(boolean emitBinaryTokens, String lineText) {
-        this.emitBinaryTokens = emitBinaryTokens;
-        this.lineText = LOGGER.isLoggable(Level.FINEST) ? lineText : null; // store line only if it's logged
-        if (this.emitBinaryTokens) {
-            this.tokens = null;
-            this.binaryTokens = new ArrayList<>();
-        } else {
-            this.tokens = new ArrayList<>();
-            this.binaryTokens = null;
-        }
-        this.lastTokenEndIndex = 0;
-    }
+	private final boolean _emitBinaryTokens;
 
-    public void produce(StackElement stack, int endIndex) {
-        this.produceFromScopes(stack.contentNameScopesList, endIndex);
-    }
+	/**
+	 * defined only if `LOGGER.isLoggable(TRACE)`.
+	 */
+	private final String _lineText;
 
-    public void produceFromScopes(ScopeListElement scopesList, int endIndex) {
-        if (this.lastTokenEndIndex >= endIndex) {
-            return;
-        }
+	/**
+	 * used only if `emitBinaryTokens` is false.
+	 */
+	private final Deque<IToken> _tokens;
 
-        if (this.emitBinaryTokens) {
-            int metadata = scopesList.metadata;
-            if (!this.binaryTokens.isEmpty() && this.binaryTokens.get(this.binaryTokens.size() - 1) == metadata) {
-                // no need to push a token with the same metadata
-                this.lastTokenEndIndex = endIndex;
-                return;
-            }
+	/**
+	 * used only if `emitBinaryTokens` is true.
+	 */
+	private final List<Integer> _binaryTokens;
 
-            this.binaryTokens.add(this.lastTokenEndIndex);
-            this.binaryTokens.add(metadata);
+	private int _lastTokenEndIndex = 0;
 
-            this.lastTokenEndIndex = endIndex;
-            return;
-        }
+	private final List<TokenTypeMatcher> _tokenTypeOverrides;
 
-        List<String> scopes = scopesList.generateScopes();
+	@Nullable
+	private final BalancedBracketSelectors balancedBracketSelectors;
 
-        if (this.lineText != null) {
-            LOGGER.info("  token: |" + this.lineText.substring(this.lastTokenEndIndex, endIndex).replaceAll("\n", "\\n") + '|');
-            for (String scope : scopes) {
-                LOGGER.info("      * " + scope);
-            }
-        }
-        this.tokens.add(new Token(this.lastTokenEndIndex, endIndex, scopes));
+	LineTokens(final boolean emitBinaryTokens,
+		final String lineText,
+		final List<TokenTypeMatcher> tokenTypeOverrides,
+		@Nullable final BalancedBracketSelectors balancedBracketSelectors) {
 
-        this.lastTokenEndIndex = endIndex;
-    }
+		this._emitBinaryTokens = emitBinaryTokens;
+		this._tokenTypeOverrides = tokenTypeOverrides;
+		this._lineText = /*LOGGER.isLoggable(TRACE) ? lineText :*/ ""; // store line only if it's logged
+		if (this._emitBinaryTokens) {
+			this._tokens = EMPTY_DEQUE;
+			this._binaryTokens = new ArrayList<>();
+		} else {
+			this._tokens = new ArrayDeque<>();
+			this._binaryTokens = Collections.emptyList();
+		}
+		this.balancedBracketSelectors = balancedBracketSelectors;
+	}
 
-    public IToken[] getResult(StackElement stack, int lineLength) {
-        if (!this.tokens.isEmpty() && this.tokens.get(this.tokens.size() - 1).getStartIndex() == lineLength - 1) {
-            // pop produced token for newline
-            this.tokens.remove(this.tokens.size() - 1);
-        }
+	void produce(final StateStack stack, final int endIndex) {
+		this.produceFromScopes(stack.contentNameScopesList, endIndex);
+	}
 
-        if (this.tokens.isEmpty()) {
-            this.lastTokenEndIndex = -1;
-            this.produce(stack, lineLength);
-            this.tokens.get(this.tokens.size() - 1).setStartIndex(0);
-        }
+	void produceFromScopes(final AttributedScopeStack scopesList, final int endIndex) {
+		if (this._lastTokenEndIndex >= endIndex) {
+			return;
+		}
 
-        return this.tokens.toArray(new IToken[0]);
-    }
+		if (this._emitBinaryTokens) {
+			int metadata = scopesList.tokenAttributes;
+			var containsBalancedBrackets = false;
+			final var balancedBracketSelectors = this.balancedBracketSelectors;
+			if (balancedBracketSelectors != null && balancedBracketSelectors.matchesAlways()) {
+				containsBalancedBrackets = true;
+			}
 
-    public int[] getBinaryResult(StackElement stack, int lineLength) {
-        if (!this.binaryTokens.isEmpty() && this.binaryTokens.get(this.binaryTokens.size() - 2) == lineLength - 1) {
-            // pop produced token for newline
-            this.binaryTokens.remove(this.binaryTokens.size() - 1);
-            this.binaryTokens.remove(this.binaryTokens.size() - 1);
-        }
+			if (!_tokenTypeOverrides.isEmpty()
+				|| balancedBracketSelectors != null
+					&& !balancedBracketSelectors.matchesAlways() && !balancedBracketSelectors.matchesNever()) {
+				// Only generate scope array when required to improve performance
+				final var scopes = scopesList.getScopeNames();
+				for (final var tokenType : _tokenTypeOverrides) {
+					if (tokenType.matcher.matches(scopes)) {
+						metadata = EncodedTokenAttributes.set(
+							metadata,
+							0,
+							tokenType.type, // toOptionalTokenType(tokenType.type),
+							null,
+							FontStyle.NotSet,
+							0,
+							0);
+					}
+				}
+				if (balancedBracketSelectors != null) {
+					containsBalancedBrackets = balancedBracketSelectors.match(scopes);
+				}
+			}
 
-        if (this.binaryTokens.isEmpty()) {
-            this.lastTokenEndIndex = -1;
-            this.produce(stack, lineLength);
-            this.binaryTokens.set(this.binaryTokens.size() - 2, 0);
-        }
+			if (containsBalancedBrackets) {
+				metadata = EncodedTokenAttributes.set(
+					metadata,
+					0,
+					OptionalStandardTokenType.NotSet,
+					containsBalancedBrackets,
+					FontStyle.NotSet,
+					0,
+					0);
+			}
 
-        int[] result = new int[this.binaryTokens.size()];
-        for (int i = 0, len = this.binaryTokens.size(); i < len; i++) {
-            result[i] = this.binaryTokens.get(i);
-        }
+			if (!this._binaryTokens.isEmpty() && getLastElement(this._binaryTokens) == metadata) {
+				// no need to push a token with the same metadata
+				this._lastTokenEndIndex = endIndex;
+				return;
+			}
 
-        return result;
-    }
+			/*if (LOGGER.isLoggable(TRACE)) {
+				final var scopes = scopesList.getScopeNames();
+				LOGGER.log(TRACE, "  token: |" + this._lineText
+					.substring(this._lastTokenEndIndex >= 0 ? this._lastTokenEndIndex : 0, endIndex)
+					.replace("\n", "\\n")
+					+ '|');
+				for (final String scope : scopes) {
+					LOGGER.log(TRACE, "      * " + scope);
+				}
+			}*/
+
+			this._binaryTokens.add(this._lastTokenEndIndex);
+			this._binaryTokens.add(metadata);
+
+			this._lastTokenEndIndex = endIndex;
+			return;
+		}
+
+		final List<String> scopes = scopesList.getScopeNames();
+
+		/*if (LOGGER.isLoggable(TRACE)) {
+			LOGGER.log(TRACE, "  token: |" +
+				this._lineText.substring(this._lastTokenEndIndex, endIndex).replace("\n", "\\n") + '|');
+			for (final String scope : scopes) {
+				LOGGER.log(TRACE, "      * " + scope);
+			}
+		}*/
+
+		this._tokens.add(new IToken() {
+			private int startIndex = _lastTokenEndIndex;
+
+			@Override
+			public int getStartIndex() {
+				return startIndex;
+			}
+
+			@Override
+			public void setStartIndex(final int startIndex) {
+				this.startIndex = startIndex;
+			}
+
+			@Override
+			public int getEndIndex() {
+				return endIndex;
+			}
+
+			@Override
+			public List<String> getScopes() {
+				return scopes;
+			}
+
+			@Override
+			public String toString() {
+				return "{" +
+					"startIndex: " + startIndex +
+					", endIndex: " + endIndex +
+					", scopes: " + scopes +
+					"}";
+			}
+		});
+
+		this._lastTokenEndIndex = endIndex;
+	}
+
+	IToken[] getResult(final StateStack stack, final int lineLength) {
+		if (!this._tokens.isEmpty() && this._tokens.getLast().getStartIndex() == lineLength - 1) {
+			// pop produced token for newline
+			this._tokens.removeLast();
+		}
+
+		if (this._tokens.isEmpty()) {
+			this._lastTokenEndIndex = -1;
+			this.produce(stack, lineLength);
+			this._tokens.getLast().setStartIndex(0);
+		}
+
+		return this._tokens.toArray(new IToken[0]);
+	}
+
+	int[] getBinaryResult(final StateStack stack, final int lineLength) {
+		if (!this._binaryTokens.isEmpty() && this._binaryTokens.get(_binaryTokens.size() - 2) == lineLength - 1) {
+			// pop produced token for newline
+			removeLastElement(this._binaryTokens);
+			removeLastElement(this._binaryTokens);
+		}
+
+		if (this._binaryTokens.isEmpty()) {
+			this._lastTokenEndIndex = -1;
+			this.produce(stack, lineLength);
+			this._binaryTokens.set(_binaryTokens.size() - 2, 0);
+		}
+
+		return _binaryTokens.stream().mapToInt(Integer::intValue).toArray();
+	}
 }

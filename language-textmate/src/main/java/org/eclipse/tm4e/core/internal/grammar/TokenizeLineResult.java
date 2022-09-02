@@ -1,55 +1,50 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/microsoft/vscode-textmate/
+ * Initial copyright Copyright (C) Microsoft Corporation. All rights reserved.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - Microsoft Corporation: Initial code, written in TypeScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
 package org.eclipse.tm4e.core.internal.grammar;
 
-import org.eclipse.tm4e.core.grammar.StackElement;
-import org.eclipse.tm4e.core.grammar.IToken;
 import org.eclipse.tm4e.core.grammar.ITokenizeLineResult;
 
 /**
- *
  * Result of the line tokenization implementation.
- *
  */
-public class TokenizeLineResult implements ITokenizeLineResult {
+final class TokenizeLineResult<T> implements ITokenizeLineResult<T> {
 
-    private final IToken[] tokens;
-    private final StackElement ruleStack;
+	private final T tokens;
+	private final StateStack ruleStack;
+	private final boolean stoppedEarly;
 
-    public TokenizeLineResult(IToken[] tokens, StackElement ruleStack) {
-        this.tokens = tokens;
-        this.ruleStack = ruleStack;
-    }
+	TokenizeLineResult(final T tokens, final StateStack ruleStack, final boolean stoppedEarly) {
+		this.tokens = tokens;
+		this.ruleStack = ruleStack;
+		this.stoppedEarly = stoppedEarly;
+	}
 
-    @Override
-    public IToken[] getTokens() {
-        return tokens;
-    }
+	@Override
+	public T getTokens() {
+		return tokens;
+	}
 
-    @Override
-    public StackElement getRuleStack() {
-        return ruleStack;
-    }
+	@Override
+	public StateStack getRuleStack() {
+		return ruleStack;
+	}
 
+	@Override
+	public boolean isStoppedEarly() {
+		return stoppedEarly;
+	}
 }

@@ -1,47 +1,50 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/microsoft/vscode-textmate/
+ * Initial copyright Copyright (C) Microsoft Corporation. All rights reserved.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - Microsoft Corporation: Initial code, written in TypeScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
 package org.eclipse.tm4e.core.model;
 
-import java.util.Arrays;
 import java.util.List;
+
+import org.eclipse.tm4e.core.internal.utils.StringUtils;
 
 /**
  * Model tokens changed event.
  *
+ * @see <a href="https://github.com/microsoft/vscode/blob/main/src/vs/editor/common/textModelEvents.ts">
+ *      github.com/microsoft/vscode/blob/main/src/vs/editor/common/textModelEvents.ts</a>
  */
 public class ModelTokensChangedEvent {
 
-    public final List<Range> ranges;
-    public final ITMModel model;
+	public final List<Range> ranges;
+	public final ITMModel model;
 
-    public ModelTokensChangedEvent(Range range, ITMModel model) {
-        this(Arrays.asList(range), model);
-    }
+	public ModelTokensChangedEvent(final Range range, final ITMModel model) {
+		this(List.of(range), model);
+	}
 
-    public ModelTokensChangedEvent(List<Range> ranges, ITMModel model) {
-        this.ranges = ranges;
-        this.model = model;
-    }
+	public ModelTokensChangedEvent(final List<Range> ranges, final ITMModel model) {
+		this.ranges = ranges;
+		this.model = model;
+	}
 
+	@Override
+	public String toString() {
+		return StringUtils.toString(this, sb -> {
+			sb.append("ranges=").append(ranges).append(", ");
+			sb.append("model=").append(model);
+		});
+	}
 }

@@ -49,7 +49,6 @@ import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.text.ContentCreator
 import io.github.rosemoe.sora.text.LineSeparator
-import org.eclipse.tm4e.core.internal.theme.reader.ThemeReader
 import io.github.rosemoe.sora.utils.CrashHandler
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorSearcher
@@ -57,7 +56,8 @@ import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.schemes.*
 import io.github.rosemoe.sora.widget.style.builtin.ScaleCursorAnimator
 import io.github.rosemoe.sorakt.subscribeEvent
-import org.w3c.dom.CharacterData
+import org.eclipse.tm4e.core.registry.IGrammarSource
+import org.eclipse.tm4e.core.registry.IThemeSource
 import java.io.*
 import java.util.regex.PatternSyntaxException
 
@@ -147,11 +147,14 @@ class MainActivity : AppCompatActivity() {
 
         ensureTextmateTheme()
         val editor = binding.editor
-        val language: Language = TextMateLanguage.create(
-            "java.tmLanguage.json",
-            assets.open("textmate/java/syntaxes/java.tmLanguage.json"),
+        val language = TextMateLanguage.create(
+            IGrammarSource.fromInputStream(
+                assets.open("textmate/java/syntaxes/java.tmLanguage.json"),
+                "java.tmLanguage.json",
+                null
+            ),
             InputStreamReader(assets.open("textmate/java/language-configuration.json")),
-            (editor.colorScheme as TextMateColorScheme).rawTheme
+            (editor.colorScheme as TextMateColorScheme).themeSource
         )
         editor.setEditorLanguage(language)
 
@@ -165,11 +168,13 @@ class MainActivity : AppCompatActivity() {
         val container = DiagnosticsContainer()
         for (i in 0 until editor.text.lineCount) {
             val index = editor.text.getCharIndex(i, 0)
-            container.addDiagnostic(DiagnosticRegion(
-                index,
-                index + editor.text.getColumnCount(i),
-                DiagnosticRegion.SEVERITY_ERROR
-            ))
+            container.addDiagnostic(
+                DiagnosticRegion(
+                    index,
+                    index + editor.text.getColumnCount(i),
+                    DiagnosticRegion.SEVERITY_ERROR
+                )
+            )
         }
         editor.diagnostics = container
     }
@@ -178,11 +183,12 @@ class MainActivity : AppCompatActivity() {
         val editor = binding.editor
         var editorColorScheme = editor.colorScheme
         if (editorColorScheme !is TextMateColorScheme) {
-            val iRawTheme = ThemeReader.readThemeSync(
+            val themeSource = IThemeSource.fromInputStream(
+                assets.open("textmate/QuietLight.tmTheme"),
                 "QuietLight.tmTheme",
-                assets.open("textmate/QuietLight.tmTheme")
+                null
             )
-            editorColorScheme = TextMateColorScheme.create(iRawTheme)
+            editorColorScheme = TextMateColorScheme.create(themeSource)
             editor.colorScheme = editorColorScheme
         }
     }
@@ -247,15 +253,26 @@ class MainActivity : AppCompatActivity() {
                     cursor.leftColumn
                 )
                 if (char.isLowSurrogate() && cursor.leftColumn > 0) {
-                    "(" + String(charArrayOf(binding.editor.text.charAt(
-                        cursor.leftLine,
-                        cursor.leftColumn - 1
-                    ), char))  + ")"
-                } else if(char.isHighSurrogate() && cursor.leftColumn + 1 < binding.editor.text.getColumnCount(cursor.leftLine)){
-                    "(" + String(charArrayOf(char, binding.editor.text.charAt(
-                        cursor.leftLine,
-                        cursor.leftColumn + 1
-                    )))  + ")"
+                    "(" + String(
+                        charArrayOf(
+                            binding.editor.text.charAt(
+                                cursor.leftLine,
+                                cursor.leftColumn - 1
+                            ), char
+                        )
+                    ) + ")"
+                } else if (char.isHighSurrogate() && cursor.leftColumn + 1 < binding.editor.text.getColumnCount(
+                        cursor.leftLine
+                    )
+                ) {
+                    "(" + String(
+                        charArrayOf(
+                            char, binding.editor.text.charAt(
+                                cursor.leftLine,
+                                cursor.leftColumn + 1
+                            )
+                        )
+                    ) + ")"
                 } else {
                     "(" + escapeIfNecessary(
                         binding.editor.text.charAt(
@@ -285,17 +302,21 @@ class MainActivity : AppCompatActivity() {
             //TextMateLanguage only support TextMateColorScheme
             var editorColorScheme = binding.editor.colorScheme
             if (editorColorScheme !is TextMateColorScheme) {
-                val iRawTheme = ThemeReader.readThemeSync(
+                val themeSource = IThemeSource.fromInputStream(
+                    assets.open("textmate/QuietLight.tmTheme"),
                     "QuietLight.tmTheme",
-                    assets.open("textmate/QuietLight.tmTheme")
+                    null
                 )
-                editorColorScheme = TextMateColorScheme.create(iRawTheme)
+                editorColorScheme = TextMateColorScheme.create(themeSource)
                 binding.editor.colorScheme = editorColorScheme
             }
-            val language: Language = TextMateLanguage.create(
-                result.path,
-                contentResolver.openInputStream(result),
-                (editorColorScheme as TextMateColorScheme).rawTheme
+            val language = TextMateLanguage.create(
+                IGrammarSource.fromInputStream(
+                    contentResolver.openInputStream(result),
+                    result.path, null
+                ),
+                null,
+                (editorColorScheme as TextMateColorScheme).themeSource
             )
             binding.editor.setEditorLanguage(language)
         } catch (e: Exception) {
@@ -306,8 +327,9 @@ class MainActivity : AppCompatActivity() {
     private val loadTMTLauncher = registerForActivityResult(GetContent()) { result: Uri? ->
         try {
             if (result == null) return@registerForActivityResult
-            val iRawTheme = ThemeReader.readThemeSync(
-                result.path, contentResolver.openInputStream(result)
+            val iRawTheme = IThemeSource.fromInputStream(
+                contentResolver.openInputStream(result), result.path,
+                null
             )
             val colorScheme = TextMateColorScheme.create(iRawTheme)
             binding.editor.colorScheme = colorScheme
@@ -387,10 +409,13 @@ class MainActivity : AppCompatActivity() {
                             //TextMateLanguage only support TextMateColorScheme
                             ensureTextmateTheme()
                             val language: Language = TextMateLanguage.create(
-                                "java.tmLanguage.json",
-                                assets.open("textmate/java/syntaxes/java.tmLanguage.json"),
+                                IGrammarSource.fromInputStream(
+                                    assets.open("textmate/java/syntaxes/java.tmLanguage.json"),
+                                    "java.tmLanguage.json",
+                                    null
+                                ),
                                 InputStreamReader(assets.open("textmate/java/language-configuration.json")),
-                                (editor.colorScheme as TextMateColorScheme).rawTheme
+                                (editor.colorScheme as TextMateColorScheme).themeSource
                             )
                             editor.setEditorLanguage(language)
                         } catch (e: Exception) {
@@ -398,11 +423,14 @@ class MainActivity : AppCompatActivity() {
                         }
                         2 -> try {
                             ensureTextmateTheme()
-                            val language: Language = TextMateLanguage.create(
-                                "Kotlin.tmLanguage",
-                                assets.open("textmate/kotlin/syntaxes/Kotlin.tmLanguage"),
+                            val language = TextMateLanguage.create(
+                                IGrammarSource.fromInputStream(
+                                    assets.open("textmate/kotlin/syntaxes/Kotlin.tmLanguage"),
+                                    "Kotlin.tmLanguage",
+                                    null
+                                ),
                                 InputStreamReader(assets.open("textmate/kotlin/language-configuration.json")),
-                                (editor.colorScheme as TextMateColorScheme).rawTheme
+                                (editor.colorScheme as TextMateColorScheme).themeSource
                             )
                             editor.setEditorLanguage(language)
                         } catch (e: Exception) {
@@ -410,11 +438,14 @@ class MainActivity : AppCompatActivity() {
                         }
                         3 -> try {
                             ensureTextmateTheme()
-                            val language: Language = TextMateLanguage.create(
-                                "Python.tmLanguage.json",
-                                assets.open("textmate/python/syntaxes/python.tmLanguage.json"),
+                            val language = TextMateLanguage.create(
+                                IGrammarSource.fromInputStream(
+                                    assets.open("textmate/python/syntaxes/Python.tmLanguage.json"),
+                                    "Python.tmLanguage.json",
+                                    null
+                                ),
                                 InputStreamReader(assets.open("textmate/python/language-configuration.json")),
-                                (editor.colorScheme as TextMateColorScheme).rawTheme
+                                (editor.colorScheme as TextMateColorScheme).themeSource
                             )
                             editor.setEditorLanguage(language)
                         } catch (e: Exception) {
@@ -470,43 +501,48 @@ class MainActivity : AppCompatActivity() {
                         4 -> editor.colorScheme = SchemeVS2019()
                         5 -> editor.colorScheme = SchemeNotepadXX()
                         6 -> try {
-                            val iRawTheme = ThemeReader.readThemeSync(
+
+                            val themeSource = IThemeSource.fromInputStream(
+                                assets.open("textmate/QuietLight.tmTheme"),
                                 "QuietLight.tmTheme",
-                                assets.open("textmate/QuietLight.tmTheme")
+                                null
                             )
-                            val colorScheme = TextMateColorScheme.create(iRawTheme)
+                            val colorScheme = TextMateColorScheme.create(themeSource)
                             editor.colorScheme = colorScheme
                             val language = editor.editorLanguage
                             if (language is TextMateLanguage) {
-                                language.updateTheme(iRawTheme)
+                                language.updateTheme(themeSource)
                             }
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
                         7 -> try {
-                            val iRawTheme = ThemeReader.readThemeSync(
+                            val themeSource = IThemeSource.fromInputStream(
+                                assets.open("textmate/darcula.json"),
                                 "darcula.json",
-                                assets.open("textmate/darcula.json")
+                                null
                             )
-                            val colorScheme = TextMateColorScheme.create(iRawTheme)
+
+                            val colorScheme = TextMateColorScheme.create(themeSource)
                             editor.colorScheme = colorScheme
                             val language = editor.editorLanguage
                             if (language is TextMateLanguage) {
-                                language.updateTheme(iRawTheme)
+                                language.updateTheme(themeSource)
                             }
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
                         8 -> try {
-                            val iRawTheme = ThemeReader.readThemeSync(
+                            val themeSource = IThemeSource.fromInputStream(
+                                assets.open("textmate/abyss-color-theme.json"),
                                 "abyss-color-theme.json",
-                                assets.open("textmate/abyss-color-theme.json")
+                                null
                             )
-                            val colorScheme = TextMateColorScheme.create(iRawTheme)
+                            val colorScheme = TextMateColorScheme.create(themeSource)
                             editor.colorScheme = colorScheme
                             val language = editor.editorLanguage
                             if (language is TextMateLanguage) {
-                                language.updateTheme(iRawTheme)
+                                language.updateTheme(themeSource)
                             }
                         } catch (e: Exception) {
                             e.printStackTrace()

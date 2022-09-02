@@ -1,85 +1,76 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/microsoft/vscode-textmate/
+ * Initial copyright Copyright (C) Microsoft Corporation. All rights reserved.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - Microsoft Corporation: Initial code, written in TypeScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
 package org.eclipse.tm4e.core.internal.types;
 
 import java.util.Collection;
 
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tm4e.core.internal.rule.RuleId;
+
+/**
+ * @see <a href=
+ *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/rawGrammar.ts">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/rawGrammar.ts</a>
+ */
 public interface IRawRule {
 
-    Integer getId();
+	@Nullable
+	RuleId getId();
 
-    void setId(Integer id);
+	void setId(RuleId id);
 
-    String getInclude();
+	@Nullable
+	String getInclude();
 
-    void setInclude(String include);
+	@Nullable
+	String getName();
 
-    String getName();
+	@Nullable
+	String getContentName();
 
-    void setName(String name);
+	@Nullable
+	String getMatch();
 
-    String getContentName();
+	@Nullable
+	IRawCaptures getCaptures();
 
-    void setContentName(String name);
+	@Nullable
+	String getBegin();
 
-    String getMatch();
+	@Nullable
+	IRawCaptures getBeginCaptures();
 
-    void setMatch(String match);
+	@Nullable
+	String getEnd();
 
-    IRawCaptures getCaptures();
+	@Nullable
+	String getWhile();
 
-    void setCaptures(IRawCaptures captures);
+	@Nullable
+	IRawCaptures getEndCaptures();
 
-    String getBegin();
+	@Nullable
+	IRawCaptures getWhileCaptures();
 
-    void setBegin(String begin);
+	@Nullable
+	Collection<IRawRule> getPatterns();
 
-    IRawCaptures getBeginCaptures();
+	@Nullable
+	IRawRepository getRepository();
 
-    void setBeginCaptures(IRawCaptures beginCaptures);
-
-    String getEnd();
-
-    void setEnd(String end);
-
-    String getWhile();
-
-    IRawCaptures getEndCaptures();
-
-    void setEndCaptures(IRawCaptures endCaptures);
-
-    IRawCaptures getWhileCaptures();
-
-    Collection<IRawRule> getPatterns();
-
-    void setPatterns(Collection<IRawRule> patterns);
-
-    IRawRepository getRepository();
-
-    void setRepository(IRawRepository repository);
-
-    boolean isApplyEndPatternLast();
-
-    void setApplyEndPatternLast(boolean applyEndPatternLast);
+	boolean isApplyEndPatternLast();
 }

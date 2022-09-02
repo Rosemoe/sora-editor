@@ -1,66 +1,64 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/atom/node-oniguruma
+ * Initial copyright Copyright (c) 2013 GitHub Inc.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - GitHub Inc.: Initial code, written in JavaScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
-
 package org.eclipse.tm4e.core.internal.oniguruma;
 
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class OnigSearcher {
+import org.eclipse.jdt.annotation.Nullable;
 
-    private final List<OnigRegExp> regExps;
+/**
+ * @see <a href="https://github.com/atom/node-oniguruma/blob/master/src/onig-searcher.cc">
+ *      github.com/atom/node-oniguruma/blob/master/src/onig-searcher.cc</a>
+ */
+final class OnigSearcher {
 
-    public OnigSearcher(String[] regexps) {
-        this.regExps = Arrays.stream(regexps).map(OnigRegExp::new).collect(Collectors.toList());
-    }
+	private final List<OnigRegExp> regExps;
 
-    public OnigResult search(OnigString source, int charOffset) {
-        int byteOffset = source.convertUtf16OffsetToUtf8(charOffset);
+	OnigSearcher(final Collection<String> regExps) {
+		this.regExps = regExps.stream().map(OnigRegExp::new).collect(Collectors.toList());
+	}
 
-        int bestLocation = 0;
-        OnigResult bestResult = null;
-        int index = 0;
+	@Nullable
+	OnigResult search(final OnigString source, final int charOffset) {
+		final int byteOffset = source.getByteIndexOfChar(charOffset);
 
-        for (OnigRegExp regExp : regExps) {
-            OnigResult result = regExp.search(source, byteOffset);
-            if (result != null && result.count() > 0) {
-                int location = result.locationAt(0);
+		int bestLocation = 0;
+		OnigResult bestResult = null;
+		int index = 0;
 
-                if (bestResult == null || location < bestLocation) {
-                    bestLocation = location;
-                    bestResult = result;
-                    bestResult.setIndex(index);
-                }
+		for (final OnigRegExp regExp : regExps) {
+			final OnigResult result = regExp.search(source, byteOffset);
+			if (result != null && result.count() > 0) {
+				final int location = result.locationAt(0);
 
-                if (location == byteOffset) {
-                    break;
-                }
-            }
-            index++;
-        }
-        return bestResult;
-    }
+				if (bestResult == null || location < bestLocation) {
+					bestLocation = location;
+					bestResult = result;
+					bestResult.setIndex(index);
+				}
 
+				if (location == byteOffset) {
+					break;
+				}
+			}
+			index++;
+		}
+		return bestResult;
+	}
 }

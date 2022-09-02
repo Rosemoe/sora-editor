@@ -1,101 +1,116 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/microsoft/vscode-textmate/
+ * Initial copyright Copyright (C) Microsoft Corporation. All rights reserved.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - Microsoft Corporation: Initial code, written in TypeScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
 package org.eclipse.tm4e.core.grammar;
 
+import java.time.Duration;
 import java.util.Collection;
+
+import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * TextMate grammar API.
  *
- * @see <a href="https://github.com/Microsoft/vscode-textmate/blob/master/src/main.ts">https://github.com/Microsoft/vscode-textmate/blob/master/src/main.ts</a>
- *
+ * @see <a href="https://github.com/microsoft/vscode-textmate/blob/main/src/main.ts">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/main.ts</a>
  */
 public interface IGrammar {
 
-    /**
-     * Returns the name of the grammar.
-     *
-     * @return the name of the grammar.
-     */
-    String getName();
+	/**
+	 * Returns the name of the grammar.
+	 *
+	 * @return the name of the grammar.
+	 */
+	@Nullable
+	String getName();
 
-    /**
-     * Returns the scope name of the grammar.
-     *
-     * @return the scope name of the grammar.
-     */
-    String getScopeName();
+	/**
+	 * Returns the scope name of the grammar.
+	 *
+	 * @return the scope name of the grammar.
+	 */
+	String getScopeName();
 
-    /**
-     * Returns the supported file types and null otherwise.
-     *
-     * @return the supported file types and null otherwise.
-     */
-    Collection<String> getFileTypes();
+	/**
+	 * Returns the supported file types and null otherwise.
+	 *
+	 * @return the supported file types and null otherwise.
+	 */
+	Collection<String> getFileTypes();
 
-    /**
-     * Tokenize `lineText`.
-     *
-     * @param lineText
-     *            the line text to tokenize.
-     * @return the result of the tokenization.
-     */
-    ITokenizeLineResult tokenizeLine(String lineText);
+	/**
+	 * Tokenize `lineText`.
+	 *
+	 * @param lineText
+	 *        the line text to tokenize.
+	 *
+	 * @return the result of the tokenization.
+	 */
+	ITokenizeLineResult<IToken[]> tokenizeLine(String lineText);
 
-    /**
-     * Tokenize `lineText` using previous line state `prevState`.
-     *
-     * @param lineText
-     *            the line text to tokenize.
-     * @param prevState
-     *            previous line state.
-     * @return the result of the tokenization.
-     */
-    ITokenizeLineResult tokenizeLine(String lineText, StackElement prevState);
+	/**
+	 * Tokenize `lineText` using previous line state `prevState`.
+	 *
+	 * @param lineText the line text to tokenize.
+	 * @param prevState previous line state.
+	 * @param timeLimit duration after which tokenization is aborted, in which case the returned result
+	 *        will have {@link ITokenizeLineResult#isStoppedEarly()} set to <code>true</code>
+	 *
+	 * @return the result of the tokenization.
+	 */
+	ITokenizeLineResult<IToken[]> tokenizeLine(String lineText, @Nullable IStateStack prevState,
+		@Nullable Duration timeLimit);
 
-    /**
-     * Tokenize `lineText` using previous line state `prevState`.
-     * The result contains the tokens in binary format, resolved with the following information:
-     *  - language
-     *  - token type (regex, string, comment, other)
-     *  - font style
-     *  - foreground color
-     *  - background color
-     * e.g. for getting the languageId: `(metadata & MetadataConsts.LANGUAGEID_MASK) >>> MetadataConsts.LANGUAGEID_OFFSET`
-     */
-    ITokenizeLineResult2 tokenizeLine2(String lineText);
+	/**
+	 * Tokenize `lineText` using previous line state `prevState`.
+	 * The result contains the tokens in binary format, resolved with the following information:
+	 *
+	 * <pre>
+	 * - language
+	 * - token type (regex, string, comment, other)
+	 * - font style
+	 * - foreground color
+	 * - background color
+	 * </pre>
+	 *
+	 * e.g. for getting the languageId:
+	 * <code>(token & EncodedTokenDataConsts.LANGUAGEID_MASK) >>> EncodedTokenDataConsts.LANGUAGEID_OFFSET</code>
+	 */
+	ITokenizeLineResult<int[]> tokenizeLine2(String lineText);
 
-    /**
-     * Tokenize `lineText` using previous line state `prevState`.
-     * The result contains the tokens in binary format, resolved with the following information:
-     *  - language
-     *  - token type (regex, string, comment, other)
-     *  - font style
-     *  - foreground color
-     *  - background color
-     * e.g. for getting the languageId: `(metadata & MetadataConsts.LANGUAGEID_MASK) >>> MetadataConsts.LANGUAGEID_OFFSET`
-     */
-    ITokenizeLineResult2 tokenizeLine2(String lineText, StackElement prevState);
-
+	/**
+	 * Tokenize `lineText` using previous line state `prevState`. *
+	 *
+	 * <pre>
+	 * The result contains the tokens in binary format, resolved with the following information:
+	 * - language
+	 * - token type (regex, string, comment, other)
+	 * - font style
+	 * - foreground color
+	 * - background color
+	 * </pre>
+	 *
+	 * e.g. for getting the languageId:
+	 * <code>(token & EncodedTokenDataConsts.LANGUAGEID_MASK) >>> EncodedTokenDataConsts.LANGUAGEID_OFFSET</code>
+	 *
+	 * @param lineText the line text to tokenize.
+	 * @param prevState previous line state.
+	 * @param timeLimit duration after which tokenization is aborted, in which case the returned result
+	 *        will have {@link ITokenizeLineResult#isStoppedEarly()} set to <code>true</code>
+	 */
+	ITokenizeLineResult<int[]> tokenizeLine2(String lineText, @Nullable IStateStack prevState,
+		@Nullable Duration timeLimit);
 }

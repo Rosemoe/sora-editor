@@ -1,129 +1,98 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/atom/node-oniguruma
+ * Initial copyright Copyright (c) 2013 GitHub Inc.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - GitHub Inc.: Initial code, written in JavaScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
 package org.eclipse.tm4e.core.internal.oniguruma;
 
-class OnigNextMatchResult implements IOnigNextMatchResult {
+import java.util.Arrays;
 
-    private final int index;
+import org.eclipse.jdt.annotation.Nullable;
 
-    private final IOnigCaptureIndex[] captureIndices;
+/**
+ * @see <a href="https://github.com/atom/node-oniguruma/blob/master/src/onig-scanner.cc">
+ *      github.com/atom/node-oniguruma/blob/master/src/onig-scanner.cc</a>
+ */
+public final class OnigNextMatchResult {
 
-    public OnigNextMatchResult(OnigResult result, OnigString source) {
-        this.index = result.getIndex();
-        this.captureIndices = captureIndicesForMatch(result, source);
-    }
+	private final int index;
+	private final OnigCaptureIndex[] captureIndices;
 
-    private static IOnigCaptureIndex[] captureIndicesForMatch(OnigResult result, OnigString source) {
-        int resultCount = result.count();
-        IOnigCaptureIndex[] captures = new IOnigCaptureIndex[resultCount];
-        for (int index = 0; index < resultCount; index++) {
-            int captureStart = source.convertUtf8OffsetToUtf16(result.locationAt(index));
-            int captureEnd = source.convertUtf8OffsetToUtf16(result.locationAt(index) + result.lengthAt(index));
-            captures[index] = new OnigCaptureIndex(index, captureStart, captureEnd);
-        }
-        return captures;
-    }
+	OnigNextMatchResult(final OnigResult result, final OnigString source) {
+		this.index = result.getIndex();
+		this.captureIndices = captureIndicesOfMatch(result, source);
+	}
 
-    @Override
-    public int getIndex() {
-        return index;
-    }
+	private OnigCaptureIndex[] captureIndicesOfMatch(final OnigResult result, final OnigString source) {
+		final int resultCount = result.count();
+		final var captures = new OnigCaptureIndex[resultCount];
+		for (int i = 0; i < resultCount; i++) {
+			final int loc = result.locationAt(i);
+			final int captureStart = source.getCharIndexOfByte(loc);
+			final int captureEnd = source.getCharIndexOfByte(loc + result.lengthAt(i));
+			captures[i] = new OnigCaptureIndex(i, captureStart, captureEnd);
+		}
+		return captures;
+	}
 
-    @Override
-    public IOnigCaptureIndex[] getCaptureIndices() {
-        return captureIndices;
-    }
+	@Override
+	public boolean equals(@Nullable final Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null || getClass() != obj.getClass())
+			return false;
+		final var other = (OnigNextMatchResult) obj;
+		return index == other.index
+				&& Arrays.equals(captureIndices, other.captureIndices);
+	}
 
-    @Override
-    public String toString() {
-        StringBuilder result = new StringBuilder();
-        result.append("{\n");
-        result.append("  \"index\": ");
-        result.append(getIndex());
-        result.append(",\n");
-        result.append("  \"captureIndices\": [\n");
-        int i = 0;
-        for (IOnigCaptureIndex captureIndex : getCaptureIndices()) {
-            if (i > 0) {
-                result.append(",\n");
-            }
-            result.append("    ");
-            result.append(captureIndex);
-            i++;
-        }
-        result.append("\n");
-        result.append("  ]\n");
-        result.append("}");
-        return result.toString();
-    }
+	public OnigCaptureIndex[] getCaptureIndices() {
+		return captureIndices;
+	}
 
-    private static class OnigCaptureIndex implements IOnigCaptureIndex {
+	public int getIndex() {
+		return index;
+	}
 
-        private final int index;
-        private final int start;
-        private final int end;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + index;
+		result = prime * result + Arrays.hashCode(captureIndices);
+		return result;
+	}
 
-        public OnigCaptureIndex(int index, int start, int end) {
-            this.index = index;
-            this.start = start >= 0 ? start : 0;
-            this.end = end >= 0 ? end : 0;
-        }
-
-        @Override
-        public int getIndex() {
-            return index;
-        }
-
-        @Override
-        public int getStart() {
-            return start;
-        }
-
-        @Override
-        public int getEnd() {
-            return end;
-        }
-
-        @Override
-        public int getLength() {
-            return end - start;
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder result = new StringBuilder();
-            result.append("{\"index\": ");
-            result.append(getIndex());
-            result.append(", \"start\": ");
-            result.append(getStart());
-            result.append(", \"end\": ");
-            result.append(getEnd());
-            result.append(", \"length\": ");
-            result.append(getLength());
-            result.append("}");
-            return result.toString();
-        }
-    }
-
+	@Override
+	public String toString() {
+		final var result = new StringBuilder("{\n");
+		result.append("  \"index\": ");
+		result.append(getIndex());
+		result.append(",\n");
+		result.append("  \"captureIndices\": [\n");
+		int i = 0;
+		for (final OnigCaptureIndex captureIndex : getCaptureIndices()) {
+			if (i > 0) {
+				result.append(",\n");
+			}
+			result.append("    ");
+			result.append(captureIndex);
+			i++;
+		}
+		result.append("\n");
+		result.append("  ]\n");
+		result.append("}");
+		return result.toString();
+	}
 }

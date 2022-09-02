@@ -1,72 +1,72 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
- *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * Angelo Zerr <angelo.zerr@gmail.com> - initial API and implementation
  */
 package org.eclipse.tm4e.core.internal.theme;
-
-import org.eclipse.tm4e.core.theme.IRawTheme;
-import org.eclipse.tm4e.core.theme.IRawThemeSetting;
-import org.eclipse.tm4e.core.theme.IThemeSetting;
 
 import java.util.Collection;
 import java.util.HashMap;
 
-public class ThemeRaw extends HashMap<String, Object> implements IRawTheme, IRawThemeSetting, IThemeSetting {
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tm4e.core.internal.parser.PropertySettable;
 
-    private static final long serialVersionUID = -3622927264735492387L;
+public final class ThemeRaw extends HashMap<String, @Nullable Object>
+		implements IRawTheme, IRawThemeSetting, IThemeSetting, PropertySettable<Object> {
 
-    @Override
-    public String getName() {
-        return (String) super.get("name");
-    }
+	private static final long serialVersionUID = 1L;
 
-    @Override
-    public Collection<IRawThemeSetting> getSettings() {
-        return (Collection<IRawThemeSetting>) super.get("settings");
-    }
+	@Nullable
+	@Override
+	public String getName() {
+		return (String) super.get("name");
+	}
 
-    @Override
-    public Object getScope() {
-        return super.get("scope");
-    }
+	@SuppressWarnings("unchecked")
+	@Nullable
+	@Override
+	public Collection<IRawThemeSetting> getSettings() {
+		return (Collection<IRawThemeSetting>) super.get("settings");
+	}
 
-    @Override
-    public IThemeSetting getSetting() {
-        return (IThemeSetting) super.get("settings");
-    }
+	@Nullable
+	@Override
+	public Object getScope() {
+		return super.get("scope");
+	}
 
-    @Override
-    public Object getFontStyle() {
-        return super.get("fontStyle");
-    }
+	@Nullable
+	@Override
+	public IThemeSetting getSetting() {
+		return (IThemeSetting) super.get("settings");
+	}
 
-    @Override
-    public String getBackground() {
-        return (String) super.get("background");
-    }
+	@Nullable
+	@Override
+	public Object getFontStyle() {
+		return super.get("fontStyle");
+	}
 
-    @Override
-    public String getForeground() {
-        return (String) super.get("foreground");
-    }
+	@Nullable
+	@Override
+	public String getBackground() {
+		return (String) super.get("background");
+	}
 
+	@Nullable
+	@Override
+	public String getForeground() {
+		return (String) super.get("foreground");
+	}
+
+	@Override
+	public void setProperty(final String name, final Object value) {
+		put(name, value);
+	}
 }

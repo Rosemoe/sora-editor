@@ -51,9 +51,12 @@ dependencies {
     implementation("com.google.code.gson:gson:${Versions.gsonVersion}")
     implementation("org.jruby.jcodings:jcodings:${Versions.jcodingsVersion}")
     implementation("org.jruby.joni:joni:${Versions.joniVersion}")
-    implementation("org.apache.xmlgraphics:batik-css:${Versions.batikCssVersion}")
-    implementation("org.apache.xmlgraphics:batik-util:${Versions.batikUtilVersion}")
     implementation("xerces:xercesImpl:${Versions.xercesImplVersion}")
+
+    implementation("org.yaml:snakeyaml:1.30")
+    implementation("org.eclipse.jdt:org.eclipse.jdt.annotation:2.2.600")
+    implementation("com.google.guava:guava:30.0-android")
+
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")

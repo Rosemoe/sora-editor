@@ -25,33 +25,40 @@ package io.github.rosemoe.sora.langs.textmate;
 
 import android.graphics.Color;
 
+import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.tm4e.core.internal.theme.IRawTheme;
+import org.eclipse.tm4e.core.internal.theme.Theme;
 import org.eclipse.tm4e.core.internal.theme.ThemeRaw;
-import org.eclipse.tm4e.core.theme.IRawTheme;
-import org.eclipse.tm4e.core.theme.Theme;
+import org.eclipse.tm4e.core.internal.theme.ThemeReader;
+import org.eclipse.tm4e.core.registry.IThemeSource;
+
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 public class TextMateColorScheme extends EditorColorScheme {
 
     private final Theme theme;
-    private final IRawTheme iRawTheme;
+    private final IThemeSource themeSource;
 
-    public TextMateColorScheme(IRawTheme iRawTheme) {
-        this.iRawTheme = iRawTheme;
-        this.theme = Theme.createFromRawTheme(iRawTheme);
+    private final IRawTheme rawTheme;
+
+    public TextMateColorScheme(IThemeSource themeSource) throws Exception {
+        this.themeSource = themeSource;
+        this.rawTheme = ThemeReader.readTheme(themeSource);
+        this.theme = Theme.createFromRawTheme(rawTheme, null);
         applyDefault();
     }
 
-    public static TextMateColorScheme create(IRawTheme iRawTheme) {
-        return new TextMateColorScheme(iRawTheme);
+    public static TextMateColorScheme create(IThemeSource themeSource) throws Exception {
+        return new TextMateColorScheme(themeSource);
     }
 
     @Override
     public void applyDefault() {
-        if (iRawTheme != null) {
+        if (rawTheme != null) {
             super.applyDefault();
-            ThemeRaw themeRaw = (ThemeRaw) ((List<?>) iRawTheme.getSettings()).get(0);
+            ThemeRaw themeRaw = (ThemeRaw) ((List<?>) rawTheme.getSettings()).get(0);
             themeRaw = (ThemeRaw) themeRaw.getSetting();
 
             setColor(LINE_DIVIDER, Color.TRANSPARENT);
@@ -89,9 +96,9 @@ public class TextMateColorScheme extends EditorColorScheme {
             }
 
             //TMTheme seems to have no fields to control BLOCK_LINE colors
-            int blockLineColor=((getColor(WHOLE_BACKGROUND)+getColor(TEXT_NORMAL))/2)&0x00FFFFFF|0x88000000;
+            int blockLineColor = ((getColor(WHOLE_BACKGROUND) + getColor(TEXT_NORMAL)) / 2) & 0x00FFFFFF | 0x88000000;
             setColor(BLOCK_LINE, blockLineColor);
-            int blockLineColorCur=(blockLineColor)|0xFF000000;
+            int blockLineColorCur = (blockLineColor) | 0xFF000000;
             setColor(BLOCK_LINE_CURRENT, blockLineColorCur);
         }
 
@@ -118,7 +125,11 @@ public class TextMateColorScheme extends EditorColorScheme {
     }
 
     public IRawTheme getRawTheme() {
-        return iRawTheme;
+        return rawTheme;
     }
 
+
+    public IThemeSource getThemeSource() {
+        return themeSource;
+    }
 }

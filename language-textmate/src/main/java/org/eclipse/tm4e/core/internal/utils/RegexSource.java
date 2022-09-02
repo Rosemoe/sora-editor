@@ -1,95 +1,149 @@
-/*
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2022  Rosemoe
+/**
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
+ * SPDX-License-Identifier: EPL-2.0
  *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ * Initial code from https://github.com/microsoft/vscode-textmate/
+ * Initial copyright Copyright (C) Microsoft Corporation. All rights reserved.
+ * Initial license: MIT
  *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
+ * Contributors:
+ * - Microsoft Corporation: Initial code, written in TypeScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
  */
 package org.eclipse.tm4e.core.internal.utils;
-
-import org.eclipse.tm4e.core.internal.oniguruma.IOnigCaptureIndex;
 
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RegexSource {
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigCaptureIndex;
 
-    //fix for android
-    private static final Pattern CAPTURING_REGEX_SOURCE = Pattern
-            .compile("\\$(\\d+)|\\$\\{(\\d+):/(downcase|upcase)\\}");
+/**
+ * @see <a href=
+ *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/utils.ts#L59">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/utils.ts</a>
+ */
+public final class RegexSource {
 
-//	private static final Pattern CAPTURING_REGEX_SOURCE = Pattern
-//			.compile("\\$(\\d+)|\\$\\{(\\d+):\\/(downcase|upcase)}");
+	/*private static final Pattern CAPTURING_REGEX_SOURCE = Pattern
+		.compile("\\$(\\d+)|\\$\\{(\\d+):\\/(downcase|upcase)}");*/
+
+	//fix for android
+	private static final Pattern CAPTURING_REGEX_SOURCE = Pattern
+			.compile("\\$(\\d+)|\\$\\{(\\d+):/(downcase|upcase)\\}");
 
 
-    /**
-     * Helper class, access members statically
-     */
-    private RegexSource() {
-    }
+	/**
+	 * Escapes/prefixes RegEx meta characters with a backslash in the given string.
+	 *
+	 * It is a non-regex based faster alternative to the <a href=
+	 * "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/rule.ts#L159">TypeScript
+	 * implementation</a>:
+	 *
+	 * <pre>
+	 * function escapeRegExpCharacters(value: string): string {
+	 *   return value.replace(/[\-\\\{\}\*\+\?\|\^\$\.\,\[\]\(\)\#\s]/g, '\\$&');
+	 * }
+	 * </pre>
+	 *
+	 * @return a string with the RegEx meta characters escaped
+	 */
+	public static String escapeRegExpCharacters(final CharSequence value) {
+		final int valueLen = value.length();
+		final var sb = new StringBuilder(valueLen);
+		for (int i = 0; i < valueLen; i++) {
+			final char ch = value.charAt(i);
+			switch (ch) {
+			case '-':
+			case '\\':
+			case '{':
+			case '}':
+			case '*':
+			case '+':
+			case '?':
+			case '|':
+			case '^':
+			case '$':
+			case '.':
+			case ',':
+			case '[':
+			case ']':
+			case '(':
+			case ')':
+			case '#':
+				/* escaping white space chars is actually not necessary:
+				case ' ':
+				case '\t':
+				case '\n':
+				case '\f':
+				case '\r':
+				case 0x0B: // vertical tab \v
+				*/
+				sb.append('\\');
+			}
+			sb.append(ch);
+		}
+		return sb.toString();
+	}
 
-    public static boolean hasCaptures(String regexSource) {
-        if (regexSource == null) {
-            return false;
-        }
-        return CAPTURING_REGEX_SOURCE.matcher(regexSource).find();
-    }
+	public static boolean hasCaptures(@Nullable final CharSequence regexSource) {
+		if (regexSource == null) {
+			return false;
+		}
+		return CAPTURING_REGEX_SOURCE.matcher(regexSource).find();
+	}
 
-    public static String replaceCaptures(String regexSource, String captureSource, IOnigCaptureIndex[] captureIndices) {
-        Matcher m = CAPTURING_REGEX_SOURCE.matcher(regexSource);
-        StringBuffer result = new StringBuffer();
-        while (m.find()) {
-            String match = m.group();
-            String replacement = getReplacement(match, captureSource, captureIndices);
-            m.appendReplacement(result, replacement);
-        }
-        m.appendTail(result);
-        return result.toString();
-    }
+	public static String replaceCaptures(final CharSequence regexSource, final CharSequence captureSource,
+		final OnigCaptureIndex[] captureIndices) {
+		final Matcher m = CAPTURING_REGEX_SOURCE.matcher(regexSource);
+		final var result = new StringBuffer();
+		while (m.find()) {
+			final String match = m.group();
+			final String replacement = getReplacement(match, captureSource, captureIndices);
+			m.appendReplacement(result, replacement);
+		}
+		m.appendTail(result);
+		return result.toString();
+	}
 
-    private static String getReplacement(String match, String captureSource, IOnigCaptureIndex[] captureIndices) {
-        int index = -1;
-        String command = null;
-        int doublePointIndex = match.indexOf(':');
-        if (doublePointIndex != -1) {
-            index = Integer.parseInt(match.substring(2, doublePointIndex));
-            command = match.substring(doublePointIndex + 2, match.length() - 1);
-        } else {
-            index = Integer.parseInt(match.substring(1, match.length()));
-        }
-        IOnigCaptureIndex capture = captureIndices.length > index ? captureIndices[index] : null;
-        if (capture != null) {
-            String result = captureSource.substring(capture.getStart(), capture.getEnd());
-            // Remove leading dots that would make the selector invalid
-            while (result.length() > 0 && result.charAt(0) == '.') {
-                result = result.substring(1);
-            }
-            if ("downcase".equals(command)) {
-                return result.toLowerCase(Locale.ROOT);
-            } else if ("upcase".equals(command)) {
-                return result.toUpperCase(Locale.ROOT);
-            } else {
-                return result;
-            }
-        } else {
-            return match;
-        }
-    }
+	private static String getReplacement(final String match, final CharSequence captureSource,
+		final OnigCaptureIndex[] captureIndices) {
+		final int index;
+		final String command;
+		final int doublePointIndex = match.indexOf(':');
+		if (doublePointIndex != -1) {
+			index = Integer.parseInt(match.substring(2, doublePointIndex));
+			command = match.substring(doublePointIndex + 2, match.length() - 1);
+		} else {
+			index = Integer.parseInt(match.substring(1));
+			command = null;
+		}
+		final OnigCaptureIndex capture = captureIndices.length > index ? captureIndices[index] : null;
+		if (capture != null) {
+			var result = captureSource.subSequence(capture.start, capture.end);
+			// Remove leading dots that would make the selector invalid
+			while (result.length()>0 && result.charAt(0) == '.') {
+				result = result.subSequence(1, result.length());
+			}
+			if ("downcase".equals(command)) {
+				return result.toString().toLowerCase(Locale.ROOT);
+			}
+			if ("upcase".equals(command)) {
+				return result.toString().toLowerCase(Locale.ROOT);
+			}
+			return result.toString();
+		}
+		return match;
+	}
+
+	/**
+	 * Helper class, access members statically
+	 */
+	private RegexSource() {
+	}
 }
