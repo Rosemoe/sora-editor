@@ -1556,6 +1556,7 @@ public class EditorRenderer {
      */
     protected void drawText(Canvas canvas, ContentLine line, int index, int count, int contextStart, int contextCount, boolean isRtl, float offX, float offY, int lineNumber) {
         int end = index + count;
+        end = Math.min(line.value.length, end);
         var src = line.value;
         int st = index;
         for (int i = index; i < end; i++) {
