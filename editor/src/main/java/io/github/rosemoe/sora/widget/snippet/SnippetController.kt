@@ -300,9 +300,13 @@ class SnippetController(private val editor: CodeEditor) {
         tabStops.sortWith { a, b ->
             a.definition.id.compareTo(b.definition.id)
         }
-        val end = clonedSnippet.items.find { it is PlaceholderItem && it.definition.id == 0 } as PlaceholderItem? ?: PlaceholderItem(
-            PlaceholderDefinition(0, ""), elements.last().endIndex
-        )
+        var end = clonedSnippet.items.find { it is PlaceholderItem && it.definition.id == 0 } as PlaceholderItem?
+        if (end == null) {
+            end = PlaceholderItem(
+                PlaceholderDefinition(0, ""), elements.last().endIndex
+            )
+            clonedSnippet.items.add(end)
+        }
         tabStops.add(end)
         this.tabStops = tabStops
         // Stage 6: insert the text
