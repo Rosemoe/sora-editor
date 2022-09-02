@@ -43,25 +43,18 @@ public class CodeSnippet implements Cloneable {
 
     public boolean checkContent() {
         int index = 0;
-        int end = 0;
         for (var item : items) {
             if (item.getStartIndex() != index) {
                 return false;
             }
             if (item instanceof PlaceholderItem) {
-                if (!placeholders.contains(((PlaceholderItem) item).getDefinition()) || ((PlaceholderItem) item).getText().contains("\n") || ((PlaceholderItem) item).getText().contains("\r")) {
-                    return false;
-                }
-            }
-            if (item instanceof SelectionEndItem) {
-                end ++;
-                if (end > 1) {
+                if (!placeholders.contains(((PlaceholderItem) item).getDefinition())) {
                     return false;
                 }
             }
             index = item.getEndIndex();
         }
-        var set = new TreeSet<String>();
+        var set = new TreeSet<Integer>();
         for (var placeholder : placeholders) {
             if (!set.contains(placeholder.getId())) {
                 set.add(placeholder.getId());
@@ -131,37 +124,51 @@ public class CodeSnippet implements Cloneable {
             return this;
         }
 
-        public Builder addPlaceholder(String id) {
+        public Builder addPlaceholder(int id) {
+            return addPlaceholder(id, null);
+        }
+
+        public Builder addPlaceholder(int id, String defaultValue) {
             PlaceholderDefinition def = null;
             for (var definition : definitions) {
-                if (definition.getId().equals(id)) {
+                if (definition.getId() == id) {
                     def = definition;
                     break;
                 }
             }
             if (def == null) {
-                def = new PlaceholderDefinition(id, id);
+                def = new PlaceholderDefinition(id, "");
                 definitions.add(def);
             }
+            int delta = 0;
+            if (defaultValue != null && !defaultValue.equals(def.getDefaultValue())) {
+                delta = defaultValue.length() - def.getDefaultValue().length();
+                def.setDefaultValue(defaultValue);
+            }
             var item = new PlaceholderItem(def, index);
-            item.setText(def.getDefaultValue());
             items.add(item);
-            index += def.getDefaultValue().length();
+            if (delta != 0) {
+                for (int i = 0; i < items.size() - 1; i++) {
+                    var j = items.get(i);
+                    if (j instanceof PlaceholderItem) {
+                        var placeholder = (PlaceholderItem) j;
+                        if (placeholder.getDefinition() == def) {
+                            placeholder.setIndex(placeholder.getStartIndex(), placeholder.getEndIndex() + delta);
+                            for (int k = i + 1;k < items.size();k++) {
+                                items.get(k).shiftIndex(delta);
+                            }
+                        }
+                    }
+                }
+                index = items.get(items.size() - 1).getEndIndex();
+            } else {
+                index += def.getDefaultValue().length();
+            }
             return this;
         }
 
-        public Builder addSelectedText() {
-            items.add(new SelectedTextItem(index));
-            return this;
-        }
-
-        public Builder addSelectionEnd() {
-            items.add(new SelectionEndItem(index));
-            return this;
-        }
-
-        public Builder addTabStop(int number) {
-            items.add(new TabStopItem(index, number));
+        public Builder addVariable(String name, String defaultValue) {
+            items.add(new VariableItem(index, name, defaultValue));
             return this;
         }
 

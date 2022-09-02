@@ -64,7 +64,7 @@ class SnippetController(private val editor: CodeEditor) {
 
     private var currentSnippet: CodeSnippet? = null
     var snippetIndex = -1
-    private var tabStops: MutableList<SnippetItem>? = null
+    private var tabStops: MutableList<PlaceholderItem>? = null
     private var currentTabStopIndex = -1
     private var inSequenceEdits = false
 
@@ -203,45 +203,51 @@ class SnippetController(private val editor: CodeEditor) {
         currentTabStopIndex = -1
         snippetIndex = index
         // Stage 2: resolve the variables
-        clonedSnippet.placeholderDefinitions.forEach {
-            if (variableResolver.canResolve(it.id)) {
-                it.defaultValue = variableResolver.resolve(it.id)
-                // resolved, and we edit the items
-                val items = clonedSnippet.items!!
-                for (i in 0 until items.size) {
-                    val snippetItem = items[i]
-                    if ((snippetItem is PlaceholderItem) && snippetItem.definition == it) {
-                        // replace with plain text, and shift items after
-                        val deltaIndex = it.defaultValue.length - snippetItem.text.length
-                        items[i] = PlainTextItem(
-                            it.defaultValue,
-                            snippetItem.startIndex,
-                            snippetItem.endIndex + deltaIndex
-                        )
-                        shiftItemsFrom(i + 1, deltaIndex)
+        val elements = clonedSnippet.items!!
+        val variableItemMapping = mutableMapOf<String, PlaceholderDefinition>()
+        var maxTabStop = 0;
+        elements.forEach {
+            if (it is PlaceholderItem && it.definition.id > maxTabStop) {
+                maxTabStop = it.definition.id
+            }
+        }
+        for (i in 0 until elements.size) {
+            val item = elements[i]
+            if (item is VariableItem) {
+                val value = when {
+                    variableResolver.canResolve(item.name) -> variableResolver.resolve(item.name)
+                    item.name == "selection" -> selectedText
+                    item.defaultValue != null -> item.defaultValue
+                    else -> null
+                }
+                if (value != null) {
+                    // Resolved variable value
+                    val deltaIndex = value.length - (item.endIndex - item.startIndex)
+                    elements[i] = PlainTextItem(
+                        value,
+                        item.startIndex,
+                        item.startIndex + value.length
+                    )
+                    shiftItemsFrom(i + 1, deltaIndex)
+                } else {
+                    // Convert to placeholder
+                    val def = if (variableItemMapping.contains(item.name)) {
+                        variableItemMapping[item.name]!!
+                    } else {
+                        variableItemMapping[item.name] = PlaceholderDefinition(++maxTabStop, item.name)
+                        variableItemMapping[item.name]!!
                     }
+                    elements[i] = PlaceholderItem(def, item.startIndex)
+                    val deltaIndex = item.name.length - (item.endIndex - item.startIndex)
+                    shiftItemsFrom(i + 1, deltaIndex)
                 }
             }
         }
-        // Stage 3: apply selected text, clean useless items and shift all items to editor index
-        val items1 = clonedSnippet.items!!
-        for (i in 0 until items1.size) {
-            val snippetItem = items1[i]
-            if (snippetItem is SelectedTextItem) {
-                // replace with plain text, and shift items after
-                val deltaIndex = selectedText.length
-                items1[i] = PlainTextItem(
-                    selectedText,
-                    snippetItem.startIndex,
-                    snippetItem.endIndex + deltaIndex
-                )
-                shiftItemsFrom(i + 1, deltaIndex)
-            }
-        }
+        // Stage 3: clean useless items and shift all items to editor index
         val itr = clonedSnippet.items.iterator()
         while (itr.hasNext()) {
             val item = itr.next()
-            if ((item is PlaceholderItem && item.text.isEmpty()) || (item is PlainTextItem && item.text.isEmpty())) {
+            if ((item is PlainTextItem && item.text.isEmpty())) {
                 itr.remove()
             }
         }
@@ -283,20 +289,19 @@ class SnippetController(private val editor: CodeEditor) {
             }
         }
         // Stage 5: collect tab stops and placeholders
-        val tabStops = mutableListOf<SnippetItem>()
+        val tabStops = mutableListOf<PlaceholderItem>()
         clonedSnippet.items.forEach { item ->
-            if (item is TabStopItem) {
-                if (tabStops.find { it is TabStopItem && it.ordinal == item.ordinal } == null) {
-                    tabStops.add(item)
-                }
-            } else if (item is PlaceholderItem) {
-                if (tabStops.find { it is PlaceholderItem && it.definition == item.definition } == null) {
+            if (item is PlaceholderItem) {
+                if (item.definition.id != 0 && tabStops.find { it.definition == item.definition } == null) {
                     tabStops.add(item)
                 }
             }
         }
-        val end = clonedSnippet.items.find { it is SelectionEndItem } ?: SelectionEndItem(
-            clonedSnippet.items.last().endIndex
+        tabStops.sortWith { a, b ->
+            a.definition.id.compareTo(b.definition.id)
+        }
+        val end = clonedSnippet.items.find { it is PlaceholderItem && it.definition.id == 0 } as PlaceholderItem? ?: PlaceholderItem(
+            PlaceholderDefinition(0, ""), elements.last().endIndex
         )
         tabStops.add(end)
         this.tabStops = tabStops
@@ -306,7 +311,7 @@ class SnippetController(private val editor: CodeEditor) {
             if (it is PlainTextItem) {
                 sb.append(it.text)
             } else if (it is PlaceholderItem) {
-                sb.append(it.text)
+                sb.append(it.definition.defaultValue)
             }
         }
         text.insert(pos.line, pos.column, sb)
@@ -321,11 +326,7 @@ class SnippetController(private val editor: CodeEditor) {
     fun getEditingRelatedTabStops(): List<SnippetItem> {
         val editing = getEditingTabStop()
         if (editing != null) {
-            if (editing is TabStopItem) {
-                return currentSnippet!!.items!!.filter { it is TabStopItem && it.ordinal == editing.ordinal && it != editing }
-            } else if (editing is PlaceholderItem) {
-                return currentSnippet!!.items!!.filter { it is PlaceholderItem && it.definition == editing.definition && it != editing }
-            }
+            return currentSnippet!!.items!!.filter { it is PlaceholderItem && it.definition == editing.definition && it != editing }
         }
         return emptyList()
     }
@@ -333,11 +334,7 @@ class SnippetController(private val editor: CodeEditor) {
     fun isEditingRelated(it: SnippetItem): Boolean {
         val editing = getEditingTabStop()
         if (editing != null) {
-            if (editing is TabStopItem) {
-                return it is TabStopItem && it.ordinal == editing.ordinal && it != editing
-            } else if (editing is PlaceholderItem) {
-                return it is PlaceholderItem && it.definition == editing.definition && it != editing
-            }
+            return it is PlaceholderItem && it.definition == editing.definition && it != editing
         }
         return false
     }
@@ -345,15 +342,7 @@ class SnippetController(private val editor: CodeEditor) {
     fun getInactiveTabStops(): List<SnippetItem> {
         val editing = getEditingTabStop()
         if (editing != null) {
-            return if (editing is TabStopItem) {
-                currentSnippet!!.items!!.filter {
-                    (it is PlaceholderItem) || (it is TabStopItem && it.ordinal != editing.ordinal)
-                }
-            } else if (editing is PlaceholderItem) {
-                currentSnippet!!.items!!.filter { (it is TabStopItem) || (it is PlaceholderItem && it.definition != editing.definition) }
-            } else {
-                emptyList()
-            }
+            currentSnippet!!.items!!.filter { (it is PlaceholderItem && it.definition != editing.definition) }
         }
         return emptyList()
     }
@@ -386,6 +375,9 @@ class SnippetController(private val editor: CodeEditor) {
     }
 
     private fun shiftItemsFrom(itemIndex: Int, deltaIndex: Int) {
+        if (deltaIndex == 0) {
+            return
+        }
         val items = currentSnippet!!.items!!
         for (i in itemIndex until items.size) {
             items[i].shiftIndex(deltaIndex)

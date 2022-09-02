@@ -54,7 +54,7 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
  */
 public class JavaLanguage implements Language {
 
-    private final static CodeSnippet FOR_SNIPPET = CodeSnippetParser.parse("for(int $i = 0;$i < $count;$i++) {\n\t$0\n}");
+    private final static CodeSnippet FOR_SNIPPET = CodeSnippetParser.parse("for(int ${1:i} = 0;$1 < ${2:count};$1++) {\n    $0\n}");
 
     private IdentifierAutoComplete autoComplete;
     private JavaIncrementalAnalyzeManager manager;

@@ -24,4 +24,4 @@
 
 package io.github.rosemoe.sora.lang.completion.snippet
 
-data class PlaceholderDefinition(var id: String, var defaultValue: String)
+data class PlaceholderDefinition(var id: Int, var defaultValue: String)

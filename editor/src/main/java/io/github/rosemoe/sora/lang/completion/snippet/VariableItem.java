@@ -24,16 +24,42 @@
 package io.github.rosemoe.sora.lang.completion.snippet;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-public class SelectedTextItem extends SnippetItem {
+public class VariableItem extends SnippetItem {
 
-    public SelectedTextItem(int index) {
-        setIndex(index);
+    private String name;
+    private String defaultValue;
+
+    public VariableItem(int index, @NonNull String name, @Nullable String defaultValue) {
+        super(index);
+        this.name = name;
+        this.defaultValue = defaultValue;
+    }
+
+    public void setName(@NonNull String name) {
+        this.name = name;
+    }
+
+    @NonNull
+    public String getName() {
+        return name;
+    }
+
+    public void setDefaultValue(@NonNull String defaultValue) {
+        this.defaultValue = defaultValue;
+    }
+
+    @Nullable
+    public String getDefaultValue() {
+        return defaultValue;
     }
 
     @NonNull
     @Override
-    public SelectedTextItem clone() {
-        return new SelectedTextItem(getStartIndex());
+    public VariableItem clone() {
+        var n = new VariableItem(getStartIndex(), name, defaultValue);
+        n.setIndex(getStartIndex(), getEndIndex());
+        return n;
     }
 }

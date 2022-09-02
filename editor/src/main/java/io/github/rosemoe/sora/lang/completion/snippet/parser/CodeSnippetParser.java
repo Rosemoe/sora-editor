@@ -101,6 +101,8 @@ public class CodeSnippetParser {
     private boolean parseInternal() {
         return parseEscaped() ||
                 parseTabStopOrVariableName() ||
+                parseComplexVariable() ||
+                parseComplexPlaceholder() ||
                 parseOther();
     }
 
@@ -122,22 +124,9 @@ public class CodeSnippetParser {
         if (accept(TokenType.Dollar)) {
             String text;
             if ((text = _accept(TokenType.Int)) != null) {
-                if ("0".equals(text)) {
-                    builder.addSelectionEnd();
-                } else {
-                    builder.addTabStop(Integer.parseInt(text));
-                }
+                builder.addPlaceholder(Integer.parseInt(text));
             } else if ((text = _accept(TokenType.VariableName)) != null) {
-                switch (text) {
-                    case "selection":
-                        builder.addSelectedText();
-                        break;
-                    case "end":
-                        builder.addSelectionEnd();
-                        break;
-                    default:
-                        builder.addPlaceholder(text);
-                }
+                builder.addVariable(text, null);
             } else {
                 backTo(backup);
                 return false;
@@ -147,23 +136,93 @@ public class CodeSnippetParser {
         return false;
     }
 
-    private boolean parseOther() {
+    private boolean parseComplexVariable() {
         var backup = token;
-        boolean accepted = false;
-        while (!accept(TokenType.Backslash, TokenType.Dollar, TokenType.EOF)) {
-            accepted = true;
+        String text;
+        if (accept(TokenType.Dollar) && accept(TokenType.CurlyOpen) && (text = _accept(TokenType.VariableName)) != null) {
+            var variableName = text;
+            String defaultValue = null;
+            if (accept(TokenType.Colon)) {
+                // ${name:xxx}
+                var sb = new StringBuilder();
+                while (!accept(TokenType.CurlyClose)) {
+                    if (accept(TokenType.Backslash)) {
+                        if ((text = _accept(TokenType.Backslash, TokenType.Dollar, TokenType.CurlyClose)) != null) {
+                            sb.append(text);
+                        } else {
+                            sb.append('\\');
+                        }
+                    } else if (token.type == TokenType.EOF) {
+                        throw new IllegalArgumentException("expecting '}'");
+                    } else {
+                        sb.append(src, token.index, token.index + token.length);
+                        next();
+                    }
+                }
+                builder.addVariable(variableName, sb.toString());
+            } else if(accept(TokenType.CurlyClose)) {
+                // ${name}
+                builder.addVariable(variableName, null);
+            } else {
+                // missing token
+                backTo(backup);
+                return false;
+            }
+            return true;
+        }
+        backTo(backup);
+        return false;
+    }
+
+    private boolean parseComplexPlaceholder() {
+        var backup = token;
+        String text;
+        if (accept(TokenType.Dollar) && accept(TokenType.CurlyOpen) && (text = _accept(TokenType.Int)) != null) {
+            var idText = text;
+            String defaultValue = null;
+            if (accept(TokenType.Colon)) {
+                // ${1:xxx}
+                var sb = new StringBuilder();
+                while (!accept(TokenType.CurlyClose)) {
+                    if (accept(TokenType.Backslash)) {
+                        if ((text = _accept(TokenType.Backslash, TokenType.Dollar, TokenType.CurlyClose)) != null) {
+                            sb.append(text);
+                        } else {
+                            sb.append('\\');
+                        }
+                    } else if (token.type == TokenType.EOF) {
+                        throw new IllegalArgumentException("expecting '}'");
+                    } else {
+                        sb.append(src, token.index, token.index + token.length);
+                        next();
+                    }
+                }
+                builder.addPlaceholder(Integer.parseInt(idText), sb.toString());
+            } else if(accept(TokenType.CurlyClose)) {
+                // ${1}
+                builder.addPlaceholder(Integer.parseInt(idText));
+            } else {
+                // missing token
+                backTo(backup);
+                return false;
+            }
+            return true;
+        }
+        backTo(backup);
+        return false;
+    }
+
+    private boolean parseOther() {
+        if (token.type == TokenType.EOF) {
+            return false;
+        }
+        do {
             if (token.length > 0) {
                 builder.addPlainText(src.substring(token.index, token.index + token.length));
             }
             next();
-            backup = token;
-            if (token.type == TokenType.EOF) {
-                return false;
-            }
-        }
-        token = backup;
-        backTo(token);
-        return accepted;
+        } while (token.type != TokenType.Backslash && token.type != TokenType.Dollar && token.type != TokenType.EOF);
+        return true;
     }
 
     public static CodeSnippet parse(@NonNull String snippet) {
