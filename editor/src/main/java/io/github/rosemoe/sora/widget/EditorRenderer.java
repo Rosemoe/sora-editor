@@ -55,6 +55,7 @@ import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.GraphicsConstants;
 import io.github.rosemoe.sora.graphics.Paint;
+import io.github.rosemoe.sora.lang.completion.snippet.SnippetItem;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.EmptyReader;
@@ -951,6 +952,9 @@ public class EditorRenderer {
             tmpRect.right = viewRect.right;
             drawColor(canvas, currentLineBgColor, tmpRect);
         }
+
+        // Background of snippets
+        patchSnippetRegions(canvas, offset);
 
         // Step 2 - Draw text and text decorations
         long lastStyle = 0;
@@ -1853,6 +1857,21 @@ public class EditorRenderer {
         }
     }
 
+    protected void patchSnippetRegions(Canvas canvas, float textOffset) {
+        var controller = editor.getSnippetController();
+        if (controller.isInSnippet()) {
+            var editing = controller.getEditingTabStop();
+            if (editing != null)
+                patchTextRegionWithColor(canvas, textOffset, editing.getStartIndex(), editing.getEndIndex(), 0, editor.getColorScheme().getColor(EditorColorScheme.SNIPPET_BACKGROUND_EDITING), 0);
+            for (SnippetItem snippetItem : controller.getEditingRelatedTabStops()) {
+                patchTextRegionWithColor(canvas, textOffset, snippetItem.getStartIndex(), snippetItem.getEndIndex(), 0, editor.getColorScheme().getColor(EditorColorScheme.SNIPPET_BACKGROUND_RELATED), 0);
+            }
+            for (SnippetItem snippetItem : controller.getInactiveTabStops()) {
+                patchTextRegionWithColor(canvas, textOffset, snippetItem.getStartIndex(), snippetItem.getEndIndex(), 0, editor.getColorScheme().getColor(EditorColorScheme.SNIPPET_BACKGROUND_INACTIVE), 0);
+            }
+        }
+    }
+
     protected void patchHighlightedDelimiters(Canvas canvas, float textOffset) {
         if (editor.inputConnection.composingText.isComposing() || !editor.getProps().highlightMatchingDelimiters || editor.getCursor().isSelected()) {
             return;
@@ -1861,13 +1880,14 @@ public class EditorRenderer {
         if (paired != null) {
             var color = editor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_FOREGROUND);
             var backgroundColor = editor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_BACKGROUND);
+            var underlineColor = editor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_UNDERLINE);
             if (isInvalidTextBounds(paired.leftIndex, paired.leftLength) || isInvalidTextBounds(paired.rightIndex, paired.rightLength)) {
                 // Index out of bounds
                 return;
             }
 
-            patchTextRegionWithColor(canvas, textOffset, paired.leftIndex, paired.leftIndex + paired.leftLength, color, backgroundColor);
-            patchTextRegionWithColor(canvas, textOffset, paired.rightIndex, paired.rightIndex + paired.rightLength, color, backgroundColor);
+            patchTextRegionWithColor(canvas, textOffset, paired.leftIndex, paired.leftIndex + paired.leftLength, color, backgroundColor, underlineColor);
+            patchTextRegionWithColor(canvas, textOffset, paired.rightIndex, paired.rightIndex + paired.rightLength, color, backgroundColor, underlineColor);
         }
     }
 
@@ -1875,9 +1895,8 @@ public class EditorRenderer {
         return (index < 0 || length < 0 || index + length > mContent.length());
     }
 
-    protected void patchTextRegionWithColor(Canvas canvas, float textOffset, int start, int end, int color, int backgroundColor) {
+    protected void patchTextRegionWithColor(Canvas canvas, float textOffset, int start, int end, int color, int backgroundColor, int underlineColor) {
         paintGeneral.setColor(color);
-        var underlineColor = editor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_UNDERLINE);
         paintOther.setStrokeWidth(editor.getRowHeightOfText() * 0.1f);
         paintGeneral.setStyle(android.graphics.Paint.Style.FILL_AND_STROKE);
         paintGeneral.setFakeBoldText(editor.getProps().boldMatchingDelimiters);

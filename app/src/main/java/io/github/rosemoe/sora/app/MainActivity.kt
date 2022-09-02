@@ -115,7 +115,6 @@ class MainActivity : AppCompatActivity() {
             }
         })
         binding.editor.apply {
-            lineSeparator = LineSeparator.CRLF
             typefaceText = typeface
             setLineSpacing(2f, 1.1f)
             cursorAnimator = ScaleCursorAnimator(this)

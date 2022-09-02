@@ -28,7 +28,7 @@ import androidx.annotation.Nullable;
 
 public class PlaceholderItem extends SnippetItem {
 
-    private final PlaceholderDefinition definition;
+    private PlaceholderDefinition definition;
     private String text;
 
     public PlaceholderItem(@NonNull PlaceholderDefinition definition, int index) {
@@ -39,6 +39,10 @@ public class PlaceholderItem extends SnippetItem {
     private PlaceholderItem(@NonNull PlaceholderDefinition definition, @Nullable String text, int start, int end) {
         setIndex(start, end);
         this.text = text;
+        this.definition = definition;
+    }
+
+    public void setDefinition(PlaceholderDefinition definition) {
         this.definition = definition;
     }
 

@@ -294,7 +294,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             return;
         }
         var text = editor.getText();
-        if (text.getCursor().isSelected() || checkNoCompletion() || editor.getSnippetController().isInSnippet()) {
+        if (text.getCursor().isSelected() || checkNoCompletion()) {
             hide();
             return;
         }

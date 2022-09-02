@@ -91,6 +91,9 @@ public class JavaLanguage implements Language {
         if ("fori".startsWith(prefix) && prefix.length() > 0) {
             publisher.addItem(new SimpleSnippetCompletionItem("fori", "Snippet - For loop on index", new SnippetDescription(prefix.length(), FOR_SNIPPET, true)));
         }
+        if ("rand".startsWith(prefix) && prefix.length() > 0) {
+            publisher.addItem(new SimpleSnippetCompletionItem("rand", "Snippet - Quick random number", new SnippetDescription(prefix.length(), CodeSnippetParser.parse("$RANDOM"), true)));
+        }
     }
 
     @Override

@@ -224,7 +224,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
 
     @Override
     public void show() {
-        if (!enabled) {
+        if (!enabled || editor.getSnippetController().isInSnippet()) {
             return;
         }
         updateBtnState();

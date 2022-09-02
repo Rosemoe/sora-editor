@@ -59,17 +59,17 @@ public class CodeSnippetTokenizer {
         }
 
         if (isDigitChar(ch)) {
-            while (isDigitChar(ch) && index + length < value.length()) {
+            length = 1;
+            while (index + length  < value.length() && isDigitChar(value.charAt(index + length))) {
                 length ++;
-                ch = value.charAt(index + length);
             }
             return TokenType.Int;
         }
 
         if (isVariableChar(ch)) {
-            while ((isVariableChar(ch) || isDigitChar(ch)) && index + length < value.length()) {
+            length = 1;
+            while (index + length < value.length() && (isVariableChar(ch = value.charAt(index + length)) || isDigitChar(ch))) {
                 length ++;
-                ch = value.charAt(index + length);
             }
             return TokenType.VariableName;
         }

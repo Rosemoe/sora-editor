@@ -66,6 +66,7 @@ public final class UndoManager implements ContentListener, Parcelable {
     private int maxStackSize;
     private InsertAction insertAction;
     private DeleteAction deleteAction;
+    private Content targetContent;
     private boolean replaceMark;
     private int stackPointer;
     private boolean ignoreModification;
@@ -244,6 +245,7 @@ public final class UndoManager implements ContentListener, Parcelable {
             return;
         }
         cleanBeforePush();
+        System.out.println("push:" + action);
         if (content.isInBatchEdit()) {
             if (actionStack.isEmpty()) {
                 MultiAction a = new MultiAction();
@@ -279,12 +281,21 @@ public final class UndoManager implements ContentListener, Parcelable {
         cleanStack();
     }
 
+    public void exitReplaceMode() {
+        if (replaceMark && deleteAction != null) {
+            pushAction(targetContent, deleteAction);
+        }
+        replaceMark = false;
+        targetContent = null;
+    }
+
     @Override
     public void beforeReplace(Content content) {
         if (ignoreModification) {
             return;
         }
         replaceMark = true;
+        targetContent = content;
     }
 
     @Override
@@ -307,6 +318,8 @@ public final class UndoManager implements ContentListener, Parcelable {
         } else {
             pushAction(content, insertAction);
         }
+        deleteAction = null;
+        insertAction = null;
         replaceMark = false;
     }
 
@@ -430,6 +443,18 @@ public final class UndoManager implements ContentListener, Parcelable {
                 text = sb;
             }
             sb.append(ac.text);
+        }
+
+        @Override
+        public String toString() {
+            return "InsertAction{" +
+                    "startLine=" + startLine +
+                    ", endLine=" + endLine +
+                    ", startColumn=" + startColumn +
+                    ", endColumn=" + endColumn +
+                    ", createTime=" + createTime +
+                    ", text=" + text +
+                    '}';
         }
 
         @Override
@@ -592,6 +617,18 @@ public final class UndoManager implements ContentListener, Parcelable {
         }
 
         @Override
+        public String toString() {
+            return "DeleteAction{" +
+                    "startLine=" + startLine +
+                    ", endLine=" + endLine +
+                    ", startColumn=" + startColumn +
+                    ", endColumn=" + endColumn +
+                    ", createTime=" + createTime +
+                    ", text=" + text +
+                    '}';
+        }
+
+        @Override
         public int describeContents() {
             return 0;
         }
@@ -650,6 +687,14 @@ public final class UndoManager implements ContentListener, Parcelable {
         @Override
         public void merge(ContentAction action) {
             throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public String toString() {
+            return "ReplaceAction{" +
+                    "_insert=" + _insert +
+                    ", _delete=" + _delete +
+                    '}';
         }
 
         @Override

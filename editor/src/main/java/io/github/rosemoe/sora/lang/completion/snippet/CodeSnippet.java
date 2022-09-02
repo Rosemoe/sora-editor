@@ -27,6 +27,7 @@ package io.github.rosemoe.sora.lang.completion.snippet;
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -82,13 +83,22 @@ public class CodeSnippet implements Cloneable {
     @NonNull
     @Override
     public CodeSnippet clone() {
+        var defs = new ArrayList<PlaceholderDefinition>(placeholders.size());
+        var map = new HashMap<PlaceholderDefinition, PlaceholderDefinition>();
+        for (PlaceholderDefinition placeholder : placeholders) {
+            var n = new PlaceholderDefinition(placeholder.getId(), placeholder.getDefaultValue());
+            defs.add(n);
+            map.put(placeholder, n);
+        }
         var itemsClone = new ArrayList<SnippetItem>(items.size());
         for (SnippetItem item : items) {
-            itemsClone.add(item.clone());
-        }
-        var defs = new ArrayList<PlaceholderDefinition>(placeholders.size());
-        for (PlaceholderDefinition placeholder : placeholders) {
-            defs.add(new PlaceholderDefinition(placeholder.getId(), placeholder.getDefaultValue()));
+            var n = item.clone();
+            itemsClone.add(n);
+            if (n instanceof PlaceholderItem) {
+                if (map.get(((PlaceholderItem) n).getDefinition()) != null) {
+                    ((PlaceholderItem) n).setDefinition(map.get(((PlaceholderItem) n).getDefinition()));
+                }
+            }
         }
         return new CodeSnippet(itemsClone, defs);
     }
