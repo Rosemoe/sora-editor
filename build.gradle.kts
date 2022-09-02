@@ -36,7 +36,7 @@ plugins {
     id("com.vanniktech.maven.publish.base") version "0.21.0" apply false
 }
 
-val highApiProjects = arrayOf("editor-lsp", "app")
+val highApiProjects = arrayOf("editor-lsp")
 
 fun Project.configureBaseExtension() {
     extensions.findByType(BaseExtension::class)?.run {
