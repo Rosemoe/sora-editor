@@ -22,6 +22,12 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lang.completion.snippet
+package io.github.rosemoe.sora.lang.completion
 
-data class PlaceholderDefinition(var id: String, var defaultValue: String)
+import io.github.rosemoe.sora.lang.completion.snippet.CodeSnippet
+
+/**
+ * @param selectedLength the text length before text, which will be deleted if deleteSelected = true
+ * @param snippet The code snippet. The snippet should pass [CodeSnippet.checkContent] checks
+ */
+data class SnippetDescription(val selectedLength: Int, val snippet: CodeSnippet, val deleteSelected: Boolean = true)

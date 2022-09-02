@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 
-public class CodeSnippet {
+public class CodeSnippet implements Cloneable {
 
     private final List<SnippetItem> items;
     private final List<PlaceholderDefinition> placeholders;
@@ -42,12 +42,19 @@ public class CodeSnippet {
 
     public boolean checkContent() {
         int index = 0;
+        int end = 0;
         for (var item : items) {
             if (item.getStartIndex() != index) {
                 return false;
             }
             if (item instanceof PlaceholderItem) {
-                if (!placeholders.contains(((PlaceholderItem) item).getDefinition())) {
+                if (!placeholders.contains(((PlaceholderItem) item).getDefinition()) || ((PlaceholderItem) item).getText().contains("\n") || ((PlaceholderItem) item).getText().contains("\r")) {
+                    return false;
+                }
+            }
+            if (item instanceof SelectionEndItem) {
+                end ++;
+                if (end > 1) {
                     return false;
                 }
             }
@@ -70,6 +77,20 @@ public class CodeSnippet {
 
     public List<PlaceholderDefinition> getPlaceholderDefinitions() {
         return placeholders;
+    }
+
+    @NonNull
+    @Override
+    public CodeSnippet clone() {
+        var itemsClone = new ArrayList<SnippetItem>(items.size());
+        for (SnippetItem item : items) {
+            itemsClone.add(item.clone());
+        }
+        var defs = new ArrayList<PlaceholderDefinition>(placeholders.size());
+        for (PlaceholderDefinition placeholder : placeholders) {
+            defs.add(new PlaceholderDefinition(placeholder.getId(), placeholder.getDefaultValue()));
+        }
+        return new CodeSnippet(itemsClone, defs);
     }
 
     public static class Builder {
@@ -112,7 +133,9 @@ public class CodeSnippet {
                 def = new PlaceholderDefinition(id, id);
                 definitions.add(def);
             }
-            items.add(new PlaceholderItem(def, index));
+            var item = new PlaceholderItem(def, index);
+            item.setText(def.getDefaultValue());
+            items.add(item);
             index += def.getDefaultValue().length();
             return this;
         }

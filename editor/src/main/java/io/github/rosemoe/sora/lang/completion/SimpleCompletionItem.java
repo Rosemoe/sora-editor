@@ -25,6 +25,8 @@ package io.github.rosemoe.sora.lang.completion;
 
 import android.graphics.drawable.Drawable;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
@@ -87,7 +89,7 @@ public class SimpleCompletionItem extends CompletionItem {
     }
 
     @Override
-    public void performCompletion(CodeEditor editor, Content text, int line, int column) {
+    public void performCompletion(@NonNull CodeEditor editor, @NonNull Content text, int line, int column) {
         if (commitText == null) {
             return;
         }

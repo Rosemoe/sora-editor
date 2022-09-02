@@ -33,6 +33,10 @@ import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
+import io.github.rosemoe.sora.lang.completion.SimpleSnippetCompletionItem;
+import io.github.rosemoe.sora.lang.completion.SnippetDescription;
+import io.github.rosemoe.sora.lang.completion.snippet.CodeSnippet;
+import io.github.rosemoe.sora.lang.completion.snippet.parser.CodeSnippetParser;
 import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
@@ -49,6 +53,8 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
  * @author Rosemoe
  */
 public class JavaLanguage implements Language {
+
+    private final static CodeSnippet FOR_SNIPPET = CodeSnippetParser.parse("for(int $i = 0;$i < $count;$i++) {\n\t$0\n}");
 
     private IdentifierAutoComplete autoComplete;
     private JavaIncrementalAnalyzeManager manager;
@@ -81,6 +87,9 @@ public class JavaLanguage implements Language {
         final var idt = manager.identifiers;
         if (idt != null) {
             autoComplete.requireAutoComplete(prefix, publisher, idt);
+        }
+        if ("fori".startsWith(prefix) && prefix.length() > 0) {
+            publisher.addItem(new SimpleSnippetCompletionItem("fori", "Snippet - For loop on index", new SnippetDescription(prefix.length(), FOR_SNIPPET, true)));
         }
     }
 

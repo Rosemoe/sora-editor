@@ -35,4 +35,12 @@ public class Token {
     public int length;
     public TokenType type;
 
+    @Override
+    public String toString() {
+        return "Token{" +
+                "index=" + index +
+                ", length=" + length +
+                ", type=" + type +
+                '}';
+    }
 }

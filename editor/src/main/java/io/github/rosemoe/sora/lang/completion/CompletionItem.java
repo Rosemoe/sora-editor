@@ -25,13 +25,17 @@ package io.github.rosemoe.sora.lang.completion;
 
 import android.graphics.drawable.Drawable;
 
+import androidx.annotation.NonNull;
+
+import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
  * The class used to save auto complete result items.
  * For functionality, this class only manages the information to be displayed in list view.
- * You can implement {@link CompletionItem#performCompletion(CodeEditor, Content, int, int)} to customize
+ * You can implement {@link CompletionItem#performCompletion(CodeEditor, Content, int, int)} or
+ * {@link CompletionItem#performCompletion(CodeEditor, Content, CharPosition)} to customize
  * your own completion method so that you can develop complex actions.
  * <p>
  * For the simplest usage, see {@link SimpleCompletionItem}
@@ -96,10 +100,26 @@ public abstract class CompletionItem {
      *
      * @param editor The editor. You can set cursor position with that.
      * @param text   The text in editor. You can make modifications to it.
+     * @param position The requested completion position (the one passed to completion thread)
+     */
+    public void performCompletion(@NonNull CodeEditor editor, @NonNull Content text, @NonNull CharPosition position) {
+        performCompletion(editor, text, position.line, position.column);
+    }
+
+    /**
+     * Perform this completion.
+     * You can implement custom logic to make your completion better(by updating selection and text
+     * from here).
+     * To make it considered as a single action, the editor will enter batch edit state before invoking
+     * this method. Feel free to update the text by multiple calls to {@code text}.
+     *
+     * @param editor The editor. You can set cursor position with that.
+     * @param text   The text in editor. You can make modifications to it.
      * @param line   The auto-completion line
      * @param column The auto-completion column
+     * @see #performCompletion(CodeEditor, Content, CharPosition) Editor calls this method to do completion 
      */
-    public abstract void performCompletion(CodeEditor editor, Content text, int line, int column);
+    public abstract void performCompletion(@NonNull CodeEditor editor, @NonNull Content text, int line, int column);
 
 }
 

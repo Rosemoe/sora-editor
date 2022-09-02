@@ -144,7 +144,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         editor.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (!handler.hasAnyHeldHandle() && System.currentTimeMillis() - lastScroll > DELAY
+                if (!handler.hasAnyHeldHandle() && !editor.getSnippetController().isInSnippet() && System.currentTimeMillis() - lastScroll > DELAY
                         && editor.getScroller().isFinished()) {
                     displayWindow();
                 } else {

@@ -123,14 +123,12 @@ public class CompletionPublisher {
             return;
         }
         this.comparator = comparator;
-        if (items.size() != 0) {
+        if (items.size() != 0 && comparator != null) {
             handler.post(() -> {
                 if (invalid) {
                     return;
                 }
-                if (comparator != null) {
-                    Collections.sort(items, comparator);
-                }
+                Collections.sort(items, comparator);
                 callback.run();
             });
         }

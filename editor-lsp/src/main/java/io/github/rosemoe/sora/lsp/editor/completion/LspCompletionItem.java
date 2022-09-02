@@ -26,6 +26,8 @@ package io.github.rosemoe.sora.lsp.editor.completion;
 import android.util.Log;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
+
 import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.TextEdit;
 
@@ -62,7 +64,7 @@ public class LspCompletionItem extends CompletionItem implements Comparable<LspC
     }
 
     @Override
-    public void performCompletion(CodeEditor editor, Content text, int line, int column) {
+    public void performCompletion(@NonNull CodeEditor editor, @NonNull Content text, int line, int column) {
 
         var textEdit = new TextEdit();
 

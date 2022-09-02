@@ -162,6 +162,7 @@ public class CodeSnippetParser {
             }
         }
         token = backup;
+        backTo(token);
         return accepted;
     }
 

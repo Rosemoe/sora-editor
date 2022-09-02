@@ -120,6 +120,7 @@ import io.github.rosemoe.sora.widget.layout.Layout;
 import io.github.rosemoe.sora.widget.layout.LineBreakLayout;
 import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
+import io.github.rosemoe.sora.widget.snippet.SnippetController;
 import io.github.rosemoe.sora.widget.style.CursorAnimator;
 import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
@@ -311,6 +312,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean horizontalAbsorb;
     private LineSeparator lineSeparator;
     private TextRange lastInsertion;
+    private SnippetController snippetController;
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -560,6 +562,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         // Config scale detector
         scaleDetector.setQuickScaleEnabled(false);
+        snippetController = new SnippetController(this);
+    }
+
+    public SnippetController getSnippetController() {
+        return snippetController;
     }
 
     /**
@@ -876,6 +883,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         languageSymbolPairs.setParent(props.overrideSymbolPairs);
 
+        if (snippetController != null) {
+            snippetController.stopSnippet();
+        }
         renderer.invalidateRenderNodes();
         invalidate();
     }
@@ -2801,6 +2811,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void moveSelectionLeft() {
         if (selectionAnchor == null) {
+            if (cursor.isSelected()) {
+                setSelection(cursor.getLeftLine(), cursor.getLeftColumn());
+                return;
+            }
             Cursor c = getCursor();
             int line = c.getLeftLine();
             int column = c.getLeftColumn();
@@ -2831,6 +2845,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void moveSelectionRight() {
         if (selectionAnchor == null) {
             Cursor c = getCursor();
+            if (c.isSelected()) {
+                setSelection(c.getRightLine(), c.getRightColumn());
+                return;
+            }
             int line = c.getLeftLine();
             int column = c.getLeftColumn();
             int c_column = getText().getColumnCount(line);
@@ -4104,12 +4122,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         editorLanguage.getAnalyzeManager().insert(start, end, insertedContent);
         touchHandler.hideInsertHandle();
-        onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
         if (!cursor.isSelected() && !inputConnection.composingText.isComposing() && !completionWindow.shouldRejectComposing()) {
             cursorAnimator.markEndPos();
             cursorAnimator.start();
         }
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_INSERT, start, end, insertedContent));
+        onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
         lastInsertion = new TextRange(start.fromThis(), end.fromThis());
     }
 
@@ -4164,8 +4182,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             cursorAnimator.start();
         }
         editorLanguage.getAnalyzeManager().delete(start, end, deletedContent);
-        onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_DELETE, start, end, deletedContent));
+        onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
     }
 
     @Override

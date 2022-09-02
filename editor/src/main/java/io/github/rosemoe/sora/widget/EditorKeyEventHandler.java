@@ -272,6 +272,12 @@ class EditorKeyEventHandler {
                 if (editor.isEditable()) {
                     if (completionWindow.isShowing()) {
                         completionWindow.select();
+                    } else if(editor.getSnippetController().isInSnippet() && !isAltPressed && !isCtrlPressed) {
+                        if (isShiftPressed) {
+                            editor.getSnippetController().shiftToPreviousTabStop();
+                        } else {
+                            editor.getSnippetController().shiftToNextTabStop();
+                        }
                     } else {
                         editor.commitTab();
                     }

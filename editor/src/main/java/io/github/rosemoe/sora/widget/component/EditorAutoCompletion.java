@@ -224,7 +224,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             cancelShowUp = true;
             editor.restartInput();
             editor.getText().beginBatchEdit();
-            item.performCompletion(editor, editor.getText(), completionThread.mPosition.line, completionThread.mPosition.column);
+            item.performCompletion(editor, editor.getText(), completionThread.mPosition);
             editor.getText().endBatchEdit();
             editor.updateCursor();
             cancelShowUp = false;
@@ -294,7 +294,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             return;
         }
         var text = editor.getText();
-        if (text.getCursor().isSelected() || checkNoCompletion()) {
+        if (text.getCursor().isSelected() || checkNoCompletion() || editor.getSnippetController().isInSnippet()) {
             hide();
             return;
         }

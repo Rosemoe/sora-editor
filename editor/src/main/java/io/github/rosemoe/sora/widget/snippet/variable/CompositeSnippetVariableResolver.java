@@ -61,6 +61,10 @@ public final class CompositeSnippetVariableResolver implements ISnippetVariableR
         return new String[0];
     }
 
+    public boolean canResolve(@NonNull String name) {
+        return resolverMap.containsKey(name);
+    }
+
     @NonNull
     @Override
     public String resolve(@NonNull String name) {

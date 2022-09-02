@@ -124,8 +124,13 @@ public class SymbolInputView extends LinearLayout {
             addView(btn, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
             int finalI = i;
             btn.setOnClickListener((view) -> {
-                if (editor != null)
-                    editor.insertText(insertText[finalI], 1);
+                if (editor != null) {
+                    if ("\t".equals(insertText[finalI]) && editor.getSnippetController().isInSnippet()) {
+                        editor.getSnippetController().shiftToNextTabStop();
+                    } else {
+                        editor.insertText(insertText[finalI], 1);
+                    }
+                }
             });
         }
     }
