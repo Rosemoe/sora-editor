@@ -29,7 +29,9 @@ import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.lang.completion.snippet.*
 import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.snippet.variable.*
+import io.github.rosemoe.sorakt.getComponent
 import io.github.rosemoe.sorakt.subscribeEvent
 
 class SnippetController(private val editor: CodeEditor) {
@@ -108,10 +110,12 @@ class SnippetController(private val editor: CodeEditor) {
                         }
                         inSequenceEdits = true
                         val text = editor.text
+                        var hasChangedText = false
                         val replacement = text.substring(editing.startIndex, editing.endIndex)
                         text.beginBatchEdit()
                         currentSnippet!!.items.forEachIndexed { index, snippetItem ->
                             if (isEditingRelated(snippetItem)) {
+                                hasChangedText = true
                                 val deltaIndex =
                                     replacement.length - (snippetItem.endIndex - snippetItem.startIndex)
                                 text.replace(
@@ -130,6 +134,8 @@ class SnippetController(private val editor: CodeEditor) {
                         inSequenceEdits = false
                         if (exitOnEnd) {
                             stopSnippet()
+                        } else if(hasChangedText) {
+                            editor.getComponent<EditorAutoCompletion>().requireCompletion()
                         }
                     } else {
                         stopSnippet()

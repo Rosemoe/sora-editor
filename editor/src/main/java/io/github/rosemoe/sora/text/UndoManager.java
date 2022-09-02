@@ -245,7 +245,6 @@ public final class UndoManager implements ContentListener, Parcelable {
             return;
         }
         cleanBeforePush();
-        System.out.println("push:" + action);
         if (content.isInBatchEdit()) {
             if (actionStack.isEmpty()) {
                 MultiAction a = new MultiAction();
