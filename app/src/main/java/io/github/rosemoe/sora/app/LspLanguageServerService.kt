@@ -38,8 +38,6 @@ import kotlin.concurrent.thread
 class LspLanguageServerService : Service() {
 
 
-    private lateinit var hookThread: Thread
-
     override fun onBind(intent: Intent): IBinder? {
         return null
     }

@@ -29,6 +29,7 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
@@ -76,6 +77,9 @@ class LspTestActivity : AppCompatActivity() {
         lifecycleScope.launch {
 
             unAssets()
+
+            Toast.makeText(this@LspTestActivity, "Starting Language Server...", Toast.LENGTH_SHORT).show()
+            editor.editable = false
 
             connectToLanguageServer()
 
@@ -157,10 +161,14 @@ class LspTestActivity : AppCompatActivity() {
 
         }
 
-
+        
         lifecycleScope.launch(Dispatchers.IO) {
             delay(Timeouts.INIT.defaultTimeout.toLong()) //wait for server start
             lspEditor.connect()
+            lifecycleScope.launch { 
+                editor.editable = true
+                Toast.makeText(this@LspTestActivity, "Initialized Language server", Toast.LENGTH_SHORT).show()
+            }
         }
 
 

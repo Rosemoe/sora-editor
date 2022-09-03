@@ -159,7 +159,7 @@ public class LspEditor {
 
     @SafeVarargs
     public final void installFeatures(Supplier<Feature<?, ?>>... featureSupplier) {
-        Arrays.stream(featureSupplier).forEach(this::installFeature);
+        Arrays.stream(featureSupplier).sequential().forEach(this::installFeature);
     }
 
     public void uninstallFeature(Class<?> featureClass) {
