@@ -53,7 +53,7 @@ dependencies {
     implementation("org.jruby.joni:joni:${Versions.joniVersion}")
     implementation("xerces:xercesImpl:${Versions.xercesImplVersion}")
 
-    implementation("org.yaml:snakeyaml:1.30")
+    implementation("org.yaml:snakeyaml:1.31")
     implementation("org.eclipse.jdt:org.eclipse.jdt.annotation:2.2.600")
     implementation("com.google.guava:guava:30.0-android")
 
