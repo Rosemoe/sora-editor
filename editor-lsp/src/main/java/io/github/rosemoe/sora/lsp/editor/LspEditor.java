@@ -195,7 +195,9 @@ public class LspEditor {
         supportedFeatures.clear();
         options.clear();
         currentEditor.clear();
-        completionTriggers.clear();
+        if (completionTriggers != null) {
+            completionTriggers.clear();
+        }
         currentLanguage.destroy();
 
         currentLanguage = null;
@@ -205,6 +207,7 @@ public class LspEditor {
 
         if (unsubscribeFunction != null) {
             unsubscribeFunction.run();
+            unsubscribeFunction = null;
         }
 
         editorContentChangeEventReceiver = null;
