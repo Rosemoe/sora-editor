@@ -18,7 +18,7 @@ Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEdito
 **Issues and pull requests are welcome.**
 ## Features
 - [x] Syntax highlighting
-- [x] Auto-completion
+- [x] Auto-completion (with snippets)
 - [x] Auto indent
 - [x] Code block lines
 - [x] Scale text
