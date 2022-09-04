@@ -214,7 +214,7 @@ class SnippetController(private val editor: CodeEditor) {
         for (i in 0 until elements.size) {
             val item = elements[i]
             if (item is VariableItem) {
-                val value = when {
+                var value = when {
                     variableResolver.canResolve(item.name) -> variableResolver.resolve(item.name)
                     item.name == "selection" -> selectedText
                     item.defaultValue != null -> item.defaultValue
@@ -222,6 +222,7 @@ class SnippetController(private val editor: CodeEditor) {
                 }
                 if (value != null) {
                     // Resolved variable value
+                    value = TransformApplier.doTransform(value, item.transform)
                     val deltaIndex = value.length - (item.endIndex - item.startIndex)
                     elements[i] = PlainTextItem(
                         value,
@@ -366,6 +367,13 @@ class SnippetController(private val editor: CodeEditor) {
     private fun shiftToTabStop(index: Int) {
         if (snippetIndex == -1) {
             return
+        }
+        if (index != currentTabStopIndex && currentTabStopIndex != -1) {
+            // apply transform
+            val tabStop = tabStops!![currentTabStopIndex]
+            if (tabStop.definition.transform != null) {
+                editor.text.replace(tabStop.startIndex, tabStop.endIndex, TransformApplier.doTransform(editor.text.substring(tabStop.startIndex, tabStop.endIndex), tabStop.definition.transform))
+            }
         }
         val tabStop = tabStops!![index]
         val indexer = editor.text.indexer
