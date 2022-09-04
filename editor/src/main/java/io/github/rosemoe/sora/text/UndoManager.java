@@ -70,6 +70,7 @@ public final class UndoManager implements ContentListener, Parcelable {
     private boolean replaceMark;
     private int stackPointer;
     private boolean ignoreModification;
+    private boolean forceNewMultiAction;
 
     /**
      * Create an UndoManager
@@ -147,6 +148,16 @@ public final class UndoManager implements ContentListener, Parcelable {
             actionStack.get(stackPointer).redo(content);
             stackPointer++;
             ignoreModification = false;
+        }
+    }
+
+    protected void onExitBatchEdit() {
+        forceNewMultiAction = true;
+        if (!actionStack.isEmpty() && actionStack.get(actionStack.size() - 1) instanceof MultiAction) {
+            var action = ((MultiAction) actionStack.get(actionStack.size() - 1));
+            if (action._actions.size() == 1) {
+                actionStack.set(actionStack.size() - 1, action._actions.get(0));
+            }
         }
     }
 
@@ -253,7 +264,7 @@ public final class UndoManager implements ContentListener, Parcelable {
                 stackPointer++;
             } else {
                 ContentAction a = actionStack.get(actionStack.size() - 1);
-                if (a instanceof MultiAction) {
+                if (a instanceof MultiAction && !forceNewMultiAction) {
                     MultiAction ac = (MultiAction) a;
                     ac.addAction(action);
                 } else {
@@ -277,6 +288,7 @@ public final class UndoManager implements ContentListener, Parcelable {
                 }
             }
         }
+        forceNewMultiAction = false;
         cleanStack();
     }
 

@@ -631,6 +631,9 @@ public class Content implements CharSequence {
      */
     public boolean endBatchEdit() {
         nestedBatchEdit--;
+        if (nestedBatchEdit == 1) {
+            undoManager.onExitBatchEdit();
+        }
         if (nestedBatchEdit < 0) {
             nestedBatchEdit = 0;
         }
