@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2022  Rosemoe
@@ -20,8 +20,48 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.lang.completion.snippet;
 
-package io.github.rosemoe.sora.lang.completion.snippet
+public class ConditionalFormat implements FormatString {
 
-data class PlaceholderDefinition(var id: Int, var defaultValue: String, var choices: List<String>? = null, var transform: Transform? = null)
+    public int group;
+
+    public String ifValue;
+
+    public String elseValue;
+
+    public String shorthand;
+
+    public int getGroup() {
+        return group;
+    }
+
+    public void setGroup(int group) {
+        this.group = group;
+    }
+
+    public String getIfValue() {
+        return ifValue;
+    }
+
+    public void setIfValue(String ifValue) {
+        this.ifValue = ifValue;
+    }
+
+    public String getElseValue() {
+        return elseValue;
+    }
+
+    public void setElseValue(String elseValue) {
+        this.elseValue = elseValue;
+    }
+
+    public void setShorthand(String shorthand) {
+        this.shorthand = shorthand;
+    }
+
+    public String getShorthand() {
+        return shorthand;
+    }
+}

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2022  Rosemoe
@@ -20,8 +20,34 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.lang.completion.snippet;
 
-package io.github.rosemoe.sora.lang.completion.snippet
+import java.util.List;
+import java.util.regex.Pattern;
 
-data class PlaceholderDefinition(var id: Int, var defaultValue: String, var choices: List<String>? = null, var transform: Transform? = null)
+public class Transform {
+
+    public Pattern getRegexp() {
+        return regexp;
+    }
+
+    public void setRegexp(Pattern regexp) {
+        this.regexp = regexp;
+    }
+
+    public List<FormatString> getFormat() {
+        return format;
+    }
+
+    public void setFormat(List<FormatString> format) {
+        this.format = format;
+    }
+
+    public Pattern regexp;
+
+    public boolean globalMode;
+
+    public List<FormatString> format;
+
+}

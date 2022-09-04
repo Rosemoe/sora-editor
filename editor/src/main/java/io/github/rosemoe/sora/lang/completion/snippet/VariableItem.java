@@ -30,11 +30,26 @@ public class VariableItem extends SnippetItem {
 
     private String name;
     private String defaultValue;
+    private Transform transform;
 
     public VariableItem(int index, @NonNull String name, @Nullable String defaultValue) {
+        this(index, name, defaultValue, null);
+    }
+
+    public VariableItem(int index, @NonNull String name, @Nullable String defaultValue, @Nullable Transform transform) {
         super(index);
         this.name = name;
         this.defaultValue = defaultValue;
+        this.transform = transform;
+    }
+
+    public void setTransform(@Nullable Transform transform) {
+        this.transform = transform;
+    }
+
+    @Nullable
+    public Transform getTransform() {
+        return transform;
     }
 
     public void setName(@NonNull String name) {

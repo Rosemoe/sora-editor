@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2022  Rosemoe
@@ -20,8 +20,10 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.lang.completion.snippet;
 
-package io.github.rosemoe.sora.lang.completion.snippet
+public interface FormatString {
 
-data class PlaceholderDefinition(var id: Int, var defaultValue: String, var choices: List<String>? = null, var transform: Transform? = null)
+
+}

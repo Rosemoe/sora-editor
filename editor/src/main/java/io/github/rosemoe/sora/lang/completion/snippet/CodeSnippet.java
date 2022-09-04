@@ -80,7 +80,7 @@ public class CodeSnippet implements Cloneable {
         var defs = new ArrayList<PlaceholderDefinition>(placeholders.size());
         var map = new HashMap<PlaceholderDefinition, PlaceholderDefinition>();
         for (PlaceholderDefinition placeholder : placeholders) {
-            var n = new PlaceholderDefinition(placeholder.getId(), placeholder.getDefaultValue(), placeholder.getChoices());
+            var n = new PlaceholderDefinition(placeholder.getId(), placeholder.getDefaultValue(), placeholder.getChoices(), placeholder.getTransform());
             defs.add(n);
             map.put(placeholder, n);
         }
@@ -147,6 +147,22 @@ public class CodeSnippet implements Cloneable {
             return this;
         }
 
+        public Builder addPlaceholder(int id, Transform transform) {
+            if (transform == null) {
+                return addPlaceholder(id);
+            }
+            addPlaceholder(id);
+            PlaceholderDefinition def = null;
+            for (var definition : definitions) {
+                if (definition.getId() == id) {
+                    def = definition;
+                    break;
+                }
+            }
+            Objects.requireNonNull(def).setTransform(transform);
+            return this;
+        }
+
         public Builder addPlaceholder(int id, String defaultValue) {
             PlaceholderDefinition def = null;
             for (var definition : definitions) {
@@ -156,7 +172,7 @@ public class CodeSnippet implements Cloneable {
                 }
             }
             if (def == null) {
-                def = new PlaceholderDefinition(id, "", null);
+                def = new PlaceholderDefinition(id, "", null, null);
                 definitions.add(def);
             }
             int delta = 0;
@@ -188,6 +204,11 @@ public class CodeSnippet implements Cloneable {
 
         public Builder addVariable(String name, String defaultValue) {
             items.add(new VariableItem(index, name, defaultValue));
+            return this;
+        }
+
+        public Builder addVariable(String name, Transform transform) {
+            items.add(new VariableItem(index, name, null, transform));
             return this;
         }
 
