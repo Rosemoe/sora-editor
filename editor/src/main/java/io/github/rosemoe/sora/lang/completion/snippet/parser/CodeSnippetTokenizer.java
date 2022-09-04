@@ -76,7 +76,8 @@ public class CodeSnippetTokenizer {
 
         while (index + length < value.length() && !isDigitChar(ch) && !isVariableChar(ch) && staticTypes.get(ch) == null) {
             length++;
-            ch = value.charAt(index + length);
+            if (index + length < value.length())
+                ch = value.charAt(index + length);
         }
         return TokenType.Format;
     }

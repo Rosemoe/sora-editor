@@ -51,6 +51,9 @@ public class CodeSnippetParser {
     }
 
     private void next() {
+        if (token.type == TokenType.EOF) {
+            return;
+        }
         token = tokenizer.nextToken();
     }
 
@@ -200,7 +203,6 @@ public class CodeSnippetParser {
         String text;
         if (accept(TokenType.Dollar) && accept(TokenType.CurlyOpen) && (text = _accept(TokenType.Int)) != null) {
             var idText = text;
-            String defaultValue = null;
             if (accept(TokenType.Colon)) {
                 // ${1:xxx}
                 var sb = new StringBuilder();
