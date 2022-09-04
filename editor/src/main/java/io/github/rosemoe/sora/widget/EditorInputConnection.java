@@ -278,17 +278,8 @@ class EditorInputConnection extends BaseInputConnection {
                 || (replacement.shouldNotDoReplace(editor.getText()) && replacement.notHasAutoSurroundPair())) {
             editor.commitText(text, applyAutoIndent);
         } else {
-            String[] autoSurroundPair;
-            if (getCursor().isSelected() && (autoSurroundPair = replacement.getAutoSurroundPair()) != null) {
-                editor.getText().beginBatchEdit();
-                //insert left
-                editor.getText().insert(getCursor().getLeftLine(), getCursor().getLeftColumn(), autoSurroundPair[0]);
-                //insert right
-                editor.getText().insert(getCursor().getRightLine(), getCursor().getRightColumn(), autoSurroundPair[1]);
-                editor.getText().endBatchEdit();
-                //cancel selected
-                editor.setSelection(getCursor().getLeftLine(), getCursor().getLeftColumn() + autoSurroundPair[0].length() - 1, SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
-
+            if (getCursor().isSelected()) {
+                editor.commitText(text, applyAutoIndent);
             } else {
                 editor.commitText(replacement.text, applyAutoIndent);
                 int delta = (replacement.text.length() - replacement.selection);

@@ -175,7 +175,9 @@ public interface Language {
      */
     @UiThread
     @Nullable
-    QuickQuoteHandler getQuickQuoteHandler();
+    default QuickQuoteHandler getQuickQuoteHandler() {
+        return null;
+    }
 
     /**
      * Destroy this {@link Language} object.

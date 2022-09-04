@@ -1628,8 +1628,23 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param text Text commit by InputConnection
      */
     public void commitText(CharSequence text, boolean applyAutoIndent) {
+        if (text.length() == 0) {
+            return;
+        }
         var cur = cursor;
         if (cur.isSelected()) {
+            if (text.length() > 0 && text.length() == 1) {
+                var quoteHandler = editorLanguage.getQuickQuoteHandler();
+                System.out.println(quoteHandler);
+                var result = quoteHandler == null ? null : quoteHandler.onHandleTyping(text.toString(), this.text, getCursorRange(), getStyles());
+                if (result != null && result.isConsumed()) {
+                    var range = result.getNewCursorRange();
+                    if (range != null) {
+                        setSelectionRegion(range.getStart().line, range.getStart().column, range.getEnd().line, range.getEnd().column);
+                    }
+                    return;
+                }
+            }
             this.text.replace(cur.getLeftLine(), cur.getLeftColumn(), cur.getRightLine(), cur.getRightColumn(), text);
         } else {
             if (props.autoIndent && text.length() != 0 && applyAutoIndent) {

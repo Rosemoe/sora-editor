@@ -32,6 +32,7 @@ import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
+import io.github.rosemoe.sora.lang.QuickQuoteHandler;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
@@ -65,6 +66,7 @@ public class JavaLanguage implements Language {
 
     private IdentifierAutoComplete autoComplete;
     private final JavaIncrementalAnalyzeManager manager;
+    private final JavaQuoteHandler javaQuoteHandler = new JavaQuoteHandler();
 
     public JavaLanguage() {
         autoComplete = new IdentifierAutoComplete(JavaTextTokenizer.sKeywords);
@@ -75,6 +77,12 @@ public class JavaLanguage implements Language {
     @Override
     public AnalyzeManager getAnalyzeManager() {
         return manager;
+    }
+
+    @Nullable
+    @Override
+    public QuickQuoteHandler getQuickQuoteHandler() {
+        return javaQuoteHandler;
     }
 
     @Override
