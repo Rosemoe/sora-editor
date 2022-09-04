@@ -55,6 +55,7 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
 public class JavaLanguage implements Language {
 
     private final static CodeSnippet FOR_SNIPPET = CodeSnippetParser.parse("for(int ${1:i} = 0;$1 < ${2:count};$1++) {\n    $0\n}");
+    private final static CodeSnippet STATIC_CONST_SNIPPET = CodeSnippetParser.parse("private final static ${1:type} ${2/(.*)/${1:/upcase}/} = ${3:value};");
 
     private IdentifierAutoComplete autoComplete;
     private JavaIncrementalAnalyzeManager manager;
@@ -90,6 +91,9 @@ public class JavaLanguage implements Language {
         }
         if ("fori".startsWith(prefix) && prefix.length() > 0) {
             publisher.addItem(new SimpleSnippetCompletionItem("fori", "Snippet - For loop on index", new SnippetDescription(prefix.length(), FOR_SNIPPET, true)));
+        }
+        if ("sconst".startsWith(prefix) && prefix.length() > 0) {
+            publisher.addItem(new SimpleSnippetCompletionItem("sconst", "Snippet - Static Constant", new SnippetDescription(prefix.length(), STATIC_CONST_SNIPPET, true)));
         }
         if ("rand".startsWith(prefix) && prefix.length() > 0) {
             publisher.addItem(new SimpleSnippetCompletionItem("rand", "Snippet - Quick random number", new SnippetDescription(prefix.length(), CodeSnippetParser.parse("$RANDOM"), true)));
