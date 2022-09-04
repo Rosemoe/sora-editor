@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.widget.snippet;
 
+import static io.github.rosemoe.sora.util.MyCharacter.isAlpha;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -104,10 +106,6 @@ public class TransformApplier {
             return Character.toUpperCase(text.charAt(0)) + text.substring(1, text.length());
         }
         return text;
-    }
-
-    private static boolean isAlpha(char c) {
-        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
     }
 
 }
