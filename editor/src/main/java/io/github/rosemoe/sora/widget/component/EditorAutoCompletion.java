@@ -394,8 +394,9 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             } catch (Exception e) {
                 if (e instanceof CompletionCancelledException) {
                     Log.v("CompletionThread", "Completion is cancelled");
+                } else {
+                    e.printStackTrace();
                 }
-                e.printStackTrace();
             }
         }
 
