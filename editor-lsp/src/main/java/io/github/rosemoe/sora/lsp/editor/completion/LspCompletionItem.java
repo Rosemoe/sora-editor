@@ -68,15 +68,12 @@ public class LspCompletionItem extends CompletionItem implements Comparable<LspC
 
         var textEdit = new TextEdit();
 
-        var cursorPosition = LspUtils.createPosition(line, column);
 
         textEdit.setRange(LspUtils.createRange(LspUtils.createPosition(line, column - prefixLength), LspUtils.createPosition(line, column)));
 
         if (commitItem.getInsertText() != null) {
             textEdit.setNewText(commitItem.getInsertText());
         }
-
-
 
 
         if (commitItem.getTextEdit() != null && commitItem.getTextEdit().isLeft()) {
@@ -112,60 +109,18 @@ public class LspCompletionItem extends CompletionItem implements Comparable<LspC
         }
 
 
-        SnippetVariable firstSnippetVariable = null;
+        var finalTextEdit = textEdit;
+
+        Runnable runnable = () -> {
+            applyEditsFeature.execute(new Pair<>(List.of(finalTextEdit), text));
+
+        };
 
         if (commitItem.getInsertTextFormat() == InsertTextFormat.Snippet) {
-            try {
-                var variables = new ArrayList<SnippetVariable>();
-                // Extracts variables using placeholder REGEX pattern.
-                var varMatcher = Pattern.compile(SNIPPET_PLACEHOLDER_REGEX_1).matcher(textEdit.getNewText());
-                while (varMatcher.find()) {
-                    variables.add(new SnippetVariable(varMatcher.group(), varMatcher.start(), varMatcher.end()));
-                }
-
-                varMatcher = Pattern.compile(SNIPPET_PLACEHOLDER_REGEX_2).matcher(textEdit.getNewText());
-
-                while (varMatcher.find()) {
-                    variables.add(new SnippetVariable(varMatcher.group(), varMatcher.start(), varMatcher.end()));
-                }
-
-                variables.sort(Comparator.comparingInt(o -> o.startIndex));
-
-                firstSnippetVariable = variables.get(0);
-
-                final String[] finalInsertText = {textEdit.getNewText()};
-                variables.forEach(var -> finalInsertText[0] = finalInsertText[0].replace(var.snippetText, "$"));
-
-                String[] splitInsertText = finalInsertText[0].split("\\$");
-
-
-                finalInsertText[0] = String.join("", splitInsertText);
-
-                textEdit.setNewText(finalInsertText[0]);
-
-
-            } catch (Exception e) {
-                Log.e("aaa", "bbb", e);
-                throw e;
-            }
 
         }
 
-        applyEditsFeature.execute(new Pair<>(List.of(textEdit), text));
-
-
-        if (firstSnippetVariable != null) {
-            var startPosition = textEdit.getRange().getStart();
-            var targetIndex = text.getCharIndex(startPosition.getLine(), startPosition.getCharacter());
-
-            targetIndex += firstSnippetVariable.startIndex;
-
-            cursorPosition = LspUtils.createPosition(text.getIndexer().getCharPosition(targetIndex));
-
-        }
-
-
-        text.getCursor().set(cursorPosition.getLine(), cursorPosition.getCharacter());
+        runnable.run();
 
         if (commitItem.getAdditionalTextEdits() != null) {
             applyEditsFeature.execute(new Pair<>(commitItem.getAdditionalTextEdits(), text));
@@ -181,38 +136,6 @@ public class LspCompletionItem extends CompletionItem implements Comparable<LspC
         }
 
         return commitItem.getLabel().compareTo(completionItem.commitItem.getLabel());
-    }
-
-    static class SnippetVariable {
-        String snippetText;
-        int startIndex;
-        int endIndex;
-        String variableValue;
-
-
-        SnippetVariable(String text, int start, int end) {
-            this.snippetText = text;
-            this.startIndex = start;
-            this.endIndex = end;
-            this.variableValue = getVariableValue(text);
-        }
-
-        private String getVariableValue(String lspVarSnippet) {
-            if (lspVarSnippet.contains(":")) {
-                return lspVarSnippet.substring(lspVarSnippet.indexOf(':') + 1, lspVarSnippet.lastIndexOf('}'));
-            }
-            return " ";
-        }
-
-        @Override
-        public String toString() {
-            return "SnippetVariable{" +
-                    "snippetText='" + snippetText + '\'' +
-                    ", startIndex=" + startIndex +
-                    ", endIndex=" + endIndex +
-                    ", variableValue='" + variableValue + '\'' +
-                    '}';
-        }
     }
 
 }

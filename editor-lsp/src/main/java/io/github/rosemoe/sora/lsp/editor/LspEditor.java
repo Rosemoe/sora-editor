@@ -33,6 +33,7 @@ import org.eclipse.lsp4j.TextDocumentSyncKind;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -60,9 +61,7 @@ import io.github.rosemoe.sora.lsp.operations.format.RangeFormattingFeature;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 @Experimental
-
 public class LspEditor {
-
 
     private final String projectPath;
 
@@ -88,7 +87,7 @@ public class LspEditor {
 
     private TextDocumentSyncKind textDocumentSyncKind;
 
-    private List<String> completionTriggers;
+    private List<String> completionTriggers = Collections.emptyList();
 
     private LspEditorContentChangeEventReceiver editorContentChangeEventReceiver;
 
@@ -143,6 +142,9 @@ public class LspEditor {
         return (T) wrapperLanguage;
     }
 
+    /**
+     * Set the wrapper language, as the language server may not provide all the features, such as highlighting, you can implement the features yourself and integrate with the language server
+     */
     public void setWrapperLanguage(Language wrapperLanguage) {
         this.wrapperLanguage = wrapperLanguage;
         currentLanguage.setWrapperLanguage(wrapperLanguage);
@@ -195,9 +197,8 @@ public class LspEditor {
         supportedFeatures.clear();
         options.clear();
         currentEditor.clear();
-        if (completionTriggers != null) {
-            completionTriggers.clear();
-        }
+        completionTriggers.clear();
+
         currentLanguage.destroy();
 
         currentLanguage = null;
@@ -243,6 +244,12 @@ public class LspEditor {
         return null;
     }
 
+    /**
+     * Connect to the language server to provide the capabilities, this will cause threads blocking. Note: An error will be thrown if the language server is not connected after some time.
+     *
+     * @see io.github.rosemoe.sora.lsp.requests.Timeouts
+     * @see io.github.rosemoe.sora.lsp.requests.Timeout
+     */
     @WorkerThread
     public void connect() {
         var languageServerWrapper = LanguageServerWrapper.forProject(projectPath);
@@ -251,7 +258,7 @@ public class LspEditor {
         this.languageServerWrapper = languageServerWrapper;
         languageServerWrapper.start();
         //wait for language server start
-        languageServerWrapper.getServer();
+        languageServerWrapper.getServerCapabilities();
         languageServerWrapper.connect(this);
     }
 
@@ -272,10 +279,16 @@ public class LspEditor {
     }
 
 
+    /**
+     * Notify the language server to open the document
+     */
     public void open() {
         safeUseFeature(DocumentOpenFeature.class).ifPresent(documentOpenFeature -> documentOpenFeature.execute(null));
     }
 
+    /**
+     * Get a request manager that can manipulate the language server
+     */
     @Nullable
     public RequestManager getRequestManager() {
         LanguageServerWrapper serverWrapper = LanguageServerWrapper.forProject(projectPath);
@@ -286,10 +299,16 @@ public class LspEditor {
         return Optional.ofNullable(getRequestManager());
     }
 
+    /**
+     * Notify language servers to save document
+     */
     public void save() {
         safeUseFeature(DocumentSaveFeature.class).ifPresent(documentSaveFeature -> documentSaveFeature.execute(null));
     }
 
+    /**
+     * disconnect to the language server
+     */
     public void disconnect() {
         if (languageServerWrapper != null) {
             try {
@@ -304,6 +323,9 @@ public class LspEditor {
         }
     }
 
+    /**
+     * Close the editor, it will dispose the editor's resources and disconnect to the language server
+     */
     public void close() {
 
         if (isClose) {
@@ -311,7 +333,6 @@ public class LspEditor {
         }
 
         isClose = true;
-
 
         disconnect();
         dispose();

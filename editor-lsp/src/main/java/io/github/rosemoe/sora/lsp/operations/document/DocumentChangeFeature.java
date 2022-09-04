@@ -41,11 +41,11 @@ import io.github.rosemoe.sora.lsp.requests.Timeout;
 import io.github.rosemoe.sora.lsp.requests.Timeouts;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 
-public class DocumentChangeFeature implements Feature<ContentChangeEvent, Void> {
+public class
+DocumentChangeFeature implements Feature<ContentChangeEvent, Void> {
 
     private volatile CompletableFuture<Void> future;
     private LspEditor editor;
-
 
     @Override
     public void install(LspEditor editor) {
@@ -72,8 +72,8 @@ public class DocumentChangeFeature implements Feature<ContentChangeEvent, Void> 
         var params = createDidChangeTextDocumentParams(data);
 
         editor.getRequestManagerOfOptional().ifPresent(requestManager -> {
+            future = CompletableFuture.runAsync(() -> requestManager.didChange(params));
             ForkJoinPool.commonPool().execute(() -> {
-                future = CompletableFuture.runAsync(() -> requestManager.didChange(params));
                 future.join();
             });
 

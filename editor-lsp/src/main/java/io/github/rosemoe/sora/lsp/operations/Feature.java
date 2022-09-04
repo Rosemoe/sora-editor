@@ -25,10 +25,17 @@ package io.github.rosemoe.sora.lsp.operations;
 
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 
+
 public interface Feature<T, R> {
 
+    /**
+     * Install this feature
+     */
     void install(LspEditor editor);
 
+    /**
+     * Uninstall this feature
+     */
     void uninstall(LspEditor editor);
 
     R execute(T data);

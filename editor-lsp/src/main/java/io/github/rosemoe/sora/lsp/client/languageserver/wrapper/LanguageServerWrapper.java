@@ -76,6 +76,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -433,9 +434,9 @@ public class LanguageServerWrapper {
                         editor.setSyncOptions(textDocumentSyncKind);
 
 
-                        var completionTriggers = (capabilities.getCompletionProvider() != null
+                        List<String> completionTriggers = (capabilities.getCompletionProvider() != null
                                 && capabilities.getCompletionProvider().getTriggerCharacters() != null) ?
-                                capabilities.getCompletionProvider().getTriggerCharacters() : new ArrayList<String>();
+                                capabilities.getCompletionProvider().getTriggerCharacters() : Collections.emptyList();
 
                         editor.setCompletionTriggers(completionTriggers);
 
