@@ -159,7 +159,7 @@ class LspTestActivity : AppCompatActivity() {
 
 
         lifecycleScope.launch(Dispatchers.IO) {
-            //delay(Timeout.getTimeout(Timeouts.INIT).toLong()) //wait for server start
+            delay(Timeout.getTimeout(Timeouts.INIT).toLong()) //wait for server start
             lspEditor.connect()
             withContext(Dispatchers.Main) {
                 editor.editable = true
