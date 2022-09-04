@@ -26,7 +26,9 @@ package io.github.rosemoe.sora.widget.snippet
 
 import android.util.Log
 import io.github.rosemoe.sora.event.ContentChangeEvent
+import io.github.rosemoe.sora.event.InterceptTarget
 import io.github.rosemoe.sora.event.SelectionChangeEvent
+import io.github.rosemoe.sora.event.SnippetEvent
 import io.github.rosemoe.sora.lang.completion.snippet.*
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
@@ -321,6 +323,10 @@ class SnippetController(private val editor: CodeEditor) {
         }
         text.insert(pos.line, pos.column, sb)
         // Stage 7: shift to the first tab stop
+        if ((editor.dispatchEvent(SnippetEvent(editor, SnippetEvent.ACTION_START, currentTabStopIndex, tabStops.size)) and InterceptTarget.TARGET_EDITOR) != 0) {
+            stopSnippet()
+            return
+        }
         shiftToTabStop(0)
     }
 
@@ -381,6 +387,7 @@ class SnippetController(private val editor: CodeEditor) {
         val right = indexer.getCharPosition(tabStop.endIndex)
         currentTabStopIndex = index
         editor.setSelectionRegion(left.line, left.column, right.line, right.column)
+        editor.dispatchEvent(SnippetEvent(editor, SnippetEvent.ACTION_SHIFT, currentTabStopIndex, tabStops!!.size))
         if (index == tabStops!!.size - 1) {
             stopSnippet()
         }
@@ -401,6 +408,7 @@ class SnippetController(private val editor: CodeEditor) {
         snippetIndex = -1
         tabStops = null
         currentTabStopIndex = -1
+        editor.dispatchEvent(SnippetEvent(editor, SnippetEvent.ACTION_STOP, currentTabStopIndex, 0))
         editor.invalidate()
     }
 
