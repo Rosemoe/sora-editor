@@ -287,10 +287,9 @@ public class JavaTextTokenizer {
                     return;
                 }
                 length++;
-                throwIfNeeded();
             }
         }
-        if (offset + length != bufferLen) {
+        if (offset + length < bufferLen) {
             length++;
         }
     }
