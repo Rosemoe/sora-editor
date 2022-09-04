@@ -33,6 +33,7 @@ import java.util.regex.PatternSyntaxException;
 import io.github.rosemoe.sora.lang.completion.snippet.CodeSnippet;
 import io.github.rosemoe.sora.lang.completion.snippet.ConditionalFormat;
 import io.github.rosemoe.sora.lang.completion.snippet.FormatString;
+import io.github.rosemoe.sora.lang.completion.snippet.NextUpperCaseFormat;
 import io.github.rosemoe.sora.lang.completion.snippet.NoFormat;
 import io.github.rosemoe.sora.lang.completion.snippet.PlaceholderDefinition;
 import io.github.rosemoe.sora.lang.completion.snippet.Transform;
@@ -319,6 +320,12 @@ public class CodeSnippetParser {
                 String escaped;
                 if ((escaped = _accept(TokenType.Backslash, TokenType.Forwardslash)) != null) {
                     list.add(new NoFormat(escaped));
+                } else if ((escaped = _accept(TokenType.VariableName)) != null) {
+                    if ("u".equals(escaped)) {
+                        list.add(new NextUpperCaseFormat());
+                    } else {
+                        list.add(new NoFormat("\\" + escaped));
+                    }
                 } else {
                     list.add(new NoFormat("\\"));
                 }

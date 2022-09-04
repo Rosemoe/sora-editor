@@ -32,6 +32,7 @@ import java.util.regex.Matcher;
 
 import io.github.rosemoe.sora.lang.completion.snippet.ConditionalFormat;
 import io.github.rosemoe.sora.lang.completion.snippet.FormatString;
+import io.github.rosemoe.sora.lang.completion.snippet.NextUpperCaseFormat;
 import io.github.rosemoe.sora.lang.completion.snippet.NoFormat;
 import io.github.rosemoe.sora.lang.completion.snippet.Transform;
 
@@ -66,9 +67,10 @@ public class TransformApplier {
 
     private static CharSequence applySingle(String text, Matcher matcher, List<FormatString> formatStringList) {
         var sb = new StringBuilder();
+        var nextUpperCase = false;
         for (FormatString formatString : formatStringList) {
             if (formatString instanceof NoFormat) {
-                sb.append(((NoFormat) formatString).getText());
+                sb.append(applyFirstUpperCase(((NoFormat) formatString).getText(), nextUpperCase));
             } else if (formatString instanceof ConditionalFormat) {
                 var format = (ConditionalFormat) formatString;
                 var group = matcher.group(format.getGroup());
@@ -76,24 +78,36 @@ public class TransformApplier {
                     if (group != null) {
                         switch (format.getShorthand()) {
                             case "upcase":
-                                sb.append(group.toUpperCase(Locale.ROOT));
+                                sb.append(applyFirstUpperCase(group.toUpperCase(Locale.ROOT), nextUpperCase));
                                 break;
                             case "lowcase":
-                                sb.append(group.toLowerCase(Locale.ROOT));
+                                sb.append(applyFirstUpperCase(group.toLowerCase(Locale.ROOT), nextUpperCase));
                                 break;
                             default:
                                 //not supported
-                                sb.append(group);
+                                sb.append(applyFirstUpperCase(group, nextUpperCase));
                         }
                     }
                 } else {
                     var ifValue = format.getIfValue() != null ? format.getIfValue() : group;
                     var elseValue = format.getElseValue() != null ? format.getElseValue() : "";
-                    sb.append(group != null ? ifValue : elseValue);
+                    sb.append(applyFirstUpperCase(group != null ? ifValue : elseValue, nextUpperCase));
                 }
             }
+            nextUpperCase = formatString instanceof NextUpperCaseFormat;
         }
         return sb;
+    }
+
+    private static String applyFirstUpperCase(String text, boolean apply) {
+        if (apply && text != null && text.length() > 0 && isAlpha(text.charAt(0))) {
+            return Character.toUpperCase(text.charAt(0)) + text.substring(1, text.length());
+        }
+        return text;
+    }
+
+    private static boolean isAlpha(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
     }
 
 }
