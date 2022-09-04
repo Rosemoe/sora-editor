@@ -387,13 +387,13 @@ class SnippetController(private val editor: CodeEditor) {
 
     fun shiftToPreviousTabStop() {
         if (snippetIndex != -1 && currentTabStopIndex > 0) {
-            shiftToTabStop(--currentTabStopIndex)
+            shiftToTabStop(currentTabStopIndex - 1)
         }
     }
 
     fun shiftToNextTabStop() {
         if (snippetIndex != -1 && currentTabStopIndex < tabStops!!.size - 1) {
-            shiftToTabStop(++currentTabStopIndex)
+            shiftToTabStop(currentTabStopIndex + 1)
         }
     }
 
