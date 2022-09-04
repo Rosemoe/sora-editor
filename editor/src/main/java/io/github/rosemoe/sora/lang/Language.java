@@ -165,6 +165,19 @@ public interface Language {
     NewlineHandler[] getNewlineHandlers();
 
     /**
+     * Get newline handlers of this language.
+     * This method is called each time the user types a single character (or a single code point)
+     * and some text is currently selected.
+     * <p>
+     * Pay attention to the performance as this method is called frequently
+     *
+     * @return QuickQuoteHandler, maybe null
+     */
+    @UiThread
+    @Nullable
+    QuickQuoteHandler getQuickQuoteHandler();
+
+    /**
      * Destroy this {@link Language} object.
      * <p>
      * When called, you should stop your resource-taking actions and remove any reference
