@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.TreeSet;
 
 public class CodeSnippet implements Cloneable {
@@ -79,7 +80,7 @@ public class CodeSnippet implements Cloneable {
         var defs = new ArrayList<PlaceholderDefinition>(placeholders.size());
         var map = new HashMap<PlaceholderDefinition, PlaceholderDefinition>();
         for (PlaceholderDefinition placeholder : placeholders) {
-            var n = new PlaceholderDefinition(placeholder.getId(), placeholder.getDefaultValue());
+            var n = new PlaceholderDefinition(placeholder.getId(), placeholder.getDefaultValue(), placeholder.getChoices());
             defs.add(n);
             map.put(placeholder, n);
         }
@@ -125,7 +126,25 @@ public class CodeSnippet implements Cloneable {
         }
 
         public Builder addPlaceholder(int id) {
-            return addPlaceholder(id, null);
+            return addPlaceholder(id, (String) null);
+        }
+
+        public Builder addPlaceholder(int id, List<String> choices) {
+            if (choices.size() == 0) {
+                return addPlaceholder(id);
+            } else if (choices.size() == 1) {
+                return addPlaceholder(id, choices.get(0));
+            }
+            addPlaceholder(id, choices.get(0));
+            PlaceholderDefinition def = null;
+            for (var definition : definitions) {
+                if (definition.getId() == id) {
+                    def = definition;
+                    break;
+                }
+            }
+            Objects.requireNonNull(def).setChoices(choices);
+            return this;
         }
 
         public Builder addPlaceholder(int id, String defaultValue) {
@@ -137,7 +156,7 @@ public class CodeSnippet implements Cloneable {
                 }
             }
             if (def == null) {
-                def = new PlaceholderDefinition(id, "");
+                def = new PlaceholderDefinition(id, "", null);
                 definitions.add(def);
             }
             int delta = 0;

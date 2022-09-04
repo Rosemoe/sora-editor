@@ -76,6 +76,11 @@ public class CodeSnippetParser {
     }
 
     private String _accept(TokenType... types) {
+        if (types.length == 0) {
+            var text = src.substring(token.index, token.index + token.length);
+            next();
+            return text;
+        }
         for (var type : types) {
             if (token.type == type) {
                 var text = src.substring(token.index, token.index + token.length);
@@ -153,7 +158,8 @@ public class CodeSnippetParser {
                             sb.append('\\');
                         }
                     } else if (token.type == TokenType.EOF) {
-                        throw new IllegalArgumentException("expecting '}'");
+                        backTo(backup);
+                        return false;
                     } else {
                         sb.append(src, token.index, token.index + token.length);
                         next();
@@ -191,13 +197,31 @@ public class CodeSnippetParser {
                             sb.append('\\');
                         }
                     } else if (token.type == TokenType.EOF) {
-                        throw new IllegalArgumentException("expecting '}'");
+                        backTo(backup);
+                        return false;
                     } else {
                         sb.append(src, token.index, token.index + token.length);
                         next();
                     }
                 }
                 builder.addPlaceholder(Integer.parseInt(idText), sb.toString());
+            } else if(accept(TokenType.Pipe)) {
+                // ${1|one,two,three|}
+                var choices = new ArrayList<String>();
+                while (true) {
+                    if (parseChoiceElement(choices)) {
+                        if (accept(TokenType.Comma)) {
+                            continue;
+                        }
+                        if (accept(TokenType.Pipe) && accept(TokenType.CurlyClose)) {
+                            builder.addPlaceholder(Integer.parseInt(idText), choices);
+                            return true;
+                        }
+                    }
+
+                    backTo(backup);
+                    return false;
+                }
             } else if(accept(TokenType.CurlyClose)) {
                 // ${1}
                 builder.addPlaceholder(Integer.parseInt(idText));
@@ -211,6 +235,33 @@ public class CodeSnippetParser {
         backTo(backup);
         return false;
     }
+
+    private boolean parseChoiceElement(List<String> choices) {
+        var backup = token;
+        var sb = new StringBuilder();
+        String text;
+        while (token.type != TokenType.Comma && token.type != TokenType.Pipe) {
+            if (accept(TokenType.Backslash)) {
+                if ((text = _accept(TokenType.Pipe, TokenType.Comma, TokenType.Backslash)) != null) {
+                    sb.append(text);
+                } else {
+                    sb.append('\\');
+                }
+            } else if (token.type != TokenType.EOF) {
+                sb.append(_accept());
+            } else {
+                backTo(backup);
+                return false;
+            }
+        }
+        if (sb.length() == 0) {
+            backTo(backup);
+            return false;
+        }
+        choices.add(sb.toString());
+        return true;
+    }
+
 
     private boolean parseOther() {
         if (token.type == TokenType.EOF) {
