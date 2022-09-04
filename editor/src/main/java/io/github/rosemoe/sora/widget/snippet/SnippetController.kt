@@ -150,7 +150,7 @@ class SnippetController(private val editor: CodeEditor) {
                         inSequenceEdits = false
                         if (exitOnEnd) {
                             stopSnippet()
-                        } else if(hasChangedText) {
+                        } else if (hasChangedText) {
                             editor.getComponent<EditorAutoCompletion>().requireCompletion()
                         }
                     } else {
@@ -257,7 +257,8 @@ class SnippetController(private val editor: CodeEditor) {
                     val def = if (variableItemMapping.contains(item.name)) {
                         variableItemMapping[item.name]!!
                     } else {
-                        variableItemMapping[item.name] = PlaceholderDefinition(++maxTabStop, item.name)
+                        variableItemMapping[item.name] =
+                            PlaceholderDefinition(++maxTabStop, item.name)
                         variableItemMapping[item.name]!!
                     }
                     elements[i] = PlaceholderItem(def, item.startIndex)
@@ -279,11 +280,12 @@ class SnippetController(private val editor: CodeEditor) {
                 }
                 val lastChar = value[value.lastIndex]
                 if (value.isNotEmpty() && lastChar == '\n' || lastChar == '\r') {
-                    value = if (lastChar == '\r' || (value.lastIndex > 0 && value[value.lastIndex - 1] != '\r') || value.lastIndex == 0) {
-                        value.substring(0, value.lastIndex)
-                    } else {
-                        value.substring(0, value.lastIndex - 1)
-                    }
+                    value =
+                        if (lastChar == '\r' || (value.lastIndex > 0 && value[value.lastIndex - 1] != '\r') || value.lastIndex == 0) {
+                            value.substring(0, value.lastIndex)
+                        } else {
+                            value.substring(0, value.lastIndex - 1)
+                        }
                 }
                 val deltaIndex = value.length - (item.endIndex - item.startIndex)
                 elements[i] = PlainTextItem(
@@ -351,7 +353,8 @@ class SnippetController(private val editor: CodeEditor) {
         tabStops.sortWith { a, b ->
             a.definition.id.compareTo(b.definition.id)
         }
-        var end = clonedSnippet.items.find { it is PlaceholderItem && it.definition.id == 0 } as PlaceholderItem?
+        var end =
+            clonedSnippet.items.find { it is PlaceholderItem && it.definition.id == 0 } as PlaceholderItem?
         if (end == null) {
             end = PlaceholderItem(
                 PlaceholderDefinition(0, ""), elements.last().endIndex
@@ -371,7 +374,15 @@ class SnippetController(private val editor: CodeEditor) {
         }
         text.insert(pos.line, pos.column, sb)
         // Stage 7: shift to the first tab stop
-        if ((editor.dispatchEvent(SnippetEvent(editor, SnippetEvent.ACTION_START, currentTabStopIndex, tabStops.size)) and InterceptTarget.TARGET_EDITOR) != 0) {
+        if ((editor.dispatchEvent(
+                SnippetEvent(
+                    editor,
+                    SnippetEvent.ACTION_START,
+                    currentTabStopIndex,
+                    tabStops.size
+                )
+            ) and InterceptTarget.TARGET_EDITOR) != 0
+        ) {
             stopSnippet()
             return
         }
@@ -433,7 +444,16 @@ class SnippetController(private val editor: CodeEditor) {
             // apply transform
             val tabStop = tabStops!![currentTabStopIndex]
             if (tabStop.definition.transform != null) {
-                editor.text.replace(tabStop.startIndex, tabStop.endIndex, TransformApplier.doTransform(editor.text.substring(tabStop.startIndex, tabStop.endIndex), tabStop.definition.transform))
+                editor.text.replace(
+                    tabStop.startIndex,
+                    tabStop.endIndex,
+                    TransformApplier.doTransform(
+                        editor.text.substring(
+                            tabStop.startIndex,
+                            tabStop.endIndex
+                        ), tabStop.definition.transform
+                    )
+                )
             }
         }
         val tabStop = tabStops!![index]
@@ -442,7 +462,14 @@ class SnippetController(private val editor: CodeEditor) {
         val right = indexer.getCharPosition(tabStop.endIndex)
         currentTabStopIndex = index
         editor.setSelectionRegion(left.line, left.column, right.line, right.column)
-        editor.dispatchEvent(SnippetEvent(editor, SnippetEvent.ACTION_SHIFT, currentTabStopIndex, tabStops!!.size))
+        editor.dispatchEvent(
+            SnippetEvent(
+                editor,
+                SnippetEvent.ACTION_SHIFT,
+                currentTabStopIndex,
+                tabStops!!.size
+            )
+        )
         if (index == tabStops!!.size - 1) {
             stopSnippet()
         }

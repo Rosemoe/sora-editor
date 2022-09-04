@@ -52,7 +52,7 @@ public class CommentBasedSnippetVariableResolver implements ISnippetVariableReso
     @NonNull
     @Override
     public String[] getResolvableNames() {
-        return new String[] {
+        return new String[]{
                 "LINE_COMMENT", "BLOCK_COMMENT_START", "BLOCK_COMMENT_END"
         };
     }
@@ -64,9 +64,12 @@ public class CommentBasedSnippetVariableResolver implements ISnippetVariableReso
             throw new IllegalStateException("language comment style is not configured properly");
         }
         switch (name) {
-            case "LINE_COMMENT": return commentTokens[0];
-            case "BLOCK_COMMENT_START": return commentTokens[1];
-            case "BLOCK_COMMENT_END": return commentTokens[2];
+            case "LINE_COMMENT":
+                return commentTokens[0];
+            case "BLOCK_COMMENT_START":
+                return commentTokens[1];
+            case "BLOCK_COMMENT_END":
+                return commentTokens[2];
         }
         throw new IllegalArgumentException("Unsupported variable name:" + name);
     }

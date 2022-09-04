@@ -194,7 +194,7 @@ public class CodeSnippet implements Cloneable {
                         var placeholder = (PlaceholderItem) j;
                         if (placeholder.getDefinition() == def) {
                             placeholder.setIndex(placeholder.getStartIndex(), placeholder.getEndIndex() + delta);
-                            for (int k = i + 1;k < items.size();k++) {
+                            for (int k = i + 1; k < items.size(); k++) {
                                 items.get(k).shiftIndex(delta);
                             }
                         }

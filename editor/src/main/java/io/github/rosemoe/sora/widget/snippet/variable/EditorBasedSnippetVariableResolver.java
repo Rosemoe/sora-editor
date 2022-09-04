@@ -65,7 +65,7 @@ public class EditorBasedSnippetVariableResolver implements ISnippetVariableResol
                 return text.getLine(text.getCursor().getLeftLine()).subSequence(IntPair.getFirst(res), IntPair.getSecond(res)).toString();
             }
             case "SELECTION":
-            case "TM_SELECTED_TEXT":{
+            case "TM_SELECTED_TEXT": {
                 var cursor = editor.getCursor();
                 return editor.getText().subSequence(cursor.getLeft(), cursor.getRight()).toString();
             }

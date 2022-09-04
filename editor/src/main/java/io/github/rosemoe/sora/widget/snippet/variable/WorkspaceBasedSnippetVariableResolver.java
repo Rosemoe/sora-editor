@@ -30,7 +30,7 @@ public abstract class WorkspaceBasedSnippetVariableResolver implements ISnippetV
     @NonNull
     @Override
     public String[] getResolvableNames() {
-        return new String[] {
+        return new String[]{
                 "WORKSPACE_NAME", "WORKSPACE_FOLDER"
         };
     }

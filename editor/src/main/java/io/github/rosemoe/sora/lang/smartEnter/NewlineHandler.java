@@ -23,6 +23,13 @@
  */
 package io.github.rosemoe.sora.lang.smartEnter;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import io.github.rosemoe.sora.lang.styling.Styles;
+import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.Content;
+
 /**
  * Perform text processing when user enters '\n' and selection size is 0
  */
@@ -31,11 +38,49 @@ public interface NewlineHandler {
     /**
      * Checks whether the given input matches the requirement to invoke this handler
      *
+     * @param text     Current text in editor
+     * @param position The position of cursor
+     * @param style    Current code styles
+     * @return Whether this handler should be called
+     */
+    @SuppressWarnings("deprecation")
+    default boolean matchesRequirement(@NonNull Content text, @NonNull CharPosition position, @Nullable Styles style) {
+        var line = text.getLine(position.line);
+        int index = position.column;
+        var beforeText = line.subSequence(0, index).toString();
+        var afterText = line.subSequence(index, line.length()).toString();
+        return matchesRequirement(beforeText, afterText);
+    }
+
+    /**
+     * Handle newline and return processed content to insert
+     *
+     * @param text     Current text in editor
+     * @param position The position of cursor
+     * @param style    Current code styles
+     * @return Actual content to insert
+     */
+    @NonNull
+    default NewlineHandleResult handleNewline(@NonNull Content text, @NonNull CharPosition position, @Nullable Styles style, int tabSize) {
+        var line = text.getLine(position.line);
+        int index = position.column;
+        var beforeText = line.subSequence(0, index).toString();
+        var afterText = line.subSequence(index, line.length()).toString();
+        return handleNewline(beforeText, afterText, tabSize);
+    }
+
+    /**
+     * Checks whether the given input matches the requirement to invoke this handler
+     *
      * @param beforeText Text of line before cursor
      * @param afterText  Text of line after cursor
      * @return Whether this handler should be called
+     * @deprecated use {@link #matchesRequirement(Content, CharPosition, Styles)} instead
      */
-    boolean matchesRequirement(String beforeText, String afterText);
+    @Deprecated
+    default boolean matchesRequirement(String beforeText, String afterText) {
+        return false;
+    }
 
     /**
      * Handle newline and return processed content to insert
@@ -44,6 +89,9 @@ public interface NewlineHandler {
      * @param afterText  Text of line after cursor
      * @return Actual content to insert
      */
-    NewlineHandleResult handleNewline(String beforeText, String afterText, int tabSize);
+    @NonNull
+    default NewlineHandleResult handleNewline(String beforeText, String afterText, int tabSize) {
+        return new NewlineHandleResult("\n", 0);
+    }
 
 }

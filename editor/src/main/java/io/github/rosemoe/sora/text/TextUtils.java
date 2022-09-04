@@ -137,7 +137,7 @@ public class TextUtils {
             return src;
         }
         var sb = new StringBuilder(length);
-        for (int i = 0;i < length - src.length();i++) {
+        for (int i = 0; i < length - src.length(); i++) {
             sb.append(padChar);
         }
         sb.append(src);

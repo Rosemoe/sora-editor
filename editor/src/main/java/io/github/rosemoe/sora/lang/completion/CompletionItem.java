@@ -98,8 +98,8 @@ public abstract class CompletionItem {
      * To make it considered as a single action, the editor will enter batch edit state before invoking
      * this method. Feel free to update the text by multiple calls to {@code text}.
      *
-     * @param editor The editor. You can set cursor position with that.
-     * @param text   The text in editor. You can make modifications to it.
+     * @param editor   The editor. You can set cursor position with that.
+     * @param text     The text in editor. You can make modifications to it.
      * @param position The requested completion position (the one passed to completion thread)
      */
     public void performCompletion(@NonNull CodeEditor editor, @NonNull Content text, @NonNull CharPosition position) {
@@ -117,7 +117,7 @@ public abstract class CompletionItem {
      * @param text   The text in editor. You can make modifications to it.
      * @param line   The auto-completion line
      * @param column The auto-completion column
-     * @see #performCompletion(CodeEditor, Content, CharPosition) Editor calls this method to do completion 
+     * @see #performCompletion(CodeEditor, Content, CharPosition) Editor calls this method to do completion
      */
     public abstract void performCompletion(@NonNull CodeEditor editor, @NonNull Content text, int line, int column);
 

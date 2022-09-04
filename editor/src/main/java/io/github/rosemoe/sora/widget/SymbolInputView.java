@@ -137,8 +137,9 @@ public class SymbolInputView extends LinearLayout {
 
     @RequiresApi(24)
     public void forEachButton(@NonNull Consumer<Button> consumer) {
-        for (int i = 0;i < getChildCount();i++) {
-            consumer.accept((Button) getChildAt(i));;
+        for (int i = 0; i < getChildCount(); i++) {
+            consumer.accept((Button) getChildAt(i));
+            ;
         }
     }
 

@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.widget.snippet.variable;
 
 import static io.github.rosemoe.sora.text.TextUtils.padStart;
+
 import androidx.annotation.NonNull;
 
 import java.text.SimpleDateFormat;
@@ -57,7 +58,7 @@ public class TimeBasedSnippetVariableResolver implements ISnippetVariableResolve
     @NonNull
     @Override
     public String[] getResolvableNames() {
-        return new String[] {
+        return new String[]{
                 "CURRENT_YEAR", "CURRENT_YEAR_SHORT", "CURRENT_MONTH", "CURRENT_DATE",
                 "CURRENT_HOUR", "CURRENT_MINUTE", "CURRENT_SECOND", "CURRENT_DAY_NAME",
                 "CURRENT_DAY_NAME_SHORT", "CURRENT_MONTH_NAME", "CURRENT_MONTH_NAME_SHORT",

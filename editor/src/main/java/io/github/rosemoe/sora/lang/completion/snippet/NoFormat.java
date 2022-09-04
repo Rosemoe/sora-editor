@@ -23,8 +23,6 @@
  */
 package io.github.rosemoe.sora.lang.completion.snippet;
 
-import java.util.regex.Matcher;
-
 public class NoFormat implements FormatString {
 
     private String text;

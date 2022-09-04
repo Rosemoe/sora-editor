@@ -24,7 +24,6 @@
 package io.github.rosemoe.sora.lang.completion.snippet;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 public class PlaceholderItem extends SnippetItem {
 

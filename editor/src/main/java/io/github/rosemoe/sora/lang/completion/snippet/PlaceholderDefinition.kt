@@ -24,4 +24,9 @@
 
 package io.github.rosemoe.sora.lang.completion.snippet
 
-data class PlaceholderDefinition(var id: Int, var defaultValue: String, var choices: List<String>? = null, var transform: Transform? = null)
+data class PlaceholderDefinition(
+    var id: Int,
+    var defaultValue: String,
+    var choices: List<String>? = null,
+    var transform: Transform? = null
+)

@@ -23,9 +23,12 @@
  */
 package io.github.rosemoe.sora.langs.java;
 
+import static java.lang.Character.isWhitespace;
+
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
@@ -40,7 +43,10 @@ import io.github.rosemoe.sora.lang.completion.snippet.parser.CodeSnippetParser;
 import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
+import io.github.rosemoe.sora.lang.styling.Styles;
+import io.github.rosemoe.sora.lang.styling.StylesUtils;
 import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.TextUtils;
 import io.github.rosemoe.sora.util.MyCharacter;
@@ -95,9 +101,6 @@ public class JavaLanguage implements Language {
         if ("sconst".startsWith(prefix) && prefix.length() > 0) {
             publisher.addItem(new SimpleSnippetCompletionItem("sconst", "Snippet - Static Constant", new SnippetDescription(prefix.length(), STATIC_CONST_SNIPPET, true)));
         }
-        if ("rand".startsWith(prefix) && prefix.length() > 0) {
-            publisher.addItem(new SimpleSnippetCompletionItem("rand", "Snippet - Quick random number", new SnippetDescription(prefix.length(), CodeSnippetParser.parse("$RANDOM"), true)));
-        }
     }
 
     @Override
@@ -142,13 +145,30 @@ public class JavaLanguage implements Language {
         return newlineHandlers;
     }
 
+    private static String getNonEmptyTextBefore(CharSequence text, int index, int length) {
+        while (index > 0 && isWhitespace(text.charAt(index - 1))) {
+            index--;
+        }
+        return text.subSequence(Math.max(0, index - length), index).toString();
+    }
+
+    private static String getNonEmptyTextAfter(CharSequence text, int index, int length) {
+        while (index < text.length() && isWhitespace(text.charAt(index))) {
+            index++;
+        }
+        return text.subSequence(index, Math.min(index + length, text.length())).toString();
+    }
+
     class BraceHandler implements NewlineHandler {
 
         @Override
-        public boolean matchesRequirement(String beforeText, String afterText) {
-            return beforeText.endsWith("{") && afterText.startsWith("}");
+        public boolean matchesRequirement(@NonNull Content text, @NonNull CharPosition position, @Nullable Styles style) {
+            var line = text.getLine(position.line);
+            return !StylesUtils.checkNoCompletion(style, position) && getNonEmptyTextBefore(line, position.column, 1).equals("{") &&
+                    getNonEmptyTextAfter(line, position.column, 1).equals("}");
         }
 
+        @NonNull
         @Override
         public NewlineHandleResult handleNewline(String beforeText, String afterText, int tabSize) {
             int count = TextUtils.countLeadingSpaceCount(beforeText, tabSize);

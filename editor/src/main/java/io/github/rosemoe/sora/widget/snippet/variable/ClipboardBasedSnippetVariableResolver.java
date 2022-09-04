@@ -39,7 +39,7 @@ public class ClipboardBasedSnippetVariableResolver implements ISnippetVariableRe
     @NonNull
     @Override
     public String[] getResolvableNames() {
-        return new String[] {"CLIPBOARD"};
+        return new String[]{"CLIPBOARD"};
     }
 
     @NonNull

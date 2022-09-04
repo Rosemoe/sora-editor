@@ -60,8 +60,8 @@ public class CodeSnippetTokenizer {
 
         if (isDigitChar(ch)) {
             length = 1;
-            while (index + length  < value.length() && isDigitChar(value.charAt(index + length))) {
-                length ++;
+            while (index + length < value.length() && isDigitChar(value.charAt(index + length))) {
+                length++;
             }
             return TokenType.Int;
         }
@@ -69,7 +69,7 @@ public class CodeSnippetTokenizer {
         if (isVariableChar(ch)) {
             length = 1;
             while (index + length < value.length() && (isVariableChar(ch = value.charAt(index + length)) || isDigitChar(ch))) {
-                length ++;
+                length++;
             }
             return TokenType.VariableName;
         }

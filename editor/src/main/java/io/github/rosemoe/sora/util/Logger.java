@@ -83,8 +83,8 @@ public class Logger {
         Log.w(name, msg, e);
     }
 
-    public void w(String msg,Throwable e, Object... format) {
-        Log.w(name, String.format(msg, format),e);
+    public void w(String msg, Throwable e, Object... format) {
+        Log.w(name, String.format(msg, format), e);
     }
 
     public void e(String msg) {
@@ -100,8 +100,8 @@ public class Logger {
         Log.e(name, msg, e);
     }
 
-    public void e(String msg,Throwable e, Object... format) {
-        Log.e(name, String.format(msg, format),e);
+    public void e(String msg, Throwable e, Object... format) {
+        Log.e(name, String.format(msg, format), e);
     }
 
 

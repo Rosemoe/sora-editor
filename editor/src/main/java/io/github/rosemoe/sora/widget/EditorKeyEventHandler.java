@@ -33,11 +33,9 @@ import java.util.Objects;
 import io.github.rosemoe.sora.event.EditorKeyEvent;
 import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.KeyBindingEvent;
-import io.github.rosemoe.sora.lang.smartEnter.NewlineHandleResult;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
-import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.method.KeyMetaStates;
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
@@ -207,28 +205,20 @@ class EditorKeyEventHandler {
                     if (handlers == null || editorCursor.isSelected()) {
                         editor.commitText(lineSeparator, true);
                     } else {
-                        ContentLine line = editorText.getLine(editorCursor.getLeftLine());
-                        int index = editorCursor.getLeftColumn();
-                        String beforeText = line.subSequence(0, index).toString();
-                        String afterText = line.subSequence(index, line.length()).toString();
                         boolean consumed = false;
                         for (NewlineHandler handler : handlers) {
                             if (handler != null) {
-                                if (handler.matchesRequirement(beforeText, afterText)) {
+                                if (handler.matchesRequirement(editorText, editorCursor.left(), editor.getStyles())) {
                                     try {
-                                        NewlineHandleResult result = handler.handleNewline(beforeText, afterText, editor.getTabWidth());
-                                        if (result != null) {
-                                            editor.commitText(result.text, false);
-                                            int delta = result.shiftLeft;
-                                            if (delta != 0) {
-                                                int newSel = Math.max(editorCursor.getLeft() - delta, 0);
-                                                CharPosition charPosition = editorCursor.getIndexer().getCharPosition(newSel);
-                                                editor.setSelection(charPosition.line, charPosition.column);
-                                            }
-                                            consumed = true;
-                                        } else {
-                                            continue;
+                                        var result = handler.handleNewline(editorText, editorCursor.left(), editor.getStyles(), editor.getTabWidth());
+                                        editor.commitText(result.text, false);
+                                        int delta = result.shiftLeft;
+                                        if (delta != 0) {
+                                            int newSel = Math.max(editorCursor.getLeft() - delta, 0);
+                                            var charPosition = editorCursor.getIndexer().getCharPosition(newSel);
+                                            editor.setSelection(charPosition.line, charPosition.column);
                                         }
+                                        consumed = true;
                                     } catch (Exception ex) {
                                         Log.w(TAG, "Error occurred while calling Language's NewlineHandler", ex);
                                     }
@@ -272,7 +262,7 @@ class EditorKeyEventHandler {
                 if (editor.isEditable()) {
                     if (completionWindow.isShowing()) {
                         completionWindow.select();
-                    } else if(editor.getSnippetController().isInSnippet() && !isAltPressed && !isCtrlPressed) {
+                    } else if (editor.getSnippetController().isInSnippet() && !isAltPressed && !isCtrlPressed) {
                         if (isShiftPressed) {
                             editor.getSnippetController().shiftToPreviousTabStop();
                         } else {
