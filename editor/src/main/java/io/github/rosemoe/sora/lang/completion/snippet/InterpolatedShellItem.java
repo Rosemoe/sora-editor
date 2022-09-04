@@ -21,38 +21,34 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lang.completion.snippet.parser;
+package io.github.rosemoe.sora.lang.completion.snippet;
 
-public enum TokenType {
+import androidx.annotation.NonNull;
 
-    Dollar('$'),
-    Colon(':'),
-    Comma(','),
-    CurlyOpen('{'),
-    CurlyClose('}'),
-    Backslash('\\'),
-    Forwardslash('/'),
-    Pipe('|'),
-    Int,
-    VariableName,
-    Format,
-    Plus('+'),
-    Dash('-'),
-    QuestionMark('?'),
-    Backtick('`'),
-    EOF;
+public class InterpolatedShellItem extends SnippetItem {
 
-    private final char target;
+    private String shellCode;
 
-    TokenType() {
-        this('\0');
+    public InterpolatedShellItem(@NonNull String shellCode, int index) {
+        super(index);
+        this.shellCode = shellCode;
     }
 
-    TokenType(char targetChar) {
-        target = targetChar;
+    @NonNull
+    public String getShellCode() {
+        return shellCode;
     }
 
-    public char getTargetCharacter() {
-        return target;
+    public void setShellCode(@NonNull String shellCode) {
+        this.shellCode = shellCode;
     }
+
+    @NonNull
+    @Override
+    public InterpolatedShellItem clone() {
+        var n = new InterpolatedShellItem(shellCode, getStartIndex());
+        n.setIndex(getStartIndex(), getEndIndex());
+        return n;
+    }
+
 }

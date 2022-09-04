@@ -58,7 +58,7 @@ public class JavaLanguage implements Language {
     private final static CodeSnippet STATIC_CONST_SNIPPET = CodeSnippetParser.parse("private final static ${1:type} ${2/(.*)/${1:/upcase}/} = ${3:value};");
 
     private IdentifierAutoComplete autoComplete;
-    private JavaIncrementalAnalyzeManager manager;
+    private final JavaIncrementalAnalyzeManager manager;
 
     public JavaLanguage() {
         autoComplete = new IdentifierAutoComplete(JavaTextTokenizer.sKeywords);

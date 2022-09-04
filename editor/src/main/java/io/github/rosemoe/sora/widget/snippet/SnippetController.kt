@@ -224,7 +224,7 @@ class SnippetController(private val editor: CodeEditor) {
         currentSnippet = clonedSnippet
         currentTabStopIndex = -1
         snippetIndex = index
-        // Stage 2: resolve the variables
+        // Stage 2: resolve the variables and execute shell codes
         val elements = clonedSnippet.items!!
         val variableItemMapping = mutableMapOf<String, PlaceholderDefinition>()
         var maxTabStop = 0;
@@ -264,6 +264,34 @@ class SnippetController(private val editor: CodeEditor) {
                     val deltaIndex = item.name.length - (item.endIndex - item.startIndex)
                     shiftItemsFrom(i + 1, deltaIndex)
                 }
+            } else if (item is InterpolatedShellItem) {
+                var value = try {
+                    val proc = Runtime.getRuntime().exec("sh")
+                    proc.outputStream.apply {
+                        write(item.shellCode.encodeToByteArray())
+                        write("\nexit\n".encodeToByteArray())
+                        flush()
+                    }
+                    proc.inputStream.bufferedReader().readText()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    ""
+                }
+                val lastChar = value[value.lastIndex]
+                if (value.isNotEmpty() && lastChar == '\n' || lastChar == '\r') {
+                    value = if (lastChar == '\r' || (value.lastIndex > 0 && value[value.lastIndex - 1] != '\r') || value.lastIndex == 0) {
+                        value.substring(0, value.lastIndex)
+                    } else {
+                        value.substring(0, value.lastIndex - 1)
+                    }
+                }
+                val deltaIndex = value.length - (item.endIndex - item.startIndex)
+                elements[i] = PlainTextItem(
+                    value,
+                    item.startIndex,
+                    item.startIndex + value.length
+                )
+                shiftItemsFrom(i + 1, deltaIndex)
             }
         }
         // Stage 3: clean useless items and shift all items to editor index

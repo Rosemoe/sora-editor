@@ -118,12 +118,13 @@ public class CodeSnippetParser {
                 parseTabStopOrVariableName() ||
                 parseComplexVariable() ||
                 parseComplexPlaceholder() ||
+                parseInterpolatedShell() ||
                 parseAnything();
     }
 
     private boolean parseEscaped() {
         if (accept(TokenType.Backslash)) {
-            var escaped = _accept(TokenType.CurlyClose, TokenType.Dollar, TokenType.Backslash);
+            var escaped = _accept(TokenType.CurlyClose, TokenType.Dollar, TokenType.Backslash, TokenType.Backtick);
             if (escaped == null) {
                 escaped = "\\";
             }
@@ -131,6 +132,31 @@ public class CodeSnippetParser {
 
             return true;
         }
+        return false;
+    }
+
+    private boolean parseInterpolatedShell() {
+        var backup = token;
+        if (accept(TokenType.Backtick)) {
+            var sb = new StringBuilder();
+            while (!accept(TokenType.Backtick)) {
+                if (accept(TokenType.Backslash)) {
+                    if (accept(TokenType.Backtick)) {
+                        sb.append('`');
+                    } else {
+                        sb.append('\\');
+                    }
+                } else if (token.type == TokenType.EOF) {
+                    backTo(backup);
+                    return false;
+                } else {
+                    sb.append(_accept());
+                }
+            }
+            builder.addInterpolatedShell(sb.toString());
+            return true;
+        }
+        backTo(token);
         return false;
     }
 

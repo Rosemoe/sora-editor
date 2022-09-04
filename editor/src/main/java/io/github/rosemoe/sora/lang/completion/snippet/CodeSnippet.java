@@ -125,6 +125,11 @@ public class CodeSnippet implements Cloneable {
             return this;
         }
 
+        public Builder addInterpolatedShell(String shell) {
+            items.add(new InterpolatedShellItem(shell, index));
+            return this;
+        }
+
         public Builder addPlaceholder(int id) {
             return addPlaceholder(id, (String) null);
         }
