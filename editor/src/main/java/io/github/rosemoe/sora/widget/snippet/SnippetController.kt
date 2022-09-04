@@ -36,10 +36,21 @@ import io.github.rosemoe.sora.widget.snippet.variable.*
 import io.github.rosemoe.sorakt.getComponent
 import io.github.rosemoe.sorakt.subscribeEvent
 
+/**
+ * Manage snippet editing in editor
+ *
+ * @author Rosemoe
+ */
 class SnippetController(private val editor: CodeEditor) {
 
+    /**
+     * Language based variable resolver. User should set valid values when change language.
+     */
     val commentVariableResolver = CommentBasedSnippetVariableResolver(null)
 
+    /**
+     * File based variable resolver. User should implement this class and set it when opening a new file in editor
+     */
     var fileVariableResolver: FileBasedSnippetVariableResolver? = null
         set(value) {
             val old = field
@@ -52,6 +63,9 @@ class SnippetController(private val editor: CodeEditor) {
             }
         }
 
+    /**
+     * Workspace based variable resolver. User should implement this class and set it when workspace is updated
+     */
     var workspaceVariableResolver: WorkspaceBasedSnippetVariableResolver? = null
         set(value) {
             val old = field
@@ -191,6 +205,12 @@ class SnippetController(private val editor: CodeEditor) {
         return index >= editing.startIndex && index <= editing.endIndex
     }
 
+    /**
+     * Start a new snippet editing. The given [CodeSnippet] must pass the checks in [CodeSnippet.checkContent].
+     * Otherwise, the snippet editing will not be started.
+     * No matter whether a new snippet editing is started, the existing snippet editing will get cancelled after
+     *  calling this method.
+     */
     fun startSnippet(index: Int, snippet: CodeSnippet, selectedText: String = "") {
         if (snippetIndex != -1) {
             stopSnippet()
@@ -330,9 +350,16 @@ class SnippetController(private val editor: CodeEditor) {
         shiftToTabStop(0)
     }
 
+    /**
+     * Check whether the editor in snippet editing
+     */
     fun isInSnippet() = snippetIndex != -1 && currentTabStopIndex != -1
 
     fun getEditingTabStop() = if (snippetIndex == -1) null else tabStops!![currentTabStopIndex]
+
+    fun getTabStopAt(index: Int) = tabStops?.get(index)
+
+    fun getTabStopCount() = tabStops?.size ?: 0
 
     fun getEditingRelatedTabStops(): List<SnippetItem> {
         val editing = getEditingTabStop()
@@ -403,7 +430,13 @@ class SnippetController(private val editor: CodeEditor) {
         }
     }
 
+    /**
+     * Stop snippet editing
+     */
     fun stopSnippet() {
+        if (!isInSnippet()) {
+            return
+        }
         currentSnippet = null
         snippetIndex = -1
         tabStops = null
@@ -413,7 +446,7 @@ class SnippetController(private val editor: CodeEditor) {
     }
 
     companion object {
-        val lineSeparatorRegex = Regex("\\r|\\n|\\r\\n")
+        private val lineSeparatorRegex = Regex("\\r|\\n|\\r\\n")
     }
 
 
