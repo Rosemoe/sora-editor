@@ -74,7 +74,6 @@ public class RangeFormattingFeature implements Feature<Pair<Content, TextRange>,
             return null;
         }
 
-        //TODO: Separate features for full format and range formatting
         var formattingParams = new DocumentRangeFormattingParams();
         formattingParams.setOptions(editor.getOption(FormattingOptions.class));
 

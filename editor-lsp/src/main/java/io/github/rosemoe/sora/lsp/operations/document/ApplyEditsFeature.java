@@ -36,6 +36,9 @@ import io.github.rosemoe.sora.lsp.operations.Feature;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 import io.github.rosemoe.sora.text.Content;
 
+/**
+ *
+ */
 public class ApplyEditsFeature implements Feature<Pair<List<? extends TextEdit>, Content>, Void> {
 
     @Override

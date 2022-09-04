@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lsp.editor.completion;
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
 import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsFeature;
 
+
 public interface CompletionItemProvider<T extends CompletionItem> {
 
     T createCompletionItem(org.eclipse.lsp4j.CompletionItem completionItem, ApplyEditsFeature applyEditsFeature, int prefixLength);

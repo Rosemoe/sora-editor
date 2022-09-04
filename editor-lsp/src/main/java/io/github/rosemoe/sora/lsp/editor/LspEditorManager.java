@@ -32,6 +32,9 @@ import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.Languag
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 
+/**
+ * Manager the LspEditor
+ */
 public class LspEditorManager {
 
     private final String currentProjectPath;
@@ -67,6 +70,7 @@ public class LspEditorManager {
         return editors.remove(currentFileUri);
     }
 
+
     public LspEditor createEditor(String currentFileUri, LanguageServerDefinition serverDefinition) {
         LspEditor editor = editors.get(currentFileUri);
         if (editor == null) {
@@ -76,6 +80,9 @@ public class LspEditorManager {
         return editor;
     }
 
+    /**
+     * Close all editors under this manager, for scenarios where the project is closed
+     */
     public void closeAllEditor() {
         editors.forEach((key, editor) -> {
             editor.close();
@@ -84,6 +91,9 @@ public class LspEditorManager {
 
     }
 
+    /**
+     * Close all managers, and close all editors under the manager, for scenarios where the software is closed
+     */
     public static void closeAllManager() {
         managers.values().forEach(LspEditorManager::closeAllEditor);
         managers.clear();

@@ -38,6 +38,7 @@ import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvid
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspEditorManager
+import io.github.rosemoe.sora.lsp.requests.Timeout
 import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.URIUtils
 import io.github.rosemoe.sora.text.ContentCreator
@@ -78,7 +79,8 @@ class LspTestActivity : AppCompatActivity() {
 
             unAssets()
 
-            Toast.makeText(this@LspTestActivity, "Starting Language Server...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@LspTestActivity, "Starting Language Server...", Toast.LENGTH_SHORT)
+                .show()
             editor.editable = false
 
             connectToLanguageServer()
@@ -124,12 +126,6 @@ class LspTestActivity : AppCompatActivity() {
 
         val projectPath = externalCacheDir?.resolve("testProject")?.absolutePath ?: ""
 
-
-        /*lifecycleScope.launch(Dispatchers.IO) {
-            //FIXME: The language server should be started in another process, consider using service instead of thread
-            MockLanguageConnection.createConnect(port)
-        }*/
-
         startService(
             Intent(this@LspTestActivity, LspLanguageServerService::class.java)
                 .apply {
@@ -161,13 +157,17 @@ class LspTestActivity : AppCompatActivity() {
 
         }
 
-        
+
         lifecycleScope.launch(Dispatchers.IO) {
-            delay(Timeouts.INIT.defaultTimeout.toLong()) //wait for server start
+            delay(Timeout.getTimeout(Timeouts.INIT).toLong()) //wait for server start
             lspEditor.connect()
-            lifecycleScope.launch { 
+            withContext(Dispatchers.Main) {
                 editor.editable = true
-                Toast.makeText(this@LspTestActivity, "Initialized Language server", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@LspTestActivity,
+                    "Initialized Language server",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
 
