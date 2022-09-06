@@ -2960,7 +2960,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         updateCursor();
         updateSelection();
-        if (!touchHandler.hasAnyHeldHandle() && !inputConnection.composingText.isComposing() && !completionWindow.shouldRejectComposing()) {
+        if (editable && !touchHandler.hasAnyHeldHandle() && !inputConnection.composingText.isComposing() && !completionWindow.shouldRejectComposing()) {
             cursorAnimator.markEndPos();
             cursorAnimator.start();
         }
@@ -4137,7 +4137,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         editorLanguage.getAnalyzeManager().insert(start, end, insertedContent);
         touchHandler.hideInsertHandle();
-        if (!cursor.isSelected() && !inputConnection.composingText.isComposing() && !completionWindow.shouldRejectComposing()) {
+        if (editable && !cursor.isSelected() && !inputConnection.composingText.isComposing() && !completionWindow.shouldRejectComposing()) {
             cursorAnimator.markEndPos();
             cursorAnimator.start();
         }
@@ -4192,7 +4192,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             ensureSelectionVisible();
             touchHandler.hideInsertHandle();
         }
-        if (!cursor.isSelected() && !waitForNextChange && !inputConnection.composingText.isComposing() && !completionWindow.shouldRejectComposing()) {
+        if (editable && !cursor.isSelected() && !waitForNextChange && !inputConnection.composingText.isComposing() && !completionWindow.shouldRejectComposing()) {
             cursorAnimator.markEndPos();
             cursorAnimator.start();
         }
