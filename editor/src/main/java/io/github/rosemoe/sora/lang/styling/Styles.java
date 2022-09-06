@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.github.rosemoe.sora.data.ObjectAllocator;
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
 import io.github.rosemoe.sora.lang.styling.line.LineAnchorStyle;
 import io.github.rosemoe.sora.lang.styling.line.LineStyles;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -183,6 +184,9 @@ public class Styles {
     }
 
     public void addLineStyle(@NonNull LineAnchorStyle style) {
+        if (style instanceof InlayHint) {
+            throw new IllegalArgumentException("reject to add InlayHint");
+        }
         if (lineStyles == null) {
             lineStyles = new ArrayList<>();
             styleTypeCount = new ConcurrentHashMap<>();

@@ -22,17 +22,7 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lang.styling.line
+package io.github.rosemoe.sora.lang.styling.inlayHint
 
-abstract class LineColumnAnchorStyle(override var line: Int, open var column: Int) : LineAnchorStyle(line) {
-
-    override fun compareTo(other: LineAnchorStyle): Int {
-        val lineResult =  super.compareTo(other)
-        return if (lineResult == 0 && other is LineColumnAnchorStyle) {
-            column.compareTo(other.column)
-        } else {
-            lineResult
-        }
-    }
-
+class InlayHintManager {
 }

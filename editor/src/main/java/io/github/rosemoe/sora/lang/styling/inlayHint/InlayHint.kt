@@ -22,11 +22,36 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lang.styling.line
+/*******************************************************************************
+ *    sora-editor - the awesome code editor for Android
+ *    https://github.com/Rosemoe/sora-editor
+ *    Copyright (C) 2020-2022  Rosemoe
+ *
+ *     This library is free software; you can redistribute it and/or
+ *     modify it under the terms of the GNU Lesser General Public
+ *     License as published by the Free Software Foundation; either
+ *     version 2.1 of the License, or (at your option) any later version.
+ *
+ *     This library is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *     Lesser General Public License for more details.
+ *
+ *     You should have received a copy of the GNU Lesser General Public
+ *     License along with this library; if not, write to the Free Software
+ *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *     USA
+ *
+ *     Please contact Rosemoe by email 2073412493@qq.com if you need
+ *     additional information or have any questions
+ ******************************************************************************/
+
+package io.github.rosemoe.sora.lang.styling.inlayHint
 
 import android.graphics.Canvas
 import android.graphics.Paint.FontMetricsInt
 import io.github.rosemoe.sora.graphics.Paint
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
  * Base class for all inlay hints.
@@ -34,7 +59,8 @@ import io.github.rosemoe.sora.graphics.Paint
  * @param line line index of the hint
  * @param column column index of the hint
  */
-abstract class AbsInlayHint(override var line: Int, override var column: Int) : LineColumnAnchorStyle(line, column) {
+abstract class InlayHint(override var line: Int, override var column: Int) :
+    LineColumnAnchorStyle(line, column) {
 
     /**
      * Measure the width of this inlay hint so that editor can properly place all the elements.
@@ -51,7 +77,12 @@ abstract class AbsInlayHint(override var line: Int, override var column: Int) : 
      * @param baseline the general baseline, with line spacing considered
      * @return the width of this inlay hint
      */
-    abstract fun measure(paint: Paint, textMetrics: FontMetricsInt, lineHeight: Int, baseline: Float) : Float
+    abstract fun measure(
+        paint: Paint,
+        textMetrics: FontMetricsInt,
+        lineHeight: Int,
+        baseline: Float
+    ): Float
 
     /**
      * Render the inlay hint on the given canvas. The [Canvas.translate] is called in advance so you do
@@ -63,10 +94,19 @@ abstract class AbsInlayHint(override var line: Int, override var column: Int) : 
      * @param canvas the canvas to render your content
      * @param paint the text paint currently used by editor
      * @param textMetrics the [FontMetricsInt] instance of the paint cached by editor
+     * @param colorScheme the [EditorColorScheme] of editor
      * @param lineHeight the general line height, with line spacing considered
      * @param baseline the general baseline, with line spacing considered
      * @param measuredWidth the width previously measured
      */
-    abstract fun render(canvas: Canvas, paint: Paint, textMetrics: FontMetricsInt, lineHeight: Int, baseline: Float, measuredWidth: Float)
+    abstract fun render(
+        canvas: Canvas,
+        paint: Paint,
+        textMetrics: FontMetricsInt,
+        colorScheme: EditorColorScheme,
+        lineHeight: Int,
+        baseline: Float,
+        measuredWidth: Float
+    )
 
 }

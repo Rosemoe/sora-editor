@@ -83,6 +83,8 @@ public class EditorColorScheme {
     public static final int COMMENT = 22;
     public static final int KEYWORD = 21;
     //-------------View colors---------------------
+    public static final int TEXT_INLAY_HINT_FOREGROUND = 50;
+    public static final int TEXT_INLAY_HINT_BACKGROUND = 49;
     public static final int SNIPPET_BACKGROUND_EDITING = 48;
     public static final int SNIPPET_BACKGROUND_RELATED = 47;
     public static final int SNIPPET_BACKGROUND_INACTIVE = 46;
@@ -135,7 +137,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 48;
+    protected static final int END_COLOR_ID = 50;
     /**
      * Real color saver
      */
@@ -323,6 +325,7 @@ public class EditorColorScheme {
                 break;
             case COMPLETION_WND_TEXT_PRIMARY:
             case COMPLETION_WND_TEXT_SECONDARY:
+            case TEXT_INLAY_HINT_FOREGROUND:
                 color = isDark() ? 0xffffffff : 0xff000000;
                 break;
             case COMPLETION_WND_ITEM_CURRENT:
@@ -336,6 +339,9 @@ public class EditorColorScheme {
                 break;
             case SNIPPET_BACKGROUND_INACTIVE:
                 color = 0x66dddddd;
+                break;
+            case TEXT_INLAY_HINT_BACKGROUND:
+                color = isDark() ? 0xffeeeeee : 0x1D000000;
                 break;
         }
         setColor(type, color);
