@@ -2050,6 +2050,9 @@ public class EditorRenderer {
     }
 
     protected void drawSelectionOnAnimation(Canvas canvas) {
+        if (!editor.isEditable()) {
+            return;
+        }
         tmpRect.bottom = editor.getCursorAnimator().animatedY() - editor.getOffsetY();
         tmpRect.top = tmpRect.bottom - (editor.getProps().textBackgroundWrapTextOnly ? editor.getRowHeightOfText() : editor.getRowHeight());
         float centerX = editor.getCursorAnimator().animatedX() - editor.getOffsetX();
