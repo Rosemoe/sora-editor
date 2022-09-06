@@ -66,11 +66,13 @@ public class ICUUtils {
     public static long getWordEdgesFallback(CharSequence text, int offset) {
         int start = offset;
         int end = offset;
-        while (start > 0 && MyCharacter.isJavaIdentifierPart(text.charAt(start - 1))) {
-            start--;
-        }
         while (end < text.length() && MyCharacter.isJavaIdentifierPart(text.charAt(end))) {
             end++;
+        }
+        if (end > offset) {
+            while (start > 0 && MyCharacter.isJavaIdentifierPart(text.charAt(start - 1))) {
+                start--;
+            }
         }
         return IntPair.pack(start, end);
     }
