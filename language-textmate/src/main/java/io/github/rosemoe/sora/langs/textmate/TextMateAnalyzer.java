@@ -90,9 +90,18 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
             configuration = LanguageConfiguration.load(languageConfigurationReader);
             var pairs = configuration.getBrackets();
             if (pairs != null && pairs.size() != 0) {
-                var pairArr = new char[pairs.size() * 2];
+                int size = pairs.size();
+                for (var pair : pairs) {
+                    if (pair.open.length() != 1 || pair.close.length() != 1) {
+                        size --;
+                    }
+                }
+                var pairArr = new char[size * 2];
                 int i = 0;
                 for (var pair : pairs) {
+                    if (pair.open.length() != 1 || pair.close.length() != 1) {
+                        continue;
+                    }
                     pairArr[i * 2] = pair.open.charAt(0);
                     pairArr[i * 2 + 1] = pair.close.charAt(0);
                     i++;
