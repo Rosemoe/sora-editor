@@ -51,16 +51,14 @@ package io.github.rosemoe.sora.lang.styling.inlayHint
 import android.graphics.Canvas
 import android.graphics.Paint.FontMetricsInt
 import io.github.rosemoe.sora.graphics.Paint
+import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
  * Base class for all inlay hints.
  * @author Rosemoe
- * @param line line index of the hint
- * @param column column index of the hint
  */
-abstract class InlayHint(override var line: Int, override var column: Int) :
-    LineColumnAnchorStyle(line, column) {
+abstract class InlayHint(open var position: CharPosition) {
 
     /**
      * Measure the width of this inlay hint so that editor can properly place all the elements.

@@ -26,12 +26,14 @@ package io.github.rosemoe.sora.widget;
 import android.graphics.Canvas;
 import android.graphics.RenderNode;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
+import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.lang.styling.EmptyReader;
 import io.github.rosemoe.sora.util.ArrayList;
 
@@ -55,6 +57,21 @@ class RenderNodeHolder {
 
     private boolean shouldUpdateCache() {
         return !editor.isWordwrap() && editor.isHardwareAcceleratedDrawAllowed();
+    }
+
+    public boolean invalidateInRegion(@NonNull StyleUpdateRange range) {
+        var res = false;
+        var itr = cache.iterator();
+        while (itr.hasNext()) {
+            var element = itr.next();
+            if (range.isInRange(element.line)) {
+                itr.remove();
+                element.renderNode.discardDisplayList();
+                pool.push(element);
+                res = true;
+            }
+        }
+        return res;
     }
 
     public boolean invalidateInRegion(int startLine, int endLine) {

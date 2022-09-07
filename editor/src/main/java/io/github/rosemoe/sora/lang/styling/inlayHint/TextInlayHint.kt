@@ -48,17 +48,17 @@
 
 package io.github.rosemoe.sora.lang.styling.inlayHint
 
-import android.content.res.Resources
 import android.graphics.Canvas
-import android.util.TypedValue
 import io.github.rosemoe.sora.graphics.Paint
+import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
-class TextInlayHint(override var line: Int, override var column: Int, val text: String) : InlayHint(line, column) {
-
-    companion object {
-        val margin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2f, Resources.getSystem().displayMetrics)
-    }
+/**
+ * A general inlay hint of text. The hint text will be displayed in a round colored rect.
+ *
+ * @author Rosemoe
+ */
+class TextInlayHint(override var position: CharPosition, val text: String) : InlayHint(position) {
 
     override fun measure(
         paint: Paint,
@@ -66,6 +66,7 @@ class TextInlayHint(override var line: Int, override var column: Int, val text: 
         lineHeight: Int,
         baseline: Float
     ): Float {
+        val margin = paint.spaceWidth * 0.8f
         val textSize = paint.textSize
         paint.setTextSizeWrapped(textSize * 0.75f)
         val width = paint.measureText(text) + margin * 3
@@ -82,6 +83,7 @@ class TextInlayHint(override var line: Int, override var column: Int, val text: 
         baseline: Float,
         measuredWidth: Float
     ) {
+        val margin = paint.spaceWidth * 0.8f
         val textSize = paint.textSize
         paint.setTextSizeWrapped(textSize * 0.75f)
 

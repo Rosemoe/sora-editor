@@ -24,21 +24,20 @@
 
 package io.github.rosemoe.sora.lang.analysis
 
-/**
- * Describe the range of a style update
- *
- * @author Rosemoe
- */
-interface StyleUpdateRange {
+import java.lang.Integer.min
 
-    /**
-     * Check whether the given [line] index is in range
-     */
-    fun isInRange(line: Int) : Boolean
+class SequenceUpdateRange(val startLine: Int, val endLine: Int = Int.MAX_VALUE) : StyleUpdateRange {
 
-    /**
-     * Get a new iterator for line indices in range
-     */
-    fun lineIndexIterator(maxLineIndex: Int) : IntIterator
+    override fun isInRange(line: Int) = line in startLine..endLine
+
+    override fun lineIndexIterator(maxLineIndex: Int) = object : IntIterator() {
+
+        var currentLine = startLine
+
+        override fun hasNext() = currentLine <= min(endLine, maxLineIndex)
+
+        override fun nextInt() = currentLine++
+
+    }
 
 }

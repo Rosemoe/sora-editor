@@ -3560,7 +3560,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (highlightCurrentBlock) {
             cursorPosition = findCursorBlock();
         }
-        renderer.invalidateInRegion(range.getStartLine(), range.getEndLine());
+        renderer.invalidateInRegion(range);
         renderer.updateTimestamp();
         invalidate();
     }

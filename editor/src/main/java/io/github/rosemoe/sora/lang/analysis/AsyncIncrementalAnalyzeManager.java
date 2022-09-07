@@ -193,7 +193,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
     private void sendUpdate(Styles styles, int startLine, int endLine) {
         final var r = receiver;
         if (r != null) {
-            r.updateStyles(this, styles, new StyleUpdateRange(startLine, endLine));
+            r.updateStyles(this, styles, new SequenceUpdateRange(startLine, endLine));
         }
     }
 

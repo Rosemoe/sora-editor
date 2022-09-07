@@ -55,6 +55,7 @@ import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.GraphicsConstants;
 import io.github.rosemoe.sora.graphics.Paint;
+import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.lang.completion.snippet.SnippetItem;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
@@ -314,6 +315,12 @@ public class EditorRenderer {
     public void invalidateInRegion(int start, int end) {
         if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             renderNodeHolder.invalidateInRegion(start, end);
+        }
+    }
+
+    public void invalidateInRegion(@NonNull StyleUpdateRange range) {
+        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            renderNodeHolder.invalidateInRegion(range);
         }
     }
 

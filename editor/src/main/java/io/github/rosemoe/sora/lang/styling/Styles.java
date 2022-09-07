@@ -184,9 +184,6 @@ public class Styles {
     }
 
     public void addLineStyle(@NonNull LineAnchorStyle style) {
-        if (style instanceof InlayHint) {
-            throw new IllegalArgumentException("reject to add InlayHint");
-        }
         if (lineStyles == null) {
             lineStyles = new ArrayList<>();
             styleTypeCount = new ConcurrentHashMap<>();
