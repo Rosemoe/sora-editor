@@ -24,8 +24,10 @@
 
 package io.github.rosemoe.sora.lang.styling.inlayHint
 
-class InlayHintManager {
+class LineInlayHint(var line: Int) : Comparable<LineInlayHint> {
 
+    val hints = mutableListOf<InlayHint>()
 
+    override fun compareTo(other: LineInlayHint) = line.compareTo(other.line)
 
 }

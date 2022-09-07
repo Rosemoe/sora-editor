@@ -69,6 +69,7 @@ abstract class InlayHint(open var position: CharPosition) {
      * The method is called when editor measures text, for example when the text size or font is changed. So make sure do
      * that this method is fast enough to achieve good performance. If your width changes because other reasons, remember to
      * notify the editor in time.
+     * [InlayHint] is only allowed to be place at span start or end. Illegal hints will be ignored.
      * @param paint the text paint currently used by editor
      * @param textMetrics the [FontMetricsInt] instance of the paint cached by editor
      * @param lineHeight the general line height, with line spacing considered
