@@ -3552,8 +3552,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @UiThread
-    public void updateStyles(@NonNull Styles styles, StyleUpdateRange range) {
-        if (textStyles != styles) {
+    public void updateStyles(@NonNull Styles styles, @Nullable StyleUpdateRange range) {
+        if (textStyles != styles || range == null) {
             setStyles(styles);
             return;
         }
