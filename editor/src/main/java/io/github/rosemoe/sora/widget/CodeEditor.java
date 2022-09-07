@@ -2698,6 +2698,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     scroller.getCurrY(), 0, (int) afterScrollY, ScrollEvent.CAUSE_SCALE_TEXT));
             scroller.startScroll(0, (int) afterScrollY, 0, 0, 0);
             scroller.abortAnimation();
+            restartInput();
             postInvalidate();
         }
         this.layoutBusy = busy;
@@ -4238,6 +4239,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             // Ensure the scroll offset is valid
             touchHandler.scrollBy(0, 0);
             inputConnection.reset();
+            restartInput();
         });
     }
 
