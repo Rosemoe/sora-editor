@@ -51,14 +51,35 @@ package io.github.rosemoe.sora.lang.styling.inlayHint
 import android.graphics.Canvas
 import android.graphics.Paint.FontMetricsInt
 import io.github.rosemoe.sora.graphics.Paint
-import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
  * Base class for all inlay hints.
  * @author Rosemoe
  */
-abstract class InlayHint(open var position: CharPosition) {
+abstract class InlayHint {
+
+    var measuredWidth: Float = 0f
+        private set
+
+    fun measure(
+        paint: Paint,
+        textMetrics: FontMetricsInt,
+        lineHeight: Int,
+        baseline: Float
+    ): Float {
+        measuredWidth = onMeasure(paint, textMetrics, lineHeight, baseline)
+        return measuredWidth
+    }
+
+    fun render(
+        canvas: Canvas,
+        paint: Paint,
+        textMetrics: FontMetricsInt,
+        colorScheme: EditorColorScheme,
+        lineHeight: Int,
+        baseline: Float
+    ) = onRender(canvas, paint, textMetrics, colorScheme, lineHeight, baseline, measuredWidth)
 
     /**
      * Measure the width of this inlay hint so that editor can properly place all the elements.
@@ -76,7 +97,7 @@ abstract class InlayHint(open var position: CharPosition) {
      * @param baseline the general baseline, with line spacing considered
      * @return the width of this inlay hint
      */
-    abstract fun measure(
+    abstract fun onMeasure(
         paint: Paint,
         textMetrics: FontMetricsInt,
         lineHeight: Int,
@@ -98,7 +119,7 @@ abstract class InlayHint(open var position: CharPosition) {
      * @param baseline the general baseline, with line spacing considered
      * @param measuredWidth the width previously measured
      */
-    abstract fun render(
+    abstract fun onRender(
         canvas: Canvas,
         paint: Paint,
         textMetrics: FontMetricsInt,

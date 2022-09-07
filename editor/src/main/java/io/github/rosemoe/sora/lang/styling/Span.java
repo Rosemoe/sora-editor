@@ -26,7 +26,6 @@ package io.github.rosemoe.sora.lang.styling;
 import androidx.annotation.NonNull;
 
 import java.util.Collection;
-import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -47,7 +46,6 @@ public class Span {
      */
     public long style;
     public int underlineColor;
-    public ExternalRenderer renderer = null;
 
     /**
      * Create a new span
@@ -57,7 +55,7 @@ public class Span {
      * @see Span#obtain(int, long)
      * @see TextStyle
      */
-    private Span(int column, long style) {
+    Span(int column, long style) {
         this.column = column;
         this.style = style;
     }
@@ -122,7 +120,6 @@ public class Span {
     public Span copy() {
         var copy = obtain(column, style);
         copy.setUnderlineColor(underlineColor);
-        copy.renderer = renderer;
         return copy;
     }
 
@@ -134,7 +131,6 @@ public class Span {
     public boolean recycle() {
         column = underlineColor = 0;
         style = 0;
-        renderer = null;
         return cacheQueue.offer(this);
     }
 
@@ -155,7 +151,7 @@ public class Span {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         var span = (Span) o;
-        return column == span.column && style == span.style && underlineColor == span.underlineColor && Objects.equals(renderer, span.renderer);
+        return column == span.column && style == span.style && underlineColor == span.underlineColor;
     }
 
     @Override
@@ -163,7 +159,6 @@ public class Span {
         int hash = 31 * column;
         hash = 31 * hash + Long.hashCode(style);
         hash = 31 * hash + underlineColor;
-        hash = 31 * hash + (renderer == null ? 0 : renderer.hashCode());
         return hash;
     }
 
@@ -174,7 +169,6 @@ public class Span {
                 "column=" + column +
                 ", style=" + style +
                 ", underlineColor=" + underlineColor +
-                ", renderer=" + renderer +
                 "}";
     }
 

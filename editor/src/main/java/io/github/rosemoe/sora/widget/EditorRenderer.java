@@ -58,6 +58,7 @@ import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.lang.completion.snippet.SnippetItem;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
+import io.github.rosemoe.sora.lang.styling.AdvancedSpan;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.EmptyReader;
 import io.github.rosemoe.sora.lang.styling.ExternalRenderer;
@@ -371,7 +372,7 @@ public class EditorRenderer {
             int paintStart = span.column;
             int paintEnd = Math.min(columnCount, spanEnd);
             float width = measureText(lineBuf, line, paintStart, paintEnd - paintStart);
-            ExternalRenderer renderer = span.renderer;
+            ExternalRenderer renderer = span instanceof AdvancedSpan ? ((AdvancedSpan) span).renderer : null;
 
             // Invoke external renderer preDraw
             if (renderer != null && renderer.requirePreDraw()) {
@@ -1035,7 +1036,7 @@ public class EditorRenderer {
                         break;
                     }
                     float width = measureText(lineBuf, line, paintStart, paintEnd - paintStart);
-                    ExternalRenderer renderer = span.renderer;
+                    ExternalRenderer renderer = span instanceof AdvancedSpan ? ((AdvancedSpan) span).renderer : null;
 
                     // Invoke external renderer preDraw
                     if (renderer != null && renderer.requirePreDraw()) {
