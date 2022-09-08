@@ -62,6 +62,9 @@ abstract class InlayHint {
     var measuredWidth: Float = 0f
         private set
 
+    var measureTimestamp: Long = 0
+        private set
+
     fun measure(
         paint: Paint,
         textMetrics: FontMetricsInt,
@@ -69,6 +72,7 @@ abstract class InlayHint {
         baseline: Float
     ): Float {
         measuredWidth = onMeasure(paint, textMetrics, lineHeight, baseline)
+        measureTimestamp = System.nanoTime()
         return measuredWidth
     }
 

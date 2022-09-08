@@ -60,7 +60,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
  */
 class TextInlayHint(val text: String) : InlayHint() {
 
-    override fun measure(
+    override fun onMeasure(
         paint: Paint,
         textMetrics: android.graphics.Paint.FontMetricsInt,
         lineHeight: Int,
@@ -74,7 +74,7 @@ class TextInlayHint(val text: String) : InlayHint() {
         return width
     }
 
-    override fun render(
+    override fun onRender(
         canvas: Canvas,
         paint: Paint,
         textMetrics: android.graphics.Paint.FontMetricsInt,
