@@ -5,7 +5,8 @@
             "background": "#242424",
             "foreground": "#cccccc",
             "lineHighlight": "#2B2B2B",
-            "selection": "#214283"
+            "selection": "#214283",
+            "highlightedDelimetersForeground": "#57f6c0"
         }
     },
         {
