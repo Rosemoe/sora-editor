@@ -98,7 +98,7 @@ public class TextMateColorScheme extends EditorColorScheme {
             String highlightedDelimetersForeground =
                     (String) themeRaw.get("highlightedDelimetersForeground");
             if (highlightedDelimetersForeground != null) {
-                setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(foreground));
+                setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(highlightedDelimetersForeground));
             }
 
             //TMTheme seems to have no fields to control BLOCK_LINE colors
