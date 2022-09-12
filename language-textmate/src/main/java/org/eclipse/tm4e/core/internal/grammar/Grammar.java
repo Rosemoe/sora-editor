@@ -167,7 +167,7 @@ public final class Grammar implements IGrammar, IRuleFactoryHelper {
             // add injection grammars contributed for the current scope
             final var injectionScopeNames = this._grammarRepository.injections(scopeName);
             if (injectionScopeNames != null) {
-                injectionScopeNames.forEach(injectionScopeName -> {
+                for (String injectionScopeName : injectionScopeNames) {
                     final var injectionGrammar = Grammar.this.getExternalGrammar(injectionScopeName, null);
                     if (injectionGrammar != null) {
                         final var selector = injectionGrammar.getInjectionSelector();
@@ -180,7 +180,7 @@ public final class Grammar implements IGrammar, IRuleFactoryHelper {
                                     injectionGrammar);
                         }
                     }
-                });
+                }
             }
         }
 

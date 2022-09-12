@@ -12,6 +12,7 @@ package org.eclipse.tm4e.core.internal.utils;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -57,7 +58,9 @@ public final class ObjectCloner {
             var list = (List<T>) obj;
             final var listClone = shallowClone(list, () -> new ArrayList<>(list));
             clones.put(list, listClone);
-            listClone.replaceAll(v -> deepCloneNullable(v, clones));
+            for (var i = 0; i < listClone.size(); ++i) {
+                listClone.set(i, deepCloneNullable(listClone.get(i), clones));
+            }
             return (T) listClone;
         }
 

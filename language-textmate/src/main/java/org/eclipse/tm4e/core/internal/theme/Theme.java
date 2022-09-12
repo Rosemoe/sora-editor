@@ -239,7 +239,7 @@ public final class Theme {
         final var parsedThemeRules = new ArrayList<>(_parsedThemeRules);
 
         // Sort rules lexicographically, and then by index if necessary
-        parsedThemeRules.sort((a, b) -> {
+        Collections.sort(parsedThemeRules, (a, b) -> {
             int r = strcmp(a.scope, b.scope);
             if (r != 0) {
                 return r;

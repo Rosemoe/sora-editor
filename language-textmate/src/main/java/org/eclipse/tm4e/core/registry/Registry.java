@@ -24,6 +24,7 @@ import org.eclipse.tm4e.core.TMException;
 import org.eclipse.tm4e.core.grammar.IGrammar;
 import org.eclipse.tm4e.core.internal.grammar.BalancedBracketSelectors;
 import org.eclipse.tm4e.core.internal.grammar.GrammarReader;
+import org.eclipse.tm4e.core.internal.grammar.dependencies.AbsoluteRuleReference;
 import org.eclipse.tm4e.core.internal.grammar.dependencies.ScopeDependencyProcessor;
 import org.eclipse.tm4e.core.internal.registry.SyncRegistry;
 import org.eclipse.tm4e.core.internal.theme.IRawTheme;
@@ -139,7 +140,9 @@ public final class Registry {
             @Nullable final BalancedBracketSelectors balancedBracketSelectors) {
         final var dependencyProcessor = new ScopeDependencyProcessor(this._syncRegistry, initialScopeName);
         while (!dependencyProcessor.Q.isEmpty()) {
-            dependencyProcessor.Q.forEach(request -> this._loadSingleGrammar(request.scopeName));
+            for (AbsoluteRuleReference request : dependencyProcessor.Q) {
+                this._loadSingleGrammar(request.scopeName);
+            }
             dependencyProcessor.processQueue();
         }
 

@@ -15,6 +15,7 @@ import static org.eclipse.tm4e.core.internal.utils.MoreCollections.*;
 import static org.eclipse.tm4e.core.internal.utils.StringUtils.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +58,7 @@ public final class ThemeTrieElement {
 		if (arr.size() == 1) {
 			return arr;
 		}
-		arr.sort(ThemeTrieElement::_cmpBySpecificity);
+		Collections.sort(arr, ThemeTrieElement::_cmpBySpecificity);
 		return arr;
 	}
 
