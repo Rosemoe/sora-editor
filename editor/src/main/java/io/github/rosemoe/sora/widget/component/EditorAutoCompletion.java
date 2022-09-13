@@ -223,7 +223,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             cancelShowUp = true;
             editor.restartInput();
             editor.getText().beginBatchEdit();
-            item.performCompletion(editor, editor.getText(), completionThread.mPosition);
+            item.performCompletion(editor, editor.getText(), completionThread.requestPosition);
             editor.getText().endBatchEdit();
             editor.updateCursor();
             cancelShowUp = false;
@@ -239,7 +239,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         var previous = completionThread;
         if (previous != null && previous.isAlive()) {
             previous.cancel();
-            previous.mTime = -1;
+            previous.requestTimestamp = -1;
         }
         completionThread = null;
     }
@@ -305,44 +305,44 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
      */
     public final class CompletionThread extends Thread implements TextReference.Validator {
 
-        private final Bundle mExtra;
-        private final CharPosition mPosition;
-        private final Language mLanguage;
-        private final ContentReference mRef;
-        private final CompletionPublisher mLocalPublisher;
-        private long mTime;
-        private boolean mAborted;
+        private final Bundle extraData;
+        private final CharPosition requestPosition;
+        private final Language targetLanguage;
+        private final ContentReference contentRef;
+        private final CompletionPublisher localPublisher;
+        private long requestTimestamp;
+        private boolean isAborted;
 
         public CompletionThread(long requestTime, CompletionPublisher publisher) {
-            mTime = requestTime;
-            mPosition = editor.getCursor().left();
-            mLanguage = editor.getEditorLanguage();
-            mRef = new ContentReference(editor.getText());
-            mRef.setValidator(this);
-            mLocalPublisher = publisher;
-            mExtra = editor.getExtraArguments();
-            mAborted = false;
+            requestTimestamp = requestTime;
+            requestPosition = editor.getCursor().left();
+            targetLanguage = editor.getEditorLanguage();
+            contentRef = new ContentReference(editor.getText());
+            contentRef.setValidator(this);
+            localPublisher = publisher;
+            extraData = editor.getExtraArguments();
+            isAborted = false;
         }
 
         /**
          * Abort the completion thread
          */
         public void cancel() {
-            mAborted = true;
-            var level = mLanguage.getInterruptionLevel();
+            isAborted = true;
+            var level = targetLanguage.getInterruptionLevel();
             if (level == Language.INTERRUPTION_LEVEL_STRONG) {
                 interrupt();
             }
-            mLocalPublisher.cancel();
+            localPublisher.cancel();
         }
 
         public boolean isCancelled() {
-            return mAborted;
+            return isAborted;
         }
 
         @Override
         public void validate() {
-            if (requestTime != mTime || mAborted) {
+            if (requestTime != requestTimestamp || isAborted) {
                 throw new CompletionCancelledException();
             }
         }
@@ -350,10 +350,10 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         @Override
         public void run() {
             try {
-                mLanguage.requireAutoComplete(mRef, mPosition, mLocalPublisher, mExtra);
-                if (mLocalPublisher.hasData()) {
+                targetLanguage.requireAutoComplete(contentRef, requestPosition, localPublisher, extraData);
+                if (localPublisher.hasData()) {
                     if (completionThread == Thread.currentThread()) {
-                        mLocalPublisher.updateList(true);
+                        localPublisher.updateList(true);
                     }
                 } else {
                     editor.post(EditorAutoCompletion.this::hide);
