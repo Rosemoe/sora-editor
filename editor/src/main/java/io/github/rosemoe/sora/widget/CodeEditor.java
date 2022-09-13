@@ -654,6 +654,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * <p>
      * This method allows you to insert texts externally to the content of editor.
      * The content of {@param text} is not checked to be exactly characters of symbols.
+     * <p>
+     * Note that this still works when the editor is not editable. But you should not
+     * call it at that time due to possible problems, especially when {@link #getEditable()} returns
+     * true but {@link #isEditable()} returns false
+     * </p>
      *
      * @param text            Text to insert, usually a text of symbols
      * @param selectionOffset New selection position relative to the start of text to insert.
@@ -2705,6 +2710,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * Check whether the editor is actually editable. This is not only related to user
+     * property 'editable', but also editor states. When the editor is busy at initializing
+     * its layout or awaiting the result of format, it is also not editable.
+     * <p>
+     * Do not modify the text externally in editor when this method returns false.
      * @return Whether the editor is editable, actually.
      * @see CodeEditor#setEditable(boolean)
      * @see CodeEditor#setLayoutBusy(boolean)
@@ -2730,6 +2740,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         this.editable = editable;
         if (!editable) {
             hideSoftInput();
+            snippetController.stopSnippet();
         }
     }
 
