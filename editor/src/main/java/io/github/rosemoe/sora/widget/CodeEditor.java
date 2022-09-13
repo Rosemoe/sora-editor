@@ -4141,9 +4141,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         waitForNextChange = false;
 
         // Auto completion
+        var needCompletion = false;
         if (completionWindow.isEnabled() && !text.isUndoManagerWorking()) {
             if ((!inputConnection.composingText.isComposing() || props.autoCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
-                completionWindow.requireCompletion();
+                needCompletion = true;
             } else {
                 completionWindow.hide();
             }
@@ -4166,6 +4167,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_INSERT, start, end, insertedContent));
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
         lastInsertion = new TextRange(start.fromThis(), end.fromThis());
+        if (needCompletion) {
+            completionWindow.requireCompletion();
+        }
     }
 
     @Override
@@ -4194,12 +4198,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         updateCursor();
 
+        var needCompletion = false;
         if (completionWindow.isEnabled() && !text.isUndoManagerWorking()) {
             if (!inputConnection.composingText.isComposing() && completionWindow.isShowing()) {
                 if (startLine != endLine || startColumn != endColumn - 1) {
                     completionWindow.hide();
                 } else {
-                    completionWindow.requireCompletion();
+                    needCompletion = true;
                     updateCompletionWindowPosition();
                 }
             }
@@ -4221,6 +4226,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         editorLanguage.getAnalyzeManager().delete(start, end, deletedContent);
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_DELETE, start, end, deletedContent));
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
+        if (needCompletion) {
+            completionWindow.requireCompletion();
+        }
     }
 
     @Override
