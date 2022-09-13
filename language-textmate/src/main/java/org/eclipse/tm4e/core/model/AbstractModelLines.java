@@ -45,7 +45,9 @@ public abstract class AbstractModelLines {
 	void setModel(@Nullable final TMModel model) {
 		this.model = model;
 		synchronized (list) {
-			list.forEach(line -> line.isInvalid = true);
+			for (ModelLine line : list) {
+				line.isInvalid = true;
+			}
 		}
 	}
 

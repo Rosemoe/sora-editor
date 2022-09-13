@@ -179,12 +179,12 @@ public class LanguageConfiguration {
 						close = getAsString(autoClosePair.get("close")); //$NON-NLS-1$
 						final var notInElem = autoClosePair.get("notIn"); //$NON-NLS-1$
 						if (notInElem != null && notInElem.isJsonArray()) {
-							notInElem.getAsJsonArray().forEach(element -> {
+							for (JsonElement element : notInElem.getAsJsonArray()) {
 								final var string = getAsString(element);
 								if (string != null) {
 									notInList.add(string);
 								}
-							});
+							}
 						}
 					}
 
