@@ -25,6 +25,8 @@ package io.github.rosemoe.sora.text;
 
 import androidx.annotation.NonNull;
 
+import io.github.rosemoe.sora.util.IntPair;
+
 /**
  * Utility class for texts
  */
@@ -142,6 +144,28 @@ public class TextUtils {
         }
         sb.append(src);
         return sb.toString();
+    }
+
+    /**
+     * As the name is, we find where leading spaces end and trailing spaces start
+     *
+     * @param line The line to search
+     */
+    public static long findLeadingAndTrailingWhitespacePos(ContentLine line) {
+        var buffer = line.value;
+        int column = line.length();
+        int leading = 0;
+        int trailing = column;
+        while (leading < column && isWhitespace(buffer[leading])) {
+            leading++;
+        }
+        // Only them this action is needed
+        if (leading != column) {
+            while (trailing > 0 && isWhitespace(buffer[trailing - 1])) {
+                trailing--;
+            }
+        }
+        return IntPair.pack(leading, trailing);
     }
 
 }

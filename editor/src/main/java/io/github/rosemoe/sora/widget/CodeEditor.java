@@ -2900,7 +2900,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void moveSelectionEnd() {
         if (selectionAnchor == null) {
             int line = cursor.getLeftLine();
-            setSelection(line, getText().getColumnCount(line));
+            if (props.enhancedHomeAndEnd && cursor.getLeftColumn() == getText().getColumnCount(line)) {
+                int column = IntPair.getSecond(TextUtils.findLeadingAndTrailingWhitespacePos(text.getLine(cursor.getLeftLine())));
+                setSelection(cursor.getLeftLine(), column);
+            } else {
+                setSelection(line, getText().getColumnCount(line));
+            }
         } else {
             int line = getSelectingTarget().line;
             setSelectionRegion(selectionAnchor.line, selectionAnchor.column, line, getText().getColumnCount(line), false);
@@ -2913,7 +2918,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void moveSelectionHome() {
         if (selectionAnchor == null) {
-            setSelection(cursor.getLeftLine(), 0);
+            if (props.enhancedHomeAndEnd && cursor.getLeftColumn() == 0) {
+                int column = IntPair.getFirst(TextUtils.findLeadingAndTrailingWhitespacePos(text.getLine(cursor.getLeftLine())));
+                setSelection(cursor.getLeftLine(), column);
+            } else if (cursor.getLeftColumn() != 0) {
+                setSelection(cursor.getLeftLine(), 0);
+            }
         } else {
             setSelectionRegion(selectionAnchor.line, selectionAnchor.column, getSelectingTarget().line, 0, false);
             ensureSelectingTargetVisible();

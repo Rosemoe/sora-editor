@@ -287,5 +287,11 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean formatPastedText = false;
 
+    /**
+     * Use enhanced function of home and end. When it is enabled, clicking home will place
+     * the selection to actually text start on the line if the selection is currently at the start
+     *  of line. End works in similar way, too.
+     */
+    public boolean enhancedHomeAndEnd = true;
 
 }
