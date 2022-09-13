@@ -22,26 +22,16 @@
   ~     additional information or have any questions
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<resources>
-    <!-- Style attribute for CodeEditor -->
-    <attr name="codeEditorStyle" format="reference" />
+<shape
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle"
+    android:tint="?colorControlActivated">
 
-    <declare-styleable name="CodeEditor">
-        <attr name="android:scrollbarTrackHorizontal" />
-        <attr name="android:scrollbarThumbHorizontal" />
-        <attr name="android:scrollbarTrackVertical" />
-        <attr name="android:scrollbarThumbVertical" />
+    <corners android:radius="8dp" />
 
-        <attr name="text" format="string" />
-        <attr name="textSize" format="dimension" />
-        <attr name="dividerWidth" format="dimension" />
-        <attr name="lineNumberVisible" format="boolean" />
-        <attr name="autoCompleteEnabled" format="boolean" />
-        <attr name="symbolCompletionEnabled" format="boolean" />
-        <attr name="cursorBlinkPeriod" format="integer" />
-        <attr name="scrollbarsEnabled" format="boolean" />
-        <attr name="verticalScrollbarEnabled" format="boolean" />
-        <attr name="horizontalScrollbarEnabled" format="boolean" />
-    </declare-styleable>
+    <padding android:top="4dp" android:bottom="4dp" />
 
-</resources>
+    <size android:width="8dp" android:height="52dp" />
+
+    <solid android:color="@android:color/white" />
+</shape>
