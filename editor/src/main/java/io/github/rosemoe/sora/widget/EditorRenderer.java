@@ -1222,7 +1222,8 @@ public class EditorRenderer {
             var firstVisRow = editor.getFirstVisibleRow();
             var lastVisRow = editor.getLastVisibleRow();
             var firstIndex = text.getCharIndex(editor.getFirstVisibleLine(), 0);
-            var lastIndex = text.getCharIndex(Math.min(text.getLineCount() - 1, editor.getLastVisibleLine()), 0);
+            var lastLine = Math.min(text.getLineCount() - 1, editor.getLastVisibleLine() + 1);
+            var lastIndex = text.getCharIndex(lastLine, 0) + text.getColumnCount(lastLine);
             diagnosticsContainer.queryInRegion(collectedDiagnostics, firstIndex, lastIndex);
             if (collectedDiagnostics.isEmpty()) {
                 return;

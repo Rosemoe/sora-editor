@@ -27,6 +27,8 @@ package io.github.rosemoe.sora.app
 import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.widget.CodeEditor
 
@@ -49,6 +51,9 @@ class TestActivity : AppCompatActivity() {
                 "    private boolean mRegistered;\n" +
                 "    private int mOffsetX, mOffsetY, mX, mY, mWidth, mHeight;"
         editor.setText(text)
+        editor.diagnostics = DiagnosticsContainer().also {
+            it.addDiagnostic(DiagnosticRegion(37, 50, DiagnosticRegion.SEVERITY_ERROR))
+        }
         assert(text == editor.text.toString()) { "Text check failed" }
     }
 
