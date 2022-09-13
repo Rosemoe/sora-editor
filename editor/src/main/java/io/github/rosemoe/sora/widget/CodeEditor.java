@@ -487,7 +487,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     a.recycle();
                 }
             } catch (Exception e) {
-                Log.e(LOG_TAG, "Failed to get scroll factor", e);
+                Log.e(LOG_TAG, "Failed to get scroll factor, using default.", e);
                 verticalScrollFactor = 32;
             }
         }

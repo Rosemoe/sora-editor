@@ -28,6 +28,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Typeface
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -360,7 +361,15 @@ class MainActivity : AppCompatActivity() {
         if (id == R.id.open_test_activity) {
             startActivity(Intent(this, TestActivity::class.java))
         } else if (id == R.id.open_lsp_activity) {
-            startActivity(Intent(this, LspTestActivity::class.java))
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.not_supported))
+                    .setMessage(getString(R.string.dialog_api_warning_msg))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+            } else {
+                startActivity(Intent(this, LspTestActivity::class.java))
+            }
         } else if (id == R.id.text_undo) {
             editor.undo()
         } else if (id == R.id.text_redo) {
