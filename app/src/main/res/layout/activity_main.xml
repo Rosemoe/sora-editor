@@ -91,7 +91,11 @@
         android:id="@+id/editor"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="50dp" />
+        android:layout_marginBottom="50dp"
+        android:scrollbarThumbHorizontal="@drawable/scrollbar_thumb"
+        android:scrollbarTrackHorizontal="@drawable/scrollbar_track"
+        android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
+        android:scrollbarTrackVertical="@drawable/scrollbar_track" />
 
     <LinearLayout
         android:layout_width="match_parent"

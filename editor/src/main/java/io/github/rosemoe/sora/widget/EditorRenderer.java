@@ -35,6 +35,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.RenderNode;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.Log;
 import android.util.MutableInt;
@@ -114,6 +115,14 @@ public class EditorRenderer {
     private final CodeEditor editor;
     private final List<DiagnosticRegion> collectedDiagnostics = new ArrayList<>();
     Paint.FontMetricsInt metricsText;
+    @Nullable
+    private Drawable horizontalScrollbarThumbDrawable;
+    @Nullable
+    private Drawable horizontalScrollbarTrackDrawable;
+    @Nullable
+    private Drawable verticalScrollbarThumbDrawable;
+    @Nullable
+    private Drawable verticalScrollbarTrackDrawable;
     protected RenderNodeHolder renderNodeHolder;
     private long displayTimestamp;
     private Paint.FontMetricsInt metricsLineNumber;
@@ -201,6 +210,42 @@ public class EditorRenderer {
 
     public RectF getHorizontalScrollBarRect() {
         return horizontalScrollBarRect;
+    }
+
+    public void setHorizontalScrollbarThumbDrawable(@Nullable Drawable drawable) {
+        horizontalScrollbarThumbDrawable = drawable;
+    }
+
+    @Nullable
+    public Drawable getHorizontalScrollbarThumbDrawable() {
+        return horizontalScrollbarThumbDrawable;
+    }
+
+    public void setHorizontalScrollbarTrackDrawable(@Nullable Drawable drawable) {
+        horizontalScrollbarTrackDrawable = drawable;
+    }
+
+    @Nullable
+    public Drawable getHorizontalScrollbarTrackDrawable() {
+        return horizontalScrollbarTrackDrawable;
+    }
+
+    public void setVerticalScrollbarThumbDrawable(@Nullable Drawable drawable) {
+        this.verticalScrollbarThumbDrawable = drawable;
+    }
+
+    @Nullable
+    public Drawable getVerticalScrollbarThumbDrawable() {
+        return verticalScrollbarThumbDrawable;
+    }
+
+    public void setVerticalScrollbarTrackDrawable(@Nullable Drawable drawable) {
+        verticalScrollbarTrackDrawable = drawable;
+    }
+
+    @Nullable
+    public Drawable getVerticalScrollbarTrackDrawable() {
+        return verticalScrollbarTrackDrawable;
     }
 
     public void setTextSizePxDirect(float size) {
@@ -1785,7 +1830,12 @@ public class EditorRenderer {
             tmpRect.left = editor.getWidth() - editor.getDpUnit() * 10;
             tmpRect.top = 0;
             tmpRect.bottom = editor.getHeight();
-            drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.SCROLL_BAR_TRACK), tmpRect);
+            if (verticalScrollbarTrackDrawable != null) {
+                verticalScrollbarTrackDrawable.setBounds((int) tmpRect.left, (int) tmpRect.top, (int) tmpRect.right, (int) tmpRect.bottom);
+                verticalScrollbarTrackDrawable.draw(canvas);
+            } else {
+                drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.SCROLL_BAR_TRACK), tmpRect);
+            }
         }
     }
 
@@ -1814,9 +1864,14 @@ public class EditorRenderer {
         tmpRect.top = topY;
         tmpRect.bottom = topY + length;
         verticalScrollBarRect.set(tmpRect);
-        drawColor(canvas, editor.getColorScheme().getColor(editor.getEventHandler().holdVerticalScrollBar()
-                ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED
-                : EditorColorScheme.SCROLL_BAR_THUMB), tmpRect);
+        if (verticalScrollbarThumbDrawable != null) {
+            verticalScrollbarThumbDrawable.setBounds((int) tmpRect.left, (int) tmpRect.top, (int) tmpRect.right, (int) tmpRect.bottom);
+            verticalScrollbarThumbDrawable.draw(canvas);
+        } else {
+            drawColor(canvas, editor.getColorScheme().getColor(editor.getEventHandler().holdVerticalScrollBar()
+                    ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED
+                    : EditorColorScheme.SCROLL_BAR_THUMB), tmpRect);
+        }
     }
 
     /**
@@ -1863,7 +1918,12 @@ public class EditorRenderer {
             tmpRect.bottom = editor.getHeight();
             tmpRect.right = editor.getWidth();
             tmpRect.left = 0;
-            drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.SCROLL_BAR_TRACK), tmpRect);
+            if (horizontalScrollbarTrackDrawable != null) {
+                horizontalScrollbarTrackDrawable.setBounds((int) tmpRect.left, (int) tmpRect.top, (int) tmpRect.right, (int) tmpRect.bottom);
+                horizontalScrollbarTrackDrawable.draw(canvas);
+            } else {
+                drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.SCROLL_BAR_TRACK), tmpRect);
+            }
         }
     }
 
@@ -2088,7 +2148,12 @@ public class EditorRenderer {
         tmpRect.right = leftX + length;
         tmpRect.left = leftX;
         horizontalScrollBarRect.set(tmpRect);
-        drawColor(canvas, editor.getColorScheme().getColor(editor.getEventHandler().holdHorizontalScrollBar() ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED : EditorColorScheme.SCROLL_BAR_THUMB), tmpRect);
+        if (horizontalScrollbarThumbDrawable != null) {
+            horizontalScrollbarThumbDrawable.setBounds((int) tmpRect.left, (int) tmpRect.top, (int) tmpRect.right, (int) tmpRect.bottom);
+            horizontalScrollbarThumbDrawable.draw(canvas);
+        } else {
+            drawColor(canvas, editor.getColorScheme().getColor(editor.getEventHandler().holdHorizontalScrollBar() ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED : EditorColorScheme.SCROLL_BAR_THUMB), tmpRect);
+        }
     }
 
     // BEGIN Measure-------------------------------------
