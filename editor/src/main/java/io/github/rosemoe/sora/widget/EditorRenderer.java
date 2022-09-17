@@ -1860,7 +1860,7 @@ public class EditorRenderer {
             drawLineInfoPanel(canvas, centerY, tmpRect.left - editor.getDpUnit() * 5);
         }
         tmpRect.right = editor.getWidth();
-        tmpRect.left = editor.getWidth() - editor.getDpUnit() * 13;
+        tmpRect.left = editor.getWidth() - editor.getDpUnit() * 10;
         tmpRect.top = topY;
         tmpRect.bottom = topY + length;
         verticalScrollBarRect.set(tmpRect);
@@ -2142,6 +2142,8 @@ public class EditorRenderer {
         int page = editor.getWidth();
         float all = editor.getScrollMaxX();
         float length = page / (all + editor.getWidth()) * editor.getWidth();
+        float minLength = 60 * editor.getDpUnit();
+        if (length <= minLength) length = minLength;
         float leftX = editor.getOffsetX() / all * (editor.getWidth() - length);
         tmpRect.top = editor.getHeight() - editor.getDpUnit() * 10;
         tmpRect.bottom = editor.getHeight();

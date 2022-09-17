@@ -341,7 +341,12 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     float movedDis = e.getX() - thumbDownX;
                     thumbDownX = e.getX();
                     float all = editor.getScrollMaxX() + editor.getWidth();
-                    float dx = movedDis / editor.getWidth() * all;
+                    float dx;
+                    if (editor.getRenderer().getHorizontalScrollBarRect().width() <= 60 * editor.getDpUnit()) {
+                        dx = movedDis / (editor.getWidth() - editor.getRenderer().getHorizontalScrollBarRect().width()) * all;
+                    } else {
+                        dx = movedDis / editor.getWidth() * all;
+                    }
                     scrollBy(dx, 0);
                     return true;
                 }
