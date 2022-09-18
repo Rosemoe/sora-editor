@@ -87,6 +87,8 @@ import io.github.rosemoe.sora.widget.layout.RowIterator;
 import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
+import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition;
+import io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 
 public class EditorRenderer {
@@ -1809,13 +1811,13 @@ public class EditorRenderer {
         if (!editor.getEventHandler().shouldDrawScrollBar()) {
             return;
         }
-        if (editor.isVerticalScrollBarEnabled() && editor.getScrollMaxY() > editor.getHeight() / 2) {
-            drawScrollBarTrackVertical(canvas);
-            drawScrollBarVertical(canvas);
-        }
         if (editor.isHorizontalScrollBarEnabled() && !editor.isWordwrap() && editor.getScrollMaxX() > editor.getWidth() * 3 / 4) {
             drawScrollBarTrackHorizontal(canvas);
             drawScrollBarHorizontal(canvas);
+        }
+        if (editor.isVerticalScrollBarEnabled() && editor.getScrollMaxY() > editor.getHeight() / 2) {
+            drawScrollBarTrackVertical(canvas);
+            drawScrollBarVertical(canvas);
         }
     }
 
@@ -1856,8 +1858,7 @@ public class EditorRenderer {
             topY = editor.getOffsetY() / all * height;
         }
         if (editor.getEventHandler().holdVerticalScrollBar()) {
-            float centerY = topY + length / 2f;
-            drawLineInfoPanel(canvas, centerY, tmpRect.left - editor.getDpUnit() * 5);
+            drawLineInfoPanel(canvas, topY, length);
         }
         tmpRect.right = editor.getWidth();
         tmpRect.left = editor.getWidth() - editor.getDpUnit() * 10;
@@ -1877,14 +1878,16 @@ public class EditorRenderer {
     /**
      * Draw line number panel
      *
-     * @param canvas  Canvas to draw
-     * @param centerY The center y on screen for the panel
-     * @param rightX  The right x on screen for the panel
+     * @param canvas Canvas to draw
+     * @param topY   The y at the top of the vertical scrollbar
+     * @param length The length of vertical scrollbar
      */
-    protected void drawLineInfoPanel(Canvas canvas, float centerY, float rightX) {
+    protected void drawLineInfoPanel(Canvas canvas, float topY, float length) {
         if (!editor.isDisplayLnPanel()) {
             return;
         }
+        int mode = editor.getLnPanelPositionMode();
+        int position = editor.getLnPanelPosition();
         String text = editor.getLnTip() + (1 + editor.getFirstVisibleLine());
         float backupSize = paintGeneral.getTextSize();
         paintGeneral.setTextSize(editor.getLineInfoTextSize());
@@ -1892,12 +1895,53 @@ public class EditorRenderer {
         metricsText = paintGeneral.getFontMetricsInt();
         float expand = editor.getDpUnit() * 3;
         float textWidth = paintGeneral.measureText(text);
-        tmpRect.top = centerY - editor.getRowHeight() / 2f - expand;
-        tmpRect.bottom = centerY + editor.getRowHeight() / 2f + expand;
-        tmpRect.right = rightX;
-        tmpRect.left = rightX - expand * 2 - textWidth;
+        float baseline;
+        if (mode == LineInfoPanelPositionMode.FIXED) {
+            tmpRect.top = editor.getHeight() / 2f - editor.getRowHeight() / 2f - expand;
+            tmpRect.bottom = editor.getHeight() / 2f + editor.getRowHeight() / 2f + expand;
+            tmpRect.left = editor.getWidth() / 2f - textWidth / 2f - expand;
+            tmpRect.right = editor.getWidth() / 2f + textWidth / 2f + expand;
+            baseline = editor.getHeight() / 2f + 2 * expand;
+            float offset = 10 * editor.getDpUnit();
+            if (position != LineInfoPanelPosition.CENTER) {
+                if ((position | LineInfoPanelPosition.TOP) == position) {
+                    tmpRect.top = offset;
+                    tmpRect.bottom = offset + editor.getRowHeight() + 2 * expand;
+                    baseline = offset + editor.getRowBaseline(0) + expand;
+                }
+                if ((position | LineInfoPanelPosition.BOTTOM) == position) {
+                    tmpRect.top = editor.getHeight() - offset - 2 * expand - editor.getRowHeight();
+                    tmpRect.bottom = editor.getHeight() - offset;
+                    baseline = editor.getHeight() - editor.getRowHeight() + editor.getRowBaseline(0) - offset - expand;
+                }
+                if ((position | LineInfoPanelPosition.LEFT) == position) {
+                    tmpRect.left = offset;
+                    tmpRect.right = offset + 2 * expand + textWidth;
+                }
+                if ((position | LineInfoPanelPosition.RIGHT) == position) {
+                    tmpRect.right = editor.getWidth() - offset;
+                    tmpRect.left = editor.getWidth() - offset - expand * 2 - textWidth;
+                }
+            }
+        } else {
+            tmpRect.right = editor.getWidth() - 15 * editor.getDpUnit();
+            tmpRect.left = editor.getWidth() - 15 * editor.getDpUnit() - expand * 2 - textWidth;
+            if (position == LineInfoPanelPosition.TOP) {
+                tmpRect.top = topY;
+                tmpRect.bottom = topY + editor.getRowHeight() + 2 * expand;
+                baseline = topY + editor.getRowBaseline(0) + expand;
+            } else if (position == LineInfoPanelPosition.BOTTOM) {
+                tmpRect.top = topY + length - editor.getRowHeight() - 2 * expand;
+                tmpRect.bottom = topY + length;
+                baseline = topY + length - editor.getRowBaseline(0) / 2f;
+            } else {
+                float centerY = topY + length / 2f;
+                tmpRect.top = centerY - editor.getRowHeight() / 2f - expand;
+                tmpRect.bottom = centerY + editor.getRowHeight() / 2f + expand;
+                baseline = centerY - editor.getRowHeight() / 2f + editor.getRowBaseline(0);
+            }
+        }
         drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL), tmpRect);
-        float baseline = centerY - editor.getRowHeight() / 2f + editor.getRowBaseline(0);
         float centerX = (tmpRect.left + tmpRect.right) / 2;
         paintGeneral.setColor(editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL_TEXT));
         paintGeneral.setTextAlign(Paint.Align.CENTER);
