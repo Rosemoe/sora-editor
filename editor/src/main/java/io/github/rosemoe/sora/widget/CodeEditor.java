@@ -1144,21 +1144,33 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         invalidate();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isHorizontalScrollBarEnabled() {
         return horizontalScrollBarEnabled;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setHorizontalScrollBarEnabled(boolean horizontalScrollBarEnabled) {
         this.horizontalScrollBarEnabled = horizontalScrollBarEnabled;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isVerticalScrollBarEnabled() {
         return verticalScrollBarEnabled;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setVerticalScrollBarEnabled(boolean verticalScrollBarEnabled) {
         this.verticalScrollBarEnabled = verticalScrollBarEnabled;
@@ -3077,6 +3089,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             cursorAnimator.markEndPos();
             cursorAnimator.start();
         }
+        renderer.invalidateRenderNodes();
         if (makeItVisible) {
             ensurePositionVisible(line, column);
         } else {
@@ -3177,6 +3190,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         updateCursor();
         updateSelection();
         completionWindow.hide();
+        renderer.invalidateRenderNodes();
         if (makeRightVisible) {
             ensurePositionVisible(lineRight, columnRight);
         } else {
