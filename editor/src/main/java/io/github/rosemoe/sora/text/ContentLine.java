@@ -336,4 +336,9 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
         }
         return lineSeparator;
     }
+
+    @NonNull
+    public char[] getLineSeparatorChars() {
+        return getLineSeparator().getChars();
+    }
 }

@@ -54,6 +54,10 @@ public enum LineSeparator {
         return str;
     }
 
+    public char[] getChars() {
+        return getContent().toCharArray();
+    }
+
     public int getLength() {
         return length;
     }

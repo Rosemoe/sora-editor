@@ -151,8 +151,9 @@ public class ContentReference extends TextReference {
                 column += toRead;
                 read += toRead;
                 if (read < length && columnCount == column) {
-                    chars[offset + read] = '\n';
-                    read++;
+                    var separator = content.getLine(line).getLineSeparatorChars();
+                    System.arraycopy(separator, 0, chars, offset + read, separator.length);
+                    read += separator.length;
                     line++;
                     column = 0;
                 }

@@ -22,46 +22,35 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-plugins {
-    id("com.android.library")
-    id("com.vanniktech.maven.publish.base")
-    id("kotlin-android")
-}
+package io.github.rosemoe.sora.text
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
 
-android {
-    namespace = "io.github.rosemoe.sora"
+/**
+ * Tests for the [Content] class.
+ *
+ * @author Akash Yadav
+ */
+@RunWith(JUnit4::class)
+class ContentTest {
 
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
+    @Test
+    fun `test ContentReference should respect the line separator in ContentLine`() {
+        val content = Content("public class Main {\n" +
+                "    public static void main(String[] args) {\r\n" +
+                "        System.out.println(\"Hello World!\");\n" +
+                "    }\r\n" +
+                "}")
+
+        val ref = ContentReference(content)
+        val cString = ref.toReaderString()
+
+        // content[100] = 'W'
+        assert(cString[100] == content[100])
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
 
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-
-    testOptions {
-        unitTests {
-            isIncludeAndroidResources = true
-        }
-    }
-}
-
-dependencies {
-    api("androidx.annotation:annotation:1.4.0")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:${Versions.kotlinVersion}")
-
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    private fun ContentReference.toReaderString() = createReader().use { it.readText() }
 }
