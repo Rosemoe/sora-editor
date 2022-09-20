@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.github.rosemoe.sora.data.ObjectAllocator;
-import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
 import io.github.rosemoe.sora.lang.styling.line.LineAnchorStyle;
 import io.github.rosemoe.sora.lang.styling.line.LineStyles;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -62,6 +61,8 @@ public class Styles {
     public List<CodeBlock> blocks;
 
     public int suppressSwitch = Integer.MAX_VALUE;
+
+    public boolean indentCountMode = false;
 
     public Styles() {
         this(null);
@@ -224,9 +225,29 @@ public class Styles {
         }
     }
 
+    /**
+     * Remove all line styles
+     */
     public void eraseAllLineStyles() {
         lineStyles.clear();
         styleTypeCount.clear();
+    }
+
+    /**
+     * @param indentCountMode true if the column in {@link #blocks} is the count of spaces.
+     *                                 In other words, the indentation level. false if the column in
+     *                                 {@link #blocks} are based on actual characters.
+     * @see #isIndentCountMode()
+     */
+    public void setIndentCountMode(boolean indentCountMode) {
+        this.indentCountMode = indentCountMode;
+    }
+
+    /**
+     * @see #setIndentCountMode(boolean)
+     */
+    public boolean isIndentCountMode() {
+        return indentCountMode;
     }
 
     /**

@@ -94,12 +94,7 @@ import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 public class EditorRenderer {
 
     private static final String LOG_TAG = "EditorPainter";
-    private final static int[] sDiagnosticsColorMapping = {
-            0,
-            EditorColorScheme.PROBLEM_TYPO,
-            EditorColorScheme.PROBLEM_WARNING,
-            EditorColorScheme.PROBLEM_ERROR
-    };
+    private final static int[] sDiagnosticsColorMapping = {0, EditorColorScheme.PROBLEM_TYPO, EditorColorScheme.PROBLEM_WARNING, EditorColorScheme.PROBLEM_ERROR};
     protected final BufferedDrawPoints bufferedDrawPoints;
     protected final Paint paintGeneral;
     protected final Paint paintOther;
@@ -1046,10 +1041,7 @@ public class EditorRenderer {
             int nonPrintableFlags = editor.getNonPrintablePaintingFlags();
 
             // Draw text here
-            if (!editor.isHardwareAcceleratedDrawAllowed() || editor.getEventHandler().isScaling
-                    || !canvas.isHardwareAccelerated() || editor.isWordwrap()
-                    || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
-                    (rowInf.endColumn - rowInf.startColumn > 128 && !editor.getProps().cacheRenderNodeForLongLines) /* Save memory */) {
+            if (!editor.isHardwareAcceleratedDrawAllowed() || editor.getEventHandler().isScaling || !canvas.isHardwareAccelerated() || editor.isWordwrap() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || (rowInf.endColumn - rowInf.startColumn > 128 && !editor.getProps().cacheRenderNodeForLongLines) /* Save memory */) {
                 // Draw without hardware acceleration
                 // Get spans
                 var reader = spans == null ? new EmptyReader() : spans.read();
@@ -1128,8 +1120,7 @@ public class EditorRenderer {
                     // Draw strikethrough
                     if (TextStyle.isStrikeThrough(styleBits)) {
                         paintOther.setColor(Color.BLACK);
-                        canvas.drawLine(paintingOffset, editor.getRowTop(row) + editor.getRowHeight() / 2f - editor.getOffsetY(),
-                                paintingOffset + width, editor.getRowTop(row) + editor.getRowHeight() / 2f - editor.getOffsetY(), paintOther);
+                        canvas.drawLine(paintingOffset, editor.getRowTop(row) + editor.getRowHeight() / 2f - editor.getOffsetY(), paintingOffset + width, editor.getRowTop(row) + editor.getRowHeight() / 2f - editor.getOffsetY(), paintOther);
                     }
 
                     // Draw underline
@@ -1731,7 +1722,9 @@ public class EditorRenderer {
      * @param offsetX The start x offset for text
      */
     protected void drawBlockLines(Canvas canvas, float offsetX) {
-        List<CodeBlock> blocks = editor.getStyles() == null ? null : editor.getStyles().blocks;
+        final var styles = editor.getStyles();
+        List<CodeBlock> blocks = styles == null ? null : styles.blocks;
+        var indentMode = styles != null && styles.isIndentCountMode();
         if (blocks == null || blocks.isEmpty()) {
             return;
         }
@@ -1750,10 +1743,10 @@ public class EditorRenderer {
             if (CodeEditor.hasVisibleRegion(block.startLine, block.endLine, first, last)) {
                 try {
                     var lineContent = getLine(block.endLine);
-                    float offset1 = measureText(lineContent, block.endLine, 0, Math.min(block.endColumn, lineContent.length()));
+                    float offsetEnd = indentMode ? paintGeneral.getSpaceWidth() * block.endColumn : measureText(lineContent, block.endLine, 0, Math.min(block.endColumn, lineContent.length()));
                     lineContent = getLine(block.startLine);
-                    float offset2 = measureText(lineContent, block.startLine, 0, Math.min(block.startColumn, lineContent.length()));
-                    float offset = Math.min(offset1, offset2);
+                    float offsetStart = indentMode ? paintGeneral.getSpaceWidth() * block.startColumn : measureText(lineContent, block.startLine, 0, Math.min(block.startColumn, lineContent.length()));
+                    float offset = Math.min(offsetEnd, offsetStart);
                     float centerX = offset + offsetX;
                     tmpRect.top = Math.max(0, editor.getRowBottom(block.startLine) - editor.getOffsetY());
                     tmpRect.bottom = Math.min(editor.getHeight(), (block.toBottomOfEndLine ? editor.getRowBottom(block.endLine) : editor.getRowTop(block.endLine)) - editor.getOffsetY());
@@ -1761,13 +1754,12 @@ public class EditorRenderer {
                     tmpRect.right = centerX + editor.getDpUnit() * editor.getBlockLineWidth() / 2;
                     drawColor(canvas, editor.getColorScheme().getColor(curr == cursorIdx ? EditorColorScheme.BLOCK_LINE_CURRENT : EditorColorScheme.BLOCK_LINE), tmpRect);
                 } catch (IndexOutOfBoundsException e) {
-                    //Ignored
-                    //Because the exception usually occurs when the content changed.
+                    // Ignored
+                    // Because the exception usually occurs when the content is changed.
                 }
                 mark = true;
             } else if (mark) {
-                if (invalidCount >= maxCount)
-                    break;
+                if (invalidCount >= maxCount) break;
                 invalidCount++;
             }
         }
@@ -1869,9 +1861,7 @@ public class EditorRenderer {
             verticalScrollbarThumbDrawable.setBounds((int) tmpRect.left, (int) tmpRect.top, (int) tmpRect.right, (int) tmpRect.bottom);
             verticalScrollbarThumbDrawable.draw(canvas);
         } else {
-            drawColor(canvas, editor.getColorScheme().getColor(editor.getEventHandler().holdVerticalScrollBar()
-                    ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED
-                    : EditorColorScheme.SCROLL_BAR_THUMB), tmpRect);
+            drawColor(canvas, editor.getColorScheme().getColor(editor.getEventHandler().holdVerticalScrollBar() ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED : EditorColorScheme.SCROLL_BAR_THUMB), tmpRect);
         }
     }
 
@@ -2410,15 +2400,7 @@ public class EditorRenderer {
         @Override
         @NonNull
         public String toString() {
-            return "TextDisplayPosition{" +
-                    "row=" + row +
-                    ", startColumn=" + startColumn +
-                    ", endColumn=" + endColumn +
-                    ", line=" + line +
-                    ", rowStart=" + rowStart +
-                    ", left=" + left +
-                    ", right=" + right +
-                    '}';
+            return "TextDisplayPosition{" + "row=" + row + ", startColumn=" + startColumn + ", endColumn=" + endColumn + ", line=" + line + ", rowStart=" + rowStart + ", left=" + left + ", right=" + right + '}';
         }
     }
 

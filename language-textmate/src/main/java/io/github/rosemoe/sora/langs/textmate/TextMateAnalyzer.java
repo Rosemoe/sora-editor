@@ -189,6 +189,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
         } catch (Exception e) {
             e.printStackTrace();
         }
+        getManagedStyles().setIndentCountMode(true);
     }
 
     @Override
