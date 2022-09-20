@@ -35,6 +35,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.RenderNode;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.Log;
 import android.util.MutableInt;
@@ -86,6 +87,8 @@ import io.github.rosemoe.sora.widget.layout.RowIterator;
 import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
+import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition;
+import io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 
 public class EditorRenderer {
@@ -114,6 +117,14 @@ public class EditorRenderer {
     private final CodeEditor editor;
     private final List<DiagnosticRegion> collectedDiagnostics = new ArrayList<>();
     Paint.FontMetricsInt metricsText;
+    @Nullable
+    private Drawable horizontalScrollbarThumbDrawable;
+    @Nullable
+    private Drawable horizontalScrollbarTrackDrawable;
+    @Nullable
+    private Drawable verticalScrollbarThumbDrawable;
+    @Nullable
+    private Drawable verticalScrollbarTrackDrawable;
     protected RenderNodeHolder renderNodeHolder;
     private long displayTimestamp;
     private Paint.FontMetricsInt metricsLineNumber;
@@ -201,6 +212,42 @@ public class EditorRenderer {
 
     public RectF getHorizontalScrollBarRect() {
         return horizontalScrollBarRect;
+    }
+
+    public void setHorizontalScrollbarThumbDrawable(@Nullable Drawable drawable) {
+        horizontalScrollbarThumbDrawable = drawable;
+    }
+
+    @Nullable
+    public Drawable getHorizontalScrollbarThumbDrawable() {
+        return horizontalScrollbarThumbDrawable;
+    }
+
+    public void setHorizontalScrollbarTrackDrawable(@Nullable Drawable drawable) {
+        horizontalScrollbarTrackDrawable = drawable;
+    }
+
+    @Nullable
+    public Drawable getHorizontalScrollbarTrackDrawable() {
+        return horizontalScrollbarTrackDrawable;
+    }
+
+    public void setVerticalScrollbarThumbDrawable(@Nullable Drawable drawable) {
+        this.verticalScrollbarThumbDrawable = drawable;
+    }
+
+    @Nullable
+    public Drawable getVerticalScrollbarThumbDrawable() {
+        return verticalScrollbarThumbDrawable;
+    }
+
+    public void setVerticalScrollbarTrackDrawable(@Nullable Drawable drawable) {
+        verticalScrollbarTrackDrawable = drawable;
+    }
+
+    @Nullable
+    public Drawable getVerticalScrollbarTrackDrawable() {
+        return verticalScrollbarTrackDrawable;
     }
 
     public void setTextSizePxDirect(float size) {
@@ -1764,13 +1811,13 @@ public class EditorRenderer {
         if (!editor.getEventHandler().shouldDrawScrollBar()) {
             return;
         }
-        if (editor.isVerticalScrollBarEnabled() && editor.getScrollMaxY() > editor.getHeight() / 2) {
-            drawScrollBarTrackVertical(canvas);
-            drawScrollBarVertical(canvas);
-        }
         if (editor.isHorizontalScrollBarEnabled() && !editor.isWordwrap() && editor.getScrollMaxX() > editor.getWidth() * 3 / 4) {
             drawScrollBarTrackHorizontal(canvas);
             drawScrollBarHorizontal(canvas);
+        }
+        if (editor.isVerticalScrollBarEnabled() && editor.getScrollMaxY() > editor.getHeight() / 2) {
+            drawScrollBarTrackVertical(canvas);
+            drawScrollBarVertical(canvas);
         }
     }
 
@@ -1785,7 +1832,12 @@ public class EditorRenderer {
             tmpRect.left = editor.getWidth() - editor.getDpUnit() * 10;
             tmpRect.top = 0;
             tmpRect.bottom = editor.getHeight();
-            drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.SCROLL_BAR_TRACK), tmpRect);
+            if (verticalScrollbarTrackDrawable != null) {
+                verticalScrollbarTrackDrawable.setBounds((int) tmpRect.left, (int) tmpRect.top, (int) tmpRect.right, (int) tmpRect.bottom);
+                verticalScrollbarTrackDrawable.draw(canvas);
+            } else {
+                drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.SCROLL_BAR_TRACK), tmpRect);
+            }
         }
     }
 
@@ -1806,30 +1858,36 @@ public class EditorRenderer {
             topY = editor.getOffsetY() / all * height;
         }
         if (editor.getEventHandler().holdVerticalScrollBar()) {
-            float centerY = topY + length / 2f;
-            drawLineInfoPanel(canvas, centerY, tmpRect.left - editor.getDpUnit() * 5);
+            drawLineInfoPanel(canvas, topY, length);
         }
         tmpRect.right = editor.getWidth();
-        tmpRect.left = editor.getWidth() - editor.getDpUnit() * 13;
+        tmpRect.left = editor.getWidth() - editor.getDpUnit() * 10;
         tmpRect.top = topY;
         tmpRect.bottom = topY + length;
         verticalScrollBarRect.set(tmpRect);
-        drawColor(canvas, editor.getColorScheme().getColor(editor.getEventHandler().holdVerticalScrollBar()
-                ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED
-                : EditorColorScheme.SCROLL_BAR_THUMB), tmpRect);
+        if (verticalScrollbarThumbDrawable != null) {
+            verticalScrollbarThumbDrawable.setBounds((int) tmpRect.left, (int) tmpRect.top, (int) tmpRect.right, (int) tmpRect.bottom);
+            verticalScrollbarThumbDrawable.draw(canvas);
+        } else {
+            drawColor(canvas, editor.getColorScheme().getColor(editor.getEventHandler().holdVerticalScrollBar()
+                    ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED
+                    : EditorColorScheme.SCROLL_BAR_THUMB), tmpRect);
+        }
     }
 
     /**
      * Draw line number panel
      *
-     * @param canvas  Canvas to draw
-     * @param centerY The center y on screen for the panel
-     * @param rightX  The right x on screen for the panel
+     * @param canvas Canvas to draw
+     * @param topY   The y at the top of the vertical scrollbar
+     * @param length The length of vertical scrollbar
      */
-    protected void drawLineInfoPanel(Canvas canvas, float centerY, float rightX) {
+    protected void drawLineInfoPanel(Canvas canvas, float topY, float length) {
         if (!editor.isDisplayLnPanel()) {
             return;
         }
+        int mode = editor.getLnPanelPositionMode();
+        int position = editor.getLnPanelPosition();
         String text = editor.getLnTip() + (1 + editor.getFirstVisibleLine());
         float backupSize = paintGeneral.getTextSize();
         paintGeneral.setTextSize(editor.getLineInfoTextSize());
@@ -1837,12 +1895,53 @@ public class EditorRenderer {
         metricsText = paintGeneral.getFontMetricsInt();
         float expand = editor.getDpUnit() * 3;
         float textWidth = paintGeneral.measureText(text);
-        tmpRect.top = centerY - editor.getRowHeight() / 2f - expand;
-        tmpRect.bottom = centerY + editor.getRowHeight() / 2f + expand;
-        tmpRect.right = rightX;
-        tmpRect.left = rightX - expand * 2 - textWidth;
+        float baseline;
+        if (mode == LineInfoPanelPositionMode.FIXED) {
+            tmpRect.top = editor.getHeight() / 2f - editor.getRowHeight() / 2f - expand;
+            tmpRect.bottom = editor.getHeight() / 2f + editor.getRowHeight() / 2f + expand;
+            tmpRect.left = editor.getWidth() / 2f - textWidth / 2f - expand;
+            tmpRect.right = editor.getWidth() / 2f + textWidth / 2f + expand;
+            baseline = editor.getHeight() / 2f + 2 * expand;
+            float offset = 10 * editor.getDpUnit();
+            if (position != LineInfoPanelPosition.CENTER) {
+                if ((position | LineInfoPanelPosition.TOP) == position) {
+                    tmpRect.top = offset;
+                    tmpRect.bottom = offset + editor.getRowHeight() + 2 * expand;
+                    baseline = offset + editor.getRowBaseline(0) + expand;
+                }
+                if ((position | LineInfoPanelPosition.BOTTOM) == position) {
+                    tmpRect.top = editor.getHeight() - offset - 2 * expand - editor.getRowHeight();
+                    tmpRect.bottom = editor.getHeight() - offset;
+                    baseline = editor.getHeight() - editor.getRowHeight() + editor.getRowBaseline(0) - offset - expand;
+                }
+                if ((position | LineInfoPanelPosition.LEFT) == position) {
+                    tmpRect.left = offset;
+                    tmpRect.right = offset + 2 * expand + textWidth;
+                }
+                if ((position | LineInfoPanelPosition.RIGHT) == position) {
+                    tmpRect.right = editor.getWidth() - offset;
+                    tmpRect.left = editor.getWidth() - offset - expand * 2 - textWidth;
+                }
+            }
+        } else {
+            tmpRect.right = editor.getWidth() - 15 * editor.getDpUnit();
+            tmpRect.left = editor.getWidth() - 15 * editor.getDpUnit() - expand * 2 - textWidth;
+            if (position == LineInfoPanelPosition.TOP) {
+                tmpRect.top = topY;
+                tmpRect.bottom = topY + editor.getRowHeight() + 2 * expand;
+                baseline = topY + editor.getRowBaseline(0) + expand;
+            } else if (position == LineInfoPanelPosition.BOTTOM) {
+                tmpRect.top = topY + length - editor.getRowHeight() - 2 * expand;
+                tmpRect.bottom = topY + length;
+                baseline = topY + length - editor.getRowBaseline(0) / 2f;
+            } else {
+                float centerY = topY + length / 2f;
+                tmpRect.top = centerY - editor.getRowHeight() / 2f - expand;
+                tmpRect.bottom = centerY + editor.getRowHeight() / 2f + expand;
+                baseline = centerY - editor.getRowHeight() / 2f + editor.getRowBaseline(0);
+            }
+        }
         drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL), tmpRect);
-        float baseline = centerY - editor.getRowHeight() / 2f + editor.getRowBaseline(0);
         float centerX = (tmpRect.left + tmpRect.right) / 2;
         paintGeneral.setColor(editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL_TEXT));
         paintGeneral.setTextAlign(Paint.Align.CENTER);
@@ -1863,7 +1962,12 @@ public class EditorRenderer {
             tmpRect.bottom = editor.getHeight();
             tmpRect.right = editor.getWidth();
             tmpRect.left = 0;
-            drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.SCROLL_BAR_TRACK), tmpRect);
+            if (horizontalScrollbarTrackDrawable != null) {
+                horizontalScrollbarTrackDrawable.setBounds((int) tmpRect.left, (int) tmpRect.top, (int) tmpRect.right, (int) tmpRect.bottom);
+                horizontalScrollbarTrackDrawable.draw(canvas);
+            } else {
+                drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.SCROLL_BAR_TRACK), tmpRect);
+            }
         }
     }
 
@@ -2082,13 +2186,20 @@ public class EditorRenderer {
         int page = editor.getWidth();
         float all = editor.getScrollMaxX();
         float length = page / (all + editor.getWidth()) * editor.getWidth();
+        float minLength = 60 * editor.getDpUnit();
+        if (length <= minLength) length = minLength;
         float leftX = editor.getOffsetX() / all * (editor.getWidth() - length);
         tmpRect.top = editor.getHeight() - editor.getDpUnit() * 10;
         tmpRect.bottom = editor.getHeight();
         tmpRect.right = leftX + length;
         tmpRect.left = leftX;
         horizontalScrollBarRect.set(tmpRect);
-        drawColor(canvas, editor.getColorScheme().getColor(editor.getEventHandler().holdHorizontalScrollBar() ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED : EditorColorScheme.SCROLL_BAR_THUMB), tmpRect);
+        if (horizontalScrollbarThumbDrawable != null) {
+            horizontalScrollbarThumbDrawable.setBounds((int) tmpRect.left, (int) tmpRect.top, (int) tmpRect.right, (int) tmpRect.bottom);
+            horizontalScrollbarThumbDrawable.draw(canvas);
+        } else {
+            drawColor(canvas, editor.getColorScheme().getColor(editor.getEventHandler().holdHorizontalScrollBar() ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED : EditorColorScheme.SCROLL_BAR_THUMB), tmpRect);
+        }
     }
 
     // BEGIN Measure-------------------------------------

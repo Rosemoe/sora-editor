@@ -33,6 +33,7 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
@@ -123,6 +124,8 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.snippet.SnippetController;
 import io.github.rosemoe.sora.widget.style.CursorAnimator;
 import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
+import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition;
+import io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 import io.github.rosemoe.sora.widget.style.builtin.HandleStyleDrop;
 import io.github.rosemoe.sora.widget.style.builtin.HandleStyleSideDrop;
@@ -259,6 +262,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean undoEnabled;
     private boolean layoutBusy;
     private boolean displayLnPanel;
+    private int lnPanelPosition;
+    private int lnPanelPositionMode;
     private boolean lineNumberEnabled;
     private boolean blockLineEnabled;
     private boolean forceHorizontalScrollable;
@@ -319,7 +324,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     public CodeEditor(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
+        this(context, attrs, R.attr.codeEditorStyle);
     }
 
     public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -475,6 +480,16 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         eventManager = new EventManager();
         renderer = onCreateRenderer();
+
+        var array = getContext().obtainStyledAttributes(attrs, R.styleable.CodeEditor, defStyleAttr, defStyleRes);
+        setHorizontalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbHorizontal));
+        setHorizontalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackHorizontal));
+        setVerticalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbVertical));
+        setVerticalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackVertical));
+        setLnPanelPositionMode(array.getInt(R.styleable.CodeEditor_lnPanelPositionMode, LineInfoPanelPositionMode.FOLLOW));
+        setLnPanelPosition(array.getInt(R.styleable.CodeEditor_lnPanelPosition, LineInfoPanelPosition.CENTER));
+        array.recycle();
+
         styleDelegate = new EditorStyleDelegate(this);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -1014,6 +1029,42 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         invalidate();
     }
 
+    public void setHorizontalScrollbarThumbDrawable(@Nullable Drawable drawable) {
+        renderer.setHorizontalScrollbarThumbDrawable(drawable);
+    }
+
+    @Nullable
+    public Drawable getHorizontalScrollbarThumbDrawable() {
+        return renderer.getHorizontalScrollbarThumbDrawable();
+    }
+
+    public void setHorizontalScrollbarTrackDrawable(@Nullable Drawable drawable) {
+        renderer.setHorizontalScrollbarTrackDrawable(drawable);
+    }
+
+    @Nullable
+    public Drawable getHorizontalScrollbarTrackDrawable() {
+        return renderer.getHorizontalScrollbarTrackDrawable();
+    }
+
+    public void setVerticalScrollbarThumbDrawable(@Nullable Drawable drawable) {
+        renderer.setVerticalScrollbarThumbDrawable(drawable);
+    }
+
+    @Nullable
+    public Drawable getVerticalScrollbarThumbDrawable() {
+        return renderer.getVerticalScrollbarThumbDrawable();
+    }
+
+    public void setVerticalScrollbarTrackDrawable(@Nullable Drawable drawable) {
+        renderer.setVerticalScrollbarTrackDrawable(drawable);
+    }
+
+    @Nullable
+    public Drawable getVerticalScrollbarTrackDrawable() {
+        return renderer.getVerticalScrollbarTrackDrawable();
+    }
+
     /**
      * @return Enabled / disabled
      * @see CodeEditor#setDisplayLnPanel(boolean)
@@ -1030,6 +1081,45 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void setDisplayLnPanel(boolean displayLnPanel) {
         this.displayLnPanel = displayLnPanel;
+        invalidate();
+    }
+
+    /**
+     * @return LineInfoPanelPosition.FOLLOW or LineInfoPanelPosition.FIXED
+     * @see CodeEditor#setLnPanelPosition(int)
+     */
+    public int getLnPanelPositionMode() {
+        return lnPanelPositionMode;
+    }
+
+    /**
+     * Set display position mode the line number panel beside vertical scroll bar
+     *
+     * @param mode Default LineInfoPanelPosition.FOLLOW
+     * @see io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode
+     */
+    public void setLnPanelPositionMode(int mode) {
+        this.lnPanelPositionMode = mode;
+        invalidate();
+    }
+
+    /**
+     * @return position
+     * @see CodeEditor#setLnPanelPosition(int)
+     */
+    public int getLnPanelPosition() {
+        return lnPanelPosition;
+    }
+
+    /**
+     * Set display position the line number panel beside vertical scroll bar <br/>
+     * Only TOP,CENTER and BOTTOM will be effective when position mode is follow.
+     *
+     * @param position default TOP|RIGHT
+     * @see io.github.rosemoe.sora.widget.style.LineInfoPanelPosition
+     */
+    public void setLnPanelPosition(int position) {
+        this.lnPanelPosition = position;
         invalidate();
     }
 
@@ -2715,6 +2805,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * its layout or awaiting the result of format, it is also not editable.
      * <p>
      * Do not modify the text externally in editor when this method returns false.
+     *
      * @return Whether the editor is editable, actually.
      * @see CodeEditor#setEditable(boolean)
      * @see CodeEditor#setLayoutBusy(boolean)

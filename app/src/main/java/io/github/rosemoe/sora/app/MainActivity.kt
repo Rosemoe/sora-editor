@@ -46,8 +46,8 @@ import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.langs.java.JavaLanguage
-import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
+import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.text.ContentCreator
 import io.github.rosemoe.sora.text.LineSeparator
 import io.github.rosemoe.sora.utils.CrashHandler
@@ -55,6 +55,8 @@ import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorSearcher
 import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.schemes.*
+import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition
+import io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode
 import io.github.rosemoe.sora.widget.style.builtin.ScaleCursorAnimator
 import io.github.rosemoe.sorakt.subscribeEvent
 import org.eclipse.tm4e.core.registry.IGrammarSource
@@ -358,266 +360,326 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
         val editor = binding.editor
-        if (id == R.id.open_test_activity) {
-            startActivity(Intent(this, TestActivity::class.java))
-        } else if (id == R.id.open_lsp_activity) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                AlertDialog.Builder(this)
-                    .setTitle(getString(R.string.not_supported))
-                    .setMessage(getString(R.string.dialog_api_warning_msg))
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show()
-            } else {
-                startActivity(Intent(this, LspTestActivity::class.java))
+        when (id) {
+            R.id.open_test_activity -> startActivity(Intent(this, TestActivity::class.java))
+            R.id.open_lsp_activity -> {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                    AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.not_supported))
+                        .setMessage(getString(R.string.dialog_api_warning_msg))
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
+                } else {
+                    startActivity(Intent(this, LspTestActivity::class.java))
+                }
             }
-        } else if (id == R.id.text_undo) {
-            editor.undo()
-        } else if (id == R.id.text_redo) {
-            editor.redo()
-        } else if (id == R.id.goto_end) {
-            editor.setSelection(
+            R.id.text_undo -> editor.undo()
+            R.id.text_redo -> editor.redo()
+            R.id.goto_end -> editor.setSelection(
                 editor.text.lineCount - 1,
                 editor.text.getColumnCount(editor.text.lineCount - 1)
             )
-        } else if (id == R.id.move_up) {
-            editor.moveSelectionUp()
-        } else if (id == R.id.move_down) {
-            editor.moveSelectionDown()
-        } else if (id == R.id.home) {
-            editor.moveSelectionHome()
-        } else if (id == R.id.end) {
-            editor.moveSelectionEnd()
-        } else if (id == R.id.move_left) {
-            editor.moveSelectionLeft()
-        } else if (id == R.id.move_right) {
-            editor.moveSelectionRight()
-        } else if (id == R.id.magnifier) {
-            item.isChecked = !item.isChecked
-            editor.getComponent(Magnifier::class.java).isEnabled = item.isChecked
-        } else if (id == R.id.useIcu) {
-            item.isChecked = !item.isChecked
-            editor.props.useICULibToSelectWords = item.isChecked
-        } else if (id == R.id.code_format) {
-            editor.formatCodeAsync()
-        } else if (id == R.id.switch_language) {
-            AlertDialog.Builder(this)
-                .setTitle(R.string.switch_language)
-                .setSingleChoiceItems(
-                    arrayOf(
-                        "Java",
-                        "TextMate Java",
-                        "TextMate Kotlin",
-                        "TextMate Python",
-                        "TM Language from file",
-                        "None"
-                    ), -1
-                ) { dialog: DialogInterface, which: Int ->
-                    when (which) {
-                        0 -> editor.setEditorLanguage(JavaLanguage())
-                        1 -> try {
-                            //TextMateLanguage only support TextMateColorScheme
-                            ensureTextmateTheme()
-                            val language: Language = TextMateLanguage.create(
-                                IGrammarSource.fromInputStream(
-                                    assets.open("textmate/java/syntaxes/java.tmLanguage.json"),
-                                    "java.tmLanguage.json",
-                                    null
-                                ),
-                                InputStreamReader(assets.open("textmate/java/language-configuration.json")),
-                                (editor.colorScheme as TextMateColorScheme).themeSource
-                            )
-                            editor.setEditorLanguage(language)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
+            R.id.move_up -> editor.moveSelectionUp()
+            R.id.move_down -> editor.moveSelectionDown()
+            R.id.home -> editor.moveSelectionHome()
+            R.id.end -> editor.moveSelectionEnd()
+            R.id.move_left -> editor.moveSelectionLeft()
+            R.id.move_right -> editor.moveSelectionRight()
+            R.id.magnifier -> {
+                item.isChecked = !item.isChecked
+                editor.getComponent(Magnifier::class.java).isEnabled = item.isChecked
+            }
+            R.id.useIcu -> {
+                item.isChecked = !item.isChecked
+                editor.props.useICULibToSelectWords = item.isChecked
+            }
+            R.id.ln_panel_fixed -> {
+                val themes = arrayOf(
+                    getString(R.string.top),
+                    getString(R.string.bottom),
+                    getString(R.string.left),
+                    getString(R.string.right),
+                    getString(R.string.center),
+                    getString(R.string.top_left),
+                    getString(R.string.top_right),
+                    getString(R.string.bottom_left),
+                    getString(R.string.bottom_right)
+                )
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.fixed)
+                    .setSingleChoiceItems(themes, -1) { dialog: DialogInterface, which: Int ->
+                        editor.lnPanelPositionMode = LineInfoPanelPositionMode.FIXED
+                        when (which) {
+                            0 -> editor.lnPanelPosition = LineInfoPanelPosition.TOP
+                            1 -> editor.lnPanelPosition = LineInfoPanelPosition.BOTTOM
+                            2 -> editor.lnPanelPosition = LineInfoPanelPosition.LEFT
+                            3 -> editor.lnPanelPosition = LineInfoPanelPosition.RIGHT
+                            4 -> editor.lnPanelPosition = LineInfoPanelPosition.CENTER
+                            5 -> editor.lnPanelPosition =
+                                LineInfoPanelPosition.TOP or LineInfoPanelPosition.LEFT
+                            6 -> editor.lnPanelPosition =
+                                LineInfoPanelPosition.TOP or LineInfoPanelPosition.RIGHT
+                            7 -> editor.lnPanelPosition =
+                                LineInfoPanelPosition.BOTTOM or LineInfoPanelPosition.LEFT
+                            8 -> editor.lnPanelPosition =
+                                LineInfoPanelPosition.BOTTOM or LineInfoPanelPosition.RIGHT
                         }
-                        2 -> try {
-                            ensureTextmateTheme()
-                            val language = TextMateLanguage.create(
-                                IGrammarSource.fromInputStream(
-                                    assets.open("textmate/kotlin/syntaxes/Kotlin.tmLanguage"),
-                                    "Kotlin.tmLanguage",
-                                    null
-                                ),
-                                InputStreamReader(assets.open("textmate/kotlin/language-configuration.json")),
-                                (editor.colorScheme as TextMateColorScheme).themeSource
-                            )
-                            editor.setEditorLanguage(language)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                        3 -> try {
-                            ensureTextmateTheme()
-                            val language = TextMateLanguage.create(
-                                IGrammarSource.fromInputStream(
-                                    assets.open("textmate/python/syntaxes/Python.tmLanguage.json"),
-                                    "Python.tmLanguage.json",
-                                    null
-                                ),
-                                InputStreamReader(assets.open("textmate/python/language-configuration.json")),
-                                (editor.colorScheme as TextMateColorScheme).themeSource
-                            )
-                            editor.setEditorLanguage(language)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                        4 -> loadTMLLauncher.launch("*/*")
-                        else -> editor.setEditorLanguage(EmptyLanguage())
+                        dialog.dismiss()
                     }
-                    dialog.dismiss()
-                }
-                .setNegativeButton(android.R.string.cancel, null)
-                .show()
-        } else if (id == R.id.search_panel_st) {
-            if (binding.searchPanel.visibility == View.GONE) {
-                binding.apply {
-                    replaceEditor.setText("")
-                    searchEditor.setText("")
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+            }
+            R.id.ln_panel_follow -> {
+                val themes = arrayOf(
+                    getString(R.string.top),
+                    getString(R.string.center),
+                    getString(R.string.bottom)
+                )
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.fixed)
+                    .setSingleChoiceItems(themes, -1) { dialog: DialogInterface, which: Int ->
+                        editor.lnPanelPositionMode = LineInfoPanelPositionMode.FOLLOW
+                        when (which) {
+                            0 -> editor.lnPanelPosition = LineInfoPanelPosition.TOP
+                            1 -> editor.lnPanelPosition = LineInfoPanelPosition.CENTER
+                            2 -> editor.lnPanelPosition = LineInfoPanelPosition.BOTTOM
+                        }
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+            }
+            R.id.code_format -> editor.formatCodeAsync()
+            R.id.switch_language -> {
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.switch_language)
+                    .setSingleChoiceItems(
+                        arrayOf(
+                            "Java",
+                            "TextMate Java",
+                            "TextMate Kotlin",
+                            "TextMate Python",
+                            "TM Language from file",
+                            "None"
+                        ), -1
+                    ) { dialog: DialogInterface, which: Int ->
+                        when (which) {
+                            0 -> editor.setEditorLanguage(JavaLanguage())
+                            1 -> try {
+                                //TextMateLanguage only support TextMateColorScheme
+                                ensureTextmateTheme()
+                                val language: Language = TextMateLanguage.create(
+                                    IGrammarSource.fromInputStream(
+                                        assets.open("textmate/java/syntaxes/java.tmLanguage.json"),
+                                        "java.tmLanguage.json",
+                                        null
+                                    ),
+                                    InputStreamReader(assets.open("textmate/java/language-configuration.json")),
+                                    (editor.colorScheme as TextMateColorScheme).themeSource
+                                )
+                                editor.setEditorLanguage(language)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                            2 -> try {
+                                ensureTextmateTheme()
+                                val language = TextMateLanguage.create(
+                                    IGrammarSource.fromInputStream(
+                                        assets.open("textmate/kotlin/syntaxes/Kotlin.tmLanguage"),
+                                        "Kotlin.tmLanguage",
+                                        null
+                                    ),
+                                    InputStreamReader(assets.open("textmate/kotlin/language-configuration.json")),
+                                    (editor.colorScheme as TextMateColorScheme).themeSource
+                                )
+                                editor.setEditorLanguage(language)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                            3 -> try {
+                                ensureTextmateTheme()
+                                val language = TextMateLanguage.create(
+                                    IGrammarSource.fromInputStream(
+                                        assets.open("textmate/python/syntaxes/Python.tmLanguage.json"),
+                                        "Python.tmLanguage.json",
+                                        null
+                                    ),
+                                    InputStreamReader(assets.open("textmate/python/language-configuration.json")),
+                                    (editor.colorScheme as TextMateColorScheme).themeSource
+                                )
+                                editor.setEditorLanguage(language)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                            4 -> loadTMLLauncher.launch("*/*")
+                            else -> editor.setEditorLanguage(EmptyLanguage())
+                        }
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+            }
+            R.id.search_panel_st -> {
+                if (binding.searchPanel.visibility == View.GONE) {
+                    binding.apply {
+                        replaceEditor.setText("")
+                        searchEditor.setText("")
+                        editor.searcher.stopSearch()
+                        searchPanel.visibility = View.VISIBLE
+                        item.isChecked = true
+                    }
+                } else {
+                    binding.searchPanel.visibility = View.GONE
                     editor.searcher.stopSearch()
-                    searchPanel.visibility = View.VISIBLE
-                    item.isChecked = true
+                    item.isChecked = false
                 }
-            } else {
-                binding.searchPanel.visibility = View.GONE
+            }
+            R.id.search_am -> {
+                binding.replaceEditor.setText("")
+                binding.searchEditor.setText("")
                 editor.searcher.stopSearch()
-                item.isChecked = false
+                editor.beginSearchMode()
             }
-        } else if (id == R.id.search_am) {
-            binding.replaceEditor.setText("")
-            binding.searchEditor.setText("")
-            editor.searcher.stopSearch()
-            editor.beginSearchMode()
-        } else if (id == R.id.switch_colors) {
-            val themes = arrayOf(
-                "Default",
-                "GitHub",
-                "Eclipse",
-                "Darcula",
-                "VS2019",
-                "NotepadXX",
-                "QuietLight for TM",
-                "Darcula for TM",
-                "Abyss for TM",
-                "TM theme from file"
-            )
-            AlertDialog.Builder(this)
-                .setTitle(R.string.color_scheme)
-                .setSingleChoiceItems(themes, -1) { dialog: DialogInterface, which: Int ->
-                    when (which) {
-                        0 -> editor.colorScheme = EditorColorScheme()
-                        1 -> editor.colorScheme = SchemeGitHub()
-                        2 -> editor.colorScheme = SchemeEclipse()
-                        3 -> editor.colorScheme = SchemeDarcula()
-                        4 -> editor.colorScheme = SchemeVS2019()
-                        5 -> editor.colorScheme = SchemeNotepadXX()
-                        6 -> try {
+            R.id.switch_colors -> {
+                val themes = arrayOf(
+                    "Default",
+                    "GitHub",
+                    "Eclipse",
+                    "Darcula",
+                    "VS2019",
+                    "NotepadXX",
+                    "QuietLight for TM",
+                    "Darcula for TM",
+                    "Abyss for TM",
+                    "TM theme from file"
+                )
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.color_scheme)
+                    .setSingleChoiceItems(themes, -1) { dialog: DialogInterface, which: Int ->
+                        when (which) {
+                            0 -> editor.colorScheme = EditorColorScheme()
+                            1 -> editor.colorScheme = SchemeGitHub()
+                            2 -> editor.colorScheme = SchemeEclipse()
+                            3 -> editor.colorScheme = SchemeDarcula()
+                            4 -> editor.colorScheme = SchemeVS2019()
+                            5 -> editor.colorScheme = SchemeNotepadXX()
+                            6 -> try {
 
-                            val themeSource = IThemeSource.fromInputStream(
-                                assets.open("textmate/QuietLight.tmTheme"),
-                                "QuietLight.tmTheme",
-                                null
-                            )
-                            val colorScheme = TextMateColorScheme.create(themeSource)
-                            editor.colorScheme = colorScheme
-                            val language = editor.editorLanguage
-                            if (language is TextMateLanguage) {
-                                language.updateTheme(themeSource)
+                                val themeSource = IThemeSource.fromInputStream(
+                                    assets.open("textmate/QuietLight.tmTheme"),
+                                    "QuietLight.tmTheme",
+                                    null
+                                )
+                                val colorScheme = TextMateColorScheme.create(themeSource)
+                                editor.colorScheme = colorScheme
+                                val language = editor.editorLanguage
+                                if (language is TextMateLanguage) {
+                                    language.updateTheme(themeSource)
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
                             }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                        7 -> try {
-                            val themeSource = IThemeSource.fromInputStream(
-                                assets.open("textmate/darcula.json"),
-                                "darcula.json",
-                                null
-                            )
+                            7 -> try {
+                                val themeSource = IThemeSource.fromInputStream(
+                                    assets.open("textmate/darcula.json"),
+                                    "darcula.json",
+                                    null
+                                )
 
-                            val colorScheme = TextMateColorScheme.create(themeSource)
-                            editor.colorScheme = colorScheme
-                            val language = editor.editorLanguage
-                            if (language is TextMateLanguage) {
-                                language.updateTheme(themeSource)
+                                val colorScheme = TextMateColorScheme.create(themeSource)
+                                editor.colorScheme = colorScheme
+                                val language = editor.editorLanguage
+                                if (language is TextMateLanguage) {
+                                    language.updateTheme(themeSource)
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
                             }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                        8 -> try {
-                            val themeSource = IThemeSource.fromInputStream(
-                                assets.open("textmate/abyss-color-theme.json"),
-                                "abyss-color-theme.json",
-                                null
-                            )
-                            val colorScheme = TextMateColorScheme.create(themeSource)
-                            editor.colorScheme = colorScheme
-                            val language = editor.editorLanguage
-                            if (language is TextMateLanguage) {
-                                language.updateTheme(themeSource)
+                            8 -> try {
+                                val themeSource = IThemeSource.fromInputStream(
+                                    assets.open("textmate/abyss-color-theme.json"),
+                                    "abyss-color-theme.json",
+                                    null
+                                )
+                                val colorScheme = TextMateColorScheme.create(themeSource)
+                                editor.colorScheme = colorScheme
+                                val language = editor.editorLanguage
+                                if (language is TextMateLanguage) {
+                                    language.updateTheme(themeSource)
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
                             }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
+                            9 -> loadTMTLauncher.launch("*/*")
                         }
-                        9 -> loadTMTLauncher.launch("*/*")
+                        dialog.dismiss()
                     }
-                    dialog.dismiss()
-                }
-                .setNegativeButton(android.R.string.cancel, null)
-                .show()
-        } else if (id == R.id.text_wordwrap) {
-            item.isChecked = !item.isChecked
-            editor.isWordwrap = item.isChecked
-        } else if (id == R.id.open_logs) {
-            var fis: FileInputStream? = null
-            try {
-                fis = openFileInput("crash-journal.log")
-                val br = BufferedReader(InputStreamReader(fis))
-                val sb = StringBuilder()
-                var line: String?
-                while (br.readLine().also { line = it } != null) {
-                    sb.append(line).append('\n')
-                }
-                Toast.makeText(this, "Succeeded", Toast.LENGTH_SHORT).show()
-                editor.setText(sb, null)
-            } catch (e: Exception) {
-                Toast.makeText(this, "Failed:$e", Toast.LENGTH_SHORT).show()
-                e.printStackTrace()
-            } finally {
-                if (fis != null) {
-                    try {
-                        fis.close()
-                    } catch (e: IOException) {
-                        e.printStackTrace()
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+            }
+            R.id.text_wordwrap -> {
+                item.isChecked = !item.isChecked
+                editor.isWordwrap = item.isChecked
+            }
+            R.id.open_logs -> {
+                var fis: FileInputStream? = null
+                try {
+                    fis = openFileInput("crash-journal.log")
+                    val br = BufferedReader(InputStreamReader(fis))
+                    val sb = StringBuilder()
+                    var line: String?
+                    while (br.readLine().also { line = it } != null) {
+                        sb.append(line).append('\n')
+                    }
+                    Toast.makeText(this, "Succeeded", Toast.LENGTH_SHORT).show()
+                    editor.setText(sb, null)
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Failed:$e", Toast.LENGTH_SHORT).show()
+                    e.printStackTrace()
+                } finally {
+                    if (fis != null) {
+                        try {
+                            fis.close()
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                        }
                     }
                 }
             }
-        } else if (id == R.id.clear_logs) {
-            var fos: FileOutputStream? = null
-            try {
-                fos = openFileOutput("crash-journal.log", MODE_PRIVATE)
-                Toast.makeText(this, "Succeeded", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Toast.makeText(this, "Failed:$e", Toast.LENGTH_SHORT).show()
-                e.printStackTrace()
-            } finally {
-                if (fos != null) {
-                    try {
-                        fos.close()
-                    } catch (e: IOException) {
-                        e.printStackTrace()
+            R.id.clear_logs -> {
+                var fos: FileOutputStream? = null
+                try {
+                    fos = openFileOutput("crash-journal.log", MODE_PRIVATE)
+                    Toast.makeText(this, "Succeeded", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Failed:$e", Toast.LENGTH_SHORT).show()
+                    e.printStackTrace()
+                } finally {
+                    if (fos != null) {
+                        try {
+                            fos.close()
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                        }
                     }
                 }
             }
-        } else if (id == R.id.open_debug_logs) {
-            //ignored
-            //editor.setText(Logs.getLogs());
-        } else if (id == R.id.editor_line_number) {
-            editor.isLineNumberEnabled = !editor.isLineNumberEnabled
-            item.isChecked = editor.isLineNumberEnabled
-        } else if (id == R.id.pin_line_number) {
-            editor.setPinLineNumber(!editor.isLineNumberPinned)
-            item.isChecked = editor.isLineNumberPinned
-        } else if (id == R.id.enable_highlight) {
-            item.isChecked = !item.isChecked
-            // no implementation
+            R.id.open_debug_logs -> {
+                //ignored
+                //editor.setText(Logs.getLogs());
+            }
+            R.id.editor_line_number -> {
+                editor.isLineNumberEnabled = !editor.isLineNumberEnabled
+                item.isChecked = editor.isLineNumberEnabled
+            }
+            R.id.pin_line_number -> {
+                editor.setPinLineNumber(!editor.isLineNumberPinned)
+                item.isChecked = editor.isLineNumberPinned
+            }
+            R.id.enable_highlight -> {
+                item.isChecked = !item.isChecked
+                // no implementation
+            }
         }
         return super.onOptionsItemSelected(item)
     }
