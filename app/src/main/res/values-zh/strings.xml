@@ -65,4 +65,17 @@
     <string name="open_lsp_activity">打开LSP测试界面</string>
     <string name="not_supported">此项操作不受支持</string>
     <string name="dialog_api_warning_msg">LSP只能在Android O或更新的系统上运行</string>
+    <string name="line_info_panel_position">行号面板位置</string>
+    <string name="fixed">固定</string>
+    <string name="follow_scrollbar">跟随滚动条</string>
+    <string name="top">上方</string>
+    <string name="bottom">下方</string>
+    <string name="left">左侧</string>
+    <string name="right">右侧</string>
+    <string name="center">中间</string>
+    <string name="top_left">左上方</string>
+    <string name="top_right">右上方</string>
+    <string name="bottom_left">左下方</string>
+    <string name="bottom_right">右下方</string>
+
 </resources>

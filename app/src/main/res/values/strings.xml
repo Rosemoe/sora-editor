@@ -65,4 +65,16 @@
     <string name="open_lsp_activity">Open lsp activity</string>
     <string name="not_supported">Not supported</string>
     <string name="dialog_api_warning_msg">LSP works only on Android O or above</string>
+    <string name="line_info_panel_position">Line Info Panel Position</string>
+    <string name="fixed">Fixed</string>
+    <string name="follow_scrollbar">Follow scrollbar</string>
+    <string name="top">Top</string>
+    <string name="bottom">Bottom</string>
+    <string name="left">Left</string>
+    <string name="right">Right</string>
+    <string name="center">Center</string>
+    <string name="top_left">Top left</string>
+    <string name="top_right">Top right</string>
+    <string name="bottom_left">Bottom left</string>
+    <string name="bottom_right">Bottom right</string>
 </resources>

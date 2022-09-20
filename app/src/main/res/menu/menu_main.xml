@@ -23,7 +23,7 @@
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:title="@string/cursor_actions">
         <menu>
             <item
@@ -74,22 +74,32 @@
             <item
                 android:id="@+id/pin_line_number"
                 android:checkable="true"
-                android:title="@string/pin_line_number"/>
+                android:title="@string/pin_line_number" />
             <item
                 android:id="@+id/magnifier"
                 android:checkable="true"
                 android:checked="true"
-                android:title="@string/magnifier"/>
+                android:title="@string/magnifier" />
             <item
                 android:id="@+id/useIcu"
                 android:checkable="true"
                 android:checked="true"
-                android:title="@string/use_icu_library"/>
+                android:title="@string/use_icu_library" />
+        </menu>
+    </item>
+    <item android:title="@string/line_info_panel_position">
+        <menu>
+            <item
+                android:id="@+id/ln_panel_fixed"
+                android:title="@string/fixed" />
+            <item
+                android:id="@+id/ln_panel_follow"
+                android:title="@string/follow_scrollbar" />
         </menu>
     </item>
     <item
         android:id="@+id/code_format"
-        android:title="@string/format"/>
+        android:title="@string/format" />
     <item
         android:id="@+id/switch_language"
         android:title="@string/switch_language" />
@@ -98,32 +108,34 @@
         android:title="@string/switch_color_scheme" />
     <item
         android:id="@+id/open_logs"
-        android:title="@string/show_crash_log"/>
+        android:title="@string/show_crash_log" />
     <item
         android:id="@+id/clear_logs"
-        android:title="@string/clear_crash_log"/>
+        android:title="@string/clear_crash_log" />
     <item
         android:id="@+id/open_debug_logs"
-        android:visible="false"
-        android:title="@string/open_debug_logs"/>
-    <item android:id="@+id/open_test_activity"
-        android:title="@string/open_new_activity"/>
-    <item android:id="@+id/open_lsp_activity"
-        android:title="@string/open_lsp_activity"/>
+        android:title="@string/open_debug_logs"
+        android:visible="false" />
     <item
-       android:id="@+id/text_undo"
-       android:title="@string/undo" 
-       android:icon="@drawable/undo"
-       app:showAsAction="always"/>
+        android:id="@+id/open_test_activity"
+        android:title="@string/open_new_activity" />
+    <item
+        android:id="@+id/open_lsp_activity"
+        android:title="@string/open_lsp_activity" />
+    <item
+        android:id="@+id/text_undo"
+        android:icon="@drawable/undo"
+        android:title="@string/undo"
+        app:showAsAction="always" />
     <item
         android:id="@+id/text_redo"
-        android:title="@string/redo" 
         android:icon="@drawable/redo"
-        app:showAsAction="always"/>
+        android:title="@string/redo"
+        app:showAsAction="always" />
     <item
         android:id="@+id/enable_highlight"
-        android:title="Highlight update(Debug)"
         android:checkable="true"
         android:checked="true"
-        android:visible="false"/>
+        android:title="Highlight update(Debug)"
+        android:visible="false" />
 </menu>

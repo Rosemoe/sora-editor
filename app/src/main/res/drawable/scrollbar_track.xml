@@ -27,8 +27,6 @@
     android:shape="rectangle"
     android:tint="?colorControlNormal">
 
-    <corners android:radius="8dp" />
-
     <size android:width="8dp" />
 
     <solid android:color="#39FFFFFF" />

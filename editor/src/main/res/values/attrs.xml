@@ -32,6 +32,18 @@
         <attr name="android:scrollbarTrackVertical" />
         <attr name="android:scrollbarThumbVertical" />
 
+        <attr name="lnPanelPositionMode">
+            <enum name="fixed" value="0" />
+            <enum name="follow" value="1" />
+        </attr>
+        <attr name="lnPanelPosition">
+            <flag name="left" value="1" />
+            <flag name="top" value="2" />
+            <flag name="right" value="4" />
+            <flag name="bottom" value="8" />
+            <flag name="center" value="15" />
+        </attr>
+
         <attr name="text" format="string" />
         <attr name="textSize" format="dimension" />
         <attr name="dividerWidth" format="dimension" />
