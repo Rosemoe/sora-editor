@@ -38,11 +38,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
-import io.github.rosemoe.sora.event.SubscriptionReceipt;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition;
@@ -58,6 +58,8 @@ import io.github.rosemoe.sora.lsp.operations.document.DocumentOpenFeature;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentSaveFeature;
 import io.github.rosemoe.sora.lsp.operations.format.FullFormattingFeature;
 import io.github.rosemoe.sora.lsp.operations.format.RangeFormattingFeature;
+import io.github.rosemoe.sora.lsp.requests.Timeout;
+import io.github.rosemoe.sora.lsp.requests.Timeouts;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 @Experimental
@@ -219,9 +221,7 @@ public class LspEditor {
     public void installFeatures() {
 
         //features
-        installFeatures(RangeFormattingFeature::new, DocumentOpenFeature::new, DocumentSaveFeature::new,
-                DocumentChangeFeature::new, DocumentCloseFeature::new, PublishDiagnosticsFeature::new,
-                CompletionFeature::new, FullFormattingFeature::new, ApplyEditsFeature::new);
+        installFeatures(RangeFormattingFeature::new, DocumentOpenFeature::new, DocumentSaveFeature::new, DocumentChangeFeature::new, DocumentCloseFeature::new, PublishDiagnosticsFeature::new, CompletionFeature::new, FullFormattingFeature::new, ApplyEditsFeature::new);
 
         //options
 
@@ -244,6 +244,14 @@ public class LspEditor {
         return null;
     }
 
+
+    private void setupLanguageServerWrapper() {
+        var languageServerWrapper = LanguageServerWrapper.forProject(projectPath);
+        languageServerWrapper = languageServerWrapper != null ? languageServerWrapper : new LanguageServerWrapper(serverDefinition, projectPath);
+        languageServerWrapper.serverDefinition = serverDefinition;
+        this.languageServerWrapper = languageServerWrapper;
+    }
+
     /**
      * Connect to the language server to provide the capabilities, this will cause threads blocking. Note: An error will be thrown if the language server is not connected after some time.
      *
@@ -251,15 +259,53 @@ public class LspEditor {
      * @see io.github.rosemoe.sora.lsp.requests.Timeout
      */
     @WorkerThread
-    public void connect() {
-        var languageServerWrapper = LanguageServerWrapper.forProject(projectPath);
-        languageServerWrapper = languageServerWrapper != null ? languageServerWrapper : new LanguageServerWrapper(serverDefinition, projectPath);
-        languageServerWrapper.serverDefinition = serverDefinition;
-        this.languageServerWrapper = languageServerWrapper;
+    public void connect() throws TimeoutException {
+
+        setupLanguageServerWrapper();
+
         languageServerWrapper.start();
         //wait for language server start
-        languageServerWrapper.getServerCapabilities();
+        var server = languageServerWrapper.getServer();
+        if (server == null) {
+            throw new TimeoutException("Unable to connect language server");
+        }
         languageServerWrapper.connect(this);
+    }
+
+    /**
+     * Try to connect to the language server repeatedly, this will cause threads blocking. Note: An error will be thrown if the language server is not connected after some time.
+     *
+     * @see io.github.rosemoe.sora.lsp.requests.Timeouts
+     * @see io.github.rosemoe.sora.lsp.requests.Timeout
+     */
+    @WorkerThread
+    public void connectWithTimeout() throws InterruptedException, TimeoutException {
+
+        setupLanguageServerWrapper();
+
+        var start = System.currentTimeMillis();
+        var retryTime = Timeout.getTimeout(Timeouts.INIT);
+        long maxRetryTime = start + retryTime;
+
+        while (start < maxRetryTime) {
+            try {
+                connect();
+                break;
+            } catch (Exception exception) {
+                //exception.printStackTrace();
+            }
+            start = System.currentTimeMillis();
+
+            Thread.sleep(retryTime / 10);
+
+        }
+
+        if (start > maxRetryTime) {
+            throw new TimeoutException("Unable to connect language server");
+        } else {
+            connect();
+        }
+
     }
 
 
