@@ -218,6 +218,15 @@ public class LanguageServerWrapper {
      * Starts the LanguageServer
      */
     public void start() {
+        start(false);
+    }
+
+    /**
+     * Starts the LanguageServer
+     *
+     * @param throwException Whether to throw a startup failure exception
+     */
+    public void start(boolean throwException) {
         if (status == STOPPED && !alreadyShownCrash && !alreadyShownTimeout) {
             setStatus(STARTING);
             try {
@@ -251,9 +260,15 @@ public class LanguageServerWrapper {
                     return res;
                 });
             } catch (IOException e) {
+
+
                 Log.w(TAG, "Failed to start " + serverDefinition + " ; " + projectRootPath, e);
                 serverDefinition.getEventListener().onHandlerException(new LSPException("Failed to start " +
                         serverDefinition + " ; " + projectRootPath, e));
+
+                if (throwException) {
+                    throw new RuntimeException(e);
+                }
 
                 stop(true);
             }

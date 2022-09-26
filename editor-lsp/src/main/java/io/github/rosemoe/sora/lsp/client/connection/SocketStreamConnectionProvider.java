@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.function.Supplier;
 
 /**
@@ -49,8 +50,7 @@ public class SocketStreamConnectionProvider implements StreamConnectionProvider 
         int port = portSupplier.get();
         socket = new Socket("localhost", port);
         //block
-        socket.getInputStream();
-        socket.getOutputStream();
+        //socket.connect();
     }
 
     @Override
