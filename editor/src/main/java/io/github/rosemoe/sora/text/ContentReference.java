@@ -143,17 +143,23 @@ public class ContentReference extends TextReference {
             }
             int read = 0;
             while (read < length && line < getLineCount()) {
-                var columnCount = getColumnCount(line);
+                var targetLine = content.getLine(line);
+                var separatorLength = targetLine.getLineSeparator().getLength();
+                var columnCount = targetLine.length();
                 int toRead = Math.min(columnCount - column, length - read);
+                toRead = Math.max(0, toRead);
                 if (toRead > 0) {
                     content.getRegionOnLine(line, column, column + toRead, chars, offset + read);
                 }
                 column += toRead;
                 read += toRead;
-                if (read < length && columnCount == column) {
-                    chars[offset + read] = '\n';
+                while (read < length && columnCount <= column && column < columnCount + separatorLength) {
+                    chars[offset + read] = targetLine.getLineSeparator().getContent().charAt(column - columnCount);
                     read++;
-                    line++;
+                    column ++;
+                }
+                if (column >= columnCount + separatorLength) {
+                    line ++;
                     column = 0;
                 }
             }
