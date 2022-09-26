@@ -52,6 +52,9 @@ import org.eclipse.tm4e.core.registry.IThemeSource
 import java.io.*
 import java.net.ServerSocket
 import java.util.zip.ZipFile
+import kotlin.concurrent.thread
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class LspTestActivity : AppCompatActivity() {
     private lateinit var editor: CodeEditor
@@ -78,10 +81,6 @@ class LspTestActivity : AppCompatActivity() {
         lifecycleScope.launch {
 
             unAssets()
-
-            Toast.makeText(this@LspTestActivity, "Starting Language Server...", Toast.LENGTH_SHORT)
-                .show()
-            editor.editable = false
 
             connectToLanguageServer()
 
@@ -122,9 +121,15 @@ class LspTestActivity : AppCompatActivity() {
 
     private suspend fun connectToLanguageServer() = withContext(Dispatchers.IO) {
 
+        withContext(Dispatchers.Main) {
+            toast("Starting Language Server...")
+            editor.editable = false
+        }
+
         val port = randomPort()
 
         val projectPath = externalCacheDir?.resolve("testProject")?.absolutePath ?: ""
+
 
         startService(
             Intent(this@LspTestActivity, LspLanguageServerService::class.java)
@@ -132,6 +137,7 @@ class LspTestActivity : AppCompatActivity() {
                     putExtra("port", port)
                 }
         )
+
 
         val serverDefinition = CustomLanguageServerDefinition(".xml") {
             SocketStreamConnectionProvider {
@@ -158,20 +164,34 @@ class LspTestActivity : AppCompatActivity() {
         }
 
 
-        lifecycleScope.launch(Dispatchers.IO) {
-            delay(Timeout.getTimeout(Timeouts.INIT).toLong()) //wait for server start
-            lspEditor.connect()
-            withContext(Dispatchers.Main) {
+
+        lifecycleScope.launch(Dispatchers.Main) {
+            //delay(Timeout.getTimeout(Timeouts.INIT).toLong()) //wait for server start
+            try {
+
+                withContext(Dispatchers.IO) { lspEditor.connectWithTimeout() }
+
                 editor.editable = true
-                Toast.makeText(
-                    this@LspTestActivity,
-                    "Initialized Language server",
-                    Toast.LENGTH_SHORT
-                ).show()
+                toast("Initialized Language server")
+
+            } catch (e: Exception) {
+                toast("Unable to connect language server")
+                editor.editable = true
+                e.printStackTrace()
             }
+
+
         }
 
 
+    }
+
+    private fun toast(text: String) {
+        Toast.makeText(
+            this,
+            text,
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
     private fun randomPort(): Int {

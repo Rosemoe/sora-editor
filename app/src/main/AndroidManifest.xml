@@ -18,9 +18,8 @@
         <service
             android:name=".LspLanguageServerService"
             android:enabled="true"
-
             android:exported="false"
-            android:process=":remote" />
+            android:process=":languageServerService" />
 
         <profileable
             android:shell="true"
