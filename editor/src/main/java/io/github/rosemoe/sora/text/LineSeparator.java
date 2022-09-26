@@ -44,20 +44,40 @@ public enum LineSeparator {
 
     private final String str;
     private final int length;
+    private final char[] chars;
 
     LineSeparator(String str) {
         this.str = str;
         this.length = str.length();
+        chars = str.toCharArray();
     }
 
+    /**
+     * Get the text of this separator
+     */
     public String getContent() {
         return str;
     }
 
+    /**
+     * Get text length of this separator
+     */
     public int getLength() {
         return length;
     }
 
+    /**
+     * Get a char array containing the line separator. The char array should not be modified.
+     */
+    public char[] getChars() {
+        return chars;
+    }
+
+    /**
+     * Get target line separator from a line separator string.
+     * @param str line separator string
+     * @throws IllegalArgumentException if the given str is not a line separator
+     */
     public static LineSeparator fromSeparatorString(String str) {
         Objects.requireNonNull(str, "text must not be null");
         switch (str) {
@@ -74,6 +94,13 @@ public enum LineSeparator {
         }
     }
 
+    /**
+     * Get target line separator from a line separator string.
+     * @param text the whole text
+     * @param start start index of the line separator
+     * @param end end index of the line separator
+     * @throws IllegalArgumentException if the given str is not a line separator
+     */
     public static LineSeparator fromSeparatorString(@NonNull CharSequence text, int start, int end) {
         Objects.requireNonNull(text, "text must not be null");
         if (end == start) {
