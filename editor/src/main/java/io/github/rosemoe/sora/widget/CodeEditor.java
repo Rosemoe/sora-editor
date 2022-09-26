@@ -255,6 +255,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private float lineSpacingMultiplier = 1f;
     private float lineSpacingAdd = 0f;
     private float lineNumberMarginLeft;
+    private float verticalExtraSpaceFactor = 0.5f;
     private boolean waitForNextChange;
     private boolean scalable;
     private boolean editable;
@@ -1987,7 +1988,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return max scroll y
      */
     public int getScrollMaxY() {
-        return Math.max(0, layout.getLayoutHeight() - getHeight() / 2);
+        return Math.max(0, layout.getLayoutHeight() - (int) (getHeight() * (1 - verticalExtraSpaceFactor)));
     }
 
     /**
@@ -1997,6 +1998,33 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public int getScrollMaxX() {
         return (int) Math.max(0, layout.getLayoutWidth() + measureTextRegionOffset() - getWidth() / 2f);
+    }
+
+    /**
+     * Set the factor of extra space in vertical direction. The factor is multiplied with editor
+     * height to compute the extra space of vertical viewport. Specially, when factor is zero, no
+     * extra space is added.
+     *
+     * @param extraSpaceFactor the factor. 0.5 by default.
+     * @see #getVerticalExtraSpaceFactor()
+     * @throws IllegalArgumentException if the factor is negative or bigger than 1.0f
+     */
+    public void setVerticalExtraSpaceFactor(float extraSpaceFactor) {
+        if (extraSpaceFactor < 0 || extraSpaceFactor > 1.0f) {
+            throw new IllegalArgumentException("the factor should be in range [0.0, 1.0]");
+        }
+        this.verticalExtraSpaceFactor = extraSpaceFactor;
+        // ensure offset is in scroll range
+        touchHandler.scrollBy(0, 0);
+    }
+
+    /**
+     * Get the factor used to compute extra space of vertical viewport.
+     *
+     * @see #setVerticalExtraSpaceFactor(float)
+     */
+    public float getVerticalExtraSpaceFactor() {
+        return verticalExtraSpaceFactor;
     }
 
     /**
