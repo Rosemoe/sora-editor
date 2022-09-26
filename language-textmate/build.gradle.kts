@@ -58,7 +58,7 @@ dependencies {
     implementation("org.jruby.jcodings:jcodings:${Versions.jcodingsVersion}")
     implementation("org.jruby.joni:joni:${Versions.joniVersion}")
 
-    implementation("org.yaml:snakeyaml:1.32")
+    implementation("org.yaml:snakeyaml:1.33")
     implementation("org.eclipse.jdt:org.eclipse.jdt.annotation:2.2.700")
     implementation("com.google.guava:guava:31.1-android")
 
