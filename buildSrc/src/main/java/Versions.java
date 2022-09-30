@@ -35,7 +35,7 @@ public final class Versions {
     public final static int minSdkVersionHighApi = 26;
     public final static int targetSdkVersion = 33;
 
-    public final static String kotlinVersion = "1.7.10";
+    public final static String kotlinVersion = "1.7.20";
 
     // Dependency versions
     public final static String antlrVersion = "4.9.2";
