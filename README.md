@@ -31,6 +31,7 @@ Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEdito
 - [x] Incremental highlight analysis 
 - [x] Highlight bracket pairs 
 - [x] Event System
+- [x] Code snippets
 ## Screenshots
 <div style="overflow: hidden">
 <img src="/images/general.jpg" alt="GeneralAppearance" width="40%" align="bottom" />
