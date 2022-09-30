@@ -440,6 +440,7 @@ class SnippetController(private val editor: CodeEditor) {
         if (snippetIndex == -1) {
             return
         }
+        editor.hideAutoCompleteWindow()
         if (index != currentTabStopIndex && currentTabStopIndex != -1) {
             // apply transform
             val tabStop = tabStops!![currentTabStopIndex]
