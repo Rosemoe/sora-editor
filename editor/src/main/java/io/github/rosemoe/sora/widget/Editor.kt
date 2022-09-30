@@ -22,12 +22,11 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sorakt
+package io.github.rosemoe.sora.widget
 
 import io.github.rosemoe.sora.event.Event
 import io.github.rosemoe.sora.event.EventReceiver
 import io.github.rosemoe.sora.event.SubscriptionReceipt
-import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.component.EditorBuiltinComponent
 
 /**

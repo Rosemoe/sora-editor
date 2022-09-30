@@ -58,7 +58,7 @@ import io.github.rosemoe.sora.widget.schemes.*
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode
 import io.github.rosemoe.sora.widget.style.builtin.ScaleCursorAnimator
-import io.github.rosemoe.sorakt.subscribeEvent
+import io.github.rosemoe.sora.widget.subscribeEvent
 import org.eclipse.tm4e.core.registry.IGrammarSource
 import org.eclipse.tm4e.core.registry.IThemeSource
 import java.io.*

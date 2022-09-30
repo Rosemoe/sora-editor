@@ -22,9 +22,7 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sorakt
-
-import io.github.rosemoe.sora.text.Content
+package io.github.rosemoe.sora.text
 
 /**
  * A delegate method.

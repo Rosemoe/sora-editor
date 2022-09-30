@@ -33,8 +33,8 @@ import io.github.rosemoe.sora.lang.completion.snippet.*
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.snippet.variable.*
-import io.github.rosemoe.sorakt.getComponent
-import io.github.rosemoe.sorakt.subscribeEvent
+import io.github.rosemoe.sora.widget.getComponent
+import io.github.rosemoe.sora.widget.subscribeEvent
 
 /**
  * Manage snippet editing in editor
