@@ -598,6 +598,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 if (edgeEffect.getDistance() != 0) {
                     endY = scroller.getCurrY();
                 }
+            } else {
+                editor.getVerticalEdgeEffect().finish();
             }
             notifyY = false;
         }
@@ -613,6 +615,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 if (edgeEffect.getDistance() != 0) {
                     endX = scroller.getCurrX();
                 }
+            } else {
+                editor.getHorizontalEdgeEffect().finish();
             }
             notifyX = false;
         }
