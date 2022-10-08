@@ -18,7 +18,7 @@ Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEdito
 **Issues and pull requests are welcome.**
 ## Features
 - [x] Syntax highlighting
-- [x] Auto-completion (with snippets)
+- [x] Auto-completion (with [code snippets](https://macromates.com/manual/en/snippets))
 - [x] Auto indent
 - [x] Code block lines
 - [x] Scale text
@@ -31,7 +31,6 @@ Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEdito
 - [x] Incremental highlight analysis 
 - [x] Highlight bracket pairs 
 - [x] Event System
-- [x] Code snippets
 ## Screenshots
 <div style="overflow: hidden">
 <img src="/images/general.jpg" alt="GeneralAppearance" width="40%" align="bottom" />
