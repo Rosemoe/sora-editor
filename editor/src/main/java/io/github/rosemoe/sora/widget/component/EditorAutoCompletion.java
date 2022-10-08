@@ -200,20 +200,21 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
 
     /**
      * Select current position
+     * @return if the action is performed
      */
-    public void select() {
-        select(currentSelection);
+    public boolean select() {
+        return select(currentSelection);
     }
 
     /**
      * Select the given position
      *
      * @param pos Index of auto complete item
+     * @return if the action is performed
      */
-    public void select(int pos) {
+    public boolean select(int pos) {
         if (pos == -1) {
-            editor.commitText("\n");
-            return;
+            return false;
         }
         var adpView = layout.getCompletionList();
         var item = ((EditorCompletionAdapter) adpView.getAdapter()).getItem(pos);
@@ -230,6 +231,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             editor.restartInput();
         }
         hide();
+        return true;
     }
 
     /**

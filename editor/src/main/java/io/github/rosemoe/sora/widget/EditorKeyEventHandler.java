@@ -167,8 +167,7 @@ class EditorKeyEventHandler {
                 if (editor.isEditable()) {
                     var lineSeparator = editor.getLineSeparator().getContent();
                     final var editorLanguage = editor.getEditorLanguage();
-                    if (completionWindow.isShowing()) {
-                        completionWindow.select();
+                    if (completionWindow.isShowing() && completionWindow.select()) {
                         return true;
                     }
 
