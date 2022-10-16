@@ -210,8 +210,12 @@ class EditorKeyEventHandler {
                 editor.moveSelectionEnd();
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_MOVE_HOME:
-                editor.moveSelectionHome();
-                return editorKeyEvent.result(true);
+                if (isCtrlPressed) {
+                    editor.setSelection(0, 0);
+                    return editorKeyEvent.result(true);
+                }
+            editor.moveSelectionHome();
+            return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_PAGE_DOWN:
                 editor.movePageDown();
                 return editorKeyEvent.result(true);
@@ -319,9 +323,10 @@ class EditorKeyEventHandler {
             KeyBindingEvent keybindingEvent,
             int keyCode,
             boolean isShiftPressed) {
-        final var connection = this.editor.inputConnection;
-        final var editorText = this.editor.getText();
-        final var editorCursor = this.editor.getCursor();
+        final var editor = this.editor;
+        final var connection = editor.inputConnection;
+        final var editorText = editor.getText();
+        final var editorCursor = editor.getCursor();
         switch (keyCode) {
             case KeyEvent.KEYCODE_V:
                 if (editor.isEditable()) {
