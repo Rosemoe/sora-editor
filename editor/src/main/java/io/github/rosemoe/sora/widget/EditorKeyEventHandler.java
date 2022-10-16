@@ -169,6 +169,7 @@ class EditorKeyEventHandler {
     ) {
         final var connection = editor.inputConnection;
         final var editorCursor = editor.getCursor();
+        final var editorText = editor.getText();
         final var completionWindow = editor.getComponent(EditorAutoCompletion.class);
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK: {
@@ -207,8 +208,14 @@ class EditorKeyEventHandler {
                 editor.moveSelectionRight();
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_MOVE_END:
-                editor.moveSelectionEnd();
-                return editorKeyEvent.result(true);
+                if (isCtrlPressed) {
+                    final var lastLine = editorText.getLineCount() - 1;
+                    final var lastColumn = editorText.getColumnCount(lastLine);
+                    editor.setSelection(lastLine, lastColumn);
+                    return editorKeyEvent.result(true);
+                }
+            editor.moveSelectionEnd();
+            return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_MOVE_HOME:
                 if (isCtrlPressed) {
                     editor.setSelection(0, 0);
