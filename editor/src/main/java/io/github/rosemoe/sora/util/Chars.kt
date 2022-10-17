@@ -60,9 +60,20 @@ object Chars {
     @JvmStatic
     @JvmOverloads
     fun findWord(position: CharPosition, text: Content, reverse: Boolean = false): TextRange {
-        if (text.getColumnCount(position.line) == position.column && position.line < text.lineCount - 1) {
-            return TextRange(CharPosition(position.line + 1, 0), CharPosition(position.line + 1, 0))
+        if(reverse) {
+            position.column -= 1
         }
+        if (position.column <= 0 && position.line > 0 && reverse) {
+            val l = position.line
+            val pos = CharPosition(l, text.getLine(l).length)
+            return TextRange(pos, pos)
+        }
+
+        if (text.getColumnCount(position.line) == position.column && position.line < text.lineCount - 1 && !reverse) {
+            val pos = CharPosition(position.line + 1, 0)
+            return TextRange(pos, pos)
+        }
+
         val column = skipWs(text.getLine(position.line), position.column, reverse)
         return getWordRange(text, position.line, column, false)
     }

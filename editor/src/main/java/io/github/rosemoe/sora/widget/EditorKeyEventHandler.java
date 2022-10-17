@@ -203,6 +203,17 @@ class EditorKeyEventHandler {
                 editor.moveSelectionUp();
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_DPAD_LEFT:
+                if (isCtrlPressed) {
+                    final var handle = editorCursor.left().equals(editor.selectionAnchor) ? editorCursor.right() : editorCursor.left();
+                    final var prevStart = Chars.prevWordStart(handle, editorText);
+                    if (editor.selectionAnchor != null) {
+                        editor.setSelectionRegion(editor.selectionAnchor.line, editor.selectionAnchor.column, prevStart.line, prevStart.column);
+                        editor.ensureSelectingTargetVisible();
+                        return editorKeyEvent.result(true);
+                    }
+                    editor.setSelection(prevStart.line, prevStart.column);
+                    return editorKeyEvent.result(true);
+                }
                 editor.moveSelectionLeft();
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_DPAD_RIGHT:
