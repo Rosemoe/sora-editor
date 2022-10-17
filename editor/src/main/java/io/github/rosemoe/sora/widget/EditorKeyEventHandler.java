@@ -39,6 +39,7 @@ import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.method.KeyMetaStates;
+import io.github.rosemoe.sora.util.Chars;
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 
 /**
@@ -205,25 +206,39 @@ class EditorKeyEventHandler {
                 editor.moveSelectionLeft();
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_DPAD_RIGHT:
+                if (isCtrlPressed) {
+                    final var nextEnd = Chars.nextWordEnd(editorCursor.left(), editorText);
+                    if (editor.selectionAnchor != null) {
+                        editor.setSelectionRegion(editor.selectionAnchor.line, editor.selectionAnchor.column, nextEnd.line, nextEnd.column);
+                        editor.ensureSelectingTargetVisible();
+                        return editorKeyEvent.result(true);
+                    }
+                    editor.setSelection(nextEnd.line, nextEnd.column);
+                    return editorKeyEvent.result(true);
+                }
                 editor.moveSelectionRight();
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_MOVE_END:
                 final var lastLine = editorText.getLineCount() - 1;
                 final var lastColumn = editorText.getColumnCount(lastLine);
-                if (isCtrlPressed && editor.selectionAnchor != null) {
-                    editor.setSelectionRegion(editor.selectionAnchor.line, editor.selectionAnchor.column, lastLine, lastColumn);
-                    editor.ensureSelectingTargetVisible();
-                } else if (isCtrlPressed) {
+                if (isCtrlPressed) {
+                    if (editor.selectionAnchor != null) {
+                        editor.setSelectionRegion(editor.selectionAnchor.line, editor.selectionAnchor.column, lastLine, lastColumn);
+                        editor.ensureSelectingTargetVisible();
+                        return editorKeyEvent.result(true);
+                    }
                     editor.setSelection(lastLine, lastColumn);
                     return editorKeyEvent.result(true);
                 }
                 editor.moveSelectionEnd();
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_MOVE_HOME:
-                if (isCtrlPressed && editor.selectionAnchor != null) {
-                    editor.setSelectionRegion(0, 0, editor.selectionAnchor.line, editor.selectionAnchor.column);
-                    editor.ensureSelectingTargetVisible();
-                } else if (isCtrlPressed) {
+                if (isCtrlPressed) {
+                    if (editor.selectionAnchor != null) {
+                        editor.setSelectionRegion(0, 0, editor.selectionAnchor.line, editor.selectionAnchor.column);
+                        editor.ensureSelectingTargetVisible();
+                        return editorKeyEvent.result(true);
+                    }
                     editor.setSelection(0, 0);
                     return editorKeyEvent.result(true);
                 }

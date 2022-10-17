@@ -105,6 +105,7 @@ import io.github.rosemoe.sora.text.TextLayoutHelper;
 import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.text.TextUtils;
 import io.github.rosemoe.sora.text.method.KeyMetaStates;
+import io.github.rosemoe.sora.util.Chars;
 import io.github.rosemoe.sora.util.Floats;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.Logger;
@@ -2006,8 +2007,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * extra space is added.
      *
      * @param extraSpaceFactor the factor. 0.5 by default.
-     * @see #getVerticalExtraSpaceFactor()
      * @throws IllegalArgumentException if the factor is negative or bigger than 1.0f
+     * @see #getVerticalExtraSpaceFactor()
      */
     public void setVerticalExtraSpaceFactor(float extraSpaceFactor) {
         if (extraSpaceFactor < 0 || extraSpaceFactor > 1.0f) {
@@ -3429,30 +3430,30 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param column The column.
      */
     public void selectWord(int line, int column) {
-        // Find word edges
-        int startLine = line, endLine = line;
-        var lineObj = getText().getLine(line);
-        long edges = ICUUtils.getWordEdges(lineObj, column, props.useICULibToSelectWords);
-        int startColumn = IntPair.getFirst(edges);
-        int endColumn = IntPair.getSecond(edges);
-        if (startColumn == endColumn) {
-            if (endColumn < lineObj.length()) {
-                endColumn++;
-            } else if (startColumn > 0) {
-                startColumn--;
-            } else {
-                if (line > 0) {
-                    int lastColumn = getText().getColumnCount(line - 1);
-                    startLine = line - 1;
-                    startColumn = lastColumn;
-                } else if (line < getLineCount() - 1) {
-                    endLine = line + 1;
-                    endColumn = 0;
-                }
-            }
-        }
+        final var range = getWordRange(line, column);
+        final var start = range.getStart();
+        final var end = range.getEnd();
         requestFocusFromTouch();
-        setSelectionRegion(startLine, startColumn, endLine, endColumn, SelectionChangeEvent.CAUSE_LONG_PRESS);
+        setSelectionRegion(start.line, start.column, end.line, end.column, SelectionChangeEvent.CAUSE_LONG_PRESS);
+    }
+
+    /**
+     * @see #getWordRange(int, int, boolean)
+     */
+    public TextRange getWordRange(final int line, final int column) {
+        return getWordRange(line, column, props.useICULibToSelectWords);
+    }
+
+    /**
+     * Get the range of the word at given character position.
+     *
+     * @param line   The line.
+     * @param column The column.
+     * @param useIcu Whether to use the ICU library to get word edges.
+     * @return The word range.
+     */
+    public TextRange getWordRange(final int line, final int column, final boolean useIcu) {
+        return Chars.getWordRange(getText(), line, column, useIcu);
     }
 
     /**
