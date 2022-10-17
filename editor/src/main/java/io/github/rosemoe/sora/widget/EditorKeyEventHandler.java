@@ -197,8 +197,12 @@ class EditorKeyEventHandler {
                 return handleEnterKeyEvent(editorKeyEvent, keybindingEvent, isShiftPressed, isAltPressed, isCtrlPressed);
             }
             case KeyEvent.KEYCODE_DPAD_DOWN:
-                editor.moveSelectionDown();
-                return editorKeyEvent.result(true);
+                if (isCtrlPressed) {
+                    editor.getScroller().startScroll(editor.getOffsetX(), editor.getOffsetY(), 0, editor.getRowHeight());
+                    return editorKeyEvent.result(true);
+                }
+            editor.moveSelectionDown();
+            return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_DPAD_UP:
                 editor.moveSelectionUp();
                 return editorKeyEvent.result(true);
