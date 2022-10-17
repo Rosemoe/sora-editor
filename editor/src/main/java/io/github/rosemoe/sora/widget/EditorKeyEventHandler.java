@@ -214,11 +214,14 @@ class EditorKeyEventHandler {
                         editorText.endBatchEdit();
                         return editorKeyEvent.result(true);
                     }
-                    editor.getScroller().startScroll(editor.getOffsetX(), editor.getOffsetY(), 0, editor.getRowHeight());
+                    final var dy = editor.getOffsetY() + editor.getRowHeight() > editor.getScrollMaxY()
+                            ? editor.getScrollMaxY() - editor.getOffsetY()
+                            : editor.getRowHeight();
+                    editor.getScroller().startScroll(editor.getOffsetX(), editor.getOffsetY(), 0, dy);
                     return editorKeyEvent.result(true);
                 }
-            editor.moveSelectionDown();
-            return editorKeyEvent.result(true);
+                editor.moveSelectionDown();
+                return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_DPAD_UP:
                 editor.moveSelectionUp();
                 return editorKeyEvent.result(true);
