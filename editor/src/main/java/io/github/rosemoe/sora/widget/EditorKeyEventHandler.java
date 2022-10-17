@@ -198,6 +198,22 @@ class EditorKeyEventHandler {
             }
             case KeyEvent.KEYCODE_DPAD_DOWN:
                 if (isCtrlPressed) {
+                    if (isShiftPressed) {
+                        final var left = editorCursor.left();
+                        final var right = editorCursor.right();
+                        final var lines = editorText.getLineCount();
+                        if (right.line == lines - 1) {
+                            // last line, cannot move down
+                            return editorKeyEvent.result(true);
+                        }
+
+                        final var next = editorText.getLine(right.line + 1).toString();
+                        editorText.beginBatchEdit();
+                        editorText.delete(right.line, editorText.getColumnCount(right.line), right.line + 1, next.length());
+                        editorText.insert(left.line, 0, next.concat(editor.getLineSeparator().getContent()));
+                        editorText.endBatchEdit();
+                        return editorKeyEvent.result(true);
+                    }
                     editor.getScroller().startScroll(editor.getOffsetX(), editor.getOffsetY(), 0, editor.getRowHeight());
                     return editorKeyEvent.result(true);
                 }
