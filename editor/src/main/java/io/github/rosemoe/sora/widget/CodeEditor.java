@@ -3435,6 +3435,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         final var end = range.getEnd();
         requestFocusFromTouch();
         setSelectionRegion(start.line, start.column, end.line, end.column, SelectionChangeEvent.CAUSE_LONG_PRESS);
+        selectionAnchor = getCursor().left();
     }
 
     /**

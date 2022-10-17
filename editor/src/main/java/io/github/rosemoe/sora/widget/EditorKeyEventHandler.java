@@ -207,7 +207,8 @@ class EditorKeyEventHandler {
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_DPAD_RIGHT:
                 if (isCtrlPressed) {
-                    final var nextEnd = Chars.nextWordEnd(editorCursor.left(), editorText);
+                    final var handle = editorCursor.left().equals(editor.selectionAnchor) ? editorCursor.right() : editorCursor.left();
+                    final var nextEnd = Chars.nextWordEnd(handle, editorText);
                     if (editor.selectionAnchor != null) {
                         editor.setSelectionRegion(editor.selectionAnchor.line, editor.selectionAnchor.column, nextEnd.line, nextEnd.column);
                         editor.ensureSelectingTargetVisible();
