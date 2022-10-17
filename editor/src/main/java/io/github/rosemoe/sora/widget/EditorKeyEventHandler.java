@@ -208,21 +208,27 @@ class EditorKeyEventHandler {
                 editor.moveSelectionRight();
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_MOVE_END:
-                if (isCtrlPressed) {
-                    final var lastLine = editorText.getLineCount() - 1;
-                    final var lastColumn = editorText.getColumnCount(lastLine);
+                final var lastLine = editorText.getLineCount() - 1;
+                final var lastColumn = editorText.getColumnCount(lastLine);
+                if (isCtrlPressed && editor.selectionAnchor != null) {
+                    editor.setSelectionRegion(editor.selectionAnchor.line, editor.selectionAnchor.column, lastLine, lastColumn);
+                    editor.ensureSelectingTargetVisible();
+                } else if (isCtrlPressed) {
                     editor.setSelection(lastLine, lastColumn);
                     return editorKeyEvent.result(true);
                 }
-            editor.moveSelectionEnd();
-            return editorKeyEvent.result(true);
+                editor.moveSelectionEnd();
+                return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_MOVE_HOME:
-                if (isCtrlPressed) {
+                if (isCtrlPressed && editor.selectionAnchor != null) {
+                    editor.setSelectionRegion(0, 0, editor.selectionAnchor.line, editor.selectionAnchor.column);
+                    editor.ensureSelectingTargetVisible();
+                } else if (isCtrlPressed) {
                     editor.setSelection(0, 0);
                     return editorKeyEvent.result(true);
                 }
-            editor.moveSelectionHome();
-            return editorKeyEvent.result(true);
+                editor.moveSelectionHome();
+                return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_PAGE_DOWN:
                 editor.movePageDown();
                 return editorKeyEvent.result(true);

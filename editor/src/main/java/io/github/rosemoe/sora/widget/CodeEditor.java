@@ -2915,7 +2915,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Make sure the moving selection is visible
      */
-    private void ensureSelectingTargetVisible() {
+    void ensureSelectingTargetVisible() {
         if (cursor.left().equals(selectionAnchor)) {
             // Ensure right selection visible
             ensureSelectionVisible();
