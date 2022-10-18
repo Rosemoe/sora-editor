@@ -212,6 +212,12 @@ class EditorKeyEventHandler {
                         editorText.delete(right.line, editorText.getColumnCount(right.line), right.line + 1, next.length());
                         editorText.insert(left.line, 0, next.concat(editor.getLineSeparator().getContent()));
                         editorText.endBatchEdit();
+
+                        // Update selection
+                        if (left.index != right.index) {
+                            editor.setSelectionRegion(left.line + 1, left.column, right.line + 1, right.column);
+                        }
+
                         return editorKeyEvent.result(true);
                     }
                     final var dy = editor.getOffsetY() + editor.getRowHeight() > editor.getScrollMaxY()
@@ -238,6 +244,12 @@ class EditorKeyEventHandler {
                         editorText.delete(left.line - 1, 0, left.line, 0);
                         editorText.insert(right.line - 1, editorText.getColumnCount(right.line - 1), editor.getLineSeparator().getContent().concat(prev));
                         editorText.endBatchEdit();
+
+                        // Update selection
+                        if (left.index != right.index) {
+                            editor.setSelectionRegion(left.line - 1, left.column, right.line + 1, right.column);
+                        }
+
                         return editorKeyEvent.result(true);
                     }
                     if (editor.getOffsetY() == 0) {
