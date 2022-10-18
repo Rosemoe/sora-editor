@@ -98,13 +98,13 @@ import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
-import io.github.rosemoe.sora.text.ICUUtils;
 import io.github.rosemoe.sora.text.LineRemoveListener;
 import io.github.rosemoe.sora.text.LineSeparator;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
 import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.text.TextUtils;
 import io.github.rosemoe.sora.text.method.KeyMetaStates;
+import io.github.rosemoe.sora.util.Chars;
 import io.github.rosemoe.sora.util.Floats;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.Logger;
@@ -922,21 +922,34 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return <code>true</code> if the editor can handle the keybinding, <code>false</code> otherwise.
      */
     protected boolean canHandleKeyBinding(int keyCode, boolean ctrlPressed, boolean shiftPressed, boolean altPressed) {
-        if (ctrlPressed && !shiftPressed && altPressed) {
-            return keyCode == KeyEvent.KEYCODE_A || keyCode == KeyEvent.KEYCODE_C
-                    || keyCode == KeyEvent.KEYCODE_X || keyCode == KeyEvent.KEYCODE_V
-                    || keyCode == KeyEvent.KEYCODE_U || keyCode == KeyEvent.KEYCODE_R
-                    || keyCode == KeyEvent.KEYCODE_D || keyCode == KeyEvent.KEYCODE_W;
-        }
+        final var isDpadKey = keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN
+                || keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
+        final var isHomeOrEnd = keyCode == KeyEvent.KEYCODE_MOVE_HOME || keyCode == KeyEvent.KEYCODE_MOVE_END;
 
-        if (shiftPressed && !altPressed) {
-            if (ctrlPressed) {
-                // Ctrl + Shift + J
-                return keyCode == KeyEvent.KEYCODE_J;
-            } else {
-                // Shift + Enter
+        if (ctrlPressed) {
+            if (shiftPressed) {
+                // Ctrl+Shift+[xx] keys
+                return isDpadKey || isHomeOrEnd || keyCode == KeyEvent.KEYCODE_J;
+            }
+
+            if (altPressed) {
+                // Ctrl+Alt+[xx] keys
                 return keyCode == KeyEvent.KEYCODE_ENTER;
             }
+
+            // Ctrl+[xx] keys
+            return isDpadKey || isHomeOrEnd
+                    || keyCode == KeyEvent.KEYCODE_A || keyCode == KeyEvent.KEYCODE_C
+                    || keyCode == KeyEvent.KEYCODE_X || keyCode == KeyEvent.KEYCODE_V
+                    || keyCode == KeyEvent.KEYCODE_U || keyCode == KeyEvent.KEYCODE_R
+                    || keyCode == KeyEvent.KEYCODE_D || keyCode == KeyEvent.KEYCODE_W
+                    || keyCode == KeyEvent.KEYCODE_ENTER;
+        }
+
+
+        if (shiftPressed) {
+            // Shift+[xx] keys
+            return isDpadKey || isHomeOrEnd || keyCode == KeyEvent.KEYCODE_ENTER;
         }
 
         return false;
@@ -2006,8 +2019,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * extra space is added.
      *
      * @param extraSpaceFactor the factor. 0.5 by default.
-     * @see #getVerticalExtraSpaceFactor()
      * @throws IllegalArgumentException if the factor is negative or bigger than 1.0f
+     * @see #getVerticalExtraSpaceFactor()
      */
     public void setVerticalExtraSpaceFactor(float extraSpaceFactor) {
         if (extraSpaceFactor < 0 || extraSpaceFactor > 1.0f) {
@@ -2915,7 +2928,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Make sure the moving selection is visible
      */
-    private void ensureSelectingTargetVisible() {
+    void ensureSelectingTargetVisible() {
         if (cursor.left().equals(selectionAnchor)) {
             // Ensure right selection visible
             ensureSelectionVisible();
@@ -3429,30 +3442,31 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param column The column.
      */
     public void selectWord(int line, int column) {
-        // Find word edges
-        int startLine = line, endLine = line;
-        var lineObj = getText().getLine(line);
-        long edges = ICUUtils.getWordEdges(lineObj, column, props.useICULibToSelectWords);
-        int startColumn = IntPair.getFirst(edges);
-        int endColumn = IntPair.getSecond(edges);
-        if (startColumn == endColumn) {
-            if (endColumn < lineObj.length()) {
-                endColumn++;
-            } else if (startColumn > 0) {
-                startColumn--;
-            } else {
-                if (line > 0) {
-                    int lastColumn = getText().getColumnCount(line - 1);
-                    startLine = line - 1;
-                    startColumn = lastColumn;
-                } else if (line < getLineCount() - 1) {
-                    endLine = line + 1;
-                    endColumn = 0;
-                }
-            }
-        }
+        final var range = getWordRange(line, column);
+        final var start = range.getStart();
+        final var end = range.getEnd();
         requestFocusFromTouch();
-        setSelectionRegion(startLine, startColumn, endLine, endColumn, SelectionChangeEvent.CAUSE_LONG_PRESS);
+        setSelectionRegion(start.line, start.column, end.line, end.column, SelectionChangeEvent.CAUSE_LONG_PRESS);
+        selectionAnchor = getCursor().left();
+    }
+
+    /**
+     * @see #getWordRange(int, int, boolean)
+     */
+    public TextRange getWordRange(final int line, final int column) {
+        return getWordRange(line, column, props.useICULibToSelectWords);
+    }
+
+    /**
+     * Get the range of the word at given character position.
+     *
+     * @param line   The line.
+     * @param column The column.
+     * @param useIcu Whether to use the ICU library to get word edges.
+     * @return The word range.
+     */
+    public TextRange getWordRange(final int line, final int column, final boolean useIcu) {
+        return Chars.getWordRange(getText(), line, column, useIcu);
     }
 
     /**

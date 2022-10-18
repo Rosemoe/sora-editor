@@ -237,7 +237,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updatePositionText() {
         val cursor = binding.editor.cursor
-        var text = (1 + cursor.leftLine).toString() + ":" + cursor.leftColumn + " "
+        var text = (1 + cursor.leftLine).toString() + ":" + cursor.leftColumn + ";" + cursor.left + " "
         text += if (cursor.isSelected) {
             "(" + (cursor.right - cursor.left) + " chars)"
         } else {

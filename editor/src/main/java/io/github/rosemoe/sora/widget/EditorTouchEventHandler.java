@@ -408,10 +408,12 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         }
         switch (selHandleType) {
             case SelectionHandle.LEFT:
+                editor.selectionAnchor = editor.getCursor().right();
                 this.leftHandle.applyPosition(e);
                 scrollIfThumbReachesEdge(e);
                 return true;
             case SelectionHandle.RIGHT:
+                editor.selectionAnchor = editor.getCursor().left();
                 this.rightHandle.applyPosition(e);
                 scrollIfThumbReachesEdge(e);
                 return true;
