@@ -218,10 +218,17 @@ class EditorKeyEventHandler {
                         editorText.endBatchEdit();
 
                         // Update selection
+                        final var newLeft = new CharPosition(left.line + 1, left.column);
+                        final var newRight = new CharPosition(right.line + 1, right.column);
                         if (left.index != right.index) {
-                            editor.setSelectionRegion(left.line + 1, left.column, right.line + 1, right.column);
+                            editor.setSelectionRegion(newLeft.line, newLeft.column, newRight.line, newRight.column);
+                            if (editor.selectionAnchor.equals(left)) {
+                                editor.selectionAnchor = newLeft;
+                            } else {
+                                editor.selectionAnchor = newRight;
+                            }
                         } else {
-                            editor.setSelection(left.line + 1, left.column);
+                            editor.setSelection(newLeft.line, newLeft.column);
                         }
 
                         return editorKeyEvent.result(true);
@@ -252,10 +259,17 @@ class EditorKeyEventHandler {
                         editorText.endBatchEdit();
 
                         // Update selection
+                        final var newLeft = new CharPosition(left.line - 1, left.column);
+                        final var newRight = new CharPosition(right.line - 1, right.column);
                         if (left.index != right.index) {
-                            editor.setSelectionRegion(left.line - 1, left.column, right.line - 1, right.column);
+                            editor.setSelectionRegion(newLeft.line, newLeft.column, newRight.line, newRight.column);
+                            if (editor.selectionAnchor.equals(left)) {
+                                editor.selectionAnchor = newLeft;
+                            } else {
+                                editor.selectionAnchor = newRight;
+                            }
                         } else {
-                            editor.setSelection(left.line - 1, left.column);
+                            editor.setSelection(newLeft.line, newLeft.column);
                         }
 
                         return editorKeyEvent.result(true);
