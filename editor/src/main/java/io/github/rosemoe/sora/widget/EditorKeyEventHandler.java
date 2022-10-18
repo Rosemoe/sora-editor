@@ -217,12 +217,23 @@ class EditorKeyEventHandler {
                     final var dy = editor.getOffsetY() + editor.getRowHeight() > editor.getScrollMaxY()
                             ? editor.getScrollMaxY() - editor.getOffsetY()
                             : editor.getRowHeight();
-                    editor.getScroller().startScroll(editor.getOffsetX(), editor.getOffsetY(), 0, dy);
+                    editor.getScroller().startScroll(editor.getOffsetX(), editor.getOffsetY(), 0, dy, 0);
                     return editorKeyEvent.result(true);
                 }
                 editor.moveSelectionDown();
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_DPAD_UP:
+                if (isCtrlPressed) {
+                    if (editor.getOffsetY() == 0) {
+                        return editorKeyEvent.result(true);
+                    }
+                    var dy = -editor.getRowHeight();
+                    if (editor.getOffsetY() - editor.getRowHeight() < 0) {
+                        dy = -editor.getOffsetY();
+                    }
+                    editor.getScroller().startScroll(editor.getOffsetX(), editor.getOffsetY(), 0, dy, 0);
+                    return editorKeyEvent.result(true);
+                }
                 editor.moveSelectionUp();
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_DPAD_LEFT:
