@@ -64,7 +64,7 @@ object Chars {
             position.column -= 1
         }
         if (position.column <= 0 && position.line > 0 && reverse) {
-            val l = position.line
+            val l = position.line - 1
             val pos = CharPosition(l, text.getLine(l).length)
             return TextRange(pos, pos)
         }
@@ -136,7 +136,7 @@ object Chars {
             }
 
             val c = text[i]
-            if (!c.isWhitespace()) break
+            if (!c.isWhitespace() || (i == 0 && reverse)) break
             else {
                 i += if (reverse) -1 else 1
             }
