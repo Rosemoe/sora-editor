@@ -224,6 +224,22 @@ class EditorKeyEventHandler {
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_DPAD_UP:
                 if (isCtrlPressed) {
+                    if (isShiftPressed) {
+                        final var left = editorCursor.left();
+                        final var right = editorCursor.right();
+                        final var lines = editorText.getLineCount();
+                        if (left.line == 0) {
+                            // first line, cannot move up
+                            return editorKeyEvent.result(true);
+                        }
+
+                        final var prev = editorText.getLine(left.line - 1).toString();
+                        editorText.beginBatchEdit();
+                        editorText.delete(left.line - 1, 0, left.line, 0);
+                        editorText.insert(right.line - 1, editorText.getColumnCount(right.line - 1), editor.getLineSeparator().getContent().concat(prev));
+                        editorText.endBatchEdit();
+                        return editorKeyEvent.result(true);
+                    }
                     if (editor.getOffsetY() == 0) {
                         return editorKeyEvent.result(true);
                     }
