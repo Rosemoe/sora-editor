@@ -253,7 +253,7 @@ class EditorKeyEventHandler {
 
                         // Update selection
                         if (left.index != right.index) {
-                            editor.setSelectionRegion(left.line - 1, left.column, right.line + 1, right.column);
+                            editor.setSelectionRegion(left.line - 1, left.column, right.line - 1, right.column);
                         } else {
                             editor.setSelection(left.line - 1, left.column);
                         }
