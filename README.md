@@ -31,6 +31,17 @@ Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEdito
 - [x] Incremental highlight analysis 
 - [x] Highlight bracket pairs 
 - [x] Event System
+
+## Key bindings
+
+When working with a physical keyboard, you can use use key bindings for performing various text actions.
+The editor provides support for some key bindings by default.
+However, you can subscribe to [`KeyBindingEvent`](https://github.com/Rosemoe/sora-editor/blob/main/editor/src/main/java/io/github/rosemoe/sora/event/KeyBindingEvent.java)
+and add your own key bindings. You can even override the default key bindings and perform actions of your own.
+
+The currently supported key bindings are mostly similar to Android Studio/Intellij IDEA.
+See the [supported key bindings](./keybindings.md).
+
 ## Screenshots
 <div style="overflow: hidden">
 <img src="/images/general.jpg" alt="GeneralAppearance" width="40%" align="bottom" />
