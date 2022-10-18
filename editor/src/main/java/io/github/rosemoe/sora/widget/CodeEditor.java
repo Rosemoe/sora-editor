@@ -98,7 +98,6 @@ import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
-import io.github.rosemoe.sora.text.ICUUtils;
 import io.github.rosemoe.sora.text.LineRemoveListener;
 import io.github.rosemoe.sora.text.LineSeparator;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
@@ -923,21 +922,34 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return <code>true</code> if the editor can handle the keybinding, <code>false</code> otherwise.
      */
     protected boolean canHandleKeyBinding(int keyCode, boolean ctrlPressed, boolean shiftPressed, boolean altPressed) {
-        if (ctrlPressed && !shiftPressed && altPressed) {
-            return keyCode == KeyEvent.KEYCODE_A || keyCode == KeyEvent.KEYCODE_C
-                    || keyCode == KeyEvent.KEYCODE_X || keyCode == KeyEvent.KEYCODE_V
-                    || keyCode == KeyEvent.KEYCODE_U || keyCode == KeyEvent.KEYCODE_R
-                    || keyCode == KeyEvent.KEYCODE_D || keyCode == KeyEvent.KEYCODE_W;
-        }
+        final var isDpadKey = keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN
+                || keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
+        final var isHomeOrEnd = keyCode == KeyEvent.KEYCODE_MOVE_HOME || keyCode == KeyEvent.KEYCODE_MOVE_END;
 
-        if (shiftPressed && !altPressed) {
-            if (ctrlPressed) {
-                // Ctrl + Shift + J
-                return keyCode == KeyEvent.KEYCODE_J;
-            } else {
-                // Shift + Enter
+        if (ctrlPressed) {
+            if (shiftPressed) {
+                // Ctrl+Shift+[xx] keys
+                return isDpadKey || isHomeOrEnd || keyCode == KeyEvent.KEYCODE_J;
+            }
+
+            if (altPressed) {
+                // Ctrl+Alt+[xx] keys
                 return keyCode == KeyEvent.KEYCODE_ENTER;
             }
+
+            // Ctrl+[xx] keys
+            return isDpadKey || isHomeOrEnd
+                    || keyCode == KeyEvent.KEYCODE_A || keyCode == KeyEvent.KEYCODE_C
+                    || keyCode == KeyEvent.KEYCODE_X || keyCode == KeyEvent.KEYCODE_V
+                    || keyCode == KeyEvent.KEYCODE_U || keyCode == KeyEvent.KEYCODE_R
+                    || keyCode == KeyEvent.KEYCODE_D || keyCode == KeyEvent.KEYCODE_W
+                    || keyCode == KeyEvent.KEYCODE_ENTER;
+        }
+
+
+        if (shiftPressed) {
+            // Shift+[xx] keys
+            return isDpadKey || isHomeOrEnd || keyCode == KeyEvent.KEYCODE_ENTER;
         }
 
         return false;
