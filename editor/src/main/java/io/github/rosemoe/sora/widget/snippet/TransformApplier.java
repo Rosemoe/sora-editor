@@ -38,8 +38,20 @@ import io.github.rosemoe.sora.lang.completion.snippet.NextUpperCaseFormat;
 import io.github.rosemoe.sora.lang.completion.snippet.NoFormat;
 import io.github.rosemoe.sora.lang.completion.snippet.Transform;
 
+/**
+ * Utility class for applying {@link Transform} objects
+ *
+ * @author Rosemoe
+ */
 public class TransformApplier {
 
+    /**
+     * Apply the given {@link Transform} to the text and return transform result
+     *
+     * @param text the text to be transformed. must not be null
+     * @param transform the {@link Transform} object describing how to transform the text, maybe null
+     * @return the transformed text
+     */
     public static String doTransform(@NonNull String text, @Nullable Transform transform) {
         if (transform == null) {
             return text;
@@ -67,6 +79,14 @@ public class TransformApplier {
         return sb.toString();
     }
 
+    /**
+     * Generate text for the given region in Matcher.
+     *
+     * @param text the original text, which is given to the Matcher
+     * @param matcher the Matcher at the requested region
+     * @param formatStringList the format descriptors
+     * @return generated(transform) text
+     */
     private static CharSequence applySingle(String text, Matcher matcher, List<FormatString> formatStringList) {
         var sb = new StringBuilder();
         var nextUpperCase = false;
@@ -101,6 +121,9 @@ public class TransformApplier {
         return sb;
     }
 
+    /**
+     * Convenient method for applying upper case of first character only
+     */
     private static String applyFirstUpperCase(String text, boolean apply) {
         if (apply && text != null && text.length() > 0 && isAlpha(text.charAt(0))) {
             return Character.toUpperCase(text.charAt(0)) + text.substring(1, text.length());
