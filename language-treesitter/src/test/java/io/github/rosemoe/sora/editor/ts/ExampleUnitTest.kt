@@ -21,34 +21,21 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-@file:Suppress("UnstableApiUsage")
 
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+package io.github.rosemoe.sora.editor.ts
 
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
+import org.junit.Test
+
+import org.junit.Assert.*
+
+/**
+ * Example local unit test, which will execute on the development machine (host).
+ *
+ * See [testing documentation](http://d.android.com/tools/testing).
+ */
+class ExampleUnitTest {
+    @Test
+    fun addition_isCorrect() {
+        assertEquals(4, 2 + 2)
     }
 }
-
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://repo.eclipse.org/content/groups/releases/")
-        maven("https://maven.aliyun.com/nexus/content/groups/public/")
-    }
-}
-
-rootProject.name="sora-editor"
-include(
-    ":editor",
-    ":app",
-    ":language-java",
-    ":language-textmate",
-    ":editor-lsp",
-    ":language-treesitter"
-)

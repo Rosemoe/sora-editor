@@ -1446,7 +1446,6 @@ public class EditorRenderer {
             var dirs = getLineDirections(line);
             var lineObj = getLine(line);
             var empty = true;
-            var layout = editor.getLayout();
             paintGeneral.setColor(color);
             float paintingOffset = editor.measureTextRegionOffset() - editor.getOffsetX();
             for (int i = 0; i < dirs.getRunCount(); i++) {
