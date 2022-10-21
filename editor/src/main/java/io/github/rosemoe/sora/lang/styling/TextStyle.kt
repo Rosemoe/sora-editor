@@ -24,8 +24,6 @@
 
 package io.github.rosemoe.sora.lang.styling
 
-import io.github.rosemoe.sora.lang.styling.TextStyle
-
 /**
  * Make a text style
  *

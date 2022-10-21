@@ -29,11 +29,24 @@ import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.InterceptTarget
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.SnippetEvent
-import io.github.rosemoe.sora.lang.completion.snippet.*
+import io.github.rosemoe.sora.lang.completion.snippet.CodeSnippet
+import io.github.rosemoe.sora.lang.completion.snippet.InterpolatedShellItem
+import io.github.rosemoe.sora.lang.completion.snippet.PlaceholderDefinition
+import io.github.rosemoe.sora.lang.completion.snippet.PlaceholderItem
+import io.github.rosemoe.sora.lang.completion.snippet.PlainTextItem
+import io.github.rosemoe.sora.lang.completion.snippet.SnippetItem
+import io.github.rosemoe.sora.lang.completion.snippet.VariableItem
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
-import io.github.rosemoe.sora.widget.snippet.variable.*
 import io.github.rosemoe.sora.widget.getComponent
+import io.github.rosemoe.sora.widget.snippet.variable.ClipboardBasedSnippetVariableResolver
+import io.github.rosemoe.sora.widget.snippet.variable.CommentBasedSnippetVariableResolver
+import io.github.rosemoe.sora.widget.snippet.variable.CompositeSnippetVariableResolver
+import io.github.rosemoe.sora.widget.snippet.variable.EditorBasedSnippetVariableResolver
+import io.github.rosemoe.sora.widget.snippet.variable.FileBasedSnippetVariableResolver
+import io.github.rosemoe.sora.widget.snippet.variable.RandomBasedSnippetVariableResolver
+import io.github.rosemoe.sora.widget.snippet.variable.TimeBasedSnippetVariableResolver
+import io.github.rosemoe.sora.widget.snippet.variable.WorkspaceBasedSnippetVariableResolver
 import io.github.rosemoe.sora.widget.subscribeEvent
 
 /**

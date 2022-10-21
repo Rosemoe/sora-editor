@@ -50,7 +50,6 @@ package io.github.rosemoe.sora.lang.styling.inlayHint
 
 import android.graphics.Canvas
 import io.github.rosemoe.sora.graphics.Paint
-import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
