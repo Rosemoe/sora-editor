@@ -43,14 +43,7 @@ public interface NewlineHandler {
      * @param style    Current code styles
      * @return Whether this handler should be called
      */
-    @SuppressWarnings("deprecation")
-    default boolean matchesRequirement(@NonNull Content text, @NonNull CharPosition position, @Nullable Styles style) {
-        var line = text.getLine(position.line);
-        int index = position.column;
-        var beforeText = line.subSequence(0, index).toString();
-        var afterText = line.subSequence(index, line.length()).toString();
-        return matchesRequirement(beforeText, afterText);
-    }
+    boolean matchesRequirement(@NonNull Content text, @NonNull CharPosition position, @Nullable Styles style);
 
     /**
      * Handle newline and return processed content to insert
@@ -61,37 +54,6 @@ public interface NewlineHandler {
      * @return Actual content to insert
      */
     @NonNull
-    default NewlineHandleResult handleNewline(@NonNull Content text, @NonNull CharPosition position, @Nullable Styles style, int tabSize) {
-        var line = text.getLine(position.line);
-        int index = position.column;
-        var beforeText = line.subSequence(0, index).toString();
-        var afterText = line.subSequence(index, line.length()).toString();
-        return handleNewline(beforeText, afterText, tabSize);
-    }
-
-    /**
-     * Checks whether the given input matches the requirement to invoke this handler
-     *
-     * @param beforeText Text of line before cursor
-     * @param afterText  Text of line after cursor
-     * @return Whether this handler should be called
-     * @deprecated use {@link #matchesRequirement(Content, CharPosition, Styles)} instead
-     */
-    @Deprecated
-    default boolean matchesRequirement(String beforeText, String afterText) {
-        return false;
-    }
-
-    /**
-     * Handle newline and return processed content to insert
-     *
-     * @param beforeText Text of line before cursor
-     * @param afterText  Text of line after cursor
-     * @return Actual content to insert
-     */
-    @NonNull
-    default NewlineHandleResult handleNewline(String beforeText, String afterText, int tabSize) {
-        return new NewlineHandleResult("\n", 0);
-    }
+    NewlineHandleResult handleNewline(@NonNull Content text, @NonNull CharPosition position, @Nullable Styles style, int tabSize);
 
 }

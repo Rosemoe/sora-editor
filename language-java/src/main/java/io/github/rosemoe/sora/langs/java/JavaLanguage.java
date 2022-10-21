@@ -178,6 +178,15 @@ public class JavaLanguage implements Language {
 
         @NonNull
         @Override
+        public NewlineHandleResult handleNewline(@NonNull Content text, @NonNull CharPosition position, @Nullable Styles style, int tabSize) {
+            var line = text.getLine(position.line);
+            int index = position.column;
+            var beforeText = line.subSequence(0, index).toString();
+            var afterText = line.subSequence(index, line.length()).toString();
+            return handleNewline(beforeText, afterText, tabSize);
+        }
+
+        @NonNull
         public NewlineHandleResult handleNewline(String beforeText, String afterText, int tabSize) {
             int count = TextUtils.countLeadingSpaceCount(beforeText, tabSize);
             int advanceBefore = getIndentAdvance(beforeText);
