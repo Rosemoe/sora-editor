@@ -39,6 +39,8 @@ public final class Versions {
 
     // Dependency versions
     public final static String antlrVersion = "4.9.2";
+    public final static String androidxAnnotationVersion = "1.5.0";
+    public final static String lsp4jVersion = "0.17.0";
 
 
     // TextMate Dependency versions(from tm4e 0.4.2)

@@ -78,13 +78,13 @@ import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
-import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.TextDocumentSyncOptions;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.TypeDefinitionParams;
 import org.eclipse.lsp4j.UnregistrationParams;
 import org.eclipse.lsp4j.WillSaveTextDocumentParams;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -290,7 +290,7 @@ public class DefaultRequestManager implements RequestManager {
     }
 
 
-    public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params) {
+    public CompletableFuture<Either<List<? extends SymbolInformation>, List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {
         if (checkStatus()) {
             try {
                 return serverCapabilities.getWorkspaceSymbolProvider().getRight()!=null ? workspaceService.symbol(params) : null;
@@ -591,8 +591,8 @@ public class DefaultRequestManager implements RequestManager {
     public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
         if (checkStatus()) {
             try {
-                return (serverCapabilities.getCodeLensProvider() != null && serverCapabilities.getCodeLensProvider()
-                        .isResolveProvider()) ? textDocumentService.resolveCodeLens(unresolved) : null;
+                var codeLensProvider = serverCapabilities.getCodeLensProvider();
+                return (codeLensProvider != null && (codeLensProvider.getResolveProvider() != null && codeLensProvider.getResolveProvider())) ? textDocumentService.resolveCodeLens(unresolved) : null;
             } catch (Exception e) {
                 crashed(e);
                 return null;
