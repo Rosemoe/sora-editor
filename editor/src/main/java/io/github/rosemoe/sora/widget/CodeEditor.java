@@ -3126,7 +3126,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         updateCursor();
         updateSelection();
-        if (editable && !touchHandler.hasAnyHeldHandle() && !inputConnection.composingText.isComposing() && !completionWindow.shouldRejectComposing()) {
+        if (editable && !touchHandler.hasAnyHeldHandle() && !completionWindow.shouldRejectComposing()) {
             cursorAnimator.markEndPos();
             cursorAnimator.start();
         }
