@@ -37,6 +37,7 @@ import android.graphics.RenderNode;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 import android.util.MutableInt;
 import android.util.SparseArray;
@@ -121,14 +122,14 @@ public class EditorRenderer {
     @Nullable
     private Drawable verticalScrollbarTrackDrawable;
     protected RenderNodeHolder renderNodeHolder;
-    private long displayTimestamp;
+    private volatile long displayTimestamp;
     private Paint.FontMetricsInt metricsLineNumber;
     private Paint.FontMetricsInt metricsGraph;
     private int cachedGutterWidth;
     private Cursor cursor;
     protected ContentLine lineBuf;
     protected Content content;
-    private boolean renderingFlag;
+    private volatile boolean renderingFlag;
     protected boolean basicDisplayMode;
     protected boolean forcedRecreateLayout;
 
@@ -159,14 +160,17 @@ public class EditorRenderer {
         tmpRect = new RectF();
         tmpPath = new Path();
 
-        notifyFullTextUpdate();
+        onEditorFullTextUpdate();
     }
 
     public boolean isBasicDisplayMode() {
         return basicDisplayMode;
     }
 
-    public void notifyFullTextUpdate() {
+    /**
+     * Called when the editor text is changed by {@link CodeEditor#setText}
+     */
+    public void onEditorFullTextUpdate() {
         cursor = editor.getCursor();
         content = editor.getText();
     }
@@ -2366,7 +2370,7 @@ public class EditorRenderer {
      */
     @UnsupportedUserUsage
     public float measureText(ContentLine text, int line, int index, int count) {
-        if (text.timestamp < displayTimestamp && text.widthCache != null) {
+        if (text.timestamp < displayTimestamp && text.widthCache != null || text.widthCache.length >= index + count) {
             buildMeasureCacheForLines(line, line);
         }
         var gtr = GraphicTextRow.obtain(basicDisplayMode);

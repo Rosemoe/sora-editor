@@ -3543,7 +3543,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         this.text.addContentListener(this);
         this.text.setUndoEnabled(undoEnabled);
         this.text.setLineListener(this);
-        renderer.notifyFullTextUpdate();
+        renderer.onEditorFullTextUpdate();
 
         if (editorLanguage != null) {
             editorLanguage.getAnalyzeManager().reset(new ContentReference(this.text), this.extraArguments);

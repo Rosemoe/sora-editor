@@ -282,13 +282,16 @@ public class GraphicTextRow {
     }
 
     public float measureText(int start, int end) {
+        if (start < 0) {
+            throw new IndexOutOfBoundsException("negative start position");
+        }
         if (start >= end) {
             if (start != end)
                 Log.w("GraphicTextRow", "start > end");
             return 0f;
         }
-        if (text.widthCache != null && useCache) {
-            var cache = text.widthCache;
+        var cache = text.widthCache;
+        if (cache != null && useCache && end <= cache.length) {
             return cache[end] - cache[start];
         }
         return measureTextInternal(start, end, null);
