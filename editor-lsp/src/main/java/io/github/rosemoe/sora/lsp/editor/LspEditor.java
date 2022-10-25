@@ -107,10 +107,6 @@ public class LspEditor {
         this.providerManager = new LspProviderManager(this);
     }
 
-    public void init() {
-
-    }
-
     public String getCurrentFileUri() {
         return currentFileUri;
     }
