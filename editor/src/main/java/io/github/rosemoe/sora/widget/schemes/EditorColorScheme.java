@@ -233,7 +233,6 @@ public class EditorColorScheme {
                 break;
             case LINE_NUMBER_BACKGROUND:
             case LINE_DIVIDER:
-            case HARD_WRAP_MARKER:
                 color = 0xeeeeeeee;
                 break;
             case WHOLE_BACKGROUND:
@@ -344,6 +343,9 @@ public class EditorColorScheme {
                 break;
             case TEXT_INLAY_HINT_BACKGROUND:
                 color = isDark() ? 0xffeeeeee : 0x1D000000;
+                break;
+            case HARD_WRAP_MARKER:
+                color = !isDark() ? 0xffeeeeee : 0x1D000000;
                 break;
         }
         setColor(type, color);

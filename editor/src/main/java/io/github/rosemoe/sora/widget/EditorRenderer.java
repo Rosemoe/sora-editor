@@ -551,8 +551,6 @@ public class EditorRenderer {
         float offsetX = -editor.getOffsetX() + editor.measureTextRegionOffset();
         float textOffset = offsetX;
 
-        drawHardwrapMarker(canvas, textOffset);
-
         var gutterWidth = (int) (lineNumberWidth + sideIconWidth + editor.getDividerWidth() + editor.getDividerMarginLeft() + editor.getDividerMarginRight());
         if (editor.isWordwrap()) {
             if (cachedGutterWidth == 0) {
@@ -1031,6 +1029,9 @@ public class EditorRenderer {
 
         // Background of snippets
         patchSnippetRegions(canvas, offset);
+
+        // Hard wrap marker
+        drawHardwrapMarker(canvas, offset);
 
         // Step 2 - Draw text and text decorations
         long lastStyle = 0;
