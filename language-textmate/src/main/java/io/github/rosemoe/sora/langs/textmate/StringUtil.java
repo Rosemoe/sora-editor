@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.langs.textmate;
 
+import java.util.regex.Pattern;
+
 public class StringUtil {
 
     public static boolean checkSurrogate(String text) {
@@ -51,4 +53,11 @@ public class StringUtil {
         return offset;
     }
 
+
+    private static final Pattern MATCH_PATTERN = Pattern.compile(".*/|\\..*");
+
+    public static String getFileNameWithoutExtension(String filePath) {
+        return MATCH_PATTERN.matcher(filePath).replaceAll("");
+
+    }
 }

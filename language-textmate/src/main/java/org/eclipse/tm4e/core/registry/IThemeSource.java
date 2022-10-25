@@ -94,7 +94,22 @@ public interface IThemeSource {
                 }
             }
 
-            return fromString(contentType1, builder.toString());
+            return new IThemeSource() {
+                @Override
+                public Reader getReader() throws IOException {
+                    return new StringReader(builder.toString());
+                }
+
+                @Override
+                public String getFilePath() {
+                    return fileName;
+                }
+
+                @Override
+                public ContentType getContentType() {
+                    return contentType1;
+                }
+            };
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

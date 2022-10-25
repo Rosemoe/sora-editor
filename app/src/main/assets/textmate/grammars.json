@@ -1,0 +1,9 @@
+{
+  "languages": [
+    {
+      "grammarPath": "./textmate/java.tmLanguage.json",
+      "languageC"
+      "scopeName": "source.abc"
+    }
+  ]
+}

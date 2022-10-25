@@ -68,7 +68,6 @@ public class LanguageServerDefinition {
     }
 
 
-
     public boolean callExitForLanguageServer() { return false; }
 
     /**

@@ -28,8 +28,11 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
+import org.eclipse.tm4e.core.grammar.IGrammar;
+import org.eclipse.tm4e.core.internal.grammar.Grammar;
 import org.eclipse.tm4e.core.registry.IGrammarSource;
 import org.eclipse.tm4e.core.registry.IThemeSource;
+import org.eclipse.tm4e.languageconfiguration.model.LanguageConfiguration;
 
 import java.io.Reader;
 import java.util.Objects;
@@ -39,6 +42,9 @@ import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
+import io.github.rosemoe.sora.langs.textmate.registry.LanguageRegistry;
+import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
+import io.github.rosemoe.sora.langs.textmate.registry.model.LanguageDefinition;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.util.MyCharacter;
@@ -51,6 +57,29 @@ public class TextMateLanguage extends EmptyLanguage {
     private final IdentifierAutoComplete autoComplete = new IdentifierAutoComplete();
     boolean autoCompleteEnabled;
     final boolean createIdentifiers;
+
+    private IGrammar grammar;
+
+    private LanguageRegistry languageRegistry;
+
+    private ThemeRegistry themeRegistry;
+
+
+
+    protected TextMateLanguage(IGrammar grammar,
+                               LanguageRegistry languageRegistry,
+                               ThemeRegistry themeRegistry,
+                               boolean createIdentifiers) {
+
+        try {
+            textMateAnalyzer = new TextMateAnalyzer(this, languageRegistry, themeRegistry, scopeName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        this.createIdentifiers = createIdentifiers;
+        autoCompleteEnabled = true;
+
+    }
 
     protected TextMateLanguage(IGrammarSource grammarSource, Reader languageConfiguration, IThemeSource themeSource, boolean createIdentifiers) {
         try {
@@ -78,6 +107,22 @@ public class TextMateLanguage extends EmptyLanguage {
         return new TextMateLanguage(grammarSource, null, themeSource, true);
     }
 
+    public static TextMateLanguage create(String languageScopeName) {
+        var rootLanguageRegistry = LanguageRegistry.getInstance();
+
+        var grammar = rootLanguageRegistry.findGrammar(languageScopeName);
+
+        if (grammar == null) {
+            throw new IllegalArgumentException(String.format("Language with %s scope name not found", languageScopeName));
+        }
+
+        var languageConfiguration = rootLanguageRegistry.findLanguageConfiguration(grammar.getScopeName());
+
+        return create(grammar, languageConfiguration, true);
+
+    }
+
+
     /**
      * When you update the {@link TextMateColorScheme} for editor, you need to synchronize the updates here
      *
@@ -88,6 +133,11 @@ public class TextMateLanguage extends EmptyLanguage {
         if (textMateAnalyzer != null) {
             textMateAnalyzer.updateTheme(theme);
         }
+    }
+
+
+    public void updateLanguage(String scopeName) {
+
     }
 
     @NonNull
