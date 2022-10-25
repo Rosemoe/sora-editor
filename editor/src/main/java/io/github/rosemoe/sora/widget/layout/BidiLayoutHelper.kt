@@ -59,7 +59,7 @@ object BidiLayoutHelper {
         for (i in 0 until dirs.runCount) {
             val runStart = dirs.getRunStart(i).coerceIn(rowStart, rowEnd)
             val runEnd = dirs.getRunEnd(i).coerceIn(rowStart, rowEnd)
-            if (runStart > column || runStart >= runEnd) {
+            if (runStart > column || runStart > runEnd) {
                 break
             }
             offset += if (runEnd < column) {
