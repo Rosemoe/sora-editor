@@ -150,8 +150,9 @@ public class LspEditor {
     public void setWrapperLanguage(Language wrapperLanguage) {
         this.wrapperLanguage = wrapperLanguage;
         currentLanguage.setWrapperLanguage(wrapperLanguage);
-        if (currentEditor.get() != null) {
-            setEditor(currentEditor.get());
+        var editor = currentEditor.get();
+        if (editor != null) {
+            setEditor(editor);
         }
     }
 
