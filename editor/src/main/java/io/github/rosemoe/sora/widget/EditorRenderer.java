@@ -1815,13 +1815,24 @@ public class EditorRenderer {
         if (!editor.getEventHandler().shouldDrawScrollBar()) {
             return;
         }
+        var size = editor.getDpUnit() * 10;
         if (editor.isHorizontalScrollBarEnabled() && !editor.isWordwrap() && editor.getScrollMaxX() > editor.getWidth() * 3 / 4) {
+            canvas.save();
+            canvas.translate(0f, size * editor.getEventHandler().getScrollBarMovementPercentage());
+
             drawScrollBarTrackHorizontal(canvas);
             drawScrollBarHorizontal(canvas);
+
+            canvas.restore();
         }
         if (editor.isVerticalScrollBarEnabled() && editor.getScrollMaxY() > editor.getHeight() / 2) {
+            canvas.save();
+            canvas.translate(size * editor.getEventHandler().getScrollBarMovementPercentage(), 0f);
+
             drawScrollBarTrackVertical(canvas);
             drawScrollBarVertical(canvas);
+
+            canvas.restore();
         }
     }
 

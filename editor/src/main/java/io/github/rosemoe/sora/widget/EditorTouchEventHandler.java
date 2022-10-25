@@ -33,6 +33,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.widget.OverScroller;
 
+import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.ClickEvent;
 import io.github.rosemoe.sora.event.DoubleClickEvent;
 import io.github.rosemoe.sora.event.HandleStateChangeEvent;
@@ -56,7 +57,9 @@ import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 public final class EditorTouchEventHandler implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
 
     private final static int HIDE_DELAY = 3000;
-    private final static int HIDE_DELAY_HANDLE = 5000;
+    private final static int HIDE_DELAY_HANDLE = 3500;
+
+    private final static int SCROLLBAR_FADE_ANIMATION_TIME = 200;
 
     private final static int LEFT_EDGE = 1;
     private final static int RIGHT_EDGE = 1 << 1;
@@ -116,7 +119,18 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      * @return whether draw scroll bars
      */
     public boolean shouldDrawScrollBar() {
-        return System.currentTimeMillis() - timeLastScroll < HIDE_DELAY || holdingScrollbarVertical || holdingScrollbarHorizontal;
+        return System.currentTimeMillis() - timeLastScroll < HIDE_DELAY + SCROLLBAR_FADE_ANIMATION_TIME || holdingScrollbarVertical || holdingScrollbarHorizontal;
+    }
+
+    @UnsupportedUserUsage
+    public float getScrollBarMovementPercentage() {
+        if (System.currentTimeMillis() - timeLastScroll < HIDE_DELAY || holdingScrollbarVertical || holdingScrollbarHorizontal) {
+            return 0f;
+        } else if (System.currentTimeMillis() - timeLastScroll >= HIDE_DELAY && System.currentTimeMillis() - timeLastScroll < HIDE_DELAY + SCROLLBAR_FADE_ANIMATION_TIME) {
+            editor.postInvalidateOnAnimation();
+            return (System.currentTimeMillis() - timeLastScroll - HIDE_DELAY) * 1f / SCROLLBAR_FADE_ANIMATION_TIME;
+        }
+        return 1f;
     }
 
     /**
@@ -163,7 +177,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      * @return Whether to draw
      */
     public boolean shouldDrawInsertHandle() {
-        return (System.currentTimeMillis() - timeLastSetSelection < HIDE_DELAY || holdingInsertHandle);
+        return (System.currentTimeMillis() - timeLastSetSelection < HIDE_DELAY_HANDLE || holdingInsertHandle);
     }
 
     /**
@@ -175,13 +189,13 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
             @Override
             public void run() {
-                if (System.currentTimeMillis() - timeLastScroll >= HIDE_DELAY_HANDLE) {
+                if (System.currentTimeMillis() - timeLastScroll >= HIDE_DELAY) {
                     editor.invalidate();
                 }
             }
 
         }
-        editor.postDelayed(new ScrollNotifier(), HIDE_DELAY_HANDLE);
+        editor.postDelayed(new ScrollNotifier(), HIDE_DELAY);
     }
 
     /**
@@ -193,13 +207,13 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
             @Override
             public void run() {
-                if (System.currentTimeMillis() - timeLastSetSelection >= HIDE_DELAY) {
+                if (System.currentTimeMillis() - timeLastSetSelection >= HIDE_DELAY_HANDLE) {
                     editor.invalidate();
                 }
             }
 
         }
-        editor.postDelayed(new InvalidateNotifier(), HIDE_DELAY);
+        editor.postDelayed(new InvalidateNotifier(), HIDE_DELAY_HANDLE);
     }
 
     /**
