@@ -294,4 +294,11 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean enhancedHomeAndEnd = true;
 
+    /**
+     * Show hard wrap marker near the column. (a reminder for starting a new line)
+     * Use 0 or negative number for no marker
+     */
+    @InvalidateRequired
+    public int hardwrapColumn = 80;
+
 }

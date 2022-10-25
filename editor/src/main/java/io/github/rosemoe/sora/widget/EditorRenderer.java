@@ -551,6 +551,8 @@ public class EditorRenderer {
         float offsetX = -editor.getOffsetX() + editor.measureTextRegionOffset();
         float textOffset = offsetX;
 
+        drawHardwrapMarker(canvas, textOffset);
+
         var gutterWidth = (int) (lineNumberWidth + sideIconWidth + editor.getDividerWidth() + editor.getDividerMarginLeft() + editor.getDividerMarginRight());
         if (editor.isWordwrap()) {
             if (cachedGutterWidth == 0) {
@@ -684,6 +686,17 @@ public class EditorRenderer {
         editor.rememberDisplayedLines();
         releasePreloadedData();
         drawFormatTip(canvas);
+    }
+
+    protected void drawHardwrapMarker(Canvas canvas, float offset) {
+        int column = editor.getProps().hardwrapColumn;
+        if (!editor.isWordwrap() && column > 0) {
+            tmpRect.left = offset + paintGeneral.measureText("a") * column;
+            tmpRect.right = tmpRect.left + editor.getDpUnit() * 2f;
+            tmpRect.top = 0f;
+            tmpRect.bottom = viewRect.bottom;
+            drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.HARD_WRAP_MARKER), tmpRect);
+        }
     }
 
     protected void drawSideIcons(Canvas canvas, float offset) {
