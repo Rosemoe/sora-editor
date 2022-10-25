@@ -102,18 +102,18 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginTop="-50dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="-56dp"
         android:orientation="vertical">
 
         <HorizontalScrollView
             android:layout_width="match_parent"
-            android:layout_height="36dp">
+            android:layout_height="40dp">
 
             <io.github.rosemoe.sora.widget.SymbolInputView
                 android:id="@+id/symbol_input"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp" />
+                android:layout_height="40dp" />
 
         </HorizontalScrollView>
 
