@@ -23,46 +23,43 @@
  */
 package io.github.rosemoe.sora.lsp.operations.document;
 
-import android.util.Pair;
-
-import org.eclipse.lsp4j.TextEdit;
-
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
-import io.github.rosemoe.sora.lsp.operations.Feature;
+import io.github.rosemoe.sora.lsp.operations.Provider;
+import io.github.rosemoe.sora.lsp.operations.VoidProvider;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
-import io.github.rosemoe.sora.text.Content;
 
-/**
- *
- */
-public class ApplyEditsFeature implements Feature<Pair<List<? extends TextEdit>, Content>, Void> {
+public class DocumentSaveProvider extends VoidProvider {
 
-    @Override
-    public void install(LspEditor editor) {
-    }
-
-    @Override
-    public void uninstall(LspEditor editor) {
-    }
+    private CompletableFuture<Void> future;
+    private LspEditor editor;
 
 
     @Override
-    public Void execute(Pair<List<? extends TextEdit>, Content> contentPair) {
-
-        var editList = contentPair.first;
-        var content = contentPair.second;
-
-        editList.forEach(textEdit -> {
-            var range = textEdit.getRange();
-            var text = textEdit.getNewText();
-            content.replace(range.getStart().getLine(), range.getStart().getCharacter(), range.getEnd().getLine(), range.getEnd().getCharacter(), text);
-        });
-
-        return null;
+    public void init(LspEditor editor) {
+        this.editor = editor;
     }
+
+    @Override
+    public void dispose(LspEditor editor) {
+        this.editor = null;
+        if (future != null) {
+            future.cancel(true);
+            future = null;
+        }
+    }
+
+
+    @Override
+    public void run() {
+
+        editor.getRequestManagerOfOptional().ifPresent(requestManager -> future = CompletableFuture.runAsync(() -> requestManager.didSave(LspUtils.createDidSaveTextDocumentParams(editor.getCurrentFileUri(), editor.getEditorContent()))));
+
+        ForkJoinPool.commonPool().execute(future::join);
+
+    }
+
+
 }
-

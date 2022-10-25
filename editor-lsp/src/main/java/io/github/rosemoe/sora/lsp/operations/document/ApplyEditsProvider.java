@@ -23,44 +23,33 @@
  */
 package io.github.rosemoe.sora.lsp.operations.document;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
+import android.util.Pair;
 
-import io.github.rosemoe.sora.lsp.editor.LspEditor;
-import io.github.rosemoe.sora.lsp.operations.Feature;
-import io.github.rosemoe.sora.lsp.operations.completion.CompletionFeature;
-import io.github.rosemoe.sora.lsp.utils.LspUtils;
+import org.eclipse.lsp4j.TextEdit;
 
-public class DocumentCloseFeature implements Feature<Void, CompletableFuture<Void>> {
+import java.util.List;
 
-    private CompletableFuture<Void> future;
-    private LspEditor editor;
+import io.github.rosemoe.sora.lsp.operations.Provider;
+import io.github.rosemoe.sora.lsp.operations.RunOnlyProvider;
+import io.github.rosemoe.sora.text.Content;
 
-
-    @Override
-    public void install(LspEditor editor) {
-        this.editor = editor;
-    }
+/**
+ *
+ */
+public class ApplyEditsProvider extends RunOnlyProvider<Pair<List<? extends TextEdit>, Content>> {
 
     @Override
-    public void uninstall(LspEditor editor) {
-        this.editor = null;
-        if (future != null) {
-            future.cancel(true);
-            future = null;
-        }
+    public void run(Pair<List<? extends TextEdit>, Content> contentPair) {
+
+        var editList = contentPair.first;
+        var content = contentPair.second;
+
+        editList.forEach(textEdit -> {
+            var range = textEdit.getRange();
+            var text = textEdit.getNewText();
+            content.replace(range.getStart().getLine(), range.getStart().getCharacter(), range.getEnd().getLine(), range.getEnd().getCharacter(), text);
+        });
+
     }
-
-
-    @Override
-    public CompletableFuture<Void> execute(Void data) {
-
-        editor.getRequestManagerOfOptional().ifPresent(requestManager -> future = CompletableFuture.runAsync(() -> requestManager.didClose(LspUtils.createDidCloseTextDocumentParams(editor.getCurrentFileUri()))));
-
-        ForkJoinPool.commonPool().execute(future::join);
-
-        return future;
-    }
-
-
 }
+

@@ -21,12 +21,15 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.editor.completion;
+package io.github.rosemoe.sora.lsp.operations;
 
-import io.github.rosemoe.sora.lang.completion.CompletionItem;
-import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsProvider;
+public abstract class RunOnlyProvider<T> implements Provider<T, Void> {
 
+    public abstract void run(T data);
 
-public interface CompletionItemProvider<T extends CompletionItem> {
-    T createCompletionItem(org.eclipse.lsp4j.CompletionItem completionItem, ApplyEditsProvider applyEditsFeature, int prefixLength);
+    @Override
+    public final Void execute(T data) {
+        run(data);
+        return null;
+    }
 }

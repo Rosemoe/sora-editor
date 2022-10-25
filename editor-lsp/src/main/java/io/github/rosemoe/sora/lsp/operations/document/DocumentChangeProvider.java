@@ -23,8 +23,6 @@
  */
 package io.github.rosemoe.sora.lsp.operations.document;
 
-import androidx.annotation.Nullable;
-
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
@@ -36,24 +34,22 @@ import java.util.concurrent.ForkJoinPool;
 
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
-import io.github.rosemoe.sora.lsp.operations.Feature;
-import io.github.rosemoe.sora.lsp.requests.Timeout;
-import io.github.rosemoe.sora.lsp.requests.Timeouts;
+import io.github.rosemoe.sora.lsp.operations.Provider;
+import io.github.rosemoe.sora.lsp.operations.RunOnlyProvider;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 
-public class
-DocumentChangeFeature implements Feature<ContentChangeEvent, Void> {
+public class DocumentChangeProvider extends RunOnlyProvider<ContentChangeEvent> {
 
     private volatile CompletableFuture<Void> future;
     private LspEditor editor;
 
     @Override
-    public void install(LspEditor editor) {
+    public void init(LspEditor editor) {
         this.editor = editor;
     }
 
     @Override
-    public void uninstall(LspEditor editor) {
+    public void dispose(LspEditor editor) {
         this.editor = null;
         if (future != null) {
             future.cancel(true);
@@ -67,7 +63,7 @@ DocumentChangeFeature implements Feature<ContentChangeEvent, Void> {
     }
 
     @Override
-    public Void execute(ContentChangeEvent data) {
+    public void run(ContentChangeEvent data) {
 
         var params = createDidChangeTextDocumentParams(data);
 
@@ -80,7 +76,6 @@ DocumentChangeFeature implements Feature<ContentChangeEvent, Void> {
         });
 
 
-        return null;
     }
 
     private List<TextDocumentContentChangeEvent> createFullTextDocumentContentChangeEvent() {

@@ -28,7 +28,6 @@ import android.util.Pair;
 import androidx.annotation.WorkerThread;
 
 import org.eclipse.lsp4j.DocumentFormattingParams;
-import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
 
 import java.util.List;
@@ -38,27 +37,27 @@ import java.util.concurrent.TimeUnit;
 
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
-import io.github.rosemoe.sora.lsp.operations.Feature;
-import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsFeature;
+import io.github.rosemoe.sora.lsp.operations.Provider;
+import io.github.rosemoe.sora.lsp.operations.RunOnlyProvider;
+import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsProvider;
 import io.github.rosemoe.sora.lsp.requests.Timeout;
 import io.github.rosemoe.sora.lsp.requests.Timeouts;
 import io.github.rosemoe.sora.lsp.utils.LSPException;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 import io.github.rosemoe.sora.text.Content;
-import io.github.rosemoe.sora.text.TextRange;
 
-public class FullFormattingFeature implements Feature<Content, Void> {
+public class FullFormattingProvider extends RunOnlyProvider<Content> {
 
     private CompletableFuture<Void> future;
     private LspEditor editor;
 
     @Override
-    public void install(LspEditor editor) {
+    public void init(LspEditor editor) {
         this.editor = editor;
     }
 
     @Override
-    public void uninstall(LspEditor editor) {
+    public void dispose(LspEditor editor) {
         this.editor = null;
         if (future != null) {
             future.cancel(true);
@@ -68,20 +67,20 @@ public class FullFormattingFeature implements Feature<Content, Void> {
 
     @Override
     @WorkerThread
-    public Void execute(Content content) {
+    public void run(Content content) {
         RequestManager manager = editor.getRequestManager();
 
         if (manager == null) {
-            return null;
+            return;
         }
 
         var formattingParams = new DocumentFormattingParams();
-        formattingParams.setOptions(editor.getOption(FormattingOptions.class));
+        formattingParams.setOptions(editor.getProviderManager().getOption(FormattingOptions.class));
 
         formattingParams.setTextDocument(LspUtils.createTextDocumentIdentifier(editor.getCurrentFileUri()));
 
         future = manager.formatting(formattingParams).thenApply(list -> Optional.ofNullable(list).orElse(List.of())).thenAccept(list -> {
-            editor.safeUseFeature(ApplyEditsFeature.class)
+            editor.getProviderManager().safeUseProvider(ApplyEditsProvider.class)
                     .ifPresent(applyEditsFeature -> applyEditsFeature
                             .execute(new Pair<>(list, content)));
         });
@@ -92,7 +91,6 @@ public class FullFormattingFeature implements Feature<Content, Void> {
         } catch (Exception exception) {
             throw new LSPException("Formatting code timeout");
         }
-        return null;
     }
 
 
