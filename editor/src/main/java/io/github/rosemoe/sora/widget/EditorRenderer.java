@@ -37,7 +37,6 @@ import android.graphics.RenderNode;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.MutableInt;
 import android.util.SparseArray;
@@ -94,6 +93,16 @@ import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 
 public class EditorRenderer {
 
+    /**
+     * When measuring text in wordwrap mode, we must use the max possible width of the character sequence
+     * so that no character will be invisible after its styles are applied on actual drawing.
+     * It's different from the {@link CodeEditor#defaultSpans}
+     */
+    private final static List<Span> sSpansForWordwrap = new ArrayList<>();
+
+    static {
+        sSpansForWordwrap.add(Span.obtain(0, TextStyle.makeStyle(0, 0, true, true, false)));
+    }
     private static final String LOG_TAG = "EditorPainter";
     private final static int[] sDiagnosticsColorMapping = {0, EditorColorScheme.PROBLEM_TYPO, EditorColorScheme.PROBLEM_WARNING, EditorColorScheme.PROBLEM_ERROR};
     protected final BufferedDrawPoints bufferedDrawPoints;
@@ -2316,10 +2325,7 @@ public class EditorRenderer {
             return new float[]{end, 0};
         }
         var gtr = GraphicTextRow.obtain(basicDisplayMode);
-        if (editor.defaultSpans.size() == 0) {
-            editor.defaultSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
-        }
-        gtr.set(content, lineIndex, contextStart, end, editor.getTabWidth(), editor.defaultSpans, paint);
+        gtr.set(content, lineIndex, contextStart, end, editor.getTabWidth(), sSpansForWordwrap, paint);
         gtr.disableCache();
         var res = gtr.findOffsetByAdvance(start, target);
         gtr.recycle();

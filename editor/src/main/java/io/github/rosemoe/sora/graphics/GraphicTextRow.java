@@ -272,10 +272,10 @@ public class GraphicTextRow {
             paint.setFakeBoldText(false);
             paint.setTextSkewX(0f);
         }
-        if (currentPosition > advance && offset > start) {
+        /*if (currentPosition > advance && offset > start) {
             offset--;
             currentPosition -= measureText(offset, offset + 1);
-        }
+        }*/
         buffer[0] = offset;
         buffer[1] = currentPosition;
         return buffer;
