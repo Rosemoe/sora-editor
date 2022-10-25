@@ -109,7 +109,7 @@ public class ScaleCursorAnimator implements CursorAnimator, ValueAnimator.Animat
 
     @Override
     public void start() {
-        if (!editor.isCursorAnimationEnabled() || System.currentTimeMillis() - lastAnimateTime < 100) {
+        if (!editor.isCursorAnimationEnabled() || System.currentTimeMillis() - lastAnimateTime < 100 || editor.getInsertHandleDescriptor().position.isEmpty()) {
             lastAnimateTime = System.currentTimeMillis();
             return;
         }
