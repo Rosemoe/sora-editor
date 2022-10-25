@@ -2376,7 +2376,8 @@ public class EditorRenderer {
      */
     @UnsupportedUserUsage
     public float measureText(ContentLine text, int line, int index, int count) {
-        if (text.timestamp < displayTimestamp && text.widthCache != null || text.widthCache.length >= index + count) {
+        var cache = text.widthCache;
+        if (text.timestamp < displayTimestamp && cache != null || (cache != null && cache.length >= index + count)) {
             buildMeasureCacheForLines(line, line);
         }
         var gtr = GraphicTextRow.obtain(basicDisplayMode);
