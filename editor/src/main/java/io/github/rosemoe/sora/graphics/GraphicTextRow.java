@@ -272,10 +272,6 @@ public class GraphicTextRow {
             paint.setFakeBoldText(false);
             paint.setTextSkewX(0f);
         }
-        /*if (currentPosition > advance && offset > start) {
-            offset--;
-            currentPosition -= measureText(offset, offset + 1);
-        }*/
         buffer[0] = offset;
         buffer[1] = currentPosition;
         return buffer;
@@ -287,7 +283,7 @@ public class GraphicTextRow {
         }
         if (start >= end) {
             if (start != end)
-                Log.w("GraphicTextRow", "start > end");
+                Log.w("GraphicTextRow", "start > end. if this is caused by editor, please provide feedback", new Throwable());
             return 0f;
         }
         var cache = text.widthCache;

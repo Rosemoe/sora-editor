@@ -1469,7 +1469,7 @@ public class EditorRenderer {
                 }
                 var measureStart = Math.max(rowStart, dirs.getRunStart(i));
                 var measureEnd = Math.min(rowEnd, dirs.getRunEnd(i));
-                var runWidth = measureText(lineObj, line, measureStart, measureEnd - measureStart);
+                var runWidth = measureEnd <= measureStart ? 0f : measureText(lineObj, line, measureStart, measureEnd - measureStart);
                 if (sharedStart >= sharedEnd) {
                     paintingOffset += runWidth;
                     continue;
@@ -1598,8 +1598,9 @@ public class EditorRenderer {
             if (sharedEnd > sharedStart) {
                 drawRegionText(canvas, offsetX + width, baseline, line, sharedStart, sharedEnd, contextStart, contextEnd, directions.isRunRtl(i), columnCount, color);
             }
-            if (i + 1 < directions.getRunCount())
+            if (i + 1 < directions.getRunCount() && sharedEnd > sharedStart) {
                 width += measureText(getLine(line), line, sharedStart, sharedEnd - sharedStart);
+            }
         }
     }
 
