@@ -274,6 +274,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean horizontalScrollBarEnabled;
     private boolean cursorAnimation;
     private boolean pinLineNumber;
+    private boolean antiWordBreaking;
     private boolean firstLineNumberAlwaysVisible;
     private boolean ligatureEnabled;
     private boolean lastCursorState;
@@ -977,19 +978,36 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     /**
      * @see #setWordwrap(boolean)
+     * @see #setWordwrap(boolean, boolean)
      */
     public boolean isWordwrap() {
         return wordwrap;
+    }
+
+
+    /**
+     * Set whether text in editor should be wrapped to fit its size, with anti-word-breaking enabled
+     * by default
+     *
+     * @param wordwrap Whether to wrap words
+     * @see #setWordwrap(boolean, boolean)
+     * @see #isWordwrap()
+     */
+    public void setWordwrap(boolean wordwrap) {
+        setWordwrap(wordwrap, true);
     }
 
     /**
      * Set whether text in editor should be wrapped to fit its size
      *
      * @param wordwrap Whether to wrap words
+     * @param antiWordBreaking Prevent English words to be split into two lines
+     * @see #isWordwrap()
      */
-    public void setWordwrap(boolean wordwrap) {
-        if (this.wordwrap != wordwrap) {
+    public void setWordwrap(boolean wordwrap, boolean antiWordBreaking) {
+        if (this.wordwrap != wordwrap || this.antiWordBreaking != antiWordBreaking) {
             this.wordwrap = wordwrap;
+            this.antiWordBreaking = antiWordBreaking;
             createLayout();
             if (!wordwrap) {
                 renderer.invalidateRenderNodes();
@@ -1571,7 +1589,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 return;
             }
             if (layout instanceof WordwrapLayout && wordwrap) {
-                var newLayout = new WordwrapLayout(this, text, ((WordwrapLayout) layout).getRowTable(), clearWordwrapCache);
+                var newLayout = new WordwrapLayout(this, text, antiWordBreaking, ((WordwrapLayout) layout).getRowTable(), clearWordwrapCache);
                 layout.destroyLayout();
                 layout = newLayout;
                 return;
@@ -1580,7 +1598,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         if (wordwrap) {
             renderer.setCachedLineNumberWidth((int) measureLineNumber());
-            layout = new WordwrapLayout(this, text, null, false);
+            layout = new WordwrapLayout(this, text, antiWordBreaking, null, false);
         } else {
             layout = new LineBreakLayout(this, text);
         }

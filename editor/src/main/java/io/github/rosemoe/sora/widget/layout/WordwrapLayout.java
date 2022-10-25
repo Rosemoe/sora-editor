@@ -38,6 +38,7 @@ import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.IntPair;
+import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
@@ -53,10 +54,12 @@ import io.github.rosemoe.sora.widget.CodeEditor;
 public class WordwrapLayout extends AbstractLayout {
 
     private final int width;
+    private final boolean antiWordBreaking;
     private List<RowRegion> rowTable;
 
-    public WordwrapLayout(CodeEditor editor, Content text, List<RowRegion> extended, boolean clearCache) {
+    public WordwrapLayout(CodeEditor editor, Content text, boolean antiWordBreaking, List<RowRegion> extended, boolean clearCache) {
         super(editor, text);
+        this.antiWordBreaking = antiWordBreaking;
         rowTable = extended != null ? extended : new ArrayList<>();
         if (clearCache) {
             rowTable.clear();
@@ -170,12 +173,22 @@ public class WordwrapLayout extends AbstractLayout {
     private void breakLine(int line, ContentLine sequence, List<Integer> breakpoints, @Nullable Paint paint) {
         int start = 0;
         int len = sequence.length();
+        var text = sequence.value;
 
         while (start < len) {
             var next = (int) editor.getRenderer().findFirstVisibleCharForWordwrap(width, line, start, len, 0, paint == null ? editor.getTextPaint() : paint)[0];
             // Force to break the text, though no space is available
             if (next == start) {
                 next++;
+            }
+            if (antiWordBreaking && MyCharacter.isAlpha(text[next - 1]) && next < len && (MyCharacter.isAlpha(text[next]) || text[next] == '-')) {
+                int wordStart = next - 1;
+                while (wordStart > start && MyCharacter.isAlpha(text[wordStart - 1])) {
+                    wordStart --;
+                }
+                if (wordStart > start) {
+                    next = wordStart;
+                }
             }
             breakpoints.add(next);
             start = next;
