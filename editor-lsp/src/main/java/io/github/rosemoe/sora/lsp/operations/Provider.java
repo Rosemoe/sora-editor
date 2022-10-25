@@ -21,44 +21,31 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.operations.document;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
+package io.github.rosemoe.sora.lsp.operations;
 
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
-import io.github.rosemoe.sora.lsp.operations.Feature;
-import io.github.rosemoe.sora.lsp.utils.LspUtils;
+import io.github.rosemoe.sora.lsp.editor.LspProviderManager;
+import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeProvider;
 
-public class DocumentOpenFeature implements Feature<Void, Void> {
+/**
+ * Language server capability providers which the editor invokes to call the language server.
+ * For example, it is useful to notify the language server that the editor's text has changed by invoking {@link DocumentChangeProvider}.
+ * We can also manage the capabilities on an editor via {@link LspProviderManager}.
+ *
+ * @param <T>
+ */
+public interface Provider<T, R> {
 
-    private CompletableFuture<Void> future;
-    private LspEditor editor;
+    /**
+     * init this feature
+     */
+    default void init(LspEditor editor) {}
 
+    /**
+     * Dispose this feature
+     */
+    default void dispose(LspEditor editor) {}
 
-    @Override
-    public void install(LspEditor editor) {
-        this.editor = editor;
-    }
+    R execute(T data);
 
-    @Override
-    public void uninstall(LspEditor editor) {
-        this.editor = null;
-        if (future != null) {
-            future.cancel(true);
-            future = null;
-        }
-    }
-
-
-    @Override
-    public Void execute(Void data) {
-
-        editor.getRequestManagerOfOptional().ifPresent(requestManager -> future = CompletableFuture.runAsync(() -> requestManager.didOpen(LspUtils.createDidOpenTextDocumentParams(editor.getCurrentFileUri(), editor.getFileExt(), editor.getEditorContent()))));
-
-
-        ForkJoinPool.commonPool().execute(future::join);
-
-        return null;
-    }
 }

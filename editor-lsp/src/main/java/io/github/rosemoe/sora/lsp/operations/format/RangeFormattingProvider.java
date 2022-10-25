@@ -37,8 +37,9 @@ import java.util.concurrent.TimeUnit;
 
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
-import io.github.rosemoe.sora.lsp.operations.Feature;
-import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsFeature;
+import io.github.rosemoe.sora.lsp.operations.Provider;
+import io.github.rosemoe.sora.lsp.operations.RunOnlyProvider;
+import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsProvider;
 import io.github.rosemoe.sora.lsp.requests.Timeout;
 import io.github.rosemoe.sora.lsp.requests.Timeouts;
 import io.github.rosemoe.sora.lsp.utils.LSPException;
@@ -46,18 +47,18 @@ import io.github.rosemoe.sora.lsp.utils.LspUtils;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.TextRange;
 
-public class RangeFormattingFeature implements Feature<Pair<Content, TextRange>, Void> {
+public class RangeFormattingProvider extends RunOnlyProvider<Pair<Content, TextRange>> {
 
     private CompletableFuture<Void> future;
     private LspEditor editor;
 
     @Override
-    public void install(LspEditor editor) {
+    public void init(LspEditor editor) {
         this.editor = editor;
     }
 
     @Override
-    public void uninstall(LspEditor editor) {
+    public void dispose(LspEditor editor) {
         this.editor = null;
         if (future != null) {
             future.cancel(true);
@@ -67,15 +68,15 @@ public class RangeFormattingFeature implements Feature<Pair<Content, TextRange>,
 
     @Override
     @WorkerThread
-    public Void execute(Pair<Content, TextRange> data) {
+    public void run(Pair<Content, TextRange> data) {
         RequestManager manager = editor.getRequestManager();
 
         if (manager == null) {
-            return null;
+            return;
         }
 
         var formattingParams = new DocumentRangeFormattingParams();
-        formattingParams.setOptions(editor.getOption(FormattingOptions.class));
+        formattingParams.setOptions(editor.getProviderManager().getOption(FormattingOptions.class));
 
         formattingParams.setTextDocument(LspUtils.createTextDocumentIdentifier(editor.getCurrentFileUri()));
         var textRange = data.second;
@@ -84,7 +85,7 @@ public class RangeFormattingFeature implements Feature<Pair<Content, TextRange>,
         var content = data.first;
 
         future = manager.rangeFormatting(formattingParams).thenApply(list -> Optional.ofNullable(list).orElse(List.of())).thenAccept(list -> {
-            editor.safeUseFeature(ApplyEditsFeature.class)
+            editor.getProviderManager().safeUseProvider(ApplyEditsProvider.class)
                     .ifPresent(applyEditsFeature -> applyEditsFeature
                             .execute(new Pair<>(list, content)));
 
@@ -96,7 +97,6 @@ public class RangeFormattingFeature implements Feature<Pair<Content, TextRange>,
         } catch (Exception exception) {
             throw new LSPException("Formatting code timeout");
         }
-        return null;
     }
 
 

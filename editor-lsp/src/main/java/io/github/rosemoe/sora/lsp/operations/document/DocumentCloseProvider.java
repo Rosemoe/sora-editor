@@ -21,26 +21,46 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.editor.event;
+package io.github.rosemoe.sora.lsp.operations.document;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 
-import io.github.rosemoe.sora.event.ContentChangeEvent;
-import io.github.rosemoe.sora.event.EventReceiver;
-import io.github.rosemoe.sora.event.Unsubscribe;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
-import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeProvider;
+import io.github.rosemoe.sora.lsp.operations.NoArgProvider;
+import io.github.rosemoe.sora.lsp.operations.Provider;
+import io.github.rosemoe.sora.lsp.utils.LspUtils;
 
-public class LspEditorContentChangeEventReceiver implements EventReceiver<ContentChangeEvent> {
+public class DocumentCloseProvider extends NoArgProvider<CompletableFuture<Void>> {
 
-    private final LspEditor editor;
+    private CompletableFuture<Void> future;
+    private LspEditor editor;
 
-    public LspEditorContentChangeEventReceiver(LspEditor editor) {
+
+    @Override
+    public void init(LspEditor editor) {
         this.editor = editor;
     }
 
     @Override
-    public void onReceive(ContentChangeEvent event, Unsubscribe unsubscribe) {
-        editor.getProviderManager().safeUseProvider(DocumentChangeProvider.class)
-                .ifPresent(documentChangeFeature -> documentChangeFeature.execute(event));
+    public void dispose(LspEditor editor) {
+        this.editor = null;
+        if (future != null) {
+            future.cancel(true);
+            future = null;
+        }
     }
+
+
+    @Override
+    public CompletableFuture<Void> run() {
+
+        editor.getRequestManagerOfOptional().ifPresent(requestManager -> future = CompletableFuture.runAsync(() -> requestManager.didClose(LspUtils.createDidCloseTextDocumentParams(editor.getCurrentFileUri()))));
+
+        ForkJoinPool.commonPool().execute(future::join);
+
+        return future;
+    }
+
+
 }

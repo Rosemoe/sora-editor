@@ -28,32 +28,30 @@ import org.eclipse.lsp4j.CompletionItem;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
-import io.github.rosemoe.sora.lsp.operations.Feature;
+import io.github.rosemoe.sora.lsp.operations.Provider;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 import io.github.rosemoe.sora.text.CharPosition;
 
-public class CompletionFeature implements Feature<CharPosition, CompletableFuture<List<CompletionItem>>> {
+public class CompletionProvider implements Provider<CharPosition, CompletableFuture<List<CompletionItem>>> {
 
     private CompletableFuture<List<CompletionItem>> future;
     private LspEditor editor;
 
 
     @Override
-    public void install(LspEditor editor) {
+    public void init(LspEditor editor) {
         this.editor = editor;
     }
 
     @Override
-    public void uninstall(LspEditor editor) {
+    public void dispose(LspEditor editor) {
         this.editor = null;
         if (future != null) {
             future.cancel(true);
             future = null;
         }
     }
-
 
     @Override
     public CompletableFuture<List<CompletionItem>> execute(CharPosition data) {
@@ -69,7 +67,6 @@ public class CompletionFeature implements Feature<CharPosition, CompletableFutur
         }
 
         future = editor.getRequestManager().completion(LspUtils.createCompletionParams(editor.getCurrentFileUri(), LspUtils.createPosition(data))).thenApply(listCompletionListEither -> listCompletionListEither.isLeft() ? listCompletionListEither.getLeft() : listCompletionListEither.getRight().getItems());
-
 
         return future;
     }

@@ -21,22 +21,44 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.lsp.operations;
+package io.github.rosemoe.sora.lsp.operations.document;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
+import io.github.rosemoe.sora.lsp.operations.Provider;
+import io.github.rosemoe.sora.lsp.operations.VoidProvider;
+import io.github.rosemoe.sora.lsp.utils.LspUtils;
+
+public class DocumentOpenProvider extends VoidProvider {
+
+    private CompletableFuture<Void> future;
+    private LspEditor editor;
 
 
-public interface Feature<T, R> {
+    @Override
+    public void init(LspEditor editor) {
+        this.editor = editor;
+    }
 
-    /**
-     * Install this feature
-     */
-    void install(LspEditor editor);
+    @Override
+    public void dispose(LspEditor editor) {
+        this.editor = null;
+        if (future != null) {
+            future.cancel(true);
+            future = null;
+        }
+    }
 
-    /**
-     * Uninstall this feature
-     */
-    void uninstall(LspEditor editor);
 
-    R execute(T data);
+    @Override
+    public void run() {
+
+        editor.getRequestManagerOfOptional().ifPresent(requestManager -> future = CompletableFuture.runAsync(() -> requestManager.didOpen(LspUtils.createDidOpenTextDocumentParams(editor.getCurrentFileUri(), editor.getFileExt(), editor.getEditorContent()))));
+
+
+        ForkJoinPool.commonPool().execute(future::join);
+
+    }
 }

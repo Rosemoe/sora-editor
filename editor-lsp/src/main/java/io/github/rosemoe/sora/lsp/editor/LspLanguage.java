@@ -30,14 +30,10 @@ import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Supplier;
 
 import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
@@ -52,14 +48,13 @@ import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.lsp.editor.completion.CompletionItemProvider;
 import io.github.rosemoe.sora.lsp.editor.completion.LspCompletionItem;
 import io.github.rosemoe.sora.lsp.editor.format.LspFormatter;
-import io.github.rosemoe.sora.lsp.operations.completion.CompletionFeature;
-import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsFeature;
-import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeFeature;
+import io.github.rosemoe.sora.lsp.operations.completion.CompletionProvider;
+import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsProvider;
+import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeProvider;
 import io.github.rosemoe.sora.lsp.requests.Timeout;
 import io.github.rosemoe.sora.lsp.requests.Timeouts;
 import io.github.rosemoe.sora.lsp.utils.LSPException;
 import io.github.rosemoe.sora.text.CharPosition;
-import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
@@ -113,7 +108,7 @@ public class LspLanguage implements Language {
         });
 
 
-        currentEditor.safeUseFeature(DocumentChangeFeature.class)
+        currentEditor.getProviderManager().safeUseProvider(DocumentChangeProvider.class)
                 .ifPresent(documentChangeFeature -> {
                     var documentChangeFuture = documentChangeFeature.getFuture();
                     if (!documentChangeFuture.isDone() || !documentChangeFuture.isCompletedExceptionally() || !documentChangeFuture.isCancelled()) {
@@ -128,7 +123,7 @@ public class LspLanguage implements Language {
 
 
         try {
-            var completionFeature = currentEditor.useFeature(CompletionFeature.class);
+            var completionFeature = currentEditor.getProviderManager().useProvider(CompletionProvider.class);
 
             if (completionFeature == null) {
                 return;
@@ -137,7 +132,7 @@ public class LspLanguage implements Language {
             completionFeature.execute(position).thenAccept(completions -> {
                 completions.forEach(completionItem -> {
                     publisher.addItem(completionItemProvider.createCompletionItem(completionItem,
-                            currentEditor.useFeature(ApplyEditsFeature.class), prefixLength));
+                            currentEditor.getProviderManager().useProvider(ApplyEditsProvider.class), prefixLength));
                 });
             }).exceptionally(throwable -> {
                 publisher.cancel();

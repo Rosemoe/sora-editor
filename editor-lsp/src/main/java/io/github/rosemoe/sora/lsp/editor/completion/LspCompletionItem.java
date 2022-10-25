@@ -23,7 +23,6 @@
   */
  package io.github.rosemoe.sora.lsp.editor.completion;
 
- import android.util.Log;
  import android.util.Pair;
 
  import androidx.annotation.NonNull;
@@ -32,17 +31,11 @@
  import org.eclipse.lsp4j.TextEdit;
 
 
- import java.util.ArrayList;
- import java.util.Arrays;
- import java.util.Comparator;
  import java.util.List;
- import java.util.regex.Matcher;
- import java.util.regex.Pattern;
 
  import io.github.rosemoe.sora.lang.completion.CompletionItem;
- import io.github.rosemoe.sora.lang.completion.SnippetDescription;
  import io.github.rosemoe.sora.lang.completion.snippet.parser.CodeSnippetParser;
- import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsFeature;
+ import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsProvider;
  import io.github.rosemoe.sora.lsp.utils.LspUtils;
  import io.github.rosemoe.sora.text.CharPosition;
  import io.github.rosemoe.sora.text.Content;
@@ -53,16 +46,15 @@
      private org.eclipse.lsp4j.CompletionItem commitItem;
      private final int prefixLength;
 
-     private ApplyEditsFeature applyEditsFeature;
+     private ApplyEditsProvider applyEditsFeature;
 
 
-     public LspCompletionItem(org.eclipse.lsp4j.CompletionItem completionItem, ApplyEditsFeature applyEditsFeature, int prefixLength) {
+     public LspCompletionItem(org.eclipse.lsp4j.CompletionItem completionItem, ApplyEditsProvider applyEditsFeature, int prefixLength) {
          super(completionItem.getLabel(), completionItem.getDetail());
          this.commitItem = completionItem;
          this.prefixLength = prefixLength;
          this.applyEditsFeature = applyEditsFeature;
      }
-
 
      @Override
      public void performCompletion(@NonNull CodeEditor editor, @NonNull Content text, CharPosition position) {

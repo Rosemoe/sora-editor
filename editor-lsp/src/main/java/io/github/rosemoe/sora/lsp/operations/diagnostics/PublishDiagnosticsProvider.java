@@ -36,22 +36,20 @@ import java.util.stream.Collectors;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
-import io.github.rosemoe.sora.lsp.operations.Feature;
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.lsp.operations.Provider;
+import io.github.rosemoe.sora.lsp.operations.RunOnlyProvider;
 
-public class PublishDiagnosticsFeature implements Feature<PublishDiagnosticsParams, Void> {
+public class PublishDiagnosticsProvider extends RunOnlyProvider<PublishDiagnosticsParams> {
 
     private LspEditor editor;
 
-
     @Override
-    public void install(LspEditor editor) {
+    public void init(LspEditor editor) {
         this.editor = editor;
     }
 
-
     @Override
-    public void uninstall(LspEditor editor) {
+    public void dispose(LspEditor editor) {
         this.editor = null;
     }
 
@@ -67,12 +65,12 @@ public class PublishDiagnosticsFeature implements Feature<PublishDiagnosticsPara
 
 
     @Override
-    public Void execute(PublishDiagnosticsParams data) {
+    public void run(PublishDiagnosticsParams data) {
 
         var currentEditor = editor.getEditor();
 
         if (currentEditor == null) {
-            return null;
+            return;
         }
 
         var diagnosticsContainer = currentEditor.getDiagnostics() != null ? currentEditor.getDiagnostics() : new DiagnosticsContainer();
@@ -90,7 +88,7 @@ public class PublishDiagnosticsFeature implements Feature<PublishDiagnosticsPara
 
         currentEditor.setDiagnostics(diagnosticsContainer);
 
-        return null;
+        return;
     }
 
     private short transformToEditorDiagnosticSeverity(DiagnosticSeverity severity) {

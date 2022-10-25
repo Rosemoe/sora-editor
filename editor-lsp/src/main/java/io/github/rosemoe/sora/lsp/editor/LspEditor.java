@@ -48,16 +48,16 @@ import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestMa
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition;
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper;
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEventReceiver;
-import io.github.rosemoe.sora.lsp.operations.Feature;
-import io.github.rosemoe.sora.lsp.operations.completion.CompletionFeature;
-import io.github.rosemoe.sora.lsp.operations.diagnostics.PublishDiagnosticsFeature;
-import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsFeature;
-import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeFeature;
-import io.github.rosemoe.sora.lsp.operations.document.DocumentCloseFeature;
-import io.github.rosemoe.sora.lsp.operations.document.DocumentOpenFeature;
-import io.github.rosemoe.sora.lsp.operations.document.DocumentSaveFeature;
-import io.github.rosemoe.sora.lsp.operations.format.FullFormattingFeature;
-import io.github.rosemoe.sora.lsp.operations.format.RangeFormattingFeature;
+import io.github.rosemoe.sora.lsp.operations.Provider;
+import io.github.rosemoe.sora.lsp.operations.completion.CompletionProvider;
+import io.github.rosemoe.sora.lsp.operations.diagnostics.PublishDiagnosticsProvider;
+import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsProvider;
+import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeProvider;
+import io.github.rosemoe.sora.lsp.operations.document.DocumentCloseProvider;
+import io.github.rosemoe.sora.lsp.operations.document.DocumentOpenProvider;
+import io.github.rosemoe.sora.lsp.operations.document.DocumentSaveProvider;
+import io.github.rosemoe.sora.lsp.operations.format.FullFormattingProvider;
+import io.github.rosemoe.sora.lsp.operations.format.RangeFormattingProvider;
 import io.github.rosemoe.sora.lsp.requests.Timeout;
 import io.github.rosemoe.sora.lsp.requests.Timeouts;
 import io.github.rosemoe.sora.widget.CodeEditor;
@@ -77,9 +77,7 @@ public class LspEditor {
 
     private LspLanguage currentLanguage;
 
-    private List<Feature<?, ?>> supportedFeatures = new ArrayList<>();
-
-    private List<Object> options = new ArrayList<>();
+    private LspProviderManager providerManager;
 
     private LanguageServerWrapper languageServerWrapper;
 
@@ -105,6 +103,12 @@ public class LspEditor {
         this.serverDefinition = serverDefinition;
 
         this.editorContentChangeEventReceiver = new LspEditorContentChangeEventReceiver(this);
+
+        this.providerManager = new LspProviderManager(this);
+    }
+
+    public void init() {
+
     }
 
     public String getCurrentFileUri() {
@@ -155,73 +159,67 @@ public class LspEditor {
         }
     }
 
-    public void installFeature(Supplier<Feature<?, ?>> featureSupplier) {
-        var feature = featureSupplier.get();
-        supportedFeatures.add(feature);
-        feature.install(this);
+    /**
+     * Return the provider manager to manage this editor
+     */
+    public LspProviderManager getProviderManager() {
+        return providerManager;
     }
 
+    /**
+     * @deprecated recommended to use {@link LspProviderManager#addProvider(Supplier)}
+     */
+    @Deprecated
+    public void installFeature(Supplier<Provider<?, ?>> featureSupplier) {
+        providerManager.addProvider(featureSupplier);
+    }
+
+    /**
+     * @deprecated recommended to use {@link LspProviderManager#addProviders(Supplier[])}
+     */
+    @Deprecated
     @SafeVarargs
-    public final void installFeatures(Supplier<Feature<?, ?>>... featureSupplier) {
-        Arrays.stream(featureSupplier).sequential().forEach(this::installFeature);
+    public final void installFeatures(Supplier<Provider<?, ?>>... featureSupplier) {
+        providerManager.addProviders(featureSupplier);
     }
 
+    /**
+     * Remove a feature for the given class
+     *
+     * @deprecated The internal implementation has been migrated to {@link LspProviderManager} and  recommended to use {@link LspProviderManager#removeProvider(Class)}
+     */
+    @Deprecated
     public void uninstallFeature(Class<?> featureClass) {
-        for (var feature : supportedFeatures) {
-            if (feature.getClass() == featureClass) {
-                feature.uninstall(this);
-                supportedFeatures.remove(feature);
-                return;
-            }
-        }
+        providerManager.removeProvider(featureClass);
     }
 
+    /**
+     * Return a feature instance for the given class
+     *
+     * @deprecated The internal implementation has been migrated to {@link LspProviderManager} and recommended to use {@link LspProviderManager#useProvider(Class)}
+     */
     @Nullable
-    public <T extends Feature> T useFeature(Class<T> featureClass) {
-        for (var feature : supportedFeatures) {
-            if (feature.getClass() == featureClass) {
-                return (T) feature;
-            }
-        }
-        return null;
+    @Deprecated
+    public <T extends Provider> T useFeature(Class<T> featureClass) {
+        return providerManager.useProvider(featureClass);
     }
 
-    public <T extends Feature> Optional<T> safeUseFeature(Class<T> featureClass) {
-        return Optional.ofNullable(useFeature(featureClass));
+    /**
+     * Return feature instances based on Optional wrappers.
+     *
+     * @deprecated The internal implementation has been migrated to {@link LspProviderManager} and recommended to use {@link LspProviderManager#safeUseProvider(Class)}
+     */
+    @Deprecated
+    public <T extends Provider> Optional<T> safeUseFeature(Class<T> featureClass) {
+        return providerManager.safeUseProvider(featureClass);
     }
 
-    private void dispose() {
-
-        for (var feature : supportedFeatures) {
-            feature.uninstall(this);
-        }
-
-        supportedFeatures.clear();
-        options.clear();
-        currentEditor.clear();
-        completionTriggers.clear();
-
-        currentLanguage.destroy();
-
-        currentLanguage = null;
-        supportedFeatures = null;
-        options = null;
-        completionTriggers = null;
-
-        if (unsubscribeFunction != null) {
-            unsubscribeFunction.run();
-            unsubscribeFunction = null;
-        }
-
-        editorContentChangeEventReceiver = null;
-
-    }
 
 
     public void installFeatures() {
 
         //features
-        installFeatures(RangeFormattingFeature::new, DocumentOpenFeature::new, DocumentSaveFeature::new, DocumentChangeFeature::new, DocumentCloseFeature::new, PublishDiagnosticsFeature::new, CompletionFeature::new, FullFormattingFeature::new, ApplyEditsFeature::new);
+        providerManager.addProviders(RangeFormattingProvider::new, DocumentOpenProvider::new, DocumentSaveProvider::new, DocumentChangeProvider::new, DocumentCloseProvider::new, PublishDiagnosticsProvider::new, CompletionProvider::new, FullFormattingProvider::new, ApplyEditsProvider::new);
 
         //options
 
@@ -229,19 +227,18 @@ public class LspEditor {
         var formattingOptions = new FormattingOptions();
         formattingOptions.setTabSize(4);
         formattingOptions.setInsertSpaces(true);
-        options.add(formattingOptions);
+        providerManager.addOption(formattingOptions);
 
     }
 
 
+    /**
+     * @deprecated recommended to use {@link LspProviderManager#getOption(Class)}
+     */
+    @Deprecated
     @Nullable
     public <T> T getOption(Class<T> optionClass) {
-        for (Object option : options) {
-            if (optionClass.isInstance(option)) {
-                return (T) option;
-            }
-        }
-        return null;
+        return providerManager.getOption(optionClass);
     }
 
 
@@ -321,7 +318,7 @@ public class LspEditor {
 
     public void publishDiagnostics(PublishDiagnosticsParams publishDiagnosticsParams) {
         this.diagnosticsParams = publishDiagnosticsParams;
-        safeUseFeature(PublishDiagnosticsFeature.class).ifPresent(publishDiagnosticsFeature -> publishDiagnosticsFeature.execute(publishDiagnosticsParams));
+        getProviderManager().safeUseProvider(PublishDiagnosticsProvider.class).ifPresent(publishDiagnosticsFeature -> publishDiagnosticsFeature.execute(publishDiagnosticsParams));
     }
 
 
@@ -329,8 +326,17 @@ public class LspEditor {
      * Notify the language server to open the document
      */
     public void open() {
-        safeUseFeature(DocumentOpenFeature.class).ifPresent(documentOpenFeature -> documentOpenFeature.execute(null));
+        getProviderManager().safeUseProvider(DocumentOpenProvider.class).ifPresent(documentOpenFeature -> documentOpenFeature.execute(null));
     }
+
+
+    /**
+     * Notify language servers to save document
+     */
+    public void save() {
+        getProviderManager().safeUseProvider(DocumentSaveProvider.class).ifPresent(documentSaveFeature -> documentSaveFeature.execute(null));
+    }
+
 
     /**
      * Get a request manager that can manipulate the language server
@@ -346,19 +352,12 @@ public class LspEditor {
     }
 
     /**
-     * Notify language servers to save document
-     */
-    public void save() {
-        safeUseFeature(DocumentSaveFeature.class).ifPresent(documentSaveFeature -> documentSaveFeature.execute(null));
-    }
-
-    /**
      * disconnect to the language server
      */
     public void disconnect() {
         if (languageServerWrapper != null) {
             try {
-                var feature = useFeature(DocumentCloseFeature.class);
+                var feature = getProviderManager().useProvider(DocumentCloseProvider.class);
                 if (feature != null) feature.execute(null).get();
 
                 ForkJoinPool.commonPool().execute(() -> languageServerWrapper.disconnect(this));
@@ -367,6 +366,30 @@ public class LspEditor {
                 e.printStackTrace();
             }
         }
+    }
+
+
+    private void dispose() {
+
+
+        providerManager.dispose();
+
+        currentEditor.clear();
+        completionTriggers.clear();
+
+        currentLanguage.destroy();
+
+        currentLanguage = null;
+        providerManager = null;
+        completionTriggers = null;
+
+        if (unsubscribeFunction != null) {
+            unsubscribeFunction.run();
+            unsubscribeFunction = null;
+        }
+
+        editorContentChangeEventReceiver = null;
+
     }
 
     /**
