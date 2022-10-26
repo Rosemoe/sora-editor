@@ -46,6 +46,11 @@ public class ThemeModel {
         this.name = StringUtil.getFileNameWithoutExtension(themeSource.getFilePath());
     }
 
+    public ThemeModel(IThemeSource themeSource,String name) {
+        this.themeSource = themeSource;
+        this.name = name;
+    }
+
     private ThemeModel(String name) {
         themeSource = null;
         rawTheme = null;

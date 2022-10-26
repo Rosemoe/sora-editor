@@ -40,10 +40,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
-//import io.github.rosemoe.sora.langs.textmate.registry.dsl.LanguageDefinitionListBuilder;
+import io.github.rosemoe.sora.langs.textmate.registry.dsl.LanguageDefinitionListBuilder;
 import io.github.rosemoe.sora.langs.textmate.registry.model.LanguageDefinition;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
 import io.github.rosemoe.sora.langs.textmate.registry.provider.FileProvider;
+import io.github.rosemoe.sora.langs.textmate.registry.reader.LanguageDefinitionReader;
 
 public class LanguageRegistry {
 
@@ -157,12 +158,16 @@ public class LanguageRegistry {
         return Pair.create(grammar, languageConfiguration);
     }
 
-    //public List<IGrammar> loadLanguages(LanguageDefinitionListBuilder builder) {
-    //  return builder.build().stream().map(this::loadLanguage).collect(Collectors.toList());
-    //}
+    public List<IGrammar> loadLanguages(LanguageDefinitionListBuilder builder) {
+        return builder.build().stream().map(this::loadLanguage).collect(Collectors.toList());
+    }
 
     public List<IGrammar> loadLanguages(List<LanguageDefinition> list) {
         return list.stream().map(this::loadLanguage).collect(Collectors.toList());
+    }
+
+    public List<IGrammar> loadLanguages(String jsonPath) {
+        return loadLanguages(LanguageDefinitionReader.read(jsonPath));
     }
 
     public IGrammar loadLanguage(LanguageDefinition languageDefinition) {

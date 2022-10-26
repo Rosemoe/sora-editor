@@ -84,8 +84,7 @@ public class DefaultLanguageDefinition implements LanguageDefinition {
 
 
     public static LanguageDefinition withLanguageConfiguration(IGrammarSource grammarSource, String languageConfigurationPath, String languageName, String scopeName) {
-        var languageNameByPath = StringUtil.getFileNameWithoutExtension(grammarSource.getFilePath());
-        return new DefaultLanguageDefinition(languageNameByPath, "source." + languageNameByPath, grammarSource, languageConfigurationPath);
+        return new DefaultLanguageDefinition(languageName, scopeName, grammarSource, languageConfigurationPath);
     }
 
     public static LanguageDefinition withGrammarSource(IGrammarSource grammarSource, String languageName, String scopeName) {

@@ -64,19 +64,18 @@ public class ThemeRegistry {
         loadTheme(new ThemeModel(themeSource), setToCurrentTheme);
     }
 
-
     public void loadTheme(ThemeModel themeModel) throws Exception {
         loadTheme(themeModel, true);
     }
 
     public void loadTheme(ThemeModel themeModel, boolean setToCurrentTheme) throws Exception {
+        if (!themeModel.isLoaded()) {
+            themeModel.load();
+        }
         var theme = findThemeByThemeName(themeModel.getName());
         if (theme != null) {
             setTheme(theme);
             return;
-        }
-        if (!themeModel.isLoaded()) {
-            themeModel.load();
         }
         allThemeModel.add(themeModel);
         if (setToCurrentTheme) {

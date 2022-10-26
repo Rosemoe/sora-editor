@@ -95,8 +95,17 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
     public void applyDefault() {
         if (rawTheme != null) {
             super.applyDefault();
-            ThemeRaw themeRaw = (ThemeRaw) ((List<?>) rawTheme.getSettings()).get(0);
-            themeRaw = (ThemeRaw) themeRaw.getSetting();
+
+            var settings = rawTheme.getSettings();
+
+            ThemeRaw themeRaw;
+
+            if (settings == null) {
+                themeRaw = ((ThemeRaw) ((ThemeRaw) rawTheme).get("colors"));
+            } else {
+                themeRaw = (ThemeRaw) ((List<?>) settings).get(0);
+                themeRaw = (ThemeRaw) themeRaw.getSetting();
+            }
 
             setColor(LINE_DIVIDER, Color.TRANSPARENT);
 
