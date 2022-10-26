@@ -2864,8 +2864,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     scroller.getCurrY(), 0, (int) afterScrollY, ScrollEvent.CAUSE_SCALE_TEXT));
             scroller.startScroll(0, (int) afterScrollY, 0, 0, 0);
             scroller.abortAnimation();
+            // IMPORTANT restart input after clearing the busy flag
+            // otherwise, the connection may fallback to inactive mode
+            this.layoutBusy = false;
             restartInput();
             postInvalidate();
+            return;
         }
         this.layoutBusy = busy;
     }
@@ -3895,7 +3899,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void restartInput() {
         if (inputConnection != null)
-            inputConnection.invalid();
+            inputConnection.reset();
         if (inputMethodManager != null)
             inputMethodManager.restartInput(this);
     }

@@ -1318,13 +1318,13 @@ public class EditorRenderer {
                     var row = editor.getLayout().getRowAt(i);
                     var startX = 0f;
                     if (i == startRow) {
-                        startX = measureText(getLine(row.lineIndex), row.lineIndex, row.startColumn, start.column - row.startColumn);
+                        startX = measureText(getLine(row.lineIndex), row.lineIndex, row.startColumn, Math.max(start.column - row.startColumn, 0));
                     }
                     float endX;
                     if (i != endRow) {
                         endX = measureText(getLine(row.lineIndex), row.lineIndex, row.startColumn, row.endColumn - row.startColumn);
                     } else {
-                        endX = measureText(getLine(row.lineIndex), row.lineIndex, row.startColumn, end.column - row.startColumn);
+                        endX = measureText(getLine(row.lineIndex), row.lineIndex, row.startColumn, Math.max(0, end.column - row.startColumn));
                     }
                     startX += offset;
                     endX += offset;
