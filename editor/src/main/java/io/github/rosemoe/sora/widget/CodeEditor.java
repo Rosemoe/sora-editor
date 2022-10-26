@@ -76,6 +76,7 @@ import java.util.Objects;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
+import io.github.rosemoe.sora.event.BuildEditorInfoEvent;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.EventManager;
@@ -4108,6 +4109,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI | EditorInfo.IME_FLAG_NO_FULLSCREEN;
         }
 
+        dispatchEvent(new BuildEditorInfoEvent(this, outAttrs));
         inputConnection.reset();
         text.resetBatchEdit();
         setExtracting(null);
