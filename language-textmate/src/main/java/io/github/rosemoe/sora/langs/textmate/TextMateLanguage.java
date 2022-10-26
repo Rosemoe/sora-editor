@@ -28,6 +28,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.grammar.IGrammar;
 import org.eclipse.tm4e.core.internal.grammar.Grammar;
 import org.eclipse.tm4e.core.registry.IGrammarSource;
@@ -42,8 +43,10 @@ import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
+import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.langs.textmate.registry.LanguageRegistry;
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
+import io.github.rosemoe.sora.langs.textmate.registry.model.DefaultLanguageDefinition;
 import io.github.rosemoe.sora.langs.textmate.registry.model.LanguageDefinition;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
@@ -58,67 +61,121 @@ public class TextMateLanguage extends EmptyLanguage {
     boolean autoCompleteEnabled;
     final boolean createIdentifiers;
 
-    private IGrammar grammar;
-
     private LanguageRegistry languageRegistry;
 
     private ThemeRegistry themeRegistry;
 
+    //OnEnterSupport ....
+    @SuppressWarnings("all")
+    private LanguageConfiguration languageConfiguration;
 
 
     protected TextMateLanguage(IGrammar grammar,
+                               LanguageConfiguration languageConfiguration,
                                LanguageRegistry languageRegistry,
                                ThemeRegistry themeRegistry,
                                boolean createIdentifiers) {
 
+        this.languageRegistry = languageRegistry;
+        this.themeRegistry = themeRegistry;
+        this.languageConfiguration = languageConfiguration;
+        //this.grammar = grammar;
+
         try {
-            textMateAnalyzer = new TextMateAnalyzer(this, languageRegistry, themeRegistry, scopeName);
+            textMateAnalyzer = new TextMateAnalyzer(this, grammar, languageConfiguration, /*languageRegistry,*/ themeRegistry);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        this.createIdentifiers = createIdentifiers;
         autoCompleteEnabled = true;
+
+
+        this.createIdentifiers = createIdentifiers;
 
     }
 
-    protected TextMateLanguage(IGrammarSource grammarSource, Reader languageConfiguration, IThemeSource themeSource, boolean createIdentifiers) {
+
+    @Deprecated
+    public static IGrammar prepareLoad(IGrammarSource grammarSource, @Nullable Reader languageConfiguration, IThemeSource themeSource) {
+        var definition = DefaultLanguageDefinition.withGrammarSource(grammarSource, StringUtil.getFileNameWithoutExtension(grammarSource.getFilePath()),null);
+        var languageRegistry = LanguageRegistry.getInstance();
+        var grammar = languageRegistry.loadLanguage(definition);
+        if (languageConfiguration != null) {
+            languageRegistry.languageConfigurationToGrammar(LanguageConfiguration.load(languageConfiguration), grammar);
+        }
+        var themeRegistry = ThemeRegistry.getInstance();
         try {
-            textMateAnalyzer = new TextMateAnalyzer(this, grammarSource, languageConfiguration, themeSource);
+            themeRegistry.loadTheme(themeSource);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        this.createIdentifiers = createIdentifiers;
-        autoCompleteEnabled = true;
+        return grammar;
     }
 
+    @Deprecated
     public static TextMateLanguage create(IGrammarSource grammarSource, Reader languageConfiguration, IThemeSource themeSource) {
-        return new TextMateLanguage(grammarSource, languageConfiguration, themeSource, true);
+        var grammar = prepareLoad(grammarSource, languageConfiguration, themeSource);
+        return create(grammar.getScopeName(), true);
     }
 
+    @Deprecated
     public static TextMateLanguage create(IGrammarSource grammarSource, IThemeSource themeSource) {
-        return new TextMateLanguage(grammarSource, null, themeSource, true);
+        var grammar = prepareLoad(grammarSource, null, themeSource);
+        return create(grammar.getScopeName(), true);
     }
 
+    @Deprecated
     public static TextMateLanguage createNoCompletion(IGrammarSource grammarSource, Reader languageConfiguration, IThemeSource themeSource) {
-        return new TextMateLanguage(grammarSource, languageConfiguration, themeSource, false);
+        var grammar = prepareLoad(grammarSource, languageConfiguration, themeSource);
+        return create(grammar.getScopeName(), false);
     }
 
+    @Deprecated
     public static TextMateLanguage createNoCompletion(IGrammarSource grammarSource, IThemeSource themeSource) {
-        return new TextMateLanguage(grammarSource, null, themeSource, true);
+        var grammar = prepareLoad(grammarSource, null, themeSource);
+        return create(grammar.getScopeName(), false);
     }
 
-    public static TextMateLanguage create(String languageScopeName) {
-        var rootLanguageRegistry = LanguageRegistry.getInstance();
+    public static TextMateLanguage create(String languageScopeName, boolean autoCompleteEnabled) {
+        return create(languageScopeName, LanguageRegistry.getInstance(), autoCompleteEnabled);
+    }
 
-        var grammar = rootLanguageRegistry.findGrammar(languageScopeName);
+    public static TextMateLanguage create(String languageScopeName, LanguageRegistry languageRegistry, boolean autoCompleteEnabled) {
+        return create(languageScopeName, languageRegistry, ThemeRegistry.getInstance(), autoCompleteEnabled);
+    }
+
+    public static TextMateLanguage create(String languageScopeName, LanguageRegistry languageRegistry, ThemeRegistry themeRegistry, boolean autoCompleteEnabled) {
+        var grammar = languageRegistry.findGrammar(languageScopeName);
 
         if (grammar == null) {
-            throw new IllegalArgumentException(String.format("Language with %s scope name not found", languageScopeName));
+            throw new IllegalArgumentException(String.format("Language with %s scope name not found", languageRegistry));
         }
 
-        var languageConfiguration = rootLanguageRegistry.findLanguageConfiguration(grammar.getScopeName());
+        var languageConfiguration = languageRegistry.findLanguageConfiguration(grammar.getScopeName());
 
-        return create(grammar, languageConfiguration, true);
+
+        return new TextMateLanguage(grammar, languageConfiguration, languageRegistry, themeRegistry, autoCompleteEnabled);
+    }
+
+
+    public static TextMateLanguage create(LanguageDefinition languageDefinition, boolean autoCompleteEnabled) {
+        return create(languageDefinition, LanguageRegistry.getInstance(), autoCompleteEnabled);
+    }
+
+    public static TextMateLanguage create(LanguageDefinition languageDefinition, LanguageRegistry languageRegistry, boolean autoCompleteEnabled) {
+        return create(languageDefinition, languageRegistry, ThemeRegistry.getInstance(), autoCompleteEnabled);
+    }
+
+    public static TextMateLanguage create(LanguageDefinition languageDefinition, LanguageRegistry languageRegistry, ThemeRegistry themeRegistry, boolean autoCompleteEnabled) {
+        var grammar = languageRegistry.loadLanguage(languageDefinition);
+
+        if (grammar == null) {
+            throw new IllegalArgumentException(String.format("Language with %s scope name not found", languageRegistry));
+        }
+
+        var languageConfiguration = languageRegistry.findLanguageConfiguration(grammar.getScopeName());
+
+
+        return new TextMateLanguage(grammar, languageConfiguration, languageRegistry, themeRegistry, autoCompleteEnabled);
 
     }
 
@@ -127,16 +184,41 @@ public class TextMateLanguage extends EmptyLanguage {
      * When you update the {@link TextMateColorScheme} for editor, you need to synchronize the updates here
      *
      * @param theme IThemeSource creates from file
+     * @deprecated Use {@link ThemeRegistry#setTheme(String)}
      */
     @WorkerThread
+    @Deprecated
     public void updateTheme(IThemeSource theme) throws Exception {
-        if (textMateAnalyzer != null) {
-            textMateAnalyzer.updateTheme(theme);
-        }
+        //if (textMateAnalyzer != null) {
+        //  textMateAnalyzer.updateTheme(theme);
+        //}
+        themeRegistry.loadTheme(theme);
     }
 
 
     public void updateLanguage(String scopeName) {
+        var grammar = languageRegistry.findGrammar(scopeName);
+
+        var languageConfiguration = languageRegistry.findLanguageConfiguration(grammar.getScopeName());
+
+        try {
+            textMateAnalyzer = new TextMateAnalyzer(this, grammar, languageConfiguration, /*languageRegistry,*/ themeRegistry);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void updateLanguage(LanguageDefinition languageDefinition) {
+        var grammar = languageRegistry.loadLanguage(languageDefinition);
+
+        var languageConfiguration = languageRegistry.findLanguageConfiguration(grammar.getScopeName());
+
+        try {
+            textMateAnalyzer = new TextMateAnalyzer(this, grammar, languageConfiguration, /*languageRegistry,*/ themeRegistry);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -164,7 +246,14 @@ public class TextMateLanguage extends EmptyLanguage {
 
     @Override
     public SymbolPairMatch getSymbolPairs() {
+        //TODO: AutoClosePair 
         return new SymbolPairMatch.DefaultSymbolPairs();
+    }
+
+    @Override
+    public NewlineHandler[] getNewlineHandlers() {
+        //TODO: OnEnterSupport
+        return super.getNewlineHandlers();
     }
 
     public boolean isAutoCompleteEnabled() {

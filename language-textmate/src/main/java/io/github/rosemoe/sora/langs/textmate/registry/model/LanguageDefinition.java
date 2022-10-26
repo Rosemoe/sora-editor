@@ -26,18 +26,17 @@ package io.github.rosemoe.sora.langs.textmate.registry.model;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.registry.IGrammarSource;
-import org.eclipse.tm4e.languageconfiguration.model.LanguageConfiguration;
 
 public interface LanguageDefinition {
 
     String getName();
 
     @Nullable
-    String getLanguageConfigurationPath();
+    String getLanguageConfiguration();
 
     @Nullable
     String getScopeName();
 
-    IGrammarSource getGrammarSource();
+    IGrammarSource getGrammar();
 
 }

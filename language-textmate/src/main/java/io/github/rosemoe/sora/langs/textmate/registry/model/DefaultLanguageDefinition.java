@@ -58,7 +58,7 @@ public class DefaultLanguageDefinition implements LanguageDefinition {
     }
 
     @Override
-    public @Nullable String getLanguageConfigurationPath() {
+    public @Nullable String getLanguageConfiguration() {
         return null;
     }
 
@@ -68,7 +68,7 @@ public class DefaultLanguageDefinition implements LanguageDefinition {
     }
 
     @Override
-    public IGrammarSource getGrammarSource() {
+    public IGrammarSource getGrammar() {
         return grammarSource;
     }
 

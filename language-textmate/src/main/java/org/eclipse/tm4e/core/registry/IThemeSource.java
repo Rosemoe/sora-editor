@@ -109,6 +109,7 @@ public interface IThemeSource {
                 public ContentType getContentType() {
                     return contentType1;
                 }
+
             };
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -23,21 +23,15 @@
  */
 package io.github.rosemoe.sora.langs.textmate.registry;
 
-import androidx.annotation.NonNull;
-
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.tm4e.core.internal.theme.Theme;
+import org.eclipse.tm4e.core.internal.theme.ThemeReader;
 import org.eclipse.tm4e.core.registry.IThemeSource;
 
 import java.util.ArrayList;
-import java.util.EventObject;
 import java.util.List;
 import java.util.Objects;
 
-import io.github.rosemoe.sora.event.ContentChangeEvent;
-import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
-import io.github.rosemoe.sora.widget.CodeEditor;
 
 public class ThemeRegistry {
 
@@ -76,10 +70,18 @@ public class ThemeRegistry {
     }
 
     public void loadTheme(ThemeModel themeModel, boolean setToCurrentTheme) throws Exception {
+        var theme = findThemeByThemeName(themeModel.getName());
+        if (theme != null) {
+            setTheme(theme);
+            return;
+        }
         if (!themeModel.isLoaded()) {
             themeModel.load();
         }
         allThemeModel.add(themeModel);
+        if (setToCurrentTheme) {
+            setTheme(themeModel);
+        }
     }
 
 
@@ -126,12 +128,18 @@ public class ThemeRegistry {
 
     public void setTheme(ThemeModel theme) {
         currentThemeModel = theme;
+        if (!theme.isLoaded()) {
+            try {
+                theme.load();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
         dispatchThemeChange(currentThemeModel);
     }
 
 
-
-    public ThemeModel getCurrentTheme() {
+    public ThemeModel getCurrentThemeModel() {
         return currentThemeModel;
     }
 

@@ -34,24 +34,61 @@ import org.eclipse.tm4e.core.internal.theme.ThemeRaw;
 import org.eclipse.tm4e.core.internal.theme.ThemeReader;
 import org.eclipse.tm4e.core.registry.IThemeSource;
 
+import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
+import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
+import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
-public class TextMateColorScheme extends EditorColorScheme {
+public class TextMateColorScheme extends EditorColorScheme implements ThemeRegistry.ThemeChangeListener {
 
-    private final Theme theme;
-    private final IThemeSource themeSource;
+    private Theme theme;
 
-    private final IRawTheme rawTheme;
+    private IRawTheme rawTheme;
 
-    public TextMateColorScheme(IThemeSource themeSource) throws Exception {
-        this.themeSource = themeSource;
-        this.rawTheme = ThemeReader.readTheme(themeSource);
-        this.theme = Theme.createFromRawTheme(rawTheme, null);
+    @Deprecated
+    private IThemeSource themeSource;
+
+    private final ThemeRegistry themeRegistry;
+
+    public TextMateColorScheme(ThemeRegistry themeRegistry, ThemeModel themeModel) throws Exception {
+        this.themeRegistry = themeRegistry;
+        themeRegistry.loadTheme(themeModel);
+        if (!themeRegistry.hasListener(this)) {
+            themeRegistry.addListener(this);
+        }
+        setTheme(themeModel);
+
+    }
+
+    @Deprecated
+    public static TextMateColorScheme create(IThemeSource themeSource) throws Exception {
+        return create(new ThemeModel(themeSource));
+    }
+
+    public static TextMateColorScheme create(ThemeModel themeModel) throws Exception {
+        return create(ThemeRegistry.getInstance(), themeModel);
+    }
+
+    public static TextMateColorScheme create(ThemeRegistry themeRegistry) throws Exception {
+        return create(ThemeRegistry.getInstance(), themeRegistry.getCurrentThemeModel());
+    }
+
+    public static TextMateColorScheme create(ThemeRegistry themeRegistry, ThemeModel themeModel) throws Exception {
+        return new TextMateColorScheme(themeRegistry, themeModel);
+    }
+
+
+    public void setTheme(ThemeModel themeModel) {
+        super.colors.clear();
+        this.rawTheme = themeModel.getRawTheme();
+        this.theme = themeModel.getTheme();
+        this.themeSource = themeModel.getThemeSource();
         applyDefault();
     }
 
-    public static TextMateColorScheme create(IThemeSource themeSource) throws Exception {
-        return new TextMateColorScheme(themeSource);
+    @Override
+    public void onChangeTheme(ThemeModel newTheme) {
+        setTheme(newTheme);
     }
 
     @Override
@@ -130,11 +167,19 @@ public class TextMateColorScheme extends EditorColorScheme {
         return super.getColor(type);
     }
 
+    @Override
+    public void detachEditor(CodeEditor editor) {
+        super.detachEditor(editor);
+        themeRegistry.removeListener(this);
+    }
+
+    @Deprecated
     public IRawTheme getRawTheme() {
         return rawTheme;
     }
 
 
+    @Deprecated
     public IThemeSource getThemeSource() {
         return themeSource;
     }

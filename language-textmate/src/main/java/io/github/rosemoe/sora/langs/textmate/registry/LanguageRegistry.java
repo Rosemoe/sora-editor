@@ -27,21 +27,29 @@ import android.util.Pair;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.grammar.IGrammar;
+import org.eclipse.tm4e.core.registry.IGrammarSource;
+import org.eclipse.tm4e.core.registry.IThemeSource;
 import org.eclipse.tm4e.core.registry.Registry;
 import org.eclipse.tm4e.languageconfiguration.model.LanguageConfiguration;
 
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
+//import io.github.rosemoe.sora.langs.textmate.registry.dsl.LanguageDefinitionListBuilder;
 import io.github.rosemoe.sora.langs.textmate.registry.model.LanguageDefinition;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
+import io.github.rosemoe.sora.langs.textmate.registry.provider.FileProvider;
 
 public class LanguageRegistry {
 
     private static LanguageRegistry instance;
 
-    private Registry registry;
+    private Registry registry = new Registry();
 
     private LanguageRegistry parent;
 
@@ -58,9 +66,7 @@ public class LanguageRegistry {
     }
 
     private LanguageRegistry() {
-
     }
-
 
     public LanguageRegistry(LanguageRegistry parent) {
         this.parent = parent;
@@ -105,6 +111,19 @@ public class LanguageRegistry {
         return parent.findGrammar(scopeName, true);
     }
 
+
+    /**
+     * Adapted to use streams to read and load language configuration files by yourself {@link TextMateLanguage#create(IGrammarSource, Reader, IThemeSource)}.
+     *
+     * @param languageConfiguration loaded language configuration
+     * @param grammar               Binding to grammar
+     * @deprecated The grammar file and language configuration file should in most cases be on local file, use {@link LanguageDefinition#getLanguageConfiguration()} and {@link FileProvider} to read the language configuration file
+     */
+    @Deprecated
+    public void languageConfigurationToGrammar(LanguageConfiguration languageConfiguration, IGrammar grammar) {
+        languageConfigurationMap.put(grammar.getScopeName(), languageConfiguration);
+    }
+
     @Nullable
     public LanguageConfiguration findLanguageConfiguration(String scopeName) {
         return findLanguageConfiguration(scopeName, true);
@@ -138,6 +157,14 @@ public class LanguageRegistry {
         return Pair.create(grammar, languageConfiguration);
     }
 
+    //public List<IGrammar> loadLanguages(LanguageDefinitionListBuilder builder) {
+    //  return builder.build().stream().map(this::loadLanguage).collect(Collectors.toList());
+    //}
+
+    public List<IGrammar> loadLanguages(List<LanguageDefinition> list) {
+        return list.stream().map(this::loadLanguage).collect(Collectors.toList());
+    }
+
     public IGrammar loadLanguage(LanguageDefinition languageDefinition) {
         var languageName = languageDefinition.getName();
 
@@ -159,7 +186,7 @@ public class LanguageRegistry {
 
     private IGrammar doLoadLanguage(LanguageDefinition languageDefinition) {
 
-        var languageConfigurationPath = languageDefinition.getLanguageConfigurationPath();
+        var languageConfigurationPath = languageDefinition.getLanguageConfiguration();
 
         if (languageConfigurationPath != null) {
 
@@ -178,7 +205,7 @@ public class LanguageRegistry {
             }
         }
 
-        var grammar = registry.addGrammar(languageDefinition.getGrammarSource());
+        var grammar = registry.addGrammar(languageDefinition.getGrammar());
 
         if (languageDefinition.getScopeName() != null && !grammar.getScopeName().equals(languageDefinition.getScopeName())) {
             throw new IllegalStateException(

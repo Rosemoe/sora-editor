@@ -61,7 +61,7 @@ public final class SyncRegistry implements IGrammarRepository, IThemeProvider {
 
         //dingyi change: check grammar is loaded
         final var rawGrammar = lookup(grammar.getScopeName());
-        if (rawGrammar == null) {
+        if (rawGrammar != null) {
             return;
         }
 
