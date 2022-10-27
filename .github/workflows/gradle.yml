@@ -15,7 +15,7 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - name: Clone repo
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
       - name: Set up JDK 11
@@ -28,8 +28,8 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build debug apk
-        uses: eskatos/gradle-command-action@v2
+      - name: Build debug APK
+        uses: gradle/gradle-build-action@v2
         with:
           arguments: assembleDebug
 
