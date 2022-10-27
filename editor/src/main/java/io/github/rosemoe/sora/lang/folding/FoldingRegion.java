@@ -49,6 +49,14 @@ public class FoldingRegion {
         this.end = end;
     }
 
+    public void setCollapsed(boolean collapsed) {
+        this.collapsed = collapsed;
+    }
+
+    public boolean isCollapsed() {
+        return collapsed;
+    }
+
     public int getStartLine() {
         return IntPair.getFirst(start);
     }
