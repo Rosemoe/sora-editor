@@ -299,6 +299,6 @@ public class DirectAccessProps implements Serializable {
      * Use 0 or negative number for no marker
      */
     @InvalidateRequired
-    public int hardwrapColumn = 80;
+    public int hardwrapColumn = 0;
 
 }
