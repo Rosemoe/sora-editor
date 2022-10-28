@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.text.SpannableStringBuilder;
@@ -39,6 +40,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import io.github.rosemoe.sora.event.ContentChangeEvent;
+import io.github.rosemoe.sora.event.ImePrivateCommandEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ComposingText;
@@ -614,4 +616,15 @@ class EditorInputConnection extends BaseInputConnection {
         editor.invalidate();
         return true;
     }
+
+    @Override
+    public boolean performPrivateCommand(String action, Bundle data) {
+        if (connectionInvalid) {
+            return false;
+        }
+        editor.dispatchEvent(new ImePrivateCommandEvent(editor, action, data));
+        return true;
+    }
+
+
 }
