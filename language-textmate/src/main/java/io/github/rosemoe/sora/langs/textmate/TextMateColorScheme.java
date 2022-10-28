@@ -28,6 +28,7 @@ import android.graphics.Color;
 import java.util.List;
 
 import org.eclipse.tm4e.core.internal.theme.IRawTheme;
+import org.eclipse.tm4e.core.internal.theme.IThemeSetting;
 import org.eclipse.tm4e.core.internal.theme.Theme;
 import org.eclipse.tm4e.core.internal.theme.ThemeRaw;
 import org.eclipse.tm4e.core.registry.IThemeSource;
@@ -54,7 +55,6 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
         this.themeRegistry = themeRegistry;
 
         currentTheme = themeModel;
-
     }
 
     @Deprecated
@@ -98,8 +98,6 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
         }
 
         if (rawTheme != null) {
-
-
             var settings = rawTheme.getSettings();
 
             ThemeRaw themeRaw;
@@ -135,7 +133,7 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
             setColor(SELECTED_TEXT_BACKGROUND, Color.parseColor(selection));
         }
 
-        String invisibles = (String) themeRaw.get("invisibles");
+        String invisibles = (String) themeRaw.get("editorWhitespace.foreground");
         if (invisibles != null) {
             setColor(NON_PRINTABLE_CHAR, Color.parseColor(invisibles));
         }
@@ -151,10 +149,25 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
             setColor(LINE_NUMBER_BACKGROUND, Color.parseColor(background));
         }
 
-        String foreground = (String) themeRaw.get("foreground");
+        String lineHighlightBackground = (String) themeRaw.get("editorLineNumber.foreground");
+
+        if (lineHighlightBackground != null) {
+            setColor(LINE_NUMBER, Color.parseColor(lineHighlightBackground));
+        }
+
+        String lineHighlightActiveForeground = (String) themeRaw.get("editorLineNumber.activeForeground");
+
+        if (lineHighlightActiveForeground != null) {
+            setColor(LINE_NUMBER_CURRENT, Color.parseColor(lineHighlightActiveForeground));
+        }
+
+
+        String foreground = (String) themeRaw.get("editor.foreground");
+
         if (foreground != null) {
             setColor(TEXT_NORMAL, Color.parseColor(foreground));
         }
+
 
         String highlightedDelimetersForeground =
                 (String) themeRaw.get("highlightedDelimetersForeground");
@@ -162,16 +175,37 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
             setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(highlightedDelimetersForeground));
         }
 
-        //TMTheme seems to have no fields to control BLOCK_LINE colors
+
+        String editorIndentGuideBackground = (String) themeRaw.get("editorIndentGuide.background");
         int blockLineColor = ((getColor(WHOLE_BACKGROUND) + getColor(TEXT_NORMAL)) / 2) & 0x00FFFFFF | 0x88000000;
-        setColor(BLOCK_LINE, blockLineColor);
         int blockLineColorCur = (blockLineColor) | 0xFF000000;
-        setColor(BLOCK_LINE_CURRENT, blockLineColorCur);
+
+        if (editorIndentGuideBackground != null) {
+            setColor(BLOCK_LINE, Color.parseColor(editorIndentGuideBackground));
+        } else {
+            setColor(BLOCK_LINE, blockLineColor);
+        }
+
+        String editorIndentGuideActiveBackground = (String) themeRaw.get("editorIndentGuide.activeBackground");
+
+        if (editorIndentGuideActiveBackground != null) {
+            setColor(BLOCK_LINE_CURRENT, Color.parseColor(editorIndentGuideActiveBackground));
+        } else {
+            setColor(BLOCK_LINE_CURRENT, blockLineColorCur);
+        }
+
+    }
+
+    @Override
+    public boolean isDark() {
+        return super.isDark();
     }
 
     private void applyTMTheme(ThemeRaw themeRaw) {
         setColor(LINE_DIVIDER, Color.TRANSPARENT);
 
+
+        
         String caret = (String) themeRaw.get("caret");
         if (caret != null) {
             setColor(SELECTION_INSERT, Color.parseColor(caret));

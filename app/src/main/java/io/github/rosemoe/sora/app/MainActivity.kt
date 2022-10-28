@@ -182,7 +182,7 @@ class MainActivity : AppCompatActivity() {
         FileProviderRegistry.getInstance().addFileProvider(AssetsFileProvider(applicationContext.assets))
 
 
-        val themes = arrayOf("darcula", "abyss", "quietlight")
+        val themes = arrayOf("darcula", "abyss", "quietlight","solarized_drak")
         val themeRegistry = ThemeRegistry.getInstance()
         themes.forEach { name ->
             val path = "textmate/$name.json"
@@ -650,9 +650,10 @@ class MainActivity : AppCompatActivity() {
                     "Darcula",
                     "VS2019",
                     "NotepadXX",
-                    "QuietLight for TM",
+                    "QuietLight for TM(VSCode)",
                     "Darcula for TM",
                     "Abyss for TM",
+                    "Solarized(Dark) for TM(VSCode)",
                     "TM theme from file"
                 )
                 AlertDialog.Builder(this)
@@ -685,8 +686,14 @@ class MainActivity : AppCompatActivity() {
                             } catch (e: Exception) {
                                 e.printStackTrace()
                             }
+                            9 -> try {
+                                ensureTextmateTheme()
+                                ThemeRegistry.getInstance().setTheme("solarized_drak")
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
 
-                            9 -> loadTMTLauncher.launch("*/*")
+                            10 -> loadTMTLauncher.launch("*/*")
                         }
                         resetColorScheme()
                         dialog.dismiss()
