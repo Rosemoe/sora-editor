@@ -21,11 +21,11 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.textmate;
+package io.github.rosemoe.sora.langs.textmate.utils;
 
 import java.util.regex.Pattern;
 
-public class StringUtil {
+public class StringUtils {
 
     public static boolean checkSurrogate(String text) {
         for (int i = 0; i < text.length(); i++) {

@@ -25,13 +25,11 @@ package io.github.rosemoe.sora.langs.textmate;
 
 import android.graphics.Color;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.tm4e.core.internal.theme.IRawTheme;
 import org.eclipse.tm4e.core.internal.theme.Theme;
 import org.eclipse.tm4e.core.internal.theme.ThemeRaw;
-import org.eclipse.tm4e.core.internal.theme.ThemeReader;
 import org.eclipse.tm4e.core.registry.IThemeSource;
 
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
@@ -48,15 +46,14 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
     @Deprecated
     private IThemeSource themeSource;
 
+    private ThemeModel currentTheme;
+
     private final ThemeRegistry themeRegistry;
 
     public TextMateColorScheme(ThemeRegistry themeRegistry, ThemeModel themeModel) throws Exception {
         this.themeRegistry = themeRegistry;
-        themeRegistry.loadTheme(themeModel);
-        if (!themeRegistry.hasListener(this)) {
-            themeRegistry.addListener(this);
-        }
-        setTheme(themeModel);
+
+        currentTheme = themeModel;
 
     }
 
@@ -79,6 +76,7 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
 
 
     public void setTheme(ThemeModel themeModel) {
+        currentTheme = themeModel;
         super.colors.clear();
         this.rawTheme = themeModel.getRawTheme();
         this.theme = themeModel.getTheme();
@@ -93,8 +91,14 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
 
     @Override
     public void applyDefault() {
+        super.applyDefault();
+
+        if (themeRegistry != null && !themeRegistry.hasListener(this)) {
+            themeRegistry.addListener(this);
+        }
+
         if (rawTheme != null) {
-            super.applyDefault();
+
 
             var settings = rawTheme.getSettings();
 
@@ -102,58 +106,115 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
 
             if (settings == null) {
                 themeRaw = ((ThemeRaw) ((ThemeRaw) rawTheme).get("colors"));
+                applyVSCTheme(themeRaw);
             } else {
                 themeRaw = (ThemeRaw) ((List<?>) settings).get(0);
                 themeRaw = (ThemeRaw) themeRaw.getSetting();
-            }
 
-            setColor(LINE_DIVIDER, Color.TRANSPARENT);
+                applyTMTheme(themeRaw);
 
-            String caret = (String) themeRaw.get("caret");
-            if (caret != null) {
-                setColor(SELECTION_INSERT, Color.parseColor(caret));
             }
 
 
-            String selection = (String) themeRaw.get("selection");
-            if (selection != null) {
-                setColor(SELECTED_TEXT_BACKGROUND, Color.parseColor(selection));
-            }
-
-            String invisibles = (String) themeRaw.get("invisibles");
-            if (invisibles != null) {
-                setColor(NON_PRINTABLE_CHAR, Color.parseColor(invisibles));
-            }
-
-            String lineHighlight = (String) themeRaw.get("lineHighlight");
-            if (lineHighlight != null) {
-                setColor(CURRENT_LINE, Color.parseColor(lineHighlight));
-            }
-
-            String background = (String) themeRaw.get("background");
-            if (background != null) {
-                setColor(WHOLE_BACKGROUND, Color.parseColor(background));
-                setColor(LINE_NUMBER_BACKGROUND, Color.parseColor(background));
-            }
-
-            String foreground = (String) themeRaw.get("foreground");
-            if (foreground != null) {
-                setColor(TEXT_NORMAL, Color.parseColor(foreground));
-            }
-
-            String highlightedDelimetersForeground =
-                    (String) themeRaw.get("highlightedDelimetersForeground");
-            if (highlightedDelimetersForeground != null) {
-                setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(highlightedDelimetersForeground));
-            }
-
-            //TMTheme seems to have no fields to control BLOCK_LINE colors
-            int blockLineColor = ((getColor(WHOLE_BACKGROUND) + getColor(TEXT_NORMAL)) / 2) & 0x00FFFFFF | 0x88000000;
-            setColor(BLOCK_LINE, blockLineColor);
-            int blockLineColorCur = (blockLineColor) | 0xFF000000;
-            setColor(BLOCK_LINE_CURRENT, blockLineColorCur);
         }
 
+    }
+
+
+    private void applyVSCTheme(ThemeRaw themeRaw) {
+        setColor(LINE_DIVIDER, Color.TRANSPARENT);
+
+        String caret = (String) themeRaw.get("editorCursor.foreground");
+        if (caret != null) {
+            setColor(SELECTION_INSERT, Color.parseColor(caret));
+        }
+
+
+        String selection = (String) themeRaw.get("editor.selectionBackground");
+        if (selection != null) {
+            setColor(SELECTED_TEXT_BACKGROUND, Color.parseColor(selection));
+        }
+
+        String invisibles = (String) themeRaw.get("invisibles");
+        if (invisibles != null) {
+            setColor(NON_PRINTABLE_CHAR, Color.parseColor(invisibles));
+        }
+
+        String lineHighlight = (String) themeRaw.get("editor.lineHighlightBackground");
+        if (lineHighlight != null) {
+            setColor(CURRENT_LINE, Color.parseColor(lineHighlight));
+        }
+
+        String background = (String) themeRaw.get("editor.background");
+        if (background != null) {
+            setColor(WHOLE_BACKGROUND, Color.parseColor(background));
+            setColor(LINE_NUMBER_BACKGROUND, Color.parseColor(background));
+        }
+
+        String foreground = (String) themeRaw.get("foreground");
+        if (foreground != null) {
+            setColor(TEXT_NORMAL, Color.parseColor(foreground));
+        }
+
+        String highlightedDelimetersForeground =
+                (String) themeRaw.get("highlightedDelimetersForeground");
+        if (highlightedDelimetersForeground != null) {
+            setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(highlightedDelimetersForeground));
+        }
+
+        //TMTheme seems to have no fields to control BLOCK_LINE colors
+        int blockLineColor = ((getColor(WHOLE_BACKGROUND) + getColor(TEXT_NORMAL)) / 2) & 0x00FFFFFF | 0x88000000;
+        setColor(BLOCK_LINE, blockLineColor);
+        int blockLineColorCur = (blockLineColor) | 0xFF000000;
+        setColor(BLOCK_LINE_CURRENT, blockLineColorCur);
+    }
+
+    private void applyTMTheme(ThemeRaw themeRaw) {
+        setColor(LINE_DIVIDER, Color.TRANSPARENT);
+
+        String caret = (String) themeRaw.get("caret");
+        if (caret != null) {
+            setColor(SELECTION_INSERT, Color.parseColor(caret));
+        }
+
+
+        String selection = (String) themeRaw.get("selection");
+        if (selection != null) {
+            setColor(SELECTED_TEXT_BACKGROUND, Color.parseColor(selection));
+        }
+
+        String invisibles = (String) themeRaw.get("invisibles");
+        if (invisibles != null) {
+            setColor(NON_PRINTABLE_CHAR, Color.parseColor(invisibles));
+        }
+
+        String lineHighlight = (String) themeRaw.get("lineHighlight");
+        if (lineHighlight != null) {
+            setColor(CURRENT_LINE, Color.parseColor(lineHighlight));
+        }
+
+        String background = (String) themeRaw.get("background");
+        if (background != null) {
+            setColor(WHOLE_BACKGROUND, Color.parseColor(background));
+            setColor(LINE_NUMBER_BACKGROUND, Color.parseColor(background));
+        }
+
+        String foreground = (String) themeRaw.get("foreground");
+        if (foreground != null) {
+            setColor(TEXT_NORMAL, Color.parseColor(foreground));
+        }
+
+        String highlightedDelimetersForeground =
+                (String) themeRaw.get("highlightedDelimetersForeground");
+        if (highlightedDelimetersForeground != null) {
+            setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(highlightedDelimetersForeground));
+        }
+
+        //TMTheme seems to have no fields to control BLOCK_LINE colors
+        int blockLineColor = ((getColor(WHOLE_BACKGROUND) + getColor(TEXT_NORMAL)) / 2) & 0x00FFFFFF | 0x88000000;
+        setColor(BLOCK_LINE, blockLineColor);
+        int blockLineColorCur = (blockLineColor) | 0xFF000000;
+        setColor(BLOCK_LINE_CURRENT, blockLineColorCur);
     }
 
     @Override
@@ -180,6 +241,17 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
     public void detachEditor(CodeEditor editor) {
         super.detachEditor(editor);
         themeRegistry.removeListener(this);
+    }
+
+    @Override
+    public void attachEditor(CodeEditor editor) {
+        super.attachEditor(editor);
+        try {
+            themeRegistry.loadTheme(currentTheme);
+        } catch (Exception e) {
+            //throw new RuntimeException(e);
+        }
+        setTheme(currentTheme);
     }
 
     @Deprecated

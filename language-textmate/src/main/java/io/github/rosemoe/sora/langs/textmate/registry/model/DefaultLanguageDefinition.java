@@ -25,17 +25,14 @@ package io.github.rosemoe.sora.langs.textmate.registry.model;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.registry.IGrammarSource;
-import org.eclipse.tm4e.languageconfiguration.model.LanguageConfiguration;
 
-import java.util.function.Supplier;
-
-import io.github.rosemoe.sora.langs.textmate.StringUtil;
+import io.github.rosemoe.sora.langs.textmate.utils.StringUtils;
 
 public class DefaultLanguageDefinition implements LanguageDefinition {
 
     private String name;
 
-    private String languageConfigurationPath = null;
+    private String languageConfigurationPath;
 
     private IGrammarSource grammarSource;
 
@@ -59,7 +56,7 @@ public class DefaultLanguageDefinition implements LanguageDefinition {
 
     @Override
     public @Nullable String getLanguageConfiguration() {
-        return null;
+        return languageConfigurationPath;
     }
 
     @Override
@@ -73,12 +70,12 @@ public class DefaultLanguageDefinition implements LanguageDefinition {
     }
 
     public static LanguageDefinition withGrammarSource(IGrammarSource grammarSource) {
-        var languageNameByPath = StringUtil.getFileNameWithoutExtension(grammarSource.getFilePath());
+        var languageNameByPath = StringUtils.getFileNameWithoutExtension(grammarSource.getFilePath());
         return withGrammarSource(grammarSource, languageNameByPath, "source." + languageNameByPath);
     }
 
     public static LanguageDefinition withLanguageConfiguration(IGrammarSource grammarSource, String languageConfigurationPath) {
-        var languageNameByPath = StringUtil.getFileNameWithoutExtension(grammarSource.getFilePath());
+        var languageNameByPath = StringUtils.getFileNameWithoutExtension(grammarSource.getFilePath());
         return withLanguageConfiguration(grammarSource, languageConfigurationPath, languageNameByPath, "source." + languageNameByPath);
     }
 

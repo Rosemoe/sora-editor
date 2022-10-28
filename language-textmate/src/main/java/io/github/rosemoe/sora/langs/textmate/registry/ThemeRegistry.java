@@ -68,7 +68,7 @@ public class ThemeRegistry {
         loadTheme(themeModel, true);
     }
 
-    public void loadTheme(ThemeModel themeModel, boolean setToCurrentTheme) throws Exception {
+    public synchronized void loadTheme(ThemeModel themeModel, boolean setToCurrentTheme) throws Exception {
         if (!themeModel.isLoaded()) {
             themeModel.load();
         }
@@ -104,7 +104,7 @@ public class ThemeRegistry {
         return null;
     }
 
-    public boolean setTheme(String name) {
+    public synchronized boolean setTheme(String name) {
         var targetModel = findThemeByFileName(name);
 
         if (targetModel != null) {
@@ -152,11 +152,11 @@ public class ThemeRegistry {
         return allListener.contains(themeChangeListener);
     }
 
-    public void addListener(ThemeChangeListener themeChangeListener) {
+    public synchronized void addListener(ThemeChangeListener themeChangeListener) {
         allListener.add(themeChangeListener);
     }
 
-    public void removeListener(ThemeChangeListener themeChangeListener) {
+    public synchronized void removeListener(ThemeChangeListener themeChangeListener) {
         allListener.remove(themeChangeListener);
     }
 

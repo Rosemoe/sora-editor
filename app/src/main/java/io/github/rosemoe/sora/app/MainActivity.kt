@@ -179,7 +179,7 @@ class MainActivity : AppCompatActivity() {
     private /*suspend*/ fun loadDefaultThemes() /*= withContext(Dispatchers.IO)*/ {
 
         //add assets file provider
-        FileProviderRegistry.getInstance().addFileProvider(AssetsFileProvider(assets))
+        FileProviderRegistry.getInstance().addFileProvider(AssetsFileProvider(applicationContext.assets))
 
 
         val themes = arrayOf("darcula", "abyss", "quietlight")
@@ -666,18 +666,21 @@ class MainActivity : AppCompatActivity() {
                             4 -> editor.colorScheme = SchemeVS2019()
                             5 -> editor.colorScheme = SchemeNotepadXX()
                             6 -> try {
+                                ensureTextmateTheme()
                                 ThemeRegistry.getInstance().setTheme("quietlight")
                             } catch (e: Exception) {
                                 e.printStackTrace()
                             }
 
                             7 -> try {
+                                ensureTextmateTheme()
                                 ThemeRegistry.getInstance().setTheme("darcula")
                             } catch (e: Exception) {
                                 e.printStackTrace()
                             }
 
                             8 -> try {
+                                ensureTextmateTheme()
                                 ThemeRegistry.getInstance().setTheme("abyss")
                             } catch (e: Exception) {
                                 e.printStackTrace()

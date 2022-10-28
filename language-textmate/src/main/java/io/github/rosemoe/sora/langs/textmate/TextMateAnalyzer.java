@@ -28,9 +28,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
 
-import java.io.Reader;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -45,9 +43,9 @@ import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.langs.textmate.folding.FoldingHelper;
 import io.github.rosemoe.sora.langs.textmate.folding.IndentRange;
-import io.github.rosemoe.sora.langs.textmate.registry.LanguageRegistry;
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
+import io.github.rosemoe.sora.langs.textmate.utils.StringUtils;
 import io.github.rosemoe.sora.text.Content;
 
 import org.eclipse.tm4e.core.grammar.IGrammar;
@@ -59,10 +57,6 @@ import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
 import org.eclipse.tm4e.core.internal.theme.FontStyle;
 import org.eclipse.tm4e.core.internal.theme.Theme;
-import org.eclipse.tm4e.core.internal.theme.ThemeReader;
-import org.eclipse.tm4e.core.registry.IGrammarSource;
-import org.eclipse.tm4e.core.registry.IThemeSource;
-import org.eclipse.tm4e.core.registry.Registry;
 import org.eclipse.tm4e.languageconfiguration.model.LanguageConfiguration;
 
 import io.github.rosemoe.sora.text.ContentLine;
@@ -98,7 +92,6 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
         //this.languageRegistry = languageRegistry;
 
         this.themeRegistry = themeRegistry;
-
 
         if (!themeRegistry.hasListener(this)) {
             themeRegistry.addListener(this);
@@ -216,12 +209,12 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     public synchronized LineTokenizeResult<MyState, Span> tokenizeLine(CharSequence lineC, MyState state, int lineIndex) {
         String line = (lineC instanceof ContentLine) ? ((ContentLine) lineC).toStringWithNewline() : lineC.toString();
         var tokens = new ArrayList<Span>();
-        var surrogate = StringUtil.checkSurrogate(line);
+        var surrogate = StringUtils.checkSurrogate(line);
         var lineTokens = grammar.tokenizeLine2(line, state == null ? null : state.tokenizeState, Duration.ofSeconds(2));
         int tokensLength = lineTokens.getTokens().length / 2;
         var identifiers = language.createIdentifiers ? new ArrayList<String>() : null;
         for (int i = 0; i < tokensLength; i++) {
-            int startIndex = StringUtil.convertUnicodeOffsetToUtf16(line, lineTokens.getTokens()[2 * i], surrogate);
+            int startIndex = StringUtils.convertUnicodeOffsetToUtf16(line, lineTokens.getTokens()[2 * i], surrogate);
             if (i == 0 && startIndex != 0) {
                 tokens.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
             }
@@ -231,7 +224,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
             if (language.createIdentifiers) {
                 var type = EncodedTokenAttributes.getTokenType(metadata);
                 if (type == StandardTokenType.Other) {
-                    var end = i + 1 == tokensLength ? lineC.length() : StringUtil.convertUnicodeOffsetToUtf16(line, lineTokens.getTokens()[2 * (i + 1)], surrogate);
+                    var end = i + 1 == tokensLength ? lineC.length() : StringUtils.convertUnicodeOffsetToUtf16(line, lineTokens.getTokens()[2 * (i + 1)], surrogate);
                     if (end > startIndex && MyCharacter.isJavaIdentifierStart(line.charAt(startIndex))) {
                         var flag = true;
                         for (int j = startIndex + 1; j < end; j++) {

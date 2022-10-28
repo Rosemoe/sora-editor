@@ -28,7 +28,7 @@ import org.eclipse.tm4e.core.internal.theme.Theme;
 import org.eclipse.tm4e.core.internal.theme.ThemeReader;
 import org.eclipse.tm4e.core.registry.IThemeSource;
 
-import io.github.rosemoe.sora.langs.textmate.StringUtil;
+import io.github.rosemoe.sora.langs.textmate.utils.StringUtils;
 
 public class ThemeModel {
 
@@ -43,7 +43,7 @@ public class ThemeModel {
 
     public ThemeModel(IThemeSource themeSource) {
         this.themeSource = themeSource;
-        this.name = StringUtil.getFileNameWithoutExtension(themeSource.getFilePath());
+        this.name = StringUtils.getFileNameWithoutExtension(themeSource.getFilePath());
     }
 
     public ThemeModel(IThemeSource themeSource,String name) {

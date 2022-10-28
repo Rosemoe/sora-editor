@@ -30,7 +30,6 @@ import androidx.annotation.WorkerThread;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.grammar.IGrammar;
-import org.eclipse.tm4e.core.internal.grammar.Grammar;
 import org.eclipse.tm4e.core.registry.IGrammarSource;
 import org.eclipse.tm4e.core.registry.IThemeSource;
 import org.eclipse.tm4e.languageconfiguration.model.LanguageConfiguration;
@@ -48,6 +47,7 @@ import io.github.rosemoe.sora.langs.textmate.registry.LanguageRegistry;
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
 import io.github.rosemoe.sora.langs.textmate.registry.model.DefaultLanguageDefinition;
 import io.github.rosemoe.sora.langs.textmate.registry.model.LanguageDefinition;
+import io.github.rosemoe.sora.langs.textmate.utils.StringUtils;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.util.MyCharacter;
@@ -61,14 +61,16 @@ public class TextMateLanguage extends EmptyLanguage {
     boolean autoCompleteEnabled;
     final boolean createIdentifiers;
 
-    private LanguageRegistry languageRegistry;
+    LanguageRegistry languageRegistry;
 
-    private ThemeRegistry themeRegistry;
+    ThemeRegistry themeRegistry;
 
     //OnEnterSupport ....
-    @SuppressWarnings("all")
-    private LanguageConfiguration languageConfiguration;
+    LanguageConfiguration languageConfiguration;
 
+    TextMateNewlineHandler[] newlineHandlers;
+
+    private TextMateNewlineHandler newlineHandler;
 
     protected TextMateLanguage(IGrammar grammar,
                                LanguageConfiguration languageConfiguration,
@@ -81,22 +83,19 @@ public class TextMateLanguage extends EmptyLanguage {
         this.languageConfiguration = languageConfiguration;
         //this.grammar = grammar;
 
-        try {
-            textMateAnalyzer = new TextMateAnalyzer(this, grammar, languageConfiguration, /*languageRegistry,*/ themeRegistry);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
         autoCompleteEnabled = true;
 
-
         this.createIdentifiers = createIdentifiers;
+
+        createAnalyzerAndNewlineHandler(grammar, languageConfiguration);
 
     }
 
 
     @Deprecated
     public static IGrammar prepareLoad(IGrammarSource grammarSource, @Nullable Reader languageConfiguration, IThemeSource themeSource) {
-        var definition = DefaultLanguageDefinition.withGrammarSource(grammarSource, StringUtil.getFileNameWithoutExtension(grammarSource.getFilePath()),null);
+        var definition = DefaultLanguageDefinition.withGrammarSource(grammarSource, StringUtils.getFileNameWithoutExtension(grammarSource.getFilePath()), null);
         var languageRegistry = LanguageRegistry.getInstance();
         var grammar = languageRegistry.loadLanguage(definition);
         if (languageConfiguration != null) {
@@ -174,9 +173,7 @@ public class TextMateLanguage extends EmptyLanguage {
 
         var languageConfiguration = languageRegistry.findLanguageConfiguration(grammar.getScopeName());
 
-
         return new TextMateLanguage(grammar, languageConfiguration, languageRegistry, themeRegistry, autoCompleteEnabled);
-
     }
 
 
@@ -196,16 +193,29 @@ public class TextMateLanguage extends EmptyLanguage {
     }
 
 
-    public void updateLanguage(String scopeName) {
-        var grammar = languageRegistry.findGrammar(scopeName);
-
-        var languageConfiguration = languageRegistry.findLanguageConfiguration(grammar.getScopeName());
-
+    private void createAnalyzerAndNewlineHandler(IGrammar grammar, LanguageConfiguration languageConfiguration) {
         try {
             textMateAnalyzer = new TextMateAnalyzer(this, grammar, languageConfiguration, /*languageRegistry,*/ themeRegistry);
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        this.languageConfiguration = languageConfiguration;
+
+        newlineHandler = new TextMateNewlineHandler(this);
+
+        newlineHandlers = new TextMateNewlineHandler[]{newlineHandler};
+
+    }
+
+    public void updateLanguage(String scopeName) {
+        var grammar = languageRegistry.findGrammar(scopeName);
+
+        var languageConfiguration = languageRegistry.findLanguageConfiguration(grammar.getScopeName());
+
+
+
+        createAnalyzerAndNewlineHandler(grammar, languageConfiguration);
 
     }
 
@@ -214,11 +224,7 @@ public class TextMateLanguage extends EmptyLanguage {
 
         var languageConfiguration = languageRegistry.findLanguageConfiguration(grammar.getScopeName());
 
-        try {
-            textMateAnalyzer = new TextMateAnalyzer(this, grammar, languageConfiguration, /*languageRegistry,*/ themeRegistry);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        createAnalyzerAndNewlineHandler(grammar, languageConfiguration);
 
     }
 
@@ -244,6 +250,11 @@ public class TextMateLanguage extends EmptyLanguage {
         return tabSize;
     }
 
+
+    public TextMateNewlineHandler getNewlineHandler() {
+        return newlineHandler;
+    }
+
     @Override
     public SymbolPairMatch getSymbolPairs() {
         //TODO: AutoClosePair 
@@ -253,7 +264,7 @@ public class TextMateLanguage extends EmptyLanguage {
     @Override
     public NewlineHandler[] getNewlineHandlers() {
         //TODO: OnEnterSupport
-        return super.getNewlineHandlers();
+        return newlineHandlers;
     }
 
     public boolean isAutoCompleteEnabled() {

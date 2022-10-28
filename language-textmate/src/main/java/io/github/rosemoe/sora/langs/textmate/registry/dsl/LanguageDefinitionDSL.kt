@@ -64,8 +64,8 @@ class LanguageDefinitionBuilder(var name: String) {
     var scopeName: String? = null
     var languageConfiguration: String? = null
 
-    fun defaultScopeName() {
-        scopeName = "source.$name"
+    fun defaultScopeName(prefix: String = "source") {
+        scopeName = "$prefix.$name"
     }
 
 }

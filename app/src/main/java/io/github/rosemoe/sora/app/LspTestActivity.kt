@@ -34,6 +34,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
+import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry
+import io.github.rosemoe.sora.langs.textmate.registry.LanguageRegistry
+import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
+import io.github.rosemoe.sora.langs.textmate.registry.dsl.languages
+import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
+import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileProvider
 import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvider
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
 import io.github.rosemoe.sora.lsp.editor.LspEditor
@@ -203,26 +209,45 @@ class LspTestActivity : AppCompatActivity() {
     }
 
     private fun createTextMateLanguage(): TextMateLanguage {
-        return TextMateLanguage.createNoCompletion(
-            IGrammarSource.fromInputStream(
-                assets.open("textmate/xml/syntaxes/xml.tmLanguage.json"),
-                "xml.tmLanguage.json",
-                null
-            ),
-            InputStreamReader(assets.open("textmate/xml/language-configuration.json")),
-            (editor.colorScheme as TextMateColorScheme).themeSource
+
+
+        LanguageRegistry.getInstance().loadLanguages(
+            languages {
+                language("xml") {
+                    grammar = "textmate/xml/syntaxes/xml.tmLanguage.json"
+                    scopeName = "text.xml"
+                    languageConfiguration = "textmate/xml/language-configuration.json"
+                }
+            }
+        )
+
+
+        return TextMateLanguage.create(
+            "text.xml", false
         )
     }
 
     private fun ensureTextmateTheme() {
         var editorColorScheme = editor.colorScheme
         if (editorColorScheme !is TextMateColorScheme) {
-            val themeSource = IThemeSource.fromInputStream(
-                assets.open("textmate/QuietLight.tmTheme"),
-                "QuietLight.tmTheme",
-                null
+
+            FileProviderRegistry.getInstance().addFileProvider(AssetsFileProvider(assets))
+
+            val themeRegistry = ThemeRegistry.getInstance()
+
+            val path = "textmate/quietlight.json"
+            themeRegistry.loadTheme(
+                ThemeModel(
+                    IThemeSource.fromInputStream(
+                        FileProviderRegistry.getInstance().tryGetInputStream(path), path, null
+                    ), "quitelight"
+                )
             )
-            editorColorScheme = TextMateColorScheme.create(themeSource)
+
+
+            themeRegistry.setTheme("quietlight")
+
+            editorColorScheme = TextMateColorScheme.create(themeRegistry)
             editor.colorScheme = editorColorScheme
         }
     }

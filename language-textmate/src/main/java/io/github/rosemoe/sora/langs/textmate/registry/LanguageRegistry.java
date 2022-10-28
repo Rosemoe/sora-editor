@@ -37,6 +37,8 @@ import java.io.Reader;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
@@ -57,6 +59,7 @@ public class LanguageRegistry {
     private final Map</* scopeName */String, LanguageConfiguration> languageConfigurationMap = new LinkedHashMap<>();
 
     private final Map</* name */String, String /* scopeName */> grammarFileName2ScopeName = new LinkedHashMap<>();
+
 
     public synchronized static LanguageRegistry getInstance() {
         if (instance == null) {
@@ -95,6 +98,7 @@ public class LanguageRegistry {
     }
 
     public IGrammar findGrammar(String scopeName, boolean findInParent) {
+
         var grammar = registry.grammarForScopeName(scopeName);
 
         if (grammar != null) {
@@ -109,6 +113,7 @@ public class LanguageRegistry {
             return null;
         }
 
+
         return parent.findGrammar(scopeName, true);
     }
 
@@ -121,7 +126,7 @@ public class LanguageRegistry {
      * @deprecated The grammar file and language configuration file should in most cases be on local file, use {@link LanguageDefinition#getLanguageConfiguration()} and {@link FileProvider} to read the language configuration file
      */
     @Deprecated
-    public void languageConfigurationToGrammar(LanguageConfiguration languageConfiguration, IGrammar grammar) {
+    public synchronized void languageConfigurationToGrammar(LanguageConfiguration languageConfiguration, IGrammar grammar) {
         languageConfigurationMap.put(grammar.getScopeName(), languageConfiguration);
     }
 
@@ -170,7 +175,7 @@ public class LanguageRegistry {
         return loadLanguages(LanguageDefinitionReader.read(jsonPath));
     }
 
-    public IGrammar loadLanguage(LanguageDefinition languageDefinition) {
+    public synchronized IGrammar loadLanguage(LanguageDefinition languageDefinition) {
         var languageName = languageDefinition.getName();
 
         if (grammarFileName2ScopeName.containsKey(languageName) && languageDefinition.getScopeName() != null) {
@@ -189,7 +194,7 @@ public class LanguageRegistry {
     }
 
 
-    private IGrammar doLoadLanguage(LanguageDefinition languageDefinition) {
+    private synchronized IGrammar doLoadLanguage(LanguageDefinition languageDefinition) {
 
         var languageConfigurationPath = languageDefinition.getLanguageConfiguration();
 
@@ -222,7 +227,7 @@ public class LanguageRegistry {
 
     }
 
-    public void setTheme(ThemeModel themeModel) throws Exception {
+    public synchronized void setTheme(ThemeModel themeModel) throws Exception {
         if (!themeModel.isLoaded()) {
             themeModel.load();
         }
@@ -230,7 +235,12 @@ public class LanguageRegistry {
     }
 
 
-    public void dispose(boolean closeParent) {
+    public synchronized void dispose(boolean closeParent) {
+
+        if (registry == null) {
+            return;
+        }
+
         registry = null;
         grammarFileName2ScopeName.clear();
         languageConfigurationMap.clear();
