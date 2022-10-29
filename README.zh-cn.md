@@ -14,10 +14,10 @@ sora-editor是安卓平台上很棒的高效代码编辑器
 
 阅读其他语言的文档: [English](README.md), [简体中文](README.zh-cn.md).
 
-***这个项目仍在缓慢开发中***
+***这个项目仍在缓慢开发中，欢迎提交问题和合并请求***
+
 请从[Releases](https://github.com/Rosemoe/CodeEditor/releases)
 下载最新的源代码，而不是直接克隆此项目。
-**欢迎提交问题和合并请求**
 
 ## 特色
 
