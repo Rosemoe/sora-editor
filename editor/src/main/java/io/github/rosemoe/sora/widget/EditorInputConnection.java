@@ -269,28 +269,75 @@ class EditorInputConnection extends BaseInputConnection {
         } else if (composingText.isComposing()) {
             deleteComposingText();
         }
-        // Replace text
-        SymbolPairMatch.Replacement replacement = null;
-        if (text.length() == 1 && editor.getProps().symbolPairAutoCompletion) {
-            replacement = editor.languageSymbolPairs.getCompletion(text.charAt(0));
+        // replace text
+        SymbolPairMatch.SymbolPair pair = null;
+        if (editor.getProps().symbolPairAutoCompletion) {
+
+            var firstCharFromText = text.charAt(0);
+
+            char[] inputText = null;
+
+            //size > 1
+            if (text.length() > 1) {
+                inputText = text.toString().toCharArray();
+            }
+
+            pair = editor.languageSymbolPairs.matchBestPair(
+                    editor.getText(), editor.getCursor().left(),
+                    inputText, firstCharFromText
+            );
         }
+        var editorText = editor.getText();
+        var editorCursor = editor.getCursor();
+
         // newCursorPosition ignored
         // Call onCommitText() can make auto indent and delete text selected automatically
-        if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
-                || (replacement.shouldNotDoReplace(editor.getText()) && replacement.notHasAutoSurroundPair())) {
+        if (pair == null || pair == SymbolPairMatch.SymbolPair.EMPTY_SYMBOL_PAIR
+                || (pair.shouldNotReplace(editor.getText()))) {
             editor.commitText(text, applyAutoIndent);
         } else {
-            if (getCursor().isSelected()) {
-                editor.commitText(text, applyAutoIndent);
+
+            // QuickQuoteHandler can easily implement the feature of AutoSurround
+            // and is at a higher level (customizable),
+            // so if the language implemented QuickQuoteHandler,
+            // the AutoSurround feature is not considered needed because it can be implemented through QuickQuoteHandler
+
+            if (pair.shouldDoAutoSurround(editorText) && editor.getEditorLanguage().getQuickQuoteHandler() == null) {
+
+                editorText.beginBatchEdit();
+                // insert left
+                editorText.insert(editorCursor.getLeftLine(), editorCursor.getLeftColumn(), pair.open);
+                // editorText.insert(editorCursor.getLeftLine(),editorCursor.getLeftColumn(),selectText);
+                // insert right
+                editorText.insert(editorCursor.getRightLine(), editorCursor.getRightColumn(), pair.close);
+                editorText.endBatchEdit();
+
+                // setSelection
+                editor.setSelectionRegion(editorCursor.getLeftLine(), editorCursor.getLeftColumn(),
+                        editorCursor.getRightLine(), editorCursor.getRightColumn() - pair.close.length());
+
+            } else if (editorCursor.isSelected() && editor.getEditorLanguage().getQuickQuoteHandler() != null) {
+                editor.commitText(text);
             } else {
-                editor.commitText(replacement.text, applyAutoIndent);
-                int delta = (replacement.text.length() - replacement.selection);
-                if (delta != 0) {
-                    int newSel = Math.max(getCursor().getLeft() - delta, 0);
-                    CharPosition charPosition = getCursor().getIndexer().getCharPosition(newSel);
-                    editor.setSelection(charPosition.line, charPosition.column, SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
-                }
+                editorText.beginBatchEdit();
+
+                var insertPosition = editorText
+                        .getIndexer()
+                        .getCharPosition(pair.getInsertOffset());
+
+                editorText.replace(insertPosition.line, insertPosition.column,
+                        editorCursor.getRightLine(), editorCursor.getRightColumn() , pair.open);
+                editorText.insert(insertPosition.line, insertPosition.column + pair.open.length(), pair.close);
+                editorText.endBatchEdit();
+
+                var cursorPosition = editorText
+                        .getIndexer()
+                        .getCharPosition(pair.getCursorOffset());
+
+                editor.setSelection(cursorPosition.line, cursorPosition.column);
+
             }
+
         }
         if (composingStateBefore) {
             endBatchEdit();
