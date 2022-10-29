@@ -61,7 +61,7 @@ public class MatchHelper {
             var matches = true;
             for (int i = 0; i < len; i++) {
                 char a = name.charAt(i);
-                char b = name.charAt(i);
+                char b = pattern.charAt(i);
                 if (!(a == b || ((ignoreCase && (i != 0 || !matchFirstCase)) && Character.toLowerCase(a) == Character.toLowerCase(b)))) {
                     matches = false;
                     break;
