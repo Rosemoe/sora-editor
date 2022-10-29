@@ -156,10 +156,10 @@ public class ContentReference extends TextReference {
                 while (read < length && columnCount <= column && column < columnCount + separatorLength) {
                     chars[offset + read] = targetLine.getLineSeparator().getContent().charAt(column - columnCount);
                     read++;
-                    column ++;
+                    column++;
                 }
                 if (column >= columnCount + separatorLength) {
-                    line ++;
+                    line++;
                     column = 0;
                 }
             }

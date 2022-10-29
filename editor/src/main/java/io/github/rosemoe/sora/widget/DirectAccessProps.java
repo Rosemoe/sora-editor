@@ -47,8 +47,6 @@ public class DirectAccessProps implements Serializable {
     /**
      * Define symbol pairs for any language,
      * Override language settings.
-     * <p>
-     * Use {@link SymbolPairMatch.Replacement#NO_REPLACEMENT} to force no completion for a character
      */
     @NonNull
     public final SymbolPairMatch overrideSymbolPairs = new SymbolPairMatch();
@@ -290,7 +288,7 @@ public class DirectAccessProps implements Serializable {
     /**
      * Use enhanced function of home and end. When it is enabled, clicking home will place
      * the selection to actually text start on the line if the selection is currently at the start
-     *  of line. End works in similar way, too.
+     * of line. End works in similar way, too.
      */
     public boolean enhancedHomeAndEnd = true;
 

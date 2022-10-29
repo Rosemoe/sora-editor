@@ -402,38 +402,67 @@ class EditorKeyEventHandler {
         final var editorCursor = this.editor.getCursor();
         if (event.isPrintingKey() && editor.isEditable()) {
             String text = new String(Character.toChars(event.getUnicodeChar(event.getMetaState())));
-            SymbolPairMatch.Replacement replacement = null;
-            if (text.length() == 1 && editor.getProps().symbolPairAutoCompletion) {
-                replacement = editor.languageSymbolPairs.getCompletion(text.charAt(0));
+            // replace text
+            SymbolPairMatch.SymbolPair pair = null;
+            if (editor.getProps().symbolPairAutoCompletion) {
+
+                var firstCharFromText = text.charAt(0);
+
+                char[] inputText = null;
+
+                //size > 1
+                if (text.length() > 1) {
+                    inputText = text.toCharArray();
+                }
+
+                pair = editor.languageSymbolPairs.matchBestPair(
+                        editor.getText(), editor.getCursor().left(),
+                        inputText, firstCharFromText
+                );
             }
-            if (replacement == null || replacement == SymbolPairMatch.Replacement.NO_REPLACEMENT
-                    || (replacement.shouldNotDoReplace(editorText) && replacement.notHasAutoSurroundPair())) {
+            if (pair == null || pair == SymbolPairMatch.SymbolPair.EMPTY_SYMBOL_PAIR
+                    || pair.shouldNotReplace(editorText)) {
                 editor.commitText(text);
                 editor.notifyIMEExternalCursorChange();
             } else {
-                String[] autoSurroundPair;
-                if (editorCursor.isSelected() && (autoSurroundPair = replacement.getAutoSurroundPair()) != null) {
+
+                // QuickQuoteHandler can easily implement the feature of AutoSurround
+                // and is at a higher level (customizable),
+                // so if the language implemented QuickQuoteHandler,
+                // the AutoSurround feature is not considered needed because it can be implemented through QuickQuoteHandler
+
+                if (pair.shouldDoAutoSurround(editorText) && editor.getEditorLanguage().getQuickQuoteHandler() == null) {
                     editorText.beginBatchEdit();
-                    //insert left
-                    editorText.insert(editorCursor.getLeftLine(), editorCursor.getLeftColumn(), autoSurroundPair[0]);
-                    //insert right
-                    editorText.insert(editorCursor.getRightLine(), editorCursor.getRightColumn(), autoSurroundPair[1]);
+                    // insert left
+                    editorText.insert(editorCursor.getLeftLine(), editorCursor.getLeftColumn(), pair.open);
+                    // editorText.insert(editorCursor.getLeftLine(),editorCursor.getLeftColumn(),selectText);
+                    // insert right
+                    editorText.insert(editorCursor.getRightLine(), editorCursor.getRightColumn(), pair.close);
                     editorText.endBatchEdit();
-                    //cancel selected
-                    editor.setSelection(editorCursor.getLeftLine(), editorCursor.getLeftColumn() + autoSurroundPair[0].length() - 1);
 
-                    editor.notifyIMEExternalCursorChange();
+                    // setSelection
+                    editor.setSelectionRegion(editorCursor.getLeftLine(), editorCursor.getLeftColumn(),
+                            editorCursor.getRightLine(), editorCursor.getRightColumn() - pair.close.length());
+                } else if (editorCursor.isSelected() && editor.getEditorLanguage().getQuickQuoteHandler() != null) {
+                    editor.commitText(text);
                 } else {
-                    editor.commitText(replacement.text);
-                    int delta = (replacement.text.length() - replacement.selection);
-                    if (delta != 0) {
-                        int newSel = Math.max(editorCursor.getLeft() - delta, 0);
-                        CharPosition charPosition = editorCursor.getIndexer().getCharPosition(newSel);
-                        editor.setSelection(charPosition.line, charPosition.column);
-                        editor.notifyIMEExternalCursorChange();
-                    }
-                }
+                    editorText.beginBatchEdit();
 
+                    var insertPosition = editorText
+                            .getIndexer()
+                            .getCharPosition(pair.getInsertOffset());
+
+                    editorText.replace(insertPosition.line, insertPosition.column, editorCursor.getRightLine(), editorCursor.getRightColumn(), pair.open);
+                    editorText.insert(insertPosition.line, insertPosition.column + pair.open.length(), pair.close);
+                    editorText.endBatchEdit();
+
+                    var cursorPosition = editorText
+                            .getIndexer()
+                            .getCharPosition(pair.getCursorOffset());
+
+                    editor.setSelection(cursorPosition.line, cursorPosition.column);
+                }
+                editor.notifyIMEExternalCursorChange();
             }
         } else {
             return editor.onSuperKeyDown(keyCode, event);
@@ -584,7 +613,8 @@ class EditorKeyEventHandler {
         return editorKeyEvent.result(true);
     }
 
-    private boolean startNewLIne(CodeEditor editor, Cursor editorCursor, Content editorText, EditorKeyEvent e, KeyBindingEvent keybindingEvent) {
+    private boolean startNewLIne(CodeEditor editor, Cursor editorCursor, Content
+            editorText, EditorKeyEvent e, KeyBindingEvent keybindingEvent) {
         final var line = editorCursor.right().line;
         editor.setSelection(line, editorText.getColumnCount(line));
         editor.commitText(editor.getLineSeparator().getContent());

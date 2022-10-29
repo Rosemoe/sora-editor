@@ -48,7 +48,7 @@ public class TransformApplier {
     /**
      * Apply the given {@link Transform} to the text and return transform result
      *
-     * @param text the text to be transformed. must not be null
+     * @param text      the text to be transformed. must not be null
      * @param transform the {@link Transform} object describing how to transform the text, maybe null
      * @return the transformed text
      */
@@ -82,8 +82,8 @@ public class TransformApplier {
     /**
      * Generate text for the given region in Matcher.
      *
-     * @param text the original text, which is given to the Matcher
-     * @param matcher the Matcher at the requested region
+     * @param text             the original text, which is given to the Matcher
+     * @param matcher          the Matcher at the requested region
      * @param formatStringList the format descriptors
      * @return generated(transform) text
      */

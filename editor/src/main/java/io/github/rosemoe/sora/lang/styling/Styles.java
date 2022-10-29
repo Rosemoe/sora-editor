@@ -235,8 +235,8 @@ public class Styles {
 
     /**
      * @param indentCountMode true if the column in {@link #blocks} is the count of spaces.
-     *                                 In other words, the indentation level. false if the column in
-     *                                 {@link #blocks} are based on actual characters.
+     *                        In other words, the indentation level. false if the column in
+     *                        {@link #blocks} are based on actual characters.
      * @see #isIndentCountMode()
      */
     public void setIndentCountMode(boolean indentCountMode) {
