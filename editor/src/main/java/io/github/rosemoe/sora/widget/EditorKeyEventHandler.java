@@ -402,7 +402,7 @@ class EditorKeyEventHandler {
         final var editorCursor = this.editor.getCursor();
         if (event.isPrintingKey() && editor.isEditable()) {
             String text = new String(Character.toChars(event.getUnicodeChar(event.getMetaState())));
-            // Replace text
+            // replace text
             SymbolPairMatch.SymbolPair pair = null;
             if (editor.getProps().symbolPairAutoCompletion) {
 
@@ -442,8 +442,8 @@ class EditorKeyEventHandler {
                     editorText.endBatchEdit();
 
                     // setSelection
-                    editor.setSelectionRegion(editorCursor.getLeftLine(), editorCursor.getLeftColumn() - pair.open.length(),
-                            editorCursor.getRightLine(), editorCursor.getRightColumn());
+                    editor.setSelectionRegion(editorCursor.getLeftLine(), editorCursor.getLeftColumn(),
+                            editorCursor.getRightLine(), editorCursor.getRightColumn() - pair.close.length());
 
                 } else if (editorCursor.isSelected() && editor.getEditorLanguage().getQuickQuoteHandler() != null) {
                     editor.commitText(text);
@@ -454,7 +454,7 @@ class EditorKeyEventHandler {
                             .getIndexer()
                             .getCharPosition(pair.getInsertOffset());
 
-                    editorText.replace(insertPosition.line, insertPosition.column, editorCursor.getRightLine(), editorCursor.getRightColumn() , pair.open);
+                    editorText.replace(insertPosition.line, insertPosition.column, editorCursor.getRightLine(), editorCursor.getRightColumn(), pair.open);
                     editorText.insert(insertPosition.line, insertPosition.column + pair.open.length(), pair.close);
                     editorText.endBatchEdit();
 

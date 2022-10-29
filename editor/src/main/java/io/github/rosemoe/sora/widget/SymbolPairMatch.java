@@ -143,7 +143,8 @@ public class SymbolPairMatch {
 
             var insertIndex = cursorPosition.index;
 
-            // the size > 1
+
+            // the size = 1
             if (inputCharArray == null) {
 
                 var arrayIndex = openCharArray.length - 2;
@@ -157,6 +158,7 @@ public class SymbolPairMatch {
 
 
             } else {
+
 
                 // Not fully tested.
 
@@ -193,7 +195,6 @@ public class SymbolPairMatch {
 
 
             }
-
 
 
             if (matchFlag == 1) {
@@ -334,11 +335,11 @@ public class SymbolPairMatch {
                 }
             }));
 
-            //test for java
+            // test for java
 
-            //if (BuildConfig.DEBUG) {
+            // if (BuildConfig.DEBUG) {
             //    super.putPair("/*".toCharArray(), new SymbolPair("/*", " */"));
-            //}
+            // }
 
         }
 

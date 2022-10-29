@@ -269,7 +269,7 @@ class EditorInputConnection extends BaseInputConnection {
         } else if (composingText.isComposing()) {
             deleteComposingText();
         }
-        // Replace text
+        // replace text
         SymbolPairMatch.SymbolPair pair = null;
         if (editor.getProps().symbolPairAutoCompletion) {
 
@@ -313,8 +313,8 @@ class EditorInputConnection extends BaseInputConnection {
                 editorText.endBatchEdit();
 
                 // setSelection
-                editor.setSelectionRegion(editorCursor.getLeftLine(), editorCursor.getLeftColumn() - pair.open.length(),
-                        editorCursor.getRightLine(), editorCursor.getRightColumn());
+                editor.setSelectionRegion(editorCursor.getLeftLine(), editorCursor.getLeftColumn(),
+                        editorCursor.getRightLine(), editorCursor.getRightColumn() - pair.close.length());
 
             } else if (editorCursor.isSelected() && editor.getEditorLanguage().getQuickQuoteHandler() != null) {
                 editor.commitText(text);
@@ -325,7 +325,8 @@ class EditorInputConnection extends BaseInputConnection {
                         .getIndexer()
                         .getCharPosition(pair.getInsertOffset());
 
-                editorText.replace(insertPosition.line, insertPosition.column, editorCursor.getRightLine(), editorCursor.getRightColumn() , pair.open);
+                editorText.replace(insertPosition.line, insertPosition.column,
+                        editorCursor.getRightLine(), editorCursor.getRightColumn() , pair.open);
                 editorText.insert(insertPosition.line, insertPosition.column + pair.open.length(), pair.close);
                 editorText.endBatchEdit();
 
