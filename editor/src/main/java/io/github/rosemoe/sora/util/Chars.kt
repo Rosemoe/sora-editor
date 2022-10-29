@@ -60,7 +60,7 @@ object Chars {
     @JvmStatic
     @JvmOverloads
     fun findWord(position: CharPosition, text: Content, reverse: Boolean = false): TextRange {
-        if(reverse) {
+        if (reverse) {
             position.column -= 1
         }
         if (position.column <= 0 && position.line > 0 && reverse) {

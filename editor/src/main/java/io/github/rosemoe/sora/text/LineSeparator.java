@@ -75,6 +75,7 @@ public enum LineSeparator {
 
     /**
      * Get target line separator from a line separator string.
+     *
      * @param str line separator string
      * @throws IllegalArgumentException if the given str is not a line separator
      */
@@ -96,9 +97,10 @@ public enum LineSeparator {
 
     /**
      * Get target line separator from a line separator string.
-     * @param text the whole text
+     *
+     * @param text  the whole text
      * @param start start index of the line separator
-     * @param end end index of the line separator
+     * @param end   end index of the line separator
      * @throws IllegalArgumentException if the given str is not a line separator
      */
     public static LineSeparator fromSeparatorString(@NonNull CharSequence text, int start, int end) {

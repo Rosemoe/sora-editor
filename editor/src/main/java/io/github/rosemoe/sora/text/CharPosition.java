@@ -43,7 +43,8 @@ public final class CharPosition {
 
     public int column;
 
-    public CharPosition() {}
+    public CharPosition() {
+    }
 
     public CharPosition(int line, int column) {
         this(line, column, -1);

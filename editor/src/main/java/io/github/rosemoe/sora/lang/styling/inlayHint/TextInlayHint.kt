@@ -89,7 +89,15 @@ class TextInlayHint(val text: String) : InlayHint() {
         val myLineHeight = paint.descent() - paint.ascent()
         val myBaseline = lineHeight / 2f - myLineHeight / 2f + paint.descent()
         paint.color = colorScheme.getColor(EditorColorScheme.TEXT_INLAY_HINT_BACKGROUND)
-        canvas.drawRoundRect(margin, lineHeight / 2f - myLineHeight / 2f, measuredWidth - margin, lineHeight / 2f + myLineHeight / 2f, 0.15f, 0.15f, paint)
+        canvas.drawRoundRect(
+            margin,
+            lineHeight / 2f - myLineHeight / 2f,
+            measuredWidth - margin,
+            lineHeight / 2f + myLineHeight / 2f,
+            0.15f,
+            0.15f,
+            paint
+        )
         paint.color = colorScheme.getColor(EditorColorScheme.TEXT_INLAY_HINT_FOREGROUND)
         canvas.drawText(text, margin * 1.5f, myBaseline, paint)
 

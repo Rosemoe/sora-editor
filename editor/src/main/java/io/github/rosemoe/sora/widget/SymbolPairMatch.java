@@ -31,7 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.github.rosemoe.sora.BuildConfig;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
@@ -91,7 +90,6 @@ public class SymbolPairMatch {
         }
 
         list.add(symbolPair);
-
         multipleCharByEndPairMaps.put(charArray[charArray.length - 1], list);
     }
 
@@ -99,11 +97,9 @@ public class SymbolPairMatch {
     @Nullable
     public final SymbolPair matchBestPairBySingleChar(char editChar) {
         var pair = singleCharPairMaps.get(editChar);
-
         if (pair == null && parent != null) {
             return parent.matchBestPairBySingleChar(editChar);
         }
-
         return pair;
     }
 
@@ -112,7 +108,6 @@ public class SymbolPairMatch {
 
         if (result == null && parent != null) {
             var parentResult = parent.matchBestPairList(editChar);
-
             result = new ArrayList<>(parentResult);
         }
 
@@ -140,26 +135,18 @@ public class SymbolPairMatch {
 
             // if flag is not 1, no match
             var matchFlag = 1;
-
             var insertIndex = cursorPosition.index;
-
 
             // the size = 1
             if (inputCharArray == null) {
-
                 var arrayIndex = openCharArray.length - 2;
-
                 while (arrayIndex >= 0) {
                     insertIndex--;
                     var contentChar = content.charAt(insertIndex);
                     matchFlag &= contentChar == openCharArray[arrayIndex] ? 1 : 0;
                     arrayIndex--;
                 }
-
-
             } else {
-
-
                 // Not fully tested.
 
                 // Not all the time the user will enter a string that matches the symbol pair,
@@ -169,7 +156,6 @@ public class SymbolPairMatch {
                 if (inputCharArray.length > openCharArray.length) {
                     continue;
                 }
-
 
                 var pairIndex = openCharArray.length - 1;
 
@@ -192,8 +178,6 @@ public class SymbolPairMatch {
                 for (; pairIndex >= 0; insertIndex--, pairIndex--) {
                     matchFlag &= content.charAt(insertIndex) == openCharArray[pairIndex] ? 1 : 0;
                 }
-
-
             }
 
 
@@ -202,20 +186,14 @@ public class SymbolPairMatch {
                 pair.measureCursorPosition(insertIndex);
                 break;
             }
-
         }
-
         return matchPair;
-
-
     }
-
 
     public void removeAllPairs() {
         singleCharPairMaps.clear();
         multipleCharByEndPairMaps.clear();
     }
-
 
     /**
      * Defines a replacement of input
@@ -334,13 +312,11 @@ public class SymbolPairMatch {
                     return content.getCursor().isSelected();
                 }
             }));
-
             // test for java
 
             // if (BuildConfig.DEBUG) {
             //    super.putPair("/*".toCharArray(), new SymbolPair("/*", " */"));
             // }
-
         }
 
     }

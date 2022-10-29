@@ -36,4 +36,5 @@ import io.github.rosemoe.sora.widget.CodeEditor
  * @see android.view.inputmethod.InputConnection.performPrivateCommand
  * @author Rosemoe
  */
-class ImePrivateCommandEvent(editor: CodeEditor, val action: String, val data: Bundle) : Event(editor)
+class ImePrivateCommandEvent(editor: CodeEditor, val action: String, val data: Bundle) :
+    Event(editor)

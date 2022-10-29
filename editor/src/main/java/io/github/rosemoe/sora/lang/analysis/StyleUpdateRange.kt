@@ -34,11 +34,11 @@ interface StyleUpdateRange {
     /**
      * Check whether the given [line] index is in range
      */
-    fun isInRange(line: Int) : Boolean
+    fun isInRange(line: Int): Boolean
 
     /**
      * Get a new iterator for line indices in range
      */
-    fun lineIndexIterator(maxLineIndex: Int) : IntIterator
+    fun lineIndexIterator(maxLineIndex: Int): IntIterator
 
 }

@@ -200,6 +200,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
 
     /**
      * Select current position
+     *
      * @return if the action is performed
      */
     public boolean select() {

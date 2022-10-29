@@ -432,7 +432,6 @@ class EditorKeyEventHandler {
                 // the AutoSurround feature is not considered needed because it can be implemented through QuickQuoteHandler
 
                 if (pair.shouldDoAutoSurround(editorText) && editor.getEditorLanguage().getQuickQuoteHandler() == null) {
-
                     editorText.beginBatchEdit();
                     // insert left
                     editorText.insert(editorCursor.getLeftLine(), editorCursor.getLeftColumn(), pair.open);
@@ -444,7 +443,6 @@ class EditorKeyEventHandler {
                     // setSelection
                     editor.setSelectionRegion(editorCursor.getLeftLine(), editorCursor.getLeftColumn(),
                             editorCursor.getRightLine(), editorCursor.getRightColumn() - pair.close.length());
-
                 } else if (editorCursor.isSelected() && editor.getEditorLanguage().getQuickQuoteHandler() != null) {
                     editor.commitText(text);
                 } else {
@@ -463,11 +461,8 @@ class EditorKeyEventHandler {
                             .getCharPosition(pair.getCursorOffset());
 
                     editor.setSelection(cursorPosition.line, cursorPosition.column);
-
                 }
-
                 editor.notifyIMEExternalCursorChange();
-
             }
         } else {
             return editor.onSuperKeyDown(keyCode, event);

@@ -197,7 +197,7 @@ class EditorInputConnection extends BaseInputConnection {
             }
             return text;
         }
-        return sub.toString();
+        return sub;
     }
 
     protected CharSequence getTextRegion(int start, int end, int flags) {
@@ -272,7 +272,6 @@ class EditorInputConnection extends BaseInputConnection {
         // replace text
         SymbolPairMatch.SymbolPair pair = null;
         if (editor.getProps().symbolPairAutoCompletion) {
-
             var firstCharFromText = text.charAt(0);
 
             char[] inputText = null;
@@ -315,7 +314,6 @@ class EditorInputConnection extends BaseInputConnection {
                 // setSelection
                 editor.setSelectionRegion(editorCursor.getLeftLine(), editorCursor.getLeftColumn(),
                         editorCursor.getRightLine(), editorCursor.getRightColumn() - pair.close.length());
-
             } else if (editorCursor.isSelected() && editor.getEditorLanguage().getQuickQuoteHandler() != null) {
                 editor.commitText(text);
             } else {
@@ -326,7 +324,7 @@ class EditorInputConnection extends BaseInputConnection {
                         .getCharPosition(pair.getInsertOffset());
 
                 editorText.replace(insertPosition.line, insertPosition.column,
-                        editorCursor.getRightLine(), editorCursor.getRightColumn() , pair.open);
+                        editorCursor.getRightLine(), editorCursor.getRightColumn(), pair.open);
                 editorText.insert(insertPosition.line, insertPosition.column + pair.open.length(), pair.close);
                 editorText.endBatchEdit();
 
@@ -335,9 +333,7 @@ class EditorInputConnection extends BaseInputConnection {
                         .getCharPosition(pair.getCursorOffset());
 
                 editor.setSelection(cursorPosition.line, cursorPosition.column);
-
             }
-
         }
         if (composingStateBefore) {
             endBatchEdit();

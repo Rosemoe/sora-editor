@@ -1001,7 +1001,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Set whether text in editor should be wrapped to fit its size
      *
-     * @param wordwrap Whether to wrap words
+     * @param wordwrap         Whether to wrap words
      * @param antiWordBreaking Prevent English words to be split into two lines
      * @see #isWordwrap()
      */

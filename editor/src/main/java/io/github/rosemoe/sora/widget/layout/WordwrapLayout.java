@@ -24,7 +24,6 @@
 package io.github.rosemoe.sora.widget.layout;
 
 import android.util.SparseArray;
-import android.util.TypedValue;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -184,7 +183,7 @@ public class WordwrapLayout extends AbstractLayout {
             if (antiWordBreaking && MyCharacter.isAlpha(text[next - 1]) && next < len && (MyCharacter.isAlpha(text[next]) || text[next] == '-')) {
                 int wordStart = next - 1;
                 while (wordStart > start && MyCharacter.isAlpha(text[wordStart - 1])) {
-                    wordStart --;
+                    wordStart--;
                 }
                 if (wordStart > start) {
                     next = wordStart;
