@@ -93,6 +93,17 @@ public class SymbolPairMatch {
         multipleCharByEndPairMaps.put(charArray[charArray.length - 1], list);
     }
 
+    /**
+     * Put a pair of symbol completion
+     * When the user types the {@param openString}, it will be replaced by {@param symbolPair}
+     * SymbolPair maybe null to disable completion for this character.
+     *
+     * @see this#putPair(char[], SymbolPair)
+     */
+    public void putPair(String openString, SymbolPair symbolPair) {
+        putPair(openString.toCharArray(), symbolPair);
+    }
+
 
     @Nullable
     public final SymbolPair matchBestPairBySingleChar(char editChar) {
@@ -141,7 +152,9 @@ public class SymbolPairMatch {
             if (inputCharArray == null) {
                 var arrayIndex = openCharArray.length - 2;
                 while (arrayIndex >= 0) {
-                    insertIndex--;
+                    if (insertIndex > 0) {
+                        insertIndex--;
+                    }
                     var contentChar = content.charAt(insertIndex);
                     matchFlag &= contentChar == openCharArray[arrayIndex] ? 1 : 0;
                     arrayIndex--;
@@ -233,12 +246,13 @@ public class SymbolPairMatch {
         }
 
 
-        protected boolean shouldNotReplace(Content content) {
+        protected boolean shouldNotReplace(CodeEditor editor) {
             if (symbolPairEx == null) {
                 return false;
             }
+            var content = editor.getText();
             ContentLine currentLine = content.getLine(content.getCursor().getLeftLine());
-            return !symbolPairEx.shouldDoReplace(content, currentLine, content.getCursor().getLeftColumn());
+            return !symbolPairEx.shouldDoReplace(editor, currentLine, content.getCursor().getLeftColumn());
         }
 
         protected boolean shouldDoAutoSurround(Content content) {
@@ -269,14 +283,14 @@ public class SymbolPairMatch {
              * also see <a href="https://code.visualstudio.com/api/language-extensions/language-configuration-guide#autoclosing">this</a>
              * If not implemented, always return true
              *
-             * @param content     The current edit content,
+             * @param editor      The current edit content,
              *                    sometimes you may need to get the analyzed data from {@link AnalyzeManager}
-             *                    (e.g. token with tags) and use content to get more information,
+             *                    (e.g. token with tags) and use editor to get more information,
              *                    such as the line of the cursor.
              * @param currentLine The current line edit in the editor,quick analysis it to decide whether to replaced
              * @param leftColumn  return current cursor column
              */
-            default boolean shouldDoReplace(Content content, ContentLine currentLine, int leftColumn) {
+            default boolean shouldDoReplace(CodeEditor editor, ContentLine currentLine, int leftColumn) {
                 return true;
             }
 

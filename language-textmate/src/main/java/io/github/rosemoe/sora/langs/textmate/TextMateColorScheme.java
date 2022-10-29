@@ -28,7 +28,6 @@ import android.graphics.Color;
 import java.util.List;
 
 import org.eclipse.tm4e.core.internal.theme.IRawTheme;
-import org.eclipse.tm4e.core.internal.theme.IThemeSetting;
 import org.eclipse.tm4e.core.internal.theme.Theme;
 import org.eclipse.tm4e.core.internal.theme.ThemeRaw;
 import org.eclipse.tm4e.core.registry.IThemeSource;
@@ -97,24 +96,24 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
             themeRegistry.addListener(this);
         }
 
-        if (rawTheme != null) {
-            var settings = rawTheme.getSettings();
+        if (rawTheme == null) {
+            return;
+        }
+        var settings = rawTheme.getSettings();
 
-            ThemeRaw themeRaw;
+        ThemeRaw themeRaw;
 
-            if (settings == null) {
-                themeRaw = ((ThemeRaw) ((ThemeRaw) rawTheme).get("colors"));
-                applyVSCTheme(themeRaw);
-            } else {
-                themeRaw = (ThemeRaw) ((List<?>) settings).get(0);
-                themeRaw = (ThemeRaw) themeRaw.getSetting();
+        if (settings == null) {
+            themeRaw = ((ThemeRaw) ((ThemeRaw) rawTheme).get("colors"));
+            applyVSCTheme(themeRaw);
+        } else {
+            themeRaw = (ThemeRaw) ((List<?>) settings).get(0);
+            themeRaw = (ThemeRaw) themeRaw.getSetting();
 
-                applyTMTheme(themeRaw);
-
-            }
-
+            applyTMTheme(themeRaw);
 
         }
+
 
     }
 
@@ -205,7 +204,6 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
         setColor(LINE_DIVIDER, Color.TRANSPARENT);
 
 
-        
         String caret = (String) themeRaw.get("caret");
         if (caret != null) {
             setColor(SELECTION_INSERT, Color.parseColor(caret));

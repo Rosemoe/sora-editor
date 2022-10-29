@@ -421,7 +421,7 @@ class EditorKeyEventHandler {
                 );
             }
             if (pair == null || pair == SymbolPairMatch.SymbolPair.EMPTY_SYMBOL_PAIR
-                    || pair.shouldNotReplace(editorText)) {
+                    || pair.shouldNotReplace(editor)) {
                 editor.commitText(text);
                 editor.notifyIMEExternalCursorChange();
             } else {

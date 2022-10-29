@@ -227,7 +227,7 @@ class MainActivity : AppCompatActivity() {
     private fun resetColorScheme() {
         binding.editor.apply {
             val colorScheme = this.colorScheme
-            //redraw
+            // reset
             this.colorScheme = colorScheme
         }
     }

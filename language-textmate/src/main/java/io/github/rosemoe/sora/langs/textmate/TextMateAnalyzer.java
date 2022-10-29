@@ -221,9 +221,10 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
             int metadata = lineTokens.getTokens()[2 * i + 1];
             int foreground = EncodedTokenAttributes.getForeground(metadata);
             int fontStyle = EncodedTokenAttributes.getFontStyle(metadata);
+            var tokenType = EncodedTokenAttributes.getTokenType(metadata);
             if (language.createIdentifiers) {
-                var type = EncodedTokenAttributes.getTokenType(metadata);
-                if (type == StandardTokenType.Other) {
+
+                if (tokenType == StandardTokenType.Other) {
                     var end = i + 1 == tokensLength ? lineC.length() : StringUtils.convertUnicodeOffsetToUtf16(line, lineTokens.getTokens()[2 * (i + 1)], surrogate);
                     if (end > startIndex && MyCharacter.isJavaIdentifierStart(line.charAt(startIndex))) {
                         var flag = true;
@@ -240,6 +241,8 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
                 }
             }
             Span span = Span.obtain(startIndex, TextStyle.makeStyle(foreground + 255, 0, (fontStyle & FontStyle.Bold) != 0, (fontStyle & FontStyle.Italic) != 0, false));
+
+            span.extra = tokenType;
 
             if ((fontStyle & FontStyle.Underline) != 0) {
                 String color = theme.getColor(foreground);

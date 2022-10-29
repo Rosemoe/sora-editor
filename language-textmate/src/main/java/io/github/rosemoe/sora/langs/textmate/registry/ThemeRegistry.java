@@ -24,7 +24,6 @@
 package io.github.rosemoe.sora.langs.textmate.registry;
 
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.tm4e.core.internal.theme.ThemeReader;
 import org.eclipse.tm4e.core.registry.IThemeSource;
 
 import java.util.ArrayList;
@@ -34,13 +33,12 @@ import java.util.Objects;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
 
 public class ThemeRegistry {
-
-
+    
     private static ThemeRegistry instance;
 
-    private List<ThemeChangeListener> allListener = new ArrayList<>();
+    private final List<ThemeChangeListener> allListener = new ArrayList<>();
 
-    private List<ThemeModel> allThemeModel = new ArrayList<>();
+    private final List<ThemeModel> allThemeModel = new ArrayList<>();
 
     private ThemeModel currentThemeModel;
 
@@ -60,15 +58,15 @@ public class ThemeRegistry {
         loadTheme(themeSource, true);
     }
 
-    public void loadTheme(IThemeSource themeSource, boolean setToCurrentTheme) throws Exception {
-        loadTheme(new ThemeModel(themeSource), setToCurrentTheme);
+    public void loadTheme(IThemeSource themeSource, boolean isCurrentTheme) throws Exception {
+        loadTheme(new ThemeModel(themeSource), isCurrentTheme);
     }
 
     public void loadTheme(ThemeModel themeModel) throws Exception {
         loadTheme(themeModel, true);
     }
 
-    public synchronized void loadTheme(ThemeModel themeModel, boolean setToCurrentTheme) throws Exception {
+    public synchronized void loadTheme(ThemeModel themeModel, boolean isCurrentTheme) throws Exception {
         if (!themeModel.isLoaded()) {
             themeModel.load();
         }
@@ -78,7 +76,7 @@ public class ThemeRegistry {
             return;
         }
         allThemeModel.add(themeModel);
-        if (setToCurrentTheme) {
+        if (isCurrentTheme) {
             setTheme(themeModel);
         }
     }

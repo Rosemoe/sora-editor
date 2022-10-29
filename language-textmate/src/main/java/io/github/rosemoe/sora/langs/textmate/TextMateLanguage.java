@@ -55,20 +55,24 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
 public class TextMateLanguage extends EmptyLanguage {
 
-    private TextMateAnalyzer textMateAnalyzer;
+    // use for TextMateSymbolPairMatch
+
     private int tabSize = 4;
     private final IdentifierAutoComplete autoComplete = new IdentifierAutoComplete();
     boolean autoCompleteEnabled;
     final boolean createIdentifiers;
 
+    TextMateAnalyzer textMateAnalyzer;
+
     GrammarRegistry grammarRegistry;
 
     ThemeRegistry themeRegistry;
 
-    //OnEnterSupport ....
     LanguageConfiguration languageConfiguration;
 
     TextMateNewlineHandler[] newlineHandlers;
+
+    TextMateSymbolPairMatch symbolPairMatch;
 
     private TextMateNewlineHandler newlineHandler;
 
@@ -80,13 +84,13 @@ public class TextMateLanguage extends EmptyLanguage {
 
         this.grammarRegistry = grammarRegistry;
         this.themeRegistry = themeRegistry;
-        this.languageConfiguration = languageConfiguration;
-        //this.grammar = grammar;
-
+        // this.grammar = grammar;
 
         autoCompleteEnabled = true;
 
         this.createIdentifiers = createIdentifiers;
+
+        symbolPairMatch = new TextMateSymbolPairMatch(this);
 
         createAnalyzerAndNewlineHandler(grammar, languageConfiguration);
 
@@ -206,13 +210,19 @@ public class TextMateLanguage extends EmptyLanguage {
 
         newlineHandlers = new TextMateNewlineHandler[]{newlineHandler};
 
+        if (languageConfiguration != null) {
+            // because the editor will only get the symbol pair matcher once
+            // (caching object to stop repeated new object created),
+            // the symbol pair needs to be updated inside the symbol pair matcher.
+            symbolPairMatch.updatePair();
+        }
+
     }
 
     public void updateLanguage(String scopeName) {
         var grammar = grammarRegistry.findGrammar(scopeName);
 
         var languageConfiguration = grammarRegistry.findLanguageConfiguration(grammar.getScopeName());
-
 
 
         createAnalyzerAndNewlineHandler(grammar, languageConfiguration);
@@ -225,7 +235,6 @@ public class TextMateLanguage extends EmptyLanguage {
         var languageConfiguration = grammarRegistry.findLanguageConfiguration(grammar.getScopeName());
 
         createAnalyzerAndNewlineHandler(grammar, languageConfiguration);
-
     }
 
     @NonNull
@@ -257,13 +266,11 @@ public class TextMateLanguage extends EmptyLanguage {
 
     @Override
     public SymbolPairMatch getSymbolPairs() {
-        //TODO: AutoClosePair 
-        return new SymbolPairMatch.DefaultSymbolPairs();
+        return symbolPairMatch;
     }
 
     @Override
     public NewlineHandler[] getNewlineHandlers() {
-        //TODO: OnEnterSupport
         return newlineHandlers;
     }
 

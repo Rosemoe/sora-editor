@@ -98,7 +98,9 @@ public class TextMateNewlineHandler implements NewlineHandler {
                 final String increasedIndent = normalizeIndentation(enterAction.indentation + enterAction.appendText);
                 final String typeText = delim + increasedIndent;
 
-                //var caretOffset = typeText.length();
+                // var caretOffset = typeText.length();
+                // offset value is not needed because the editor ignores the position of invisible characters when moving the cursor
+
                 result = new NewlineHandleResult(typeText, 0);
                 break;
             }// Indent once
@@ -108,8 +110,8 @@ public class TextMateNewlineHandler implements NewlineHandler {
                 final String increasedIndent = normalizeIndentation(enterAction.indentation + enterAction.appendText);
                 final String typeText = delim + increasedIndent + delim + normalIndent;
 
-                //var caretOffset = typeText.length();
-                result = new NewlineHandleResult(typeText, 0);
+                var caretOffset = increasedIndent.length() + delim.length();
+                result = new NewlineHandleResult(typeText, caretOffset);
                 break;
             }
             case Outdent:
@@ -118,8 +120,8 @@ public class TextMateNewlineHandler implements NewlineHandler {
                 final String outdentedText = outdentString(
                         normalizeIndentation(indentation + enterAction.appendText));
 
-                // var caretOffset = (delim + outdentedText).length();
-                result = new NewlineHandleResult(outdentedText, 0);
+                var caretOffset = (delim + outdentedText).length();
+                result = new NewlineHandleResult(outdentedText, caretOffset);
                 break;
         }
 

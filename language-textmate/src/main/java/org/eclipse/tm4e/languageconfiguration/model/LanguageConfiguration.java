@@ -222,7 +222,12 @@ public class LanguageConfiguration {
 
     @Nullable
     private static Pattern getAsPattern(@Nullable final JsonElement element) {
-        final var pattern = getAsString(element);
+        String pattern;
+        if (element != null && element.isJsonObject()) {
+            pattern = element.getAsJsonObject().get("pattern").getAsString();
+        } else {
+            pattern = getAsString(element);
+        }
         return pattern == null ? null : RegExpUtils.create(pattern);
     }
 
