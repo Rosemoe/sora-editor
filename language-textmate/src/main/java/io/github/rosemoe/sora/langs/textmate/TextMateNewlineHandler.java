@@ -110,7 +110,7 @@ public class TextMateNewlineHandler implements NewlineHandler {
                 final String increasedIndent = normalizeIndentation(enterAction.indentation + enterAction.appendText);
                 final String typeText = delim + increasedIndent + delim + normalIndent;
 
-                var caretOffset = increasedIndent.length() + delim.length();
+                var caretOffset = normalIndent.length() + 1;
                 result = new NewlineHandleResult(typeText, caretOffset);
                 break;
             }
@@ -120,7 +120,7 @@ public class TextMateNewlineHandler implements NewlineHandler {
                 final String outdentedText = outdentString(
                         normalizeIndentation(indentation + enterAction.appendText));
 
-                var caretOffset = (delim + outdentedText).length();
+                var caretOffset = outdentedText.length() + 1;
                 result = new NewlineHandleResult(outdentedText, caretOffset);
                 break;
         }
