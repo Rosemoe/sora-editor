@@ -12,15 +12,17 @@ sora-editor是安卓平台上很棒的高效代码编辑器
 
 </div>
 
-阅读其他的语言文档: [English](README.md), [简体中文](README.zh-cn.md).
-***正在开发中*** 这个项目仍在缓慢开发中.   
+阅读其他语言的文档: [English](README.md), [简体中文](README.zh-cn.md).
+
+***这个项目仍在缓慢开发中***
 请从[Releases](https://github.com/Rosemoe/CodeEditor/releases)
-下载最新的源代码，而不是直接克隆此项目。**欢迎提交问题和合并请求**
+下载最新的源代码，而不是直接克隆此项目。
+**欢迎提交问题和合并请求**
 
 ## 特色
 
 - [x] 语法高亮
-- [x] 自动补全 (包含 [代码块](https://macromates.com/manual/en/snippets))
+- [x] 自动补全 (包含[代码块](https://macromates.com/manual/en/snippets))
 - [x] 自动缩进
 - [x] 代码块辅助线
 - [x] 文本缩放
@@ -36,13 +38,12 @@ sora-editor是安卓平台上很棒的高效代码编辑器
 
 ## 按键绑定
 
-使用物理键盘时，您可以使用按键绑定来执行各种文本操作。一般情况下，编辑器默认支持某些按键的绑定。
-但是,
-您可以实现 [`KeyBindingEvent`](https://github.com/Rosemoe/sora-editor/blob/main/editor/src/main/java/io/github/rosemoe/sora/event/KeyBindingEvent.java)
+使用物理键盘时，您可以使用按键绑定来执行各种文本操作。
+
+一般情况下，编辑器默认支持某些按键的绑定，但是你可以实现 [`KeyBindingEvent`](https://github.com/Rosemoe/sora-editor/blob/main/editor/src/main/java/io/github/rosemoe/sora/event/KeyBindingEvent.java)
 并添加自己的按键绑定事件，甚至可以覆盖默认绑定的按键事件并执行自己定义的操作。
 
-当前支持的键绑定大多类似于 Android Studio/Intellij IDEA.
-参见 [支持的按键绑定](./keybindings.md).
+当前支持的键绑定大多类似于 Android Studio/Intellij IDEA，可参见[支持的按键绑定](./keybindings.md).
 
 ## 截图
 
@@ -69,6 +70,7 @@ implementation 'io.github.Rosemoe.sora-editor:<moduleName>:<versionName>'
   包含Java高亮和自动补全的基本实现。
 - language-textmate   
   一个高效的编辑器高亮渲染器。依赖这个工具库后，你可以使用并加载textmate语言配置文件。
+
   内部实现来自[tm4e](https://github.com/eclipse/tm4e)。
 
 你可以从顶部的徽章或者[Releases](https://github.com/Rosemoe/CodeEditor/releases)查看是否有最新的版本。
