@@ -42,19 +42,18 @@ import androidx.appcompat.app.AppCompatActivity
 import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
 import io.github.rosemoe.sora.event.*
 import io.github.rosemoe.sora.lang.EmptyLanguage
-import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry
-import io.github.rosemoe.sora.langs.textmate.registry.LanguageRegistry
+import io.github.rosemoe.sora.langs.textmate.registry.GrammarRegistry
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
 import io.github.rosemoe.sora.langs.textmate.registry.dsl.languages
-import io.github.rosemoe.sora.langs.textmate.registry.model.DefaultLanguageDefinition
+import io.github.rosemoe.sora.langs.textmate.registry.model.DefaultGrammarDefinition
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
-import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileProvider
+import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
 import io.github.rosemoe.sora.text.ContentCreator
 import io.github.rosemoe.sora.text.LineSeparator
 import io.github.rosemoe.sora.utils.CrashHandler
@@ -64,10 +63,7 @@ import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.schemes.*
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode
-import io.github.rosemoe.sora.widget.style.builtin.ScaleCursorAnimator
 import io.github.rosemoe.sora.widget.subscribeEvent
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.eclipse.tm4e.core.registry.IGrammarSource
 import org.eclipse.tm4e.core.registry.IThemeSource
 import java.io.*
@@ -179,10 +175,14 @@ class MainActivity : AppCompatActivity() {
     private /*suspend*/ fun loadDefaultThemes() /*= withContext(Dispatchers.IO)*/ {
 
         //add assets file provider
-        FileProviderRegistry.getInstance().addFileProvider(AssetsFileProvider(applicationContext.assets))
+        FileProviderRegistry.getInstance().addFileProvider(
+            AssetsFileResolver(
+                applicationContext.assets
+            )
+        )
 
 
-        val themes = arrayOf("darcula", "abyss", "quietlight","solarized_drak")
+        val themes = arrayOf("darcula", "abyss", "quietlight", "solarized_drak")
         val themeRegistry = ThemeRegistry.getInstance()
         themes.forEach { name ->
             val path = "textmate/$name.json"
@@ -199,11 +199,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private /*suspend*/ fun loadDefaultLanguages() /*= withContext(Dispatchers.Main)*/ {
-        LanguageRegistry.getInstance().loadLanguages("textmate/languages.json")
+        GrammarRegistry.getInstance().loadGrammars("textmate/languages.json")
     }
 
     private fun loadDefaultLanguagesWithDSL() {
-        LanguageRegistry.getInstance().loadLanguages(
+        GrammarRegistry.getInstance().loadGrammars(
             languages {
                 language("java") {
                     grammar = "textmate/java/syntaxes/java.tmLanguage.json"
@@ -371,7 +371,7 @@ class MainActivity : AppCompatActivity() {
 
             val language = if (editorLanguage is TextMateLanguage) {
                 editorLanguage.updateLanguage(
-                    DefaultLanguageDefinition.withGrammarSource(
+                    DefaultGrammarDefinition.withGrammarSource(
                         IGrammarSource.fromInputStream(
                             contentResolver.openInputStream(result),
                             result.path, null
@@ -381,7 +381,7 @@ class MainActivity : AppCompatActivity() {
                 editorLanguage
             } else {
                 TextMateLanguage.create(
-                    DefaultLanguageDefinition.withGrammarSource(
+                    DefaultGrammarDefinition.withGrammarSource(
                         IGrammarSource.fromInputStream(
                             contentResolver.openInputStream(result),
                             result.path, null
@@ -538,6 +538,8 @@ class MainActivity : AppCompatActivity() {
                             "TextMate Java",
                             "TextMate Kotlin",
                             "TextMate Python",
+                            "TextMate Html",
+                            "TextMate JavaScript",
                             "TM Language from file",
                             "None"
                         ), -1
@@ -610,7 +612,52 @@ class MainActivity : AppCompatActivity() {
                                 e.printStackTrace()
                             }
 
-                            4 -> loadTMLLauncher.launch("*/*")
+                            4 -> try {
+                                ensureTextmateTheme()
+                                val editorLanguage = editor.editorLanguage
+                                val language = if (editorLanguage is TextMateLanguage) {
+                                    editorLanguage.updateLanguage(
+                                        "text.html.basic"
+                                    )
+                                    editorLanguage
+                                } else {
+                                    TextMateLanguage.create(
+                                        "text.html.basic",
+                                        true
+                                    )
+                                }
+                                editor.setEditorLanguage(
+                                    language
+                                )
+
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+
+                            5 -> try {
+                                ensureTextmateTheme()
+                                val editorLanguage = editor.editorLanguage
+                                val language = if (editorLanguage is TextMateLanguage) {
+                                    editorLanguage.updateLanguage(
+                                        "source.js"
+                                    )
+                                    editorLanguage
+                                } else {
+                                    TextMateLanguage.create(
+                                        "source.js",
+                                        true
+                                    )
+                                }
+                                editor.setEditorLanguage(
+                                    language
+                                )
+
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+
+
+                            6 -> loadTMLLauncher.launch("*/*")
                             else -> editor.setEditorLanguage(EmptyLanguage())
                         }
                         dialog.dismiss()
@@ -686,6 +733,7 @@ class MainActivity : AppCompatActivity() {
                             } catch (e: Exception) {
                                 e.printStackTrace()
                             }
+
                             9 -> try {
                                 ensureTextmateTheme()
                                 ThemeRegistry.getInstance().setTheme("solarized_drak")

@@ -34,45 +34,47 @@ import org.eclipse.tm4e.languageconfiguration.model.LanguageConfiguration;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.langs.textmate.registry.dsl.LanguageDefinitionListBuilder;
-import io.github.rosemoe.sora.langs.textmate.registry.model.LanguageDefinition;
+import io.github.rosemoe.sora.langs.textmate.registry.model.GrammarDefinition;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
-import io.github.rosemoe.sora.langs.textmate.registry.provider.FileProvider;
+import io.github.rosemoe.sora.langs.textmate.registry.provider.FileResolver;
 import io.github.rosemoe.sora.langs.textmate.registry.reader.LanguageDefinitionReader;
 
-public class LanguageRegistry {
+public class GrammarRegistry {
 
-    private static LanguageRegistry instance;
+    private static GrammarRegistry instance;
 
     private Registry registry = new Registry();
 
-    private LanguageRegistry parent;
+    private GrammarRegistry parent;
 
     private final Map</* scopeName */String, LanguageConfiguration> languageConfigurationMap = new LinkedHashMap<>();
 
+    private final Map<String/* */, Integer> scopeName2GrammarId = new LinkedHashMap<>();
+
     private final Map</* name */String, String /* scopeName */> grammarFileName2ScopeName = new LinkedHashMap<>();
 
+    private final Map<String, GrammarDefinition> scopeName2GrammarDefinition = new LinkedHashMap<>();
 
-    public synchronized static LanguageRegistry getInstance() {
+    public synchronized static GrammarRegistry getInstance() {
         if (instance == null) {
-            instance = new LanguageRegistry();
+            instance = new GrammarRegistry();
             instance.initThemeListener();
         }
         return instance;
     }
 
-    private LanguageRegistry() {
+    private GrammarRegistry() {
     }
 
-    public LanguageRegistry(LanguageRegistry parent) {
+    public GrammarRegistry(GrammarRegistry parent) {
         this.parent = parent;
     }
 
@@ -123,7 +125,7 @@ public class LanguageRegistry {
      *
      * @param languageConfiguration loaded language configuration
      * @param grammar               Binding to grammar
-     * @deprecated The grammar file and language configuration file should in most cases be on local file, use {@link LanguageDefinition#getLanguageConfiguration()} and {@link FileProvider} to read the language configuration file
+     * @deprecated The grammar file and language configuration file should in most cases be on local file, use {@link GrammarDefinition#getLanguageConfiguration()} and {@link FileResolver} to read the language configuration file
      */
     @Deprecated
     public synchronized void languageConfigurationToGrammar(LanguageConfiguration languageConfiguration, IGrammar grammar) {
@@ -155,38 +157,41 @@ public class LanguageRegistry {
     }
 
 
-    public Pair<IGrammar, LanguageConfiguration> loadLanguageAndLanguageConfiguration(LanguageDefinition languageDefinition) {
-        var grammar = loadLanguage(languageDefinition);
+    public Pair<IGrammar, LanguageConfiguration> loadLanguageAndLanguageConfiguration(GrammarDefinition grammarDefinition) {
+        var grammar = loadGrammar(grammarDefinition);
 
         var languageConfiguration = findLanguageConfiguration(grammar.getScopeName(), false);
 
         return Pair.create(grammar, languageConfiguration);
     }
 
-    public List<IGrammar> loadLanguages(LanguageDefinitionListBuilder builder) {
-        return builder.build().stream().map(this::loadLanguage).collect(Collectors.toList());
+    public List<IGrammar> loadGrammars(LanguageDefinitionListBuilder builder) {
+        return loadGrammars(builder.build());
     }
 
-    public List<IGrammar> loadLanguages(List<LanguageDefinition> list) {
-        return list.stream().map(this::loadLanguage).collect(Collectors.toList());
+    public List<IGrammar> loadGrammars(List<GrammarDefinition> list) {
+        prepareLoadGrammars(list);
+        return list.stream().map(this::loadGrammar).collect(Collectors.toList());
     }
 
-    public List<IGrammar> loadLanguages(String jsonPath) {
-        return loadLanguages(LanguageDefinitionReader.read(jsonPath));
+    public List<IGrammar> loadGrammars(String jsonPath) {
+        return loadGrammars(LanguageDefinitionReader.read(jsonPath));
     }
 
-    public synchronized IGrammar loadLanguage(LanguageDefinition languageDefinition) {
-        var languageName = languageDefinition.getName();
+    public synchronized IGrammar loadGrammar(GrammarDefinition grammarDefinition) {
+        var languageName = grammarDefinition.getName();
 
-        if (grammarFileName2ScopeName.containsKey(languageName) && languageDefinition.getScopeName() != null) {
+        if (grammarFileName2ScopeName.containsKey(languageName) && grammarDefinition.getScopeName() != null) {
             //loaded
-            return registry.grammarForScopeName(languageDefinition.getScopeName());
+            return registry.grammarForScopeName(grammarDefinition.getScopeName());
         }
 
-        var grammar = doLoadLanguage(languageDefinition);
 
-        if (languageDefinition.getScopeName() != null) {
-            grammarFileName2ScopeName.put(languageName, languageDefinition.getScopeName());
+        var grammar = doLoadGrammar(grammarDefinition);
+
+        if (grammarDefinition.getScopeName() != null) {
+            grammarFileName2ScopeName.put(languageName, grammarDefinition.getScopeName());
+            scopeName2GrammarDefinition.put(grammar.getScopeName(), grammarDefinition);
         }
 
         return grammar;
@@ -194,9 +199,9 @@ public class LanguageRegistry {
     }
 
 
-    private synchronized IGrammar doLoadLanguage(LanguageDefinition languageDefinition) {
+    private synchronized IGrammar doLoadGrammar(GrammarDefinition grammarDefinition) {
 
-        var languageConfigurationPath = languageDefinition.getLanguageConfiguration();
+        var languageConfigurationPath = grammarDefinition.getLanguageConfiguration();
 
         if (languageConfigurationPath != null) {
 
@@ -210,21 +215,39 @@ public class LanguageRegistry {
                         new InputStreamReader(languageConfigurationStream)
                 );
 
-                languageConfigurationMap.put(languageDefinition.getScopeName(), languageConfiguration);
+                languageConfigurationMap.put(grammarDefinition.getScopeName(), languageConfiguration);
 
             }
         }
 
-        var grammar = registry.addGrammar(languageDefinition.getGrammar());
+        IGrammar grammar;
 
-        if (languageDefinition.getScopeName() != null && !grammar.getScopeName().equals(languageDefinition.getScopeName())) {
+        if (!grammarDefinition.getEmbeddedLanguages().isEmpty()) {
+            grammar = registry.addGrammar(grammarDefinition.getGrammar());
+        } else {
+            grammar = registry.addGrammar(
+                    grammarDefinition.getGrammar(),
+                    null,
+                    getOrPullGrammarId(grammarDefinition.getScopeName()),
+                    findGrammarIds(grammarDefinition.getEmbeddedLanguages())
+            );
+        }
+
+        if (grammarDefinition.getScopeName() != null && !grammar.getScopeName().equals(grammarDefinition.getScopeName())) {
             throw new IllegalStateException(
                     String.format("The scope name loaded by the grammar file does not match the declared scope name, it should be %s instead of %s",
-                            grammar.getScopeName(), languageDefinition.getScopeName()));
+                            grammar.getScopeName(), grammarDefinition.getScopeName()));
         }
 
         return grammar;
 
+    }
+
+
+    private void prepareLoadGrammars(List<GrammarDefinition> grammarDefinitions) {
+        for (var grammar : grammarDefinitions) {
+            getOrPullGrammarId(grammar.getScopeName());
+        }
     }
 
     public synchronized void setTheme(ThemeModel themeModel) throws Exception {
@@ -235,6 +258,37 @@ public class LanguageRegistry {
     }
 
 
+    private synchronized int getOrPullGrammarId(String scopeName) {
+        var id = scopeName2GrammarId.get(scopeName);
+
+        if (id == null) {
+            id = scopeName2GrammarId.size() + 2;
+        }
+
+        scopeName2GrammarId.put(scopeName, id);
+
+        return id;
+    }
+
+
+    private synchronized Map<String, Integer> findGrammarIds(Map<String, String> scopeName2LanguageName) {
+        var result = new HashMap<String, Integer>();
+        for (var entry : scopeName2LanguageName.entrySet()) {
+            // scopeName (entry#getKey)
+            result.put(entry.getKey(), getOrPullGrammarId(
+                    getGrammarScopeName(entry.getValue())));
+        }
+        return result;
+    }
+
+    private String getGrammarScopeName(String name) {
+        if (scopeName2GrammarDefinition.containsKey(name)) {
+            return name;
+        }
+        var grammarName = grammarFileName2ScopeName.get(name);
+        return grammarName == null ? name : grammarName;
+    }
+
     public synchronized void dispose(boolean closeParent) {
 
         if (registry == null) {
@@ -244,6 +298,8 @@ public class LanguageRegistry {
         registry = null;
         grammarFileName2ScopeName.clear();
         languageConfigurationMap.clear();
+        scopeName2GrammarId.clear();
+        scopeName2GrammarDefinition.clear();
 
         // if (parent == null) {
         // ? need?

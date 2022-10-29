@@ -72,7 +72,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     private final TextMateLanguage language;
     private final LanguageConfiguration configuration;
 
-    //private final LanguageRegistry languageRegistry;
+    //private final GrammarRegistry grammarRegistry;
 
     private final ThemeRegistry themeRegistry;
 
@@ -82,14 +82,14 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     final IdentifierAutoComplete.SyncIdentifiers syncIdentifiers = new IdentifierAutoComplete.SyncIdentifiers();
 
 
-    public TextMateAnalyzer(TextMateLanguage language, IGrammar grammar, LanguageConfiguration languageConfiguration,/* LanguageRegistry languageRegistry,*/ ThemeRegistry themeRegistry) {
+    public TextMateAnalyzer(TextMateLanguage language, IGrammar grammar, LanguageConfiguration languageConfiguration,/* GrammarRegistry grammarRegistry,*/ ThemeRegistry themeRegistry) {
         this.language = language;
 
         this.theme = themeRegistry.getCurrentThemeModel().getTheme();
 
         this.grammar = grammar;
 
-        //this.languageRegistry = languageRegistry;
+        //this.grammarRegistry = grammarRegistry;
 
         this.themeRegistry = themeRegistry;
 

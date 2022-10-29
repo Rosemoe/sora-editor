@@ -27,7 +27,11 @@ package io.github.rosemoe.sora.langs.textmate.registry.model;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.registry.IGrammarSource;
 
-public interface LanguageDefinition {
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+public interface GrammarDefinition {
 
     String getName();
 
@@ -36,6 +40,10 @@ public interface LanguageDefinition {
 
     @Nullable
     String getScopeName();
+
+    default Map<String,String> getEmbeddedLanguages() {
+        return Collections.emptyMap();
+    }
 
     IGrammarSource getGrammar();
 

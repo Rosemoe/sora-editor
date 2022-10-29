@@ -108,7 +108,7 @@ public class TextMateNewlineHandler implements NewlineHandler {
                 final String increasedIndent = normalizeIndentation(enterAction.indentation + enterAction.appendText);
                 final String typeText = delim + increasedIndent + delim + normalIndent;
 
-                var caretOffset = typeText.length();
+                //var caretOffset = typeText.length();
                 result = new NewlineHandleResult(typeText, 0);
                 break;
             }
@@ -118,7 +118,7 @@ public class TextMateNewlineHandler implements NewlineHandler {
                 final String outdentedText = outdentString(
                         normalizeIndentation(indentation + enterAction.appendText));
 
-                //var caretOffset = (delim + outdentedText).length();
+                // var caretOffset = (delim + outdentedText).length();
                 result = new NewlineHandleResult(outdentedText, 0);
                 break;
         }
@@ -144,7 +144,7 @@ public class TextMateNewlineHandler implements NewlineHandler {
         var beforeEnterText = scopedLineText.substring(0, position.column  /*- 0*/ /*scopedLineTokens.firstCharOffset*/);
 
 
-        //String afterEnterText = null;
+        // String afterEnterText = null;
 
         // selection support
         // if (range.isEmpty()) {
@@ -203,7 +203,7 @@ public class TextMateNewlineHandler implements NewlineHandler {
 
 
     private String outdentString(final String str) {
-        if (str.startsWith("\t")) {//$NON-NLS-1$
+        if (str.startsWith("\t")) { // $NON-NLS-1$
             return str.substring(1);
         }
         final TabSpacesInfo tabSpaces = getTabSpaces();

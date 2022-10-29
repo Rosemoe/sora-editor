@@ -25,8 +25,8 @@
 package io.github.rosemoe.sora.langs.textmate.registry.dsl
 
 import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry
-import io.github.rosemoe.sora.langs.textmate.registry.model.DefaultLanguageDefinition
-import io.github.rosemoe.sora.langs.textmate.registry.model.LanguageDefinition
+import io.github.rosemoe.sora.langs.textmate.registry.model.DefaultGrammarDefinition
+import io.github.rosemoe.sora.langs.textmate.registry.model.GrammarDefinition
 import org.eclipse.tm4e.core.registry.IGrammarSource
 import java.nio.charset.Charset
 
@@ -42,7 +42,7 @@ class LanguageDefinitionListBuilder {
         allBuilder.add(LanguageDefinitionBuilder(name).also(block))
     }
 
-    fun build(): List<LanguageDefinition> =
+    fun build(): List<GrammarDefinition> =
         allBuilder.map {
             val grammarSource = IGrammarSource.fromInputStream(
                 FileProviderRegistry.getInstance().tryGetInputStream(it.grammar),
@@ -50,7 +50,7 @@ class LanguageDefinitionListBuilder {
             )
 
 
-            DefaultLanguageDefinition.withLanguageConfiguration(
+            DefaultGrammarDefinition.withLanguageConfiguration(
                 grammarSource,
                 it.languageConfiguration
             )
@@ -64,8 +64,28 @@ class LanguageDefinitionBuilder(var name: String) {
     var scopeName: String? = null
     var languageConfiguration: String? = null
 
+    var embeddedLanguages: MutableMap<String, String>? = null
+
     fun defaultScopeName(prefix: String = "source") {
         scopeName = "$prefix.$name"
+    }
+
+    fun embeddedLanguages(block: LanguageEmbeddedLanguagesDefinitionBuilder.() -> Unit) {
+        embeddedLanguages = embeddedLanguages ?: mutableMapOf<String, String>()
+        LanguageEmbeddedLanguagesDefinitionBuilder(checkNotNull(embeddedLanguages)).also(block)
+    }
+
+    fun embeddedLanguage(scopeName: String, languageName: String) {
+        embeddedLanguages = embeddedLanguages ?: mutableMapOf<String, String>()
+        embeddedLanguages?.put(scopeName, languageName)
+    }
+}
+
+class LanguageEmbeddedLanguagesDefinitionBuilder(private val map: MutableMap<String, String>) {
+
+
+    infix fun String.to(languageName: String) {
+        map[this] = languageName
     }
 
 }

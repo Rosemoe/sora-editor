@@ -25,28 +25,25 @@ package io.github.rosemoe.sora.langs.textmate.registry.reader;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializer;
-import com.google.gson.TypeAdapter;
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.reflect.TypeToken;
 
 import org.eclipse.tm4e.core.registry.IGrammarSource;
-import org.eclipse.tm4e.languageconfiguration.model.CharacterPair;
-import org.eclipse.tm4e.languageconfiguration.model.OnEnterRule;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry;
-import io.github.rosemoe.sora.langs.textmate.registry.model.DefaultLanguageDefinition;
-import io.github.rosemoe.sora.langs.textmate.registry.model.LanguageDefinition;
+import io.github.rosemoe.sora.langs.textmate.registry.model.DefaultGrammarDefinition;
+import io.github.rosemoe.sora.langs.textmate.registry.model.GrammarDefinition;
 
 public class LanguageDefinitionReader {
 
-    public static List<LanguageDefinition> read(String path) {
+    public static List<GrammarDefinition> read(String path) {
         var stream = FileProviderRegistry.getInstance().tryGetInputStream(path);
         if (stream == null) {
             return Collections.emptyList();
@@ -54,31 +51,58 @@ public class LanguageDefinitionReader {
         return read(new BufferedReader(new InputStreamReader(stream)));
     }
 
-    private static List<LanguageDefinition> read(BufferedReader bufferedReader) {
-        return new GsonBuilder().registerTypeAdapter(LanguageDefinition.class, (JsonDeserializer<LanguageDefinition>) (json, typeOfT, context) -> {
+    private static List<GrammarDefinition> read(BufferedReader bufferedReader) {
+        return new GsonBuilder().registerTypeAdapter(GrammarDefinition.class, (JsonDeserializer<GrammarDefinition>) (json, typeOfT, context) -> {
                     var object = json.getAsJsonObject();
                     var grammarPath = object.get("grammar").getAsString();
                     var name = object.get("name").getAsString();
                     var scopeName = object.get("scopeName").getAsString();
 
+
+                    var embeddedLanguagesElement = object.get("embeddedLanguages");
+
+                    JsonObject embeddedLanguages = null;
+
+                    if (embeddedLanguagesElement != null && embeddedLanguagesElement.isJsonObject()) {
+                        embeddedLanguages = embeddedLanguagesElement.getAsJsonObject();
+                    }
+
+
                     var languageConfigurationElement = object.get("languageConfiguration");
 
                     String languageConfiguration = null;
 
-                    if (!languageConfigurationElement.isJsonNull()) {
+                    if (languageConfigurationElement != null && !languageConfigurationElement.isJsonNull()) {
                         languageConfiguration = languageConfigurationElement.getAsString();
                     }
+
 
                     var grammarSource = IGrammarSource.fromInputStream(FileProviderRegistry.getInstance().tryGetInputStream(
                             grammarPath
                     ), grammarPath, Charset.defaultCharset());
 
-                    return DefaultLanguageDefinition.withLanguageConfiguration(grammarSource, languageConfiguration, name, scopeName);
+                    var grammarDefinition = DefaultGrammarDefinition.withLanguageConfiguration(grammarSource, languageConfiguration, name, scopeName);
 
+                    if (embeddedLanguages != null) {
+                        var embeddedLanguagesMap = new HashMap<String, String>();
+
+                        for (var entry : embeddedLanguages.entrySet()) {
+                            var value = entry.getValue();
+
+                            if (!value.isJsonNull()) {
+                                embeddedLanguagesMap.put(entry.getKey(), value.getAsString());
+                            }
+
+                        }
+
+                        return grammarDefinition.withEmbeddedLanguages(embeddedLanguagesMap);
+                    } else {
+                        return grammarDefinition;
+                    }
 
                 })
                 .create()
-                .fromJson(bufferedReader, LanguageDefinitionList.class).languageDefinition;
+                .fromJson(bufferedReader, LanguageDefinitionList.class).grammarDefinition;
 
 
     }
@@ -86,18 +110,18 @@ public class LanguageDefinitionReader {
 
     static class LanguageDefinitionList {
         @SerializedName("languages")
-        private List<LanguageDefinition> languageDefinition;
+        private List<GrammarDefinition> grammarDefinition;
 
-        public LanguageDefinitionList(List<LanguageDefinition> languageDefinition) {
-            this.languageDefinition = languageDefinition;
+        public LanguageDefinitionList(List<GrammarDefinition> grammarDefinition) {
+            this.grammarDefinition = grammarDefinition;
         }
 
-        public List<LanguageDefinition> getLanguageDefinition() {
-            return languageDefinition;
+        public List<GrammarDefinition> getLanguageDefinition() {
+            return grammarDefinition;
         }
 
-        public void setLanguageDefinition(List<LanguageDefinition> languageDefinition) {
-            this.languageDefinition = languageDefinition;
+        public void setLanguageDefinition(List<GrammarDefinition> grammarDefinition) {
+            this.grammarDefinition = grammarDefinition;
         }
     }
 

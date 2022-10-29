@@ -23,38 +23,33 @@
  */
 package io.github.rosemoe.sora.langs.textmate.registry.provider;
 
-import android.content.Context;
-import android.content.res.AssetManager;
-
 import androidx.annotation.Nullable;
 
-import java.io.IOException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.lang.ref.WeakReference;
 
-public class AssetsFileProvider implements FileProvider {
-
-    private AssetManager assetManager;
-
-    public AssetsFileProvider(AssetManager assetManager) {
-        this.assetManager = assetManager;
-    }
-
+@FunctionalInterface
+public interface FileResolver {
     @Nullable
-    @Override
-    public InputStream provideStream(String path) {
+    InputStream resolveStreamByPath(String path);
 
-        try {
-            return assetManager.open(path);
-        } catch (IOException e) {
-            e.printStackTrace();
+    default void dispose() {
+
+    }
+
+    FileResolver DEFAULT = path -> {
+        var file = new File(path);
+        if (file.isFile()) {
+            try {
+                return new FileInputStream(file);
+            } catch (FileNotFoundException e) {
+                return null;
+            }
+        } else {
+            return null;
         }
-        return null;
 
-    }
-
-    @Override
-    public void dispose() {
-        assetManager = null;
-    }
+    };
 }

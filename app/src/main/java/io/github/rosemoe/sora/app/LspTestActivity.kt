@@ -35,32 +35,25 @@ import androidx.lifecycle.lifecycleScope
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry
-import io.github.rosemoe.sora.langs.textmate.registry.LanguageRegistry
+import io.github.rosemoe.sora.langs.textmate.registry.GrammarRegistry
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
 import io.github.rosemoe.sora.langs.textmate.registry.dsl.languages
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
-import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileProvider
+import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
 import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvider
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspEditorManager
-import io.github.rosemoe.sora.lsp.requests.Timeout
-import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.URIUtils
 import io.github.rosemoe.sora.text.ContentCreator
 import io.github.rosemoe.sora.widget.CodeEditor
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.eclipse.tm4e.core.registry.IGrammarSource
 import org.eclipse.tm4e.core.registry.IThemeSource
 import java.io.*
 import java.net.ServerSocket
 import java.util.zip.ZipFile
-import kotlin.concurrent.thread
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 class LspTestActivity : AppCompatActivity() {
     private lateinit var editor: CodeEditor
@@ -211,7 +204,7 @@ class LspTestActivity : AppCompatActivity() {
     private fun createTextMateLanguage(): TextMateLanguage {
 
 
-        LanguageRegistry.getInstance().loadLanguages(
+        GrammarRegistry.getInstance().loadGrammars(
             languages {
                 language("xml") {
                     grammar = "textmate/xml/syntaxes/xml.tmLanguage.json"
@@ -231,7 +224,11 @@ class LspTestActivity : AppCompatActivity() {
         var editorColorScheme = editor.colorScheme
         if (editorColorScheme !is TextMateColorScheme) {
 
-            FileProviderRegistry.getInstance().addFileProvider(AssetsFileProvider(assets))
+            FileProviderRegistry.getInstance().addFileProvider(
+                AssetsFileResolver(
+                    assets
+                )
+            )
 
             val themeRegistry = ThemeRegistry.getInstance()
 

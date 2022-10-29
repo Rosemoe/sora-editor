@@ -29,17 +29,17 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.rosemoe.sora.langs.textmate.registry.provider.FileProvider;
+import io.github.rosemoe.sora.langs.textmate.registry.provider.FileResolver;
 
 public class FileProviderRegistry {
 
 
-    private final List<FileProvider> allFileProviders = new ArrayList<>();
+    private final List<FileResolver> allFileResolvers = new ArrayList<>();
 
     private static FileProviderRegistry fileProviderRegistry;
 
     private FileProviderRegistry() {
-        allFileProviders.add(FileProvider.DEFAULT);
+        allFileResolvers.add(FileResolver.DEFAULT);
     }
 
     public static synchronized FileProviderRegistry getInstance() {
@@ -48,22 +48,22 @@ public class FileProviderRegistry {
         return fileProviderRegistry;
     }
 
-    public synchronized void addFileProvider(FileProvider fileProvider) {
-        if (fileProvider != FileProvider.DEFAULT) {
-            allFileProviders.add(fileProvider);
+    public synchronized void addFileProvider(FileResolver fileResolver) {
+        if (fileResolver != FileResolver.DEFAULT) {
+            allFileResolvers.add(fileResolver);
         }
     }
 
-    public synchronized void removeFileProvider(FileProvider fileProvider) {
-        if (fileProvider != FileProvider.DEFAULT) {
-            allFileProviders.remove(fileProvider);
+    public synchronized void removeFileProvider(FileResolver fileResolver) {
+        if (fileResolver != FileResolver.DEFAULT) {
+            allFileResolvers.remove(fileResolver);
         }
     }
 
     @Nullable
     public InputStream tryGetInputStream(String path) {
-        for (var provider : allFileProviders) {
-            var stream = provider.provideStream(path);
+        for (var provider : allFileResolvers) {
+            var stream = provider.resolveStreamByPath(path);
             if (stream!=null) {
                 return stream;
             }
@@ -72,11 +72,11 @@ public class FileProviderRegistry {
     }
 
     public void dispose() {
-        for (var provider : allFileProviders) {
+        for (var provider : allFileResolvers) {
             provider.dispose();
         }
 
-        allFileProviders.clear();
+        allFileResolvers.clear();
     }
 
 }
