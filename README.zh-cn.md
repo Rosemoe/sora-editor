@@ -12,10 +12,10 @@ sora-editor是安卓平台上很棒的高效代码编辑器
 
 </div>
 
-* 阅读其他的语言文档: [English](README.md), [简体中文](README.zh-cn.md).*
-  ***正在开发中*** 这个项目仍在缓慢开发中.   
-  请从[Releases](https://github.com/Rosemoe/CodeEditor/releases)
-  下载最新的源代码，而不是直接克隆此项目。**欢迎提交问题和合并请求**
+阅读其他的语言文档: [English](README.md), [简体中文](README.zh-cn.md).
+***正在开发中*** 这个项目仍在缓慢开发中.   
+请从[Releases](https://github.com/Rosemoe/CodeEditor/releases)
+下载最新的源代码，而不是直接克隆此项目。**欢迎提交问题和合并请求**
 
 ## 特色
 
@@ -113,5 +113,6 @@ additional information or have any questions
 ## 鸣谢
 
 感谢[JetBrains](https://www.jetbrains.com/?from=CodeEditor)
-提供的例如[IntelliJ IDEA](https://www.jetbrains.com/idea/?from=CodeEditor)等IDE的免费许可证。
+提供的如[IntelliJ IDEA](https://www.jetbrains.com/idea/?from=CodeEditor)等IDE的免费许可证。
+
 [<img src=".github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)
