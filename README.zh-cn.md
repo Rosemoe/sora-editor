@@ -8,7 +8,7 @@
 [![Telegram](https://img.shields.io/badge/Join-Telegram-blue)](https://t.me/rosemoe_code_editor)
 [![QQ](https://img.shields.io/badge/Join-QQ_Group-ff69b4)](https://jq.qq.com/?_wv=1027&k=n68uxQws)
 
-sora-editor是安卓平台上很棒的高效代码编辑器
+sora-editor是一款高效的安卓代码编辑器
 
 </div>
 
@@ -22,12 +22,12 @@ sora-editor是安卓平台上很棒的高效代码编辑器
 ## 特色
 
 - [x] 语法高亮
-- [x] 自动补全 (包含[代码块](https://macromates.com/manual/en/snippets))
+- [x] 自动补全 (包含对[代码块（Code Snippets）](https://macromates.com/manual/en/snippets)的支持)
 - [x] 自动缩进
 - [x] 代码块辅助线
-- [x] 文本缩放
+- [x] 手势缩放
 - [x] 撤销/重做
-- [x] 文本的搜索及替换
+- [x] 搜索和替换文本
 - [x] 自动换行
 - [x] 显示不可打印的字符
 - [x] 错误/警告/错字/弃用指示器
@@ -36,23 +36,23 @@ sora-editor是安卓平台上很棒的高效代码编辑器
 - [x] 高亮显示括号对
 - [x] 事件系统
 
-## 按键绑定
+## 快捷键绑定
 
-使用物理键盘时，您可以使用按键绑定来执行各种文本操作。
+使用物理键盘时，您可以使用快捷键来执行各种文本操作。
 
-一般情况下，编辑器默认支持某些按键的绑定，但是你可以实现 [`KeyBindingEvent`](https://github.com/Rosemoe/sora-editor/blob/main/editor/src/main/java/io/github/rosemoe/sora/event/KeyBindingEvent.java)
-并添加自己的按键绑定事件，甚至可以覆盖默认绑定的按键事件并执行自己定义的操作。
+编辑器默认支持了一些快捷键，但是你可以订阅 [`KeyBindingEvent`](https://github.com/Rosemoe/sora-editor/blob/main/editor/src/main/java/io/github/rosemoe/sora/event/KeyBindingEvent.java)
+并处理它来实现自己的快捷键，当然也可以覆盖默认的快捷键操作并执行自定义操作。
 
-当前支持的键绑定大多类似于 Android Studio/Intellij IDEA，可参见[支持的按键绑定](./keybindings.md).
+当前编辑器支持的快捷键大多与 Android Studio/Intellij IDEA 的快捷键类似，可参见[支持的快捷键](./keybindings.md).
 
-## 截图
+## 编辑器预览图
 
 <div style="overflow: hidden">
 <img src="/images/general.jpg" alt="GeneralAppearance" width="40%" align="bottom" />
 <img src="/images/problem_indicators.jpg" alt="ProblemIndicator" width="40%" align="bottom" />
 </div>
 
-## 快速开始
+## 快速使用
 
 为您的项目添加依赖:
 
@@ -63,22 +63,22 @@ implementation 'io.github.Rosemoe.sora-editor:<moduleName>:<versionName>'
 可用模块:
 
 - editor   
-  包含基本内容的框架。
+  包含编辑器的核心框架。
 - editor-lsp   
   可以使用语言服务器协议（简称LSP）创建语言的便捷工具库。
 - language-java   
-  包含Java高亮和自动补全的基本实现。
+  包含Java高亮和自动补全的语言库。
 - language-textmate   
-  一个高效的编辑器高亮渲染器。依赖这个工具库后，你可以使用并加载textmate语言配置文件。
+  一个高级的高亮分析库。你可以借助它来加载textmate语言配置文件并应用于本编辑器。
 
   内部实现来自[tm4e](https://github.com/eclipse/tm4e)。
 
-你可以从顶部的徽章或者[Releases](https://github.com/Rosemoe/CodeEditor/releases)查看是否有最新的版本。
+你可以从顶部的徽章或者[Releases](https://github.com/Rosemoe/CodeEditor/releases)找到最新的编辑器版本。
 
 ## 讨论
 
 * QQ群:[216632648](https://jq.qq.com/?_wv=1027&k=n68uxQws)
-* [Telegram Group](https://t.me/rosemoe_code_editor)
+* [Telegram 群组](https://t.me/rosemoe_code_editor)
 
 ## 贡献者
 
@@ -114,7 +114,7 @@ additional information or have any questions
 
 ## 鸣谢
 
-感谢[JetBrains](https://www.jetbrains.com/?from=CodeEditor)
-提供的如[IntelliJ IDEA](https://www.jetbrains.com/idea/?from=CodeEditor)等IDE的免费许可证。
+感谢[JetBrains](https://www.jetbrains.com/?from=CodeEditor)为本项目
+提供的[IntelliJ IDEA](https://www.jetbrains.com/idea/?from=CodeEditor)等IDE的免费许可证。
 
 [<img src=".github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)
