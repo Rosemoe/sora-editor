@@ -21,23 +21,35 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package org.eclipse.tm4e.languageconfiguration.utils;
+package io.github.rosemoe.sora.langs.textmate.registry.provider;
 
-public final class TabSpacesInfo {
+import androidx.annotation.Nullable;
 
-	private final int tabSize;
-	private final boolean insertSpaces;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 
-	public TabSpacesInfo(final int tabSize, final boolean insertSpaces) {
-		this.tabSize = tabSize;
-		this.insertSpaces = insertSpaces;
-	}
+@FunctionalInterface
+public interface FileResolver {
+    @Nullable
+    InputStream resolveStreamByPath(String path);
 
-	public int getTabSize() {
-		return tabSize;
-	}
+    default void dispose() {
 
-	public boolean isInsertSpaces() {
-		return insertSpaces;
-	}
+    }
+
+    FileResolver DEFAULT = path -> {
+        var file = new File(path);
+        if (file.isFile()) {
+            try {
+                return new FileInputStream(file);
+            } catch (FileNotFoundException e) {
+                return null;
+            }
+        } else {
+            return null;
+        }
+
+    };
 }

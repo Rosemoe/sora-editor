@@ -21,9 +21,11 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.textmate;
+package io.github.rosemoe.sora.langs.textmate.utils;
 
-public class StringUtil {
+import java.util.regex.Pattern;
+
+public class StringUtils {
 
     public static boolean checkSurrogate(String text) {
         for (int i = 0; i < text.length(); i++) {
@@ -51,4 +53,11 @@ public class StringUtil {
         return offset;
     }
 
+
+    private static final Pattern MATCH_PATTERN = Pattern.compile(".*/|\\..*");
+
+    public static String getFileNameWithoutExtension(String filePath) {
+        return MATCH_PATTERN.matcher(filePath).replaceAll("");
+
+    }
 }

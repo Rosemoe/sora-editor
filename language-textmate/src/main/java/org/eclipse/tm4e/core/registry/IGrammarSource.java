@@ -102,7 +102,22 @@ public interface IGrammarSource {
                 }
             }
 
-            return fromString(contentType1, builder.toString());
+            return new IGrammarSource() {
+                @Override
+                public String getFilePath() {
+                    return fileName;
+                }
+
+                @Override
+                public Reader getReader() throws IOException {
+                    return new StringReader(builder.toString());
+                }
+
+                @Override
+                public ContentType getContentType() {
+                    return contentType1;
+                }
+            };
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

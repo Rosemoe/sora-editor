@@ -21,23 +21,30 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package org.eclipse.tm4e.languageconfiguration.utils;
+package io.github.rosemoe.sora.langs.textmate.registry.model;
 
-public final class TabSpacesInfo {
 
-	private final int tabSize;
-	private final boolean insertSpaces;
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tm4e.core.registry.IGrammarSource;
 
-	public TabSpacesInfo(final int tabSize, final boolean insertSpaces) {
-		this.tabSize = tabSize;
-		this.insertSpaces = insertSpaces;
-	}
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-	public int getTabSize() {
-		return tabSize;
-	}
+public interface GrammarDefinition {
 
-	public boolean isInsertSpaces() {
-		return insertSpaces;
-	}
+    String getName();
+
+    @Nullable
+    String getLanguageConfiguration();
+
+    @Nullable
+    String getScopeName();
+
+    default Map<String,String> getEmbeddedLanguages() {
+        return Collections.emptyMap();
+    }
+
+    IGrammarSource getGrammar();
+
 }

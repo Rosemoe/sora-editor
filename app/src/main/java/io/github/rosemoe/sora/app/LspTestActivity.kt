@@ -34,27 +34,26 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
+import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry
+import io.github.rosemoe.sora.langs.textmate.registry.GrammarRegistry
+import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
+import io.github.rosemoe.sora.langs.textmate.registry.dsl.languages
+import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
+import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
 import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvider
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspEditorManager
-import io.github.rosemoe.sora.lsp.requests.Timeout
-import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.URIUtils
 import io.github.rosemoe.sora.text.ContentCreator
 import io.github.rosemoe.sora.widget.CodeEditor
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.eclipse.tm4e.core.registry.IGrammarSource
 import org.eclipse.tm4e.core.registry.IThemeSource
 import java.io.*
 import java.net.ServerSocket
 import java.util.zip.ZipFile
-import kotlin.concurrent.thread
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 class LspTestActivity : AppCompatActivity() {
     private lateinit var editor: CodeEditor
@@ -203,26 +202,49 @@ class LspTestActivity : AppCompatActivity() {
     }
 
     private fun createTextMateLanguage(): TextMateLanguage {
-        return TextMateLanguage.createNoCompletion(
-            IGrammarSource.fromInputStream(
-                assets.open("textmate/xml/syntaxes/xml.tmLanguage.json"),
-                "xml.tmLanguage.json",
-                null
-            ),
-            InputStreamReader(assets.open("textmate/xml/language-configuration.json")),
-            (editor.colorScheme as TextMateColorScheme).themeSource
+
+
+        GrammarRegistry.getInstance().loadGrammars(
+            languages {
+                language("xml") {
+                    grammar = "textmate/xml/syntaxes/xml.tmLanguage.json"
+                    scopeName = "text.xml"
+                    languageConfiguration = "textmate/xml/language-configuration.json"
+                }
+            }
+        )
+
+
+        return TextMateLanguage.create(
+            "text.xml", false
         )
     }
 
     private fun ensureTextmateTheme() {
         var editorColorScheme = editor.colorScheme
         if (editorColorScheme !is TextMateColorScheme) {
-            val themeSource = IThemeSource.fromInputStream(
-                assets.open("textmate/QuietLight.tmTheme"),
-                "QuietLight.tmTheme",
-                null
+
+            FileProviderRegistry.getInstance().addFileProvider(
+                AssetsFileResolver(
+                    assets
+                )
             )
-            editorColorScheme = TextMateColorScheme.create(themeSource)
+
+            val themeRegistry = ThemeRegistry.getInstance()
+
+            val path = "textmate/quietlight.json"
+            themeRegistry.loadTheme(
+                ThemeModel(
+                    IThemeSource.fromInputStream(
+                        FileProviderRegistry.getInstance().tryGetInputStream(path), path, null
+                    ), "quitelight"
+                )
+            )
+
+
+            themeRegistry.setTheme("quietlight")
+
+            editorColorScheme = TextMateColorScheme.create(themeRegistry)
             editor.colorScheme = editorColorScheme
         }
     }

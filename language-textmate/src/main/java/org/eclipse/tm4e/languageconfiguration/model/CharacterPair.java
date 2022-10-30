@@ -23,6 +23,8 @@
  */
 package org.eclipse.tm4e.languageconfiguration.model;
 
+import java.util.Objects;
+
 /**
  * A tuple of two characters, like a pair of opening and closing brackets.
  *
@@ -38,5 +40,23 @@ public class CharacterPair {
 	public CharacterPair(final String opening, final String closing) {
 		this.open = opening;
 		this.close = closing;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		CharacterPair that = (CharacterPair) o;
+
+		if (!Objects.equals(open, that.open)) return false;
+		return Objects.equals(close, that.close);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = open != null ? open.hashCode() : 0;
+		result = 31 * result + (close != null ? close.hashCode() : 0);
+		return result;
 	}
 }

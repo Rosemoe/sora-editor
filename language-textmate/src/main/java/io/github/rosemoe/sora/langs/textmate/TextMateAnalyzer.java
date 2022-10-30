@@ -28,9 +28,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
 
-import java.io.Reader;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -45,6 +43,9 @@ import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.langs.textmate.folding.FoldingHelper;
 import io.github.rosemoe.sora.langs.textmate.folding.IndentRange;
+import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
+import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
+import io.github.rosemoe.sora.langs.textmate.utils.StringUtils;
 import io.github.rosemoe.sora.text.Content;
 
 import org.eclipse.tm4e.core.grammar.IGrammar;
@@ -56,10 +57,6 @@ import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
 import org.eclipse.tm4e.core.internal.theme.FontStyle;
 import org.eclipse.tm4e.core.internal.theme.Theme;
-import org.eclipse.tm4e.core.internal.theme.ThemeReader;
-import org.eclipse.tm4e.core.registry.IGrammarSource;
-import org.eclipse.tm4e.core.registry.IThemeSource;
-import org.eclipse.tm4e.core.registry.Registry;
 import org.eclipse.tm4e.languageconfiguration.model.LanguageConfiguration;
 
 import io.github.rosemoe.sora.text.ContentLine;
@@ -68,33 +65,46 @@ import io.github.rosemoe.sora.util.ArrayList;
 import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
-public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Span> implements FoldingHelper {
+public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Span> implements FoldingHelper, ThemeRegistry.ThemeChangeListener {
 
-    private final Registry registry = new Registry();
     private final IGrammar grammar;
     private Theme theme;
     private final TextMateLanguage language;
     private final LanguageConfiguration configuration;
+
+    //private final GrammarRegistry grammarRegistry;
+
+    private final ThemeRegistry themeRegistry;
+
     private OnigRegExp cachedRegExp;
     private boolean foldingOffside;
     private BracketsProvider bracketsProvider;
     final IdentifierAutoComplete.SyncIdentifiers syncIdentifiers = new IdentifierAutoComplete.SyncIdentifiers();
 
 
-    public TextMateAnalyzer(TextMateLanguage language, IGrammarSource grammarSource, Reader languageConfigurationReader, IThemeSource themeSource) throws Exception {
-        registry.setTheme(themeSource);
+    public TextMateAnalyzer(TextMateLanguage language, IGrammar grammar, LanguageConfiguration languageConfiguration,/* GrammarRegistry grammarRegistry,*/ ThemeRegistry themeRegistry) {
         this.language = language;
-        this.theme = Theme.createFromRawTheme(ThemeReader.readTheme(themeSource), null);
 
-        this.grammar = registry.addGrammar(grammarSource);
-        if (languageConfigurationReader != null) {
-            configuration = LanguageConfiguration.load(languageConfigurationReader);
-            var pairs = configuration.getBrackets();
+        this.theme = themeRegistry.getCurrentThemeModel().getTheme();
+
+        this.grammar = grammar;
+
+        //this.grammarRegistry = grammarRegistry;
+
+        this.themeRegistry = themeRegistry;
+
+        if (!themeRegistry.hasListener(this)) {
+            themeRegistry.addListener(this);
+        }
+
+        if (languageConfiguration != null) {
+            configuration = languageConfiguration;
+            var pairs = languageConfiguration.getBrackets();
             if (pairs != null && pairs.size() != 0) {
                 int size = pairs.size();
                 for (var pair : pairs) {
                     if (pair.open.length() != 1 || pair.close.length() != 1) {
-                        size --;
+                        size--;
                     }
                 }
                 var pairArr = new char[size * 2];
@@ -112,6 +122,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
         } else {
             configuration = null;
         }
+
         createFoldingExp();
     }
 
@@ -198,22 +209,23 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     public synchronized LineTokenizeResult<MyState, Span> tokenizeLine(CharSequence lineC, MyState state, int lineIndex) {
         String line = (lineC instanceof ContentLine) ? ((ContentLine) lineC).toStringWithNewline() : lineC.toString();
         var tokens = new ArrayList<Span>();
-        var surrogate = StringUtil.checkSurrogate(line);
+        var surrogate = StringUtils.checkSurrogate(line);
         var lineTokens = grammar.tokenizeLine2(line, state == null ? null : state.tokenizeState, Duration.ofSeconds(2));
         int tokensLength = lineTokens.getTokens().length / 2;
         var identifiers = language.createIdentifiers ? new ArrayList<String>() : null;
         for (int i = 0; i < tokensLength; i++) {
-            int startIndex = StringUtil.convertUnicodeOffsetToUtf16(line, lineTokens.getTokens()[2 * i], surrogate);
+            int startIndex = StringUtils.convertUnicodeOffsetToUtf16(line, lineTokens.getTokens()[2 * i], surrogate);
             if (i == 0 && startIndex != 0) {
                 tokens.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
             }
             int metadata = lineTokens.getTokens()[2 * i + 1];
             int foreground = EncodedTokenAttributes.getForeground(metadata);
             int fontStyle = EncodedTokenAttributes.getFontStyle(metadata);
+            var tokenType = EncodedTokenAttributes.getTokenType(metadata);
             if (language.createIdentifiers) {
-                var type = EncodedTokenAttributes.getTokenType(metadata);
-                if (type == StandardTokenType.Other) {
-                    var end = i + 1 == tokensLength ? lineC.length() : StringUtil.convertUnicodeOffsetToUtf16(line, lineTokens.getTokens()[2 * (i + 1)], surrogate);
+
+                if (tokenType == StandardTokenType.Other) {
+                    var end = i + 1 == tokensLength ? lineC.length() : StringUtils.convertUnicodeOffsetToUtf16(line, lineTokens.getTokens()[2 * (i + 1)], surrogate);
                     if (end > startIndex && MyCharacter.isJavaIdentifierStart(line.charAt(startIndex))) {
                         var flag = true;
                         for (int j = startIndex + 1; j < end; j++) {
@@ -229,6 +241,8 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
                 }
             }
             Span span = Span.obtain(startIndex, TextStyle.makeStyle(foreground + 255, 0, (fontStyle & FontStyle.Bold) != 0, (fontStyle & FontStyle.Italic) != 0, false));
+
+            span.extra = tokenType;
 
             if ((fontStyle & FontStyle.Underline) != 0) {
                 String color = theme.getColor(foreground);
@@ -269,14 +283,18 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     }
 
     @Override
+    public void destroy() {
+        super.destroy();
+        themeRegistry.removeListener(this);
+    }
+
+    @Override
     public List<Span> generateSpansForLine(LineTokenizeResult<MyState, Span> tokens) {
         return null;
     }
 
-    @WorkerThread
-    public void updateTheme(IThemeSource source) throws Exception {
-        registry.setTheme(source);
-        this.theme = Theme.createFromRawTheme(ThemeReader.readTheme(source), null);
+    @Override
+    public void onChangeTheme(ThemeModel newTheme) {
+        this.theme = newTheme.getTheme();
     }
-
 }
