@@ -540,6 +540,7 @@ class MainActivity : AppCompatActivity() {
                             "TextMate Python",
                             "TextMate Html",
                             "TextMate JavaScript",
+                            "TextMate MarkDown",
                             "TM Language from file",
                             "None"
                         ), -1
@@ -656,8 +657,29 @@ class MainActivity : AppCompatActivity() {
                                 e.printStackTrace()
                             }
 
+                            6 -> try {
+                                ensureTextmateTheme()
+                                val editorLanguage = editor.editorLanguage
+                                val language = if (editorLanguage is TextMateLanguage) {
+                                    editorLanguage.updateLanguage(
+                                        "text.html.markdown"
+                                    )
+                                    editorLanguage
+                                } else {
+                                    TextMateLanguage.create(
+                                        "text.html.markdown",
+                                        true
+                                    )
+                                }
+                                editor.setEditorLanguage(
+                                    language
+                                )
 
-                            6 -> loadTMLLauncher.launch("*/*")
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+
+                            7 -> loadTMLLauncher.launch("*/*")
                             else -> editor.setEditorLanguage(EmptyLanguage())
                         }
                         dialog.dismiss()

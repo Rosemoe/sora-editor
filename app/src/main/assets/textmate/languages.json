@@ -28,16 +28,29 @@
       "grammar": "textmate/html/syntaxes/html.tmLanguage.json",
       "name": "html",
       "scopeName": "text.html.basic",
+      "languageConfiguration": "textmate/html/language-configuration.json",
       "embeddedLanguages": {
         "source.js": "javascript"
-      },
-      "languageConfiguration": "textmate/html/language-configuration.json"
+      }
     },
     {
       "grammar": "textmate/javascript/syntaxes/JavaScript.tmLanguage.json",
       "name": "javascript",
       "scopeName": "source.js",
       "languageConfiguration": "textmate/javascript/language-configuration.json"
+    },
+    {
+      "name": "markdown",
+      "scopeName": "text.html.markdown",
+      "grammar": "textmate/markdown/syntaxes/markdown.tmLanguage.json",
+      "languageConfiguration": "textmate/markdown/language-configuration.json",
+      "embeddedLanguages": {
+        "meta.embedded.block.html": "html",
+        "source.js": "javascript",
+        "meta.embedded.block.java": "java",
+        "meta.embedded.block.xml": "xml",
+        "meta.embedded.block.python": "python"
+      }
     }
   ]
 }
