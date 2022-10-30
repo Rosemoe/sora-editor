@@ -55,6 +55,11 @@ public class EditorKeyEvent extends ResultedEvent<Boolean> {
         altPressed = getEditor().getKeyMetaStates().isAltPressed();
     }
 
+    @Override
+    public boolean canIntercept() {
+        return true;
+    }
+
     public int getAction() {
         return src.getAction();
     }
