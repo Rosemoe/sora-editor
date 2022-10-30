@@ -266,8 +266,8 @@ public class TextMateLanguage extends EmptyLanguage {
         return useTab;
     }
 
-    public void useTab(boolean ussTab) {
-        this.useTab = ussTab;
+    public void useTab(boolean useTab) {
+        this.useTab = useTab;
     }
 
     public TextMateNewlineHandler getNewlineHandler() {

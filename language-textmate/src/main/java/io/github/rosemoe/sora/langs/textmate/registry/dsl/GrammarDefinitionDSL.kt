@@ -53,7 +53,7 @@ class LanguageDefinitionListBuilder {
             DefaultGrammarDefinition.withLanguageConfiguration(
                 grammarSource,
                 it.languageConfiguration
-            )
+            ).withEmbeddedLanguages(it.embeddedLanguages)
 
         }
 
