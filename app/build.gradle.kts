@@ -34,10 +34,25 @@ android {
         versionCode = Versions.versionCode
         versionName = Versions.versionName + "-" + System.currentTimeMillis()
     }
+    signingConfigs {
+        create("general") {
+            storeFile = file("../debug.jks")
+            storePassword = "114514"
+            keyAlias = "debug"
+            keyPassword = "114514"
+            this.enableV1Signing = true
+            this.enableV2Signing = true
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("general")
+            proguardFiles("proguard-rules.pro")
+        }
+        debug {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("general")
             proguardFiles("proguard-rules.pro")
         }
     }
