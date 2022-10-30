@@ -21,35 +21,25 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-@file:Suppress("UnstableApiUsage")
 
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
+plugins {
+    id("com.vanniktech.maven.publish.base")
+    id("java-platform")
+}
+
+dependencies {
+    constraints {
+        project.rootProject.subprojects.forEach { subproject ->
+            if (subproject.name != "bom") {
+                api(subproject)
+            }
+        }
     }
 }
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://repo.eclipse.org/content/groups/releases/")
-        maven("https://maven.aliyun.com/nexus/content/groups/public/")
+publishing {
+    publications.create<MavenPublication>("maven") {
+        from(project.components["javaPlatform"])
     }
 }
-
-rootProject.name="sora-editor"
-include(
-    ":bom",
-    ":editor",
-    ":app",
-    ":language-java",
-    ":language-textmate",
-    ":editor-lsp",
-    ":language-treesitter"
-)
