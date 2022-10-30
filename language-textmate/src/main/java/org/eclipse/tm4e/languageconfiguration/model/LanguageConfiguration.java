@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigRegExp;
 import org.eclipse.tm4e.languageconfiguration.model.EnterAction.IndentAction;
 import org.eclipse.tm4e.languageconfiguration.utils.RegExpUtils;
 import org.eclipse.tm4e.languageconfiguration.utils.TextUtils;
@@ -197,6 +198,33 @@ public class LanguageConfiguration {
                             : new AutoClosingPairConditional(open, close, notInList);
                 })
 
+                .registerTypeAdapter(IndentationRules.class, (JsonDeserializer<IndentationRules>) (json, typeT, context) -> {
+
+                    if (!json.isJsonObject()) {
+                        return null;
+                    }
+
+                    final var object = json.getAsJsonObject();
+
+                    final var increaseIndentPattern = getAsOnigRegExp(
+                            object.get("increaseIndentPattern"));
+
+                    final var decreaseIndentPattern = getAsOnigRegExp(
+                            object.get("decreaseIndentPattern"));
+
+                    final var indentNextLinePattern = getAsOnigRegExp(
+                            object.get("indentNextLinePattern"));
+
+                    final var unIndentedLinePattern = getAsOnigRegExp(
+                            object.get("unIndentedLinePattern"));
+
+                    if (increaseIndentPattern == null || decreaseIndentPattern == null) {
+                        return null;
+                    }
+
+                    return new IndentationRules(decreaseIndentPattern,increaseIndentPattern,indentNextLinePattern,unIndentedLinePattern);
+                })
+
                 .registerTypeAdapter(FoldingRules.class, (JsonDeserializer<FoldingRules>) (json, typeOfT, context) -> {
                     if (!json.isJsonObject()) {
                         return null;
@@ -229,6 +257,17 @@ public class LanguageConfiguration {
             pattern = getAsString(element);
         }
         return pattern == null ? null : RegExpUtils.create(pattern);
+    }
+
+    @Nullable
+    private static OnigRegExp getAsOnigRegExp(@Nullable final JsonElement element) {
+        String pattern;
+        if (element != null && element.isJsonObject()) {
+            pattern = element.getAsJsonObject().get("pattern").getAsString();
+        } else {
+            pattern = getAsString(element);
+        }
+        return pattern == null ? null : new OnigRegExp(pattern);
     }
 
     @Nullable
@@ -350,6 +389,17 @@ public class LanguageConfiguration {
     }
 
     // TODO @Nullable List<CharacterPair> getColorizedBracketPairs();
+
+
+    private IndentationRules indentationRules;
+
+    /**
+     * The language's indentation settings.
+     */
+    @Nullable
+    public IndentationRules getIndentationRules() {
+        return indentationRules;
+    }
 
     @Nullable
     private String autoCloseBefore;

@@ -55,9 +55,10 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
 public class TextMateLanguage extends EmptyLanguage {
 
-    // use for TextMateSymbolPairMatch
-
     private int tabSize = 4;
+
+    private boolean useTab = false;
+
     private final IdentifierAutoComplete autoComplete = new IdentifierAutoComplete();
     boolean autoCompleteEnabled;
     final boolean createIdentifiers;
@@ -259,6 +260,15 @@ public class TextMateLanguage extends EmptyLanguage {
         return tabSize;
     }
 
+
+    @Override
+    public boolean useTab() {
+        return useTab;
+    }
+
+    public void useTab(boolean ussTab) {
+        this.useTab = ussTab;
+    }
 
     public TextMateNewlineHandler getNewlineHandler() {
         return newlineHandler;

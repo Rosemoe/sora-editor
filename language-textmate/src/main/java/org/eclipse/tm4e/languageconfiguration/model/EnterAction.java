@@ -34,7 +34,9 @@ import org.eclipse.jdt.annotation.Nullable;
  */
 public class EnterAction {
 
-	public enum IndentAction {
+
+
+    public enum IndentAction {
 		/**
 		 * Insert new line and copy the previous line's indentation.
 		 */
@@ -91,5 +93,12 @@ public class EnterAction {
 	EnterAction withRemoveText(@Nullable final Integer removeText) {
 		this.removeText = removeText;
 		return this;
+	}
+
+	public EnterAction copy() {
+		var copy = new EnterAction(indentAction);
+		copy.appendText = appendText;
+		copy.removeText = removeText;
+		return copy;
 	}
 }

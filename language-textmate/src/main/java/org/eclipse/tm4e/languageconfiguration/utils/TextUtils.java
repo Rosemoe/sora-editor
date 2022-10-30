@@ -23,6 +23,7 @@
  */
 package org.eclipse.tm4e.languageconfiguration.utils;
 
+import io.github.rosemoe.sora.graphics.SingleCharacterWidths;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
@@ -38,6 +39,84 @@ public class TextUtils {
         return TextUtils.normalizeIndentationFromWhitespace(str.substring(0, firstNonWhitespaceIndex), tabSize,
                 insertSpaces) + str.substring(firstNonWhitespaceIndex);
     }
+
+
+    public static int invisibleColumnFromColumn(Content content, int line, int column, TabSpacesInfo tabSpacesInfo) {
+        var lineContent = content.getLine(line);
+
+        var currentIndex = 0;
+        var result = 0;
+        while (currentIndex < lineContent.length()) {
+            var codePoint = lineContent.charAt(currentIndex);
+            if (codePoint != 32 /*CharCode.Space*/ && codePoint != 9/*CharCode.Tab*/) {
+                return result;
+            }
+            currentIndex++;
+            result++;
+        }
+
+        return result;
+
+    }
+
+
+    private static int nextVisibleColumn(int codePoint, int visibleColumn, int tabSize) {
+        if (codePoint == 9 /*CharCode.Tab*/) {
+            return visibleColumn + tabSize - visibleColumn % tabSize;
+        }
+        if (SingleCharacterWidths.isEmoji((char) codePoint)) {
+            return visibleColumn + 2;
+        }
+        return visibleColumn + 1;
+    }
+
+    public static int visibleColumnFromColumn(Content content, int line, int column, TabSpacesInfo tabSpacesInfo) {
+        var lineContent = content.getLine(line);
+        var textLen = Math.max(0,Math.min(column - 1, lineContent.length()));
+        var text = lineContent.subSequence(0, textLen);
+        var currentIndex = 0;
+        var result = 0;
+        while (currentIndex < textLen) {
+            var codePoint = text.charAt(currentIndex);
+            result = nextVisibleColumn(codePoint, result, tabSpacesInfo.getTabSize());
+            currentIndex++;
+        }
+
+        return result;
+
+    }
+
+
+    public static String shiftIndent(int visibleColumn, TabSpacesInfo tabSpacesInfo) {
+
+        // https://github.com/microsoft/vscode/blob/bf63ea1932dd253745f38a4cbe26bb9be01801b1/src/vs/editor/common/commands/shiftCommand.ts#L60
+        var tabSize = tabSpacesInfo.getTabSize();
+        var desiredTabStop = visibleColumn + tabSize - visibleColumn % tabSize;
+        var indentCount = desiredTabStop / tabSize; // will be an integer
+
+        if (tabSpacesInfo.isInsertSpaces()) {
+            return " ".repeat(indentCount);
+        } else {
+            return "\t".repeat(indentCount);
+        }
+
+    }
+
+
+    public static String unShiftIndent(int visibleColumn, TabSpacesInfo tabSpacesInfo) {
+
+        var tabSize = tabSpacesInfo.getTabSize();
+        var desiredTabStop = Math.max(0, visibleColumn - 1 - (visibleColumn - 1) % tabSize);
+       // var indentCount = desiredTabStop; /// tabSize; // will be an integer
+
+        if (tabSpacesInfo.isInsertSpaces()) {
+            return " ".repeat(desiredTabStop);
+        } else {
+            return "\t".repeat(desiredTabStop);
+        }
+
+    }
+
 
     private static String normalizeIndentationFromWhitespace(final String str, final int tabSize,
                                                              final boolean insertSpaces) {
@@ -135,6 +214,30 @@ public class TextUtils {
 
     }
 
+
+    /**
+     * Returns the leading whitespace of the string.
+     * If the string contains only whitespaces, returns entire string
+     */
+    public static String getLeadingWhitespace(String str, int start, int end) {
+        for (var i = start; i < end; i++) {
+            var chCode = str.charAt(i);
+            if (chCode != 32 /*CharCode.Space*/ && chCode != 9/*CharCode.Tab*/) {
+                return str.substring(start, i);
+            }
+        }
+        return str.substring(start, end);
+    }
+
+    /**
+     * Returns the leading whitespace of the string.
+     * If the string contains only whitespaces, returns entire string
+     */
+    public static String getLeadingWhitespace(String str) {
+        return getLeadingWhitespace(str, 0, str.length());
+    }
+
+
     /**
      * Returns the first offset greater than <code>offset</code> and smaller than
      * <code>end</code> whose character is not a space or tab character. If no such
@@ -158,7 +261,7 @@ public class TextUtils {
     }
 
     public static TabSpacesInfo getTabSpaces(final TextMateLanguage language) {
-        return new TabSpacesInfo(language.getTabSize(), true);
+        return new TabSpacesInfo(language.getTabSize(), !language.useTab());
     }
 
     public static String firstCharToUpperCase(String targetString) {

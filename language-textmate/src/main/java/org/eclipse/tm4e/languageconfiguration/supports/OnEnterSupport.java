@@ -78,10 +78,10 @@ public class OnEnterSupport {
                 final var afterText = rule.afterText;
                 if (afterText != null) {
                     if (afterText.matcher(afterEnterText).find()) {
-                        return rule.action;
+                        return rule.action.copy();
                     }
                 } else {
-                    return rule.action;
+                    return rule.action.copy();
                 }
             }
         }
