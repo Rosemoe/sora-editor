@@ -57,7 +57,10 @@ sora-editor是一款高效的安卓代码编辑器
 为您的项目添加依赖:
 
 ```Gradle
-implementation 'io.github.Rosemoe.sora-editor:<moduleName>:<versionName>'
+dependencies {
+    implementation(platform("io.github.Rosemoe.sora-editor:bom:<versionName>"))
+    implementation("io.github.Rosemoe.sora-editor:<moduleName>")
+}
 ```
 
 可用模块:

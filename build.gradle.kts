@@ -70,7 +70,9 @@ subprojects {
             pomFromGradleProperties()
             publishToMavenCentral(SonatypeHost.S01)
             signAllPublications()
-            configure(AndroidSingleVariantLibrary(publishJavadocJar = false))
+            if ("bom" != this@subprojects.name) {
+                configure(AndroidSingleVariantLibrary(publishJavadocJar = false))
+            }
         }
     }
 }

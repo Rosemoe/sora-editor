@@ -61,7 +61,10 @@ See the [supported key bindings](./keybindings.md).
 Add to your app's dependencies:
 
 ```Gradle
-implementation 'io.github.Rosemoe.sora-editor:<moduleName>:<versionName>'
+dependencies {
+    implementation(platform("io.github.Rosemoe.sora-editor:bom:<versionName>"))
+    implementation("io.github.Rosemoe.sora-editor:<moduleName>")
+}
 ```
 
 Available modules:
