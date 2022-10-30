@@ -59,8 +59,8 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     protected CompletionThread completionThread;
     protected CompletionPublisher publisher;
     protected WeakReference<List<CompletionItem>> lastAttachedItems;
-    private int currentSelection = -1;
-    private EditorCompletionAdapter adapter;
+    protected int currentSelection = -1;
+    protected EditorCompletionAdapter adapter;
     private CompletionLayout layout;
     private long requestShow = 0;
     private long requestHide = -1;
