@@ -589,6 +589,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                                                     onAbandonState(old.state);
                                                 }
                                                 onAddState(res.state);
+                                                state = res.state;
                                             }
                                             line++;
                                         }
