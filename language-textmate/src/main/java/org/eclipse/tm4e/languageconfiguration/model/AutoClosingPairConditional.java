@@ -24,6 +24,7 @@
 package org.eclipse.tm4e.languageconfiguration.model;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @see <a href=
@@ -32,7 +33,7 @@ import java.util.List;
  */
 public final class AutoClosingPairConditional extends AutoClosingPair {
 
-	public final List<String> notIn;
+	public /*final*/ List<String> notIn;
 
 	public AutoClosingPairConditional(final String open, final String close, final List<String> notIn) {
 		super(open, close);

@@ -47,6 +47,8 @@ public class Span {
     public long style;
     public int underlineColor;
 
+    public Object extra;
+
     /**
      * Create a new span
      *

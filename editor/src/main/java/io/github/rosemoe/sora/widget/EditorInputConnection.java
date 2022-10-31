@@ -292,7 +292,7 @@ class EditorInputConnection extends BaseInputConnection {
         // newCursorPosition ignored
         // Call onCommitText() can make auto indent and delete text selected automatically
         if (pair == null || pair == SymbolPairMatch.SymbolPair.EMPTY_SYMBOL_PAIR
-                || (pair.shouldNotReplace(editor.getText()))) {
+                || (pair.shouldNotReplace(editor))) {
             editor.commitText(text, applyAutoIndent);
         } else {
 

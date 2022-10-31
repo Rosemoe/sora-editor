@@ -15,6 +15,7 @@ import static org.eclipse.tm4e.core.internal.utils.MoreCollections.*;
 import static org.eclipse.tm4e.core.internal.utils.StringUtils.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -130,9 +131,13 @@ public final class Theme {
             return Collections.emptyList();
         }
 
-        final var settings = source.getSettings();
+         var settings = source.getSettings();
         if (settings == null) {
-            return Collections.emptyList();
+            //dingyi change: adapted vscode theme
+            settings = (Collection<IRawThemeSetting>) ( (ThemeRaw) source).get("tokenColors");
+
+
+            //return Collections.emptyList();
         }
 
         final var result = new ArrayList<ParsedThemeRule>();

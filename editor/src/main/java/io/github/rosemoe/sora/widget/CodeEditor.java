@@ -131,6 +131,7 @@ import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 import io.github.rosemoe.sora.widget.style.builtin.HandleStyleDrop;
 import io.github.rosemoe.sora.widget.style.builtin.HandleStyleSideDrop;
 import io.github.rosemoe.sora.widget.style.builtin.MoveCursorAnimator;
+import kotlin.text.StringsKt;
 
 /**
  * CodeEditor is an editor that can highlight text regions by doing basic syntax analyzing
@@ -1611,10 +1612,23 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Commit a tab to cursor
      */
-    void commitTab() {
+    protected void commitTab() {
         if (inputConnection != null && isEditable()) {
-            inputConnection.commitTextInternal("\t", true);
+            inputConnection.commitTextInternal(createTabString(), true);
         }
+    }
+
+    /**
+     * Creates the string to insert when <code>KEYCODE_TAB</code> key event is received from the IME.
+     *
+     * @return The string to insert for tab character.
+     */
+    protected String createTabString() {
+        final var language = getEditorLanguage();
+        if (language.useTab()) {
+            return "\t";
+        }
+        return StringsKt.repeat(" ", getTabWidth());
     }
 
     protected void updateCompletionWindowPosition() {
