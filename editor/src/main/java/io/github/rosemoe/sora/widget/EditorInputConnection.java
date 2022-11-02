@@ -36,6 +36,7 @@ import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.SurroundingText;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
@@ -251,7 +252,10 @@ class EditorInputConnection extends BaseInputConnection {
                 KeyEvent.FLAG_SOFT_KEYBOARD | KeyEvent.FLAG_KEEP_TOUCH_MODE));
     }
 
-    protected void commitTextInternal(CharSequence text, boolean applyAutoIndent) {
+    protected void commitTextInternal(@NonNull CharSequence text, boolean applyAutoIndent) {
+        if (text.length() == 0) {
+            return;
+        }
         var composingStateBefore = composingText.isComposing();
         // NOTE: Text styles are ignored by editor
         // Remove composing text first if there is
