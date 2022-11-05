@@ -253,9 +253,6 @@ class EditorInputConnection extends BaseInputConnection {
     }
 
     protected void commitTextInternal(@NonNull CharSequence text, boolean applyAutoIndent) {
-        if (text.length() == 0) {
-            return;
-        }
         var composingStateBefore = composingText.isComposing();
         // NOTE: Text styles are ignored by editor
         // Remove composing text first if there is
@@ -275,7 +272,7 @@ class EditorInputConnection extends BaseInputConnection {
         }
         // replace text
         SymbolPairMatch.SymbolPair pair = null;
-        if (editor.getProps().symbolPairAutoCompletion) {
+        if (editor.getProps().symbolPairAutoCompletion && text.length() > 0) {
             var firstCharFromText = text.charAt(0);
 
             char[] inputText = null;
