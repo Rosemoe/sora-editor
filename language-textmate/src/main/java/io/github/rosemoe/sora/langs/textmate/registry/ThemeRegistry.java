@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.langs.textmate.registry;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.registry.IThemeSource;
 
@@ -33,7 +34,7 @@ import java.util.Objects;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
 
 public class ThemeRegistry {
-    
+
     private static ThemeRegistry instance;
 
     private final List<ThemeChangeListener> allListener = new ArrayList<>();
@@ -83,7 +84,7 @@ public class ThemeRegistry {
 
 
     @Nullable
-    public ThemeModel findThemeByFileName(String name) {
+    public ThemeModel findThemeByFileName(@NonNull String name) {
         for (var themeModel : allThemeModel) {
             if (themeModel.getName().equals(name)) {
                 return themeModel;
@@ -93,16 +94,22 @@ public class ThemeRegistry {
     }
 
     @Nullable
-    public ThemeModel findThemeByThemeName(String name) {
+    public ThemeModel findThemeByThemeName(@NonNull String name) {
         for (var themeModel : allThemeModel) {
-            if (Objects.equals(themeModel.getRawTheme().getName(), name)) {
+            var rawTheme = themeModel.getRawTheme();
+
+            if (rawTheme == null) {
+                continue;
+            }
+
+            if (name.equals(rawTheme.getName())) {
                 return themeModel;
             }
         }
         return null;
     }
 
-    public synchronized boolean setTheme(String name) {
+    public synchronized boolean setTheme(@NonNull String name) {
         var targetModel = findThemeByFileName(name);
 
         if (targetModel != null) {
@@ -125,6 +132,11 @@ public class ThemeRegistry {
 
     public void setTheme(ThemeModel theme) {
         currentThemeModel = theme;
+
+        if (!allThemeModel.contains(theme)) {
+            allThemeModel.add(theme);
+        }
+
         if (!theme.isLoaded()) {
             try {
                 theme.load();

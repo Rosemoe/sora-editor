@@ -27,6 +27,7 @@ import org.eclipse.tm4e.core.internal.theme.IRawTheme;
 import org.eclipse.tm4e.core.internal.theme.Theme;
 import org.eclipse.tm4e.core.internal.theme.ThemeReader;
 import org.eclipse.tm4e.core.registry.IThemeSource;
+import org.jetbrains.annotations.Nullable;
 
 import io.github.rosemoe.sora.langs.textmate.utils.StringUtils;
 
@@ -62,17 +63,18 @@ public class ThemeModel {
     public void load() throws Exception {
         rawTheme = ThemeReader.readTheme(themeSource);
         theme = Theme.createFromRawTheme(rawTheme, null);
-
     }
 
     public boolean isLoaded() {
         return theme != null;
     }
 
+    @Nullable
     public IThemeSource getThemeSource() {
         return themeSource;
     }
 
+    @Nullable
     public IRawTheme getRawTheme() {
         return rawTheme;
     }
