@@ -12,9 +12,10 @@ sora-editor es un increíble editor de código optimizado para Android
 
 </div>
 
-Lea esto en otros lenguajes: [English](README.md), [简体中文](README.zh-cn.md), [Español](README.es.md).
+Lea esto en otros idiomas: [English](README.md), [简体中文](README.zh-cn.md), [Español](README.es.md).
 
 ***Trabajo en Progreso***
+
 Este proyecto todavía se está desarrollando lentamente.
 Descarga las versiones más recientes desde [Releases](https://github.com/Rosemoe/CodeEditor/releases)
 en lugar de clonar este repositorio directamente.
@@ -70,13 +71,16 @@ dependencies {
 Modulos disponibles:
 
 **- editor**
-  Biblioteca de widgets que contiene todas las cosas básicas del marco
+Biblioteca de widgets que contiene todas las cosas básicas del marco
+
 **- editor-lsp**
-  Una biblioteca conveniente para crear idiomas usando el Protocolo de Servidor de Lenguajes (también conocido como LSP)
+Una biblioteca conveniente para crear idiomas usando el Protocolo de Servidor de Lenguajes (también conocido como LSP)
+
 **- language-java**
-  Una implementación simple para el resaltado de Java y el autocompletado de identificadores
+Una implementación simple para el resaltado de Java y el autocompletado de identificadores
+
 **- language-textmate**
-  Un resaltador avanzado para el editor. Puede encontrar paquetes y temas de idiomas para compañeros de texto y cargar ellos usando este módulo. La implementación interna de textmate es de [tm4e](https://github.com/eclipse/tm4e).
+Un resaltador avanzado para el editor. Puede encontrar paquetes y temas de idiomas para compañeros de texto y cargar ellos usando este módulo. La implementación interna de textmate es de [tm4e](https://github.com/eclipse/tm4e).
 
 Compruebe la versión más reciente ingresando a [Releases](https://github.com/Rosemoe/CodeEditor/releases).
 
