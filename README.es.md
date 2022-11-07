@@ -46,7 +46,7 @@ a [`KeyBindingEvent`](https://github.com/Rosemoe/sora-editor/blob/main/editor/sr
 y agregar tus propias combinaciones de teclas. Incluso puede anular los enlaces de teclas predeterminados y realizar acciones personalizadas que usted necesite.
 
 Las combinaciones de teclas admitidas actualmente son en su mayoría similares a Android Studio/Intellij IDEA.
-Consulte [supported key bindings](./keybindings.md).
+Consulte las [combinaciones de teclas admitidas](./keybindings.md).
 
 ## Capturas de pantalla
 
