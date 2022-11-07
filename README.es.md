@@ -46,7 +46,7 @@ a [`KeyBindingEvent`](https://github.com/Rosemoe/sora-editor/blob/main/editor/sr
 y agregar tus propias combinaciones de teclas. Incluso puede anular los enlaces de teclas predeterminados y realizar acciones personalizadas que usted necesite.
 
 Las combinaciones de teclas admitidas actualmente son en su mayoría similares a Android Studio/Intellij IDEA.
-Consulte [supported key bindings] (./keybindings.md).
+Consulte [supported key bindings](./keybindings.md).
 
 ## Capturas de pantalla
 
@@ -75,9 +75,7 @@ Modulos disponibles:
 - language-java
   Una implementación simple para el resaltado de Java y el autocompletado de identificadores
 - language-textmate
-  Un resaltador avanzado para el editor. Puede encontrar paquetes y temas de idiomas para compañeros de texto y cargar
-  ellos usando este
-  módulo. La implementación interna de textmate es de [tm4e](https://github.com/eclipse/tm4e).
+  Un resaltador avanzado para el editor. Puede encontrar paquetes y temas de idiomas para compañeros de texto y cargar ellos usando este módulo. La implementación interna de textmate es de [tm4e](https://github.com/eclipse/tm4e).
 
 Compruebe la versión más reciente ingresando a [Releases](https://github.com/Rosemoe/CodeEditor/releases).
 
