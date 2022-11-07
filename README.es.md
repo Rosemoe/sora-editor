@@ -8,13 +8,14 @@
 [![Telegram](https://img.shields.io/badge/Join-Telegram-blue)](https://t.me/rosemoe_code_editor)
 [![QQ](https://img.shields.io/badge/Join-QQ_Group-ff69b4)](https://jq.qq.com/?_wv=1027&k=n68uxQws)
 
-sora-editor es un editor de código genial y optimizado para la plataforma Android
+sora-editor es un increíble editor de código optimizado para Android
 
 </div>
 
 Lea esto en otros lenguajes: [English](README.md), [简体中文](README.zh-cn.md), [Español](README.es.md).
 
-***Trabajo en Progreso*** Este proyecto todavía se está desarrollando lentamente.
+***Trabajo en Progreso***
+Este proyecto todavía se está desarrollando lentamente.
 Descarga las versiones más recientes desde [Releases](https://github.com/Rosemoe/CodeEditor/releases)
 en lugar de clonar este repositorio directamente.
 **Los problemas y las solicitudes de extracción son bienvenidos.**
@@ -68,21 +69,21 @@ dependencies {
 
 Modulos disponibles:
 
-- editor
+**- editor**
   Biblioteca de widgets que contiene todas las cosas básicas del marco
-- editor-lsp
+**- editor-lsp**
   Una biblioteca conveniente para crear idiomas usando el Protocolo de Servidor de Lenguajes (también conocido como LSP)
-- language-java
+**- language-java**
   Una implementación simple para el resaltado de Java y el autocompletado de identificadores
-- language-textmate
+**- language-textmate**
   Un resaltador avanzado para el editor. Puede encontrar paquetes y temas de idiomas para compañeros de texto y cargar ellos usando este módulo. La implementación interna de textmate es de [tm4e](https://github.com/eclipse/tm4e).
 
 Compruebe la versión más reciente ingresando a [Releases](https://github.com/Rosemoe/CodeEditor/releases).
 
 ## Comunidad
 
-* Oficial [Grupo de QQ:216632648](https://jq.qq.com/?_wv=1027&k=n68uxQws)
-* Oficial [Grupo de Telegram](https://t.me/rosemoe_code_editor)
+* [Grupo Oficial de QQ](https://jq.qq.com/?_wv=1027&k=n68uxQws)
+* [Grupo Oficial de Telegram](https://t.me/rosemoe_code_editor)
 
 ## Colaboradores
 
