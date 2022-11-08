@@ -49,10 +49,11 @@ class LanguageDefinitionListBuilder {
                 it.grammar, Charset.defaultCharset()
             )
 
-
             DefaultGrammarDefinition.withLanguageConfiguration(
                 grammarSource,
-                it.languageConfiguration
+                it.languageConfiguration,
+                it.name,
+                it.scopeName
             ).withEmbeddedLanguages(it.embeddedLanguages)
 
         }
