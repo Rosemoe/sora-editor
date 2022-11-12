@@ -944,7 +944,7 @@ public class EditorRenderer {
         int leadingWhitespaceEnd = 0;
         int trailingWhitespaceStart = 0;
         float circleRadius = 0f;
-        var composingPosition = editor.inputConnection.composingText.isComposing() ? content.getIndexer().getCharPosition(editor.inputConnection.composingText.startIndex) : null;
+        var composingPosition = editor.inputConnection.composingText.isComposing() && editor.inputConnection.composingText.startIndex != -1 ? content.getIndexer().getCharPosition(editor.inputConnection.composingText.startIndex) : null;
         var composingLength = editor.inputConnection.composingText.endIndex - editor.inputConnection.composingText.startIndex;
         if (editor.shouldInitializeNonPrintable()) {
             float spaceWidth = paintGeneral.getSpaceWidth();
@@ -1178,7 +1178,7 @@ public class EditorRenderer {
                     if (paintEnd >= lastVisibleChar || paintEnd >= columnCount) {
                         break;
                     }
-                    spanOffset++;
+                    spanOffset ++;
                     if (spanOffset < reader.getSpanCount()) {
                         span = reader.getSpanAt(spanOffset);
                     } else {
