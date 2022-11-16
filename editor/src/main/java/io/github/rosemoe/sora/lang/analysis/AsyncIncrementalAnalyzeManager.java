@@ -98,7 +98,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
     }
 
     @Override
-    public void insert(CharPosition start, CharPosition end, CharSequence insertedText) {
+    public void insert(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence insertedText) {
         if (thread != null) {
             increaseRunCount();
             thread.handler.sendMessage(thread.handler.obtainMessage(MSG_MOD, new TextModification(IntPair.pack(start.line, start.column), IntPair.pack(end.line, end.column), insertedText)));
@@ -106,7 +106,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
     }
 
     @Override
-    public void delete(CharPosition start, CharPosition end, CharSequence deletedText) {
+    public void delete(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence deletedText) {
         if (thread != null) {
             increaseRunCount();
             thread.handler.sendMessage(thread.handler.obtainMessage(MSG_MOD, new TextModification(IntPair.pack(start.line, start.column), IntPair.pack(end.line, end.column), null)));

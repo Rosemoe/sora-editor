@@ -74,12 +74,12 @@ public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
     }
 
     @Override
-    public void insert(CharPosition start, CharPosition end, CharSequence insertedContent) {
+    public void insert(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence insertedContent) {
         rerun();
     }
 
     @Override
-    public void delete(CharPosition start, CharPosition end, CharSequence deletedContent) {
+    public void delete(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence deletedContent) {
         rerun();
     }
 

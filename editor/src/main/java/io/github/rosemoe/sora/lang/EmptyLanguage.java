@@ -141,12 +141,12 @@ public class EmptyLanguage implements Language {
         }
 
         @Override
-        public void insert(CharPosition start, CharPosition end, CharSequence insertedContent) {
+        public void insert(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence insertedContent) {
 
         }
 
         @Override
-        public void delete(CharPosition start, CharPosition end, CharSequence deletedContent) {
+        public void delete(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence deletedContent) {
 
         }
 
