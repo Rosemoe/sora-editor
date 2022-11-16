@@ -78,7 +78,7 @@ class LineSpansGenerator(
         endIndex: Int,
         state: State
     ) {
-        if (node.startByte >= endIndex * 2) {
+        if (node.startByte >= endIndex) {
             return
         }
         // println("Region ${node.startByte}..${node.endByte} symbol: ${node.symbol} type:${node.type}")
