@@ -300,6 +300,10 @@ public class Magnifier implements EditorBuiltinComponent {
      * directly calling {@link EditorRenderer#drawView(Canvas)}
      */
     private void updateDisplayWithinEditor() {
+        if (popup.getWidth() <= 0 || popup.getHeight() <= 0) {
+            dismiss();
+            return;
+        }
         var dest = Bitmap.createBitmap(popup.getWidth(), popup.getHeight(), Bitmap.Config.ARGB_8888);
         var requiredWidth = (int) (popup.getWidth() / scaleFactor);
         var requiredHeight = (int) (popup.getHeight() / scaleFactor);
