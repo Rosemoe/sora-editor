@@ -99,6 +99,7 @@ dependencies {
     implementation(projects.languageJava)
     implementation(projects.languageTextmate)
     implementation(projects.editorLsp)
+    implementation(projects.languageTreesitter)
 
     //Kotlin coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")

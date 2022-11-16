@@ -22,38 +22,9 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-plugins {
-    id("com.android.library")
-    id("com.vanniktech.maven.publish.base")
-    id("kotlin-android")
-}
+package io.github.rosemoe.sora.editor.ts
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
+import com.itsaky.androidide.treesitter.TSPoint
+import io.github.rosemoe.sora.text.CharPosition
 
-android {
-    namespace = "io.github.rosemoe.sora.ts"
-
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-}
-
-dependencies {
-    compileOnly(projects.editor)
-    api("io.github.itsaky:android-tree-sitter:1.0.3")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
-}
+fun CharPosition.toTSPoint() = TSPoint(line, column)

@@ -39,11 +39,19 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
+import com.itsaky.androidide.treesitter.TSLanguages
 import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
-import io.github.rosemoe.sora.event.*
+import io.github.rosemoe.sora.editor.ts.TsLanguage
+import io.github.rosemoe.sora.editor.ts.tsTheme
+import io.github.rosemoe.sora.event.ContentChangeEvent
+import io.github.rosemoe.sora.event.EditorKeyEvent
+import io.github.rosemoe.sora.event.KeyBindingEvent
+import io.github.rosemoe.sora.event.SelectionChangeEvent
+import io.github.rosemoe.sora.event.SideIconClickEvent
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
+import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
@@ -60,24 +68,34 @@ import io.github.rosemoe.sora.utils.CrashHandler
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorSearcher
 import io.github.rosemoe.sora.widget.component.Magnifier
-import io.github.rosemoe.sora.widget.schemes.*
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+import io.github.rosemoe.sora.widget.schemes.SchemeDarcula
+import io.github.rosemoe.sora.widget.schemes.SchemeEclipse
+import io.github.rosemoe.sora.widget.schemes.SchemeGitHub
+import io.github.rosemoe.sora.widget.schemes.SchemeNotepadXX
+import io.github.rosemoe.sora.widget.schemes.SchemeVS2019
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode
 import io.github.rosemoe.sora.widget.subscribeEvent
 import org.eclipse.tm4e.core.registry.IGrammarSource
 import org.eclipse.tm4e.core.registry.IThemeSource
-import java.io.*
+import java.io.BufferedReader
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStreamReader
 import java.util.regex.PatternSyntaxException
 
 
 class MainActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivityMainBinding
     private var undo: MenuItem? = null
     private var redo: MenuItem? = null
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        System.loadLibrary("ts")
         CrashHandler.INSTANCE.init(this)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -542,6 +560,7 @@ class MainActivity : AppCompatActivity() {
                             "TextMate JavaScript",
                             "TextMate MarkDown",
                             "TM Language from file",
+                            "Tree-sitter Java",
                             "None"
                         ), -1
                     ) { dialog: DialogInterface, which: Int ->
@@ -680,6 +699,39 @@ class MainActivity : AppCompatActivity() {
                             }
 
                             7 -> loadTMLLauncher.launch("*/*")
+                            8 -> {
+                                val lang = TSLanguages.java()
+                                editor.setEditorLanguage(TsLanguage(lang, tsTheme = tsTheme(lang) {
+                                    TextStyle.makeStyle(
+                                        EditorColorScheme.COMMENT,
+                                        0,
+                                        false,
+                                        true,
+                                        false
+                                    ) styleFor "block_comment" and "line_comment"
+                                    TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL) styleFor "class_body"
+                                    TextStyle.makeStyle(EditorColorScheme.LITERAL) styleFor "character_literal" and "string_literal" and "decimal_integer_literal" and "decimal_floating_point_literal" and "hex_integer_literal" and "binary_integer_literal"
+                                    TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false) styleFor "package_declaration" and "modifiers" and "integral_type" and arrayOf(
+                                        "void_type", "if", "while", "do", "for", "break", "continue", "else", "return", "strictfp", "volatile", "transient",
+                                        "synchronized", "var"
+                                    )
+                                    TextStyle.makeStyle(EditorColorScheme.FUNCTION_NAME) styleFor "class_declaration"
+                                    TextStyle.makeStyle(EditorColorScheme.COMMENT) styleFor "scoped_identifier"
+                                    TextStyle.makeStyle(EditorColorScheme.OPERATOR) styleFor "=" and arrayOf(
+                                        "{", "}", "[", "]", ",",
+                                        ";", "(", ")", "+", "-",
+                                        "*", "/", "%", "&", "|",
+                                        "&&", "||", "<", ">", "!",
+                                        "@", ":", "?", ".", "^",
+                                        "~", "<<", ">>", ">>>", "+=",
+                                        "-=", "*=", "/=", "<=", ">=",
+                                        "==", "|=", "&=", "^=", "!=",
+                                        "<<=", ">>=", ">>>=", "%=", "||=",
+                                        "&&=", "++", "--"
+                                    )
+                                }))
+                            }
+
                             else -> editor.setEditorLanguage(EmptyLanguage())
                         }
                         dialog.dismiss()
