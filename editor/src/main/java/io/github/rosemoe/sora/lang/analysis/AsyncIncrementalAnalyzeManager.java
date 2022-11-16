@@ -277,12 +277,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
             private Line line;
 
             public void moveToLine(int line) {
-                if (line < 0) {
-                    if (this.line != null) {
-                        this.line.lock.unlock();
-                    }
-                    this.line = null;
-                } else if (line >= lines.size()) {
+                if (line < 0 || line >= lines.size()) {
                     if (this.line != null) {
                         this.line.lock.unlock();
                     }
@@ -296,6 +291,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                         locked = lock.tryLock(100, TimeUnit.MICROSECONDS);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+                        Thread.currentThread().interrupt();
                     }
                     if (locked) {
                         try {
