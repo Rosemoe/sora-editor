@@ -432,10 +432,25 @@ public class Content implements CharSequence {
     }
 
     private void deleteInternal(int startLine, int columnOnStartLine, int endLine, int columnOnEndLine) {
+        checkLineAndColumn(endLine, columnOnEndLine);
+        checkLineAndColumn(startLine, columnOnStartLine);
+        if (startLine == endLine && columnOnStartLine == columnOnEndLine) {
+            return;
+        }
+        var endLineObj = lines.get(endLine);
+        if (columnOnEndLine > endLineObj.length() && endLine + 1 < getLineCount()) {
+            // Expected to delete the whole newline
+            deleteInternal(startLine, columnOnStartLine, endLine + 1, 0);
+            return;
+        }
+        var startLineObj = lines.get(startLine);
+        if (columnOnStartLine > startLineObj.length()) {
+            // Expected to delete the whole newline
+            deleteInternal(startLine, startLineObj.length(), endLine, columnOnEndLine);
+            return;
+        }
         var changedContent = new StringBuilder();
         if (startLine == endLine) {
-            checkLineAndColumn(endLine, columnOnEndLine);
-            checkLineAndColumn(startLine, columnOnStartLine);
             var curr = lines.get(startLine);
             int len = curr.length();
             if (columnOnStartLine < 0 || columnOnEndLine > len || columnOnStartLine > columnOnEndLine) {
@@ -454,8 +469,6 @@ public class Content implements CharSequence {
             curr.delete(columnOnStartLine, columnOnEndLine);
             textLength -= columnOnEndLine - columnOnStartLine;
         } else if (startLine < endLine) {
-            checkLineAndColumn(startLine, columnOnStartLine);
-            checkLineAndColumn(endLine, columnOnEndLine);
 
             //-----Notify------
             if (cursor != null)
