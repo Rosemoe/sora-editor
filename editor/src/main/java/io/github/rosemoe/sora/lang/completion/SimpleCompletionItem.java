@@ -82,6 +82,15 @@ public class SimpleCompletionItem extends CompletionItem {
         return this;
     }
 
+    @Override
+    public SimpleCompletionItem kind(CompletionItemKind kind) {
+        super.kind(kind);
+        if (this.icon == null) {
+            icon = SimpleCompletionIconDrawer.draw(kind);
+        }
+        return this;
+    }
+
     public SimpleCompletionItem commit(int prefixLength, String commitText) {
         this.prefixLength = prefixLength;
         this.commitText = commitText;
