@@ -42,6 +42,7 @@ import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
 import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvider
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
+import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspEditorManager
 import io.github.rosemoe.sora.lsp.utils.URIUtils
@@ -50,9 +51,13 @@ import io.github.rosemoe.sora.widget.CodeEditor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.eclipse.lsp4j.InitializeResult
+import org.eclipse.lsp4j.MessageParams
+import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.tm4e.core.registry.IThemeSource
 import java.io.*
 import java.net.ServerSocket
+import java.net.URI
 import java.util.zip.ZipFile
 
 class LspTestActivity : AppCompatActivity() {
@@ -90,14 +95,14 @@ class LspTestActivity : AppCompatActivity() {
     private suspend fun setEditorText() {
         val text = withContext(Dispatchers.IO) {
             ContentCreator.fromStream(
-                externalCacheDir?.resolve("testProject/sample.xml")?.inputStream()
+                externalCacheDir?.resolve("testProject/sample.lua")?.inputStream()
             )
         }
         editor.setText(text, null)
     }
 
     private suspend fun unAssets() = withContext(Dispatchers.IO) {
-
+        externalCacheDir?.deleteRecursively()
         val zipFile = ZipFile(packageResourcePath)
         val zipEntries = zipFile.entries()
         while (zipEntries.hasMoreElements()) {
@@ -138,11 +143,16 @@ class LspTestActivity : AppCompatActivity() {
         )
 
 
-        val serverDefinition = CustomLanguageServerDefinition(".xml") {
-            SocketStreamConnectionProvider {
-                port
+        val serverDefinition =
+            object : CustomLanguageServerDefinition(".lua",
+                { SocketStreamConnectionProvider { port } }
+            ) {
+                override fun getInitializationOptions(uri: URI?): Any {
+                    return InitializationOption(
+                        stdFolder = URIUtils.fileToURI("$projectPath/std/Lua53").toString(),
+                    )
+                }
             }
-        }
 
 
         withContext(Dispatchers.Main) {
@@ -150,7 +160,7 @@ class LspTestActivity : AppCompatActivity() {
             lspEditor = LspEditorManager
                 .getOrCreateEditorManager(projectPath)
                 .createEditor(
-                    URIUtils.fileToURI("$projectPath/sample.xml").toString(),
+                    URIUtils.fileToURI("$projectPath/sample.lua").toString(),
                     serverDefinition
                 )
 
@@ -206,17 +216,17 @@ class LspTestActivity : AppCompatActivity() {
 
         GrammarRegistry.getInstance().loadGrammars(
             languages {
-                language("xml") {
-                    grammar = "textmate/xml/syntaxes/xml.tmLanguage.json"
-                    scopeName = "text.xml"
-                    languageConfiguration = "textmate/xml/language-configuration.json"
+                language("lua") {
+                    grammar = "textmate/lua/syntaxes/lua.tmLanguage.json"
+                    scopeName = "source.lua"
+                    languageConfiguration = "textmate/lua/language-configuration.json"
                 }
             }
         )
 
 
         return TextMateLanguage.create(
-            "text.xml", false
+            "source.lua", false
         )
     }
 
@@ -275,3 +285,7 @@ class LspTestActivity : AppCompatActivity() {
         stopService(Intent(this@LspTestActivity, LspLanguageServerService::class.java))
     }
 }
+
+data class InitializationOption(
+    var stdFolder: String
+)

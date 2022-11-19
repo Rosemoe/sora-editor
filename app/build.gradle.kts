@@ -83,15 +83,16 @@ android {
 
 dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("com.google.android.gms:play-services-instantapps:18.0.1")
 
     // Desugar
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
 
     // androidx & material
-    implementation("com.google.android.material:material:1.6.1")
-    implementation("androidx.core:core-ktx:1.8.0")
-    implementation("androidx.appcompat:appcompat:1.4.2")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.0")
+    implementation("com.google.android.material:material:1.7.0")
+    implementation("androidx.core:core-ktx:1.9.0")
+    implementation("androidx.appcompat:appcompat:1.5.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
 
 
     // Editor
@@ -104,11 +105,12 @@ dependencies {
     //Kotlin coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
 
-    //Xml language server
-    implementation("org.eclipse.lemminx:org.eclipse.lemminx:0.17.0")
+    //Lua language server
+    implementation(fileTree("dir" to "libs", "includes" to listOf("*.jar")))
+    implementation ("org.eclipse.lsp4j:org.eclipse.lsp4j:${Versions.lsp4jVersion}")
 
 
     testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.4")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
 }

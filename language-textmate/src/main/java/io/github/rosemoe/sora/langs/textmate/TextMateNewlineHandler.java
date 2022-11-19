@@ -386,6 +386,9 @@ public class TextMateNewlineHandler implements NewlineHandler {
          */
 
         EnterAction enterResult = null;
+        if (onEnterSupport == null) {
+            return null;
+        }
         try {
             enterResult = onEnterSupport.onEnter(beforeEnterText, afterEnterText);
         } catch (final Exception e) {

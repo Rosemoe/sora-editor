@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.lsp.utils;
 
+import org.eclipse.lsp4j.CompletionContext;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
@@ -42,6 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.TextRange;
 
@@ -115,10 +117,12 @@ public class LspUtils {
     }
 
 
-    public static CompletionParams createCompletionParams(String uri, Position position) {
+    public static CompletionParams createCompletionParams(LspEditor editor, Position position) {
         CompletionParams params = new CompletionParams();
-        params.setTextDocument(createTextDocumentIdentifier(uri));
+        params.setTextDocument(createTextDocumentIdentifier(editor.getCurrentFileUri()));
         params.setPosition(position);
+        params.setContext(new CompletionContext());
+        params.getContext().setTriggerCharacter(null);
         return params;
     }
 
