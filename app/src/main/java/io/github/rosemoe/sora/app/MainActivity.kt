@@ -67,7 +67,10 @@ import io.github.rosemoe.sora.text.LineSeparator
 import io.github.rosemoe.sora.utils.CrashHandler
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorSearcher
+import io.github.rosemoe.sora.widget.component.DefaultCompletionLayout
+import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.component.Magnifier
+import io.github.rosemoe.sora.widget.getComponent
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.schemes.SchemeDarcula
 import io.github.rosemoe.sora.widget.schemes.SchemeEclipse
@@ -169,6 +172,9 @@ class MainActivity : AppCompatActivity() {
                     Toast.LENGTH_LONG
                 ).show()
             }
+
+            getComponent<EditorAutoCompletion>()
+                .setEnabledAnimation(true)
         }
 
 
