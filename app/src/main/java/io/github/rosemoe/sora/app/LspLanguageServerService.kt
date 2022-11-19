@@ -24,18 +24,19 @@
 
 package io.github.rosemoe.sora.app
 
-import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Intent
-import android.os.Debug
 import android.os.IBinder
 import android.util.Log
-import kotlinx.coroutines.runBlocking
-import org.eclipse.lemminx.XMLServerLauncher
-import java.lang.RuntimeException
+import com.tang.vscode.LuaLanguageClient
+import com.tang.vscode.LuaLanguageServer
+import org.eclipse.lsp4j.jsonrpc.Launcher
 import java.net.ServerSocket
-import java.security.Permission
+import java.nio.channels.AsynchronousByteChannel
+import java.nio.channels.Channels
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
+
 
 class LspLanguageServerService : Service() {
 
@@ -64,10 +65,29 @@ class LspLanguageServerService : Service() {
             Log.d(TAG, "connected to the client on port ${socketClient.localPort}")
 
             runCatching {
-                XMLServerLauncher.launch(
-                    socketClient.getInputStream(),
-                    socketClient.getOutputStream()
-                ).get()
+
+                val server = LuaLanguageServer();
+
+
+                val inputStream = socketClient.getInputStream()
+                val outputStream = socketClient.getOutputStream()
+
+
+                val launcher = Launcher.createLauncher(
+                    server, LuaLanguageClient::class.java,
+                    inputStream, outputStream
+                );
+                val remoteProxy = launcher.remoteProxy
+
+                server.connect(remoteProxy);
+
+                launcher.startListening()
+                    .get(Long.MAX_VALUE,TimeUnit.SECONDS)
+
+                /* XMLServerLauncher.launch(
+                     socketClient.getInputStream(),
+                     socketClient.getOutputStream()
+                 ).get()*/
             }.onFailure {
                 Log.d(TAG, "Unexpected exception is thrown in the Language Server Thread.", it)
             }

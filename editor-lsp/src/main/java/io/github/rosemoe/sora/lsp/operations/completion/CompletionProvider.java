@@ -66,7 +66,11 @@ public class CompletionProvider implements Provider<CharPosition, CompletableFut
             return null;
         }
 
-        future = editor.getRequestManager().completion(LspUtils.createCompletionParams(editor.getCurrentFileUri(), LspUtils.createPosition(data))).thenApply(listCompletionListEither -> listCompletionListEither.isLeft() ? listCompletionListEither.getLeft() : listCompletionListEither.getRight().getItems());
+        future = editor.getRequestManager()
+                .completion(
+                        LspUtils.createCompletionParams(
+                                editor, LspUtils.createPosition(data))
+                ).thenApply(listCompletionListEither -> listCompletionListEither.isLeft() ? listCompletionListEither.getLeft() : listCompletionListEither.getRight().getItems());
 
         return future;
     }

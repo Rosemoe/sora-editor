@@ -246,7 +246,6 @@ public class LanguageServerWrapper {
 
                 eventHandler.setLanguageServer(languageServer);
 
-
                 initializeFuture = languageServer.initialize(initParams).thenApply(res -> {
                     initializeResult = res;
                     Log.i(TAG, "Got initializeResult for " + serverDefinition + " ; " + projectRootPath);
