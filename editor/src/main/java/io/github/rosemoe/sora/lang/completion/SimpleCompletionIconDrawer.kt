@@ -33,8 +33,6 @@ import android.graphics.drawable.Drawable
 
 
 object SimpleCompletionIconDrawer {
-
-
     @JvmStatic
     @JvmOverloads
     fun draw(kind: CompletionItemKind, circle: Boolean = true): Drawable {

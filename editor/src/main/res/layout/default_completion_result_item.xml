@@ -36,8 +36,8 @@
 		android:layout_height="24dp"
 		android:layout_width="24dp"
 		android:src="@android:drawable/ic_delete"
-		android:layout_marginLeft="4dp"
-		android:layout_marginRight="4dp"
+		android:layout_marginLeft="8dp"
+		android:layout_marginRight="8dp"
 		android:id="@+id/result_item_image" />
 
 	<LinearLayout
@@ -45,7 +45,7 @@
 		android:layout_width="match_parent"
 		android:orientation="vertical"
 		android:gravity="center_vertical"
-		android:paddingLeft="8dp"
+		android:paddingLeft="0dp"
 		android:paddingRight="8dp">
 
 		<TextView
@@ -54,14 +54,14 @@
 			android:text="Medium Text"
 			android:textColor="#FF000000"
 			android:id="@+id/result_item_label"
-			android:textSize="16sp"/>
+			android:textSize="15sp"/>
 
 		<TextView
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:text="Small Text"
 			android:id="@+id/result_item_desc"
-			android:textSize="12sp"
+			android:textSize="11sp"
 			android:layout_marginTop="4dp"/>
 
 	</LinearLayout>

@@ -79,7 +79,6 @@ public class LineBreakLayout extends AbstractLayout {
             });
         });
         var task = new LayoutTask<Void>(monitor) {
-
             @Override
             protected Void compute() {
                 widthMaintainer.lock.lock();
