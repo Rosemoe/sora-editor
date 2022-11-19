@@ -43,7 +43,6 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  */
 public class SimpleCompletionItem extends CompletionItem {
 
-    public int prefixLength;
     public String commitText;
 
     public SimpleCompletionItem(int prefixLength, String commitText) {

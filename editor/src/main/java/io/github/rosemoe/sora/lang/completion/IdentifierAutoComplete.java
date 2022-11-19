@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +46,7 @@ import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.TextUtils;
 import io.github.rosemoe.sora.util.MutableInt;
 
+
 /**
  * Identifier auto-completion.
  * <p>
@@ -57,6 +59,10 @@ import io.github.rosemoe.sora.util.MutableInt;
  */
 public class IdentifierAutoComplete {
 
+    /**
+     * @deprecated Use {@link Comparators}
+     */
+    @Deprecated
     private final static Comparator<CompletionItem> COMPARATOR = (p1, p2) -> {
         var cmp1 = asString(p1.desc).compareTo(asString(p2.desc));
         if (cmp1 < 0) {
@@ -104,29 +110,58 @@ public class IdentifierAutoComplete {
      *
      * @param prefix The prefix to make completions for.
      */
-    public void requireAutoComplete(@NonNull String prefix, @NonNull CompletionPublisher publisher, @Nullable Identifiers userIdentifiers) {
-        publisher.setComparator(COMPARATOR);
-        publisher.setUpdateThreshold(0);
+    public void requireAutoComplete(
+            @NonNull ContentReference reference, @NonNull CharPosition position,
+            @NonNull String prefix, @NonNull CompletionPublisher publisher, @Nullable Identifiers userIdentifiers) {
+
+        var completeItemList = createCompleteItemList(prefix, publisher, userIdentifiers);
+
+        var comparator = Comparators.getBaseComparator(reference, position, completeItemList);
+
+        publisher.addItems(completeItemList);
+
+        publisher.setComparator(comparator);
+
+    }
+
+
+    public List<CompletionItem> createCompleteItemList(
+            @NonNull String prefix, @NonNull CompletionPublisher publisher, @Nullable Identifiers userIdentifiers
+    ) {
         int prefixLength = prefix.length();
         if (prefixLength == 0) {
-            return;
+            return Collections.emptyList();
         }
+        var result = new ArrayList<CompletionItem>();
         final var keywordArray = keywords;
         final var lowCase = keywordsAreLowCase;
         final var keywordMap = this.keywordMap;
         var match = prefix.toLowerCase(Locale.ROOT);
+
         if (keywordArray != null) {
             if (lowCase) {
                 for (var kw : keywordArray) {
-                    if (kw.startsWith(match)) {
-                        publisher.addItem(new SimpleCompletionItem(kw, "Keyword", prefixLength, kw)
+                    var fuzzyScore = Filters.fuzzyScoreGracefulAggressive(prefix,
+                            prefix.toLowerCase(Locale.ROOT),
+                            0, kw, kw.toLowerCase(Locale.ROOT), 0, FuzzyScoreOptions.getDefault());
+
+                    var score = fuzzyScore == null ? -100 : fuzzyScore.getScore();
+
+                    if (kw.startsWith(match) || score >= -20) {
+                        result.add(new SimpleCompletionItem(kw, "Keyword", prefixLength, kw)
                                 .kind(CompletionItemKind.Keyword));
                     }
                 }
             } else {
                 for (var kw : keywordArray) {
-                    if (kw.toLowerCase(Locale.ROOT).startsWith(match)) {
-                        publisher.addItem(new SimpleCompletionItem(kw, "Keyword", prefixLength, kw)
+                    var fuzzyScore = Filters.fuzzyScoreGracefulAggressive(prefix,
+                            prefix.toLowerCase(Locale.ROOT),
+                            0, kw, kw.toLowerCase(Locale.ROOT), 0, FuzzyScoreOptions.getDefault());
+
+                    var score = fuzzyScore == null ? -100 : fuzzyScore.getScore();
+
+                    if (kw.toLowerCase(Locale.ROOT).startsWith(match) || score >= -20) {
+                        result.add(new SimpleCompletionItem(kw, "Keyword", prefixLength, kw)
                                 .kind(CompletionItemKind.Keyword));
                     }
                 }
@@ -139,10 +174,25 @@ public class IdentifierAutoComplete {
             userIdentifiers.filterIdentifiers(prefix, dest);
             for (var word : dest) {
                 if (keywordMap == null || !keywordMap.containsKey(word))
-                    publisher.addItem(new SimpleCompletionItem(word, "Identifier", prefixLength, word)
+                    result.add(new SimpleCompletionItem(word, "Identifier", prefixLength, word)
                             .kind(CompletionItemKind.Identifier));
             }
         }
+        return result;
+    }
+
+    /**
+     * Make completion items for the given arguments.
+     * Provide the required arguments passed by {@link Language#requireAutoComplete(ContentReference, CharPosition, CompletionPublisher, Bundle)}
+     *
+     * @param prefix The prefix to make completions for.
+     */
+    @Deprecated
+    public void requireAutoComplete(
+            @NonNull String prefix, @NonNull CompletionPublisher publisher, @Nullable Identifiers userIdentifiers) {
+        publisher.setComparator(COMPARATOR);
+        publisher.setUpdateThreshold(0);
+        publisher.addItems(createCompleteItemList(prefix, publisher, userIdentifiers));
     }
 
     /**
@@ -206,7 +256,13 @@ public class IdentifierAutoComplete {
         @Override
         public void filterIdentifiers(@NonNull String prefix, @NonNull List<String> dest) {
             for (String identifier : identifiers) {
-                if (TextUtils.startsWith(identifier, prefix, true)) {
+                var fuzzyScore = Filters.fuzzyScoreGracefulAggressive(prefix,
+                        prefix.toLowerCase(Locale.ROOT),
+                        0, identifier, identifier.toLowerCase(Locale.ROOT), 0, FuzzyScoreOptions.getDefault());
+
+                var score = fuzzyScore == null ? -100 : fuzzyScore.getScore();
+
+                if (TextUtils.startsWith(identifier, prefix, true) || score >= -20) {
                     dest.add(identifier);
                 }
             }
@@ -279,7 +335,13 @@ public class IdentifierAutoComplete {
             if (acquired) {
                 try {
                     for (String s : identifierMap.keySet()) {
-                        if (TextUtils.startsWith(s, prefix, true)) {
+                        var fuzzyScore = Filters.fuzzyScoreGracefulAggressive(prefix,
+                                prefix.toLowerCase(Locale.ROOT),
+                                0, s, s.toLowerCase(Locale.ROOT), 0, FuzzyScoreOptions.getDefault());
+
+                        var score = fuzzyScore == null ? -100 : fuzzyScore.getScore();
+
+                        if (TextUtils.startsWith(s, prefix, true) || score >= -20) {
                             dest.add(s);
                         }
                     }

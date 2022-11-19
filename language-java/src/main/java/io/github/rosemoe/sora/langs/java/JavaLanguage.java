@@ -101,7 +101,7 @@ public class JavaLanguage implements Language {
         var prefix = CompletionHelper.computePrefix(content, position, MyCharacter::isJavaIdentifierPart);
         final var idt = manager.identifiers;
         if (idt != null) {
-            autoComplete.requireAutoComplete(prefix, publisher, idt);
+            autoComplete.requireAutoComplete(content,position,prefix, publisher, idt);
         }
         if ("fori".startsWith(prefix) && prefix.length() > 0) {
             publisher.addItem(new SimpleSnippetCompletionItem("fori", "Snippet - For loop on index", new SnippetDescription(prefix.length(), FOR_SNIPPET, true)));

@@ -46,7 +46,10 @@ public class SimpleSnippetCompletionItem extends CompletionItem {
     public SimpleSnippetCompletionItem(CharSequence label, CharSequence desc, Drawable icon, SnippetDescription snippet) {
         super(label, desc, icon);
         this.snippet = snippet;
+        kind(CompletionItemKind.Snippet);
     }
+
+
 
     @Override
     public void performCompletion(@NonNull CodeEditor editor, @NonNull Content text, @NonNull CharPosition position) {

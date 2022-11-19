@@ -98,7 +98,7 @@ public class SymbolPairMatch {
      * When the user types the {@param openString}, it will be replaced by {@param symbolPair}
      * SymbolPair maybe null to disable completion for this character.
      *
-     * @see this#putPair(char[], SymbolPair)
+     * @see #putPair(char[], SymbolPair)
      */
     public void putPair(String openString, SymbolPair symbolPair) {
         putPair(openString.toCharArray(), symbolPair);

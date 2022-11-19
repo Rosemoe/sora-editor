@@ -299,7 +299,7 @@ public class TextMateLanguage extends EmptyLanguage {
         }
         var prefix = CompletionHelper.computePrefix(content, position, MyCharacter::isJavaIdentifierPart);
         final var idt = textMateAnalyzer.syncIdentifiers;
-        autoComplete.requireAutoComplete(prefix, publisher, idt);
+        autoComplete.requireAutoComplete(content, position, prefix, publisher, idt);
     }
 
     public IdentifierAutoComplete getAutoCompleter() {

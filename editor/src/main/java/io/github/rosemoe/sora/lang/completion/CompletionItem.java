@@ -67,8 +67,24 @@ public abstract class CompletionItem {
      * The kind of this completion item. Based on the kind
      * an icon is chosen by the editor.
      */
-    private CompletionItemKind kind;
+    @Nullable
+    protected CompletionItemKind kind;
 
+    /**
+     * Use for default sort
+     */
+    public int prefixLength = 0;
+
+    /**
+     * A string that should be used when comparing this item
+     * with other items. When null the {@link #label label}
+     * is used.
+     */
+    @Nullable
+    public String sortText;
+
+    @Nullable
+    protected Object extra;
 
     public CompletionItem(CharSequence label) {
         this(label, null);
