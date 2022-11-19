@@ -119,13 +119,15 @@ public class IdentifierAutoComplete {
             if (lowCase) {
                 for (var kw : keywordArray) {
                     if (kw.startsWith(match)) {
-                        publisher.addItem(new SimpleCompletionItem(kw, "Keyword", prefixLength, kw));
+                        publisher.addItem(new SimpleCompletionItem(kw, "Keyword", prefixLength, kw)
+                                .kind(CompletionItemKind.Keyword));
                     }
                 }
             } else {
                 for (var kw : keywordArray) {
                     if (kw.toLowerCase(Locale.ROOT).startsWith(match)) {
-                        publisher.addItem(new SimpleCompletionItem(kw, "Keyword", prefixLength, kw));
+                        publisher.addItem(new SimpleCompletionItem(kw, "Keyword", prefixLength, kw)
+                                .kind(CompletionItemKind.Keyword));
                     }
                 }
             }
@@ -133,10 +135,12 @@ public class IdentifierAutoComplete {
         if (userIdentifiers != null) {
             List<CompletionItem> words = new ArrayList<>();
             List<String> dest = new ArrayList<>();
+
             userIdentifiers.filterIdentifiers(prefix, dest);
             for (var word : dest) {
                 if (keywordMap == null || !keywordMap.containsKey(word))
-                    publisher.addItem(new SimpleCompletionItem(word, "Identifier", prefixLength, word));
+                    publisher.addItem(new SimpleCompletionItem(word, "Identifier", prefixLength, word)
+                            .kind(CompletionItemKind.Identifier));
             }
         }
     }

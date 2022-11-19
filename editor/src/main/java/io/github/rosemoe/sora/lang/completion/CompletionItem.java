@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lang.completion;
 import android.graphics.drawable.Drawable;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
@@ -49,6 +50,7 @@ public abstract class CompletionItem {
     /**
      * Icon for displaying in adapter
      */
+    @Nullable
     public Drawable icon;
 
     /**
@@ -60,6 +62,12 @@ public abstract class CompletionItem {
      * Text to display as description in adapter
      */
     public CharSequence desc;
+
+    /**
+     * The kind of this completion item. Based on the kind
+     * an icon is chosen by the editor.
+     */
+    private CompletionItemKind kind;
 
 
     public CompletionItem(CharSequence label) {
@@ -83,6 +91,11 @@ public abstract class CompletionItem {
 
     public CompletionItem desc(CharSequence desc) {
         this.desc = desc;
+        return this;
+    }
+
+    public CompletionItem kind(CompletionItemKind kind) {
+        this.kind = kind;
         return this;
     }
 
