@@ -297,11 +297,6 @@ public class TextMateLanguage extends EmptyLanguage {
         if (!autoCompleteEnabled) {
             return;
         }
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            //throw new RuntimeException(e);
-        }
         var prefix = CompletionHelper.computePrefix(content, position, MyCharacter::isJavaIdentifierPart);
         final var idt = textMateAnalyzer.syncIdentifiers;
         autoComplete.requireAutoComplete(content, position, prefix, publisher, idt);
