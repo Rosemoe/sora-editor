@@ -74,4 +74,11 @@ public interface CompletionLayout {
      */
     void ensureListPositionVisible(int position, int incrementPixels);
 
+    /**
+     * Some layout may support to display more animations,
+     * this method provides control over the animation of the layout.
+     */
+    default void setEnabledAnimation(boolean enabledAnimation) {
+        //ignore
+    }
 }

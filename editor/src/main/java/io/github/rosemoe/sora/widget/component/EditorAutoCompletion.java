@@ -102,6 +102,15 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         }
     }
 
+    /**
+     * Some layout may support to display more animations,
+     * this method provides control over the animation of the layout。
+     * @see CompletionLayout#setEnabledAnimation(boolean)
+     */
+    public void setEnabledAnimation(boolean enabledAnimation) {
+        layout.setEnabledAnimation(enabledAnimation);
+    }
+
     @SuppressWarnings("unchecked")
     public void setAdapter(EditorCompletionAdapter adapter) {
         this.adapter = adapter;
