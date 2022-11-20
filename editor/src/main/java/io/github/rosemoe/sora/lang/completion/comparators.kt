@@ -86,7 +86,7 @@ fun snippetUpComparator(a: CompletionItem, b: CompletionItem): Int {
 }
 
 
-fun getBaseComparator(
+fun getCompletionItemComparator(
     source: ContentReference,
     cursorPosition: CharPosition,
     completionItemList: Collection<CompletionItem>

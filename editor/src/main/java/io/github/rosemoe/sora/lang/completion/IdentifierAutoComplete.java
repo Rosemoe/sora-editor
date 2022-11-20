@@ -114,19 +114,19 @@ public class IdentifierAutoComplete {
             @NonNull ContentReference reference, @NonNull CharPosition position,
             @NonNull String prefix, @NonNull CompletionPublisher publisher, @Nullable Identifiers userIdentifiers) {
 
-        var completeItemList = createCompleteItemList(prefix, publisher, userIdentifiers);
+        var completionItemList = createCompletionItemList(prefix, userIdentifiers);
 
-        var comparator = Comparators.getBaseComparator(reference, position, completeItemList);
+        var comparator = Comparators.getCompletionItemComparator(reference, position, completionItemList);
 
-        publisher.addItems(completeItemList);
+        publisher.addItems(completionItemList);
 
         publisher.setComparator(comparator);
 
     }
 
 
-    public List<CompletionItem> createCompleteItemList(
-            @NonNull String prefix, @NonNull CompletionPublisher publisher, @Nullable Identifiers userIdentifiers
+    public List<CompletionItem> createCompletionItemList(
+            @NonNull String prefix, @Nullable Identifiers userIdentifiers
     ) {
         int prefixLength = prefix.length();
         if (prefixLength == 0) {
@@ -192,7 +192,7 @@ public class IdentifierAutoComplete {
             @NonNull String prefix, @NonNull CompletionPublisher publisher, @Nullable Identifiers userIdentifiers) {
         publisher.setComparator(COMPARATOR);
         publisher.setUpdateThreshold(0);
-        publisher.addItems(createCompleteItemList(prefix, publisher, userIdentifiers));
+        publisher.addItems(createCompletionItemList(prefix, userIdentifiers));
     }
 
     /**
