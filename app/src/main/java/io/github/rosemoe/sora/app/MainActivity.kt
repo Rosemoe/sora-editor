@@ -835,6 +835,12 @@ class MainActivity : AppCompatActivity() {
                 editor.isWordwrap = item.isChecked
             }
 
+            R.id.completionAnim -> {
+                item.isChecked = !item.isChecked
+                editor.getComponent<EditorAutoCompletion>()
+                    .setEnabledAnimation(item.isChecked)
+            }
+
             R.id.open_logs -> {
                 var fis: FileInputStream? = null
                 try {

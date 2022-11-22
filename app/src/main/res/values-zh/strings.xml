@@ -60,6 +60,7 @@
     <string name="pin_line_number">固定显示行号</string>
     <string name="feature_switches">功能开关</string>
     <string name="magnifier">放大镜</string>
+    <string name="open_completion_window_animation">开启自动补全窗口动画</string>
     <string name="use_icu_library">使用ICU</string>
     <string name="open_new_activity">打开新界面</string>
     <string name="open_lsp_activity">打开LSP测试界面</string>
