@@ -61,7 +61,7 @@ enum class CompletionItemKind(
     User(25),
     Issue(26);
 
-    fun getDisplayChar(): String {
-        return this.name[0].toString()
-    }
+    private val displayString = name[0].toString()
+
+    fun getDisplayChar(): String = displayString
 }

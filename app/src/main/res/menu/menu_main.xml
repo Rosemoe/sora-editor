@@ -85,6 +85,11 @@
                 android:checkable="true"
                 android:checked="true"
                 android:title="@string/use_icu_library" />
+            <item
+                android:id="@+id/completionAnim"
+                android:checkable="true"
+                android:checked="true"
+                android:title="@string/open_completion_window_animation" />
         </menu>
     </item>
     <item android:title="@string/line_info_panel_position">

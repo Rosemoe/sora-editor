@@ -81,11 +81,12 @@ internal class CircleDrawable(kind: CompletionItemKind, circle: Boolean) :
     }
 
     override fun setAlpha(p1: Int) {
-        throw UnsupportedOperationException("setAlpha is not supported on CircleDrawable")
+        mPaint.alpha = p1
+        mTextPaint.alpha = p1
     }
 
     override fun setColorFilter(colorFilter: ColorFilter?) {
-
+        mTextPaint.colorFilter = colorFilter
     }
 
     @Deprecated(
