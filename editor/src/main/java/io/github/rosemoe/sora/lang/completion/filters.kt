@@ -235,7 +235,7 @@ fun fuzzyScore(
 ): FuzzyScore? {
 
     val patternLen = if (pattern.length > maxLen) maxLen else pattern.length
-    val wordLen = if (word.length > maxLen) maxLen else word.length
+    val wordLen = if (word.length > maxLen - 1) maxLen - 1 else word.length
 
     if (patternStart >= patternLen || wordStart >= wordLen || (patternLen - patternStart) > (wordLen - wordStart)) {
         return null
