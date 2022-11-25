@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.text;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.os.Build;
 import android.text.DynamicLayout;
 import android.text.Editable;
@@ -84,7 +85,7 @@ public class TextLayoutHelper {
     public int getCurPosLeft(int offset, CharSequence s) {
         int left = Math.max(0, offset - CHAR_FACTOR);
         int index = offset - left;
-        text.append(s, left, Math.min(s.length(), offset + CHAR_FACTOR));
+        text.append(s, left, Math.min(s.length(), offset + CHAR_FACTOR + 1));
         Selection.setSelection(text, index);
         Selection.moveLeft(text, layout);
         index = Selection.getSelectionStart(text);
@@ -96,7 +97,7 @@ public class TextLayoutHelper {
     public int getCurPosRight(int offset, CharSequence s) {
         int left = Math.max(0, offset - CHAR_FACTOR);
         int index = offset - left;
-        text.append(s, left, Math.min(s.length(), offset + CHAR_FACTOR));
+        text.append(s, left, Math.min(s.length(), offset + CHAR_FACTOR + 1));
         Selection.setSelection(text, index);
         Selection.moveRight(text, layout);
         index = Selection.getSelectionStart(text);
