@@ -559,6 +559,8 @@ public class EditorRenderer {
             } else if (cachedGutterWidth != gutterWidth && !editor.getEventHandler().isScaling) {
                 cachedGutterWidth = gutterWidth;
                 editor.createLayout(false);
+            } else if (forcedRecreateLayout) {
+                editor.createLayout();
             }
         } else {
             cachedGutterWidth = 0;
