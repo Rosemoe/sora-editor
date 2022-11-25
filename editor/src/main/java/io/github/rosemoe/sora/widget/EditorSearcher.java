@@ -51,7 +51,7 @@ public class EditorSearcher {
     protected String currentPattern;
     protected SearchOptions searchOptions;
     protected Thread currentThread;
-    protected LongArrayList lastResults;
+    protected volatile LongArrayList lastResults;
 
     EditorSearcher(@NonNull CodeEditor editor) {
         this.editor = editor;
@@ -117,6 +117,9 @@ public class EditorSearcher {
         if (searchOptions.useRegex) {
             if (isResultValid()) {
                 var res = lastResults;
+                if (res == null) {
+                    return false;
+                }
                 var right = editor.getCursor().getRight();
                 for (int i = 0; i < res.size(); i++) {
                     var data = res.get(i);
@@ -151,6 +154,9 @@ public class EditorSearcher {
         if (searchOptions.useRegex) {
             if (isResultValid()) {
                 var res = lastResults;
+                if (res == null) {
+                    return false;
+                }
                 var left = editor.getCursor().getLeft();
                 for (int i = 0; i < res.size(); i++) {
                     var data = res.get(i);
@@ -191,6 +197,9 @@ public class EditorSearcher {
         if (searchOptions.useRegex) {
             if (isResultValid()) {
                 var res = lastResults;
+                if (res == null) {
+                    return false;
+                }
                 var packed = IntPair.pack(left, right);
                 for (int i = 0; i < res.size(); i++) {
                     var value = res.get(i);
@@ -260,7 +269,6 @@ public class EditorSearcher {
                 }
                 editor.post(() -> {
                     var pos = editor.getCursor().left();
-                    //stopSearch();
                     editor.getText().replace(0, 0, editor.getLineCount() - 1, editor.getText().getColumnCount(editor.getLineCount() - 1), sb);
                     editor.setSelectionAround(pos.line, pos.column);
                     dialog.dismiss();

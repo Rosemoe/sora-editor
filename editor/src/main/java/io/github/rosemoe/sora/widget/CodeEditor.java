@@ -1369,6 +1369,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 return;
             }
             var res = editorSearcher.lastResults;
+            if (res == null) {
+                return;
+            }
             var lineLeft = text.getCharIndex(line, 0);
             var lineRight = lineLeft + text.getColumnCount(line);
             for (int i = 0; i < res.size(); i++) {
