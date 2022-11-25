@@ -1664,12 +1664,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             width = (int) Math.min(300 * dpUnit, getWidth() / 2f);
         }
         int height = completionWindow.getHeight();
-        if (!completionWindow.isShowing()) {
-            height = (int) restY;
-        }
         completionWindow.setMaxHeight((int) restY);
-        completionWindow.setSize(width, height);
         completionWindow.setLocation((int) panelX + getOffsetX(), (int) panelY + getOffsetY());
+        completionWindow.setSize(width, height);
     }
 
     /**

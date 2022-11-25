@@ -308,8 +308,11 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
                 adapter.notifyDataSetChanged();
             }
             float newHeight = adapter.getItemHeight() * adapter.getCount();
-            setSize(getWidth(), (int) Math.min(newHeight, maxHeight));
+            if (newHeight == 0) {
+                hide();
+            }
             editor.updateCompletionWindowPosition();
+            setSize(getWidth(), (int) Math.min(newHeight, maxHeight));
             if (!isShowing()) {
                 show();
             }
