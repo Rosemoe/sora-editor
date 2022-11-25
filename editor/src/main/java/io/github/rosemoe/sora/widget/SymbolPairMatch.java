@@ -127,8 +127,8 @@ public class SymbolPairMatch {
 
     @Nullable
     public final SymbolPair matchBestPair(Content content, CharPosition cursorPosition, char[] inputCharArray, char firstChar) {
-
-        var singleCharPair = matchBestPairBySingleChar(firstChar);
+        // do not apply single character pairs for text with length > 1
+        var singleCharPair = inputCharArray == null ? matchBestPairBySingleChar(firstChar) : null;
 
         // matches single character symbol pair first
         if (singleCharPair != null) {
@@ -140,7 +140,6 @@ public class SymbolPairMatch {
         var matchList = matchBestPairList(firstChar);
 
         SymbolPair matchPair = null;
-
         for (var pair : matchList) {
             var openCharArray = pair.open.toCharArray();
 
@@ -185,14 +184,12 @@ public class SymbolPairMatch {
                 // is still in the first position of the matched characters,
                 // we need to replace this character,
                 // so we need to subtract a character position
-
                 insertIndex--;
 
                 for (; pairIndex >= 0; insertIndex--, pairIndex--) {
                     matchFlag &= content.charAt(insertIndex) == openCharArray[pairIndex] ? 1 : 0;
                 }
             }
-
 
             if (matchFlag == 1) {
                 matchPair = pair;
