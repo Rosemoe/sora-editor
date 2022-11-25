@@ -342,7 +342,7 @@ public class Content implements CharSequence {
             throw new IllegalArgumentException("text can not be null");
         }
 
-        //-----Notify------
+        // Notify listeners and cursor manager
         if (cursor != null)
             cursor.beforeInsert(line, column);
         for (var lis : contentListeners) {
@@ -457,7 +457,7 @@ public class Content implements CharSequence {
                 throw new StringIndexOutOfBoundsException("invalid bounds");
             }
 
-            //-----Notify------
+            // Notify listeners and cursor manager
             if (cursor != null) {
                 cursor.beforeDelete(startLine, columnOnStartLine, endLine, columnOnEndLine);
             }
@@ -469,8 +469,7 @@ public class Content implements CharSequence {
             curr.delete(columnOnStartLine, columnOnEndLine);
             textLength -= columnOnEndLine - columnOnStartLine;
         } else if (startLine < endLine) {
-
-            //-----Notify------
+            // Notify listeners and cursor manager
             if (cursor != null)
                 cursor.beforeDelete(startLine, columnOnStartLine, endLine, columnOnEndLine);
             for (var lis : contentListeners) {
