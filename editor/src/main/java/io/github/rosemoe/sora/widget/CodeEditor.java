@@ -1631,7 +1631,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return StringsKt.repeat(" ", getTabWidth());
     }
 
-    protected void updateCompletionWindowPosition() {
+    public void updateCompletionWindowPosition() {
         updateCompletionWindowPosition(true);
     }
 
