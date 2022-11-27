@@ -84,6 +84,13 @@ public class RangeFormattingProvider extends RunOnlyProvider<Pair<Content, TextR
 
         var content = data.first;
 
+        var formattingFuture = manager.rangeFormatting(formattingParams);
+
+        if (formattingFuture == null) {
+            future = CompletableFuture.completedFuture(null);
+            return;
+        }
+
         future = manager.rangeFormatting(formattingParams).thenApply(list -> Optional.ofNullable(list).orElse(List.of())).thenAccept(list -> {
             editor.getProviderManager().safeUseProvider(ApplyEditsProvider.class)
                     .ifPresent(applyEditsFeature -> applyEditsFeature

@@ -687,6 +687,7 @@ public class DefaultRequestManager implements RequestManager {
     }
 
     private void crashed(Exception e) {
+        e.printStackTrace(System.err);
         wrapper.crashed(e);
     }
 

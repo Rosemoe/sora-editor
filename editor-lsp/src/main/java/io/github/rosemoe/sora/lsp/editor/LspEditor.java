@@ -96,6 +96,7 @@ public class LspEditor {
 
     public LspEditor(String currentProjectPath, String currentFileUri, LanguageServerDefinition serverDefinition) {
         this.currentEditor = new WeakReference<>(null);
+        this.providerManager = new LspProviderManager(this);
         this.currentLanguage = new LspLanguage(this);
         this.currentFileUri = currentFileUri;
         this.projectPath = currentProjectPath;
@@ -104,7 +105,6 @@ public class LspEditor {
 
         this.editorContentChangeEventReceiver = new LspEditorContentChangeEventReceiver(this);
 
-        this.providerManager = new LspProviderManager(this);
     }
 
     public String getCurrentFileUri() {

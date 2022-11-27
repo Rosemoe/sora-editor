@@ -149,7 +149,7 @@ class LspTestActivity : AppCompatActivity() {
             ) {
                 override fun getInitializationOptions(uri: URI?): Any {
                     return InitializationOption(
-                        stdFolder = URIUtils.fileToURI("$projectPath/std/Lua53").toString(),
+                        stdFolder = URIUtils.fileToURI("$projectPath/std").toString(),
                     )
                 }
             }
@@ -169,6 +169,10 @@ class LspTestActivity : AppCompatActivity() {
             lspEditor.setWrapperLanguage(wrapperLanguage)
 
             lspEditor.editor = editor
+
+            menu.findItem(R.id.code_format).isEnabled =
+                lspEditor.requestManager
+                    ?.serverCapabilities
 
         }
 
@@ -261,6 +265,7 @@ class LspTestActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_lsp, menu)
+
         return super.onCreateOptionsMenu(menu)
     }
 

@@ -42,6 +42,7 @@ import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -50,6 +51,8 @@ import io.github.rosemoe.sora.text.TextRange;
 public class LspUtils {
 
     private static final Map<String, Integer> versionMap = new HashMap<>();
+
+    private static ReentrantReadWriteLock lock;
 
     public static DidCloseTextDocumentParams createDidCloseTextDocumentParams(String uri) {
         DidCloseTextDocumentParams params = new DidCloseTextDocumentParams();
@@ -94,17 +97,26 @@ public class LspUtils {
 
 
     private static int getVersion(String uri) {
+        if (lock == null) {
+            lock = new ReentrantReadWriteLock();
+        }
+        var readLock = lock.readLock();
+        readLock.lock();
         Integer version = versionMap.getOrDefault(uri, 0);
         if (version == null) {
             version = 0;
         }
         version++;
+        readLock.unlock();
+        var writeLock = lock.writeLock();
+        writeLock.lock();
         versionMap.put(uri, version);
+        writeLock.unlock();
         return version;
     }
 
     public static DidOpenTextDocumentParams createDidOpenTextDocumentParams(String uri, String languageId, String content) {
-        DidOpenTextDocumentParams params = new DidOpenTextDocumentParams();
+        var params = new DidOpenTextDocumentParams();
 
         params.setTextDocument(new TextDocumentItem(uri, languageId, getVersion(uri), content));
         return params;

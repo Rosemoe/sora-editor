@@ -101,8 +101,6 @@ public class LspEditorManager {
         // Maybe the user should be allowed to call the method themselves
         LspUtils.clearVersions();
 
-
-
     }
 
     public void close() {

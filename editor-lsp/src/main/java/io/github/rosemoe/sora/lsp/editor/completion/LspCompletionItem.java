@@ -34,6 +34,8 @@
  import java.util.List;
 
  import io.github.rosemoe.sora.lang.completion.CompletionItem;
+ import io.github.rosemoe.sora.lang.completion.CompletionItemKind;
+ import io.github.rosemoe.sora.lang.completion.SimpleCompletionIconDrawer;
  import io.github.rosemoe.sora.lang.completion.snippet.parser.CodeSnippetParser;
  import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsProvider;
  import io.github.rosemoe.sora.lsp.utils.LspUtils;
@@ -41,10 +43,9 @@
  import io.github.rosemoe.sora.text.Content;
  import io.github.rosemoe.sora.widget.CodeEditor;
 
- public class LspCompletionItem extends CompletionItem implements Comparable<LspCompletionItem> {
+ public class LspCompletionItem extends CompletionItem {
 
      private org.eclipse.lsp4j.CompletionItem commitItem;
-     private final int prefixLength;
 
      private ApplyEditsProvider applyEditsFeature;
 
@@ -54,7 +55,12 @@
          this.commitItem = completionItem;
          this.prefixLength = prefixLength;
          this.applyEditsFeature = applyEditsFeature;
+         this.kind = completionItem.getKind() == null ? CompletionItemKind.Text : CompletionItemKind.valueOf(completionItem.getKind().name());
+         this.sortText = completionItem.getSortText();
+         this.desc = completionItem.getDetail();
+         this.icon = SimpleCompletionIconDrawer.draw(kind);
      }
+
 
      @Override
      public void performCompletion(@NonNull CodeEditor editor, @NonNull Content text, CharPosition position) {
@@ -130,14 +136,6 @@
          // do nothing
      }
 
-     @Override
-     public int compareTo(LspCompletionItem completionItem) {
-         if (commitItem.getSortText() != null && completionItem.commitItem.getSortText() != null) {
-             return commitItem.getSortText().compareTo(completionItem.commitItem.getSortText());
-         }
-
-         return commitItem.getLabel().compareTo(completionItem.commitItem.getLabel());
-     }
 
  }
 
