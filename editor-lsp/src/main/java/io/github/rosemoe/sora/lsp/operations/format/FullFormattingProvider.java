@@ -79,7 +79,14 @@ public class FullFormattingProvider extends RunOnlyProvider<Content> {
 
         formattingParams.setTextDocument(LspUtils.createTextDocumentIdentifier(editor.getCurrentFileUri()));
 
-        future = manager.formatting(formattingParams).thenApply(list -> Optional.ofNullable(list).orElse(List.of())).thenAccept(list -> {
+        var formattingFuture = manager.formatting(formattingParams);
+
+        if (formattingFuture == null) {
+            future = CompletableFuture.completedFuture(null);
+            return;
+        }
+
+        future = formattingFuture.thenApply(list -> Optional.ofNullable(list).orElse(List.of())).thenAccept(list -> {
             editor.getProviderManager().safeUseProvider(ApplyEditsProvider.class)
                     .ifPresent(applyEditsFeature -> applyEditsFeature
                             .execute(new Pair<>(list, content)));

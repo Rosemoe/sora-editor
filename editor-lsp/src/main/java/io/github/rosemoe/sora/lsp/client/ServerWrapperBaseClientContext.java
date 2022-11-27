@@ -42,7 +42,6 @@ public class ServerWrapperBaseClientContext implements ClientContext {
         this.wrapper = wrapper;
     }
 
-
     @Nullable
     @Override
     public RequestManager getRequestManager() {

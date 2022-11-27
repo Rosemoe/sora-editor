@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition;
 
+import androidx.annotation.NonNull;
+
 import org.checkerframework.checker.units.qual.C;
 
 import java.util.HashMap;
@@ -62,6 +64,7 @@ public class CustomLanguageServerDefinition extends LanguageServerDefinition {
 
 
 
+    @NonNull
     public String toString() {
         return "CustomLanguageServerDefinition : " + String.join(" ", connectProvider.toString());
     }

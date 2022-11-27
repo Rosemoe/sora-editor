@@ -100,14 +100,6 @@ public class LspLanguage implements Language {
 
         var prefixLength = prefix.length();
 
-        publisher.setComparator((o1, o2) -> {
-            if (o1 instanceof LspCompletionItem && o2 instanceof LspCompletionItem) {
-                return ((LspCompletionItem) o1).compareTo(((LspCompletionItem) o2));
-            }
-            return 0;
-        });
-
-
         currentEditor.getProviderManager().safeUseProvider(DocumentChangeProvider.class)
                 .ifPresent(documentChangeFeature -> {
                     var documentChangeFuture = documentChangeFeature.getFuture();
