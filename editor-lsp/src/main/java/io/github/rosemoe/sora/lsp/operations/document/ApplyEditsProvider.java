@@ -32,6 +32,7 @@ import java.util.List;
 import io.github.rosemoe.sora.lsp.operations.Provider;
 import io.github.rosemoe.sora.lsp.operations.RunOnlyProvider;
 import io.github.rosemoe.sora.text.Content;
+import io.github.rosemoe.sora.util.Logger;
 
 /**
  *
@@ -47,7 +48,18 @@ public class ApplyEditsProvider extends RunOnlyProvider<Pair<List<? extends Text
         editList.forEach(textEdit -> {
             var range = textEdit.getRange();
             var text = textEdit.getNewText();
-            content.replace(range.getStart().getLine(), range.getStart().getCharacter(), range.getEnd().getLine(), range.getEnd().getCharacter(), text);
+            var startIndex = content.getCharIndex(range.getStart().getLine(), range.getStart().getCharacter());
+            var endIndex = content.getCharIndex(range.getEnd().getLine(), range.getEnd().getCharacter());
+
+            if (endIndex < startIndex) {
+                Logger.instance(this.getClass().getName())
+                        .w("Invalid location information found applying edits from %s to %s", range.getStart(), range.getEnd());
+                var diff = startIndex - endIndex;
+                endIndex = startIndex;
+                startIndex = endIndex - diff;
+            }
+
+            content.replace(startIndex, endIndex, text);
         });
 
     }

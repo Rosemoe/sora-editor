@@ -32,7 +32,6 @@ import org.eclipse.lsp4j.TextDocumentSyncKind;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -51,6 +50,7 @@ import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEventReceiv
 import io.github.rosemoe.sora.lsp.operations.Provider;
 import io.github.rosemoe.sora.lsp.operations.completion.CompletionProvider;
 import io.github.rosemoe.sora.lsp.operations.diagnostics.PublishDiagnosticsProvider;
+import io.github.rosemoe.sora.lsp.operations.diagnostics.QueryDocumentDiagnosticsProvider;
 import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsProvider;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeProvider;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentCloseProvider;
@@ -212,11 +212,10 @@ public class LspEditor {
     }
 
 
-
     public void installFeatures() {
 
         //features
-        providerManager.addProviders(RangeFormattingProvider::new, DocumentOpenProvider::new, DocumentSaveProvider::new, DocumentChangeProvider::new, DocumentCloseProvider::new, PublishDiagnosticsProvider::new, CompletionProvider::new, FullFormattingProvider::new, ApplyEditsProvider::new);
+        providerManager.addProviders(RangeFormattingProvider::new, DocumentOpenProvider::new, DocumentSaveProvider::new, DocumentChangeProvider::new, DocumentCloseProvider::new, PublishDiagnosticsProvider::new, CompletionProvider::new, FullFormattingProvider::new, ApplyEditsProvider::new, QueryDocumentDiagnosticsProvider::new);
 
         //options
 

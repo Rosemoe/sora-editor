@@ -91,7 +91,7 @@ public class PublishDiagnosticsProvider extends RunOnlyProvider<PublishDiagnosti
         return;
     }
 
-    private short transformToEditorDiagnosticSeverity(DiagnosticSeverity severity) {
+    public static short transformToEditorDiagnosticSeverity(DiagnosticSeverity severity) {
         switch (severity) {
             case Hint:
             case Information:

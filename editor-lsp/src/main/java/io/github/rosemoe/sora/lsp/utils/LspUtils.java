@@ -30,6 +30,7 @@ import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.DocumentColorParams;
+import org.eclipse.lsp4j.DocumentDiagnosticParams;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.DocumentSymbolParams;
 import org.eclipse.lsp4j.Position;
@@ -128,6 +129,10 @@ public class LspUtils {
         return identifier;
     }
 
+    public static DocumentDiagnosticParams createDocumentDiagnosticParams(String uri) {
+        return new DocumentDiagnosticParams(createTextDocumentIdentifier(uri));
+    }
+
 
     public static CompletionParams createCompletionParams(LspEditor editor, Position position) {
         CompletionParams params = new CompletionParams();
@@ -168,4 +173,6 @@ public class LspUtils {
     public static void clearVersions() {
         versionMap.clear();
     }
+
+
 }

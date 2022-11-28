@@ -57,7 +57,10 @@
          this.applyEditsFeature = applyEditsFeature;
          this.kind = completionItem.getKind() == null ? CompletionItemKind.Text : CompletionItemKind.valueOf(completionItem.getKind().name());
          this.sortText = completionItem.getSortText();
-         this.desc = completionItem.getDetail();
+         var labelDetails = commitItem.getLabelDetails();
+         if (labelDetails != null && labelDetails.getDescription() != null) {
+             this.desc = labelDetails.getDescription();
+         }
          this.icon = SimpleCompletionIconDrawer.draw(kind);
      }
 
@@ -97,7 +100,7 @@
 
          { // allow completion items to be wrong with a too wide range
              var documentEnd = LspUtils.createPosition(
-                     text.getLineCount() - 1, text.getColumnCount(position.line - 1)
+                     text.getLineCount() - 1, text.getColumnCount(Math.max(0, position.line - 1))
              );
              var textEditEnd = textEdit.getRange().getEnd();
              if (documentEnd.getLine() < textEditEnd.getLine()

@@ -41,6 +41,7 @@ import org.eclipse.lsp4j.CodeActionLiteralSupportCapabilities;
 import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.DefinitionCapabilities;
+import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesCapabilities;
 import org.eclipse.lsp4j.DocumentHighlightCapabilities;
 import org.eclipse.lsp4j.ExecuteCommandCapabilities;
@@ -348,7 +349,7 @@ public class LanguageServerWrapper {
 
     private InitializeParams getInitParams() {
         InitializeParams initParams = new InitializeParams();
-        initParams.setRootUri(URIUtils.fileToURI(projectRootPath).toString());
+        initParams.setRootUri(URIUtils.fileToURI(projectRootPath).toASCIIString());
 
 
         WorkspaceClientCapabilities workspaceClientCapabilities = new WorkspaceClientCapabilities();
