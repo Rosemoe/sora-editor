@@ -70,7 +70,13 @@ fun defaultComparator(a: CompletionItem, b: CompletionItem): Int {
 
     // check with 'kind'
 
-    return (a.kind?.value ?: 0) - (b.kind?.value ?: 0)
+    val kind = (a.kind?.value ?: 0) - (b.kind?.value ?: 0)
+
+    return if (kind == 0) {
+        if (a.extra is SortedCompletionItem && b.extra is SortedCompletionItem) {
+            return fuzzyComparator(a.extra as SortedCompletionItem, b.extra as SortedCompletionItem)
+        } else kind
+    } else kind
 
 }
 
@@ -187,11 +193,7 @@ fun getCompletionItemComparator(
 
 
     return Comparator { o1, o2 ->
-        val extra1 = o1.extra
-        val extra2 = o2.extra
-        if (extra1 is SortedCompletionItem && extra2 is SortedCompletionItem) {
-            fuzzyComparator(o1.extra as SortedCompletionItem, o2.extra as SortedCompletionItem)
-        } else snippetUpComparator(o1, o2)
+        snippetUpComparator(o1, o2)
     }
 }
 
