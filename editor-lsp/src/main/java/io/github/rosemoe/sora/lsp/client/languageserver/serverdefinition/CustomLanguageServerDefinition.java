@@ -64,7 +64,9 @@ public class CustomLanguageServerDefinition extends LanguageServerDefinition {
 
 
 
-    @NonNull
+
+
+        @NonNull
     public String toString() {
         return "CustomLanguageServerDefinition : " + String.join(" ", connectProvider.toString());
     }

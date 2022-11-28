@@ -41,6 +41,7 @@ import io.github.rosemoe.sora.langs.textmate.registry.dsl.languages
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
 import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvider
+import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.DefaultRequestManager
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 import io.github.rosemoe.sora.lsp.editor.LspEditor
@@ -51,8 +52,11 @@ import io.github.rosemoe.sora.widget.CodeEditor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams
 import org.eclipse.lsp4j.InitializeResult
 import org.eclipse.lsp4j.MessageParams
+import org.eclipse.lsp4j.WorkspaceFolder
+import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent
 import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.tm4e.core.registry.IThemeSource
 import java.io.*
@@ -65,6 +69,7 @@ class LspTestActivity : AppCompatActivity() {
 
     private lateinit var lspEditor: LspEditor
 
+    private lateinit var rootMenu: Menu
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,7 +107,7 @@ class LspTestActivity : AppCompatActivity() {
     }
 
     private suspend fun unAssets() = withContext(Dispatchers.IO) {
-        externalCacheDir?.deleteRecursively()
+        //externalCacheDir?.deleteRecursively()
         val zipFile = ZipFile(packageResourcePath)
         val zipEntries = zipFile.entries()
         while (zipEntries.hasMoreElements()) {
@@ -147,10 +152,14 @@ class LspTestActivity : AppCompatActivity() {
             object : CustomLanguageServerDefinition(".lua",
                 { SocketStreamConnectionProvider { port } }
             ) {
-                override fun getInitializationOptions(uri: URI?): Any {
+               /* override fun getInitializationOptions(uri: URI?): Any {
                     return InitializationOption(
-                        stdFolder = URIUtils.fileToURI("$projectPath/std").toString(),
+                        stdFolder = "file:/$projectPath/std/Lua53",
                     )
+                }*/
+
+                override fun getEventListener(): EventHandler.EventListener {
+                    return EventListener()
                 }
             }
 
@@ -170,9 +179,6 @@ class LspTestActivity : AppCompatActivity() {
 
             lspEditor.editor = editor
 
-            menu.findItem(R.id.code_format).isEnabled =
-                lspEditor.requestManager
-                    ?.serverCapabilities
 
         }
 
@@ -182,7 +188,16 @@ class LspTestActivity : AppCompatActivity() {
             //delay(Timeout.getTimeout(Timeouts.INIT).toLong()) //wait for server start
             try {
 
-                withContext(Dispatchers.IO) { lspEditor.connectWithTimeout() }
+                withContext(Dispatchers.IO) {
+                    lspEditor.connectWithTimeout()
+                    lspEditor.requestManager?.didChangeWorkspaceFolders(
+                        DidChangeWorkspaceFoldersParams().apply {
+                            this.event = WorkspaceFoldersChangeEvent().apply {
+                                added = listOf(WorkspaceFolder("file://$projectPath/std/Lua53"))
+                            }
+                        }
+                    )
+                }
 
                 editor.editable = true
                 toast("Initialized Language server")
@@ -265,7 +280,7 @@ class LspTestActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_lsp, menu)
-
+        rootMenu = menu
         return super.onCreateOptionsMenu(menu)
     }
 
@@ -289,8 +304,20 @@ class LspTestActivity : AppCompatActivity() {
         LspEditorManager.closeAllManager()
         stopService(Intent(this@LspTestActivity, LspLanguageServerService::class.java))
     }
+
+    data class InitializationOption(
+        var stdFolder: String
+    )
+
+
+    inner class EventListener : EventHandler.EventListener {
+        override fun initialize(server: LanguageServer, result: InitializeResult) {
+            runOnUiThread {
+                rootMenu.findItem(R.id.code_format).isEnabled =
+                    result.capabilities.documentFormattingProvider != null
+            }
+        }
+    }
+
 }
 
-data class InitializationOption(
-    var stdFolder: String
-)

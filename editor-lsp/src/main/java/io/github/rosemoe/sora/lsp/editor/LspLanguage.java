@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.lsp.editor;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -39,6 +40,7 @@ import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
+import io.github.rosemoe.sora.lang.completion.Comparators;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
@@ -92,11 +94,11 @@ public class LspLanguage implements Language {
     @Override
     public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position, @NonNull CompletionPublisher publisher, @NonNull Bundle extraArguments) throws CompletionCancelledException {
 
-        var prefix = getCompletionPrefix(content, position);
-
-        if (prefix.length() == 0) {
+        var prefix = computePrefix(content, position);
+        Log.d("prefix", prefix);
+       /* if (prefix.length() == 0) {
             return;
-        }
+        }*/
 
         var prefixLength = prefix.length();
 
@@ -114,6 +116,8 @@ public class LspLanguage implements Language {
                 });
 
 
+        var completionList = new ArrayList<CompletionItem>();
+
         try {
             var completionFeature = currentEditor.getProviderManager().useProvider(CompletionProvider.class);
 
@@ -123,7 +127,7 @@ public class LspLanguage implements Language {
 
             completionFeature.execute(position).thenAccept(completions -> {
                 completions.forEach(completionItem -> {
-                    publisher.addItem(completionItemProvider.createCompletionItem(completionItem,
+                    completionList.add(completionItemProvider.createCompletionItem(completionItem,
                             currentEditor.getProviderManager().useProvider(ApplyEditsProvider.class), prefixLength));
                 });
             }).exceptionally(throwable -> {
@@ -134,13 +138,19 @@ public class LspLanguage implements Language {
             throw new LSPException(e);
         }
 
-        publisher.updateList();
 
+        publisher.setComparator(
+                Comparators.getCompletionItemComparator(content, position, completionList)
+        );
+
+        publisher.addItems(completionList);
+
+        publisher.updateList();
 
     }
 
 
-    public String getCompletionPrefix(ContentReference text, CharPosition position) {
+    public String computePrefix(ContentReference text, CharPosition position) {
 
         List<String> delimiters = new ArrayList<>(currentEditor.getCompletionTriggers());
 
