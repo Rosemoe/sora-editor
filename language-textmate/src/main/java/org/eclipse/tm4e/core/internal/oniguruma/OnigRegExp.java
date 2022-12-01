@@ -62,7 +62,7 @@ public final class OnigRegExp {
 	}
 
 	@Nullable
-	public OnigResult search(final OnigString str, final int startPosition) {
+	public synchronized OnigResult search(final OnigString str, final int startPosition) {
 		if (hasGAnchor) {
 			// Should not use caching, because the regular expression
 			// targets the current search position (\G)
@@ -83,7 +83,7 @@ public final class OnigRegExp {
 	}
 
 	@Nullable
-	private OnigResult search(final byte[] data, final int startPosition, final int end) {
+	private synchronized OnigResult search(final byte[] data, final int startPosition, final int end) {
 		final Matcher matcher = regex.matcher(data);
 		final int status = matcher.search(startPosition, end, Option.DEFAULT);
 		if (status != Matcher.FAILED) {
