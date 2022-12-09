@@ -413,7 +413,7 @@ public class EditorRenderer {
         float widthLine = measureText(lineBuf, line, 0, columnCount) + editor.getDpUnit() * 20;
         renderNode.setPosition(0, 0, (int) (widthLine + paintGraph.measureText("↵") * 1.5f), editor.getRowHeight());
         Canvas canvas = renderNode.beginRecording();
-        if (spans == null) {
+        if (spans == null || spans.getSpanCount() <= 0) {
             spans = new EmptyReader();
         }
         int spanOffset = 0;
@@ -1038,6 +1038,7 @@ public class EditorRenderer {
 
         // Step 2 - Draw text and text decorations
         long lastStyle = 0;
+        Spans.Reader reader = null;
         for (int row = firstVis; row <= editor.getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
             int line = rowInf.lineIndex;
@@ -1054,6 +1055,30 @@ public class EditorRenderer {
                 lastPreparedLine = line;
                 prepareLine(line);
                 spanOffset = 0;
+                // Release old reader
+                if (reader != null) {
+                    try {
+                        reader.moveToLine(-1);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                // Get new reader and lock
+                // Note that we should hold the reader during the **text line** rendering process
+                // Otherwise, the spans of that line can be changed during the inter rendering time
+                // between two **rows** because the spans could have been changed concurrently
+                // See #290
+                reader = spans == null ? new EmptyReader() : spans.read();
+                if (reader.getSpanCount() == 0) {
+                    // Unacceptable span count, use fallback reader
+                    reader = new EmptyReader();
+                }
+                try {
+                    reader.moveToLine(line);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    reader = new EmptyReader();
+                }
                 if (editor.shouldInitializeNonPrintable()) {
                     long positions = editor.findLeadingAndTrailingWhitespacePos(lineBuf);
                     leadingWhitespaceEnd = IntPair.getFirst(positions);
@@ -1073,14 +1098,6 @@ public class EditorRenderer {
             // Draw text here
             if (!editor.isHardwareAcceleratedDrawAllowed() || editor.getEventHandler().isScaling || !canvas.isHardwareAccelerated() || editor.isWordwrap() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || (rowInf.endColumn - rowInf.startColumn > 128 && !editor.getProps().cacheRenderNodeForLongLines) /* Save memory */) {
                 // Draw without hardware acceleration
-                // Get spans
-                var reader = spans == null ? new EmptyReader() : spans.read();
-                try {
-                    reader.moveToLine(line);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    reader = new EmptyReader();
-                }
                 // Seek for first span
                 while (spanOffset + 1 < reader.getSpanCount()) {
                     if (reader.getSpanAt(spanOffset + 1).column <= firstVisibleChar) {
@@ -1188,11 +1205,6 @@ public class EditorRenderer {
                         //break;
                     }
                 }
-                try {
-                    reader.moveToLine(-1);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
 
                 // Draw hard wrap
                 if (lastVisibleChar == columnCount && (nonPrintableFlags & CodeEditor.FLAG_DRAW_LINE_SEPARATOR) != 0) {
@@ -1273,6 +1285,15 @@ public class EditorRenderer {
             } else if (cursor.getLeftLine() == line && isInside(cursor.getLeftColumn(), rowInf.startColumn, rowInf.endColumn, line)) {
                 float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(cursor.getLeftLine(), cursor.getLeftColumn())[1] - editor.getOffsetX();
                 postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), editor.getEventHandler().shouldDrawInsertHandle() ? SelectionHandleStyle.HANDLE_TYPE_INSERT : SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, editor.getInsertHandleDescriptor()));
+            }
+        }
+
+        // Release last used reader object
+        if (reader != null) {
+            try {
+                reader.moveToLine(-1);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
 
