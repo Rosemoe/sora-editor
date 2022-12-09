@@ -74,6 +74,11 @@ public class LineBreakLayout extends AbstractLayout {
                 return;
             }
             editor.postInLifecycle(() -> {
+                if (LineBreakLayout.this.editor != editor) {
+                    // This layout could have been abandoned when waiting for Runnable execution
+                    // See #307
+                    return;
+                }
                 editor.setLayoutBusy(false);
                 editor.getEventHandler().scrollBy(0, 0);
             });

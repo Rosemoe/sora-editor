@@ -83,6 +83,11 @@ public class WordwrapLayout extends AbstractLayout {
                 }
                 Collections.sort(r2);
                 editor.postInLifecycle(() -> {
+                    if (WordwrapLayout.this.editor != editor) {
+                        // This layout could have been abandoned when waiting for Runnable execution
+                        // See #307
+                        return;
+                    }
                     if (rowTable != null) {
                         rowTable.clear();
                     } else {
