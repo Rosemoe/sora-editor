@@ -24,19 +24,47 @@
 
 package io.github.rosemoe.sora.editor.ts
 
-import com.itsaky.androidide.treesitter.TSLanguage
 import io.github.rosemoe.sora.util.IntPair
 
+/**
+ * Theme for tree-sitter. This is different from [io.github.rosemoe.sora.widget.schemes.EditorColorScheme].
+ * It is only used for colorizing spans in tree-sitter module. The real colors are still stored in editor
+ * color schemes.
+ *
+ * ### Rule format:
+ * - suffix matching: x.y.z
+ *
+ *   For example: class_declaration.name matches rule stack: `(*.)*class_declaration.name`
+ * - prefix matching: ^x.y.z
+ *
+ *   For example: ^program.import_declaration matches rule stack: `program.import_declaration(.*)*`
+ *
+ * Tip: both node name (aka named node) and node type name can be used in rule matching.
+ * Dot symbol ('.') should be replaced with letters 'dot'
+ *
+ * Note that we always try to find color for every node, and try to match the longest path, which means:
+ *   If we have rules: package_declaration -> A, scope -> B
+ *   node 'package_declaration' contains node of type 'scope', you will get 'scope' of 'package_declaration' with style B,
+ *   and other parts of 'package_declaration' with style A.
+ *
+ *   If we add rule: package_declaration.scope -> C,
+ *   you will get 'scope' of 'package_declaration' with style C,and other parts of package_declaration with style A.
+ *
+ * @author Rosemoe
+ */
 class TsTheme {
-
-    companion object {
-        val INTEGER_REGEX = Regex("[0-9]+")
-    }
 
     private val suffixStyle = RuleNode()
     private val prefixStyle = RuleNode()
     private val styles = arrayListOf(0L)
 
+    /**
+     * Set text style for the given rule string.
+     *
+     * @param rule The rule for locating nodes
+     * @param style The style value for those nodes
+     * @see io.github.rosemoe.sora.lang.styling.TextStyle
+     */
     fun putStyleRule(rule: String, style: Long) {
         val styleIdx = if (style != 0L) {
             styles.add(style)
@@ -51,7 +79,11 @@ class TsTheme {
         }
     }
 
-    fun eraseStyleRule(rule: String, language: TSLanguage? = null) = putStyleRule(rule, 0L)
+    /**
+     * Remove rule*
+     * @param rule The rule for locating nodes
+     */
+    fun eraseStyleRule(rule: String) = putStyleRule(rule, 0L)
 
     private fun resolvePrimitiveRule(rule: String) = rule.split('.').toMutableList().also {
         for (i in 0 until it.size) {
@@ -69,7 +101,13 @@ class TsTheme {
         node.nodeStyle = style
     }
 
-    private fun resolveStyleForTypeStack(node: RuleNode, currentPos:Int, terminalPos: Int, deltaPos: Int, typeStack: MyStack<Array<String>>) : Long {
+    private fun resolveStyleForTypeStack(
+        node: RuleNode,
+        currentPos: Int,
+        terminalPos: Int,
+        deltaPos: Int,
+        typeStack: NonConcStack<Array<String>>
+    ): Long {
         if (currentPos == terminalPos) {
             return 0L
         }
@@ -78,7 +116,13 @@ class TsTheme {
         for (typeAlias in typeStack[currentPos]) {
             val sub = node.getChild(typeAlias)
             if (sub != null) {
-                val subResult = resolveStyleForTypeStack(sub, currentPos + deltaPos, terminalPos, deltaPos, typeStack)
+                val subResult = resolveStyleForTypeStack(
+                    sub,
+                    currentPos + deltaPos,
+                    terminalPos,
+                    deltaPos,
+                    typeStack
+                )
                 val depth = (IntPair.getSecond(subResult) - currentPos) / deltaPos
                 if (IntPair.getFirst(subResult) != 0 && depth > maxDepth) {
                     maxDepth = depth
@@ -92,7 +136,7 @@ class TsTheme {
         return IntPair.pack(node.nodeStyle, currentPos)
     }
 
-    internal fun resolveStyleForTypeStack(typeStack: MyStack<Array<String>>) : Long {
+    internal fun resolveStyleForTypeStack(typeStack: NonConcStack<Array<String>>): Long {
         if (typeStack.size == 0) {
             return 0L
         }
@@ -124,6 +168,9 @@ class TsTheme {
 
 }
 
+/**
+ * Builder class for tree-sitter themes
+ */
 class TsThemeBuilder {
 
     internal val theme = TsTheme()
@@ -140,5 +187,8 @@ class TsThemeBuilder {
 
 }
 
+/**
+ * Build tree-sitter theme
+ */
 fun tsTheme(description: TsThemeBuilder.() -> Unit) =
     TsThemeBuilder().also { it.description() }.theme

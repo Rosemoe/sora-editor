@@ -36,7 +36,12 @@ import io.github.rosemoe.sora.lang.styling.Styles
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 
-class TsAnalyzeManager(val parser: TSParser, val theme: TsTheme) : AnalyzeManager {
+/**
+ * AnalyzeManager for tree-sitter
+ *
+ * @author Rosemoe
+ */
+open class TsAnalyzeManager(val parser: TSParser, val theme: TsTheme) : AnalyzeManager {
 
     var currentReceiver: StyleReceiver? = null
     var content: StringBuilder? = null

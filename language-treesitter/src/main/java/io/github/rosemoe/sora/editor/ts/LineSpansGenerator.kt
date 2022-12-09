@@ -33,8 +33,14 @@ import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import java.lang.Math.max
-import java.util.Stack
 
+/**
+ * Spans generator for tree-sitter. Results are cached.
+ *
+ * Note that this implementation does not support external modifications
+ *
+ * @author Rosemoe
+ */
 class LineSpansGenerator(
     private val tree: TSTree, private val lineCount: Int,
     private val content: ContentReference, private val theme: TsTheme
@@ -206,9 +212,9 @@ class LineSpansGenerator(
 
 class NodeStack {
 
-    val typeStack = MyStack<Array<String>>()
+    val typeStack = NonConcStack<Array<String>>()
 
-    val attributeStack = MyStack<Boolean>()
+    val attributeStack = NonConcStack<Boolean>()
 
 }
 

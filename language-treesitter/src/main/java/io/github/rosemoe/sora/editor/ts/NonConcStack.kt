@@ -26,8 +26,10 @@ package io.github.rosemoe.sora.editor.ts
 
 /**
  * Non-threadsafe stack by [ArrayList]
+ *
+ * @author Rosemoe
  */
-class MyStack<T> : ArrayList<T>() {
+class NonConcStack<T> : ArrayList<T>() {
 
     fun push(obj: T) {
         add(obj)

@@ -36,6 +36,14 @@ import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.widget.SymbolPairMatch
 
+/**
+ * Tree-sitter based language.
+ * @param language TSLanguage instance
+ * @param tsTheme Theme for colorizing
+ * @param tab whether tab should be used
+ * @see TsTheme
+ * @author Rosemoe
+ */
 open class TsLanguage(val language: TSLanguage, val tsTheme: TsTheme = TsTheme(), val tab: Boolean = false) : Language {
 
     private val analyzer by lazy {
