@@ -141,14 +141,14 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         if (!editor.getCursor().isSelected()) {
             return;
         }
-        editor.postDelayed(new Runnable() {
+        editor.postDelayedInLifecycle(new Runnable() {
             @Override
             public void run() {
                 if (!handler.hasAnyHeldHandle() && !editor.getSnippetController().isInSnippet() && System.currentTimeMillis() - lastScroll > DELAY
                         && editor.getScroller().isFinished()) {
                     displayWindow();
                 } else {
-                    editor.postDelayed(this, DELAY);
+                    editor.postDelayedInLifecycle(this, DELAY);
                 }
             }
         }, DELAY);
@@ -162,13 +162,13 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         if (event.isSelected()) {
             //#193
             //if (!isShowing()) {
-            editor.post(this::displayWindow);
+            editor.postInLifecycle(this::displayWindow);
             //}
             lastPosition = -1;
         } else {
             var show = false;
             if (event.getCause() == SelectionChangeEvent.CAUSE_TAP && event.getLeft().index == lastPosition && !isShowing() && !editor.getText().isInBatchEdit() && editor.isEditable()) {
-                editor.post(this::displayWindow);
+                editor.postInLifecycle(this::displayWindow);
                 show = true;
             } else {
                 dismiss();

@@ -73,7 +73,7 @@ public class LineBreakLayout extends AbstractLayout {
             if (editor == null) {
                 return;
             }
-            editor.post(() -> {
+            editor.postInLifecycle(() -> {
                 editor.setLayoutBusy(false);
                 editor.getEventHandler().scrollBy(0, 0);
             });

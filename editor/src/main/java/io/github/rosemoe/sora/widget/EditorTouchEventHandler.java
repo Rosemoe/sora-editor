@@ -195,7 +195,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             }
 
         }
-        editor.postDelayed(new ScrollNotifier(), HIDE_DELAY);
+        editor.postDelayedInLifecycle(new ScrollNotifier(), HIDE_DELAY);
     }
 
     /**
@@ -213,7 +213,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             }
 
         }
-        editor.postDelayed(new InvalidateNotifier(), HIDE_DELAY_HANDLE);
+        editor.postDelayedInLifecycle(new InvalidateNotifier(), HIDE_DELAY_HANDLE);
     }
 
     /**
@@ -473,7 +473,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         if (flag != 0 && edgeFlags == 0) {
             edgeFlags = flag;
             thumbMotionRecord = MotionEvent.obtain(e);
-            editor.post(new EdgeScrollRunnable(initialDelta));
+            editor.postInLifecycle(new EdgeScrollRunnable(initialDelta));
         } else if (flag == 0) {
             stopEdgeScroll();
         } else {
@@ -964,7 +964,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             postTimes++;
             // Post for animation
             if (edgeFlags != 0) {
-                editor.postDelayed(this, 10);
+                editor.postDelayedInLifecycle(this, 10);
             }
         }
     }

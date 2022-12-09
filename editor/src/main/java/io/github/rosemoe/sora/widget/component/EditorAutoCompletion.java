@@ -130,7 +130,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         }
         requestShow = System.currentTimeMillis();
         final var requireRequest = requestTime;
-        editor.postDelayed(() -> {
+        editor.postDelayedInLifecycle(() -> {
             if (requestHide < requestShow && requestTime == requireRequest) {
                 super.show();
             }
@@ -167,7 +167,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     public void setLoading(boolean state) {
         loading = state;
         if (state) {
-            editor.postDelayed(() -> {
+            editor.postDelayedInLifecycle(() -> {
                 if (loading) {
                     layout.setLoading(true);
                 }
@@ -384,9 +384,9 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
                         localPublisher.updateList(true);
                     }
                 } else {
-                    editor.post(EditorAutoCompletion.this::hide);
+                    editor.postInLifecycle(EditorAutoCompletion.this::hide);
                 }
-                editor.post(() -> setLoading(false));
+                editor.postInLifecycle(() -> setLoading(false));
             } catch (Exception e) {
                 if (e instanceof CompletionCancelledException) {
                     Log.v("CompletionThread", "Completion is cancelled");

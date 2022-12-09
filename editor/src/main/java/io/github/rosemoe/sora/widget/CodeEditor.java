@@ -267,6 +267,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean displayLnPanel;
     private int lnPanelPosition;
     private int lnPanelPositionMode;
+    private boolean released;
     private boolean lineNumberEnabled;
     private boolean blockLineEnabled;
     private boolean forceHorizontalScrollable;
@@ -724,7 +725,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             int before = cursorBlink.period;
             cursorBlink.setPeriod(period);
             if (before <= 0 && cursorBlink.valid && isAttachedToWindow()) {
-                post(cursorBlink);
+                postInLifecycle(cursorBlink);
             }
         }
     }
@@ -3931,13 +3932,16 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * Release any resources held by editor.
+     * Release some resources held by editor.
      * This will stop completion threads and destroy using {@link Language} object.
+     * Also it prevents future editor tasks (such as posted Runnable) to be executed.
      * <p>
-     * Recommend to call if the activity is to destroy.
+     * You are expected to call this method when the editor instance is no longer used, especially when
+     * your activity is to be destroyed. Invoking this method repeatedly will not generated errors.
      */
     public void release() {
         hideEditorWindows();
+        released = true;
         if (editorLanguage != null) {
             editorLanguage.getAnalyzeManager().destroy();
             var formatter = editorLanguage.getFormatter();
@@ -4031,7 +4035,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         // Update magnifier
         if ((lastCursorState != cursorBlink.visibility || !touchHandler.getScroller().isFinished()) && touchHandler.magnifier.isShowing()) {
             lastCursorState = cursorBlink.visibility;
-            post(touchHandler.magnifier::updateDisplay);
+            postInLifecycle(touchHandler.magnifier::updateDisplay);
         }
     }
 
@@ -4246,7 +4250,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (gainFocus) {
             cursorBlink.valid = cursorBlink.period > 0;
             if (cursorBlink.valid) {
-                post(cursorBlink);
+                postInLifecycle(cursorBlink);
             }
         } else {
             cursorBlink.valid = false;
@@ -4291,6 +4295,43 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
             postInvalidateOnAnimation();
         }
+    }
+
+    /**
+     * Post the given action to message queue. Run the action if editor is not released.
+     *
+     * @param action The Runnable to be executed.
+     * @return Returns true if the Runnable was successfully placed in to the message queue.
+     * Returns false on failure, usually because the looper processing the message queue is exiting.
+     *
+     * @see View#post(Runnable)
+     */
+    public boolean postInLifecycle(Runnable action) {
+        return super.post(() -> {
+            if (released) {
+                return;
+            }
+            action.run();
+        });
+    }
+
+    /**
+     * Post the given action to message queue. Run the action if editor is not released.
+     *
+     * @param action The Runnable to be executed.
+     * @param delayMillis The delay (in milliseconds) until the Runnable will be executed.
+     * @return Returns true if the Runnable was successfully placed in to the message queue.
+     * Returns false on failure, usually because the looper processing the message queue is exiting.
+     *
+     * @see View#postDelayed(Runnable, long)
+     */
+    public boolean postDelayedInLifecycle(Runnable action, long delayMillis) {
+        return super.postDelayed(() -> {
+            if (released) {
+                return;
+            }
+            action.run();
+        }, delayMillis);
     }
 
     @Override
@@ -4423,7 +4464,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     @Override
     public void onFormatSucceed(@NonNull CharSequence applyContent, @Nullable TextRange cursorRange) {
-        post(() -> {
+        postInLifecycle(() -> {
             int line = cursor.getLeftLine();
             int column = cursor.getLeftColumn();
             int x = getOffsetX();
@@ -4459,7 +4500,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     @Override
     public void onFormatFail(final Throwable throwable) {
-        post(() -> Toast.makeText(getContext(), "Format:" + throwable, Toast.LENGTH_SHORT).show());
+        postInLifecycle(() -> Toast.makeText(getContext(), "Format:" + throwable, Toast.LENGTH_SHORT).show());
     }
 
     @Override

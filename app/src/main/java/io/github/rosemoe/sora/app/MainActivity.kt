@@ -67,7 +67,6 @@ import io.github.rosemoe.sora.text.LineSeparator
 import io.github.rosemoe.sora.utils.CrashHandler
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorSearcher
-import io.github.rosemoe.sora.widget.component.DefaultCompletionLayout
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.getComponent
@@ -152,7 +151,7 @@ class MainActivity : AppCompatActivity() {
             // Update display dynamically
             subscribeEvent<SelectionChangeEvent> { _, _ -> updatePositionText() }
             subscribeEvent<ContentChangeEvent> { _, _ ->
-                postDelayed(
+                postDelayedInLifecycle(
                     ::updateBtnState,
                     50
                 )

@@ -267,7 +267,7 @@ public class EditorSearcher {
                         fromIndex = foundIndex + newLength;
                     }
                 }
-                editor.post(() -> {
+                editor.postInLifecycle(() -> {
                     var pos = editor.getCursor().left();
                     editor.getText().replace(0, 0, editor.getLineCount() - 1, editor.getText().getColumnCount(editor.getLineCount() - 1), sb);
                     editor.setSelectionAround(pos.line, pos.column);
@@ -278,7 +278,7 @@ public class EditorSearcher {
                     }
                 });
             } catch (Exception e) {
-                editor.post(() -> {
+                editor.postInLifecycle(() -> {
                     Toast.makeText(editor.getContext(), "Replace failed:" + e, Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
                 });

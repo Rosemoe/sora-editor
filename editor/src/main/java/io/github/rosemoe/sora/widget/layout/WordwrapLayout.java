@@ -82,7 +82,7 @@ public class WordwrapLayout extends AbstractLayout {
                     r2.add((WordwrapResult) result);
                 }
                 Collections.sort(r2);
-                editor.post(() -> {
+                editor.postInLifecycle(() -> {
                     if (rowTable != null) {
                         rowTable.clear();
                     } else {

@@ -89,7 +89,7 @@ class EditorStyleDelegate implements StyleReceiver {
         if (Looper.getMainLooper().getThread() == Thread.currentThread()) {
             operation.run();
         } else {
-            editor.post(operation);
+            editor.postInLifecycle(operation);
         }
     }
 
