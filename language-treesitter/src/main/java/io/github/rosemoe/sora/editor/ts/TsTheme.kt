@@ -26,9 +26,6 @@ package io.github.rosemoe.sora.editor.ts
 
 import com.itsaky.androidide.treesitter.TSLanguage
 import io.github.rosemoe.sora.util.IntPair
-import java.lang.Math.max
-import java.lang.Math.min
-import java.util.Stack
 
 class TsTheme {
 
@@ -100,9 +97,9 @@ class TsTheme {
             return 0L
         }
         // Suffix matching first
-        var style = resolveStyleForTypeStack(suffixStyle, typeStack.size - 1, max(-1, typeStack.size - 5), -1, typeStack)
+        var style = resolveStyleForTypeStack(suffixStyle, typeStack.size - 1, -1, -1, typeStack)
         if (IntPair.getFirst(style) == 0) {
-            style = resolveStyleForTypeStack(prefixStyle, 0, min(4, typeStack.size), 1, typeStack)
+            style = resolveStyleForTypeStack(prefixStyle, 0, typeStack.size, 1, typeStack)
         }
         return styles[IntPair.getFirst(style)]
     }
