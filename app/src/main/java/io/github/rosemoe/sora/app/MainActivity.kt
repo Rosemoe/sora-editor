@@ -706,33 +706,34 @@ class MainActivity : AppCompatActivity() {
                             7 -> loadTMLLauncher.launch("*/*")
                             8 -> {
                                 val lang = TSLanguages.java()
-                                editor.setEditorLanguage(TsLanguage(lang, tsTheme = tsTheme(lang) {
+                                editor.setEditorLanguage(TsLanguage(lang, tsTheme = tsTheme {
+                                    TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL) applyTo arrayOf("identifier", "name")
                                     TextStyle.makeStyle(
                                         EditorColorScheme.COMMENT,
                                         0,
                                         false,
                                         true,
                                         false
-                                    ) styleFor "block_comment" and "line_comment"
-                                    TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL) styleFor "class_body"
-                                    TextStyle.makeStyle(EditorColorScheme.LITERAL) styleFor "character_literal" and "string_literal" and "decimal_integer_literal" and "decimal_floating_point_literal" and "hex_integer_literal" and "binary_integer_literal"
-                                    TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false) styleFor "package_declaration" and "modifiers" and "integral_type" and arrayOf(
+                                    ) applyTo arrayOf("block_comment", "line_comment")
+                                    TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL) applyTo "class_body"
+                                    TextStyle.makeStyle(EditorColorScheme.LITERAL) applyTo arrayOf("character_literal", "string_literal", "decimal_integer_literal", "decimal_floating_point_literal", "hex_integer_literal", "binary_integer_literal")
+                                    TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false) applyTo arrayOf("package_declaration", "modifiers", "integral_type",
                                         "void_type", "if", "while", "do", "for", "break", "continue", "else", "return", "strictfp", "volatile", "transient",
-                                        "synchronized", "var"
+                                        "synchronized", "var", "import", "class"
                                     )
-                                    TextStyle.makeStyle(EditorColorScheme.FUNCTION_NAME) styleFor "class_declaration"
-                                    TextStyle.makeStyle(EditorColorScheme.COMMENT) styleFor "scoped_identifier"
-                                    TextStyle.makeStyle(EditorColorScheme.OPERATOR) styleFor "=" and arrayOf(
+                                    TextStyle.makeStyle(EditorColorScheme.FUNCTION_NAME) applyTo arrayOf("class_declaration.name", "method_declaration.name", "formal_parameter.type_identifier", "field_access.object")
+                                    TextStyle.makeStyle(EditorColorScheme.COMMENT) applyTo arrayOf("scoped_identifier", "scoped_identifier.scope", "scope.name", "package_declaration.scoped_identifier.name", "import_declaration.scoped_identifier.name")
+                                    TextStyle.makeStyle(EditorColorScheme.OPERATOR) applyTo  arrayOf(
                                         "{", "}", "[", "]", ",",
                                         ";", "(", ")", "+", "-",
                                         "*", "/", "%", "&", "|",
                                         "&&", "||", "<", ">", "!",
-                                        "@", ":", "?", ".", "^",
+                                        "@", ":", "?", "dot", "^",
                                         "~", "<<", ">>", ">>>", "+=",
                                         "-=", "*=", "/=", "<=", ">=",
                                         "==", "|=", "&=", "^=", "!=",
                                         "<<=", ">>=", ">>>=", "%=", "||=",
-                                        "&&=", "++", "--"
+                                        "&&=", "++", "--", "="
                                     )
                                 }))
                             }

@@ -24,73 +24,124 @@
 
 package io.github.rosemoe.sora.editor.ts
 
-import android.util.SparseLongArray
 import com.itsaky.androidide.treesitter.TSLanguage
-import io.github.rosemoe.sora.lang.styling.TextStyle
-import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+import io.github.rosemoe.sora.util.IntPair
+import java.lang.Math.max
+import java.lang.Math.min
+import java.util.Stack
 
 class TsTheme {
 
-    private val styleMapping = SparseLongArray()
+    companion object {
+        val INTEGER_REGEX = Regex("[0-9]+")
+    }
 
-    fun styleFor(symbol: Int): Long {
-        val value = styleMapping[symbol]
-        if (value == 0L) {
-            return TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)
+    private val suffixStyle = RuleNode()
+    private val prefixStyle = RuleNode()
+    private val styles = arrayListOf(0L)
+
+    fun putStyleRule(rule: String, style: Long) {
+        val styleIdx = if (style != 0L) {
+            styles.add(style)
+            styles.size - 1
+        } else {
+            0
         }
-        return value
+        if (rule.startsWith("^")) {
+            setStyleForRuleSpec(prefixStyle, resolvePrimitiveRule(rule.substring(1)), styleIdx)
+        } else {
+            setStyleForRuleSpec(suffixStyle, resolvePrimitiveRule(rule).reversed(), styleIdx)
+        }
     }
 
-    fun isStyleSetFor(symbol: Int) : Boolean {
-        return styleMapping.indexOfKey(symbol) >= 0
+    fun eraseStyleRule(rule: String, language: TSLanguage? = null) = putStyleRule(rule, 0L)
+
+    private fun resolvePrimitiveRule(rule: String) = rule.split('.').toMutableList().also {
+        for (i in 0 until it.size) {
+            if (it[i] == "dot") {
+                it[i] = "."
+            }
+        }
     }
 
-    fun setStyleFor(symbol: Int, style: Long) {
-        println("style $style to symbol $symbol")
-        styleMapping.put(symbol, style)
+    private fun setStyleForRuleSpec(initialNode: RuleNode, ruleSpec: List<String>, style: Int) {
+        var node = initialNode
+        for (type in ruleSpec) {
+            node = node.getOrCreateChild(type)
+        }
+        node.nodeStyle = style
+    }
+
+    private fun resolveStyleForTypeStack(node: RuleNode, currentPos:Int, terminalPos: Int, deltaPos: Int, typeStack: MyStack<Array<String>>) : Long {
+        if (currentPos == terminalPos) {
+            return 0L
+        }
+        var maxDepth = 0
+        var childStyle = 0
+        for (typeAlias in typeStack[currentPos]) {
+            val sub = node.getChild(typeAlias)
+            if (sub != null) {
+                val subResult = resolveStyleForTypeStack(sub, currentPos + deltaPos, terminalPos, deltaPos, typeStack)
+                val depth = (IntPair.getSecond(subResult) - currentPos) / deltaPos
+                if (IntPair.getFirst(subResult) != 0 && depth > maxDepth) {
+                    maxDepth = depth
+                    childStyle = IntPair.getFirst(subResult)
+                }
+            }
+        }
+        if (childStyle != 0) {
+            return IntPair.pack(childStyle, currentPos + maxDepth * deltaPos)
+        }
+        return IntPair.pack(node.nodeStyle, currentPos)
+    }
+
+    internal fun resolveStyleForTypeStack(typeStack: MyStack<Array<String>>) : Long {
+        if (typeStack.size == 0) {
+            return 0L
+        }
+        // Suffix matching first
+        var style = resolveStyleForTypeStack(suffixStyle, typeStack.size - 1, max(-1, typeStack.size - 5), -1, typeStack)
+        if (IntPair.getFirst(style) == 0) {
+            style = resolveStyleForTypeStack(prefixStyle, 0, min(4, typeStack.size), 1, typeStack)
+        }
+        return styles[IntPair.getFirst(style)]
+    }
+
+    private class RuleNode(var nodeStyle: Int = 0) {
+
+        private val children = mutableMapOf<String, RuleNode>()
+
+        fun getOrCreateChild(type: String) = children[type].let {
+            if (it == null) {
+                val node = RuleNode()
+                children[type] = node
+                node
+            } else {
+                it
+            }
+        }
+
+        fun getChild(type: String) = children[type]
+
     }
 
 }
 
-class TsThemeBuilder(internal val language: TSLanguage?) {
+class TsThemeBuilder {
 
     internal val theme = TsTheme()
 
-    infix fun Long.styleFor(target: String): StyleWrapper {
-        var symbol = language!!.getSymbolForTypeString(target, true)
-        if (symbol == 0) {
-            symbol = language.getSymbolForTypeString(target, false)
-        }
-        theme.setStyleFor(symbol, this)
-        return StyleWrapper(this)
+    infix fun Long.applyTo(targetRule: String) {
+        theme.putStyleRule(targetRule, this)
     }
 
-    inner class StyleWrapper(private val textStyle: Long) {
-
-        infix fun and(target: String): StyleWrapper {
-            var symbol = language!!.getSymbolForTypeString(target, true)
-            if (symbol == 0) {
-                symbol = language.getSymbolForTypeString(target, false)
-            }
-            theme.setStyleFor(symbol, textStyle)
-            return this
+    infix fun Long.applyTo(targetRules: Array<String>) {
+        targetRules.forEach {
+            applyTo(it)
         }
-
-        infix fun and(target: Array<String>): StyleWrapper {
-            target.forEach {
-                and(it)
-            }
-            return this
-        }
-
-        infix fun and(symbol: Int): StyleWrapper {
-            theme.setStyleFor(symbol, textStyle)
-            return this
-        }
-
     }
 
 }
 
-fun tsTheme(language: TSLanguage? = null, description: TsThemeBuilder.() -> Unit) =
-    TsThemeBuilder(language).also { it.description() }.theme
+fun tsTheme(description: TsThemeBuilder.() -> Unit) =
+    TsThemeBuilder().also { it.description() }.theme

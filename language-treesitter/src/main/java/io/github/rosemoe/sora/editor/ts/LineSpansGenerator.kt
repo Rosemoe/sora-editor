@@ -33,7 +33,7 @@ import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import java.lang.Math.max
-import java.lang.Math.min
+import java.util.Stack
 
 class LineSpansGenerator(
     private val tree: TSTree, private val lineCount: Int,
@@ -67,45 +67,80 @@ class LineSpansGenerator(
 
     fun captureRegion(startIndex: Int, endIndex: Int): MutableList<Span> {
         val list = mutableListOf<Span>()
-        dfsCaptureRegion(tree.rootNode, list, startIndex, endIndex, State())
+        dfsCaptureRegion(tree.rootNode, null, list, startIndex, endIndex, NodeStack(), LastSpanState())
+        if (list.isEmpty()) {
+            list.add(Span.obtain(0, TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)))
+        }
         return list
     }
 
     private fun dfsCaptureRegion(
         node: TSNode,
+        nodeName: String?,
         list: MutableList<Span>,
         startIndex: Int,
         endIndex: Int,
-        state: State
+        nodeStack: NodeStack,
+        lastSpanState: LastSpanState
     ) {
+        // Skip this node if it does not contain the given region
         if (node.startByte >= endIndex) {
+            // To be consumed by parent
+            nodeStack.attributeStack.push(false)
             return
         }
-        // println("Region ${node.startByte}..${node.endByte} symbol: ${node.symbol} type:${node.type}")
-        val backupStyle = state.style
-        var flag = false
+        if (node.type == "ERROR" /* Error node raises too large dfs depth */) {
+            nodeStack.attributeStack.push(true)
+            val errorStyle = EditorColorScheme.TEXT_NORMAL.toLong()
+            list.add(Span.obtain(max(0, node.startByte - startIndex), errorStyle))
+            lastSpanState.style = errorStyle
+            return
+        }
+        // Push type stack
+        nodeStack.typeStack.push(if (nodeName != null) arrayOf(nodeName, node.type) else arrayOf(node.type))
+
+        // Push color stack if style is set for the rule
+        var styled = false
+        var nodeStyle = 0L
         if (node.startByte in startIndex..endIndex || (node.startByte < startIndex && node.endByte > startIndex)) {
-            if (theme.isStyleSetFor(node.symbol)) {
-                val style = theme.styleFor(node.symbol)
-                if (style != state.style) {
-                    list.add(Span.obtain(max(0, node.startByte - startIndex), style))
-                    state.style = style
-                    flag = true
+            val style = theme.resolveStyleForTypeStack(nodeStack.typeStack)
+            if (style != 0L && lastSpanState.style != style) {
+                styled = true
+                list.add(Span.obtain(max(0, node.startByte - startIndex), style))
+                lastSpanState.style = style
+                nodeStyle = style
+            }
+        }
+        // Visit children
+        var childStyled = false
+        val cursor = node.walk()
+        if (cursor.gotoFirstChild()) {
+            do {
+                val child = cursor.currentNode
+                if (child.startByte >= endIndex) {
+                    break
                 }
-            }
+                if (child.endByte >= startIndex) {
+                    dfsCaptureRegion(
+                        child,
+                        if (child.isNamed) cursor.currentFieldName else null,
+                        list,
+                        startIndex,
+                        endIndex,
+                        nodeStack,
+                        lastSpanState
+                    )
+                    if (nodeStack.attributeStack.pop()) {
+                        childStyled = true
+                        if (styled) {
+                            list.add(Span.obtain(max(0, child.endByte - startIndex), nodeStyle))
+                        }
+                    }
+                }
+            } while (cursor.gotoNextSibling())
         }
-        for (i in 0 until node.childCount) {
-            val child = node.getChild(i)
-            if (child.startByte >= endIndex) {
-                break
-            }
-            if (child.endByte >= startIndex)
-                dfsCaptureRegion(child, list, startIndex, endIndex, state)
-        }
-        if (flag) {
-            list.add(Span.obtain(min(endIndex, node.endByte - startIndex), backupStyle))
-            state.style = backupStyle
-        }
+        nodeStack.attributeStack.push(styled || childStyled)
+        nodeStack.typeStack.pop()
     }
 
     override fun adjustOnInsert(start: CharPosition, end: CharPosition) {
@@ -169,8 +204,14 @@ class LineSpansGenerator(
 
 }
 
-data class Region(val start: Int, val end: Int, val symbol: Int)
+class NodeStack {
+
+    val typeStack = MyStack<Array<String>>()
+
+    val attributeStack = MyStack<Boolean>()
+
+}
 
 data class SpanCache(val spans: MutableList<Span>, val line: Int)
 
-data class State(var style: Long = TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL))
+data class LastSpanState(var style: Long = TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL))

@@ -25,6 +25,7 @@
 package io.github.rosemoe.sora.editor.ts
 
 import android.os.Bundle
+import android.util.Log
 import com.itsaky.androidide.treesitter.TSInputEdit
 import com.itsaky.androidide.treesitter.TSInputEncoding
 import com.itsaky.androidide.treesitter.TSParser
@@ -79,6 +80,7 @@ class TsAnalyzeManager(val parser: TSParser, val theme: TsTheme) : AnalyzeManage
         } else {
             parser.parseString(source, TSInputEncoding.TSInputEncodingUTF16)
         }
+        Log.d("Test", tree!!.rootNode.nodeString)
         styles!!.spans = LineSpansGenerator(tree!!, tree!!.rootNode.endPoint.row + 1, reference!!, theme)
         currentReceiver?.setStyles(this, styles)
     }
