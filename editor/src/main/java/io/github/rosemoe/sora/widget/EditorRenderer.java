@@ -1039,6 +1039,7 @@ public class EditorRenderer {
         // Step 2 - Draw text and text decorations
         long lastStyle = 0;
         Spans.Reader reader = null;
+        lastPreparedLine = -1;
         for (int row = firstVis; row <= editor.getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
             int line = rowInf.lineIndex;
