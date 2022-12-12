@@ -3834,7 +3834,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 candidatesStart = inputConnection.composingText.startIndex;
                 candidatesEnd = inputConnection.composingText.endIndex;
             } catch (IndexOutOfBoundsException e) {
-                //Ignored
+                // Ignored
             }
         }
         inputMethodManager.updateSelection(this, cursor.getLeft(), cursor.getRight(), candidatesStart, candidatesEnd);
@@ -4296,6 +4296,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
             postInvalidateOnAnimation();
         }
+    }
+
+    @Override
+    public boolean removeCallbacks(Runnable action) {
+        EditorHandler.INSTANCE.removeCallbacks(action);
+        return super.removeCallbacks(action);
     }
 
     /**
