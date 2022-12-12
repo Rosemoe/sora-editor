@@ -2481,7 +2481,7 @@ public class EditorRenderer {
 
         void execute(Canvas canvas) {
             // Hide cursors (API level 31)
-            if (editor.inputConnection.imeConsumingInput || !editor.hasFocus()) {
+            if (editor.inputConnection.imeConsumingInput || !editor.isFocused()) {
                 return;
             }
             if (handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT && !editor.isEditable()) {

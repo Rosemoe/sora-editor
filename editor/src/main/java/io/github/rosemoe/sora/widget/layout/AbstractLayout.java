@@ -88,6 +88,7 @@ public abstract class AbstractLayout implements Layout {
         private final Object[] results;
         private final Callback callback;
         private int completedCount = 0;
+        private int cancelledCount = 0;
 
         public TaskMonitor(int totalTask, Callback callback) {
             taskCount = totalTask;
@@ -98,12 +99,17 @@ public abstract class AbstractLayout implements Layout {
         public synchronized void reportCompleted(Object result) {
             results[completedCount++] = result;
             if (completedCount == taskCount) {
-                callback.onCompleted(results);
+                callback.onCompleted(results, cancelledCount);
             }
         }
 
+        public synchronized void reportCancelled() {
+            cancelledCount ++;
+            reportCompleted(null);
+        }
+
         public interface Callback {
-            void onCompleted(Object[] results);
+            void onCompleted(Object[] results, int cancelledCount);
         }
 
     }
@@ -124,6 +130,8 @@ public abstract class AbstractLayout implements Layout {
             if (shouldRun()) {
                 var result = compute();
                 monitor.reportCompleted(result);
+            } else {
+                monitor.reportCancelled();
             }
         }
 

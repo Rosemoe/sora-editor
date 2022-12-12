@@ -68,13 +68,13 @@ public class LineBreakLayout extends AbstractLayout {
         shadowPaint.onAttributeUpdate();
         var reuseCountLocal = reuseCount.get();
         var measurerLocal = measurer;
-        final var monitor = new TaskMonitor(1, (results) -> {
+        final var monitor = new TaskMonitor(1, (results, cancelledCount) -> {
             final var editor = this.editor;
-            if (editor == null) {
+            if (editor == null || cancelledCount > 0) {
                 return;
             }
             editor.postInLifecycle(() -> {
-                if (LineBreakLayout.this.editor != editor) {
+                if (LineBreakLayout.this.editor != editor || reuseCountLocal != reuseCount.get()) {
                     // This layout could have been abandoned when waiting for Runnable execution
                     // See #307
                     return;

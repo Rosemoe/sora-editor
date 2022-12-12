@@ -74,7 +74,7 @@ public class WordwrapLayout extends AbstractLayout {
     private void breakAllLines() {
         var taskCount = Math.min(SUBTASK_COUNT, (int) Math.ceil((float) text.getLineCount() / MIN_LINE_COUNT_FOR_SUBTASK));
         var sizeEachTask = text.getLineCount() / taskCount;
-        var monitor = new TaskMonitor(taskCount, (results) -> {
+        var monitor = new TaskMonitor(taskCount,(results, cancelledCount) -> {
             final var editor = this.editor;
             if (editor != null) {
                 List<WordwrapResult> r2 = new ArrayList<>();

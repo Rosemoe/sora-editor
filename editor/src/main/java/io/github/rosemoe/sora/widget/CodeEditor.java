@@ -106,6 +106,7 @@ import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.text.TextUtils;
 import io.github.rosemoe.sora.text.method.KeyMetaStates;
 import io.github.rosemoe.sora.util.Chars;
+import io.github.rosemoe.sora.util.EditorHandler;
 import io.github.rosemoe.sora.util.Floats;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.Logger;
@@ -263,7 +264,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean editable;
     private boolean wordwrap;
     private boolean undoEnabled;
-    private boolean layoutBusy;
+    private volatile boolean layoutBusy;
     private boolean displayLnPanel;
     private int lnPanelPosition;
     private int lnPanelPositionMode;
@@ -3805,10 +3806,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void showSoftInput() {
         if (isEditable() && isEnabled()) {
-            if (isInTouchMode() && !hasFocus()) {
+            if (isInTouchMode() && !isFocused()) {
                 requestFocusFromTouch();
             }
-            if (!hasFocus()) {
+            if (!isFocused()) {
                 requestFocus();
             }
             inputMethodManager.showSoftInput(this, 0);
@@ -4307,7 +4308,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see View#post(Runnable)
      */
     public boolean postInLifecycle(Runnable action) {
-        return super.post(() -> {
+        return EditorHandler.INSTANCE.post(() -> {
             if (released) {
                 return;
             }
@@ -4326,7 +4327,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see View#postDelayed(Runnable, long)
      */
     public boolean postDelayedInLifecycle(Runnable action, long delayMillis) {
-        return super.postDelayed(() -> {
+        return EditorHandler.INSTANCE.postDelayed(() -> {
             if (released) {
                 return;
             }
