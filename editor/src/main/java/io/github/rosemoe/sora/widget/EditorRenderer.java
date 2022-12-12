@@ -2453,10 +2453,11 @@ public class EditorRenderer {
 
     }
 
-    private static class TextDisplayPosition {
-        int row, startColumn, endColumn, line, rowStart;
-        float left;
-        float right;
+    protected static class TextDisplayPosition {
+
+        protected int row, startColumn, endColumn, line, rowStart;
+        protected float left;
+        protected float right;
 
         @Override
         @NonNull
@@ -2465,12 +2466,12 @@ public class EditorRenderer {
         }
     }
 
-    class DrawCursorTask {
+    protected class DrawCursorTask {
 
-        float x;
-        float y;
-        int handleType;
-        SelectionHandleStyle.HandleDescriptor descriptor;
+        protected float x;
+        protected float y;
+        protected int handleType;
+        protected SelectionHandleStyle.HandleDescriptor descriptor;
 
         public DrawCursorTask(float x, float y, int handleType, SelectionHandleStyle.HandleDescriptor descriptor) {
             this.x = x;
@@ -2479,7 +2480,7 @@ public class EditorRenderer {
             this.descriptor = descriptor;
         }
 
-        void execute(Canvas canvas) {
+        protected void execute(Canvas canvas) {
             // Hide cursors (API level 31)
             if (editor.inputConnection.imeConsumingInput || !editor.isFocused()) {
                 return;
