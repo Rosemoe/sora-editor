@@ -158,7 +158,7 @@ public class EditorSearcher {
                     return false;
                 }
                 var left = editor.getCursor().getLeft();
-                for (int i = 0; i < res.size(); i++) {
+                for (int i = res.size() - 1; i >= 0; i--) {
                     var data = res.get(i);
                     var end = IntPair.getSecond(data);
                     if (end <= left) {
