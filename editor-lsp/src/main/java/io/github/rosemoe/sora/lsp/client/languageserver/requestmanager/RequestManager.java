@@ -165,8 +165,6 @@ public interface RequestManager extends LanguageClient, TextDocumentService, Wor
     void didChangeWatchedFiles(DidChangeWatchedFilesParams params);
 
 
-
-
     @Override
     CompletableFuture<Object> executeCommand(ExecuteCommandParams params);
 

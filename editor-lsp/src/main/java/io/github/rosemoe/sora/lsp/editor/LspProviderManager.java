@@ -25,8 +25,6 @@ package io.github.rosemoe.sora.lsp.editor;
 
 import androidx.annotation.Nullable;
 
-import org.eclipse.lsp4j.FormattingOptions;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

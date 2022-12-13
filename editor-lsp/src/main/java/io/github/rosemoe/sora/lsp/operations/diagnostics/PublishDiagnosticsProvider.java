@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
-import io.github.rosemoe.sora.lsp.operations.Provider;
 import io.github.rosemoe.sora.lsp.operations.RunOnlyProvider;
 
 public class PublishDiagnosticsProvider extends RunOnlyProvider<PublishDiagnosticsParams> {

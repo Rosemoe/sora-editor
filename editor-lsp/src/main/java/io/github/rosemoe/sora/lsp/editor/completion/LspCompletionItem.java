@@ -30,7 +30,6 @@
  import org.eclipse.lsp4j.InsertTextFormat;
  import org.eclipse.lsp4j.TextEdit;
 
-
  import java.util.List;
 
  import io.github.rosemoe.sora.lang.completion.CompletionItem;

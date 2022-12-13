@@ -34,7 +34,6 @@ import java.util.concurrent.ForkJoinPool;
 
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
-import io.github.rosemoe.sora.lsp.operations.Provider;
 import io.github.rosemoe.sora.lsp.operations.RunOnlyProvider;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 

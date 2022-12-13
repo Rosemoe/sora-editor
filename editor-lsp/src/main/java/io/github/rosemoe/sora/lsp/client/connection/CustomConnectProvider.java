@@ -39,20 +39,20 @@ public class CustomConnectProvider implements StreamConnectionProvider {
     private OutputStream outputStream;
 
     public CustomConnectProvider(StreamProvider streamProvider) {
-       this.streamProvider = streamProvider;
+        this.streamProvider = streamProvider;
     }
 
 
     @Override
     public void start() throws IOException {
-        Pair<InputStream,OutputStream> streams = streamProvider.getStreams();
+        Pair<InputStream, OutputStream> streams = streamProvider.getStreams();
         inputStream = streams.first;
         outputStream = streams.second;
     }
 
     @Override
     public InputStream getInputStream() {
-       return inputStream;
+        return inputStream;
     }
 
     @Override

@@ -29,7 +29,6 @@ import org.eclipse.lsp4j.TextEdit;
 
 import java.util.List;
 
-import io.github.rosemoe.sora.lsp.operations.Provider;
 import io.github.rosemoe.sora.lsp.operations.RunOnlyProvider;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.util.Logger;

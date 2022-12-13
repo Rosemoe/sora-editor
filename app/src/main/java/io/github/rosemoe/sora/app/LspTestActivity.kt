@@ -73,9 +73,7 @@ class LspTestActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         editor = CodeEditor(this)
-
         setContentView(editor)
 
         val font = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
@@ -88,11 +86,8 @@ class LspTestActivity : AppCompatActivity() {
         ensureTextmateTheme()
 
         lifecycleScope.launch {
-
             unAssets()
-
             connectToLanguageServer()
-
             setEditorText()
         }
     }
@@ -139,14 +134,12 @@ class LspTestActivity : AppCompatActivity() {
 
         val projectPath = externalCacheDir?.resolve("testProject")?.absolutePath ?: ""
 
-
         startService(
             Intent(this@LspTestActivity, LspLanguageServerService::class.java)
                 .apply {
                     putExtra("port", port)
                 }
         )
-
 
         val serverDefinition =
             object : CustomLanguageServerDefinition(".lua",
@@ -163,31 +156,21 @@ class LspTestActivity : AppCompatActivity() {
                 }
             }
 
-
         withContext(Dispatchers.Main) {
-
             lspEditor = LspEditorManager
                 .getOrCreateEditorManager(projectPath)
                 .createEditor(
                     URIUtils.fileToURI("$projectPath/sample.lua").toString(),
                     serverDefinition
                 )
-
             val wrapperLanguage = createTextMateLanguage()
-
             lspEditor.setWrapperLanguage(wrapperLanguage)
-
             lspEditor.editor = editor
-
-
         }
-
-
 
         lifecycleScope.launch(Dispatchers.Main) {
             //delay(Timeout.getTimeout(Timeouts.INIT).toLong()) //wait for server start
             try {
-
                 withContext(Dispatchers.IO) {
                     lspEditor.connectWithTimeout()
                     lspEditor.requestManager?.didChangeWorkspaceFolders(
@@ -201,17 +184,12 @@ class LspTestActivity : AppCompatActivity() {
 
                 editor.editable = true
                 toast("Initialized Language server")
-
             } catch (e: Exception) {
                 toast("Unable to connect language server")
                 editor.editable = true
                 e.printStackTrace()
             }
-
-
         }
-
-
     }
 
     private fun toast(text: String) {
@@ -231,8 +209,6 @@ class LspTestActivity : AppCompatActivity() {
     }
 
     private fun createTextMateLanguage(): TextMateLanguage {
-
-
         GrammarRegistry.getInstance().loadGrammars(
             languages {
                 language("lua") {
@@ -242,7 +218,6 @@ class LspTestActivity : AppCompatActivity() {
                 }
             }
         )
-
 
         return TextMateLanguage.create(
             "source.lua", false
@@ -269,7 +244,6 @@ class LspTestActivity : AppCompatActivity() {
                     ), "quitelight"
                 )
             )
-
 
             themeRegistry.setTheme("quietlight")
 

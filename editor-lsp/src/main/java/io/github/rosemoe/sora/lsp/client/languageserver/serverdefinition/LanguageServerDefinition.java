@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.Collections;
-import java.util.EventListener;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -68,7 +67,9 @@ public class LanguageServerDefinition {
     }
 
 
-    public boolean callExitForLanguageServer() { return false; }
+    public boolean callExitForLanguageServer() {
+        return false;
+    }
 
     /**
      * Stops the Language server corresponding to the given working directory

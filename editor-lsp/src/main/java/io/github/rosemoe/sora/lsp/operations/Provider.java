@@ -39,12 +39,14 @@ public interface Provider<T, R> {
     /**
      * init this feature
      */
-    default void init(LspEditor editor) {}
+    default void init(LspEditor editor) {
+    }
 
     /**
      * Dispose this feature
      */
-    default void dispose(LspEditor editor) {}
+    default void dispose(LspEditor editor) {
+    }
 
     R execute(T data);
 

@@ -28,7 +28,6 @@ import java.util.concurrent.ForkJoinPool;
 
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.operations.NoArgProvider;
-import io.github.rosemoe.sora.lsp.operations.Provider;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 
 public class DocumentCloseProvider extends NoArgProvider<CompletableFuture<Void>> {

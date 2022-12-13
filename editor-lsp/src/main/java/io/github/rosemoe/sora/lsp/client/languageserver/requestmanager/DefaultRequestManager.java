@@ -187,7 +187,6 @@ public class DefaultRequestManager implements RequestManager {
     }
 
 
-
     // Server
 
     // General
@@ -304,7 +303,7 @@ public class DefaultRequestManager implements RequestManager {
     public CompletableFuture<Either<List<? extends SymbolInformation>, List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {
         if (checkStatus()) {
             try {
-                return serverCapabilities.getWorkspaceSymbolProvider().getRight()!=null ? workspaceService.symbol(params) : null;
+                return serverCapabilities.getWorkspaceSymbolProvider().getRight() != null ? workspaceService.symbol(params) : null;
             } catch (Exception e) {
                 crashed(e);
                 return null;
@@ -680,7 +679,7 @@ public class DefaultRequestManager implements RequestManager {
 
     @Override
     public CompletableFuture<List<FoldingRange>> foldingRange(FoldingRangeRequestParams params) {
-       if (checkStatus()) {
+        if (checkStatus()) {
             try {
                 return (serverCapabilities.getFoldingRangeProvider() != null) ?
                         textDocumentService.foldingRange(params) :

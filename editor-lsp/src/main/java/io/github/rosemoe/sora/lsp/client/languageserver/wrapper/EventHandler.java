@@ -31,7 +31,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.ResponseMessage;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.jetbrains.annotations.NotNull;
 
-
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
@@ -89,9 +88,11 @@ public class EventHandler implements Function<MessageConsumer, MessageConsumer> 
         EventListener DEFAULT = new EventListener() {
         };
 
-        default void onShowMessage(MessageParams messageParams) {}
+        default void onShowMessage(MessageParams messageParams) {
+        }
 
-        default void onLogMessage(MessageParams messageParams) {}
+        default void onLogMessage(MessageParams messageParams) {
+        }
     }
 
 

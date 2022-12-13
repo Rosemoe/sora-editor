@@ -37,7 +37,6 @@ import java.util.concurrent.TimeUnit;
 
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
-import io.github.rosemoe.sora.lsp.operations.Provider;
 import io.github.rosemoe.sora.lsp.operations.RunOnlyProvider;
 import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsProvider;
 import io.github.rosemoe.sora.lsp.requests.Timeout;

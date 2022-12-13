@@ -23,11 +23,14 @@
  */
 package io.github.rosemoe.sora.lsp.client.languageserver.wrapper;
 
-import static io.github.rosemoe.sora.lsp.client.languageserver.ServerStatus.*;
+import static io.github.rosemoe.sora.lsp.client.languageserver.ServerStatus.INITIALIZED;
+import static io.github.rosemoe.sora.lsp.client.languageserver.ServerStatus.STARTED;
+import static io.github.rosemoe.sora.lsp.client.languageserver.ServerStatus.STARTING;
+import static io.github.rosemoe.sora.lsp.client.languageserver.ServerStatus.STOPPED;
+import static io.github.rosemoe.sora.lsp.client.languageserver.ServerStatus.STOPPING;
 import static io.github.rosemoe.sora.lsp.requests.Timeout.getTimeout;
 import static io.github.rosemoe.sora.lsp.requests.Timeouts.INIT;
 import static io.github.rosemoe.sora.lsp.requests.Timeouts.SHUTDOWN;
-
 
 import android.net.Uri;
 import android.util.Log;
@@ -41,9 +44,7 @@ import org.eclipse.lsp4j.CodeActionLiteralSupportCapabilities;
 import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.DefinitionCapabilities;
-import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesCapabilities;
-import org.eclipse.lsp4j.DocumentHighlightCapabilities;
 import org.eclipse.lsp4j.ExecuteCommandCapabilities;
 import org.eclipse.lsp4j.FormattingCapabilities;
 import org.eclipse.lsp4j.HoverCapabilities;
@@ -76,7 +77,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -100,7 +100,6 @@ import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.editor.LspEditorManager;
 import io.github.rosemoe.sora.lsp.utils.LSPException;
 import io.github.rosemoe.sora.lsp.utils.URIUtils;
-import io.github.rosemoe.sora.util.MyCharacter;
 
 /**
  * The implementation of a LanguageServerWrapper (specific to a serverDefinition and a project)
