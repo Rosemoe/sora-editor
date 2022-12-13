@@ -585,7 +585,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         if ((editor.dispatchEvent(new LongPressEvent(editor, editor.getText().getIndexer().getCharPosition(line, column), e)) & InterceptTarget.TARGET_EDITOR) != 0) {
             return;
         }
-        if (editor.getCursor().isSelected() || e.getPointerCount() != 1) {
+        if (e.getPointerCount() != 1) {
             return;
         }
         editor.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
