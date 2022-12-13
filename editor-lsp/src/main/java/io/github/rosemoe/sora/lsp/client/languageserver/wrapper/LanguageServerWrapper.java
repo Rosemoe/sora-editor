@@ -531,6 +531,10 @@ public class LanguageServerWrapper {
         start();
     }
 
+    public void unregister() {
+        projectToLanguageServerWrapper.remove(projectRootPath);
+    }
+
     private void connect(String uri) {
         connect(LspEditorManager.getOrCreateEditorManager(projectRootPath).getEditor(uri));
     }

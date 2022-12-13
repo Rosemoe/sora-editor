@@ -366,8 +366,9 @@ public class LspEditor {
 
 
     private void dispose() {
-
-
+        if (languageServerWrapper != null) {
+            languageServerWrapper.unregister();
+        }
         providerManager.dispose();
 
         currentEditor.clear();
@@ -385,7 +386,6 @@ public class LspEditor {
         }
 
         editorContentChangeEventReceiver = null;
-
     }
 
     /**
