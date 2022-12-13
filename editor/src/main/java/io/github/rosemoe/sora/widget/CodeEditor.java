@@ -3266,6 +3266,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param makeRightVisible Whether to make right cursor visible
      */
     public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight, int columnRight, boolean makeRightVisible, int cause) {
+        requestFocus();
         int start = getText().getCharIndex(lineLeft, columnLeft);
         int end = getText().getCharIndex(lineRight, columnRight);
         if (start == end) {
@@ -3518,7 +3519,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         final var range = getWordRange(line, column);
         final var start = range.getStart();
         final var end = range.getEnd();
-        requestFocusFromTouch();
         setSelectionRegion(start.line, start.column, end.line, end.column, SelectionChangeEvent.CAUSE_LONG_PRESS);
         selectionAnchor = getCursor().left();
     }
