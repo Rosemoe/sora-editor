@@ -99,7 +99,9 @@ public class DefaultCompletionLayout implements CompletionLayout {
 
         rootLayout.setBackground(gd);
 
-
+                listView.setHorizontalScrollBarEnabled(false);
+		listView.setVerticalScrollBarEnabled(false);
+		listView.setOverScrollMode(ListView.OVER_SCROLL_NEVER);
         listView.setDividerHeight(0);
         setLoading(true);
 
