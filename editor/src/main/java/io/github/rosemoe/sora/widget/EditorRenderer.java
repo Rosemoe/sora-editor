@@ -104,7 +104,7 @@ public class EditorRenderer {
         sSpansForWordwrap.add(Span.obtain(0, TextStyle.makeStyle(0, 0, true, true, false)));
     }
 
-    private static final String LOG_TAG = "EditorPainter";
+    private static final String LOG_TAG = "EditorRenderer";
     private final static int[] sDiagnosticsColorMapping = {0, EditorColorScheme.PROBLEM_TYPO, EditorColorScheme.PROBLEM_WARNING, EditorColorScheme.PROBLEM_ERROR};
     protected final BufferedDrawPoints bufferedDrawPoints;
     protected final Paint paintGeneral;
@@ -1072,14 +1072,14 @@ public class EditorRenderer {
                 // between two **rows** because the spans could have been changed concurrently
                 // See #290
                 reader = spans == null ? new EmptyReader() : spans.read();
-                if (reader.getSpanCount() == 0) {
-                    // Unacceptable span count, use fallback reader
-                    reader = new EmptyReader();
-                }
                 try {
                     reader.moveToLine(line);
                 } catch (Exception e) {
                     e.printStackTrace();
+                    reader = new EmptyReader();
+                }
+                if (reader.getSpanCount() == 0) {
+                    // Unacceptable span count, use fallback reader
                     reader = new EmptyReader();
                 }
                 if (editor.shouldInitializeNonPrintable()) {
