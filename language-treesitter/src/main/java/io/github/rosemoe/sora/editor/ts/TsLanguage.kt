@@ -27,6 +27,7 @@ package io.github.rosemoe.sora.editor.ts
 import android.os.Bundle
 import com.itsaky.androidide.treesitter.TSLanguage
 import com.itsaky.androidide.treesitter.TSParser
+import com.itsaky.androidide.treesitter.TSQuery
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher
@@ -44,12 +45,34 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch
  * @see TsTheme
  * @author Rosemoe
  */
-open class TsLanguage(val language: TSLanguage, val tsTheme: TsTheme = TsTheme(), val tab: Boolean = false, val scmSource: String = "") : Language {
+open class TsLanguage(
+    val language: TSLanguage,
+    val tab: Boolean = false,
+    scmSource: String,
+    themeDescription: TsThemeBuilder.() -> Unit
+) : Language {
 
-    private val analyzer by lazy {
+    val tsQuery = TSQuery(language, scmSource)
+
+    private var tsTheme = TsThemeBuilder(tsQuery).let {
+        it.themeDescription()
+        it.theme
+    }
+
+    open val analyzer by lazy {
         TsAnalyzeManager(TSParser().also {
             it.language = language
-        }, tsTheme, scmSource)
+        }, tsTheme, tsQuery)
+    }
+
+    fun updateTheme(themeDescription: TsThemeBuilder.() -> Unit) = updateTheme(TsThemeBuilder(tsQuery).let {
+            it.themeDescription()
+            it.theme
+        })
+
+    fun updateTheme(theme: TsTheme) {
+        this.tsTheme = theme
+        analyzer.updateTheme(theme)
     }
 
     override fun getAnalyzeManager() = analyzer

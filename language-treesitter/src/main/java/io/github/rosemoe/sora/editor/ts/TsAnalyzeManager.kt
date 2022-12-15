@@ -29,6 +29,7 @@ import android.util.Log
 import com.itsaky.androidide.treesitter.TSInputEdit
 import com.itsaky.androidide.treesitter.TSInputEncoding
 import com.itsaky.androidide.treesitter.TSParser
+import com.itsaky.androidide.treesitter.TSQuery
 import com.itsaky.androidide.treesitter.TSTree
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver
@@ -41,7 +42,7 @@ import io.github.rosemoe.sora.text.ContentReference
  *
  * @author Rosemoe
  */
-open class TsAnalyzeManager(val parser: TSParser, val theme: TsTheme, val scmSource: String) : AnalyzeManager {
+open class TsAnalyzeManager(val parser: TSParser, var theme: TsTheme, val tsQuery: TSQuery) : AnalyzeManager {
 
     var currentReceiver: StyleReceiver? = null
     var content: StringBuilder? = null
@@ -85,9 +86,13 @@ open class TsAnalyzeManager(val parser: TSParser, val theme: TsTheme, val scmSou
         } else {
             parser.parseString(source, TSInputEncoding.TSInputEncodingUTF16)
         }
-        Log.d("Test", tree!!.rootNode.nodeString)
-        LineSpansGeneratorEx().test(tree!!.language, scmSource, tree!!, 0, content!!.length)
-        styles!!.spans = LineSpansGenerator(tree!!, tree!!.rootNode.endPoint.row + 1, reference!!, theme, scmSource)
+        styles!!.spans = LineSpansGenerator(tree!!, reference!!.lineCount, reference!!, theme, tsQuery)
+        currentReceiver?.setStyles(this, styles)
+    }
+
+    fun updateTheme(theme: TsTheme) {
+        this.theme = theme
+        styles!!.spans = LineSpansGenerator(tree!!, reference!!.lineCount, reference!!, theme, tsQuery)
         currentReceiver?.setStyles(this, styles)
     }
 

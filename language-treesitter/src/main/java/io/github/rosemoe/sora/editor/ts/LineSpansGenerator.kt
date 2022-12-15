@@ -24,7 +24,10 @@
 
 package io.github.rosemoe.sora.editor.ts
 
-import com.itsaky.androidide.treesitter.TSNode
+import android.util.Log
+import com.itsaky.androidide.treesitter.TSQuery
+import com.itsaky.androidide.treesitter.TSQueryCapture
+import com.itsaky.androidide.treesitter.TSQueryCursor
 import com.itsaky.androidide.treesitter.TSTree
 import io.github.rosemoe.sora.lang.styling.Span
 import io.github.rosemoe.sora.lang.styling.Spans
@@ -32,7 +35,6 @@ import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
-import java.lang.Math.max
 
 /**
  * Spans generator for tree-sitter. Results are cached.
@@ -44,7 +46,7 @@ import java.lang.Math.max
 class LineSpansGenerator(
     private val tree: TSTree, private val lineCount: Int,
     private val content: ContentReference, private val theme: TsTheme,
-    private val scmSource: String
+    private val tsQuery: TSQuery
 ) : Spans {
 
     companion object {
@@ -74,80 +76,43 @@ class LineSpansGenerator(
 
     fun captureRegion(startIndex: Int, endIndex: Int): MutableList<Span> {
         val list = mutableListOf<Span>()
-        dfsCaptureRegion(tree.rootNode, null, list, startIndex, endIndex, NodeStack(), LastSpanState())
+        val captures = mutableListOf<TSQueryCapture>()
+        TSQueryCursor().use { cursor ->
+            cursor.setByteRange(startIndex * 2, endIndex * 2)
+            cursor.exec(tsQuery, tree.rootNode)
+            var match = cursor.nextMatch()
+            while (match != null) {
+                captures.addAll(match.captures)
+                match = cursor.nextMatch()
+            }
+            captures.sortBy { it.node.startByte }
+            var lastIndex = 0
+            captures.forEach {
+                val startByte = it.node.startByte
+                val endByte = it.node.endByte
+                val start = (startByte / 2 - startIndex).coerceAtLeast(0)
+                // Do not add span for overlapping regions and out-of-bounds regions
+                if (start >= lastIndex && endByte / 2 >= startIndex && startByte / 2 < endIndex) {
+                    if (start != lastIndex) {
+                        list.add(
+                            Span.obtain(
+                                lastIndex,
+                                TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)
+                            )
+                        )
+                    }
+                    list.add(Span.obtain(start, theme.resolveStyleForPattern(it.index)))
+                    lastIndex = (endByte / 2 - startIndex).coerceAtMost(endIndex)
+                }
+            }
+            if (lastIndex != endIndex) {
+                list.add(Span.obtain(lastIndex, TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)))
+            }
+        }
         if (list.isEmpty()) {
             list.add(Span.obtain(0, TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)))
         }
         return list
-    }
-
-    private fun dfsCaptureRegion(
-        node: TSNode,
-        nodeName: String?,
-        list: MutableList<Span>,
-        startIndex: Int,
-        endIndex: Int,
-        nodeStack: NodeStack,
-        lastSpanState: LastSpanState
-    ) {
-        // Skip this node if it does not contain the given region
-        if (node.startByte >= endIndex) {
-            // To be consumed by parent
-            nodeStack.attributeStack.push(false)
-            return
-        }
-        if (node.type == "ERROR" /* Error node raises too large dfs depth */) {
-            nodeStack.attributeStack.push(true)
-            val errorStyle = EditorColorScheme.TEXT_NORMAL.toLong()
-            list.add(Span.obtain(max(0, node.startByte - startIndex), errorStyle))
-            lastSpanState.style = errorStyle
-            return
-        }
-        // Push type stack
-        nodeStack.typeStack.push(if (nodeName != null) arrayOf(nodeName, node.type) else arrayOf(node.type))
-
-        // Push color stack if style is set for the rule
-        var styled = false
-        var nodeStyle = 0L
-        if (node.startByte in startIndex..endIndex || (node.startByte < startIndex && node.endByte > startIndex)) {
-            val style = theme.resolveStyleForTypeStack(nodeStack.typeStack)
-            if (style != 0L && lastSpanState.style != style) {
-                styled = true
-                list.add(Span.obtain(max(0, node.startByte - startIndex), style))
-                lastSpanState.style = style
-                nodeStyle = style
-            }
-        }
-        // Visit children
-        var childStyled = false
-        val cursor = node.walk()
-        if (cursor.gotoFirstChild()) {
-            do {
-                val child = cursor.currentNode
-                if (child.startByte >= endIndex) {
-                    break
-                }
-                if (child.endByte >= startIndex) {
-                    dfsCaptureRegion(
-                        child,
-                        if (child.isNamed) cursor.currentFieldName else null,
-                        list,
-                        startIndex,
-                        endIndex,
-                        nodeStack,
-                        lastSpanState
-                    )
-                    if (nodeStack.attributeStack.pop()) {
-                        childStyled = true
-                        if (styled) {
-                            list.add(Span.obtain(max(0, child.endByte - startIndex), nodeStyle))
-                        }
-                    }
-                }
-            } while (cursor.gotoNextSibling())
-        }
-        nodeStack.attributeStack.push(styled || childStyled)
-        nodeStack.typeStack.pop()
     }
 
     override fun adjustOnInsert(start: CharPosition, end: CharPosition) {
@@ -175,9 +140,6 @@ class LineSpansGenerator(
             val start = content.getCharPosition(line, 0).index
             val end = start + content.getColumnCount(line)
             spans = captureRegion(start, end)
-            if (spans.isEmpty() || spans[0].column > 0) {
-                spans.add(0, Span.obtain(0, TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)))
-            }
             pushCache(line, spans)
         }
 
@@ -192,11 +154,7 @@ class LineSpansGenerator(
             }
             val start = content.getCharPosition(line, 0).index
             val end = start + content.getColumnCount(line)
-            val spans = captureRegion(start, end)
-            if (spans.isEmpty() || spans[0].column > 0) {
-                spans.add(0, Span.obtain(0, TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)))
-            }
-            return spans
+            return captureRegion(start, end)
         }
 
     }
@@ -211,14 +169,4 @@ class LineSpansGenerator(
 
 }
 
-class NodeStack {
-
-    val typeStack = NonConcStack<Array<String>>()
-
-    val attributeStack = NonConcStack<Boolean>()
-
-}
-
 data class SpanCache(val spans: MutableList<Span>, val line: Int)
-
-data class LastSpanState(var style: Long = TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL))

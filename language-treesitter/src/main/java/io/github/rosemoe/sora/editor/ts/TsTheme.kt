@@ -24,7 +24,8 @@
 
 package io.github.rosemoe.sora.editor.ts
 
-import io.github.rosemoe.sora.util.IntPair
+import android.util.SparseLongArray
+import com.itsaky.androidide.treesitter.TSQuery
 
 /**
  * Theme for tree-sitter. This is different from [io.github.rosemoe.sora.widget.schemes.EditorColorScheme].
@@ -52,11 +53,10 @@ import io.github.rosemoe.sora.util.IntPair
  *
  * @author Rosemoe
  */
-class TsTheme {
+class TsTheme(private val tsQuery: TSQuery) {
 
-    private val suffixStyle = RuleNode()
-    private val prefixStyle = RuleNode()
-    private val styles = arrayListOf(0L)
+    private val styles = mutableMapOf<String, Long>()
+    private val mapping = SparseLongArray()
 
     /**
      * Set text style for the given rule string.
@@ -66,104 +66,26 @@ class TsTheme {
      * @see io.github.rosemoe.sora.lang.styling.TextStyle
      */
     fun putStyleRule(rule: String, style: Long) {
-        val styleIdx = if (style != 0L) {
-            styles.add(style)
-            styles.size - 1
-        } else {
-            0
-        }
-        if (rule.startsWith("^")) {
-            setStyleForRuleSpec(prefixStyle, resolvePrimitiveRule(rule.substring(1)), styleIdx)
-        } else {
-            setStyleForRuleSpec(suffixStyle, resolvePrimitiveRule(rule).reversed(), styleIdx)
-        }
+        styles[rule] = style
+        mapping.clear()
     }
 
     /**
-     * Remove rule*
+     * Remove rule
      * @param rule The rule for locating nodes
      */
     fun eraseStyleRule(rule: String) = putStyleRule(rule, 0L)
 
-    private fun resolvePrimitiveRule(rule: String) = rule.split('.').toMutableList().also {
-        for (i in 0 until it.size) {
-            if (it[i] == "dot") {
-                it[i] = "."
-            }
+    fun resolveStyleForPattern(pattern: Int): Long {
+        val index = mapping.indexOfKey(pattern)
+        return if (index >= 0) {
+            mapping.valueAt(index)
+        } else {
+            val mappedName = tsQuery.getCaptureNameForId(pattern)
+            val style = styles[mappedName] ?: 0
+            mapping.put(pattern, style)
+            style
         }
-    }
-
-    private fun setStyleForRuleSpec(initialNode: RuleNode, ruleSpec: List<String>, style: Int) {
-        var node = initialNode
-        for (type in ruleSpec) {
-            node = node.getOrCreateChild(type)
-        }
-        node.nodeStyle = style
-    }
-
-    private fun resolveStyleForTypeStack(
-        node: RuleNode,
-        currentPos: Int,
-        terminalPos: Int,
-        deltaPos: Int,
-        typeStack: NonConcStack<Array<String>>
-    ): Long {
-        if (currentPos == terminalPos) {
-            return 0L
-        }
-        var maxDepth = 0
-        var childStyle = 0
-        for (typeAlias in typeStack[currentPos]) {
-            val sub = node.getChild(typeAlias)
-            if (sub != null) {
-                val subResult = resolveStyleForTypeStack(
-                    sub,
-                    currentPos + deltaPos,
-                    terminalPos,
-                    deltaPos,
-                    typeStack
-                )
-                val depth = (IntPair.getSecond(subResult) - currentPos) / deltaPos
-                if (IntPair.getFirst(subResult) != 0 && depth > maxDepth) {
-                    maxDepth = depth
-                    childStyle = IntPair.getFirst(subResult)
-                }
-            }
-        }
-        if (childStyle != 0) {
-            return IntPair.pack(childStyle, currentPos + maxDepth * deltaPos)
-        }
-        return IntPair.pack(node.nodeStyle, currentPos)
-    }
-
-    internal fun resolveStyleForTypeStack(typeStack: NonConcStack<Array<String>>): Long {
-        if (typeStack.size == 0) {
-            return 0L
-        }
-        // Suffix matching first
-        var style = resolveStyleForTypeStack(suffixStyle, typeStack.size - 1, -1, -1, typeStack)
-        if (IntPair.getFirst(style) == 0) {
-            style = resolveStyleForTypeStack(prefixStyle, 0, typeStack.size, 1, typeStack)
-        }
-        return styles[IntPair.getFirst(style)]
-    }
-
-    private class RuleNode(var nodeStyle: Int = 0) {
-
-        private val children = mutableMapOf<String, RuleNode>()
-
-        fun getOrCreateChild(type: String) = children[type].let {
-            if (it == null) {
-                val node = RuleNode()
-                children[type] = node
-                node
-            } else {
-                it
-            }
-        }
-
-        fun getChild(type: String) = children[type]
-
     }
 
 }
@@ -171,9 +93,9 @@ class TsTheme {
 /**
  * Builder class for tree-sitter themes
  */
-class TsThemeBuilder {
+class TsThemeBuilder(tsQuery: TSQuery) {
 
-    internal val theme = TsTheme()
+    internal val theme = TsTheme(tsQuery)
 
     infix fun Long.applyTo(targetRule: String) {
         theme.putStyleRule(targetRule, this)
@@ -190,5 +112,5 @@ class TsThemeBuilder {
 /**
  * Build tree-sitter theme
  */
-fun tsTheme(description: TsThemeBuilder.() -> Unit) =
-    TsThemeBuilder().also { it.description() }.theme
+fun tsTheme(tsQuery: TSQuery, description: TsThemeBuilder.() -> Unit) =
+    TsThemeBuilder(tsQuery).also { it.description() }.theme

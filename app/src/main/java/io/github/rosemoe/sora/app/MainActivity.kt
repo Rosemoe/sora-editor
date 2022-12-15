@@ -708,36 +708,15 @@ class MainActivity : AppCompatActivity() {
                             7 -> loadTMLLauncher.launch("*/*")
                             8 -> {
                                 val lang = TSLanguageJava.newInstance()
-                                editor.setEditorLanguage(TsLanguage(lang, tsTheme = tsTheme {
-                                    TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL) applyTo arrayOf("identifier", "name")
-                                    TextStyle.makeStyle(
-                                        EditorColorScheme.COMMENT,
-                                        0,
-                                        false,
-                                        true,
-                                        false
-                                    ) applyTo arrayOf("block_comment", "line_comment")
-                                    TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL) applyTo "class_body"
-                                    TextStyle.makeStyle(EditorColorScheme.LITERAL) applyTo arrayOf("character_literal", "string_literal", "decimal_integer_literal", "decimal_floating_point_literal", "hex_integer_literal", "binary_integer_literal")
-                                    TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false) applyTo arrayOf("package_declaration", "modifiers", "integral_type",
-                                        "void_type", "if", "while", "do", "for", "break", "continue", "else", "return", "strictfp", "volatile", "transient",
-                                        "synchronized", "var", "import", "class"
-                                    )
-                                    TextStyle.makeStyle(EditorColorScheme.FUNCTION_NAME) applyTo arrayOf("class_declaration.name", "method_declaration.name", "formal_parameter.type_identifier", "field_access.object")
-                                    TextStyle.makeStyle(EditorColorScheme.COMMENT) applyTo arrayOf("scoped_identifier", "scoped_identifier.scope", "scope.name", "package_declaration.scoped_identifier.name", "import_declaration.scoped_identifier.name")
-                                    TextStyle.makeStyle(EditorColorScheme.OPERATOR) applyTo  arrayOf(
-                                        "{", "}", "[", "]", ",",
-                                        ";", "(", ")", "+", "-",
-                                        "*", "/", "%", "&", "|",
-                                        "&&", "||", "<", ">", "!",
-                                        "@", ":", "?", "dot", "^",
-                                        "~", "<<", ">>", ">>>", "+=",
-                                        "-=", "*=", "/=", "<=", ">=",
-                                        "==", "|=", "&=", "^=", "!=",
-                                        "<<=", ">>=", ">>>=", "%=", "||=",
-                                        "&&=", "++", "--", "="
-                                    )
-                                }, scmSource = assets.open("tree-sitter-queries/java/highlights.scm").reader().readText()))
+                                editor.setEditorLanguage(TsLanguage(lang, scmSource = assets.open("tree-sitter-queries/java/highlights.scm").reader().readText()) {
+                                    TextStyle.makeStyle(EditorColorScheme.COMMENT) applyTo "comment"
+                                    TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false) applyTo "keyword"
+                                    TextStyle.makeStyle(EditorColorScheme.LITERAL) applyTo arrayOf("constant.builtin", "string", "number")
+                                    TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_VAR) applyTo arrayOf("variable.builtin", "variable", "constant")
+                                    TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_NAME) applyTo arrayOf("type.builtin", "type", "attribute")
+                                    TextStyle.makeStyle(EditorColorScheme.FUNCTION_NAME) applyTo arrayOf("function.method", "function.builtin")
+                                    TextStyle.makeStyle(EditorColorScheme.OPERATOR) applyTo "operator"
+                                })
                             }
 
                             else -> editor.setEditorLanguage(EmptyLanguage())
