@@ -22,38 +22,29 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-plugins {
-    id("com.android.library")
-    id("com.vanniktech.maven.publish.base")
-    id("kotlin-android")
-}
+package io.github.rosemoe.sora.editor.ts
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
+import android.util.Log
+import com.itsaky.androidide.treesitter.TSLanguage
+import com.itsaky.androidide.treesitter.TSQuery
+import com.itsaky.androidide.treesitter.TSQueryCursor
+import com.itsaky.androidide.treesitter.TSTree
 
-android {
-    namespace = "io.github.rosemoe.sora.ts"
+class LineSpansGeneratorEx {
 
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+    fun test(language: TSLanguage, scmSource: String, tree: TSTree, start: Int, end: Int) {
+        val query = TSQuery(language, scmSource)
+        val cursor = TSQueryCursor()
+        cursor.setByteRange(start, end)
+        cursor.matchLimit = 114514
+        cursor.exec(query, tree.rootNode)
+        var match = cursor.nextMatch()
+        while (match != null) {
+            match.captures.forEach {
+                Log.d("Test", "Captured: ${it.node.nodeString}\nPattern type: ${query.getCaptureNameForId(it.index)}")
+            }
+            match = cursor.nextMatch()
         }
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-}
 
-dependencies {
-    compileOnly(projects.editor)
-    api("io.github.itsaky:android-tree-sitter:${Versions.tsBindingVersion}")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
 }

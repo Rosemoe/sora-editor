@@ -44,12 +44,12 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch
  * @see TsTheme
  * @author Rosemoe
  */
-open class TsLanguage(val language: TSLanguage, val tsTheme: TsTheme = TsTheme(), val tab: Boolean = false) : Language {
+open class TsLanguage(val language: TSLanguage, val tsTheme: TsTheme = TsTheme(), val tab: Boolean = false, val scmSource: String = "") : Language {
 
     private val analyzer by lazy {
         TsAnalyzeManager(TSParser().also {
             it.language = language
-        }, tsTheme)
+        }, tsTheme, scmSource)
     }
 
     override fun getAnalyzeManager() = analyzer

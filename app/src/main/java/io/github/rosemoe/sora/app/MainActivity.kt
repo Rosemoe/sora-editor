@@ -39,7 +39,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
-import com.itsaky.androidide.treesitter.TSLanguages
+import com.itsaky.androidide.treesitter.java.TSLanguageJava
 import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
 import io.github.rosemoe.sora.editor.ts.TsLanguage
 import io.github.rosemoe.sora.editor.ts.tsTheme
@@ -97,8 +97,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        System.loadLibrary("ts")
         CrashHandler.INSTANCE.init(this)
+        // Load tree-sitter libraries
+        System.loadLibrary("android-tree-sitter")
+        System.loadLibrary("tree-sitter-java")
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         val inputView = binding.symbolInput
@@ -705,7 +707,7 @@ class MainActivity : AppCompatActivity() {
 
                             7 -> loadTMLLauncher.launch("*/*")
                             8 -> {
-                                val lang = TSLanguages.java()
+                                val lang = TSLanguageJava.newInstance()
                                 editor.setEditorLanguage(TsLanguage(lang, tsTheme = tsTheme {
                                     TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL) applyTo arrayOf("identifier", "name")
                                     TextStyle.makeStyle(
@@ -735,7 +737,7 @@ class MainActivity : AppCompatActivity() {
                                         "<<=", ">>=", ">>>=", "%=", "||=",
                                         "&&=", "++", "--", "="
                                     )
-                                }))
+                                }, scmSource = assets.open("tree-sitter-queries/java/highlights.scm").reader().readText()))
                             }
 
                             else -> editor.setEditorLanguage(EmptyLanguage())

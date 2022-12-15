@@ -43,7 +43,8 @@ import java.lang.Math.max
  */
 class LineSpansGenerator(
     private val tree: TSTree, private val lineCount: Int,
-    private val content: ContentReference, private val theme: TsTheme
+    private val content: ContentReference, private val theme: TsTheme,
+    private val scmSource: String
 ) : Spans {
 
     companion object {

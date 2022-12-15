@@ -41,7 +41,7 @@ import io.github.rosemoe.sora.text.ContentReference
  *
  * @author Rosemoe
  */
-open class TsAnalyzeManager(val parser: TSParser, val theme: TsTheme) : AnalyzeManager {
+open class TsAnalyzeManager(val parser: TSParser, val theme: TsTheme, val scmSource: String) : AnalyzeManager {
 
     var currentReceiver: StyleReceiver? = null
     var content: StringBuilder? = null
@@ -86,7 +86,8 @@ open class TsAnalyzeManager(val parser: TSParser, val theme: TsTheme) : AnalyzeM
             parser.parseString(source, TSInputEncoding.TSInputEncodingUTF16)
         }
         Log.d("Test", tree!!.rootNode.nodeString)
-        styles!!.spans = LineSpansGenerator(tree!!, tree!!.rootNode.endPoint.row + 1, reference!!, theme)
+        LineSpansGeneratorEx().test(tree!!.language, scmSource, tree!!, 0, content!!.length)
+        styles!!.spans = LineSpansGenerator(tree!!, tree!!.rootNode.endPoint.row + 1, reference!!, theme, scmSource)
         currentReceiver?.setStyles(this, styles)
     }
 

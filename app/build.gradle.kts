@@ -94,7 +94,6 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.5.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
 
-
     // Editor
     implementation(projects.editor)
     implementation(projects.languageJava)
@@ -102,10 +101,13 @@ dependencies {
     implementation(projects.editorLsp)
     implementation(projects.languageTreesitter)
 
-    //Kotlin coroutines
+    // Tree-sitter languages
+    implementation("io.github.itsaky:tree-sitter-java:${Versions.tsBindingVersion}")
+
+    // Kotlin coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
 
-    //Lua language server
+    // Lua language server
     implementation(fileTree("dir" to "libs", "includes" to listOf("*.jar")))
     implementation ("org.eclipse.lsp4j:org.eclipse.lsp4j:${Versions.lsp4jVersion}")
 
