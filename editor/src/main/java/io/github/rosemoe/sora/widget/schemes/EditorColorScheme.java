@@ -257,7 +257,7 @@ public class EditorColorScheme {
                 color = 0xff536dfe;
                 break;
             case ANNOTATION:
-            case FUNCTION_NAME:
+            case IDENTIFIER_NAME:
                 color = 0xFF03A9F4;
                 break;
             case CURRENT_LINE:
@@ -297,8 +297,10 @@ public class EditorColorScheme {
                 color = 0xff999999;
                 break;
             case IDENTIFIER_VAR:
-            case IDENTIFIER_NAME:
-                color = 0xff333333;
+                color = 0xff546e7a;
+                break;
+            case FUNCTION_NAME:
+                color = 0xffe040fb;
                 break;
             case MATCHED_TEXT_BACKGROUND:
                 color = 0xffffff00;
