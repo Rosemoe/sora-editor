@@ -168,7 +168,6 @@ public class IdentifierAutoComplete {
             }
         }
         if (userIdentifiers != null) {
-            List<CompletionItem> words = new ArrayList<>();
             List<String> dest = new ArrayList<>();
 
             userIdentifiers.filterIdentifiers(prefix, dest);
@@ -262,7 +261,7 @@ public class IdentifierAutoComplete {
 
                 var score = fuzzyScore == null ? -100 : fuzzyScore.getScore();
 
-                if (TextUtils.startsWith(identifier, prefix, true) || score >= -20) {
+                if ((TextUtils.startsWith(identifier, prefix, true) || score >= -20) && !(prefix.length() == identifier.length() && TextUtils.startsWith(prefix, identifier, false))) {
                     dest.add(identifier);
                 }
             }
@@ -341,7 +340,7 @@ public class IdentifierAutoComplete {
 
                         var score = fuzzyScore == null ? -100 : fuzzyScore.getScore();
 
-                        if (TextUtils.startsWith(s, prefix, true) || score >= -20) {
+                        if ((TextUtils.startsWith(s, prefix, true) || score >= -20)  && !(prefix.length() == s.length() && TextUtils.startsWith(prefix, s, false))) {
                             dest.add(s);
                         }
                     }
