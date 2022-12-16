@@ -346,7 +346,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 if (holdingScrollbarVertical) {
                     float movedDis = e.getY() - thumbDownY;
                     thumbDownY = e.getY();
-                    float all = editor.layout.getLayoutHeight() - editor.getHeight() / 2f;
+                    float all = editor.getScrollMaxY();
                     float dy = movedDis / (editor.getHeight() - editor.getRenderer().getVerticalScrollBarRect().height()) * all;
                     scrollBy(0, dy);
                     return true;

@@ -1905,15 +1905,12 @@ public class EditorRenderer {
      */
     protected void drawScrollBarVertical(Canvas canvas) {
         int height = editor.getHeight();
-        float all = editor.getLayout().getLayoutHeight() + height / 2f;
+        float all = editor.getScrollMaxY() + height;
         float length = height / all * height;
-        float topY;
         if (length < editor.getDpUnit() * 60) {
             length = editor.getDpUnit() * 60;
-            topY = (editor.getOffsetY()) / all * (height - length);
-        } else {
-            topY = editor.getOffsetY() / all * height;
         }
+        float topY = editor.getOffsetY() * 1.0f / editor.getScrollMaxY() * (height - length);
         if (editor.getEventHandler().holdVerticalScrollBar()) {
             drawLineInfoPanel(canvas, topY, length);
         }
