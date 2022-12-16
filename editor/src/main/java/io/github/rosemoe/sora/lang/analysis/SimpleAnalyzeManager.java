@@ -175,7 +175,7 @@ public abstract class SimpleAnalyzeManager<V> implements AnalyzeManager {
                             textContainer.ensureCapacity(text.length());
                             for (int i = 0; i < text.getLineCount() && requestId == newestRequestId; i++) {
                                 if (i != 0) {
-                                    textContainer.append('\n');
+                                    textContainer.append(text.getLineSeparator(i - 1));
                                 }
                                 text.appendLineTo(textContainer, i);
                             }

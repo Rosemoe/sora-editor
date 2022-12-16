@@ -88,6 +88,14 @@ public class ContentReference extends TextReference {
     }
 
     /**
+     * @see Content#getLineSeparatorUnsafe(int)
+     */
+    public String getLineSeparator(int line) {
+        validateAccess();
+        return content.getLineSeparatorUnsafe(line).getContent();
+    }
+
+    /**
      * @see Content#getLineString(int)
      */
     public String getLine(int line) {
