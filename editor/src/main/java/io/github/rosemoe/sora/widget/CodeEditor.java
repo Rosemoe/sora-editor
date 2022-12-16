@@ -51,6 +51,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.inputmethod.CursorAnchorInfo;
@@ -121,6 +122,7 @@ import io.github.rosemoe.sora.widget.component.EditorTextActionWindow;
 import io.github.rosemoe.sora.widget.component.Magnifier;
 import io.github.rosemoe.sora.widget.layout.Layout;
 import io.github.rosemoe.sora.widget.layout.LineBreakLayout;
+import io.github.rosemoe.sora.widget.layout.ViewMeasureHelper;
 import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.snippet.SnippetController;
@@ -284,6 +286,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean lastCursorState;
     private boolean stickyTextSelection;
     private boolean highlightBracketPair;
+    private boolean anyWrapContentSet;
     private SelectionHandleStyle.HandleDescriptor handleDescLeft;
     private SelectionHandleStyle.HandleDescriptor handleDescRight;
     private SelectionHandleStyle.HandleDescriptor handleDescInsert;
@@ -1012,6 +1015,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (this.wordwrap != wordwrap || this.antiWordBreaking != antiWordBreaking) {
             this.wordwrap = wordwrap;
             this.antiWordBreaking = antiWordBreaking;
+            requestLayoutIfNeeded();
             createLayout();
             if (!wordwrap) {
                 renderer.invalidateRenderNodes();
@@ -1240,6 +1244,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void setTextSizePx(@Px float size) {
         setTextSizePxDirect(size);
+        requestLayoutIfNeeded();
         createLayout();
         invalidate();
     }
@@ -1251,6 +1256,27 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     protected void setTextSizePxDirect(float size) {
         renderer.setTextSizePxDirect(size);
+    }
+
+    protected void requestLayoutIfNeeded() {
+        if (anyWrapContentSet) {
+            requestLayout();
+        }
+    }
+
+    protected void checkForRelayout() {
+        if (anyWrapContentSet) {
+            var params = getLayoutParams();
+            if (params != null) {
+                if (params.width == ViewGroup.LayoutParams.WRAP_CONTENT) {
+                    requestLayout();
+                } else if (params.height == ViewGroup.LayoutParams.WRAP_CONTENT) {
+                    if (getHeight() != layout.getLayoutHeight()) {
+                        requestLayout();
+                    }
+                }
+            }
+        }
     }
 
     public EditorRenderer getRenderer() {
@@ -1652,7 +1678,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             restY = dpUnit * 200;
         } else if (restY < dpUnit * 100 && shift) {
             float offset = 0;
-            while (restY < dpUnit * 100) {
+            while (restY < dpUnit * 100 && getOffsetY() + offset + getRowHeight() <= getScrollMaxY()) {
                 restY += getRowHeight();
                 panelY -= getRowHeight();
                 offset += getRowHeight();
@@ -2036,7 +2062,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return max scroll y
      */
     public int getScrollMaxY() {
-        return Math.max(0, layout.getLayoutHeight() - (int) (getHeight() * (1 - verticalExtraSpaceFactor)));
+        var params = getLayoutParams();
+        return Math.max(0, layout.getLayoutHeight() - (int) (params == null || params.height == ViewGroup.LayoutParams.WRAP_CONTENT ? getHeight() : getHeight() * (1 - verticalExtraSpaceFactor)));
     }
 
     /**
@@ -2199,6 +2226,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         tabWidth = width;
         renderer.invalidateRenderNodes();
         renderer.updateTimestamp();
+        requestLayoutIfNeeded();
         invalidate();
     }
 
@@ -2495,6 +2523,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         dividerMarginLeft = marginLeft;
         dividerMarginRight = marginRight;
+        requestLayoutIfNeeded();
         invalidate();
     }
 
@@ -2512,6 +2541,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void setLineNumberMarginLeft(@Px float lineNumberMarginLeft) {
         this.lineNumberMarginLeft = lineNumberMarginLeft;
+        requestLayoutIfNeeded();
         invalidate();
     }
 
@@ -2540,6 +2570,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             throw new IllegalArgumentException("width can not be under zero");
         }
         this.dividerWidth = dividerWidth;
+        requestLayoutIfNeeded();
         invalidate();
     }
 
@@ -2558,6 +2589,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void setTypefaceLineNumber(Typeface typefaceLineNumber) {
         renderer.setTypefaceLineNumber(typefaceLineNumber);
+        requestLayoutIfNeeded();
     }
 
     /**
@@ -2575,6 +2607,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void setTypefaceText(Typeface typefaceText) {
         renderer.setTypefaceText(typefaceText);
+        requestLayoutIfNeeded();
     }
 
     /**
@@ -2609,6 +2642,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void setTextLetterSpacing(float textLetterSpacing) {
         renderer.setLetterSpacing(textLetterSpacing);
+        requestLayoutIfNeeded();
     }
 
     /**
@@ -4190,19 +4224,16 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        boolean warn = false;
-        //Fill the horizontal layout if WRAP_CONTENT mode
-        if (MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.AT_MOST || MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.UNSPECIFIED) {
-            widthMeasureSpec = MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY);
-            warn = true;
-        }
-        //Fill the vertical layout if WRAP_CONTENT mode
-        if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.AT_MOST || MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.UNSPECIFIED) {
-            heightMeasureSpec = MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(heightMeasureSpec), MeasureSpec.EXACTLY);
-            warn = true;
-        }
-        if (warn) {
-            Log.w(LOG_TAG, "onMeasure():CodeEditor does not support wrap_content mode when measuring.It will just fill the whole space.");
+        if (MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.EXACTLY ||
+                MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.EXACTLY) {
+            Log.w(LOG_TAG, "use wrap_content in editor may cause layout lags");
+            long specs = ViewMeasureHelper.getDesiredSize(widthMeasureSpec, heightMeasureSpec, measureTextRegionOffset(),
+                    getRowHeight(), wordwrap, tabWidth, text, renderer.paintGeneral);
+            widthMeasureSpec = IntPair.getFirst(specs);
+            heightMeasureSpec = IntPair.getSecond(specs);
+            anyWrapContentSet = true;
+        } else {
+            anyWrapContentSet = false;
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
@@ -4368,6 +4399,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
 
         layout.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
+        checkForRelayout();
 
         // Notify input method
         updateCursor();
@@ -4428,6 +4460,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
 
         layout.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
+        checkForRelayout();
 
         updateCursor();
 

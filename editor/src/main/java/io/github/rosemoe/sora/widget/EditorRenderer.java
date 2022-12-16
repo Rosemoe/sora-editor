@@ -558,9 +558,11 @@ public class EditorRenderer {
                 cachedGutterWidth = gutterWidth;
             } else if (cachedGutterWidth != gutterWidth && !editor.getEventHandler().isScaling) {
                 cachedGutterWidth = gutterWidth;
+                editor.postInLifecycle(editor::requestLayoutIfNeeded);
                 editor.createLayout(false);
             } else if (forcedRecreateLayout) {
                 editor.createLayout();
+                editor.postInLifecycle(editor::requestLayoutIfNeeded);
             }
         } else {
             cachedGutterWidth = 0;
