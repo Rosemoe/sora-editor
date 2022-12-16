@@ -44,8 +44,8 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
  * @author Rosemoe
  */
 class LineSpansGenerator(
-    private val tree: TSTree, private val lineCount: Int,
-    private val content: ContentReference, private val theme: TsTheme,
+    internal var tree: TSTree, internal var lineCount: Int,
+    private val content: ContentReference, internal var theme: TsTheme,
     private val tsQuery: TSQuery
 ) : Spans {
 

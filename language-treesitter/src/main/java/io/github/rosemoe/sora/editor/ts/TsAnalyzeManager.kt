@@ -25,9 +25,13 @@
 package io.github.rosemoe.sora.editor.ts
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.Log
 import com.itsaky.androidide.treesitter.TSInputEdit
 import com.itsaky.androidide.treesitter.TSInputEncoding
+import com.itsaky.androidide.treesitter.TSLanguage
 import com.itsaky.androidide.treesitter.TSParser
 import com.itsaky.androidide.treesitter.TSQuery
 import com.itsaky.androidide.treesitter.TSTree
@@ -36,73 +40,209 @@ import io.github.rosemoe.sora.lang.analysis.StyleReceiver
 import io.github.rosemoe.sora.lang.styling.Styles
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
+import java.util.concurrent.CancellationException
+import java.util.concurrent.atomic.AtomicInteger
 
-/**
- * AnalyzeManager for tree-sitter
- *
- * @author Rosemoe
- */
-open class TsAnalyzeManager(val parser: TSParser, var theme: TsTheme, val tsQuery: TSQuery) : AnalyzeManager {
+open class TsAnalyzeManager(val language: TSLanguage, var theme: TsTheme, val tsQuery: TSQuery) :
+    AnalyzeManager {
 
     var currentReceiver: StyleReceiver? = null
-    var content: StringBuilder? = null
-    var tree: TSTree? = null
-    var styles: Styles? = null
     var reference: ContentReference? = null
+    var extraArguments: Bundle? = null
+    var thread: TsLooperThread? = null
+    var styles = Styles()
+    val messageCounter = AtomicInteger()
+
+    fun updateTheme(theme: TsTheme) {
+        this.theme = theme
+        (styles.spans as LineSpansGenerator?)?.let {
+            it.theme = theme
+        }
+    }
 
     override fun setReceiver(receiver: StyleReceiver?) {
         currentReceiver = receiver
     }
 
     override fun reset(content: ContentReference, extraArguments: Bundle) {
-        this.content = content.reference.toStringBuilder()
         reference = content
-        styles = Styles()
-        rerun(null)
+        this.extraArguments = extraArguments
+        rerun()
     }
 
     override fun insert(start: CharPosition, end: CharPosition, insertedContent: CharSequence) {
-        content!!.insert(start.index, insertedContent)
-        rerun(TSInputEdit(start.index, start.index, end.index, start.toTSPoint(), start.toTSPoint(), end.toTSPoint()))
+        thread?.handler?.let {
+            messageCounter.getAndIncrement()
+            it.sendMessage(it.obtainMessage(MSG_MOD, TextModification(start.index, end.index, TSInputEdit(start.index, start.index, end.index, start.toTSPoint(), start.toTSPoint(), end.toTSPoint()), insertedContent.toString())))
+        }
+        (styles.spans as LineSpansGenerator?)?.apply {
+            lineCount = reference!!.lineCount
+            tree.edit(TSInputEdit(start.index, start.index, end.index, start.toTSPoint(), start.toTSPoint(), end.toTSPoint()))
+        }
     }
 
     override fun delete(start: CharPosition, end: CharPosition, deletedContent: CharSequence) {
-        content!!.delete(start.index, end.index)
-        rerun(TSInputEdit(start.index, end.index, start.index, start.toTSPoint(), end.toTSPoint(), start.toTSPoint()))
+        thread?.handler?.let {
+            messageCounter.getAndIncrement()
+            it.sendMessage(it.obtainMessage(MSG_MOD, TextModification(start.index, end.index, TSInputEdit(start.index, end.index, start.index, start.toTSPoint(), end.toTSPoint(), start.toTSPoint()), null)))
+        }
+        (styles.spans as LineSpansGenerator?)?.apply {
+            lineCount = reference!!.lineCount
+            tree.edit(TSInputEdit(start.index, end.index, start.index, start.toTSPoint(), end.toTSPoint(), start.toTSPoint()))
+        }
     }
 
     override fun rerun() {
-        rerun(null)
-    }
-
-    private fun rerun(edition: TSInputEdit?) {
-        val oldTree = if (edition != null) tree else null
-        val source = content.toString()
-        tree = if (oldTree != null) {
-            oldTree.edit(edition)
-            parser.parseString(oldTree, source, TSInputEncoding.TSInputEncodingUTF16).also {
-                oldTree.close()
+        messageCounter.set(0)
+        thread?.let {
+            it.callback = { throw CancellationException() }
+            if (it.isAlive) {
+                it.handler?.sendMessage(
+                    Message.obtain(
+                        thread!!.handler,
+                        MSG_EXIT
+                    )
+                )
+                it.abort = true
             }
-        } else {
-            parser.parseString(source, TSInputEncoding.TSInputEncodingUTF16)
         }
-        styles!!.spans = LineSpansGenerator(tree!!, reference!!.lineCount, reference!!, theme, tsQuery)
-        currentReceiver?.setStyles(this, styles)
-    }
-
-    fun updateTheme(theme: TsTheme) {
-        this.theme = theme
-        styles!!.spans = LineSpansGenerator(tree!!, reference!!.lineCount, reference!!, theme, tsQuery)
-        currentReceiver?.setStyles(this, styles)
+        (styles.spans as LineSpansGenerator?)?.tree?.close()
+        styles.spans = null
+        val initText = reference?.reference.toString() ?: ""
+        thread = TsLooperThread {
+            handler!!.apply {
+                messageCounter.getAndIncrement()
+                sendMessage(obtainMessage(MSG_INIT, initText))
+            }
+        }.also {
+            it.name = "TsDaemon-${nextThreadId()}"
+            styles = Styles()
+            it.start()
+        }
     }
 
     override fun destroy() {
-        setReceiver(null)
-        content = null
-        reference = null
-        tree?.close()
-        tree = null
-        parser.close()
+        thread?.let {
+            it.callback = { throw CancellationException() }
+            if (it.isAlive) {
+                it.handler?.sendMessage(
+                    Message.obtain(
+                        thread!!.handler,
+                        MSG_EXIT
+                    )
+                )
+                it.abort = true
+            }
+        }
+        (styles.spans as LineSpansGenerator?)?.tree?.close()
     }
 
+    companion object {
+        private const val MSG_BASE = 11451400
+        private const val MSG_INIT = MSG_BASE + 1
+        private const val MSG_MOD = MSG_BASE + 2
+        private const val MSG_EXIT = MSG_BASE + 3
+        @Volatile
+        private var threadId = 0
+
+        @Synchronized
+        fun nextThreadId() = ++threadId
+    }
+
+    inner class TsLooperThread(var callback: TsLooperThread.() -> Unit) : Thread() {
+
+        var handler: Handler? = null
+        var looper: Looper? = null
+        @Volatile
+        var abort: Boolean = false
+        val localText = StringBuilder()
+        private val parser = TSParser().also {
+            it.language = language
+        }
+        var tree: TSTree? = null
+        var handledMessageCount = 0
+
+        fun updateStyles() {
+            if (thread == this && handledMessageCount == messageCounter.get()) {
+                styles.spans = LineSpansGenerator(tree!!.copy(), reference!!.lineCount, reference!!, theme, tsQuery)
+                currentReceiver?.setStyles(this@TsAnalyzeManager, styles)
+            }
+        }
+
+        override fun run() {
+            Looper.prepare()
+            looper = Looper.myLooper()
+            handler = object : Handler(looper!!) {
+                override fun handleMessage(msg: Message) {
+                    super.handleMessage(msg)
+                    try {
+                        handledMessageCount ++
+                        when (msg.what) {
+                            MSG_INIT -> {
+                                localText.append(msg.obj!! as String)
+                                if (!abort && !isInterrupted) {
+                                    tree = parser.parseString(
+                                        localText.toString(),
+                                        TSInputEncoding.TSInputEncodingUTF16
+                                    )
+                                    updateStyles()
+                                }
+                            }
+
+                            MSG_MOD -> {
+                                if (!abort && !isInterrupted) {
+                                    val modification = msg.obj!! as TextModification
+                                    val newText = modification.changedText
+                                    val t = tree!!
+                                    t.edit(modification.tsEdition)
+                                    if (newText == null) {
+                                        localText.delete(modification.start, modification.end)
+                                    } else {
+                                        localText.insert(modification.start, newText)
+                                    }
+                                    tree = parser.parseString(
+                                        t,
+                                        localText.toString(),
+                                        TSInputEncoding.TSInputEncodingUTF16
+                                    )
+                                    t.close()
+                                    updateStyles()
+                                }
+                            }
+
+                            MSG_EXIT -> {
+                                releaseThreadResources()
+                                looper.quit()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.w("TsAnalyzeManager", "Thread ${Thread.currentThread().name} exited with an error", e)
+                    }
+                }
+            }
+
+            try {
+                callback()
+                Looper.loop()
+            } catch (e: CancellationException) {
+                releaseThreadResources()
+            }
+        }
+
+        fun releaseThreadResources() {
+            parser.close()
+            tree?.close()
+        }
+
+    }
+
+    private data class TextModification(
+        val start: Int,
+        val end: Int,
+        val tsEdition: TSInputEdit,
+        /**
+         * null for deletion
+         */
+        val changedText: String?
+    )
 }

@@ -26,7 +26,6 @@ package io.github.rosemoe.sora.editor.ts
 
 import android.os.Bundle
 import com.itsaky.androidide.treesitter.TSLanguage
-import com.itsaky.androidide.treesitter.TSParser
 import com.itsaky.androidide.treesitter.TSQuery
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
@@ -60,9 +59,7 @@ open class TsLanguage(
     }
 
     open val analyzer by lazy {
-        TsAnalyzeManager(TSParser().also {
-            it.language = language
-        }, tsTheme, tsQuery)
+        TsAnalyzeManager(language, tsTheme, tsQuery)
     }
 
     fun updateTheme(themeDescription: TsThemeBuilder.() -> Unit) = updateTheme(TsThemeBuilder(tsQuery).let {
