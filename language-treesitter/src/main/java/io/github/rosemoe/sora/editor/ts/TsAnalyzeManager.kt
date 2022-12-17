@@ -35,6 +35,7 @@ import com.itsaky.androidide.treesitter.TSLanguage
 import com.itsaky.androidide.treesitter.TSParser
 import com.itsaky.androidide.treesitter.TSQuery
 import com.itsaky.androidide.treesitter.TSTree
+import com.itsaky.androidide.treesitter.string.UTF16String
 import com.itsaky.androidide.treesitter.string.UTF16StringFactory
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver
@@ -156,7 +157,7 @@ open class TsAnalyzeManager(val language: TSLanguage, var theme: TsTheme, val ts
         var looper: Looper? = null
         @Volatile
         var abort: Boolean = false
-        val localText = UTF16StringFactory.newString()
+        val localText: UTF16String = UTF16StringFactory.newString()
         private val parser = TSParser().also {
             it.language = language
         }
@@ -165,6 +166,7 @@ open class TsAnalyzeManager(val language: TSLanguage, var theme: TsTheme, val ts
 
         fun updateStyles() {
             if (thread == this && handledMessageCount == messageCounter.get()) {
+                (styles.spans as LineSpansGenerator?)?.tree?.close()
                 styles.spans = LineSpansGenerator(tree!!.copy(), reference!!.lineCount, reference!!, theme, tsQuery)
                 currentReceiver?.setStyles(this@TsAnalyzeManager, styles)
             }
