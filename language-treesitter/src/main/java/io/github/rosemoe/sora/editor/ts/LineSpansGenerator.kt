@@ -97,13 +97,13 @@ class LineSpansGenerator(
                         list.add(
                             Span.obtain(
                                 lastIndex,
-                                TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)
+                                theme.normalTextStyle
                             )
                         )
                     }
                     var style = theme.resolveStyleForPattern(it.index)
                     if (style == 0L) {
-                        style = TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)
+                        style = theme.normalTextStyle
                     }
                     list.add(Span.obtain(start, style))
                     lastIndex = (endByte / 2 - startIndex).coerceAtMost(endIndex)

@@ -26,6 +26,8 @@ package io.github.rosemoe.sora.editor.ts
 
 import android.util.SparseLongArray
 import com.itsaky.androidide.treesitter.TSQuery
+import io.github.rosemoe.sora.lang.styling.TextStyle
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
  * Theme for tree-sitter. This is different from [io.github.rosemoe.sora.widget.schemes.EditorColorScheme].
@@ -43,6 +45,7 @@ class TsTheme(private val tsQuery: TSQuery) {
 
     private val styles = mutableMapOf<String, Long>()
     private val mapping = SparseLongArray()
+    var normalTextStyle = TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)
 
     /**
      * Set text style for the given rule string.
