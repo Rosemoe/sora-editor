@@ -35,6 +35,7 @@ import com.itsaky.androidide.treesitter.TSLanguage
 import com.itsaky.androidide.treesitter.TSParser
 import com.itsaky.androidide.treesitter.TSQuery
 import com.itsaky.androidide.treesitter.TSTree
+import com.itsaky.androidide.treesitter.string.UTF16StringFactory
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver
 import io.github.rosemoe.sora.lang.styling.Styles
@@ -155,7 +156,7 @@ open class TsAnalyzeManager(val language: TSLanguage, var theme: TsTheme, val ts
         var looper: Looper? = null
         @Volatile
         var abort: Boolean = false
-        val localText = StringBuilder()
+        val localText = UTF16StringFactory.newString()
         private val parser = TSParser().also {
             it.language = language
         }
@@ -181,10 +182,7 @@ open class TsAnalyzeManager(val language: TSLanguage, var theme: TsTheme, val ts
                             MSG_INIT -> {
                                 localText.append(msg.obj!! as String)
                                 if (!abort && !isInterrupted) {
-                                    tree = parser.parseString(
-                                        localText.toString(),
-                                        TSInputEncoding.TSInputEncodingUTF16
-                                    )
+                                    tree = parser.parseString(localText)
                                     updateStyles()
                                 }
                             }
@@ -200,11 +198,7 @@ open class TsAnalyzeManager(val language: TSLanguage, var theme: TsTheme, val ts
                                     } else {
                                         localText.insert(modification.start, newText)
                                     }
-                                    tree = parser.parseString(
-                                        t,
-                                        localText.toString(),
-                                        TSInputEncoding.TSInputEncodingUTF16
-                                    )
+                                    tree = parser.parseString(t, localText)
                                     t.close()
                                     updateStyles()
                                 }
@@ -216,7 +210,7 @@ open class TsAnalyzeManager(val language: TSLanguage, var theme: TsTheme, val ts
                             }
                         }
                     } catch (e: Exception) {
-                        Log.w("TsAnalyzeManager", "Thread ${Thread.currentThread().name} exited with an error", e)
+                        Log.w("TsAnalyzeManager", "Thread ${currentThread().name} exited with an error", e)
                     }
                 }
             }
@@ -232,6 +226,7 @@ open class TsAnalyzeManager(val language: TSLanguage, var theme: TsTheme, val ts
         fun releaseThreadResources() {
             parser.close()
             tree?.close()
+            localText.close()
         }
 
     }
