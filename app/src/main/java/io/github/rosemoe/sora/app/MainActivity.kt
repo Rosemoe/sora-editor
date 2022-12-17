@@ -709,7 +709,7 @@ class MainActivity : AppCompatActivity() {
                             8 -> {
                                 val lang = TSLanguageJava.newInstance()
                                 editor.setEditorLanguage(TsLanguage(lang, scmSource = assets.open("tree-sitter-queries/java/highlights.scm").reader().readText()) {
-                                    TextStyle.makeStyle(EditorColorScheme.COMMENT) applyTo "comment"
+                                    TextStyle.makeStyle(EditorColorScheme.COMMENT, 0, false, true, false) applyTo "comment"
                                     TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false) applyTo "keyword"
                                     TextStyle.makeStyle(EditorColorScheme.LITERAL) applyTo arrayOf("constant.builtin", "string", "number")
                                     TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_VAR) applyTo arrayOf("variable.builtin", "variable", "constant")
