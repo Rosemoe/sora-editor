@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.editor.ts
 
-import android.util.Log
 import com.itsaky.androidide.treesitter.TSQuery
 import com.itsaky.androidide.treesitter.TSQueryCapture
 import com.itsaky.androidide.treesitter.TSQueryCursor
@@ -39,7 +38,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 /**
  * Spans generator for tree-sitter. Results are cached.
  *
- * Note that this implementation does not support external modifications
+ * Note that this implementation does not support external modifications.
  *
  * @author Rosemoe
  */

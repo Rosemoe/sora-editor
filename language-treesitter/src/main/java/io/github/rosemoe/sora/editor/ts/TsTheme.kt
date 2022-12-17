@@ -45,6 +45,10 @@ class TsTheme(private val tsQuery: TSQuery) {
 
     private val styles = mutableMapOf<String, Long>()
     private val mapping = SparseLongArray()
+
+    /**
+     * The text style for normal texts
+     */
     var normalTextStyle = TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)
 
     /**

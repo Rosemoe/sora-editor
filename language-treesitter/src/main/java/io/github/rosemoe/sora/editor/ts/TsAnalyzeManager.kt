@@ -30,7 +30,6 @@ import android.os.Looper
 import android.os.Message
 import android.util.Log
 import com.itsaky.androidide.treesitter.TSInputEdit
-import com.itsaky.androidide.treesitter.TSInputEncoding
 import com.itsaky.androidide.treesitter.TSLanguage
 import com.itsaky.androidide.treesitter.TSParser
 import com.itsaky.androidide.treesitter.TSQuery

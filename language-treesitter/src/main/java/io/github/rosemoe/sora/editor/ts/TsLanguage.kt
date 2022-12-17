@@ -39,8 +39,9 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch
 /**
  * Tree-sitter based language.
  * @param language TSLanguage instance
- * @param tsTheme Theme for colorizing
+ * @param themeDescription Theme for colorizing nodes
  * @param tab whether tab should be used
+ * @param scmSource The scm source text for capturing tree nodes and highlighting
  * @see TsTheme
  * @author Rosemoe
  */
@@ -53,20 +54,20 @@ open class TsLanguage(
 
     val tsQuery = TSQuery(language, scmSource)
 
-    private var tsTheme = TsThemeBuilder(tsQuery).let {
-        it.themeDescription()
-        it.theme
-    }
+    private var tsTheme = TsThemeBuilder(tsQuery).apply { themeDescription() }.theme
 
     open val analyzer by lazy {
         TsAnalyzeManager(language, tsTheme, tsQuery)
     }
 
-    fun updateTheme(themeDescription: TsThemeBuilder.() -> Unit) = updateTheme(TsThemeBuilder(tsQuery).let {
-            it.themeDescription()
-            it.theme
-        })
+    /**
+     * Update tree-sitter colorizing theme with the given description
+     */
+    fun updateTheme(themeDescription: TsThemeBuilder.() -> Unit) = updateTheme(TsThemeBuilder(tsQuery).apply { themeDescription() }.theme)
 
+    /**
+     * Update tree-sitter colorizing theme
+     */
     fun updateTheme(theme: TsTheme) {
         this.tsTheme = theme
         analyzer.updateTheme(theme)
