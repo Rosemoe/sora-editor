@@ -31,25 +31,11 @@ import com.itsaky.androidide.treesitter.TSQuery
  * Theme for tree-sitter. This is different from [io.github.rosemoe.sora.widget.schemes.EditorColorScheme].
  * It is only used for colorizing spans in tree-sitter module. The real colors are still stored in editor
  * color schemes.
- *
- * ### Rule format:
- * - suffix matching: x.y.z
- *
- *   For example: class_declaration.name matches rule stack: `(*.)*class_declaration.name`
- * - prefix matching: ^x.y.z
- *
- *   For example: ^program.import_declaration matches rule stack: `program.import_declaration(.*)*`
- *
- * Tip: both node name (aka named node) and node type name can be used in rule matching.
- * Dot symbol ('.') should be replaced with letters 'dot'
- *
- * Note that we always try to find color for every node, and try to match the longest path, which means:
- *   If we have rules: package_declaration -> A, scope -> B
- *   node 'package_declaration' contains node of type 'scope', you will get 'scope' of 'package_declaration' with style B,
- *   and other parts of 'package_declaration' with style A.
- *
- *   If we add rule: package_declaration.scope -> C,
- *   you will get 'scope' of 'package_declaration' with style C,and other parts of package_declaration with style A.
+ * As what tree-sitter do, we try to match the longest scope.
+ * For example, if 'variable' and 'variable.builtin' rule are both defined, Query 'variable.builtin'
+ * and 'variable.builtin.this' will get 'variable.builtin' rule.
+ * The theme also provide a fallback. You may call [TsTheme.putStyleRule] with a rule of length 0 to
+ *  set fallback color scheme.
  *
  * @author Rosemoe
  */
@@ -81,8 +67,12 @@ class TsTheme(private val tsQuery: TSQuery) {
         return if (index >= 0) {
             mapping.valueAt(index)
         } else {
-            val mappedName = tsQuery.getCaptureNameForId(pattern)
-            val style = styles[mappedName] ?: 0
+            var mappedName = tsQuery.getCaptureNameForId(pattern)
+            var style = styles[mappedName] ?: 0L
+            while (style == 0L && mappedName.isNotEmpty()) {
+                mappedName = mappedName.substringBeforeLast('.', "")
+                style = styles[mappedName] ?: 0L
+            }
             mapping.put(pattern, style)
             style
         }
