@@ -42,7 +42,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.itsaky.androidide.treesitter.java.TSLanguageJava
 import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
 import io.github.rosemoe.sora.editor.ts.TsLanguage
-import io.github.rosemoe.sora.editor.ts.tsTheme
+import io.github.rosemoe.sora.editor.ts.TsLanguageSpec
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EditorKeyEvent
 import io.github.rosemoe.sora.event.KeyBindingEvent
@@ -708,7 +708,9 @@ class MainActivity : AppCompatActivity() {
                             7 -> loadTMLLauncher.launch("*/*")
                             8 -> {
                                 val lang = TSLanguageJava.newInstance()
-                                editor.setEditorLanguage(TsLanguage(lang, scmSource = assets.open("tree-sitter-queries/java/highlights.scm").reader().readText()) {
+                                editor.setEditorLanguage(TsLanguage(
+                                    TsLanguageSpec(TSLanguageJava.newInstance(), assets.open("tree-sitter-queries/java/highlights.scm").reader().readText())
+                                ) {
                                     TextStyle.makeStyle(EditorColorScheme.COMMENT, 0, false, true, false) applyTo "comment"
                                     TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false) applyTo "keyword"
                                     TextStyle.makeStyle(EditorColorScheme.LITERAL) applyTo arrayOf("constant.builtin", "string", "number")

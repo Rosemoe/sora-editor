@@ -41,29 +41,37 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch
  * @param language TSLanguage instance
  * @param themeDescription Theme for colorizing nodes
  * @param tab whether tab should be used
- * @param scmSource The scm source text for capturing tree nodes and highlighting
+ * @param scmSourceHighlight The scm source text for capturing tree nodes and highlighting
  * @see TsTheme
  * @author Rosemoe
  */
 open class TsLanguage(
-    val language: TSLanguage,
+    val languageSpec: TsLanguageSpec,
     val tab: Boolean = false,
-    scmSource: String,
     themeDescription: TsThemeBuilder.() -> Unit
 ) : Language {
 
-    val tsQuery = TSQuery(language, scmSource)
+    init {
+        if (languageSpec.closed) {
+            throw IllegalStateException("spec is closed")
+        }
+    }
 
-    private var tsTheme = TsThemeBuilder(tsQuery).apply { themeDescription() }.theme
+    private var tsTheme = TsThemeBuilder(languageSpec.tsQuery).apply { themeDescription() }.theme
 
     open val analyzer by lazy {
-        TsAnalyzeManager(language, tsTheme, tsQuery)
+        TsAnalyzeManager(languageSpec, tsTheme)
     }
 
     /**
      * Update tree-sitter colorizing theme with the given description
      */
-    fun updateTheme(themeDescription: TsThemeBuilder.() -> Unit) = updateTheme(TsThemeBuilder(tsQuery).apply { themeDescription() }.theme)
+    fun updateTheme(themeDescription: TsThemeBuilder.() -> Unit) = languageSpec.let {
+        if (it.closed) {
+            throw IllegalStateException("spec is closed")
+        }
+        updateTheme(TsThemeBuilder(languageSpec.tsQuery).apply { themeDescription() }.theme)
+    }
 
     /**
      * Update tree-sitter colorizing theme
@@ -97,7 +105,7 @@ open class TsLanguage(
     override fun getNewlineHandlers() = emptyArray<NewlineHandler>()
 
     override fun destroy() {
-
+        languageSpec.close()
     }
 
 }

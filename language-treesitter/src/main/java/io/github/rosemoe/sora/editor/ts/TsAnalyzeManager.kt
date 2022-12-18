@@ -44,7 +44,7 @@ import io.github.rosemoe.sora.text.ContentReference
 import java.util.concurrent.CancellationException
 import java.util.concurrent.atomic.AtomicInteger
 
-open class TsAnalyzeManager(val language: TSLanguage, var theme: TsTheme, val tsQuery: TSQuery) :
+open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme) :
     AnalyzeManager {
 
     var currentReceiver: StyleReceiver? = null
@@ -158,7 +158,7 @@ open class TsAnalyzeManager(val language: TSLanguage, var theme: TsTheme, val ts
         var abort: Boolean = false
         val localText: UTF16String = UTF16StringFactory.newString()
         private val parser = TSParser().also {
-            it.language = language
+            it.language = languageSpec.language
         }
         var tree: TSTree? = null
         var handledMessageCount = 0
@@ -166,7 +166,7 @@ open class TsAnalyzeManager(val language: TSLanguage, var theme: TsTheme, val ts
         fun updateStyles() {
             if (thread == this && handledMessageCount == messageCounter.get()) {
                 (styles.spans as LineSpansGenerator?)?.tree?.close()
-                styles.spans = LineSpansGenerator(tree!!.copy(), reference!!.lineCount, reference!!, theme, tsQuery)
+                styles.spans = LineSpansGenerator(tree!!.copy(), reference!!.lineCount, reference!!, theme, languageSpec)
                 currentReceiver?.setStyles(this@TsAnalyzeManager, styles)
             }
         }

@@ -34,6 +34,7 @@ import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+import java.util.Stack
 
 /**
  * Spans generator for tree-sitter. Results are cached.
@@ -45,7 +46,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 class LineSpansGenerator(
     internal var tree: TSTree, internal var lineCount: Int,
     private val content: ContentReference, internal var theme: TsTheme,
-    private val tsQuery: TSQuery
+    private val languageSpec: TsLanguageSpec
 ) : Spans {
 
     companion object {
@@ -78,7 +79,7 @@ class LineSpansGenerator(
         val captures = mutableListOf<TSQueryCapture>()
         TSQueryCursor().use { cursor ->
             cursor.setByteRange(startIndex * 2, endIndex * 2)
-            cursor.exec(tsQuery, tree.rootNode)
+            cursor.exec(languageSpec.tsQuery, tree.rootNode)
             var match = cursor.nextMatch()
             while (match != null) {
                 captures.addAll(match.captures)
@@ -86,6 +87,7 @@ class LineSpansGenerator(
             }
             captures.sortBy { it.node.startByte }
             var lastIndex = 0
+            // val scopeStack = Stack<TsScope>()
             captures.forEach {
                 val startByte = it.node.startByte
                 val endByte = it.node.endByte
@@ -99,6 +101,11 @@ class LineSpansGenerator(
                                 theme.normalTextStyle
                             )
                         )
+                    }
+                    when {
+                        it.index in languageSpec.localsScopeIndices -> {
+
+                        }
                     }
                     var style = theme.resolveStyleForPattern(it.index)
                     if (style == 0L) {
