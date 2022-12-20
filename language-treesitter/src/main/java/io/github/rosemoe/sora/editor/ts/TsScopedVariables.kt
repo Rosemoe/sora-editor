@@ -27,6 +27,7 @@ package io.github.rosemoe.sora.editor.ts
 import com.itsaky.androidide.treesitter.TSQueryCapture
 import com.itsaky.androidide.treesitter.TSQueryCursor
 import com.itsaky.androidide.treesitter.TSTree
+import com.itsaky.androidide.treesitter.string.UTF16String
 import java.util.Stack
 
 /**
@@ -38,7 +39,7 @@ import java.util.Stack
  * @param text The current text for tree
  * @param spec Language specification, which should the same as highlighter's
  */
-class TsScopedVariables(tree: TSTree, text: CharSequence, spec: TsLanguageSpec) {
+class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
 
     /**
      * Naturally sorted by start index
@@ -68,8 +69,11 @@ class TsScopedVariables(tree: TSTree, text: CharSequence, spec: TsLanguageSpec) 
                     if (pattern in spec.localsScopeIndices) {
                         scopeStack.push(Scope(endIndex))
                     } else if (pattern in spec.localsDefinitionIndices) {
+                        val utf16Name = text.subseqChars(startIndex, endIndex)
+                        val name = utf16Name.toString()
+                        utf16Name.close()
                         val scopedVar = ScopedVariable(
-                            text.substring(startIndex, endIndex),
+                            name,
                             startIndex,
                             scopeStack.peek().endIndex,
                             endIndex
