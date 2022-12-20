@@ -108,7 +108,7 @@ class TsLanguageSpec(
             throw IllegalArgumentException("bad scm sources: error ${tsQuery.errorType.name} occurs in $region range at offset $offset")
         }
         var highlightOffset = 0
-        for (i in 0 until tsQuery.patternCount) {
+        for (i in 0 until tsQuery.captureCount) {
             if (tsQuery.getStartByteForPattern(i) < highlightScmOffset) {
                 highlightOffset ++
                 // Only locals in localsScm are taken down
