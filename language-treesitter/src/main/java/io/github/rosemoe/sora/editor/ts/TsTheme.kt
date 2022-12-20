@@ -38,6 +38,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
  * and 'variable.builtin.this' will get 'variable.builtin' rule.
  * The theme also provide a fallback. You may call [TsTheme.putStyleRule] with a rule of length 0 to
  *  set fallback color scheme.
+ * Note that colors of 'locals.definition', 'locals.reference', etc. can not be set by this theme object.
  *
  * @author Rosemoe
  */

@@ -29,6 +29,15 @@ import com.itsaky.androidide.treesitter.TSQueryCursor
 import com.itsaky.androidide.treesitter.TSTree
 import java.util.Stack
 
+/**
+ * Class for storing tree-sitter variables. This class tracks the positions and scopes
+ * of variables and find definitions.
+ *
+ * @author Rosemoe
+ * @param tree The parsed tree
+ * @param text The current text for tree
+ * @param spec Language specification, which should the same as highlighter's
+ */
 class TsScopedVariables(tree: TSTree, text: CharSequence, spec: TsLanguageSpec) {
 
     /**

@@ -24,6 +24,11 @@
 
 package io.github.rosemoe.sora.editor.ts
 
+/**
+ * Defines what type of locals pattern of a capture
+ *
+ * @author Rosemoe
+ */
 open class LocalsCaptureSpec {
 
     companion object {

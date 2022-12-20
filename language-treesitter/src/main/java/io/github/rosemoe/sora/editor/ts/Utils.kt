@@ -27,4 +27,7 @@ package io.github.rosemoe.sora.editor.ts
 import com.itsaky.androidide.treesitter.TSPoint
 import io.github.rosemoe.sora.text.CharPosition
 
+/**
+ * Convert a [CharPosition] object to a [TSPoint] object
+ */
 fun CharPosition.toTSPoint() = TSPoint(line, column)

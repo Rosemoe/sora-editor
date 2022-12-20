@@ -38,11 +38,14 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch
 
 /**
  * Tree-sitter based language.
- * @param language TSLanguage instance
+ *
+ * @param languageSpec The language specification for parsing and highlighting
  * @param themeDescription Theme for colorizing nodes
  * @param tab whether tab should be used
- * @param scmSourceHighlight The scm source text for capturing tree nodes and highlighting
+ *
  * @see TsTheme
+ * @see TsLanguageSpec
+ *
  * @author Rosemoe
  */
 open class TsLanguage(

@@ -29,6 +29,20 @@ import com.itsaky.androidide.treesitter.TSQuery
 import com.itsaky.androidide.treesitter.TSQueryError
 import java.io.Closeable
 
+/**
+ * Language specification for tree-sitter highlighter. This specification covers language code
+ * parsing, highlighting captures and local variable tracking descriptions.
+ *
+ * Note that you must use ASCII characters in your scm sources. Otherwise, an [IllegalArgumentException] is
+ * thrown.
+ * Be careful that this should be closed to avoid native memory leaks.
+ *
+ * @author Rosemoe
+ * @param language The tree-sitter language instance to be used for parsing
+ * @param highlightScmSource The scm source code for highlighting tree nodes
+ * @param localsScmSource The scm source code for tracking local variables
+ * @param localsCaptureSpec Custom specification for locals scm file
+ */
 class TsLanguageSpec(
     val language: TSLanguage,
     highlightScmSource: String,
@@ -36,23 +50,51 @@ class TsLanguageSpec(
     localsCaptureSpec: LocalsCaptureSpec = LocalsCaptureSpec.DEFAULT
 ) : Closeable {
 
+    /**
+     * The generated scm source code for querying
+     */
     val querySource = localsScmSource + "\n" + highlightScmSource
 
+    /**
+     * Offset of highlighting scm source code in [querySource]
+     */
     val highlightScmOffset = localsScmSource.encodeToByteArray().size + 1
 
+    /**
+     * The actual [TSQuery] object
+     */
     val tsQuery = TSQuery(language, querySource)
 
+    /**
+     * The first index of highlighting pattern
+     */
     val highlightPatternOffset: Int
 
+    /**
+     * Indices of variable definition patterns
+     */
     val localsDefinitionIndices = mutableListOf<Int>()
 
+    /**
+     * Indices of variable reference patterns
+     */
     val localsReferenceIndices = mutableListOf<Int>()
 
+    /**
+     * Indices of variable scope patterns
+     */
     val localsScopeIndices = mutableListOf<Int>()
 
+    /**
+     * Indices of variable definition-value patterns. Currently unused in analysis.
+     */
     val localsDefinitionValueIndices = mutableListOf<Int>()
 
+    /**
+     * Close flag
+     */
     var closed = false
+        private set
 
     init {
         querySource.forEach {
