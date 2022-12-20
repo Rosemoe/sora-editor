@@ -315,6 +315,9 @@ public class GraphicTextRow {
             var regionStart = regionItr.getStartIndex();
             var regionEnd = regionItr.getEndIndex();
             regionEnd = Math.min(end, regionEnd);
+            if (regionStart >= regionEnd) {
+                break;
+            }
             var style = regionItr.getSpan().getStyleBits();
             if (style != lastStyle) {
                 if (isBold(style) != isBold(lastStyle)) {
@@ -325,7 +328,10 @@ public class GraphicTextRow {
                 }
                 lastStyle = style;
             }
-            width += measureTextInner(regionStart, regionEnd, regionItr.getSpanStart(), regionItr.getSpanEnd(), widths);
+            int contextStart = Math.min(regionStart, regionItr.getSpanStart());
+            int contextEnd = Math.max(regionEnd, regionItr.getSpanEnd());
+            contextEnd = Math.min(textEnd, contextEnd);
+            width += measureTextInner(regionStart, regionEnd, contextStart, contextEnd, widths);
             if (regionEnd >= end) {
                 break;
             }
