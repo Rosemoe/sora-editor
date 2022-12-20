@@ -110,6 +110,12 @@ class LineSpansGenerator(
                         if (def != null) {
                             style = theme.resolveStyleForPattern(def.matchedHighlightPattern)
                         }
+                        // This reference can not be resolved to its definition
+                        // but it can have its own fallback color by other captures
+                        // so continue to next capture
+                        if (style == 0L) {
+                            return@forEach
+                        }
                     }
                     if (style == 0L) {
                         style = theme.resolveStyleForPattern(it.index)
