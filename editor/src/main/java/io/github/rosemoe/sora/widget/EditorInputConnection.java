@@ -316,7 +316,7 @@ class EditorInputConnection extends BaseInputConnection {
                 editor.setSelectionRegion(editorCursor.getLeftLine(), editorCursor.getLeftColumn(),
                         editorCursor.getRightLine(), editorCursor.getRightColumn() - pair.close.length());
             } else if (editorCursor.isSelected() && editor.getEditorLanguage().getQuickQuoteHandler() != null) {
-                editor.commitText(text);
+                editor.commitText(text,applyAutoIndent);
             } else {
                 editorText.beginBatchEdit();
 

@@ -48,6 +48,8 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
 
     private final TextMateLanguage language;
 
+    private boolean enabled;
+
     public TextMateSymbolPairMatch(TextMateLanguage language) {
         super(new SymbolPairMatch.DefaultSymbolPairs());
         this.language = language;
@@ -55,7 +57,22 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
         updatePair();
     }
 
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        if (!enabled) {
+            removeAllPairs();
+        } else {
+            updatePair();
+        }
+    }
+
+
     public void updatePair() {
+
+        if (!enabled) {
+            return;
+        }
+
         var languageConfiguration = language.languageConfiguration;
 
         if (languageConfiguration == null) {
@@ -98,14 +115,12 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
                 }
                 mergePairs.add(newPair);
 
-
             }
         }
 
         for (var pair : mergePairs) {
             putPair(pair.open, new SymbolPair(pair.open, pair.close, new SymbolPairEx(pair)));
         }
-
 
     }
 
@@ -134,7 +149,6 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
                 }
             }
 
-
             notInTokenTypeArray = new int[notInList.size()];
 
             for (int i = 0; i < notInTokenTypeArray.length; i++) {
@@ -154,7 +168,6 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
                 }
 
                 notInTokenTypeArray[i] = notInTokenType;
-
             }
 
             Arrays.sort(notInTokenTypeArray);
@@ -174,12 +187,10 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
 
             var cursor = editor.getCursor();
 
-
             var currentLine = cursor.getLeftLine();
             var currentColumn = cursor.getLeftColumn();
 
             var spansOnCurrentLine = editor.getSpansForLine(currentLine);
-
 
             var currentSpan = binarySearchSpan(spansOnCurrentLine, currentColumn);
 
