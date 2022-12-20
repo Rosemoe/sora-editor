@@ -87,6 +87,12 @@ public class TextReference implements CharSequence {
 
     @NonNull
     @Override
+    public String toString() {
+        return ref.subSequence(start, end).toString();
+    }
+
+    @NonNull
+    @Override
     public CharSequence subSequence(int start, int end) {
         if (start < 0 || start >= length()) {
             throw new StringIndexOutOfBoundsException(start);
