@@ -62,28 +62,32 @@ public final class OnigRegExp {
 	}
 
 	@Nullable
-	public synchronized OnigResult search(final OnigString str, final int startPosition) {
+	public OnigResult search(final OnigString str, final int startPosition) {
 		if (hasGAnchor) {
 			// Should not use caching, because the regular expression
 			// targets the current search position (\G)
 			return search(str.bytesUTF8, startPosition, str.bytesCount);
 		}
-
-		final var lastSearchResult0 = this.lastSearchResult;
-		if (lastSearchString == str
-			&& lastSearchPosition <= startPosition
-			&& (lastSearchResult0 == null || lastSearchResult0.locationAt(0) >= startPosition)) {
-			return lastSearchResult0;
+		synchronized (this) {
+			final var lastSearchResult0 = this.lastSearchResult;
+			if (lastSearchString == str
+					&& lastSearchPosition <= startPosition
+					&& (lastSearchResult0 == null || lastSearchResult0.locationAt(0) >= startPosition)) {
+				return lastSearchResult0;
+			}
 		}
 
-		lastSearchString = str;
-		lastSearchPosition = startPosition;
-		lastSearchResult = search(str.bytesUTF8, startPosition, str.bytesCount);
-		return lastSearchResult;
+		var result = search(str.bytesUTF8, startPosition, str.bytesCount);
+		synchronized (this) {
+			lastSearchString = str;
+			lastSearchPosition = startPosition;
+			lastSearchResult = result;
+		}
+		return result;
 	}
 
 	@Nullable
-	private synchronized OnigResult search(final byte[] data, final int startPosition, final int end) {
+	private OnigResult search(final byte[] data, final int startPosition, final int end) {
 		final Matcher matcher = regex.matcher(data);
 		final int status = matcher.search(startPosition, end, Option.DEFAULT);
 		if (status != Matcher.FAILED) {
