@@ -287,6 +287,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean stickyTextSelection;
     private boolean highlightBracketPair;
     private boolean anyWrapContentSet;
+    private boolean renderFunctionCharacters;
     private SelectionHandleStyle.HandleDescriptor handleDescLeft;
     private SelectionHandleStyle.HandleDescriptor handleDescRight;
     private SelectionHandleStyle.HandleDescriptor handleDescInsert;
@@ -488,6 +489,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         Log.v(LOG_TAG, COPYRIGHT);
 
         eventManager = new EventManager();
+        renderFunctionCharacters = true;
         renderer = onCreateRenderer();
 
         var array = getContext().obtainStyledAttributes(attrs, R.styleable.CodeEditor, defStyleAttr, defStyleRes);
@@ -3649,6 +3651,27 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
 
         setTextSizePx(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, textSize, res.getDisplayMetrics()));
+    }
+
+    /**
+     * Render ASCII Function characters
+     * @see #isRenderFunctionCharacters()
+     */
+    public void setRenderFunctionCharacters(boolean renderFunctionCharacters) {
+        if (this.renderFunctionCharacters != renderFunctionCharacters) {
+            this.renderFunctionCharacters = renderFunctionCharacters;
+            renderer.onTextStyleUpdate();
+            requestLayoutIfNeeded();
+            createLayout();
+            invalidate();
+        }
+    }
+
+    /**
+     * @see #setRenderFunctionCharacters(boolean)
+     */
+    public boolean isRenderFunctionCharacters() {
+        return renderFunctionCharacters;
     }
 
     /**

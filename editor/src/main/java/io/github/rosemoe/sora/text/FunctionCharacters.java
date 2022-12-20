@@ -61,7 +61,7 @@ public class FunctionCharacters {
         } else if (letter == 127) {
             return "DEL";
         }
-        throw new IllegalArgumentException("not a function character");
+        return "UNK";
     }
 
 }

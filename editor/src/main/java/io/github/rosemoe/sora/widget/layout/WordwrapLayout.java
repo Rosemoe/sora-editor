@@ -549,7 +549,7 @@ public class WordwrapLayout extends AbstractLayout {
             this.start = start;
             this.id = id;
             this.end = end;
-            paint = new Paint();
+            paint = new Paint(editor.isRenderFunctionCharacters());
             paint.set(editor.getTextPaint());
             paint.onAttributeUpdate();
         }

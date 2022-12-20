@@ -63,7 +63,7 @@ public class LineBreakLayout extends AbstractLayout {
         if (text == null) {
             return;
         }
-        var shadowPaint = new Paint();
+        var shadowPaint = new Paint(editor.isRenderFunctionCharacters());
         shadowPaint.set(editor.getTextPaint());
         shadowPaint.onAttributeUpdate();
         var reuseCountLocal = reuseCount.get();

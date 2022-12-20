@@ -119,6 +119,10 @@ public class SingleCharacterWidths {
         return width;
     }
 
+    public float measureText(CharSequence str, Paint p) {
+        return measureText(str, 0, str.length(), p);
+    }
+
     /**
      * Measure text
      */

@@ -31,6 +31,7 @@ import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.widget.CodeEditor
+import java.lang.StringBuilder
 
 class TestActivity : AppCompatActivity() {
     private lateinit var editor: CodeEditor
@@ -41,7 +42,7 @@ class TestActivity : AppCompatActivity() {
         setContentView(editor)
         editor.typefaceText = Typeface.createFromAsset(assets, "Roboto-Regular.ttf")
         editor.setEditorLanguage(JavaLanguage())
-        val text = "    private final PopupWindow mWindow;\r\n" +
+        val text = StringBuilder("    private final PopupWindow mWindow;\r\n" +
                 "    private final CodeEditor mEditor;\r\n" +
                 "    private final int mFeatures;\n\r" +
                 "    private final int[] mLocationBuffer = new int[2];\r" +
@@ -49,12 +50,17 @@ class TestActivity : AppCompatActivity() {
                 "    private boolean mShowState;\r" +
                 "    private boolean mRegisterFlag;\n" +
                 "    private boolean mRegistered;\n" +
-                "    private int mOffsetX, mOffsetY, mX, mY, mWidth, mHeight;"
+                "    private int mOffsetX, mOffsetY, mX, mY, mWidth, mHeight;")
+        for (i in 0..31) {
+            text.append(i.toChar())
+        }
+        text.append(127.toChar())
         editor.setText(text)
         editor.diagnostics = DiagnosticsContainer().also {
             it.addDiagnostic(DiagnosticRegion(37, 50, DiagnosticRegion.SEVERITY_ERROR))
         }
-        assert(text == editor.text.toString()) { "Text check failed" }
+        val stringText = text.toString()
+        assert(stringText == editor.text.toString()) { "Text check failed" }
     }
 
     override fun onDestroy() {

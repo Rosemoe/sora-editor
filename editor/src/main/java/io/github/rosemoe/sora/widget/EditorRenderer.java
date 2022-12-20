@@ -76,6 +76,7 @@ import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.Cursor;
+import io.github.rosemoe.sora.text.FunctionCharacters;
 import io.github.rosemoe.sora.text.UnicodeIterator;
 import io.github.rosemoe.sora.text.bidi.Directions;
 import io.github.rosemoe.sora.util.IntPair;
@@ -153,14 +154,14 @@ public class EditorRenderer {
         }
         bufferedDrawPoints = new BufferedDrawPoints();
 
-        paintGeneral = new Paint();
+        paintGeneral = new Paint(editor.isRenderFunctionCharacters());
         paintGeneral.setAntiAlias(true);
-        paintOther = new Paint();
+        paintOther = new Paint(false);
         paintOther.setStrokeWidth(this.editor.getDpUnit() * 1.8f);
         paintOther.setStrokeCap(Paint.Cap.ROUND);
         paintOther.setTypeface(Typeface.MONOSPACE);
         paintOther.setAntiAlias(true);
-        paintGraph = new Paint();
+        paintGraph = new Paint(false);
         paintGraph.setAntiAlias(true);
 
         metricsText = paintGeneral.getFontMetricsInt();
@@ -309,6 +310,8 @@ public class EditorRenderer {
     }
 
     protected void onTextStyleUpdate() {
+        paintGeneral.setRenderFunctionCharacters(editor.isRenderFunctionCharacters());
+        metricsGraph = paintGraph.getFontMetricsInt();
         metricsLineNumber = paintOther.getFontMetricsInt();
         metricsText = paintGeneral.getFontMetricsInt();
         invalidateRenderNodes();
@@ -1645,6 +1648,30 @@ public class EditorRenderer {
         }
     }
 
+    protected void drawFunctionCharacter(Canvas canvas, float offsetX, float offsetY, float width, char ch) {
+        paintGraph.setTextAlign(android.graphics.Paint.Align.CENTER);
+        float topY = offsetY - editor.getRowBaseline(0);
+        float heightOrigin = editor.getRowHeight();
+        float heightScaled = metricsGraph.descent - metricsGraph.ascent;
+        float centerY = topY + heightOrigin / 2f;
+        float baseline = centerY - heightScaled / 2f - metricsGraph.ascent;
+        paintGraph.setColor(paintGeneral.getColor());
+        canvas.drawText(FunctionCharacters.getNameForFunctionCharacter(ch), offsetX + width / 2f, baseline, paintGraph);
+        paintGraph.setTextAlign(android.graphics.Paint.Align.RIGHT);
+        float actualWidth = paintGraph.measureText(FunctionCharacters.getNameForFunctionCharacter(ch));
+        tmpRect.top = centerY - heightScaled / 2f;
+        tmpRect.bottom = centerY + heightScaled / 2f;
+        tmpRect.left = offsetX + width / 2f - actualWidth / 2f;
+        tmpRect.right = offsetX + width / 2f + actualWidth / 2f;
+        int color = paintGeneral.getColor();
+        paintGeneral.setColor(editor.getColorScheme().getColor(EditorColorScheme.FUNCTION_CHAR_BACKGROUND_STROKE));
+        paintGeneral.setStyle(android.graphics.Paint.Style.STROKE);
+        paintGeneral.setStrokeWidth(editor.getRowHeightOfText() * 0.05f);
+        drawRowBackgroundRect(canvas, tmpRect);
+        paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
+        paintGeneral.setColor(color);
+    }
+
     /**
      * Draw text on the given position
      *
@@ -1660,10 +1687,18 @@ public class EditorRenderer {
         end = Math.min(line.value.length, end);
         var src = line.value;
         int st = index;
+        var renderFuncChars = editor.isRenderFunctionCharacters();
         for (int i = index; i < end; i++) {
             if (src[i] == '\t') {
                 drawTextRunDirect(canvas, src, st, i - st, contextStart, contextCount, offX, offY, isRtl);
                 offX = offX + measureText(line, lineNumber, st, i - st + 1);
+                st = i + 1;
+            } else if (renderFuncChars && FunctionCharacters.isEditorFunctionChar(src[i])) {
+                drawTextRunDirect(canvas, src, st, i - st, contextStart, contextCount, offX, offY, isRtl);
+                offX = offX + measureText(line, lineNumber, st, i - st);
+                float width = measureText(line, lineNumber, i, 1);
+                drawFunctionCharacter(canvas, offX, offY, width, src[i]);
+                offX = offX + width;
                 st = i + 1;
             }
         }
