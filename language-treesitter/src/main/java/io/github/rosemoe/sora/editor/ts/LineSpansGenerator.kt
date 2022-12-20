@@ -46,7 +46,7 @@ import java.util.Stack
 class LineSpansGenerator(
     internal var tree: TSTree, internal var lineCount: Int,
     private val content: ContentReference, internal var theme: TsTheme,
-    private val languageSpec: TsLanguageSpec
+    private val languageSpec: TsLanguageSpec, var scopedVariables: TsScopedVariables
 ) : Spans {
 
     companion object {
@@ -87,13 +87,15 @@ class LineSpansGenerator(
             }
             captures.sortBy { it.node.startByte }
             var lastIndex = 0
-            // val scopeStack = Stack<TsScope>()
             captures.forEach {
                 val startByte = it.node.startByte
                 val endByte = it.node.endByte
                 val start = (startByte / 2 - startIndex).coerceAtLeast(0)
+                val pattern = it.index
                 // Do not add span for overlapping regions and out-of-bounds regions
-                if (start >= lastIndex && endByte / 2 >= startIndex && startByte / 2 < endIndex) {
+                if (start >= lastIndex && endByte / 2 >= startIndex && startByte / 2 < endIndex
+                    && (pattern !in languageSpec.localsScopeIndices && pattern !in languageSpec.localsDefinitionIndices
+                            && pattern !in languageSpec.localsDefinitionValueIndices)) {
                     if (start != lastIndex) {
                         list.add(
                             Span.obtain(
@@ -102,12 +104,16 @@ class LineSpansGenerator(
                             )
                         )
                     }
-                    when {
-                        it.index in languageSpec.localsScopeIndices -> {
-
+                    var style = 0L
+                    if (it.index in languageSpec.localsReferenceIndices) {
+                        val def = scopedVariables.findDefinition(startByte / 2, endByte / 2, content.substring(startByte / 2, endByte / 2))
+                        if (def != null) {
+                            style = theme.resolveStyleForPattern(def.matchedHighlightPattern)
                         }
                     }
-                    var style = theme.resolveStyleForPattern(it.index)
+                    if (style == 0L) {
+                        style = theme.resolveStyleForPattern(it.index)
+                    }
                     if (style == 0L) {
                         style = theme.normalTextStyle
                     }

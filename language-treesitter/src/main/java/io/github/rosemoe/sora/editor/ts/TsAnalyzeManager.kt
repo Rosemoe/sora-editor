@@ -164,9 +164,10 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         var handledMessageCount = 0
 
         fun updateStyles() {
+            val scopedVariables = TsScopedVariables(tree!!, localText, languageSpec)
             if (thread == this && handledMessageCount == messageCounter.get()) {
                 (styles.spans as LineSpansGenerator?)?.tree?.close()
-                styles.spans = LineSpansGenerator(tree!!.copy(), reference!!.lineCount, reference!!, theme, languageSpec)
+                styles.spans = LineSpansGenerator(tree!!.copy(), reference!!.lineCount, reference!!, theme, languageSpec, scopedVariables)
                 currentReceiver?.setStyles(this@TsAnalyzeManager, styles)
             }
         }

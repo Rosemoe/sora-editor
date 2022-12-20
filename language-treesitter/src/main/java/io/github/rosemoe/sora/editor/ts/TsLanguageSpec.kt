@@ -69,16 +69,17 @@ class TsLanguageSpec(
         for (i in 0 until tsQuery.patternCount) {
             if (tsQuery.getStartByteForPattern(i) < highlightScmOffset) {
                 highlightOffset ++
-            }
-            val name = tsQuery.getCaptureNameForId(i)
-            if (localsCaptureSpec.isDefinitionCapture(name)) {
-                localsDefinitionIndices.add(i)
-            } else if (localsCaptureSpec.isReferenceCapture(name)) {
-                localsReferenceIndices.add(i)
-            } else if (localsCaptureSpec.isScopeCapture(name)) {
-                localsScopeIndices.add(i)
-            } else if (localsCaptureSpec.isDefinitionValueCapture(name)) {
-                localsDefinitionValueIndices.add(i)
+                // Only locals in localsScm are taken down
+                val name = tsQuery.getCaptureNameForId(i)
+                if (localsCaptureSpec.isDefinitionCapture(name)) {
+                    localsDefinitionIndices.add(i)
+                } else if (localsCaptureSpec.isReferenceCapture(name)) {
+                    localsReferenceIndices.add(i)
+                } else if (localsCaptureSpec.isScopeCapture(name)) {
+                    localsScopeIndices.add(i)
+                } else if (localsCaptureSpec.isDefinitionValueCapture(name)) {
+                    localsDefinitionValueIndices.add(i)
+                }
             }
         }
         highlightPatternOffset = highlightOffset
