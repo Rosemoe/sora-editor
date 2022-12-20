@@ -1,10 +1,17 @@
-; Methods
+; from https://github.com/tree-sitter/tree-sitter-java/blob/09d650def6cdf7f479f4b78f595e9ef5b58ce31e/queries/highlights.scm
+; Fields
+
+
+; Methods and Fields
 
 (method_declaration
   name: (identifier) @function.method)
 (method_invocation
   name: (identifier) @function.method)
 (super) @function.builtin
+(field_declaration
+  declarator: (variable_declarator
+                name: (identifier) @variable.field))
 
 ; Annotations
 

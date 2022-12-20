@@ -41,6 +41,7 @@ import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
 import com.itsaky.androidide.treesitter.java.TSLanguageJava
 import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
+import io.github.rosemoe.sora.editor.ts.LocalsCaptureSpec
 import io.github.rosemoe.sora.editor.ts.TsLanguage
 import io.github.rosemoe.sora.editor.ts.TsLanguageSpec
 import io.github.rosemoe.sora.event.ContentChangeEvent
@@ -709,14 +710,32 @@ class MainActivity : AppCompatActivity() {
                             8 -> {
                                 val lang = TSLanguageJava.newInstance()
                                 editor.setEditorLanguage(TsLanguage(
-                                    TsLanguageSpec(TSLanguageJava.newInstance(), assets.open("tree-sitter-queries/java/highlights.scm").reader().readText())
-                                ) {
+                                    TsLanguageSpec(
+                                        TSLanguageJava.newInstance(),
+                                        assets.open("tree-sitter-queries/java/highlights.scm").reader().readText(),
+                                        assets.open("tree-sitter-queries/java/locals.scm").reader().readText(),
+                                        object : LocalsCaptureSpec() {
+
+                                            override fun isScopeCapture(captureName: String): Boolean {
+                                                return captureName == "scope"
+                                            }
+
+                                            override fun isReferenceCapture(captureName: String): Boolean {
+                                                return captureName == "reference"
+                                            }
+
+                                            override fun isDefinitionCapture(captureName: String): Boolean {
+                                                return captureName == "definition.var" || captureName == "definition.field"
+                                            }
+
+                                        }
+                                    )) {
                                     TextStyle.makeStyle(EditorColorScheme.COMMENT, 0, false, true, false) applyTo "comment"
                                     TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false) applyTo "keyword"
                                     TextStyle.makeStyle(EditorColorScheme.LITERAL) applyTo arrayOf("constant.builtin", "string", "number")
                                     TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_VAR) applyTo arrayOf("variable.builtin", "variable", "constant")
                                     TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_NAME) applyTo arrayOf("type.builtin", "type", "attribute")
-                                    TextStyle.makeStyle(EditorColorScheme.FUNCTION_NAME) applyTo arrayOf("function.method", "function.builtin")
+                                    TextStyle.makeStyle(EditorColorScheme.FUNCTION_NAME) applyTo arrayOf("function.method", "function.builtin", "variable.field")
                                     TextStyle.makeStyle(EditorColorScheme.OPERATOR) applyTo "operator"
                                 })
                             }
