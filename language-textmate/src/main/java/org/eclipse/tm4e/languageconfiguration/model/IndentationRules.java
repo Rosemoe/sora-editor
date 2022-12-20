@@ -39,24 +39,24 @@ public class IndentationRules {
     /**
      * If a line matches this pattern, then all the lines after it should be unindented once (until another rule matches).
      */
-    public final OnigRegExp decreaseIndentPattern;
+    public final Pattern decreaseIndentPattern;
     /**
      * If a line matches this pattern, then all the lines after it should be indented once (until another rule matches).
      */
-    public final OnigRegExp increaseIndentPattern;
+    public final Pattern increaseIndentPattern;
     /**
      * If a line matches this pattern, then **only the next line** after it should be indented once.
      */
     @Nullable
-    public final OnigRegExp indentNextLinePattern;
+    public final Pattern indentNextLinePattern;
     /**
      * If a line matches this pattern, then its indentation should not be changed and it should not be evaluated against the other rules.
      */
     @Nullable
-    public final OnigRegExp unIndentedLinePattern;
+    public final Pattern unIndentedLinePattern;
 
 
-    public IndentationRules(OnigRegExp decreaseIndentPattern, OnigRegExp increaseIndentPattern, @Nullable OnigRegExp indentNextLinePattern, @Nullable OnigRegExp unIndentedLinePattern) {
+    public IndentationRules(Pattern decreaseIndentPattern, Pattern increaseIndentPattern, @Nullable Pattern indentNextLinePattern, @Nullable Pattern unIndentedLinePattern) {
         this.decreaseIndentPattern = decreaseIndentPattern;
         this.increaseIndentPattern = increaseIndentPattern;
         this.indentNextLinePattern = indentNextLinePattern;

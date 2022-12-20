@@ -84,11 +84,15 @@ public class LanguageConfiguration {
                             final var indentAction = IndentAction.valueOf(
                                     TextUtils.firstCharToUpperCase(indentActionString));
                             final var removeText = getAsInteger(actionJsonObj.get("removeText")); //$NON-NLS-1$
-                            final var appendText = getAsString(actionJsonObj.get("appendText")); //$NON-NLS-1$
+                            final var appendText = getAsString(actionJsonObj.get("appendText"));
+
+                            final var previousLineText = getAsPattern(actionJsonObj.get("previousLineText"));
+
+                            //$NON-NLS-1$
                             final var action = new EnterAction(indentAction);
                             action.appendText = appendText;
                             action.removeText = removeText;
-                            return new OnEnterRule(beforeText, afterText, action);
+                            return new OnEnterRule(beforeText, afterText, previousLineText, action);
                         }
                     }
                     return null;
@@ -206,23 +210,23 @@ public class LanguageConfiguration {
 
                     final var object = json.getAsJsonObject();
 
-                    final var increaseIndentPattern = getAsOnigRegExp(
+                    final var increaseIndentPattern = getAsPattern(
                             object.get("increaseIndentPattern"));
 
-                    final var decreaseIndentPattern = getAsOnigRegExp(
+                    final var decreaseIndentPattern = getAsPattern(
                             object.get("decreaseIndentPattern"));
 
-                    final var indentNextLinePattern = getAsOnigRegExp(
+                    final var indentNextLinePattern = getAsPattern(
                             object.get("indentNextLinePattern"));
 
-                    final var unIndentedLinePattern = getAsOnigRegExp(
+                    final var unIndentedLinePattern = getAsPattern(
                             object.get("unIndentedLinePattern"));
 
                     if (increaseIndentPattern == null || decreaseIndentPattern == null) {
                         return null;
                     }
 
-                    return new IndentationRules(decreaseIndentPattern,increaseIndentPattern,indentNextLinePattern,unIndentedLinePattern);
+                    return new IndentationRules(decreaseIndentPattern, increaseIndentPattern, indentNextLinePattern, unIndentedLinePattern);
                 })
 
                 .registerTypeAdapter(FoldingRules.class, (JsonDeserializer<FoldingRules>) (json, typeOfT, context) -> {
@@ -278,6 +282,7 @@ public class LanguageConfiguration {
         try {
             return element.getAsString();
         } catch (final Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
@@ -344,8 +349,6 @@ public class LanguageConfiguration {
     public String getWordPattern() {
         return wordPattern;
     }
-
-    // TODO @Nullable IndentionRule getIndentionRules();
 
     @Nullable
     private List<OnEnterRule> onEnterRules;

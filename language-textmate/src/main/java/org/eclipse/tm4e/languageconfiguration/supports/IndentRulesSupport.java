@@ -25,6 +25,7 @@ package org.eclipse.tm4e.languageconfiguration.supports;
 
 import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
 import org.eclipse.tm4e.languageconfiguration.model.IndentationRules;
+import org.eclipse.tm4e.languageconfiguration.utils.TextUtils;
 
 /**
  * The "IndentRules" support.
@@ -42,17 +43,10 @@ public class IndentRulesSupport {
     }
 
     public boolean shouldIncrease(String text) {
-        if (this.indentationRules.increaseIndentPattern == null) {
+        if (this.indentationRules.increaseIndentPattern == null || TextUtils.isEmpty(text)) {
             return false;
         }
-        var searchResult = this.indentationRules.increaseIndentPattern.search(
-                OnigString.of(text), 0);
-
-        if (searchResult == null) {
-            return false;
-        }
-
-        return searchResult.count() > 0;
+        return indentationRules.increaseIndentPattern.matcher(text).matches();
 
         // if (this._indentationRules.indentNextLinePattern && this._indentationRules.indentNextLinePattern.test(text)) {
         // 	return true;
@@ -60,46 +54,25 @@ public class IndentRulesSupport {
     }
 
     public boolean shouldDecrease(String text) {
-        if (this.indentationRules.decreaseIndentPattern == null) {
+        if (this.indentationRules.decreaseIndentPattern == null || TextUtils.isEmpty(text)) {
             return false;
         }
-        var searchResult = this.indentationRules.decreaseIndentPattern.search(
-                OnigString.of(text), 0);
-
-        if (searchResult == null) {
-            return false;
-        }
-
-        return searchResult.count() > 0;
+        return indentationRules.decreaseIndentPattern.matcher(text).matches();
     }
 
     public boolean shouldIndentNextLine(String text) {
-        if (this.indentationRules.indentNextLinePattern == null) {
+        if (this.indentationRules.indentNextLinePattern == null || TextUtils.isEmpty(text)) {
             return false;
         }
-        var searchResult = this.indentationRules.indentNextLinePattern.search(
-                OnigString.of(text), 0);
-
-        if (searchResult == null) {
-            return false;
-        }
-
-        return searchResult.count() > 0;
+        return indentationRules.indentNextLinePattern.matcher(text).matches();
     }
 
 
     public boolean shouldIgnore(String text) {
-        if (this.indentationRules.unIndentedLinePattern == null) {
+        if (this.indentationRules.unIndentedLinePattern == null || TextUtils.isEmpty(text)) {
             return false;
         }
-        var searchResult = this.indentationRules.unIndentedLinePattern.search(
-                OnigString.of(text), 0);
-
-        if (searchResult == null) {
-            return false;
-        }
-
-        return searchResult.count() > 0;
+        return indentationRules.unIndentedLinePattern.matcher(text).matches();
     }
 
 
@@ -118,10 +91,6 @@ public class IndentRulesSupport {
             ret += IndentConsts.UNINDENT_MASK;
         }
         return ret;
-    }
-
-    public boolean packMetadata(int metadata, int mask) {
-        return (metadata & mask) != 0;
     }
 
 

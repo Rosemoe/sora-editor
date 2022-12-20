@@ -65,7 +65,7 @@ public class OnEnterSupport {
     @Nullable
     public EnterAction onEnter(
             // TODO autoIndent: EditorAutoIndentStrategy,
-            // TODO final String previousLineText,
+            final String previousLineText,
             final String beforeEnterText,
             final String afterEnterText) {
         // (1): `regExpRules`
@@ -73,16 +73,24 @@ public class OnEnterSupport {
             if (rule == null) {
                 continue;
             }
+            var regResult = 1;
+
             final var beforeText = rule.beforeText;
-            if (beforeText.matcher(beforeEnterText).find()) {
-                final var afterText = rule.afterText;
-                if (afterText != null) {
-                    if (afterText.matcher(afterEnterText).find()) {
-                        return rule.action.copy();
-                    }
-                } else {
-                    return rule.action.copy();
-                }
+
+            regResult &= beforeText.matcher(beforeEnterText).matches() ? 1 : 0;
+
+            final var afterText = rule.afterText;
+            if (afterText != null) {
+                regResult &= afterText.matcher(afterEnterText).matches() ? 1 : 0;
+            }
+
+            final var previousText = rule.previousLineText;
+            if (previousText != null) {
+                regResult &= previousText.matcher(previousLineText).matches() ? 1 : 0;
+            }
+
+            if (regResult == 1) {
+                return rule.action.copy();
             }
         }
 
