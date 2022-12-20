@@ -299,4 +299,12 @@ public class DirectAccessProps implements Serializable {
     @InvalidateRequired
     public int hardwrapColumn = 0;
 
+    /**
+     * Select words even if some texts are already selected when the editor is
+     * long-pressed.
+     * If true, new text under the new long-press will be selected. Otherwise, the old text is kept
+     * selected.
+     */
+    public boolean reselectOnLongPress = true;
+
 }
