@@ -35,12 +35,12 @@ open class LocalsCaptureSpec {
         val DEFAULT = LocalsCaptureSpec()
     }
 
-    fun isDefinitionValueCapture(captureName: String) = captureName == "local.definition-value"
+    open fun isDefinitionValueCapture(captureName: String) = captureName == "local.definition-value"
 
-    fun isDefinitionCapture(captureName: String) = captureName == "local.definition"
+    open fun isDefinitionCapture(captureName: String) = captureName == "local.definition"
 
-    fun isReferenceCapture(captureName: String) = captureName == "local.reference"
+    open fun isReferenceCapture(captureName: String) = captureName == "local.reference"
 
-    fun isScopeCapture(captureName: String) = captureName == "local.scope"
+    open fun isScopeCapture(captureName: String) = captureName == "local.scope"
 
 }
