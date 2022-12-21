@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lang.styling;
 import androidx.annotation.NonNull;
 
 import java.util.Comparator;
+import java.util.Objects;
 
 /**
  * Code block info model
@@ -74,6 +75,19 @@ public class CodeBlock {
     public void clear() {
         startColumn = startLine = endLine = endColumn = 0;
         toBottomOfEndLine = false;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CodeBlock codeBlock = (CodeBlock) o;
+        return startLine == codeBlock.startLine && startColumn == codeBlock.startColumn && endLine == codeBlock.endLine && endColumn == codeBlock.endColumn && toBottomOfEndLine == codeBlock.toBottomOfEndLine;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(startLine, startColumn, endLine, endColumn, toBottomOfEndLine);
     }
 
     @NonNull

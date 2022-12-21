@@ -33,11 +33,13 @@ import com.itsaky.androidide.treesitter.TSInputEdit
 import com.itsaky.androidide.treesitter.TSLanguage
 import com.itsaky.androidide.treesitter.TSParser
 import com.itsaky.androidide.treesitter.TSQuery
+import com.itsaky.androidide.treesitter.TSQueryCursor
 import com.itsaky.androidide.treesitter.TSTree
 import com.itsaky.androidide.treesitter.string.UTF16String
 import com.itsaky.androidide.treesitter.string.UTF16StringFactory
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver
+import io.github.rosemoe.sora.lang.styling.CodeBlock
 import io.github.rosemoe.sora.lang.styling.Styles
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
@@ -168,8 +170,44 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
             if (thread == this && handledMessageCount == messageCounter.get()) {
                 (styles.spans as LineSpansGenerator?)?.tree?.close()
                 styles.spans = LineSpansGenerator(tree!!.copy(), reference!!.lineCount, reference!!, theme, languageSpec, scopedVariables)
+                updateCodeBlocks()
                 currentReceiver?.setStyles(this@TsAnalyzeManager, styles)
             }
+        }
+
+        fun updateCodeBlocks() {
+            if (languageSpec.blocksQuery.patternCount == 0) {
+                return
+            }
+            val blocks = mutableListOf<CodeBlock>()
+            TSQueryCursor().use {
+                it.exec(languageSpec.blocksQuery, tree!!.rootNode)
+                var match = it.nextMatch()
+                while (match != null) {
+                    match.captures.forEach {
+                        blocks.add(CodeBlock().also { block ->
+                            var node = it.node
+                            val start = node.startPoint
+                            block.startLine = start.row
+                            block.startColumn = start.column
+                            val end = if (languageSpec.tsQuery.getCaptureNameForId(it.index).endsWith(".marked")) {
+                                // Goto last terminal element
+                                while (node.childCount > 0) {
+                                    node = node.getChild(node.childCount - 1)
+                                }
+                                node.startPoint
+                            } else {
+                                node.startPoint
+                            }
+                            block.endLine = end.row
+                            block.endColumn = end.column
+                        })
+                    }
+                    match = it.nextMatch()
+                }
+            }
+            val distinct = blocks.distinct().toMutableList()
+            styles.blocks = distinct
         }
 
         override fun run() {

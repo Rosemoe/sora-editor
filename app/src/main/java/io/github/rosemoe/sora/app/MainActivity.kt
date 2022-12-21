@@ -713,6 +713,7 @@ class MainActivity : AppCompatActivity() {
                                     TsLanguageSpec(
                                         TSLanguageJava.newInstance(),
                                         assets.open("tree-sitter-queries/java/highlights.scm").reader().readText(),
+                                        assets.open("tree-sitter-queries/java/blocks.scm").reader().readText(),
                                         assets.open("tree-sitter-queries/java/locals.scm").reader().readText(),
                                         object : LocalsCaptureSpec() {
 

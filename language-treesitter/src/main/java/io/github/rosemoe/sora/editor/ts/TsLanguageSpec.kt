@@ -46,6 +46,9 @@ import java.io.Closeable
  * @author Rosemoe
  * @param language The tree-sitter language instance to be used for parsing
  * @param highlightScmSource The scm source code for highlighting tree nodes
+ * @param codeBlocksScmSource The scm source for capturing code blocks.
+ *                          All captured nodes are considered to be a code block.
+ *                          Capture named with '.marked' suffix will have its last terminal node's start position as its scope end
  * @param localsScmSource The scm source code for tracking local variables
  * @param localsCaptureSpec Custom specification for locals scm file
  * @param predicates Client custom predicate implementations
@@ -53,6 +56,7 @@ import java.io.Closeable
 class TsLanguageSpec(
     val language: TSLanguage,
     highlightScmSource: String,
+    codeBlocksScmSource: String = "",
     localsScmSource: String = "",
     localsCaptureSpec: LocalsCaptureSpec = LocalsCaptureSpec.DEFAULT,
     val predicates: List<TsPredicate> = listOf(MatchPredicate)
@@ -98,7 +102,12 @@ class TsLanguageSpec(
      */
     val localsDefinitionValueIndices = mutableListOf<Int>()
 
+    /**
+     * Predicates for patterns
+     */
     val patternPredicates = mutableListOf<List<TsClientPredicateStep>>()
+
+    val blocksQuery = TSQuery(language, codeBlocksScmSource)
 
     /**
      * Close flag
@@ -160,6 +169,7 @@ class TsLanguageSpec(
 
     override fun close() {
         tsQuery.close()
+        blocksQuery.close()
         closed = true
     }
 
