@@ -44,7 +44,14 @@ public abstract class AbstractLayout implements Layout {
     protected static final int SUBTASK_COUNT = 8;
     protected static final int MIN_LINE_COUNT_FOR_SUBTASK = 3000;
     protected static final BidiLayoutHelper BidiLayout = BidiLayoutHelper.INSTANCE;
-    private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(2, Runtime.getRuntime().availableProcessors(), 1, TimeUnit.MINUTES, new LinkedBlockingQueue<>(128));
+    private static final ThreadPoolExecutor executor;
+
+    static {
+        int maximumPoolSize = Math.max(2, Runtime.getRuntime().availableProcessors()); // available processor count changes during runtime
+        final int corePoolSize = 2;
+        executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, 1, TimeUnit.MINUTES, new LinkedBlockingQueue<>(128));
+    }
+
     protected CodeEditor editor;
     protected Content text;
 
