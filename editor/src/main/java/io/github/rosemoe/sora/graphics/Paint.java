@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.graphics;
 import android.annotation.SuppressLint;
 import android.graphics.Typeface;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -197,7 +198,7 @@ public class Paint extends android.graphics.Paint {
             for (int i = start;i < end;i++) {
                 char ch = text.value[i];
                 if (FunctionCharacters.isEditorFunctionChar(ch)) {
-                    int result = lastEnd == i ? 0 : breakTextImpl(text, lastEnd, i, advance - current);
+                    int result = lastEnd == i ? i : breakTextImpl(text, lastEnd, i, advance - current);
                     if (result < i) {
                         return result;
                     }
