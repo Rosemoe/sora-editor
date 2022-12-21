@@ -162,7 +162,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         }
         (styles.spans as LineSpansGenerator?)?.tree?.close()
         styles.spans = null
-        val initText = reference?.reference.toString() ?: ""
+        val initText = reference?.reference?.toString() ?: ""
         thread = TsLooperThread {
             handler!!.apply {
                 messageCounter.getAndIncrement()
