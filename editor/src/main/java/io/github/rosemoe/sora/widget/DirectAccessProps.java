@@ -307,4 +307,10 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean reselectOnLongPress = true;
 
+    /**
+     * Show selection above selection handle when text is selectedd
+     */
+    @InvalidateRequired
+    public boolean showSelectionWhenSelected = false;
+
 }

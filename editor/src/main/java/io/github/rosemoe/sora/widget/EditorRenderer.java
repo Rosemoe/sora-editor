@@ -2535,7 +2535,12 @@ public class EditorRenderer {
                 }
             }
 
-            if (handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT || editor.getCursorBlink().visibility || editor.getEventHandler().holdInsertHandle()) {
+            if (((handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT
+                    || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT)
+                    && editor.getProps().showSelectionWhenSelected)
+                    || (!(handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT
+                    || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT) && (editor.getCursorBlink().visibility
+                    || editor.getEventHandler().holdInsertHandle()))) {
                 tmpRect.top = y - (editor.getProps().textBackgroundWrapTextOnly ? editor.getRowHeightOfText() : editor.getRowHeight());
                 tmpRect.bottom = y;
                 tmpRect.left = x - editor.getInsertSelectionWidth() / 2f;
