@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.lang.brackets;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.text.Content;
 
 /**
@@ -96,7 +98,7 @@ public class OnlineBracketsMatcher implements BracketsProvider {
     }
 
     @Override
-    public PairedBracket getPairedBracketAt(Content text, int index) {
+    public PairedBracket getPairedBracketAt(@NonNull Content text, int index) {
         PairedBracket pairedBracket = null;
         if (index > 0) {
             pairedBracket = tryComputePaired(text, index - 1);

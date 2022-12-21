@@ -712,10 +712,11 @@ class MainActivity : AppCompatActivity() {
                                 editor.setEditorLanguage(TsLanguage(
                                     TsLanguageSpec(
                                         TSLanguageJava.newInstance(),
-                                        assets.open("tree-sitter-queries/java/highlights.scm").reader().readText(),
-                                        assets.open("tree-sitter-queries/java/blocks.scm").reader().readText(),
-                                        assets.open("tree-sitter-queries/java/locals.scm").reader().readText(),
-                                        object : LocalsCaptureSpec() {
+                                        highlightScmSource = assets.open("tree-sitter-queries/java/highlights.scm").reader().readText(),
+                                        codeBlocksScmSource = assets.open("tree-sitter-queries/java/blocks.scm").reader().readText(),
+                                        bracketsScmSource = assets.open("tree-sitter-queries/java/brackets.scm").reader().readText(),
+                                        localsScmSource = assets.open("tree-sitter-queries/java/locals.scm").reader().readText(),
+                                        localsCaptureSpec = object : LocalsCaptureSpec() {
 
                                             override fun isScopeCapture(captureName: String): Boolean {
                                                 return captureName == "scope"

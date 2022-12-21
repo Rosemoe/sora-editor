@@ -42,6 +42,7 @@ import java.io.Closeable
  * Note that you must use ASCII characters in your scm sources. Otherwise, an [IllegalArgumentException] is
  * thrown.
  * Be careful that this should be closed to avoid native memory leaks.
+ * Note that, client predicates are applied only to highlighting scm source.
  *
  * @author Rosemoe
  * @param language The tree-sitter language instance to be used for parsing
@@ -49,6 +50,7 @@ import java.io.Closeable
  * @param codeBlocksScmSource The scm source for capturing code blocks.
  *                          All captured nodes are considered to be a code block.
  *                          Capture named with '.marked' suffix will have its last terminal node's start position as its scope end
+ * @param bracketsScmSource The scm source for capturing brackets. Capture named 'open' and 'close' are used to compute bracket pairs
  * @param localsScmSource The scm source code for tracking local variables
  * @param localsCaptureSpec Custom specification for locals scm file
  * @param predicates Client custom predicate implementations
@@ -57,6 +59,7 @@ class TsLanguageSpec(
     val language: TSLanguage,
     highlightScmSource: String,
     codeBlocksScmSource: String = "",
+    bracketsScmSource: String = "",
     localsScmSource: String = "",
     localsCaptureSpec: LocalsCaptureSpec = LocalsCaptureSpec.DEFAULT,
     val predicates: List<TsPredicate> = listOf(MatchPredicate)
@@ -108,6 +111,8 @@ class TsLanguageSpec(
     val patternPredicates = mutableListOf<List<TsClientPredicateStep>>()
 
     val blocksQuery = TSQuery(language, codeBlocksScmSource)
+
+    val bracketsQuery = TSQuery(language, bracketsScmSource)
 
     /**
      * Close flag
@@ -170,6 +175,7 @@ class TsLanguageSpec(
     override fun close() {
         tsQuery.close()
         blocksQuery.close()
+        bracketsQuery.close()
         closed = true
     }
 

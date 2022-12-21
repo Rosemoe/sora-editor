@@ -25,6 +25,8 @@ package io.github.rosemoe.sora.lang.brackets;
 
 import android.util.SparseIntArray;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.text.Content;
 
 /**
@@ -70,7 +72,7 @@ public class SimpleBracketsCollector implements BracketsProvider {
     }
 
     @Override
-    public PairedBracket getPairedBracketAt(Content text, int index) {
+    public PairedBracket getPairedBracketAt(@NonNull Content text, int index) {
         var res = index - 1 >= 0 ? getForIndex(index - 1) : null;
         if (res == null) {
             res = getForIndex(index);

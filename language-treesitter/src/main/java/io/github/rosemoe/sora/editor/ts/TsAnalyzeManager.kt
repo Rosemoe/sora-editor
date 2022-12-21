@@ -169,9 +169,11 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
             val scopedVariables = TsScopedVariables(tree!!, localText, languageSpec)
             if (thread == this && handledMessageCount == messageCounter.get()) {
                 (styles.spans as LineSpansGenerator?)?.tree?.close()
-                styles.spans = LineSpansGenerator(tree!!.copy(), reference!!.lineCount, reference!!, theme, languageSpec, scopedVariables)
+                val copied = tree!!.copy()
+                styles.spans = LineSpansGenerator(copied, reference!!.lineCount, reference!!, theme, languageSpec, scopedVariables)
                 updateCodeBlocks()
                 currentReceiver?.setStyles(this@TsAnalyzeManager, styles)
+                currentReceiver?.updateBracketProvider(this@TsAnalyzeManager, TsBracketPairs(copied, languageSpec))
             }
         }
 
