@@ -27,6 +27,12 @@ package io.github.rosemoe.sora.editor.ts
 import com.itsaky.androidide.treesitter.TSLanguage
 import com.itsaky.androidide.treesitter.TSQuery
 import com.itsaky.androidide.treesitter.TSQueryError
+import com.itsaky.androidide.treesitter.TSQueryMatch
+import com.itsaky.androidide.treesitter.TSQueryPredicateStep
+import io.github.rosemoe.sora.editor.ts.predicate.PredicateResult
+import io.github.rosemoe.sora.editor.ts.predicate.TsClientPredicateStep
+import io.github.rosemoe.sora.editor.ts.predicate.TsPredicate
+import io.github.rosemoe.sora.editor.ts.predicate.builtin.MatchPredicate
 import java.io.Closeable
 
 /**
@@ -42,12 +48,14 @@ import java.io.Closeable
  * @param highlightScmSource The scm source code for highlighting tree nodes
  * @param localsScmSource The scm source code for tracking local variables
  * @param localsCaptureSpec Custom specification for locals scm file
+ * @param predicates Client custom predicate implementations
  */
 class TsLanguageSpec(
     val language: TSLanguage,
     highlightScmSource: String,
     localsScmSource: String = "",
-    localsCaptureSpec: LocalsCaptureSpec = LocalsCaptureSpec.DEFAULT
+    localsCaptureSpec: LocalsCaptureSpec = LocalsCaptureSpec.DEFAULT,
+    val predicates: List<TsPredicate> = listOf(MatchPredicate)
 ) : Closeable {
 
     /**
@@ -90,6 +98,8 @@ class TsLanguageSpec(
      */
     val localsDefinitionValueIndices = mutableListOf<Int>()
 
+    val patternPredicates = mutableListOf<List<TsClientPredicateStep>>()
+
     /**
      * Close flag
      */
@@ -108,6 +118,15 @@ class TsLanguageSpec(
             throw IllegalArgumentException("bad scm sources: error ${tsQuery.errorType.name} occurs in $region range at offset $offset")
         }
         var highlightOffset = 0
+        for (i in 0 until tsQuery.patternCount) {
+            patternPredicates.add(tsQuery.getPredicatesForPattern(i).map {
+                when (it.type) {
+                    TSQueryPredicateStep.Type.String -> TsClientPredicateStep(it.type, tsQuery.getStringValueForId(it.valueId))
+                    TSQueryPredicateStep.Type.Capture -> TsClientPredicateStep(it.type, tsQuery.getCaptureNameForId(it.valueId))
+                    else -> TsClientPredicateStep(it.type, "")
+                }
+            })
+        }
         for (i in 0 until tsQuery.captureCount) {
             if (tsQuery.getStartByteForPattern(i) < highlightScmOffset) {
                 highlightOffset ++
@@ -125,6 +144,18 @@ class TsLanguageSpec(
             }
         }
         highlightPatternOffset = highlightOffset
+    }
+
+    fun doPredicate(text: CharSequence, match: TSQueryMatch) : Boolean {
+        val description = patternPredicates[match.patternIndex]
+        for (predicate in predicates) {
+           when (predicate.doPredicate(tsQuery, text, match, description)) {
+               PredicateResult.ACCEPT -> return true
+               PredicateResult.REJECT -> return false
+               else -> {}
+           }
+        }
+        return true
     }
 
     override fun close() {

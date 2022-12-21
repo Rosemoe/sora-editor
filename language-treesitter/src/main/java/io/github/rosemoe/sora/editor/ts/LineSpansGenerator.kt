@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.editor.ts
 
-import com.itsaky.androidide.treesitter.TSQuery
 import com.itsaky.androidide.treesitter.TSQueryCapture
 import com.itsaky.androidide.treesitter.TSQueryCursor
 import com.itsaky.androidide.treesitter.TSTree
@@ -34,7 +33,6 @@ import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
-import java.util.Stack
 
 /**
  * Spans generator for tree-sitter. Results are cached.
@@ -82,7 +80,9 @@ class LineSpansGenerator(
             cursor.exec(languageSpec.tsQuery, tree.rootNode)
             var match = cursor.nextMatch()
             while (match != null) {
-                captures.addAll(match.captures)
+                if (languageSpec.doPredicate(content, match)) {
+                    captures.addAll(match.captures)
+                }
                 match = cursor.nextMatch()
             }
             captures.sortBy { it.node.startByte }

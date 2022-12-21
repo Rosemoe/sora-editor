@@ -53,7 +53,9 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
                 var match = cursor.nextMatch()
                 val captures = mutableListOf<TSQueryCapture>()
                 while (match != null) {
-                    captures.addAll(match.captures)
+                    if (spec.doPredicate(text, match)) {
+                        captures.addAll(match.captures)
+                    }
                     match = cursor.nextMatch()
                 }
                 captures.sortBy { it.node.startByte }
