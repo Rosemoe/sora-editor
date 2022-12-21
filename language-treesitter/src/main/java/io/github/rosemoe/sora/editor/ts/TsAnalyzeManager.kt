@@ -261,7 +261,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                                 var node = it.node
                                 val start = node.startPoint
                                 block.startLine = start.row
-                                block.startColumn = start.column
+                                block.startColumn = start.column / 2
                                 val end = if (languageSpec.blocksQuery.getCaptureNameForId(it.index)
                                         .endsWith(".marked")
                                 ) {
@@ -274,7 +274,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                                     node.endPoint
                                 }
                                 block.endLine = end.row
-                                block.endColumn = end.column
+                                block.endColumn = end.column / 2
                             }
                             if (block.endLine - block.startLine > 1) {
                                 blocks.add(block)
