@@ -95,9 +95,19 @@ class EditorStyleDelegate implements StyleReceiver {
 
     @Override
     public void setStyles(@NonNull AnalyzeManager sourceManager, @Nullable Styles styles) {
+        setStyles(sourceManager, styles, null);
+    }
+
+    @Override
+    public void setStyles(@NonNull AnalyzeManager sourceManager, @Nullable Styles styles, @Nullable Runnable action) {
         var editor = editorRef.get();
         if (editor != null && sourceManager == editor.getEditorLanguage().getAnalyzeManager()) {
-            runOnUiThread(() -> editor.setStyles(styles));
+            runOnUiThread(() -> {
+                if (action != null) {
+                    action.run();
+                }
+                editor.setStyles(styles);
+            });
         }
     }
 

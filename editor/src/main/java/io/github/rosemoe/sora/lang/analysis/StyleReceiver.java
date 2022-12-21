@@ -53,6 +53,17 @@ public interface StyleReceiver {
     void setStyles(@NonNull AnalyzeManager sourceManager, @Nullable Styles styles);
 
     /**
+     * Send the styles to the receiver. You can call it in any thread.
+     * The implementation of this method should make sure that concurrent invocations to it are safe.
+     *
+     * @param sourceManager Source AnalyzeManager. The receiver may ignore the request if some checks on
+     *                      the sourceManager fail
+     * @param action Sometimes you may need to synchronize your action in main thread. This ensures the given action is executed
+     *               on main thread before the style updates.
+     */
+    void setStyles(@NonNull AnalyzeManager sourceManager, @Nullable Styles styles, @Nullable Runnable action);
+
+    /**
      * Notify the receiver the given styles object is updated, and line range is given by {@code range}
      *
      * @param sourceManager Source AnalyzeManager. The receiver may ignore the request if some checks on

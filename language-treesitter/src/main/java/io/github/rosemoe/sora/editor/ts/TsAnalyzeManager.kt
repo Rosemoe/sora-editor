@@ -221,7 +221,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         fun updateStyles() {
             val scopedVariables = TsScopedVariables(tree!!, localText, languageSpec)
             if (thread == this && handledMessageCount == messageCounter.get()) {
-                (styles.spans as LineSpansGenerator?)?.tree?.close()
+                val oldTree = (styles.spans as LineSpansGenerator?)?.tree
                 val copied = tree!!.copy()
                 styles.spans = LineSpansGenerator(
                     copied,
@@ -236,7 +236,9 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                 if (oldBlocks != null) {
                     ObjectAllocator.recycleBlockLines(oldBlocks)
                 }
-                currentReceiver?.setStyles(this@TsAnalyzeManager, styles)
+                currentReceiver?.setStyles(this@TsAnalyzeManager, styles) {
+                    oldTree?.close()
+                }
                 currentReceiver?.updateBracketProvider(
                     this@TsAnalyzeManager,
                     TsBracketPairs(copied, languageSpec)
