@@ -80,7 +80,7 @@ class LineSpansGenerator(
             cursor.exec(languageSpec.tsQuery, tree.rootNode)
             var match = cursor.nextMatch()
             while (match != null) {
-                if (languageSpec.doPredicate(content, match)) {
+                if (languageSpec.queryPredicator.doPredicate(languageSpec.predicates, content, match)) {
                     captures.addAll(match.captures)
                 }
                 match = cursor.nextMatch()

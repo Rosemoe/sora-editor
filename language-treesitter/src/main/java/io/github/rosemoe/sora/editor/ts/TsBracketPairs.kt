@@ -52,30 +52,32 @@ class TsBracketPairs(
                 var match = cursor.nextMatch()
                 var matched = false
                 while (match != null && !matched) {
-                    var startNode: TSNode? = null
-                    var endNode: TSNode? = null
-                    for (capture in match.captures) {
-                        val captureName =
-                            languageSpec.bracketsQuery.getCaptureNameForId(capture.index)
-                        if (captureName == OPEN_NAME || captureName == CLOSE_NAME) {
-                            val node = capture.node
-                            if (index >= node.startByte / 2 && index <= node.endByte / 2) {
-                                matched = true
-                            }
-                            if (captureName == OPEN_NAME) {
-                                startNode = node
-                            } else {
-                                endNode = node
+                    if (languageSpec.bracketsPredicator.doPredicate(languageSpec.predicates, text, match)) {
+                        var startNode: TSNode? = null
+                        var endNode: TSNode? = null
+                        for (capture in match.captures) {
+                            val captureName =
+                                languageSpec.bracketsQuery.getCaptureNameForId(capture.index)
+                            if (captureName == OPEN_NAME || captureName == CLOSE_NAME) {
+                                val node = capture.node
+                                if (index >= node.startByte / 2 && index <= node.endByte / 2) {
+                                    matched = true
+                                }
+                                if (captureName == OPEN_NAME) {
+                                    startNode = node
+                                } else {
+                                    endNode = node
+                                }
                             }
                         }
-                    }
-                    if (matched && startNode != null && endNode != null) {
-                        return PairedBracket(
-                            startNode.startByte / 2,
-                            (startNode.endByte - startNode.startByte) / 2,
-                            endNode.startByte / 2,
-                            (endNode.endByte - endNode.startByte) / 2
-                        )
+                        if (matched && startNode != null && endNode != null) {
+                            return PairedBracket(
+                                startNode.startByte / 2,
+                                (startNode.endByte - startNode.startByte) / 2,
+                                endNode.startByte / 2,
+                                (endNode.endByte - endNode.startByte) / 2
+                            )
+                        }
                     }
                     match = cursor.nextMatch()
                 }

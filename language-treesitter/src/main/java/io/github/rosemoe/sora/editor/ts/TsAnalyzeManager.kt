@@ -255,28 +255,30 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                 it.exec(languageSpec.blocksQuery, tree!!.rootNode)
                 var match = it.nextMatch()
                 while (match != null) {
-                    match.captures.forEach {
-                        val block = ObjectAllocator.obtainBlockLine().also { block ->
-                            var node = it.node
-                            val start = node.startPoint
-                            block.startLine = start.row
-                            block.startColumn = start.column
-                            val end = if (languageSpec.blocksQuery.getCaptureNameForId(it.index)
-                                    .endsWith(".marked")
-                            ) {
-                                // Goto last terminal element
-                                while (node.childCount > 0) {
-                                    node = node.getChild(node.childCount - 1)
+                    if (languageSpec.blocksPredicator.doPredicate(languageSpec.predicates, localText, match)) {
+                        match.captures.forEach {
+                            val block = ObjectAllocator.obtainBlockLine().also { block ->
+                                var node = it.node
+                                val start = node.startPoint
+                                block.startLine = start.row
+                                block.startColumn = start.column
+                                val end = if (languageSpec.blocksQuery.getCaptureNameForId(it.index)
+                                        .endsWith(".marked")
+                                ) {
+                                    // Goto last terminal element
+                                    while (node.childCount > 0) {
+                                        node = node.getChild(node.childCount - 1)
+                                    }
+                                    node.startPoint
+                                } else {
+                                    node.endPoint
                                 }
-                                node.startPoint
-                            } else {
-                                node.endPoint
+                                block.endLine = end.row
+                                block.endColumn = end.column
                             }
-                            block.endLine = end.row
-                            block.endColumn = end.column
-                        }
-                        if (block.endLine - block.startLine > 1) {
-                            blocks.add(block)
+                            if (block.endLine - block.startLine > 1) {
+                                blocks.add(block)
+                            }
                         }
                     }
                     match = it.nextMatch()
