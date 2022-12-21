@@ -62,13 +62,21 @@ class Predicator(private val query: TSQuery) {
 
     fun doPredicate(predicates: List<TsPredicate>, text: CharSequence, match: TSQueryMatch): Boolean {
         val description = patternPredicates[match.patternIndex]
-        for (predicate in predicates) {
-            when (predicate.doPredicate(query, text, match, description)) {
-                PredicateResult.ACCEPT -> return true
-                PredicateResult.REJECT -> return false
-                else -> {}
+        var tail = 0
+        for (i in description.indices) {
+            if (description[i].predicateType == TSQueryPredicateStep.Type.Done) {
+                val subPredicateStep = description.subList(tail, i + 1)
+                for (predicate in predicates) {
+                    when (predicate.doPredicate(query, text, match, subPredicateStep)) {
+                        PredicateResult.ACCEPT -> break
+                        PredicateResult.REJECT -> return false
+                        else -> {}
+                    }
+                }
+                tail = i + 1
             }
         }
+
         return true
     }
 
