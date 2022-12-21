@@ -95,7 +95,8 @@ class LineSpansGenerator(
                 // Do not add span for overlapping regions and out-of-bounds regions
                 if (start >= lastIndex && endByte / 2 >= startIndex && startByte / 2 < endIndex
                     && (pattern !in languageSpec.localsScopeIndices && pattern !in languageSpec.localsDefinitionIndices
-                            && pattern !in languageSpec.localsDefinitionValueIndices)) {
+                            && pattern !in languageSpec.localsDefinitionValueIndices)
+                ) {
                     if (start != lastIndex) {
                         list.add(
                             Span.obtain(
@@ -106,7 +107,11 @@ class LineSpansGenerator(
                     }
                     var style = 0L
                     if (it.index in languageSpec.localsReferenceIndices) {
-                        val def = scopedVariables.findDefinition(startByte / 2, endByte / 2, content.substring(startByte / 2, endByte / 2))
+                        val def = scopedVariables.findDefinition(
+                            startByte / 2,
+                            endByte / 2,
+                            content.substring(startByte / 2, endByte / 2)
+                        )
                         if (def != null) {
                             style = theme.resolveStyleForPattern(def.matchedHighlightPattern)
                         }

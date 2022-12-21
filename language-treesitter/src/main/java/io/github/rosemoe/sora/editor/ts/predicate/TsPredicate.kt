@@ -37,6 +37,11 @@ interface TsPredicate {
      * @see TSQueryMatch
      * @see PredicateResult
      */
-    fun doPredicate(tsQuery: TSQuery, text: CharSequence, match: TSQueryMatch, predicate: List<TsClientPredicateStep>) : PredicateResult
+    fun doPredicate(
+        tsQuery: TSQuery,
+        text: CharSequence,
+        match: TSQueryMatch,
+        predicate: List<TsClientPredicateStep>
+    ): PredicateResult
 
 }

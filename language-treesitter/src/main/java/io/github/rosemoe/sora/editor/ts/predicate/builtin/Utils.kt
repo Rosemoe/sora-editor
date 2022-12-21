@@ -33,7 +33,7 @@ import io.github.rosemoe.sora.editor.ts.predicate.TsClientPredicateStep
 fun parametersMatch(
     predicate: List<TsClientPredicateStep>,
     types: Array<Type>
-) : Boolean {
+): Boolean {
     if (predicate.size == types.size) {
         for (i in types.indices) {
             if (predicate[i].predicateType != types[i]) {
@@ -50,7 +50,7 @@ fun getCaptureContent(
     match: TSQueryMatch,
     captureName: String,
     text: CharSequence
-) : String? {
+): String? {
     match.captures.forEach {
         if (tsQuery.getCaptureNameForId(it.index) == captureName) {
             return if (text is UTF16String) {

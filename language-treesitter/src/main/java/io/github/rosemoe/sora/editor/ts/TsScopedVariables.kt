@@ -110,8 +110,9 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
         var matchedHighlightPattern: Int = -1
     )
 
-    fun findDefinition(startIndex: Int, endIndex: Int, name: String) : ScopedVariable? {
-        val filtered = collectedVariables.filter { it.scopeStartIndex <= startIndex && it.scopeEndIndex >= endIndex && it.name == name }
+    fun findDefinition(startIndex: Int, endIndex: Int, name: String): ScopedVariable? {
+        val filtered =
+            collectedVariables.filter { it.scopeStartIndex <= startIndex && it.scopeEndIndex >= endIndex && it.name == name }
         if (filtered.isEmpty()) {
             return null
         }

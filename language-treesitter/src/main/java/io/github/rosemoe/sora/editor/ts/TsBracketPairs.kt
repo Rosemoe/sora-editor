@@ -38,7 +38,7 @@ class TsBracketPairs(
 ) : BracketsProvider {
 
     override fun getPairedBracketAt(text: Content, index: Int): PairedBracket? {
-        if (languageSpec.bracketsQuery.patternCount > 0)  {
+        if (languageSpec.bracketsQuery.patternCount > 0) {
             TSQueryCursor().use { cursor ->
                 cursor.setByteRange(max(0, index - 1) * 2, index * 2 + 1)
                 cursor.exec(languageSpec.bracketsQuery, tree.rootNode)
@@ -48,7 +48,8 @@ class TsBracketPairs(
                     var startNode: TSNode? = null
                     var endNode: TSNode? = null
                     for (capture in match.captures) {
-                        val captureName = languageSpec.bracketsQuery.getCaptureNameForId(capture.index)
+                        val captureName =
+                            languageSpec.bracketsQuery.getCaptureNameForId(capture.index)
                         if (captureName == "open" || captureName == "close") {
                             val node = capture.node
                             if (index >= node.startByte / 2 && index <= node.endByte / 2) {
@@ -62,7 +63,12 @@ class TsBracketPairs(
                         }
                     }
                     if (matched && startNode != null && endNode != null) {
-                        return PairedBracket(startNode.startByte / 2, (startNode.endByte - startNode.startByte) / 2, endNode.startByte / 2, (endNode.endByte - endNode.startByte) / 2)
+                        return PairedBracket(
+                            startNode.startByte / 2,
+                            (startNode.endByte - startNode.startByte) / 2,
+                            endNode.startByte / 2,
+                            (endNode.endByte - endNode.startByte) / 2
+                        )
                     }
                     match = cursor.nextMatch()
                 }

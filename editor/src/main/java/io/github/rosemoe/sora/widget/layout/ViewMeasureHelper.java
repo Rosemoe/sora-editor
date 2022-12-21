@@ -26,7 +26,6 @@ package io.github.rosemoe.sora.widget.layout;
 import android.view.View;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.graphics.SingleCharacterWidths;

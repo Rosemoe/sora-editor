@@ -30,9 +30,7 @@ import android.os.Looper
 import android.os.Message
 import android.util.Log
 import com.itsaky.androidide.treesitter.TSInputEdit
-import com.itsaky.androidide.treesitter.TSLanguage
 import com.itsaky.androidide.treesitter.TSParser
-import com.itsaky.androidide.treesitter.TSQuery
 import com.itsaky.androidide.treesitter.TSQueryCursor
 import com.itsaky.androidide.treesitter.TSTree
 import com.itsaky.androidide.treesitter.string.UTF16String
@@ -76,22 +74,74 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     override fun insert(start: CharPosition, end: CharPosition, insertedContent: CharSequence) {
         thread?.handler?.let {
             messageCounter.getAndIncrement()
-            it.sendMessage(it.obtainMessage(MSG_MOD, TextModification(start.index, end.index, TSInputEdit(start.index * 2, start.index * 2, end.index * 2, start.toTSPoint(), start.toTSPoint(), end.toTSPoint()), insertedContent.toString())))
+            it.sendMessage(
+                it.obtainMessage(
+                    MSG_MOD,
+                    TextModification(
+                        start.index,
+                        end.index,
+                        TSInputEdit(
+                            start.index * 2,
+                            start.index * 2,
+                            end.index * 2,
+                            start.toTSPoint(),
+                            start.toTSPoint(),
+                            end.toTSPoint()
+                        ),
+                        insertedContent.toString()
+                    )
+                )
+            )
         }
         (styles.spans as LineSpansGenerator?)?.apply {
             lineCount = reference!!.lineCount
-            tree.edit(TSInputEdit(start.index, start.index, end.index, start.toTSPoint(), start.toTSPoint(), end.toTSPoint()))
+            tree.edit(
+                TSInputEdit(
+                    start.index,
+                    start.index,
+                    end.index,
+                    start.toTSPoint(),
+                    start.toTSPoint(),
+                    end.toTSPoint()
+                )
+            )
         }
     }
 
     override fun delete(start: CharPosition, end: CharPosition, deletedContent: CharSequence) {
         thread?.handler?.let {
             messageCounter.getAndIncrement()
-            it.sendMessage(it.obtainMessage(MSG_MOD, TextModification(start.index, end.index, TSInputEdit(start.index * 2, end.index * 2, start.index * 2, start.toTSPoint(), end.toTSPoint(), start.toTSPoint()), null)))
+            it.sendMessage(
+                it.obtainMessage(
+                    MSG_MOD,
+                    TextModification(
+                        start.index,
+                        end.index,
+                        TSInputEdit(
+                            start.index * 2,
+                            end.index * 2,
+                            start.index * 2,
+                            start.toTSPoint(),
+                            end.toTSPoint(),
+                            start.toTSPoint()
+                        ),
+                        null
+                    )
+                )
+            )
         }
         (styles.spans as LineSpansGenerator?)?.apply {
             lineCount = reference!!.lineCount
-            tree.edit(TSInputEdit(start.index, end.index, start.index, start.toTSPoint(), end.toTSPoint(), start.toTSPoint()))
+            tree.edit(
+                TSInputEdit(
+                    start.index,
+                    end.index,
+                    start.index,
+                    start.toTSPoint(),
+                    end.toTSPoint(),
+                    start.toTSPoint()
+                )
+            )
         }
     }
 
@@ -145,6 +195,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         private const val MSG_INIT = MSG_BASE + 1
         private const val MSG_MOD = MSG_BASE + 2
         private const val MSG_EXIT = MSG_BASE + 3
+
         @Volatile
         private var threadId = 0
 
@@ -156,6 +207,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
 
         var handler: Handler? = null
         var looper: Looper? = null
+
         @Volatile
         var abort: Boolean = false
         val localText: UTF16String = UTF16StringFactory.newString()
@@ -170,10 +222,20 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
             if (thread == this && handledMessageCount == messageCounter.get()) {
                 (styles.spans as LineSpansGenerator?)?.tree?.close()
                 val copied = tree!!.copy()
-                styles.spans = LineSpansGenerator(copied, reference!!.lineCount, reference!!, theme, languageSpec, scopedVariables)
+                styles.spans = LineSpansGenerator(
+                    copied,
+                    reference!!.lineCount,
+                    reference!!,
+                    theme,
+                    languageSpec,
+                    scopedVariables
+                )
                 updateCodeBlocks()
                 currentReceiver?.setStyles(this@TsAnalyzeManager, styles)
-                currentReceiver?.updateBracketProvider(this@TsAnalyzeManager, TsBracketPairs(copied, languageSpec))
+                currentReceiver?.updateBracketProvider(
+                    this@TsAnalyzeManager,
+                    TsBracketPairs(copied, languageSpec)
+                )
             }
         }
 
@@ -192,7 +254,9 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                             val start = node.startPoint
                             block.startLine = start.row
                             block.startColumn = start.column
-                            val end = if (languageSpec.blocksQuery.getCaptureNameForId(it.index).endsWith(".marked")) {
+                            val end = if (languageSpec.blocksQuery.getCaptureNameForId(it.index)
+                                    .endsWith(".marked")
+                            ) {
                                 // Goto last terminal element
                                 while (node.childCount > 0) {
                                     node = node.getChild(node.childCount - 1)
@@ -219,7 +283,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                 override fun handleMessage(msg: Message) {
                     super.handleMessage(msg)
                     try {
-                        handledMessageCount ++
+                        handledMessageCount++
                         when (msg.what) {
                             MSG_INIT -> {
                                 localText.append(msg.obj!! as String)
@@ -252,7 +316,11 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                             }
                         }
                     } catch (e: Exception) {
-                        Log.w("TsAnalyzeManager", "Thread ${currentThread().name} exited with an error", e)
+                        Log.w(
+                            "TsAnalyzeManager",
+                            "Thread ${currentThread().name} exited with an error",
+                            e
+                        )
                     }
                 }
             }

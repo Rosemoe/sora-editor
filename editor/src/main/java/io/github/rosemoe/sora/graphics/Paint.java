@@ -26,7 +26,6 @@ package io.github.rosemoe.sora.graphics;
 import android.annotation.SuppressLint;
 import android.graphics.Typeface;
 import android.os.Build;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

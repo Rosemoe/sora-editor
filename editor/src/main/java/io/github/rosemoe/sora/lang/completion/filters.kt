@@ -25,10 +25,8 @@
 
 package io.github.rosemoe.sora.lang.completion
 
-import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.util.CharCode
 import io.github.rosemoe.sora.util.MyCharacter
-import io.github.rosemoe.sora.util.Numbers
 
 // Migrating from vscode
 // https://github.com/microsoft/vscode/blob/main/src/vs/base/common/filters.ts

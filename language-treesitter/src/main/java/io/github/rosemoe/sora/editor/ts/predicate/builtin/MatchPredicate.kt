@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.editor.ts.predicate.builtin
 
-import android.util.Log
 import com.itsaky.androidide.treesitter.TSQuery
 import com.itsaky.androidide.treesitter.TSQueryMatch
 import com.itsaky.androidide.treesitter.TSQueryPredicateStep.Type

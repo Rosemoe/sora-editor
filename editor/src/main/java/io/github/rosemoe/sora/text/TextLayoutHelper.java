@@ -24,7 +24,6 @@
 package io.github.rosemoe.sora.text;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.os.Build;
 import android.text.DynamicLayout;
 import android.text.Editable;

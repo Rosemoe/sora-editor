@@ -128,22 +128,31 @@ class TsLanguageSpec(
         }
         if (tsQuery.errorType != TSQueryError.None) {
             val region = if (tsQuery.errorOffset < highlightScmOffset) "locals" else "highlight"
-            val offset = if (tsQuery.errorOffset < highlightScmOffset) tsQuery.errorOffset else tsQuery.errorOffset - highlightScmOffset
+            val offset =
+                if (tsQuery.errorOffset < highlightScmOffset) tsQuery.errorOffset else tsQuery.errorOffset - highlightScmOffset
             throw IllegalArgumentException("bad scm sources: error ${tsQuery.errorType.name} occurs in $region range at offset $offset")
         }
         var highlightOffset = 0
         for (i in 0 until tsQuery.patternCount) {
             patternPredicates.add(tsQuery.getPredicatesForPattern(i).map {
                 when (it.type) {
-                    TSQueryPredicateStep.Type.String -> TsClientPredicateStep(it.type, tsQuery.getStringValueForId(it.valueId))
-                    TSQueryPredicateStep.Type.Capture -> TsClientPredicateStep(it.type, tsQuery.getCaptureNameForId(it.valueId))
+                    TSQueryPredicateStep.Type.String -> TsClientPredicateStep(
+                        it.type,
+                        tsQuery.getStringValueForId(it.valueId)
+                    )
+
+                    TSQueryPredicateStep.Type.Capture -> TsClientPredicateStep(
+                        it.type,
+                        tsQuery.getCaptureNameForId(it.valueId)
+                    )
+
                     else -> TsClientPredicateStep(it.type, "")
                 }
             })
         }
         for (i in 0 until tsQuery.captureCount) {
             if (tsQuery.getStartByteForPattern(i) < highlightScmOffset) {
-                highlightOffset ++
+                highlightOffset++
                 // Only locals in localsScm are taken down
                 val name = tsQuery.getCaptureNameForId(i)
                 if (localsCaptureSpec.isDefinitionCapture(name)) {
@@ -160,14 +169,14 @@ class TsLanguageSpec(
         highlightPatternOffset = highlightOffset
     }
 
-    fun doPredicate(text: CharSequence, match: TSQueryMatch) : Boolean {
+    fun doPredicate(text: CharSequence, match: TSQueryMatch): Boolean {
         val description = patternPredicates[match.patternIndex]
         for (predicate in predicates) {
-           when (predicate.doPredicate(tsQuery, text, match, description)) {
-               PredicateResult.ACCEPT -> return true
-               PredicateResult.REJECT -> return false
-               else -> {}
-           }
+            when (predicate.doPredicate(tsQuery, text, match, description)) {
+                PredicateResult.ACCEPT -> return true
+                PredicateResult.REJECT -> return false
+                else -> {}
+            }
         }
         return true
     }

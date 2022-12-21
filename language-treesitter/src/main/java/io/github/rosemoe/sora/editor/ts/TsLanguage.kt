@@ -25,8 +25,6 @@
 package io.github.rosemoe.sora.editor.ts
 
 import android.os.Bundle
-import com.itsaky.androidide.treesitter.TSLanguage
-import com.itsaky.androidide.treesitter.TSQuery
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher
