@@ -5,3 +5,4 @@
 (enum_declaration
   body: (_) @scope.marked)
 (block) @scope.marked
+(array_initializer) @scope.marked

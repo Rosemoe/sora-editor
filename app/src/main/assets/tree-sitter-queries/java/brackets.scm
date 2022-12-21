@@ -5,3 +5,7 @@
 (expression
   "(" @open
   ")" @close)
+
+(array_initializer
+  "{" @open
+  "}" @close)
