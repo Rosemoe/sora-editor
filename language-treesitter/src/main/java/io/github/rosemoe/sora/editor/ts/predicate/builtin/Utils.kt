@@ -50,18 +50,14 @@ fun getCaptureContent(
     match: TSQueryMatch,
     captureName: String,
     text: CharSequence
-): String? {
-    match.captures.forEach {
-        if (tsQuery.getCaptureNameForId(it.index) == captureName) {
-            return if (text is UTF16String) {
-                val utf16Name = text.subseqChars(it.node.startByte / 2, it.node.endByte / 2)
-                val name = utf16Name.toString()
-                utf16Name.close()
-                name
-            } else {
-                text.substring(it.node.startByte / 2, it.node.endByte / 2)
-            }
+) = match.captures.filter { tsQuery.getCaptureNameForId(it.index) == captureName }
+    .map {
+        if (text is UTF16String) {
+            val utf16Name = text.subseqChars(it.node.startByte / 2, it.node.endByte / 2)
+            val name = utf16Name.toString()
+            utf16Name.close()
+            name
+        } else {
+            text.substring(it.node.startByte / 2, it.node.endByte / 2)
         }
     }
-    return null
-}

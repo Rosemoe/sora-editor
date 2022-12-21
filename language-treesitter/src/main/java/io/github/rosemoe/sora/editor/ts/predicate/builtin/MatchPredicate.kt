@@ -49,21 +49,21 @@ object MatchPredicate : TsPredicate {
             return PredicateResult.UNHANDLED
         }
         val captured = getCaptureContent(tsQuery, match, predicate[1].content, text)
-            ?: return PredicateResult.UNHANDLED
-        return try {
+        try {
             var regex = cache[predicate[2].content]
             if (regex == null) {
                 regex = Regex(predicate[2].content)
                 cache[predicate[2].content] = regex
             }
-            if (regex.find(captured) != null) {
-                PredicateResult.ACCEPT
-            } else {
-                PredicateResult.REJECT
+            for (str in captured) {
+                if (regex.find(str) == null) {
+                    return PredicateResult.REJECT
+                }
             }
+            return PredicateResult.ACCEPT
         } catch (e: PatternSyntaxException) {
             e.printStackTrace()
-            PredicateResult.UNHANDLED
+            return PredicateResult.UNHANDLED
         }
     }
 
