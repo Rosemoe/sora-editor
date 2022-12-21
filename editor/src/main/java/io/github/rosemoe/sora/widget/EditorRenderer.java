@@ -1657,7 +1657,7 @@ public class EditorRenderer {
         float baseline = centerY - heightScaled / 2f - metricsGraph.ascent;
         paintGraph.setColor(paintGeneral.getColor());
         canvas.drawText(FunctionCharacters.getNameForFunctionCharacter(ch), offsetX + width / 2f, baseline, paintGraph);
-        paintGraph.setTextAlign(android.graphics.Paint.Align.RIGHT);
+        paintGraph.setTextAlign(android.graphics.Paint.Align.LEFT);
         float actualWidth = paintGraph.measureText(FunctionCharacters.getNameForFunctionCharacter(ch));
         tmpRect.top = centerY - heightScaled / 2f;
         tmpRect.bottom = centerY + heightScaled / 2f;
