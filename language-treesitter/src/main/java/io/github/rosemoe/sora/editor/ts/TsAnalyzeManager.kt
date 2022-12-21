@@ -74,7 +74,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     override fun insert(start: CharPosition, end: CharPosition, insertedContent: CharSequence) {
         thread?.handler?.let {
             messageCounter.getAndIncrement()
-            it.sendMessage(it.obtainMessage(MSG_MOD, TextModification(start.index, end.index, TSInputEdit(start.index, start.index, end.index, start.toTSPoint(), start.toTSPoint(), end.toTSPoint()), insertedContent.toString())))
+            it.sendMessage(it.obtainMessage(MSG_MOD, TextModification(start.index, end.index, TSInputEdit(start.index * 2, start.index * 2, end.index * 2, start.toTSPoint(), start.toTSPoint(), end.toTSPoint()), insertedContent.toString())))
         }
         (styles.spans as LineSpansGenerator?)?.apply {
             lineCount = reference!!.lineCount
@@ -85,7 +85,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     override fun delete(start: CharPosition, end: CharPosition, deletedContent: CharSequence) {
         thread?.handler?.let {
             messageCounter.getAndIncrement()
-            it.sendMessage(it.obtainMessage(MSG_MOD, TextModification(start.index, end.index, TSInputEdit(start.index, end.index, start.index, start.toTSPoint(), end.toTSPoint(), start.toTSPoint()), null)))
+            it.sendMessage(it.obtainMessage(MSG_MOD, TextModification(start.index, end.index, TSInputEdit(start.index * 2, end.index * 2, start.index * 2, start.toTSPoint(), end.toTSPoint(), start.toTSPoint()), null)))
         }
         (styles.spans as LineSpansGenerator?)?.apply {
             lineCount = reference!!.lineCount

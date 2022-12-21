@@ -30,4 +30,4 @@ import io.github.rosemoe.sora.text.CharPosition
 /**
  * Convert a [CharPosition] object to a [TSPoint] object
  */
-fun CharPosition.toTSPoint() = TSPoint(line, column)
+fun CharPosition.toTSPoint() = TSPoint(line, column * 2)
