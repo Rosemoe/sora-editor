@@ -135,11 +135,10 @@ public class Paint extends android.graphics.Paint {
                         if (advances != null) {
                             advance -= advances[advancesIndex + i];
                             advances[advancesIndex + i] = width;
-                            advance += width;
                         } else {
                             advance -= measureText(Character.toString(ch));
-                            advance += width;
                         }
+                        advance += width;
                     }
                 }
             }
@@ -163,7 +162,7 @@ public class Paint extends android.graphics.Paint {
             var offset = start;
             var currAdvance = 0f;
             for (; offset < end && currAdvance < advance; offset++) {
-                currAdvance += cache[offset];
+                currAdvance += cache[offset + 1] - cache[offset];
             }
             if (currAdvance > advance) {
                 offset--;
