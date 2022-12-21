@@ -37,6 +37,13 @@ class TsBracketPairs(
     private val languageSpec: TsLanguageSpec
 ) : BracketsProvider {
 
+    companion object {
+
+        val OPEN_NAME = "editor.brackets.open"
+        val CLOSE_NAME = "editor.brackets.close"
+
+    }
+
     override fun getPairedBracketAt(text: Content, index: Int): PairedBracket? {
         if (languageSpec.bracketsQuery.patternCount > 0) {
             TSQueryCursor().use { cursor ->
@@ -50,12 +57,12 @@ class TsBracketPairs(
                     for (capture in match.captures) {
                         val captureName =
                             languageSpec.bracketsQuery.getCaptureNameForId(capture.index)
-                        if (captureName == "open" || captureName == "close") {
+                        if (captureName == OPEN_NAME || captureName == CLOSE_NAME) {
                             val node = capture.node
                             if (index >= node.startByte / 2 && index <= node.endByte / 2) {
                                 matched = true
                             }
-                            if (captureName == "open") {
+                            if (captureName == OPEN_NAME) {
                                 startNode = node
                             } else {
                                 endNode = node

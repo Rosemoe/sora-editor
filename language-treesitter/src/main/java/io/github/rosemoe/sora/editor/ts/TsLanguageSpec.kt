@@ -50,7 +50,7 @@ import java.io.Closeable
  * @param codeBlocksScmSource The scm source for capturing code blocks.
  *                          All captured nodes are considered to be a code block.
  *                          Capture named with '.marked' suffix will have its last terminal node's start position as its scope end
- * @param bracketsScmSource The scm source for capturing brackets. Capture named 'open' and 'close' are used to compute bracket pairs
+ * @param bracketsScmSource The scm source for capturing brackets. Capture named 'editor.brackets.open' and 'editor.brackets.close' are used to compute bracket pairs
  * @param localsScmSource The scm source code for tracking local variables
  * @param localsCaptureSpec Custom specification for locals scm file
  * @param predicates Client custom predicate implementations
