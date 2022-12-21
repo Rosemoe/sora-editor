@@ -35,6 +35,7 @@ import com.itsaky.androidide.treesitter.TSQueryCursor
 import com.itsaky.androidide.treesitter.TSTree
 import com.itsaky.androidide.treesitter.string.UTF16String
 import com.itsaky.androidide.treesitter.string.UTF16StringFactory
+import io.github.rosemoe.sora.data.ObjectAllocator
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver
 import io.github.rosemoe.sora.lang.styling.CodeBlock
@@ -230,7 +231,11 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                     languageSpec,
                     scopedVariables
                 )
+                val oldBlocks = styles.blocks
                 updateCodeBlocks()
+                if (oldBlocks != null) {
+                    ObjectAllocator.recycleBlockLines(oldBlocks)
+                }
                 currentReceiver?.setStyles(this@TsAnalyzeManager, styles)
                 currentReceiver?.updateBracketProvider(
                     this@TsAnalyzeManager,
@@ -249,7 +254,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                 var match = it.nextMatch()
                 while (match != null) {
                     match.captures.forEach {
-                        blocks.add(CodeBlock().also { block ->
+                        val block = ObjectAllocator.obtainBlockLine().also { block ->
                             var node = it.node
                             val start = node.startPoint
                             block.startLine = start.row
@@ -267,7 +272,10 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                             }
                             block.endLine = end.row
                             block.endColumn = end.column
-                        })
+                        }
+                        if (block.endLine - block.startLine > 1) {
+                            blocks.add(block)
+                        }
                     }
                     match = it.nextMatch()
                 }
