@@ -315,7 +315,7 @@ public class GraphicTextRow {
             var regionStart = regionItr.getStartIndex();
             var regionEnd = regionItr.getEndIndex();
             regionEnd = Math.min(end, regionEnd);
-            if (regionStart >= regionEnd) {
+            if (regionStart > regionEnd || (regionStart == regionEnd && regionEnd >= end)) {
                 break;
             }
             var style = regionItr.getSpan().getStyleBits();
