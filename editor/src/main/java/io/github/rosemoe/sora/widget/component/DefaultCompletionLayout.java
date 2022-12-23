@@ -30,6 +30,7 @@ import android.os.SystemClock;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -56,20 +57,32 @@ public class DefaultCompletionLayout implements CompletionLayout {
         this.enabledAnimation = enabledAnimation;
 
         if (enabledAnimation) {
-            rootView.setLayoutTransition(new LayoutTransition());
-            var transition = rootView.getLayoutTransition();
+            var transition = new LayoutTransition();
             transition.enableTransitionType(LayoutTransition.CHANGING);
             transition.enableTransitionType(LayoutTransition.APPEARING);
             transition.enableTransitionType(LayoutTransition.DISAPPEARING);
             transition.enableTransitionType(LayoutTransition.CHANGE_APPEARING);
             transition.enableTransitionType(LayoutTransition.CHANGE_DISAPPEARING);
+            transition.addTransitionListener(new LayoutTransition.TransitionListener() {
+                @Override
+                public void startTransition(LayoutTransition transition, ViewGroup container, View view, int transitionType) {
 
-            listView.setLayoutTransition(rootView.getLayoutTransition());
+                }
+
+                @Override
+                public void endTransition(LayoutTransition transition, ViewGroup container, View view, int transitionType) {
+                    if (view != listView) {
+                        return;
+                    }
+                    view.requestLayout();
+                }
+            });
+            rootView.setLayoutTransition(transition);
+            listView.setLayoutTransition(transition);
         } else  {
             rootView.setLayoutTransition(null);
             listView.setLayoutTransition(null);
         }
-
     }
 
     @Override
@@ -98,7 +111,6 @@ public class DefaultCompletionLayout implements CompletionLayout {
         gd.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, context.getResources().getDisplayMetrics()));
 
         rootLayout.setBackground(gd);
-
 
         listView.setDividerHeight(0);
         setLoading(true);
