@@ -3495,7 +3495,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         final var sub = getText().subContent(left.line, left.column, right.line, right.column);
 
         setSelection(right.line, right.column);
-        commitText(prefix + sub);
+        commitText(prefix + sub, false);
 
         if (selectDuplicate) {
             final var r = cursor.right();
