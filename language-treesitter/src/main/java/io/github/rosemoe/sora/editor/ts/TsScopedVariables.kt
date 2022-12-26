@@ -41,12 +41,10 @@ import java.util.Stack
  */
 class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
 
-    /**
-     * Naturally sorted by start index
-     */
-    private val collectedVariables = mutableListOf<ScopedVariable>()
+    private val rootScope: Scope
 
     init {
+        rootScope = Scope(0, tree.rootNode.endByte / 2)
         if (spec.localsDefinitionIndices.isNotEmpty()) {
             TSQueryCursor().use { cursor ->
                 cursor.exec(spec.tsQuery, tree.rootNode)
@@ -60,7 +58,7 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
                 }
                 captures.sortBy { it.node.startByte }
                 val scopeStack = Stack<Scope>()
-                scopeStack.push(Scope(tree.rootNode.endByte / 2))
+                scopeStack.push(rootScope)
                 captures.forEach {
                     val startIndex = it.node.startByte / 2
                     val endIndex = it.node.endByte / 2
@@ -69,19 +67,25 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
                     }
                     val pattern = it.index
                     if (pattern in spec.localsScopeIndices) {
-                        scopeStack.push(Scope(endIndex))
+                        val newScope = Scope(startIndex, endIndex)
+                        scopeStack.peek().childScopes.add(newScope)
+                        scopeStack.push(newScope)
+                    } else if (pattern in spec.localsMembersScopeIndices) {
+                        val newScope = Scope(startIndex, endIndex, true)
+                        scopeStack.peek().childScopes.add(newScope)
+                        scopeStack.push(newScope)
                     } else if (pattern in spec.localsDefinitionIndices) {
+                        val scope = scopeStack.peek()
                         val utf16Name = text.subseqChars(startIndex, endIndex)
                         val name = utf16Name.toString()
                         utf16Name.close()
                         val scopedVar = ScopedVariable(
                             name,
-                            startIndex,
-                            scopeStack.peek().endIndex,
+                            if(scope.forMembers) scope.startIndex else startIndex,
+                            scope.endIndex,
                             endIndex
                         )
-                        collectedVariables.add(scopedVar)
-                        scopeStack.peek().variables.add(scopedVar)
+                        scope.variables.add(scopedVar)
                     } else if (pattern !in spec.localsDefinitionValueIndices && pattern !in spec.localsReferenceIndices) {
                         val topVariables = scopeStack.peek().variables
                         if (topVariables.isNotEmpty()) {
@@ -93,13 +97,15 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
                     }
                 }
             }
-            collectedVariables.removeAll { it.matchedHighlightPattern == -1 }
         }
     }
 
     data class Scope(
+        val startIndex: Int,
         val endIndex: Int,
-        val variables: MutableList<ScopedVariable> = mutableListOf()
+        val forMembers: Boolean = false,
+        val variables: MutableList<ScopedVariable> = mutableListOf(),
+        val childScopes: MutableList<Scope> = mutableListOf()
     )
 
     data class ScopedVariable(
@@ -111,12 +117,21 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
     )
 
     fun findDefinition(startIndex: Int, endIndex: Int, name: String): ScopedVariable? {
-        val filtered =
-            collectedVariables.filter { it.scopeStartIndex <= startIndex && it.scopeEndIndex >= endIndex && it.name == name }
-        if (filtered.isEmpty()) {
-            return null
+        var definition: ScopedVariable? = null
+        var currentScope:Scope? = rootScope
+        while (currentScope != null) {
+            for (variable in currentScope.variables) {
+                if (variable.scopeStartIndex > startIndex) {
+                    break
+                }
+                if (variable.scopeStartIndex <= startIndex && variable.scopeEndIndex >= endIndex && variable.name == name) {
+                    definition = variable
+                    // Do not break here: name can be shadowed in some languages
+                }
+            }
+            currentScope = currentScope.childScopes.firstOrNull { scope -> scope.startIndex <= startIndex && scope.endIndex >= endIndex }
         }
-        return filtered.last()
+        return definition
     }
 
 }

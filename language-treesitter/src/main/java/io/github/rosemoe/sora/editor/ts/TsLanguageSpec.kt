@@ -27,11 +27,7 @@ package io.github.rosemoe.sora.editor.ts
 import com.itsaky.androidide.treesitter.TSLanguage
 import com.itsaky.androidide.treesitter.TSQuery
 import com.itsaky.androidide.treesitter.TSQueryError
-import com.itsaky.androidide.treesitter.TSQueryMatch
-import com.itsaky.androidide.treesitter.TSQueryPredicateStep
-import io.github.rosemoe.sora.editor.ts.predicate.PredicateResult
 import io.github.rosemoe.sora.editor.ts.predicate.Predicator
-import io.github.rosemoe.sora.editor.ts.predicate.TsClientPredicateStep
 import io.github.rosemoe.sora.editor.ts.predicate.TsPredicate
 import io.github.rosemoe.sora.editor.ts.predicate.builtin.MatchPredicate
 import java.io.Closeable
@@ -101,6 +97,12 @@ class TsLanguageSpec(
     val localsScopeIndices = mutableListOf<Int>()
 
     /**
+     * Indices of weak variable scope patterns
+     * @see [LocalsCaptureSpec.isMembersScopeCapture] for more information
+     */
+    val localsMembersScopeIndices = mutableListOf<Int>()
+
+    /**
      * Indices of variable definition-value patterns. Currently unused in analysis.
      */
     val localsDefinitionValueIndices = mutableListOf<Int>()
@@ -135,19 +137,23 @@ class TsLanguageSpec(
         }
         var highlightOffset = 0
         for (i in 0 until tsQuery.captureCount) {
+            // Only locals in localsScm are taken down
+            val name = tsQuery.getCaptureNameForId(i)
+            if (localsCaptureSpec.isDefinitionCapture(name)) {
+                localsDefinitionIndices.add(i)
+            } else if (localsCaptureSpec.isReferenceCapture(name)) {
+                localsReferenceIndices.add(i)
+            } else if (localsCaptureSpec.isScopeCapture(name)) {
+                localsScopeIndices.add(i)
+            } else if (localsCaptureSpec.isDefinitionValueCapture(name)) {
+                localsDefinitionValueIndices.add(i)
+            } else if (localsCaptureSpec.isMembersScopeCapture(name)) {
+                localsMembersScopeIndices.add(i)
+            }
+        }
+        for (i in 0 until tsQuery.patternCount) {
             if (tsQuery.getStartByteForPattern(i) < highlightScmOffset) {
                 highlightOffset++
-                // Only locals in localsScm are taken down
-                val name = tsQuery.getCaptureNameForId(i)
-                if (localsCaptureSpec.isDefinitionCapture(name)) {
-                    localsDefinitionIndices.add(i)
-                } else if (localsCaptureSpec.isReferenceCapture(name)) {
-                    localsReferenceIndices.add(i)
-                } else if (localsCaptureSpec.isScopeCapture(name)) {
-                    localsScopeIndices.add(i)
-                } else if (localsCaptureSpec.isDefinitionValueCapture(name)) {
-                    localsDefinitionValueIndices.add(i)
-                }
             }
         }
         highlightPatternOffset = highlightOffset

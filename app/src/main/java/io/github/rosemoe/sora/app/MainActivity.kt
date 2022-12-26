@@ -730,6 +730,10 @@ class MainActivity : AppCompatActivity() {
                                                 return captureName == "definition.var" || captureName == "definition.field"
                                             }
 
+                                            override fun isMembersScopeCapture(captureName: String): Boolean {
+                                                return captureName == "scope.members"
+                                            }
+
                                         }
                                     )) {
                                     TextStyle.makeStyle(EditorColorScheme.COMMENT, 0, false, true, false) applyTo "comment"

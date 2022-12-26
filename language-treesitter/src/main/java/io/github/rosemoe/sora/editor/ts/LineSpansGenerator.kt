@@ -95,7 +95,7 @@ class LineSpansGenerator(
                 // Do not add span for overlapping regions and out-of-bounds regions
                 if (start >= lastIndex && endByte / 2 >= startIndex && startByte / 2 < endIndex
                     && (pattern !in languageSpec.localsScopeIndices && pattern !in languageSpec.localsDefinitionIndices
-                            && pattern !in languageSpec.localsDefinitionValueIndices)
+                            && pattern !in languageSpec.localsDefinitionValueIndices && pattern !in languageSpec.localsMembersScopeIndices)
                 ) {
                     if (start != lastIndex) {
                         list.add(

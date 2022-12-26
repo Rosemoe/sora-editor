@@ -43,4 +43,12 @@ open class LocalsCaptureSpec {
 
     open fun isScopeCapture(captureName: String) = captureName == "local.scope"
 
+    /**
+     * Usually, variables in a scope take effect after their declarations. This special scope
+     * indicates that, all variables in this scope (but not in its sub-scope), take effect in this
+     * scope, no matter where they are.
+     * For example, class member fields.
+     */
+    open fun isMembersScopeCapture(captureName: String) = captureName == "local.scope.members"
+
 }
