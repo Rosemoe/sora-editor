@@ -123,7 +123,7 @@ public class ContentReference extends TextReference {
      * @see Content#getDocumentVersion()
      */
     public long getDocumentVersion() {
-        validateAccess();;
+        validateAccess();
         return content.getDocumentVersion();
     }
 

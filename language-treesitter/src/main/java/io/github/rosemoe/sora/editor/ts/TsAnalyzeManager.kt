@@ -98,9 +98,9 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
             lineCount = reference!!.lineCount
             tree.edit(
                 TSInputEdit(
-                    start.index,
-                    start.index,
-                    end.index,
+                    start.index * 2,
+                    start.index * 2,
+                    end.index * 2,
                     start.toTSPoint(),
                     start.toTSPoint(),
                     end.toTSPoint()
@@ -135,9 +135,9 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
             lineCount = reference!!.lineCount
             tree.edit(
                 TSInputEdit(
-                    start.index,
-                    end.index,
-                    start.index,
+                    start.index * 2,
+                    end.index * 2,
+                    start.index * 2,
                     start.toTSPoint(),
                     end.toTSPoint(),
                     start.toTSPoint()
