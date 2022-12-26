@@ -40,9 +40,9 @@ public final class DiagnosticRegion implements Comparable<DiagnosticRegion> {
      */
     public long id;
     /*
-     * The description of the problem
-     * public String description;
-     */
+     * The detail of the problem
+     **/
+    public DiagnosticDetail detail;
     /**
      * The start index of the diagnostic
      */
@@ -62,14 +62,18 @@ public final class DiagnosticRegion implements Comparable<DiagnosticRegion> {
     public short severity;
 
     public DiagnosticRegion(int startIndex, int endIndex, short severity) {
-        this(startIndex, endIndex, severity, 0);
+        this(startIndex, endIndex, severity, 0, null);
     }
 
     public DiagnosticRegion(int startIndex, int endIndex, short severity, long id) {
+        this(startIndex, endIndex, severity, id, null);
+    }
+
+    public DiagnosticRegion(int startIndex, int endIndex, short severity, long id, DiagnosticDetail detail) {
         this.startIndex = startIndex;
         this.endIndex = endIndex;
         this.severity = severity;
-        //this.description = description;
+        this.detail = detail;
         this.id = id;
     }
 
@@ -78,12 +82,12 @@ public final class DiagnosticRegion implements Comparable<DiagnosticRegion> {
         var cmp = Integer.compare(startIndex, o.startIndex);
         if (cmp == 0) {
             cmp = Integer.compare(endIndex, o.endIndex);
-            if (cmp == 0) {
-                cmp = Short.compare(severity, o.severity);
-                if (cmp == 0) {
-                    cmp = Long.compare(id, o.id);
-                }
-            }
+        }
+        if (cmp == 0) {
+            cmp = Short.compare(severity, o.severity);
+        }
+        if (cmp == 0) {
+            cmp = Long.compare(id, o.id);
         }
         return cmp;
     }
