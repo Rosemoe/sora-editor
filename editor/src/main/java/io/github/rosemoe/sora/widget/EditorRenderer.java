@@ -36,6 +36,7 @@ import android.graphics.RectF;
 import android.graphics.RenderNode;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.shapes.RoundRectShape;
 import android.os.Build;
 import android.util.Log;
 import android.util.MutableInt;
@@ -52,6 +53,7 @@ import java.util.List;
 import java.util.Objects;
 
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
+import io.github.rosemoe.sora.graphics.BubbleHelper;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.GraphicsConstants;
@@ -104,6 +106,9 @@ public class EditorRenderer {
     static {
         sSpansForWordwrap.add(Span.obtain(0, TextStyle.makeStyle(0, 0, true, true, false)));
     }
+
+    private final static int[] PRESSED_DRAWABLE_STATE = new int[] {android.R.attr.state_pressed, android.R.attr.state_enabled};
+    private final static int[] DEFAULT_DRAWABLE_STATE = new int[] {android.R.attr.state_enabled};
 
     private static final String LOG_TAG = "EditorRenderer";
     private final static int[] sDiagnosticsColorMapping = {0, EditorColorScheme.PROBLEM_TYPO, EditorColorScheme.PROBLEM_WARNING, EditorColorScheme.PROBLEM_ERROR};
@@ -756,6 +761,21 @@ public class EditorRenderer {
         if (color != 0) {
             paintGeneral.setColor(color);
             canvas.drawRect(rect, paintGeneral);
+        }
+    }
+
+    /**
+     * Draw rect on screen in a round rectangle
+     * Will not do anything if color is zero
+     *
+     * @param canvas Canvas to draw
+     * @param color  Color of rect
+     * @param rect   Rect to draw
+     */
+    protected void drawColorRound(Canvas canvas, int color, RectF rect) {
+        if (color != 0) {
+            paintGeneral.setColor(color);
+            canvas.drawRoundRect(rect, rect.height() * GraphicsConstants.ROUND_RECT_FACTOR, rect.height() * GraphicsConstants.ROUND_RECT_FACTOR, paintGeneral);
         }
     }
 
@@ -1955,6 +1975,7 @@ public class EditorRenderer {
         tmpRect.bottom = topY + length;
         verticalScrollBarRect.set(tmpRect);
         if (verticalScrollbarThumbDrawable != null) {
+            verticalScrollbarThumbDrawable.setState(editor.getEventHandler().holdVerticalScrollBar() ? PRESSED_DRAWABLE_STATE : DEFAULT_DRAWABLE_STATE);
             verticalScrollbarThumbDrawable.setBounds((int) tmpRect.left, (int) tmpRect.top, (int) tmpRect.right, (int) tmpRect.bottom);
             verticalScrollbarThumbDrawable.draw(canvas);
         } else {
@@ -1975,14 +1996,15 @@ public class EditorRenderer {
         }
         int mode = editor.getLnPanelPositionMode();
         int position = editor.getLnPanelPosition();
-        String text = editor.getLnTip() + (1 + editor.getFirstVisibleLine());
+        String text = editor.getLineNumberTipTextProvider().getCurrentText(editor);
         float backupSize = paintGeneral.getTextSize();
         paintGeneral.setTextSize(editor.getLineInfoTextSize());
         Paint.FontMetricsInt backupMetrics = metricsText;
         metricsText = paintGeneral.getFontMetricsInt();
-        float expand = editor.getDpUnit() * 3;
+        float expand = editor.getDpUnit() * 8;
         float textWidth = paintGeneral.measureText(text);
         float baseline;
+        float textOffset = 0f;
         if (mode == LineInfoPanelPositionMode.FIXED) {
             tmpRect.top = editor.getHeight() / 2f - editor.getRowHeight() / 2f - expand;
             tmpRect.bottom = editor.getHeight() / 2f + editor.getRowHeight() / 2f + expand;
@@ -2010,26 +2032,48 @@ public class EditorRenderer {
                     tmpRect.left = editor.getWidth() - offset - expand * 2 - textWidth;
                 }
             }
+            drawColorRound(canvas, editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL), tmpRect);
         } else {
-            tmpRect.right = editor.getWidth() - 15 * editor.getDpUnit();
-            tmpRect.left = editor.getWidth() - 15 * editor.getDpUnit() - expand * 2 - textWidth;
+            float[] radii = null;
+            tmpRect.right = editor.getWidth() - 30 * editor.getDpUnit();
+            tmpRect.left = editor.getWidth() - 30 * editor.getDpUnit() - expand * 2 - textWidth;
             if (position == LineInfoPanelPosition.TOP) {
                 tmpRect.top = topY;
                 tmpRect.bottom = topY + editor.getRowHeight() + 2 * expand;
                 baseline = topY + editor.getRowBaseline(0) + expand;
+                radii = new float[8];
+                for (int i = 0;i < 8;i++) {
+                    if (i != 5)
+                        radii[i] = tmpRect.height() * GraphicsConstants.ROUND_BUBBLE_FACTOR;
+                }
             } else if (position == LineInfoPanelPosition.BOTTOM) {
                 tmpRect.top = topY + length - editor.getRowHeight() - 2 * expand;
                 tmpRect.bottom = topY + length;
                 baseline = topY + length - editor.getRowBaseline(0) / 2f;
+                radii = new float[8];
+                for (int i = 0;i < 8;i++) {
+                    if (i != 3)
+                        radii[i] = tmpRect.height() * GraphicsConstants.ROUND_BUBBLE_FACTOR;
+                }
             } else {
                 float centerY = topY + length / 2f;
                 tmpRect.top = centerY - editor.getRowHeight() / 2f - expand;
                 tmpRect.bottom = centerY + editor.getRowHeight() / 2f + expand;
                 baseline = centerY - editor.getRowHeight() / 2f + editor.getRowBaseline(0);
             }
+            if (radii != null) {
+                tmpPath.reset();
+                tmpPath.addRoundRect(tmpRect, radii, Path.Direction.CW);
+            } else {
+                tmpRect.offset(-expand, 0f);
+                tmpRect.right += expand;
+                textOffset = -expand / 2f;
+                BubbleHelper.buildBubblePath(tmpPath, tmpRect);
+            }
+            paintGeneral.setColor(editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL));
+            canvas.drawPath(tmpPath, paintGeneral);
         }
-        drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL), tmpRect);
-        float centerX = (tmpRect.left + tmpRect.right) / 2;
+        float centerX = (tmpRect.left + tmpRect.right) / 2 + textOffset;
         paintGeneral.setColor(editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL_TEXT));
         paintGeneral.setTextAlign(Paint.Align.CENTER);
         canvas.drawText(text, centerX, baseline, paintGeneral);
@@ -2282,6 +2326,7 @@ public class EditorRenderer {
         tmpRect.left = leftX;
         horizontalScrollBarRect.set(tmpRect);
         if (horizontalScrollbarThumbDrawable != null) {
+            horizontalScrollbarThumbDrawable.setState(editor.getEventHandler().holdHorizontalScrollBar() ? PRESSED_DRAWABLE_STATE : DEFAULT_DRAWABLE_STATE);
             horizontalScrollbarThumbDrawable.setBounds((int) tmpRect.left, (int) tmpRect.top, (int) tmpRect.right, (int) tmpRect.bottom);
             horizontalScrollbarThumbDrawable.draw(canvas);
         } else {

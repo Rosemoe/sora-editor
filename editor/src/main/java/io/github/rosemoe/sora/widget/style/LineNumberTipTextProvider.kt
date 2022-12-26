@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2022  Rosemoe
@@ -20,23 +20,19 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- */
-package io.github.rosemoe.sora.graphics;
+ ******************************************************************************/
+
+package io.github.rosemoe.sora.widget.style
+
+import io.github.rosemoe.sora.widget.CodeEditor
 
 /**
- * Holds some shared constants in editor graphics properties
+ * Interface for generating line number tip texts
  *
  * @author Rosemoe
  */
-public class GraphicsConstants {
+interface LineNumberTipTextProvider {
 
-    /**
-     * Text skew X applied in editor
-     */
-    public final static float TEXT_SKEW_X = -0.2f;
-
-    public final static float ROUND_RECT_FACTOR = 0.13f;
-
-    public final static float ROUND_BUBBLE_FACTOR = 0.5f;
+    fun getCurrentText(editor: CodeEditor) : String
 
 }

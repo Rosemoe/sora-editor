@@ -130,7 +130,9 @@ import io.github.rosemoe.sora.widget.style.CursorAnimator;
 import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition;
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode;
+import io.github.rosemoe.sora.widget.style.LineNumberTipTextProvider;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
+import io.github.rosemoe.sora.widget.style.builtin.DefaultLineNumberTip;
 import io.github.rosemoe.sora.widget.style.builtin.HandleStyleDrop;
 import io.github.rosemoe.sora.widget.style.builtin.HandleStyleSideDrop;
 import io.github.rosemoe.sora.widget.style.builtin.MoveCursorAnimator;
@@ -151,9 +153,13 @@ import kotlin.text.StringsKt;
 public class CodeEditor extends View implements ContentListener, Formatter.FormatResultReceiver, LineRemoveListener {
 
     /**
-     * The default size when creating the editor object. Unit is sp.
+     * The default text size when creating the editor object. Unit is sp.
      */
     public static final int DEFAULT_TEXT_SIZE = 18;
+    /**
+     * The default line info text size when creating the editor object. Unit is sp.
+     */
+    public static final int DEFAULT_LINE_INFO_TEXT_SIZE = 21;
     /**
      * The default cursor blinking period
      */
@@ -297,7 +303,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private Content text;
     private Matrix matrix;
     private EditorColorScheme colorScheme;
-    private String lnTipPrefix;
+    private LineNumberTipTextProvider lineNumberTipTextProvider;
     private String formatTip;
     private Language editorLanguage;
     private DiagnosticIndicatorStyle diagnosticStyle = DiagnosticIndicatorStyle.WAVY_LINE;
@@ -518,7 +524,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
         }
         lineSeparator = LineSeparator.LF;
-        lnTipPrefix = getContext().getString(R.string.editor_line_number_tip_prefix);
+        lineNumberTipTextProvider = DefaultLineNumberTip.INSTANCE;
         formatTip = getContext().getString(R.string.editor_formatting);
         props = new DirectAccessProps();
         dpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10f;
@@ -535,7 +541,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         startedActionMode = ACTION_MODE_NONE;
         setTextSize(DEFAULT_TEXT_SIZE);
-        setLineInfoTextSize(renderer.getPaint().getTextSize());
+        setLineInfoTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, DEFAULT_LINE_INFO_TEXT_SIZE, Resources.getSystem().getDisplayMetrics()));
         colorScheme = new EditorColorScheme(this);
         touchHandler = new EditorTouchEventHandler(this);
         basicDetector = new GestureDetector(getContext(), touchHandler);
@@ -1166,23 +1172,18 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * @return The prefix
-     * @see CodeEditor#setLnTip(String)
+     * @see CodeEditor#setLineNumberTipTextProvider(LineNumberTipTextProvider)
      */
-    public String getLnTip() {
-        return lnTipPrefix;
+    public LineNumberTipTextProvider getLineNumberTipTextProvider() {
+        return lineNumberTipTextProvider;
     }
 
     /**
      * Set the tip text before line number for the line number panel
-     *
-     * @param prefix The prefix for text
      */
-    public void setLnTip(String prefix) {
-        if (prefix == null) {
-            prefix = "";
-        }
-        lnTipPrefix = prefix;
+    public void setLineNumberTipTextProvider(LineNumberTipTextProvider provider) {
+        Objects.requireNonNull(provider, "Provider can not be null");
+        lineNumberTipTextProvider = provider;
         invalidate();
     }
 
