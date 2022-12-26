@@ -314,7 +314,11 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                                     if (newText == null) {
                                         localText.delete(modification.start, modification.end)
                                     } else {
-                                        localText.insert(modification.start, newText)
+                                        if (modification.start == localText.length) {
+                                            localText.append(newText)
+                                        } else {
+                                            localText.insert(modification.start, newText)
+                                        }
                                     }
                                     tree = parser.parseString(t, localText)
                                     t.close()
