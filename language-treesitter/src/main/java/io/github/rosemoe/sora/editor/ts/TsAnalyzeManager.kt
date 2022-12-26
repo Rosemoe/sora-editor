@@ -42,6 +42,7 @@ import io.github.rosemoe.sora.lang.styling.CodeBlock
 import io.github.rosemoe.sora.lang.styling.Styles
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
+import java.util.Collections
 import java.util.concurrent.CancellationException
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -285,6 +286,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                 }
             }
             val distinct = blocks.distinct().toMutableList()
+            Collections.sort(distinct, CodeBlock.COMPARATOR_END)
             styles.blocks = distinct
         }
 
