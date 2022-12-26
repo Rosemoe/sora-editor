@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -58,6 +59,7 @@ public class Content implements CharSequence {
     private final ReadWriteLock lock;
     private int textLength;
     private int nestedBatchEdit;
+    private final AtomicLong documentVersion = new AtomicLong(1L);
     private final Indexer indexer;
     private final ContentBidi bidi;
     private UndoManager undoManager;
@@ -329,6 +331,7 @@ public class Content implements CharSequence {
      */
     public void insert(int line, int column, CharSequence text) {
         lock(true);
+        documentVersion.getAndIncrement();
         try {
             insertInternal(line, column, text);
         } finally {
@@ -400,9 +403,10 @@ public class Content implements CharSequence {
      * @param end   End position in content
      */
     public void delete(int start, int end) {
+        lock(true);
         checkIndex(start);
         checkIndex(end);
-        lock(true);
+        documentVersion.getAndIncrement();
         try {
             CharPosition startPos = getIndexer().getCharPosition(start);
             CharPosition endPos = getIndexer().getCharPosition(end);
@@ -424,6 +428,7 @@ public class Content implements CharSequence {
      */
     public void delete(int startLine, int columnOnStartLine, int endLine, int columnOnEndLine) {
         lock(true);
+        documentVersion.getAndIncrement();
         try {
             deleteInternal(startLine, columnOnStartLine, endLine, columnOnEndLine);
         } finally {
@@ -527,6 +532,7 @@ public class Content implements CharSequence {
             throw new IllegalArgumentException("text can not be null");
         }
         lock(true);
+        documentVersion.getAndIncrement();
         try {
             this.dispatchBeforeReplace();
             deleteInternal(startLine, columnOnStartLine, endLine, columnOnEndLine);
@@ -543,6 +549,14 @@ public class Content implements CharSequence {
         var start = getIndexer().getCharPosition(startIndex);
         var end = getIndexer().getCharPosition(endIndex);
         replace(start.line, start.column, end.line, end.column, text);
+    }
+
+    /**
+     * Get current document version. The returned value is increasing (if the modification count is
+     * smaller than Long.MAX_VALUE).
+     */
+    public long getDocumentVersion() {
+        return documentVersion.get();
     }
 
     /**

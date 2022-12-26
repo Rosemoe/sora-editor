@@ -120,6 +120,14 @@ public class ContentReference extends TextReference {
     }
 
     /**
+     * @see Content#getDocumentVersion()
+     */
+    public long getDocumentVersion() {
+        validateAccess();;
+        return content.getDocumentVersion();
+    }
+
+    /**
      * Create a reader to read the text
      */
     public Reader createReader() {
