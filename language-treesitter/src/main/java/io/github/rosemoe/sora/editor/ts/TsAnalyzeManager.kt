@@ -226,7 +226,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                 styles.spans = LineSpansGenerator(
                     copied,
                     reference!!.lineCount,
-                    reference!!,
+                    reference!!.reference,
                     theme,
                     languageSpec,
                     scopedVariables

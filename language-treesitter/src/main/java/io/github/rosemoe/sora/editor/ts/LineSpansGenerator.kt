@@ -31,7 +31,7 @@ import io.github.rosemoe.sora.lang.styling.Span
 import io.github.rosemoe.sora.lang.styling.Spans
 import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.text.CharPosition
-import io.github.rosemoe.sora.text.ContentReference
+import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
@@ -43,7 +43,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
  */
 class LineSpansGenerator(
     internal var tree: TSTree, internal var lineCount: Int,
-    private val content: ContentReference, internal var theme: TsTheme,
+    private val content: Content, internal var theme: TsTheme,
     private val languageSpec: TsLanguageSpec, var scopedVariables: TsScopedVariables
 ) : Spans {
 
@@ -164,7 +164,7 @@ class LineSpansGenerator(
                 spans = cached
                 return
             }
-            val start = content.getCharPosition(line, 0).index
+            val start = content.indexer.getCharPosition(line, 0).index
             val end = start + content.getColumnCount(line)
             spans = captureRegion(start, end)
             pushCache(line, spans)
@@ -179,7 +179,7 @@ class LineSpansGenerator(
             if (cached != null) {
                 return ArrayList(cached)
             }
-            val start = content.getCharPosition(line, 0).index
+            val start = content.indexer.getCharPosition(line, 0).index
             val end = start + content.getColumnCount(line)
             return captureRegion(start, end)
         }
