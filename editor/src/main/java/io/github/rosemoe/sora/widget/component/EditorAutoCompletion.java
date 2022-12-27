@@ -106,6 +106,11 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         }
     }
 
+    public boolean isCompletionInProgress() {
+        final var thread = completionThread;
+        return super.isShowing() || requestShow > requestHide || (thread != null && thread.isAlive());
+    }
+
     /**
      * Some layout may support to display more animations,
      * this method provides control over the animation of the layout。

@@ -33,17 +33,17 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import io.github.rosemoe.sora.R
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent
-import io.github.rosemoe.sora.event.EventManager
 import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
+import io.github.rosemoe.sora.widget.getComponent
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.subscribeEvent
 
-class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(editor, FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED or FEATURE_SCROLL_AS_CONTENT), EditorBuiltinComponent {
+class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(editor, FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED), EditorBuiltinComponent {
 
     private var enableState = true
     private val rootView: View = LayoutInflater.from(editor.context).inflate(R.layout.diagnostic_tooltip_window, null)
@@ -57,6 +57,7 @@ class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(edit
     private val maxHeight = (editor.dpUnit * 175).toInt()
     private val diagnosticList = mutableListOf<DiagnosticRegion>()
     private val buffer = FloatArray(2)
+    private val locationBuffer = IntArray(2)
     private val popupMenu = PopupMenu(editor.context, moreActionText)
 
     override fun isEnabled() = enableState
@@ -94,7 +95,8 @@ class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(edit
                         }
                     }
                     updateDiagnostic(diagnosticList[minIndex].detail)
-                    show()
+                    if (!editor.getComponent<EditorAutoCompletion>().isCompletionInProgress)
+                        show()
                 } else {
                     updateDiagnostic(null)
                 }
@@ -105,6 +107,8 @@ class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(edit
             if (currentDiagnostic != null && isShowing) {
                 if (!isSelectionVisible()) {
                     dismiss()
+                } else {
+                    updateWindowPosition()
                 }
             }
         }
@@ -192,7 +196,6 @@ class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(edit
         }
         updateWindowSize()
         updateWindowPosition()
-        show()
     }
 
     private fun updateWindowSize() {
@@ -221,12 +224,18 @@ class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(edit
         val selection = editor.cursor.left()
         val charX = editor.getCharOffsetX(selection.line, selection.column)
         val charY = editor.getCharOffsetY(selection.line, selection.column) - editor.rowHeight
-        val restAbove = charY
+        editor.getLocationInWindow(locationBuffer)
+        val restAbove = charY + locationBuffer[1]
         val restBottom = editor.height - charY - editor.rowHeight
-        val windowY = if (restAbove > restBottom) {
+        val completionShowing = editor.getComponent<EditorAutoCompletion>().isShowing
+        val windowY = if (restAbove > restBottom || completionShowing) {
             charY - height
         } else {
             charY + editor.rowHeight * 1.5f
+        }
+        if (completionShowing && windowY < 0) {
+            dismiss()
+            return
         }
         val windowX = (charX - width / 2).coerceAtLeast(0f)
         setLocationAbsolutely(windowX.toInt(), windowY.toInt())
