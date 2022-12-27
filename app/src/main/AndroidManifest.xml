@@ -28,11 +28,13 @@
         <activity
             android:name=".TestActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
-            android:exported="false" />
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"/>
         <activity
             android:name=".LspTestActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
-            android:exported="false" />
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"/>
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
