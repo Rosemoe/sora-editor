@@ -112,7 +112,7 @@ class LineSpansGenerator(
                             endByte / 2,
                             content.substring(startByte / 2, endByte / 2)
                         )
-                        if (def != null) {
+                        if (def != null && def.matchedHighlightPattern != -1) {
                             style = theme.resolveStyleForPattern(def.matchedHighlightPattern)
                         }
                         // This reference can not be resolved to its definition
