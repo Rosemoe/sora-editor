@@ -93,6 +93,15 @@ import java.util.regex.PatternSyntaxException
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        init {
+            // Load tree-sitter libraries
+            System.loadLibrary("android-tree-sitter")
+            System.loadLibrary("tree-sitter-java")
+        }
+
+    }
+
     private lateinit var binding: ActivityMainBinding
     private var undo: MenuItem? = null
     private var redo: MenuItem? = null
@@ -100,9 +109,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         CrashHandler.INSTANCE.init(this)
-        // Load tree-sitter libraries
-        System.loadLibrary("android-tree-sitter")
-        System.loadLibrary("tree-sitter-java")
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         val inputView = binding.symbolInput
