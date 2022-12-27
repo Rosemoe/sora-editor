@@ -22,30 +22,13 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lang.diagnostic
+package io.github.rosemoe.sora.event
 
-import android.content.Context
+import io.github.rosemoe.sora.widget.CodeEditor
 
-// Should we add it?
+class ColorSchemeUpdateEvent(editor: CodeEditor) : Event(editor) {
 
-open class Quickfix(
-    private val title: CharSequence?,
-    val documentVersion: Long = 0,
-    private val fixAction: Runnable? = null
-) {
-
-    private var resourceId: Int = 0
-
-    constructor(titleRes: Int, documentVersion: Long = 0, fixAction: Runnable) : this(null, documentVersion, fixAction) {
-        resourceId = titleRes
-    }
-
-    open fun resolveTitle(context: Context) : CharSequence {
-        return title ?: context.getString(resourceId)
-    }
-
-    open fun executeQuickfix() {
-        fixAction?.run()
-    }
+    val colorScheme
+        get() = editor.colorScheme
 
 }

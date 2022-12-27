@@ -23,19 +23,17 @@
   ~     additional information or have any questions
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<resources>
-
-    <string name="last">Last</string>
-    <string name="next">Next</string>
-    <string name="replace">Replace</string>
-    <string name="replaceAll">Replace All</string>
-    <string name="replacement">Replacement</string>
-    <string name="text_to_search">Text to search</string>
-    <string name="editor_search_replacing">Replacing texts…</string>
-    <string name="editor_search_busy">Editor is still preparing…</string>
-    <string name="editor_line_number_tip_prefix" translatable="false">Line:</string>
-    <string name="editor_formatting">Formatting your code…</string>
-    <string name="more">More</string>
-    <string name="diagnostics_more_actions">More Actions...</string>
-
-</resources>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shareInterpolator="false">
+    <translate
+        android:duration="250"
+        android:fromXDelta="0%"
+        android:fromYDelta="20%"
+        android:toXDelta="0%"
+        android:toYDelta="0%" />
+    <alpha
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0"
+        android:duration="250"
+        />
+</set>

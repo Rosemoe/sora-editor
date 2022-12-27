@@ -33,4 +33,5 @@
     <string name="editor_formatting">正在格式化…</string>
     <string name="text_to_search">欲搜索文本</string>
     <string name="more">更多</string>
+    <string name="diagnostics_more_actions">更多操作…</string>
 </resources>

@@ -32,6 +32,7 @@ import androidx.annotation.NonNull;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
+import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
@@ -78,6 +79,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         this.editor = editor;
         adapter = new DefaultCompletionItemAdapter();
         setLayout(new DefaultCompletionLayout());
+        editor.subscribeEvent(ColorSchemeUpdateEvent.class, ((event, unsubscribe) -> applyColorScheme()));
     }
 
     @SuppressWarnings("unchecked")

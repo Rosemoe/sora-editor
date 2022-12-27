@@ -24,11 +24,14 @@
 
 package io.github.rosemoe.sora.app
 
+import android.content.res.Configuration
 import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
+import io.github.rosemoe.sora.lang.diagnostic.Quickfix
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.widget.CodeEditor
 import java.lang.StringBuilder
@@ -42,6 +45,7 @@ class TestActivity : AppCompatActivity() {
         setContentView(editor)
         editor.typefaceText = Typeface.createFromAsset(assets, "Roboto-Regular.ttf")
         editor.setEditorLanguage(JavaLanguage())
+        switchThemeIfRequired(this, editor)
         val text = StringBuilder("    private final PopupWindow mWindow;\r\n" +
                 "    private final CodeEditor mEditor;\r\n" +
                 "    private final int mFeatures;\n\r" +
@@ -57,10 +61,17 @@ class TestActivity : AppCompatActivity() {
         text.append(127.toChar())
         editor.setText(text)
         editor.diagnostics = DiagnosticsContainer().also {
-            it.addDiagnostic(DiagnosticRegion(37, 50, DiagnosticRegion.SEVERITY_ERROR))
+            it.addDiagnostic(DiagnosticRegion(37, 50, DiagnosticRegion.SEVERITY_ERROR, 0L, DiagnosticDetail("TestMessage", "This is a test error message\nYou can add your content here\ntest scroll\ntest\ntest\ntest\ntest", listOf(
+                Quickfix("Fix Quick", 0L, {}), Quickfix("Test", 0L, {})
+            ))))
         }
         val stringText = text.toString()
         assert(stringText == editor.text.toString()) { "Text check failed" }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        switchThemeIfRequired(this, editor)
     }
 
     override fun onDestroy() {

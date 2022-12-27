@@ -25,6 +25,7 @@
 package io.github.rosemoe.sora.app
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Menu
@@ -84,12 +85,18 @@ class LspTestActivity : AppCompatActivity() {
         }
 
         ensureTextmateTheme()
+        switchThemeIfRequired(this, editor)
 
         lifecycleScope.launch {
             unAssets()
             connectToLanguageServer()
             setEditorText()
         }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        switchThemeIfRequired(this, editor)
     }
 
     private suspend fun setEditorText() {

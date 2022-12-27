@@ -83,6 +83,10 @@ public class EditorColorScheme {
     public static final int COMMENT = 22;
     public static final int KEYWORD = 21;
     //-------------View colors---------------------
+    public static final int DIAGNOSTIC_TOOLTIP_ACTION = 56;
+    public static final int DIAGNOSTIC_TOOLTIP_DETAILED_MSG = 55;
+    public static final int DIAGNOSTIC_TOOLTIP_BRIEF_MSG = 54;
+    public static final int DIAGNOSTIC_TOOLTIP_BACKGROUND = 53;
     public static final int FUNCTION_CHAR_BACKGROUND_STROKE = 52;
     public static final int HARD_WRAP_MARKER = 51;
     public static final int TEXT_INLAY_HINT_FOREGROUND = 50;
@@ -139,7 +143,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 52;
+    protected static final int END_COLOR_ID = 56;
     /**
      * Real color saver
      */
@@ -150,6 +154,13 @@ public class EditorColorScheme {
     private final List<WeakReference<CodeEditor>> editors;
 
     private final boolean dark;
+
+    private final static int PRIMARY_TEXT_COLOR_DEFAULT_LIGHT = 0xff424242;
+    private final static int PRIMARY_TEXT_COLOR_DEFAULT_DARK = 0xfff5f5f5;
+    private final static int BACKGROUND_COLOR_LIGHT = 0xffeeeeee;
+    private final static int BACKGROUND_COLOR_DARK = 0xff212121;
+    private final static int SECONDARY_TEXT_COLOR_LIGHT = 0xff616161;
+    private final static int SECONDARY_TEXT_COLOR_DARK = 0xffeeeeee;
 
     /**
      * Create a new ColorScheme for the given editor
@@ -351,6 +362,17 @@ public class EditorColorScheme {
             case HARD_WRAP_MARKER:
                 color = !isDark() ? 0xffeeeeee : 0x1D000000;
                 break;
+            case DIAGNOSTIC_TOOLTIP_BRIEF_MSG:
+                color = isDark() ? PRIMARY_TEXT_COLOR_DEFAULT_DARK : PRIMARY_TEXT_COLOR_DEFAULT_LIGHT;
+                break;
+            case DIAGNOSTIC_TOOLTIP_DETAILED_MSG:
+                color = isDark() ? SECONDARY_TEXT_COLOR_DARK : SECONDARY_TEXT_COLOR_LIGHT;
+                break;
+            case DIAGNOSTIC_TOOLTIP_BACKGROUND:
+                color = isDark() ? BACKGROUND_COLOR_DARK : BACKGROUND_COLOR_LIGHT;
+                break;
+            case DIAGNOSTIC_TOOLTIP_ACTION:
+                color = 0xff42A5F5;
         }
         setColor(type, color);
     }

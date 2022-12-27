@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.app
 import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
@@ -195,6 +196,8 @@ class MainActivity : AppCompatActivity() {
         openAssetsFile("sample.txt")
         updatePositionText()
         updateBtnState()
+
+        switchThemeIfRequired(this, binding.editor)
     }
 
 
@@ -439,6 +442,11 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        switchThemeIfRequired(this, binding.editor)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

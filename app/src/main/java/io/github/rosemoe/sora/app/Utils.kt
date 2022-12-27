@@ -22,30 +22,29 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lang.diagnostic
+package io.github.rosemoe.sora.app
 
 import android.content.Context
+import android.content.res.Configuration
+import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
+import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
+import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+import io.github.rosemoe.sora.widget.schemes.SchemeDarcula
 
-// Should we add it?
-
-open class Quickfix(
-    private val title: CharSequence?,
-    val documentVersion: Long = 0,
-    private val fixAction: Runnable? = null
-) {
-
-    private var resourceId: Int = 0
-
-    constructor(titleRes: Int, documentVersion: Long = 0, fixAction: Runnable) : this(null, documentVersion, fixAction) {
-        resourceId = titleRes
+fun switchThemeIfRequired(context: Context, editor: CodeEditor) {
+    if ((context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES) {
+        if (editor.colorScheme is TextMateColorScheme) {
+            ThemeRegistry.getInstance().setTheme("darcula")
+        } else {
+            editor.colorScheme = SchemeDarcula()
+        }
+    } else {
+        if (editor.colorScheme is TextMateColorScheme) {
+            ThemeRegistry.getInstance().setTheme("quietlight")
+        } else {
+            editor.colorScheme = EditorColorScheme()
+        }
     }
-
-    open fun resolveTitle(context: Context) : CharSequence {
-        return title ?: context.getString(resourceId)
-    }
-
-    open fun executeQuickfix() {
-        fixAction?.run()
-    }
-
+    editor.invalidate()
 }

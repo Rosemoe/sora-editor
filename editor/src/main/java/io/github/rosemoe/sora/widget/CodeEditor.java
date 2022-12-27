@@ -78,6 +78,7 @@ import java.util.Objects;
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.BuildEditorInfoEvent;
+import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.EventManager;
@@ -118,6 +119,7 @@ import io.github.rosemoe.sora.util.ThemeUtils;
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 import io.github.rosemoe.sora.widget.component.EditorBuiltinComponent;
 import io.github.rosemoe.sora.widget.component.EditorCompletionAdapter;
+import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow;
 import io.github.rosemoe.sora.widget.component.EditorTextActionWindow;
 import io.github.rosemoe.sora.widget.component.Magnifier;
 import io.github.rosemoe.sora.widget.layout.Layout;
@@ -241,6 +243,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     protected final EditorKeyEventHandler keyEventHandler = new EditorKeyEventHandler(this);
     protected SymbolPairMatch languageSymbolPairs;
     protected EditorTextActionWindow textActionWindow;
+    protected EditorDiagnosticTooltipWindow diagnosticTooltip;
     protected List<Span> defaultSpans = new ArrayList<>(2);
     protected EditorStyleDelegate styleDelegate;
     int startedActionMode;
@@ -567,6 +570,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         edgeEffectVertical = new EdgeEffect(getContext());
         edgeEffectHorizontal = new EdgeEffect(getContext());
         textActionWindow = new EditorTextActionWindow(this);
+        diagnosticTooltip = new EditorDiagnosticTooltipWindow(this);
         setEditorLanguage(null);
         setText(null);
         setTabWidth(4);
@@ -4026,13 +4030,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param type Color type changed
      */
     public void onColorUpdated(int type) {
-        if (type == EditorColorScheme.COMPLETION_WND_BACKGROUND || type == EditorColorScheme.COMPLETION_WND_CORNER
-                || type == EditorColorScheme.COMPLETION_WND_ITEM_CURRENT || type == EditorColorScheme.COMPLETION_WND_TEXT_SECONDARY
-                || type == EditorColorScheme.COMPLETION_WND_TEXT_PRIMARY) {
-            if (completionWindow != null)
-                completionWindow.applyColorScheme();
-            return;
-        }
+        dispatchEvent(new ColorSchemeUpdateEvent(this));
         renderer.invalidateRenderNodes();
         invalidate();
     }
@@ -4041,8 +4039,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Called by color scheme to init colors
      */
     public void onColorFullUpdate() {
-        if (completionWindow != null)
-            completionWindow.applyColorScheme();
+        dispatchEvent(new ColorSchemeUpdateEvent(this));
         renderer.invalidateRenderNodes();
         invalidate();
     }
