@@ -78,5 +78,6 @@
     <string name="top_right">右上方</string>
     <string name="bottom_left">左下方</string>
     <string name="bottom_right">右下方</string>
-
+    <string name="open_debug_document">打开View.java</string>
+    <string name="debug">测试</string>
 </resources>

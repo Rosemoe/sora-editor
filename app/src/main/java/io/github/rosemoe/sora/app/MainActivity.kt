@@ -923,9 +923,8 @@ class MainActivity : AppCompatActivity() {
                 item.isChecked = editor.isLineNumberPinned
             }
 
-            R.id.enable_highlight -> {
-                item.isChecked = !item.isChecked
-                // no implementation
+            R.id.load_test_file -> {
+                openAssetsFile("View.java")
             }
         }
         return super.onOptionsItemSelected(item)

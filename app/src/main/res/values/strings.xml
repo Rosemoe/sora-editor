@@ -78,4 +78,6 @@
     <string name="top_right">Top right</string>
     <string name="bottom_left">Bottom left</string>
     <string name="bottom_right">Bottom right</string>
+    <string name="open_debug_document">Open View.java</string>
+    <string name="debug">Debug</string>
 </resources>
