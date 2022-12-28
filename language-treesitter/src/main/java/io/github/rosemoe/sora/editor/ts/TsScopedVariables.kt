@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.editor.ts
 
+import com.itsaky.androidide.treesitter.TSNode
 import com.itsaky.androidide.treesitter.TSQueryCapture
 import com.itsaky.androidide.treesitter.TSQueryCursor
 import com.itsaky.androidide.treesitter.TSTree
@@ -58,6 +59,7 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
                 }
                 captures.sortBy { it.node.startByte }
                 val scopeStack = Stack<Scope>()
+                var lastAddedVariableNode: TSNode? = null
                 scopeStack.push(rootScope)
                 captures.forEach {
                     val startIndex = it.node.startByte / 2
@@ -86,12 +88,15 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
                             endIndex
                         )
                         scope.variables.add(scopedVar)
+                        lastAddedVariableNode = it.node
                     } else if (pattern !in spec.localsDefinitionValueIndices && pattern !in spec.localsReferenceIndices) {
-                        val topVariables = scopeStack.peek().variables
-                        if (topVariables.isNotEmpty()) {
-                            val topVariable = topVariables.last()
-                            if (topVariable.scopeStartIndex == startIndex && topVariable.nodeEndIndex == endIndex && topVariable.matchedHighlightPattern == -1) {
-                                topVariable.matchedHighlightPattern = pattern
+                        lastAddedVariableNode?.let {
+                            val topVariables = scopeStack.peek().variables
+                            if (topVariables.isNotEmpty()) {
+                                val topVariable = topVariables.last()
+                                if (it.startByte / 2 == startIndex && it.endByte / 2 == endIndex && topVariable.matchedHighlightPattern == -1) {
+                                    topVariable.matchedHighlightPattern = pattern
+                                }
                             }
                         }
                     }
@@ -112,7 +117,6 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
         var name: String,
         var scopeStartIndex: Int,
         var scopeEndIndex: Int,
-        var nodeEndIndex: Int,
         var matchedHighlightPattern: Int = -1
     )
 
