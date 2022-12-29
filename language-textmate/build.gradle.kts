@@ -61,7 +61,7 @@ dependencies {
 
     implementation("org.yaml:snakeyaml:1.33")
     implementation("org.eclipse.jdt:org.eclipse.jdt.annotation:2.2.700")
-    implementation("com.google.guava:guava:31.1-android")
+    implementation("com.google.guava:guava:31.1-jre")
 
 
     testImplementation("junit:junit:4.13.2")
