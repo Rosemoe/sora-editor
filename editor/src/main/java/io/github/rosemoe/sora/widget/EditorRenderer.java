@@ -2240,6 +2240,7 @@ public class EditorRenderer {
                 var spanStart = Math.max(span.column, position.rowStart);
                 var sharedStart = Math.max(startCol, spanStart);
                 var spanEnd = nextSpan == null ? column : nextSpan.column;
+                spanEnd = Math.min(column, spanEnd); // Spans can be corrupted
                 if (spanEnd <= position.startColumn) {
                     continue;
                 }
