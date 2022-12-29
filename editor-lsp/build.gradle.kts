@@ -47,5 +47,5 @@ android {
 
 dependencies {
     compileOnly(projects.editor)
-    implementation ("org.eclipse.lsp4j:org.eclipse.lsp4j:${Versions.lsp4jVersion}")
+    implementation(libs.lsp4j)
 }

@@ -56,20 +56,18 @@ android {
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.2")
+    coreLibraryDesugaring(libs.desugar)
 
     compileOnly(projects.editor)
-    implementation("com.google.code.gson:gson:${Versions.gsonVersion}")
-    implementation("org.jruby.jcodings:jcodings:${Versions.jcodingsVersion}")
-    implementation("org.jruby.joni:joni:${Versions.joniVersion}")
+    implementation(libs.gson)
+    implementation(libs.jcodings)
+    implementation(libs.joni)
 
-    implementation("org.yaml:snakeyaml:1.33")
-    implementation("org.eclipse.jdt:org.eclipse.jdt.annotation:2.2.700")
-    implementation("com.google.guava:guava:31.1-android")
+    implementation(libs.snakeyaml)
+    implementation(libs.jdt.annotation)
+    implementation(libs.guava)
 
-
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.4")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
-
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.espresso)
 }
