@@ -86,7 +86,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-instantapps:18.0.1")
 
     // Desugar
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.2")
 
     // androidx & material
     implementation("com.google.android.material:material:1.7.0")
