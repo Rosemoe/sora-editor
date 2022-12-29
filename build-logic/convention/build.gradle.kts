@@ -22,35 +22,25 @@
  *     additional information or have any questions
  ******************************************************************************/
 
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-    id("com.android.library")
-    id("com.vanniktech.maven.publish.base")
+    `kotlin-dsl`
 }
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
-
-android {
-    namespace = "io.github.rosemoe.sora.langs.java"
-
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
+repositories {
+    google()
+    gradlePluginPortal()
+    mavenCentral()
 }
 
-dependencies {
-    compileOnly(projects.editor)
-    api(libs.androidx.annotation)
+java {
+    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_11
+}
 
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.test.junit)
-    androidTestImplementation(libs.androidx.test.espresso)
+tasks.withType<KotlinCompile> {
+    kotlinOptions {
+        jvmTarget = "11"
+    }
 }

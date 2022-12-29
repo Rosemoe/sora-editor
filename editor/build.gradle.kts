@@ -51,9 +51,9 @@ android {
 }
 
 dependencies {
-    api("androidx.annotation:annotation:${Versions.androidxAnnotationVersion}")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:${Versions.kotlinVersion}")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.4")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    api(libs.androidx.annotation)
+    implementation(libs.kotlin.stdlib)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.espresso)
 }

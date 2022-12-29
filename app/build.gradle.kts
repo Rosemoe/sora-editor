@@ -82,17 +82,17 @@ android {
 }
 
 dependencies {
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("com.google.android.gms:play-services-instantapps:18.0.1")
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.gms.instantapps)
 
     // Desugar
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
+    coreLibraryDesugaring(libs.desugar)
 
     // androidx & material
-    implementation("com.google.android.material:material:1.7.0")
-    implementation("androidx.core:core-ktx:1.9.0")
-    implementation("androidx.appcompat:appcompat:1.5.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
+    implementation(libs.material)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.lifecycle.runtime)
 
     // Editor
     implementation(projects.editor)
@@ -102,17 +102,17 @@ dependencies {
     implementation(projects.languageTreesitter)
 
     // Tree-sitter languages
-    implementation("io.github.itsaky:tree-sitter-java:${Versions.tsBindingVersion}")
+    implementation(libs.tree.sitter.java)
 
     // Kotlin coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+    implementation(libs.kotlinx.coroutines)
 
     // Lua language server
     implementation(fileTree("dir" to "libs", "includes" to listOf("*.jar")))
-    implementation ("org.eclipse.lsp4j:org.eclipse.lsp4j:${Versions.lsp4jVersion}")
+    implementation(libs.lsp4j)
 
-    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.10")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.4")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
+    debugImplementation(libs.leakcanary)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.espresso)
 }

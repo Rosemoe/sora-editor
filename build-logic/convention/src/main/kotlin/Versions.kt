@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2022  Rosemoe
@@ -20,14 +20,32 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+@SuppressWarnings("unused")
+object Versions {
+    // Project versions
+    const val versionName = "0.20.2"
+    const val versionCode = 73
 
-plugins {
-    `kotlin-dsl`
-}
+    // Platform & Tool versions
+    const val buildToolsVersion = "33.0.0"
+    const val compileSdkVersion = 33
+    const val minSdkVersion = 21
+    const val minSdkVersionHighApi = 26
+    const val targetSdkVersion = 33
+    const val kotlinVersion = "1.7.20"
 
-repositories {
-    google()
-    gradlePluginPortal()
-    mavenCentral()
+    // Dependency versions
+    const val antlrVersion = "4.9.2"
+    const val androidxAnnotationVersion = "1.5.0"
+    const val lsp4jVersion = "0.17.0"
+    const val tsBindingVersion = "1.0.10"
+
+    // TextMate Dependency versions(from tm4e 0.4.2)
+    const val gsonVersion = "2.9.1"
+    const val jcodingsVersion = "1.0.57"
+    const val joniVersion = "2.1.43"
+    const val batikCssVersion = "1.14"
+    const val batikUtilVersion = "1.14"
+    const val xercesImplVersion = "2.12.2"
 }

@@ -27,11 +27,13 @@ import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
 
+@Suppress("DSL_SCOPE_VIOLATION") // https://youtrack.jetbrains.com/issue/KTIJ-19369
 plugins {
-    id("com.android.application") version "7.3.1" apply false
-    id("com.android.library") version "7.3.1" apply false
-    id("org.jetbrains.kotlin.android") version Versions.kotlinVersion apply false
-    id("com.vanniktech.maven.publish.base") version "0.22.0" apply false
+    id("build-logic.root-project")
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.kotlin) apply false
+    alias(libs.plugins.publish) apply false
 }
 
 val highApiProjects = arrayOf("editor-lsp")
