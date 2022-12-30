@@ -157,7 +157,7 @@ public class EditorColorScheme {
 
     private final static int PRIMARY_TEXT_COLOR_DEFAULT_LIGHT = 0xff424242;
     private final static int PRIMARY_TEXT_COLOR_DEFAULT_DARK = 0xfff5f5f5;
-    private final static int BACKGROUND_COLOR_LIGHT = 0xffeeeeee;
+    private final static int BACKGROUND_COLOR_LIGHT = 0xfffefefe;
     private final static int BACKGROUND_COLOR_DARK = 0xff212121;
     private final static int SECONDARY_TEXT_COLOR_LIGHT = 0xff616161;
     private final static int SECONDARY_TEXT_COLOR_DARK = 0xffeeeeee;
