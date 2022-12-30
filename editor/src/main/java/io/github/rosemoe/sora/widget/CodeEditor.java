@@ -382,6 +382,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             return (T) touchHandler.magnifier;
         } else if (clazz == EditorTextActionWindow.class) {
             return (T) textActionWindow;
+        } else if (clazz == EditorDiagnosticTooltipWindow.class) {
+            return (T) diagnosticTooltip;
         } else {
             throw new IllegalArgumentException("Unknown component type");
         }
@@ -405,6 +407,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             touchHandler.magnifier = (Magnifier) replacement;
         } else if (clazz == EditorTextActionWindow.class) {
             textActionWindow = (EditorTextActionWindow) replacement;
+        } else if (clazz == EditorDiagnosticTooltipWindow.class) {
+            diagnosticTooltip = (EditorDiagnosticTooltipWindow) replacement;
         } else {
             throw new IllegalArgumentException("Unknown component type");
         }
