@@ -40,7 +40,7 @@ import java.util.Stack
  * @param text The current text for tree
  * @param spec Language specification, which should the same as highlighter's
  */
-class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
+class TsScopedVariables(tree: TSTree, text: UTF16String, val spec: TsLanguageSpec) {
 
     private val rootScope: Scope
 
@@ -61,13 +61,13 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
                 val scopeStack = Stack<Scope>()
                 var lastAddedVariableNode: TSNode? = null
                 scopeStack.push(rootScope)
-                captures.forEach {
-                    val startIndex = it.node.startByte / 2
-                    val endIndex = it.node.endByte / 2
+                for (capture in captures) {
+                    val startIndex = capture.node.startByte / 2
+                    val endIndex = capture.node.endByte / 2
                     while (startIndex >= scopeStack.peek().endIndex) {
                         scopeStack.pop()
                     }
-                    val pattern = it.index
+                    val pattern = capture.index
                     if (pattern in spec.localsScopeIndices) {
                         val newScope = Scope(startIndex, endIndex)
                         scopeStack.peek().childScopes.add(newScope)
@@ -83,20 +83,17 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
                         utf16Name.close()
                         val scopedVar = ScopedVariable(
                             name,
-                            if(scope.forMembers) scope.startIndex else startIndex,
-                            scope.endIndex,
-                            endIndex
+                            if (scope.forMembers) scope.startIndex else startIndex,
+                            scope.endIndex
                         )
                         scope.variables.add(scopedVar)
-                        lastAddedVariableNode = it.node
-                    } else if (pattern !in spec.localsDefinitionValueIndices && pattern !in spec.localsReferenceIndices) {
-                        lastAddedVariableNode?.let {
-                            val topVariables = scopeStack.peek().variables
-                            if (topVariables.isNotEmpty()) {
-                                val topVariable = topVariables.last()
-                                if (it.startByte / 2 == startIndex && it.endByte / 2 == endIndex && topVariable.matchedHighlightPattern == -1) {
-                                    topVariable.matchedHighlightPattern = pattern
-                                }
+                        lastAddedVariableNode = capture.node
+                    } else if (pattern !in spec.localsDefinitionValueIndices && pattern !in spec.localsReferenceIndices && lastAddedVariableNode != null) {
+                        val topVariables = scopeStack.peek().variables
+                        if (topVariables.isNotEmpty()) {
+                            val topVariable = topVariables.last()
+                            if (lastAddedVariableNode.startByte / 2 == startIndex && lastAddedVariableNode.endByte / 2 == endIndex && topVariable.matchedHighlightPattern == -1) {
+                                topVariable.matchedHighlightPattern = pattern
                             }
                         }
                     }
@@ -122,7 +119,7 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
 
     fun findDefinition(startIndex: Int, endIndex: Int, name: String): ScopedVariable? {
         var definition: ScopedVariable? = null
-        var currentScope:Scope? = rootScope
+        var currentScope: Scope? = rootScope
         while (currentScope != null) {
             for (variable in currentScope.variables) {
                 if (variable.scopeStartIndex > startIndex) {
@@ -133,7 +130,8 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, spec: TsLanguageSpec) {
                     // Do not break here: name can be shadowed in some languages
                 }
             }
-            currentScope = currentScope.childScopes.firstOrNull { scope -> scope.startIndex <= startIndex && scope.endIndex >= endIndex }
+            currentScope =
+                currentScope.childScopes.firstOrNull { scope -> scope.startIndex <= startIndex && scope.endIndex >= endIndex }
         }
         return definition
     }
