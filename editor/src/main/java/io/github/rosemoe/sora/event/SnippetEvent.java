@@ -75,10 +75,16 @@ public class SnippetEvent extends Event {
         return action;
     }
 
+    /**
+     * Get the current index of tab stops
+     */
     public int getCurrentTabStop() {
         return currentTabStop;
     }
 
+    /**
+     * Get the count of tab stops
+     */
     public int getTotalTabStop() {
         return totalTabStop;
     }

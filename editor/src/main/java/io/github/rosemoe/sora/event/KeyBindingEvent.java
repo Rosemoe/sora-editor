@@ -25,6 +25,8 @@ package io.github.rosemoe.sora.event;
 
 import android.view.KeyEvent;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
@@ -54,11 +56,10 @@ public class KeyBindingEvent extends EditorKeyEvent {
      *
      * @param editor             The editor.
      * @param src                The source {@link KeyEvent}.
-     * @param keyCode            The key code.
      * @param type               The key event type.
      * @param editorAbleToHandle <code>true</code> if the editor can handle this event, <code>false</code> otherwise.
      */
-    public KeyBindingEvent(CodeEditor editor, KeyEvent src, Type type, int keyCode, boolean editorAbleToHandle) {
+    public KeyBindingEvent(@NonNull CodeEditor editor, @NonNull KeyEvent src, Type type, boolean editorAbleToHandle) {
         super(editor, src, type);
         this.editorAbleToHandle = editorAbleToHandle;
     }

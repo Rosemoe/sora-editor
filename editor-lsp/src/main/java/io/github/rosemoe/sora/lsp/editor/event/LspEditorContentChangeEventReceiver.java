@@ -24,6 +24,8 @@
 package io.github.rosemoe.sora.lsp.editor.event;
 
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.EventReceiver;
 import io.github.rosemoe.sora.event.Unsubscribe;
@@ -39,7 +41,7 @@ public class LspEditorContentChangeEventReceiver implements EventReceiver<Conten
     }
 
     @Override
-    public void onReceive(ContentChangeEvent event, Unsubscribe unsubscribe) {
+    public void onReceive(@NonNull ContentChangeEvent event, @NonNull Unsubscribe unsubscribe) {
         editor.getProviderManager().safeUseProvider(DocumentChangeProvider.class)
                 .ifPresent(documentChangeFeature -> documentChangeFeature.execute(event));
     }

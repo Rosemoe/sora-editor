@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.event;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
@@ -61,7 +63,7 @@ public class ScrollEvent extends Event {
     private final int mEndY;
     private final int mCause;
 
-    public ScrollEvent(CodeEditor editor, int startX, int startY, int endX, int endY, int cause) {
+    public ScrollEvent(@NonNull CodeEditor editor, int startX, int startY, int endX, int endY, int cause) {
         super(editor);
         mStartX = startX;
         mStartY = startY;

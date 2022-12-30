@@ -122,7 +122,6 @@ class EditorKeyEventHandler {
                 new KeyBindingEvent(editor,
                         event,
                         EditorKeyEvent.Type.DOWN,
-                        keyCode,
                         editor.canHandleKeyBinding(keyCode, event.isCtrlPressed(), keyMetaStates.isShiftPressed(), keyMetaStates.isAltPressed()));
         if ((eventManager.dispatchEvent(editorKeyEvent) & InterceptTarget.TARGET_EDITOR) != 0) {
             return editorKeyEvent.result(false);
@@ -645,7 +644,6 @@ class EditorKeyEventHandler {
                     new KeyBindingEvent(editor,
                             event,
                             EditorKeyEvent.Type.UP,
-                            keyCode,
                             editor.canHandleKeyBinding(keyCode, event.isCtrlPressed(), keyMetaStates.isShiftPressed(), keyMetaStates.isAltPressed()));
 
             if ((eventManager.dispatchEvent(keybindingEvent) & InterceptTarget.TARGET_EDITOR) != 0) {

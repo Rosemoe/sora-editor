@@ -31,6 +31,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.event.EventReceiver;
 import io.github.rosemoe.sora.event.HandleStateChangeEvent;
@@ -155,7 +157,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
     }
 
     @Override
-    public void onReceive(SelectionChangeEvent event, Unsubscribe unsubscribe) {
+    public void onReceive(@NonNull SelectionChangeEvent event, @NonNull Unsubscribe unsubscribe) {
         if (handler.hasAnyHeldHandle()) {
             return;
         }

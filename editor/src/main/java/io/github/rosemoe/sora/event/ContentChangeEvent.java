@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.event;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
@@ -33,6 +35,8 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  * Note that you should not update the content at this time. Otherwise, there might be some
  * exceptions causing the editor framework to crash. If you do need to update the content, you should
  * post your actions to the main thread so that the user's modification will be successful.
+ *
+ * @author Rosemoe
  */
 public class ContentChangeEvent extends Event {
 
@@ -56,7 +60,7 @@ public class ContentChangeEvent extends Event {
     private final CharPosition mEnd;
     private final CharSequence mTextChanged;
 
-    public ContentChangeEvent(CodeEditor editor, int action, CharPosition changeStart, CharPosition changeEnd, CharSequence textChanged) {
+    public ContentChangeEvent(@NonNull CodeEditor editor, int action, @NonNull CharPosition changeStart, @NonNull CharPosition changeEnd, @NonNull CharSequence textChanged) {
         super(editor);
         mAction = action;
         mStart = changeStart;
@@ -80,6 +84,7 @@ public class ContentChangeEvent extends Event {
      * <p>
      * Note that you can not modify the values in the returned instance.
      */
+    @NonNull
     public CharPosition getChangeStart() {
         return mStart;
     }
@@ -89,6 +94,7 @@ public class ContentChangeEvent extends Event {
      * <p>
      * Note that you can not modify the values in the returned instance.
      */
+    @NonNull
     public CharPosition getChangeEnd() {
         return mEnd;
     }
@@ -99,6 +105,7 @@ public class ContentChangeEvent extends Event {
      * If action is {@link #ACTION_INSERT}, inserted text is the result.
      * If action is {@link #ACTION_DELETE}, deleted text is the result.
      */
+    @NonNull
     public CharSequence getChangedText() {
         return mTextChanged;
     }

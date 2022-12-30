@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.event.EventReceiver;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.Unsubscribe;
@@ -49,7 +51,7 @@ final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent>
     }
 
     @Override
-    public void onReceive(SelectionChangeEvent event, Unsubscribe unsubscribe) {
+    public void onReceive(@NonNull SelectionChangeEvent event, @NonNull Unsubscribe unsubscribe) {
         onSelectionChanged();
     }
 

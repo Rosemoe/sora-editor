@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.event;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.widget.CodeEditor;
 
@@ -40,11 +41,12 @@ public abstract class ResultedEvent<T> extends Event {
         super(editor);
     }
 
+    @Nullable
     public T getResult() {
         return result;
     }
 
-    public void setResult(T result) {
+    public void setResult(@Nullable T result) {
         this.result = result;
     }
 

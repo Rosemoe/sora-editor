@@ -26,8 +26,17 @@ package io.github.rosemoe.sora.event
 
 import io.github.rosemoe.sora.widget.CodeEditor
 
+/**
+ * Event trigger when any updates to the editor color scheme, including setting a new color and setting
+ *  a new color scheme
+ *
+ *  @author Rosemoe
+ */
 class ColorSchemeUpdateEvent(editor: CodeEditor) : Event(editor) {
 
+    /**
+     * Updated color scheme (the new one if new color scheme is set)
+     */
     val colorScheme
         get() = editor.colorScheme
 

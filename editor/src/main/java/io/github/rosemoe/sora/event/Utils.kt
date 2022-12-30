@@ -24,8 +24,8 @@
 
 package io.github.rosemoe.sora.event
 
-fun ResultedEvent<Boolean>.getResultBoolean() = if (isResultSet) {
-    result
+fun ResultedEvent<Boolean>.getResultBoolean(): Boolean = if (isResultSet) {
+    result!!
 } else {
     false
 }

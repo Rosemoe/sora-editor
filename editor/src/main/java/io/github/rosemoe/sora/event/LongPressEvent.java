@@ -43,7 +43,7 @@ public class LongPressEvent extends Event {
     private final CharPosition pos;
     private final MotionEvent event;
 
-    public LongPressEvent(@NonNull CodeEditor editor, CharPosition position, MotionEvent event) {
+    public LongPressEvent(@NonNull CodeEditor editor, @NonNull CharPosition position, @NonNull MotionEvent event) {
         super(editor);
         this.pos = position;
         this.event = event;
@@ -77,6 +77,7 @@ public class LongPressEvent extends Event {
     /**
      * Get original event object from Android framework
      */
+    @NonNull
     public MotionEvent getCausingEvent() {
         return event;
     }

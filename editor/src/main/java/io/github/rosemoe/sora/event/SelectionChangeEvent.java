@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.event;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.EditorSearcher;
@@ -68,7 +70,7 @@ public class SelectionChangeEvent extends Event {
     private final CharPosition right;
     private final int cause;
 
-    public SelectionChangeEvent(CodeEditor editor, int cause) {
+    public SelectionChangeEvent(@NonNull CodeEditor editor, int cause) {
         super(editor);
         var cursor = editor.getText().getCursor();
         left = cursor.left();
@@ -91,6 +93,7 @@ public class SelectionChangeEvent extends Event {
     /**
      * Get the left selection's position
      */
+    @NonNull
     public CharPosition getLeft() {
         return left;
     }
@@ -98,6 +101,7 @@ public class SelectionChangeEvent extends Event {
     /**
      * Get the right selection's position
      */
+    @NonNull
     public CharPosition getRight() {
         return right;
     }
