@@ -29,3 +29,5 @@ fun ResultedEvent<Boolean>.getResultBoolean() = if (isResultSet) {
 } else {
     false
 }
+
+inline fun <reified T : Event> EventManager.subscribeEvent(receiver: EventReceiver<T>) = subscribeEvent(T::class.java, receiver)

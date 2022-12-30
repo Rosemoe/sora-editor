@@ -35,17 +35,17 @@ import io.github.rosemoe.sora.R
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent
 import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
+import io.github.rosemoe.sora.event.subscribeEvent
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
 import io.github.rosemoe.sora.widget.getComponent
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
-import io.github.rosemoe.sora.widget.subscribeEvent
 
-class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(editor, FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED), EditorBuiltinComponent {
+open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(editor, FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED), EditorBuiltinComponent {
 
-    private var enableState = true
+    protected val eventManager = editor.createSubEventManager()
     private val rootView: View = LayoutInflater.from(editor.context).inflate(R.layout.diagnostic_tooltip_window, null)
     private val briefMessageText = rootView.findViewById<TextView>(R.id.diagnostic_tooltip_brief_message)
     private val detailMessageText = rootView.findViewById<TextView>(R.id.diagnostic_tooltip_detailed_message)
@@ -53,28 +53,29 @@ class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(edit
     private val moreActionText = rootView.findViewById<TextView>(R.id.diagnostic_tooltip_more_actions)
     private val messagePanel = rootView.findViewById<ViewGroup>(R.id.diagnostic_container_message)
     private val quickfixPanel = rootView.findViewById<ViewGroup>(R.id.diagnostic_container_quickfix)
-    private var currentDiagnostic: DiagnosticDetail? = null
-    private val maxHeight = (editor.dpUnit * 175).toInt()
+    protected var currentDiagnostic: DiagnosticDetail? = null
+        private set
+    protected var maxHeight = (editor.dpUnit * 175).toInt()
     private val diagnosticList = mutableListOf<DiagnosticRegion>()
     private val buffer = FloatArray(2)
     private val locationBuffer = IntArray(2)
-    private val popupMenu = PopupMenu(editor.context, moreActionText)
+    protected val popupMenu = PopupMenu(editor.context, moreActionText)
 
-    override fun isEnabled() = enableState
+    override fun isEnabled() = eventManager.isEnabled
 
     override fun setEnabled(enabled: Boolean) {
-        enableState = enabled
+        eventManager.isEnabled = enabled
         if (!enabled) {
             dismiss()
         }
     }
 
     init {
-        setContentView(rootView)
+        super.setContentView(rootView)
         popup.animationStyle = R.style.diagnostic_popup_animation
         rootView.clipToOutline = true
-        editor.subscribeEvent<SelectionChangeEvent> { event, _ ->
-            if (!enableState) {
+        eventManager.subscribeEvent<SelectionChangeEvent> { event, _ ->
+            if (!isEnabled) {
                 return@subscribeEvent
             }
             if (event.isSelected || (event.cause != SelectionChangeEvent.CAUSE_TAP && event.cause != SelectionChangeEvent.CAUSE_TEXT_MODIFICATION)) {
@@ -103,7 +104,7 @@ class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(edit
                 diagnosticList.clear()
             }
         }
-        editor.subscribeEvent<ScrollEvent> { _, _ ->
+        eventManager.subscribeEvent<ScrollEvent> { _, _ ->
             if (currentDiagnostic != null && isShowing) {
                 if (!isSelectionVisible()) {
                     dismiss()
@@ -112,7 +113,7 @@ class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(edit
                 }
             }
         }
-        editor.subscribeEvent<ColorSchemeUpdateEvent> { _, _ ->
+        eventManager.subscribeEvent<ColorSchemeUpdateEvent> { _, _ ->
             applyColorScheme()
         }
         popup.setOnDismissListener {
@@ -145,7 +146,7 @@ class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(edit
         applyColorScheme()
     }
 
-    private fun applyColorScheme() {
+    protected open fun applyColorScheme() {
         val colorScheme = editor.colorScheme
         briefMessageText.setTextColor(colorScheme.getColor(EditorColorScheme.DIAGNOSTIC_TOOLTIP_BRIEF_MSG))
         detailMessageText.setTextColor(colorScheme.getColor(EditorColorScheme.DIAGNOSTIC_TOOLTIP_DETAILED_MSG))
@@ -157,14 +158,14 @@ class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(edit
         rootView.background = background
     }
 
-    private fun isSelectionVisible(): Boolean {
+    protected open fun isSelectionVisible(): Boolean {
         val selection = editor.cursor.left()
         editor.layout.getCharLayoutOffset(selection.line, selection.column, buffer)
         return buffer[0] >= editor.offsetY && buffer[0] - editor.rowHeight <= editor.offsetY + editor.height && buffer[1] >= editor.offsetX && buffer[1] - 100f /* larger than a single character */ <= editor.offsetX + editor.width
     }
 
-    private fun updateDiagnostic(diagnostic: DiagnosticDetail?) {
-        if (!enableState) {
+    protected open fun updateDiagnostic(diagnostic: DiagnosticDetail?) {
+        if (!isEnabled) {
             return
         }
         if (diagnostic == currentDiagnostic) {
@@ -198,7 +199,7 @@ class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(edit
         updateWindowPosition()
     }
 
-    private fun updateWindowSize() {
+    protected open fun updateWindowSize() {
         val width = (editor.width * 0.9).toInt()
         // First, measure the bottom bar
         var bottomBarHeight = 0
@@ -220,7 +221,7 @@ class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(edit
         setSize(dialogWidth, dialogHeight)
     }
 
-    private fun updateWindowPosition() {
+    protected open fun updateWindowPosition() {
         val selection = editor.cursor.left()
         val charX = editor.getCharOffsetX(selection.line, selection.column)
         val charY = editor.getCharOffsetY(selection.line, selection.column) - editor.rowHeight

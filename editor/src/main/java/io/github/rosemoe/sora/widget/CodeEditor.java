@@ -3702,6 +3702,16 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * Create a new {@link EventManager} instance that can be used to subscribe events in editor,
+     * as a child instance of editor.
+     * @return Child EventManager instance
+     */
+    @NonNull
+    public EventManager createSubEventManager() {
+        return new EventManager(eventManager);
+    }
+
+    /**
      * Check whether the editor is currently performing a format operation
      *
      * @return whether the editor is currently formatting
