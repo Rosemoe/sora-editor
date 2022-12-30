@@ -29,12 +29,22 @@ import android.graphics.RectF;
 
 import androidx.annotation.NonNull;
 
+/**
+ * Helper class for building a bubble rect
+ *
+ * @author Rosemoe
+ */
 public class BubbleHelper {
 
-    private final static Matrix mTempMatrix = new Matrix();
+    private final static Matrix tempMatrix = new Matrix();
 
-    public static void buildBubblePath(@NonNull Path mPath, @NonNull RectF bounds) {
-        mPath.reset();
+    /**
+     * Build a bubble into the given Path object. Old content in given Path is cleared.
+     * @param path target Path object
+     * @param bounds The bounds for the bubble
+     */
+    public static void buildBubblePath(@NonNull Path path, @NonNull RectF bounds) {
+        path.reset();
 
         float width = bounds.width();
         float height = bounds.height();
@@ -42,18 +52,18 @@ public class BubbleHelper {
         float sqrt2 = (float) Math.sqrt(2);
         // Ensure we are convex.
         width = Math.max(r + sqrt2 * r, width);
-        pathArcTo(mPath, r, r, r, 90, 180);
+        pathArcTo(path, r, r, r, 90, 180);
         float o1X = width - sqrt2 * r;
-        pathArcTo(mPath, o1X, r, r, -90, 45f);
+        pathArcTo(path, o1X, r, r, -90, 45f);
         float r2 = r / 5;
         float o2X = width - sqrt2 * r2;
-        pathArcTo(mPath, o2X, r, r2, -45, 90);
-        pathArcTo(mPath, o1X, r, r, 45f, 45f);
-        mPath.close();
+        pathArcTo(path, o2X, r, r2, -45, 90);
+        pathArcTo(path, o1X, r, r, 45f, 45f);
+        path.close();
 
-        mTempMatrix.reset();
-        mTempMatrix.postTranslate(bounds.left, bounds.top);
-        mPath.transform(mTempMatrix);
+        tempMatrix.reset();
+        tempMatrix.postTranslate(bounds.left, bounds.top);
+        path.transform(tempMatrix);
     }
 
     private static void pathArcTo(@NonNull Path path, float centerX, float centerY, float radius,
