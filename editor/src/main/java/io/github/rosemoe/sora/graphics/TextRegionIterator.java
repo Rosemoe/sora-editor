@@ -46,6 +46,10 @@ class TextRegionIterator extends RegionIterator {
         this.spans = spans;
     }
 
+    /**
+     * Move to next region, until the end index of that region is bigger than {@code index}.
+     * And set region start index to {@code index}.
+     */
     public void requireStartOffset(int index) {
         if (index > getMax()) {
             throw new IllegalArgumentException();
@@ -59,6 +63,9 @@ class TextRegionIterator extends RegionIterator {
         startIndex = index;
     }
 
+    /**
+     * Get current {@link Span} for current region
+     */
     public Span getSpan() {
         var idx = getRegionSourcePointer(0) - 1;
         if (idx < 0) {
@@ -67,10 +74,16 @@ class TextRegionIterator extends RegionIterator {
         return spans.get(idx);
     }
 
+    /**
+     * Get start index of current {@link Span}
+     */
     public int getSpanStart() {
         return getPointerValue(0, getRegionSourcePointer(0) - 1);
     }
 
+    /**
+     * Get end index of current {@link Span}
+     */
     public int getSpanEnd() {
         return getPointerValue(0, getRegionSourcePointer(0));
     }
