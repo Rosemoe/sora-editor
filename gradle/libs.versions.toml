@@ -3,7 +3,7 @@ agp = "7.3.1"
 kotlin = "1.8.0"
 lifecycle = "2.5.1"
 tsBinding = "1.0.10"
-lsp4j = "0.17.0"
+lsp4j = "0.19.0"
 androidxAnnotation = "1.5.0"
 
 [libraries]
