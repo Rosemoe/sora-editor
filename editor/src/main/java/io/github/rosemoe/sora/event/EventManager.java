@@ -59,7 +59,7 @@ public final class EventManager {
     private final EventManager parent;
     private final List<EventManager> children;
     private final EventReceiver<?>[][] caches = new EventReceiver[5][];
-    private boolean enabled;
+    private boolean enabled = true;
     private boolean detached = false;
 
     /**
@@ -199,6 +199,9 @@ public final class EventManager {
      */
     @SuppressWarnings("unchecked")
     public <T extends Event> int dispatchEvent(@NonNull T event) {
+        if (!enabled) {
+            return event.getInterceptTargets();
+        }
         // Safe cast
         var receivers = getReceivers((Class<T>) event.getClass());
         receivers.lock.readLock().lock();
