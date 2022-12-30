@@ -105,6 +105,7 @@ public final class EventManager {
     /**
      * Get root node
      */
+    @NonNull
     public EventManager getRootManager() {
         checkDetached();
         return parent == null ? this : parent.getRootManager();
@@ -173,6 +174,7 @@ public final class EventManager {
      * @param receiver  Receiver of event
      * @param <T>       Event type
      */
+    @NonNull
     public <T extends Event> SubscriptionReceipt<T> subscribeEvent(@NonNull Class<T> eventType, @NonNull EventReceiver<T> receiver) {
         var receivers = getReceivers(eventType);
         receivers.lock.writeLock().lock();
@@ -248,6 +250,7 @@ public final class EventManager {
         return event.getInterceptTargets();
     }
 
+    @NonNull
     @SuppressWarnings("unchecked")
     private <V extends Event> EventReceiver<V>[] obtainBuffer(int size) {
         EventReceiver<V>[] res = null;
@@ -266,7 +269,7 @@ public final class EventManager {
         return res;
     }
 
-    private synchronized void recycleBuffer(EventReceiver<?>[] array) {
+    private synchronized void recycleBuffer(@Nullable EventReceiver<?>[] array) {
         if (array == null) {
             return;
         }
