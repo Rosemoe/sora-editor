@@ -27,6 +27,8 @@ import android.util.SparseArray;
 
 import java.util.Arrays;
 
+import io.github.rosemoe.sora.text.FunctionCharacters;
+
 public class SingleCharacterWidths {
 
     public final float[] widths;
@@ -34,6 +36,7 @@ public class SingleCharacterWidths {
     public final char[] buffer;
     private final float[] cache;
     private final int tabWidth;
+    private boolean handleFunctionCharacters;
 
     public SingleCharacterWidths(int tabWidth) {
         cache = new float[65536];
@@ -41,6 +44,14 @@ public class SingleCharacterWidths {
         widths = new float[10];
         codePointWidths = new SparseArray<>();
         this.tabWidth = tabWidth;
+    }
+
+    public void setHandleFunctionCharacters(boolean handleFunctionCharacters) {
+        this.handleFunctionCharacters = handleFunctionCharacters;
+    }
+
+    public boolean isHandleFunctionCharacters() {
+        return handleFunctionCharacters;
     }
 
     public static boolean isEmoji(char ch) {
@@ -112,6 +123,11 @@ public class SingleCharacterWidths {
                 }
                 width += p.measureText(buffer, 0, len);
                 i += len - 1;
+            } else if(isHandleFunctionCharacters() && FunctionCharacters.isEditorFunctionChar(ch)) {
+                var name = FunctionCharacters.getNameForFunctionCharacter(ch);
+                for (int j = 0;j < name.length();j++) {
+                    width += measureChar(name.charAt(j), p);
+                }
             } else {
                 width += measureChar(ch, p);
             }
@@ -146,6 +162,11 @@ public class SingleCharacterWidths {
                 }
                 width += p.measureText(buffer, 0, len);
                 i += len - 1;
+            } else if(isHandleFunctionCharacters() && FunctionCharacters.isEditorFunctionChar(ch)) {
+                var name = FunctionCharacters.getNameForFunctionCharacter(ch);
+                for (int j = 0;j < name.length();j++) {
+                    width += measureChar(name.charAt(j), p);
+                }
             } else {
                 width += measureChar(ch, p);
             }

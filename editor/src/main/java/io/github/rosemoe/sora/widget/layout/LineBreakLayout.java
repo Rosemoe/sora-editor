@@ -55,6 +55,7 @@ public class LineBreakLayout extends AbstractLayout {
     public LineBreakLayout(CodeEditor editor, Content text) {
         super(editor, text);
         measurer = new SingleCharacterWidths(editor.getTabWidth());
+        measurer.setHandleFunctionCharacters(editor.isRenderFunctionCharacters());
         widthMaintainer = new BlockIntList();
         measureAllLines(widthMaintainer);
     }
@@ -254,6 +255,7 @@ public class LineBreakLayout extends AbstractLayout {
         this.text = text;
         reuseCount.getAndIncrement();
         measurer = new SingleCharacterWidths(editor.getTabWidth());
+        measurer.setHandleFunctionCharacters(editor.isRenderFunctionCharacters());
         try {
             if (widthMaintainer.lock.tryLock(5, TimeUnit.MILLISECONDS)) {
                 widthMaintainer.lock.unlock();
