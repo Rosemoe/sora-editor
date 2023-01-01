@@ -1951,26 +1951,32 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param noAnimation true if no animation should be applied
      */
     public void ensurePositionVisible(int line, int column, boolean noAnimation) {
+        var scroller = getScroller();
         float[] layoutOffset = layout.getCharLayoutOffset(line, column);
         // x offset is the left of character
         float xOffset = layoutOffset[1] + measureTextRegionOffset();
         // y offset is the bottom of row
         float yOffset = layoutOffset[0];
 
-        float targetY = getOffsetY();
-        float targetX = getOffsetX();
+        float targetY = scroller.isFinished() ? getOffsetY() : scroller.getFinalY();
+        float targetX = scroller.isFinished() ? getOffsetX() : scroller.getFinalX();
 
         if (yOffset - getRowHeight() < getOffsetY()) {
-            //top invisible
-            targetY = yOffset - getRowHeight() * 1.1f;
+            // top invisible
+            targetY = yOffset - getRowHeight() * 2f;
         }
         if (yOffset > getHeight() + getOffsetY()) {
-            //bottom invisible
-            targetY = yOffset - getHeight() + getRowHeight() * 0.1f;
+            // bottom invisible
+            targetY = yOffset - getHeight() + getRowHeight() * 1f;
         }
-        float charWidth = column == 0 ? 0 : renderer.measureText(text.getLine(line), line, column - 1, 1);
+        float charWidth = column == 0 ? 0 : renderer.measureText(text.getLine(line), line, column - 1, 1) * 2;
         if (xOffset < getOffsetX() + (pinLineNumber ? measureTextRegionOffset() : 0)) {
-            targetX = xOffset + (pinLineNumber ? -measureTextRegionOffset() : 0) - charWidth * 0.2f;
+            float backupX = targetX;
+            var scrollSlopX = getWidth() / 2;
+            targetX = xOffset + (pinLineNumber ? -measureTextRegionOffset() : 0) - charWidth;
+            if (Math.abs(targetX - backupX) < scrollSlopX) {
+                targetX = backupX - scrollSlopX;
+            }
         }
         if (xOffset + charWidth > getOffsetX() + getWidth()) {
             targetX = xOffset + charWidth * 0.8f - getWidth();
@@ -1987,7 +1993,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         boolean animation = System.currentTimeMillis() - lastMakeVisible >= 100;
         lastMakeVisible = System.currentTimeMillis();
 
-        var scroller = getScroller();
         if (animation && !noAnimation) {
             scroller.forceFinished(true);
             scroller.startScroll(getOffsetX(), getOffsetY(), (int) (targetX - getOffsetX()), (int) (targetY - getOffsetY()));
@@ -3318,7 +3323,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         completionWindow.hide();
         renderer.invalidateRenderNodes();
         if (makeRightVisible) {
-            ensurePositionVisible(lineRight, columnRight);
+            if (cause == SelectionChangeEvent.CAUSE_SEARCH) {
+                ensurePositionVisible(lineLeft, columnLeft);
+                lastMakeVisible = 0;
+                ensurePositionVisible(lineRight, columnRight);
+            } else {
+                ensurePositionVisible(lineRight, columnRight);
+            }
         } else {
             invalidate();
         }

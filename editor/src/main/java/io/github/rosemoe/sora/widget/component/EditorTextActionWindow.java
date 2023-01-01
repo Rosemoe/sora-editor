@@ -36,6 +36,8 @@ import androidx.annotation.NonNull;
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.event.EventReceiver;
 import io.github.rosemoe.sora.event.HandleStateChangeEvent;
+import io.github.rosemoe.sora.event.InterceptTarget;
+import io.github.rosemoe.sora.event.LongPressEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.Unsubscribe;
@@ -58,6 +60,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
     private final EditorTouchEventHandler handler;
     private long lastScroll;
     private int lastPosition;
+    private int lastCause;
     private boolean enabled = true;
 
     /**
@@ -93,13 +96,23 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         editor.subscribeEvent(ScrollEvent.class, ((event, unsubscribe) -> {
             var last = lastScroll;
             lastScroll = System.currentTimeMillis();
-            if (lastScroll - last < DELAY) {
+            if (lastScroll - last < DELAY && lastCause != SelectionChangeEvent.CAUSE_SEARCH) {
                 postDisplay();
             }
         }));
         editor.subscribeEvent(HandleStateChangeEvent.class, ((event, unsubscribe) -> {
             if (event.isHeld()) {
                 postDisplay();
+            }
+        }));
+        editor.subscribeEvent(LongPressEvent.class, ((event, unsubscribe) -> {
+            if (editor.getCursor().isSelected() && lastCause == SelectionChangeEvent.CAUSE_SEARCH) {
+                var idx = event.getIndex();
+                if (idx >= editor.getCursor().getLeft() && idx <= editor.getCursor().getRight()) {
+                    lastCause = 0;
+                    displayWindow();
+                }
+                event.intercept(InterceptTarget.TARGET_EDITOR);
             }
         }));
         getPopup().setAnimationStyle(R.style.text_action_popup_animation);
@@ -161,11 +174,14 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         if (handler.hasAnyHeldHandle()) {
             return;
         }
+        lastCause = event.getCause();
         if (event.isSelected()) {
-            //#193
-            //if (!isShowing()) {
-            editor.postInLifecycle(this::displayWindow);
-            //}
+            // Always post show. See #193
+            if (event.getCause() != SelectionChangeEvent.CAUSE_SEARCH) {
+                editor.postInLifecycle(this::displayWindow);
+            } else {
+                dismiss();
+            }
             lastPosition = -1;
         } else {
             var show = false;

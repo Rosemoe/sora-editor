@@ -85,6 +85,9 @@ public class SelectionChangeEvent extends Event {
      * @see #CAUSE_TEXT_MODIFICATION
      * @see #CAUSE_SELECTION_HANDLE
      * @see #CAUSE_TAP
+     * @see #CAUSE_IME
+     * @see #CAUSE_LONG_PRESS
+     * @see #CAUSE_SEARCH
      */
     public int getCause() {
         return cause;
