@@ -221,6 +221,20 @@ public class Content implements CharSequence {
         }
     }
 
+    public String substring(int start, int end) {
+        if (start > end) {
+            throw new StringIndexOutOfBoundsException("start > end");
+        }
+        lock(false);
+        try {
+            var s = getIndexer().getCharPosition(start);
+            var e = getIndexer().getCharPosition(end);
+            return subStringBuilder(s.getLine(), s.getColumn(), e.getLine(), e.getColumn(), end - start + 1).toString();
+        } finally {
+            unlock(false);
+        }
+    }
+
     /**
      * Set a line listener
      *
@@ -749,13 +763,13 @@ public class Content implements CharSequence {
             var line = lines.get(startLine);
             if (endColumn == line.length() + 1 && line.getLineSeparator() == LineSeparator.CRLF) {
                 if (startColumn < endColumn) {
-                    c.insert(0, 0, lines.get(startLine).subSequence(startColumn, line.length()));
+                    c.insert(0, 0, line.subSequence(startColumn, line.length()));
                     c.lines.get(0).setLineSeparator(LineSeparator.CR);
                     c.textLength++;
                     c.lines.add(new ContentLine());
                 }
             } else {
-                c.insert(0, 0, lines.get(startLine).subSequence(startColumn, endColumn));
+                c.insert(0, 0, line.subSequence(startColumn, endColumn));
             }
         } else if (startLine < endLine) {
             var firstLine = lines.get(startLine);
@@ -795,6 +809,51 @@ public class Content implements CharSequence {
         }
         c.setUndoEnabled(true);
         return c;
+    }
+
+    private StringBuilder subStringBuilder(int startLine, int startColumn, int endLine, int endColumn, int length) {
+        var sb = new StringBuilder();
+        if (startLine == endLine) {
+            var line = lines.get(startLine);
+            if (endColumn == line.length() + 1 && line.getLineSeparator() == LineSeparator.CRLF) {
+                if (startColumn < endColumn) {
+                    sb.append(lines.get(startLine), startColumn, line.length())
+                            .append(LineSeparator.CR.getContent());
+                }
+            } else {
+                sb.append(lines.get(startLine), startColumn, line.length());
+            }
+        } else if (startLine < endLine) {
+            var firstLine = lines.get(startLine);
+            if (firstLine.getLineSeparator() == LineSeparator.CRLF) {
+                if (startColumn <= firstLine.length()) {
+                    sb.append(firstLine, startColumn, firstLine.length());
+                    sb.append(firstLine.getLineSeparator().getContent());
+                } else if (startColumn == firstLine.length() + 1) {
+                    sb.append(LineSeparator.LF.getContent());
+                } else {
+                    throw new IndexOutOfBoundsException();
+                }
+            } else {
+                sb.append(firstLine, startColumn, firstLine.length());
+                sb.append(firstLine.getLineSeparator().getContent());
+            }
+            for (int i = startLine + 1; i < endLine; i++) {
+                var line = lines.get(i);
+                sb.append(line)
+                        .append(line.getLineSeparator().getContent());
+            }
+            var end = lines.get(endLine);
+            if (endColumn == end.length() + 1 && end.getLineSeparator() == LineSeparator.CRLF) {
+                sb.append(end, 0, endColumn)
+                        .append(LineSeparator.CR.getContent());
+            } else {
+                sb.append(end, 0, endColumn);
+            }
+        } else {
+            throw new StringIndexOutOfBoundsException("start > end");
+        }
+        return sb;
     }
 
     @NonNull
