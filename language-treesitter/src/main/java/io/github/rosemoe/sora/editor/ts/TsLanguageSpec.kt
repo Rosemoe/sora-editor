@@ -111,6 +111,30 @@ class TsLanguageSpec(
 
     val bracketsQuery = TSQuery(language, bracketsScmSource)
 
+    init {
+        // Check the queries before access
+        try {
+            blocksQuery.validateOrThrow("code-blocks")
+            bracketsQuery.validateOrThrow("brackets")
+            querySource.forEach {
+                if (it > 0xFF.toChar()) {
+                    throw IllegalArgumentException("use non-ASCII characters in scm source is unexpected")
+                }
+            }
+            if (tsQuery.errorType != TSQueryError.None) {
+                val region = if (tsQuery.errorOffset < highlightScmOffset) "locals" else "highlight"
+                val offset =
+                    if (tsQuery.errorOffset < highlightScmOffset) tsQuery.errorOffset else tsQuery.errorOffset - highlightScmOffset
+                throw IllegalArgumentException("bad scm sources: error ${tsQuery.errorType.name} occurs in $region range at offset $offset")
+            }
+        } catch (e: IllegalArgumentException) {
+            tsQuery.close()
+            blocksQuery.close()
+            bracketsQuery.close()
+            throw e
+        }
+    }
+
     val queryPredicator = Predicator(tsQuery)
 
     val blocksPredicator = Predicator(blocksQuery)
@@ -124,17 +148,6 @@ class TsLanguageSpec(
         private set
 
     init {
-        querySource.forEach {
-            if (it > 0xFF.toChar()) {
-                throw IllegalArgumentException("use non-ASCII characters in scm source is unexpected")
-            }
-        }
-        if (tsQuery.errorType != TSQueryError.None) {
-            val region = if (tsQuery.errorOffset < highlightScmOffset) "locals" else "highlight"
-            val offset =
-                if (tsQuery.errorOffset < highlightScmOffset) tsQuery.errorOffset else tsQuery.errorOffset - highlightScmOffset
-            throw IllegalArgumentException("bad scm sources: error ${tsQuery.errorType.name} occurs in $region range at offset $offset")
-        }
         var highlightOffset = 0
         for (i in 0 until tsQuery.captureCount) {
             // Only locals in localsScm are taken down

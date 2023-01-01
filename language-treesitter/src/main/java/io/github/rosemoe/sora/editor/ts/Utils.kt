@@ -25,9 +25,17 @@
 package io.github.rosemoe.sora.editor.ts
 
 import com.itsaky.androidide.treesitter.TSPoint
+import com.itsaky.androidide.treesitter.TSQuery
+import com.itsaky.androidide.treesitter.TSQueryError
 import io.github.rosemoe.sora.text.CharPosition
 
 /**
  * Convert a [CharPosition] object to a [TSPoint] object
  */
 fun CharPosition.toTSPoint() = TSPoint(line, column * 2)
+
+fun TSQuery.validateOrThrow(name: String = "unknown") {
+    if (errorType != TSQueryError.None) {
+        throw IllegalArgumentException("query(name:$name) parsing failed: ${errorType.name} at text offset $errorOffset")
+    }
+}
