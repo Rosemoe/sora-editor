@@ -29,6 +29,7 @@ import com.itsaky.androidide.treesitter.TSQueryMatch
 import com.itsaky.androidide.treesitter.TSQueryPredicateStep.Type
 import com.itsaky.androidide.treesitter.string.UTF16String
 import io.github.rosemoe.sora.editor.ts.predicate.TsClientPredicateStep
+import io.github.rosemoe.sora.text.Content
 
 fun parametersMatch(
     predicate: List<TsClientPredicateStep>,
@@ -57,6 +58,8 @@ fun getCaptureContent(
             val name = utf16Name.toString()
             utf16Name.close()
             name
+        } else if(text is Content) {
+            text.substring(it.node.startByte / 2, it.node.endByte / 2)
         } else {
             text.substring(it.node.startByte / 2, it.node.endByte / 2)
         }

@@ -65,8 +65,10 @@ class Predicator(private val query: TSQuery) {
         var tail = 0
         for (i in description.indices) {
             if (description[i].predicateType == TSQueryPredicateStep.Type.Done) {
-                val subPredicateStep = description.subList(tail, i + 1)
-                for (predicate in predicates) {
+                // Avoid allocating sublist if possible
+                val subPredicateStep = if (tail == 0 && i + 1 == description.size) description else description.subList(tail, i + 1)
+                for (j in predicates.indices) {
+                    val predicate = predicates[j]
                     when (predicate.doPredicate(query, text, match, subPredicateStep)) {
                         PredicateResult.ACCEPT -> break
                         PredicateResult.REJECT -> return false
