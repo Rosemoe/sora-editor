@@ -95,6 +95,24 @@ public class LongArrayList {
         return low;  // key not found.
     }
 
+    public int lowerBound(long key) {
+        int low = 0;
+        int high = length - 1;
+
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            long midVal = data[mid];
+
+            if (midVal < key)
+                low = mid + 1;
+            else if (midVal > key)
+                high = mid - 1;
+            else
+                return mid; // key found
+        }
+        return low;  // key not found.
+    }
+
     /**
      * Get element at given index
      * @throws ArrayIndexOutOfBoundsException if index is invalid

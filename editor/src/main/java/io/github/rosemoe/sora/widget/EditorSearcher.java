@@ -123,14 +123,9 @@ public class EditorSearcher {
                 return -1;
             }
             var packed = IntPair.pack(left, right);
-            for (int i = 0; i < res.size(); i++) {
-                var value = res.get(i);
-                if (value == packed) {
-                    return i;
-                } else if (value > packed) {
-                    // Values behind can not be valid
-                    break;
-                }
+            int index = res.lowerBound(packed);
+            if (index < res.size() && res.get(index) == packed) {
+                return index;
             }
         }
         return -1;
