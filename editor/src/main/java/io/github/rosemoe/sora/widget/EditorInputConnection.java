@@ -565,6 +565,10 @@ class EditorInputConnection extends BaseInputConnection {
         if (!editor.isEditable() || connectionInvalid || shouldRejectComposing() || editor.getProps().disallowSuggestions) {
             return false;
         }
+        if (start == end) {
+            finishComposingText();
+            return true;
+        }
         try {
             if (start > end) {
                 int tmp = start;
@@ -574,9 +578,12 @@ class EditorInputConnection extends BaseInputConnection {
             if (start < 0) {
                 start = 0;
             }
-            Content content = editor.getText();
+            var content = editor.getText();
             if (end > content.length()) {
                 end = content.length();
+            }
+            if (start >= end) {
+                return false;
             }
             composingText.set(start, end);
             editor.invalidate();
