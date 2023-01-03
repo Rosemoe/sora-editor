@@ -1956,13 +1956,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             // bottom invisible
             targetY = yOffset - getHeight() + getRowHeight() * 1f;
         }
-        float charWidth = column == 0 ? 0 : renderer.measureText(text.getLine(line), line, column - 1, 1) * 2;
+        float charWidth = column == 0 ? 0 : renderer.measureText(text.getLine(line), line, column - 1, 1);
         if (xOffset < getOffsetX() + (pinLineNumber ? measureTextRegionOffset() : 0)) {
             float backupX = targetX;
             var scrollSlopX = getWidth() / 2;
             targetX = xOffset + (pinLineNumber ? -measureTextRegionOffset() : 0) - charWidth;
             if (Math.abs(targetX - backupX) < scrollSlopX) {
-                targetX = backupX - scrollSlopX;
+                targetX = Math.max(1, backupX - scrollSlopX);
             }
         }
         if (xOffset + charWidth > getOffsetX() + getWidth()) {
