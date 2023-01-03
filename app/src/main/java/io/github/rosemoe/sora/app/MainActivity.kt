@@ -222,7 +222,7 @@ class MainActivity : AppCompatActivity() {
 
         editor.setEditorLanguage(language)
 
-        openAssetsFile("sample.txt")
+        openAssetsFile("samples/sample.txt")
         updatePositionText()
         updateBtnState()
 
@@ -973,7 +973,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             R.id.load_test_file -> {
-                openAssetsFile("View.java")
+                openAssetsFile("samples/View.java")
             }
         }
         return super.onOptionsItemSelected(item)
