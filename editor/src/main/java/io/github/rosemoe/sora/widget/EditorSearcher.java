@@ -52,7 +52,7 @@ public class EditorSearcher {
     protected String currentPattern;
     protected SearchOptions searchOptions;
     protected Thread currentThread;
-    protected volatile LongArrayList lastResults;
+    protected LongArrayList lastResults;
     private boolean cyclicJumping = true;
 
     EditorSearcher(@NonNull CodeEditor editor) {
