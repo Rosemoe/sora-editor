@@ -427,10 +427,17 @@ class MainActivity : AppCompatActivity() {
         if (searcher.hasQuery()) {
             val idx = searcher.currentMatchedPositionIndex
             val count = searcher.matchedPositionCount
-            if (idx == -1) {
-                text += "($count matches)"
+            val matchText = if (count == 0) {
+                "no match"
+            } else if (count == 1) {
+                "1 match"
             } else {
-                text += "(${idx+1} of $count matches)"
+                "$count matches"
+            }
+            if (idx == -1) {
+                text += "($matchText)"
+            } else {
+                text += "(${idx+1} of $matchText)"
             }
         }
         binding.positionDisplay.text = text
