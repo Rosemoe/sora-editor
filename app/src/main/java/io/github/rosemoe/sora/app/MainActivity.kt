@@ -49,6 +49,7 @@ import io.github.rosemoe.sora.editor.ts.TsLanguageSpec
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EditorKeyEvent
 import io.github.rosemoe.sora.event.KeyBindingEvent
+import io.github.rosemoe.sora.event.PublishSearchResultEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.SideIconClickEvent
 import io.github.rosemoe.sora.lang.EmptyLanguage
@@ -69,7 +70,6 @@ import io.github.rosemoe.sora.text.ContentCreator
 import io.github.rosemoe.sora.text.LineSeparator
 import io.github.rosemoe.sora.utils.CrashHandler
 import io.github.rosemoe.sora.widget.CodeEditor
-import io.github.rosemoe.sora.widget.EditorSearcher
 import io.github.rosemoe.sora.widget.EditorSearcher.SearchOptions
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.component.Magnifier
@@ -182,6 +182,7 @@ class MainActivity : AppCompatActivity() {
                 CodeEditor.FLAG_DRAW_WHITESPACE_LEADING or CodeEditor.FLAG_DRAW_LINE_SEPARATOR or CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION
             // Update display dynamically
             subscribeEvent<SelectionChangeEvent> { _, _ -> updatePositionText() }
+            subscribeEvent<PublishSearchResultEvent> { _, _ -> updatePositionText() }
             subscribeEvent<ContentChangeEvent> { _, _ ->
                 postDelayedInLifecycle(
                     ::updateBtnState,
@@ -420,6 +421,16 @@ class MainActivity : AppCompatActivity() {
                         )
                     ) + ")"
                 }
+            }
+        }
+        val searcher = binding.editor.searcher
+        if (searcher.hasQuery()) {
+            val idx = searcher.currentMatchedPositionIndex
+            val count = searcher.matchedPositionCount
+            if (idx == -1) {
+                text += "($count matches)"
+            } else {
+                text += "(${idx+1} of $count matches)"
             }
         }
         binding.positionDisplay.text = text
