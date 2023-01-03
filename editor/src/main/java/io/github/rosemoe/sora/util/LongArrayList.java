@@ -25,6 +25,8 @@ package io.github.rosemoe.sora.util;
 
 /**
  * ArrayList for primitive type long
+ *
+ * @author Rosemoe
  */
 public class LongArrayList {
 
@@ -35,6 +37,9 @@ public class LongArrayList {
         data = new long[64];
     }
 
+    /**
+     * Add a value at end
+     */
     public void add(long value) {
         data[length++] = value;
         if (data.length == length) {
@@ -44,12 +49,58 @@ public class LongArrayList {
         }
     }
 
+    /**
+     * Get length of the list
+     */
     public int size() {
         return length;
     }
 
+    /**
+     * Set element at given index to {@code value}
+     * @throws ArrayIndexOutOfBoundsException if index is invalid
+     */
+    public void set(int index, long value) {
+        if (index >= length || index < 0) {
+            throw new ArrayIndexOutOfBoundsException(index);
+        }
+        data[index] = value;
+    }
+
+    /**
+     * Refers to C++ algorithm lower_bound().
+     * Compare by {@link IntPair#getFirst(long)} on each element.
+     * <p>
+     * Note that, you guarantee the sequence in list is in ascendant order.
+     *
+     * @param key Target value
+     * @return Index of target value, or index of the insertion point (that's the index of first element
+     * bigger than {@code key} or array length)
+     */
+    public int lowerBoundByFirst(int key) {
+        int low = 0;
+        int high = length - 1;
+
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            long midVal = IntPair.getFirst(data[mid]);
+
+            if (midVal < key)
+                low = mid + 1;
+            else if (midVal > key)
+                high = mid - 1;
+            else
+                return mid; // key found
+        }
+        return low;  // key not found.
+    }
+
+    /**
+     * Get element at given index
+     * @throws ArrayIndexOutOfBoundsException if index is invalid
+     */
     public long get(int index) {
-        if (index > length || index < 0) {
+        if (index >= length || index < 0) {
             throw new ArrayIndexOutOfBoundsException(index);
         }
         return data[index];

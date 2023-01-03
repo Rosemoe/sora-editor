@@ -1412,7 +1412,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         var lineLeft = text.getCharIndex(line, 0);
         var lineRight = lineLeft + text.getColumnCount(line);
-        for (int i = 0; i < res.size(); i++) {
+        for (int i = Math.max(0, positions.lowerBoundByFirst(lineLeft) - 1); i < res.size(); i++) {
             var region = res.get(i);
             var start = IntPair.getFirst(region);
             var end = IntPair.getSecond(region);
