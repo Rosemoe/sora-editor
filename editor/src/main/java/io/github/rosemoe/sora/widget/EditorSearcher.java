@@ -53,6 +53,7 @@ public class EditorSearcher {
     protected SearchOptions searchOptions;
     protected Thread currentThread;
     protected volatile LongArrayList lastResults;
+    private boolean cyclicJumping = true;
 
     EditorSearcher(@NonNull CodeEditor editor) {
         this.editor = editor;
@@ -61,6 +62,14 @@ public class EditorSearcher {
                 executeMatch();
             }
         }));
+    }
+
+    public void setCyclicJumping(boolean cyclicJumping) {
+        this.cyclicJumping = cyclicJumping;
+    }
+
+    public boolean isCyclicJumping() {
+        return cyclicJumping;
     }
 
     public void search(@NonNull String pattern, @NonNull SearchOptions options) {
@@ -148,15 +157,17 @@ public class EditorSearcher {
                 return false;
             }
             var right = editor.getCursor().getRight();
-            for (int i = 0; i < res.size(); i++) {
-                var data = res.get(i);
+            var index = res.lowerBoundByFirst(right);
+            if (index == res.size() && cyclicJumping) {
+                index = 0;
+            }
+            if (index < res.size()) {
+                var data = res.get(index);
                 var start = IntPair.getFirst(data);
-                if (start >= right) {
-                    var pos1 = editor.getText().getIndexer().getCharPosition(start);
-                    var pos2 = editor.getText().getIndexer().getCharPosition(IntPair.getSecond(data));
-                    editor.setSelectionRegion(pos1.line, pos1.column, pos2.line, pos2.column, SelectionChangeEvent.CAUSE_SEARCH);
-                    return true;
-                }
+                var pos1 = editor.getText().getIndexer().getCharPosition(start);
+                var pos2 = editor.getText().getIndexer().getCharPosition(IntPair.getSecond(data));
+                editor.setSelectionRegion(pos1.line, pos1.column, pos2.line, pos2.column, SelectionChangeEvent.CAUSE_SEARCH);
+                return true;
             }
         }
         return false;
@@ -166,19 +177,24 @@ public class EditorSearcher {
         checkState();
         if (isResultValid()) {
             var res = lastResults;
-            if (res == null) {
+            if (res == null || res.size() == 0) {
                 return false;
             }
             var left = editor.getCursor().getLeft();
-            for (int i = res.size() - 1; i >= 0; i--) {
-                var data = res.get(i);
+            var index = res.lowerBoundByFirst(left);
+            if (index == res.size() || IntPair.getFirst(res.get(index)) >= index) {
+                index --;
+            }
+            if (index < 0 && cyclicJumping) {
+                index = res.size() - 1;
+            }
+            if (index >= 0 && index < res.size()) {
+                var data = res.get(index);
                 var end = IntPair.getSecond(data);
-                if (end <= left) {
-                    var pos1 = editor.getText().getIndexer().getCharPosition(IntPair.getFirst(data));
-                    var pos2 = editor.getText().getIndexer().getCharPosition(end);
-                    editor.setSelectionRegion(pos1.line, pos1.column, pos2.line, pos2.column, SelectionChangeEvent.CAUSE_SEARCH);
-                    return true;
-                }
+                var pos1 = editor.getText().getIndexer().getCharPosition(IntPair.getFirst(data));
+                var pos2 = editor.getText().getIndexer().getCharPosition(end);
+                editor.setSelectionRegion(pos1.line, pos1.column, pos2.line, pos2.column, SelectionChangeEvent.CAUSE_SEARCH);
+                return true;
             }
         }
         return false;
