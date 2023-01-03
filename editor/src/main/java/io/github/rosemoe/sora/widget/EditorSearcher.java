@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
+import io.github.rosemoe.sora.event.PublishSearchResultEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.TextUtils;
@@ -94,6 +95,7 @@ public class EditorSearcher {
         lastResults = null;
         currentPattern = null;
         searchOptions = null;
+        editor.dispatchEvent(new PublishSearchResultEvent(editor));
     }
 
     public boolean hasQuery() {
@@ -341,8 +343,14 @@ public class EditorSearcher {
                     }
             }
             if (checkNotCancelled()) {
-                lastResults = results;
-                editor.postInvalidate();
+                editor.postInLifecycle(() -> {
+                    if (currentThread == localThread) {
+                        lastResults = results;
+                        editor.invalidate();
+                        editor.dispatchEvent(new PublishSearchResultEvent(editor));
+                        currentThread = null;
+                    }
+                });
             }
         }
     }
