@@ -1396,46 +1396,33 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Get matched text regions on the given line
      *
      * @param line      Target line
-     * @param positions Outputs start positions
+     * @param positions Output start positions
      */
     protected void computeMatchedPositions(int line, LongArrayList positions) {
         positions.clear();
         if (editorSearcher.currentPattern == null || editorSearcher.searchOptions == null) {
             return;
         }
-        if (editorSearcher.searchOptions.useRegex) {
-            if (!editorSearcher.isResultValid()) {
-                return;
-            }
-            var res = editorSearcher.lastResults;
-            if (res == null) {
-                return;
-            }
-            var lineLeft = text.getCharIndex(line, 0);
-            var lineRight = lineLeft + text.getColumnCount(line);
-            for (int i = 0; i < res.size(); i++) {
-                var region = res.get(i);
-                var start = IntPair.getFirst(region);
-                var end = IntPair.getSecond(region);
-                var highlightStart = Math.max(start, lineLeft);
-                var highlightEnd = Math.min(end, lineRight);
-                if (highlightStart < highlightEnd) {
-                    positions.add(IntPair.pack(highlightStart - lineLeft, highlightEnd - lineLeft));
-                }
-                if (start > lineRight) {
-                    break;
-                }
-            }
+        if (!editorSearcher.isResultValid()) {
             return;
         }
-        ContentLine seq = text.getLine(line);
-        int index = 0;
-        var len = editorSearcher.currentPattern.length();
-        while (index != -1) {
-            index = TextUtils.indexOf(seq, editorSearcher.currentPattern, editorSearcher.searchOptions.ignoreCase, index);
-            if (index != -1) {
-                positions.add(IntPair.pack(index, index + len));
-                index += len;
+        var res = editorSearcher.lastResults;
+        if (res == null) {
+            return;
+        }
+        var lineLeft = text.getCharIndex(line, 0);
+        var lineRight = lineLeft + text.getColumnCount(line);
+        for (int i = 0; i < res.size(); i++) {
+            var region = res.get(i);
+            var start = IntPair.getFirst(region);
+            var end = IntPair.getSecond(region);
+            var highlightStart = Math.max(start, lineLeft);
+            var highlightEnd = Math.min(end, lineRight);
+            if (highlightStart < highlightEnd) {
+                positions.add(IntPair.pack(highlightStart - lineLeft, highlightEnd - lineLeft));
+            }
+            if (start > lineRight) {
+                break;
             }
         }
     }
@@ -2406,7 +2393,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return diagnosticStyle;
     }
 
-    public void setDiagnosticIndicatorStyle(@NonNull DiagnosticIndicatorStyle diagnosticIndicatorStyle) {
+    public void setDiagnosticIndicatorStyle(@NonNull DiagnosticIndicatorStyle
+                                                    diagnosticIndicatorStyle) {
         this.diagnosticStyle = diagnosticIndicatorStyle;
         invalidate();
     }
@@ -3243,7 +3231,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param lineRight   Line right
      * @param columnRight Column right
      */
-    public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight, int columnRight, int cause) {
+    public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight,
+                                   int columnRight, int cause) {
         setSelectionRegion(lineLeft, columnLeft, lineRight, columnRight, true, cause);
     }
 
@@ -3255,7 +3244,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param lineRight   Line right
      * @param columnRight Column right
      */
-    public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight, int columnRight) {
+    public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight,
+                                   int columnRight) {
         setSelectionRegion(lineLeft, columnLeft, lineRight, columnRight, true, SelectionChangeEvent.CAUSE_UNKNOWN);
     }
 
@@ -3268,7 +3258,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param columnRight      Column right
      * @param makeRightVisible Whether to make right cursor visible
      */
-    public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight, int columnRight, boolean makeRightVisible) {
+    public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight,
+                                   int columnRight, boolean makeRightVisible) {
         setSelectionRegion(lineLeft, columnLeft, lineRight, columnRight, makeRightVisible, SelectionChangeEvent.CAUSE_UNKNOWN);
     }
 
@@ -3281,7 +3272,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param columnRight      Column right
      * @param makeRightVisible Whether to make right cursor visible
      */
-    public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight, int columnRight, boolean makeRightVisible, int cause) {
+    public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight,
+                                   int columnRight, boolean makeRightVisible, int cause) {
         requestFocus();
         int start = getText().getCharIndex(lineLeft, columnLeft);
         int end = getText().getCharIndex(lineRight, columnRight);
@@ -3611,7 +3603,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param extraArguments     Extra arguments for the document. This {@link Bundle} object is passed
      *                           to all languages and plugins in editor.
      */
-    public void setText(@Nullable CharSequence text, boolean reuseContentObject, @Nullable Bundle extraArguments) {
+    public void setText(@Nullable CharSequence text, boolean reuseContentObject,
+                        @Nullable Bundle extraArguments) {
         if (text == null) {
             text = "";
         }
@@ -3675,6 +3668,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     /**
      * Render ASCII Function characters
+     *
      * @see #isRenderFunctionCharacters()
      */
     public void setRenderFunctionCharacters(boolean renderFunctionCharacters) {
@@ -3699,7 +3693,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      *
      * @see EventManager#subscribeEvent(Class, EventReceiver)
      */
-    public <T extends Event> SubscriptionReceipt<T> subscribeEvent(Class<T> eventType, EventReceiver<T> receiver) {
+    public <T extends
+            Event> SubscriptionReceipt<T> subscribeEvent(Class<T> eventType, EventReceiver<T> receiver) {
         return eventManager.subscribeEvent(eventType, receiver);
     }
 
@@ -3715,6 +3710,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Create a new {@link EventManager} instance that can be used to subscribe events in editor,
      * as a child instance of editor.
+     *
      * @return Child EventManager instance
      */
     @NonNull
@@ -4322,7 +4318,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Override
-    protected void onFocusChanged(boolean gainFocus, int direction, @Nullable Rect previouslyFocusedRect) {
+    protected void onFocusChanged(boolean gainFocus, int direction,
+                                  @Nullable Rect previouslyFocusedRect) {
         super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
         if (gainFocus) {
             cursorBlink.valid = cursorBlink.period > 0;
@@ -4386,7 +4383,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param action The Runnable to be executed.
      * @return Returns true if the Runnable was successfully placed in to the message queue.
      * Returns false on failure, usually because the looper processing the message queue is exiting.
-     *
      * @see View#post(Runnable)
      */
     public boolean postInLifecycle(Runnable action) {
@@ -4401,11 +4397,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Post the given action to message queue. Run the action if editor is not released.
      *
-     * @param action The Runnable to be executed.
+     * @param action      The Runnable to be executed.
      * @param delayMillis The delay (in milliseconds) until the Runnable will be executed.
      * @return Returns true if the Runnable was successfully placed in to the message queue.
      * Returns false on failure, usually because the looper processing the message queue is exiting.
-     *
      * @see View#postDelayed(Runnable, long)
      */
     public boolean postDelayedInLifecycle(Runnable action, long delayMillis) {
@@ -4424,7 +4419,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Override
-    public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
+    public void afterInsert(Content content, int startLine, int startColumn, int endLine,
+                            int endColumn, CharSequence insertedContent) {
         renderer.updateTimestamp();
         styleDelegate.onTextChange();
         var start = text.getIndexer().getCharPosition(startLine, startColumn);
@@ -4483,7 +4479,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Override
-    public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
+    public void afterDelete(Content content, int startLine, int startColumn, int endLine,
+                            int endColumn, CharSequence deletedContent) {
         renderer.updateTimestamp();
         styleDelegate.onTextChange();
         var start = text.getIndexer().getCharPosition(startLine, startColumn);
@@ -4548,7 +4545,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Override
-    public void onFormatSucceed(@NonNull CharSequence applyContent, @Nullable TextRange cursorRange) {
+    public void onFormatSucceed(@NonNull CharSequence applyContent, @Nullable TextRange
+            cursorRange) {
         postInLifecycle(() -> {
             int line = cursor.getLeftLine();
             int column = cursor.getLeftColumn();

@@ -37,6 +37,7 @@ import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
@@ -69,6 +70,7 @@ import io.github.rosemoe.sora.text.LineSeparator
 import io.github.rosemoe.sora.utils.CrashHandler
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorSearcher
+import io.github.rosemoe.sora.widget.EditorSearcher.SearchOptions
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.getComponent
@@ -103,6 +105,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var searchMenu: PopupMenu
+    private var searchOptions = SearchOptions(false, false)
     private var undo: MenuItem? = null
     private var redo: MenuItem? = null
 
@@ -139,20 +143,38 @@ class MainActivity : AppCompatActivity() {
             override fun beforeTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {}
             override fun onTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {}
             override fun afterTextChanged(editable: Editable) {
-                if (editable.isNotEmpty()) {
-                    try {
-                        binding.editor.searcher.search(
-                            editable.toString(),
-                            EditorSearcher.SearchOptions(true, true)
-                        )
-                    } catch (e: PatternSyntaxException) {
-                        // Regex error
-                    }
-                } else {
-                    binding.editor.searcher.stopSearch()
-                }
+                tryCommitSearch()
             }
         })
+        searchMenu = PopupMenu(this, binding.searchOptions)
+        searchMenu.inflate(R.menu.menu_search_options)
+        searchMenu.setOnMenuItemClickListener {
+            it.isChecked = !it.isChecked
+            var ignoreCase = !searchMenu.menu.findItem(R.id.search_option_match_case)!!.isChecked
+            if (it.isChecked) {
+                when (it.itemId) {
+                    R.id.search_option_regex -> {
+                        searchMenu.menu.findItem(R.id.search_option_whole_word)!!.isChecked = false
+                    }
+
+                    R.id.search_option_whole_word -> {
+                        searchMenu.menu.findItem(R.id.search_option_regex)!!.isChecked = false
+                    }
+                }
+            }
+            var type = SearchOptions.TYPE_NORMAL
+            val regex = searchMenu.menu.findItem(R.id.search_option_regex)!!.isChecked
+            if (regex) {
+                type = SearchOptions.TYPE_REGULAR_EXPRESSION
+            }
+            val wholeWord = searchMenu.menu.findItem(R.id.search_option_whole_word)!!.isChecked
+            if (wholeWord) {
+                type = SearchOptions.TYPE_WHOLE_WORD
+            }
+            searchOptions = SearchOptions(type, ignoreCase)
+            tryCommitSearch()
+            true
+        }
         binding.editor.apply {
             typefaceText = typeface
             setLineSpacing(2f, 1.1f)
@@ -204,6 +226,22 @@ class MainActivity : AppCompatActivity() {
         updateBtnState()
 
         switchThemeIfRequired(this, binding.editor)
+    }
+
+    private fun tryCommitSearch() {
+        val editable = binding.searchEditor.editableText
+        if (editable.isNotEmpty()) {
+            try {
+                binding.editor.searcher.search(
+                    editable.toString(),
+                    searchOptions
+                )
+            } catch (e: PatternSyntaxException) {
+                // Regex error
+            }
+        } else {
+            binding.editor.searcher.stopSearch()
+        }
     }
 
 
@@ -960,5 +998,9 @@ class MainActivity : AppCompatActivity() {
         } catch (e: IllegalStateException) {
             e.printStackTrace()
         }
+    }
+
+    fun showSearchOptions(view: View?) {
+        searchMenu.show()
     }
 }

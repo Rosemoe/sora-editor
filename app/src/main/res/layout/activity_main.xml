@@ -48,26 +48,37 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:onClick="gotoLast"
-                    android:text="@string/layout_tv_last" />
+                    android:text="@string/layout_tv_last"
+                    style="?android:attr/buttonBarButtonStyle" />
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:onClick="gotoNext"
-                    android:text="@string/layout_tv_next" />
+                    android:text="@string/layout_tv_next"
+                    style="?android:attr/buttonBarButtonStyle" />
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:onClick="replace"
-                    android:text="@string/layout_tv_replace" />
+                    android:text="@string/layout_tv_replace"
+                    style="?android:attr/buttonBarButtonStyle" />
 
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:onClick="replaceAll"
-                    android:text="@string/layout_tv_replaceAll" />
+                    android:text="@string/layout_tv_replaceAll"
+                    style="?android:attr/buttonBarButtonStyle" />
 
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:onClick="showSearchOptions"
+                    android:text="@string/layout_tv_search_options"
+                    android:id="@+id/search_options"
+                    style="?android:attr/buttonBarButtonStyle" />
 
             </LinearLayout>
 

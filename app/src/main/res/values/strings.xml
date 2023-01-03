@@ -52,7 +52,7 @@
     <string name="code_navi">Code Navigation</string>
     <string name="navi_err_msg">Code navigation not prepared or unsupported</string>
     <string name="color_scheme">Color Scheme</string>
-    <string name="err_crash_loop">"Exception in a thread with looper. Crash log is saved to crash-journal.log in private files directory. "</string>
+    <string name="err_crash">"Unexpected exception occurred. Crash log is saved to crash-journal.log in private files directory. "</string>
     <string name="wordwrap">Wordwrap</string>
     <string name="show_crash_log">Open crash log</string>
     <string name="clear_crash_log">Clear crash log</string>
@@ -80,4 +80,8 @@
     <string name="bottom_right">Bottom right</string>
     <string name="open_debug_document">Open View.java</string>
     <string name="debug">Debug</string>
+    <string name="layout_tv_search_options">Options</string>
+    <string name="search_option_regex">Regex</string>
+    <string name="search_option_whole_word">Whole Word</string>
+    <string name="search_option_match_case">Match Case</string>
 </resources>

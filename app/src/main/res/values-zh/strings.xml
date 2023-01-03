@@ -52,7 +52,7 @@
     <string name="code_navi">代码导航</string>
     <string name="navi_err_msg">代码导航没有准备好或者该语言不支持</string>
     <string name="color_scheme">颜色风格</string>
-    <string name="err_crash_loop">在一个具有Looper的线程中发生了错误，错误日志已保存至应用私有文件夹的crash-journal.log</string>
+    <string name="err_crash">应用程序已发生错误，错误日志已保存至应用私有文件夹的crash-journal.log</string>
     <string name="wordwrap">自动换行</string>
     <string name="show_crash_log">打开崩溃日志</string>
     <string name="clear_crash_log">清除崩溃日志</string>
@@ -80,4 +80,8 @@
     <string name="bottom_right">右下方</string>
     <string name="open_debug_document">打开View.java</string>
     <string name="debug">测试</string>
+    <string name="layout_tv_search_options">选项</string>
+    <string name="search_option_regex">正则表达式</string>
+    <string name="search_option_whole_word">全词匹配</string>
+    <string name="search_option_match_case">区分大小写</string>
 </resources>

@@ -61,34 +61,33 @@ public class CrashHandler implements UncaughtExceptionHandler {
     public final static String LOG_TAG = "CrashHandler";
     @SuppressLint("StaticFieldLeak")
     public final static CrashHandler INSTANCE = new CrashHandler();
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
-    private Context mContext;
+    private Context context;
     private final Map<String, String> info = new HashMap<>();
 
     private CrashHandler() {
     }
 
     public void init(Context context) {
-        mContext = context.getApplicationContext();
-        collectDeviceInfo(mContext);
+        this.context = context.getApplicationContext();
+        collectDeviceInfo(this.context);
         Thread.setDefaultUncaughtExceptionHandler(this);
     }
 
     @Override
     public void uncaughtException(Thread thread, @NonNull Throwable ex) {
         saveCrashInfo(thread.getName(), ex);
+        handler.post(() -> Toast.makeText(context, R.string.err_crash, Toast.LENGTH_SHORT).show());
         // Save the world, hopefully
         if (Looper.myLooper() != null) {
-            Handler handler = new Handler(Looper.myLooper());
             while (true) {
                 try {
-                    handler.post(() -> {
-                        Toast.makeText(mContext, R.string.err_crash_loop, Toast.LENGTH_SHORT).show();
-
-                    });
                     Looper.loop();
+                    return; // Quit loop if no exception
                 } catch (Throwable t) {
                     saveCrashInfo(thread.getName(), t);
+                    handler.post(() -> Toast.makeText(context, R.string.err_crash, Toast.LENGTH_SHORT).show());
                 }
             }
         }
@@ -161,7 +160,7 @@ public class CrashHandler implements UncaughtExceptionHandler {
         sb.append(result).append('\n');
         try {
             Log.e(LOG_TAG, sb.toString());
-            FileOutputStream fos = mContext.openFileOutput("crash-journal.log", Context.MODE_APPEND);
+            FileOutputStream fos = context.openFileOutput("crash-journal.log", Context.MODE_APPEND);
             fos.write(sb.toString().getBytes());
             fos.close();
         } catch (Exception e) {
