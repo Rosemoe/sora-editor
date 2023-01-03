@@ -150,7 +150,7 @@ class EditorInputConnection extends BaseInputConnection {
     /**
      * Get content region internally
      */
-    private CharSequence getTextRegionInternal(int start, int end, int flags) {
+    private CharSequence getTextRegionInternal(int start, int end, int flags, boolean ignoreIPCLimit) {
         var origin = editor.getText();
         if (start > end) {
             int tmp = start;
@@ -166,7 +166,7 @@ class EditorInputConnection extends BaseInputConnection {
         if (end < start) {
             start = end = 0;
         }
-        if (end - start > editor.getProps().maxIPCTextLength) {
+        if (!ignoreIPCLimit && end - start > editor.getProps().maxIPCTextLength) {
             end = start + Math.max(0, editor.getProps().maxIPCTextLength);
         }
         var sub = origin.subSequence(start, end).toString();
@@ -203,7 +203,22 @@ class EditorInputConnection extends BaseInputConnection {
 
     protected CharSequence getTextRegion(int start, int end, int flags) {
         try {
-            return getTextRegionInternal(start, end, flags);
+            var res = getTextRegionInternal(start, end, flags, false);
+            if (DEBUG)
+                logger.d("getTextRegion result:" + res);
+            return res;
+        } catch (IndexOutOfBoundsException e) {
+            logger.w("Failed to get text region for IME", e);
+            return "";
+        }
+    }
+
+    protected CharSequence getTextRegionUnlimited(int start, int end, int flags) {
+        try {
+            var res = getTextRegionInternal(start, end, flags, true);
+            if (DEBUG)
+                logger.d("getTextRegion result:" + res);
+            return res;
         } catch (IndexOutOfBoundsException e) {
             logger.w("Failed to get text region for IME", e);
             return "";
@@ -227,8 +242,9 @@ class EditorInputConnection extends BaseInputConnection {
         if (editor.getProps().disallowSuggestions) {
             return null;
         }
-        int start = getCursor().getLeft();
-        return getTextRegion(start - length, start, flags);
+        int end = getCursor().getLeft();
+        int start = Math.max(end - length, end - editor.getProps().maxIPCTextLength);
+        return getTextRegion(start, end, flags);
     }
 
     @Override
@@ -640,14 +656,18 @@ class EditorInputConnection extends BaseInputConnection {
     @Override
     @RequiresApi(31)
     public SurroundingText getSurroundingText(int beforeLength, int afterLength, int flags) {
+        if (DEBUG)
+            logger.d("getSurroundingText, beforeLen = " + beforeLength + ", afterLen = " + afterLength);
         if (editor.getProps().disallowSuggestions) {
             return null;
         }
         if ((beforeLength | afterLength) < 0) {
             throw new IllegalArgumentException("length < 0");
         }
-        int startOffset = Math.min(0, getCursor().getLeft() - beforeLength);
-        var text = (Spanned) getTextRegion(startOffset, Math.min(editor.getText().length(), getCursor().getRight() + afterLength), flags);
+        int startOffset = Math.max(0, getCursor().getLeft() - beforeLength);
+        var selStart = getCursor().getLeft();
+        startOffset = Math.min(startOffset, selStart);
+        var text = getTextRegionUnlimited(startOffset, Math.min(editor.getText().length(), getCursor().getRight() + afterLength), flags);
         return new SurroundingText(text, getCursor().getLeft() - startOffset, getCursor().getRight() - startOffset, startOffset);
     }
 

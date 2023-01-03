@@ -3967,10 +3967,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (request.hintMaxChars == 0) {
             request.hintMaxChars = props.maxIPCTextLength;
         }
-        if (request.hintMaxChars < props.maxIPCTextLength) {
-            if (startOffset + request.hintMaxChars < selBegin) {
-                startOffset = selBegin - request.hintMaxChars / 2;
-            }
+        if (startOffset + request.hintMaxChars < selBegin) {
+            startOffset = selBegin - request.hintMaxChars / 2;
+            startOffset = Math.min(startOffset, selBegin); // Ensure not negative
         }
         text.text = inputConnection.getTextRegion(startOffset, startOffset + request.hintMaxChars, request.flags);
         text.startOffset = startOffset;
