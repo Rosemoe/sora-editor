@@ -984,6 +984,16 @@ public class EditorRenderer {
         float offset3 = offset2 - editor.getDpUnit() * 15;
 
         // Step 1 - Draw background of rows
+
+        // Draw current line background on animation
+        if (editor.getCursorAnimator().isRunning()) {
+            tmpRect.bottom = editor.getCursorAnimator().animatedLineBottom() - editor.getOffsetY();
+            tmpRect.top = tmpRect.bottom - editor.getCursorAnimator().animatedLineHeight();
+            tmpRect.left = 0;
+            tmpRect.right = viewRect.right;
+            drawColor(canvas, currentLineBgColor, tmpRect);
+        }
+        // Other backgrounds
         for (int row = firstVis; row <= editor.getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
             int line = rowInf.lineIndex;
@@ -1045,15 +1055,6 @@ public class EditorRenderer {
             }
         }
         rowIterator.reset();
-
-        // Draw current line background on animation
-        if (editor.getCursorAnimator().isRunning()) {
-            tmpRect.bottom = editor.getCursorAnimator().animatedLineBottom() - editor.getOffsetY();
-            tmpRect.top = tmpRect.bottom - editor.getCursorAnimator().animatedLineHeight();
-            tmpRect.left = 0;
-            tmpRect.right = viewRect.right;
-            drawColor(canvas, currentLineBgColor, tmpRect);
-        }
 
         // Background of snippets
         patchSnippetRegions(canvas, offset);
