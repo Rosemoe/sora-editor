@@ -339,6 +339,12 @@ public class EditorSearcher {
                     var matcher = regex.matcher(string);
                     while (lastEnd < textLength && matcher.find(lastEnd)) {
                         lastEnd = matcher.end();
+                        var start = matcher.start();
+                        if (start == lastEnd) {
+                            // Do not match empty text
+                            lastEnd ++;
+                            continue;
+                        }
                         results.add(IntPair.pack(matcher.start(), lastEnd));
                     }
             }
