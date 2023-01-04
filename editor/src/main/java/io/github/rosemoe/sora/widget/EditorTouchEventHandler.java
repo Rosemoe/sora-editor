@@ -60,6 +60,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     private final static int HIDE_DELAY_HANDLE = 3500;
 
     private final static int SCROLLBAR_FADE_ANIMATION_TIME = 200;
+    private final static int MAGNIFIER_TOUCH_SLOP = 4;
 
     private final static int LEFT_EDGE = 1;
     private final static int RIGHT_EDGE = 1 << 1;
@@ -321,7 +322,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 if (shouldDrawInsertHandle() && editor.getInsertHandleDescriptor().position.contains(e.getX(), e.getY())) {
                     holdingInsertHandle = true;
                     dispatchHandle(HandleStateChangeEvent.HANDLE_TYPE_INSERT, true);
-                    updateMagnifier(e);
                     thumbDownY = e.getY();
                     thumbDownX = e.getX();
                 }
@@ -336,7 +336,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                         touchedHandleType = SelectionHandle.RIGHT;
                     }
                     dispatchHandle(selHandleType, true);
-                    updateMagnifier(e);
                     thumbDownY = e.getY();
                     thumbDownX = e.getX();
                 }
@@ -365,7 +364,10 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     return true;
                 }
                 if (handleSelectionChange(e)) {
-                    updateMagnifier(e);
+                    if (magnifier.isShowing() || Math.sqrt((e.getX() - thumbDownX) * (e.getX() - thumbDownX) +
+                            (e.getY() - thumbDownY) * (e.getY() - thumbDownY)) >= MAGNIFIER_TOUCH_SLOP) {
+                        updateMagnifier(e);
+                    }
                     if (touchedHandleType != -1 || holdInsertHandle()) {
                         editor.invalidate();
                     }
