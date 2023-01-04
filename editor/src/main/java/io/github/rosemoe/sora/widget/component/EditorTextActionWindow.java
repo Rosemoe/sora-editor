@@ -115,6 +115,26 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
                 event.intercept(InterceptTarget.TARGET_EDITOR);
             }
         }));
+        editor.subscribeEvent(HandleStateChangeEvent.class, ((event, unsubscribe) -> {
+            if (!event.getEditor().getCursor().isSelected()
+                    && event.getHandleType() == HandleStateChangeEvent.HANDLE_TYPE_INSERT
+                    && !event.isHeld()) {
+                displayWindow();
+                // Also, post to hide the window on handle disappearance
+                editor.postDelayedInLifecycle(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!editor.getEventHandler().shouldDrawInsertHandle()
+                                && !editor.getCursor().isSelected()) {
+                            dismiss();
+                        } else if (!editor.getCursor().isSelected()) {
+                            editor.postDelayedInLifecycle(this, 100);
+                        }
+                    }
+                }, 100);
+            }
+        }));
+
         getPopup().setAnimationStyle(R.style.text_action_popup_animation);
     }
 
