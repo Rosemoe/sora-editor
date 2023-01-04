@@ -208,7 +208,7 @@ public class TextMateNewlineHandler implements NewlineHandler {
         if (indentRulesSupport.shouldDecrease(afterEnterText)) {
             // afterEnterIndent = indentConverter.unshiftIndent(afterEnterIndent);
 
-            afterEnterIndent = beforeEnterIndent.substring(0, beforeEnterIndent.length() - indent.length());
+            afterEnterIndent = beforeEnterIndent.substring(0, Math.max(Math.max(0, beforeEnterIndent.length() - 1), beforeEnterIndent.length() - indent.length() /*- 1*/));
         }
 
         return new Pair<>(beforeEnterIndent, afterEnterIndent);
