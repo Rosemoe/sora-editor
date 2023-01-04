@@ -42,8 +42,16 @@ import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
 
 /**
- * Search text in editor
+ * Search text in editor.
+ * Note that editor searches text in another thread, so results may not be available immediately. Also,
+ * the searcher does not match empty text. For example, you will never match a single empty
+ * line by regex '^.*$'. What's more, zero-length pattern is not permitted.
+ * The searcher updates its search results automatically when editor text is changed, even after {@link CodeEditor#setText(CharSequence)}
+ * is invoked. So be careful that the search result is changing and {@link PublishSearchResultEvent} is
+ * re-triggered when search result is available for changed text.
  *
+ * @see PublishSearchResultEvent
+ * @see SearchOptions
  * @author Rosemoe
  */
 public class EditorSearcher {
@@ -52,6 +60,10 @@ public class EditorSearcher {
     protected String currentPattern;
     protected SearchOptions searchOptions;
     protected Thread currentThread;
+    /**
+     * Search results. Note that it is naturally sorted by start index (and also end index).
+     * No overlapping region is permitted.
+     */
     protected LongArrayList lastResults;
     private boolean cyclicJumping = true;
 
@@ -64,14 +76,34 @@ public class EditorSearcher {
         }));
     }
 
+    /**
+     * Jump cyclically when calling {@link #gotoNext()} and {@link #gotoPrevious()}
+     * @see #isCyclicJumping()
+     */
     public void setCyclicJumping(boolean cyclicJumping) {
         this.cyclicJumping = cyclicJumping;
     }
 
+    /**
+     * @see #setCyclicJumping(boolean)
+     */
     public boolean isCyclicJumping() {
         return cyclicJumping;
     }
 
+    /**
+     * Search text with the given pattern and options. If you use {@link SearchOptions#TYPE_REGULAR_EXPRESSION},
+     * the pattern will be your regular expression.
+     * <p>
+     * {@link #stopSearch()} should be called if you want to stop, instead of invoking this method with nulls.
+     * <p>
+     * Note that, the result is not immediately available because we search texts in another thread to
+     * avoid lags in main thread. If you want to be notified when the results is available, refer to
+     * {@link PublishSearchResultEvent}. Also be careful that, the event is also triggered when {@link #stopSearch()}
+     * is called.
+     * @throws IllegalArgumentException if pattern length is zero
+     * @throws java.util.regex.PatternSyntaxException if pattern is invalid when regex is enabled.
+     */
     public void search(@NonNull String pattern, @NonNull SearchOptions options) {
         if (pattern.length() == 0) {
             throw new IllegalArgumentException("pattern length must be > 0");
@@ -87,6 +119,9 @@ public class EditorSearcher {
         editor.postInvalidate();
     }
 
+    /**
+     * Execute current match task. Cancel any previous tasks.
+     */
     private void executeMatch() {
         if (currentThread != null && currentThread.isAlive()) {
             currentThread.interrupt();
@@ -96,6 +131,9 @@ public class EditorSearcher {
         currentThread.start();
     }
 
+    /**
+     * Stop searching.
+     */
     public void stopSearch() {
         if (currentThread != null && currentThread.isAlive()) {
             currentThread.interrupt();
@@ -107,6 +145,9 @@ public class EditorSearcher {
         editor.dispatchEvent(new PublishSearchResultEvent(editor));
     }
 
+    /**
+     * Check if any search is in progress
+     */
     public boolean hasQuery() {
         return currentPattern != null;
     }
@@ -117,6 +158,11 @@ public class EditorSearcher {
         }
     }
 
+    /**
+     * Find current selected region in search results and return the index in search result.
+     * Or {@code -1} if result is not available or the current selected region is not in result.
+     * @throws IllegalStateException if no search is in progress
+     */
     public int getCurrentMatchedPositionIndex() {
         checkState();
         var cur = editor.getCursor();
@@ -140,6 +186,10 @@ public class EditorSearcher {
         return -1;
     }
 
+    /**
+     * Get item count of search result. Or {@code 0} if result is not available or no item is found.
+     * @throws IllegalStateException if no search is in progress
+     */
     public int getMatchedPositionCount() {
         checkState();
         if (!isResultValid()) {
@@ -149,6 +199,12 @@ public class EditorSearcher {
         return result == null ? 0 : result.size();
     }
 
+    /**
+     * Goto next matched position based on cursor position.
+     * @see #setCyclicJumping(boolean)
+     * @return if any jumping action is performed
+     * @throws IllegalStateException if no search is in progress
+     */
     public boolean gotoNext() {
         checkState();
         if (isResultValid()) {
@@ -173,6 +229,12 @@ public class EditorSearcher {
         return false;
     }
 
+    /**
+     * Goto last matched position based on cursor position.
+     * @see #setCyclicJumping(boolean)
+     * @return if any jumping action is performed
+     * @throws IllegalStateException if no search is in progress
+     */
     public boolean gotoPrevious() {
         checkState();
         if (isResultValid()) {
@@ -200,10 +262,20 @@ public class EditorSearcher {
         return false;
     }
 
+    /**
+     * Check if selected region is in search result
+     * @throws IllegalStateException if no search is in progress
+     */
     public boolean isMatchedPositionSelected() {
         return getCurrentMatchedPositionIndex() > -1;
     }
 
+    /**
+     * Replace currently selected region if it is in search result. Otherwise, attempt to jump to
+     * next matched position.
+     * @param replacement The text for replacement
+     * @throws IllegalStateException if no search is in progress
+     */
     public void replaceThis(@NonNull String replacement) {
         if (!editor.isEditable()) {
             return;
@@ -215,10 +287,25 @@ public class EditorSearcher {
         }
     }
 
+    /**
+     * Replace all matched position. Note that after invoking this, a blocking {@link ProgressDialog}
+     * is shown until the action is done (either succeeded or failed).
+     * @param replacement The text for replacement
+     * @throws IllegalStateException if no search is in progress
+     */
     public void replaceAll(@NonNull String replacement) {
         replaceAll(replacement, null);
     }
 
+    /**
+     * Replace all matched position. Note that after invoking this, a blocking {@link ProgressDialog}
+     * is shown until the action is done (either succeeded or failed). The given callback will be executed
+     * on success.
+     *
+     * @param replacement The text for replacement
+     * @param whenSucceeded Callback when action is succeeded
+     * @throws IllegalStateException if no search is in progress
+     */
     public void replaceAll(@NonNull String replacement, @Nullable final Runnable whenSucceeded) {
         if (!editor.isEditable()) {
             return;
@@ -267,6 +354,9 @@ public class EditorSearcher {
         return currentThread == null || !currentThread.isAlive();
     }
 
+    /**
+     * Search options for {@link EditorSearcher#search(String, SearchOptions)}
+     */
     public static class SearchOptions {
 
         public final boolean ignoreCase;
@@ -289,6 +379,14 @@ public class EditorSearcher {
             this(useRegex ? TYPE_REGULAR_EXPRESSION : TYPE_NORMAL, ignoreCase);
         }
 
+        /**
+         * Create a new searching option with the given attributes.
+         * @param type type of searching method
+         * @param ignoreCase Case insensitive
+         * @see #TYPE_NORMAL
+         * @see #TYPE_WHOLE_WORD
+         * @see #TYPE_REGULAR_EXPRESSION
+         */
         public SearchOptions(@IntRange(from = 1, to = 3) int type, boolean ignoreCase) {
             if (type < 1 || type > 3) {
                 throw new IllegalArgumentException("invalid type");
