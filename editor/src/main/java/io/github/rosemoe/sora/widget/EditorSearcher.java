@@ -428,7 +428,7 @@ public class EditorSearcher {
                 case SearchOptions.TYPE_NORMAL: {
                     int nextStart = 0;
                     var patternLength = pattern.length();
-                    while (nextStart != -1 && nextStart < textLength) {
+                    while (nextStart != -1 && nextStart < textLength && checkNotCancelled()) {
                         nextStart = TextUtils.indexOf(text, pattern, ignoreCase, nextStart);
                         if (nextStart != -1) {
                             results.add(IntPair.pack(nextStart, nextStart + patternLength));
@@ -446,7 +446,7 @@ public class EditorSearcher {
                     // Matcher will call toString() on input several times
                     var string = text.toString();
                     var matcher = regex.matcher(string);
-                    while (lastEnd < textLength && matcher.find(lastEnd)) {
+                    while (lastEnd < textLength && matcher.find(lastEnd) && checkNotCancelled()) {
                         lastEnd = matcher.end();
                         var start = matcher.start();
                         if (start == lastEnd) {
