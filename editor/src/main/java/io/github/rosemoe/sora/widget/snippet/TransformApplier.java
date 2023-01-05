@@ -66,7 +66,7 @@ public class TransformApplier {
                 int start = matcher.start();
                 int end = matcher.end();
                 sb.append(text, nextIndex, start);
-                sb.append(applySingle(text, matcher, transform.format));
+                sb.append(applySingle(matcher, transform.format));
                 nextIndex = end;
             } else {
                 break;
@@ -82,12 +82,11 @@ public class TransformApplier {
     /**
      * Generate text for the given region in Matcher.
      *
-     * @param text             the original text, which is given to the Matcher
      * @param matcher          the Matcher at the requested region
      * @param formatStringList the format descriptors
      * @return generated(transform) text
      */
-    private static CharSequence applySingle(String text, Matcher matcher, List<FormatString> formatStringList) {
+    private static CharSequence applySingle(Matcher matcher, List<FormatString> formatStringList) {
         var sb = new StringBuilder();
         var nextUpperCase = false;
         for (FormatString formatString : formatStringList) {
@@ -126,7 +125,7 @@ public class TransformApplier {
      */
     private static String applyFirstUpperCase(String text, boolean apply) {
         if (apply && text != null && text.length() > 0 && isAlpha(text.charAt(0))) {
-            return Character.toUpperCase(text.charAt(0)) + text.substring(1, text.length());
+            return Character.toUpperCase(text.charAt(0)) + text.substring(1);
         }
         return text;
     }
