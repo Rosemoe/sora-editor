@@ -150,7 +150,7 @@ class MainActivity : AppCompatActivity() {
         searchMenu.inflate(R.menu.menu_search_options)
         searchMenu.setOnMenuItemClickListener {
             it.isChecked = !it.isChecked
-            var ignoreCase = !searchMenu.menu.findItem(R.id.search_option_match_case)!!.isChecked
+            val ignoreCase = !searchMenu.menu.findItem(R.id.search_option_match_case)!!.isChecked
             if (it.isChecked) {
                 when (it.itemId) {
                     R.id.search_option_regex -> {

@@ -101,6 +101,9 @@ public class DirectAccessProps implements Serializable {
      * {@link android.view.inputmethod.InputConnection#setComposingRegion(int, int)} taking effects.
      * <p>
      * This may not be always good for all IMEs, as keyboards' strategy varies.
+     * <p>
+     * Update: this will cause input connection to be negative and forcibly reject composing texts by
+     * restarting inputs.
      */
     public boolean disallowSuggestions = false;
 

@@ -3927,6 +3927,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Send current selection position to input method
      */
     protected void updateSelection() {
+        if (props.disallowSuggestions) {
+            var index = new java.util.Random().nextInt();
+            inputMethodManager.updateSelection(this, index, index, -1, -1);
+            return;
+        }
         int candidatesStart = -1, candidatesEnd = -1;
         if (inputConnection.composingText.isComposing()) {
             try {

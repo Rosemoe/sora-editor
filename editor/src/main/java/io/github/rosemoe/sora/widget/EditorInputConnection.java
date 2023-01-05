@@ -240,7 +240,7 @@ class EditorInputConnection extends BaseInputConnection {
     @Override
     public CharSequence getTextBeforeCursor(int length, int flags) {
         if (editor.getProps().disallowSuggestions) {
-            return null;
+            return "";
         }
         int end = getCursor().getLeft();
         int start = Math.max(end - length, end - editor.getProps().maxIPCTextLength);
@@ -250,7 +250,7 @@ class EditorInputConnection extends BaseInputConnection {
     @Override
     public CharSequence getTextAfterCursor(int length, int flags) {
         if (editor.getProps().disallowSuggestions) {
-            return null;
+            return "";
         }
         int end = getCursor().getRight();
         return getTextRegion(end, end + length, flags);
@@ -448,6 +448,9 @@ class EditorInputConnection extends BaseInputConnection {
     public synchronized boolean beginBatchEdit() {
         if (DEBUG)
             logger.d("beginBatchEdit");
+        if (editor.getProps().disallowSuggestions) {
+            return editor.getText().isInBatchEdit(); // Do not start new batch edit layer
+        }
         return editor.getText().beginBatchEdit();
     }
 
@@ -481,7 +484,9 @@ class EditorInputConnection extends BaseInputConnection {
             return false;
         }
         if (editor.getProps().disallowSuggestions) {
-            commitText(text, newCursorPosition);
+            composingText.reset();
+            commitText(text, 0);
+            //editor.restartInput();
             return false;
         }
         if (TextUtils.indexOf(text, '\n') != -1) {
@@ -516,6 +521,9 @@ class EditorInputConnection extends BaseInputConnection {
         if (!editor.isEditable() || connectionInvalid) {
             return false;
         }
+        if (editor.getProps().disallowSuggestions) {
+            return false;
+        }
         composingText.reset();
         endBatchEdit();
         editor.updateCursor();
@@ -537,7 +545,7 @@ class EditorInputConnection extends BaseInputConnection {
     public boolean setSelection(int start, int end) {
         if (DEBUG)
             logger.d("setSelection, s = " + start + ", e = " + end);
-        if (!editor.isEditable() || connectionInvalid) {
+        if (!editor.isEditable() || connectionInvalid || editor.getProps().disallowSuggestions) {
             return false;
         }
         start = getWrappedIndex(start);
@@ -634,6 +642,9 @@ class EditorInputConnection extends BaseInputConnection {
     public ExtractedText getExtractedText(ExtractedTextRequest request, int flags) {
         if (DEBUG)
             logger.d("getExtractedText, flags = " + flags);
+        if (editor.getProps().disallowSuggestions) {
+            return null;
+        }
         if ((flags & GET_EXTRACTED_TEXT_MONITOR) != 0) {
             editor.setExtracting(request);
         } else {
@@ -666,7 +677,7 @@ class EditorInputConnection extends BaseInputConnection {
         if (DEBUG)
             logger.d("getSurroundingText, beforeLen = " + beforeLength + ", afterLen = " + afterLength);
         if (editor.getProps().disallowSuggestions) {
-            return null;
+            return new SurroundingText("", 0, 0, -1);
         }
         if ((beforeLength | afterLength) < 0) {
             throw new IllegalArgumentException("length < 0");
