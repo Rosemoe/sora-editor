@@ -229,6 +229,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
     }
 
     public void displayWindow() {
+        updateBtnState();
         int top;
         var cursor = editor.getCursor();
         if (cursor.isSelected()) {
@@ -243,7 +244,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         top = Math.max(0, Math.min(top, editor.getHeight() - getHeight() - 5));
         float handleLeftX = editor.getOffset(editor.getCursor().getLeftLine(), editor.getCursor().getLeftColumn());
         float handleRightX = editor.getOffset(editor.getCursor().getRightLine(), editor.getCursor().getRightColumn());
-        int panelX = (int) ((handleLeftX + handleRightX) / 2f);
+        int panelX = (int) ((handleLeftX + handleRightX) / 2f - rootView.getMeasuredWidth() / 2f);
         setLocationAbsolutely(panelX, top);
         show();
     }
@@ -265,13 +266,12 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         if (!enabled || editor.getSnippetController().isInSnippet()) {
             return;
         }
-        updateBtnState();
         super.show();
     }
 
     @Override
-    public void onClick(View p1) {
-        int id = p1.getId();
+    public void onClick(View view) {
+        int id = view.getId();
         if (id == R.id.panel_btn_select_all) {
             editor.selectAll();
             return;
