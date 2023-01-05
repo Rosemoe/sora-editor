@@ -33,7 +33,6 @@
     <string name="text_to_search">Text to search</string>
     <string name="editor_search_replacing">Replacing texts…</string>
     <string name="editor_search_busy">Editor is still preparing…</string>
-    <string name="editor_line_number_tip_prefix" translatable="false">Line:</string>
     <string name="editor_formatting">Formatting your code…</string>
     <string name="more">More</string>
     <string name="diagnostics_more_actions">More Actions...</string>
