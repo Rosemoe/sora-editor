@@ -75,6 +75,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import io.github.rosemoe.sora.I18nConfig;
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.BuildEditorInfoEvent;
@@ -532,7 +533,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         lineSeparator = LineSeparator.LF;
         lineNumberTipTextProvider = DefaultLineNumberTip.INSTANCE;
-        formatTip = getContext().getString(R.string.editor_formatting);
+        formatTip = I18nConfig.getString(getContext(), R.string.editor_formatting);
         props = new DirectAccessProps();
         dpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10f;
         dividerWidth = dpUnit;
@@ -2408,10 +2409,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             @Override
             public boolean onCreateActionMode(ActionMode p1, Menu p2) {
                 startedActionMode = ACTION_MODE_SEARCH_TEXT;
-                p2.add(0, 0, 0, R.string.next).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-                p2.add(0, 1, 0, R.string.last).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
-                p2.add(0, 2, 0, R.string.replace).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
-                p2.add(0, 3, 0, R.string.replaceAll).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
+                p2.add(0, 0, 0, I18nConfig.getResourceId(R.string.next)).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+                p2.add(0, 1, 0, I18nConfig.getResourceId(R.string.last)).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
+                p2.add(0, 2, 0, I18nConfig.getResourceId(R.string.replace)).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
+                p2.add(0, 3, 0, I18nConfig.getResourceId(R.string.replaceAll)).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
                 SearchView sv = new SearchView(getContext());
                 sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 
@@ -2434,7 +2435,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 });
                 p1.setCustomView(sv);
                 sv.performClick();
-                sv.setQueryHint(getContext().getString(R.string.text_to_search));
+                sv.setQueryHint(I18nConfig.getString(getContext(), R.string.text_to_search));
                 sv.setIconifiedByDefault(false);
                 sv.setIconified(false);
                 return true;
@@ -2461,12 +2462,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     case 3:
                         final boolean replaceAll = p2.getItemId() == 3;
                         final EditText et = new EditText(getContext());
-                        et.setHint(R.string.replacement);
+                        et.setHint(I18nConfig.getResourceId(R.string.replacement));
                         new AlertDialog.Builder(getContext())
-                                .setTitle(replaceAll ? R.string.replaceAll : R.string.replace)
+                                .setTitle(I18nConfig.getResourceId(replaceAll ? R.string.replaceAll : R.string.replace))
                                 .setView(et)
                                 .setNegativeButton(android.R.string.cancel, null)
-                                .setPositiveButton(R.string.replace, (dialog, which) -> {
+                                .setPositiveButton(I18nConfig.getResourceId(R.string.replace), (dialog, which) -> {
                                     if (replaceAll) {
                                         getSearcher().replaceAll(et.getText().toString(), am::finish);
                                     } else {

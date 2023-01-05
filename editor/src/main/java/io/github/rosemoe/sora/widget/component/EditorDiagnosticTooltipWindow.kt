@@ -31,6 +31,7 @@ import android.view.View.MeasureSpec
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.TextView
+import io.github.rosemoe.sora.I18nConfig
 import io.github.rosemoe.sora.R
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent
 import io.github.rosemoe.sora.event.ScrollEvent
@@ -126,6 +127,7 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
                 dismiss()
             }
         }
+        moreActionText.setText(I18nConfig.getResourceId(R.string.diagnostics_more_actions))
         moreActionText.setOnClickListener { _ ->
             val quickfixes = currentDiagnostic?.quickfixes
             if (!quickfixes.isNullOrEmpty() && quickfixes.size > 1) {

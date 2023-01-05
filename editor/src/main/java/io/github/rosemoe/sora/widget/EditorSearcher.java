@@ -32,6 +32,7 @@ import androidx.annotation.Nullable;
 
 import java.util.regex.Pattern;
 
+import io.github.rosemoe.sora.I18nConfig;
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.PublishSearchResultEvent;
@@ -312,11 +313,11 @@ public class EditorSearcher {
         }
         checkState();
         if (!isResultValid()) {
-            Toast.makeText(editor.getContext(), R.string.editor_search_busy, Toast.LENGTH_SHORT).show();
+            Toast.makeText(editor.getContext(), I18nConfig.getResourceId(R.string.editor_search_busy), Toast.LENGTH_SHORT).show();
             return;
         }
         var context = editor.getContext();
-        final var dialog = ProgressDialog.show(context, context.getString(R.string.replaceAll), context.getString(R.string.editor_search_replacing), true, false);
+        final var dialog = ProgressDialog.show(context, I18nConfig.getString(context, R.string.replaceAll), I18nConfig.getString(context, R.string.editor_search_replacing), true, false);
         final var res = lastResults;
         new Thread(() -> {
             try {
