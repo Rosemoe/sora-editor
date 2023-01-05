@@ -4048,6 +4048,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             editorLanguage.destroy();
             editorLanguage = new EmptyLanguage();
         }
+        colorScheme.detachEditor(this);
     }
 
     /**
