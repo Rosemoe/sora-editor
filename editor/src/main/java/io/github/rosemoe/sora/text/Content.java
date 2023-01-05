@@ -812,7 +812,7 @@ public class Content implements CharSequence {
     }
 
     private StringBuilder subStringBuilder(int startLine, int startColumn, int endLine, int endColumn, int length) {
-        var sb = new StringBuilder();
+        var sb = new StringBuilder(length);
         if (startLine == endLine) {
             var line = lines.get(startLine);
             if (endColumn == line.length() + 1 && line.getLineSeparator() == LineSeparator.CRLF) {
@@ -821,7 +821,7 @@ public class Content implements CharSequence {
                             .append(LineSeparator.CR.getContent());
                 }
             } else {
-                sb.append(lines.get(startLine), startColumn, line.length());
+                sb.append(lines.get(startLine), startColumn, endColumn);
             }
         } else if (startLine < endLine) {
             var firstLine = lines.get(startLine);
