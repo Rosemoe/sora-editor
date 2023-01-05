@@ -1009,6 +1009,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return wordwrap;
     }
 
+    /**
+     * This only makes sense when wordwrap is enabled.
+     * Checks if anti word breaking is enabled in wordwrap mode.
+     */
+    public boolean isAntiWordBreaking() {
+        return antiWordBreaking;
+    }
 
     /**
      * Set whether text in editor should be wrapped to fit its size, with anti-word-breaking enabled
