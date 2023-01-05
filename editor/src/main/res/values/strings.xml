@@ -36,5 +36,6 @@
     <string name="editor_formatting">Formatting your code…</string>
     <string name="more">More</string>
     <string name="diagnostics_more_actions">More Actions...</string>
+    <string name="clip_text_length_too_large">Text is too large to copy</string>
 
 </resources>

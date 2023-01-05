@@ -36,6 +36,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.TransactionTooLargeException;
 import android.text.InputType;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -3392,17 +3393,23 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void copyText(boolean shouldCopyLine) {
         try {
             if (cursor.isSelected()) {
-                String clip = getText().subContent(cursor.getLeftLine(),
-                        cursor.getLeftColumn(),
-                        cursor.getRightLine(),
-                        cursor.getRightColumn()).toString();
-                clipboardManager.setPrimaryClip(ClipData.newPlainText(clip, clip));
+                int length = cursor.getRight() - cursor.getLeft();
+                if (length > props.clipboardTextLengthLimit) {
+                    Toast.makeText(getContext(), I18nConfig.getResourceId(R.string.clip_text_length_too_large), Toast.LENGTH_SHORT).show();
+                } else {
+                    var clip = getText().substring(cursor.getLeft(), cursor.getRight());
+                    clipboardManager.setPrimaryClip(ClipData.newPlainText(clip, clip));
+                }
             } else if (shouldCopyLine) {
                 copyLine();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(getContext(), e.toString(), Toast.LENGTH_SHORT).show();
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof TransactionTooLargeException) {
+                Toast.makeText(getContext(), I18nConfig.getResourceId(R.string.clip_text_length_too_large), Toast.LENGTH_SHORT).show();
+            } else {
+                e.printStackTrace();
+                Toast.makeText(getContext(), e.getClass().toString(), Toast.LENGTH_SHORT).show();
+            }
         }
     }
 

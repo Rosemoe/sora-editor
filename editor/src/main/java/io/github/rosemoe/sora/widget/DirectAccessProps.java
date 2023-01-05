@@ -308,9 +308,17 @@ public class DirectAccessProps implements Serializable {
     public boolean reselectOnLongPress = true;
 
     /**
-     * Show selection above selection handle when text is selectedd
+     * Show selection above selection handle when text is selected
      */
     @InvalidateRequired
     public boolean showSelectionWhenSelected = false;
+
+    /**
+     * Limit length for copying text to clipboard. When the length of copying text exceeded the limit,
+     * copying is aborted and a toast tip is shown to notify user that the action is failed.
+     * <p>
+     * Default size is 512*1024 Java characters, which is 1MB in UTF-16 encoding
+     */
+    public int clipboardTextLengthLimit = 512 * 1024;
 
 }
