@@ -25,6 +25,9 @@ package io.github.rosemoe.sora.widget.schemes;
 
 import android.util.SparseIntArray;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -420,6 +423,41 @@ public class EditorColorScheme {
      */
     public boolean isDark() {
         return dark;
+    }
+
+    private static EditorColorScheme globalDefault = new EditorColorScheme();
+
+    @NonNull
+    public static EditorColorScheme getDefault() {
+        return globalDefault;
+    }
+
+    /**
+     * Set global default color scheme.
+     */
+    public static void setDefault(@Nullable EditorColorScheme colorScheme) {
+        setDefault(colorScheme, false);
+    }
+
+    /**
+     * Set global default color scheme and optionally update existing editors that are using default
+     * color scheme.
+     * @param updateEditors update existing editors
+     */
+    public static void setDefault(@Nullable EditorColorScheme colorScheme, boolean updateEditors) {
+        if (colorScheme == null) {
+            colorScheme = new EditorColorScheme();
+        }
+        if (updateEditors) {
+            var editors = globalDefault.editors.toArray(new WeakReference[0]);
+            for (var ref : editors) {
+                var editor = (CodeEditor) ref.get();
+                if (editor != null) {
+                    editor.setColorScheme(colorScheme);
+                }
+            }
+        }
+        globalDefault = colorScheme;
     }
 
 }

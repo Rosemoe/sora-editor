@@ -551,7 +551,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         startedActionMode = ACTION_MODE_NONE;
         setTextSize(DEFAULT_TEXT_SIZE);
         setLineInfoTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, DEFAULT_LINE_INFO_TEXT_SIZE, Resources.getSystem().getDisplayMetrics()));
-        colorScheme = new EditorColorScheme(this);
+        colorScheme = EditorColorScheme.getDefault();
+        colorScheme.attachEditor(this);
         touchHandler = new EditorTouchEventHandler(this);
         basicDetector = new GestureDetector(getContext(), touchHandler);
         basicDetector.setOnDoubleTapListener(touchHandler);
