@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.widget.layout;
 
+import androidx.annotation.NonNull;
+
 import java.util.NoSuchElementException;
 
 /**
@@ -43,6 +45,7 @@ public interface RowIterator {
      * @return Row object contains the information about a row
      * @throws NoSuchElementException If no more row available
      */
+    @NonNull
     Row next();
 
     /**

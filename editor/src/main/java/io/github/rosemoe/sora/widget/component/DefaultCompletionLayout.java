@@ -36,6 +36,8 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 public class DefaultCompletionLayout implements CompletionLayout {
@@ -48,7 +50,7 @@ public class DefaultCompletionLayout implements CompletionLayout {
     private boolean enabledAnimation = false;
 
     @Override
-    public void setEditorCompletion(EditorAutoCompletion completion) {
+    public void setEditorCompletion(@NonNull EditorAutoCompletion completion) {
         editorAutoCompletion = completion;
     }
 
@@ -85,8 +87,9 @@ public class DefaultCompletionLayout implements CompletionLayout {
         }
     }
 
+    @NonNull
     @Override
-    public View inflate(Context context) {
+    public View inflate(@NonNull Context context) {
         var rootLayout = new LinearLayout(context);
         rootView = rootLayout;
         listView = new ListView(context);
@@ -128,7 +131,7 @@ public class DefaultCompletionLayout implements CompletionLayout {
     }
 
     @Override
-    public void onApplyColorScheme(EditorColorScheme colorScheme) {
+    public void onApplyColorScheme(@NonNull EditorColorScheme colorScheme) {
         GradientDrawable gd = new GradientDrawable();
         gd.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, editorAutoCompletion.getContext().getResources().getDisplayMetrics()));
         gd.setStroke(1, colorScheme.getColor(EditorColorScheme.COMPLETION_WND_CORNER));
@@ -141,6 +144,7 @@ public class DefaultCompletionLayout implements CompletionLayout {
         progressBar.setVisibility(state ? View.VISIBLE : View.GONE);
     }
 
+    @NonNull
     @Override
     public ListView getCompletionList() {
         return listView;

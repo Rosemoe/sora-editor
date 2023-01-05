@@ -74,7 +74,7 @@ public class Magnifier implements EditorBuiltinComponent {
      */
     private float scaleFactor;
 
-    public Magnifier(CodeEditor editor) {
+    public Magnifier(@NonNull CodeEditor editor) {
         view = editor;
         parentView = editor;
         popup = new PopupWindow();

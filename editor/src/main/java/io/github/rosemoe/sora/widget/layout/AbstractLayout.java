@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.widget.layout;
 
+import androidx.annotation.NonNull;
+
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -55,7 +57,7 @@ public abstract class AbstractLayout implements Layout {
     protected CodeEditor editor;
     protected Content text;
 
-    public AbstractLayout(CodeEditor editor, Content text) {
+    public AbstractLayout(@NonNull CodeEditor editor, @NonNull Content text) {
         this.editor = editor;
         this.text = text;
     }
@@ -65,12 +67,12 @@ public abstract class AbstractLayout implements Layout {
     }
 
     @Override
-    public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
+    public void afterDelete(@NonNull Content content, int startLine, int startColumn, int endLine, int endColumn, @NonNull CharSequence deletedContent) {
 
     }
 
     @Override
-    public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
+    public void afterInsert(@NonNull Content content, int startLine, int startColumn, int endLine, int endColumn, @NonNull CharSequence insertedContent) {
 
     }
 

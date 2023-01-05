@@ -388,14 +388,14 @@ public class CachedIndexer implements Indexer, ContentListener {
 
     @Override
     @UnsupportedUserUsage
-    public void beforeReplace(Content content) {
+    public void beforeReplace(@NonNull Content content) {
         //Do nothing
     }
 
     @Override
     @UnsupportedUserUsage
-    public synchronized void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn,
-                                         CharSequence insertedContent) {
+    public synchronized void afterInsert(@NonNull Content content, int startLine, int startColumn, int endLine, int endColumn,
+                                         @NonNull CharSequence insertedContent) {
         for (var pos : cachedPositions) {
             if (pos.line == startLine) {
                 if (pos.column >= startColumn) {
@@ -413,8 +413,8 @@ public class CachedIndexer implements Indexer, ContentListener {
 
     @Override
     @UnsupportedUserUsage
-    public synchronized void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn,
-                                         CharSequence deletedContent) {
+    public synchronized void afterDelete(@NonNull Content content, int startLine, int startColumn, int endLine, int endColumn,
+                                         @NonNull CharSequence deletedContent) {
         List<CharPosition> garbage = new ArrayList<>();
         for (CharPosition pos : cachedPositions) {
             if (pos.line == startLine) {

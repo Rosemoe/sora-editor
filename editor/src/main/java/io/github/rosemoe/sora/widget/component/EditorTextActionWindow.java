@@ -219,7 +219,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         }
     }
 
-    private int selectTop(RectF rect) {
+    private int selectTop(@NonNull RectF rect) {
         var rowHeight = editor.getRowHeight();
         if (rect.top - rowHeight * 3 / 2F > getHeight()) {
             return (int) (rect.top - rowHeight * 3 / 2 - getHeight());

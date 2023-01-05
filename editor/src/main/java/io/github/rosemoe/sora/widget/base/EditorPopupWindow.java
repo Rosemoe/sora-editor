@@ -163,6 +163,7 @@ public class EditorPopupWindow {
      * Note that you should not manage its visibility but update that by invoking methods in this
      * class. Otherwise, there may be some abnormal display.
      */
+    @NonNull
     public PopupWindow getPopup() {
         return window;
     }

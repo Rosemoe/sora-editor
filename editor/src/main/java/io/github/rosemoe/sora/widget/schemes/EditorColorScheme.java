@@ -200,7 +200,7 @@ public class EditorColorScheme {
      * Called by editor
      */
     @UnsupportedUserUsage
-    public void attachEditor(CodeEditor editor) {
+    public void attachEditor(@NonNull CodeEditor editor) {
         Objects.requireNonNull(editor);
         for (var ref : editors) {
             if (ref.get() == editor) {
@@ -215,7 +215,7 @@ public class EditorColorScheme {
      * Unsubscribe changes
      */
     @UnsupportedUserUsage
-    public void detachEditor(CodeEditor editor) {
+    public void detachEditor(@NonNull CodeEditor editor) {
         var itr = editors.iterator();
         while (itr.hasNext()) {
             if (itr.next().get() == editor) {
@@ -427,13 +427,17 @@ public class EditorColorScheme {
 
     private static EditorColorScheme globalDefault = new EditorColorScheme();
 
+    /**
+     * Get global default color scheme.
+     */
     @NonNull
     public static EditorColorScheme getDefault() {
         return globalDefault;
     }
 
     /**
-     * Set global default color scheme.
+     * Set global default color scheme. Newly created editor will use the new default color scheme.
+     * @param colorScheme new global color scheme, or null for restoring to built-in default
      */
     public static void setDefault(@Nullable EditorColorScheme colorScheme) {
         setDefault(colorScheme, false);
@@ -442,7 +446,8 @@ public class EditorColorScheme {
     /**
      * Set global default color scheme and optionally update existing editors that are using default
      * color scheme.
-     * @param updateEditors update existing editors
+     * @param colorScheme new global color scheme, or null for restoring to built-in default
+     * @param updateEditors update existing editors that are using default color scheme
      */
     public static void setDefault(@Nullable EditorColorScheme colorScheme, boolean updateEditors) {
         if (colorScheme == null) {

@@ -29,6 +29,8 @@ import android.view.ViewGroup;
 import android.widget.Adapter;
 import android.widget.BaseAdapter;
 
+import androidx.annotation.NonNull;
+
 import java.util.List;
 
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
@@ -48,7 +50,7 @@ public abstract class EditorCompletionAdapter extends BaseAdapter implements Ada
     /**
      * Called by {@link EditorAutoCompletion} to attach some arguments
      */
-    public void attachValues(EditorAutoCompletion window, List<CompletionItem> items) {
+    public void attachValues(@NonNull EditorAutoCompletion window, @NonNull List<CompletionItem> items) {
         this.window = window;
         this.items = items;
     }
@@ -76,6 +78,7 @@ public abstract class EditorCompletionAdapter extends BaseAdapter implements Ada
     /**
      * Get color scheme in editor
      */
+    @NonNull
     protected EditorColorScheme getColorScheme() {
         return window.getEditor().getColorScheme();
     }
@@ -93,6 +96,7 @@ public abstract class EditorCompletionAdapter extends BaseAdapter implements Ada
     /**
      * Get context from editor
      */
+    @NonNull
     protected Context getContext() {
         return window.getContext();
     }

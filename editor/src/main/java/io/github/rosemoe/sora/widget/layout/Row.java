@@ -27,7 +27,7 @@ package io.github.rosemoe.sora.widget.layout;
  * This class represents a 'row' in editor.
  * Editor uses this to draw rows
  *
- * @author Rose
+ * @author Rosemoe
  */
 public class Row {
 

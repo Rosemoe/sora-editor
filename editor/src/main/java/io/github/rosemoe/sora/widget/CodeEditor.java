@@ -4430,14 +4430,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Override
-    public void beforeReplace(Content content) {
+    public void beforeReplace(@NonNull Content content) {
         waitForNextChange = true;
         layout.beforeReplace(content);
     }
 
     @Override
-    public void afterInsert(Content content, int startLine, int startColumn, int endLine,
-                            int endColumn, CharSequence insertedContent) {
+    public void afterInsert(@NonNull Content content, int startLine, int startColumn, int endLine,
+                            int endColumn, @NonNull CharSequence insertedContent) {
         renderer.updateTimestamp();
         styleDelegate.onTextChange();
         var start = text.getIndexer().getCharPosition(startLine, startColumn);
@@ -4496,8 +4496,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Override
-    public void afterDelete(Content content, int startLine, int startColumn, int endLine,
-                            int endColumn, CharSequence deletedContent) {
+    public void afterDelete(@NonNull Content content, int startLine, int startColumn, int endLine,
+                            int endColumn, @NonNull CharSequence deletedContent) {
         renderer.updateTimestamp();
         styleDelegate.onTextChange();
         var start = text.getIndexer().getCharPosition(startLine, startColumn);
@@ -4557,7 +4557,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Override
-    public void beforeModification(Content content) {
+    public void beforeModification(@NonNull Content content) {
         cursorAnimator.markStartPos();
     }
 

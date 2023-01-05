@@ -27,6 +27,8 @@ import android.content.Context;
 import android.view.View;
 import android.widget.AdapterView;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
@@ -42,22 +44,24 @@ public interface CompletionLayout {
     /**
      * Color scheme changed
      */
-    void onApplyColorScheme(EditorColorScheme colorScheme);
+    void onApplyColorScheme(@NonNull EditorColorScheme colorScheme);
 
     /**
      * Attach the {@link EditorAutoCompletion}.
      * This is called first before other methods are called.
      */
-    void setEditorCompletion(EditorAutoCompletion completion);
+    void setEditorCompletion(@NonNull EditorAutoCompletion completion);
 
     /**
      * Inflate the layout, return the view root.
      */
-    View inflate(Context context);
+    @NonNull
+    View inflate(@NonNull Context context);
 
     /**
      * Get the {@link AdapterView} to display completion items
      */
+    @NonNull
     AdapterView getCompletionList();
 
     /**

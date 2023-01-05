@@ -989,7 +989,7 @@ public class Content implements CharSequence {
      * @param d End column
      * @param e Text deleted
      */
-    private void dispatchAfterDelete(int a, int b, int c, int d, CharSequence e) {
+    private void dispatchAfterDelete(int a, int b, int c, int d, @NonNull CharSequence e) {
         undoManager.afterDelete(this, a, b, c, d, e);
         if (cursor != null)
             cursor.afterDelete(a, b, c, d, e);
@@ -1010,7 +1010,7 @@ public class Content implements CharSequence {
      * @param d End column
      * @param e Text deleted
      */
-    private void dispatchAfterInsert(int a, int b, int c, int d, CharSequence e) {
+    private void dispatchAfterInsert(int a, int b, int c, int d, @NonNull CharSequence e) {
         undoManager.afterInsert(this, a, b, c, d, e);
         if (cursor != null)
             cursor.afterInsert(a, b, c, d, e);

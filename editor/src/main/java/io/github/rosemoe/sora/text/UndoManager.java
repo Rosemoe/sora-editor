@@ -26,6 +26,8 @@ package io.github.rosemoe.sora.text;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -301,7 +303,7 @@ public final class UndoManager implements ContentListener, Parcelable {
     }
 
     @Override
-    public void beforeReplace(Content content) {
+    public void beforeReplace(@NonNull Content content) {
         if (ignoreModification) {
             return;
         }
@@ -310,8 +312,8 @@ public final class UndoManager implements ContentListener, Parcelable {
     }
 
     @Override
-    public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn,
-                            CharSequence insertedContent) {
+    public void afterInsert(@NonNull Content content, int startLine, int startColumn, int endLine, int endColumn,
+                            @NonNull CharSequence insertedContent) {
         if (ignoreModification) {
             return;
         }
@@ -335,8 +337,8 @@ public final class UndoManager implements ContentListener, Parcelable {
     }
 
     @Override
-    public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn,
-                            CharSequence deletedContent) {
+    public void afterDelete(@NonNull Content content, int startLine, int startColumn, int endLine, int endColumn,
+                            @NonNull CharSequence deletedContent) {
         if (ignoreModification) {
             return;
         }

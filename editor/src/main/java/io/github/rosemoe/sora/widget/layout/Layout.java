@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.widget.layout;
 
 import android.util.SparseArray;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.text.ContentLine;
@@ -54,6 +55,13 @@ public interface Layout extends LineRemoveListener, ContentListener {
      */
     int getLineNumberForRow(int row);
 
+    /**
+     * Return a {@link RowIterator} object for editor to draw text rows
+     *
+     * @param initialRow The first row in result iterator
+     * @return Iterator contains rows
+     */
+    @NonNull
     default RowIterator obtainRowIterator(int initialRow) {
         return obtainRowIterator(initialRow, null);
     }
@@ -62,13 +70,16 @@ public interface Layout extends LineRemoveListener, ContentListener {
      * Return a {@link RowIterator} object for editor to draw text rows
      *
      * @param initialRow The first row in result iterator
+     * @param preloadedLines Lines that are already loaded in editor
      * @return Iterator contains rows
      */
+    @NonNull
     RowIterator obtainRowIterator(int initialRow, @Nullable SparseArray<ContentLine> preloadedLines);
 
     /**
      * Get the specific Row
      */
+    @NonNull
     Row getRowAt(int rowIndex);
 
     /**
@@ -109,6 +120,7 @@ public interface Layout extends LineRemoveListener, ContentListener {
      * @param column Column on line
      * @return An array containing layout offset, first element is the bottom of character and second element is the left of character
      */
+    @NonNull
     default float[] getCharLayoutOffset(int line, int column) {
         return getCharLayoutOffset(line, column, new float[2]);
     }
@@ -121,6 +133,7 @@ public interface Layout extends LineRemoveListener, ContentListener {
      * @param array  If the array is given, it will try to save the two elements in this array. Otherwise, a new array is created
      * @return An array containing layout offset, first element is the bottom of character and second element is the left of character
      */
+    @NonNull
     float[] getCharLayoutOffset(int line, int column, float[] array);
 
     /**

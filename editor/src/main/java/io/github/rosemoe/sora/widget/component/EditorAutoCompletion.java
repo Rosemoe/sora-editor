@@ -28,6 +28,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -74,7 +75,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
      *
      * @param editor Target editor
      */
-    public EditorAutoCompletion(CodeEditor editor) {
+    public EditorAutoCompletion(@NonNull CodeEditor editor) {
         super(editor, FEATURE_HIDE_WHEN_FAST_SCROLL);
         this.editor = editor;
         adapter = new DefaultCompletionItemAdapter();
@@ -121,7 +122,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     }
 
     @SuppressWarnings("unchecked")
-    public void setAdapter(EditorCompletionAdapter adapter) {
+    public void setAdapter(@Nullable EditorCompletionAdapter adapter) {
         this.adapter = adapter;
         if (adapter == null) {
             this.adapter = new DefaultCompletionItemAdapter();
@@ -348,7 +349,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         private long requestTimestamp;
         private boolean isAborted;
 
-        public CompletionThread(long requestTime, CompletionPublisher publisher) {
+        public CompletionThread(long requestTime, @NonNull CompletionPublisher publisher) {
             requestTimestamp = requestTime;
             requestPosition = editor.getCursor().left();
             targetLanguage = editor.getEditorLanguage();

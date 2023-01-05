@@ -122,6 +122,7 @@ public class LineBreakLayout extends AbstractLayout {
         return (int) measurer.measureText(line, start, end, editor.getTextPaint());
     }
 
+    @NonNull
     @Override
     public RowIterator obtainRowIterator(int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
         return new LineBreakLayoutRowItr(text, initialRow, preloadedLines);
@@ -133,12 +134,12 @@ public class LineBreakLayout extends AbstractLayout {
     }
 
     @Override
-    public void beforeReplace(Content content) {
+    public void beforeReplace(@NonNull Content content) {
         // Intentionally empty
     }
 
     @Override
-    public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
+    public void afterInsert(@NonNull Content content, int startLine, int startColumn, int endLine, int endColumn, @NonNull CharSequence insertedContent) {
         super.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
         for (int i = startLine; i <= endLine; i++) {
             if (i == startLine) {
@@ -154,7 +155,7 @@ public class LineBreakLayout extends AbstractLayout {
     }
 
     @Override
-    public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
+    public void afterDelete(@NonNull Content content, int startLine, int startColumn, int endLine, int endColumn, @NonNull CharSequence deletedContent) {
         super.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
         if (startLine < endLine) {
             widthMaintainer.removeRange(startLine + 1, endLine + 1);
@@ -166,6 +167,7 @@ public class LineBreakLayout extends AbstractLayout {
         }
     }
 
+    @NonNull
     @Override
     public Row getRowAt(int rowIndex) {
         var row = new Row();
@@ -210,6 +212,7 @@ public class LineBreakLayout extends AbstractLayout {
         return IntPair.pack(line, res);
     }
 
+    @NonNull
     @Override
     public float[] getCharLayoutOffset(int line, int column, float[] dest) {
         if (dest == null || dest.length < 2) {
@@ -286,6 +289,7 @@ public class LineBreakLayout extends AbstractLayout {
             this.preloadedLines = preloadedLines;
         }
 
+        @NonNull
         @Override
         public Row next() {
             if (!hasNext()) {

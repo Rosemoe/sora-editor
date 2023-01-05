@@ -203,12 +203,12 @@ public class WordwrapLayout extends AbstractLayout {
     }
 
     @Override
-    public void beforeReplace(Content content) {
+    public void beforeReplace(@NonNull Content content) {
         // Intentionally empty
     }
 
     @Override
-    public void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
+    public void afterInsert(@NonNull Content content, int startLine, int startColumn, int endLine, int endColumn, @NonNull CharSequence insertedContent) {
         super.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
         // Update line numbers
         int delta = endLine - startLine;
@@ -222,7 +222,7 @@ public class WordwrapLayout extends AbstractLayout {
     }
 
     @Override
-    public void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
+    public void afterDelete(@NonNull Content content, int startLine, int startColumn, int endLine, int endColumn, @NonNull CharSequence deletedContent) {
         super.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
         int delta = endLine - startLine;
         if (delta != 0) {
@@ -250,6 +250,7 @@ public class WordwrapLayout extends AbstractLayout {
         rowTable = null;
     }
 
+    @NonNull
     @Override
     public Row getRowAt(int rowIndex) {
         if (rowTable.isEmpty()) {
@@ -271,6 +272,7 @@ public class WordwrapLayout extends AbstractLayout {
         return row >= rowTable.size() ? rowTable.get(rowTable.size() - 1).line : rowTable.get(row).line;
     }
 
+    @NonNull
     @Override
     public RowIterator obtainRowIterator(int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
         return rowTable.isEmpty() ? new LineBreakLayout.LineBreakLayoutRowItr(text, initialRow, preloadedLines) : new WordwrapLayoutRowItr(initialRow);
@@ -380,6 +382,7 @@ public class WordwrapLayout extends AbstractLayout {
         return IntPair.pack(region.line, column);
     }
 
+    @NonNull
     @Override
     public float[] getCharLayoutOffset(int line, int column, float[] dest) {
         if (dest == null || dest.length < 2) {
@@ -514,6 +517,7 @@ public class WordwrapLayout extends AbstractLayout {
             result = new Row();
         }
 
+        @NonNull
         @Override
         public Row next() {
             if (!hasNext()) {

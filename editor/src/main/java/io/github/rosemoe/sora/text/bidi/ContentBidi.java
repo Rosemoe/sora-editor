@@ -77,7 +77,7 @@ public class ContentBidi implements ContentListener {
     }
 
     @Override
-    public synchronized void afterDelete(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence deletedContent) {
+    public synchronized void afterDelete(@NonNull Content content, int startLine, int startColumn, int endLine, int endColumn, @NonNull CharSequence deletedContent) {
         var delta = endLine - startLine;
         for (int i = 0; i < entries.length; i++) {
             var entry = entries[i];
@@ -95,7 +95,7 @@ public class ContentBidi implements ContentListener {
     }
 
     @Override
-    public synchronized void afterInsert(Content content, int startLine, int startColumn, int endLine, int endColumn, CharSequence insertedContent) {
+    public synchronized void afterInsert(@NonNull Content content, int startLine, int startColumn, int endLine, int endColumn, @NonNull CharSequence insertedContent) {
         var delta = endLine - startLine;
         for (int i = 0; i < entries.length; i++) {
             var entry = entries[i];
@@ -111,7 +111,7 @@ public class ContentBidi implements ContentListener {
     }
 
     @Override
-    public void beforeReplace(Content content) {
+    public void beforeReplace(@NonNull Content content) {
 
     }
 
