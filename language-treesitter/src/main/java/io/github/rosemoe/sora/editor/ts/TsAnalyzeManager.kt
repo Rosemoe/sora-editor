@@ -25,8 +25,6 @@
 package io.github.rosemoe.sora.editor.ts
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.os.Message
 import android.util.Log
 import com.itsaky.androidide.treesitter.TSInputEdit
@@ -43,8 +41,7 @@ import io.github.rosemoe.sora.lang.styling.Styles
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import java.util.Collections
-import java.util.concurrent.CancellationException
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.LinkedBlockingQueue
 
 open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme) :
     AnalyzeManager {
@@ -54,7 +51,6 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     var extraArguments: Bundle? = null
     var thread: TsLooperThread? = null
     var styles = Styles()
-    val messageCounter = AtomicInteger()
 
     fun updateTheme(theme: TsTheme) {
         this.theme = theme
@@ -74,27 +70,22 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     }
 
     override fun insert(start: CharPosition, end: CharPosition, insertedContent: CharSequence) {
-        thread?.handler?.let {
-            messageCounter.getAndIncrement()
-            it.sendMessage(
-                it.obtainMessage(
-                    MSG_MOD,
-                    TextModification(
-                        start.index,
-                        end.index,
-                        TSInputEdit(
-                            start.index * 2,
-                            start.index * 2,
-                            end.index * 2,
-                            start.toTSPoint(),
-                            start.toTSPoint(),
-                            end.toTSPoint()
-                        ),
-                        insertedContent.toString()
-                    )
-                )
+        thread?.offerMessage(
+            MSG_MOD,
+            TextModification(
+                start.index,
+                end.index,
+                TSInputEdit(
+                    start.index * 2,
+                    start.index * 2,
+                    end.index * 2,
+                    start.toTSPoint(),
+                    start.toTSPoint(),
+                    end.toTSPoint()
+                ),
+                insertedContent.toString()
             )
-        }
+        )
         (styles.spans as LineSpansGenerator?)?.apply {
             lineCount = reference!!.lineCount
             tree.edit(
@@ -111,27 +102,22 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     }
 
     override fun delete(start: CharPosition, end: CharPosition, deletedContent: CharSequence) {
-        thread?.handler?.let {
-            messageCounter.getAndIncrement()
-            it.sendMessage(
-                it.obtainMessage(
-                    MSG_MOD,
-                    TextModification(
-                        start.index,
-                        end.index,
-                        TSInputEdit(
-                            start.index * 2,
-                            end.index * 2,
-                            start.index * 2,
-                            start.toTSPoint(),
-                            end.toTSPoint(),
-                            start.toTSPoint()
-                        ),
-                        null
-                    )
-                )
+        thread?.offerMessage(
+            MSG_MOD,
+            TextModification(
+                start.index,
+                end.index,
+                TSInputEdit(
+                    start.index * 2,
+                    end.index * 2,
+                    start.index * 2,
+                    start.toTSPoint(),
+                    end.toTSPoint(),
+                    start.toTSPoint()
+                ),
+                null
             )
-        }
+        )
         (styles.spans as LineSpansGenerator?)?.apply {
             lineCount = reference!!.lineCount
             tree.edit(
@@ -148,44 +134,27 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     }
 
     override fun rerun() {
-        messageCounter.set(0)
         thread?.let {
-            it.callback = { throw CancellationException() }
             if (it.isAlive) {
-                it.handler?.sendMessage(
-                    Message.obtain(
-                        thread!!.handler,
-                        MSG_EXIT
-                    )
-                )
+                it.interrupt()
                 it.abort = true
             }
         }
         (styles.spans as LineSpansGenerator?)?.tree?.close()
         styles.spans = null
         val initText = reference?.reference?.toString() ?: ""
-        thread = TsLooperThread {
-            handler!!.apply {
-                messageCounter.getAndIncrement()
-                sendMessage(obtainMessage(MSG_INIT, initText))
-            }
-        }.also {
+        thread = TsLooperThread().also {
             it.name = "TsDaemon-${nextThreadId()}"
             styles = Styles()
+            it.offerMessage(MSG_INIT, initText)
             it.start()
         }
     }
 
     override fun destroy() {
         thread?.let {
-            it.callback = { throw CancellationException() }
             if (it.isAlive) {
-                it.handler?.sendMessage(
-                    Message.obtain(
-                        thread!!.handler,
-                        MSG_EXIT
-                    )
-                )
+                it.interrupt()
                 it.abort = true
             }
         }
@@ -196,7 +165,6 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         private const val MSG_BASE = 11451400
         private const val MSG_INIT = MSG_BASE + 1
         private const val MSG_MOD = MSG_BASE + 2
-        private const val MSG_EXIT = MSG_BASE + 3
 
         @Volatile
         private var threadId = 0
@@ -205,10 +173,9 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         fun nextThreadId() = ++threadId
     }
 
-    inner class TsLooperThread(var callback: TsLooperThread.() -> Unit) : Thread() {
+    inner class TsLooperThread : Thread() {
 
-        var handler: Handler? = null
-        var looper: Looper? = null
+        private val messageQueue = LinkedBlockingQueue<Message>()
 
         @Volatile
         var abort: Boolean = false
@@ -217,11 +184,22 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
             it.language = languageSpec.language
         }
         var tree: TSTree? = null
-        var handledMessageCount = 0
+
+        fun offerMessage(what: Int, obj: Any?) {
+            val msg = Message.obtain()
+            msg.what = what
+            msg.obj = obj
+            offerMessage(msg)
+        }
+
+        fun offerMessage(msg: Message) {
+            // Result ignored: capacity is enough as it is INT_MAX
+            messageQueue.offer(msg)
+        }
 
         fun updateStyles() {
             val scopedVariables = TsScopedVariables(tree!!, localText, languageSpec)
-            if (thread == this && handledMessageCount == messageCounter.get()) {
+            if (thread == this && messageQueue.isEmpty()) {
                 val oldTree = (styles.spans as LineSpansGenerator?)?.tree
                 val copied = tree!!.copy()
                 styles.spans = LineSpansGenerator(
@@ -256,7 +234,12 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                 it.exec(languageSpec.blocksQuery, tree!!.rootNode)
                 var match = it.nextMatch()
                 while (match != null) {
-                    if (languageSpec.blocksPredicator.doPredicate(languageSpec.predicates, localText, match)) {
+                    if (languageSpec.blocksPredicator.doPredicate(
+                            languageSpec.predicates,
+                            localText,
+                            match
+                        )
+                    ) {
                         match.captures.forEach {
                             val block = ObjectAllocator.obtainBlockLine().also { block ->
                                 var node = it.node
@@ -291,64 +274,61 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         }
 
         override fun run() {
-            Looper.prepare()
-            looper = Looper.myLooper()
-            handler = object : Handler(looper!!) {
-                override fun handleMessage(msg: Message) {
-                    super.handleMessage(msg)
-                    try {
-                        handledMessageCount++
-                        when (msg.what) {
-                            MSG_INIT -> {
-                                localText.append(msg.obj!! as String)
-                                if (!abort && !isInterrupted) {
-                                    tree = parser.parseString(localText)
-                                    updateStyles()
-                                }
-                            }
+            try {
+                while (!abort && !isInterrupted) {
+                    val msg = messageQueue.take()
+                    if (!handleMessage(msg)) {
+                        break
+                    }
+                    msg.recycle()
+                }
+            } catch (e: InterruptedException) {
+                // ignored
+            }
+            releaseThreadResources()
+        }
 
-                            MSG_MOD -> {
-                                if (!abort && !isInterrupted) {
-                                    val modification = msg.obj!! as TextModification
-                                    val newText = modification.changedText
-                                    val t = tree!!
-                                    t.edit(modification.tsEdition)
-                                    if (newText == null) {
-                                        localText.delete(modification.start, modification.end)
-                                    } else {
-                                        if (modification.start == localText.length) {
-                                            localText.append(newText)
-                                        } else {
-                                            localText.insert(modification.start, newText)
-                                        }
-                                    }
-                                    tree = parser.parseString(t, localText)
-                                    t.close()
-                                    updateStyles()
-                                }
-                            }
-
-                            MSG_EXIT -> {
-                                releaseThreadResources()
-                                looper.quit()
-                            }
+        fun handleMessage(msg: Message): Boolean {
+            try {
+                when (msg.what) {
+                    MSG_INIT -> {
+                        localText.append(msg.obj!! as String)
+                        if (!abort && !isInterrupted) {
+                            tree = parser.parseString(localText)
+                            updateStyles()
                         }
-                    } catch (e: Exception) {
-                        Log.w(
-                            "TsAnalyzeManager",
-                            "Thread ${currentThread().name} exited with an error",
-                            e
-                        )
+                    }
+
+                    MSG_MOD -> {
+                        if (!abort && !isInterrupted) {
+                            val modification = msg.obj!! as TextModification
+                            val newText = modification.changedText
+                            val t = tree!!
+                            t.edit(modification.tsEdition)
+                            if (newText == null) {
+                                localText.delete(modification.start, modification.end)
+                            } else {
+                                if (modification.start == localText.length) {
+                                    localText.append(newText)
+                                } else {
+                                    localText.insert(modification.start, newText)
+                                }
+                            }
+                            tree = parser.parseString(t, localText)
+                            t.close()
+                            updateStyles()
+                        }
                     }
                 }
+                return true
+            } catch (e: Exception) {
+                Log.w(
+                    "TsAnalyzeManager",
+                    "Thread $name exited with an error",
+                    e
+                )
             }
-
-            try {
-                callback()
-                Looper.loop()
-            } catch (e: CancellationException) {
-                releaseThreadResources()
-            }
+            return false
         }
 
         fun releaseThreadResources() {
