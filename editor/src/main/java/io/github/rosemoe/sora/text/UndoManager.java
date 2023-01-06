@@ -131,7 +131,7 @@ public final class UndoManager implements ContentListener, Parcelable {
      * @param content Undo Target
      */
     public void undo(Content content) {
-        if (canUndo()) {
+        if (canUndo() && !isModifyingContent()) {
             ignoreModification = true;
             actionStack.get(stackPointer - 1).undo(content);
             stackPointer--;
@@ -145,7 +145,7 @@ public final class UndoManager implements ContentListener, Parcelable {
      * @param content Redo Target
      */
     public void redo(Content content) {
-        if (canRedo()) {
+        if (canRedo() && !isModifyingContent()) {
             ignoreModification = true;
             actionStack.get(stackPointer).redo(content);
             stackPointer++;
@@ -153,7 +153,7 @@ public final class UndoManager implements ContentListener, Parcelable {
         }
     }
 
-    protected void onExitBatchEdit() {
+    void onExitBatchEdit() {
         forceNewMultiAction = true;
         if (!actionStack.isEmpty() && actionStack.get(actionStack.size() - 1) instanceof MultiAction) {
             var action = ((MultiAction) actionStack.get(actionStack.size() - 1));
@@ -323,7 +323,7 @@ public final class UndoManager implements ContentListener, Parcelable {
         insertAction.endLine = endLine;
         insertAction.endColumn = endColumn;
         insertAction.text = insertedContent;
-        if (replaceMark) {
+        if (replaceMark && deleteAction != null) {
             ReplaceAction rep = new ReplaceAction();
             rep._delete = deleteAction;
             rep._insert = insertAction;
@@ -458,6 +458,7 @@ public final class UndoManager implements ContentListener, Parcelable {
             sb.append(ac.text);
         }
 
+        @NonNull
         @Override
         public String toString() {
             return "InsertAction{" +
@@ -629,6 +630,7 @@ public final class UndoManager implements ContentListener, Parcelable {
             sb.insert(0, ac.text);
         }
 
+        @NonNull
         @Override
         public String toString() {
             return "DeleteAction{" +
@@ -702,6 +704,7 @@ public final class UndoManager implements ContentListener, Parcelable {
             throw new UnsupportedOperationException();
         }
 
+        @NonNull
         @Override
         public String toString() {
             return "ReplaceAction{" +
