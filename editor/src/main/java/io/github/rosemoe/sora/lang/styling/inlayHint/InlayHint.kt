@@ -55,9 +55,10 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
  * Base class for all inlay hints.
+ *
  * @author Rosemoe
  */
-abstract class InlayHint {
+abstract class InlayHint(val type: InlayHintLayoutType) {
 
     var measuredWidth: Float = 0f
         private set

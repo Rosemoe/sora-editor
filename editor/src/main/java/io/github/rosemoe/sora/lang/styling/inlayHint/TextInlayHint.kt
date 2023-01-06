@@ -57,7 +57,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
  *
  * @author Rosemoe
  */
-class TextInlayHint(val text: String) : InlayHint() {
+class TextInlayHint(val text: String) : InlayHint(InlayHintLayoutType.IN_LINE) {
 
     override fun onMeasure(
         paint: Paint,
