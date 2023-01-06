@@ -54,7 +54,6 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
     private final static int MSG_BASE = 11451400;
     private final static int MSG_INIT = MSG_BASE + 1;
     private final static int MSG_MOD = MSG_BASE + 2;
-    private final static int MSG_EXIT = MSG_BASE + 3;
     private static int sThreadId = 0;
     private StyleReceiver receiver;
     private ContentReference ref;
@@ -452,7 +451,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         LockedSpans spans;
         CodeBlockAnalyzeDelegate delegate = new CodeBlockAnalyzeDelegate(this);
 
-        public void offerMessage(int what, Object obj) {
+        public void offerMessage(int what, @Nullable Object obj) {
             var msg = Message.obtain();
             msg.what = what;
             msg.obj = obj;
@@ -484,7 +483,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                 sendNewStyles(styles);
         }
 
-        public void handleMessage(@NonNull Message msg) {
+        public boolean handleMessage(@NonNull Message msg) {
             try {
                 myRunCount = runCount;
                 delegate.reset();
@@ -586,21 +585,22 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                             sendUpdate(styles, updateStart, updateEnd);
                         }
                         break;
-                    case MSG_EXIT:
-                        break;
                 }
+                return true;
             } catch (Exception e) {
                 Log.w("AsyncAnalysis", "Thread " + Thread.currentThread().getName() + " failed", e);
             }
+            return false;
         }
 
         @Override
         public void run() {
-            var thread = Thread.currentThread();
             try {
-                while (!abort && !thread.isInterrupted()) {
+                while (!abort && !isInterrupted()) {
                     var msg = messageQueue.take();
-                    handleMessage(msg);
+                    if (!handleMessage(msg)) {
+                        break;
+                    }
                     msg.recycle();
                 }
             } catch (InterruptedException e) {
