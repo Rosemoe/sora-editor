@@ -199,18 +199,19 @@ public class TextMateLanguage extends EmptyLanguage {
 
 
     private void createAnalyzerAndNewlineHandler(IGrammar grammar, LanguageConfiguration languageConfiguration) {
+        var old = textMateAnalyzer;
+        if (old != null) {
+            old.setReceiver(null);
+            old.destroy();
+        }
         try {
             textMateAnalyzer = new TextMateAnalyzer(this, grammar, languageConfiguration, /*grammarRegistry,*/ themeRegistry);
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         this.languageConfiguration = languageConfiguration;
-
         newlineHandler = new TextMateNewlineHandler(this);
-
         newlineHandlers = new TextMateNewlineHandler[]{newlineHandler};
-
         if (languageConfiguration != null) {
             // because the editor will only get the symbol pair matcher once
             // (caching object to stop repeated new object created),
@@ -222,12 +223,8 @@ public class TextMateLanguage extends EmptyLanguage {
 
     public void updateLanguage(String scopeName) {
         var grammar = grammarRegistry.findGrammar(scopeName);
-
         var languageConfiguration = grammarRegistry.findLanguageConfiguration(grammar.getScopeName());
-
-
         createAnalyzerAndNewlineHandler(grammar, languageConfiguration);
-
     }
 
     public void updateLanguage(GrammarDefinition grammarDefinition) {
