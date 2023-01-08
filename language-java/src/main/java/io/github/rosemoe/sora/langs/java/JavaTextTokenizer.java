@@ -121,6 +121,10 @@ public class JavaTextTokenizer {
     }
 
     public Tokens nextToken() {
+        return currToken = nextTokenInternal();
+    }
+
+    private Tokens nextTokenInternal() {
         if (lcCal) {
             boolean r = false;
             for (int i = offset; i < offset + length; i++) {
