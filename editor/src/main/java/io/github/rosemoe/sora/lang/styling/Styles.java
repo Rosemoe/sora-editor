@@ -229,6 +229,9 @@ public class Styles {
      * Remove all line styles
      */
     public void eraseAllLineStyles() {
+        if (lineStyles == null) {
+            return;
+        }
         lineStyles.clear();
         styleTypeCount.clear();
     }
