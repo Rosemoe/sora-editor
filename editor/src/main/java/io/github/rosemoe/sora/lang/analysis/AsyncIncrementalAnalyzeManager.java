@@ -557,19 +557,19 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                                     line++;
                                 }
                                 // line = end.line + 1, check whether the state equals
-                                while (line < shadowed.getLineCount()) {
+                                boolean flag = true;
+                                while (line < shadowed.getLineCount() && flag) {
                                     var res = tokenizeLine(shadowed.getLine(line), state, line);
                                     if (stateEquals(res.state, states.get(line).state)) {
-                                        break;
-                                    } else {
-                                        spans.setSpansOnLine(line, res.spans != null ? res.spans : generateSpansForLine(res));
-                                        var old = states.set(line, res.clearSpans());
-                                        if (old != null) {
-                                            onAbandonState(old.state);
-                                        }
-                                        onAddState(res.state);
-                                        state = res.state;
+                                        flag = false;
                                     }
+                                    spans.setSpansOnLine(line, res.spans != null ? res.spans : generateSpansForLine(res));
+                                    var old = states.set(line, res.clearSpans());
+                                    if (old != null) {
+                                        onAbandonState(old.state);
+                                    }
+                                    onAddState(res.state);
+                                    state = res.state;
                                     line++;
                                 }
                                 updateEnd = line;
