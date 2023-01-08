@@ -54,6 +54,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.inputmethod.CursorAnchorInfo;
 import android.view.inputmethod.EditorInfo;
@@ -2031,7 +2032,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      *
      * @return The scroller
      */
-    public OverScroller getScroller() {
+    public EditorScroller getScroller() {
         return touchHandler.getScroller();
     }
 
@@ -4139,21 +4140,47 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     @Override
     public AccessibilityNodeInfo createAccessibilityNodeInfo() {
-        AccessibilityNodeInfo node = super.createAccessibilityNodeInfo();
-        node.setEditable(isEditable());
-        node.setTextSelection(cursor.getLeft(), cursor.getRight());
-        node.setScrollable(true);
-        node.setInputType(InputType.TYPE_CLASS_TEXT);
-        node.setMultiLine(true);
-        node.setText(getText().toStringBuilder());
-        node.setLongClickable(true);
-        node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_COPY);
-        node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CUT);
-        node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_PASTE);
-        node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_TEXT);
-        node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);
-        node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD);
-        return node;
+        var info = super.createAccessibilityNodeInfo();
+        if (isEnabled()) {
+            info.setEditable(isEditable());
+            info.setTextSelection(cursor.getLeft(), cursor.getRight());
+            info.setInputType(InputType.TYPE_CLASS_TEXT);
+            info.setMultiLine(true);
+            info.setText(getText().toStringBuilder());
+            info.setLongClickable(true);
+            info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_COPY);
+            info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CUT);
+            info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_PASTE);
+            info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_TEXT);
+            final int scrollRange = getScrollMaxY();
+            if (scrollRange > 0) {
+                info.setScrollable(true);
+                var scrollY = getOffsetY();
+                if (scrollY > 0) {
+                    info.addAction(
+                            AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_UP);
+                    }
+                }
+                if (scrollY < scrollRange) {
+                    info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_DOWN);
+                    }
+                }
+            }
+        }
+        return info;
+    }
+
+    @Override
+    public void onInitializeAccessibilityEvent(AccessibilityEvent event) {
+        super.onInitializeAccessibilityEvent(event);
+        var maxScrollY = getScrollMaxY();
+        event.setScrollable(maxScrollY > 0);
+        event.setMaxScrollX(getScrollMaxX());
+        event.setMaxScrollY(maxScrollY);
     }
 
     @Override
@@ -4178,7 +4205,22 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 movePageUp();
                 return true;
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            switch (action) {
+                case android.R.id.accessibilityActionScrollDown:
+                    movePageDown();
+                    return true;
+                case android.R.id.accessibilityActionScrollUp:
+                    movePageUp();
+                    return true;
+            }
+        }
         return super.performAccessibilityAction(action, arguments);
+    }
+
+    @Override
+    public CharSequence getAccessibilityClassName() {
+        return CodeEditor.class.getName();
     }
 
     @Override
@@ -4391,6 +4433,36 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
             postInvalidateOnAnimation();
         }
+    }
+
+    @Override
+    protected int computeVerticalScrollRange() {
+        return getScrollMaxY();
+    }
+
+    @Override
+    protected int computeVerticalScrollOffset() {
+        return Math.max(0, Math.min(getScrollMaxY(), getOffsetY()));
+    }
+
+    @Override
+    protected int computeHorizontalScrollRange() {
+        return getScrollMaxX();
+    }
+
+    @Override
+    protected int computeHorizontalScrollOffset() {
+        return Math.max(0, Math.min(getScrollMaxX(), getOffsetX()));
+    }
+
+    @Override
+    protected int computeHorizontalScrollExtent() {
+        return 0;
+    }
+
+    @Override
+    protected int computeVerticalScrollExtent() {
+        return 0;
     }
 
     @Override

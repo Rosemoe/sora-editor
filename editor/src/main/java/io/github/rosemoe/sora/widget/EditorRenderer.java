@@ -192,12 +192,15 @@ public class EditorRenderer {
     }
 
     public void draw(@NonNull Canvas canvas) {
+        int saveCount = canvas.save();
+        canvas.translate(editor.getOffsetX(), editor.getOffsetY());
         renderingFlag = true;
         try {
             drawView(canvas);
         } finally {
             renderingFlag = false;
         }
+        canvas.restoreToCount(saveCount);
     }
 
     public void onSizeChanged(int width, int height) {
@@ -1807,7 +1810,7 @@ public class EditorRenderer {
             postDraw = horizontalEdgeEffect.draw(canvas) || postDraw;
             canvas.restore();
         }
-        OverScroller scroller = editor.getScroller();
+        var scroller = editor.getScroller();
         if (scroller.isOverScrolled()) {
             if (verticalEdgeEffect.isFinished() && (scroller.getCurrY() < 0 || scroller.getCurrY() > editor.getScrollMaxY())) {
                 editor.getEventHandler().glowTopOrBottom = scroller.getCurrY() >= editor.getScrollMaxY();

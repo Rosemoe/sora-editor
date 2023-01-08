@@ -33,6 +33,8 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.widget.OverScroller;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.ClickEvent;
 import io.github.rosemoe.sora.event.DoubleClickEvent;
@@ -68,7 +70,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     private final static int BOTTOM_EDGE = 1 << 3;
 
     private final CodeEditor editor;
-    private final OverScroller scroller;
+    private final EditorScroller scroller;
     private final SelectionHandle insertHandle;
     Magnifier magnifier;
     int selHandleType = -1;
@@ -99,9 +101,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      *
      * @param editor Host editor
      */
-    public EditorTouchEventHandler(CodeEditor editor) {
+    public EditorTouchEventHandler(@NonNull CodeEditor editor) {
         this.editor = editor;
-        scroller = new OverScroller(editor.getContext());
+        scroller = new EditorScroller(editor);
         scaleMaxSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 26, Resources.getSystem().getDisplayMetrics());
         scaleMinSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 8, Resources.getSystem().getDisplayMetrics());
         magnifier = new Magnifier(editor);
@@ -232,7 +234,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      *
      * @return Scroller using
      */
-    public OverScroller getScroller() {
+    public EditorScroller getScroller() {
         return scroller;
     }
 
