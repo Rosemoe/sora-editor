@@ -1845,14 +1845,14 @@ public class EditorRenderer {
         int last = editor.getLastVisibleRow();
         boolean mark = false;
         int invalidCount = 0;
-        int maxCount = Integer.MAX_VALUE;
-        if (editor.getStyles() != null) {
-            maxCount = editor.getStyles().getSuppressSwitch();
-        }
+        int maxCount = styles.getSuppressSwitch();
         int mm = editor.binarySearchEndBlock(first, blocks);
         int cursorIdx = editor.getCurrentCursorBlock();
         for (int curr = mm; curr < blocks.size(); curr++) {
             CodeBlock block = blocks.get(curr);
+            if (block == null) {
+                continue;
+            }
             if (CodeEditor.hasVisibleRegion(block.startLine, block.endLine, first, last)) {
                 try {
                     var lineContent = getLine(block.endLine);
