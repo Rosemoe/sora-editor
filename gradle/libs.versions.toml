@@ -10,7 +10,7 @@ androidxAnnotation = "1.5.0"
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidxAnnotation" }
 androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version = "2.1.4" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.9.0" }
-androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.5.1" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.6.0" }
 androidx-test-junit = { module = "androidx.test.ext:junit", version = "1.1.5" }
 androidx-test-espresso = { module = "androidx.test.espresso:espresso-core", version = "3.5.1" }
 desugar = { module = "com.android.tools:desugar_jdk_libs", version = "1.2.2" }
