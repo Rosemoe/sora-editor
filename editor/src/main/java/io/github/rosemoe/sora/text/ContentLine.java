@@ -54,12 +54,12 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
         this(true);
     }
 
-    public ContentLine(CharSequence text) {
+    public ContentLine(@Nullable CharSequence text) {
         this(true);
         insert(0, text);
     }
 
-    public ContentLine(ContentLine src) {
+    public ContentLine(@NonNull ContentLine src) {
         this(src.length + 16);
         length = src.length;
         rtlAffectingCount = src.rtlAffectingCount;
@@ -115,7 +115,8 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
      * @return a reference to this object.
      * @throws IndexOutOfBoundsException if the offset is invalid.
      */
-    public ContentLine insert(int dstOffset, CharSequence s) {
+    @NonNull
+    public ContentLine insert(int dstOffset, @Nullable CharSequence s) {
         if (s == null)
             s = "null";
         return this.insert(dstOffset, s, 0, s.length());
@@ -165,7 +166,8 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
      *                                   {@code start} is greater than {@code end} or
      *                                   {@code end} is greater than {@code s.length()}
      */
-    public ContentLine insert(int dstOffset, CharSequence s,
+    @NonNull
+    public ContentLine insert(int dstOffset, @Nullable CharSequence s,
                               int start, int end) {
         if (s == null)
             s = "null";
@@ -190,6 +192,7 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
         return this;
     }
 
+    @NonNull
     public ContentLine insert(int offset, char c) {
         ensureCapacity(length + 1);
         if (offset < length) {
@@ -217,6 +220,7 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
      *                                         is negative, greater than {@code length()}, or
      *                                         greater than {@code end}.
      */
+    @NonNull
     public ContentLine delete(int start, int end) {
         if (start < 0)
             throw new StringIndexOutOfBoundsException(start);
@@ -241,6 +245,7 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
         return rtlAffectingCount > 0;
     }
 
+    @NonNull
     public ContentLine append(CharSequence text) {
         return this.insert(length, text);
     }
@@ -303,6 +308,7 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
         return new String(value, 0, length);
     }
 
+    @NonNull
     public String toStringWithNewline() {
         if (value.length == length) {
             ensureCapacity(length + 1);
@@ -311,11 +317,12 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
         return new String(value, 0, length + 1);
     }
 
+    @NonNull
     public char[] getRawData() {
         return value;
     }
 
-    public void getChars(int srcBegin, int srcEnd, char[] dst, int dstBegin) {
+    public void getChars(int srcBegin, int srcEnd, @NonNull char[] dst, int dstBegin) {
         if (srcBegin < 0)
             throw new StringIndexOutOfBoundsException(srcBegin);
         if ((srcEnd < 0) || (srcEnd > length))

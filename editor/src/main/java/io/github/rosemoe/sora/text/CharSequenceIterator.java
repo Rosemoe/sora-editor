@@ -37,7 +37,7 @@ public class CharSequenceIterator implements CharacterIterator {
     private final CharSequence src;
     private int index;
 
-    public CharSequenceIterator(CharSequence source) {
+    public CharSequenceIterator(@NonNull CharSequence source) {
         src = source;
     }
 

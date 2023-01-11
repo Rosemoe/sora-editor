@@ -40,11 +40,11 @@ public class CharArrayWrapper implements CharSequence, GetChars {
     private final int offset;
     private int count;
 
-    public CharArrayWrapper(char[] array, int dataCount) {
+    public CharArrayWrapper(@NonNull char[] array, int dataCount) {
         this(array, 0, dataCount);
     }
 
-    public CharArrayWrapper(char[] array, int startOffset, int dataCount) {
+    public CharArrayWrapper(@NonNull char[] array, int startOffset, int dataCount) {
         data = array;
         count = dataCount;
         offset = startOffset;

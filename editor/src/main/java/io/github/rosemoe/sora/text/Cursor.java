@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.text;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.util.IntPair;
 
 /**
@@ -42,7 +44,7 @@ public final class Cursor {
      *
      * @param content Target content
      */
-    public Cursor(Content content) {
+    public Cursor(@NonNull Content content) {
         this.content = content;
         indexer = new CachedIndexer(content);
         leftSel = new CharPosition().toBOF();
@@ -243,6 +245,7 @@ public final class Cursor {
     /**
      * Get copy of left cursor
      */
+    @NonNull
     public CharPosition left() {
         return leftSel.fromThis();
     }
@@ -250,6 +253,7 @@ public final class Cursor {
     /**
      * Get copy of right cursor
      */
+    @NonNull
     public CharPosition right() {
         return rightSel.fromThis();
     }

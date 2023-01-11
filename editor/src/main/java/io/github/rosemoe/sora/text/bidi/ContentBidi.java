@@ -56,6 +56,7 @@ public class ContentBidi implements ContentListener {
         return enabled;
     }
 
+    @NonNull
     public Directions getLineDirections(int line) {
         if (!enabled) {
             return new Directions(new long[]{IntPair.pack(0, 0)}, text.getLine(line).length());

@@ -52,7 +52,7 @@ public class CachedIndexer implements Indexer, ContentListener {
      *
      * @param content Content to manage
      */
-    CachedIndexer(Content content) {
+    CachedIndexer(@NonNull Content content) {
         this.content = content;
         updateEnd();
     }
@@ -82,6 +82,7 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param index Querying index
      * @return Nearest cache
      */
+    @NonNull
     private synchronized CharPosition findNearestByIndex(int index) {
         int min = index, dis = index;
         CharPosition nearestCharPosition = startPosition;
@@ -113,6 +114,7 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param line Querying line
      * @return Nearest cache
      */
+    @NonNull
     private synchronized CharPosition findNearestByLine(int line) {
         int min = line, dis = line;
         CharPosition nearestCharPosition = startPosition;
@@ -178,7 +180,7 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param start Given position
      * @param index Querying index
      */
-    private void findIndexBackward(CharPosition start, int index, CharPosition dest) {
+    private void findIndexBackward(@NonNull CharPosition start, int index, @NonNull CharPosition dest) {
         if (start.index < index) {
             throw new IllegalArgumentException("Unable to find forward from method findIndexBackward()");
         }
@@ -214,7 +216,7 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param line   Querying line
      * @param column Querying column
      */
-    private void findLiCoForward(CharPosition start, int line, int column, CharPosition dest) {
+    private void findLiCoForward(@NonNull CharPosition start, int line, int column, @NonNull CharPosition dest) {
         if (start.line > line) {
             throw new IllegalArgumentException("can not find backward from findLiCoForward()");
         }
@@ -241,7 +243,7 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param line   Querying line
      * @param column Querying column
      */
-    private void findLiCoBackward(CharPosition start, int line, int column, CharPosition dest) {
+    private void findLiCoBackward(@NonNull CharPosition start, int line, int column, @NonNull CharPosition dest) {
         if (start.line < line) {
             throw new IllegalArgumentException("can not find forward from findLiCoBackward()");
         }
@@ -268,7 +270,7 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param line   Querying line
      * @param column Querying column
      */
-    private void findInLine(CharPosition pos, int line, int column) {
+    private void findInLine(@NonNull CharPosition pos, int line, int column) {
         if (pos.line != line) {
             throw new IllegalArgumentException("can not find other lines with findInLine()");
         }
@@ -281,7 +283,7 @@ public class CachedIndexer implements Indexer, ContentListener {
      *
      * @param pos New cache
      */
-    private synchronized void push(CharPosition pos) {
+    private synchronized void push(@NonNull CharPosition pos) {
         if (maxCacheCount <= 0) {
             return;
         }

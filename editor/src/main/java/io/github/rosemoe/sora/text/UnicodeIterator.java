@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.text;
 
+import androidx.annotation.NonNull;
+
 public class UnicodeIterator {
 
     private final CharSequence text;
@@ -31,11 +33,11 @@ public class UnicodeIterator {
     private int end;
     private final int limit;
 
-    public UnicodeIterator(CharSequence text) {
+    public UnicodeIterator(@NonNull CharSequence text) {
         this(text, 0, text.length());
     }
 
-    public UnicodeIterator(CharSequence text, int start, int end) {
+    public UnicodeIterator(@NonNull CharSequence text, int start, int end) {
         if ((start | end | (end - start) | (text.length() - end)) < 0) {
             throw new IndexOutOfBoundsException();
         }

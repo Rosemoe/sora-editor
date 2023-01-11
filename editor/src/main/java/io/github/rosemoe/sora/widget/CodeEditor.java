@@ -4681,7 +4681,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Override
-    public void onRemove(Content content, ContentLine line) {
+    public void onRemove(@NonNull Content content, @NonNull ContentLine line) {
         layout.onRemove(content, line);
     }
 

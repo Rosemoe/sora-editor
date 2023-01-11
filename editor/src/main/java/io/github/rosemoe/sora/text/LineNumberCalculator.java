@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.text;
 
+import androidx.annotation.NonNull;
+
 /**
  * A line number calculator for spanner
  *
@@ -41,7 +43,7 @@ public class LineNumberCalculator {
      *
      * @param target Target text
      */
-    public LineNumberCalculator(CharSequence target) {
+    public LineNumberCalculator(@NonNull CharSequence target) {
         this.target = target;
         offset = line = column = 0;
         length = this.target.length();

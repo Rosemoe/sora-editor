@@ -25,6 +25,8 @@ package io.github.rosemoe.sora.text;
 
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -48,7 +50,7 @@ public class SpanRecycler {
         return INSTANCE;
     }
 
-    public void recycle(List<Span> spans) {
+    public void recycle(@Nullable List<Span> spans) {
         if (spans == null) {
             return;
         }

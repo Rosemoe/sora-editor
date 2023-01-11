@@ -42,6 +42,7 @@ public class TextBidi {
     /**
      * Compute text directions for the given text
      */
+    @NonNull
     public static Directions getDirections(@NonNull CharSequence text) {
         var len = text.length();
         if (doesNotNeedBidi(text)) {

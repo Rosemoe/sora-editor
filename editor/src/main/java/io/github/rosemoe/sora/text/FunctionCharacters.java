@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.text;
 
+import androidx.annotation.NonNull;
+
 /**
  * Utility for ASCII function characters
  *
@@ -55,6 +57,7 @@ public class FunctionCharacters {
     /**
      * Get the name of function character
      */
+    @NonNull
     public static String getNameForFunctionCharacter(char letter) {
         if (letter < 32) {
             return names[letter];

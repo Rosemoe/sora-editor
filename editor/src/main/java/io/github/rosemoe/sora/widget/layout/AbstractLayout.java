@@ -77,7 +77,7 @@ public abstract class AbstractLayout implements Layout {
     }
 
     @Override
-    public void onRemove(Content content, ContentLine line) {
+    public void onRemove(@NonNull Content content, @NonNull ContentLine line) {
         // do nothing
     }
 

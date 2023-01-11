@@ -63,7 +63,7 @@ class InsertTextHelper {
         }
     }
 
-    private void init(CharSequence text) {
+    private void init(@NonNull CharSequence text) {
         this.text = text;
         index = -1;
         indexNext = 0;

@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.text;
 
+import androidx.annotation.NonNull;
+
 /**
  * A listener to know when a ContentLine object is removed from Content object
  *
@@ -36,6 +38,6 @@ public interface LineRemoveListener {
      * @param content Caller Content
      * @param line    ContentLine object removed
      */
-    void onRemove(Content content, ContentLine line);
+    void onRemove(@NonNull Content content, @NonNull ContentLine line);
 
 }

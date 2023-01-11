@@ -32,6 +32,8 @@ import android.text.Selection;
 import android.text.TextDirectionHeuristics;
 import android.text.TextPaint;
 
+import androidx.annotation.NonNull;
+
 /**
  * Helper class for indirectly calling Paint#getTextRunCursor(), which is
  * responsible for cursor controlling.
@@ -72,6 +74,9 @@ public class TextLayoutHelper {
         }
     }
 
+    /**
+     * Get TextLayoutHelper for current thread
+     */
     public static TextLayoutHelper get() {
         var v = sLocal.get();
         if (v == null) {
@@ -81,7 +86,10 @@ public class TextLayoutHelper {
         return v;
     }
 
-    public int getCurPosLeft(int offset, CharSequence s) {
+    /**
+     * Get cursor position after moving left
+     */
+    public int getCurPosLeft(int offset, @NonNull CharSequence s) {
         int left = Math.max(0, offset - CHAR_FACTOR);
         int index = offset - left;
         text.append(s, left, Math.min(s.length(), offset + CHAR_FACTOR + 1));
@@ -94,7 +102,10 @@ public class TextLayoutHelper {
         return left + index;
     }
 
-    public int getCurPosRight(int offset, CharSequence s) {
+    /**
+     * Get cursor position after moving right
+     */
+    public int getCurPosRight(int offset, @NonNull CharSequence s) {
         int left = Math.max(0, offset - CHAR_FACTOR);
         int index = offset - left;
         text.append(s, left, Math.min(s.length(), offset + CHAR_FACTOR + 1));

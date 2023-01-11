@@ -102,7 +102,7 @@ class LspTestActivity : AppCompatActivity() {
     private suspend fun setEditorText() {
         val text = withContext(Dispatchers.IO) {
             ContentCreator.fromStream(
-                externalCacheDir?.resolve("testProject/sample.lua")?.inputStream()
+                externalCacheDir?.resolve("testProject/sample.lua")!!.inputStream()
             )
         }
         editor.setText(text, null)
