@@ -55,7 +55,7 @@ public class TextLayoutHelper {
             layout = new DynamicLayout(text, new TextPaint(), Integer.MAX_VALUE / 2,
                     Layout.Alignment.ALIGN_NORMAL, 0, 0, true);
             try {
-                @SuppressLint("DiscouragedPrivateApi")
+                @SuppressLint({"DiscouragedPrivateApi", "SoonBlockedPrivateApi"})
                 var field = Layout.class.getDeclaredField("mTextDir");
                 field.setAccessible(true);
                 field.set(layout, TextDirectionHeuristics.LTR);
@@ -85,6 +85,7 @@ public class TextLayoutHelper {
         int left = Math.max(0, offset - CHAR_FACTOR);
         int index = offset - left;
         text.append(s, left, Math.min(s.length(), offset + CHAR_FACTOR + 1));
+        index = Math.min(index, text.length());
         Selection.setSelection(text, index);
         Selection.moveLeft(text, layout);
         index = Selection.getSelectionStart(text);
@@ -97,6 +98,7 @@ public class TextLayoutHelper {
         int left = Math.max(0, offset - CHAR_FACTOR);
         int index = offset - left;
         text.append(s, left, Math.min(s.length(), offset + CHAR_FACTOR + 1));
+        index = Math.min(index, text.length());
         Selection.setSelection(text, index);
         Selection.moveRight(text, layout);
         index = Selection.getSelectionStart(text);
