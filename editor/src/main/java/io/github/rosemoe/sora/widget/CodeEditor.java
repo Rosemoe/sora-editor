@@ -83,6 +83,7 @@ import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.BuildEditorInfoEvent;
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
+import io.github.rosemoe.sora.event.EditorReleaseEvent;
 import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.EventManager;
 import io.github.rosemoe.sora.event.EventReceiver;
@@ -4046,7 +4047,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void release() {
         hideEditorWindows();
+        if (!released) {
+            dispatchEvent(new EditorReleaseEvent(this));
+        }
         released = true;
+        completionWindow.cancelCompletion();
         if (editorLanguage != null) {
             editorLanguage.getAnalyzeManager().destroy();
             var formatter = editorLanguage.getFormatter();
@@ -4056,6 +4061,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             editorLanguage = new EmptyLanguage();
         }
         colorScheme.detachEditor(this);
+    }
+
+    /**
+     * Check if the editor is released.
+     * When an editor is released, you are unexpected to make any changes to it.
+     */
+    public boolean isReleased() {
+        return released;
     }
 
     /**
