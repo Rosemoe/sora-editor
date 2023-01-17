@@ -66,7 +66,7 @@ import io.github.rosemoe.sora.langs.textmate.registry.dsl.languages
 import io.github.rosemoe.sora.langs.textmate.registry.model.DefaultGrammarDefinition
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
-import io.github.rosemoe.sora.text.ContentCreator
+import io.github.rosemoe.sora.text.ContentIO
 import io.github.rosemoe.sora.text.LineSeparator
 import io.github.rosemoe.sora.utils.CrashHandler
 import io.github.rosemoe.sora.widget.CodeEditor
@@ -353,7 +353,7 @@ class MainActivity : AppCompatActivity() {
     private fun openAssetsFile(name: String) {
         Thread {
             try {
-                val text = ContentCreator.fromStream(assets.open(name))
+                val text = ContentIO.createFrom(assets.open(name))
                 runOnUiThread {
                     binding.editor.setText(text, null)
                     //setupDiagnostics()

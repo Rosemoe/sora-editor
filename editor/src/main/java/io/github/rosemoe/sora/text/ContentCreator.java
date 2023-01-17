@@ -27,62 +27,34 @@ import androidx.annotation.NonNull;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 
 /**
- * Utility class for creating {@link Content} objects
+ * Utility class for creating {@link Content} objects.
  *
+ * @deprecated Use {@link ContentIO} class instead
  * @author Rosemoe
  */
+@Deprecated(since = "0.21.1", forRemoval = true)
 public class ContentCreator {
 
     /**
-     * Create a {@link Content} from stream
+     * Create a {@link Content} from stream.
+     * The stream will get closed if the operation is successfully done.
      */
     @NonNull
     public static Content fromStream(@NonNull InputStream stream) throws IOException {
-        return fromReader(new InputStreamReader(stream));
+        return ContentIO.createFrom(stream);
     }
 
     /**
-     * Create a {@link Content} from reader
+     * Create a {@link Content} from reader.
+     * <p>
+     * The reader will get closed if the operation is successfully done.
      */
     @NonNull
     public static Content fromReader(@NonNull Reader reader) throws IOException {
-        var content = new Content();
-        content.setUndoEnabled(false);
-        var buffer = new char[8192 * 2];
-        var wrapper = new CharArrayWrapper(buffer, 0);
-        int count;
-        while ((count = reader.read(buffer)) != -1) {
-            if (count > 0) {
-                if (buffer[count - 1] == '\r') {
-                    var peek = reader.read();
-                    if (peek == '\n') {
-                        wrapper.setDataCount(count - 1);
-                        var line = content.getLineCount() - 1;
-                        content.insert(line, content.getColumnCount(line), wrapper);
-                        line = content.getLineCount() - 1;
-                        content.insert(line, content.getColumnCount(line), "\r\n");
-                        continue;
-                    } else if (peek != -1) {
-                        wrapper.setDataCount(count);
-                        var line = content.getLineCount() - 1;
-                        content.insert(line, content.getColumnCount(line), wrapper);
-                        line = content.getLineCount() - 1;
-                        content.insert(line, content.getColumnCount(line), String.valueOf((char) peek));
-                        continue;
-                    }
-                }
-                wrapper.setDataCount(count);
-                var line = content.getLineCount() - 1;
-                content.insert(line, content.getColumnCount(line), wrapper);
-            }
-        }
-        reader.close();
-        content.setUndoEnabled(true);
-        return content;
+        return ContentIO.createFrom(reader);
     }
 
 }

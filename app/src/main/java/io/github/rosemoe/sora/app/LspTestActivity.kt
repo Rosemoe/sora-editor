@@ -42,27 +42,24 @@ import io.github.rosemoe.sora.langs.textmate.registry.dsl.languages
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
 import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvider
-import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.DefaultRequestManager
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspEditorManager
 import io.github.rosemoe.sora.lsp.utils.URIUtils
-import io.github.rosemoe.sora.text.ContentCreator
+import io.github.rosemoe.sora.text.ContentIO
 import io.github.rosemoe.sora.widget.CodeEditor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams
 import org.eclipse.lsp4j.InitializeResult
-import org.eclipse.lsp4j.MessageParams
 import org.eclipse.lsp4j.WorkspaceFolder
 import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent
 import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.tm4e.core.registry.IThemeSource
-import java.io.*
+import java.io.FileOutputStream
 import java.net.ServerSocket
-import java.net.URI
 import java.util.zip.ZipFile
 
 class LspTestActivity : AppCompatActivity() {
@@ -101,7 +98,7 @@ class LspTestActivity : AppCompatActivity() {
 
     private suspend fun setEditorText() {
         val text = withContext(Dispatchers.IO) {
-            ContentCreator.fromStream(
+            ContentIO.createFrom(
                 externalCacheDir?.resolve("testProject/sample.lua")!!.inputStream()
             )
         }
