@@ -67,7 +67,7 @@ public class CharArrayWrapper implements CharSequence, GetChars {
     @NonNull
     @Override
     public CharSequence subSequence(int start, int end) {
-        return CharBuffer.wrap(data, start + start, end - start);
+        return CharBuffer.wrap(data, offset + start, end - start);
     }
 
     @Override
