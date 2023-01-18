@@ -358,6 +358,10 @@ public class Content implements CharSequence {
         if (text == null) {
             throw new IllegalArgumentException("text can not be null");
         }
+        if (column > lines.get(line).length()) {
+            // Never insert texts between line separator characters
+            column = lines.get(line).length();
+        }
 
         // Notify listeners and cursor manager
         if (cursor != null)
@@ -368,9 +372,6 @@ public class Content implements CharSequence {
 
         int workLine = line;
         int workIndex = column;
-        if (workIndex == -1) {
-            workIndex = 0;
-        }
         var currLine = lines.get(workLine);
         var helper = InsertTextHelper.forInsertion(text);
         int type, peekType = InsertTextHelper.TYPE_EOF;

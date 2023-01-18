@@ -328,24 +328,10 @@ public final class Cursor {
         if (beginIdx > right) {
             return;
         }
-        if (endIdx <= left) {
-            leftSel = indexer.getCharPosition(left - (endIdx - beginIdx)).fromThis();
-            rightSel = indexer.getCharPosition(right - (endIdx - beginIdx)).fromThis();
-        } else if (/* endIdx > left && */ endIdx < right) {
-            if (beginIdx <= left) {
-                leftSel = indexer.getCharPosition(beginIdx).fromThis();
-                rightSel = indexer.getCharPosition(right - (endIdx - left)).fromThis();
-            } else {
-                rightSel = indexer.getCharPosition(right - (endIdx - beginIdx)).fromThis();
-            }
-        } else {
-            if (beginIdx <= left) {
-                leftSel = indexer.getCharPosition(beginIdx).fromThis();
-                rightSel = leftSel.fromThis();
-            } else {
-                rightSel = indexer.getCharPosition(left + (right - beginIdx)).fromThis();
-            }
-        }
+        left = left - Math.max(0, Math.min(left - beginIdx, endIdx - beginIdx));
+        right = right - Math.max(0, Math.min(right - beginIdx, endIdx - beginIdx));
+        leftSel = indexer.getCharPosition(left).fromThis();
+        rightSel = indexer.getCharPosition(right).fromThis();
     }
 
 }

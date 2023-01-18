@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.text;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -146,7 +147,8 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param start Given position
      * @param index Querying index
      */
-    private void findIndexForward(@NonNull CharPosition start, int index, @NonNull CharPosition dest) {
+    @VisibleForTesting
+    void findIndexForward(@NonNull CharPosition start, int index, @NonNull CharPosition dest) {
         if (start.index > index) {
             throw new IllegalArgumentException("Unable to find backward from method findIndexForward()");
         }
@@ -180,7 +182,8 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param start Given position
      * @param index Querying index
      */
-    private void findIndexBackward(@NonNull CharPosition start, int index, @NonNull CharPosition dest) {
+    @VisibleForTesting
+    void findIndexBackward(@NonNull CharPosition start, int index, @NonNull CharPosition dest) {
         if (start.index < index) {
             throw new IllegalArgumentException("Unable to find forward from method findIndexBackward()");
         }
@@ -216,7 +219,8 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param line   Querying line
      * @param column Querying column
      */
-    private void findLiCoForward(@NonNull CharPosition start, int line, int column, @NonNull CharPosition dest) {
+    @VisibleForTesting
+    void findLiCoForward(@NonNull CharPosition start, int line, int column, @NonNull CharPosition dest) {
         if (start.line > line) {
             throw new IllegalArgumentException("can not find backward from findLiCoForward()");
         }
@@ -243,7 +247,8 @@ public class CachedIndexer implements Indexer, ContentListener {
      * @param line   Querying line
      * @param column Querying column
      */
-    private void findLiCoBackward(@NonNull CharPosition start, int line, int column, @NonNull CharPosition dest) {
+    @VisibleForTesting
+    void findLiCoBackward(@NonNull CharPosition start, int line, int column, @NonNull CharPosition dest) {
         if (start.line < line) {
             throw new IllegalArgumentException("can not find forward from findLiCoBackward()");
         }
