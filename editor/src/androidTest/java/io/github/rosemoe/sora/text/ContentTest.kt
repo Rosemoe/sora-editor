@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.text
 
+import android.util.Log
 import org.junit.Assert.*
 import org.junit.Test
 import kotlin.random.Random
@@ -32,7 +33,7 @@ import kotlin.random.nextInt
 class ContentTest {
 
     @Test
-    fun testInsertions() {
+    fun testBasicInsertions() {
         val content = Content()
         content.insert(0, 0, "Test\r\ntext")
         assertEquals("Test\r\ntext", content.toString())
@@ -49,7 +50,7 @@ class ContentTest {
     }
 
     @Test
-    fun testIndexerQueries() {
+    fun testImmutableContentIndexerQueries() {
         val content = Content("POM_SCM_URL=https://github.com/Rosemoe/sora-editor/tree/master\r\n" +
                 "POM_SCM_CONNECTION=scm:git:github.com/Rosemoe/sora-editor.git\r\n" +
                 "POM_SCM_DEV_CONNECTION=scm:git:ssh://github.com/Rosemoe/sora-editor.git")
@@ -95,25 +96,22 @@ class ContentTest {
     }
 
     @Test
-    fun testRandomInsertions() {
+    fun testBasicRandomInsertions() {
         val content = Content()
         val shadow = StringBuilder()
-        val random = Random(System.currentTimeMillis())
+        val seed = System.currentTimeMillis()
+        val random = Random(seed)
         val charset = "asdfghjklqwertyuiopzxcvbnm0123456789\n\n\n"
 
-        var lineCount = 1
         fun generateRandomInsertionText() : CharSequence {
             val sb = StringBuilder()
             for (i in 1..50) {
-                val ch = charset.random(random)
-                if (ch == '\n') {
-                    lineCount ++
-                }
-                sb.append(ch)
+                sb.append(charset.random(random))
             }
             return sb
         }
 
+        Log.v(this.javaClass.simpleName, "testBasicRandomInsertions: Random object is initialized with seed $seed")
 
         for (i in 0 until 1000) {
             val text = generateRandomInsertionText()
@@ -121,8 +119,9 @@ class ContentTest {
             shadow.insert(offset, text)
             val pos = content.indexer.getCharPosition(offset)
             content.insert(pos.line, pos.column, text)
-            assertEquals(lineCount, content.lineCount)
-            assertEquals(shadow.toString(), content.toString())
+            val lineCount = shadow.lines().size
+            assertEquals("line count is invalid", lineCount, content.lineCount)
+            assertEquals("text content is invalid", shadow.toString(), content.toString())
         }
     }
 
