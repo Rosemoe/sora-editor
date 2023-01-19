@@ -24,25 +24,10 @@
 
 package io.github.rosemoe.sora.editor.ts.predicate
 
-import com.itsaky.androidide.treesitter.TSQuery
-import com.itsaky.androidide.treesitter.TSQueryMatch
+import com.itsaky.androidide.treesitter.TSNode
 
-/**
- * Predicate client-side implementation
- */
-interface TsPredicate {
-
-    /**
-     * Run the predicate on the given [TSQueryMatch]
-     * @see TSQueryMatch
-     * @see PredicateResult
-     */
-    fun doPredicate(
-        tsQuery: TSQuery,
-        text: CharSequence,
-        match: TSQueryMatch,
-        predicateSteps: List<TsClientPredicateStep>,
-        syntheticCaptures: TsSyntheticCaptureContainer
-    ): PredicateResult
-
-}
+data class TsSyntheticCapture(
+    val captureName: String,
+    val captureText: String? = null,
+    val captureNode: TSNode? = null
+)

@@ -60,16 +60,25 @@ class Predicator(private val query: TSQuery) {
         }
     }
 
-    fun doPredicate(predicates: List<TsPredicate>, text: CharSequence, match: TSQueryMatch): Boolean {
+    fun doPredicate(
+        predicates: List<TsPredicate>,
+        text: CharSequence,
+        match: TSQueryMatch,
+        syntheticCaptureContainer: TsSyntheticCaptureContainer = TsSyntheticCaptureContainer.EMPTY_IMMUTABLE_CONTAINER
+    ): Boolean {
         val description = patternPredicates[match.patternIndex]
         var tail = 0
         for (i in description.indices) {
             if (description[i].predicateType == TSQueryPredicateStep.Type.Done) {
                 // Avoid allocating sublist if possible
-                val subPredicateStep = if (tail == 0 && i + 1 == description.size) description else description.subList(tail, i + 1)
+                val subPredicateStep =
+                    if (tail == 0 && i + 1 == description.size) description else description.subList(
+                        tail,
+                        i + 1
+                    )
                 for (j in predicates.indices) {
                     val predicate = predicates[j]
-                    when (predicate.doPredicate(query, text, match, subPredicateStep)) {
+                    when (predicate.doPredicate(query, text, match, subPredicateStep, syntheticCaptureContainer)) {
                         PredicateResult.ACCEPT -> break
                         PredicateResult.REJECT -> return false
                         else -> {}

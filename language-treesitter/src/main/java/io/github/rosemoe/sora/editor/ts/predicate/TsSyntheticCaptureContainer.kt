@@ -24,25 +24,34 @@
 
 package io.github.rosemoe.sora.editor.ts.predicate
 
-import com.itsaky.androidide.treesitter.TSQuery
-import com.itsaky.androidide.treesitter.TSQueryMatch
+class TsSyntheticCaptureContainer(private val noAddOperation: Boolean = false) {
 
-/**
- * Predicate client-side implementation
- */
-interface TsPredicate {
+    companion object {
+        val EMPTY_IMMUTABLE_CONTAINER = TsSyntheticCaptureContainer(true)
+    }
 
-    /**
-     * Run the predicate on the given [TSQueryMatch]
-     * @see TSQueryMatch
-     * @see PredicateResult
-     */
-    fun doPredicate(
-        tsQuery: TSQuery,
-        text: CharSequence,
-        match: TSQueryMatch,
-        predicateSteps: List<TsClientPredicateStep>,
-        syntheticCaptures: TsSyntheticCaptureContainer
-    ): PredicateResult
+    private val syntheticCaptures = mutableListOf<TsSyntheticCapture>()
+
+    val indices
+        get() = syntheticCaptures.indices
+
+    val size
+        get() = syntheticCaptures.size
+
+    operator fun get(index: Int) = syntheticCaptures[index]
+
+    fun addSyntheticCapture(syntheticCapture: TsSyntheticCapture) {
+        if (syntheticCapture.captureNode == null && syntheticCapture.captureText == null) {
+            throw IllegalArgumentException("at least one field between 'captureText' and 'captureNode' should be non-null")
+        }
+        if (noAddOperation) {
+            return
+        }
+        syntheticCaptures.add(syntheticCapture)
+    }
+
+    fun clear() {
+        syntheticCaptures.clear()
+    }
 
 }
