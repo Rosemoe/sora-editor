@@ -51,7 +51,7 @@ import java.io.Closeable
  * @param localsCaptureSpec Custom specification for locals scm file
  * @param predicates Client custom predicate implementations
  */
-class TsLanguageSpec(
+open class TsLanguageSpec(
     val language: TSLanguage,
     highlightScmSource: String,
     codeBlocksScmSource: String = "",
