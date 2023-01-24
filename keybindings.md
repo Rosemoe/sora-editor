@@ -8,7 +8,7 @@ The following key bindings are currently supported by the editor :
 | `Ctrl + X`             | If no content is selected, cuts the current line. Else, performs the usual cut operation.                                                  |
 | `Ctrl + C`             | If no content is selected, selects and copies the current line. Else, performs the usual copy operation.                                   |
 | `Ctrl + V`             | The usual paste action.                                                                                                                    |
-| `Ctrl + U`             | Undo the last action.                                                                                                                      |
+| `Ctrl + Z`             | Undo the last action.                                                                                                                      |
 | `Ctrl + R`             | Redo the last action.                                                                                                                      |
 | `Ctrl + D`             | If content is selected, duplicates the selected content else duplicates the current line.                                                  |
 | `Ctrl + W`             | Selects the word at the left selection handle.                                                                                             |
