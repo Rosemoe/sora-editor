@@ -38,7 +38,7 @@ instead of cloning this repository directly.
 
 ## Key bindings
 
-When working with a physical keyboard, you can use use key bindings for performing various text
+When working with a physical keyboard, you can use key bindings for performing various text
 actions.
 The editor provides support for some key bindings by default.
 However, you can subscribe
