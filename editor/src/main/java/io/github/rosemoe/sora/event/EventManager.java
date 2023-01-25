@@ -181,7 +181,11 @@ public final class EventManager {
         try {
             var list = receivers.receivers;
             if (list.contains(receiver)) {
-                throw new IllegalArgumentException("the receiver is already registered for this type");
+                // Simply detect if the event receiver has been added and return the SubscriptionReceipt directly.
+                // Even if add multiple subscription, actually send an event, the event receiver will only receive an event once.
+                // See also how LiveData does it:
+                // https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:lifecycle/lifecycle-livedata-core/src/main/java/androidx/lifecycle/LiveData.java;l=190;drc=b69fe340ccf37160705e6d7dc512b814fd6bb100
+                return new SubscriptionReceipt<>(this, eventType, receiver);
             }
             list.add(receiver);
         } finally {
@@ -195,7 +199,7 @@ public final class EventManager {
      *
      * @param event Event to dispatch
      * @param <T>   Event type
-     * @return The event's intercept targets
+     * @return <>                           </>he event's intercept targets
      */
     @SuppressWarnings("unchecked")
     public <T extends Event> int dispatchEvent(@NonNull T event) {
