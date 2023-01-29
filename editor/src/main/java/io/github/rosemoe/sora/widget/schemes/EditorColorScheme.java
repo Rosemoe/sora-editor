@@ -86,6 +86,10 @@ public class EditorColorScheme {
     public static final int COMMENT = 22;
     public static final int KEYWORD = 21;
     //-------------View colors---------------------
+    /**
+     * Color for text strikethrough. If value is 0, text color of that region will be used.
+     */
+    public static final int STRIKETHROUGH = 57;
     public static final int DIAGNOSTIC_TOOLTIP_ACTION = 56;
     public static final int DIAGNOSTIC_TOOLTIP_DETAILED_MSG = 55;
     public static final int DIAGNOSTIC_TOOLTIP_BRIEF_MSG = 54;
@@ -146,7 +150,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 56;
+    protected static final int END_COLOR_ID = 57;
     /**
      * Real color saver
      */
@@ -303,6 +307,7 @@ public class EditorColorScheme {
             case LINE_BLOCK_LABEL:
             case SCROLL_BAR_TRACK:
             case TEXT_SELECTED:
+            case STRIKETHROUGH:
                 color = 0;
                 break;
             case LINE_NUMBER_PANEL:

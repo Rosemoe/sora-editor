@@ -484,7 +484,8 @@ public class EditorRenderer {
 
             // Draw strikethrough
             if (TextStyle.isStrikeThrough(span.style)) {
-                paintOther.setColor(Color.BLACK);
+                var strikethroughColor = editor.getColorScheme().getColor(EditorColorScheme.STRIKETHROUGH);
+                paintOther.setColor(strikethroughColor == 0 ? paintGeneral.getColor() : strikethroughColor);
                 canvas.drawLine(paintingOffset, editor.getRowTop(row) + editor.getRowHeight() / 2f, paintingOffset + width, editor.getRowTop(row) + editor.getRowHeight() / 2f, paintOther);
             }
 
@@ -1196,7 +1197,8 @@ public class EditorRenderer {
 
                     // Draw strikethrough
                     if (TextStyle.isStrikeThrough(styleBits)) {
-                        paintOther.setColor(Color.BLACK);
+                        var strikethroughColor = editor.getColorScheme().getColor(EditorColorScheme.STRIKETHROUGH);
+                        paintOther.setColor(strikethroughColor == 0 ? paintGeneral.getColor() : strikethroughColor);
                         canvas.drawLine(paintingOffset, editor.getRowTop(row) + editor.getRowHeight() / 2f - editor.getOffsetY(), paintingOffset + width, editor.getRowTop(row) + editor.getRowHeight() / 2f - editor.getOffsetY(), paintOther);
                     }
 
