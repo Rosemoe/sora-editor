@@ -187,6 +187,13 @@ public class DirectAccessProps implements Serializable {
     public boolean trackComposingTextOnCommit = true;
 
     /**
+     * Try to simplify composing text update as a single insertion or deletion.
+     * <p>
+     * See detailed issue: #357
+     */
+    public boolean minimizeComposingTextUpdate = true;
+
+    /**
      * Draw side block line when in wordwrap mode
      */
     @InvalidateRequired

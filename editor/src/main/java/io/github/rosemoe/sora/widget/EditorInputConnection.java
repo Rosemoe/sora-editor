@@ -502,7 +502,11 @@ class EditorInputConnection extends BaseInputConnection {
         } else {
             // Already have composing text
             if (composingText.isComposing()) {
-                editor.getText().replace(composingText.startIndex, composingText.endIndex, text);
+                if (editor.getProps().minimizeComposingTextUpdate) {
+                    setComposingTextCompat(text.toString());
+                } else {
+                    editor.getText().replace(composingText.startIndex, composingText.endIndex, text);
+                }
                 // Reset range
                 composingText.adjustLength(text.length());
             }
@@ -512,6 +516,22 @@ class EditorInputConnection extends BaseInputConnection {
             return true;
         }
         return true;
+    }
+
+    private void setComposingTextCompat(@NonNull String text) {
+        var content = editor.getText();
+        String current = content.substring(composingText.startIndex, composingText.endIndex);
+        if (current.equals(text)) {
+            return;
+        }
+        if (current.length() < text.length() && text.startsWith(current)) {
+            var pos = content.getIndexer().getCharPosition(composingText.endIndex);
+            content.insert(pos.line, pos.column, text.substring(current.length()));
+        } else if (current.length() > text.length() && current.startsWith(text)) {
+            content.delete(composingText.endIndex - (current.length() - text.length()), composingText.endIndex);
+        } else {
+            content.replace(composingText.startIndex, composingText.endIndex, text);
+        }
     }
 
     @Override
