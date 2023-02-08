@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.lsp.operations.diagnostics;
 
 import android.util.Log;
 
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
@@ -37,8 +38,9 @@ import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.operations.RunOnlyProvider;
+import io.github.rosemoe.sora.lsp.utils.LspUtils;
 
-public class PublishDiagnosticsProvider extends RunOnlyProvider<PublishDiagnosticsParams> {
+public class PublishDiagnosticsProvider extends RunOnlyProvider<List<Diagnostic>> {
 
     private LspEditor editor;
 
@@ -52,19 +54,9 @@ public class PublishDiagnosticsProvider extends RunOnlyProvider<PublishDiagnosti
         this.editor = null;
     }
 
-    private int getIndexForPosition(Position position) {
-        var currentEditor = editor.getEditor();
-
-        if (currentEditor == null) {
-            return 0;
-        }
-
-        return currentEditor.getText().getCharIndex(position.getLine(), position.getCharacter());
-    }
-
 
     @Override
-    public void run(PublishDiagnosticsParams data) {
+    public void run(List<Diagnostic> data) {
 
         var currentEditor = editor.getEditor();
 
@@ -76,30 +68,13 @@ public class PublishDiagnosticsProvider extends RunOnlyProvider<PublishDiagnosti
 
         diagnosticsContainer.reset();
 
-        var id = new AtomicInteger();
-
-        List<DiagnosticRegion> diagnosticRegionList = data.getDiagnostics().stream().map(it -> {
-            Log.w("diagnostic message", "diagnostic: " + it.getMessage());
-            return new DiagnosticRegion(getIndexForPosition(it.getRange().getStart()), getIndexForPosition(it.getRange().getEnd()), transformToEditorDiagnosticSeverity(it.getSeverity()), id.incrementAndGet());
-        }).collect(Collectors.toList());
-
-        diagnosticsContainer.addDiagnostics(diagnosticRegionList);
+        diagnosticsContainer.addDiagnostics(
+                LspUtils.transformToEditorDiagnostics(editor.getEditor(),data)
+        );
 
         currentEditor.setDiagnostics(diagnosticsContainer);
 
-        return;
     }
 
-    public static short transformToEditorDiagnosticSeverity(DiagnosticSeverity severity) {
-        switch (severity) {
-            case Hint:
-            case Information:
-                return DiagnosticRegion.SEVERITY_TYPO;
-            case Error:
-                return DiagnosticRegion.SEVERITY_ERROR;
-            case Warning:
-                return DiagnosticRegion.SEVERITY_WARNING;
-        }
-        return 0;
-    }
+
 }

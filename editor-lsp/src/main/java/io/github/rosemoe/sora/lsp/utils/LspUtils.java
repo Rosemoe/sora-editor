@@ -23,8 +23,12 @@
  */
 package io.github.rosemoe.sora.lsp.utils;
 
+import android.util.Log;
+
 import org.eclipse.lsp4j.CompletionContext;
 import org.eclipse.lsp4j.CompletionParams;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -45,9 +49,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail;
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.TextRange;
+import io.github.rosemoe.sora.util.ArrayList;
+import io.github.rosemoe.sora.widget.CodeEditor;
 
 public class LspUtils {
 
@@ -172,6 +180,47 @@ public class LspUtils {
 
     public static void clearVersions() {
         versionMap.clear();
+    }
+
+    public static short transformToEditorDiagnosticSeverity(DiagnosticSeverity severity) {
+        switch (severity) {
+            case Hint:
+            case Information:
+                return DiagnosticRegion.SEVERITY_TYPO;
+            case Error:
+                return DiagnosticRegion.SEVERITY_ERROR;
+            case Warning:
+                return DiagnosticRegion.SEVERITY_WARNING;
+        }
+        return 0;
+    }
+
+    public static List<DiagnosticRegion> transformToEditorDiagnostics(CodeEditor editor, List<Diagnostic> diagnostics) {
+        var result = new ArrayList<DiagnosticRegion>();
+        var id = 0;
+        for (var diagnosticSource : diagnostics) {
+            Log.w("diagnostic message", "diagnostic: " + diagnosticSource.getMessage());
+
+            var diagnostic = new DiagnosticRegion(getIndexForPosition(editor, diagnosticSource.getRange().getStart()),
+                    getIndexForPosition(editor, diagnosticSource.getRange().getEnd()),
+                    transformToEditorDiagnosticSeverity(diagnosticSource.getSeverity()), id++,
+                    new DiagnosticDetail(
+                            diagnosticSource.getSeverity().name(),
+                            diagnosticSource.getMessage(),
+                            null,
+                            null
+                    ));
+            result.add(diagnostic);
+        }
+        return result;
+    }
+
+    public static int getIndexForPosition(CodeEditor editor, Position position) {
+        if (editor == null) {
+            return 0;
+        }
+
+        return editor.getText().getCharIndex(position.getLine(), position.getCharacter());
     }
 
 

@@ -94,6 +94,7 @@ public class DiagnosticsContainer {
             }
             // Type 2, text is inserted before a diagnostic
             if (region.startIndex > insertStart) {
+
                 region.startIndex += length;
                 region.endIndex += length;
             }
