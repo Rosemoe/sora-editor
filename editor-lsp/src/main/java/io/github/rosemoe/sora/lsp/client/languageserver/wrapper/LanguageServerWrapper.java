@@ -452,6 +452,11 @@ public class LanguageServerWrapper {
                                 && capabilities.getCompletionProvider().getTriggerCharacters() != null) ?
                                 capabilities.getCompletionProvider().getTriggerCharacters() : Collections.emptyList();
 
+                        List<String> signatureHelpTriggers = (capabilities.getSignatureHelpProvider() != null
+                                && capabilities.getSignatureHelpProvider().getTriggerCharacters() != null) ?
+                                capabilities.getSignatureHelpProvider().getTriggerCharacters() : Collections.emptyList();
+
+                        editor.setSignatureHelpTriggers(signatureHelpTriggers);
                         editor.setCompletionTriggers(completionTriggers);
 
                         editor.installFeatures();

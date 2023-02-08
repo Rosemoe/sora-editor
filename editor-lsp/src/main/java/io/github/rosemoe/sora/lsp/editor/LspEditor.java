@@ -58,6 +58,7 @@ import io.github.rosemoe.sora.lsp.operations.document.DocumentOpenProvider;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentSaveProvider;
 import io.github.rosemoe.sora.lsp.operations.format.FullFormattingProvider;
 import io.github.rosemoe.sora.lsp.operations.format.RangeFormattingProvider;
+import io.github.rosemoe.sora.lsp.operations.signature.SignatureHelpProvider;
 import io.github.rosemoe.sora.lsp.requests.Timeout;
 import io.github.rosemoe.sora.lsp.requests.Timeouts;
 import io.github.rosemoe.sora.widget.CodeEditor;
@@ -89,6 +90,8 @@ public class LspEditor {
     private TextDocumentSyncKind textDocumentSyncKind;
 
     private List<String> completionTriggers = Collections.emptyList();
+
+    private List<String> signatureHelpTriggers = Collections.emptyList();
 
     private LspEditorContentChangeEventReceiver editorContentChangeEventReceiver;
 
@@ -215,7 +218,8 @@ public class LspEditor {
     public void installFeatures() {
 
         //features
-        providerManager.addProviders(RangeFormattingProvider::new, DocumentOpenProvider::new, DocumentSaveProvider::new, DocumentChangeProvider::new, DocumentCloseProvider::new, PublishDiagnosticsProvider::new, CompletionProvider::new, FullFormattingProvider::new, ApplyEditsProvider::new, QueryDocumentDiagnosticsProvider::new);
+        providerManager.addProviders(RangeFormattingProvider::new, DocumentOpenProvider::new, DocumentSaveProvider::new, DocumentChangeProvider::new, DocumentCloseProvider::new, PublishDiagnosticsProvider::new, CompletionProvider::new, FullFormattingProvider::new, ApplyEditsProvider::new,
+                QueryDocumentDiagnosticsProvider::new, SignatureHelpProvider::new);
 
         //options
 
@@ -427,5 +431,13 @@ public class LspEditor {
 
     public List<String> getCompletionTriggers() {
         return this.completionTriggers;
+    }
+
+    public void setSignatureHelpTriggers(List<String> signatureHelpTriggers) {
+        this.signatureHelpTriggers = new ArrayList<>(signatureHelpTriggers);
+    }
+
+    public List<String> getSignatureHelpTriggers() {
+        return this.signatureHelpTriggers;
     }
 }
