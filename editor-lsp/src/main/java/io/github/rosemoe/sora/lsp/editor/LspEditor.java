@@ -28,6 +28,7 @@ import androidx.annotation.WorkerThread;
 
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.FormattingOptions;
+import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 
 import java.lang.ref.WeakReference;
@@ -47,6 +48,7 @@ import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestMa
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition;
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper;
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEventReceiver;
+import io.github.rosemoe.sora.lsp.editor.signature.SignatureHelpWindow;
 import io.github.rosemoe.sora.lsp.operations.Provider;
 import io.github.rosemoe.sora.lsp.operations.completion.CompletionProvider;
 import io.github.rosemoe.sora.lsp.operations.diagnostics.PublishDiagnosticsProvider;
@@ -74,6 +76,8 @@ public class LspEditor {
     private final LspEditorManager lspEditorManager;
 
     private WeakReference<CodeEditor> currentEditor;
+
+    private WeakReference<SignatureHelpWindow> signatureHelpWindowWeakReference;
 
     private Language wrapperLanguage;
 
@@ -124,8 +128,8 @@ public class LspEditor {
         if (unsubscribeFunction != null) {
             unsubscribeFunction.run();
         }
-
         currentEditor.setEditorLanguage(currentLanguage);
+        signatureHelpWindowWeakReference = new WeakReference<>(new SignatureHelpWindow(currentEditor));
 
         var subscriptionReceipt = currentEditor.subscribeEvent(ContentChangeEvent.class, editorContentChangeEventReceiver);
 
@@ -372,6 +376,22 @@ public class LspEditor {
         }
     }
 
+    public void showSignatureHelp(SignatureHelp signatureHelp) {
+        var signatureHelpWindow = signatureHelpWindowWeakReference.get();
+        if (signatureHelpWindow == null) {
+            return;
+        }
+        var editor = currentEditor.get();
+        if (editor == null) {
+            return;
+        }
+        if (signatureHelp == null) {
+            editor.post(signatureHelpWindow::dismiss);
+            return;
+        }
+        editor.post(() -> signatureHelpWindow.show(signatureHelp));
+    }
+
 
     private void dispose() {
         if (languageServerWrapper != null) {
@@ -439,5 +459,23 @@ public class LspEditor {
 
     public List<String> getSignatureHelpTriggers() {
         return this.signatureHelpTriggers;
+    }
+
+
+    public boolean hitTrigger(CharSequence eventText) {
+        for (var trigger : signatureHelpTriggers) {
+            if (trigger.contains(eventText)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isShowSignatureHelp() {
+        var signatureHelpWindow = signatureHelpWindowWeakReference.get();
+        if (signatureHelpWindow == null) {
+            return false;
+        }
+        return signatureHelpWindow.isShowing();
     }
 }

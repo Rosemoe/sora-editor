@@ -94,11 +94,15 @@ public class LspLanguage implements Language {
     @Override
     public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position, @NonNull CompletionPublisher publisher, @NonNull Bundle extraArguments) throws CompletionCancelledException {
 
-        var prefix = computePrefix(content, position);
-        Log.d("prefix", prefix);
-       /* if (prefix.length() == 0) {
+        var line = content.getLine(position.line).substring(position.column);
+        System.out.println(line);
+       /* if (getEditor().hitTrigger(line)) {
+            publisher.cancel();
             return;
         }*/
+
+        var prefix = computePrefix(content, position);
+        // Log.d("prefix", prefix);
 
         var prefixLength = prefix.length();
 
@@ -114,7 +118,6 @@ public class LspLanguage implements Language {
                         }
                     }
                 });
-
 
         var completionList = new ArrayList<CompletionItem>();
 
@@ -146,7 +149,6 @@ public class LspLanguage implements Language {
         publisher.addItems(completionList);
 
         publisher.updateList();
-
     }
 
 
