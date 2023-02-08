@@ -24,33 +24,37 @@
 
 package io.github.rosemoe.sora.lsp.editor.signature
 
+import android.graphics.Typeface
+import android.text.SpannableStringBuilder
+import android.text.style.BackgroundColorSpan
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.MeasureSpec
 import android.widget.TextView
-import io.github.rosemoe.sora.R
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent
-import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.subscribeEvent
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
-import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.component.EditorBuiltinComponent
-import io.github.rosemoe.sora.widget.getComponent
-import io.github.rosemoe.sora.widget.subscribeEvent
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import org.eclipse.lsp4j.SignatureHelp
+import org.eclipse.lsp4j.SignatureInformation
 
 open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
     editor,
     FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SCROLL_AS_CONTENT
-),
-    EditorBuiltinComponent {
+), EditorBuiltinComponent {
 
+    private var highlightParameter = 0
+    private var defaultTextColor = 0
     private val rootView: View = LayoutInflater.from(editor.context)
         .inflate(io.github.rosemoe.sora.lsp.R.layout.signature_help_tooltip_window, null, false)
 
-    val maxWidth = (editor.width * 0.9).toInt()
-    val maxHeight = (editor.dpUnit * 175).toInt()
+    val maxWidth = (editor.width * 0.67).toInt()
+    val maxHeight = (editor.dpUnit * 235).toInt()
 
     private val text =
         rootView.findViewById<TextView>(io.github.rosemoe.sora.lsp.R.id.signature_help_tooltip_text)
@@ -59,9 +63,10 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
 
     private lateinit var signatureHelp: SignatureHelp
 
+
     init {
         super.setContentView(rootView)
-        
+
         eventManager.subscribeEvent<ColorSchemeUpdateEvent> { _, _ ->
             applyColorScheme()
         }
@@ -87,7 +92,6 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
 
 
     private fun updateWindowSizeAndLocation() {
-
         rootView.measure(
             MeasureSpec.makeMeasureSpec(maxWidth, MeasureSpec.AT_MOST),
             MeasureSpec.makeMeasureSpec(maxHeight, MeasureSpec.AT_MOST)
@@ -125,10 +129,117 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
     }
 
     private fun renderSignatureHelp() {
+        val activeSignatureIndex = signatureHelp.activeSignature
+        val activeParameterIndex = signatureHelp.activeParameter
+        val signatures = signatureHelp.signatures
+
+        val renderStringBuilder = SpannableStringBuilder()
+
+        if (activeSignatureIndex < 0 || activeParameterIndex < 0) {
+            Log.d("SignatureHelpWindow", "activeSignature or activeParameter is negative")
+            return
+        }
+
+        if (activeSignatureIndex >= signatures.size) {
+            Log.d("SignatureHelpWindow", "activeSignature is out of range")
+            return
+        }
+
+        // Get only the activated signature
+        for (i in 0..activeSignatureIndex) {
+            formatSignature(
+                signatures[i],
+                activeParameterIndex,
+                renderStringBuilder,
+                isCurrentSignature = i == activeSignatureIndex
+            )
+            if (i < activeSignatureIndex) {
+                renderStringBuilder.append("\n")
+            }
+        }
+
+        text.text = renderStringBuilder
+    }
+
+    private fun formatSignature(
+        signature: SignatureInformation,
+        activeParameterIndex: Int,
+        renderStringBuilder: SpannableStringBuilder,
+        isCurrentSignature: Boolean
+    ) {
+
+
+        val label = signature.label
+        val parameters = signature.parameters
+        val activeParameter = parameters.getOrNull(activeParameterIndex)
+
+        val parameterStart = label.substring(0, label.indexOf('('))
+        val currentIndex = 0.coerceAtLeast(renderStringBuilder.lastIndex);
+
+        renderStringBuilder.append(
+            parameterStart,
+            ForegroundColorSpan(defaultTextColor), SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        renderStringBuilder.append(
+            "("
+        )
+
+        for (i in 0 until parameters.size) {
+            val parameter = parameters[i]
+            if (parameter == activeParameter && isCurrentSignature) {
+                renderStringBuilder.append(
+                    parameter.label.left,
+                    ForegroundColorSpan(highlightParameter),
+                    SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                renderStringBuilder.setSpan(
+                    StyleSpan(Typeface.BOLD),
+                    renderStringBuilder.lastIndex - parameter.label.left.length,
+                    renderStringBuilder.lastIndex,
+                    SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                if (i != parameters.size - 1) {
+                    renderStringBuilder.append(
+                        ", ", ForegroundColorSpan(highlightParameter),
+                        SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+            } else {
+                renderStringBuilder.append(
+                    parameter.label.left,
+                    ForegroundColorSpan(defaultTextColor),
+                    SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+
+            }
+
+            if (i != parameters.size - 1 && (!isCurrentSignature || parameter != activeParameter)) {
+                renderStringBuilder.append(", ")
+            }
+
+        }
+
+        renderStringBuilder.append(")")
+
+        if (isCurrentSignature) {
+            renderStringBuilder.setSpan(
+                StyleSpan(Typeface.BOLD),
+                currentIndex,
+                renderStringBuilder.lastIndex,
+                SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
 
     }
 
+
     private fun applyColorScheme() {
+        text.typeface = editor.typefaceText
+        defaultTextColor = editor.colorScheme.getColor(EditorColorScheme.SIGNATURE_TEXT_NORMAL)
+
+        highlightParameter =
+            editor.colorScheme.getColor(EditorColorScheme.SIGNATURE_TEXT_HIGHLIGHTED_PARAMETER)
+
         if (isShowing) {
             renderSignatureHelp()
         }

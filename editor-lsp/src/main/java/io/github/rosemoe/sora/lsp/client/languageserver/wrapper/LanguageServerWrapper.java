@@ -57,6 +57,7 @@ import org.eclipse.lsp4j.ReferencesCapabilities;
 import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.SignatureHelpCapabilities;
+import org.eclipse.lsp4j.SignatureHelpOptions;
 import org.eclipse.lsp4j.SymbolCapabilities;
 import org.eclipse.lsp4j.SynchronizationCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
@@ -456,7 +457,13 @@ public class LanguageServerWrapper {
                                 && capabilities.getSignatureHelpProvider().getTriggerCharacters() != null) ?
                                 capabilities.getSignatureHelpProvider().getTriggerCharacters() : Collections.emptyList();
 
+                        List<String> signatureHelpRetriggers = (capabilities.getSignatureHelpProvider() != null
+                                && capabilities.getSignatureHelpProvider().getRetriggerCharacters() != null) ?
+                                capabilities.getSignatureHelpProvider().getRetriggerCharacters() : Collections.emptyList();
+
+
                         editor.setSignatureHelpTriggers(signatureHelpTriggers);
+                        editor.setSignatureHelpRetriggers(signatureHelpRetriggers);
                         editor.setCompletionTriggers(completionTriggers);
 
                         editor.installFeatures();

@@ -97,6 +97,8 @@ public class LspEditor {
 
     private List<String> signatureHelpTriggers = Collections.emptyList();
 
+    private List<String> signatureHelpRetriggers = Collections.emptyList();
+
     private LspEditorContentChangeEventReceiver editorContentChangeEventReceiver;
 
 
@@ -461,6 +463,26 @@ public class LspEditor {
         return this.signatureHelpTriggers;
     }
 
+    public void setSignatureHelpRetriggers(List<String> signatureHelpRetriggers) {
+        if (signatureHelpRetriggers.size() < 1 && signatureHelpTriggers.size() > 0 && signatureHelpTriggers.contains("(")) {
+            this.signatureHelpRetriggers = List.of(")");
+            return;
+        }
+        this.signatureHelpRetriggers = signatureHelpRetriggers;
+    }
+
+    public List<String> getSignatureHelpRetriggers() {
+        return this.signatureHelpRetriggers;
+    }
+
+    public boolean hitRetrigger(CharSequence eventText) {
+        for (var trigger : signatureHelpRetriggers) {
+            if (trigger.contains(eventText)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public boolean hitTrigger(CharSequence eventText) {
         for (var trigger : signatureHelpTriggers) {
@@ -478,4 +500,6 @@ public class LspEditor {
         }
         return signatureHelpWindow.isShowing();
     }
+
+
 }

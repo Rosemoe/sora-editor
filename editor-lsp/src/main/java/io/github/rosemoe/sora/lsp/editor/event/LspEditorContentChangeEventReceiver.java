@@ -49,15 +49,13 @@ public class LspEditorContentChangeEventReceiver implements EventReceiver<Conten
         editor.getProviderManager().safeUseProvider(DocumentChangeProvider.class)
                 .ifPresent(documentChangeFeature -> documentChangeFeature.execute(event));
 
-        if (event.getAction() != ContentChangeEvent.ACTION_INSERT) {
-            return;
-        }
-
         var eventText = event.getChangedText();
 
-        if (!editor.hitTrigger(eventText) && !editor.isShowSignatureHelp()) {
+        if (editor.hitRetrigger(eventText)) {
+            editor.showSignatureHelp(null);
             return;
         }
+
 
         ForkJoinPool.commonPool().execute(() ->
                 editor.getProviderManager().safeUseProvider(SignatureHelpProvider.class)
