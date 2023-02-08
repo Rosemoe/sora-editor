@@ -26,11 +26,14 @@ package io.github.rosemoe.sora.lsp.editor.event;
 
 import androidx.annotation.NonNull;
 
+import java.util.concurrent.ForkJoinPool;
+
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.EventReceiver;
 import io.github.rosemoe.sora.event.Unsubscribe;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeProvider;
+import io.github.rosemoe.sora.lsp.operations.signature.SignatureHelpProvider;
 
 public class LspEditorContentChangeEventReceiver implements EventReceiver<ContentChangeEvent> {
 
@@ -42,7 +45,32 @@ public class LspEditorContentChangeEventReceiver implements EventReceiver<Conten
 
     @Override
     public void onReceive(@NonNull ContentChangeEvent event, @NonNull Unsubscribe unsubscribe) {
+        // send to server
         editor.getProviderManager().safeUseProvider(DocumentChangeProvider.class)
                 .ifPresent(documentChangeFeature -> documentChangeFeature.execute(event));
+
+        if (event.getAction() != ContentChangeEvent.ACTION_INSERT) {
+            return;
+        }
+
+        var eventText = event.getChangedText();
+
+        var hasTrigger = false;
+        for (var trigger : editor.getSignatureHelpTriggers()) {
+            if (trigger.contains(eventText)) {
+                hasTrigger = true;
+                break;
+            }
+        }
+
+        if (!hasTrigger) {
+            return;
+        }
+
+        ForkJoinPool.commonPool().execute(() ->
+                editor.getProviderManager().safeUseProvider(SignatureHelpProvider.class)
+                        .ifPresent(feature -> feature.execute(event.getChangeStart()))
+        );
+
     }
 }
