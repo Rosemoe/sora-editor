@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.lsp.operations.signature;
 
+import android.util.Log;
+
 import androidx.annotation.WorkerThread;
 
 import com.google.gson.Gson;
@@ -78,14 +80,17 @@ public class SignatureHelpProvider extends RunOnlyProvider<CharPosition> {
 
         future = future.thenApply(signatureHelp -> {
             System.out.println(new Gson().toJson(signatureHelp));
-            return null;
+            return signatureHelp;
         });
 
 
         try {
-            future.get(Timeout.getTimeout(Timeouts.SIGNATURE), TimeUnit.MILLISECONDS);
+            var signatureHelp = future.get(Timeout.getTimeout(Timeouts.SIGNATURE), TimeUnit.MILLISECONDS);
+            editor.showSignatureHelp(signatureHelp);
         } catch (Exception exception) {
-            throw new LSPException("show signatureHelp timeout");
+            // throw?
+            exception.printStackTrace();
+            Log.e("LSP client","show signatureHelp timeout");
         }
     }
 }

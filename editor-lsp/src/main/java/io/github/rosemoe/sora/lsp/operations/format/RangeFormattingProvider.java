@@ -102,6 +102,7 @@ public class RangeFormattingProvider extends RunOnlyProvider<Pair<Content, TextR
             future.get(Timeout.getTimeout(Timeouts.FORMATTING), TimeUnit.MILLISECONDS);
         } catch (Exception exception) {
             throw new LSPException("Formatting code timeout");
+
         }
     }
 

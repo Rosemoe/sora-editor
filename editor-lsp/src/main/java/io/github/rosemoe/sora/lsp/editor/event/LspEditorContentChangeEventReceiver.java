@@ -55,15 +55,7 @@ public class LspEditorContentChangeEventReceiver implements EventReceiver<Conten
 
         var eventText = event.getChangedText();
 
-        var hasTrigger = false;
-        for (var trigger : editor.getSignatureHelpTriggers()) {
-            if (trigger.contains(eventText)) {
-                hasTrigger = true;
-                break;
-            }
-        }
-
-        if (!hasTrigger) {
+        if (!editor.hitTrigger(eventText) && !editor.isShowSignatureHelp()) {
             return;
         }
 
