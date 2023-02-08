@@ -147,10 +147,15 @@ public class EditorColorScheme {
      */
     protected static final int START_COLOR_ID = 1;
 
+    public static final int SIGNATURE_TEXT_NORMAL = 58;
+    public static final int SIGNATURE_TEXT_HIGHLIGHTED_PARAMETER = 59;
+
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 57;
+    protected static final int END_COLOR_ID = 60;
+
+
     /**
      * Real color saver
      */
@@ -264,6 +269,7 @@ public class EditorColorScheme {
                 color = 0xFF0066D6;
                 break;
             case TEXT_NORMAL:
+            case SIGNATURE_TEXT_NORMAL:
                 color = 0xFF333333;
                 break;
             case SELECTION_INSERT:
@@ -276,6 +282,7 @@ public class EditorColorScheme {
                 color = 0xff536dfe;
                 break;
             case ANNOTATION:
+            case SIGNATURE_TEXT_HIGHLIGHTED_PARAMETER:
             case IDENTIFIER_NAME:
                 color = 0xFF03A9F4;
                 break;
@@ -442,6 +449,7 @@ public class EditorColorScheme {
 
     /**
      * Set global default color scheme. Newly created editor will use the new default color scheme.
+     *
      * @param colorScheme new global color scheme, or null for restoring to built-in default
      */
     public static void setDefault(@Nullable EditorColorScheme colorScheme) {
@@ -451,7 +459,8 @@ public class EditorColorScheme {
     /**
      * Set global default color scheme and optionally update existing editors that are using default
      * color scheme.
-     * @param colorScheme new global color scheme, or null for restoring to built-in default
+     *
+     * @param colorScheme   new global color scheme, or null for restoring to built-in default
      * @param updateEditors update existing editors that are using default color scheme
      */
     public static void setDefault(@Nullable EditorColorScheme colorScheme, boolean updateEditors) {

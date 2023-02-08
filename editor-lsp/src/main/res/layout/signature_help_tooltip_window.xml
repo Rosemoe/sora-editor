@@ -33,7 +33,7 @@
 
     <TextView
         android:id="@+id/signature_help_tooltip_text"
-        android:text="73984573ejfklafhjdskfasehjkl;f"
+        android:textSize="16sp"
         style="?android:textAppearanceSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

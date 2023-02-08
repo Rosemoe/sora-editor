@@ -30,6 +30,7 @@ public abstract class NoArgProvider<T> implements Provider<Void, T> {
 
     @Override
     public final T execute(Void data) {
+
         return run();
     }
 }
