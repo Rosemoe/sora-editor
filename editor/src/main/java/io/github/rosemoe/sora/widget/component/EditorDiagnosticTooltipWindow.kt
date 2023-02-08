@@ -120,7 +120,7 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
         popup.setOnDismissListener {
             currentDiagnostic = null
         }
-        quickfixText.setOnClickListener { _ ->
+        quickfixText.setOnClickListener {
             val quickfixes = currentDiagnostic?.quickfixes
             if (!quickfixes.isNullOrEmpty()) {
                 quickfixes[0].executeQuickfix()

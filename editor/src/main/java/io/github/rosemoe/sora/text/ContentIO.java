@@ -150,9 +150,9 @@ public class ContentIO {
                 throw e;
             }
         }
-        writer.flush();
+        buffered.flush();
         if (closeOnSucceed) {
-            writer.close();
+            buffered.close();
         }
     }
 
