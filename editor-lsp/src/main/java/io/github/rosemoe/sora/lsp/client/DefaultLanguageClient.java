@@ -95,15 +95,20 @@ public class DefaultLanguageClient implements LanguageClient {
 
     @Override
     public void publishDiagnostics(PublishDiagnosticsParams publishDiagnosticsParams) {
-        LspEditor editor = LspEditorManager
-                .getOrCreateEditorManager(getContext().getProjectPath())
-                .getEditor(publishDiagnosticsParams.getUri());
+        LspEditorManager manager = LspEditorManager
+                .getOrCreateEditorManager(getContext().getProjectPath());
+
+        LspEditor editor = manager.getEditor(publishDiagnosticsParams.getUri());
+
+        manager.diagnosticsContainer.addDiagnostics(
+                publishDiagnosticsParams.getUri(),
+                publishDiagnosticsParams.getDiagnostics());
 
         if (editor == null) {
             return;
         }
 
-        editor.publishDiagnostics(publishDiagnosticsParams);
+        editor.onDiagnosticsUpdate();
     }
 
     @Override

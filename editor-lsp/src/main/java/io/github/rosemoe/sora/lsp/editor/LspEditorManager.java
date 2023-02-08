@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition;
+import io.github.rosemoe.sora.lsp.editor.diagnostics.DiagnosticsContainer;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 
 /**
@@ -43,6 +44,8 @@ public class LspEditorManager {
     }
 
     private final Map<String, LspEditor> editors = new HashMap<>();
+
+    public final DiagnosticsContainer diagnosticsContainer = new DiagnosticsContainer();
 
     private static final Map<String, LspEditorManager> managers = new HashMap<>();
 
@@ -73,7 +76,7 @@ public class LspEditorManager {
     public LspEditor createEditor(String currentFileUri, LanguageServerDefinition serverDefinition) {
         LspEditor editor = editors.get(currentFileUri);
         if (editor == null) {
-            editor = new LspEditor(currentProjectPath, currentFileUri, serverDefinition);
+            editor = new LspEditor(currentProjectPath, currentFileUri, serverDefinition, this);
             editors.put(currentFileUri, editor);
         }
         return editor;
@@ -105,6 +108,7 @@ public class LspEditorManager {
     public void close() {
         closeAllEditor();
         managers.remove(currentProjectPath);
+        diagnosticsContainer.clear();
     }
 
 }

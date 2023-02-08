@@ -35,7 +35,6 @@ import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.operations.Provider;
 import io.github.rosemoe.sora.lsp.utils.LspUtils;
 
-//TODO: cross-document diagnostic containers
 public class QueryDocumentDiagnosticsProvider implements Provider<DocumentDiagnosticParams, CompletableFuture<Map<String, Either<FullDocumentDiagnosticReport, UnchangedDocumentDiagnosticReport>>>> {
 
     private volatile CompletableFuture<Map<String, Either<FullDocumentDiagnosticReport, UnchangedDocumentDiagnosticReport>>> future;
