@@ -46,7 +46,7 @@ import org.eclipse.lsp4j.SignatureInformation
 open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
     editor,
     FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SCROLL_AS_CONTENT
-), EditorBuiltinComponent {
+) {
 
     private var highlightParameter = 0
     private var defaultTextColor = 0
@@ -74,9 +74,9 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
         applyColorScheme()
     }
 
-    override fun isEnabled() = eventManager.isEnabled
+    fun isEnabled() = eventManager.isEnabled
 
-    override fun setEnabled(enabled: Boolean) {
+    fun setEnabled(enabled: Boolean) {
         eventManager.isEnabled = enabled
         if (!enabled) {
             dismiss()
