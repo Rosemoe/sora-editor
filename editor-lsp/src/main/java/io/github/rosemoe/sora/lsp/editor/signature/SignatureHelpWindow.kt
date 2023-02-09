@@ -25,6 +25,7 @@
 package io.github.rosemoe.sora.lsp.editor.signature
 
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.text.SpannableStringBuilder
 import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
@@ -48,13 +49,14 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
     FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SCROLL_AS_CONTENT
 ) {
 
+    private var signatureBackgroundColor = 0
     private var highlightParameter = 0
     private var defaultTextColor = 0
     private val rootView: View = LayoutInflater.from(editor.context)
         .inflate(io.github.rosemoe.sora.lsp.R.layout.signature_help_tooltip_window, null, false)
 
-    val maxWidth = (editor.width * 0.67).toInt()
-    val maxHeight = (editor.dpUnit * 235).toInt()
+    private val maxWidth = (editor.width * 0.67).toInt()
+    private val maxHeight = (editor.dpUnit * 235).toInt()
 
     private val text =
         rootView.findViewById<TextView>(io.github.rosemoe.sora.lsp.R.id.signature_help_tooltip_text)
@@ -83,7 +85,7 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
         }
     }
 
-    fun show(signatureHelp: SignatureHelp) {
+    open fun show(signatureHelp: SignatureHelp) {
         this.signatureHelp = signatureHelp
         renderSignatureHelp()
         updateWindowSizeAndLocation()
@@ -129,6 +131,7 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
     }
 
     private fun renderSignatureHelp() {
+
         val activeSignatureIndex = signatureHelp.activeSignature
         val activeParameterIndex = signatureHelp.activeParameter
         val signatures = signatureHelp.signatures
@@ -234,11 +237,20 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
 
 
     private fun applyColorScheme() {
+        val colorScheme = editor.colorScheme
         text.typeface = editor.typefaceText
-        defaultTextColor = editor.colorScheme.getColor(EditorColorScheme.SIGNATURE_TEXT_NORMAL)
+        defaultTextColor = colorScheme.getColor(EditorColorScheme.SIGNATURE_TEXT_NORMAL)
 
         highlightParameter =
-            editor.colorScheme.getColor(EditorColorScheme.SIGNATURE_TEXT_HIGHLIGHTED_PARAMETER)
+            colorScheme.getColor(EditorColorScheme.SIGNATURE_TEXT_HIGHLIGHTED_PARAMETER)
+
+        signatureBackgroundColor =
+            colorScheme.getColor(EditorColorScheme.SIGNATURE_BACKGROUND)
+
+        val background = GradientDrawable()
+        background.cornerRadius = editor.dpUnit * 8
+        background.setColor(colorScheme.getColor(EditorColorScheme.SIGNATURE_BACKGROUND))
+        rootView.background = background
 
         if (isShowing) {
             renderSignatureHelp()

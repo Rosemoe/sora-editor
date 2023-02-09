@@ -197,7 +197,14 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
 
     @Override
     public boolean isDark() {
-        return super.isDark();
+        var superIsDark =  super.isDark();
+        if (superIsDark) {
+            return true;
+        }
+        if (currentTheme !=null) {
+            return currentTheme.isDark();
+        }
+        return false;
     }
 
     private void applyTMTheme(ThemeRaw themeRaw) {

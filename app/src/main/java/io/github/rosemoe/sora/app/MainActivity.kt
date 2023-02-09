@@ -265,7 +265,11 @@ class MainActivity : AppCompatActivity() {
                     IThemeSource.fromInputStream(
                         FileProviderRegistry.getInstance().tryGetInputStream(path), path, null
                     ), name
-                )
+                ).apply {
+                    if (name != "quietlight") {
+                        isDark = true
+                    }
+                }
             )
         }
 

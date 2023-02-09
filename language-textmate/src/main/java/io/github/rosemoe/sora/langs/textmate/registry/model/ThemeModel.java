@@ -42,6 +42,8 @@ public class ThemeModel {
 
     private String name;
 
+    private boolean isDark;
+
     public ThemeModel(IThemeSource themeSource) {
         this.themeSource = themeSource;
         this.name = StringUtils.getFileNameWithoutExtension(themeSource.getFilePath());
@@ -57,6 +59,14 @@ public class ThemeModel {
         rawTheme = null;
         this.name = name;
         theme = Theme.createFromRawTheme(null,null);
+    }
+
+    public void setDark(boolean dark) {
+        isDark = dark;
+    }
+
+    public boolean isDark() {
+        return isDark;
     }
 
     //TODO colorMap support
