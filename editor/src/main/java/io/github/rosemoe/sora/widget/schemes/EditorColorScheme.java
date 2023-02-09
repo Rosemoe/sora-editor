@@ -150,10 +150,12 @@ public class EditorColorScheme {
     public static final int SIGNATURE_TEXT_NORMAL = 58;
     public static final int SIGNATURE_TEXT_HIGHLIGHTED_PARAMETER = 59;
 
+    public static final int SIGNATURE_BACKGROUND = 60;
+
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 60;
+    protected static final int END_COLOR_ID = 61;
 
 
     /**
@@ -263,13 +265,12 @@ public class EditorColorScheme {
             case LINE_NUMBER_PANEL_TEXT:
             case COMPLETION_WND_BACKGROUND:
             case COMPLETION_WND_CORNER:
-                color = 0xffffffff;
+                color = isDark() ? BACKGROUND_COLOR_DARK : 0xffffffff;
                 break;
             case OPERATOR:
                 color = 0xFF0066D6;
                 break;
             case TEXT_NORMAL:
-            case SIGNATURE_TEXT_NORMAL:
                 color = 0xFF333333;
                 break;
             case SELECTION_INSERT:
@@ -371,6 +372,9 @@ public class EditorColorScheme {
             case SNIPPET_BACKGROUND_INACTIVE:
                 color = 0x66dddddd;
                 break;
+            case SIGNATURE_TEXT_NORMAL:
+                color = isDark() ?  0xffeeeeee : 0xff000000;
+                break;
             case TEXT_INLAY_HINT_BACKGROUND:
                 color = isDark() ? 0xffeeeeee : 0x1D000000;
                 break;
@@ -383,6 +387,7 @@ public class EditorColorScheme {
             case DIAGNOSTIC_TOOLTIP_DETAILED_MSG:
                 color = isDark() ? SECONDARY_TEXT_COLOR_DARK : SECONDARY_TEXT_COLOR_LIGHT;
                 break;
+            case SIGNATURE_BACKGROUND:
             case DIAGNOSTIC_TOOLTIP_BACKGROUND:
                 color = isDark() ? BACKGROUND_COLOR_DARK : BACKGROUND_COLOR_LIGHT;
                 break;
