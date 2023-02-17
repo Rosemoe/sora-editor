@@ -36,7 +36,7 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 
 /**
- * Helper class for creating or saving {@link Content} objects, with minima extra memory usage when
+ * Helper class for creating or saving {@link Content} objects, with minimal extra memory usage when
  *  processing.
  *
  * @author Rosemoe
@@ -110,6 +110,10 @@ public class ContentIO {
 
     /**
      * Write the text to the given stream with default charset. Close the stream if {@code closeOnSucceed} is true.
+     *
+     * @param text Text to be written
+     * @param stream Output stream
+     * @param closeOnSucceed If true, the stream will be closed when operation is successfully
      */
     public static void writeTo(@NonNull Content text, @NonNull OutputStream stream, boolean closeOnSucceed) throws IOException {
         writeTo(text, stream, Charset.defaultCharset(), closeOnSucceed);
@@ -117,6 +121,11 @@ public class ContentIO {
 
     /**
      * Write the text to the given stream with given charset. Close the stream if {@code closeOnSucceed} is true.
+     *
+     * @param text Text to be written
+     * @param stream Output stream
+     * @param charset Charset of output bytes
+     * @param closeOnSucceed If true, the stream will be closed when operation is successfully
      */
     public static void writeTo(@NonNull Content text, @NonNull OutputStream stream, @NonNull Charset charset, boolean closeOnSucceed) throws IOException {
         writeTo(text, new OutputStreamWriter(stream, charset), closeOnSucceed);
@@ -126,6 +135,10 @@ public class ContentIO {
      * Write the text to the given writer. Close the writer if {@code closeOnSucceed} is true.
      * <p>
      * If you use {@link BufferedWriter}, make sure you set an appropriate buffer size. We recommend using the default size (8192) or larger.
+     *
+     * @param text Text to be written
+     * @param writer Output writer
+     * @param closeOnSucceed If true, the stream will be closed when operation is successfully
      */
     public static void writeTo(@NonNull Content text, @NonNull Writer writer, boolean closeOnSucceed) throws IOException {
         // Use buffered writer to avoid frequently IO when there are a lot of short lines
