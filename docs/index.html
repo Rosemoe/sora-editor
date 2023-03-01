@@ -8,6 +8,7 @@
     <meta name="description" content="Description">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/sidebar.min.css" />
 </head>
 
 <body>
@@ -17,15 +18,16 @@
     window.$docsify = {
       name: 'Sora Editor',
       repo: 'https://github.com/Rosemoe/sora-editor',
-      coverpage: ['/', '/zh-cn/'],
-      // loadNavbar: true,
+      coverpage: ['/', '/zh-cn/', '/es/'],
+      loadNavbar: true,
       loadSidebar: true,
       subMaxLevel: 2,
+      sidebarDisplayLevel: 1,
 
 
       search: {
         maxAge: 86400000,
-        paths: [],
+        paths: 'auto',
         placeholder: 'Type to search',
         placeholder: {
           '/zh-cn/': '搜索',
@@ -64,7 +66,6 @@
         )
       ]
     }
-
 </script>
 <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
@@ -73,5 +74,8 @@
 <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/docsify-progress@latest/dist/progress.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/docsify-sidebar-collapse.min.js"></script>
+<script src="//polyfill.io/v3/polyfill.min.js?features=String.prototype.normalize"></script>
 </body>
+
 </html>
