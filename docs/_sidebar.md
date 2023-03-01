@@ -1,3 +1,4 @@
 - Getting started
-  - [Quick start](/start/quickstart.md "Quick start")
+    - [Quick start](/start/quickstart.md "Quick start")
+- [API](/api.md "API")
 - [Changelog](/changelog.md "Changelog")
