@@ -717,7 +717,7 @@
 
 ### Bug fix
 
-- Fix line editing issue (#154 )
+- Fix line editing issue [#154](https://github.com/Rosemoe/sora-editor/issues/154)
 
 ### Improvement
 
@@ -758,16 +758,17 @@
 
 ### Contributed updates
 
-- Fixed flickering of completion window when invoked multiple times. by @tyron12233
+- Fixed flickering of completion window when invoked multiple times.
+  by [@tyron12233](https://github.com/tyron12233)
   in https://github.com/Rosemoe/sora-editor/pull/148
 - Separate rendering logic with the View by @tyron12233
   in https://github.com/Rosemoe/sora-editor/pull/151
 
 ### New Contributors
 
-- @tyron12233 made their first contribution in https://github.com/Rosemoe/sora-editor/pull/148
-
-- -Full Changelog - -: https://github.com/Rosemoe/sora-editor/compare/0.10.0...0.10.1
+- [@tyron12233](https://github.com/tyron12233) made their first contribution
+  in https://github.com/Rosemoe/sora-editor/pull/148
+- Full Changelog: https://github.com/Rosemoe/sora-editor/compare/0.10.0...0.10.1
 
 ## **[0.10.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.0) (2022-02-05)**
 
@@ -887,7 +888,7 @@ But, some IMPORTANT Tips:
 
 ## **[0.8.4](https://github.com/Rosemoe/sora-editor/releases/tag/0.8.4) (2021-11-14)**
 
-This includes a set of bug fixes and small improvements.
+> This includes a set of bug fixes and small improvements.
 
 ### Bug fix
 
@@ -925,7 +926,7 @@ This includes a set of bug fixes and small improvements.
 
 ### Update Log
 
-Due to some bugs 0.8.1 is not released or uploaded to maven
+> Due to some bugs 0.8.1 is not released or uploaded to maven
 
 - SymbolInputView as part of the editor
 - Improve completion window item scrolling
@@ -948,7 +949,7 @@ Due to some bugs 0.8.1 is not released or uploaded to maven
 ### Update log
 
 - Add method to control completion window position scheme
-- textmate module supports block line (@Coyamo )
+- textmate module supports block line [@Coyamo](https://github.com/Coyamo)
 - textmate in sample app supports low API device
 
 ## **[0.7.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.7.1) (2021-10-21)**
@@ -959,15 +960,19 @@ Due to some bugs 0.8.1 is not released or uploaded to maven
 
 ## **[0.7.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.7.0) (2021-10-16)**
 
-- Add textmate support (require higher API version, up to Android 8) (@Coyamo )
-- Add AutoSurroundPair and condition check interface for symbol pair matching (@dingyi222666 )
+- Add textmate support (require higher API version, up to Android
+    8) [@Coyamo](https://github.com/Coyamo)
+- Add AutoSurroundPair and condition check interface for symbol pair
+  matching [@dingyi222666](https://github.com/dingyi222666)
 
 ### Generated notes
 
-- Add CI with GitHub Workflow by @mnixry in https://github.com/Rosemoe/CodeEditor/pull/101
-- Simple transplantation of tm4e core module based on tm4e-0.4.2. by @Coyamo
+- Add CI with GitHub Workflow by [@mnixry](https://github.com/mnixry)
+  in https://github.com/Rosemoe/CodeEditor/pull/101
+- Simple transplantation of tm4e core module based on tm4e-0.4.2.
+  by [@Coyamo](https://github.com/Coyamo)
   in https://github.com/Rosemoe/CodeEditor/pull/97
-- Add shouldDoReplace() in Replacement by @dingyi222666
+- Add shouldDoReplace() in Replacement by [@dingyi222666](https://github.com/dingyi222666)
   in https://github.com/Rosemoe/CodeEditor/pull/99
 
 ## **[0.6.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.6.0) (2021-10-09)**
@@ -976,19 +981,20 @@ Fix error underlines being covered by line background of next line
 
 ## **[0.6.0-dev-4](https://github.com/Rosemoe/sora-editor/releases/tag/0.6.0-dev-4) (2021-10-03)**
 
-Fix unspecified dependency in generated pom file.
-Solve this problem while building your app:
+- Fix unspecified dependency in generated pom file.
+- Solve this problem while building your app:
+
 ![image](https://user-images.githubusercontent.com/28822819/135739646-653b9625-d84a-4d5b-8447-514fce34e80a.png)
 
 ## **[0.6.0-dev-3](https://github.com/Rosemoe/sora-editor/releases/tag/0.6.0-dev-3) (2021-10-02)**
 
-0.6.0-dev-3
+!> Stop use 0.6.0-dev-2.
 
-- -Fix bugs in 0.6.0-dev-2. Stop use 0.6.0-dev-2. - -
+- Fix bugs in 0.6.0-dev-2.
 
 ## **[0.6.0-dev-2](https://github.com/Rosemoe/sora-editor/releases/tag/0.6.0-dev-2) (2021-10-01)**
 
-0.6.0-dev-2
+- nothing
 
 ## **[0.6.0-dev-1](https://github.com/Rosemoe/sora-editor/releases/tag/0.6.0-dev-1) (2021-09-21)**
 
@@ -1019,19 +1025,18 @@ for this version and later versions
 
 ## **[0.5.4](https://github.com/Rosemoe/sora-editor/releases/tag/0.5.4) (2021-08-08)**
 
-### Nothing but downgrade gradle plugin to run Jitpack
+- Nothing but downgrade gradle plugin to run Jitpack
 
 ## **[0.5.3](https://github.com/Rosemoe/sora-editor/releases/tag/0.5.3) (2021-08-01)**
 
 ### License Update
 
-Since 0.5.3, CodeEditor's license has been changed to the General Public License V3.
-Make sure that there is no conflict between your project and this.
+- Since `0.5.3`, CodeEditor's license has been changed to the General Public License V3.
+  Make sure that there is no conflict between your project and this.
 
 ### Update Note
 
-- Added option to disable fullscreen in landscape mode (by **[@itsaky ](https://github.com/itsaky )
-  **)
+- Added option to disable fullscreen in landscape mode (by **[@itsaky](https://github.com/itsaky)**)
 - Pin line number at left
 - Show line number for first row even if its leading row is invisible under wordwrap mode
 - Max text length passed to input method rised.
@@ -1044,13 +1049,13 @@ Make sure that there is no conflict between your project and this.
 
 ### Note
 
-Update plan is changed due to my time schedule.
-New major version development is delayed.
+- Update plan is changed due to my time schedule.
+- New major version development is delayed.
 
 ## **[0.5.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.5.1) (2021-06-07)**
 
-- -Important:  This is the last version before editor project's refactor - -
-- -Next version will be almost fully different - -
+- **Important:  This is the last version before editor project's refactor**
+- **Next version will be almost fully different**
 
 ### Updates
 
@@ -1069,18 +1074,19 @@ New major version development is delayed.
 
 This is a major update of CodeEditor with many patches and features.
 And some slight breaking changes are made.
-Thanks to contributions from @itsaky and @RandunuRtx !
+Thanks to contributions from [@itsaky](https://github.com/itsaky)
+and [@RandunuRtx](https://github.com/RandunuRtx)!
 
 ### Breaking changes
 
-- Interfaces do - -not - - have default methods due to compatibility, which means language
+- Interfaces do **not** have default methods due to compatibility, which means language
   implementations must override the methods
   explicitly [#48](https://github.com/Rosemoe/sora-editor/issues/48)
 - 'language-s5d' module is removed
 
 ### New features & Improvements
 
-- language-python by @RandunuRtx
+- language-python by [@itsaky](https://github.com/itsaky)
 - No longer redraw view automatically when cursor is invisible
 - Quicker speed in line number rendering
 - Add some symbol pairs [#44](https://github.com/Rosemoe/sora-editor/issues/44) by @itsaky
@@ -1094,16 +1100,18 @@ Thanks to contributions from @itsaky and @RandunuRtx !
 - Crash on low API level [#48](https://github.com/Rosemoe/sora-editor/issues/48)
 - Unexpected background color when focused on Android
   11 [#41](https://github.com/Rosemoe/sora-editor/issues/41)
-- Adapt keyboard behaviors (#41, #56)
+- Adapt keyboard
+  behaviors ([#41](https://github.com/Rosemoe/sora-editor/issues/41), [#56](https://github.com/Rosemoe/sora-editor/issues/56))
 - Can not deselect text after selecting all [#46](https://github.com/Rosemoe/sora-editor/issues/46)
-  by @itsaky
-- Invalid cast on custom adapter [#53](https://github.com/Rosemoe/sora-editor/issues/53) by @itsaky
+  by [@itsaky](https://github.com/itsaky)
+- Invalid cast on custom adapter [#53](https://github.com/Rosemoe/sora-editor/issues/53)
+  by [@itsaky](https://github.com/itsaky)
 - Font issue on text offset [#55](https://github.com/Rosemoe/sora-editor/issues/55)
 - Auto indent is invalid in Java language [#56](https://github.com/Rosemoe/sora-editor/issues/56)
 
 ## **[0.4.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.4.0) (2021-02-27)**
 
-- Note: This release includes breaking changes - -
+- Note: This release includes breaking changes
 - API Requirement rised up to Android 5.0 (API 21)
 - Module editor
 
@@ -1119,11 +1127,10 @@ Thanks to contributions from @itsaky and @RandunuRtx !
 - Provide completions together with composing
   text [#32](https://github.com/Rosemoe/sora-editor/issues/32)
 - Scaling size range can be controlled
-- New module language-html (by **[@itsaky ](https://github.com/itsaky )**)
+- New module language-html (by **[@itsaky](https://github.com/itsaky)**)
 - Symbol pairs auto-completion [#36](https://github.com/Rosemoe/sora-editor/issues/36)
 - Handler for typing new line
 - Custom support for adapter of auto-completion
-
 - Module language-java
 
 ### New feature
@@ -1223,7 +1230,6 @@ Thanks to contributions from @itsaky and @RandunuRtx !
 
 ## **[0.1.0-beta](https://github.com/Rosemoe/sora-editor/releases/tag/0.1.0-beta) (2020-07-29)**
 
-First release of CodeEditor. All basic modules are done.
-Most of typing and displaying bugs are fixed.
-
+- First release of CodeEditor. All basic modules are done.
+- Most of typing and displaying bugs are fixed.
 - This release is non-production ready but for test.
