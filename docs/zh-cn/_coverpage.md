@@ -9,4 +9,4 @@
 [![QQ](https://img.shields.io/badge/Join-QQ_Group-ff69b4)](https://jq.qq.com/?_wv=1027&k=n68uxQws)
 
 [GitHub](https://github.com/Rosemoe/sora-editor)
-[Get Started](#get-started)
+[Get Started](/zh-cn/start/quickstart)

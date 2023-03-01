@@ -12,14 +12,16 @@
 
 <body>
   <div id="app"></div>
+  <script src="//cdn.jsdelivr.net/npm/docsify-edit-on-github"></script>
   <script>
     window.$docsify = {
       name: 'Sora Editor',
       repo: 'https://github.com/Rosemoe/sora-editor',
       coverpage: ['/', '/zh-cn/'],
-      loadNavbar: true,
+      // loadNavbar: true,
       loadSidebar: true,
-      loadSidebar: true,
+      subMaxLevel: 2,
+
 
       search: {
         maxAge: 86400000,
@@ -40,7 +42,21 @@
         countable: true,
         fontsize: '0.9em',
         color: 'rgb(90,90,90)'
-      }
+      },
+
+      plugins: [
+        EditOnGithubPlugin.create(
+          'https://github.com/Rosemoe/sora-editor/blob/master/docs/',
+          null,
+          function (file) {
+            if (file.indexOf('zh-cn') !== -1) {
+              return '编辑'
+            } else {
+              return 'edit on git'
+            }
+          }
+        )
+      ]
     }
   </script>
   <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
