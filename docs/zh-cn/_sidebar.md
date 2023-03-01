@@ -1,0 +1,3 @@
+- 入门
+  - [快速开始](/zh-cn/start/quickstart.md "快速开始")
+- [更新日志](/zh-cn/changelog.md "更新日志")
