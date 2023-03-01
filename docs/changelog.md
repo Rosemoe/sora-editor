@@ -2,7 +2,7 @@
 
 ## **[0.21.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.21.0) (2023-01-08)**
 
-!> This release includes bug fixes and little improvement as well as minor API changes.
+> This release includes bug fixes and little improvement as well as minor API changes.
 
 ### Bugs fixed
 
