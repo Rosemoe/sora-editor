@@ -12,7 +12,8 @@ sora-editor is a cool and optimized code editor on Android platform
 
 </div>
 
-Read this in other languages: [English](README.md), [简体中文](/zh-cn/README.md), [Español](README.es.md).
+Read this in other
+languages: [English](/README.md), [简体中文](/zh-cn/README.md), [Español](/es/README.md).
 
 ***Work In Progress*** This project is still developing slowly.   
 Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/releases)
@@ -80,9 +81,12 @@ Available modules:
   them by using this
   module. The internal implementation of textmate is from [tm4e](https://github.com/eclipse/tm4e).
 - language-treesitter   
-  Offer [tree-sitter](https://tree-sitter.github.io/tree-sitter/) support for editor. This can be used to 
-  parse the code to an AST fast and incrementally, which is helpful for accurate highlighting and providing completions.
-  Note that this module only provides incremental paring and highlighting. Thanks to Java bindings [android-tree-sitter](https://github.com/AndroidIDEOfficial/android-tree-sitter/)
+  Offer [tree-sitter](https://tree-sitter.github.io/tree-sitter/) support for editor. This can be
+  used to
+  parse the code to an AST fast and incrementally, which is helpful for accurate highlighting and
+  providing completions.
+  Note that this module only provides incremental paring and highlighting. Thanks to Java
+  bindings [android-tree-sitter](https://github.com/AndroidIDEOfficial/android-tree-sitter/)
 
 Check the newest version from the badge above
 or [Releases](https://github.com/Rosemoe/CodeEditor/releases).

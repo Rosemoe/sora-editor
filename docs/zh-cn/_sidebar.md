@@ -1,3 +1,6 @@
 - 入门
   - [快速开始](/zh-cn/start/quickstart.md "快速开始")
+- Java 文档
+  - [API接口](/zh-cn/api.md "API接口")
+  - [常量](/zh-cn/constant.md "常量")
 - [更新日志](/zh-cn/changelog.md "更新日志")
