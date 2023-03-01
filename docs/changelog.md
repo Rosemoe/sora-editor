@@ -128,10 +128,10 @@
 ### Bugs fixed
 
 - can't add language with scope not "source" ([#288](https://github.com/Rosemoe/sora-editor/issues/288) by [@dingyi222666](https://github.com/dingyi222666))
-- nullable data bundle in ImePrivateCommandEvent is marked nonnull  (#293 )
-- index out of bounds when rendering in preset composing state (#294 )
-- magnifier shows when window size is illegal  (#298 )
-- partly broken logic of Content#deleteInternal after introducing line separator types (#299 )
+- nullable data bundle in ImePrivateCommandEvent is marked nonnull  [#293](https://github.com/Rosemoe/sora-editor/issues/293)
+- index out of bounds when rendering in preset composing state [#294](https://github.com/Rosemoe/sora-editor/issues/294)
+- magnifier shows when window size is illegal  [#298](https://github.com/Rosemoe/sora-editor/issues/298)
+- partly broken logic of Content#deleteInternal after introducing line separator types [#299](https://github.com/Rosemoe/sora-editor/issues/299)
 - completion window size is not adjusted when size is too small
 - layout is not recreated after scaling when wordwrap is enabled and gutter is disabled
 - occasional invalid height for completion window
@@ -139,43 +139,43 @@
 - unexpected symbol pair matching for '<' '>' in textmate Java
 - unexpected symbol pair match when pasting text (AndroidIDE#593)
 - selection span can be out of range when shifting cursor in some situations(AndroidIDE#579)
-- posted Runnable can be executed out of editor lifecycle (#305 )
+- posted Runnable can be executed out of editor lifecycle [#305](https://github.com/Rosemoe/sora-editor/issues/305)
 - Spans.Reader is not locked during text line rendering, giving chances to hold dirty spanOffset if span content is
-  modified in another thread (#290 )
-- editor layout state is not check when layout initialization is finished and is trying to update editor state (#307 )
-- View#post does not execute posted actions on startup, causing pending layoutBusy state (#308 )
+  modified in another thread [#290](https://github.com/Rosemoe/sora-editor/issues/290)
+- editor layout state is not check when layout initialization is finished and is trying to update editor state [#307](https://github.com/Rosemoe/sora-editor/issues/307)
+- View#post does not execute posted actions on startup, causing pending layoutBusy state [#308](https://github.com/Rosemoe/sora-editor/issues/308)
 
 ### New features
 
-- updated auto completion ui and sorting method (by **[@dingyi222666 ](https://github.com/dingyi222666 )**)
-- lua language server in sample app (by **[@dingyi222666 ](https://github.com/dingyi222666 )**)
+- updated auto completion ui and sorting method (by **[@dingyi222666 ](https://github.com/dingyi222666)**)
+- lua language server in sample app (by **[@dingyi222666 ](https://github.com/dingyi222666)**)
 - expose some internal classes of `EditorRenderer` for better extension
 - very alpha release of `tree-sitter` [RIP]
 
 ## **[0.18.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.18.1) (2022-11-05)**
 
-A major update of editor. This release note covers the updates of 0.18.0 and 0.18.1
+> A major update of editor. This release note covers the updates of 0.18.0 and 0.18.1
 
-## Improvements
+### Improvements
 
-- more built-in key bindings (by **[@itsaky ](https://github.com/itsaky )**)
+- more built-in key bindings (by **[@itsaky](https://github.com/itsaky)**)
 - update lsp4j to 0.17.0
 - anti-word-breaking option for wordwrap (for English). enabled by default
 - animation for fading scrollbars
 - registry feature in textmate, which provides multi-language highlighting in one file (by *
-  *[@dingyi222666 ](https://github.com/dingyi222666 )**)
+  *[@dingyi222666](https://github.com/dingyi222666)**)
 - hardwrap marker
 - input connection events `BuildEditorInfoEvent` and `ImePrivateCommandEvent`
-- symbol pair completion for textmate (by **[@dingyi222666 ](https://github.com/dingyi222666 )**)
-- updated symbol pair api (by **[@dingyi222666 ](https://github.com/dingyi222666 )**)
-- add bom module (by **[@keta1 ](https://github.com/keta1 )**)
-- support indentationRules in textmate (by **[@dingyi222666 ](https://github.com/dingyi222666 )**)
+- symbol pair completion for textmate (by **[@dingyi222666](https://github.com/dingyi222666)**)
+- updated symbol pair api (by **[@dingyi222666 ](https://github.com/dingyi222666)**)
+- add bom module (by **[@keta1](https://github.com/keta1)**)
+- support indentationRules in textmate (by **[@dingyi222666](https://github.com/dingyi222666)**)
 
-## Fixed Bugs
+### Fixed Bugs
 
 - [VITAL] wrong state passed to incremental analysis process when line state-affecting text is inserted
 - selection anchor not updated when moving lines (by **[@itsaky ](https://github.com/itsaky )**)
-- possible crash on low API device #246
+- possible crash on low API device [#246](https://github.com/Rosemoe/sora-editor/issues/246)
 - measure cache is not verified before being used
 - selection animation is unexpectedly canceled when composing text is present
 - selection scale animation causes visual lag when setting new selection position
@@ -189,7 +189,7 @@ A major update of editor. This release note covers the updates of 0.18.0 and 0.1
 - `CodeEditor#commitTab` ignores language settings
 - `EditorKeyEvent` can not be intercepted
 
-## Migration
+### Migration
 
 - Due to new API of textmate, some methods are deprecated. They are still compatiable until 0.20.0 or so. See #282 for
   detailed message
@@ -199,7 +199,7 @@ A major update of editor. This release note covers the updates of 0.18.0 and 0.1
 
 ## **[0.17.2](https://github.com/Rosemoe/sora-editor/releases/tag/0.17.2) (2022-10-08)**
 
-## Bugs Fixed
+### Bugs Fixed
 
 - fix unexpected cursor animation when text is not editable
 - fix text selecting issue on low API devices (#238 )
@@ -218,7 +218,7 @@ A major update of editor. This release note covers the updates of 0.18.0 and 0.1
 - fix `NewlineHandler` not triggered when completion window is shown
 - fix wrongly inserted line separator in completion window
 
-## Improvements
+### Improvements
 
 - add `StyleUpdateRange` for performance when highlight is updated
 - (BREAKING) separate some less frequently used field to  `AdvancedSpan` from `Span`
@@ -230,7 +230,7 @@ A major update of editor. This release note covers the updates of 0.18.0 and 0.1
 - improve connection speed of language server (#262 by @dingyi222666 )
 - add `verticalExtraSpaceFactor` for extra space size in vertical viewport
 
-## Dependency
+### Dependency
 
 - remove unused xerces dependency (#243 by @PranavPurwar )
 - update kotlin to 1.7.20
@@ -238,13 +238,13 @@ A major update of editor. This release note covers the updates of 0.18.0 and 0.1
 
 ## **[0.17.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.17.1) (2022-09-04)**
 
-## Bugs Fixed
+### Bugs Fixed
 
 - fix nullptr when destroying lsp server without completion implementation
 - fix trailing FORMAT sting at snippet end causing index out of bounds
 - fix a bug in `JavaTextTokenizer` that causes the completion stop
 
-## Improvements
+### Improvements
 
 - editor code snippets now support complex variables and placeholders (with transform or choices) as well as usage
   of `\u` and interpolated shell code
@@ -259,7 +259,7 @@ A major update of editor. This release note covers the updates of 0.18.0 and 0.1
 
 ## **[0.17.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.17.0) (2022-09-03)**
 
-## Fixed bugs
+### Fixed bugs
 
 - a potential bug in composing text
 - invalid emoji text display when using textmate
@@ -270,7 +270,7 @@ A major update of editor. This release note covers the updates of 0.18.0 and 0.1
 - bug in selecting text when ICU is unavailable (#238 )
 - occasional index out of bounds in drawText
 
-## New features and Improvements
+### New features and Improvements
 
 - Optional bold highlighted delimiters (by **[@ikws4 ](https://github.com/ikws4 )**)
 - Better auto completion in lsp (by **[@dingyi222666 ](https://github.com/dingyi222666 )**)
@@ -278,7 +278,7 @@ A major update of editor. This release note covers the updates of 0.18.0 and 0.1
 - Line number color for current line
 - Very basic support of code snippets (simple tabstops, variables and placeholder. choice and rules are unavailable now)
 
-## Breaking changes
+### Breaking changes
 
 tm4e upstream code is changed significantly. You are expected to refer to our sample app for migrating old code.
 
@@ -311,7 +311,7 @@ Users who rely on using internal fields should check their reflection targets.
 
 ## **[0.16.2](https://github.com/Rosemoe/sora-editor/releases/tag/0.16.2) (2022-08-11)**
 
-## Updates
+### Updates
 
 - fix potential bug in ContentCreator when reading CRLF text
 - fix bug in Content#copyText
@@ -322,7 +322,7 @@ Users who rely on using internal fields should check their reflection targets.
 
 ## **[0.16.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.16.1) (2022-08-10)**
 
-## Updates
+### Updates
 
 - Specify line separators for new lines when users edit text in editor
 - Fix Content#subSequence bugs in CRLF text
@@ -333,13 +333,13 @@ Users who rely on using internal fields should check their reflection targets.
 
 ## **[0.16.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.16.0) (2022-08-10)**
 
-## Performance Enhancements
+### Performance Enhancements
 
 This release is mainly focused on performance and display correctness. We optimized the speed of highlighting delimiters
 and the time cost when text is editted. We also add a new mode called "Basic Display Mode", which provides basic display
 of text and fast measuring speed. However, some features such as RTL and ligatures are disabled when this is enabled.
 
-## New Features
+### New Features
 
 - correct LTR and RTL mixed display
 - customizible round text background factor
@@ -347,18 +347,16 @@ of text and fast measuring speed. However, some features such as RTL and ligatur
 - mixed CR,LF,CRLF in `Content` (Note that CodeEditor#setLineSeparator is not complete yet. editor still uses LF for
   newlines when you edit text in editor)
 
-## Bugs fixed
+### Bugs fixed
 
 - fix the width measurement of RTL texts
 - fix bugs in `TextRegionIterator`
 
 ## **[0.15.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.15.1) (2022-07-23)**
 
-# 0.15.1
+> This is a major update of sora-editor
 
-This is a major update of sora-editor
-
-## New features
+### New features
 
 - `editor-lsp` for LSP users, provided by @dingyi222666
 - new selection position can be provided by formatters
@@ -369,7 +367,7 @@ This is a major update of sora-editor
   editted
 - highlight matching delimiters (including underline, bold and background) (optional)
 
-## Improvements
+### Improvements
 
 - quicker speed when finding index in text
 - use Android 12 introduced new `EdgeEffect`
@@ -383,19 +381,19 @@ This is a major update of sora-editor
 - better user experience when editor is not editable
 - more switches in `DirectAccessProps`
 
-## Fixed bugs
+### Fixed bugs
 
 - fix potential NPE during destruction of `AsyncIncrementalAnalyzeManager`
 - fix concurrent issue of `InsertTextHelper` (  - -critical - -)
 - fix sometimes wrongly drawn newline markers on high API devices
 
-## Notice
+### Notice
 
 From - -next version - - of sora-editor, the min SDK version will rise to Android API 24 due to better maintainence.
 
 ## **[0.14.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.14.0) (2022-06-29)**
 
-## Bug fix
+### Bug fix
 
 - Fix unnotified text change for IME when undo/redo (#210 )
 - Fix bad scroll range (#212 )
@@ -403,25 +401,24 @@ From - -next version - - of sora-editor, the min SDK version will rise to Androi
 - Reset batch edit when `Content` object is detached
 - Reset all styles when text or language changes
 
-## Improvements
+### Improvements
 
 - `Indexer` and `Content` share a lock
 - `Content` has 8x faster speed when inserting
 - `Content` now recoginzes newline correctly: CR, LF, CRLF are all considered '\n'
 
-## New Features
+### New Features
 
 - Brackets matching and highlighting in language-java and language-textmate (#194 )
 
 ## **[0.13.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.13.1) (2022-06-26)**
 
-## Fix some issues in composing text
-
-## Fix incorrect sticky selection
+- Fix some issues in composing text
+- Fix incorrect sticky selection
 
 ## **[0.13.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.13.0) (2022-06-25)**
 
-## Improvements
+### Improvements
 
 - Fix unexpectedly created 512 bytes array when drawing
 - Fix text width caching
@@ -434,11 +431,11 @@ From - -next version - - of sora-editor, the min SDK version will rise to Androi
 - Add line spacing APIs
 - Add option for round text background
 
-## Chores
+### Chores
 
 - Update dependencies of textmate & testing instrumentations
 
-## Breaking changes
+### Breaking changes
 
 - `UIThreadIncrementalAnalyzeManager` is removed
 - `IdentifierAutoComplete` is updated so that it can be used incrementally
@@ -446,7 +443,7 @@ From - -next version - - of sora-editor, the min SDK version will rise to Androi
 
 ## **[0.12.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.12.0) (2022-06-21)**
 
-## Bug fix
+### Bug fix
 
 - Fix parent view of Magnifier
 - Fix missing `invalidate()` call in `setFontFeatureSettings()`
@@ -456,7 +453,7 @@ From - -next version - - of sora-editor, the min SDK version will rise to Androi
 - Fix invalid error indicator line display (invalid phi for the wavy lines)
 - Fix 1 char invisible at line ending sometimes when wordwrap is enabled
 
-## New & Improvements
+### New & Improvements
 
 - Custom scale factor in `Magnifier`
 - Add time limit for merging undo actions (can be modified by `UndoManager#setMergeTimeLimit(long)`)
@@ -468,14 +465,14 @@ From - -next version - - of sora-editor, the min SDK version will rise to Androi
 - More diagnostic indicator styles (`DiagnosticIndicatorStyle`)
 - Approriate default size for diagnostic indicator lines
 
-## Breaking changes
+### Breaking changes
 
 - `Span#problemFlags`, `MappedSpans#markProblemRegion` and `MappedSpans.Builder#markProblemRegion` are removed. Instead,
   you are expected to replace them with Diagnostic APIs
 - In order to catch up with the updates from tm4e in time, some packages in language-textmate are moved to its original
   package in tm4e project.
 
-## Migration Guide
+### Migration Guide
 
 ->Mainly, your work will be miragting your problem marking logic to the new diagnostic API.
 Now, the diagnostics are sent by calling `StyleReceiver#setDiagnostics(DiagnosticContainer)`. You are expected to add
@@ -489,17 +486,17 @@ See package `io.github.rosemoe.sora.lang.diagnostic`.
 ->package `io.github.rosemoe.langs.textmate.core` and `io.github.rosemoe.langs.textmate.languageconfiguration` are moved
 to `org.eclipse.tm4e.core` and `org.eclipse.tm4e.languageconfiguration`
 
-## More information
+### More information
 
 Now editor will show diagnostics with zero length. The editor will show the indicator with a width of the character 'a'.
 
-## Note
+### Note
 
 Maven artifact language-textmate 0.12.0 is broken. Use 0.12.0-1 instead.
 
 ## **[0.11.4](https://github.com/Rosemoe/sora-editor/releases/tag/0.11.4) (2022-06-21)**
 
-## Bug fix
+### Bug fix
 
 - Fix invalid position of editor windows
 - Fix unexpected cursor update notification to IME when composing text
@@ -522,7 +519,7 @@ Version 0.11.2's maven repo is broken. Use 0.11.3 instead.
 
 ## **[0.11.2](https://github.com/Rosemoe/sora-editor/releases/tag/0.11.2) (2022-05-21)**
 
-### New  Features
+### New Features
 
 - Multiple cursor animation available (by **[@massivemadness ](https://github.com/massivemadness )**)
 - Optional sticky selection while selecting text (by **[@massivemadness ](https://github.com/massivemadness )**)
@@ -544,7 +541,7 @@ created on Android O or above.
 
 ## **[0.11.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.11.1) (2022-05-01)**
 
-## Improvements
+### Improvements
 
 - Reduce waiting time to for span map lock while drawing
 - Reduce acquisitions of locks while drawing
@@ -552,13 +549,13 @@ created on Android O or above.
 - Reuse `Paint` objects while rendering
 - Use `Collections#swap` to swap value in List
 
-## New
+### New
 
 - Add letter spacing and text scale settings
 
 ## **[0.11.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.11.0) (2022-04-30)**
 
-## Bug fix
+### Bug fix
 
 - Fix `deleteEmptyLineFast` and `deleteMultiSpaces` when using
   Gboard [#170](https://github.com/Rosemoe/sora-editor/issues/170)
@@ -567,53 +564,53 @@ created on Android O or above.
 - Fix crash/ANR when deleting chars in wordwrap mode [#168](https://github.com/Rosemoe/sora-editor/issues/168)
 - Fix memory leak in sample app
 
-## Improvements
+### Improvements
 
 - Optimize auto-scrolling when editing at the end of text
 - Add method to format code partially
 - Migrate code to new Android Gradle Plugin DSL
 
-## Tip
+### Tip
 
 After upgrading to the new version, you may need to re-compile your project (clean & build) if you get
 an `AbstractMethodError` because a method with default implementation is added to `Language` class.
 
 ## **[0.10.11](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.11) (2022-04-02)**
 
-## Bug fix
+### Bug fix
 
 - Fix non-threadsafe access to spans in IncrementalAnalyzeManager
 - Fix measure cache based position computing
 
-## Improvement
+### Improvement
 
 - Add some functions in editor-kt (by **[@dingyi222666 ](https://github.com/dingyi222666 )**)
 
 ## **[0.10.10](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.10) (2022-03-26)**
 
-## Improvement
+### Improvement
 
 - Improve rendering performance for long lines
 - Add option to allow render cache to be save for long lines. enabled by default
 
 ## **[0.10.9](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.9) (2022-03-19)**
 
-## Bug fix
+### Bug fix
 
 - Fix exception occurred when deleting texts
 - Fix current code block line color
 
-## Feature
+### Feature
 
 - Add side block line for current block in wordwrap mode
 
 ## **[0.10.8](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.8) (2022-03-14)**
 
-### Fix custom adapter not applied to completion window
+- Fix custom adapter not applied to completion window
 
 ## **[0.10.7](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.7) (2022-03-11)**
 
-## Bug fix
+### Bug fix
 
 - Fix wrong text object used in AsyncIncremntalAnalyzeManager#initialize
 - Fix occasional failed java highlighting due to concurrently accessed tokenizer
@@ -621,7 +618,6 @@ an `AbstractMethodError` because a method with default implementation is added t
 - Dismiss editor windows in `release()` to avoid window leak
 - Fix overflowed problem indicator region
 
-## Improvement
+### Improvement
 
 - Adjust defualt width of problem indicator
-
