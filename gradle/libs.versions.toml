@@ -2,7 +2,7 @@
 agp = "7.4.1"
 kotlin = "1.8.10"
 lifecycle = "2.5.1"
-tsBinding = "1.4.1"
+tsBinding = "1.4.2"
 lsp4j = "0.20.1"
 androidxAnnotation = "1.6.0"
 
