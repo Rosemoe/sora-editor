@@ -287,7 +287,7 @@ public class GraphicTextRow {
             return 0f;
         }
         var cache = text.widthCache;
-        if (cache != null && useCache && end <= cache.length) {
+        if (cache != null && useCache && end < cache.length) {
             return cache[end] - cache[start];
         }
         return measureTextInternal(start, end, null);
