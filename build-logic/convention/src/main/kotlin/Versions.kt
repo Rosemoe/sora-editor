@@ -24,8 +24,8 @@
 @SuppressWarnings("unused")
 object Versions {
     // Project versions
-    const val versionName = "0.21.0"
-    const val versionCode = 76
+    const val versionName = "0.21.1"
+    const val versionCode = 77
 
     // Platform & Tool versions
     const val buildToolsVersion = "33.0.0"
