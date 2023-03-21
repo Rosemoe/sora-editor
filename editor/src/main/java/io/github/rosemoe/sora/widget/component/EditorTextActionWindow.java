@@ -276,9 +276,8 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
             editor.selectAll();
             return;
         } else if (id == R.id.panel_btn_cut) {
-            editor.copyText();
             if (editor.getCursor().isSelected()) {
-                editor.deleteText();
+                editor.cutText();
             }
         } else if (id == R.id.panel_btn_paste) {
             editor.pasteText();
