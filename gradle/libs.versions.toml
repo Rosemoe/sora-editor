@@ -16,7 +16,7 @@ androidx-test-espresso = { module = "androidx.test.espresso:espresso-core", vers
 desugar = { module = "com.android.tools:desugar_jdk_libs", version = "1.2.2" }
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version = "1.6.4" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.6.0"}
+lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.6.1"}
 material = { module = "com.google.android.material:material", version = "1.8.0"}
 gms-instantapps = { module = "com.google.android.gms:play-services-instantapps", version = "18.0.1"}
 tree-sitter-java = { module = "io.github.itsaky:tree-sitter-java", version.ref = "tsBinding" }
