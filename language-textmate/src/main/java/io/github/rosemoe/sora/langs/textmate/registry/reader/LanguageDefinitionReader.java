@@ -77,9 +77,13 @@ public class LanguageDefinitionReader {
                     }
 
 
-                    var grammarSource = IGrammarSource.fromInputStream(FileProviderRegistry.getInstance().tryGetInputStream(
+                    var grammarInput = FileProviderRegistry.getInstance().tryGetInputStream(
                             grammarPath
-                    ), grammarPath, Charset.defaultCharset());
+                    );
+                    if (grammarInput == null) {
+                        throw new IllegalArgumentException("grammar file can not be opened");
+                    }
+                    var grammarSource = IGrammarSource.fromInputStream(grammarInput, grammarPath, Charset.defaultCharset());
 
                     var grammarDefinition = DefaultGrammarDefinition.withLanguageConfiguration(grammarSource, languageConfiguration, name, scopeName);
 
