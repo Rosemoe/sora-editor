@@ -23,16 +23,16 @@
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
 <resources>
-    <string name="last">上个</string>
-    <string name="next">下个</string>
-    <string name="replace">替换</string>
-    <string name="replaceAll">替换全部</string>
-    <string name="replacement">替换文本</string>
-    <string name="editor_search_replacing">正在替换…</string>
-    <string name="editor_search_busy">编辑器正在准备…</string>
-    <string name="editor_formatting">正在格式化…</string>
-    <string name="text_to_search">欲搜索文本</string>
-    <string name="more">更多</string>
-    <string name="diagnostics_more_actions">更多操作…</string>
-    <string name="clip_text_length_too_large">文本过大，无法复制</string>
+    <string name="sora_editor_last">上个</string>
+    <string name="sora_editor_next">下个</string>
+    <string name="sora_editor_replace">替换</string>
+    <string name="sora_editor_replaceAll">替换全部</string>
+    <string name="sora_editor_replacement">替换文本</string>
+    <string name="sora_editor_editor_search_replacing">正在替换…</string>
+    <string name="sora_editor_editor_search_busy">编辑器正在准备…</string>
+    <string name="sora_editor_editor_formatting">正在格式化…</string>
+    <string name="sora_editor_text_to_search">欲搜索文本</string>
+    <string name="sora_editor_more">更多</string>
+    <string name="sora_editor_diagnostics_more_actions">更多操作…</string>
+    <string name="sora_editor_clip_text_length_too_large">文本过大，无法复制</string>
 </resources>

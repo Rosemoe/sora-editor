@@ -25,17 +25,17 @@
 
 <resources>
 
-    <string name="last">Last</string>
-    <string name="next">Next</string>
-    <string name="replace">Replace</string>
-    <string name="replaceAll">Replace All</string>
-    <string name="replacement">Replacement</string>
-    <string name="text_to_search">Text to search</string>
-    <string name="editor_search_replacing">Replacing texts…</string>
-    <string name="editor_search_busy">Editor is still preparing…</string>
-    <string name="editor_formatting">Formatting your code…</string>
-    <string name="more">More</string>
-    <string name="diagnostics_more_actions">More Actions...</string>
-    <string name="clip_text_length_too_large">Text is too large to copy</string>
+    <string name="sora_editor_last">Last</string>
+    <string name="sora_editor_next">Next</string>
+    <string name="sora_editor_replace">Replace</string>
+    <string name="sora_editor_replaceAll">Replace All</string>
+    <string name="sora_editor_replacement">Replacement</string>
+    <string name="sora_editor_text_to_search">Text to search</string>
+    <string name="sora_editor_editor_search_replacing">Replacing texts…</string>
+    <string name="sora_editor_editor_search_busy">Editor is still preparing…</string>
+    <string name="sora_editor_editor_formatting">Formatting your code…</string>
+    <string name="sora_editor_more">More</string>
+    <string name="sora_editor_diagnostics_more_actions">More Actions...</string>
+    <string name="sora_editor_clip_text_length_too_large">Text is too large to copy</string>
 
 </resources>

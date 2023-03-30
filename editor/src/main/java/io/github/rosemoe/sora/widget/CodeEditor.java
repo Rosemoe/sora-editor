@@ -536,7 +536,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         lineSeparator = LineSeparator.LF;
         lineNumberTipTextProvider = DefaultLineNumberTip.INSTANCE;
-        formatTip = I18nConfig.getString(getContext(), R.string.editor_formatting);
+        formatTip = I18nConfig.getString(getContext(), R.string.sora_editor_editor_formatting);
         props = new DirectAccessProps();
         dpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10f;
         dividerWidth = dpUnit;
@@ -2420,10 +2420,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             @Override
             public boolean onCreateActionMode(ActionMode p1, Menu p2) {
                 startedActionMode = ACTION_MODE_SEARCH_TEXT;
-                p2.add(0, 0, 0, I18nConfig.getResourceId(R.string.next)).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-                p2.add(0, 1, 0, I18nConfig.getResourceId(R.string.last)).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
-                p2.add(0, 2, 0, I18nConfig.getResourceId(R.string.replace)).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
-                p2.add(0, 3, 0, I18nConfig.getResourceId(R.string.replaceAll)).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
+                p2.add(0, 0, 0, I18nConfig.getResourceId(R.string.sora_editor_next)).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+                p2.add(0, 1, 0, I18nConfig.getResourceId(R.string.sora_editor_last)).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
+                p2.add(0, 2, 0, I18nConfig.getResourceId(R.string.sora_editor_replace)).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
+                p2.add(0, 3, 0, I18nConfig.getResourceId(R.string.sora_editor_replaceAll)).setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_NEVER);
                 SearchView sv = new SearchView(getContext());
                 sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 
@@ -2446,7 +2446,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 });
                 p1.setCustomView(sv);
                 sv.performClick();
-                sv.setQueryHint(I18nConfig.getString(getContext(), R.string.text_to_search));
+                sv.setQueryHint(I18nConfig.getString(getContext(), R.string.sora_editor_text_to_search));
                 sv.setIconifiedByDefault(false);
                 sv.setIconified(false);
                 return true;
@@ -2473,12 +2473,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     case 3:
                         final boolean replaceAll = p2.getItemId() == 3;
                         final EditText et = new EditText(getContext());
-                        et.setHint(I18nConfig.getResourceId(R.string.replacement));
+                        et.setHint(I18nConfig.getResourceId(R.string.sora_editor_replacement));
                         new AlertDialog.Builder(getContext())
-                                .setTitle(I18nConfig.getResourceId(replaceAll ? R.string.replaceAll : R.string.replace))
+                                .setTitle(I18nConfig.getResourceId(replaceAll ? R.string.sora_editor_replaceAll : R.string.sora_editor_replace))
                                 .setView(et)
                                 .setNegativeButton(android.R.string.cancel, null)
-                                .setPositiveButton(I18nConfig.getResourceId(R.string.replace), (dialog, which) -> {
+                                .setPositiveButton(I18nConfig.getResourceId(R.string.sora_editor_replace), (dialog, which) -> {
                                     if (replaceAll) {
                                         getSearcher().replaceAll(et.getText().toString(), am::finish);
                                     } else {
@@ -3405,7 +3405,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             if (cursor.isSelected()) {
                 int length = cursor.getRight() - cursor.getLeft();
                 if (length > props.clipboardTextLengthLimit) {
-                    Toast.makeText(getContext(), I18nConfig.getResourceId(R.string.clip_text_length_too_large), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), I18nConfig.getResourceId(R.string.sora_editor_clip_text_length_too_large), Toast.LENGTH_SHORT).show();
                 } else {
                     var clip = getText().substring(cursor.getLeft(), cursor.getRight());
                     clipboardManager.setPrimaryClip(ClipData.newPlainText(clip, clip));
@@ -3415,7 +3415,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
         } catch (RuntimeException e) {
             if (e.getCause() instanceof TransactionTooLargeException) {
-                Toast.makeText(getContext(), I18nConfig.getResourceId(R.string.clip_text_length_too_large), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), I18nConfig.getResourceId(R.string.sora_editor_clip_text_length_too_large), Toast.LENGTH_SHORT).show();
             } else {
                 e.printStackTrace();
                 Toast.makeText(getContext(), e.getClass().toString(), Toast.LENGTH_SHORT).show();
