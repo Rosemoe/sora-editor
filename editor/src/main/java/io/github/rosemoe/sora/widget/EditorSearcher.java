@@ -313,11 +313,11 @@ public class EditorSearcher {
         }
         checkState();
         if (!isResultValid()) {
-            Toast.makeText(editor.getContext(), I18nConfig.getResourceId(R.string.editor_search_busy), Toast.LENGTH_SHORT).show();
+            Toast.makeText(editor.getContext(), I18nConfig.getResourceId(R.string.sora_editor_editor_search_busy), Toast.LENGTH_SHORT).show();
             return;
         }
         var context = editor.getContext();
-        final var dialog = ProgressDialog.show(context, I18nConfig.getString(context, R.string.replaceAll), I18nConfig.getString(context, R.string.editor_search_replacing), true, false);
+        final var dialog = ProgressDialog.show(context, I18nConfig.getString(context, R.string.sora_editor_replaceAll), I18nConfig.getString(context, R.string.sora_editor_editor_search_replacing), true, false);
         final var res = lastResults;
         new Thread(() -> {
             try {

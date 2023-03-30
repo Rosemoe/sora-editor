@@ -85,7 +85,7 @@
                 style="?android:buttonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/diagnostics_more_actions"
+                android:text="@string/sora_editor_diagnostics_more_actions"
                 android:textAllCaps="false"
                 android:textColor="@android:color/holo_blue_light" />
 

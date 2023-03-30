@@ -127,7 +127,7 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
                 dismiss()
             }
         }
-        moreActionText.setText(I18nConfig.getResourceId(R.string.diagnostics_more_actions))
+        moreActionText.setText(I18nConfig.getResourceId(R.string.sora_editor_diagnostics_more_actions))
         moreActionText.setOnClickListener { _ ->
             val quickfixes = currentDiagnostic?.quickfixes
             if (!quickfixes.isNullOrEmpty() && quickfixes.size > 1) {
