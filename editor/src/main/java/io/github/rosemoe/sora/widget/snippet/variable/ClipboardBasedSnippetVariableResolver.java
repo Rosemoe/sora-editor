@@ -48,7 +48,10 @@ public class ClipboardBasedSnippetVariableResolver implements ISnippetVariableRe
         if ("CLIPBOARD".equals(name)) {
             if (clipboardManager != null && clipboardManager.hasPrimaryClip()) {
                 var clip = clipboardManager.getPrimaryClip();
-                return clip != null ? clip.toString() : "";
+                if (clip == null || clip.getItemCount() == 0) {
+                    return "";
+                }
+                return clip.getItemAt(0).getText().toString();
             }
             return "";
         }
