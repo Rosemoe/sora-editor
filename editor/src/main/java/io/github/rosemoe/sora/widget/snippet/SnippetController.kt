@@ -271,9 +271,10 @@ class SnippetController(private val editor: CodeEditor) {
                     val def = if (variableItemMapping.contains(item.name)) {
                         variableItemMapping[item.name]!!
                     } else {
-                        variableItemMapping[item.name] =
-                            PlaceholderDefinition(++maxTabStop, elements = listOf(PlainPlaceholderElement(item.name)))
-                        variableItemMapping[item.name]!!
+                        val definition = PlaceholderDefinition(++maxTabStop)
+                        definition.text = item.name
+                        variableItemMapping[item.name] = definition
+                        definition
                     }
                     elements[i] = PlaceholderItem(def, item.startIndex)
                     val deltaIndex = item.name.length - (item.endIndex - item.startIndex)
