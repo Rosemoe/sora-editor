@@ -24,8 +24,14 @@
 @SuppressWarnings("unused")
 object Versions {
     // Project versions
-    const val versionName = "0.21.1"
+    private const val version = "0.21.1"
     const val versionCode = 77
+
+    val versionName by lazy {
+        if (System.getenv("CI").toBoolean()) {
+            "$version-SNAPSHOT"
+        } else version
+    }
 
     // Platform & Tool versions
     const val buildToolsVersion = "33.0.0"
