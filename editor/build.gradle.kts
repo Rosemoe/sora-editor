@@ -54,6 +54,8 @@ dependencies {
     api(libs.androidx.annotation)
     implementation(libs.kotlin.stdlib)
     testImplementation(libs.junit)
+    testImplementation(libs.tests.google.truth)
+    testImplementation(libs.tests.robolectric)
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.androidx.test.espresso)
 }

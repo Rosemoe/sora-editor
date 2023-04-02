@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lang.completion.snippet;
 
 import androidx.annotation.NonNull;
 
+import io.github.rosemoe.sora.text.TextUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -80,7 +81,7 @@ public class CodeSnippet implements Cloneable {
         var defs = new ArrayList<PlaceholderDefinition>(placeholders.size());
         var map = new HashMap<PlaceholderDefinition, PlaceholderDefinition>();
         for (PlaceholderDefinition placeholder : placeholders) {
-            var n = new PlaceholderDefinition(placeholder.getId(), placeholder.getDefaultValue(), placeholder.getChoices(), placeholder.getTransform());
+            var n = new PlaceholderDefinition(placeholder.getId(), placeholder.getChoices(), placeholder.getElements(), placeholder.getTransform());
             defs.add(n);
             map.put(placeholder, n);
         }
@@ -169,6 +170,14 @@ public class CodeSnippet implements Cloneable {
         }
 
         public Builder addPlaceholder(int id, String defaultValue) {
+            final var elements = new ArrayList<PlaceHolderElement>();
+            if (!android.text.TextUtils.isEmpty(defaultValue)) {
+                elements.add(new PlainPlaceholderElement(defaultValue));
+            }
+            return addComplexPlaceholder(id, elements);
+        }
+
+        public Builder addComplexPlaceholder(int id, List<PlaceHolderElement> elements) {
             PlaceholderDefinition def = null;
             for (var definition : definitions) {
                 if (definition.getId() == id) {
@@ -177,33 +186,14 @@ public class CodeSnippet implements Cloneable {
                 }
             }
             if (def == null) {
-                def = new PlaceholderDefinition(id, "", null, null);
+                def = new PlaceholderDefinition(id);
                 definitions.add(def);
             }
-            int delta = 0;
-            if (defaultValue != null && !defaultValue.equals(def.getDefaultValue())) {
-                delta = defaultValue.length() - def.getDefaultValue().length();
-                def.setDefaultValue(defaultValue);
-            }
+
+            def.getElements().addAll(elements);
+
             var item = new PlaceholderItem(def, index);
             items.add(item);
-            if (delta != 0) {
-                for (int i = 0; i < items.size() - 1; i++) {
-                    var j = items.get(i);
-                    if (j instanceof PlaceholderItem) {
-                        var placeholder = (PlaceholderItem) j;
-                        if (placeholder.getDefinition() == def) {
-                            placeholder.setIndex(placeholder.getStartIndex(), placeholder.getEndIndex() + delta);
-                            for (int k = i + 1; k < items.size(); k++) {
-                                items.get(k).shiftIndex(delta);
-                            }
-                        }
-                    }
-                }
-                index = items.get(items.size() - 1).getEndIndex();
-            } else {
-                index += def.getDefaultValue().length();
-            }
             return this;
         }
 

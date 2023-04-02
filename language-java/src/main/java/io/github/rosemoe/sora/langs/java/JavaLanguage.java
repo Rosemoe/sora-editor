@@ -63,6 +63,7 @@ public class JavaLanguage implements Language {
 
     private final static CodeSnippet FOR_SNIPPET = CodeSnippetParser.parse("for(int ${1:i} = 0;$1 < ${2:count};$1++) {\n    $0\n}");
     private final static CodeSnippet STATIC_CONST_SNIPPET = CodeSnippetParser.parse("private final static ${1:type} ${2/(.*)/${1:/upcase}/} = ${3:value};");
+    private final static CodeSnippet CLIPBOARD_SNIPPET = CodeSnippetParser.parse("${1:${CLIPBOARD}}");
 
     private IdentifierAutoComplete autoComplete;
     private final JavaIncrementalAnalyzeManager manager;
@@ -108,6 +109,9 @@ public class JavaLanguage implements Language {
         }
         if ("sconst".startsWith(prefix) && prefix.length() > 0) {
             publisher.addItem(new SimpleSnippetCompletionItem("sconst", "Snippet - Static Constant", new SnippetDescription(prefix.length(), STATIC_CONST_SNIPPET, true)));
+        }
+        if ("clip".startsWith(prefix) && prefix.length() > 0) {
+            publisher.addItem(new SimpleSnippetCompletionItem("clip", "Snippet - Clipboard contents", new SnippetDescription(prefix.length(), CLIPBOARD_SNIPPET, true)));
         }
     }
 
