@@ -31,7 +31,7 @@ public class PlaceholderItem extends SnippetItem {
     private String text;
 
     public PlaceholderItem(@NonNull PlaceholderDefinition definition, int index) {
-        setIndex(index, index + definition.getDefaultValue().length());
+        setIndex(index, index);
         this.definition = definition;
     }
 

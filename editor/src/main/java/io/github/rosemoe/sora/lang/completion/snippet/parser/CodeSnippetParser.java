@@ -24,19 +24,21 @@
 package io.github.rosemoe.sora.lang.completion.snippet.parser;
 
 import androidx.annotation.NonNull;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
+import androidx.annotation.Nullable;
 import io.github.rosemoe.sora.lang.completion.snippet.CodeSnippet;
 import io.github.rosemoe.sora.lang.completion.snippet.ConditionalFormat;
 import io.github.rosemoe.sora.lang.completion.snippet.FormatString;
 import io.github.rosemoe.sora.lang.completion.snippet.NextUpperCaseFormat;
 import io.github.rosemoe.sora.lang.completion.snippet.NoFormat;
+import io.github.rosemoe.sora.lang.completion.snippet.PlaceHolderElement;
 import io.github.rosemoe.sora.lang.completion.snippet.PlaceholderDefinition;
+import io.github.rosemoe.sora.lang.completion.snippet.PlainPlaceholderElement;
+import io.github.rosemoe.sora.lang.completion.snippet.VariablePlaceholderElement;
 import io.github.rosemoe.sora.lang.completion.snippet.Transform;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public class CodeSnippetParser {
 
@@ -232,23 +234,35 @@ public class CodeSnippetParser {
             var idText = text;
             if (accept(TokenType.Colon)) {
                 // ${1:xxx}
-                var sb = new StringBuilder();
+                final var elements = new ArrayList<PlaceHolderElement>();
                 while (!accept(TokenType.CurlyClose)) {
                     if (accept(TokenType.Backslash)) {
+                        String t;
                         if ((text = _accept(TokenType.Backslash, TokenType.Dollar, TokenType.CurlyClose)) != null) {
-                            sb.append(text);
+                            t = text;
                         } else {
-                            sb.append('\\');
+                            t = "\\";
                         }
+
+                        appendPlaceholderElement(elements, t);
                     } else if (token.type == TokenType.EOF) {
                         backTo(backup);
                         return false;
                     } else {
-                        sb.append(src, token.index, token.index + token.length);
+                        var index = token.index;
+                        var v = parseVariableName();
+                        if (v != null) {
+                            elements.add(new VariablePlaceholderElement(v, index, token.index + token.length));
+                            continue;
+                        }
+
+                        var t = src.substring(token.index, token.index + token.length);
+                        appendPlaceholderElement(elements, t);
                         next();
                     }
                 }
-                builder.addPlaceholder(Integer.parseInt(idText), sb.toString());
+                final var id = Integer.parseInt(idText);
+                builder.addComplexPlaceholder(id, elements);
             } else if (accept(TokenType.Pipe)) {
                 // ${1|one,two,three|}
                 var choices = new ArrayList<String>();
@@ -287,6 +301,38 @@ public class CodeSnippetParser {
         }
         backTo(backup);
         return false;
+    }
+
+    private static void appendPlaceholderElement(@NonNull ArrayList<PlaceHolderElement> elements, @NonNull String t) {
+        if (!elements.isEmpty()) {
+            if (elements.get(elements.size() - 1) instanceof PlainPlaceholderElement) {
+                // merge with the last plain placeholder element
+                var plain = (PlainPlaceholderElement) elements.get(elements.size() - 1);
+                plain.setText(plain.getText() + t);
+                return;
+            }
+        }
+        elements.add(new PlainPlaceholderElement(t));
+    }
+
+    @Nullable
+    private String parseVariableName() {
+        var backup = token;
+        if (accept(TokenType.Dollar)) {
+
+            // Check for : $VARIABLE_NAME
+            var v = _accept(TokenType.VariableName);
+            if (v != null) {
+                return v;
+            }
+
+            // Check for: ${VARIABLE_NAME}
+            if (accept(TokenType.CurlyOpen) && (v = _accept(TokenType.VariableName)) != null && accept(TokenType.CurlyClose)) {
+                return v;
+            }
+        }
+        backTo(backup);
+        return null;
     }
 
     private boolean parseChoiceElement(List<String> choices) {
