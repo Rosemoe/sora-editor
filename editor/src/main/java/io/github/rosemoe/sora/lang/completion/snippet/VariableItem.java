@@ -26,7 +26,7 @@ package io.github.rosemoe.sora.lang.completion.snippet;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class VariableItem extends SnippetItem {
+public class VariableItem extends SnippetItem implements PlaceHolderElement {
 
     private String name;
     private String defaultValue;

@@ -207,6 +207,12 @@ public class CodeSnippet implements Cloneable {
             return this;
         }
 
+        public Builder addVariable(VariableItem item) {
+            item.setIndex(index);
+            items.add(item);
+            return this;
+        }
+
         public CodeSnippet build() {
             return new CodeSnippet(items, definitions);
         }
