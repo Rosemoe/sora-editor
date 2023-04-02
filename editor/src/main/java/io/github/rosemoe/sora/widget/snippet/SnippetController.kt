@@ -31,14 +31,12 @@ import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.SnippetEvent
 import io.github.rosemoe.sora.lang.completion.snippet.CodeSnippet
 import io.github.rosemoe.sora.lang.completion.snippet.InterpolatedShellItem
-import io.github.rosemoe.sora.lang.completion.snippet.PlaceHolderElement
 import io.github.rosemoe.sora.lang.completion.snippet.PlaceholderDefinition
 import io.github.rosemoe.sora.lang.completion.snippet.PlaceholderItem
 import io.github.rosemoe.sora.lang.completion.snippet.PlainPlaceholderElement
 import io.github.rosemoe.sora.lang.completion.snippet.PlainTextItem
 import io.github.rosemoe.sora.lang.completion.snippet.SnippetItem
 import io.github.rosemoe.sora.lang.completion.snippet.VariableItem
-import io.github.rosemoe.sora.lang.completion.snippet.VariablePlaceholderElement
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.getComponent
@@ -367,11 +365,21 @@ class SnippetController(private val editor: CodeEditor) {
                     if (element is PlainPlaceholderElement) {
                         sb.append(element.text)
                         deltaIndex += element.text.length
-                    } else if (element is VariablePlaceholderElement) {
-                        val value = if(variableResolver.canResolve(element.variable)) variableResolver.resolve(element.variable) else ""
-                        if (value.isNotEmpty()) {
+                    } else if (element is VariableItem) {
+                        var value = when {
+                            variableResolver.canResolve(element.name) -> variableResolver.resolve(element.name)
+                            element.name == "selection" -> selectedText
+                            element.defaultValue != null -> element.defaultValue
+                            else -> null
+                        }
+
+                        if (value != null) {
+                            value = TransformApplier.doTransform(value, element.transform)
                             sb.append(value)
                             deltaIndex += value.length
+                        } else {
+                            sb.append(element.name)
+                            deltaIndex += element.name.length
                         }
                     }
                 }

@@ -33,8 +33,8 @@ import io.github.rosemoe.sora.lang.completion.snippet.NoFormat;
 import io.github.rosemoe.sora.lang.completion.snippet.PlaceHolderElement;
 import io.github.rosemoe.sora.lang.completion.snippet.PlaceholderDefinition;
 import io.github.rosemoe.sora.lang.completion.snippet.PlainPlaceholderElement;
-import io.github.rosemoe.sora.lang.completion.snippet.VariablePlaceholderElement;
 import io.github.rosemoe.sora.lang.completion.snippet.Transform;
+import io.github.rosemoe.sora.lang.completion.snippet.VariableItem;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -180,6 +180,15 @@ public class CodeSnippetParser {
     }
 
     private boolean parseComplexVariable() {
+        final var variable = _parseComplexVariable();
+        if (variable != null) {
+            builder.addVariable(variable);
+        }
+        return variable != null;
+    }
+
+    @Nullable
+    private VariableItem _parseComplexVariable() {
         var backup = token;
         String text;
         if (accept(TokenType.Dollar) && accept(TokenType.CurlyOpen) && (text = _accept(TokenType.VariableName)) != null) {
@@ -197,34 +206,32 @@ public class CodeSnippetParser {
                         }
                     } else if (token.type == TokenType.EOF) {
                         backTo(backup);
-                        return false;
+                        return null;
                     } else {
                         sb.append(src, token.index, token.index + token.length);
                         next();
                     }
                 }
-                builder.addVariable(variableName, sb.toString());
+                return new VariableItem(-1, variableName, sb.toString());
             } else if (accept(TokenType.Forwardslash)) {
                 // ${name/regexp/format/options}
                 var transform = new Transform();
                 if (parseTransform(transform)) {
-                    builder.addVariable(variableName, transform);
-                    return true;
+                    return new VariableItem(-1, variableName, null, transform);
                 }
                 backTo(backup);
-                return false;
+                return null;
             } else if (accept(TokenType.CurlyClose)) {
                 // ${name}
-                builder.addVariable(variableName, (String) null);
+                return new VariableItem(-1, variableName, "");
             } else {
                 // missing token
                 backTo(backup);
-                return false;
+                return null;
             }
-            return true;
         }
         backTo(backup);
-        return false;
+        return null;
     }
 
     private boolean parseComplexPlaceholder() {
@@ -249,10 +256,16 @@ public class CodeSnippetParser {
                         backTo(backup);
                         return false;
                     } else {
-                        var index = token.index;
-                        var v = parseVariableName();
+                        var v = parseSimpleVariableName();
                         if (v != null) {
-                            elements.add(new VariablePlaceholderElement(v, index, token.index + token.length));
+                            elements.add(new VariableItem(token.index, v, ""));
+                            continue;
+                        }
+
+                        var vi = _parseComplexVariable();
+                        if (vi != null) {
+                            vi.setIndex(token.index);
+                            elements.add(vi);
                             continue;
                         }
 
@@ -316,18 +329,12 @@ public class CodeSnippetParser {
     }
 
     @Nullable
-    private String parseVariableName() {
+    private String parseSimpleVariableName() {
         var backup = token;
         if (accept(TokenType.Dollar)) {
-
             // Check for : $VARIABLE_NAME
             var v = _accept(TokenType.VariableName);
             if (v != null) {
-                return v;
-            }
-
-            // Check for: ${VARIABLE_NAME}
-            if (accept(TokenType.CurlyOpen) && (v = _accept(TokenType.VariableName)) != null && accept(TokenType.CurlyClose)) {
                 return v;
             }
         }
