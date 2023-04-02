@@ -385,7 +385,7 @@ class SnippetController(private val editor: CodeEditor) {
                 }
 
                 definition.text = sb.toString()
-                snippetItem.setIndex(snippetItem.startIndex, snippetItem.startIndex + deltaIndex)
+                snippetItem.setIndex(snippetItem.startIndex, snippetItem.endIndex + deltaIndex)
                 shiftItemsFrom(i + 1, deltaIndex)
             }
         }
