@@ -36,12 +36,10 @@ import android.graphics.RectF;
 import android.graphics.RenderNode;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.shapes.RoundRectShape;
 import android.os.Build;
 import android.util.Log;
 import android.util.MutableInt;
 import android.util.SparseArray;
-import android.widget.OverScroller;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -107,8 +105,8 @@ public class EditorRenderer {
         sSpansForWordwrap.add(Span.obtain(0, TextStyle.makeStyle(0, 0, true, true, false)));
     }
 
-    private final static int[] PRESSED_DRAWABLE_STATE = new int[] {android.R.attr.state_pressed, android.R.attr.state_enabled};
-    private final static int[] DEFAULT_DRAWABLE_STATE = new int[] {android.R.attr.state_enabled};
+    private final static int[] PRESSED_DRAWABLE_STATE = new int[]{android.R.attr.state_pressed, android.R.attr.state_enabled};
+    private final static int[] DEFAULT_DRAWABLE_STATE = new int[]{android.R.attr.state_enabled};
 
     private static final String LOG_TAG = "EditorRenderer";
     private final static int[] sDiagnosticsColorMapping = {0, EditorColorScheme.PROBLEM_TYPO, EditorColorScheme.PROBLEM_WARNING, EditorColorScheme.PROBLEM_ERROR};
@@ -1229,7 +1227,7 @@ public class EditorRenderer {
                     if (paintEnd >= lastVisibleChar || paintEnd >= columnCount) {
                         break;
                     }
-                    spanOffset ++;
+                    spanOffset++;
                     if (spanOffset < reader.getSpanCount()) {
                         span = reader.getSpanAt(spanOffset);
                     } else {
@@ -2048,7 +2046,7 @@ public class EditorRenderer {
                 tmpRect.bottom = topY + editor.getRowHeight() + 2 * expand;
                 baseline = topY + editor.getRowBaseline(0) + expand;
                 radii = new float[8];
-                for (int i = 0;i < 8;i++) {
+                for (int i = 0; i < 8; i++) {
                     if (i != 5)
                         radii[i] = tmpRect.height() * GraphicsConstants.ROUND_BUBBLE_FACTOR;
                 }
@@ -2057,7 +2055,7 @@ public class EditorRenderer {
                 tmpRect.bottom = topY + length;
                 baseline = topY + length - editor.getRowBaseline(0) / 2f;
                 radii = new float[8];
-                for (int i = 0;i < 8;i++) {
+                for (int i = 0; i < 8; i++) {
                     if (i != 3)
                         radii[i] = tmpRect.height() * GraphicsConstants.ROUND_BUBBLE_FACTOR;
                 }
@@ -2112,8 +2110,10 @@ public class EditorRenderer {
         var controller = editor.getSnippetController();
         if (controller.isInSnippet()) {
             var editing = controller.getEditingTabStop();
-            if (editing != null)
+            if (editing != null) {
+                Log.d(LOG_TAG, "Patch editing");
                 patchTextRegionWithColor(canvas, textOffset, editing.getStartIndex(), editing.getEndIndex(), 0, editor.getColorScheme().getColor(EditorColorScheme.SNIPPET_BACKGROUND_EDITING), 0);
+            }
             for (SnippetItem snippetItem : controller.getEditingRelatedTabStops()) {
                 patchTextRegionWithColor(canvas, textOffset, snippetItem.getStartIndex(), snippetItem.getEndIndex(), 0, editor.getColorScheme().getColor(EditorColorScheme.SNIPPET_BACKGROUND_RELATED), 0);
             }
@@ -2151,7 +2151,9 @@ public class EditorRenderer {
         paintOther.setStrokeWidth(editor.getRowHeightOfText() * 0.1f);
         paintGeneral.setStyle(android.graphics.Paint.Style.FILL_AND_STROKE);
         paintGeneral.setFakeBoldText(editor.getProps().boldMatchingDelimiters);
-        patchTextRegions(canvas, textOffset, getTextRegionPositions(start, end), (canvasLocal, horizontalOffset, row, line, startCol, endCol, style) -> {
+        var positions = getTextRegionPositions(start, end);
+        Log.d(LOG_TAG, "positions = " + positions);
+        patchTextRegions(canvas, textOffset, positions, (canvasLocal, horizontalOffset, row, line, startCol, endCol, style) -> {
             if (backgroundColor != 0) {
                 tmpRect.top = getRowTopForBackground(row) - editor.getOffsetY();
                 tmpRect.bottom = getRowBottomForBackground(row) - editor.getOffsetY();
@@ -2231,7 +2233,7 @@ public class EditorRenderer {
             var column = lineText.length();
             canvas.save();
             var horizontalOffset = textOffset;
-            var first = true;
+            boolean first = true;
             // Find spans to draw
             Span nextSpan = null;
             int spanCount = reader.getSpanCount();
@@ -2254,35 +2256,35 @@ public class EditorRenderer {
                 if (sharedEnd - sharedStart > 0) {
                     // Clip canvas to patch the requested region
                     if (first) {
-                        first = false;
                         horizontalOffset += measureText(lineText, line, position.rowStart, spanStart - position.rowStart);
-                        if (TextStyle.isItalics(span.getStyleBits())) {
-                            var path = new Path();
-                            var y = editor.getRowBottomOfText(position.row) - editor.getOffsetY();
-                            path.moveTo(textOffset + position.left, y);
-                            path.lineTo(textOffset + position.left - GraphicsConstants.TEXT_SKEW_X * y, 0f);
-                            path.lineTo(editor.getWidth(), 0f);
-                            path.lineTo(editor.getWidth(), editor.getHeight());
-                            path.close();
-                            canvas.clipPath(path);
-                        } else {
-                            canvas.clipRect(textOffset + position.left, 0, editor.getWidth(), editor.getHeight());
-                        }
+                        first = false;
                     }
-                    if (spanEnd >= endCol || i + 1 >= reader.getSpanCount()) {
-                        if (TextStyle.isItalics(span.getStyleBits())) {
-                            var path = new Path();
-                            var y = editor.getRowBottomOfText(position.row) - editor.getOffsetY();
-                            path.moveTo(textOffset + position.right, y);
-                            path.lineTo(textOffset + position.right - GraphicsConstants.TEXT_SKEW_X * y, 0f);
-                            path.lineTo(0, 0f);
-                            path.lineTo(0, editor.getHeight());
-                            path.close();
-                            canvas.clipPath(path);
-                        } else {
-                            canvas.clipRect(0, 0, textOffset + position.right, editor.getHeight());
-                        }
+                    if (TextStyle.isItalics(span.getStyleBits())) {
+                        var path = new Path();
+                        var y = editor.getRowBottomOfText(position.row) - editor.getOffsetY();
+                        path.moveTo(textOffset + position.left, y);
+                        path.lineTo(textOffset + position.left - GraphicsConstants.TEXT_SKEW_X * y, 0f);
+                        path.lineTo(editor.getWidth(), 0f);
+                        path.lineTo(editor.getWidth(), editor.getHeight());
+                        path.close();
+                        canvas.clipPath(path);
+                    } else {
+                        canvas.clipRect(textOffset + position.left, 0, editor.getWidth(), editor.getHeight());
                     }
+
+                    if (TextStyle.isItalics(span.getStyleBits())) {
+                        var path = new Path();
+                        var y = editor.getRowBottomOfText(position.row) - editor.getOffsetY();
+                        path.moveTo(textOffset + position.right, y);
+                        path.lineTo(textOffset + position.right - GraphicsConstants.TEXT_SKEW_X * y, 0f);
+                        path.lineTo(0, 0f);
+                        path.lineTo(0, editor.getHeight());
+                        path.close();
+                        canvas.clipPath(path);
+                    } else {
+                        canvas.clipRect(0, 0, textOffset + position.right, editor.getHeight());
+                    }
+
                     // Patch the text
                     patch.draw(canvas, horizontalOffset, position.row, line, spanStart, spanEnd, span.style);
                 }
