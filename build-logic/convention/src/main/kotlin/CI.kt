@@ -1,3 +1,5 @@
+import java.io.File
+
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
@@ -21,22 +23,36 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-@SuppressWarnings("unused")
-object Versions {
-    // Project versions
-    private const val version = "0.21.1"
-    const val versionCode = 77
 
-    val versionName by lazy {
-        if (CI.isCiBuild) {
-            "$version-${CI.commitHash}-SNAPSHOT"
-        } else version
-    }
+/**
+ * Information about the CI build.
+ *
+ * @author Akash Yadav
+ */
+object CI {
 
-    // Platform & Tool versions
-    const val buildToolsVersion = "33.0.0"
-    const val compileSdkVersion = 33
-    const val minSdkVersion = 21
-    const val minSdkVersionHighApi = 26
-    const val targetSdkVersion = 33
+  /** The short commit hash. */
+  val commitHash by lazy {
+    val sha = System.getenv("GITHUB_SHA") ?: return@lazy ""
+    shortSha(sha)
+  }
+
+  /** Name of the current branch. */
+  val branchName by lazy {
+    System.getenv("GITHUB_REF_NAME") ?: "main" // by default, 'main'
+  }
+
+  /** Whether the current build is a CI build. */
+  val isCiBuild by lazy { "true" == System.getenv("CI") }
+
+  private fun shortSha(sha: String): String {
+    return ProcessBuilder("git", "rev-parse", "--short", sha)
+      .directory(File("."))
+      .redirectErrorStream(true)
+      .start()
+      .inputStream
+      .bufferedReader()
+      .readText()
+      .trim()
+  }
 }
