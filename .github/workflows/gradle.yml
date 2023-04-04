@@ -44,7 +44,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
         if: ${{ always() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.build.outcome == 'success' }}
         with:
-          arguments: publishMavenPublicationToMavenCentralRepository
+          arguments: publishAllPublicationsToMavenCentral
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MVN_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MVN_PASSWORD }}
