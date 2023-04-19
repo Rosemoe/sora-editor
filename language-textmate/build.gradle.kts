@@ -53,6 +53,9 @@ android {
         // Flag to enable support for the new language APIs
         isCoreLibraryDesugaringEnabled = true
     }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
 }
 
 dependencies {
