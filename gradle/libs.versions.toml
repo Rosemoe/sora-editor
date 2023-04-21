@@ -2,7 +2,7 @@
 agp = "7.4.2"
 kotlin = "1.8.20"
 lifecycle = "2.5.1"
-tsBinding = "1.4.3"
+tsBinding = "2.0.0"
 lsp4j = "0.20.1"
 androidxAnnotation = "1.6.0"
 
@@ -19,8 +19,8 @@ kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "
 lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.6.1"}
 material = { module = "com.google.android.material:material", version = "1.8.0"}
 gms-instantapps = { module = "com.google.android.gms:play-services-instantapps", version = "18.0.1"}
-tree-sitter-java = { module = "io.github.itsaky:tree-sitter-java", version.ref = "tsBinding" }
-tree-sitter = { module = "io.github.itsaky:android-tree-sitter", version.ref = "tsBinding" }
+tree-sitter-java = { module = "com.itsaky.androidide:tree-sitter-java", version.ref = "tsBinding" }
+tree-sitter = { module = "com.itsaky.androidide:android-tree-sitter", version.ref = "tsBinding" }
 lsp4j = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j", version.ref = "lsp4j" }
 leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version = "2.10" }
 junit = { module = "junit:junit", version = "4.13.2" }
