@@ -17,7 +17,7 @@ desugar = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.3" }
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version = "1.6.4" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.6.1"}
-material = { module = "com.google.android.material:material", version = "1.8.0"}
+material = { module = "com.google.android.material:material", version = "1.9.0"}
 gms-instantapps = { module = "com.google.android.gms:play-services-instantapps", version = "18.0.1"}
 tree-sitter-java = { module = "com.itsaky.androidide:tree-sitter-java", version.ref = "tsBinding" }
 tree-sitter = { module = "com.itsaky.androidide:android-tree-sitter", version.ref = "tsBinding" }
