@@ -79,6 +79,7 @@ android {
             )
         )
     }
+    namespace = "io.github.rosemoe.sora.app"
 }
 
 dependencies {
