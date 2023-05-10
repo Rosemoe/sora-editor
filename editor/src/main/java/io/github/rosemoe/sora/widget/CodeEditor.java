@@ -341,6 +341,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private LineSeparator lineSeparator;
     private TextRange lastInsertion;
     private SnippetController snippetController;
+    private OnTextchange ontext;
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -357,6 +358,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initialize(attrs, defStyleAttr, defStyleRes);
+    }
+    
+    public interface OnTextchange{
+        void OnRemoved();
+        void OnStart();
+    }
+    public void setOnTextChange(OnTextchange ontext){
+      this.ontext = ontext;
     }
 
     /**
@@ -4535,6 +4544,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                             int endColumn, @NonNull CharSequence insertedContent) {
         renderer.updateTimestamp();
         styleDelegate.onTextChange();
+        ontext.OnRemoved();
         var start = text.getIndexer().getCharPosition(startLine, startColumn);
         var end = text.getIndexer().getCharPosition(endLine, endColumn);
         renderer.buildMeasureCacheForLines(startLine, endLine);
@@ -4557,6 +4567,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         // Notify input method
         updateCursor();
         waitForNextChange = false;
+        ontext.OnStart();
 
         // Auto completion
         var needCompletion = false;
