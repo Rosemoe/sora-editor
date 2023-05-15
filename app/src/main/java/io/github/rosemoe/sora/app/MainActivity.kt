@@ -984,7 +984,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             R.id.load_test_file -> {
-                openAssetsFile("samples/View.java")
+                openAssetsFile("samples/big_sample.txt")
             }
         }
         return super.onOptionsItemSelected(item)
