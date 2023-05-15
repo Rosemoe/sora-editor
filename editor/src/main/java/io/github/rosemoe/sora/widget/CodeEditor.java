@@ -29,6 +29,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Rect;
@@ -64,7 +65,6 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EdgeEffect;
 import android.widget.EditText;
-import android.widget.OverScroller;
 import android.widget.SearchView;
 import android.widget.Toast;
 
@@ -524,14 +524,17 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             var configuration = ViewConfiguration.get(getContext());
             verticalScrollFactor = configuration.getScaledVerticalScrollFactor();
         } else {
+            TypedArray a = null;
             try {
-                try (var a = getContext().obtainStyledAttributes(new int[]{android.R.attr.listPreferredItemHeight})) {
-                    verticalScrollFactor = a.getFloat(0, 32);
-                    a.recycle();
-                }
+                a = getContext().obtainStyledAttributes(new int[]{android.R.attr.listPreferredItemHeight});
+                verticalScrollFactor = a.getFloat(0, 32);
             } catch (Exception e) {
                 Log.e(LOG_TAG, "Failed to get scroll factor, using default.", e);
                 verticalScrollFactor = 32;
+            } finally {
+                if (a != null) {
+                    a.recycle();
+                }
             }
         }
         lineSeparator = LineSeparator.LF;
@@ -4106,14 +4109,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * Get using InputMethodManager
+     * Get using {@link InputMethodManager}
      */
     protected InputMethodManager getInputMethodManager() {
         return inputMethodManager;
     }
 
     /**
-     * Called by CodeEditorInputConnection
+     * Called by {@link EditorInputConnection}
      */
     protected void onCloseConnection() {
         setExtracting(null);
