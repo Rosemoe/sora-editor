@@ -1847,6 +1847,9 @@ public class EditorRenderer {
         int invalidCount = 0;
         int maxCount = styles.getSuppressSwitch();
         int mm = editor.binarySearchEndBlock(first, blocks);
+        if (mm == -1) {
+            mm = 0;
+        }
         int cursorIdx = editor.getCurrentCursorBlock();
         for (int curr = mm; curr < blocks.size(); curr++) {
             CodeBlock block = blocks.get(curr);
