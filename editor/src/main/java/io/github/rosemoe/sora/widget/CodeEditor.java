@@ -131,6 +131,11 @@ import io.github.rosemoe.sora.widget.layout.LineBreakLayout;
 import io.github.rosemoe.sora.widget.layout.ViewMeasureHelper;
 import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
+import io.github.rosemoe.sora.widget.schemes.SchemeDarcula;
+import io.github.rosemoe.sora.widget.schemes.SchemeEclipse;
+import io.github.rosemoe.sora.widget.schemes.SchemeGitHub;
+import io.github.rosemoe.sora.widget.schemes.SchemeNotepadXX;
+import io.github.rosemoe.sora.widget.schemes.SchemeVS2019;
 import io.github.rosemoe.sora.widget.snippet.SnippetController;
 import io.github.rosemoe.sora.widget.style.CursorAnimator;
 import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
@@ -342,6 +347,104 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private TextRange lastInsertion;
     private SnippetController snippetController;
 
+    private class GeneralItem {
+        private int colorScheme;
+        private int cursorBlinkPeriod;
+        private float cursorWidth;
+
+        private float dividerWidth;
+        private float dividerMarginLeft;
+        private float dividerMarginRight;
+
+        private int edgeEffectColor;
+
+        private int lineNumberAlign;
+        private float lineNumberMarginLeft;
+        private float lineSpacingExtra;
+        private float linePanelInfoTextSize;
+        private int linePanelPositionMode;
+        private int linePanelPosition;
+
+        private int nonPrintablePaintingFlags;
+
+        private int tabWidth;
+        private String text;
+        private float textLetterSpacing;
+        private float textSize;
+        private Typeface typeface;
+
+        private boolean isDisplayLinePanelEnabled = true;
+
+        private boolean isEditableEnabled = true;
+
+        private boolean isHighlightBracketPairEnabled;
+
+        private boolean isLigatureEnabled;
+        private boolean isLineNumberEnabled = true;
+
+        private boolean isPinLineNumberEnabled;
+
+        private boolean isScalableEnabled = true;
+        private boolean isScrollBarEnabled = true;
+        private boolean isStickyTextSelectionEnabled;
+
+        private boolean isWordWrapEnabled;
+
+        public static final int COLOR_SCHEME_NORMAL = 0;
+        public static final int COLOR_SCHEME_DARCULA = 1;
+        public static final int COLOR_SCHEME_ECLIPSE = 2;
+        public static final int COLOR_SCHEME_GITHUB = 3;
+        public static final int COLOR_SCHEME_NOTEPADXX = 4;
+        public static final int COLOR_SCHEME_VS2019 = 5;
+
+        public static final int ALIGN_LEFT = 6;
+        public static final int ALIGN_RIGHT = 7;
+        public static final int ALIGN_CENTER = 8;
+
+        public static final int LN_PANEL_POSITION_MODE_FIXED = 9;
+        public static final int LN_PANEL_POSITION_MODE_FOLLOW = 10;
+
+        public static final int LN_PANEL_POSITION_LEFT = 11;
+        public static final int LN_PANEL_POSITION_TOP = 12;
+        public static final int LN_PANEL_POSITION_RIGHT = 13;
+        public static final int LN_PANEL_POSITION_BOTTOM = 14;
+        public static final int LN_PANEL_POSITION_CENTER = 15;
+
+        public static final int NPF_WHITESPACE_LEADING = 16;
+        public static final int NPF_WHITESPACE_INNER = 17;
+        public static final int NPF_WHITESPACE_TRAILING = 18;
+        public static final int NPF_WHITESPACE_FOR_EMPTY_LINE = 19;
+        public static final int NPF_LINE_SEPARATOR = 20;
+        public static final int NPF_WHITESPACE_IN_SELECTION = 21;
+    }
+
+    private class PropsItem {
+        private float roundTextBackgroundFactor;
+
+        private boolean isAutoIndentEnabled = true;
+        private boolean isBoldMatchingDelimiters = true;
+        private boolean isDisallowSuggestions;
+        private boolean isDeleteEmptyLineFastEnabled = true;
+        private boolean isFormatPastedText;
+        private boolean isOverScrollEnabled;
+        private boolean isRoundTextBackgroundEnabled = true;
+        private boolean isSymbolPairAutoCompletion = true;
+        private boolean isUseICULibToSelectWords = true;
+    }
+
+    private class ComponentsItem {
+        private float magnifierScaleFactor;
+        private boolean isMagnifierEnabled = true;
+
+        private int autoCompletionMaxHeight;
+        private boolean isAutoCompletionEnabled;
+        private boolean isAutoCompletionLoading;
+    }
+
+    private GeneralItem generalItem;
+    private PropsItem propItem;
+    private ComponentsItem componentItem;
+
     public CodeEditor(Context context) {
         this(context, null);
     }
@@ -357,6 +460,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initialize(attrs, defStyleAttr, defStyleRes);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        applyProperties(getContext());
     }
 
     /**
@@ -509,14 +618,19 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         renderFunctionCharacters = true;
         renderer = onCreateRenderer();
 
-        var array = getContext().obtainStyledAttributes(attrs, R.styleable.CodeEditor, defStyleAttr, defStyleRes);
-        setHorizontalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbHorizontal));
-        setHorizontalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackHorizontal));
-        setVerticalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbVertical));
-        setVerticalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackVertical));
-        setLnPanelPositionMode(array.getInt(R.styleable.CodeEditor_lnPanelPositionMode, LineInfoPanelPositionMode.FOLLOW));
-        setLnPanelPosition(array.getInt(R.styleable.CodeEditor_lnPanelPosition, LineInfoPanelPosition.CENTER));
-        array.recycle();
+//        var array = getContext().obtainStyledAttributes(attrs, R.styleable.CodeEditor, defStyleAttr, defStyleRes);
+//        setHorizontalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbHorizontal));
+//        setHorizontalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackHorizontal));
+//        setVerticalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbVertical));
+//        setVerticalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackVertical));
+//        setLnPanelPositionMode(array.getInt(R.styleable.CodeEditor_lnPanelPositionMode, LineInfoPanelPositionMode.FOLLOW));
+//        setLnPanelPosition(array.getInt(R.styleable.CodeEditor_lnPanelPosition, LineInfoPanelPosition.CENTER));
+//        array.recycle();
+
+        generalItem = new GeneralItem();
+        propItem = new PropsItem();
+        componentItem = new ComponentsItem();
+        applyTypedArrays(getContext(), attrs);
 
         styleDelegate = new EditorStyleDelegate(this);
 
@@ -611,6 +725,223 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         // Config scale detector
         scaleDetector.setQuickScaleEnabled(false);
         snippetController = new SnippetController(this);
+    }
+
+    private void applyTypedArrays(Context context, AttributeSet attributeSet) {
+        var ta = context.obtainStyledAttributes(attributeSet, R.styleable.CodeEditor, 0, 0);
+        try {
+            generalItem.colorScheme = ta.getInt(R.styleable.CodeEditor_editorColorScheme, generalItem.colorScheme);
+            generalItem.cursorBlinkPeriod = ta.getInt(R.styleable.CodeEditor_cursorBlinkPeriod, generalItem.cursorBlinkPeriod);
+            generalItem.cursorWidth = ta.getDimension(R.styleable.CodeEditor_cursorWidth, generalItem.cursorWidth);
+
+            generalItem.dividerWidth = ta.getDimension(R.styleable.CodeEditor_dividerWidth, generalItem.dividerWidth);
+            generalItem.dividerWidth = ta.getDimension(R.styleable.CodeEditor_dividerMarginLeft, generalItem.dividerMarginLeft);
+            generalItem.dividerWidth = ta.getDimension(R.styleable.CodeEditor_dividerMarginRight, generalItem.dividerMarginRight);
+
+            generalItem.edgeEffectColor = ta.getColor(R.styleable.CodeEditor_edgeEffectColor, generalItem.edgeEffectColor);
+
+            generalItem.lineNumberAlign = ta.getInt(R.styleable.CodeEditor_lineNumberAlign, generalItem.lineNumberAlign);
+            generalItem.lineNumberMarginLeft = ta.getDimension(R.styleable.CodeEditor_lineNumberMarginLeft, generalItem.lineNumberMarginLeft);
+            generalItem.lineSpacingExtra = ta.getDimension(R.styleable.CodeEditor_lineSpacingExtra, generalItem.lineSpacingExtra);
+            generalItem.linePanelInfoTextSize = ta.getDimension(R.styleable.CodeEditor_linePanelInfoTextSize, generalItem.linePanelInfoTextSize);
+            generalItem.linePanelPosition = ta.getInt(R.styleable.CodeEditor_linePanelPosition, generalItem.linePanelPosition);
+            generalItem.linePanelPositionMode = ta.getInt(R.styleable.CodeEditor_linePanelPositionMode, generalItem.linePanelPositionMode);
+
+            generalItem.tabWidth = ta.getInt(R.styleable.CodeEditor_tabWidth, generalItem.tabWidth);
+            generalItem.text = ta.getString(R.styleable.CodeEditor_text);
+            generalItem.textLetterSpacing = ta.getDimension(R.styleable.CodeEditor_textLetterSpacing, generalItem.textLetterSpacing);
+            generalItem.textSize = ta.getDimension(R.styleable.CodeEditor_textSize, generalItem.textSize);
+            // SDK 26
+//            generalItem.typeface = ta.getFont(R.styleable.CodeEditor_typeface);
+
+            generalItem.isDisplayLinePanelEnabled = ta.getBoolean(R.styleable.CodeEditor_displayLinePanel, generalItem.isDisplayLinePanelEnabled);
+            generalItem.isEditableEnabled = ta.getBoolean(R.styleable.CodeEditor_editable, generalItem.isEditableEnabled);
+            generalItem.isHighlightBracketPairEnabled = ta.getBoolean(R.styleable.CodeEditor_highlightBracketPair, generalItem.isHighlightBracketPairEnabled);
+            generalItem.isLigatureEnabled = ta.getBoolean(R.styleable.CodeEditor_ligatureEnabled, generalItem.isLigatureEnabled);
+            generalItem.isLineNumberEnabled = ta.getBoolean(R.styleable.CodeEditor_lineNumberEnabled, generalItem.isLineNumberEnabled);
+            generalItem.isPinLineNumberEnabled = ta.getBoolean(R.styleable.CodeEditor_pinLineNumber, generalItem.isPinLineNumberEnabled);
+            generalItem.isScalableEnabled = ta.getBoolean(R.styleable.CodeEditor_scalable, generalItem.isScalableEnabled);
+            generalItem.isScrollBarEnabled = ta.getBoolean(R.styleable.CodeEditor_scrollBarEnabled, generalItem.isScrollBarEnabled);
+            generalItem.isStickyTextSelectionEnabled = ta.getBoolean(R.styleable.CodeEditor_stickyTextSelection, generalItem.isStickyTextSelectionEnabled);
+            generalItem.isWordWrapEnabled = ta.getBoolean(R.styleable.CodeEditor_wordWrap, generalItem.isWordWrapEnabled);
+
+            // Props
+            propItem.roundTextBackgroundFactor = ta.getFloat(R.styleable.CodeEditor_roundTextBackgroundFactor, propItem.roundTextBackgroundFactor);
+
+            propItem.isAutoIndentEnabled = ta.getBoolean(R.styleable.CodeEditor_autoIndent, propItem.isAutoIndentEnabled);
+            propItem.isBoldMatchingDelimiters = ta.getBoolean(R.styleable.CodeEditor_boldMatchingDelimiters, propItem.isBoldMatchingDelimiters);
+            propItem.isDisallowSuggestions = ta.getBoolean(R.styleable.CodeEditor_disallowSuggestions, propItem.isDisallowSuggestions);
+            propItem.isDeleteEmptyLineFastEnabled = ta.getBoolean(R.styleable.CodeEditor_deleteEmptyLineFast, propItem.isDeleteEmptyLineFastEnabled);
+            propItem.isFormatPastedText = ta.getBoolean(R.styleable.CodeEditor_formatPastedText, propItem.isFormatPastedText);
+            propItem.isOverScrollEnabled = ta.getBoolean(R.styleable.CodeEditor_overScrollEnabled, propItem.isOverScrollEnabled);
+            propItem.isRoundTextBackgroundEnabled = ta.getBoolean(R.styleable.CodeEditor_roundTextBackground, propItem.isRoundTextBackgroundEnabled);
+            propItem.isSymbolPairAutoCompletion = ta.getBoolean(R.styleable.CodeEditor_symbolPairAutoCompletion, propItem.isSymbolPairAutoCompletion);
+            propItem.isUseICULibToSelectWords = ta.getBoolean(R.styleable.CodeEditor_useICULibToSelectWords, propItem.isUseICULibToSelectWords);
+
+            // Components
+            componentItem.autoCompletionMaxHeight = (int) ta.getDimension(R.styleable.CodeEditor_autoCompletionMaxHeight, componentItem.autoCompletionMaxHeight);
+
+            componentItem.magnifierScaleFactor = ta.getFloat(R.styleable.CodeEditor_magnifierScaleFactor, componentItem.magnifierScaleFactor);
+            componentItem.isMagnifierEnabled = ta.getBoolean(R.styleable.CodeEditor_magnifierEnabled, componentItem.isMagnifierEnabled);
+            componentItem.isAutoCompletionEnabled = ta.getBoolean(R.styleable.CodeEditor_autoCompletionEnabled, componentItem.isAutoCompletionEnabled);
+            componentItem.isAutoCompletionLoading = ta.getBoolean(R.styleable.CodeEditor_autoCompletionLoading, componentItem.isAutoCompletionLoading);
+
+        } finally {
+            ta.recycle();
+        }
+    }
+
+    private void applyProperties(Context context) {
+        if (generalItem.colorScheme != 0) {
+            EditorColorScheme editorColorScheme = null;
+            switch (generalItem.colorScheme) {
+                case GeneralItem.COLOR_SCHEME_NORMAL:
+                    editorColorScheme = new EditorColorScheme();
+                    break;
+                case GeneralItem.COLOR_SCHEME_DARCULA:
+                    editorColorScheme = new SchemeDarcula();
+                    break;
+                case GeneralItem.COLOR_SCHEME_ECLIPSE:
+                    editorColorScheme = new SchemeEclipse();
+                    break;
+                case GeneralItem.COLOR_SCHEME_GITHUB:
+                    editorColorScheme = new SchemeGitHub();
+                    break;
+                case GeneralItem.COLOR_SCHEME_NOTEPADXX:
+                    editorColorScheme = new SchemeNotepadXX();
+                    break;
+                case GeneralItem.COLOR_SCHEME_VS2019:
+                    editorColorScheme = new SchemeVS2019();
+                    break;
+            }
+            setColorScheme(editorColorScheme);
+        }
+        if (generalItem.cursorBlinkPeriod != 0) setCursorBlinkPeriod(generalItem.cursorBlinkPeriod);
+        if (generalItem.cursorWidth != 0) setCursorWidth(generalItem.cursorWidth);
+
+        if (generalItem.dividerWidth != 0) setDividerWidth(generalItem.dividerWidth);
+        if (generalItem.dividerMarginLeft != 0 || generalItem.dividerMarginRight != 0) setDividerMargin(generalItem.dividerMarginLeft, generalItem.dividerMarginRight);
+
+        if (generalItem.edgeEffectColor != 0) setEdgeEffectColor(generalItem.edgeEffectColor);
+
+        if (generalItem.lineNumberAlign != 0) {
+            Paint.Align align = null;
+            switch (generalItem.lineNumberAlign) {
+                case GeneralItem.ALIGN_LEFT:
+                    align = Paint.Align.LEFT;
+                    break;
+                case GeneralItem.ALIGN_RIGHT:
+                    align = Paint.Align.RIGHT;
+                    break;
+                case GeneralItem.ALIGN_CENTER:
+                    align = Paint.Align.CENTER;
+                    break;
+            }
+            setLineNumberAlign(align);
+        }
+        if (generalItem.lineNumberMarginLeft != 0) setLineNumberMarginLeft(generalItem.lineNumberMarginLeft);
+        if (generalItem.lineSpacingExtra != 0) setLineSpacingExtra(generalItem.lineSpacingExtra);
+        if (generalItem.linePanelInfoTextSize != 0) setLineInfoTextSize(generalItem.linePanelInfoTextSize);
+        if (generalItem.linePanelPosition != 0) {
+            int pos = 0;
+            switch (generalItem.linePanelPosition) {
+                case GeneralItem.LN_PANEL_POSITION_LEFT:
+                    pos = LineInfoPanelPosition.LEFT;
+                    break;
+                case GeneralItem.LN_PANEL_POSITION_TOP:
+                    pos = LineInfoPanelPosition.TOP;
+                    break;
+                case GeneralItem.LN_PANEL_POSITION_RIGHT:
+                    pos = LineInfoPanelPosition.RIGHT;
+                    break;
+                case GeneralItem.LN_PANEL_POSITION_BOTTOM:
+                    pos = LineInfoPanelPosition.BOTTOM;
+                    break;
+                case GeneralItem.LN_PANEL_POSITION_CENTER:
+                    pos = LineInfoPanelPosition.CENTER;
+                    break;
+            }
+            setLnPanelPosition(pos);
+        }
+        if (generalItem.linePanelPositionMode != 0) {
+            int mode = 0;
+            switch (generalItem.linePanelPositionMode) {
+                case GeneralItem.LN_PANEL_POSITION_MODE_FIXED:
+                    mode = LineInfoPanelPositionMode.FIXED;
+                    break;
+                case GeneralItem.LN_PANEL_POSITION_MODE_FOLLOW:
+                    mode = LineInfoPanelPositionMode.FOLLOW;
+                    break;
+            }
+            setLnPanelPositionMode(mode);
+        }
+
+        if (generalItem.nonPrintablePaintingFlags != 0) {
+            int flags = 0;
+            switch (generalItem.nonPrintablePaintingFlags) {
+                case GeneralItem.NPF_WHITESPACE_LEADING:
+                    flags = FLAG_DRAW_WHITESPACE_LEADING;
+                    break;
+                case GeneralItem.NPF_WHITESPACE_INNER:
+                    flags = FLAG_DRAW_WHITESPACE_INNER;
+                    break;
+                case GeneralItem.NPF_WHITESPACE_TRAILING:
+                    flags = FLAG_DRAW_WHITESPACE_TRAILING;
+                    break;
+                case GeneralItem.NPF_WHITESPACE_FOR_EMPTY_LINE:
+                    flags = FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE;
+                    break;
+                case GeneralItem.NPF_LINE_SEPARATOR:
+                    flags = FLAG_DRAW_LINE_SEPARATOR;
+                    break;
+                case GeneralItem.NPF_WHITESPACE_IN_SELECTION:
+                    flags = FLAG_DRAW_WHITESPACE_IN_SELECTION;
+                    break;
+            }
+            setNonPrintablePaintingFlags(flags);
+        }
+
+        if (generalItem.tabWidth != 0) setTabWidth(generalItem.tabWidth);
+        if (generalItem.text != null) setText(generalItem.text);
+        if (generalItem.textLetterSpacing != 0) setTextLetterSpacing(generalItem.textLetterSpacing);
+        if (generalItem.textSize != 0) setTextSize(generalItem.textSize);
+//        if (generalItem.typeface != null) {
+//            setTypefaceText(generalItem.typeface);
+//            setTypefaceLineNumber(generalItem.typeface);
+//        }
+
+        setDisplayLnPanel(generalItem.isDisplayLinePanelEnabled);
+        setEditable(generalItem.isEditableEnabled);
+        setHighlightBracketPair(generalItem.isHighlightBracketPairEnabled);
+        setLigatureEnabled(generalItem.isLigatureEnabled);
+        setLineNumberEnabled(generalItem.isLineNumberEnabled);
+        setPinLineNumber(generalItem.isPinLineNumberEnabled);
+        setScalable(generalItem.isScalableEnabled);
+        setStickyTextSelection(generalItem.isStickyTextSelectionEnabled);
+        setWordwrap(generalItem.isWordWrapEnabled);
+        setScrollBarEnabled(generalItem.isScrollBarEnabled);
+
+        // Props
+        getProps().autoIndent = propItem.isAutoIndentEnabled;
+        getProps().boldMatchingDelimiters = propItem.isBoldMatchingDelimiters;
+        getProps().disallowSuggestions = propItem.isDisallowSuggestions;
+        getProps().deleteEmptyLineFast = propItem.isDeleteEmptyLineFastEnabled;
+        getProps().enableRoundTextBackground = propItem.isRoundTextBackgroundEnabled;
+        getProps().formatPastedText = propItem.isFormatPastedText;
+        getProps().overScrollEnabled = propItem.isOverScrollEnabled;
+        getProps().roundTextBackgroundFactor = propItem.roundTextBackgroundFactor;
+        getProps().symbolPairAutoCompletion = propItem.isSymbolPairAutoCompletion;
+        getProps().useICULibToSelectWords = propItem.isUseICULibToSelectWords;
+
+        // Components
+        if (componentItem.magnifierScaleFactor != 0) getComponent(Magnifier.class).setScaleFactor(componentItem.magnifierScaleFactor);
+        if (componentItem.autoCompletionMaxHeight != 0) getComponent(EditorAutoCompletion.class).setMaxHeight(componentItem.autoCompletionMaxHeight);
+
+        getComponent(Magnifier.class).setEnabled(componentItem.isMagnifierEnabled);
+        getComponent(EditorAutoCompletion.class).setEnabled(componentItem.isAutoCompletionEnabled);
+        getComponent(EditorAutoCompletion.class).setLoading(componentItem.isAutoCompletionLoading);
+
+
     }
 
     public SnippetController getSnippetController() {

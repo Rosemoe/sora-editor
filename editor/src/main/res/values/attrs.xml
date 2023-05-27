@@ -26,34 +26,127 @@
     <!-- Style attribute for CodeEditor -->
     <attr name="codeEditorStyle" format="reference" />
 
+<!--    <declare-styleable name="CodeEditor">-->
+<!--        <attr name="android:scrollbarTrackHorizontal" />-->
+<!--        <attr name="android:scrollbarThumbHorizontal" />-->
+<!--        <attr name="android:scrollbarTrackVertical" />-->
+<!--        <attr name="android:scrollbarThumbVertical" />-->
+
+<!--        <attr name="lnPanelPositionMode">-->
+<!--            <enum name="fixed" value="0" />-->
+<!--            <enum name="follow" value="1" />-->
+<!--        </attr>-->
+<!--        <attr name="lnPanelPosition">-->
+<!--            <flag name="left" value="1" />-->
+<!--            <flag name="top" value="2" />-->
+<!--            <flag name="right" value="4" />-->
+<!--            <flag name="bottom" value="8" />-->
+<!--            <flag name="center" value="15" />-->
+<!--        </attr>-->
+
+<!--        <attr name="text" format="string" />-->
+<!--        <attr name="textSize" format="dimension" />-->
+<!--        <attr name="dividerWidth" format="dimension" />-->
+<!--        <attr name="lineNumberVisible" format="boolean" />-->
+<!--        <attr name="autoCompleteEnabled" format="boolean" />-->
+<!--        <attr name="symbolCompletionEnabled" format="boolean" />-->
+<!--        <attr name="cursorBlinkPeriod" format="integer" />-->
+<!--        <attr name="scrollbarsEnabled" format="boolean" />-->
+<!--        <attr name="verticalScrollbarEnabled" format="boolean" />-->
+<!--        <attr name="horizontalScrollbarEnabled" format="boolean" />-->
+<!--    </declare-styleable>-->
+
     <declare-styleable name="CodeEditor">
-        <attr name="android:scrollbarTrackHorizontal" />
-        <attr name="android:scrollbarThumbHorizontal" />
-        <attr name="android:scrollbarTrackVertical" />
-        <attr name="android:scrollbarThumbVertical" />
 
-        <attr name="lnPanelPositionMode">
-            <enum name="fixed" value="0" />
-            <enum name="follow" value="1" />
+        <!-- General -->
+        <attr name="editorColorScheme">
+            <enum name="normal" value="0" />
+            <enum name="darcula" value="1" />
+            <enum name="eclipse" value="2" />
+            <enum name="github" value="3" />
+            <enum name="notepadXX" value="4" />
+            <enum name="vs2019" value="5" />
         </attr>
-        <attr name="lnPanelPosition">
-            <flag name="left" value="1" />
-            <flag name="top" value="2" />
-            <flag name="right" value="4" />
-            <flag name="bottom" value="8" />
-            <flag name="center" value="15" />
-        </attr>
-
-        <attr name="text" format="string" />
-        <attr name="textSize" format="dimension" />
-        <attr name="dividerWidth" format="dimension" />
-        <attr name="lineNumberVisible" format="boolean" />
-        <attr name="autoCompleteEnabled" format="boolean" />
-        <attr name="symbolCompletionEnabled" format="boolean" />
         <attr name="cursorBlinkPeriod" format="integer" />
-        <attr name="scrollbarsEnabled" format="boolean" />
-        <attr name="verticalScrollbarEnabled" format="boolean" />
-        <attr name="horizontalScrollbarEnabled" format="boolean" />
+        <attr name="cursorWidth" format="dimension" />
+
+        <attr name="displayLinePanel" format="boolean" />
+        <attr name="dividerWidth" format="dimension" />
+        <attr name="dividerMarginLeft" format="dimension"/>
+        <attr name="dividerMarginRight" format="dimension"/>
+
+        <attr name="editable" format="boolean" />
+        <attr name="edgeEffectColor" format="color" />
+
+        <attr name="highlightBracketPair" format="boolean" />
+
+        <attr name="ligatureEnabled" format="boolean" />
+        <attr name="lineNumberAlign">
+            <enum name="left" value="6" />
+            <enum name="right" value="7" />
+            <enum name="center" value="8" />
+        </attr>
+        <attr name="lineNumberEnabled" format="boolean" />
+        <attr name="lineNumberMarginLeft" format="dimension" />
+        <attr name="lineSpacingExtra" format="dimension" />
+        <attr name="linePanelInfoTextSize" format="dimension" />
+        <attr name="linePanelPositionMode">
+            <enum name="fixed" value="9"/>
+            <enum name="follow" value="10"/>
+        </attr>
+        <attr name="linePanelPosition">
+            <flag name="left" value="11"/>
+            <flag name="top" value="12"/>
+            <flag name="right" value="13"/>
+            <flag name="bottom" value="14"/>
+            <flag name="center" value="15"/>
+        </attr>
+
+        <attr name="nonPrintablePaintingFlags">
+            <flag name="whitespace_leading" value="16"/>
+            <flag name="whitespace_inner" value="17"/>
+            <flag name="whitespace_trailing" value="18"/>
+            <flag name="whitespace_for_empty_line" value="19"/>
+            <flag name="line_separator" value="20"/>
+            <flag name="whitespace_in_selection" value="21"/>
+        </attr>
+
+        <attr name="pinLineNumber" format="boolean" />
+
+        <attr name="scalable" format="boolean" />
+        <attr name="scrollBarEnabled" format="boolean" />
+        <attr name="stickyTextSelection" format="boolean" />
+
+        <attr name="tabWidth" format="integer" />
+        <attr name="text" format="string" />
+        <attr name="textLetterSpacing" format="dimension" />
+        <attr name="textSize" format="dimension" />
+        <attr name="typeface" format="reference" />
+
+        <attr name="wordWrap" format="boolean" />
+
+        <!-- Props -->
+        <attr name="autoIndent" format="boolean" />
+        <attr name="boldMatchingDelimiters" format="boolean" />
+        <attr name="disallowSuggestions" format="boolean" />
+        <attr name="deleteEmptyLineFast" format="boolean" />
+        <attr name="formatPastedText" format="boolean" />
+        <attr name="overScrollEnabled" format="boolean" />
+        <attr name="roundTextBackground" format="boolean" />
+        <attr name="roundTextBackgroundFactor" format="float" />
+        <attr name="symbolPairAutoCompletion" format="boolean" />
+        <attr name="useICULibToSelectWords" format="boolean" />
+
+        <!-- Components -->
+        <!-- magnifier component -->
+        <attr name="magnifierScaleFactor" format="float" />
+        <attr name="magnifierEnabled" format="boolean" />
+
+        <!-- auto completion component -->
+        <attr name="autoCompletionEnabled" format="boolean" />
+        <attr name="autoCompletionLoading" format="boolean" />
+        <attr name="autoCompletionMaxHeight" format="dimension" />
+
     </declare-styleable>
 
 </resources>

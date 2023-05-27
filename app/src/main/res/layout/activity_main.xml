@@ -104,12 +104,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="56dp"
-        android:scrollbarThumbHorizontal="@drawable/scrollbar_thumb"
-        android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
-        android:scrollbarTrackHorizontal="@drawable/scrollbar_track"
-        android:scrollbarTrackVertical="@drawable/scrollbar_track"
-        app:lnPanelPosition="center"
-        app:lnPanelPositionMode="follow" />
+        app:pinLineNumber="true"
+        app:stickyTextSelection="true"
+        app:dividerMarginRight="20dp"
+        app:linePanelPositionMode="follow"/>
 
     <LinearLayout
         android:layout_width="match_parent"
