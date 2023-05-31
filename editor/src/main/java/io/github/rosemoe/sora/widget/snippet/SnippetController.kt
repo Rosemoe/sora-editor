@@ -471,7 +471,7 @@ class SnippetController(private val editor: CodeEditor) {
     fun getInactiveTabStops(): List<SnippetItem> {
         val editing = getEditingTabStop()
         if (editing != null) {
-            currentSnippet!!.items!!.filter { (it is PlaceholderItem && it.definition != editing.definition) }
+            return currentSnippet!!.items!!.filter { (it is PlaceholderItem && it.definition != editing.definition) }
         }
         return emptyList()
     }
