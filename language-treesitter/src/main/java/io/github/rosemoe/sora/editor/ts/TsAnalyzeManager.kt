@@ -226,7 +226,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         }
 
         fun updateCodeBlocks() {
-            if (languageSpec.blocksQuery.patternCount == 0) {
+            if (languageSpec.blocksQuery.patternCount == 0 || !languageSpec.blocksQuery.isValid) {
                 return
             }
             val blocks = mutableListOf<CodeBlock>()

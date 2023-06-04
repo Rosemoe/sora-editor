@@ -74,7 +74,7 @@ open class TsLanguageSpec(
     /**
      * The actual [TSQuery] object
      */
-    val tsQuery = TSQuery(language, querySource)
+    val tsQuery = TSQuery.create(language, querySource)
 
     /**
      * The first index of highlighting pattern
@@ -107,9 +107,9 @@ open class TsLanguageSpec(
      */
     val localsDefinitionValueIndices = mutableListOf<Int>()
 
-    val blocksQuery = TSQuery(language, codeBlocksScmSource)
+    val blocksQuery = TSQuery.create(language, codeBlocksScmSource)
 
-    val bracketsQuery = TSQuery(language, bracketsScmSource)
+    val bracketsQuery = TSQuery.create(language, bracketsScmSource)
 
     init {
         // Check the queries before access
@@ -120,6 +120,9 @@ open class TsLanguageSpec(
                 if (it > 0xFF.toChar()) {
                     throw IllegalArgumentException("use non-ASCII characters in scm source is unexpected")
                 }
+            }
+            if (!tsQuery.isValid) {
+                throw IllegalArgumentException("Syntax highlights query is invalid")
             }
             if (tsQuery.errorType != TSQueryError.None) {
                 val region = if (tsQuery.errorOffset < highlightScmOffset) "locals" else "highlight"
