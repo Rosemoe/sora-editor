@@ -28,7 +28,9 @@ import android.graphics.Canvas;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.util.TypedValue;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
@@ -46,9 +48,22 @@ public class HandleStyleDrop implements SelectionHandleStyle {
     private float scaleFactor = 1.0f;
 
     public HandleStyleDrop(Context context) {
-        drawable = context.getDrawable(R.drawable.ic_sora_handle_drop).mutate();
-        width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20f, context.getResources().getDisplayMetrics());
-        height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30f, context.getResources().getDisplayMetrics());
+        Drawable textSelectHandle = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            TextView textView = new TextView(context);
+            // text_select_handle_middle_mtrl_alpha.png
+            textSelectHandle = textView.getTextSelectHandle();
+        }
+
+        if (textSelectHandle != null) {
+            drawable = textSelectHandle.mutate();
+            width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20f, context.getResources().getDisplayMetrics());
+            height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24f, context.getResources().getDisplayMetrics());
+        } else {
+            drawable = context.getDrawable(R.drawable.ic_sora_handle_drop).mutate();
+            width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20f, context.getResources().getDisplayMetrics());
+            height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30f, context.getResources().getDisplayMetrics());
+        }
     }
 
     @Override
