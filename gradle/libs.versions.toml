@@ -5,8 +5,14 @@ lifecycle = "2.5.1"
 tsBinding = "3.2.0"
 lsp4j = "0.21.0"
 androidxAnnotation = "1.6.0"
+foundationVersion = "1.4.3"
+ui = "1.4.3"
+runtimeVersion = "1.4.3"
 
 [libraries]
+foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundationVersion" }
+runtime = { module = "androidx.compose.runtime:runtime", version.ref = "runtimeVersion" }
+androidx-ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidxAnnotation" }
 androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version = "2.1.4" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.10.1" }
