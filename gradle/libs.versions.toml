@@ -38,4 +38,4 @@ tests-robolectric = { module = "org.robolectric:robolectric", version = "4.9.2" 
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-publish = { id = "com.vanniktech.maven.publish.base", version = "0.25.2" }
+publish = { id = "com.vanniktech.maven.publish.base", version = "0.25.3" }
