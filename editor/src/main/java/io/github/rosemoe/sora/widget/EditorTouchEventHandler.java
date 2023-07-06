@@ -31,7 +31,6 @@ import android.view.GestureDetector;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-import android.widget.OverScroller;
 
 import androidx.annotation.NonNull;
 
@@ -732,7 +731,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     public boolean onScaleBegin(ScaleGestureDetector detector) {
         scroller.forceFinished(true);
         textSizeStart = editor.getTextSizePx();
-        return editor.isScalable() && !editor.isFormatting();
+        return editor.isScalable() && !editor.isFormatting() && !holdingInsertHandle && touchedHandleType == -1;
     }
 
     long memoryPosition;
