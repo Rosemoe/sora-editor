@@ -13,6 +13,7 @@ sora-editor is a cool and optimized code editor on Android platform
 </div>
 
 Read this in other languages: [English](README.md), [简体中文](README.zh-cn.md), [Español](README.es.md), [日本語](README.jp.md).
+Note that statements in other languages may not be up-to-date.
 
 ***Work In Progress*** This project is still developing slowly.   
 Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/releases)
@@ -86,6 +87,11 @@ Available modules:
 
 Check the newest version from the badge above
 or [Releases](https://github.com/Rosemoe/CodeEditor/releases).
+
+### Using Snapshot Versions
+Snapshot releases are automatically generated on repository push. You may combine current released version name
+and short commit hash to make a snapshot version name. For example, if the latest released version name is '0.21.1' and
+short commit hash is '97c4963', you may use version name '0.21.1-97c4963-SNAPSHOT' to import the snapshot version to your project.
 
 ## Discuss
 
