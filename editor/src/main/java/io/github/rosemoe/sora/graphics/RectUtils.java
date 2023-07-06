@@ -31,4 +31,8 @@ public class RectUtils {
         return (x >= rect.left - extraXSpace && x <= rect.right + extraXSpace && y >= rect.top && y <= rect.bottom);
     }
 
+    public static boolean almostContains(RectF rect, float x, float y, float extraSpace) {
+        return (x >= rect.left - extraSpace && x <= rect.right + extraSpace && y >= rect.top - extraSpace && y <= rect.bottom + extraSpace);
+    }
+
 }
