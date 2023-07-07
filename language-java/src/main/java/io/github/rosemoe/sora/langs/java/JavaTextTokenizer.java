@@ -450,7 +450,7 @@ public class JavaTextTokenizer {
 
     protected static void doStaticInit() {
         sKeywords = new String[]{
-                "assert", "abstract", "boolean", "byte", "char", "class", "do",
+                "abstract", "assert", "boolean", "byte", "char", "class", "do",
                 "double", "final", "float", "for", "if", "int", "long", "new",
                 "public", "private", "protected", "package", "return", "static",
                 "short", "super", "switch", "else", "volatile", "synchronized", "strictfp",
