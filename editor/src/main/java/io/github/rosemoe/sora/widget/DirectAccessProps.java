@@ -331,6 +331,14 @@ public class DirectAccessProps implements Serializable {
      */
     public int clipboardTextLengthLimit = 512 * 1024;
 
+    /**
+     * Scrolling speed multiplier when ALT key is pressed (for mouse wheel only).
+     * <p>
+     * 5.0f by default
+     */
+    @FloatRange(from = 1f)
+    public float fastScrollSensitivity = 5f;
+
     @InvalidateRequired
     public boolean stickyScroll = false;
 

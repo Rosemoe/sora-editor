@@ -4352,7 +4352,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (event.getAction() == MotionEvent.ACTION_SCROLL && event.isFromSource(InputDevice.SOURCE_CLASS_POINTER)) {
             float v_scroll = -event.getAxisValue(MotionEvent.AXIS_VSCROLL);
             float h_scroll = -event.getAxisValue(MotionEvent.AXIS_HSCROLL);
-            touchHandler.onScroll(event, event, h_scroll * verticalScrollFactor, v_scroll * verticalScrollFactor);
+            float distanceX = h_scroll * verticalScrollFactor;
+            float distanceY = v_scroll * verticalScrollFactor;
+            if (keyEventHandler.getKeyMetaStates().isAltPressed()) {
+                float multiplier = props.fastScrollSensitivity;
+                distanceX *= multiplier;
+                distanceY *= multiplier;
+            }
+            touchHandler.onScroll(event, event, distanceX, distanceY);
             return true;
         }
         return super.onGenericMotionEvent(event);
