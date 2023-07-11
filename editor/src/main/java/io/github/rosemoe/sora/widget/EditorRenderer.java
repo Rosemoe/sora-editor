@@ -710,6 +710,14 @@ public class EditorRenderer {
         if (candidates == null) {
             return;
         }
+        var maxLines = editor.getProps().stickyScrollMaxLines;
+        if (candidates.size() > maxLines) {
+            if (editor.getProps().stickyScrollPreferInnerScope) {
+                candidates = candidates.subList(candidates.size() - maxLines, candidates.size());
+            } else {
+                candidates = candidates.subList(0, maxLines);
+            }
+        }
         var previousLine = -1;
         var offsetLine = 0;
         for (int i = 0; i < candidates.size(); i++) {

@@ -334,4 +334,11 @@ public class DirectAccessProps implements Serializable {
     @InvalidateRequired
     public boolean stickyScroll = false;
 
+    @IntRange(from = 1)
+    @InvalidateRequired
+    public int stickyScrollMaxLines = 4;
+
+    @InvalidateRequired
+    public boolean stickyScrollPreferInnerScope = false;
+
 }
