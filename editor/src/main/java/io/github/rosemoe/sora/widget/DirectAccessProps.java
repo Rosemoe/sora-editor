@@ -361,4 +361,9 @@ public class DirectAccessProps implements Serializable {
     @InvalidateRequired
     public boolean stickyScrollPreferInnerScope = false;
 
+    /**
+     * Limit for sticky scroll dataset size
+     */
+    public int stickyScrollIterationLimit = 1000;
+
 }

@@ -177,6 +177,7 @@ class MainActivity : AppCompatActivity() {
         }
         binding.editor.apply {
             typefaceText = typeface
+            props.stickyScroll = true
             setLineSpacing(2f, 1.1f)
             nonPrintablePaintingFlags =
                 CodeEditor.FLAG_DRAW_WHITESPACE_LEADING or CodeEditor.FLAG_DRAW_LINE_SEPARATOR or CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION
