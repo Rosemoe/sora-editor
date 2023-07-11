@@ -331,4 +331,7 @@ public class DirectAccessProps implements Serializable {
      */
     public int clipboardTextLengthLimit = 512 * 1024;
 
+    @InvalidateRequired
+    public boolean stickyScroll = false;
+
 }

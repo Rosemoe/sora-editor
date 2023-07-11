@@ -13,6 +13,7 @@ sora-editor is a cool and optimized code editor on Android platform
 </div>
 
 Read this in other languages: [English](README.md), [简体中文](README.zh-cn.md), [Español](README.es.md), [日本語](README.jp.md).
+
 Note that statements in other languages may not be up-to-date.
 
 ***Work In Progress*** This project is still developing slowly.   

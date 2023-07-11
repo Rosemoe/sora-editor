@@ -693,12 +693,50 @@ public class EditorRenderer {
             }
         }
 
+        testDrawStuckLines(canvas, textOffset);
         drawScrollBars(canvas);
         drawEdgeEffect(canvas);
 
         editor.rememberDisplayedLines();
         releasePreloadedData();
         drawFormatTip(canvas);
+    }
+
+    protected void testDrawStuckLines(Canvas canvas, float offset) {
+        if (editor.isWordwrap() || !canvas.isHardwareAccelerated() || Build.VERSION.SDK_INT < 29 || !editor.getProps().stickyScroll) {
+            return;
+        }
+        var candidates = getStuckCodeBlocks();
+        if (candidates == null) {
+            return;
+        }
+        var previousLine = -1;
+        var offsetLine = 0;
+        for (int i = 0; i < candidates.size(); i++) {
+            var block = candidates.get(i);
+            if (block.startLine > previousLine) {
+                tmpRect.top = editor.getRowTop(offsetLine);
+                tmpRect.bottom = editor.getRowBottom(offsetLine);
+                tmpRect.left = offset;
+                tmpRect.right = editor.getWidth();
+                var cursor = editor.getCursor();
+                var colorId = EditorColorScheme.WHOLE_BACKGROUND;
+                if (!cursor.isSelected() && cursor.getLeftLine() == block.startLine) {
+                    colorId = EditorColorScheme.CURRENT_LINE;
+                }
+                drawColor(canvas, editor.getColorScheme().getColor(colorId), tmpRect);
+                renderNodeHolder.drawLineHardwareAccelerated(canvas, block.startLine, offset, offsetLine * editor.getRowHeight());
+                previousLine = block.startLine;
+                offsetLine++;
+            }
+        }
+        if (offsetLine > 0) {
+            tmpRect.top = editor.getRowTop(offsetLine) - editor.getDpUnit();
+            tmpRect.bottom = editor.getRowTop(offsetLine);
+            tmpRect.left = 0;
+            tmpRect.right = editor.getWidth();
+            drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.BLOCK_LINE), tmpRect);
+        }
     }
 
     protected void drawHardwrapMarker(Canvas canvas, float offset) {
@@ -915,6 +953,32 @@ public class EditorRenderer {
     private void releasePreloadedData() {
         preloadedLines.clear();
         preloadedDirections.clear();
+    }
+
+    protected List<CodeBlock> getStuckCodeBlocks() {
+        Styles styles;
+        int startLine = editor.getFirstVisibleLine();
+        int offsetY = editor.getOffsetY(), rowHeight = editor.getRowHeight();
+        List<CodeBlock> codeBlocks;
+        if ((styles = editor.getStyles()) == null || (codeBlocks = styles.blocks/* TODO */) == null) {
+            return null;
+        }
+        codeBlocks = new ArrayList<>(codeBlocks);
+        Collections.sort(codeBlocks, CodeBlock.COMPARATOR_START);
+        int size = codeBlocks.size();
+        var result = new ArrayList<CodeBlock>();
+        for (int i = 0; i < size; i++) {
+            var block = codeBlocks.get(i);
+            if (block.startLine > startLine) {
+                break;
+            }
+            if (block.endLine > startLine && editor.getRowTop(block.startLine) - offsetY < 0) {
+                result.add(block);
+                startLine++;
+                offsetY += rowHeight;
+            }
+        }
+        return result;
     }
 
     private final LineStyles coordinateLine = new LineStyles(0);
@@ -1241,7 +1305,7 @@ public class EditorRenderer {
                     drawMiniGraph(canvas, paintingOffset, row, "↵");
                 }
             } else {
-                paintingOffset = offset + renderNodeHolder.drawLineHardwareAccelerated(canvas, line, offset) - editor.getDpUnit() * 20;
+                paintingOffset = offset + renderNodeHolder.drawLineHardwareAccelerated(canvas, line, offset, editor.getRowTop(line) - editor.getOffsetY()) - editor.getDpUnit() * 20;
                 lastVisibleChar = columnCount;
             }
 

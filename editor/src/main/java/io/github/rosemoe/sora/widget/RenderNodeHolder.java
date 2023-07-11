@@ -125,7 +125,7 @@ class RenderNodeHolder {
         }
     }
 
-    public int drawLineHardwareAccelerated(Canvas canvas, int line, float offset) {
+    public int drawLineHardwareAccelerated(Canvas canvas, int line, float offsetX, float offsetY) {
         if (!canvas.isHardwareAccelerated()) {
             throw new UnsupportedOperationException("Only hardware-accelerated canvas can be used");
         }
@@ -149,7 +149,7 @@ class RenderNodeHolder {
             node.isDirty = false;
         }
         canvas.save();
-        canvas.translate(offset, editor.getRowTop(line) - editor.getOffsetY());
+        canvas.translate(offsetX, offsetY);
         canvas.drawRenderNode(node.renderNode);
         canvas.restore();
         return node.renderNode.getWidth();
