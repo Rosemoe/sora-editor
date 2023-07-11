@@ -35,6 +35,7 @@ instead of cloning this repository directly.
 - [x] Error/Warning/Typo/Deprecated indicators
 - [x] Text magnifier
 - [x] Incremental highlight analysis
+- [x] Sticky Scroll
 - [x] Highlight bracket pairs
 - [x] Event System
 
