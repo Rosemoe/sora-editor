@@ -339,13 +339,25 @@ public class DirectAccessProps implements Serializable {
     @FloatRange(from = 1f)
     public float fastScrollSensitivity = 5f;
 
+    /**
+     * Enable/disable sticky scroll mode
+     */
     @InvalidateRequired
     public boolean stickyScroll = false;
 
+    /**
+     * Control the count of lines that can be stuck to the top of the editor
+     */
     @IntRange(from = 1)
     @InvalidateRequired
     public int stickyScrollMaxLines = 4;
 
+    /**
+     * Prefer inner scopes if true.
+     * When set to false, editor abandons inner scopes if {@link #stickyScrollMaxLines} is exceeded.
+     * When set to true, editor push the top stuck line out to show the new scope
+     * if {@link #stickyScrollMaxLines} is exceeded.
+     */
     @InvalidateRequired
     public boolean stickyScrollPreferInnerScope = false;
 
