@@ -479,6 +479,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
             }
             styles.blocks = computeBlocks(shadowed, delegate);
             styles.setSuppressSwitch(delegate.suppressSwitch);
+            styles.finishBuilding();
             if (!abort)
                 sendNewStyles(styles);
         }
@@ -579,6 +580,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                         var blocks = computeBlocks(shadowed, delegate);
                         if (delegate.isNotCancelled()) {
                             styles.blocks = blocks;
+                            styles.finishBuilding();
                             styles.setSuppressSwitch(delegate.suppressSwitch);
                         }
                         if (!abort) {
