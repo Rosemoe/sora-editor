@@ -127,6 +127,7 @@ public class EditorRenderer {
     private final SparseArray<Directions> preloadedDirections = new SparseArray<>();
     private final CodeEditor editor;
     private final List<DiagnosticRegion> collectedDiagnostics = new ArrayList<>();
+    protected List<CodeBlock> lastStuckLines;
     Paint.FontMetricsInt metricsText;
     @Nullable
     private Drawable horizontalScrollbarThumbDrawable;
@@ -748,6 +749,7 @@ public class EditorRenderer {
 
         editor.rememberDisplayedLines();
         releasePreloadedData();
+        lastStuckLines = stuckLines;
         drawFormatTip(canvas);
     }
 

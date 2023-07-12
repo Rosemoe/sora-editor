@@ -2054,6 +2054,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see IntPair
      */
     public long getPointPositionOnScreen(float x, float y) {
+        var stuckLines = renderer.lastStuckLines;
+        if (stuckLines != null) {
+            if (y < stuckLines.size() * getRowHeight()) {
+                var index = (int) (y / getRowHeight());
+                return getPointPosition(x, layout.getCharLayoutOffset(stuckLines.get(index).startLine, 0)[0] - getRowHeight() / 2f);
+            }
+        }
         return getPointPosition(x + getOffsetX(), y + getOffsetY());
     }
 
