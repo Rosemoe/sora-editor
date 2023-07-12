@@ -69,6 +69,7 @@ import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.lang.styling.color.ResolvableColor;
 import io.github.rosemoe.sora.lang.styling.line.LineAnchorStyle;
 import io.github.rosemoe.sora.lang.styling.line.LineBackground;
+import io.github.rosemoe.sora.lang.styling.line.LineGutterBackground;
 import io.github.rosemoe.sora.lang.styling.line.LineSideIcon;
 import io.github.rosemoe.sora.lang.styling.line.LineStyles;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -649,6 +650,8 @@ public class EditorRenderer {
             for (int i = 0; i < postDrawCurrentLines.size(); i++) {
                 drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - editor.getDividerMarginRight()));
             }
+            // User defined gutter background
+            drawUserGutterBackground(canvas, (int) (textOffset - editor.getDividerMarginRight()));
             drawSideIcons(canvas, offsetX + lineNumberWidth);
             canvas.restore();
 
@@ -723,6 +726,7 @@ public class EditorRenderer {
             for (int i = 0; i < postDrawCurrentLines.size(); i++) {
                 drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - editor.getDividerMarginRight() + editor.getOffsetX()));
             }
+            drawUserGutterBackground(canvas, (int) (textOffset - editor.getDividerMarginRight() + editor.getOffsetX()));
             drawSideIcons(canvas, lineNumberWidth);
             canvas.restore();
 
@@ -747,6 +751,21 @@ public class EditorRenderer {
         drawFormatTip(canvas);
     }
 
+    protected void drawUserGutterBackground(Canvas canvas, int right) {
+        int firstVis = editor.getFirstVisibleLine(), lastVis = editor.getLastVisibleLine();
+        for (int line = firstVis; line <= lastVis; line++) {
+            var bg = getUserGutterBackgroundForLine(line);
+            if (bg != null) {
+                var bgColor = bg.resolve(editor);
+                var top = (int) (editor.getLayout().getCharLayoutOffset(line, 0)[0] / editor.getRowHeight()) - 1;
+                var count = editor.getLayout().getRowCountForLine(line);
+                for (int i = 0; i < count; i++) {
+                    drawRowBackground(canvas, bgColor, top + i, right);
+                }
+            }
+        }
+    }
+
     protected void drawStuckLineNumbers(Canvas canvas, List<CodeBlock> candidates, float offset, float lineNumberWidth, int lineNumberColor) {
         if (candidates == null || candidates.size() == 0 || !editor.isLineNumberEnabled()) {
             return;
@@ -757,16 +776,22 @@ public class EditorRenderer {
         var offsetY = editor.getOffsetY();
         canvas.translate(0, offsetY);
         for (int i = 0; i < candidates.size(); i++) {
-            if (currentLine == candidates.get(i).startLine) {
+            var line = candidates.get(i).startLine;
+            var bg = getUserGutterBackgroundForLine(line);
+            var color = bg != null ? bg.resolve(editor) : 0;
+            if (currentLine == line || color != 0) {
                 tmpRect.top = editor.getRowTop(i) - offsetY;
                 tmpRect.bottom = editor.getRowBottom(i) - offsetY - editor.getDpUnit();
                 tmpRect.left = editor.isLineNumberPinned() ? 0 : offset;
                 tmpRect.right = tmpRect.left + editor.measureTextRegionOffset();
-                drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE), tmpRect);
+                if (currentLine == line)
+                    drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE), tmpRect);
+                if (color != 0)
+                    drawColor(canvas, color, tmpRect);
             }
-            drawLineNumber(canvas, candidates.get(i).startLine, i,
+            drawLineNumber(canvas, line, i,
                     editor.isLineNumberPinned() ? 0 : offset, lineNumberWidth,
-                    currentLine == candidates.get(i).startLine ? editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
+                    currentLine == line ? editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
         }
         canvas.restore();
     }
@@ -1101,6 +1126,15 @@ public class EditorRenderer {
     @Nullable
     protected ResolvableColor getUserBackgroundForLine(int line) {
         var bg = getLineStyle(line, LineBackground.class);
+        if (bg != null) {
+            return bg.getColor();
+        }
+        return null;
+    }
+
+    @Nullable
+    protected ResolvableColor getUserGutterBackgroundForLine(int line) {
+        var bg = getLineStyle(line, LineGutterBackground.class);
         if (bg != null) {
             return bg.getColor();
         }
