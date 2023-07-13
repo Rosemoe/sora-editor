@@ -167,6 +167,15 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
             setColor(TEXT_NORMAL, Color.parseColor(foreground));
         }
 
+        String completionWindowBackground = (String) themeRaw.get("completionWindowBackground");
+        if (completionWindowBackground != null) {
+            setColor(COMPLETION_WND_BACKGROUND, Color.parseColor(completionWindowBackground));
+        }
+
+        String completionWindowBackgroundCurrent = (String) themeRaw.get("completionWindowBackgroundCurrent");
+        if (completionWindowBackgroundCurrent != null) {
+            setColor(COMPLETION_WND_ITEM_CURRENT, Color.parseColor(completionWindowBackgroundCurrent));
+        }
 
         String highlightedDelimetersForeground =
                 (String) themeRaw.get("highlightedDelimetersForeground");
