@@ -48,7 +48,7 @@ import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestMa
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition;
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper;
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEventReceiver;
-import io.github.rosemoe.sora.lsp.editor.signature.SignatureHelpWindow;
+import io.github.rosemoe.sora.lsp2.editor.signature.SignatureHelpWindow;
 import io.github.rosemoe.sora.lsp.operations.Provider;
 import io.github.rosemoe.sora.lsp.operations.completion.CompletionProvider;
 import io.github.rosemoe.sora.lsp.operations.diagnostics.PublishDiagnosticsProvider;
