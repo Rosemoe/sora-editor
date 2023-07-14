@@ -2125,7 +2125,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * 1. Ligatures are divided into single characters.<br/>
      * 2. Text direction is always LTR (left-to-right).<br/>
      * 3. Some emojis with variation selector or fitzpatrick can not be shown correctly with specified attributes.<br/>
-     * 4. ZWJ and ZWNJ takes no effect.<br/>
+     * 4. ZWJ and ZWNJ take no effect.<br/>
      * Benefits:<br/>
      * Better performance when the text is very big, especially when you are displaying a text with long lines.
      *
@@ -4246,7 +4246,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 break;
             case MotionEvent.ACTION_MOVE:
                 int deltaX = x - downX;
-                if (forceHorizontalScrollable) {
+                if (forceHorizontalScrollable && !touchHandler.hasAnyHeldHandle()) {
                     if (deltaX > 0 && getScroller().getCurrX() == 0
                             || deltaX < 0 && getScroller().getCurrX() == getScrollMaxX()) {
                         getParent().requestDisallowInterceptTouchEvent(false);
