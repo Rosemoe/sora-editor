@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2023  Rosemoe
@@ -20,35 +20,11 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.lsp2.utils
 
-package io.github.rosemoe.sora.lsp2.client.connection
-
-import java.io.Closeable
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-
-
-interface StreamConnectionProvider : Closeable {
-    /**
-     * Connect to the server.
-     */
-    @Throws(IOException::class)
-    suspend fun start()
-
-    /**
-     * Get the input stream of the connection.
-     */
-    val inputStream: InputStream
-
-    /**
-     * Get the output stream of the connection.
-     */
-    val outputStream: OutputStream
-
-    /**
-     * Close the connection.
-     */
-    override fun close()
+class LSPException : RuntimeException {
+    constructor(msg: String) : super(msg)
+    constructor(msg: String, cause: Throwable?) : super(msg, cause)
+    constructor(cause: Throwable?) : super(cause)
 }

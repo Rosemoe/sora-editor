@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.lsp2.editor.diagnostics
 
+import io.github.rosemoe.sora.lsp2.utils.FileUri
 import org.eclipse.lsp4j.Diagnostic
 
 class DiagnosticsContainer {
@@ -30,20 +31,20 @@ class DiagnosticsContainer {
     private val diagnosticsMap by lazy(
         LazyThreadSafetyMode.NONE
     ) {
-        HashMap<String, MutableList<Diagnostic>>()
+        HashMap<FileUri, MutableList<Diagnostic>>()
     }
 
-    fun setDiagnostics(uri: String, diagnostics: MutableList<Diagnostic>) {
+    fun setDiagnostics(uri: FileUri, diagnostics: MutableList<Diagnostic>) {
         diagnosticsMap[uri] = diagnostics
     }
 
-    fun addDiagnostics(uri: String, diagnostics: List<Diagnostic>) {
+    fun addDiagnostics(uri: FileUri, diagnostics: List<Diagnostic>) {
         diagnostics.forEach {
             findOrReplaceDiagnostic(uri, it)
         }
     }
 
-    private fun findDiagnostic(uri: String, line: Int, column: Int): Diagnostic? {
+    private fun findDiagnostic(uri: FileUri, line: Int, column: Int): Diagnostic? {
         return diagnosticsMap[uri]?.find {
             it.range.start.line == line &&
                     it.range.start.character == column &&
@@ -52,7 +53,7 @@ class DiagnosticsContainer {
         }
     }
 
-    private fun findOrReplaceDiagnostic(uri: String, newDiagnostic: Diagnostic) {
+    private fun findOrReplaceDiagnostic(uri: FileUri, newDiagnostic: Diagnostic) {
         val diagnostics = diagnosticsMap[uri] ?: mutableListOf()
         findDiagnostic(
             uri,
@@ -63,18 +64,18 @@ class DiagnosticsContainer {
         diagnosticsMap[uri] = diagnostics
     }
 
-    fun removeDiagnostic(uri: String, diagnostic: Diagnostic) {
+    fun removeDiagnostic(uri: FileUri, diagnostic: Diagnostic) {
         diagnosticsMap[uri]?.remove(diagnostic)
     }
 
-    fun addDiagnostic(uri: String, diagnostic: Diagnostic) {
+    fun addDiagnostic(uri: FileUri, diagnostic: Diagnostic) {
         val diagnostics = diagnosticsMap[uri] ?: mutableListOf()
         findOrReplaceDiagnostic(uri, diagnostic)
         diagnosticsMap[uri] = diagnostics
     }
 
 
-    fun getDiagnostics(uri: String): List<Diagnostic> {
+    fun getDiagnostics(uri: FileUri): List<Diagnostic> {
         return diagnosticsMap.getOrPut(uri) { mutableListOf() }
     }
 

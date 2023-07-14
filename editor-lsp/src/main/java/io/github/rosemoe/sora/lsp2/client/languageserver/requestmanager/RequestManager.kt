@@ -126,56 +126,56 @@ abstract class RequestManager : LanguageClient, TextDocumentService, WorkspaceSe
 
     //--------------------------------------Client2Server-------------------------------------------------------------//
     // General
-    abstract override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult>
+    abstract override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult>?
     abstract override fun initialized(params: InitializedParams)
-    abstract override fun shutdown(): CompletableFuture<Any>
+    abstract override fun shutdown(): CompletableFuture<Any>?
     abstract override fun exit()
 
     // Workspace Service
     abstract override fun didChangeConfiguration(params: DidChangeConfigurationParams)
     abstract override fun didChangeWatchedFiles(params: DidChangeWatchedFilesParams)
-    abstract override fun executeCommand(params: ExecuteCommandParams): CompletableFuture<Any>
+    abstract override fun executeCommand(params: ExecuteCommandParams): CompletableFuture<Any>?
 
     // Text Document Service
     abstract override fun didOpen(params: DidOpenTextDocumentParams)
     abstract override fun didChange(params: DidChangeTextDocumentParams)
     abstract override fun willSave(params: WillSaveTextDocumentParams)
-    abstract override fun willSaveWaitUntil(params: WillSaveTextDocumentParams): CompletableFuture<List<TextEdit>>
+    abstract override fun willSaveWaitUntil(params: WillSaveTextDocumentParams): CompletableFuture<List<TextEdit>>?
     abstract override fun didSave(params: DidSaveTextDocumentParams)
     abstract override fun didClose(params: DidCloseTextDocumentParams)
-    abstract override fun completion(params: CompletionParams): CompletableFuture<Either<List<CompletionItem>, CompletionList>>
-    abstract override fun resolveCompletionItem(unresolved: CompletionItem): CompletableFuture<CompletionItem>
-    abstract override fun hover(params: HoverParams): CompletableFuture<Hover>
+    abstract override fun completion(params: CompletionParams): CompletableFuture<Either<List<CompletionItem>, CompletionList>>?
+    abstract override fun resolveCompletionItem(unresolved: CompletionItem): CompletableFuture<CompletionItem>?
+    abstract override fun hover(params: HoverParams): CompletableFuture<Hover>?
 
     @Deprecated("")
-    abstract fun hover(params: TextDocumentPositionParams?): CompletableFuture<Hover?>?
+    abstract fun hover(params: TextDocumentPositionParams): CompletableFuture<Hover>?
 
     @Deprecated("")
-    abstract fun signatureHelp(params: TextDocumentPositionParams?): CompletableFuture<SignatureHelp?>?
-    abstract override fun signatureHelp(params: SignatureHelpParams): CompletableFuture<SignatureHelp>
-    abstract override fun references(params: ReferenceParams): CompletableFuture<List<Location?>>
+    abstract fun signatureHelp(params: TextDocumentPositionParams): CompletableFuture<SignatureHelp>?
+    abstract override fun signatureHelp(params: SignatureHelpParams): CompletableFuture<SignatureHelp>?
+    abstract override fun references(params: ReferenceParams): CompletableFuture<List<Location?>>?
 
     @Deprecated("")
-    abstract fun documentHighlight(params: TextDocumentPositionParams?): CompletableFuture<List<DocumentHighlight?>?>?
-    abstract override fun documentHighlight(params: DocumentHighlightParams): CompletableFuture<List<DocumentHighlight?>>
-    abstract override fun documentSymbol(params: DocumentSymbolParams): CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>>
-    abstract override fun formatting(params: DocumentFormattingParams): CompletableFuture<List<TextEdit>>
-    abstract override fun rangeFormatting(params: DocumentRangeFormattingParams): CompletableFuture<List<TextEdit>>
-    abstract override fun onTypeFormatting(params: DocumentOnTypeFormattingParams): CompletableFuture<List<TextEdit>>
+    abstract fun documentHighlight(params: TextDocumentPositionParams): CompletableFuture<List<DocumentHighlight>>?
+    abstract override fun documentHighlight(params: DocumentHighlightParams): CompletableFuture<List<DocumentHighlight>>?
+    abstract override fun documentSymbol(params: DocumentSymbolParams): CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>>?
+    abstract override fun formatting(params: DocumentFormattingParams): CompletableFuture<List<TextEdit>>?
+    abstract override fun rangeFormatting(params: DocumentRangeFormattingParams): CompletableFuture<List<TextEdit>>?
+    abstract override fun onTypeFormatting(params: DocumentOnTypeFormattingParams): CompletableFuture<List<TextEdit>>?
 
     @Deprecated("")
-    abstract fun definition(params: TextDocumentPositionParams?): CompletableFuture<Either<List<Location?>?, List<LocationLink?>?>?>?
-    abstract override fun definition(params: DefinitionParams): CompletableFuture<Either<List<Location?>, List<LocationLink?>>>
-    abstract override fun codeAction(params: CodeActionParams): CompletableFuture<List<Either<Command, CodeAction>>>
-    abstract override fun codeLens(params: CodeLensParams): CompletableFuture<List<CodeLens>>
-    abstract override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens>
-    abstract override fun documentLink(params: DocumentLinkParams): CompletableFuture<List<DocumentLink>>
-    abstract override fun documentLinkResolve(unresolved: DocumentLink): CompletableFuture<DocumentLink>
-    abstract override fun rename(params: RenameParams): CompletableFuture<WorkspaceEdit>
-    abstract override fun implementation(params: ImplementationParams): CompletableFuture<Either<List<Location?>, List<LocationLink?>>>
-    abstract override fun typeDefinition(params: TypeDefinitionParams): CompletableFuture<Either<List<Location?>, List<LocationLink?>>>
-    abstract override fun documentColor(params: DocumentColorParams): CompletableFuture<List<ColorInformation>>
-    abstract override fun colorPresentation(params: ColorPresentationParams): CompletableFuture<List<ColorPresentation>>
-    abstract override fun foldingRange(params: FoldingRangeRequestParams): CompletableFuture<List<FoldingRange>>
+    abstract fun definition(params: TextDocumentPositionParams): CompletableFuture<Either<List<Location>, List<LocationLink>>>?
+    abstract override fun definition(params: DefinitionParams): CompletableFuture<Either<List<Location>, List<LocationLink>>>?
+    abstract override fun codeAction(params: CodeActionParams): CompletableFuture<List<Either<Command, CodeAction>>>?
+    abstract override fun codeLens(params: CodeLensParams): CompletableFuture<List<CodeLens>>?
+    abstract override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens>?
+    abstract override fun documentLink(params: DocumentLinkParams): CompletableFuture<List<DocumentLink>>?
+    abstract override fun documentLinkResolve(unresolved: DocumentLink): CompletableFuture<DocumentLink>?
+    abstract override fun rename(params: RenameParams): CompletableFuture<WorkspaceEdit>?
+    abstract override fun implementation(params: ImplementationParams): CompletableFuture<Either<List<Location>, List<LocationLink>>>?
+    abstract override fun typeDefinition(params: TypeDefinitionParams): CompletableFuture<Either<List<Location>, List<LocationLink>>>?
+    abstract override fun documentColor(params: DocumentColorParams): CompletableFuture<List<ColorInformation>>?
+    abstract override fun colorPresentation(params: ColorPresentationParams): CompletableFuture<List<ColorPresentation>>?
+    abstract override fun foldingRange(params: FoldingRangeRequestParams): CompletableFuture<List<FoldingRange>>?
 }
 

@@ -77,7 +77,6 @@ class LspEventManager(
         eventEmitter.emit(eventName, eventContext)
     }
 
-
     /**
      * For language server, some option need to be set, you can get the relevant option and set the values freely by this
      */

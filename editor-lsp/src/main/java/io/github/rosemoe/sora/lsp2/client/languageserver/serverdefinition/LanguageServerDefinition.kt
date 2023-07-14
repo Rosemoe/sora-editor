@@ -54,7 +54,7 @@ abstract class LanguageServerDefinition {
      * @throws IOException if the stream connection provider is crashed
      */
     @Throws(IOException::class)
-    suspend fun start(workingDir: String): Pair<InputStream?, OutputStream?> {
+    suspend fun start(workingDir: String): Pair<InputStream, OutputStream> {
         var streamConnectionProvider = streamConnectionProviders[workingDir]
         return if (streamConnectionProvider != null) {
             streamConnectionProvider.inputStream to streamConnectionProvider.outputStream

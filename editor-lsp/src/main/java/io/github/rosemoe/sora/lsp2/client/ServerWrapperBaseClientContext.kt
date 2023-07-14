@@ -24,39 +24,20 @@
 
 package io.github.rosemoe.sora.lsp2.client
 
-
-import io.github.rosemoe.sora.lsp2.client.languageserver.requestmanager.RequestManager
-import io.github.rosemoe.sora.lsp2.client.languageserver.wrapper.EventHandler
+import io.github.rosemoe.sora.lsp2.client.languageserver.wrapper.LanguageServerWrapper
 import io.github.rosemoe.sora.lsp2.editor.LspEditor
-import io.github.rosemoe.sora.lsp2.editor.LspProject
 import io.github.rosemoe.sora.lsp2.utils.FileUri
 
 
-/**
- * The client context which is received by [DefaultLanguageClient]. The context contain
- * information about the runtime and its components.
- *
- * **Note:** This is an internal API and may change without notice.
- *
- * @author dingyi
- *
- */
-interface ClientContext {
-    /**
-     * Returns the [LspEditor] for the given document URI.
-     */
-    fun getEditor(documentUri: FileUri): LspEditor?
+class ServerWrapperBaseClientContext(private val wrapper: LanguageServerWrapper) :
+    ClientContext {
+    override fun getEditor(documentUri: FileUri): LspEditor? {
+        return wrapper.project.getEditor(documentUri)
+    }
 
-    /**
-     * Returns the project path associated with the LanuageClient.
-     */
-    val projectPath: FileUri
+    override val projectPath = wrapper.project.projectUri
+    override val project = wrapper.project
+    override val requestManager = wrapper.requestManager
+    override val eventListener = wrapper.serverDefinition.eventListener
 
-    val project: LspProject
-
-    /**
-     * Returns the [RequestManager] associated with the Language Server Connection.
-     */
-    val requestManager: RequestManager?
-    val eventListener: EventHandler.EventListener
 }

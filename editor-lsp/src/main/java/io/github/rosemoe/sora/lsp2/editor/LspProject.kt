@@ -25,6 +25,7 @@
 package io.github.rosemoe.sora.lsp2.editor
 
 import io.github.rosemoe.sora.lsp2.client.languageserver.serverdefinition.LanguageServerDefinition
+import io.github.rosemoe.sora.lsp2.editor.diagnostics.DiagnosticsContainer
 import io.github.rosemoe.sora.lsp2.events.EventEmitter
 import io.github.rosemoe.sora.lsp2.utils.FileUri
 import io.github.rosemoe.sora.lsp2.utils.toFileUri
@@ -33,13 +34,16 @@ class LspProject(
     private val projectPath: String,
 ) {
 
-    val projectUri = "file://$projectPath"
+    val projectUri = FileUri(projectPath)
 
     val eventEmitter = EventEmitter()
 
     private val serverDefinitions = mutableMapOf<String, LanguageServerDefinition>()
 
     private val editors = mutableMapOf<FileUri, LspEditor>()
+
+    val diagnosticsContainer = DiagnosticsContainer()
+
 
     fun addServerDefinition(definition: LanguageServerDefinition) {
         serverDefinitions[definition.ext] = definition
@@ -64,8 +68,16 @@ class LspProject(
         editors.remove(path.toFileUri())
     }
 
-    fun getEditor(path: String): LspEditor {
-        return editors.getValue(path.toFileUri())
+    fun getEditor(path: String): LspEditor? {
+        return editors[path.toFileUri()]
+    }
+
+    fun getEditor(uri: FileUri): LspEditor? {
+        return editors[uri]
+    }
+
+    fun getOrCreateEditor(path: String): LspEditor {
+        return getEditor(path) ?: createEditor(path)
     }
 
     fun closeAllEditors() {

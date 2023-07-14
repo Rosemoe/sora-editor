@@ -26,13 +26,19 @@ package io.github.rosemoe.sora.lsp2.utils
 
 import java.io.File
 import java.net.URI
+import kotlin.io.path.pathString
+import kotlin.io.path.toPath
 
 fun FileUri.toFileUri(): String {
     return "file://$this"
 }
 
-inline fun String.toFileUri(): FileUri {
+fun String.toFileUri(): FileUri {
     return FileUri(this)
+}
+
+fun URI.toFileUri(): FileUri {
+    return FileUri(this.toPath().pathString)
 }
 
 @JvmInline
@@ -40,6 +46,10 @@ value class FileUri(
     val path: String
 ) {
     fun toFile(): File {
-        return File(URI(this.toFileUri()))
+        return File(toUri())
+    }
+
+    fun toUri(): URI {
+        return URI(this.toFileUri())
     }
 }
