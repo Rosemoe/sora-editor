@@ -28,8 +28,8 @@ import io.github.rosemoe.sora.lsp2.client.languageserver.serverdefinition.Langua
 import io.github.rosemoe.sora.lsp2.utils.FileUri
 
 class LspEditor(
-    private val project: LspProject,
-    private val uri: FileUri,
+    val project: LspProject,
+    val uri: FileUri,
 ) {
 
     private val serverDefinition: LanguageServerDefinition

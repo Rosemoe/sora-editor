@@ -62,7 +62,7 @@ import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
 @Experimental
-public class LspLanguage implements Language {
+public class  LspLanguage implements Language {
 
     private LspEditor currentEditor;
 
