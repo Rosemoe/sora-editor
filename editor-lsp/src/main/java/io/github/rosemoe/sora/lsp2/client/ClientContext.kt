@@ -21,35 +21,37 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-plugins {
-    id("com.android.library")
-    id("kotlin-android")
-    id("com.vanniktech.maven.publish.base")
-}
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
+package io.github.rosemoe.sora.lsp2.client
 
-android {
-    namespace = "io.github.rosemoe.sora.lsp"
+import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager
+import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
+import io.github.rosemoe.sora.lsp.editor.LspEditor
 
-    defaultConfig {
-        consumerProguardFiles("consumer-rules.pro")
-    }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-}
+/**
+ * The client context which is received by [DefaultLanguageClient]. The context contain
+ * information about the runtime and its components.
+ *
+ * **Note:** This is an internal API and may change without notice.
+ *
+ * @author dingyi
+ *
+ */
+interface ClientContext {
+    /**
+     * Returns the [LspEditor] for the given document URI.
+     */
+  //  fun getEditorEventManagerFor(documentUri: String): LspEditor?
 
-dependencies {
-    compileOnly(projects.editor)
-    implementation(libs.lsp4j)
-    implementation(libs.kotlinx.coroutines)
+    /**
+     * Returns the project path associated with the LanuageClient.
+     */
+    val projectPath: String?
+
+    /**
+     * Returns the [RequestManager] associated with the Language Server Connection.
+     */
+    val requestManager: RequestManager?
+    val eventListener: EventHandler.EventListener?
 }

@@ -21,35 +21,49 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-plugins {
-    id("com.android.library")
-    id("kotlin-android")
-    id("com.vanniktech.maven.publish.base")
-}
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
+package io.github.rosemoe.sora.lsp2.client.connection
 
-android {
-    namespace = "io.github.rosemoe.sora.lsp"
 
-    defaultConfig {
-        consumerProguardFiles("consumer-rules.pro")
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+import java.net.Socket
+
+
+/**
+ * Socket-based language server connection
+ */
+class SocketStreamConnectionProvider(
+    private val addressProvider: SocketAddressProvider
+) : StreamConnectionProvider {
+    private lateinit var socket: Socket
+
+    @Throws(IOException::class)
+    override suspend fun start() = withContext(Dispatchers.IO) {
+        val port = addressProvider.port
+        socket = Socket(addressProvider.host ?: "localhost", port)
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+    override val inputStream: InputStream
+        get() = socket.getInputStream()
+
+    override val outputStream: OutputStream
+        get() = socket.getOutputStream()
+
+    override fun close() {
+        try {
+            socket.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
 }
 
-dependencies {
-    compileOnly(projects.editor)
-    implementation(libs.lsp4j)
-    implementation(libs.kotlinx.coroutines)
-}
+
+data class SocketAddressProvider(
+    val port: Int,
+    val host: String?
+)

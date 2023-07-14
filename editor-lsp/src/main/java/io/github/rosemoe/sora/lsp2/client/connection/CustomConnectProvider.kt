@@ -21,35 +21,48 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-plugins {
-    id("com.android.library")
-    id("kotlin-android")
-    id("com.vanniktech.maven.publish.base")
-}
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
+package io.github.rosemoe.sora.lsp2.client.connection
 
-android {
-    namespace = "io.github.rosemoe.sora.lsp"
+import android.util.Pair
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 
-    defaultConfig {
-        consumerProguardFiles("consumer-rules.pro")
+
+/**
+ * A customizable connection provider, where callers provide the input and output streams.
+ */
+class CustomConnectProvider(private val streamProvider: StreamProvider) : StreamConnectionProvider {
+    private lateinit var _inputStream: InputStream
+    private lateinit var _outputStream: OutputStream
+
+    override suspend fun start() {
+        val streams = streamProvider.getStreams()
+        _inputStream = streams.first
+        _outputStream = streams.second
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+    override val inputStream: InputStream
+        get() = _inputStream
+
+    override val outputStream: OutputStream
+        get() = _outputStream
+
+    override fun close() {
+        try {
+            inputStream.close()
+            outputStream.close()
+        } catch (e: IOException) {
+            // ignore
         }
     }
-    kotlinOptions {
-        jvmTarget = "11"
+
+    /**
+     * Provider of language server connection
+     */
+    interface StreamProvider {
+        suspend fun getStreams(): Pair<InputStream, OutputStream>
     }
 }
 
-dependencies {
-    compileOnly(projects.editor)
-    implementation(libs.lsp4j)
-    implementation(libs.kotlinx.coroutines)
-}
