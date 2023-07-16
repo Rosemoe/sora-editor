@@ -179,6 +179,9 @@ public class LspLanguage implements Language {
     @NonNull
     @Override
     public Formatter getFormatter() {
+        if (lspFormatter == null) {
+            return EmptyLanguage.EmptyFormatter.INSTANCE;
+        }
         return lspFormatter;
     }
 
