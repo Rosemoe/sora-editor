@@ -25,10 +25,15 @@
 package io.github.rosemoe.sora.lsp2.editor
 
 import io.github.rosemoe.sora.lsp2.client.languageserver.serverdefinition.LanguageServerDefinition
+import io.github.rosemoe.sora.lsp2.client.languageserver.wrapper.LanguageServerWrapper
 import io.github.rosemoe.sora.lsp2.editor.diagnostics.DiagnosticsContainer
 import io.github.rosemoe.sora.lsp2.events.EventEmitter
 import io.github.rosemoe.sora.lsp2.utils.FileUri
 import io.github.rosemoe.sora.lsp2.utils.toFileUri
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
+import java.util.concurrent.ForkJoinPool
 
 class LspProject(
     private val projectPath: String,
@@ -38,12 +43,16 @@ class LspProject(
 
     val eventEmitter = EventEmitter()
 
+    private val languageServerWrappers = mutableMapOf<String, LanguageServerWrapper>()
+
     private val serverDefinitions = mutableMapOf<String, LanguageServerDefinition>()
 
     private val editors = mutableMapOf<FileUri, LspEditor>()
 
     val diagnosticsContainer = DiagnosticsContainer()
 
+    val coroutineScope =
+        CoroutineScope(ForkJoinPool.commonPool().asCoroutineDispatcher() + SupervisorJob())
 
     fun addServerDefinition(definition: LanguageServerDefinition) {
         serverDefinitions[definition.ext] = definition
@@ -80,15 +89,34 @@ class LspProject(
         return getEditor(path) ?: createEditor(path)
     }
 
-    fun closeAllEditors() {
+    suspend fun closeAllEditors() {
         editors.forEach {
             it.value.dispose()
         }
         editors.clear()
     }
 
-    fun dispose() {
+    internal fun getLanguageServerWrapper(ext: String): LanguageServerWrapper? {
+        return languageServerWrappers[ext]
+    }
 
+    internal fun getOrCreateLanguageServerWrapper(ext: String): LanguageServerWrapper {
+        return languageServerWrappers[ext] ?: createLanguageServerWrapper(ext)
+    }
+
+    internal fun createLanguageServerWrapper(ext: String): LanguageServerWrapper {
+        val definition = serverDefinitions[ext]
+            ?: throw IllegalArgumentException("No server definition for extension $ext")
+        val wrapper = LanguageServerWrapper(definition, this)
+        languageServerWrappers[ext] = wrapper
+        return wrapper
+    }
+
+    suspend fun dispose() {
+        closeAllEditors()
+        languageServerWrappers.forEach {
+            it.value.stop(false)
+        }
     }
 
     fun init() {

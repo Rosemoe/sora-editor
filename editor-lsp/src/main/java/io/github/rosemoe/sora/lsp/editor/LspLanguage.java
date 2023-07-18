@@ -200,7 +200,6 @@ public class  LspLanguage implements Language {
 
     @Override
     public void destroy() {
-
         getFormatter().destroy();
 
         if (wrapperLanguage != null) {
@@ -238,6 +237,5 @@ public class  LspLanguage implements Language {
     public void setCompletionItemProvider(CompletionItemProvider<?> completionItemProvider) {
         this.completionItemProvider = completionItemProvider;
     }
-
 
 }

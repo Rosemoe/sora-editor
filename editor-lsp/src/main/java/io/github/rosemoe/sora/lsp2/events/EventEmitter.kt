@@ -47,18 +47,18 @@ class EventEmitter {
         }
     }
 
-    fun emit(event: String, context: EventContext): EventContext {
+    suspend fun emit(event: String, context: EventContext): EventContext {
         listeners[event]?.forEach {
             it.handle(context)
         }
         return context
     }
 
-    fun emit(event: String): EventContext {
+    suspend fun emit(event: String): EventContext {
         return emit(event, EventContext())
     }
 
-    fun emit(event: String, vararg args: Any): EventContext {
+    suspend fun emit(event: String, vararg args: Any): EventContext {
         val context = EventContext()
         for (i in args) {
             context.put(i::class.java.name, i)
@@ -82,7 +82,7 @@ interface EventListener {
 
     val eventName: String
 
-    fun handle(context: EventContext): EventContext
+    suspend fun handle(context: EventContext): EventContext
 
     fun dispose() {}
 }
@@ -106,7 +106,7 @@ class EventContext {
         data[key] = value
     }
 
-    fun <T : Any> put(value: Any) {
+    fun put(value: Any) {
         data[value::class.java.name] = value
     }
 
@@ -127,6 +127,10 @@ class EventContext {
         data.clear()
     }
 
+}
+
+inline fun <reified T : Any> EventContext.getByClass(): T? {
+   return getByClass(T::class.java)
 }
 
 object EventType {}

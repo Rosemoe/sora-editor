@@ -543,13 +543,6 @@ class LanguageServerWrapper(
         start()
     }
 
-    fun unregister() {
-        projectToLanguageServerWrapper.remove(
-            project.projectUri
-        )
-    }
-
-
     fun getConnectedFiles(): List<String> {
         return connectedEditors.map {
             it.uri.path
@@ -559,8 +552,6 @@ class LanguageServerWrapper(
 
     companion object {
 
-        private val projectToLanguageServerWrapper =
-            ConcurrentHashMap<FileUri, LanguageServerWrapper>()
 
         private val uriToLanguageServerWrapper =
             ConcurrentHashMap<Pair<FileUri, FileUri>, LanguageServerWrapper>()
@@ -585,8 +576,6 @@ class LanguageServerWrapper(
             )]
         }
 
-        fun forProject(project: LspProject): LanguageServerWrapper? {
-            return projectToLanguageServerWrapper[project.projectUri]
-        }
+
     }
 }

@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.lsp2.utils
 
+import android.health.connect.datatypes.units.Length
 import android.util.Log
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
@@ -82,9 +83,16 @@ fun String.createTextDocumentContentChangeEvent(): TextDocumentContentChangeEven
 
 fun FileUri.createTextDocumentContentChangeEvent(
     range: Range,
+    rangeLength: Int,
     text: String
 ): TextDocumentContentChangeEvent {
-    return TextDocumentContentChangeEvent(range, text)
+    return TextDocumentContentChangeEvent(range, rangeLength, text)
+}
+
+fun FileUri.createTextDocumentContentChangeEvent(
+    text: String
+): TextDocumentContentChangeEvent {
+    return TextDocumentContentChangeEvent(text)
 }
 
 fun createRange(start: Position, end: Position): Range {

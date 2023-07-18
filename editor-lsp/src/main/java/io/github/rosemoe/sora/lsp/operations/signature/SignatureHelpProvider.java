@@ -90,7 +90,7 @@ public class SignatureHelpProvider extends RunOnlyProvider<CharPosition> {
         } catch (Exception exception) {
             // throw?
             exception.printStackTrace();
-            Log.e("LSP client","show signatureHelp timeout");
+            Log.e("LSP client","show signatureHelp timeout",exception);
         }
     }
 }

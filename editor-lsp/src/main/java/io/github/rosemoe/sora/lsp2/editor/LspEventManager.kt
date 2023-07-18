@@ -64,7 +64,7 @@ class LspEventManager(
         eventEmitter.removeListener(eventClass)
     }
 
-    fun emit(eventName: String, vararg args: Any) {
+    suspend fun emit(eventName: String, vararg args: Any): EventContext {
         val eventContext = EventContext()
 
         eventContext.put("lsp-editor", editor)
@@ -74,7 +74,18 @@ class LspEventManager(
             eventContext.put("arg$i", args[i])
         }
 
-        eventEmitter.emit(eventName, eventContext)
+        return eventEmitter.emit(eventName, eventContext)
+    }
+
+    suspend fun emit(eventName: String,block: EventContext.() -> Unit): EventContext {
+        val eventContext = EventContext()
+
+        eventContext.put("lsp-editor", editor)
+        eventContext.put("lsp-project", project)
+
+        eventContext.block()
+
+        return eventEmitter.emit(eventName, eventContext)
     }
 
     /**
