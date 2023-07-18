@@ -25,14 +25,20 @@ package io.github.rosemoe.sora.lsp.utils;
 
 import java.io.File;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 public class URIUtils {
 
-    public static URI fileToURI(File file) {
-        return file.toURI();
+    public static URI fileToURI(File file)  {
+        try {
+            return new URI("file://" + file.getAbsolutePath());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return file.toURI();
+        }
     }
 
-    public static URI fileToURI(String path) {
+    public static URI fileToURI(String path)  {
         return fileToURI(new File(path));
     }
 }
