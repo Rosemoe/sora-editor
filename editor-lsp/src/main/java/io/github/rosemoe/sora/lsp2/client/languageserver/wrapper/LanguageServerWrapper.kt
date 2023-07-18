@@ -37,13 +37,15 @@ import io.github.rosemoe.sora.lsp2.requests.Timeout
 import io.github.rosemoe.sora.lsp2.requests.Timeouts
 import io.github.rosemoe.sora.lsp2.utils.FileUri
 import io.github.rosemoe.sora.lsp2.utils.LSPException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -82,8 +84,7 @@ import java.io.OutputStream
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
-import java.util.function.Function
-import java.util.stream.Collectors
+import java.util.concurrent.ForkJoinPool
 
 class LanguageServerWrapper(
     val serverDefinition: LanguageServerDefinition, val project: LspProject
@@ -115,6 +116,8 @@ class LanguageServerWrapper(
         private set
 
     private val readyToConnect = HashSet<LspEditor>()
+
+    private val commonCoroutineScope = CoroutineScope(ForkJoinPool.commonPool().asCoroutineDispatcher())
 
     private lateinit var eventHandler: EventHandler
 
@@ -372,13 +375,15 @@ class LanguageServerWrapper(
         return initParams
     }
 
-    fun crashed(e: java.lang.Exception) {
+    fun crashed(e: Exception) {
         crashCount += 1
         if (crashCount <= 3) {
-            /*reconnect()*/
+            commonCoroutineScope.launch {
+                reconnect()
+            }
         } else {
             serverDefinition.eventListener.onHandlerException(
-                io.github.rosemoe.sora.lsp.utils.LSPException(
+                LSPException(
                     String.format(
                         "LanguageServer for definition %s, project %s keeps crashing due to \n%s\n",
                         serverDefinition.toString(),

@@ -103,7 +103,9 @@ import java.util.concurrent.CompletableFuture
 /**
  * Default implementation for LSP requests/notifications handling.
  */
-//TODO: Some features are not directly supported in the sora-editor (e.g. viewing method signatures), consider to remove them or abstract additional classes for the caller to provide support
+//TODO: Some features are not directly supported in the sora-editor
+// (e.g. viewing method signatures),
+// consider to remove them or abstract additional classes for the caller to provide support
 class DefaultRequestManager(
     val wrapper: LanguageServerWrapper, val server: LanguageServer, val client: LanguageClient,
     val serverCapabilities: ServerCapabilities
