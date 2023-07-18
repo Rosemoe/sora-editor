@@ -5,6 +5,11 @@
   - [滚动条](/zh-cn/customization/scrollbar.md "滚动条")
   - [行号提示面板](/zh-cn/customization/line-panel.md "行号提示面板")
   - [符号输入面板](/zh-cn/customization/symbol-input-view.md "符号输入面板")
+  - 快捷键
+    - [自定义快捷键](/zh-cn/customization/keybinding.md "自定义快捷键")
+    - [默认快捷键](/zh-cn/customization/default-keybindings.md "默认快捷键")
+- [语言服务（LSP）](/zh-cn/lsp.md "语言服务（LSP）")
+- [textmate](/zh-cn/textmate.md "textmate")
 - Java 文档
   - [API接口](/zh-cn/api.md "API接口")
   - [常量](/zh-cn/constant.md "常量")

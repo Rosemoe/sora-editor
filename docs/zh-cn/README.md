@@ -1,6 +1,6 @@
 <div align="center">
 
-![Banner](/images/editor_banner.jpg)
+![Banner](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/images/editor_banner.jpg)
 ----
 [![CI](https://github.com/Rosemoe/CodeEditor/actions/workflows/gradle.yml/badge.svg?event=push)](https://github.com/Rosemoe/CodeEditor/actions/workflows/gradle.yml)
 [![GitHub license](https://img.shields.io/github/license/Rosemoe/CodeEditor)](https://github.com/Rosemoe/CodeEditor/blob/main/LICENSE)
@@ -12,7 +12,7 @@ sora-editor是一款高效的安卓代码编辑器
 
 </div>
 
-阅读其他语言的文档: [English](README.md), [简体中文](README.zh-cn.md), [Español](README.es.md).
+阅读其他语言的文档: [English](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.md), [简体中文](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.zh-cn.md), [Español](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.es.md), [日本語](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.jp.md).
 
 ***这个项目仍在缓慢开发中，欢迎提交问题和合并请求***
 
@@ -43,13 +43,13 @@ sora-editor是一款高效的安卓代码编辑器
 编辑器默认支持了一些快捷键，但是你可以订阅 [`KeyBindingEvent`](https://github.com/Rosemoe/sora-editor/blob/main/editor/src/main/java/io/github/rosemoe/sora/event/KeyBindingEvent.java)
 并处理它来实现自己的快捷键，当然也可以覆盖默认的快捷键操作并执行自定义操作。
 
-当前编辑器支持的快捷键大多与 Android Studio/Intellij IDEA 的快捷键类似，可参见[支持的快捷键](./keybindings.md).
+当前编辑器支持的快捷键大多与 Android Studio/Intellij IDEA 的快捷键类似，可参见[支持的快捷键](https://github.com/Rosemoe/sora-editor/blob/main/keybindings.md).
 
 ## 编辑器预览图
 
 <div style="overflow: hidden">
-<img src="/images/general.jpg" alt="GeneralAppearance" width="40%" align="bottom" />
-<img src="/images/problem_indicators.jpg" alt="ProblemIndicator" width="40%" align="bottom" />
+<img src="https://raw.githubusercontent.com/Rosemoe/sora-editor/main/images/general.jpg" alt="GeneralAppearance" width="40%" align="bottom" />
+<img src="https://raw.githubusercontent.com/Rosemoe/sora-editor/main/images/problem_indicators.jpg" alt="ProblemIndicator" width="40%" align="bottom" />
 </div>
 
 ## 快速使用
@@ -122,4 +122,4 @@ additional information or have any questions
 感谢[JetBrains](https://www.jetbrains.com/?from=CodeEditor)为本项目
 提供的[IntelliJ IDEA](https://www.jetbrains.com/idea/?from=CodeEditor)等IDE的免费许可证。
 
-[<img src=".github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)
+[<img src="https://raw.githubusercontent.com/Rosemoe/sora-editor/main/.github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)

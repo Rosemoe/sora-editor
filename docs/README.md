@@ -1,6 +1,6 @@
 <div align="center">
 
-![Banner](/images/editor_banner.jpg)
+![Banner](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/images/editor_banner.jpg)
 ----
 [![CI](https://github.com/Rosemoe/CodeEditor/actions/workflows/gradle.yml/badge.svg?event=push)](https://github.com/Rosemoe/CodeEditor/actions/workflows/gradle.yml)
 [![GitHub license](https://img.shields.io/github/license/Rosemoe/CodeEditor)](https://github.com/Rosemoe/CodeEditor/blob/main/LICENSE)
@@ -12,7 +12,7 @@ sora-editor is a cool and optimized code editor on Android platform
 
 </div>
 
-Read this in other languages: [English](README.md), [简体中文](README.zh-cn.md), [Español](README.es.md).
+Read this in other languages: [English](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.md), [简体中文](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.zh-cn.md), [Español](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.es.md), [日本語](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.jp.md).
 
 Note that statements in other languages may not be up-to-date.
 
@@ -50,7 +50,7 @@ and add your own key bindings. You can even override the default key bindings an
 your own.
 
 The currently supported key bindings are mostly similar to Android Studio/Intellij IDEA.
-See the [supported key bindings](./keybindings.md).
+See the [supported key bindings](https://github.com/Rosemoe/sora-editor/blob/main/keybindings.md).
 
 ## Screenshots
 
@@ -83,7 +83,7 @@ Available modules:
   them by using this
   module. The internal implementation of textmate is from [tm4e](https://github.com/eclipse/tm4e).
 - language-treesitter   
-  Offer [tree-sitter](https://tree-sitter.github.io/tree-sitter/) support for editor. This can be used to 
+  Offer [tree-sitter](https://tree-sitter.github.io/tree-sitter/) support for editor. This can be used to
   parse the code to an AST fast and incrementally, which is helpful for accurate highlighting and providing completions.
   Note that this module only provides incremental paring and highlighting. Thanks to Java bindings [android-tree-sitter](https://github.com/AndroidIDEOfficial/android-tree-sitter/)
 
@@ -136,4 +136,4 @@ additional information or have any questions
 
 Thanks to [JetBrains](https://www.jetbrains.com/?from=CodeEditor) for allocating free open-source
 licences for IDEs such as [IntelliJ IDEA](https://www.jetbrains.com/idea/?from=CodeEditor).   
-[<img src=".github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)
+[<img src="https://raw.githubusercontent.com/Rosemoe/sora-editor/main/.github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)
