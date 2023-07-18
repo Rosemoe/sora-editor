@@ -106,7 +106,7 @@ abstract class LanguageServerDefinition {
         throw UnsupportedOperationException()
     }
 
-    val eventListener: EventHandler.EventListener
+    open val eventListener: EventHandler.EventListener
         get() = EventHandler.EventListener.DEFAULT
 
     /**

@@ -62,7 +62,7 @@ class LspLanguageServerService : Service() {
 
             val socketClient = socket.accept()
 
-            Log.d(TAG, "connected to the client on port ${socketClient.localPort}")
+            Log.d(TAG, "connected to the client on port ${socketClient.port}")
 
             runCatching {
 

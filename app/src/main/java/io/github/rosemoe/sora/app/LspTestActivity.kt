@@ -41,15 +41,17 @@ import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
 import io.github.rosemoe.sora.langs.textmate.registry.dsl.languages
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
-import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvider
-import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
-import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
-import io.github.rosemoe.sora.lsp.editor.LspEditor
-import io.github.rosemoe.sora.lsp.editor.LspEditorManager
-import io.github.rosemoe.sora.lsp.utils.URIUtils
+import io.github.rosemoe.sora.lsp2.client.connection.SocketStreamConnectionProvider
+import io.github.rosemoe.sora.lsp2.client.languageserver.serverdefinition.CustomLanguageServerDefinition
+import io.github.rosemoe.sora.lsp2.client.languageserver.wrapper.EventHandler
+import io.github.rosemoe.sora.lsp2.editor.LspEditor
+import io.github.rosemoe.sora.lsp2.editor.LspProject
+import io.github.rosemoe.sora.lsp2.requests.Timeout
+import io.github.rosemoe.sora.lsp2.requests.Timeouts
 import io.github.rosemoe.sora.text.ContentIO
 import io.github.rosemoe.sora.widget.CodeEditor
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams
@@ -66,6 +68,7 @@ class LspTestActivity : AppCompatActivity() {
     private lateinit var editor: CodeEditor
 
     private lateinit var lspEditor: LspEditor
+    private lateinit var lspProject: LspProject
 
     private lateinit var rootMenu: Menu
 
@@ -86,8 +89,8 @@ class LspTestActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             unAssets()
-            connectToLanguageServer()
             setEditorText()
+            connectToLanguageServer()
         }
     }
 
@@ -145,54 +148,65 @@ class LspTestActivity : AppCompatActivity() {
                 }
         )
 
-        val serverDefinition =
-            object : CustomLanguageServerDefinition(".lua",
-                { SocketStreamConnectionProvider { port } }
-            ) {
-               /* override fun getInitializationOptions(uri: URI?): Any {
-                    return InitializationOption(
-                        stdFolder = "file:/$projectPath/std/Lua53",
-                    )
-                }*/
-
-                override fun getEventListener(): EventHandler.EventListener {
-                    return EventListener()
+        val luaServerDefinition =
+            object : CustomLanguageServerDefinition("lua",
+                ServerConnectProvider {
+                    SocketStreamConnectionProvider(port)
                 }
+            ) {
+                /* override fun getInitializationOptions(uri: URI?): Any {
+                     return InitializationOption(
+                         stdFolder = "file:/$projectPath/std/Lua53",
+                     )
+                 }*/
+
+                private val _eventListener = EventListener()
+
+                override val eventListener: EventHandler.EventListener
+                    get() = _eventListener
+
             }
 
+        lspProject = LspProject(projectPath)
+
+        lspProject.addServerDefinition(luaServerDefinition)
+
         withContext(Dispatchers.Main) {
-            lspEditor = LspEditorManager
-                .getOrCreateEditorManager(projectPath)
-                .createEditor(
-                    URIUtils.fileToURI("$projectPath/sample.lua").toString(),
-                    serverDefinition
-                )
+            lspEditor = lspProject.createEditor("$projectPath/sample.lua")
             val wrapperLanguage = createTextMateLanguage()
-            lspEditor.setWrapperLanguage(wrapperLanguage)
+            lspEditor.wrapperLanguage = wrapperLanguage
             lspEditor.editor = editor
         }
 
-        lifecycleScope.launch(Dispatchers.Main) {
-            //delay(Timeout.getTimeout(Timeouts.INIT).toLong()) //wait for server start
-            try {
-                withContext(Dispatchers.IO) {
-                    lspEditor.connectWithTimeout()
-                    lspEditor.requestManager?.didChangeWorkspaceFolders(
-                        DidChangeWorkspaceFoldersParams().apply {
-                            this.event = WorkspaceFoldersChangeEvent().apply {
-                                added = listOf(WorkspaceFolder("file://$projectPath/std/Lua53"))
-                            }
-                        }
-                    )
-                }
+        var connected: Boolean
 
-                editor.editable = true
+        // delay(Timeout[Timeouts.INIT].toLong()) //wait for server start
+
+        try {
+            lspEditor.connectWithTimeout()
+
+            lspEditor.requestManager?.didChangeWorkspaceFolders(
+                DidChangeWorkspaceFoldersParams().apply {
+                    this.event = WorkspaceFoldersChangeEvent().apply {
+                        added = listOf(WorkspaceFolder("file://$projectPath/std/Lua53"))
+                    }
+                }
+            )
+
+            connected = true
+
+        } catch (e: Exception) {
+            connected = false
+            e.printStackTrace()
+        }
+
+        lifecycleScope.launch(Dispatchers.Main) {
+            if (connected) {
                 toast("Initialized Language server")
-            } catch (e: Exception) {
+            } else {
                 toast("Unable to connect language server")
-                editor.editable = true
-                e.printStackTrace()
             }
+            editor.editable = true
         }
     }
 
@@ -279,7 +293,10 @@ class LspTestActivity : AppCompatActivity() {
         super.onDestroy()
 
         editor.release()
-        LspEditorManager.closeAllManager()
+        lifecycleScope.launch {
+            lspEditor.dispose()
+            lspProject.dispose()
+        }
         stopService(Intent(this@LspTestActivity, LspLanguageServerService::class.java))
     }
 
@@ -289,7 +306,7 @@ class LspTestActivity : AppCompatActivity() {
 
 
     inner class EventListener : EventHandler.EventListener {
-        override fun initialize(server: LanguageServer, result: InitializeResult) {
+        override fun initialize(server: LanguageServer?, result: InitializeResult) {
             runOnUiThread {
                 rootMenu.findItem(R.id.code_format).isEnabled =
                     result.capabilities.documentFormattingProvider != null

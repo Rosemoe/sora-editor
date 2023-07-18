@@ -37,14 +37,15 @@ import java.net.Socket
  * Socket-based language server connection
  */
 class SocketStreamConnectionProvider(
-    private val addressProvider: SocketAddressProvider
+    private val port:Int,
+    private val host:String? = null
 ) : StreamConnectionProvider {
     private lateinit var socket: Socket
 
     @Throws(IOException::class)
     override suspend fun start() = withContext(Dispatchers.IO) {
-        val port = addressProvider.port
-        socket = Socket(addressProvider.host ?: "localhost", port)
+        val port = port
+        socket = Socket(host ?: "localhost", port)
     }
 
     override val inputStream: InputStream

@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.lsp2.editor
 
+import android.os.SystemClock
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lsp.operations.document.DocumentOpenProvider
@@ -45,6 +46,8 @@ import io.github.rosemoe.sora.lsp2.utils.clearVersions
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.subscribeEvent
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withTimeout
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.TextDocumentSyncKind
@@ -66,7 +69,7 @@ class LspEditor(
 
     private lateinit var editorContentChangeEventReceiver: LspEditorContentChangeEventReceiver
 
-    private val currentLanguage: LspLanguage? = null
+    private var currentLanguage: LspLanguage? = null
 
     private var isClose = false
 
@@ -93,7 +96,6 @@ class LspEditor(
             }
 
             _currentEditor = WeakReference(currentEditor)
-
 
             unsubscribeFunction?.run()
 
@@ -124,7 +126,10 @@ class LspEditor(
         set(language) {
             field = language
             currentLanguage?.wrapperLanguage = wrapperLanguage
-            this.editor = _currentEditor.get()
+            val editor = _currentEditor.get()
+            if (editor != null) {
+                this.editor = editor
+            }
         }
 
     val languageServerWrapper: LanguageServerWrapper
@@ -145,6 +150,8 @@ class LspEditor(
     init {
         serverDefinition = project.getServerDefinition(fileExt)
             ?: throw Exception("No server definition for extension $fileExt")
+
+        currentLanguage = LspLanguage(this)
     }
 
 
@@ -160,10 +167,13 @@ class LspEditor(
     suspend fun connect(throwException: Boolean = true): Boolean {
         return runCatching {
             languageServerWrapper.start()
+            println("finish 1")
             //wait for language server start
             languageServerWrapper.getServer()
                 ?: throw TimeoutException("Unable to connect language server")
+           println("finish 2")
             languageServerWrapper.connect(this)
+            println("finish 3")
         }.onFailure {
             if (throwException) {
                 throw it
@@ -180,25 +190,29 @@ class LspEditor(
      */
     @Throws(InterruptedException::class, TimeoutException::class)
     suspend fun connectWithTimeout() {
-        var start = System.currentTimeMillis()
-        val retryTime = Timeout[Timeouts.INIT]
-        val maxRetryTime = start + retryTime
+
         var isConnected = false
-        while (start <= maxRetryTime) {
-            try {
-                isConnected = connect(false)
-                break
-            } catch (exception: Exception) {
-                exception.printStackTrace();
+
+        withTimeout(Timeout[Timeouts.INIT].toLong() * 12) {
+            while (this.isActive) {
+                try {
+                    isConnected = connect()
+                    if (isConnected) {
+                        println("Connected to language server")
+                        break
+                    }
+                } catch (exception: Exception) {
+                    exception.printStackTrace();
+                    isConnected = false
+                }
+                delay(100)
             }
-            start = System.currentTimeMillis()
-            delay((retryTime / 10).toLong())
         }
-        if (start > maxRetryTime && !isConnected) {
+
+        if (!isConnected) {
             throw TimeoutException("Unable to connect language server")
-        } else {
-            connect()
         }
+
     }
 
     /**
@@ -280,6 +294,7 @@ class LspEditor(
         clearVersions {
             it == this.uri
         }
+        project.removeEditor(this)
         isClose = true
     }
 }

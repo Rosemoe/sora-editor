@@ -23,7 +23,7 @@
  ******************************************************************************/
 plugins {
     id("com.android.library")
-    id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
     id("com.vanniktech.maven.publish.base")
 }
 

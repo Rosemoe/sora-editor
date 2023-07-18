@@ -25,6 +25,7 @@
 package io.github.rosemoe.sora.lsp2.editor
 
 import android.os.Bundle
+import android.util.Log
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
@@ -101,7 +102,7 @@ class LspLanguage(var editor: LspEditor) : Language {
         }*/
 
         val prefix = computePrefix(content, position)
-        // Log.d("prefix", prefix);
+         Log.d("prefix", prefix);
         val prefixLength = prefix.length
 
         val documentChangeEvent =

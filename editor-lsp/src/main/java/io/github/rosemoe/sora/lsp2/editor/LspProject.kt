@@ -153,4 +153,8 @@ class LspProject(
             eventEmitter.addListener(it.invoke())
         }
     }
+
+    internal fun removeEditor(editor: LspEditor) {
+        editors.remove(editor.uri)
+    }
 }

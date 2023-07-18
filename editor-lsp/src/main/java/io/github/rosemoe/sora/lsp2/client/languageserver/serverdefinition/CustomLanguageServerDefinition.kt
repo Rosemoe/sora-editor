@@ -32,7 +32,7 @@ import io.github.rosemoe.sora.lsp2.client.connection.StreamConnectionProvider
  * @param languageIds     The language server ids mapping to extension(s).
  * @param connectProvider The connect provider.
  */
-class CustomLanguageServerDefinition
+open class CustomLanguageServerDefinition
     (
     ext: String, languageIds: Map<String, String>, serverConnectProvider: ServerConnectProvider
 ) : LanguageServerDefinition() {
@@ -74,7 +74,7 @@ class CustomLanguageServerDefinition
         return ext.hashCode() + 3 * serverConnectProvider.hashCode()
     }
 
-    interface ServerConnectProvider {
+    fun interface ServerConnectProvider {
         /**
          * Creates a StreamConnectionProvider given the working directory
          *
