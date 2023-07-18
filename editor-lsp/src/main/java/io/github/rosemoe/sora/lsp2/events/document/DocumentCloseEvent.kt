@@ -24,22 +24,12 @@
 
 package io.github.rosemoe.sora.lsp2.events.document
 
-import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lsp2.editor.LspEditor
 import io.github.rosemoe.sora.lsp2.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp2.events.EventContext
-import io.github.rosemoe.sora.lsp2.events.EventListener
 import io.github.rosemoe.sora.lsp2.events.EventType
-import io.github.rosemoe.sora.lsp2.events.getByClass
-import io.github.rosemoe.sora.lsp2.utils.createDidChangeTextDocumentParams
 import io.github.rosemoe.sora.lsp2.utils.createDidCloseTextDocumentParams
-import io.github.rosemoe.sora.lsp2.utils.createDidSaveTextDocumentParams
-import io.github.rosemoe.sora.lsp2.utils.createRange
-import io.github.rosemoe.sora.lsp2.utils.createTextDocumentContentChangeEvent
 import kotlinx.coroutines.future.await
-import org.eclipse.lsp4j.DidChangeTextDocumentParams
-import org.eclipse.lsp4j.TextDocumentContentChangeEvent
-import org.eclipse.lsp4j.TextDocumentSyncKind
 import java.util.concurrent.CompletableFuture
 
 
@@ -72,5 +62,5 @@ class DocumentCloseEvent : AsyncEventListener() {
 
 }
 
-val EventType.documentCloseEvent: String
+val EventType.documentClose: String
     get() = "textDocument/didClose"

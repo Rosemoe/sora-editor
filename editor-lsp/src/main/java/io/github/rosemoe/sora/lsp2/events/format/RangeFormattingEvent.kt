@@ -39,10 +39,13 @@ import io.github.rosemoe.sora.lsp2.utils.createTextDocumentIdentifier
 import io.github.rosemoe.sora.lsp2.utils.asLspRange
 import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.text.TextRange
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.eclipse.lsp4j.DocumentRangeFormattingParams
 import org.eclipse.lsp4j.FormattingOptions
+import org.eclipse.lsp4j.TextEdit
 
 
 class RangeFormattingEvent : AsyncEventListener() {
@@ -52,7 +55,7 @@ class RangeFormattingEvent : AsyncEventListener() {
         val editor = context.get<LspEditor>("lsp-editor")
 
         val textRange = context.get<TextRange>("range")
-        val content = context.getByClass<Content>() ?: return
+        val content = context.get<Content>("text") ?: return
 
         val requestManager = editor.requestManager ?: return
 
@@ -69,9 +72,13 @@ class RangeFormattingEvent : AsyncEventListener() {
         val formattingFuture = requestManager.rangeFormatting(formattingParams) ?: return
 
         try {
-            withTimeout(Timeout[Timeouts.FORMATTING].toLong()) {
-                val textEditList = formattingFuture.await() ?: listOf()
+            val textEditList: List<TextEdit>
 
+            withTimeout(Timeout[Timeouts.FORMATTING].toLong()) {
+                textEditList = formattingFuture.await() ?: listOf()
+            }
+
+            withContext(Dispatchers.Main) {
                 editor.eventManager.emit(EventType.applyEdits) {
                     put("edits", textEditList)
                     put("content", content)

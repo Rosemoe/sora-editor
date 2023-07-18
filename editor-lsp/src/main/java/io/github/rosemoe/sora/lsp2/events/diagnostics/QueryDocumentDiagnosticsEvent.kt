@@ -81,5 +81,5 @@ class QueryDocumentDiagnosticsEvent : AsyncEventListener() {
 
 }
 
-val EventType.queryDocumentDiagnosticsEvent: String
+val EventType.queryDocumentDiagnostics: String
     get() = "textDocument/diagnostics"

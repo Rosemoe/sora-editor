@@ -48,7 +48,7 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
 
     override fun applyEdit(params: ApplyWorkspaceEditParams): CompletableFuture<ApplyWorkspaceEditResponse> {
         /* boolean response = WorkspaceEditHandler.applyEdit(params.getEdit(), "LSP edits");*/
-        //TODO: Support it?
+        // FIXME: Support it?
         return CompletableFuture.supplyAsync {
             ApplyWorkspaceEditResponse(
                 false
@@ -83,7 +83,7 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
     }
 
     override fun publishDiagnostics(publishDiagnosticsParams: PublishDiagnosticsParams) {
-        //TODO: support it.
+        // FIXME: support it.
 
         val diagnosticsContainer = context.project.diagnosticsContainer
         val uri = URI(publishDiagnosticsParams.uri).toFileUri()

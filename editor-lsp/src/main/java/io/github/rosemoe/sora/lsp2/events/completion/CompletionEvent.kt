@@ -100,5 +100,5 @@ class CompletionEvent : AsyncEventListener() {
 
 }
 
-val EventType.completionEvent: String
+val EventType.completion: String
     get() = "textDocument/completion"

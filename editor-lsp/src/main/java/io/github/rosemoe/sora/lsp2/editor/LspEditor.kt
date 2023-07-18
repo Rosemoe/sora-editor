@@ -24,29 +24,27 @@
 
 package io.github.rosemoe.sora.lsp2.editor
 
-import androidx.annotation.WorkerThread
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lang.Language
-import io.github.rosemoe.sora.lsp2.editor.event.LspEditorContentChangeEventReceiver
-import io.github.rosemoe.sora.lsp2.requests.Timeout
-import io.github.rosemoe.sora.lsp2.requests.Timeouts
 import io.github.rosemoe.sora.lsp2.client.languageserver.requestmanager.RequestManager
 import io.github.rosemoe.sora.lsp2.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp2.client.languageserver.wrapper.LanguageServerWrapper
+import io.github.rosemoe.sora.lsp2.editor.event.LspEditorContentChangeEventReceiver
 import io.github.rosemoe.sora.lsp2.editor.signature.SignatureHelpWindow
+import io.github.rosemoe.sora.lsp2.events.EventType
+import io.github.rosemoe.sora.lsp2.events.diagnostics.publishDiagnostics
+import io.github.rosemoe.sora.lsp2.events.document.documentClose
+import io.github.rosemoe.sora.lsp2.requests.Timeout
+import io.github.rosemoe.sora.lsp2.requests.Timeouts
 import io.github.rosemoe.sora.lsp2.utils.FileUri
 import io.github.rosemoe.sora.lsp2.utils.clearVersions
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.subscribeEvent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import java.lang.ref.WeakReference
-import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.TimeoutException
 
 class LspEditor(
@@ -94,7 +92,7 @@ class LspEditor(
 
             unsubscribeFunction?.run()
 
-            //editor.setEditorLanguage(currentLanguage)
+            currentEditor.setEditorLanguage(currentLanguage)
             signatureHelpWindowWeakReference = WeakReference(SignatureHelpWindow(currentEditor))
 
 
@@ -120,7 +118,7 @@ class LspEditor(
     var wrapperLanguage: Language? = null
         set(language) {
             field = language
-            // currentLanguage.setWrapperLanguage(wrapperLanguage)
+            currentLanguage?.wrapperLanguage = wrapperLanguage
             this.editor = _currentEditor.get()
         }
 
@@ -130,7 +128,7 @@ class LspEditor(
     var diagnostics: List<Diagnostic>
         get() = project.diagnosticsContainer.getDiagnostics(uri)
         set(value) {
-
+            publishDiagnostics(value)
         }
 
     val isShowSignatureHelp: Boolean
@@ -198,17 +196,12 @@ class LspEditor(
         }
     }
 
-
     /**
      * disconnect to the language server
      */
     suspend fun disconnect() {
         runCatching {
-            /* val feature: DocumentCloseProvider =
-                 getProviderManager().useProvider<DocumentCloseProvider>(
-                     DocumentCloseProvider::class.java
-                 )
-             if (feature != null) feature.execute(null).get()*/
+            eventManager.emitAsync(EventType.documentClose)
 
             languageServerWrapper.disconnect(
                 this
@@ -217,6 +210,15 @@ class LspEditor(
         }.onFailure {
             throw it
         }
+    }
+
+    fun onDiagnosticsUpdate() {
+        publishDiagnostics(diagnostics)
+    }
+
+
+    private fun publishDiagnostics(diagnostics: List<Diagnostic>) {
+        eventManager.emit(EventType.publishDiagnostics, diagnostics)
     }
 
     fun showSignatureHelp(signatureHelp: SignatureHelp?) {

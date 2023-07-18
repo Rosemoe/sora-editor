@@ -29,12 +29,10 @@ import io.github.rosemoe.sora.event.EventReceiver
 import io.github.rosemoe.sora.event.Unsubscribe
 import io.github.rosemoe.sora.lsp2.editor.LspEditor
 import io.github.rosemoe.sora.lsp2.events.EventType
-import io.github.rosemoe.sora.lsp2.events.document.documentChangeEvent
+import io.github.rosemoe.sora.lsp2.events.document.documentChange
 import io.github.rosemoe.sora.lsp2.events.signature.signatureHelp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
-import java.util.concurrent.ForkJoinPool
 
 
 class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
@@ -43,14 +41,14 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
 
         editor.coroutineScope.launch(Dispatchers.Main) {
             // send to server
-            editor.eventManager.emit(EventType.documentChangeEvent, event)
+            editor.eventManager.emitAsync(EventType.documentChange, event)
 
             if (editor.hitReTrigger(event.changedText)) {
                 editor.showSignatureHelp(null)
                 return@launch
             }
 
-            editor.eventManager.emit(EventType.signatureHelp, event.changeStart)
+            editor.eventManager.emitAsync(EventType.signatureHelp, event.changeStart)
         }
 
 

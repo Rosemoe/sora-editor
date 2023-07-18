@@ -71,5 +71,5 @@ class DocumentOpenEvent : AsyncEventListener() {
 
 }
 
-val EventType.documentOpenEvent: String
+val EventType.documentOpen: String
     get() = "textDocument/didOpen"

@@ -37,10 +37,13 @@ import io.github.rosemoe.sora.lsp2.requests.Timeouts
 import io.github.rosemoe.sora.lsp2.utils.LSPException
 import io.github.rosemoe.sora.lsp2.utils.createTextDocumentIdentifier
 import io.github.rosemoe.sora.text.Content
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.eclipse.lsp4j.DocumentFormattingParams
 import org.eclipse.lsp4j.FormattingOptions
+import org.eclipse.lsp4j.TextEdit
 
 
 class FullFormattingEvent : AsyncEventListener() {
@@ -63,9 +66,13 @@ class FullFormattingEvent : AsyncEventListener() {
         val formattingFuture = requestManager.formatting(formattingParams) ?: return
 
         try {
-            withTimeout(Timeout[Timeouts.FORMATTING].toLong()) {
-                val textEditList = formattingFuture.await() ?: listOf()
+            val textEditList: List<TextEdit>
 
+            withTimeout(Timeout[Timeouts.FORMATTING].toLong()) {
+                textEditList = formattingFuture.await() ?: listOf()
+            }
+
+            withContext(Dispatchers.Main) {
                 editor.eventManager.emit(EventType.applyEdits) {
                     put("edits", textEditList)
                     put("content", content)

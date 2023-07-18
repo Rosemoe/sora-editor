@@ -28,7 +28,6 @@ import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lsp2.editor.LspEditor
 import io.github.rosemoe.sora.lsp2.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp2.events.EventContext
-import io.github.rosemoe.sora.lsp2.events.EventListener
 import io.github.rosemoe.sora.lsp2.events.EventType
 import io.github.rosemoe.sora.lsp2.events.getByClass
 import io.github.rosemoe.sora.lsp2.utils.createDidChangeTextDocumentParams
@@ -39,8 +38,6 @@ import org.eclipse.lsp4j.DidChangeTextDocumentParams
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ForkJoinPool
-import java.util.function.Consumer
 
 class DocumentChangeEvent : AsyncEventListener() {
     override val eventName = "textDocument/didChange"
@@ -109,5 +106,5 @@ class DocumentChangeEvent : AsyncEventListener() {
     }
 }
 
-val EventType.documentChangeEvent: String
+val EventType.documentChange: String
     get() = "textDocument/didChange"

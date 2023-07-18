@@ -38,6 +38,7 @@ import io.github.rosemoe.sora.lsp2.utils.asLspPosition
 import io.github.rosemoe.sora.text.CharPosition
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withTimeout
+import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.SignatureHelpParams
 import java.util.concurrent.CompletableFuture
 
@@ -64,11 +65,15 @@ class SignatureHelpEvent : AsyncEventListener() {
         this.future = future.thenAccept { }
 
         try {
+            val signatureHelp: SignatureHelp
+
             withTimeout(Timeout[Timeouts.SIGNATURE].toLong()) {
-                val signatureHelp =
+                signatureHelp =
                     future.await()
-                editor.showSignatureHelp(signatureHelp)
             }
+
+            editor.showSignatureHelp(signatureHelp)
+
         } catch (exception: Exception) {
             // throw?
             exception.printStackTrace()
