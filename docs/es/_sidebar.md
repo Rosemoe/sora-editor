@@ -1,6 +1,6 @@
 - Getting started
-    - [Quick start](/start/quickstart.md "Quick start")
+    - [Quick start](/es/start/quickstart.md "Quick start")
 - Java docs
-    - [API](/api.md "API")
-    - [Constant](/constant.md "Constant")
-- [Changelog](/changelog.md "Changelog")
+    - [API](/es/api.md "API")
+    - [Constant](/es/constant.md "Constant")
+- [Changelog](/es/changelog.md "Changelog")

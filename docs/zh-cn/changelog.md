@@ -1,1209 +1,726 @@
 # 更新日志
 
-## **[0.21.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.21.0) (2023-01-08)**
+!> 0.21.1之前的更新日志由[Claude](https://claude.ai)翻译
 
-> 此版本包含了错误修复、小的改进以及一些 API 的变化。
+## **[0.21.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.21.1) (2023-03-10)**
 
-### 错误修复
+> 此版本包含了一些小的bug修复和新功能。
 
-- 当 `renderFunctionCharacter` 打开时，水平滚动范围不正确
-- 在访问 `TSQuery` 前未经验证即使用它
-- 当超过 `maxIPCTextLength` 时，依赖于 `InputConnection#getSurroundingText` 的 IME 会获得无效的位置描述
-- 通过 `EditorInputConnection#setComposingRegion` 可以设置无效的组合文本范围
-- 在使用旧版 Gboard 快速删除字符时，文本变得脏乱
-- 动画行背景位于错误的层级
-- 在正则表达式中会重复匹配空文本，导致 OOM
-- 在 `TextMateNewlineHandler` 中出现 `StringIndexOutOfBoundsException` (by *
-  *[@dingyi222666](https://github.com/dingyi222666)**)
-- `CodeEditor#release` 未分离 `EditorColorScheme`
-- 在 `AsyncIncrementalAnalyzeManager` 中发送消息时出现 NPE
-- 由 `TextMateLanguage#updateLanguage` 泄漏的线程
-- 可以添加不带其 `DeleteAction` 的嵌套撤销/重做
-- 允许嵌套撤销/重做
-- `JavaTextTokenizer` 未考虑当前标记 [#349](https://github.com/Rosemoe/sora-editor/issues/349)
-- `AsyncIncrementalAnalyzeManager`
-  在插入时未更新最后一行受影响的范围的跨度 [#350](https://github.com/Rosemoe/sora-editor/issues/350)
-- 当没有行样式时，`Styles#eraseAllLineStyles` 会引发NPE
+### 修复的Bug
+
+- 当添加空代码块项时渲染器可能崩溃
+- 在CR和LF之间的选择时索引越界
+- `CharArrayWrapper#subSequence`引用了错误的文本开始位置
+- 在CRLF之间错误插入文本
+- 编辑器在释放后仍在监听文本更改,导致内存泄漏
+- 在`GraphicTextRow`中测量文本时偶尔索引越界
 
 ### 改进
 
--
-更好的搜索体验，包括支持整个单词搜索、正则表达式搜索速度提升、循环跳转以及更好的滚动策略 [#321](https://github.com/Rosemoe/sora-editor/issues/321)
-- 提升 Tree-sitter 谓词的性能
-- 避免 `CodeEditor#ensurePositionVisible` 中的边缘效应
-- 通过二进制搜索提高查询搜索结果的速度
-- 当释放插入句柄时，在内置文本操作窗口上显示
-- 在放大镜触发之前添加触摸斜率
-- 添加 `I18nConfig` 以提供应用程序提供的替换字符串资源
-- 添加 `DirectAccessProps#clipboardTextLengthLimit` 并在由于限制或 `TransactionTooLargeException`
-  而无法复制文本时添加提示
+- 添加`EditorReleaseEvent`,允许在销毁时进行一些清理
+- 添加`ContentIO`用于创建/保存`Content`文本
+- 在配色方案中添加删除线颜色
+- 如果可能，尽量将文本更新合成插入或删除 [#357](https://github.com/Rosemoe/sora-editor/issues/357)
+- 语言服务器协议的签名帮助窗口 **[@dingyi222666](https://github.com/dingyi222666)**
+- 为语言服务器协议添加`ThemeModel#isDark` **[@dingyi222666](https://github.com/dingyi222666)**
+
+### 注意
+
+- `ContentReader`应该迁移到`ContentIO`。`ContentReader`将在未来删除。
+
+## **[0.21.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.21.0) (2023-01-08)**
+
+> 此版本包含了bug修复和少量改进以及小的API变化。
+
+### 修复的Bug
+
+- 当`renderFunctionCharacter`开启时,水平滚动范围不正确
+- 在访问它之前没有验证`TSQuery`
+- 当`maxIPCTextLength`超过时,依赖`InputConnection#getSurroundingText`的IME获取无效的位置描述
+- 通过`EditorInputConnection#setComposingRegion`可以设置无效的组成文本范围
+- 使用旧的Gboard快速删除字符时文本变为不可编辑
+- 动画行背景层错误
+- 空文本在正则表达式中被重复匹配,导致OOM
+- `StringIndex OutOfBoundsException` in `TextMateNewlineHandler` **[@dingyi222666](https://github.com/dingyi222666)**
+- `CodeEditor#release`不会分离`EditorColorScheme`
+- 在`AsyncIncrementalAnalyzeManager`中发送消息时产生空指针异常
+- 通过`TextMateLanguage#updateLanguage`泄露线程
+- 使用不支持的符号对仍在textmate中使用
+- `ReplaceAction`可以添加而不嵌套其`DeleteAction`撤销/重做是可能的
+- `JavaTextTokenizer`没有获取当前token [#349](https://github.com/Rosemoe/sora-editor/issues/349)
+- `AsyncIncrementalAnalyzeManager`
+  不会更新最后一行受插入影响的跨度 [#350](https://github.com/Rosemoe/sora-editor/issues/350)
+- 当没有行样式存在时`Styles#eraseAllLineStyles`引发空指针异常
+
+### 改进
+
+- 更好的搜索体验,包括支持整词搜索,正则表达式搜索速度提升,循环跳转和更好的滚动策略 [#321](https://github.com/Rosemoe/sora-editor/issues/321)
+- tree-sitter谓词性能改进
+- 避免`CodeEditor#ensurePositionVisible`中的边界效应
+- 通过二分查找提高搜索结果查询速度
+- 显示内置文本操作窗口在插入手柄释放时
+- 添加触摸滞后再触发放大镜
+- 添加可配置的文本操作替换字符串资源`I18nConfig`
+- 添加`DirectAccessProps#clipboardTextLengthLimit`并在由于限制或`TransactionTooLargeException`无法复制文本时添加提示
 - 更精确的内置文本操作窗口位置
-- 编辑器在启动时使用全局默认颜色
+- 编辑器启动时使用全局默认配色方案
+- 增强了`DirectAccessProps#disallowSuggestions`的功能(在最新版Gboard和小米UI上的Sogou输入法上测试通过)
+- 适应MIUI系统的长截图的视图参数
+- 从Android M开始添加两个新的辅助功能动作
+
+### 更新的API
+
+- 新函数`Content#substring`
+- 新的事件`PublishSearchResultEvent`,在主线程中搜索结果可用或停止搜索时调用
+- 新的`I18nConfig`类用于替换字符串资源
+- 新的函数`CodeEditor#isAntiWordBreaking`
+- **[破坏性]** `EditorColorScheme`中用于全局默认主题的新API。所有新创建的编辑器都使用全局默认主题。对全局默认主题的修改将反映在这些编辑器中。
+- **[破坏性]** `CodeEditor#getScroller`现在具有`EditorScroller`的返回类型。通过`EditorScroller#getImplScroller`
+  获取原始的`OverScroller`
+- **[破坏性]** `AsyncIncrementalAnalyzeManager`和`TsAnalyzeManager`在退出时会接收线程中断
 
 ## **[0.20.4](https://github.com/Rosemoe/sora-editor/releases/tag/0.20.4) (2022-12-30)**
 
-### Bugs Fixed
+### 已修复的bugs
 
-- member variable highlighting in tree-sitter
-- editor crashes in rendering highlighted delimeters when spans are corrupted
-- `EditorDiagnosticTootipWindow` can not be got from editor components
-- `EventManager` can not be disabled
+- tree-sitter中的成员变量高亮显示
+- 当跨度损坏时渲染突出显示的delimeters时编辑器崩溃
+- 无法从编辑器组件中获取`EditorDiagnosticTootipWindow`
+- 无法禁用`EventManager`
 
-### New Features
+### 新功能
 
 - `CodeEditor#createSubEventManager()`
 
 ## **[0.20.2](https://github.com/Rosemoe/sora-editor/releases/tag/0.20.2) (2022-12-27)**
 
-### Fixed Bugs
+### 已修复的bugs
 
-- indent is unexpectedly doubled in keybinding `Ctrl+D`
-- default completion layout can not be clicked after animation unless you scroll the list
-- invalid indices are used in editing `TSTree` in main thread
-- `IndexOutOfBoundsException` when appending text if tree-sitter is used
-- unable to run predicates after text editions in tree-sitter
+- 键绑定`Ctrl + D`中缩进意外加倍
+- 除非滚动列表,否则默认完成布局无法在动画后单击
+- 在主线程中编辑`TSTree`时使用无效索引
+- 在追加文本时索引越界`IndexOutOfBoundsException`
+- 在tree-sitter中运行谓词后无法编辑文本
 
-### New features
+### 新功能
 
-- line info panel style is now a bubble [#283](https://github.com/Rosemoe/sora-editor/issues/283)
-- `Content.getDocumentVersion()` is added for checking document modifications
-- `DiagnosticDetail` for describing diagnostics and
-  builtin `EditorDiagnosticTooltipWindow` [#314](https://github.com/Rosemoe/sora-editor/issues/314)
-- experimental `Quickfix` item
-- support members scope in tree-sitter (see `LocalsCaptureSpec` for more information) and improve
-  speed in finding
-  definitions
-- custom text provider for line info panel `LineNumberTipTextProvider`
+- 现在信息面板样式是泡泡式的 [#283](https://github.com/Rosemoe/sora-editor/issues/283)
+- 添加`Content.getDocumentVersion()`以检查文档修改
+- `DiagnosticDetail`用于描述诊断信息和内置的`EditorDiagnosticTooltipWindow` [#314](https://github.com/Rosemoe/sora-editor/issues/314)
+- 实验性的`Quickfix` 项目
+- 支持tree-sitter中成员范围(更多信息请参阅`LocalsCaptureSpec`)并提高定义查找速度
+- 信息面板的自定义文本提供程序 `LineNumberTipTextProvider`
 
 ## **[0.20.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.20.1) (2022-12-21)**
 
-- Fixed a critical bug of tree-sitter code blocks in previous release of 0.20.0
+- 修复了0.20.0版本中tree-sitter代码块的关键bug
 
 ## **[0.20.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.20.0) (2022-12-21)**
 
-!> Use `0.20.1` instead
+!> 改用`0.20.1`版本
 
-### Bugs fixed
+### 已修复的bugs
 
-- memory leaks in `LanguageServerWrapper`
-- `EditorSearcher.gotoPrevious()` always jumps to the first item when regex is enabled
-- transparent line in selection handle
-  drawable ([#270](https://github.com/Rosemoe/sora-editor/issues/270), fixed
-  by [@tegajoel](https://github.com/tegajoel) [#312](https://github.com/Rosemoe/sora-editor/pull/312))
-- whole document becomes black-colored when user is scaling in some languages
-- `SimpleAnalyzeManager` ignores line separators
-- `OnigRegExp` returns corrupted cache in multi-threaded
-  access ([#315](https://github.com/Rosemoe/sora-editor/issues/315)
-  by [@xyzxqs](https://github.com/xyzxqs))
-- `TextReference.toString()` does not return string of backed sequence
-- text context region can be unexpectedly bigger the bounds of
-  text [#318](https://github.com/Rosemoe/sora-editor/issues/318)
-- textmate newline handler fixs ([#319](https://github.com/Rosemoe/sora-editor/issues/319)
-  by [@dingyi222666](https://github.com/dingyi222666))
-- `corePoolSize` exceeds `maximumPoolSize` on 1-core
-  devices [#320](https://github.com/Rosemoe/sora-editor/issues/320)
+- `LanguageServerWrapper`中的内存泄漏
+- `EditorSearcher.gotoPrevious()`在启用正则表达式时总是跳转到第一个项目
+- 选择手柄可绘制中的透明线([#270](https://github.com/Rosemoe/sora-editor/issues/270), 由 [@tegajoel](https://github.com/tegajoel)修复 [#312](https://github.com/Rosemoe/sora-editor/pull/312))
+- 当文本包含任何单个长行时,用户缩放时整个文档变为黑色
+- `SimpleAnalyzeManager`忽略换行符
+- `OnigRegExp`在多线程访问中返回损坏的缓存 ([#315](https://github.com/Rosemoe/sora-editor/issues/315) by [@xyzxqs](https://github.com/xyzxqs))
+- `TextReference.toString()`不返回备份序列的字符串
+- 文本上下文区域可能超出文本边界 [#318](https://github.com/Rosemoe/sora-editor/issues/318)
+- 换行处理程序修复 (by [#319](https://github.com/Rosemoe/sora-editor/issues/319) [@dingyi222666](https://github.com/dingyi222666))
+- 在单核心设备上`corePoolSize`超过`maximumPoolSize` [#320](https://github.com/Rosemoe/sora-editor/issues/320)
 
-### New Features
+### 新功能
 
-- add support for `wrap_content` in view measuring (not recommended, be cautious)
-- better interaction with vertical scrollbar
-- `IdentifierAutoComplete` now does not add item that is the same as prefix
-- reselect text after long press again (optional)
-- show ASCII function characters in editor style (optional, enabled by default)
-- **tree-sitter support, including highlighting, code blocks and brackets for editor, as well as
-  tree-sitter predicate support**
+- 添加tree-sitter支持,包括编辑器的突出显示、代码块和括号以及tree-sitter谓词支持
 
-### Special Thanks
+### 特别感谢
 
 - **@itsaky for [android-tree-sitter](https://github.com/AndroidIDEOfficial/android-tree-sitter)**
 
 ## **[0.19.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.19.0) (2022-12-15)**
 
-### Bugs fixed
+### 已修复的bugs
 
-- can't add language with scope not "
-  source" ([#288](https://github.com/Rosemoe/sora-editor/issues/288)
-  by [@dingyi222666](https://github.com/dingyi222666))
-- nullable data bundle in ImePrivateCommandEvent is marked
-  nonnull  [#293](https://github.com/Rosemoe/sora-editor/issues/293)
-- index out of bounds when rendering in preset composing
-  state [#294](https://github.com/Rosemoe/sora-editor/issues/294)
-- magnifier shows when window size is
-  illegal  [#298](https://github.com/Rosemoe/sora-editor/issues/298)
-- partly broken logic of Content#deleteInternal after introducing line separator
-  types [#299](https://github.com/Rosemoe/sora-editor/issues/299)
-- completion window size is not adjusted when size is too small
-- layout is not recreated after scaling when wordwrap is enabled and gutter is disabled
-- occasional invalid height for completion window
-- occasional NPE when searching with regex (AndroidIDE#588)
-- unexpected symbol pair matching for '<' '>' in textmate Java
-- unexpected symbol pair match when pasting text (AndroidIDE#593)
-- selection span can be out of range when shifting cursor in some situations(AndroidIDE#579)
-- posted Runnable can be executed out of editor
-  lifecycle [#305](https://github.com/Rosemoe/sora-editor/issues/305)
-- Spans.Reader is not locked during text line rendering, giving chances to hold dirty spanOffset if
-  span content is
-  modified in another thread [#290](https://github.com/Rosemoe/sora-editor/issues/290)
-- editor layout state is not check when layout initialization is finished and is trying to update
-  editor state [#307](https://github.com/Rosemoe/sora-editor/issues/307)
-- View#post does not execute posted actions on startup, causing pending layoutBusy
-  state [#308](https://github.com/Rosemoe/sora-editor/issues/308)
+- 无法添加范围不为“source”的语言 ([#288](https://github.com/Rosemoe/sora-editor/issues/288) by [@dingyi222666](https://github.com/dingyi222666))
+- 标记为非空的可空数据包在 ImePrivateCommandEvent 中 [#293](https://github.com/Rosemoe/sora-editor/issues/293)
+- 在预设组合状态下渲染时索引越界 [#294](https://github.com/Rosemoe/sora-editor/issues/294)
+- 放大镜在窗口大小非法时显示 [#298](https://github.com/Rosemoe/sora-editor/issues/298)
+- 引入行分隔符类型后Content#deleteInternal的部分破坏逻辑 [#299](https://github.com/Rosemoe/sora-editor/issues/299)
+- 当大小太小无法显示内容时,不调整完成窗口大小
+- 在启用自动换行且禁用页边距后,缩放后不重新创建布局
+- 完成窗口高度偶尔无效
+- 渲染长线时偶尔空指针异常
+- 与textmate Java中的'<' '>'的意外符号匹配
+- 粘贴文本时的意外符号匹配 (AndroidIDE#593)
+- 在某些情况下,选择跨度可能超出范围(AndroidIDE#579)
+- 在启用自动换行的模式下,光标在某些RTL自然语言中移位无效
+- 在自动换行模式下无法输入文本
+- `MatchHelper#startsWith`工作不正确
+- 当用户使用最新版Gboard和其他一些IME时,编辑器保存冗余的撤销操作
+- `CodeEditor#commitTab`忽略语言设置
+- 无法拦截`EditorKeyEvent`
 
-### New features
+### 新功能与改进
 
-- updated auto completion ui and sorting method (by *
-  *[@dingyi222666 ](https://github.com/dingyi222666)**)
-- lua language server in sample app (by **[@dingyi222666](https://github.com/dingyi222666)**)
-- expose some internal classes of `EditorRenderer` for better extension
-- very alpha release of `tree-sitter` [RIP]
+- 更新的自动完成功能和排序方法(by **[@dingyi222666](https://github.com/dingyi222666)**)
+- lua语言服务器在示例应用中(by **[@dingyi222666](https://github.com/dingyi222666)**)
+- 对语言-textmate的可选代码完成(by **[@dingyi222666](https://github.com/dingyi222666)**)
+- 更新后的符号对API(by **[@dingyi222666](https://github.com/dingyi222666)**)
+- 添加bom模块(by **[@keta1](https://github.com/keta1)**)
+- 在textmate中支持indentationRules(by **[@dingyi222666](https://github.com/dingyi222666)**)
 
 ## **[0.18.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.18.1) (2022-11-05)**
 
-> A major update of editor. This release note covers the updates of 0.18.0 and 0.18.1
+> 这包含一组bug修复和小的改进。涵盖了0.18.0和0.18.1的更新。
 
-### Improvements
+### 改进
 
-- more built-in key bindings (by **[@itsaky](https://github.com/itsaky)**)
-- update lsp4j to 0.17.0
-- anti-word-breaking option for wordwrap (for English). enabled by default
-- animation for fading scrollbars
-- registry feature in textmate, which provides multi-language highlighting in one file (by *
-  *[@dingyi222666](https://github.com/dingyi222666)**)
-- hardwrap marker
-- input connection events `BuildEditorInfoEvent` and `ImePrivateCommandEvent`
-- symbol pair completion for textmate (by **[@dingyi222666](https://github.com/dingyi222666)**)
-- updated symbol pair api (by **[@dingyi222666](https://github.com/dingyi222666)**)
-- add bom module (by **[@keta1](https://github.com/keta1)**)
-- support indentationRules in textmate (by **[@dingyi222666](https://github.com/dingyi222666)**)
+- 更多内置键绑定(by **[@itsaky](https://github.com/itsaky)**)
+- 更新lsp4j至0.17.0
+- 针对英语的单词自动换行的反单词断行选项(默认启用)
+- 淡入淡出滚动栏的动画
+- 编辑器代码片段现在支持复杂变量和占位符(带转换或选择)以及 `\u` 和插值shell代码的使用
+- 不再在`CompletionThread`中记录`CompletionCancelledException`
+- 添加`SnippetEvent` 用于代码片段事件
+- `SnippetController`中导出更多API
+- 添加`QuickQuoteHandler`(从`SymbolPairMatch`中分离出来)
+- 在编辑器片段支持下的编辑器lsp代码补全(by **[@dingyi222666](https://github.com/dingyi222666)**)
+- 添加`StylesUtils#checkNoCompletion`
+- 增强的`NewlineHandler`接口
 
-### Fixed Bugs
+### 已修复的bugs
 
-- [VITAL] wrong state passed to incremental analysis process when line state-affecting text is
-  inserted
-- selection anchor not updated when moving lines (by **[@itsaky](https://github.com/itsaky)**)
-- possible crash on low API device [#246](https://github.com/Rosemoe/sora-editor/issues/246)
-- measure cache is not verified before being used
-- selection animation is unexpectedly canceled when composing text is present
-- selection scale animation causes visual lag when setting new selection position
-- emoji character is unexpectedly cut in wordwrap mode
-- potential recycled editor in LspEditor#setWrapperLanguage
-- IndexOutOfBoundsException generated during rendering with complex text directions
-- invalid selection position for RTL text under wordwrap mode
-- unable to type after scaling text under wordwrap mode
-- `MatchHelper#startsWith` not working correctly
-- editor saves redundant undo operation when user is using newest Gboard and some other IMEs
-- `CodeEditor#commitTab` ignores language settings
-- `EditorKeyEvent` can not be intercepted
+- [重要]向增量分析进程传递错误状态时插入影响行状态的文本
+- 移动行时未更新选择锚点 (by **[@itsaky](https://github.com/itsaky)**)
+- 低API设备上的潜在崩溃错误 [#246](https://github.com/Rosemoe/sora-editor/issues/246)
+- 验证measure缓存之前使用
+- 选择文本存在时意外取消选择动画
+- 设置新选择位置时选择缩放动画造成视觉滞后
+- 自动换行模式下表情符号意外被截断
+- 设置包装语言时可能回收编辑器中的LspEditor
+- 在复杂文本方向的渲染中生成IndexOutOfBoundsException
+- 自动换行模式下RTL文本的无效选择位置
+- 在缩放文本后在自动换行模式下无法输入文本
+- `MatchHelper#startsWith`工作不正确
+- 当用户使用最新版Gboard和其他一些IME时,编辑器保存冗余的撤销操作
+- `CodeEditor#commitTab`忽略语言设置
+- 无法拦截`EditorKeyEvent`
 
-### Migration
+### 迁移
 
-- Due to new API of textmate, some methods are deprecated. They are still compatiable until 0.20.0
-  or so. See [#282](https://github.com/Rosemoe/sora-editor/issues/282) for detailed message
-- `NewlineHandler` should get textBefore and textAfter by manually slicing given text with the text
-  position
-- refer
-  to [new symbol pair interface](https://github.com/Rosemoe/sora-editor/blob/b343f0ae71ab3f8fe06576fcd9a813eb78554935/editor/src/main/java/io/github/rosemoe/sora/widget/SymbolPairMatch.java)
+- 由于textmate的新API,一些方法被弃用。在0.20.0左右它们仍向后兼容。有关详细信息,请参阅[#282](https://github.com/Rosemoe/sora-editor/issues/282)。
+- `NewlineHandler`应该通过使用文本位置手动切片给定的文本来获取textBefore和textAfter
+- 请参考[新的符号对接口](https://github.com/Rosemoe/sora-editor/blob/b343f0ae71ab3f8fe06576fcd9a813eb78554935/editor/src/main/java/io/github/rosemoe/sora/widget/SymbolPairMatch.java)
 
 ## **[0.17.2](https://github.com/Rosemoe/sora-editor/releases/tag/0.17.2) (2022-10-08)**
 
-### Bugs Fixed
+### 已修复的bugs
 
-- fix unexpected cursor animation when text is not editable
-- fix text selecting issue on low API
-  devices [#238](https://github.com/Rosemoe/sora-editor/issues/238)
-- fix unsupported symbol pair is still being used in textmate
-- notify the input method when layout is initialized
-- fix potential nullptr when `CodeEdditor#updateStyle` is called
-- fix compatibility issues in textmate ([#252](https://github.com/Rosemoe/sora-editor/pull/252)
-  by [@MuntashirAkon](https://github.com/MuntashirAkon))
-- fix symbol input wrongly adding text to editor when editor is not
-  editable [#253](https://github.com/Rosemoe/sora-editor/issues/253)
-- fix unnrenderer trailing diagnostics when text is short
-- fix horizontal scrollbar becoming too short to touch when text includes any single long
-  line ([#259](https://github.com/Rosemoe/sora-editor/pull/259)
-  by [@summerain0](https://github.com/summerain0))
-- fix selected text color on high API devices
-- fix wrong display of code block lines in textmate when using
-  tabs [#248](https://github.com/Rosemoe/sora-editor/issues/248)
-- fix ContentReference.RefReader ignoring line separator
-  type [#260](https://github.com/Rosemoe/sora-editor/issues/260)
-- fix completion window not getting hidden when user switches between tabstops
-- fix conflict of edge effect and reversed scroll on Android 11 and below
-- fix `NewlineHandler` not triggered when completion window is shown
-- fix wrongly inserted line separator in completion window
+- 修复文本不可编辑时意外的光标动画
+- 修复低API设备上的文本选择问题 [#238](https://github.com/Rosemoe/sora-editor/issues/238)
+- 修复textmate中使用不支持的符号对
+- 当布局初始化时通知输入法
+- 修复在调用`CodeEdditor#updateStyle`时可能出现的空指针
+- 修复引用`ContentReference.RefReader`中忽略了行分隔符类型的bug [#260](https://github.com/Rosemoe/sora-editor/issues/260)
+- 当用户在选项卡间切换时,完成窗口不会被隐藏
+- 修复与Android 11及以下版本上的反向滚动冲突的边缘效果
+- 修复显示完成窗口时未触发`NewlineHandler`
+- 修复在完成窗口中错误插入的行分隔符
 
-### Improvements
+### 改进
 
-- add `StyleUpdateRange` for performance when highlight is updated
-- (BREAKING) separate some less frequently used field to  `AdvancedSpan` from `Span`
-- support `highlightedDelimetersForeground` color property in
-  textmate ([#247](https://github.com/Rosemoe/sora-editor/pull/247)
-  by [@PranavPurwar](https://github.com/PranavPurwar))
-- add optional enchanced functionality of HOME and END
-- reorder the dispatch of content edit event and completion request
-- add support for custom scrollbar styles ([#255](https://github.com/Rosemoe/sora-editor/pull/255)
-  by [@MuntashirAkon](https://github.com/@MuntashirAkon))
-- line info panel position can be changed to other
-  places ([#305](https://github.com/Rosemoe/sora-editor/pull/259)
-  by [@summerain0](https://github.com/summerain0))
-- improve connection speed of language
-  server ([#262](https://github.com/Rosemoe/sora-editor/pull/262)
-  by [@dingyi222666](https://github.com/dingyi222666))
-- add `verticalExtraSpaceFactor` for extra space size in vertical viewport
+- 当高亮更新时添加`StyleUpdateRange`以提高性能
+- (破坏性更改)从`Span`中分离一些使用不频繁的字段到 `AdvancedSpan`
+- 在textmate中支持 `highlightedDelimetersForeground` 颜色属性([#247](https://github.com/Rosemoe/sora-editor/pull/247)by [@PranavPurwar](https://github.com/PranavPurwar))
+- 添加HOME和END增强功能的可选功能
+- 重新排序内容编辑事件和完成请求的调度
+- 支持自定义滚动条样式([#255](https://github.com/Rosemoe/sora-editor/pull/255) by [@MuntashirAkon](https://github.com/@MuntashirAkon))
+- 现在可以将行号信息面板位置更改为其他位置([#305](https://github.com/Rosemoe/sora-editor/pull/259) by [@summerain0](https://github.com/summerain0))
+- 改进语言服务器的连接速度([#262](https://github.com/Rosemoe/sora-editor/pull/262) by [@dingyi222666](https://github.com/dingyi222666))
+- 添加`verticalExtraSpaceFactor`用于垂直视口中的额外空间大小
 
-### Dependency
+### 依赖项
 
-- remove unused xerces dependency ([#243](https://github.com/Rosemoe/sora-editor/pull/243)
-  by [@PranavPurwar](https://github.com/PranavPurwar))
-- update kotlin to 1.7.20
-- update snakeyaml to 1.33
+- 删除未使用的xerces依赖项([#243](https://github.com/Rosemoe/sora-editor/pull/243) by [@PranavPurwar](https://github.com/PranavPurwar))
+- Kotlin更新至1.7.20
+- snakeyaml更新至1.33
 
 ## **[0.17.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.17.1) (2022-09-04)**
 
-### Bugs Fixed
+### 已修复的bugs
 
-- fix nullptr when destroying lsp server without completion implementation
-- fix trailing FORMAT sting at snippet end causing index out of bounds
-- fix a bug in `JavaTextTokenizer` that causes the completion stop
+- 修复在没有完成实现的情况下销毁lsp服务器时的空指针
+- 修复代码段结束处的FORMAT字符串导致索引越界
+- `JavaTextTokenizer`中的bug导致完成停止
 
-### Improvements
+### 改进
 
-- editor code snippets now support complex variables and placeholders (with transform or choices) as
-  well as usage
-  of `\u` and interpolated shell code
-- do not log `CompletionCancelledException` in `CompletionThread`
-- add `SnippetEvent` for code snippet events
-- export more API in `SnippetController`
-- add `QuickQuoteHandler` (separated from `SymbolPairMatch`)
-- add code snippet support in editor-lsp backed by editor snippet (by *
-  *[@dingyi222666 ](https://github.com/dingyi222666 )**)
-- add `StylesUtils#checkNoCompletion`
-- enhanced `NewlineHandler` interface
+- 更新自动完成UI和排序方法(by **[@dingyi222666](https://github.com/dingyi222666)**)
+- 不再在`CompletionThread`中记录`CompletionCancelledException`
+- 添加`SnippetEvent`用于代码段事件
+- `SnippetController`中导出更多API
+- 添加`QuickQuoteHandler`(从`SymbolPairMatch`中分离出来)
+- 基于编辑器代码段的编辑器lsp代码补全(by **[@dingyi222666](https://github.com/dingyi222666)**)
+- 添加`StylesUtils#checkNoCompletion`
+- 增强的`NewlineHandler`接口
 
 ## **[0.17.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.17.0) (2022-09-03)**
 
-### Fixed bugs
+### 已修复的bugs
 
-- a potential bug in composing text
-- invalid emoji text display when using textmate
-- an exception when using lsp (by **[@dingyi222666](https://github.com/dingyi222666)**)
-- stack overflow in `copyLine()`  (by **[@itsaky](https://github.com/itsaky)**)
-- potential nullptr when user selects completion item
-- invalid display of code block lines after text style update
-- bug in selecting text when ICU is
-  unavailable [#238](https://github.com/Rosemoe/sora-editor/issues/238)
-- occasional index out of bounds in drawText
+- 组合文本中的一个潜在bug
+- 使用textmate时emoji文本显示无效
+- lsp中的一个异常(by **[@dingyi222666](https://github.com/dingyi222666)**)
+- `copyLine()`中的堆栈溢出(by **[@itsaky](https://github.com/itsaky)**)
+- 用户选择完成项目时的潜在空指针
+- 文本样式更新后代码块行显示无效
+- 编辑器不可编辑时意外修改文本的操作窗口
+- 突出显示delimeters时渲染意外取消选择动画
+- emoji字符在自动换行模式下意外被截断
+- 设置包装语言时可能回收编辑器中的LspEditor
+- 在某些情况下的自动滚动问题(启用自动换行时选择文本)
+- `MatchHelper#startsWith`工作不正确
+- editor保存冗余的撤销操作(用户使用最新版的Gboard和其他一些IME时)
+- `CodeEditor#commitTab`忽略语言设置
+- 无法拦截`EditorKeyEvent`
 
-### New features and Improvements
+### 新特性与改进
 
-- Optional bold highlighted delimiters (by **[@ikws4](https://github.com/ikws4)**)
-- Better auto completion in lsp (by **[@dingyi222666](https://github.com/dingyi222666)**)
-- Upstream update of tm4e (by **[@dingyi222666](https://github.com/dingyi222666)**)
-- Line number color for current line
-- Very basic support of code snippets (simple tabstops, variables and placeholder. choice and rules
-  are unavailable now)
+- 可选的粗体高亮分隔符(by **[@ikws4](https://github.com/ikws4)**)
+- lsp中的更好的自动补全(by **[@dingyi222666](https://github.com/dingyi222666)**)
+- tm4e的上游更新(by **[@dingyi222666](https://github.com/dingyi222666)**)
+- 当前行的行号颜色
+- 非常基本的代码片段支持(简单的选项卡停止,变量和占位符。尚不可用的选择和规则)
 
-### Breaking changes
+### 破坏性更改
 
-> tm4e upstream code is changed significantly. You are expected to refer to our sample app for
-> migrating old code.
+> tm4e上游代码有很大变化。您需要参考我们的示例应用程序进行迁移旧代码。
 
 ## **[0.16.4](https://github.com/Rosemoe/sora-editor/releases/tag/0.16.4) (2022-08-14)**
 
-### Updates
+### 更新
 
-- Fix potential bug when format thread continues after setText() is called
-- Merge composing text edits with composing text submission in undo stack
-- Smoother layout update when text size changed after user scaling
-- Optional animation in CodeEditor#ensurePositionVisible
-- Cut unnecessary memory usage of Paint
-- Fix bugs in BlockIntList, which affects horizontal scroll range when wordwrap is disabled
-- Support standalone divider margins for left and right
-- Update style of default text action window
-- Gson dependency update
-- Internal field naming updates
+- 修复格式化线程在调用setText()后继续的潜在bug
+- 在撤销堆栈中将组合文本编辑与组合文本提交合并
+- 当文本大小更改后平滑更新布局
+- 在`CodeEditor#ensurePositionVisible`中可选动画
+- 减少Paint的不必要内存使用
+- 修复`BlockIntList`中的bug,这会影响没有自动换行时的水平滚动范围
+- 支持左右独立的分隔符边距
+- 更新默认文本操作窗口的样式
+- Gson依赖项更新
+- 内部字段命名更新
 
-### Note
+### 注意
 
-> Users who rely on using internal fields should check their reflection targets.
+> 依赖使用内部字段的用户应检查其反射目标。
 
 ## **[0.16.3](https://github.com/Rosemoe/sora-editor/releases/tag/0.16.3) (2022-08-11)**
 
-### Updates
+### 更新
 
-- add shortcut method for setting keywords in textmate auto completer
-- do not show identifier if it is duplicated with a keyword in `IdentifierAutoCompleter`
-- fix bug in rendering text background when wordwrap is enabled
+- 在textmate自动补全器中设置关键字的快捷方法
+- 如果标识符与关键字重复,则不显示标识符`IdentifierAutoCompleter`
+- 修复启用自动换行时渲染文本背景的错误
 
 ## **[0.16.2](https://github.com/Rosemoe/sora-editor/releases/tag/0.16.2) (2022-08-11)**
 
-### Updates
+### 更新
 
-- fix potential bug in ContentCreator when reading CRLF text
-- fix bug in Content#copyText
-- fix occasional concurrent modification error when invoking `ContentBidi` and `CachedIndexer`
-- performance enhancement in text copying
-- some internal code style uniformation
-- add some potential combined character clusters
+- 修复ContentCreator在读取CRLF文本时的异常
+- 修复Content#copyText中的bug
+- 修复调用`ContentBidi`和`CachedIndexer`时偶发的并发修改错误
+- 文本复制的性能增强
+- 一些内部代码风格统一
+- 添加一些潜在的组合字符集群
 
 ## **[0.16.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.16.1) (2022-08-10)**
 
-### Updates
+### 更新
 
-- Specify line separators for new lines when users edit text in editor
-- Fix Content#subSequence bugs in CRLF text
-- Fix composing text bug in a specific situations when `trackComposingText` is enabled
-- Do not highlight delimiters when text is selected
-- Remove debug logs
-- Performance enhancement in ContentLine#subSequence
+- 为编辑器中的新行指定行分隔符类型
+- 修复CRLF文本中`Content#subSequence`的bug
+- 在特定情况下修复跟踪组合文本的bug(当`trackComposingText`启用时)
+- 未选择文本时不突出显示分隔符
+- 移除调试日志
+- ContentLine#subSequence中的性能提升
 
 ## **[0.16.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.16.0) (2022-08-10)**
 
-### Performance Enhancements
-
-- This release is mainly focused on performance and display correctness. We optimized the speed of
-  highlighting delimiters and the time cost when text is editted. We also add a new mode called "
-  Basic Display Mode", which provides basic display of text and fast measuring speed. However, some
-  features such as RTL and ligatures are disabled when this is enabled.
-
-### New Features
-
-- correct LTR and RTL mixed display
-- customizible round text background factor
-- side icon for lines and its click event are available now
-- mixed CR,LF,CRLF in `Content` (Note that CodeEditor#setLineSeparator is not complete yet. editor
-  still uses LF for
-  newlines when you edit text in editor)
-
-### Bugs fixed
-
-- fix the width measurement of RTL texts
-- fix bugs in `TextRegionIterator`
-
-## **[0.15.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.15.1) (2022-07-23)**
-
-> This is a major update of sora-editor
-
-### New features
-
-- `editor-lsp` for LSP users, provided by @dingyi222666
-- new selection position can be provided by formatters
-- code completion in language-textmate (optional)
-- specify whether a scheme is dark and some new color ids for completion
-  window [#215](https://github.com/Rosemoe/sora-editor/issues/215)
-- specify line background color from language analyzer and these backgrounds are automatically
-  shifted when text is
-  editted
-- highlight matching delimiters (including underline, bold and background) (optional)
-
-### Improvements
-
-- quicker speed when finding index in text
-- use Android 12 introduced new `EdgeEffect`
-- reusing layout objects and async loading
-- editor is still partially interactive when formatting
-- draw only visible region of diagnostics
-- optimize shifting logic of diagnostics
-- optimize the speed of deleting texts in editor, especially when deleting text with a lot of lines
-- better display of symbols in wordwrap mode, especially in Chinese and Japanese
-- do not recreate layout when text size is not actually changed when the user finishes scaling
-- better user experience when editor is not editable
-- more switches in `DirectAccessProps`
-
-### Fixed bugs
-
-- fix potential NPE during destruction of `AsyncIncrementalAnalyzeManager`
-- fix concurrent issue of `InsertTextHelper` **critical**
-- fix sometimes wrongly drawn newline markers on high API devices
-
-### Notice
-
-- From **next version** of sora-editor, the min SDK version will rise to Android API 24 due to
-  better maintainence.
-
-## **[0.14.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.14.0) (2022-06-29)**
-
-### Bug fix
-
-- Fix unnotified text change for IME when
-  undo/redo [#210](https://github.com/Rosemoe/sora-editor/issues/210)
-- Fix bad scroll range [#212](https://github.com/Rosemoe/sora-editor/issues/212)
-- Bounds check in Content
-- Reset batch edit when `Content` object is detached
-- Reset all styles when text or language changes
-
-### Improvements
-
-- `Indexer` and `Content` share a lock
-- `Content` has 8x faster speed when inserting
-- `Content` now recoginzes newline correctly: CR, LF, CRLF are all considered '\n'
-
-### New Features
-
-- Brackets matching and highlighting in language-java and
-  language-textmate [#194](https://github.com/Rosemoe/sora-editor/issues/194)
-
-## **[0.13.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.13.1) (2022-06-26)**
-
-- Fix some issues in composing text
-- Fix incorrect sticky selection
-
-## **[0.13.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.13.0) (2022-06-25)**
-
-### Improvements
-
-- Fix unexpectedly created 512 bytes array when drawing
-- Fix text width caching
-- Optimize memory usage of language-java, language-textmate
-- Optimize speed of analyzing code blocks in language-textmate
-- Cache theme colors in textmate
-- Track composing text when external text changes
-  occur [#186](https://github.com/Rosemoe/sora-editor/issues/186) [#204](https://github.com/Rosemoe/sora-editor/issues/204)
-- Add new APIs in `Layout`
-- Fix some deprecations and better RTL support [@PranavPurwar](https://github.com/PranavPurwar)
-- Add line spacing APIs
-- Add option for round text background
-
-### Chores
-
-- Update dependencies of textmate & testing instrumentations
-
-### Breaking changes
-
-- `UIThreadIncrementalAnalyzeManager` is removed
-- `IdentifierAutoComplete` is updated so that it can be used incrementally
-- `IncrementalAnalyzeManager` now have integer for line index passed in `tokenizeLine`
-
-## **[0.12.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.12.0) (2022-06-21)**
-
-### Bug fix
-
-- Fix parent view of Magnifier
-- Fix missing `invalidate()` call in `setFontFeatureSettings()`
-- Remove unnecessary string resource items
-- Adapt Mircosoft Swift Key
-- Fix potential invalid state of SHIFT and ALT in `EditorKeyEvent`
-- Fix invalid error indicator line display (invalid phi for the wavy lines)
-- Fix 1 char invisible at line ending sometimes when wordwrap is enabled
-
-### New & Improvements
-
-- Custom scale factor in `Magnifier`
-- Add time limit for merging undo actions (can be modified by `UndoManager#setMergeTimeLimit(long)`)
-- Better magnifier image quality (@massivemadness )
-- Better magnifer position when sticky cursor is
-  enabled [@massivemadness](https://github.com/massivemadness)
-- `KeyBindingEvent` and some new built-in keybindings [@itsaky](https://github.com/itsaky)
-- Improved cursor animation (`ScaleCursorAnimation`)
-- Diagnostics APIs
-- More diagnostic indicator styles (`DiagnosticIndicatorStyle`)
-- Approriate default size for diagnostic indicator lines
-
-### Breaking changes
-
-- `Span#problemFlags`, `MappedSpans#markProblemRegion` and `MappedSpans.Builder#markProblemRegion`
-  are removed. Instead, you are expected to replace them with Diagnostic APIs
-- In order to catch up with the updates from tm4e in time, some packages in language-textmate are
-  moved to its original package in tm4e project.
-
-### Migration Guide
-
-> Mainly, your work will be miragting your problem marking logic to the new diagnostic API.
-> Now, the diagnostics are sent by calling `StyleReceiver#setDiagnostics(DiagnosticContainer)`. You
-> are expected to add
-> your `DiagnosticRegion` objects to the `DiagnosticContainer`. The container will maintain the
-> positions of those added
-> regions. And also, `DiagnosticRegion` is described by the start index and end index of the
-> diagnostic item, but not by (
-> line, column) pairs. So you need to compute the index by shadowed Content.
-> Note that it is - -not - - recommended to add new regions to a container that is already being
-> used
-> by editor though the
-> class is thread-safe.
-> See package `io.github.rosemoe.sora.lang.diagnostic`.
-
-> package `io.github.rosemoe.langs.textmate.core`
-> and `io.github.rosemoe.langs.textmate.languageconfiguration` are moved
-> to `org.eclipse.tm4e.core` and `org.eclipse.tm4e.languageconfiguration`
-
-### More information
-
-- Now editor will show diagnostics with zero length. The editor will show the indicator with a width
-  of the character 'a'.
-
-### Note
-
-- Maven artifact language-textmate 0.12.0 is broken. Use 0.12.0-1 instead.
-
-## **[0.11.4](https://github.com/Rosemoe/sora-editor/releases/tag/0.11.4) (2022-06-21)**
-
-### Bug fix
-
-- Fix invalid position of editor windows
-- Fix unexpected cursor update notification to IME when composing text
-
-## **[0.11.3](https://github.com/Rosemoe/sora-editor/releases/tag/0.11.3) (2022-05-22)**
-
-### Fix
-
-- Fix comosing text not removed
-- Fix position of editor windows
-
-### Improvements
-
-- Longer duration for some cursor animators
-- Magnifier scale factor is set to be Android default
-
-### Note
-
-- Version 0.11.2's maven repo is broken. Use `0.11.3` instead.
-
-## **[0.11.2](https://github.com/Rosemoe/sora-editor/releases/tag/0.11.2) (2022-05-21)**
-
-### New Features
-
-- Multiple cursor animation available (by **[@massivemadness](https://github.com/massivemadness)**)
-- Optional sticky selection while selecting text (by *
-  *[@massivemadness](https://github.com/massivemadness)**)
-- Perform haptic feedback on long press
-- Option to create scaled image within editor itself in `Magnifier` **[1]**
-
-### Bug fix
-
-- Fix unexpected cursor animation when composing text changes
-- Fix NPE when cursor animation is disabled
-- Fix potential unchanged empty text in `SimpleAnalyzeManager`
-- Incorrect color for Java's import statements in textmate language (by *
-  *[@PranavPurwar](https://github.com/PranavPurwar)**)
-- Fix potential NPE while moving selection handles
-- Replace `showAtLocation()` with `showAsDropdown()` to avoid window type violations when displaying
-  editor windows
-
-> [1] This should be enabled if the editor is not added to the activity window itself. Otherwise,
-> wrong image will be
-> created on Android O or above.
-
-## **[0.11.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.11.1) (2022-05-01)**
-
-### Improvements
-
-- Reduce waiting time to for span map lock while drawing
-- Reduce acquisitions of locks while drawing
-- Invalidate only corrupted cache in hardware-accelerated renderer
-- Reuse `Paint` objects while rendering
-- Use `Collections#swap` to swap value in List
-
-### New
-
-- Add letter spacing and text scale settings
-
-## **[0.11.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.11.0) (2022-04-30)**
-
-### Bug fix
-
-- Fix `deleteEmptyLineFast` and `deleteMultiSpaces` when using
-  Gboard [#170](https://github.com/Rosemoe/sora-editor/issues/170)
-- Fix crash while performing 'Replace all' (by **[@itsaky](https://github.com/itsaky)**)
-- Unset receiver field in analyzers when released
-- Fix crash/ANR when deleting chars in wordwrap
-  mode [#168](https://github.com/Rosemoe/sora-editor/issues/168)
-- Fix memory leak in sample app
-
-### Improvements
-
-- Optimize auto-scrolling when editing at the end of text
-- Add method to format code partially
-- Migrate code to new Android Gradle Plugin DSL
-
-### Tip
-
-> After upgrading to the new version, you may need to re-compile your project (clean & build) if you
-> get an `AbstractMethodError` because a method with default implementation is added to `Language`
-> class.
-
-## **[0.10.11](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.11) (2022-04-02)**
-
-### Bug fix
-
-- Fix non-threadsafe access to spans in IncrementalAnalyzeManager
-- Fix measure cache based position computing
-
-### Improvement
-
-- Add some functions in editor-kt (by **[@dingyi222666](https://github.com/dingyi222666)**)
-
-## **[0.10.10](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.10) (2022-03-26)**
-
-### Improvement
-
-- Improve rendering performance for long lines
-- Add option to allow render cache to be save for long lines. enabled by default
-
-## **[0.10.9](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.9) (2022-03-19)**
-
-### Bug fix
-
-- Fix exception occurred when deleting texts
-- Fix current code block line color
-
-### Feature
-
-- Add side block line for current block in wordwrap mode
-
-## **[0.10.8](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.8) (2022-03-14)**
-
-- Fix custom adapter not applied to completion window
-
-## **[0.10.7](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.7) (2022-03-11)**
-
-### Bug fix
-
-- Fix wrong text object used in AsyncIncrementalAnalyzeManager#initialize
-- Fix occasional failed java highlighting due to concurrently accessed tokenizer
-- Fix occasional failed textmate highlighting due to concurrently accessed grammar
-- Dismiss editor windows in `release()` to avoid window leak
-- Fix overflowed problem indicator region
-
-### Improvement
-
-- Adjust default width of problem indicator
-
-## **[0.10.6](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.6) (2022-03-11)**
-
-### Bug fix
-
-- Fix unexpectedly triggered scale after double click
-- Fix occasional StringIndexOutOfBoundsException in textmate
-
-### Improvement
-
-- Better edge effects
-- Fix symbol pair matching issue [#155](https://github.com/Rosemoe/sora-editor/issues/155)
-- Use textmate Java in sample
-
-## **[0.10.5](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.5) (2022-03-05)**
-
-### Bug fix
-
-- Fix hardware-accelerated renderer is not updated sometimes
-
-## **[0.10.4](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.4) (2022-03-05)**
-
-### Bug fix
-
-- Fix line editing issue [#154](https://github.com/Rosemoe/sora-editor/issues/154)
-
-### Improvement
-
-- Avoid some measure errors when spans generated by language are invalid
-
-## **[0.10.3](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.3) (2022-03-04)**
-
-### Bug fix
-
-- Fix stack overflow on some Samsung Galaxy ROMs
-- Fix a nullptr bug in AsyncIncrementalAnalyzeManager
-
-## **[0.10.2](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.2) (2022-02-26)**
-
-### Emergency fix
-
-- Wrong `Paint` object used for problem indicator drawing
-
-## **[0.10.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.1) (2022-02-26)**
-
-### Improvements
-
-- Event can be intercepted separately for different receivers
-- Event subscription now has a receipt for unsubscribing outside the receiver it self
-- Add `MatchHelper`
-- Optimize multiple line deletion performance
-- `ContentCreator` for loading text from reader or input stream
-- CodeEditor reuses the text object given by `setText()` by default if it is an instance
-  of `Content`
-- Scrollbars are now not awaked by default when editor size
-  changes [#150](https://github.com/Rosemoe/sora-editor/issues/150)
-- Add options for problem indicators drawing
-  parameters [#149](https://github.com/Rosemoe/sora-editor/issues/149)
-
-### Bug fix
-
-- Fix unusual crash when editor size changes
-
-### Contributed updates
-
-- Fixed flickering of completion window when invoked multiple times.
-  by [@tyron12233](https://github.com/tyron12233)
-  in https://github.com/Rosemoe/sora-editor/pull/148
-- Separate rendering logic with the View by @tyron12233
-  in https://github.com/Rosemoe/sora-editor/pull/151
-
-### New Contributors
-
-- [@tyron12233](https://github.com/tyron12233) made their first contribution
-  in https://github.com/Rosemoe/sora-editor/pull/148
-- Full Changelog: https://github.com/Rosemoe/sora-editor/compare/0.10.0...0.10.1
-
-## **[0.10.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.10.0) (2022-02-05)**
-
-### Improvements
-
-- Better support for content searching (case insensitive, regular expressions)
-- Enhance position visibility with line number pinned
-
-## **[0.9.3](https://github.com/Rosemoe/sora-editor/releases/tag/0.9.3) (2022-02-04)**
-
-### Bug fix
-
-- Fix wrongly positioned background for span
-
-### Improvements
-
-- Better support for selection moving and performance in wordwrap mode
-- Optional automatically scrolling when editor's height changed
-- Adapte InputConnection implementation to API 31
-- Parcelable and public UndoManager instance for data saving
-
-## **[0.9.2](https://github.com/Rosemoe/sora-editor/releases/tag/0.9.2) (2022-02-03)**
-
-### Improvements
-
-- Do not block scaling when reached max/min size
-- Optional thread-safe for Content
-- Optimize avoidable allocations in textmate
-- Remove unnecessary Span copying in `AsyncIncrementalAnalyzeManager`
-- Cancellable code block analysis for `AsyncIncrementalAnalyzeManager`
-- Incremental language-java available
-
-### Bug fix
-
-- Fix unability to delete line without deleteEmptyLineFast on
-
-## **[0.9.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.9.1) (2022-02-03)**
-
-### API Update
-
-- Add getCharOffsetX and getCharOffsetY to get character on screen
-- Remove final flags of built-in components and allow them to be replaced by replaceComponent
-- Expose more fields to subclass of EditorAutoCompletion
-
-## **[0.9.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.9.0) (2022-02-03)**
-
-- -A major update for sora-editor - -
-
-### Improvements
-
-- Selected text is optional to be painted in another color (set SELECTED_TEXT color to 0)
-- Option for drawing whitespaces in selected region
-- Scale text with focus
-- Draw short background for selected empty lines
-- Completion window scrolls as text scrolls
-- Updated selection handle style
-- Selection handle follow thumb when held
-- Optimized text action popup
-- Better support for ligatures
-- Event system with various events
-- Add check to avoid OOM when the width of view is too small to display content in wordwrap mode
-- Delete empty line quickly
-- Delete batch spaces by one DEL press
-- Async and customizable auto-completion APIs
-- Add option to remove keyboard suggestions forcibly
-- Open code analysis framework
-- Incremental highlighting analysis for textmate
-- Thread-safe support for Content
-- Control editor's IPC text length max
-- Better schedule for auto-completion
-- Set no completion flag for some regions
-- Removable built-in components
-- Improved cursor shifting for RTL natural languages
-- Interrupt auto-completion threads in time
-- Expose more public APIs
-
-### Bug fix
-
-- Invalid code block lines in language-textmate
-
-### Breaking changes
-
-Almost everything has changed. lol...
-But, some IMPORTANT Tips:
-
-- Migrate your legacy addIfNeeded() invocations directly with a colorId to a checked one generated
-  by `TextStyle#makeStyle(...)` to specify your styles and some other attributes (such as no
-  completion). Unless you are confident that your values are valid (for fear that the bit count for
-  foregroundColorId can be decreased in future releases. currently is 20 bits, far from we needed).
-- Legacy analysis can be quickly migrated by using `SimpleAnalyzeManager`
-- Spans are not always stored by an internal `List<List<Span>>`. Use Reader and Modifier APIs to get
-  access to its content, unless you are sure about the instance's implementation.
-- It's recommended that you use only one `Spans.Reader` and one `Spans.Modifier` at the same time.
-- New completion system provides nothing but the exact position to complete in text. How to do the
-  completion is up to you.
-- The `SimpleCompletionItem` can not take the place of the old `CompletionItem`
-- Shared data between auto-completion and analysis thread is not maintained by editor. You have to
-  manage that by yourself
-- CodeEditor adds a new method `release()` to stop completion threads and the analysis. It's
-  recommended to invoke this method when the editor is no longer used(such as being removed from
-  view forever or when activity ends).
-- Avoid use CodeEditor's protected `drawXxx()` methods, they are likely to be changed. Also, methods
-  or fields marked by annotation `@UnsupportedUserUsage` should not be used. Classes related to
-  drawing should not be used (`HwAccerelatedRenderer` and `GraphicTextRow`).
-- EditorPopupWindow provides some useful actions to create your own window in editor with good
-  support
-- NavigationItem is removed. It should be implemented by your `Language`
-- `BlockLine` is renamed to `CodeBlock`
-- Fields in `DirectAccessProps` can be directly modified. They are not required by editor at the
-  time they are set. Modification takes effect the next time the actual value is accessed by editor.
-
-### Thanks to
-
-- People who contribute to this project
-- People who test the application and provide feedback
-- People who star this repo
+- 这主要关注于sora编辑器的性能和显示正确性的一个重大更新
+
+### 改进
+
+- 选中文本可选是否用其他颜色绘制(将SELECTED_TEXT颜色设置为0)
+- 在所选区域中绘制空格
+- 聚焦时缩放文本
+- 为选中的空行绘制短背景
+- 完成窗口随文本滚动
+- 更新选择手柄样式
+- 按住时,选择手柄随拇指
+- 优化文本操作弹出窗口
+- 更好的连字支持
+- 避免自动换行模式下视图宽度过小导致无法显示内容时的OOM
+- 快速删除空行
+- 一按DEL可批量删除空格
+- 异步和可自定义的自动完成API
+- 添加选项以强制删除键盘建议
+- 开放的代码分析框架
+- textmate的增量高亮分析
+- 对Content的线程安全支持
+- 控制编辑器的IPC文本长度最大值
+- 更好的自动完成调度
+- 为某些区域设置no completion标志
+- 可删除的内置组件
+- 改进了RTL自然语言的光标移动
+- 及时中断自动完成线程
+- 暴露更多公共API
+
+### 已修复的bugs
+
+- language-textmate中的无效代码块线
+
+### 破坏性更改
+
+几乎都有变化，但是,一些重要的提示:
+
+- 将旧的addIfNeeded()调用直接与颜色ID迁移到由`TextStyle#makeStyle(...)`生成的经检查的调用,以指定样式和一些其他属性(例如nocompletion)。除非您确信值有效(担心前景色ID的位数在未来版本中可能会减少。当前为20位,远远大于我们需要的)。
+- 旧的分析可以通过使用`SimpleAnalyzeManager`快速迁移
+- Span不总是由内部的`List<List<Span>>`存储。 使用Reader和Modifier API访问其内容,除非您确定实例的实现。
+- 建议您同时只使用一个`Spans.Reader`和一个`Spans.Modifier`。
+- 新完成系统只提供文本中完成的确切位置。 如何完成取决于您。
+- `SimpleCompletionItem`不能取代旧的`CompletionItem`
+- 自动完成和分析线程之间的共享数据不由编辑器维护。 您必须自己管理。
+- CodeEditor添加了一个新方法`release()`,用于停止完成线程和分析。 强烈建议在编辑器不再使用时调用此方法(例如永久从视图中删除或活动结束时)。
+- 避免使用CodeEditor的受保护`drawXxx()`方法,它们很可能会改变。 此外,用注解`@UnsupportedUserUsage`标记的方法或字段不应该使用。与绘制相关的类(`HwAccerelatedRenderer`和`GraphicTextRow`)不应该使用。
+- EditorPopupWindow提供了一些有用的操作,以在编辑器中使用良好支持创建自己的窗口
+- NavigationItem被删除。 它应该由你的`Language`实现。
+- `BlockLine`重命名为`CodeBlock`
+- `DirectAccessProps`中的字段可以直接修改。 设置它们时编辑器不需要它们。 修改在实际值下次被编辑器访问时生效。
+
+### 感谢
+
+- 对这个项目做出贡献的人
+- 测试应用程序并提供反馈的人
+- star此仓库的人
 
 ## **[0.8.4](https://github.com/Rosemoe/sora-editor/releases/tag/0.8.4) (2021-11-14)**
 
-> This includes a set of bug fixes and small improvements.
+> 这包含一组bug修复和小的改进。
 
-### Bug fix
+### 修复的bugs
 
-- Fix Textmate illegal display in some conditions (@Coyamo )
-- Fix cursor animation position and add switch
-- Fix composing text prevents auto-completion
-- Hide completion panel when undo/redo
-- Fix crash bug when click enter with the completion window shown
-- Fix text style rendering on devices before Android Q (API 29)
-- Fix invalid parameter passed to ContentListener#afterDelete
-- Fix unreported modification in Content
-- Fix text can be modified by action window when not editable
-- Fix that mis-colored text is shown when modification is made but analysis is not done
-- Fix error layout offset in CodeEditor#getOffset
+- 下一行的背景颜色遮盖了错误下划线
 
-### Improvements
+### 改进
 
-- Hide completion panel when undo/redo
-- Magnifier will not show, when text size is big
-- Color of EdgeEffect is automatically extracted from context theme's `colorPrimary`
-- Supports 4-char emoji display and edit
-- Improve performance of magnifier on old devices
-- Draw shadow for divider if line number is pinned
-- Maintain code blocks on edit
+- 更长时间的光标动画
+- 放大因子设置为Android默认
+
+### 注意
+
+- 0.11.2版本的maven仓库损坏。改用`0.11.3`。
 
 ## **[0.8.3](https://github.com/Rosemoe/sora-editor/releases/tag/0.8.3) (2021-10-30)**
 
-### Update Log
+### 更新日志
 
-- Do not show selected completion item background by default unless direction button is used
-- Use PixelCopy for extracting in magnifier for better performance on high API level
-- Fix display of horizontal scroll bar
+- 默认情况下不显示选择的完成项目背景,除非使用方向按钮
+- 在高API级别上使用PixelCopy提高放大镜中的性能
+- 修复水平滚动条的显示
 
 ## **[0.8.2](https://github.com/Rosemoe/sora-editor/releases/tag/0.8.2) (2021-10-30)**
 
-### Update Log
+### 更新日志
 
-> Due to some bugs 0.8.1 is not released or uploaded to maven
+> 由于一些bug,0.8.1没有发布或上传到maven
 
-- SymbolInputView as part of the editor
-- Improve completion window item scrolling
-- Add bold and italics font style for span
-- Animation for current line background
-- Fix invalid layout offset in WordwrapLayout
+- 编辑器的一部分SymbolInputView
+- 改进完成窗口项目滚动
+- 为span添加粗体和斜体字体样式
+- 当前行背景动画
+- 修复WordwrapLayout中的无效布局偏移
 
 ## **[0.8.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.8.0) (2021-10-30)**
 
-### Update Log
+### 更新日志
 
-- Add optional text magnifier when selection handle is held (enabled by default)
-- Apply elevation for all popups
-- Animated cursors
-- Fix completion window flash on inserting text
-- Increase max speed of edge fast scrolling
+- 添加可选的文本放大镜,按住选择手柄时显示(默认启用)
+- 为所有弹出窗口应用高度效果
+- 动画光标
+- 修复输入文本时完成窗口闪烁问题
+- 增加边缘快速滚动的最大速度
 
 ## **[0.7.2](https://github.com/Rosemoe/sora-editor/releases/tag/0.7.2) (2021-10-21)**
 
-### Update log
+### 更新日志
 
-- Add method to control completion window position scheme
-- textmate module supports block line [@Coyamo](https://github.com/Coyamo)
-- textmate in sample app supports low API device
+- 添加控制完成窗口位置方案的方法
+- textmate模块支持块线[@Coyamo](https://github.com/Coyamo)
+- textmate在示例应用中支持低API设备
 
 ## **[0.7.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.7.1) (2021-10-21)**
 
-### Update Log
+### 更新日志
 
-- Fix crash bug on typing symbols
+- 修复输入符号时崩溃的bug
 
 ## **[0.7.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.7.0) (2021-10-16)**
 
-- Add textmate support (require higher API version, up to Android
-    8) [@Coyamo](https://github.com/Coyamo)
-- Add AutoSurroundPair and condition check interface for symbol pair
-  matching [@dingyi222666](https://github.com/dingyi222666)
+- 添加textmate支持(需要更高的API版本,直到Android 8) [@Coyamo](https://github.com/Coyamo)
+- 添加AutoSurroundPair和符号对匹配的条件检查接口 [@dingyi222666](https://github.com/dingyi222666)
 
-### Generated notes
+### 生成的注意事项
 
-- Add CI with GitHub Workflow by [@mnixry](https://github.com/mnixry)
-  in https://github.com/Rosemoe/CodeEditor/pull/101
-- Simple transplantation of tm4e core module based on tm4e-0.4.2.
-  by [@Coyamo](https://github.com/Coyamo)
-  in https://github.com/Rosemoe/CodeEditor/pull/97
-- Add shouldDoReplace() in Replacement by [@dingyi222666](https://github.com/dingyi222666)
-  in https://github.com/Rosemoe/CodeEditor/pull/99
+- 通过 [@mnixry](https://github.com/mnixry) 添加GitHub工作流CI在 https://github.com/Rosemoe/CodeEditor/pull/101
+- 基于tm4e-0.4.2的tm4e核心模块的简单移植。作者 [@Coyamo](https://github.com/Coyamo) 在 https://github.com/Rosemoe/CodeEditor/pull/97
+- 在Replacement中添加shouldDoReplace() by [@dingyi222666](https://github.com/dingyi222666) 在 https://github.com/Rosemoe/CodeEditor/pull/99
 
 ## **[0.6.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.6.0) (2021-10-09)**
 
-Fix error underlines being covered by line background of next line
+修复错误下划线被下一行的行背景所覆盖
 
 ## **[0.6.0-dev-4](https://github.com/Rosemoe/sora-editor/releases/tag/0.6.0-dev-4) (2021-10-03)**
 
-- Fix unspecified dependency in generated pom file.
-- Solve this problem while building your app:
+- 修复生成的pom文件中的未指定依赖项。
+- 解决构建应用程序时的这个问题:
 
 ![image](https://user-images.githubusercontent.com/28822819/135739646-653b9625-d84a-4d5b-8447-514fce34e80a.png)
 
 ## **[0.6.0-dev-3](https://github.com/Rosemoe/sora-editor/releases/tag/0.6.0-dev-3) (2021-10-02)**
 
-!> Stop use 0.6.0-dev-2.
+!> 不要再使用 0.6.0-dev-2。
 
-- Fix bugs in 0.6.0-dev-2.
+- 修复0.6.0-dev-2中的bug。
 
 ## **[0.6.0-dev-2](https://github.com/Rosemoe/sora-editor/releases/tag/0.6.0-dev-2) (2021-10-01)**
 
-- nothing
+- 无
 
 ## **[0.6.0-dev-1](https://github.com/Rosemoe/sora-editor/releases/tag/0.6.0-dev-1) (2021-09-21)**
 
-### Updates
+### 更新
 
-- Base package is renamed to io.github.rosemoe.sora
-- BlockLinkedList is removed
-- All builtin color schemes are non-final
-- Blockline painting attribute (bcfdbbd)
-- Compatibility method for ViewPager (97a1225)
-- language-css3 added
-- Selection change event
-- Get completion item height in place
-- Add method to mark error/warning/typo/deprecated
-- Ligatures switch, and ligatures are disabled by default
-- Fix illegal cursor position between two-char emoji
-- Optimized selection handle
+- 基础包重命名为io.github.rosemoe.sora
+- 移除BlockLinkedList
+- 所有内置配色方案都非final
+- 区块线绘制属性(bcfdbbd)
+- ViewPager的兼容方法(97a1225)
+- 添加语言-css3
+- 选择改变事件
+- 获取完成项高度
+- 添加错误/警告/打字错误/弃用标记的方法
+- 连字开关,默认关闭
+- 修复双字符表情符之间的无效光标位置
+- 优化选择手柄
 
-### Tip
+### 提示
 
-use
+对于此版本及更高版本,使用
 
 ```Gradle
 implementation 'io.github.Rosemoe.sora-editor:<module>:<version>'
 ```
 
-for this version and later versions
-
 ## **[0.5.4](https://github.com/Rosemoe/sora-editor/releases/tag/0.5.4) (2021-08-08)**
 
-- Nothing but downgrade gradle plugin to run Jitpack
+- 仅降级gradle插件版本以运行Jitpack
 
 ## **[0.5.3](https://github.com/Rosemoe/sora-editor/releases/tag/0.5.3) (2021-08-01)**
 
-### License Update
+### 许可证更新
 
-- Since `0.5.3`, CodeEditor's license has been changed to the General Public License V3.
-  Make sure that there is no conflict between your project and this.
+- 从`0.5.3`开始,CodeEditor的许可证已更改为通用公共许可证V3。
+  确保您的项目与此没有冲突。
 
-### Update Note
+### 更新说明
 
-- Added option to disable fullscreen in landscape mode (by **[@itsaky](https://github.com/itsaky)**)
-- Pin line number at left
-- Show line number for first row even if its leading row is invisible under wordwrap mode
-- Max text length passed to input method rised.
+- 添加选项可在横向模式下禁用全屏(作者 **[@itsaky](https://github.com/itsaky)**)
+- 在左边固定行号
+- 即使首行在自动换行模式下不可见,也为第一行显示行号
+- 传递给输入法的最大文本长度增加。
 
 ## **[0.5.2](https://github.com/Rosemoe/sora-editor/releases/tag/0.5.2) (2021-07-02)**
 
-### Version 0.5.2
+### 0.5.2版本
 
-- Fix emoji separating in word wrap mode [#72](https://github.com/Rosemoe/sora-editor/issues/72)
+- 修复自动换行模式下表情符号分隔问题 [#72](https://github.com/Rosemoe/sora-editor/issues/72)
 
-### Note
+### 注意
 
-- Update plan is changed due to my time schedule.
-- New major version development is delayed.
+- 更新计划由于我的时间安排已更改。
+- 主要新版本开发推迟。
 
 ## **[0.5.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.5.1) (2021-06-07)**
 
-- **Important:  This is the last version before editor project's refactor**
-- **Next version will be almost fully different**
+- **重要:这是编辑器项目重构之前的最后一个版本**
+- **下一个版本将几乎完全不同**
 
-### Updates
+### 更新
 
-- Fix error in emoji measuring (#57 #58 by @MoFanChenXuan)
-- Remove content restriction of SymbolChannel
-- New text action popup (#63 by @RandunuRtx  )
-- Unselect text by clicking whitespace (#64 by @itsaky )
-- Fix unexpected cursor flashing after removing and adding editor view again
-- Add support for shifting selections from keyboard in selecting
-  mode [#60](https://github.com/Rosemoe/sora-editor/issues/60)
-- Fix incorrect color of newline symbol
-- Fix bug in performing enter key [#67](https://github.com/Rosemoe/sora-editor/issues/67)
-- Empty composing workaround [#69](https://github.com/Rosemoe/sora-editor/issues/69)
+- 修复测量表情符号时的错误 (#57 #58 由 @MoFanChenXuan)
+- 移除SymbolChannel的内容限制
+- 新的文本操作弹出窗口(#63 由 @RandunuRtx)
+- 通过点击空白区域取消选择文本(#64 由 @itsaky)
+- 修复再次删除并添加编辑器视图后意外的光标闪烁
+- 添加换行符号的颜色不正确
+- 修复执行回车键时的bug [#67](https://github.com/Rosemoe/sora-editor/issues/67)
+- 空组合文本问题 [#69](https://github.com/Rosemoe/sora-editor/issues/69)
 
 ## **[0.5.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.5.0) (2021-05-01)**
 
-This is a major update of CodeEditor with many patches and features.
-And some slight breaking changes are made.
-Thanks to contributions from [@itsaky](https://github.com/itsaky)
-and [@RandunuRtx](https://github.com/RandunuRtx)!
+这是CodeEditor的一个重大更新,包含许多补丁和特性。
+并做出了一些轻微的不兼容更改。
+感谢 [@itsaky](https://github.com/itsaky) 和 [@RandunuRtx](https://github.com/RandunuRtx)的贡献!
 
-### Breaking changes
+### 不兼容的更改
 
-- Interfaces do **not** have default methods due to compatibility, which means language
-  implementations must override the methods
-  explicitly [#48](https://github.com/Rosemoe/sora-editor/issues/48)
-- 'language-s5d' module is removed
+- 接口不具有默认方法,为了兼容性,语言实现必须显式重写方法[#48](https://github.com/Rosemoe/sora-editor/issues/48)
+- 删除了'language-s5d'模块
 
-### New features & Improvements
+### 新特性和改进
 
-- language-python by [@itsaky](https://github.com/itsaky)
-- No longer redraw view automatically when cursor is invisible
-- Quicker speed in line number rendering
-- Add some symbol pairs [#44](https://github.com/Rosemoe/sora-editor/issues/44) by @itsaky
-- Add support for making symbol bar [#45](https://github.com/Rosemoe/sora-editor/issues/45)
-- Show action panel when inserting [#51](https://github.com/Rosemoe/sora-editor/issues/51)
-- Auto scroll when thumb hovers at edges of
-  view [#50](https://github.com/Rosemoe/sora-editor/issues/50)
+- 语言-python 由 [@itsaky](https://github.com/itsaky)
+- 当光标不可见时不再自动重绘视图
+- 更快的行号渲染速度
+- 添加一些符号对 [#44](https://github.com/Rosemoe/sora-editor/issues/44) 由 @itsaky
+- 添加对制作符号栏的支持 [#45](https://github.com/Rosemoe/sora-editor/issues/45)
+- 插入时显示操作面板 [#51](https://github.com/Rosemoe/sora-editor/issues/51)
+- 滑块悬停在边缘时自动滚动 [#50](https://github.com/Rosemoe/sora-editor/issues/50)
 
-### Fixed bugs
+### 修复的bugs
 
-- Crash on low API level [#48](https://github.com/Rosemoe/sora-editor/issues/48)
-- Unexpected background color when focused on Android
-  11 [#41](https://github.com/Rosemoe/sora-editor/issues/41)
-- Adapt keyboard
-  behaviors ([#41](https://github.com/Rosemoe/sora-editor/issues/41), [#56](https://github.com/Rosemoe/sora-editor/issues/56))
-- Can not deselect text after selecting all [#46](https://github.com/Rosemoe/sora-editor/issues/46)
-  by [@itsaky](https://github.com/itsaky)
-- Invalid cast on custom adapter [#53](https://github.com/Rosemoe/sora-editor/issues/53)
-  by [@itsaky](https://github.com/itsaky)
-- Font issue on text offset [#55](https://github.com/Rosemoe/sora-editor/issues/55)
-- Auto indent is invalid in Java language [#56](https://github.com/Rosemoe/sora-editor/issues/56)
+- 低API级别崩溃 [#48](https://github.com/Rosemoe/sora-editor/issues/48)
+- Android 11上获得焦点时意外的背景色 [#41](https://github.com/Rosemoe/sora-editor/issues/41)
+- 适配键盘行为 ([#41](https://github.com/Rosemoe/sora-editor/issues/41), [#56](https://github.com/Rosemoe/sora-editor/issues/56))
+- 选择全部后无法取消选择 [#46](https://github.com/Rosemoe/sora-editor/issues/46) 由 [@itsaky](https://github.com/itsaky)
+- 自定义适配器上的无效转换 [#53](https://github.com/Rosemoe/sora-editor/issues/53) 由 [@itsaky](https://github.com/itsaky)
+- 字体对文本偏移的问题 [#55](https://github.com/Rosemoe/sora-editor/issues/55)
+- Java语言中的自动缩进无效 [#56](https://github.com/Rosemoe/sora-editor/issues/56)
 
 ## **[0.4.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.4.0) (2021-02-27)**
 
-- Note: This release includes breaking changes
-- API Requirement rised up to Android 5.0 (API 21)
-- Module editor
+- 注意:此版本包含不兼容的更改
+- API要求上升到Android 5.0(API 21)
+- 模块编辑器
 
-### Bug fix
+### 错误修复
 
-- Invalid EdgeEffect
-- MyCharacter not initialized
-- Word wrap layout width
-- Invalid call to deleteSurroundingText [#34](https://github.com/Rosemoe/sora-editor/issues/34)
+- 无效的EdgeEffect
+- MyCharacter未初始化
+- Word wrap布局宽度
+- 调用deleteSurroundingText时无效 [#34](https://github.com/Rosemoe/sora-editor/issues/34)
 
-### New faetures
+### 新特性
 
-- Provide completions together with composing
-  text [#32](https://github.com/Rosemoe/sora-editor/issues/32)
-- Scaling size range can be controlled
-- New module language-html (by **[@itsaky](https://github.com/itsaky)**)
-- Symbol pairs auto-completion [#36](https://github.com/Rosemoe/sora-editor/issues/36)
-- Handler for typing new line
-- Custom support for adapter of auto-completion
-- Module language-java
+- 提供组合文本的补全 [#32](https://github.com/Rosemoe/sora-editor/issues/32)
+- 缩放大小范围可以控制
+- 新模块语言-html (by **[@itsaky](https://github.com/itsaky)**)
+- 符号对自动完成 [#36](https://github.com/Rosemoe/sora-editor/issues/36)
+- 输入新行的处理程序
+- 自动完成的自定义适配器支持
+- 模块语言-java
 
-### New feature
+### 新特性
 
-- Putting '{}' automatically when typing newline
+- 在输入新行时自动放入'{}'
 
 ## **[0.3.2](https://github.com/Rosemoe/sora-editor/releases/tag/0.3.2) (2021-02-08)**
 
-### Fixed bugs
+### 已修复的错误
 
-- Incorrect cursor position
-- EOL is shown at beginning of line while using EmptyLanguage
-- Span read-write concurrency during drawing
-- EdgeEffect reversed in direction
-- Exit select action mode after selected region is set to be zero size by input method
+- 光标位置错误
+- 使用EmptyLanguage时行开头显示EOL
+- 绘制期间跨度的并发读写
+- EdgeEffect方向错误
+- 输入法设置选择区域为零大小后退出选择操作模式
 
-### New feature
+### 新特性
 
-- Line number visibility can be controlled
+- 可以控制行号的可见性
 
 ## **[0.3.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.3.1) (2020-08-29)**
 
-### Bug fix
+### 错误修复
 
-- Bug in auto scrolling at selecting text while wordwrap is enabled
+- 启用自动换行时选择文本时的自动滚动错误
 
-### Change
+### 更改
 
-- Project now uses Java language level 8
+- 项目现在使用Java 8语言级别
 
 ### Javadoc
 
-- Fix typos
+- 修复拼写错误
 
 ## **[0.3.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.3.0) (2020-08-23)**
 
-### New Features
+### 新特性
 
-- Wordwrap
-- Cursor blink
-- Show non-printable characters
-- New color schemes
+- 自动换行
+- 光标闪烁
+- 显示不可打印字符
+- 新的配色方案
 
-### Performance
+### 性能
 
-- Improve speed of copying Content
-- Improve speed of drawing lines
+- 提高复制Content的速度
+- 提高绘制行的速度
 
-### User Experience
+### 用户体验
 
-- Exact scrollable range (may block UI after setting text size or typeface when text is huge)
-- Chinese translations
+- 精确的可滚动范围(当文本非常大时,在设置文本大小或字体后可能会阻止UI)
+- 中文翻译
 
-### Bug fix
+### 错误修复
 
-- Crash on next search
-- Error selection position is set from touch in text with tab
+- 下一次搜索时崩溃
+- 使用tab的文本中从触摸选择错误的错误选择位置
 
 ## **[0.2.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.2.0) (2020-08-19)**
 
-### Bug fix in
+### 错误修复
 
-- Auto scroll
-- Tab painting
-- Span shifting
-- Format State
-- Text search
+- 自动滚动
+- 选项卡绘制
+- 跨度移动
+- 格式状态
+- 文本搜索
 
-### Improvements
+### 改进
 
-- Better performance
-- Better horizontal scroll limits
-- Better management of auto-completion
-- Input method interaction
-- Better color schemes
-- Standalone line info panel text size
+- 更好的性能
+- 更好的水平滚动限制
+- 更好的自动完成管理
+- 输入法交互
+- 更好的配色方案
+- 独立的行信息面板文本大小
 
-### Breaking change
+### 突破性变化
 
-- Replace StringBuilder to ContentLine
+- 将StringBuilder替换为ContentLine
 
 ## **[0.1.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.1.1) (2020-08-06)**
 
-### New Functions
+### 新功能
 
-- Add a new way to present text actions when selecting text (ActionMode or PopupWindow, optional)
+- 添加一种新的方式来呈现选择文本时的文本操作(可选ActionMode或PopupWindow)
 
-### Improvements
+### 改进
 
-- Fix bugs of text selecting(text might be selected while using scroll bars)
-- Correct composing text region sent to input method
+- 修复文本选择的bug(使用滚动栏时可能会选择文本)
+- 校正发送到输入法的组合文本区域
 
-### Breaking changes
+### 突破性更改
 
-- Rename TextColors to TextAnalyzeResult as there is not only text colors inside
-- TextActionWindow is no longer existed
+- 将TextColors重命名为TextAnalyzeResult,因为不仅包含文本颜色
+- TextActionWindow不再存在
 
 ## **[0.1.0-beta](https://github.com/Rosemoe/sora-editor/releases/tag/0.1.0-beta) (2020-07-29)**
 
-- First release of CodeEditor. All basic modules are done.
-- Most of typing and displaying bugs are fixed.
-- This release is non-production ready but for test.
+- CodeEditor的首个版本。所有基本模块都已完成。
+- 大多数输入和显示错误都已修复。
+- 此版本不可用于生产,仅用于测试。

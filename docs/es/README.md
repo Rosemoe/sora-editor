@@ -1,6 +1,6 @@
 <div align="center">
 
-![Banner](https://github.com/Rosemoe/sora-editor/raw/main/images/editor_banner.jpg)
+![Banner](/images/editor_banner.jpg)
 ----
 [![CI](https://github.com/Rosemoe/CodeEditor/actions/workflows/gradle.yml/badge.svg?event=push)](https://github.com/Rosemoe/CodeEditor/actions/workflows/gradle.yml)
 [![GitHub license](https://img.shields.io/github/license/Rosemoe/CodeEditor)](https://github.com/Rosemoe/CodeEditor/blob/main/LICENSE)
@@ -12,14 +12,12 @@ sora-editor es un increíble editor de código optimizado para Android
 
 </div>
 
-Lea esto en otros
-idiomas: [English](/README.md), [简体中文](/zh-cn/README.md), [Español](/es/README.md).
+Lea esto en otros idiomas: [English](README.md), [简体中文](README.zh-cn.md), [Español](README.es.md).
 
 ***Trabajo en Progreso***
 
 Este proyecto todavía se está desarrollando lentamente.
-Descarga las versiones más recientes
-desde [Releases](https://github.com/Rosemoe/CodeEditor/releases)
+Descarga las versiones más recientes desde [Releases](https://github.com/Rosemoe/CodeEditor/releases)
 en lugar de clonar este repositorio directamente.
 **Los problemas y las solicitudes de extracción son bienvenidos.**
 
@@ -42,24 +40,21 @@ en lugar de clonar este repositorio directamente.
 
 ## Atajos de teclado
 
-Cuando trabaje con un teclado físico, puede usar combinaciones de teclas para realizar varias
-funciones de texto.
+Cuando trabaje con un teclado físico, puede usar combinaciones de teclas para realizar varias funciones de texto.
 comportamiento.
 El editor proporciona compatibilidad con algunas combinaciones de teclas de forma predeterminada.
 Sin embargo, puedes echarle un vistazo
 a [`KeyBindingEvent`](https://github.com/Rosemoe/sora-editor/blob/main/editor/src/main/java/io/github/rosemoe/sora/event/KeyBindingEvent.java)
-y agregar tus propias combinaciones de teclas. Incluso puede anular los enlaces de teclas
-predeterminados y realizar acciones personalizadas que usted necesite.
+y agregar tus propias combinaciones de teclas. Incluso puede anular los enlaces de teclas predeterminados y realizar acciones personalizadas que usted necesite.
 
-Las combinaciones de teclas admitidas actualmente son en su mayoría similares a Android
-Studio/Intellij IDEA.
+Las combinaciones de teclas admitidas actualmente son en su mayoría similares a Android Studio/Intellij IDEA.
 Consulte las [combinaciones de teclas admitidas](./keybindings.md).
 
 ## Capturas de pantalla
 
 <div style="overflow: hidden">
-<img src="https://raw.githubusercontent.com/Rosemoe/sora-editor/main/images/general.jpg" alt="GeneralAppearance" width="40%" align="bottom" />
-<img src="https://raw.githubusercontent.com/Rosemoe/sora-editor/main/images/problem_indicators.jpg" alt="ProblemIndicator" width="40%" align="bottom" />
+<img src="/images/general.jpg" alt="GeneralAppearance" width="40%" align="bottom" />
+<img src="/images/problem_indicators.jpg" alt="ProblemIndicator" width="40%" align="bottom" />
 </div>
 
 ## Para empezar
@@ -79,19 +74,15 @@ Modulos disponibles:
 Biblioteca de widgets que contiene todas las cosas básicas del marco
 
 **- editor-lsp**
-Una biblioteca conveniente para crear idiomas usando el Protocolo de Servidor de Lenguajes (también
-conocido como LSP)
+Una biblioteca conveniente para crear idiomas usando el Protocolo de Servidor de Lenguajes (también conocido como LSP)
 
 **- language-java**
 Una implementación simple para el resaltado de Java y el autocompletado de identificadores
 
 **- language-textmate**
-Un resaltador avanzado para el editor. Puede encontrar paquetes y temas de idiomas para compañeros
-de texto y cargar ellos usando este módulo. La implementación interna de textmate es
-de [tm4e](https://github.com/eclipse/tm4e).
+Un resaltador avanzado para el editor. Puede encontrar paquetes y temas de idiomas para compañeros de texto y cargar ellos usando este módulo. La implementación interna de textmate es de [tm4e](https://github.com/eclipse/tm4e).
 
-Compruebe la versión más reciente ingresando
-a [Releases](https://github.com/Rosemoe/CodeEditor/releases).
+Compruebe la versión más reciente ingresando a [Releases](https://github.com/Rosemoe/CodeEditor/releases).
 
 ## Comunidad
 
@@ -132,7 +123,6 @@ additional information or have any questions
 
 ## Agradecimientos
 
-Gracias a [JetBrains](https://www.jetbrains.com/?from=CodeEditor) por brindar licencia de código
-abierto gratuito
-para IDE como [IntelliJ IDEA](https://www.jetbrains.com/idea/?from=CodeEditor).   
-[<img src="https://raw.githubusercontent.com/Rosemoe/sora-editor/main/.github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)
+Gracias a [JetBrains](https://www.jetbrains.com/?from=CodeEditor) por brindar licencia de código abierto gratuito
+ para IDE como [IntelliJ IDEA](https://www.jetbrains.com/idea/?from=CodeEditor).   
+[<img src=".github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)

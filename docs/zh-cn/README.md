@@ -1,6 +1,6 @@
 <div align="center">
 
-![Banner](https://github.com/Rosemoe/sora-editor/raw/main/images/editor_banner.jpg)
+![Banner](/images/editor_banner.jpg)
 ----
 [![CI](https://github.com/Rosemoe/CodeEditor/actions/workflows/gradle.yml/badge.svg?event=push)](https://github.com/Rosemoe/CodeEditor/actions/workflows/gradle.yml)
 [![GitHub license](https://img.shields.io/github/license/Rosemoe/CodeEditor)](https://github.com/Rosemoe/CodeEditor/blob/main/LICENSE)
@@ -12,7 +12,7 @@ sora-editor是一款高效的安卓代码编辑器
 
 </div>
 
-阅读其他语言的文档: [English](/README.md), [简体中文](/zh-cn/README.md), [Español](/es/README.md).
+阅读其他语言的文档: [English](README.md), [简体中文](README.zh-cn.md), [Español](README.es.md).
 
 ***这个项目仍在缓慢开发中，欢迎提交问题和合并请求***
 
@@ -43,14 +43,13 @@ sora-editor是一款高效的安卓代码编辑器
 编辑器默认支持了一些快捷键，但是你可以订阅 [`KeyBindingEvent`](https://github.com/Rosemoe/sora-editor/blob/main/editor/src/main/java/io/github/rosemoe/sora/event/KeyBindingEvent.java)
 并处理它来实现自己的快捷键，当然也可以覆盖默认的快捷键操作并执行自定义操作。
 
-当前编辑器支持的快捷键大多与 Android Studio/Intellij IDEA
-的快捷键类似，可参见[支持的快捷键](./keybindings.md).
+当前编辑器支持的快捷键大多与 Android Studio/Intellij IDEA 的快捷键类似，可参见[支持的快捷键](./keybindings.md).
 
 ## 编辑器预览图
 
 <div style="overflow: hidden">
-<img src="https://raw.githubusercontent.com/Rosemoe/sora-editor/main/images/general.jpg" alt="GeneralAppearance" width="40%" align="bottom" />
-<img src="https://raw.githubusercontent.com/Rosemoe/sora-editor/main/images/problem_indicators.jpg" alt="ProblemIndicator" width="40%" align="bottom" />
+<img src="/images/general.jpg" alt="GeneralAppearance" width="40%" align="bottom" />
+<img src="/images/problem_indicators.jpg" alt="ProblemIndicator" width="40%" align="bottom" />
 </div>
 
 ## 快速使用
@@ -77,8 +76,7 @@ dependencies {
   内部实现来自[tm4e](https://github.com/eclipse/tm4e)。
 - language-treesitter   
   为编辑器提供[tree-sitter](https://tree-sitter.github.io/tree-sitter/)支持。tree-sitter可用于快速、增量地将代码转换
-  成抽象语法树，以便您向用户提供精确的高亮和自动补全功能。注意此模块仅提供了转换和高亮支持。感谢[android-tree-sitter](https://github.com/AndroidIDEOfficial/android-tree-sitter/)
-  项目提供的Java绑定库。
+  成抽象语法树，以便您向用户提供精确的高亮和自动补全功能。注意此模块仅提供了转换和高亮支持。感谢[android-tree-sitter](https://github.com/AndroidIDEOfficial/android-tree-sitter/)项目提供的Java绑定库。
 
 你可以从顶部的徽章或者[Releases](https://github.com/Rosemoe/CodeEditor/releases)找到最新的编辑器版本。
 
@@ -124,4 +122,4 @@ additional information or have any questions
 感谢[JetBrains](https://www.jetbrains.com/?from=CodeEditor)为本项目
 提供的[IntelliJ IDEA](https://www.jetbrains.com/idea/?from=CodeEditor)等IDE的免费许可证。
 
-[<img src="https://raw.githubusercontent.com/Rosemoe/sora-editor/main/.github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)
+[<img src=".github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)
