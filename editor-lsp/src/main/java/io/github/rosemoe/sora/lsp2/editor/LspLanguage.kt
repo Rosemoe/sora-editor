@@ -35,14 +35,22 @@ import io.github.rosemoe.sora.lang.completion.CompletionPublisher
 import io.github.rosemoe.sora.lang.completion.getCompletionItemComparator
 import io.github.rosemoe.sora.lang.format.Formatter
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler
+import io.github.rosemoe.sora.lsp.operations.document.DocumentChangeProvider
 import io.github.rosemoe.sora.lsp2.editor.completion.CompletionItemProvider
 import io.github.rosemoe.sora.lsp2.editor.completion.LspCompletionItem
 import io.github.rosemoe.sora.lsp2.editor.format.LspFormatter
+import io.github.rosemoe.sora.lsp2.events.EventType
+import io.github.rosemoe.sora.lsp2.events.completion.completion
+import io.github.rosemoe.sora.lsp2.events.document.DocumentChangeEvent
+import io.github.rosemoe.sora.lsp2.events.get
+import io.github.rosemoe.sora.lsp2.requests.Timeout
+import io.github.rosemoe.sora.lsp2.requests.Timeouts
 
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.util.MyCharacter
 import io.github.rosemoe.sora.widget.SymbolPairMatch
+import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import java.util.Arrays
 import java.util.concurrent.ExecutionException
@@ -90,54 +98,53 @@ class LspLanguage(var editor: LspEditor) : Language {
         /* *//* if (getEditor().hitTrigger(line)) {
             publisher.cancel();
             return;
-        }*//*
+        }*/
+
         val prefix = computePrefix(content, position)
         // Log.d("prefix", prefix);
         val prefixLength = prefix.length
-        editor!!.providerManager.safeUseProvider(
-            DocumentChangeProvider::class.java
-        ).ifPresent { documentChangeFeature: DocumentChangeProvider ->
-            val documentChangeFuture =
-                documentChangeFeature.future
-            if (!documentChangeFuture.isDone || !documentChangeFuture.isCompletedExceptionally || !documentChangeFuture.isCancelled) {
-                try {
-                    documentChangeFuture[1000, TimeUnit.MILLISECONDS]
-                } catch (ignored: ExecutionException) {
-                } catch (ignored: InterruptedException) {
-                } catch (ignored: TimeoutException) {
-                }
+
+        val documentChangeEvent =
+            editor.eventManager.getEventListener<DocumentChangeEvent>() ?: return
+
+        val documentChangeFuture =
+            documentChangeEvent.future
+
+        if (documentChangeFuture?.isDone == false || documentChangeFuture?.isCompletedExceptionally == false || documentChangeFuture?.isCancelled == false) {
+            runCatching {
+                documentChangeFuture[1000, TimeUnit.MILLISECONDS]
             }
+
         }
+
         val completionList = ArrayList<CompletionItem>()
-        try {
-            val completionFeature = editor!!.providerManager.useProvider(
-                CompletionProvider::class.java
-            )
-                ?: return
-            completionFeature.execute(position)
-                .thenAccept { completions: List<org.eclipse.lsp4j.CompletionItem?> ->
-                    completions.forEach(
-                        Consumer { completionItem: org.eclipse.lsp4j.CompletionItem? ->
-                            completionList.add(
-                                completionItemProvider.createCompletionItem(
-                                    completionItem,
-                                    editor!!.providerManager.useProvider(
-                                        ApplyEditsProvider::class.java
-                                    ),
-                                    prefixLength
-                                )
-                            )
-                        })
-                }.exceptionally { throwable: Throwable ->
-                    publisher.cancel()
-                    throw CompletionCancelledException(throwable.message)
-                }[Timeout.getTimeout(Timeouts.COMPLETION).toLong(), TimeUnit.MILLISECONDS]
-        } catch (e: Exception) {
-            throw LSPException(e)
-        }
+
+        val serverResultCompletionItems =
+            editor.coroutineScope.future {
+                val context = editor.eventManager.emitAsync(EventType.completion) {
+                    put("position", position)
+                }
+                return@future context.get<List<org.eclipse.lsp4j.CompletionItem>>("completion-items")
+            }
+
+        serverResultCompletionItems.thenAccept { completions ->
+            completions.forEach { completionItem: org.eclipse.lsp4j.CompletionItem ->
+                completionList.add(
+                    completionItemProvider.createCompletionItem(
+                        completionItem,
+                        editor.eventManager,
+                        prefixLength
+                    )
+                )
+            }
+        }.exceptionally { throwable: Throwable ->
+            publisher.cancel()
+            throw CompletionCancelledException(throwable.message)
+        }[Timeout[Timeouts.COMPLETION].toLong(), TimeUnit.MILLISECONDS]
+
         publisher.setComparator(getCompletionItemComparator(content, position, completionList))
         publisher.addItems(completionList)
-        publisher.updateList()*/
+        publisher.updateList()
     }
 
     fun computePrefix(text: ContentReference, position: CharPosition): String {

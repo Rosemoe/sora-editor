@@ -26,6 +26,8 @@ package io.github.rosemoe.sora.lsp2.editor
 
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lang.Language
+import io.github.rosemoe.sora.lsp.operations.document.DocumentOpenProvider
+import io.github.rosemoe.sora.lsp.operations.document.DocumentSaveProvider
 import io.github.rosemoe.sora.lsp2.client.languageserver.requestmanager.RequestManager
 import io.github.rosemoe.sora.lsp2.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp2.client.languageserver.wrapper.LanguageServerWrapper
@@ -34,6 +36,8 @@ import io.github.rosemoe.sora.lsp2.editor.signature.SignatureHelpWindow
 import io.github.rosemoe.sora.lsp2.events.EventType
 import io.github.rosemoe.sora.lsp2.events.diagnostics.publishDiagnostics
 import io.github.rosemoe.sora.lsp2.events.document.documentClose
+import io.github.rosemoe.sora.lsp2.events.document.documentOpen
+import io.github.rosemoe.sora.lsp2.events.document.documentSave
 import io.github.rosemoe.sora.lsp2.requests.Timeout
 import io.github.rosemoe.sora.lsp2.requests.Timeouts
 import io.github.rosemoe.sora.lsp2.utils.FileUri
@@ -46,6 +50,7 @@ import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeoutException
+import java.util.function.Consumer
 
 class LspEditor(
     val project: LspProject,
@@ -212,10 +217,25 @@ class LspEditor(
         }
     }
 
+    /**
+     * Notify the language server to open the document
+     */
+    suspend fun openDocument() {
+        eventManager.emit(EventType.documentOpen)
+    }
+
+
+    /**
+     * Notify language servers the document is saved
+     */
+    suspend fun saveDocument() {
+        eventManager.emit(EventType.documentSave)
+    }
+
+
     fun onDiagnosticsUpdate() {
         publishDiagnostics(diagnostics)
     }
-
 
     private fun publishDiagnostics(diagnostics: List<Diagnostic>) {
         eventManager.emit(EventType.publishDiagnostics, diagnostics)

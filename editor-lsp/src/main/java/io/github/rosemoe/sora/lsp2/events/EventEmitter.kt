@@ -24,10 +24,6 @@
 
 package io.github.rosemoe.sora.lsp2.events
 
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.future.await
-import java.util.concurrent.CompletableFuture
-
 class EventEmitter {
 
     private val listeners = HashMap<String, MutableList<EventListener>>()
@@ -38,6 +34,11 @@ class EventEmitter {
 
     fun removeListener(listener: EventListener) {
         listeners[listener.eventName]?.remove(listener)
+    }
+
+    fun <T : EventListener> getEventListener(clazz: Class<T>): T? {
+        return listeners.flatMap { it.value }
+            .find { it::class.java == clazz } as T?
     }
 
     fun <T : EventListener> removeListener(listenerClass: Class<T>) {
@@ -179,6 +180,14 @@ class EventContext {
 
 inline fun <reified T : Any> EventContext.getByClass(): T? {
     return getByClass(T::class.java)
+}
+
+inline fun <reified T : Any> EventContext.get(): T {
+    return get(T::class.java.name)
+}
+
+inline fun <reified T : EventListener> EventEmitter.getEventListener(): T? {
+    return getEventListener(T::class.java) as T?
 }
 
 object EventType

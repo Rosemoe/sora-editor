@@ -117,6 +117,14 @@ class LspEventManager(
     fun removeOption(option: Any) {
         options.remove(option)
     }
+
+    fun <T : EventListener> getEventListener(clazz: Class<T>): T? {
+        return eventEmitter.getEventListener(clazz)
+    }
+}
+
+inline fun <reified T : EventListener> LspEventManager.getEventListener(): T? {
+    return getEventListener(T::class.java)
 }
 
 inline fun <reified T> LspEventManager.getOption(): T? {

@@ -117,7 +117,8 @@ class LanguageServerWrapper(
 
     private val readyToConnect = HashSet<LspEditor>()
 
-    private val commonCoroutineScope = CoroutineScope(ForkJoinPool.commonPool().asCoroutineDispatcher())
+    private val commonCoroutineScope =
+        CoroutineScope(ForkJoinPool.commonPool().asCoroutineDispatcher())
 
     private lateinit var eventHandler: EventHandler
 
@@ -445,41 +446,32 @@ class LanguageServerWrapper(
             var textDocumentSyncKind =
                 if (syncOptions.isLeft) syncOptions.left else syncOptions.right
                     .change
+
             textDocumentSyncKind =
                 textDocumentSyncKind ?: TextDocumentSyncKind.Full
 
-            // editor.syncOptions = textDocumentSyncKind
+            editor.textDocumentSyncKind = textDocumentSyncKind
 
-            val completionTriggers =
-                if (capabilities.completionProvider != null
-                    && capabilities.completionProvider
-                        .triggerCharacters != null
-                ) capabilities.completionProvider
-                    .triggerCharacters else emptyList()
+            val completionTriggers = capabilities.completionProvider
+                ?.triggerCharacters ?: emptyList()
             val signatureHelpTriggers =
-                if (capabilities.signatureHelpProvider != null
-                    && capabilities.signatureHelpProvider
-                        .triggerCharacters != null
-                ) capabilities.signatureHelpProvider
-                    .triggerCharacters else emptyList()
-            val signatureHelpRetriggers =
-                if (capabilities.signatureHelpProvider != null
-                    && capabilities.signatureHelpProvider
-                        .retriggerCharacters != null
-                ) capabilities.signatureHelpProvider
-                    .retriggerCharacters else emptyList()
+                capabilities.signatureHelpProvider
+                    ?.triggerCharacters ?: emptyList()
+            val signatureHelpReTriggers = capabilities.signatureHelpProvider
+                ?.retriggerCharacters ?: emptyList()
 
-            /* editor.signatureHelpTriggers = signatureHelpTriggers
-             editor.signatureHelpRetriggers = signatureHelpRetriggers
-             editor.completionTriggers = completionTriggers
+            editor.signatureHelpTriggers = signatureHelpTriggers
+            editor.signatureHelpReTriggers = signatureHelpReTriggers
+            editor.completionTriggers = completionTriggers
 
-             editor.open()*/
+            editor.openDocument()
 
             for (ed in readyToConnect) {
                 connect(ed)
             }
 
         } catch (e: Exception) {
+
             Log.w(
                 TAG,
                 e
