@@ -48,7 +48,7 @@ interface ClientContext {
     fun getEditor(documentUri: FileUri): LspEditor?
 
     /**
-     * Returns the project path associated with the LanuageClient.
+     * Returns the project path associated with the LanguageClient.
      */
     val projectPath: FileUri
 

@@ -28,12 +28,18 @@ import io.github.rosemoe.sora.lsp2.client.languageserver.serverdefinition.Langua
 import io.github.rosemoe.sora.lsp2.client.languageserver.wrapper.LanguageServerWrapper
 import io.github.rosemoe.sora.lsp2.editor.diagnostics.DiagnosticsContainer
 import io.github.rosemoe.sora.lsp2.events.EventEmitter
+import io.github.rosemoe.sora.lsp2.events.EventListener
+import io.github.rosemoe.sora.lsp2.events.document.DocumentChangeEvent
+import io.github.rosemoe.sora.lsp2.events.signature.SignatureHelpEvent
 import io.github.rosemoe.sora.lsp2.utils.FileUri
 import io.github.rosemoe.sora.lsp2.utils.toFileUri
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.cancelChildren
 import java.util.concurrent.ForkJoinPool
+import java.util.function.Supplier
+import kotlin.reflect.KFunction0
 
 class LspProject(
     private val projectPath: String,
@@ -117,6 +123,7 @@ class LspProject(
         languageServerWrappers.forEach {
             it.value.stop(false)
         }
+        coroutineScope.coroutineContext.cancelChildren()
     }
 
     fun init() {
@@ -124,6 +131,12 @@ class LspProject(
     }
 
     private fun initEventEmitter() {
+        val events: List<KFunction0<EventListener>> = listOf(
+            ::SignatureHelpEvent, ::DocumentChangeEvent
+        )
 
+        events.forEach {
+            eventEmitter.addListener(it.invoke())
+        }
     }
 }

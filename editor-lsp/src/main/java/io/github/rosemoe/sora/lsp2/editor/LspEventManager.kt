@@ -109,3 +109,7 @@ class LspEventManager(
         options.remove(option)
     }
 }
+
+inline  fun <reified T> LspEventManager.getOption(): T? {
+    return getOption(T::class.java)
+}

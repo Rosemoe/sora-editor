@@ -28,6 +28,7 @@ import android.health.connect.datatypes.units.Length
 import android.util.Log
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
+import io.github.rosemoe.sora.lsp2.editor.LspEditor
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.TextRange
 import io.github.rosemoe.sora.util.ArrayList
@@ -53,10 +54,7 @@ private val versionMap = HashMap<FileUri, Int>()
 
 private var lock: ReentrantReadWriteLock? = null
 
-fun FileUri.createDidCloseTextDocumentParams(
-    languageId: String,
-    text: String
-): DidCloseTextDocumentParams {
+fun FileUri.createDidCloseTextDocumentParams(): DidCloseTextDocumentParams {
     val params = DidCloseTextDocumentParams()
     params.textDocument = this.createTextDocumentIdentifier()
     return params
@@ -75,10 +73,6 @@ fun FileUri.createDidChangeTextDocumentParams(
     params.contentChanges = events
     params.textDocument = VersionedTextDocumentIdentifier(this.toFileUri(), getVersion(this))
     return params
-}
-
-fun String.createTextDocumentContentChangeEvent(): TextDocumentContentChangeEvent {
-    return TextDocumentContentChangeEvent(this)
 }
 
 fun FileUri.createTextDocumentContentChangeEvent(
@@ -115,12 +109,12 @@ fun TextRange.toRange(): Range {
     return Range(this.start.toPosition(), this.end.toPosition())
 }
 
-fun FileUri.createDidOpenTextDocumentParams(
-    languageId: String,
-    text: String
+fun LspEditor.createDidOpenTextDocumentParams(
 ): DidOpenTextDocumentParams {
     val params = DidOpenTextDocumentParams()
-    params.textDocument = TextDocumentItem(this.toFileUri(), languageId, getVersion(this), text)
+    params.textDocument = TextDocumentItem(
+        this.uri.toFileUri(), this.fileExt, getVersion(this.uri), editorContent
+    )
     return params
 }
 
@@ -139,12 +133,11 @@ fun FileUri.createCompletionParams(
     return params
 }
 
-fun FileUri.createDidSaveTextDocumentParams(
-    text: String
-): DidSaveTextDocumentParams {
+
+fun LspEditor.createDidSaveTextDocumentParams(): DidSaveTextDocumentParams {
     val params = DidSaveTextDocumentParams()
-    params.textDocument = this.createTextDocumentIdentifier()
-    params.text = text
+    params.textDocument = uri.createTextDocumentIdentifier()
+    params.text = editorContent
     return params
 }
 

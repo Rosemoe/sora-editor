@@ -31,6 +31,7 @@ import io.github.rosemoe.sora.lsp2.events.EventListener
 import io.github.rosemoe.sora.lsp2.events.EventType
 import io.github.rosemoe.sora.lsp2.events.getByClass
 import io.github.rosemoe.sora.lsp2.utils.createDidChangeTextDocumentParams
+import io.github.rosemoe.sora.lsp2.utils.createDidOpenTextDocumentParams
 import io.github.rosemoe.sora.lsp2.utils.createRange
 import io.github.rosemoe.sora.lsp2.utils.createTextDocumentContentChangeEvent
 import kotlinx.coroutines.future.await
@@ -41,20 +42,19 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ForkJoinPool
 import java.util.function.Consumer
 
-class DocumentChangeEvent : EventListener {
-    override val eventName = "textDocument/didChange"
+class DocumentOpenEvent : EventListener {
+    override val eventName = "textDocument/didOpen"
 
     var future: CompletableFuture<Void>? = null
 
     override suspend fun handle(context: EventContext): EventContext {
         val editor = context.get<LspEditor>("lsp-editor")
-        val event = context.getByClass<ContentChangeEvent>() ?: return context
 
-        val params = createDidChangeTextDocumentParams(editor, event)
+        val params = editor.createDidOpenTextDocumentParams()
 
         editor.requestManager?.let { requestManager ->
             future = CompletableFuture.runAsync {
-                requestManager.didChange(
+                requestManager.didOpen(
                     params
                 )
             }?.apply {
@@ -70,45 +70,7 @@ class DocumentChangeEvent : EventListener {
         future = null;
     }
 
-    private fun createFullTextDocumentContentChangeEvent(editor: LspEditor): List<TextDocumentContentChangeEvent> {
-        return listOf(
-            editor.uri.createTextDocumentContentChangeEvent(editor.editorContent)
-        )
-    }
-
-    private fun createIncrementTextDocumentContentChangeEvent(
-        editor: LspEditor,
-        data: ContentChangeEvent
-    ): List<TextDocumentContentChangeEvent> {
-        val text = data.changedText.toString()
-        return listOf(
-            editor.uri.createTextDocumentContentChangeEvent(
-                createRange(
-                    data.changeStart,
-                    data.changeEnd
-                ),
-                if (data.action == ContentChangeEvent.ACTION_DELETE) text.length else 0,
-                if (data.action == ContentChangeEvent.ACTION_DELETE) "" else text
-            )
-        )
-    }
-
-
-    private fun createDidChangeTextDocumentParams(
-        editor: LspEditor,
-        data: ContentChangeEvent
-    ): DidChangeTextDocumentParams {
-        val kind = editor.textDocumentSyncKind
-        val isFullSync = kind == TextDocumentSyncKind.None || kind == TextDocumentSyncKind.Full
-
-        return editor.uri.createDidChangeTextDocumentParams(
-            if (isFullSync) createFullTextDocumentContentChangeEvent(editor) else createIncrementTextDocumentContentChangeEvent(
-                editor,
-                data
-            )
-        )
-    }
 }
 
-val EventType.documentChangeEvent: String
-    get() = "textDocument/didChange"
+val EventType.documentOpenEvent: String
+    get() = "textDocument/didOpen"

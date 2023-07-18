@@ -25,16 +25,19 @@
 package io.github.rosemoe.sora.lsp2.editor
 
 import androidx.annotation.WorkerThread
+import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lang.Language
-import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEventReceiver
-import io.github.rosemoe.sora.lsp.requests.Timeout
-import io.github.rosemoe.sora.lsp.requests.Timeouts
+import io.github.rosemoe.sora.lsp2.editor.event.LspEditorContentChangeEventReceiver
+import io.github.rosemoe.sora.lsp2.requests.Timeout
+import io.github.rosemoe.sora.lsp2.requests.Timeouts
 import io.github.rosemoe.sora.lsp2.client.languageserver.requestmanager.RequestManager
 import io.github.rosemoe.sora.lsp2.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp2.client.languageserver.wrapper.LanguageServerWrapper
 import io.github.rosemoe.sora.lsp2.editor.signature.SignatureHelpWindow
 import io.github.rosemoe.sora.lsp2.utils.FileUri
+import io.github.rosemoe.sora.lsp2.utils.clearVersions
 import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.subscribeEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -58,7 +61,7 @@ class LspEditor(
     private var signatureHelpWindowWeakReference: WeakReference<SignatureHelpWindow?> =
         WeakReference(null)
 
-    private val editorContentChangeEventReceiver: LspEditorContentChangeEventReceiver? = null
+    private lateinit var editorContentChangeEventReceiver: LspEditorContentChangeEventReceiver
 
     private val currentLanguage: LspLanguage? = null
 
@@ -93,13 +96,16 @@ class LspEditor(
 
             //editor.setEditorLanguage(currentLanguage)
             signatureHelpWindowWeakReference = WeakReference(SignatureHelpWindow(currentEditor))
-            /*
-                        val subscriptionReceipt =
-                            editor.subscribeEvent<ContentChangeEvent>(
-                               editorContentChangeEventReceiver
-                            )
 
-                        unsubscribeFunction = Runnable { subscriptionReceipt.unsubscribe() }*/
+
+            editorContentChangeEventReceiver = LspEditorContentChangeEventReceiver(this)
+
+            val subscriptionReceipt =
+                editor?.subscribeEvent<ContentChangeEvent>(
+                    editorContentChangeEventReceiver
+                )
+
+            unsubscribeFunction = Runnable { subscriptionReceipt?.unsubscribe() }
         }
         get() {
             return _currentEditor.get()
@@ -172,7 +178,7 @@ class LspEditor(
     @Throws(InterruptedException::class, TimeoutException::class)
     suspend fun connectWithTimeout() {
         var start = System.currentTimeMillis()
-        val retryTime = Timeout.getTimeout(Timeouts.INIT)
+        val retryTime = Timeout[Timeouts.INIT]
         val maxRetryTime = start + retryTime
         var isConnected = false
         while (start <= maxRetryTime) {
@@ -249,6 +255,9 @@ class LspEditor(
         disconnect()
         unsubscribeFunction?.run()
         _currentEditor.clear()
+        clearVersions {
+            it == this.uri
+        }
         isClose = true
     }
 }
