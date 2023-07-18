@@ -22,66 +22,83 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lsp2.events.signature
+package io.github.rosemoe.sora.lsp2.events.completion
 
-import android.util.Log
-import io.github.rosemoe.sora.lsp2.requests.Timeout
-import io.github.rosemoe.sora.lsp2.requests.Timeouts
+import io.github.rosemoe.sora.lsp.utils.LspUtils.createCompletionParams
 import io.github.rosemoe.sora.lsp2.editor.LspEditor
 import io.github.rosemoe.sora.lsp2.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp2.events.EventContext
 import io.github.rosemoe.sora.lsp2.events.EventListener
 import io.github.rosemoe.sora.lsp2.events.EventType
 import io.github.rosemoe.sora.lsp2.events.getByClass
-import io.github.rosemoe.sora.lsp2.utils.createTextDocumentIdentifier
 import io.github.rosemoe.sora.lsp2.utils.asLspPosition
+import io.github.rosemoe.sora.lsp2.utils.createCompletionParams
 import io.github.rosemoe.sora.text.CharPosition
+import io.github.rosemoe.sora.util.Logger
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.withTimeout
-import org.eclipse.lsp4j.SignatureHelpParams
+import org.eclipse.lsp4j.CompletionContext
+import org.eclipse.lsp4j.CompletionItem
+import org.eclipse.lsp4j.CompletionList
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 import java.util.concurrent.CompletableFuture
+import java.util.function.Function
 
-class SignatureHelpEvent : AsyncEventListener() {
-    override val eventName: String = "textDocument/signatureHelp"
 
-    var future: CompletableFuture<Void>? = null
+class CompletionEvent : AsyncEventListener() {
+    override val eventName: String = "textDocument/completion"
 
-    override val isAsync = true
+    private var future: CompletableFuture<List<CompletionItem>>? = null
 
     override suspend fun handleAsync(context: EventContext) {
+        future?.cancel(true)
+        future = null
+
         val editor = context.get<LspEditor>("lsp-editor")
         val position = context.getByClass<CharPosition>() ?: return
 
         val requestManager = editor.requestManager ?: return
 
-        val signatureHelpParams = SignatureHelpParams(
-            editor.uri.createTextDocumentIdentifier(),
-            position.asLspPosition()
-        )
+        val future = requestManager
+            .completion(
+                editor.uri.createCompletionParams(
+                    position.asLspPosition(),
+                    CompletionContext().apply {
+                        triggerCharacter = null
+                    }
+                )
+            )?.thenApply {
+                if (it == null) {
+                    return@thenApply emptyList<CompletionItem>()
+                }
+                if (it.isLeft) {
+                    return@thenApply it.left
+                }
+                if (it.isRight) {
+                    return@thenApply it.right.items
+                }
+                emptyList()
+            } ?: CompletableFuture.completedFuture(emptyList())
 
-        val future = requestManager.signatureHelp(signatureHelpParams) ?: return
-
-        this.future = future.thenAccept { }
+        this.future = future
 
         try {
-            withTimeout(Timeout[Timeouts.SIGNATURE].toLong()) {
-                val signatureHelp =
-                    future.await()
-                editor.showSignatureHelp(signatureHelp)
+            context.put("completion-items", future.await())
+        } catch (e: Exception) {
+            if (e !is TimeoutCancellationException) {
+                Logger.instance(this.javaClass.name)
+                    .e("Request completion failed", e)
             }
-        } catch (exception: Exception) {
-            // throw?
-            exception.printStackTrace()
-            Log.e("LSP client", "show signatureHelp timeout", exception)
+
         }
     }
 
     override fun dispose() {
-        future?.cancel(true);
-        future = null;
+        future?.cancel(true)
+        future = null
     }
 
 }
 
-val EventType.signatureHelp: String
-    get() = "textDocument/signatureHelp"
+val EventType.completionEvent: String
+    get() = "textDocument/completion"

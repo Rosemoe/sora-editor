@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lsp2.events.document
 
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lsp2.editor.LspEditor
+import io.github.rosemoe.sora.lsp2.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp2.events.EventContext
 import io.github.rosemoe.sora.lsp2.events.EventListener
 import io.github.rosemoe.sora.lsp2.events.EventType
@@ -41,14 +42,14 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ForkJoinPool
 import java.util.function.Consumer
 
-class DocumentChangeEvent : EventListener {
+class DocumentChangeEvent : AsyncEventListener() {
     override val eventName = "textDocument/didChange"
 
     var future: CompletableFuture<Void>? = null
 
-    override suspend fun handle(context: EventContext): EventContext {
+    override suspend fun handleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")
-        val event = context.getByClass<ContentChangeEvent>() ?: return context
+        val event = context.getByClass<ContentChangeEvent>() ?: return
 
         val params = createDidChangeTextDocumentParams(editor, event)
 
@@ -61,8 +62,6 @@ class DocumentChangeEvent : EventListener {
                 await()
             }
         }
-
-        return context
     }
 
     override fun dispose() {

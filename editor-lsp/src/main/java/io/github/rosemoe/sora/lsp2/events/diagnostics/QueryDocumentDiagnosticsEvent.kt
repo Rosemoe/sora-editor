@@ -22,46 +22,55 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lsp2.events.document
+package io.github.rosemoe.sora.lsp2.events.diagnostics
 
-import io.github.rosemoe.sora.event.ContentChangeEvent
+import io.github.rosemoe.sora.lsp.utils.LspUtils
 import io.github.rosemoe.sora.lsp2.editor.LspEditor
 import io.github.rosemoe.sora.lsp2.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp2.events.EventContext
-import io.github.rosemoe.sora.lsp2.events.EventListener
 import io.github.rosemoe.sora.lsp2.events.EventType
-import io.github.rosemoe.sora.lsp2.events.getByClass
-import io.github.rosemoe.sora.lsp2.utils.createDidChangeTextDocumentParams
-import io.github.rosemoe.sora.lsp2.utils.createDidOpenTextDocumentParams
-import io.github.rosemoe.sora.lsp2.utils.createRange
-import io.github.rosemoe.sora.lsp2.utils.createTextDocumentContentChangeEvent
+import io.github.rosemoe.sora.lsp2.utils.createDocumentDiagnosticParams
 import kotlinx.coroutines.future.await
-import org.eclipse.lsp4j.DidChangeTextDocumentParams
-import org.eclipse.lsp4j.TextDocumentContentChangeEvent
-import org.eclipse.lsp4j.TextDocumentSyncKind
+import org.eclipse.lsp4j.DocumentDiagnosticReport
+import org.eclipse.lsp4j.FullDocumentDiagnosticReport
+import org.eclipse.lsp4j.UnchangedDocumentDiagnosticReport
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ForkJoinPool
-import java.util.function.Consumer
+import java.util.function.Function
 
-class DocumentOpenEvent : AsyncEventListener() {
-    override val eventName = "textDocument/didOpen"
+
+class QueryDocumentDiagnosticsEvent : AsyncEventListener() {
+    override val eventName = "textDocument/diagnostics"
 
     var future: CompletableFuture<Void>? = null
 
     override suspend fun handleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")
 
-        val params = editor.createDidOpenTextDocumentParams()
+        val requestManager = editor.requestManager ?: return
 
-        editor.requestManager?.let { requestManager ->
-            future = CompletableFuture.runAsync {
-                requestManager.didOpen(
-                    params
-                )
-            }?.apply {
-                await()
+        val future = requestManager
+            .diagnostic(
+                editor.uri.createDocumentDiagnosticParams()
+            )
+            .thenApply { either: DocumentDiagnosticReport ->
+                if (either.isRelatedFullDocumentDiagnosticReport)
+                    either.relatedFullDocumentDiagnosticReport
+                        .relatedDocuments
+                else
+                    either.relatedUnchangedDocumentDiagnosticReport
+                        .relatedDocuments
             }
+
+        this.future = future.thenAccept { }
+
+        val result = future.await()
+
+        if (result.isEmpty()) {
+            return
         }
+
+        context.put("diagnostics", result)
     }
 
     override fun dispose() {
@@ -69,7 +78,8 @@ class DocumentOpenEvent : AsyncEventListener() {
         future = null;
     }
 
+
 }
 
-val EventType.documentOpenEvent: String
-    get() = "textDocument/didOpen"
+val EventType.queryDocumentDiagnosticsEvent: String
+    get() = "textDocument/diagnostics"

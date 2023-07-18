@@ -64,7 +64,7 @@ class LspEventManager(
         eventEmitter.removeListener(eventClass)
     }
 
-    suspend fun emit(eventName: String, vararg args: Any): EventContext {
+    private fun createEventContext(vararg args: Array<out Any>): EventContext {
         val eventContext = EventContext()
 
         eventContext.put("lsp-editor", editor)
@@ -74,18 +74,27 @@ class LspEventManager(
             eventContext.put("arg$i", args[i])
         }
 
+        return eventContext
+    }
+
+    fun emit(eventName: String, vararg args: Any): EventContext {
+        return eventEmitter.emit(eventName, createEventContext(args))
+    }
+
+    suspend fun emitAsync(eventName: String, vararg args: Any): EventContext {
+        return eventEmitter.emitAsync(eventName, createEventContext(args))
+    }
+
+    fun emit(eventName: String, block: EventContext.() -> Unit): EventContext {
+        val eventContext = createEventContext()
+        eventContext.block()
         return eventEmitter.emit(eventName, eventContext)
     }
 
-    suspend fun emit(eventName: String,block: EventContext.() -> Unit): EventContext {
-        val eventContext = EventContext()
-
-        eventContext.put("lsp-editor", editor)
-        eventContext.put("lsp-project", project)
-
+    suspend fun emitAsync(eventName: String, block: EventContext.() -> Unit): EventContext {
+        val eventContext = createEventContext()
         eventContext.block()
-
-        return eventEmitter.emit(eventName, eventContext)
+        return eventEmitter.emitAsync(eventName, eventContext)
     }
 
     /**
@@ -110,6 +119,6 @@ class LspEventManager(
     }
 }
 
-inline  fun <reified T> LspEventManager.getOption(): T? {
+inline fun <reified T> LspEventManager.getOption(): T? {
     return getOption(T::class.java)
 }

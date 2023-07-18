@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lsp2.events.document
 
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lsp2.editor.LspEditor
+import io.github.rosemoe.sora.lsp2.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp2.events.EventContext
 import io.github.rosemoe.sora.lsp2.events.EventListener
 import io.github.rosemoe.sora.lsp2.events.EventType
@@ -42,12 +43,12 @@ import org.eclipse.lsp4j.TextDocumentSyncKind
 import java.util.concurrent.CompletableFuture
 
 
-class DocumentCloseEvent : EventListener {
+class DocumentCloseEvent : AsyncEventListener() {
     override val eventName = "textDocument/didClose"
 
     var future: CompletableFuture<Void>? = null
 
-    override suspend fun handle(context: EventContext): EventContext {
+    override suspend fun handleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")
 
         val params = editor.uri.createDidCloseTextDocumentParams()
@@ -61,8 +62,6 @@ class DocumentCloseEvent : EventListener {
                 await()
             }
         }
-
-        return context
     }
 
     override fun dispose() {

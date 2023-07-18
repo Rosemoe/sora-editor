@@ -29,7 +29,16 @@ import io.github.rosemoe.sora.lsp2.client.languageserver.wrapper.LanguageServerW
 import io.github.rosemoe.sora.lsp2.editor.diagnostics.DiagnosticsContainer
 import io.github.rosemoe.sora.lsp2.events.EventEmitter
 import io.github.rosemoe.sora.lsp2.events.EventListener
+import io.github.rosemoe.sora.lsp2.events.completion.CompletionEvent
+import io.github.rosemoe.sora.lsp2.events.diagnostics.PublishDiagnosticsEvent
+import io.github.rosemoe.sora.lsp2.events.diagnostics.QueryDocumentDiagnosticsEvent
+import io.github.rosemoe.sora.lsp2.events.document.ApplyEditsEvent
 import io.github.rosemoe.sora.lsp2.events.document.DocumentChangeEvent
+import io.github.rosemoe.sora.lsp2.events.document.DocumentCloseEvent
+import io.github.rosemoe.sora.lsp2.events.document.DocumentOpenEvent
+import io.github.rosemoe.sora.lsp2.events.document.DocumentSaveEvent
+import io.github.rosemoe.sora.lsp2.events.format.FullFormattingEvent
+import io.github.rosemoe.sora.lsp2.events.format.RangeFormattingEvent
 import io.github.rosemoe.sora.lsp2.events.signature.SignatureHelpEvent
 import io.github.rosemoe.sora.lsp2.utils.FileUri
 import io.github.rosemoe.sora.lsp2.utils.toFileUri
@@ -132,7 +141,12 @@ class LspProject(
 
     private fun initEventEmitter() {
         val events: List<KFunction0<EventListener>> = listOf(
-            ::SignatureHelpEvent, ::DocumentChangeEvent
+            ::SignatureHelpEvent, ::DocumentChangeEvent,
+            ::DocumentCloseEvent, ::DocumentSaveEvent,
+            ::ApplyEditsEvent, ::CompletionEvent,
+            ::PublishDiagnosticsEvent, ::FullFormattingEvent,
+            ::RangeFormattingEvent, ::QueryDocumentDiagnosticsEvent,
+            ::DocumentOpenEvent
         )
 
         events.forEach {

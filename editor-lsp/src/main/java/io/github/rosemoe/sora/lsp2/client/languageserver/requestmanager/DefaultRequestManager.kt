@@ -103,9 +103,6 @@ import java.util.concurrent.CompletableFuture
 /**
  * Default implementation for LSP requests/notifications handling.
  */
-//TODO: Some features are not directly supported in the sora-editor
-// (e.g. viewing method signatures),
-// consider to remove them or abstract additional classes for the caller to provide support
 class DefaultRequestManager(
     val wrapper: LanguageServerWrapper, val server: LanguageServer, val client: LanguageClient,
     val serverCapabilities: ServerCapabilities
@@ -281,7 +278,7 @@ class DefaultRequestManager(
     override fun didOpen(params: DidOpenTextDocumentParams) {
         if (checkStatus()) {
             try {
-                if (textDocumentOptions == null || textDocumentOptions.openClose) {
+                if (textDocumentOptions?.openClose == true) {
                     textDocumentService.didOpen(params)
                 }
             } catch (e: Exception) {
@@ -293,7 +290,7 @@ class DefaultRequestManager(
     override fun didChange(params: DidChangeTextDocumentParams) {
         if (checkStatus()) {
             try {
-                if (textDocumentOptions == null || textDocumentOptions.change != null) {
+                if (textDocumentOptions?.change != null) {
                     textDocumentService.didChange(params)
                 }
             } catch (e: Exception) {
@@ -305,10 +302,7 @@ class DefaultRequestManager(
     override fun willSave(params: WillSaveTextDocumentParams) {
         if (checkStatus()) {
             try {
-                if (Optional.ofNullable(textDocumentOptions)
-                        .map { x: TextDocumentSyncOptions -> x.willSave }
-                        .orElse(false)
-                ) {
+                if (textDocumentOptions?.willSave == true) {
                     textDocumentService.willSave(params)
                 }
             } catch (e: Exception) {
@@ -320,10 +314,9 @@ class DefaultRequestManager(
     override fun willSaveWaitUntil(params: WillSaveTextDocumentParams): CompletableFuture<List<TextEdit>>? {
         return if (checkStatus()) {
             try {
-                if (Optional.ofNullable(textDocumentOptions)
-                        .map { obj: TextDocumentSyncOptions -> obj.willSaveWaitUntil }
-                        .orElse(false)
-                ) textDocumentService.willSaveWaitUntil(params) else null
+                if (textDocumentOptions?.willSaveWaitUntil == true) textDocumentService.willSaveWaitUntil(
+                    params
+                ) else null
             } catch (e: Exception) {
                 crashed(e)
                 null
@@ -334,9 +327,7 @@ class DefaultRequestManager(
     override fun didSave(params: DidSaveTextDocumentParams) {
         if (checkStatus()) {
             try {
-                if (Optional.ofNullable(textDocumentOptions)
-                        .map { x: TextDocumentSyncOptions -> x.save }.isPresent
-                ) {
+                if (textDocumentOptions?.save != null) {
                     textDocumentService.didSave(params)
                 }
             } catch (e: Exception) {
@@ -348,10 +339,7 @@ class DefaultRequestManager(
     override fun didClose(params: DidCloseTextDocumentParams) {
         if (checkStatus()) {
             try {
-                if (Optional.ofNullable(textDocumentOptions)
-                        .map { x: TextDocumentSyncOptions -> x.openClose }
-                        .orElse(false)
-                ) {
+                if (textDocumentOptions?.openClose == true) {
                     textDocumentService.didClose(params)
                 }
             } catch (e: Exception) {
@@ -376,9 +364,9 @@ class DefaultRequestManager(
     override fun resolveCompletionItem(unresolved: CompletionItem): CompletableFuture<CompletionItem>? {
         return if (checkStatus()) {
             try {
-                if (Optional.ofNullable(serverCapabilities.completionProvider)
-                        .map { x: CompletionOptions -> x.resolveProvider }.orElse(false)
-                ) textDocumentService.resolveCompletionItem(unresolved) else null
+                if (serverCapabilities.completionProvider.resolveProvider == true) textDocumentService.resolveCompletionItem(
+                    unresolved
+                ) else null
             } catch (e: Exception) {
                 crashed(e)
                 null

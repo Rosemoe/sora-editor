@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lsp2.events.format
 
 import io.github.rosemoe.sora.lsp2.editor.LspEditor
 import io.github.rosemoe.sora.lsp2.editor.getOption
+import io.github.rosemoe.sora.lsp2.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp2.events.EventContext
 import io.github.rosemoe.sora.lsp2.events.EventListener
 import io.github.rosemoe.sora.lsp2.events.EventType
@@ -42,15 +43,15 @@ import org.eclipse.lsp4j.DocumentFormattingParams
 import org.eclipse.lsp4j.FormattingOptions
 
 
-class FullFormattingEvent : EventListener {
+class FullFormattingEvent : AsyncEventListener() {
     override val eventName = "textDocument/formatting"
 
-    override suspend fun handle(context: EventContext): EventContext {
+    override suspend fun handleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")
 
-        val content = context.getByClass<Content>() ?: return context
+        val content = context.getByClass<Content>() ?: return
 
-        val requestManager = editor.requestManager ?: return context
+        val requestManager = editor.requestManager ?: return
 
         val formattingParams = DocumentFormattingParams()
 
@@ -59,7 +60,7 @@ class FullFormattingEvent : EventListener {
         formattingParams.textDocument =
             editor.uri.createTextDocumentIdentifier()
 
-        val formattingFuture = requestManager.formatting(formattingParams) ?: return context
+        val formattingFuture = requestManager.formatting(formattingParams) ?: return
 
         try {
             withTimeout(Timeout[Timeouts.FORMATTING].toLong()) {
@@ -74,8 +75,6 @@ class FullFormattingEvent : EventListener {
         } catch (exception: Exception) {
             throw LSPException("Formatting code timeout", exception)
         }
-
-        return context
     }
 
 }

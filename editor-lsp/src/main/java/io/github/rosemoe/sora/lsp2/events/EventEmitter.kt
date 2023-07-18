@@ -24,6 +24,10 @@
 
 package io.github.rosemoe.sora.lsp2.events
 
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.future.await
+import java.util.concurrent.CompletableFuture
+
 class EventEmitter {
 
     private val listeners = HashMap<String, MutableList<EventListener>>()
@@ -47,23 +51,42 @@ class EventEmitter {
         }
     }
 
-    suspend fun emit(event: String, context: EventContext): EventContext {
+    fun emit(event: String, context: EventContext): EventContext {
         listeners[event]?.forEach {
             it.handle(context)
         }
         return context
     }
 
-    suspend fun emit(event: String): EventContext {
+    suspend fun emitAsync(event: String, context: EventContext): EventContext {
+        listeners[event]?.forEach {
+            it.handleAsync(context)
+        }
+        return context
+    }
+
+    fun emit(event: String): EventContext {
         return emit(event, EventContext())
     }
 
-    suspend fun emit(event: String, vararg args: Any): EventContext {
+    suspend fun emitAsync(event: String): EventContext {
+        return emitAsync(event, EventContext())
+    }
+
+    fun emit(event: String, vararg args: Any): EventContext {
         val context = EventContext()
         for (i in args) {
             context.put(i::class.java.name, i)
         }
         return emit(event, context)
+    }
+
+    suspend fun emitAsync(event: String, vararg args: Any): EventContext {
+        val context = EventContext()
+        for (i in args) {
+            context.put(i::class.java.name, i)
+        }
+        return emitAsync(event, context)
     }
 
     fun clear(dispose: Boolean = false) {
@@ -82,9 +105,29 @@ interface EventListener {
 
     val eventName: String
 
-    suspend fun handle(context: EventContext): EventContext
+    val isAsync: Boolean
+        get() = false
+
+    fun handle(context: EventContext)
+
+    suspend fun handleAsync(context: EventContext) {
+        handle(context)
+    }
 
     fun dispose() {}
+}
+
+abstract class AsyncEventListener : EventListener {
+
+    override val isAsync = true
+
+    override fun handle(context: EventContext) {
+        throw IllegalStateException("This listener is async, please use handleAsync instead")
+    }
+
+    override suspend fun handleAsync(context: EventContext) {
+        super.handleAsync(context)
+    }
 }
 
 class EventContext {
@@ -123,6 +166,11 @@ class EventContext {
         return null
     }
 
+    operator fun plus(context: EventContext): EventContext {
+        data.putAll(context.data)
+        return this
+    }
+
     fun clear() {
         data.clear()
     }
@@ -130,7 +178,7 @@ class EventContext {
 }
 
 inline fun <reified T : Any> EventContext.getByClass(): T? {
-   return getByClass(T::class.java)
+    return getByClass(T::class.java)
 }
 
-object EventType {}
+object EventType

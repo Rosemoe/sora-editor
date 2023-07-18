@@ -24,9 +24,9 @@
 
 package io.github.rosemoe.sora.lsp2.events.format
 
-import io.github.rosemoe.sora.lsp.utils.LspUtils
 import io.github.rosemoe.sora.lsp2.editor.LspEditor
 import io.github.rosemoe.sora.lsp2.editor.getOption
+import io.github.rosemoe.sora.lsp2.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp2.events.EventContext
 import io.github.rosemoe.sora.lsp2.events.EventListener
 import io.github.rosemoe.sora.lsp2.events.EventType
@@ -36,28 +36,25 @@ import io.github.rosemoe.sora.lsp2.requests.Timeout
 import io.github.rosemoe.sora.lsp2.requests.Timeouts
 import io.github.rosemoe.sora.lsp2.utils.LSPException
 import io.github.rosemoe.sora.lsp2.utils.createTextDocumentIdentifier
-import io.github.rosemoe.sora.lsp2.utils.toRange
+import io.github.rosemoe.sora.lsp2.utils.asLspRange
 import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.text.TextRange
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withTimeout
-import org.eclipse.lsp4j.DocumentFormattingParams
 import org.eclipse.lsp4j.DocumentRangeFormattingParams
 import org.eclipse.lsp4j.FormattingOptions
-import org.eclipse.lsp4j.TextEdit
-import java.util.concurrent.CompletableFuture
 
 
-class RangeFormattingEvent : EventListener {
+class RangeFormattingEvent : AsyncEventListener() {
     override val eventName = "textDocument/rangeFormatting"
 
-    override suspend fun handle(context: EventContext): EventContext {
+    override suspend fun handleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")
 
         val textRange = context.get<TextRange>("range")
-        val content = context.getByClass<Content>() ?: return context
+        val content = context.getByClass<Content>() ?: return
 
-        val requestManager = editor.requestManager ?: return context
+        val requestManager = editor.requestManager ?: return
 
         val formattingParams = DocumentRangeFormattingParams()
 
@@ -67,9 +64,9 @@ class RangeFormattingEvent : EventListener {
             editor.uri.createTextDocumentIdentifier()
 
 
-        formattingParams.range = textRange.toRange()
+        formattingParams.range = textRange.asLspRange()
 
-        val formattingFuture = requestManager.rangeFormatting(formattingParams) ?: return context
+        val formattingFuture = requestManager.rangeFormatting(formattingParams) ?: return
 
         try {
             withTimeout(Timeout[Timeouts.FORMATTING].toLong()) {
@@ -84,8 +81,6 @@ class RangeFormattingEvent : EventListener {
         } catch (exception: Exception) {
             throw LSPException("Formatting code timeout", exception)
         }
-
-        return context
     }
 
 }

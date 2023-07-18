@@ -22,48 +22,42 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lsp2.events.document
+package io.github.rosemoe.sora.lsp2.events.diagnostics
 
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
+import io.github.rosemoe.sora.lsp.utils.LspUtils
+import io.github.rosemoe.sora.lsp2.editor.LspEditor
 import io.github.rosemoe.sora.lsp2.events.EventContext
 import io.github.rosemoe.sora.lsp2.events.EventListener
 import io.github.rosemoe.sora.lsp2.events.EventType
-import io.github.rosemoe.sora.lsp2.events.getByClass
-import io.github.rosemoe.sora.text.Content
-import io.github.rosemoe.sora.util.Logger
-import org.eclipse.lsp4j.TextEdit
+import io.github.rosemoe.sora.lsp2.utils.transformToEditorDiagnostics
+import org.eclipse.lsp4j.Diagnostic
+import java.util.concurrent.CompletableFuture
 
 
-class ApplyEditsEvent : EventListener {
-    override val eventName: String = "textDocument/applyEdits"
+class PublishDiagnosticsEvent : EventListener {
+    override val eventName: String = "editor/publishDiagnostics"
 
     override fun handle(context: EventContext) {
-        val editList: List<TextEdit> = context.get("edits")
-        val content = context.getByClass<Content>() ?: return
 
-        editList.forEach { textEdit: TextEdit ->
-            val range = textEdit.range
-            val text = textEdit.newText
-            var startIndex =
-                content.getCharIndex(range.start.line, range.start.character)
-            var endIndex =
-                content.getCharIndex(range.end.line, range.end.character)
-            if (endIndex < startIndex) {
-                Logger.instance(this.javaClass.name)
-                    .w(
-                        "Invalid location information found applying edits from %s to %s",
-                        range.start,
-                        range.end
-                    )
-                val diff = startIndex - endIndex
-                endIndex = startIndex
-                startIndex = endIndex - diff
-            }
-            content.replace(startIndex, endIndex, text)
-        }
+        val lspEditor = context.get<LspEditor>("lsp-editor")
+        val originEditor = lspEditor.editor ?: return
+        val data = context.get<List<Diagnostic>>("data")
+
+        val diagnosticsContainer =
+            originEditor.diagnostics ?: DiagnosticsContainer()
+
+        diagnosticsContainer.reset()
+
+        diagnosticsContainer.addDiagnostics(
+            data.transformToEditorDiagnostics(originEditor)
+        )
+
+        originEditor.diagnostics = diagnosticsContainer
     }
 
 
 }
 
-val EventType.applyEdits: String
-    get() = "textDocument/applyEdits"
+val EventType.publishDiagnostics: String
+    get() = "editor/publishDiagnostics"

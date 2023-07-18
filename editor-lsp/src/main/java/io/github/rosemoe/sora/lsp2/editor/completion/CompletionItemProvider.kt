@@ -25,11 +25,13 @@ package io.github.rosemoe.sora.lsp2.editor.completion
 
 import io.github.rosemoe.sora.lang.completion.CompletionItem
 import io.github.rosemoe.sora.lsp.operations.document.ApplyEditsProvider
+import io.github.rosemoe.sora.lsp2.editor.LspEventManager
+import io.github.rosemoe.sora.lsp2.events.document.ApplyEditsEvent
 
 fun interface CompletionItemProvider<T : CompletionItem> {
     fun createCompletionItem(
         completionItem: org.eclipse.lsp4j.CompletionItem,
-       /* applyEditsFeature: ApplyEditsProvider?,*/
+        eventManager: LspEventManager,
         prefixLength: Int
     ): T
 }

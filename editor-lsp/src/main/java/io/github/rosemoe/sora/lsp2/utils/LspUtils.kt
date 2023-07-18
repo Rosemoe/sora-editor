@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.lsp2.utils
 
-import android.health.connect.datatypes.units.Length
 import android.util.Log
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
@@ -94,19 +93,19 @@ fun createRange(start: Position, end: Position): Range {
 }
 
 fun createRange(start: CharPosition, end: CharPosition): Range {
-    return createRange(start.toPosition(), end.toPosition())
+    return createRange(start.asLspPosition(), end.asLspPosition())
 }
 
 fun createPosition(line: Int, character: Int): Position {
     return Position(line, character)
 }
 
-fun CharPosition.toPosition(): Position {
+fun CharPosition.asLspPosition(): Position {
     return Position(this.line, this.column)
 }
 
-fun TextRange.toRange(): Range {
-    return Range(this.start.toPosition(), this.end.toPosition())
+fun TextRange.asLspRange(): Range {
+    return Range(this.start.asLspPosition(), this.end.asLspPosition())
 }
 
 fun LspEditor.createDidOpenTextDocumentParams(
@@ -123,8 +122,8 @@ fun FileUri.createDocumentDiagnosticParams(): DocumentDiagnosticParams {
 }
 
 fun FileUri.createCompletionParams(
-    position: Position?,
-    context: CompletionContext?
+    position: Position,
+    context: CompletionContext
 ): CompletionParams {
     val params = CompletionParams()
     params.textDocument = this.createTextDocumentIdentifier()

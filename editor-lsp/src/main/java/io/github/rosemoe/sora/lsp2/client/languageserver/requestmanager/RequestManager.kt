@@ -97,6 +97,12 @@ import java.util.concurrent.CompletableFuture
 
 /**
  * Base representation of currently supported LSP-based requests and notifications.
+ *
+ * **Some features are not directly supported in the sora-editor.**
+ *
+ * (e.g. viewing method signatures),
+ *  consider to remove them or abstract additional classes for the caller to provide support
+ *
  */
 abstract class RequestManager : LanguageClient, TextDocumentService, WorkspaceService,
     LanguageServer {
