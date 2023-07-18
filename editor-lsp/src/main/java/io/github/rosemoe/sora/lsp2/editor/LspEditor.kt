@@ -168,10 +168,12 @@ class LspEditor(
         return runCatching {
             languageServerWrapper.start()
             println("finish 1")
+            delay(0)
             //wait for language server start
             languageServerWrapper.getServer()
                 ?: throw TimeoutException("Unable to connect language server")
            println("finish 2")
+            delay(0)
             languageServerWrapper.connect(this)
             println("finish 3")
         }.onFailure {
@@ -193,7 +195,7 @@ class LspEditor(
 
         var isConnected = false
 
-        withTimeout(Timeout[Timeouts.INIT].toLong() * 12) {
+        withTimeout(Timeout[Timeouts.INIT].toLong()) {
             while (this.isActive) {
                 try {
                     isConnected = connect()

@@ -61,6 +61,7 @@ import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent
 import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.tm4e.core.registry.IThemeSource
 import java.io.FileOutputStream
+import java.lang.ref.WeakReference
 import java.net.ServerSocket
 import java.util.zip.ZipFile
 
@@ -89,8 +90,8 @@ class LspTestActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             unAssets()
-            setEditorText()
             connectToLanguageServer()
+            setEditorText()
         }
     }
 
@@ -160,7 +161,7 @@ class LspTestActivity : AppCompatActivity() {
                      )
                  }*/
 
-                private val _eventListener = EventListener()
+                private val _eventListener = EventListener(this@LspTestActivity)
 
                 override val eventListener: EventHandler.EventListener
                     get() = _eventListener
@@ -305,14 +306,21 @@ class LspTestActivity : AppCompatActivity() {
     )
 
 
-    inner class EventListener : EventHandler.EventListener {
+    class EventListener(
+        activity: LspTestActivity
+    ) : EventHandler.EventListener {
+        private val activityRef = WeakReference(activity)
         override fun initialize(server: LanguageServer?, result: InitializeResult) {
-            runOnUiThread {
-                rootMenu.findItem(R.id.code_format).isEnabled =
-                    result.capabilities.documentFormattingProvider != null
+            activityRef.get()?.apply {
+                runOnUiThread {
+                    rootMenu.findItem(R.id.code_format).isEnabled =
+                        result.capabilities.documentFormattingProvider != null
+                }
             }
         }
     }
 
+
 }
+
 

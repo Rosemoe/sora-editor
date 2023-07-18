@@ -121,7 +121,7 @@ class LanguageServerWrapper(
     private val commonCoroutineScope =
         CoroutineScope(ForkJoinPool.commonPool().asCoroutineDispatcher())
 
-    private lateinit var eventHandler: EventHandler
+    private var eventHandler: EventHandler? = null
 
     /**
      * Warning: this is a long running operation
@@ -217,8 +217,7 @@ class LanguageServerWrapper(
 
                 launcherFuture = launcher.startListening()
 
-                eventHandler.setLanguageServer(connectedLanguageServer)
-
+                eventHandler?.setLanguageServer(connectedLanguageServer)
 
                 initializeFuture =
                     connectedLanguageServer.initialize(initParams)
@@ -306,6 +305,7 @@ class LanguageServerWrapper(
             initializeResult = null
             initializeFuture = null
             languageServer = null
+            eventHandler = null
             status = ServerStatus.STOPPED
         }
     }
@@ -322,7 +322,7 @@ class LanguageServerWrapper(
         }
 
         uriToLanguageServerWrapper.remove(
-            editor.uri to editor.project.projectUri
+            editor.uri.path + "-" + editor.project.projectUri.path
         )
         connectedEditors.remove(editor)
         editor.dispose()
@@ -420,8 +420,7 @@ class LanguageServerWrapper(
             return
         }
 
-        val key = uri to editor.project.projectUri
-        uriToLanguageServerWrapper[key] = this
+        uriToLanguageServerWrapper[uri.path + "-" + editor.project.projectUri.path] = this
         println("4")
         start()
 
@@ -565,9 +564,8 @@ class LanguageServerWrapper(
 
     companion object {
 
-
         private val uriToLanguageServerWrapper =
-            ConcurrentHashMap<Pair<FileUri, FileUri>, LanguageServerWrapper>()
+            ConcurrentHashMap<String, LanguageServerWrapper>()
 
         /**
          * @param uri             A file uri
@@ -575,7 +573,7 @@ class LanguageServerWrapper(
          * @return The wrapper for the given uri, or None
          */
         fun forUri(uri: FileUri, projectRootPath: FileUri): LanguageServerWrapper? {
-            return uriToLanguageServerWrapper[Pair(uri, projectRootPath)]
+            return uriToLanguageServerWrapper["${uri.path}-${projectRootPath.path}"]
         }
 
         /**
@@ -583,10 +581,7 @@ class LanguageServerWrapper(
          * @return The wrapper for the given editor, or None
          */
         fun forEditor(editor: LspEditor): LanguageServerWrapper? {
-            return uriToLanguageServerWrapper[Pair(
-                editor.uri,
-                editor.project.projectUri
-            )]
+            return uriToLanguageServerWrapper["${editor.uri.path}-${editor.project.projectUri.path}"]
         }
 
 

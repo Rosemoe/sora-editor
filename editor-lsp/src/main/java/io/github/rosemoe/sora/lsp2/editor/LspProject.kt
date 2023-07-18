@@ -132,6 +132,7 @@ class LspProject(
         languageServerWrappers.forEach {
             it.value.stop(false)
         }
+        serverDefinitions.clear()
         coroutineScope.coroutineContext.cancelChildren()
     }
 
