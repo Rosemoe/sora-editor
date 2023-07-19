@@ -1,549 +1,535 @@
 # API
 
-## CodeEditor
+## Constructor
 
-## CodeEditor
+| PARAM        | TYPE           | DESCRIPTION |
+|--------------|----------------|-------------|
+| context      | `Context`      |             |
+| attrs        | `AttributeSet` | optional    |
+| defStyleAttr | `int`          | optional    |
 
-## CodeEditor
+## Events
 
-## CodeEditor
+## Methods
 
-## CodeEditor
+### getComponent
 
-## afterDelete
+Get builtin component so that you can enable/disable them or do some other actions.
 
-## afterInsert
+| PARAM | TYPE       | DESCRIPTION                         |
+|-------|------------|-------------------------------------|
+| clazz | `Class<T>` | \<T extends EditorBuiltinComponent> |
 
-## beforeModification
+### replaceComponent
 
-## beforeReplace
+Replace the built-in component to the given one. The new component's enabled state will extend the
+old one.
 
-## beginSearchMode
+| PARAM       | TYPE       | DESCRIPTION                                               |
+|-------------|------------|-----------------------------------------------------------|
+| clazz       | `Class<T>` | Built-in class type. Such as `EditorAutoCompletion.class` |
+| replacement | `T`        | The new component to apply                                |
+| \<T>        |            | Type of built-in component                                |
 
-## canRedo
+### getKeyMetaStates
 
-## canUndo
+Get KeyMetaStates, which manages alt/shift state in editor
 
-## commitText
+### measureTextRegionOffset
 
-## commitText
+Get the width of line number and divider line
 
-## computeScroll
+### getLeftHandleDescriptor
 
-## copyText
+Get the rect of left selection handle painted on view
 
-## copyText
+### getRightHandleDescriptor
 
-## createAccessibilityNodeInfo
+Get the rect of right selection handle painted on view
 
-## createSubEventManager
+### getOffset
 
-## cutLine
+Get the character's x offset on view
 
-## cutText
+| PARAM  | TYPE  | DESCRIPTION                      |
+|--------|-------|----------------------------------|
+| line   | `int` | The line position of character   |
+| column | `int` | The column position of character |
 
-## deleteText
+### getCharOffsetX
 
-## dispatchEvent
+Get the character's x offset on view
 
-## dispatchTouchEvent
+| PARAM  | TYPE  | DESCRIPTION                      |
+|--------|-------|----------------------------------|
+| line   | `int` | The line position of character   |
+| column | `int` | The column position of character |
 
-## duplicateLine
+### getCharOffsetY
 
-## duplicateSelection
+Get the character's y offset on view
 
-## duplicateSelection
+| PARAM  | TYPE  | DESCRIPTION                      |
+|--------|-------|----------------------------------|
+| line   | `int` | The line position of character   |
+| column | `int` | The column position of character |
 
-## duplicateSelection
+### getSnippetController
 
-## ensurePositionVisible
+### getCompletionWndPositionMode
 
-## ensurePositionVisible
+see `setCompletionWndPositionMode(int)`
 
-## ensureSelectionVisible
+### setCompletionWndPositionMode
 
-## formatCodeAsync
+Set how should we control the position&size of completion window
 
-## formatCodeAsync
+| PARAM | TYPE  | Optional                                                                                                    |
+|-------|-------|-------------------------------------------------------------------------------------------------------------|
+| mode  | `int` | `WINDOW_POS_MODE_AUTO` <br> `WINDOW_POS_MODE_FOLLOW_CURSOR_ALWAYS` <br> `WINDOW_POS_MODE_FULL_WIDTH_ALWAYS` |
 
-## getAccessibilityClassName
+### getProps
 
-## getBlockIndex
+Get `DirectAccessProps` object of the editor. **You can update some features in editor with the
+instance without disturb to call methods.**
 
-## getBlockLineWidth
+### getFormatTip
 
-## getCharOffsetX
+see `setFormatTip(String)`
 
-## getCharOffsetY
+### setFormatTip
 
-## getClipboardManager
+Set the tip text while formatting
 
-## getColorScheme
+| PARAM     | TYPE     | DESCRIPTION |
+|-----------|----------|-------------|
+| formatTip | `String` |             |
 
-## getCompletionWndPositionMode
+### setPinLineNumber
 
-## getComponent
+Set whether line number region will scroll together with code region
 
-## getCurrentCursorBlock
+| PARAM         | TYPE      | DESCRIPTION |
+|---------------|-----------|-------------|
+| pinLineNumber | `boolean` |             |
 
-## getCursor
+### isLineNumberPinned
 
-## getCursorAnimator
+see `CodeEditor#setPinLineNumber(boolean)`
 
-## getCursorRange
+### isFirstLineNumberAlwaysVisible
 
-## getDiagnosticIndicatorStyle
+see `CodeEditor#setFirstLineNumberAlwaysVisible(boolean)`
 
-## getDiagnostics
+### setFirstLineNumberAlwaysVisible
 
-## getDividerMarginLeft
+Show first line number in screen in word wrap mode
 
-## getDividerMarginRight
+| PARAM   | TYPE      | DESCRIPTION |
+|---------|-----------|-------------|
+| enabled | `boolean` |             |
 
-## getDividerWidth
+### insertText
 
-## getDpUnit
+Inserts the given text in the editor.
 
-## getEdgeEffectColor
+This method allows you to insert texts externally to the content of editor.
+The content of `text` is not checked to be exactly characters of symbols.
 
-## getEditable
+Note that this still works when the editor is not editable. But you should not
+call it at that time due to possible problems, especially when {@link #getEditable()} returns
+true but {@link #isEditable()} returns false
 
-## getEditorLanguage
+| PARAM           | TYPE     | DESCRIPTION                                                                                        |
+|-----------------|----------|----------------------------------------------------------------------------------------------------|
+| text            | `String` | Text to insert, usually a text of symbols                                                          |
+| selectionOffset | `int`    | New selection position relative to the start of text to insert.Ranging from `0` to `text.length()` |
 
-## getEventHandler
+### setAutoCompletionItemAdapter
 
-## getExtraArguments
+Set adapter for auto-completion window
 
-## getFirstVisibleLine
+Will take effect next time the window updates
 
-## getFirstVisibleRow
+| PARAM   | TYPE                      | DESCRIPTION             |
+|---------|---------------------------|-------------------------|
+| adapter | `EditorCompletionAdapter` | New adapter, maybe null |
 
-## getFormatTip
+### setCursorBlinkPeriod
 
-## getGraphPaint
+Set cursor blinking period.If zero or negative period is passed, the cursor will always be shown.
 
-## getHandleStyle
+| PARAM  | TYPE  | DESCRIPTION                        |
+|--------|-------|------------------------------------|
+| period | `int` | The period time of cursor blinking |
 
-## getHorizontalScrollbarThumbDrawable
+### getCursorBlink
 
-## getHorizontalScrollbarTrackDrawable
+### isLigatureEnabled
 
-## getInputType
+see `CodeEditor#setLigatureEnabled(boolean)`
 
-## getInsertHandleDescriptor
+### setLigatureEnabled
 
-## getInsertSelectionWidth
+Enable/disable ligature of all types(except 'rlig').
+Generally you should disable them unless enabling this will have no effect on text measuring.
 
-## getKeyMetaStates
+Disabled by default. If you want to enable ligature of a specified type,
+use`CodeEditor#setFontFeatureSettings(String)`
 
-## getLastVisibleLine
+| PARAM   | TYPE      | DESCRIPTION |
+|---------|-----------|-------------|
+| enabled | `boolean` |             |
 
-## getLastVisibleRow
+For enabling JetBrainsMono font's ligature, Use like this:
 
-## getLayout
+```
+CodeEditor editor;
+editor.setFontFeatureSettings(enabled?null:"'liga' 0,'hlig' 0,'dlig' 0,'clig' 0");
+```
 
-## getLeftHandleDescriptor
+### setFontFeatureSettings
 
-## getLineCount
+Set font feature settings for all paints used by editor
 
-## getLineInfoTextSize
+see `Paint#setFontFeatureSettings(String)`
 
-## getLineNumberAlign
+| PARAM    | TYPE     | DESCRIPTION |
+|----------|----------|-------------|
+| features | `String` |             |
 
-## getLineNumberMarginLeft
+### setSelectionHandleStyle
 
-## getLineNumberMetrics
+Set the style of selection handler.
 
-## getLineNumberTipTextProvider
+| PARAM    | TYPE     | see                                                                      |
+|----------|----------|--------------------------------------------------------------------------|
+| features | `String` | `SelectionHandleStyle` <br> `HandleStyleDrop` <br> `HandleStyleSideDrop` |
 
-## getLineSeparator
+### getHandleStyle
 
-## getLineSpacingExtra
+### isHighlightCurrentBlock
 
-## getLineSpacingMultiplier
+Returns whether highlight current code block
 
-## getLineSpacingPixels
+### setHighlightCurrentBlock
 
-## getLnPanelPosition
+Whether the editor should use a different color to draw
+the current code block line and this code block's start line and end line's
+background.
 
-## getLnPanelPositionMode
+| PARAM                 | TYPE      | DESCRIPTION                    |
+|-----------------------|-----------|--------------------------------|
+| highlightCurrentBlock | `boolean` | Enabled / Disabled this module |
 
-## getNonPrintablePaintingFlags
+### isStickyTextSelection
 
-## getOffset
+Returns whether the cursor should stick to the text row while selecting the text
 
-## getOffsetX
+### setStickyTextSelection
 
-## getOffsetY
+Whether the cursor should stick to the text row while selecting the text.
 
-## getOtherPaint
+| PARAM           | TYPE      | DESCRIPTION        |
+|-----------------|-----------|--------------------|
+| stickySelection | `boolean` | Enabled / Disabled |
 
-## getPointPosition
+### isHighlightCurrentLine
 
-## getPointPositionOnScreen
+### setHighlightCurrentLine
 
-## getProps
+Specify whether the editor should use a different color to draw the background of current line
 
-## getRenderer
+| PARAM                | TYPE      | DESCRIPTION        |
+|----------------------|-----------|--------------------|
+| highlightCurrentLine | `boolean` | Enabled / Disabled |
 
-## getRightHandleDescriptor
+### getEditorLanguage
 
-## getRowBaseline
+Get the editor's language.
 
-## getRowBottom
+### setEditorLanguage
 
-## getRowBottomOfText
+| PARAM | TYPE       | DESCRIPTION                   |
+|-------|------------|-------------------------------|
+| lang  | `Language` | New EditorLanguage for editor |
 
-## getRowHeight
+### canHandleKeyBinding
 
-## getRowHeightOfText
+Internal callback to check if the editor is capable of handling the given keybinding `KeyEvent`
 
-## getRowTop
+| PARAM        | TYPE      | DESCRIPTION                           |
+|--------------|-----------|---------------------------------------|
+| keyCode      | `int`     | The keycode for the keybinding event. |
+| ctrlPressed  | `boolean` | Is 'Ctrl' key pressed?                |
+| shiftPressed | `boolean` | Is 'Shift' key pressed?               |
+| altPressed   | `boolean` | Is 'Alt' key pressed?                 |
 
-## getRowTopOfText
+### getBlockLineWidth
 
-## getScroller
+Get the width of code block line
 
-## getScrollMaxX
+### setBlockLineWidth
 
-## getScrollMaxY
+Set the width of code block line
 
-## getSearcher
+| PARAM | TYPE    | DESCRIPTION      |
+|-------|---------|------------------|
+| dp    | `float` | Width in dp unit |
 
-## getSnippetController
+### isWordwrap
 
-## getSpansForLine
+### setWordwrap
 
-## getStyles
+Set whether text in editor should be wrapped to fit its size, with anti-word-breaking enabled by
+default
 
-## getTabWidth
+| PARAM    | TYPE      | DESCRIPTION        |
+|----------|-----------|--------------------|
+| wordwrap | `boolean` | Enabled / Disabled |
 
-## getText
+### isCursorAnimationEnabled
 
-## getTextLetterSpacing
+### setCursorAnimationEnabled
 
-## getTextPaint
+Set cursor animation enabled
 
-## getTextScaleX
+| PARAM   | TYPE      | DESCRIPTION        |
+|---------|-----------|--------------------|
+| enabled | `boolean` | Enabled / Disabled |
 
-## getTextSizePx
+### getCursorAnimator
 
-## getTypefaceLineNumber
+Get cursor animation
 
-## getTypefaceText
+### setCursorAnimator
 
-## getVerticalExtraSpaceFactor
+Set cursor animation
 
-## getVerticalScrollbarThumbDrawable
+| PARAM          | TYPE             | DESCRIPTION |
+|----------------|------------------|-------------|
+| cursorAnimator | `CursorAnimator` |             |
 
-## getVerticalScrollbarTrackDrawable
+### setScrollBarEnabled
 
-## getWordRange
+Whether display vertical scroll bar when scrolling
 
-## getWordRange
+| PARAM   | TYPE      | DESCRIPTION        |
+|---------|-----------|--------------------|
+| enabled | `boolean` | Enabled / Disabled |
 
-## hasClip
+### setHorizontalScrollbarThumbDrawable
 
-## hideAutoCompleteWindow
+| PARAM    | TYPE       | DESCRIPTION |
+|----------|------------|-------------|
+| drawable | `Drawable` |             |
 
-## hideEditorWindows
+### getHorizontalScrollbarThumbDrawable
 
-## hideSoftInput
+### setHorizontalScrollbarTrackDrawable
 
-## insertText
+| PARAM    | TYPE       | DESCRIPTION |
+|----------|------------|-------------|
+| drawable | `Drawable` |             |
 
-## isAntiWordBreaking
+### getHorizontalScrollbarTrackDrawable
 
-## isBasicDisplayMode
+### setVerticalScrollbarThumbDrawable
 
-## isBlockLineEnabled
+| PARAM    | TYPE       | DESCRIPTION |
+|----------|------------|-------------|
+| drawable | `Drawable` |             |
 
-## isCursorAnimationEnabled
+### getVerticalScrollbarThumbDrawable
 
-## isDisplayLnPanel
+### setVerticalScrollbarTrackDrawable
 
-## isEditable
+| PARAM    | TYPE       | DESCRIPTION |
+|----------|------------|-------------|
+| drawable | `Drawable` |             |
 
-## isFirstLineNumberAlwaysVisible
+### getVerticalScrollbarTrackDrawable
 
-## isFormatting
+### isDisplayLnPanel
 
-## isHardwareAcceleratedDrawAllowed
+### setDisplayLnPanel
 
-## isHighlightBracketPair
+Whether display the line number panel beside vertical scroll bar when the scroll bar is touched by
+user
 
-## isHighlightCurrentBlock
+| PARAM          | TYPE      | DESCRIPTION        |
+|----------------|-----------|--------------------|
+| displayLnPanel | `boolean` | Enabled / disabled |
 
-## isHighlightCurrentLine
+### getLnPanelPositionMode
 
-## isHorizontalScrollBarEnabled
+### Set display position mode the line number panel beside vertical scroll bar
 
-## isInterceptParentHorizontalScrollEnabled
+Set display position mode the line number panel beside vertical scroll bar
 
-## isLigatureEnabled
+| PARAM | TYPE  | DESCRIPTION                          | see                         |
+|-------|-------|--------------------------------------|-----------------------------|
+| mode  | `int` | Default LineInfoPanelPosition.FOLLOW | `LineInfoPanelPositionMode` |
 
-## isLineNumberEnabled
+### getLnPanelPosition
 
-## isLineNumberPinned
+### setLnPanelPosition
 
-## isOverMaxY
+Set display position the line number panel beside vertical scroll bar
 
-## isReleased
+!> Only TOP,CENTER and BOTTOM will be effective when position mode is follow.
 
-## isRenderFunctionCharacters
+| PARAM | TYPE  | DESCRIPTION                          | see                     |
+|-------|-------|--------------------------------------|-------------------------|
+| mode  | `int` | Default LineInfoPanelPosition.FOLLOW | `LineInfoPanelPosition` |
 
-## isRowVisible
+### getLineNumberTipTextProvider
 
-## isScalable
+### setLineNumberTipTextProvider
 
-## isStickyTextSelection
+Set the tip text before line number for the line number panel
 
-## isUndoEnabled
+| PARAM    | TYPE                        | DESCRIPTION | 
+|----------|-----------------------------|-------------|
+| provider | `LineNumberTipTextProvider` |             |
 
-## isVerticalScrollBarEnabled
+### getInsertHandleDescriptor
 
-## isWordwrap
+Get the rect of insert cursor handle on view
 
-## jumpToLine
+### getTextSizePx
 
-## measureLineNumber
+Get text size in pixel unit
 
-## measureTextRegionOffset
+### setTextSizePx
 
-## movePageDown
+Set text size in pixel unit
 
-## movePageUp
+| PARAM | TYPE    | DESCRIPTION             | 
+|-------|---------|-------------------------|
+| size  | `float` | Text size in pixel unit |
 
-## moveSelectionDown
+### getRenderer
 
-## moveSelectionEnd
+### getLineNumberMetrics
 
-## moveSelectionHome
+### isHardwareAcceleratedDrawAllowed
 
-## moveSelectionLeft
+### setHardwareAcceleratedDrawAllowed
 
-## moveSelectionRight
+Set whether allow the editor to use RenderNode to draw its text.
 
-## moveSelectionUp
+Enabling this can cause more memory usage, but the editor can display text much quicker.
 
-## notifyIMEExternalCursorChange
+However, only when hardware accelerate is enabled on this view can the switch make a difference.
 
-## onCheckIsTextEditor
+| PARAM           | TYPE      | DESCRIPTION | 
+|-----------------|-----------|-------------|
+| acceleratedDraw | `boolean` |             |
 
-## onColorFullUpdate
+### getEdgeEffectColor
 
-## onColorUpdated
+Get the color of EdgeEffect
 
-## onCreateInputConnection
+### setEdgeEffectColor
 
-## onFormatFail
+Set the color of EdgeEffect
 
-## onFormatSucceed
+### getCurrentCursorBlock
 
-## onGenericMotionEvent
+### getSpansForLine
 
-## onInitializeAccessibilityEvent
+Get spans on the given line
 
-## onKeyDown
+### measureLineNumber
 
-## onKeyMultiple
+Get the width of line number region (include line number margin)
 
-## onKeyUp
+### updateCompletionWindowPosition
 
-## onRemove
+### deleteText
 
-## onTouchEvent
+Delete text before cursor or selected text (if there is)
 
-## pasteText
+### commitText
 
-## performAccessibilityAction
+Commit text to the content from IME
 
-## postDelayedInLifecycle
+| PARAM           | TYPE           | DESCRIPTION | 
+|-----------------|----------------|-------------|
+| text            | `CharSequence` |             |
+| applyAutoIndent | `boolean`      | Optional    |
 
-## postInLifecycle
+### getLineInfoTextSize
 
-## redo
+### setLineInfoTextSize
 
-## release
+Set text size for line info panel
 
-## removeCallbacks
+| PARAM | TYPE    | DESCRIPTION                                | 
+|-------|---------|--------------------------------------------|
+| size  | `float` | Text size for line information, unit is SP |
 
-## replaceComponent
+### getNonPrintablePaintingFlags
 
-## rerunAnalysis
+### setNonPrintablePaintingFlags
 
-## restartInput
+Sets non-printable painting flags.
 
-## selectAll
+Specify where they should be drawn and some other properties.
 
-## selectCurrentWord
+Flags can be `mixed`.
 
-## selectWord
+| PARAM | TYPE  | DESCRIPTION                                              | 
+|-------|-------|----------------------------------------------------------|
+| flags | `int` | [Flags](/zh-cn/constant?id=flag_draw_whitespace_leading) |
 
-## setAutoCompletionItemAdapter
+### ensureSelectionVisible
 
-## setBasicDisplayMode
+Make the selection visible
 
-## setBlockLineEnabled
+### ensurePositionVisible
 
-## setBlockLineWidth
+| PARAM       | TYPE      | DESCRIPTION                            | Optional |
+|-------------|-----------|----------------------------------------|----------|
+| line        | `int`     | Line in text                           |          |
+| column      | `int`     | Column in text                         |          |
+| noAnimation | `boolean` | true if no animation should be applied | Yes      |
 
-## setColorScheme
+### hasClip
 
-## setCompletionWndPositionMode
+Whether there is clip
 
-## setCursorAnimationEnabled
+### getDpUnit
 
-## setCursorAnimator
+Get 1dp = ?px
 
-## setCursorBlinkPeriod
+### getScroller
 
-## setCursorWidth
+Get scroller from EventHandler.You would better not use it for your own scrolling
 
-## setDiagnosticIndicatorStyle
+### isOverMaxY
 
-## setDiagnostics
+Checks whether the position is over max Y position
 
-## setDisplayLnPanel
+| PARAM       | TYPE    | DESCRIPTION        |
+|-------------|---------|--------------------|
+| posOnScreen | `float` | Y position on view |
 
-## setDividerMargin
+### getPointPosition
 
-## setDividerMargin
+Determine character position using positions in scroll coordinate
 
-## setDividerWidth
+| PARAM   | TYPE    | DESCRIPTION                              |
+|---------|---------|------------------------------------------|
+| xOffset | `float` | Horizontal position in scroll coordinate |
+| yOffset | `float` | Vertical position in scroll coordinate   |
 
-## setEdgeEffectColor
+### getPointPositionOnScreen
 
-## setEditable
+Determine character position using positions on view
 
-## setEditorLanguage
-
-## setFirstLineNumberAlwaysVisible
-
-## setFontFeatureSettings
-
-## setFormatTip
-
-## setHardwareAcceleratedDrawAllowed
-
-## setHighlightBracketPair
-
-## setHighlightCurrentBlock
-
-## setHighlightCurrentLine
-
-## setHorizontalScrollBarEnabled
-
-## setHorizontalScrollbarThumbDrawable
-
-## setHorizontalScrollbarTrackDrawable
-
-## setInputType
-
-## setInterceptParentHorizontalScrollIfNeeded
-
-## setLayoutBusy
-
-## setLigatureEnabled
-
-## setLineInfoTextSize
-
-## setLineNumberAlign
-
-## setLineNumberEnabled
-
-## setLineNumberMarginLeft
-
-## setLineNumberTipTextProvider
-
-## setLineSeparator
-
-## setLineSpacing
-
-## setLineSpacingExtra
-
-## setLineSpacingMultiplier
-
-## setLnPanelPosition
-
-## setLnPanelPositionMode
-
-## setNonPrintablePaintingFlags
-
-## setPinLineNumber
-
-## setRenderFunctionCharacters
-
-## setScalable
-
-## setScaleTextSizes
-
-## setScrollBarEnabled
-
-## setSelection
-
-## setSelection
-
-## setSelection
-
-## setSelection
-
-## setSelectionHandleStyle
-
-## setSelectionRegion
-
-## setSelectionRegion
-
-## setSelectionRegion
-
-## setSelectionRegion
-
-## setStickyTextSelection
-
-## setStyles
-
-## setTabWidth
-
-## setText
-
-## setText
-
-## setText
-
-## setTextLetterSpacing
-
-## setTextScaleX
-
-## setTextSize
-
-## setTextSizePx
-
-## setTypefaceLineNumber
-
-## setTypefaceText
-
-## setUndoEnabled
-
-## setVerticalExtraSpaceFactor
-
-## setVerticalScrollBarEnabled
-
-## setVerticalScrollbarThumbDrawable
-
-## setVerticalScrollbarTrackDrawable
-
-## setWordwrap
-
-## setWordwrap
-
-## showSoftInput
-
-## subscribeEvent
-
-## undo
-
-## updateCompletionWindowPosition
-
-## updateCursor
-
-## updateStyles
+| PARAM | TYPE    | DESCRIPTION |
+|-------|---------|-------------|
+| x     | `float` | X on view   |
+| y     | `float` | Y on view   |

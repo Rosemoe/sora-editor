@@ -1,10 +1,10 @@
-# 滚动条
+# Scrollbar
 
-编辑器允许使用自定义的滚动条样式
+The editor allows using custom scrollbar styles.
 
-## 实现方式 <!-- {docsify-ignore} -->
+## Implementation <!-- {docsify-ignore} -->
 
-您首先需要提供相应的样式文件，例如：
+First you need to provide the corresponding style files, for example:
 
 ``` xml
 <!-- scrollbar_thumb.xml -->
@@ -27,7 +27,7 @@
 </shape>
 ```
 
-然后在您的editor中指定滚动条的样式
+Then specify the scrollbar styles in your editor:
 
 ``` xml
 <io.github.rosemoe.sora.widget.CodeEditor

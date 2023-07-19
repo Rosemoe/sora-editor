@@ -1,6 +1,16 @@
 - Getting started
-    - [Quick start](/es/start/quickstart.md "Quick start")
-- Java docs
-    - [API](/es/api.md "API")
-    - [Constant](/es/constant.md "Constant")
+  - [Quick start](/es/start/quickstart.md "Quick start")
+- Customization
+  - [Font](/es/customization/font.md "Font")
+  - [Scrollbar](/es/customization/scrollbar.md "Scrollbar")
+  - [Line number panel](/es/customization/line-panel.md "Line number panel")
+  - [Symbol input view](/es/customization/symbol-input-view.md "Symbol input view")
+  - Keybinding
+    - [Custom keybinding](/es/customization/keybinding.md "Custom keybinding")
+    - [Default Keybindings](/es/customization/default-keybindings.md "Default Keybindings")
+- [LSP](/es/lsp.md "LSP")
+- [textmate](/es/textmate.md "textmate")
+- Reference
+  - [API](/es/api.md "API")
+  - [Constant](/es/constant.md "Constant")
 - [Changelog](/es/changelog.md "Changelog")

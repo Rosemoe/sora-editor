@@ -1163,7 +1163,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Set display position mode the line number panel beside vertical scroll bar
      *
-     * @param mode Default LineInfoPanelPosition.FOLLOW
+     * @param mode Default LineInfoPanelPositionMode.FOLLOW
      * @see io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode
      */
     public void setLnPanelPositionMode(int mode) {

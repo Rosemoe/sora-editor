@@ -1,549 +1,587 @@
+这里是将该 markdown 文件翻译成中文的尝试:
+
 # API
 
-## CodeEditor
+## 构造函数
 
-## CodeEditor
+| 参数           | 类型             | 描述  |
+|--------------|----------------|-----|
+| context      | `Context`      |     | 
+| attrs        | `AttributeSet` | 可选的 |
+| defStyleAttr | `int`          | 可选的 |
 
-## CodeEditor
+## 事件
 
-## CodeEditor
+## 方法
 
-## CodeEditor
+### getComponent
 
-## afterDelete
+获取内置组件,以便您启用/禁用它们或执行其他操作。
 
-## afterInsert
+| 参数    | 类型         | 描述                                  |
+|-------|------------|-------------------------------------|
+| clazz | `Class<T>` | \<T extends EditorBuiltinComponent> |
 
-## beforeModification
+### replaceComponent
 
-## beforeReplace
+用给定的组件替换内置组件。新组件的启用状态将扩展旧的启用状态。
 
-## beginSearchMode
+| 参数          | 类型         | 描述                                   |
+|-------------|------------|--------------------------------------|
+| clazz       | `Class<T>` | 内置类类型。 如`EditorAutoCompletion.class` |
+| replacement | `T`        | 要应用的新组件                              |  
+| \<T>        |            | 内置组件的类型                              |
 
-## canRedo
+### getKeyMetaStates
 
-## canUndo
+获取 KeyMetaStates,它管理编辑器中的 alt/shift 状态
 
-## commitText
+### measureTextRegionOffset
 
-## commitText
+获取行号和分割线的宽度
 
-## computeScroll
+### getLeftHandleDescriptor
 
-## copyText
+获取在视图上绘制的左侧选择手柄的矩形
 
-## copyText
+### getRightHandleDescriptor
 
-## createAccessibilityNodeInfo
+获取在视图上绘制的右侧选择手柄的矩形
 
-## createSubEventManager
+### getOffset
 
-## cutLine
+获取字符在视图上的 x 偏移量
 
-## cutText
+| 参数     | 类型    | 描述     |
+|--------|-------|--------|
+| line   | `int` | 字符的行位置 |
+| column | `int` | 字符的列位置 |
 
-## deleteText
+### getCharOffsetX
 
-## dispatchEvent
+获取字符在视图上的 x 偏移量
 
-## dispatchTouchEvent
+| 参数     | 类型    | 描述     |
+|--------|-------|--------|
+| line   | `int` | 字符的行位置 |
+| column | `int` | 字符的列位置 |
 
-## duplicateLine
+### getCharOffsetY
 
-## duplicateSelection
+获取字符在视图上的 y 偏移量
 
-## duplicateSelection
+| 参数     | 类型    | 描述     |
+|--------|-------|--------|
+| line   | `int` | 字符的行位置 |
+| column | `int` | 字符的列位置 |
 
-## duplicateSelection
+### getSnippetController
 
-## ensurePositionVisible
+### getCompletionWndPositionMode
 
-## ensurePositionVisible
+参见 `setCompletionWndPositionMode(int)`
 
-## ensureSelectionVisible
+### setCompletionWndPositionMode
 
-## formatCodeAsync
+设置如何控制完成窗口的位置和大小
 
-## formatCodeAsync
+| 参数   | 类型    | 可选的值                                                                                                        |
+|------|-------|-------------------------------------------------------------------------------------------------------------|
+| mode | `int` | `WINDOW_POS_MODE_AUTO` <br> `WINDOW_POS_MODE_FOLLOW_CURSOR_ALWAYS` <br> `WINDOW_POS_MODE_FULL_WIDTH_ALWAYS` |
 
-## getAccessibilityClassName
+### getProps
 
-## getBlockIndex
+获取编辑器的 `DirectAccessProps` 对象。**您可以使用该实例更新编辑器中的某些功能,而无需调用方法。**
 
-## getBlockLineWidth
+### getFormatTip
 
-## getCharOffsetX
+参见 `setFormatTip(String)`
 
-## getCharOffsetY
+### setFormatTip
 
-## getClipboardManager
+设置格式化时的提示文本
 
-## getColorScheme
+| 参数        | 类型       | 描述 |
+|-----------|----------|----|
+| formatTip | `String` |    |
 
-## getCompletionWndPositionMode
+### setPinLineNumber
 
-## getComponent
+设置行号区域是否会随代码区域一起滚动
 
-## getCurrentCursorBlock
+| 参数            | 类型        | 描述 |
+|---------------|-----------|----|
+| pinLineNumber | `boolean` |    |
 
-## getCursor
+### isLineNumberPinned
 
-## getCursorAnimator
+参见 `CodeEditor#setPinLineNumber(boolean)`
 
-## getCursorRange
+### isFirstLineNumberAlwaysVisible
 
-## getDiagnosticIndicatorStyle
+参见 `CodeEditor#setFirstLineNumberAlwaysVisible(boolean)`
 
-## getDiagnostics
+### setFirstLineNumberAlwaysVisible
 
-## getDividerMarginLeft
+在换行模式下显示屏幕中的第一行行号
 
-## getDividerMarginRight
+| 参数      | 类型        | 描述 |
+|---------|-----------|----|
+| enabled | `boolean` |    |
 
-## getDividerWidth
+### insertText
 
-## getDpUnit
+在编辑器中插入给定的文本。
 
-## getEdgeEffectColor
+此方法允许您从编辑器内容之外插入文本。
+`text` 的内容不会被检查为完全是符号的字符。
 
-## getEditable
+请注意,即使编辑器不可编辑,这仍然有效。 但由于可能的问题,您不应该在那时调用它,特别是当 {@link
+#getEditable()} 返回true但{@link #isEditable()} 返回false时
 
-## getEditorLanguage
+| 参数              | 类型       | 描述                                           |
+|-----------------|----------|----------------------------------------------|
+| text            | `String` | 要插入的文本,通常是符号的文本                              |
+| selectionOffset | `int`    | 相对于要插入的文本的开始位置的新选择位置。 范围从`0`到`text.length()` |
 
-## getEventHandler
+### setAutoCompletionItemAdapter
 
-## getExtraArguments
+为自动完成窗口设置适配器
 
-## getFirstVisibleLine
+下次窗口更新时生效
 
-## getFirstVisibleRow
+| 参数      | 类型                        | 描述         |
+|---------|---------------------------|------------|
+| adapter | `EditorCompletionAdapter` | 新的适配器,可以为空 |
 
-## getFormatTip
+### setCursorBlinkPeriod
 
-## getGraphPaint
+设置光标闪烁周期。如果传递零或负周期,则光标将始终显示。
 
-## getHandleStyle
+| 参数     | 类型    | 描述        |
+|--------|-------|-----------|
+| period | `int` | 光标闪烁的周期时间 |
 
-## getHorizontalScrollbarThumbDrawable
+### getCursorBlink
 
-## getHorizontalScrollbarTrackDrawable
+### isLigatureEnabled
 
-## getInputType
+参见 `CodeEditor#setLigatureEnabled(boolean)`
 
-## getInsertHandleDescriptor
+### setLigatureEnabled
 
-## getInsertSelectionWidth
+启用/禁用所有类型的连字(除了'rlig')。
+通常,除非启用此功能不会影响文本测量,否则应禁用它们。
 
-## getKeyMetaStates
+默认禁用。 如果要启用指定类型的连字,请使用 `CodeEditor#setFontFeatureSettings(String)`
 
-## getLastVisibleLine
+| 参数      | 类型        | 描述 |
+|---------|-----------|----|
+| enabled | `boolean` |    |
 
-## getLastVisibleRow
+要启用 JetBrainsMono 字体的连字,请这样使用:
 
-## getLayout
+```
+CodeEditor editor;
+editor.setFontFeatureSettings(enabled?null:"'liga' 0,'hlig' 0,'dlig' 0,'clig' 0");
+```
 
-## getLeftHandleDescriptor
+### setFontFeatureSettings
 
-## getLineCount
+为编辑器使用的所有绘画设置字体特征设置
 
-## getLineInfoTextSize
+参见 `Paint#setFontFeatureSettings(String)`
 
-## getLineNumberAlign
+| 参数       | 类型       | 描述 |
+|----------|----------|----|
+| features | `String` |    |
 
-## getLineNumberMarginLeft
+### setSelectionHandleStyle
 
-## getLineNumberMetrics
+设置选择句柄的样式。
 
-## getLineNumberTipTextProvider
+| 参数       | 类型       | 参见                                                                       |
+|----------|----------|--------------------------------------------------------------------------|
+| features | `String` | `SelectionHandleStyle` <br> `HandleStyleDrop` <br> `HandleStyleSideDrop` |
 
-## getLineSeparator
+### getHandleStyle
 
-## getLineSpacingExtra
+### isHighlightCurrentBlock
 
-## getLineSpacingMultiplier
+返回是否高亮当前代码块
 
-## getLineSpacingPixels
+### setHighlightCurrentBlock
 
-## getLnPanelPosition
+编辑器是否应使用不同的颜色来绘制当前代码块行以及此代码块的起始行和结束行的背景。
 
-## getLnPanelPositionMode
+| 参数                    | 类型        | 描述       |
+|-----------------------|-----------|----------|
+| highlightCurrentBlock | `boolean` | 启用/禁用此模块 |
 
-## getNonPrintablePaintingFlags
+### isStickyTextSelection
 
-## getOffset
+返回在选择文本时光标是否粘贴到文本行
 
-## getOffsetX
+### setStickyTextSelection
 
-## getOffsetY
+在选择文本时光标是否应粘贴到文本行。
 
-## getOtherPaint
+| 参数              | 类型        | 描述    |
+|-----------------|-----------|-------|
+| stickySelection | `boolean` | 启用/禁用 |
 
-## getPointPosition
+### isHighlightCurrentLine
 
-## getPointPositionOnScreen
+### setHighlightCurrentLine
 
-## getProps
+指定编辑器是否应使用不同的颜色来绘制当前行的背景
 
-## getRenderer
+| 参数                   | 类型        | 描述    |
+|----------------------|-----------|-------|
+| highlightCurrentLine | `boolean` | 启用/禁用 |
 
-## getRightHandleDescriptor
+### getEditorLanguage
 
-## getRowBaseline
+获取编辑器的语言。
 
-## getRowBottom
+### setEditorLanguage
 
-## getRowBottomOfText
+| 参数   | 类型         | 描述                   |
+|------|------------|----------------------|
+| lang | `Language` | 编辑器的新 EditorLanguage |
 
-## getRowHeight
+### canHandleKeyBinding
 
-## getRowHeightOfText
+内部回调,用于检查编辑器是否能处理给定的 `KeyEvent` 键绑定
 
-## getRowTop
+| 参数           | 类型        | 描述            |
+|--------------|-----------|---------------|
+| keyCode      | `int`     | 键绑定事件的键码。     |
+| ctrlPressed  | `boolean` | ‘Ctrl’键是否按下?  |
+| shiftPressed | `boolean` | ‘Shift’键是否按下? |
+| altPressed   | `boolean` | ‘Alt’键是否按下?   |
 
-## getRowTopOfText
+### getBlockLineWidth
 
-## getScroller
+获取代码块线的宽度
 
-## getScrollMaxX
+### setBlockLineWidth
 
-## getScrollMaxY
+设置代码块线的宽度
 
-## getSearcher
+| 参数 | 类型      | 描述       |
+|----|---------|----------|
+| dp | `float` | dp 单位的宽度 |
 
-## getSnippetController
+### isWordwrap
 
-## getSpansForLine
+### setWordwrap
 
-## getStyles
+设置编辑器中的文本是否应折行以适合其大小,默认情况下启用防止单词中断
 
-## getTabWidth
+| 参数       | 类型        | 描述    |
+|----------|-----------|-------|
+| wordwrap | `boolean` | 启用/禁用 |
 
-## getText
+### isCursorAnimationEnabled
 
-## getTextLetterSpacing
+### setCursorAnimationEnabled
 
-## getTextPaint
+设置是否启用光标动画
 
-## getTextScaleX
+| 参数      | 类型        | 描述    |
+|---------|-----------|-------|
+| enabled | `boolean` | 启用/禁用 |
 
-## getTextSizePx
+### getCursorAnimator
 
-## getTypefaceLineNumber
+获取光标动画
 
-## getTypefaceText
+### setCursorAnimator
 
-## getVerticalExtraSpaceFactor
+设置光标动画
 
-## getVerticalScrollbarThumbDrawable
+| 参数             | 类型               | 描述 |
+|----------------|------------------|----|
+| cursorAnimator | `CursorAnimator` |    |
 
-## getVerticalScrollbarTrackDrawable
+### setScrollBarEnabled
 
-## getWordRange
+滚动时是否显示垂直滚动条
 
-## getWordRange
+| 参数      | 类型        | 描述    |
+|---------|-----------|-------|
+| enabled | `boolean` | 启用/禁用 |
 
-## hasClip
+### setHorizontalScrollbarThumbDrawable
 
-## hideAutoCompleteWindow
+| 参数       | 类型         | 描述 |
+|----------|------------|----|
+| drawable | `Drawable` |    |
 
-## hideEditorWindows
+### getHorizontalScrollbarThumbDrawable
 
-## hideSoftInput
+### setHorizontalScrollbarTrackDrawable
 
-## insertText
+| 参数       | 类型         | 描述 |
+|----------|------------|----|
+| drawable | `Drawable` |    |
 
-## isAntiWordBreaking
+### getHorizontalScrollbarTrackDrawable
 
-## isBasicDisplayMode
+### setVerticalScrollbarThumbDrawable
 
-## isBlockLineEnabled
+| 参数       | 类型         | 描述 |
+|----------|------------|----|
+| drawable | `Drawable` |    |
 
-## isCursorAnimationEnabled
+### getVerticalScrollbarThumbDrawable
 
-## isDisplayLnPanel
+### setVerticalScrollbarTrackDrawable
 
-## isEditable
+| 参数       | 类型         | 描述 |
+|----------|------------|----|
+| drawable | `Drawable` |    |
 
-## isFirstLineNumberAlwaysVisible
+### getVerticalScrollbarTrackDrawable
 
-## isFormatting
+### isDisplayLnPanel
 
-## isHardwareAcceleratedDrawAllowed
+### setDisplayLnPanel
 
-## isHighlightBracketPair
+当滚动条被用户触碰时,是否在垂直滚动条旁显示行号面板
 
-## isHighlightCurrentBlock
+| 参数             | 类型        | 描述    |
+|----------------|-----------|-------|
+| displayLnPanel | `boolean` | 启用/禁用 |
 
-## isHighlightCurrentLine
+### getLnPanelPositionMode
 
-## isHorizontalScrollBarEnabled
+### Set display position mode the line number panel beside vertical scroll bar
 
-## isInterceptParentHorizontalScrollEnabled
+设置垂直滚动条旁行号面板的显示位置模式
 
-## isLigatureEnabled
+| 参数   | 类型    | 描述                              | 参见                          |
+|------|-------|---------------------------------|-----------------------------|
+| mode | `int` | 默认 LineInfoPanelPosition.FOLLOW | `LineInfoPanelPositionMode` |
 
-## isLineNumberEnabled
+### getLnPanelPosition
 
-## isLineNumberPinned
+### setLnPanelPosition
 
-## isOverMaxY
+设置垂直滚动条旁的行号面板的显示位置
 
-## isReleased
+!> 当位置模式为 follow 时,仅 TOP、CENTER 和 BOTTOM 会生效。
 
-## isRenderFunctionCharacters
+| 参数   | 类型    | 描述                              | 参见                      |  
+|------|-------|---------------------------------|-------------------------|
+| mode | `int` | 默认 LineInfoPanelPosition.FOLLOW | `LineInfoPanelPosition` |
 
-## isRowVisible
+### getLineNumberTipTextProvider
 
-## isScalable
+### setLineNumberTipTextProvider
 
-## isStickyTextSelection
+为行号面板设置行号前的提示文本
 
-## isUndoEnabled
+| 参数       | 类型                          | 描述 |
+|----------|-----------------------------|----| 
+| provider | `LineNumberTipTextProvider` |    |
 
-## isVerticalScrollBarEnabled
+### getInsertHandleDescriptor
 
-## isWordwrap
+获取视图上插入光标手柄的矩形
 
-## jumpToLine
+### getTextSizePx
 
-## measureLineNumber
+以像素为单位获取文本大小
 
-## measureTextRegionOffset
+### setTextSizePx
 
-## movePageDown
+以像素为单位设置文本大小
 
-## movePageUp
+| 参数   | 类型      | 描述          |
+|------|---------|-------------|
+| size | `float` | 以像素为单位的文本大小 |
 
-## moveSelectionDown
+### getRenderer
 
-## moveSelectionEnd
+### getLineNumberMetrics
 
-## moveSelectionHome
+### isHardwareAcceleratedDrawAllowed
 
-## moveSelectionLeft
+### setHardwareAcceleratedDrawAllowed
 
-## moveSelectionRight
+设置是否允许编辑器使用 RenderNode 来绘制文本。
 
-## moveSelectionUp
+启用此功能会导致更多内存使用,但编辑器可以更快地显示文本。
 
-## notifyIMEExternalCursorChange
+但是,仅当在此视图上启用硬件加速时,切换才会产生区别。
 
-## onCheckIsTextEditor
+| 参数              | 类型        | 描述 |
+|-----------------|-----------|----|
+| acceleratedDraw | `boolean` |    |
 
-## onColorFullUpdate
+### getEdgeEffectColor
 
-## onColorUpdated
+获取 EdgeEffect 的颜色
 
-## onCreateInputConnection
+### setEdgeEffectColor
 
-## onFormatFail
+设置 EdgeEffect 的颜色
 
-## onFormatSucceed
+### getCurrentCursorBlock
 
-## onGenericMotionEvent
+### getSpansForLine
 
-## onInitializeAccessibilityEvent
+获取给定行上的跨度
 
-## onKeyDown
+### measureLineNumber
 
-## onKeyMultiple
+获取行号区域的宽度(包括行号边距)
 
-## onKeyUp
+### updateCompletionWindowPosition
 
-## onRemove
+### deleteText
 
-## onTouchEvent
+删除光标前的文本或选中文本(如果有)
 
-## pasteText
+### commitText
 
-## performAccessibilityAction
+将文本从 IME 提交到内容
 
-## postDelayedInLifecycle
+| 参数              | 类型             | 描述 |
+|-----------------|----------------|----|
+| text            | `CharSequence` |    |
+| applyAutoIndent | `boolean`      | 可选 |
 
-## postInLifecycle
+### getLineInfoTextSize
 
-## redo
+### setLineInfoTextSize
 
-## release
+设置行信息面板的文本大小
 
-## removeCallbacks
+| 参数   | 类型      | 描述              |
+|------|---------|-----------------|
+| size | `float` | 行信息的文本大小,单位为 SP |
 
-## replaceComponent
+### getNonPrintablePaintingFlags
 
-## rerunAnalysis
+### setNonPrintablePaintingFlags
 
-## restartInput
+设置非打印字符的绘画标志。
 
-## selectAll
+指定它们应该绘制在哪里以及一些其他属性。
 
-## selectCurrentWord
+标志可以`混合`。
 
-## selectWord
+| 参数    | 类型    | 描述                                                    |
+|-------|-------|-------------------------------------------------------|
+| flags | `int` | [标志](/zh-cn/constant?id=flag_draw_whitespace_leading) |
 
-## setAutoCompletionItemAdapter
+### ensureSelectionVisible
 
-## setBasicDisplayMode
+使选择可见
 
-## setBlockLineEnabled
+### ensurePositionVisible
 
-## setBlockLineWidth
+| 参数          | 类型        | 描述             | 可选的 |
+|-------------|-----------|----------------|-----|
+| line        | `int`     | 文本中的行          |     |
+| column      | `int`     | 文本中的列          |     |
+| noAnimation | `boolean` | 如果不应用动画则为 true | 是   |
 
-## setColorScheme
+### hasClip
 
-## setCompletionWndPositionMode
+是否有裁剪
 
-## setCursorAnimationEnabled
+### getDpUnit
 
-## setCursorAnimator
+获取 1dp = ?px
 
-## setCursorBlinkPeriod
+### getScroller
 
-## setCursorWidth
+从 EventHandler 获取滚动器。您最好不要使用它进行自己的滚动
 
-## setDiagnosticIndicatorStyle
+### isOverMaxY
 
-## setDiagnostics
+检查位置是否超过最大 Y 位置
 
-## setDisplayLnPanel
+| 参数          | 类型      | 描述         |
+|-------------|---------|------------|
+| posOnScreen | `float` | 在视图上的 Y 位置 |
 
-## setDividerMargin
+### getPointPosition
 
-## setDividerMargin
+使用滚动坐标中的位置确定字符位置
 
-## setDividerWidth
+| 参数      | 类型      | 描述         |
+|---------|---------|------------|
+| xOffset | `float` | 滚动坐标中的水平位置 |
+| yOffset | `float` | 滚动坐标中的垂直位置 |
 
-## setEdgeEffectColor
+### getPointPositionOnScreen
 
-## setEditable
+使用视图上的位置确定字符位置
 
-## setEditorLanguage
+| 参数 | 类型      | 描述      |
+|----|---------|---------|
+| x  | `float` | 在视图上的 x | 
+| y  | `float` | 在视图上的 y |
 
-## setFirstLineNumberAlwaysVisible
+### hasClip
 
-## setFontFeatureSettings
+是否有裁剪
 
-## setFormatTip
+### getDpUnit
 
-## setHardwareAcceleratedDrawAllowed
+获取 1dp = ?px
 
-## setHighlightBracketPair
+### getScroller
 
-## setHighlightCurrentBlock
+从 EventHandler 获取滚动器。您最好不要使用它进行自己的滚动
 
-## setHighlightCurrentLine
+### isOverMaxY
 
-## setHorizontalScrollBarEnabled
+检查位置是否超过最大 Y 位置
 
-## setHorizontalScrollbarThumbDrawable
+| 参数          | 类型      | 描述         |
+|-------------|---------|------------|  
+| posOnScreen | `float` | 在视图上的 Y 位置 |
 
-## setHorizontalScrollbarTrackDrawable
+### getPointPosition
 
-## setInputType
+使用滚动坐标中的位置确定字符位置
 
-## setInterceptParentHorizontalScrollIfNeeded
+| 参数      | 类型      | 描述         |
+|---------|---------|------------|
+| xOffset | `float` | 滚动坐标中的水平位置 |
+| yOffset | `float` | 滚动坐标中的垂直位置 |
 
-## setLayoutBusy
+### getPointPositionOnScreen
 
-## setLigatureEnabled
+使用视图上的位置确定字符位置
 
-## setLineInfoTextSize
+| 参数 | 类型      | 描述      |
+|----|---------|---------|
+| x  | `float` | 在视图上的 x |
+| y  | `float` | 在视图上的 y |
 
-## setLineNumberAlign
+### hasClip
 
-## setLineNumberEnabled
+是否有裁剪
 
-## setLineNumberMarginLeft
+### getDpUnit
 
-## setLineNumberTipTextProvider
+获取 1dp = ?px
 
-## setLineSeparator
+### getScroller
 
-## setLineSpacing
+从 EventHandler 获取滚动器。您最好不要使用它进行自己的滚动
 
-## setLineSpacingExtra
+### isOverMaxY
 
-## setLineSpacingMultiplier
+检查位置是否超过最大 Y 位置
 
-## setLnPanelPosition
-
-## setLnPanelPositionMode
-
-## setNonPrintablePaintingFlags
-
-## setPinLineNumber
-
-## setRenderFunctionCharacters
-
-## setScalable
-
-## setScaleTextSizes
-
-## setScrollBarEnabled
-
-## setSelection
-
-## setSelection
-
-## setSelection
-
-## setSelection
-
-## setSelectionHandleStyle
-
-## setSelectionRegion
-
-## setSelectionRegion
-
-## setSelectionRegion
-
-## setSelectionRegion
-
-## setStickyTextSelection
-
-## setStyles
-
-## setTabWidth
-
-## setText
-
-## setText
-
-## setText
-
-## setTextLetterSpacing
-
-## setTextScaleX
-
-## setTextSize
-
-## setTextSizePx
-
-## setTypefaceLineNumber
-
-## setTypefaceText
-
-## setUndoEnabled
-
-## setVerticalExtraSpaceFactor
-
-## setVerticalScrollBarEnabled
-
-## setVerticalScrollbarThumbDrawable
-
-## setVerticalScrollbarTrackDrawable
-
-## setWordwrap
-
-## setWordwrap
-
-## showSoftInput
-
-## subscribeEvent
-
-## undo
-
-## updateCompletionWindowPosition
-
-## updateCursor
-
-## updateStyles
+| 参数          | 类型      | 描述         |  
+|-------------|---------|------------|
+| posOnScreen | `float` | 在视图上的 Y 位置 |

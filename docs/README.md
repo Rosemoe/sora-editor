@@ -12,7 +12,7 @@ sora-editor is a cool and optimized code editor on Android platform
 
 </div>
 
-Read this in other languages: [English](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.md), [简体中文](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.zh-cn.md), [Español](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.es.md), [日本語](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.jp.md).
+Read this in other languages: [English](https://github.com/Rosemoe/sora-editor/blob/main/README.md), [简体中文](https://github.com/Rosemoe/sora-editor/blob/main/README.zh-cn.md), [Español](https://github.com/Rosemoe/sora-editor/blob/main/README.es.md), [日本語](https://github.com/Rosemoe/sora-editor/blob/main/README.jp.md).
 
 Note that statements in other languages may not be up-to-date.
 

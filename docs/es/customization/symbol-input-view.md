@@ -1,10 +1,10 @@
-# 符号输入面板
+# Symbol Input Panel
 
-我们提供了一个便捷的符号输入面板`SymbolInputView`供您使用。
+We provide a convenient symbol input panel `SymbolInputView` for you to use.
 
-## 使用方式 <!-- {docsify-ignore} -->
+## Implementation <!-- {docsify-ignore} -->
 
-### 添加 SymbolInputView
+### Add SymbolInputView
 
 ``` xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -42,7 +42,7 @@
 </androidx.constraintlayout.widget.ConstraintLayout>
 ```
 
-### 将符号输入面板和编辑器绑定
+### Bind the symbol input panel to the editor
 
 ``` java
 CodeEditor codeEditor = findViewById(R.id.editor);

@@ -8,9 +8,9 @@
   - 快捷键
     - [自定义快捷键](/zh-cn/customization/keybinding.md "自定义快捷键")
     - [默认快捷键](/zh-cn/customization/default-keybindings.md "默认快捷键")
-- [语言服务（LSP）](/zh-cn/lsp.md "语言服务（LSP）")
+- [语言服务器协议（LSP）](/zh-cn/lsp.md "语言服务器协议（LSP）")
 - [textmate](/zh-cn/textmate.md "textmate")
-- Java 文档
+- 参考
   - [API接口](/zh-cn/api.md "API接口")
   - [常量](/zh-cn/constant.md "常量")
 - [更新日志](/zh-cn/changelog.md "更新日志")

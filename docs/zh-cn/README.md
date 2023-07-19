@@ -12,7 +12,7 @@ sora-editor是一款高效的安卓代码编辑器
 
 </div>
 
-阅读其他语言的文档: [English](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.md), [简体中文](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.zh-cn.md), [Español](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.es.md), [日本語](https://raw.githubusercontent.com/Rosemoe/sora-editor/main/README.jp.md).
+阅读其他语言的文档: [English](https://github.com/Rosemoe/sora-editor/blob/main/README.md), [简体中文](https://github.com/Rosemoe/sora-editor/blob/main/README.zh-cn.md), [Español](https://github.com/Rosemoe/sora-editor/blob/main/README.es.md), [日本語](https://github.com/Rosemoe/sora-editor/blob/main/README.jp.md).
 
 ***这个项目仍在缓慢开发中，欢迎提交问题和合并请求***
 
