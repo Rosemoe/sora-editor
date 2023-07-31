@@ -1076,6 +1076,9 @@ public class EditorRenderer {
         var limit = editor.getProps().stickyScrollIterationLimit;
         for (int i = 0; i < size && i < limit; i++) {
             var block = codeBlocks.get(i);
+            if (block == null) {
+                continue;
+            }
             if (block.startLine > startLine) {
                 break;
             }
