@@ -68,21 +68,20 @@ class LspLanguageServerService : Service() {
 
                 val server = LuaLanguageServer();
 
-
                 val inputStream = socketClient.getInputStream()
                 val outputStream = socketClient.getOutputStream()
-
 
                 val launcher = Launcher.createLauncher(
                     server, LuaLanguageClient::class.java,
                     inputStream, outputStream
-                );
+                )
+
                 val remoteProxy = launcher.remoteProxy
 
                 server.connect(remoteProxy);
 
                 launcher.startListening()
-                    .get(Long.MAX_VALUE,TimeUnit.SECONDS)
+                    .get()
 
                 /* XMLServerLauncher.launch(
                      socketClient.getInputStream(),
@@ -95,8 +94,6 @@ class LspLanguageServerService : Service() {
             socketClient.close()
 
             socket.close()
-
-
         }
 
         return START_STICKY
