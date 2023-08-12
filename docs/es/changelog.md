@@ -1,4 +1,30 @@
-# 更新日志
+# Changelog
+
+## **[0.21.1](https://github.com/Rosemoe/sora-editor/releases/tag/0.21.1) (2023-03-10)**
+
+> This release includes minor bug fixes and new features.
+
+### Bugs fixed
+
+- renderer may crash when null code block item is added
+- index out of bounds when selection is between CR and LF
+- `CharArrayWrapper#subSequence` refers to wrong text start
+- text wrongly inserted between CRLF
+- editor is still listening to text changes after release, causing memory leaks
+- occasional index out of bounds when measuring text in `GraphicTextRow`
+
+### Improvments
+
+- `EditorReleaseEvent` is added, allowing you to do some cleanup on destruction
+- add `ContentIO` for creating/saving `Content` texts
+- add strikethrough color in scheme
+- simplify composing text update as insertion or deletion if possible [#357](https://github.com/Rosemoe/sora-editor/issues/357)
+- signature help window for lsp (by **[@dingyi222666](https://github.com/dingyi222666)** )
+- add `ThemeModel#isDark` for lsp (by **[@dingyi222666](https://github.com/dingyi222666)** )
+
+### Notes
+
+- `ContentReader` should be migrated to `ContentIO`.`ContentReader` will be removed in future.
 
 ## **[0.21.0](https://github.com/Rosemoe/sora-editor/releases/tag/0.21.0) (2023-01-08)**
 
@@ -8,62 +34,45 @@
 
 - incorrect horizontal scroll range when `renderFunctionCharacter` is on
 - `TSQuery` is not verified before making access to it
-- IME that relies on `InputConnection#getSurroundingText` gets invalid position description
-  when `maxIPCTextLength` is exceeded
+- IME that relies on `InputConnection#getSurroundingText` gets invalid position description when `maxIPCTextLength` is exceeded
 - invalid composing text range can be set through `EditorInputConnection#setComposingRegion`
 - text becomes dirty when using old Gboard to delete characters fast
 - animated row background is on wrong layer
 - empty text is matched repeatly in regex, leading to OOM
-- `StringIndex OutOfBoundsException` in `TextMateNewlineHandler` (by *
-  *[@dingyi222666](https://github.com/dingyi222666)**)
+- `StringIndex OutOfBoundsException` in `TextMateNewlineHandler` (by **[@dingyi222666](https://github.com/dingyi222666)**)
 - `CodeEditor#release` does not detach `EditorColorScheme`
 - NPE when sending message in `AsyncIncrementalAnalyzeManager`
 - leaking thread by `TextMateLanguage#updateLanguage`
-- `ReplaceAction` can be added without its `DeleteAction`
-- nested undo/redo is possible
-- `JavaTextTokenizer` does not take down current
-  token [#349](https://github.com/Rosemoe/sora-editor/issues/349)
-- `AsyncIncrementalAnalyzeManager` does not update the spans of last line being affected by
-  insertion [#350](https://github.com/Rosemoe/sora-editor/issues/350)
+- `ReplaceAction` can be added without its `DeleteAction` nested undo/redo is possible
+- `JavaTextTokenizer` does not take down current token [#349](https://github.com/Rosemoe/sora-editor/issues/349)
+- `AsyncIncrementalAnalyzeManager` does not update the spans of last line being affected by insertion [#350](https://github.com/Rosemoe/sora-editor/issues/350)
 - `Styles#eraseAllLineStyles` raises npe when no line style is there
 
 ### Improvments
 
-- better search experience, including support for whole word search, speed improvement of regex
-  search, cyclic jumping
-  and better scrolling strategy [#321](https://github.com/Rosemoe/sora-editor/issues/321)
+- better search experience, including support for whole word search, speed improvement of regexsearch, cyclic jumping and better scrolling strategy [#321](https://github.com/Rosemoe/sora-editor/issues/321)
 - performance improvement of tree-sitter predicates
 - avoid edge effect in `CodeEditor#ensurePositionVisible`
 - boost the speed of querying search results by binary search
 - show built-in text actions window on insert handle release
 - add touch slop before magnifier is triggered
 - add `I18nConfig` for application provided replacement string resources
-- add `DirectAccessProps#clipboardTextLengthLimit` and add tip when text is unable to be copied due
-  to limit
-  or `TransactionTooLargeException`
+- add `DirectAccessProps#clipboardTextLengthLimit` and add tip when text is unable to be copied due to limit or `TransactionTooLargeException`
 - more exact position of built-in text actions window
 - editor uses global default color scheme on startup
-- enhanced function of `DirectAccessProps#disallowSuggestions` (tested on newest Gboard and Sogou
-  Input for MIUI)
+- enhanced function of `DirectAccessProps#disallowSuggestions` (tested on newest Gboard and Sogou Input for MIUI)
 - adapt view parameters for long screenshot in MIUI system
 - add two new accessibility actions since Android M
 
 ### Updated API
 
 - new function `Content#substring`
-- new event `PublishSearchResultEvent`, which is called when search result is available in main
-  thread or searching is
-  stopped
+- new event `PublishSearchResultEvent`, which is called when search result is available in main thread or searching is stopped
 - new `I18nConfig` class for replacing string resources
 - new function `add CodeEditor#isAntiWordBreaking`
-- **[BREAKING]** new API in `EditorColorScheme` for global default theme. All newly-created editors
-  use the global
-  default theme. Your modifications to global default theme will reflect in those editors.
-- **[BREAKING]** `CodeEditor#getScroller` now has return type `EditorScroller`. Get the
-  original `OverScroller`
-  by `EditorScroller#getImplScroller`
-- **[BREAKING]** `AsyncIncrementalAnalyzeManager` and `TsAnalyzeManager` will receive thread
-  interruption on exit
+- **[BREAKING]** new API in `EditorColorScheme` for global default theme. All newly-created editors use the global default theme. Your modifications to global default theme will reflect in those editors.
+- **[BREAKING]** `CodeEditor#getScroller` now has return type `EditorScroller`. Get the original `OverScroller` by `EditorScroller#getImplScroller`
+- **[BREAKING]** `AsyncIncrementalAnalyzeManager` and `TsAnalyzeManager` will receive thread interruption on exit
 
 ## **[0.20.4](https://github.com/Rosemoe/sora-editor/releases/tag/0.20.4) (2022-12-30)**
 
