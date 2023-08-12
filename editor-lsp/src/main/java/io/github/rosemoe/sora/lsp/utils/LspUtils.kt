@@ -34,6 +34,7 @@ import io.github.rosemoe.sora.util.ArrayList
 import io.github.rosemoe.sora.widget.CodeEditor
 import org.eclipse.lsp4j.CompletionContext
 import org.eclipse.lsp4j.CompletionParams
+import org.eclipse.lsp4j.CompletionTriggerKind
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.DiagnosticSeverity
 import org.eclipse.lsp4j.DidChangeTextDocumentParams
@@ -75,11 +76,9 @@ fun FileUri.createDidChangeTextDocumentParams(
 }
 
 fun FileUri.createTextDocumentContentChangeEvent(
-    range: Range,
-    rangeLength: Int,
-    text: String
+    range: Range, text: String
 ): TextDocumentContentChangeEvent {
-    return TextDocumentContentChangeEvent(range, rangeLength, text)
+    return TextDocumentContentChangeEvent(range, text)
 }
 
 fun FileUri.createTextDocumentContentChangeEvent(
@@ -108,8 +107,7 @@ fun TextRange.asLspRange(): Range {
     return Range(this.start.asLspPosition(), this.end.asLspPosition())
 }
 
-fun LspEditor.createDidOpenTextDocumentParams(
-): DidOpenTextDocumentParams {
+fun LspEditor.createDidOpenTextDocumentParams(): DidOpenTextDocumentParams {
     val params = DidOpenTextDocumentParams()
     params.textDocument = TextDocumentItem(
         this.uri.toFileUri(), this.fileExt, getVersion(this.uri), editorContent
@@ -122,13 +120,13 @@ fun FileUri.createDocumentDiagnosticParams(): DocumentDiagnosticParams {
 }
 
 fun FileUri.createCompletionParams(
-    position: Position,
-    context: CompletionContext
+    position: Position, context: CompletionContext
 ): CompletionParams {
     val params = CompletionParams()
     params.textDocument = this.createTextDocumentIdentifier()
     params.position = position
     params.context = context
+    context.triggerKind = CompletionTriggerKind.TriggerCharacter
     return params
 }
 
@@ -152,12 +150,10 @@ fun List<Diagnostic>.transformToEditorDiagnostics(editor: CodeEditor): List<Diag
         val diagnostic = DiagnosticRegion(
             diagnosticSource.range.start.getIndex(editor),
             diagnosticSource.range.end.getIndex(editor),
-            diagnosticSource.severity.toEditorLevel(), id++,
+            diagnosticSource.severity.toEditorLevel(),
+            id++,
             DiagnosticDetail(
-                diagnosticSource.severity.name,
-                diagnosticSource.message,
-                null,
-                null
+                diagnosticSource.severity.name, diagnosticSource.message, null, null
             )
         )
         result.add(diagnostic)

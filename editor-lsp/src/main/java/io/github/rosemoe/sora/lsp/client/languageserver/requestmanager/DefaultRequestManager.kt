@@ -106,7 +106,11 @@ class DefaultRequestManager(
 ) : RequestManager() {
 
     private val textDocumentOptions: TextDocumentSyncOptions? =
-        if (serverCapabilities.textDocumentSync.isRight) serverCapabilities.textDocumentSync.right else null
+        if (serverCapabilities.textDocumentSync.isRight) serverCapabilities.textDocumentSync.right else TextDocumentSyncOptions().apply {
+            change = serverCapabilities.textDocumentSync.left
+            openClose = true
+            save = Either.forLeft(true)
+        }
     private val workspaceService: WorkspaceService =
         server.workspaceService
     private val textDocumentService: TextDocumentService = server.textDocumentService

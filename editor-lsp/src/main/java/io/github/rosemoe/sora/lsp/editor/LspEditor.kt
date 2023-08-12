@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.lsp.editor
 
+import androidx.annotation.WorkerThread
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager
@@ -98,15 +99,14 @@ class LspEditor(
             currentEditor.setEditorLanguage(currentLanguage)
             signatureHelpWindowWeakReference = WeakReference(SignatureHelpWindow(currentEditor))
 
-
             editorContentChangeEventReceiver = LspEditorContentChangeEventReceiver(this)
 
             val subscriptionReceipt =
-                editor?.subscribeEvent<ContentChangeEvent>(
+                currentEditor.subscribeEvent<ContentChangeEvent>(
                     editorContentChangeEventReceiver
                 )
 
-            unsubscribeFunction = Runnable { subscriptionReceipt?.unsubscribe() }
+            unsubscribeFunction = Runnable { subscriptionReceipt.unsubscribe() }
         }
         get() {
             return _currentEditor.get()
@@ -161,19 +161,15 @@ class LspEditor(
 
     @Throws(TimeoutException::class)
     suspend fun connect(throwException: Boolean = true): Boolean = withContext(Dispatchers.IO) {
+        eventManager.init()
         runCatching {
-            println("0")
             languageServerWrapper.start()
 
             //wait for language server start
-            println("1")
             languageServerWrapper.getServerCapabilities()
                 ?: throw TimeoutException("Unable to connect language server")
 
-            println("2")
             languageServerWrapper.connect(this@LspEditor)
-
-            println("3?")
         }.onFailure {
             if (throwException) {
                 throw it
@@ -208,8 +204,6 @@ class LspEditor(
             Thread.sleep((retryTime / 10).toLong())
         }
 
-        println("isConnected: $isConnected")
-
         if (!isConnected && start > maxRetryTime) {
             throw TimeoutException("Unable to connect language server")
         } else if (!isConnected) {
@@ -221,6 +215,7 @@ class LspEditor(
     /**
      * disconnect to the language server
      */
+    @WorkerThread
     fun disconnect() {
         runCatching {
             coroutineScope.future {
@@ -289,6 +284,7 @@ class LspEditor(
     }
 
 
+    @WorkerThread
     fun dispose() {
         if (isClose) {
             return

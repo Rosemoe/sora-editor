@@ -53,8 +53,6 @@ public class GrammarRegistry {
 
     private Registry registry = new Registry();
 
-
-
     private GrammarRegistry parent;
 
     private final Map</* scopeName */String, LanguageConfiguration> languageConfigurationMap = new LinkedHashMap<>();

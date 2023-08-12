@@ -99,6 +99,11 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
 
     }
 
+    override fun refreshDiagnostics(): CompletableFuture<Void> {
+        // support it.
+        return CompletableFuture.completedFuture(null)
+    }
+
     override fun showMessage(messageParams: MessageParams) {
         context.eventListener.onShowMessage(messageParams)
     }

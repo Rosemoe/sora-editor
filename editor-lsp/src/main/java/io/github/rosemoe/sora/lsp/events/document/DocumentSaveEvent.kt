@@ -22,41 +22,44 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lsp.client.connection
+package io.github.rosemoe.sora.lsp.events.document
+
+import io.github.rosemoe.sora.lsp.editor.LspEditor
+import io.github.rosemoe.sora.lsp.events.AsyncEventListener
+import io.github.rosemoe.sora.lsp.events.EventContext
+import io.github.rosemoe.sora.lsp.events.EventType
+import io.github.rosemoe.sora.lsp.utils.createDidSaveTextDocumentParams
+import kotlinx.coroutines.future.await
+import java.util.concurrent.CompletableFuture
 
 
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-import java.net.Socket
+class DocumentSaveEvent : AsyncEventListener() {
+    override val eventName = "textDocument/didSave"
 
+    var future: CompletableFuture<Void>? = null
 
-/**
- * Socket-based language server connection
- */
-class SocketStreamConnectionProvider(
-    private val port:Int,
-    private val host:String? = null
-) : StreamConnectionProvider {
-    private lateinit var socket: Socket
+    override suspend fun handleAsync(context: EventContext) {
+        val editor = context.get<LspEditor>("lsp-editor")
 
-    @Throws(IOException::class)
-    override fun start() {
-        val port = port
-        socket = Socket(host ?: "localhost", port)
-    }
+        val params = editor.createDidSaveTextDocumentParams()
 
-    override val inputStream: InputStream
-        get() = socket.getInputStream()
-
-    override val outputStream: OutputStream
-        get() = socket.getOutputStream()
-
-    override fun close() {
-        try {
-            socket.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
+        editor.requestManager?.let { requestManager ->
+            future = CompletableFuture.runAsync {
+                requestManager.didSave(
+                    params
+                )
+            }?.apply {
+                await()
+            }
         }
     }
+
+    override fun dispose() {
+        future?.cancel(true);
+        future = null;
+    }
+
 }
+
+val EventType.documentSave: String
+    get() = "textDocument/didSave"

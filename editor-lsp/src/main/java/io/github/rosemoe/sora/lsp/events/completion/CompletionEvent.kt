@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.lsp.events.completion
 
+import android.util.Log
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp.events.EventContext
@@ -46,9 +47,6 @@ class CompletionEvent : AsyncEventListener() {
     private var future: CompletableFuture<List<CompletionItem>>? = null
 
     override suspend fun handleAsync(context: EventContext) {
-        future?.cancel(true)
-        future = null
-
         val editor = context.get<LspEditor>("lsp-editor")
         val position = context.getByClass<CharPosition>() ?: return
 

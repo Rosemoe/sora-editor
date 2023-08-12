@@ -159,12 +159,7 @@ class EventContext {
     }
 
     fun <T : Any> getByClass(clazz: Class<T>): T? {
-        for (value in data.values) {
-            if (clazz.isInstance(value)) {
-                return value as T
-            }
-        }
-        return null
+        return data.values.filterIsInstance(clazz).firstOrNull()
     }
 
     operator fun plus(context: EventContext): EventContext {
@@ -176,6 +171,9 @@ class EventContext {
         data.clear()
     }
 
+    override fun toString(): String {
+        return data.toString()
+    }
 }
 
 inline fun <reified T : Any> EventContext.getByClass(): T? {

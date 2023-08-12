@@ -35,7 +35,9 @@ import io.github.rosemoe.sora.lsp.events.getByClass
 import io.github.rosemoe.sora.lsp.utils.createTextDocumentIdentifier
 import io.github.rosemoe.sora.lsp.utils.asLspPosition
 import io.github.rosemoe.sora.text.CharPosition
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.SignatureHelpParams
@@ -48,23 +50,23 @@ class SignatureHelpEvent : AsyncEventListener() {
 
     override val isAsync = true
 
-    override suspend fun handleAsync(context: EventContext) {
+    override suspend fun handleAsync(context: EventContext) = withContext(Dispatchers.IO) {
         val editor = context.get<LspEditor>("lsp-editor")
-        val position = context.getByClass<CharPosition>() ?: return
+        val position = context.getByClass<CharPosition>() ?: return@withContext
 
-        val requestManager = editor.requestManager ?: return
+        val requestManager = editor.requestManager ?: return@withContext
 
         val signatureHelpParams = SignatureHelpParams(
             editor.uri.createTextDocumentIdentifier(),
             position.asLspPosition()
         )
 
-        val future = requestManager.signatureHelp(signatureHelpParams) ?: return
+        val future = requestManager.signatureHelp(signatureHelpParams) ?: return@withContext
 
-        this.future = future.thenAccept { }
+        this@SignatureHelpEvent.future = future.thenAccept { }
 
         try {
-            val signatureHelp: SignatureHelp
+            val signatureHelp: SignatureHelp?
 
             withTimeout(Timeout[Timeouts.SIGNATURE].toLong()) {
                 signatureHelp =

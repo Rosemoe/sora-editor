@@ -30,44 +30,39 @@ import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp.events.EventContext
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.document.applyEdits
+import io.github.rosemoe.sora.lsp.events.getByClass
 import io.github.rosemoe.sora.lsp.requests.Timeout
 import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.LSPException
 import io.github.rosemoe.sora.lsp.utils.createTextDocumentIdentifier
-import io.github.rosemoe.sora.lsp.utils.asLspRange
 import io.github.rosemoe.sora.text.Content
-import io.github.rosemoe.sora.text.TextRange
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import org.eclipse.lsp4j.DocumentRangeFormattingParams
+import org.eclipse.lsp4j.DocumentFormattingParams
 import org.eclipse.lsp4j.FormattingOptions
 import org.eclipse.lsp4j.TextEdit
 
 
-class RangeFormattingEvent : AsyncEventListener() {
-    override val eventName = "textDocument/rangeFormatting"
+class FullFormattingEvent : AsyncEventListener() {
+    override val eventName = "textDocument/formatting"
 
     override suspend fun handleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")
 
-        val textRange = context.get<TextRange>("range")
-        val content = context.get<Content>("text")
+        val content = context.getByClass<Content>() ?: return
 
         val requestManager = editor.requestManager ?: return
 
-        val formattingParams = DocumentRangeFormattingParams()
+        val formattingParams = DocumentFormattingParams()
 
         formattingParams.options = editor.eventManager.getOption<FormattingOptions>()
 
         formattingParams.textDocument =
             editor.uri.createTextDocumentIdentifier()
 
-
-        formattingParams.range = textRange.asLspRange()
-
-        val formattingFuture = requestManager.rangeFormatting(formattingParams) ?: return
+        val formattingFuture = requestManager.formatting(formattingParams) ?: return
 
         try {
             val textEditList: List<TextEdit>
@@ -90,5 +85,5 @@ class RangeFormattingEvent : AsyncEventListener() {
 
 }
 
-val EventType.rangeFormatting: String
-    get() = "textDocument/rangeFormatting"
+val EventType.fullFormatting: String
+    get() = "textDocument/formatting"

@@ -65,6 +65,8 @@ class LspProject(
 
     val diagnosticsContainer = DiagnosticsContainer()
 
+    private var isInit = false
+
     val coroutineScope =
         CoroutineScope(ForkJoinPool.commonPool().asCoroutineDispatcher() + SupervisorJob())
 
@@ -113,6 +115,7 @@ class LspProject(
     internal fun getLanguageServerWrapper(ext: String): LanguageServerWrapper? {
         return languageServerWrappers[ext]
     }
+
     internal fun getOrCreateLanguageServerWrapper(ext: String): LanguageServerWrapper {
         return languageServerWrappers[ext] ?: createLanguageServerWrapper(ext)
     }
@@ -135,7 +138,10 @@ class LspProject(
     }
 
     fun init() {
-        initEventEmitter()
+        if (!isInit) {
+            initEventEmitter()
+        }
+        isInit = true
     }
 
     private fun initEventEmitter() {

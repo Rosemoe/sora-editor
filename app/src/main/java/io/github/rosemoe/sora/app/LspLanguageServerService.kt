@@ -40,7 +40,6 @@ import kotlin.concurrent.thread
 
 class LspLanguageServerService : Service() {
 
-
     companion object {
         private const val TAG = "LanguageServer"
     }

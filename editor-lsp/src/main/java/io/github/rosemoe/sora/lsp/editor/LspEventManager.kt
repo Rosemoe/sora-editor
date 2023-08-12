@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lsp.editor
 
 import io.github.rosemoe.sora.lsp.events.EventContext
 import io.github.rosemoe.sora.lsp.events.EventListener
+import org.eclipse.lsp4j.FormattingOptions
 import java.util.function.Supplier
 
 
@@ -64,7 +65,7 @@ class LspEventManager(
         eventEmitter.removeListener(eventClass)
     }
 
-    private fun createEventContext(vararg args: Array<out Any>): EventContext {
+    private fun createEventContext(vararg args: Any): EventContext {
         val eventContext = EventContext()
 
         eventContext.put("lsp-editor", editor)
@@ -78,11 +79,11 @@ class LspEventManager(
     }
 
     fun emit(eventName: String, vararg args: Any): EventContext {
-        return eventEmitter.emit(eventName, createEventContext(args))
+        return eventEmitter.emit(eventName, createEventContext(*args))
     }
 
     suspend fun emitAsync(eventName: String, vararg args: Any): EventContext {
-        return eventEmitter.emitAsync(eventName, createEventContext(args))
+        return eventEmitter.emitAsync(eventName, createEventContext(*args))
     }
 
     fun emit(eventName: String, block: EventContext.() -> Unit): EventContext {
@@ -109,6 +110,15 @@ class LspEventManager(
         return null
     }
 
+
+    fun init() {
+        project.init()
+
+        val formattingOptions = FormattingOptions()
+        formattingOptions.tabSize = 4
+        formattingOptions.isInsertSpaces = true
+        addOption(formattingOptions)
+    }
 
     fun addOption(option: Any) {
         options.add(option)

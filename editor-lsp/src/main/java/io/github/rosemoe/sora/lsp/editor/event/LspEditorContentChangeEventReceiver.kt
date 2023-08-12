@@ -39,7 +39,7 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
     EventReceiver<ContentChangeEvent> {
     override fun onReceive(event: ContentChangeEvent, unsubscribe: Unsubscribe) {
 
-        editor.coroutineScope.launch(Dispatchers.Main) {
+        editor.coroutineScope.launch(Dispatchers.IO) {
             // send to server
             editor.eventManager.emitAsync(EventType.documentChange, event)
 

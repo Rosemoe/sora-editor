@@ -179,7 +179,7 @@ class LanguageServerWrapper(
      * @param throwException Whether to throw a startup failure exception
      */
     fun start(throwException: Boolean) {
-        if (status != ServerStatus.STOPPED && alreadyShownCrash && alreadyShownTimeout) {
+        if (status != ServerStatus.STOPPED || alreadyShownCrash || alreadyShownTimeout) {
             return
         }
 
@@ -425,7 +425,6 @@ class LanguageServerWrapper(
             return
         }
 
-        println("4")
         val capabilities = getServerCapabilities()
         if (capabilities == null) {
             Log.w(
@@ -447,10 +446,8 @@ class LanguageServerWrapper(
             return
         }
 
-        println("5")
         localInitializeFuture.get(Timeout[Timeouts.INIT].toLong(), TimeUnit.MILLISECONDS)
 
-        println("6")
         try {
             val syncOptions =
                 capabilities.textDocumentSync ?: return
@@ -478,8 +475,6 @@ class LanguageServerWrapper(
             editor.signatureHelpReTriggers = signatureHelpReTriggers
             editor.completionTriggers = completionTriggers
 
-            println("7")
-
             commonCoroutineScope.future {
                 editor.openDocument()
             }.get()
@@ -487,7 +482,6 @@ class LanguageServerWrapper(
             for (ed in readyToConnect) {
                 connect(ed)
             }
-            println("8")
 
         } catch (e: Exception) {
 
