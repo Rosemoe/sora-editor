@@ -1099,6 +1099,16 @@ public class EditorRenderer {
                 candidates = candidates.subList(0, maxLines);
             }
         }
+        if (editor.getCursor().isSelected() && editor.getProps().stickyScrollAutoCollapse) {
+            var limitLine = editor.getCursor().getLeftLine();
+            var firstVis = editor.getFirstVisibleLine();
+            int lastSelectionLine = editor.getCursor().getRightLine();
+            if (lastSelectionLine >= firstVis) {
+                while (!candidates.isEmpty() && firstVis + candidates.size() >= limitLine) {
+                    candidates.remove(candidates.size() - 1);
+                }
+            }
+        }
         return candidates;
     }
 

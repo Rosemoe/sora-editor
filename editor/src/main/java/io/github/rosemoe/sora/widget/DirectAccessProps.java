@@ -366,4 +366,10 @@ public class DirectAccessProps implements Serializable {
      */
     public int stickyScrollIterationLimit = 1000;
 
+    /**
+     * Hide partially or all of the stuck lines when text is selected
+     */
+    @InvalidateRequired
+    public boolean stickyScrollAutoCollapse = true;
+
 }
