@@ -34,10 +34,15 @@ import io.github.rosemoe.sora.util.IntPair;
  */
 public final class Cursor {
 
+    public final static int DIRECTION_NONE = 0;
+    public final static int DIRECTION_LTR = 1;
+    public final static int DIRECTION_RTL = 2;
+
     private final Content content;
     private final CachedIndexer indexer;
     private CharPosition leftSel, rightSel;
     private CharPosition cache0, cache1, cache2;
+    private int selDirection = DIRECTION_NONE;
 
     /**
      * Create a new Cursor for Content
@@ -196,6 +201,27 @@ public final class Cursor {
      */
     public boolean isSelected() {
         return leftSel.index != rightSel.index;
+    }
+
+    /**
+     * Set current direction of selection.
+     *
+     * @see #getSelectionDirection()
+     * @see #DIRECTION_NONE
+     * @see #DIRECTION_LTR
+     * @see #DIRECTION_RTL
+     */
+    public void setSelectionDirection(int selDirection) {
+        this.selDirection = selDirection;
+    }
+
+    /**
+     * Get current direction of selection
+     *
+     * @see #setSelectionDirection(int)
+     */
+    public int getSelectionDirection() {
+        return selDirection;
     }
 
     /**
