@@ -121,7 +121,7 @@ open class TsLanguageSpec(
                     throw IllegalArgumentException("use non-ASCII characters in scm source is unexpected")
                 }
             }
-            if (!tsQuery.isValid) {
+            if (!tsQuery.canAccess()) {
                 throw IllegalArgumentException("Syntax highlights query is invalid")
             }
             if (tsQuery.errorType != TSQueryError.None) {
