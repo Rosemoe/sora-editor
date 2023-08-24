@@ -30,6 +30,7 @@ import static io.github.rosemoe.sora.util.Numbers.stringSize;
 import android.annotation.SuppressLint;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -2359,7 +2360,6 @@ public class EditorRenderer {
         paintGeneral.setStyle(android.graphics.Paint.Style.FILL_AND_STROKE);
         paintGeneral.setFakeBoldText(editor.getProps().boldMatchingDelimiters);
         var positions = getTextRegionPositions(start, end);
-        Log.d(LOG_TAG, "positions = " + positions);
         patchTextRegions(canvas, textOffset, positions, (canvasLocal, horizontalOffset, row, line, startCol, endCol, style) -> {
             if (backgroundColor != 0) {
                 tmpRect.top = getRowTopForBackground(row) - editor.getOffsetY();
@@ -2801,12 +2801,24 @@ public class EditorRenderer {
                     && editor.getProps().showSelectionWhenSelected)
                     || (!(handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT
                     || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT) && (editor.getCursorBlink().visibility
-                    || editor.getEventHandler().holdInsertHandle()))) {
-                tmpRect.top = y - (editor.getProps().textBackgroundWrapTextOnly ? editor.getRowHeightOfText() : editor.getRowHeight());
-                tmpRect.bottom = y;
-                tmpRect.left = x - editor.getInsertSelectionWidth() / 2f;
-                tmpRect.right = x + editor.getInsertSelectionWidth() / 2f;
-                drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.SELECTION_INSERT), tmpRect);
+                    || editor.getEventHandler().holdInsertHandle() || editor.isInLongSelect()))) {
+                float startY = y - (editor.getProps().textBackgroundWrapTextOnly ? editor.getRowHeightOfText() : editor.getRowHeight());
+                float stopY = y;
+                paintGeneral.setColor(editor.getColorScheme().getColor(EditorColorScheme.SELECTION_INSERT));
+                paintGeneral.setStrokeWidth(editor.getInsertSelectionWidth());
+                paintGeneral.setStyle(android.graphics.Paint.Style.STROKE);
+                if (editor.isInLongSelect() && !(handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT
+                        || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT)) {
+                    paintGeneral.setPathEffect(new DashPathEffect(new float[]{(stopY - startY) / 8f, (stopY - startY) / 8f}, (stopY - startY) / 16f));
+                    paintGeneral.setStrokeWidth(editor.getInsertSelectionWidth() * 1.5f);
+                }
+                canvas.drawLine(x, startY, x, stopY, paintGeneral);
+                paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
+                paintGeneral.setPathEffect(null);
+            }
+            // Hide insert handle in long select mode
+            if (handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT && editor.isInLongSelect()) {
+                handleType = SelectionHandleStyle.HANDLE_TYPE_UNDEFINED;
             }
             if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED) {
                 editor.getHandleStyle().draw(canvas, handleType, x, y, editor.getRowHeight(), editor.getColorScheme().getColor(EditorColorScheme.SELECTION_HANDLE), descriptor);

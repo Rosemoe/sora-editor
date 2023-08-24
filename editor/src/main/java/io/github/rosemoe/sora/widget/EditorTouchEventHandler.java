@@ -560,7 +560,13 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         notifyLater();
         var lnAction = editor.getProps().actionWhenLineNumberClicked;
         if (region == RegionResolverKt.REGION_TEXT) {
-            editor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
+            if (editor.isInLongSelect()) {
+                var cursor = editor.getCursor();
+                editor.setSelectionRegion(cursor.getLeftLine(), cursor.getLeftColumn(), line, column, false, SelectionChangeEvent.CAUSE_TAP);
+                editor.endLongSelect();
+            } else {
+                editor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
+            }
         } else if (region == RegionResolverKt.REGION_LINE_NUMBER) {
             switch (lnAction) {
                 case DirectAccessProps.LN_ACTION_SELECT_LINE:

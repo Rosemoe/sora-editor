@@ -181,6 +181,10 @@ class EditorKeyEventHandler {
                     editor.setSelection(editorCursor.getLeftLine(), editorCursor.getLeftColumn());
                     return editorKeyEvent.result(true);
                 }
+                if (editor.isInLongSelect()) {
+                    editor.endLongSelect();
+                    return editorKeyEvent.result(true);
+                }
                 return editorKeyEvent.result(false);
             }
             case KeyEvent.KEYCODE_DEL:

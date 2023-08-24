@@ -296,6 +296,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean lastCursorState;
     private boolean stickyTextSelection;
     private boolean highlightBracketPair;
+    private boolean isInLongSelect;
     private boolean anyWrapContentSet;
     private boolean renderFunctionCharacters;
     private SelectionHandleStyle.HandleDescriptor handleDescLeft;
@@ -3816,6 +3817,40 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void jumpToLine(int line) {
         setSelection(line, 0);
+    }
+
+    /**
+     * Mark current selection position as a point of cursor range.
+     * When user taps to select another point in text, the text between the marked point and
+     * newly chosen point is selected.
+     *
+     * @see #isInLongSelect()
+     * @see #endLongSelect()
+     */
+    public void beginLongSelect() {
+        if (!isEditable()) {
+            return;
+        }
+        if (cursor.isSelected()) {
+            setSelection(cursor.getLeftLine(), cursor.getLeftColumn());
+        }
+        isInLongSelect = true;
+        invalidate();
+    }
+
+    /**
+     * Checks whether long select mode is started
+     */
+    public boolean isInLongSelect() {
+        return isInLongSelect;
+    }
+
+    /**
+     * Marks long select mode is end.
+     * This does nothing but set the flag to false.
+     */
+    public void endLongSelect() {
+        isInLongSelect = false;
     }
 
 

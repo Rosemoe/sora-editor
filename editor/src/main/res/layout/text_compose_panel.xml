@@ -65,6 +65,13 @@
 				android:background="#00000000" />
 
 			<ImageButton
+				android:id="@+id/panel_btn_long_select"
+				android:layout_width="45dp"
+				android:layout_height="45dp"
+				android:src="@drawable/editor_text_select_start"
+				android:background="#00000000" />
+
+			<ImageButton
 				android:id="@+id/panel_btn_cut"
 				android:layout_width="45dp"
 				android:layout_height="45dp"
