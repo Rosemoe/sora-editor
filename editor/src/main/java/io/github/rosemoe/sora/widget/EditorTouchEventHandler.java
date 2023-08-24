@@ -528,7 +528,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     @Override
-    public boolean onSingleTapUp(MotionEvent e) {
+    public boolean onSingleTapUp(@NonNull MotionEvent e) {
         scroller.forceFinished(true);
         if (editor.isFormatting()) {
             return true;

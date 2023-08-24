@@ -50,6 +50,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.PointerIcon;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -4325,6 +4326,34 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         text.resetBatchEdit();
         setExtracting(null);
         return inputConnection;
+    }
+
+    @Override
+    public PointerIcon onResolvePointerIcon(MotionEvent event, int pointerIndex) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
+                if (isFormatting()) {
+                    return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_WAIT);
+                }
+                if (touchHandler.hasAnyHeldHandle()) {
+                    return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_GRABBING);
+                }
+                var res = RegionResolverKt.resolveTouchRegion(this, event, pointerIndex);
+                var region = IntPair.getFirst(res);
+                var inbound = IntPair.getSecond(res) == RegionResolverKt.IN_BOUND;
+                if (region == RegionResolverKt.REGION_TEXT && inbound) {
+                    return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_TEXT);
+                } else if (region == RegionResolverKt.REGION_LINE_NUMBER) {
+                    switch (props.actionWhenLineNumberClicked) {
+                        case DirectAccessProps.LN_ACTION_SELECT_LINE:
+                        case DirectAccessProps.LN_ACTION_PLACE_SELECTION_HOME:
+                            return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_HAND);
+                    }
+                }
+                return super.onResolvePointerIcon(event, pointerIndex);
+            }
+        }
+        return super.onResolvePointerIcon(event, pointerIndex);
     }
 
     @SuppressLint("ClickableViewAccessibility")
