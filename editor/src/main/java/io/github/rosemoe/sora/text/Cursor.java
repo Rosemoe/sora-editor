@@ -285,6 +285,15 @@ public final class Cursor {
     }
 
     /**
+     * Get current range of cursor. Modifications to the returned object does not affect cursor positions.
+     *
+     * @return {@link TextRange} object describing cursor positions
+     */
+    public TextRange getRange() {
+        return new TextRange(left(), right());
+    }
+
+    /**
      * Internal call back before insertion
      *
      * @param startLine   Start line

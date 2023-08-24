@@ -27,6 +27,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,6 +74,7 @@ public final class UndoManager implements ContentListener, Parcelable {
     private int stackPointer;
     private boolean ignoreModification;
     private boolean forceNewMultiAction;
+    private TextRange memorizedCursorRange;
 
     /**
      * Create an UndoManager
@@ -130,13 +132,17 @@ public final class UndoManager implements ContentListener, Parcelable {
      *
      * @param content Undo Target
      */
-    public void undo(Content content) {
+    @Nullable
+    public TextRange undo(Content content) {
         if (canUndo() && !isModifyingContent()) {
             ignoreModification = true;
-            actionStack.get(stackPointer - 1).undo(content);
+            var action = actionStack.get(stackPointer - 1);
+            action.undo(content);
             stackPointer--;
             ignoreModification = false;
+            return action.cursor;
         }
+        return null;
     }
 
     /**
@@ -262,6 +268,7 @@ public final class UndoManager implements ContentListener, Parcelable {
             if (actionStack.isEmpty()) {
                 MultiAction a = new MultiAction();
                 a.addAction(action);
+                a.cursor = action.cursor;
                 actionStack.add(a);
                 stackPointer++;
             } else {
@@ -272,6 +279,7 @@ public final class UndoManager implements ContentListener, Parcelable {
                 } else {
                     MultiAction ac = new MultiAction();
                     ac.addAction(action);
+                    ac.cursor = action.cursor;
                     actionStack.add(ac);
                     stackPointer++;
                 }
@@ -325,10 +333,12 @@ public final class UndoManager implements ContentListener, Parcelable {
         insertAction.text = insertedContent;
         if (replaceMark && deleteAction != null) {
             ReplaceAction rep = new ReplaceAction();
-            rep._delete = deleteAction;
-            rep._insert = insertAction;
+            rep.delete = deleteAction;
+            rep.insert = insertAction;
+            rep.cursor = memorizedCursorRange;
             pushAction(content, rep);
         } else {
+            insertAction.cursor = memorizedCursorRange;
             pushAction(content, insertAction);
         }
         deleteAction = null;
@@ -348,31 +358,43 @@ public final class UndoManager implements ContentListener, Parcelable {
         deleteAction.endLine = endLine;
         deleteAction.startLine = startLine;
         deleteAction.text = deletedContent;
+        deleteAction.cursor = memorizedCursorRange;
         if (!replaceMark) {
             pushAction(content, deleteAction);
         }
     }
 
+    @Override
+    public void beforeModification(@NonNull Content content) {
+        if (!undoEnabled || !content.isCursorCreated() || replaceMark && deleteAction != null) {
+            return;
+        }
+        var cursor = content.getCursor();
+        memorizedCursorRange = cursor.getRange();
+    }
+
     /**
-     * For saving modification better
+     * Base class of content actions
      *
-     * @author Rose
+     * @author Rosemoe
      */
-    public interface ContentAction extends Parcelable {
+    public static abstract class ContentAction implements Parcelable {
+
+        public transient TextRange cursor;
 
         /**
          * Undo this action
          *
          * @param content On the given object
          */
-        void undo(Content content);
+        public abstract void undo(Content content);
 
         /**
          * Redo this action
          *
          * @param content On the given object
          */
-        void redo(Content content);
+        public abstract void redo(Content content);
 
         /**
          * Get whether the target action can be merged with this action
@@ -380,23 +402,23 @@ public final class UndoManager implements ContentListener, Parcelable {
          * @param action Target action to merge
          * @return Whether they can merge
          */
-        boolean canMerge(ContentAction action);
+        public abstract boolean canMerge(ContentAction action);
 
         /**
          * Merge with target action
          *
          * @param action Target action to merge
          */
-        void merge(ContentAction action);
+        public abstract void merge(ContentAction action);
 
     }
 
     /**
      * Insert action model for UndoManager
      *
-     * @author Rose
+     * @author Rosemoe
      */
-    public static final class InsertAction implements ContentAction {
+    public static final class InsertAction extends ContentAction {
 
         public static final Creator<InsertAction> CREATOR = new Creator<>() {
             @Override
@@ -491,7 +513,7 @@ public final class UndoManager implements ContentListener, Parcelable {
      *
      * @author Rose
      */
-    public static final class MultiAction implements ContentAction {
+    public static final class MultiAction extends ContentAction {
 
         public final static Creator<MultiAction> CREATOR = new Creator<>() {
             @Override
@@ -568,7 +590,7 @@ public final class UndoManager implements ContentListener, Parcelable {
      *
      * @author Rose
      */
-    public static final class DeleteAction implements ContentAction {
+    public static final class DeleteAction extends ContentAction {
 
         public final static Creator<DeleteAction> CREATOR = new Creator<>() {
             @Override
@@ -663,14 +685,14 @@ public final class UndoManager implements ContentListener, Parcelable {
      *
      * @author Rose
      */
-    public static final class ReplaceAction implements ContentAction {
+    public static final class ReplaceAction extends ContentAction {
 
         public final static Creator<ReplaceAction> CREATOR = new Creator<>() {
             @Override
             public ReplaceAction createFromParcel(Parcel parcel) {
                 var o = new ReplaceAction();
-                o._insert = parcel.readParcelable(ReplaceAction.class.getClassLoader());
-                o._delete = parcel.readParcelable(ReplaceAction.class.getClassLoader());
+                o.insert = parcel.readParcelable(ReplaceAction.class.getClassLoader());
+                o.delete = parcel.readParcelable(ReplaceAction.class.getClassLoader());
                 return o;
             }
 
@@ -679,19 +701,19 @@ public final class UndoManager implements ContentListener, Parcelable {
                 return new ReplaceAction[size];
             }
         };
-        public InsertAction _insert;
-        public DeleteAction _delete;
+        public InsertAction insert;
+        public DeleteAction delete;
 
         @Override
         public void undo(Content content) {
-            _insert.undo(content);
-            _delete.undo(content);
+            insert.undo(content);
+            delete.undo(content);
         }
 
         @Override
         public void redo(Content content) {
-            _delete.redo(content);
-            _insert.redo(content);
+            delete.redo(content);
+            insert.redo(content);
         }
 
         @Override
@@ -708,8 +730,8 @@ public final class UndoManager implements ContentListener, Parcelable {
         @Override
         public String toString() {
             return "ReplaceAction{" +
-                    "_insert=" + _insert +
-                    ", _delete=" + _delete +
+                    "insert=" + insert +
+                    ", delete=" + delete +
                     '}';
         }
 
@@ -720,8 +742,8 @@ public final class UndoManager implements ContentListener, Parcelable {
 
         @Override
         public void writeToParcel(Parcel parcel, int flags) {
-            parcel.writeParcelable(_insert, flags);
-            parcel.writeParcelable(_delete, flags);
+            parcel.writeParcelable(insert, flags);
+            parcel.writeParcelable(delete, flags);
         }
     }
 }

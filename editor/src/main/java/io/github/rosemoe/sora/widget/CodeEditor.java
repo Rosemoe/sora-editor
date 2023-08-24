@@ -2211,7 +2211,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Get the cursor range of editor
      */
     public TextRange getCursorRange() {
-        return new TextRange(cursor.left(), cursor.right());
+        return cursor.getRange();
     }
 
     /**
@@ -2343,7 +2343,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Undo last action
      */
     public void undo() {
-        text.undo();
+        var range = text.undo();
+        if (range != null) {
+            try {
+                setSelectionRegion(range.getStart().line, range.getStart().column, range.getEnd().line, range.getEnd().column, true, SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
+            } catch (IndexOutOfBoundsException e) {
+                // Suppressed, typically because an invalid position is memorized.
+            }
+        }
         notifyIMEExternalCursorChange();
         completionWindow.hide();
     }
@@ -3284,7 +3291,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         int start = getText().getCharIndex(lineLeft, columnLeft);
         int end = getText().getCharIndex(lineRight, columnRight);
         if (start == end) {
-            setSelection(lineLeft, columnLeft);
+            setSelection(lineLeft, columnLeft, makeRightVisible, cause);
             return;
         }
         if (start > end) {

@@ -366,9 +366,8 @@ public class Content implements CharSequence {
         // Notify listeners and cursor manager
         if (cursor != null)
             cursor.beforeInsert(line, column);
-        for (var lis : contentListeners) {
-            lis.beforeModification(this);
-        }
+
+        dispatchBeforeModification();
 
         int workLine = line;
         int workIndex = column;
@@ -481,9 +480,7 @@ public class Content implements CharSequence {
             if (cursor != null) {
                 cursor.beforeDelete(startLine, columnOnStartLine, endLine, columnOnEndLine);
             }
-            for (var lis : contentListeners) {
-                lis.beforeModification(this);
-            }
+            dispatchBeforeModification();
 
             changedContent.append(curr, columnOnStartLine, columnOnEndLine);
             curr.delete(columnOnStartLine, columnOnEndLine);
@@ -492,9 +489,7 @@ public class Content implements CharSequence {
             // Notify listeners and cursor manager
             if (cursor != null)
                 cursor.beforeDelete(startLine, columnOnStartLine, endLine, columnOnEndLine);
-            for (var lis : contentListeners) {
-                lis.beforeModification(this);
-            }
+            dispatchBeforeModification();
 
             for (int i = startLine + 1; i <= endLine - 1; i++) {
                 var line = lines.get(i);
@@ -575,11 +570,12 @@ public class Content implements CharSequence {
     }
 
     /**
-     * Undo the last modification
-     * NOTE:When there are too much modification,old modification will be deleted from UndoManager
+     * Undo the last modification.
+     * <p>
+     * NOTE: When there are too much modification, old modification will be deleted from UndoManager
      */
-    public void undo() {
-        undoManager.undo(this);
+    public TextRange undo() {
+        return undoManager.undo(this);
     }
 
     /**
@@ -967,6 +963,13 @@ public class Content implements CharSequence {
     }
 
     /**
+     * Check if there is a cursor created for this Content object
+     */
+    public boolean isCursorCreated() {
+        return cursor != null;
+    }
+
+    /**
      * Dispatch events to listener before replacement
      */
     private void dispatchBeforeReplace() {
@@ -999,6 +1002,13 @@ public class Content implements CharSequence {
         }
         for (ContentListener lis : contentListeners) {
             lis.afterDelete(this, a, b, c, d, e);
+        }
+    }
+
+    private void dispatchBeforeModification() {
+        undoManager.beforeModification(this);
+        for (ContentListener lis : contentListeners) {
+            lis.beforeModification(this);
         }
     }
 
