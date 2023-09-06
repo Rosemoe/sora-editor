@@ -1639,6 +1639,30 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * Inserts indentation string at the start of the selected lines. Does nothing if the text is
+     * not selected.
+     */
+    public void indentSelection() {
+        // this method is an instance method so that library users can implement
+        // the same behavior with a button (like in the symbol input bar)
+
+        final var cursor = getCursor();
+        if (!cursor.isSelected()) {
+            Log.w(LOG_TAG, "indentSelection: text is not selected, ignoring.");
+            return;
+        }
+
+        final var tabString = createTabString();
+
+        final var text = getText();
+        text.beginBatchEdit();
+        for (int i = cursor.getLeftLine(); i <= cursor.getRightLine(); i++) {
+            text.insert(i, 0, tabString);
+        }
+        text.endBatchEdit();
+    }
+
+    /**
      * Commit a tab to cursor
      */
     protected void commitTab() {

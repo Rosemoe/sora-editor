@@ -359,6 +359,8 @@ class EditorKeyEventHandler {
                         } else {
                             editor.getSnippetController().shiftToNextTabStop();
                         }
+                    } if (editor.getProps().indentSelectionWithTab && editorCursor.isSelected()) {
+                        editor.indentSelection();
                     } else {
                         editor.commitTab();
                     }

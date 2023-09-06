@@ -372,4 +372,8 @@ public class DirectAccessProps implements Serializable {
     @InvalidateRequired
     public boolean stickyScrollAutoCollapse = true;
 
+    /**
+     * Whether the editor should indent the selected text if `TAB` key is pressed.
+     */
+    public boolean indentSelectionWithTab = true;
 }
