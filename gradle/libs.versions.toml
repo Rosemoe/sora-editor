@@ -4,7 +4,7 @@ kotlin = "1.9.10"
 lifecycle = "2.5.1"
 tsBinding = "3.4.0"
 lsp4j = "0.21.1"
-androidxAnnotation = "1.6.0"
+androidxAnnotation = "1.7.0"
 
 [libraries]
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidxAnnotation" }
