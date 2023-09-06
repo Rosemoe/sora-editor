@@ -122,8 +122,12 @@ public class SymbolInputView extends LinearLayout {
             int finalI = i;
             btn.setOnClickListener((view) -> {
                 if (editor != null && editor.isEditable()) {
-                    if ("\t".equals(insertText[finalI]) && editor.getSnippetController().isInSnippet()) {
-                        editor.getSnippetController().shiftToNextTabStop();
+                    if ("\t".equals(insertText[finalI])) {
+                        if (editor.getSnippetController().isInSnippet()) {
+                            editor.getSnippetController().shiftToNextTabStop();
+                        } else if (editor.getProps().indentSelectionWithTab) {
+                            editor.indentSelection();
+                        }
                     } else {
                         editor.insertText(insertText[finalI], 1);
                     }
