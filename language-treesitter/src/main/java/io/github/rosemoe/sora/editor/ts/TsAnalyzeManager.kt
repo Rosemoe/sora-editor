@@ -34,13 +34,13 @@ import com.itsaky.androidide.treesitter.TSTree
 import com.itsaky.androidide.treesitter.string.UTF16String
 import com.itsaky.androidide.treesitter.string.UTF16StringFactory
 import io.github.rosemoe.sora.data.ObjectAllocator
+import io.github.rosemoe.sora.editor.ts.spans.DefaultSpanFactory
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver
 import io.github.rosemoe.sora.lang.styling.CodeBlock
 import io.github.rosemoe.sora.lang.styling.Styles
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
-import java.util.Collections
 import java.util.concurrent.LinkedBlockingQueue
 
 open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme) :
@@ -51,6 +51,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     var extraArguments: Bundle? = null
     var thread: TsLooperThread? = null
     var styles = Styles()
+    var spanFactory = DefaultSpanFactory()
 
     fun updateTheme(theme: TsTheme) {
         this.theme = theme
@@ -208,7 +209,8 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                     reference!!.reference,
                     theme,
                     languageSpec,
-                    scopedVariables
+                    scopedVariables,
+                    spanFactory
                 )
                 val oldBlocks = styles.blocks
                 updateCodeBlocks()
