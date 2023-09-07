@@ -32,7 +32,7 @@ import io.github.rosemoe.sora.lang.styling.Span
  *
  * @author Akash Yadav
  */
-interface TsSpanFactory {
+interface TsSpanFactory : AutoCloseable {
 
   /**
    * Creates the spans using the provided data.
