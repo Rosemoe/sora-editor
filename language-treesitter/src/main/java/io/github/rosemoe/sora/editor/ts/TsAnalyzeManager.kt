@@ -35,6 +35,7 @@ import com.itsaky.androidide.treesitter.string.UTF16String
 import com.itsaky.androidide.treesitter.string.UTF16StringFactory
 import io.github.rosemoe.sora.data.ObjectAllocator
 import io.github.rosemoe.sora.editor.ts.spans.DefaultSpanFactory
+import io.github.rosemoe.sora.editor.ts.spans.TsSpanFactory
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver
 import io.github.rosemoe.sora.lang.styling.CodeBlock
@@ -51,7 +52,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     var extraArguments: Bundle? = null
     var thread: TsLooperThread? = null
     var styles = Styles()
-    var spanFactory = DefaultSpanFactory()
+    var spanFactory : TsSpanFactory = DefaultSpanFactory()
 
     fun updateTheme(theme: TsTheme) {
         this.theme = theme
@@ -160,6 +161,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
             }
         }
         (styles.spans as LineSpansGenerator?)?.tree?.close()
+        spanFactory.close()
     }
 
     companion object {

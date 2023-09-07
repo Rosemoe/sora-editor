@@ -30,7 +30,7 @@ import io.github.rosemoe.sora.widget.CodeEditor
  *
  * @author Rosemoe
  */
-interface ResolvableColor {
+fun interface ResolvableColor {
     /**
      * Resolve this color
      * @return Color int
