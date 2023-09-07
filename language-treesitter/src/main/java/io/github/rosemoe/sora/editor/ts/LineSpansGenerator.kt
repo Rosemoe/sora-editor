@@ -27,6 +27,7 @@ package io.github.rosemoe.sora.editor.ts
 import com.itsaky.androidide.treesitter.TSQueryCapture
 import com.itsaky.androidide.treesitter.TSQueryCursor
 import com.itsaky.androidide.treesitter.TSTree
+import io.github.rosemoe.sora.editor.ts.spans.TsSpanFactory
 import io.github.rosemoe.sora.lang.styling.Span
 import io.github.rosemoe.sora.lang.styling.Spans
 import io.github.rosemoe.sora.lang.styling.TextStyle
@@ -44,7 +45,8 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 class LineSpansGenerator(
     internal var tree: TSTree, internal var lineCount: Int,
     private val content: Content, internal var theme: TsTheme,
-    private val languageSpec: TsLanguageSpec, var scopedVariables: TsScopedVariables
+    private val languageSpec: TsLanguageSpec, var scopedVariables: TsScopedVariables,
+    private val spanFactory: TsSpanFactory
 ) : Spans {
 
     companion object {
@@ -87,11 +89,11 @@ class LineSpansGenerator(
             }
             captures.sortBy { it.node.startByte }
             var lastIndex = 0
-            captures.forEach {
-                val startByte = it.node.startByte
-                val endByte = it.node.endByte
+            captures.forEach { capture ->
+                val startByte = capture.node.startByte
+                val endByte = capture.node.endByte
                 val start = (startByte / 2 - startIndex).coerceAtLeast(0)
-                val pattern = it.index
+                val pattern = capture.index
                 // Do not add span for overlapping regions and out-of-bounds regions
                 if (start >= lastIndex && endByte / 2 >= startIndex && startByte / 2 < endIndex
                     && (pattern !in languageSpec.localsScopeIndices && pattern !in languageSpec.localsDefinitionIndices
@@ -99,14 +101,15 @@ class LineSpansGenerator(
                 ) {
                     if (start != lastIndex) {
                         list.add(
-                            Span.obtain(
+                            createSpan(
+                                capture,
                                 lastIndex,
                                 theme.normalTextStyle
                             )
                         )
                     }
                     var style = 0L
-                    if (it.index in languageSpec.localsReferenceIndices) {
+                    if (capture.index in languageSpec.localsReferenceIndices) {
                         val def = scopedVariables.findDefinition(
                             startByte / 2,
                             endByte / 2,
@@ -123,23 +126,31 @@ class LineSpansGenerator(
                         }
                     }
                     if (style == 0L) {
-                        style = theme.resolveStyleForPattern(it.index)
+                        style = theme.resolveStyleForPattern(capture.index)
                     }
                     if (style == 0L) {
                         style = theme.normalTextStyle
                     }
-                    list.add(Span.obtain(start, style))
+                    list.add(createSpan(capture, start, style))
                     lastIndex = (endByte / 2 - startIndex).coerceAtMost(endIndex)
                 }
             }
             if (lastIndex != endIndex) {
-                list.add(Span.obtain(lastIndex, TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)))
+                list.add(emptySpan(lastIndex))
             }
         }
         if (list.isEmpty()) {
-            list.add(Span.obtain(0, TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)))
+            list.add(emptySpan(0))
         }
         return list
+    }
+
+    private fun createSpan(capture: TSQueryCapture, column: Int, style: Long) : Span {
+        return spanFactory.createSpan(capture, column, style)
+    }
+
+    private fun emptySpan(column: Int) : Span {
+        return Span.obtain(column, TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL))
     }
 
     override fun adjustOnInsert(start: CharPosition, end: CharPosition) {
@@ -193,7 +204,6 @@ class LineSpansGenerator(
     }
 
     override fun getLineCount() = lineCount
-
 }
 
 data class SpanCache(val spans: MutableList<Span>, val line: Int)
