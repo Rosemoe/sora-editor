@@ -53,6 +53,8 @@ import io.github.rosemoe.sora.event.PublishSearchResultEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.SideIconClickEvent
 import io.github.rosemoe.sora.lang.EmptyLanguage
+import io.github.rosemoe.sora.lang.JavaLanguageSpec
+import io.github.rosemoe.sora.lang.TsLanguageJava
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.lang.styling.TextStyle
@@ -783,42 +785,16 @@ class MainActivity : AppCompatActivity() {
 
                             7 -> loadTMLLauncher.launch("*/*")
                             8 -> {
-                                val lang = TSLanguageJava.newInstance()
-                                editor.setEditorLanguage(TsLanguage(
-                                    TsLanguageSpec(
-                                        TSLanguageJava.newInstance(),
-                                        highlightScmSource = assets.open("tree-sitter-queries/java/highlights.scm").reader().readText(),
-                                        codeBlocksScmSource = assets.open("tree-sitter-queries/java/blocks.scm").reader().readText(),
-                                        bracketsScmSource = assets.open("tree-sitter-queries/java/brackets.scm").reader().readText(),
-                                        localsScmSource = assets.open("tree-sitter-queries/java/locals.scm").reader().readText(),
-                                        localsCaptureSpec = object : LocalsCaptureSpec() {
-
-                                            override fun isScopeCapture(captureName: String): Boolean {
-                                                return captureName == "scope"
-                                            }
-
-                                            override fun isReferenceCapture(captureName: String): Boolean {
-                                                return captureName == "reference"
-                                            }
-
-                                            override fun isDefinitionCapture(captureName: String): Boolean {
-                                                return captureName == "definition.var" || captureName == "definition.field"
-                                            }
-
-                                            override fun isMembersScopeCapture(captureName: String): Boolean {
-                                                return captureName == "scope.members"
-                                            }
-
-                                        }
-                                    )) {
-                                    TextStyle.makeStyle(EditorColorScheme.COMMENT, 0, false, true, false) applyTo "comment"
-                                    TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false) applyTo "keyword"
-                                    TextStyle.makeStyle(EditorColorScheme.LITERAL) applyTo arrayOf("constant.builtin", "string", "number")
-                                    TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_VAR) applyTo arrayOf("variable.builtin", "variable", "constant")
-                                    TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_NAME) applyTo arrayOf("type.builtin", "type", "attribute")
-                                    TextStyle.makeStyle(EditorColorScheme.FUNCTION_NAME) applyTo arrayOf("function.method", "function.builtin", "variable.field")
-                                    TextStyle.makeStyle(EditorColorScheme.OPERATOR) applyTo "operator"
-                                })
+                                editor.setEditorLanguage(
+                                    TsLanguageJava(
+                                        JavaLanguageSpec(
+                                            highlightScmSource = assets.open("tree-sitter-queries/java/highlights.scm").reader().readText(),
+                                            codeBlocksScmSource = assets.open("tree-sitter-queries/java/blocks.scm").reader().readText(),
+                                            bracketsScmSource = assets.open("tree-sitter-queries/java/brackets.scm").reader().readText(),
+                                            localsScmSource = assets.open("tree-sitter-queries/java/locals.scm").reader().readText()
+                                        )
+                                    )
+                                )
                             }
 
                             else -> editor.setEditorLanguage(EmptyLanguage())
