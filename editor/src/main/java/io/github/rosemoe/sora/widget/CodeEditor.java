@@ -1643,8 +1643,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * not selected.
      */
     public void indentSelection() {
-        // this method is an instance method so that library users can implement
-        // the same behavior with a button (like in the symbol input bar)
 
         final var cursor = getCursor();
         if (!cursor.isSelected()) {
@@ -1660,6 +1658,26 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             text.insert(i, 0, tabString);
         }
         text.endBatchEdit();
+    }
+
+  /**
+   * Removes indentation from the start of the selected lines. If the text is not selected, or if
+   * the start and end selection is on the same line, only the line at the cursor position is
+   * unindented.
+   */
+    public void unindentSelection() {
+      final var cursor = getCursor();
+      final var text = getText();
+
+      text.beginBatchEdit();
+      for (int i = cursor.getLeftLine(); i <= cursor.getRightLine(); i++) {
+          final var line = text.getLineString(i);
+          final var end = Math.min(getTabWidth(), line.length());
+          if (line.substring(0, end).isBlank()) {
+            text.delete(i, 0, i, end);
+          }
+      }
+      text.endBatchEdit();
     }
 
     /**
