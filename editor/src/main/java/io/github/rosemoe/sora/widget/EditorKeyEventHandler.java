@@ -351,7 +351,7 @@ class EditorKeyEventHandler {
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_TAB:
                 if (editor.isEditable()) {
-                    if (completionWindow.isShowing()) {
+                    if (completionWindow.isShowing() && !isShiftPressed) {
                         completionWindow.select();
                     } else if (editor.getSnippetController().isInSnippet() && !isAltPressed && !isCtrlPressed) {
                         if (isShiftPressed) {
@@ -359,8 +359,14 @@ class EditorKeyEventHandler {
                         } else {
                             editor.getSnippetController().shiftToNextTabStop();
                         }
-                    } if (editor.getProps().indentSelectionWithTab && editorCursor.isSelected()) {
-                        editor.indentSelection();
+                    } if (editor.getProps().indentSelectionWithTab) {
+                        if (isShiftPressed) {
+                            // Shift + TAB -> unindent the [selected] lines
+                            editor.unindentSelection();
+                        } else if (editorCursor.isSelected()) {
+                            // Selection + TAB -> indent the selected lines
+                            editor.indentSelection();
+                        }
                     } else {
                         editor.commitTab();
                     }
