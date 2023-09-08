@@ -1672,9 +1672,28 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
       text.beginBatchEdit();
       for (int i = cursor.getLeftLine(); i <= cursor.getRightLine(); i++) {
           final var line = text.getLineString(i);
-          final var end = Math.min(getTabWidth(), line.length());
-          if (line.substring(0, end).isBlank()) {
+          var end = Math.min(getTabWidth(), line.length());
+          var substring = line.substring(0, end);
+
+          if (substring.isBlank()) {
             text.delete(i, 0, i, end);
+            continue;
+          }
+
+          // check for whitespace from the start instead of end
+          // this is because we are trying to remove indentation from the start
+          // if we check from the end and the the char at end is a whitespace but the char at start
+          // is not, we'll end up deleting unintended character(s)
+          end = 0;
+          while (isWhitespace(substring.charAt(end))) {
+              ++end;
+              if (end >= getTabWidth()) {
+                  break;
+              }
+          }
+
+          if (end != 0) {
+              text.delete(i, 0, i, end);
           }
       }
       text.endBatchEdit();
