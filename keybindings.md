@@ -28,3 +28,5 @@ The following key bindings are currently supported by the editor :
 | `Ctrl + Alt + Enter`   | Start a new line before current line.                                                                                                      |
 | `Ctrl + Shift + J`     | Join current line and next line.                                                                                                           |
 | `Shift + Enter`        | Start a new line.                                                                                                                          |
+| `Selection + TAB`      | If the text is selected, pressing the `TAB` key indents all selected lines.                                                                |
+| `Shift + TAB`          | Unindents the current line. If the text is selected, unindents all the selected lines.                                                     |
