@@ -12,7 +12,7 @@ sora-editor es un increíble editor de código optimizado para Android
 
 </div>
 
-Lea esto en otros idiomas: [English](README.md), [简体中文](README.zh-cn.md), [Español](README.es.md).
+Lea esto en otros idiomas: [English](README.md), [简体中文](README.zh-cn.md), [Español](README.es.md), [日本語](README.jp.md).
 
 ***Trabajo en Progreso***
 

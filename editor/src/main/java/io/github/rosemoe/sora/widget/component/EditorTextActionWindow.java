@@ -56,6 +56,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
     private final ImageButton pasteBtn;
     private final ImageButton copyBtn;
     private final ImageButton cutBtn;
+    private final ImageButton longSelectBtn;
     private final View rootView;
     private final EditorTouchEventHandler handler;
     private long lastScroll;
@@ -78,6 +79,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         ImageButton selectAll = root.findViewById(R.id.panel_btn_select_all);
         ImageButton cut = root.findViewById(R.id.panel_btn_cut);
         ImageButton copy = root.findViewById(R.id.panel_btn_copy);
+        longSelectBtn = root.findViewById(R.id.panel_btn_long_select);
         pasteBtn = root.findViewById(R.id.panel_btn_paste);
         copyBtn = copy;
         cutBtn = cut;
@@ -85,6 +87,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         cut.setOnClickListener(this);
         copy.setOnClickListener(this);
         pasteBtn.setOnClickListener(this);
+        longSelectBtn.setOnClickListener(this);
         GradientDrawable gd = new GradientDrawable();
         gd.setCornerRadius(5 * editor.getDpUnit());
         gd.setColor(0xffffffff);
@@ -257,6 +260,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         copyBtn.setVisibility(editor.getCursor().isSelected() ? View.VISIBLE : View.GONE);
         pasteBtn.setVisibility(editor.isEditable() ? View.VISIBLE : View.GONE);
         cutBtn.setVisibility((editor.getCursor().isSelected() && editor.isEditable()) ? View.VISIBLE : View.GONE);
+        longSelectBtn.setVisibility((!editor.getCursor().isSelected() && editor.isEditable()) ? View.VISIBLE : View.GONE);
         rootView.measure(View.MeasureSpec.makeMeasureSpec(1000000, View.MeasureSpec.AT_MOST), View.MeasureSpec.makeMeasureSpec(100000, View.MeasureSpec.AT_MOST));
         setSize(Math.min(rootView.getMeasuredWidth(), (int) (editor.getDpUnit() * 230)), getHeight());
     }
@@ -285,6 +289,8 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         } else if (id == R.id.panel_btn_copy) {
             editor.copyText();
             editor.setSelection(editor.getCursor().getRightLine(), editor.getCursor().getRightColumn());
+        } else if (id == R.id.panel_btn_long_select) {
+            editor.beginLongSelect();
         }
         dismiss();
     }

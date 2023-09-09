@@ -65,4 +65,12 @@ public class TextRange {
     public int getEndIndex() {
         return end.index;
     }
+
+    @Override
+    public String toString() {
+        return "TextRange{" +
+                "start=" + start +
+                ", end=" + end +
+                '}';
+    }
 }

@@ -226,7 +226,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         }
 
         fun updateCodeBlocks() {
-            if (languageSpec.blocksQuery.patternCount == 0) {
+            if (languageSpec.blocksQuery.patternCount == 0 || !languageSpec.blocksQuery.canAccess()) {
                 return
             }
             val blocks = mutableListOf<CodeBlock>()
@@ -269,8 +269,8 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                 }
             }
             val distinct = blocks.distinct().toMutableList()
-            Collections.sort(distinct, CodeBlock.COMPARATOR_END)
             styles.blocks = distinct
+            styles.finishBuilding()
         }
 
         override fun run() {

@@ -12,7 +12,9 @@ sora-editor is a cool and optimized code editor on Android platform
 
 </div>
 
-Read this in other languages: [English](README.md), [简体中文](README.zh-cn.md), [Español](README.es.md).
+Read this in other languages: [English](README.md), [简体中文](README.zh-cn.md), [Español](README.es.md), [日本語](README.jp.md).
+
+Note that statements in other languages may not be up-to-date.
 
 ***Work In Progress*** This project is still developing slowly.   
 Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/releases)
@@ -33,6 +35,7 @@ instead of cloning this repository directly.
 - [x] Error/Warning/Typo/Deprecated indicators
 - [x] Text magnifier
 - [x] Incremental highlight analysis
+- [x] Sticky Scroll
 - [x] Highlight bracket pairs
 - [x] Event System
 
@@ -87,6 +90,17 @@ Available modules:
 Check the newest version from the badge above
 or [Releases](https://github.com/Rosemoe/CodeEditor/releases).
 
+### Using Snapshot Versions
+Snapshot releases are automatically generated on repository push. You may combine current released version name
+and short commit hash to make a snapshot version name. For example, if the latest released version name is '0.21.1' and
+short commit hash is '97c4963', you may use version name '0.21.1-97c4963-SNAPSHOT' to import the snapshot version to your project.
+Also, you need to add extra maven repository:
+```gradle
+repositories {
+    // ...
+    maven("https://s01.oss.sonatype.org/content/repositories/snapshots")
+}
+```
 ## Discuss
 
 * Official QQ Group:[216632648](https://jq.qq.com/?_wv=1027&k=n68uxQws)

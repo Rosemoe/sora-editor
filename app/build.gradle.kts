@@ -65,10 +65,7 @@ android {
     buildFeatures {
         viewBinding = true
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    packagingOptions {
+    packaging {
         resources.pickFirsts.addAll(
             arrayOf(
                 "license/README.dom.txt",

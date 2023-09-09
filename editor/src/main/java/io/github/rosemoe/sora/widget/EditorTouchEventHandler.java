@@ -31,7 +31,6 @@ import android.view.GestureDetector;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-import android.widget.OverScroller;
 
 import androidx.annotation.NonNull;
 
@@ -321,14 +320,15 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 if (holdingScrollbarVertical || holdingScrollbarHorizontal) {
                     editor.invalidate();
                 }
-                if (shouldDrawInsertHandle() && editor.getInsertHandleDescriptor().position.contains(e.getX(), e.getY())) {
+                final var allowedDistance = editor.getDpUnit() * 7;
+                if (shouldDrawInsertHandle() && RectUtils.almostContains(editor.getInsertHandleDescriptor().position, e.getX(), e.getY(), allowedDistance)) {
                     holdingInsertHandle = true;
                     dispatchHandle(HandleStateChangeEvent.HANDLE_TYPE_INSERT, true);
                     thumbDownY = e.getY();
                     thumbDownX = e.getX();
                 }
-                boolean left = editor.getLeftHandleDescriptor().position.contains(e.getX(), e.getY());
-                boolean right = editor.getRightHandleDescriptor().position.contains(e.getX(), e.getY());
+                boolean left = RectUtils.almostContains(editor.getLeftHandleDescriptor().position, e.getX(), e.getY(), allowedDistance);
+                boolean right = RectUtils.almostContains(editor.getRightHandleDescriptor().position, e.getX(), e.getY(), allowedDistance);
                 if (left || right) {
                     if (left) {
                         selHandleType = SelectionHandle.LEFT;
@@ -528,7 +528,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     @Override
-    public boolean onSingleTapUp(MotionEvent e) {
+    public boolean onSingleTapUp(@NonNull MotionEvent e) {
         scroller.forceFinished(true);
         if (editor.isFormatting()) {
             return true;
@@ -560,7 +560,13 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         notifyLater();
         var lnAction = editor.getProps().actionWhenLineNumberClicked;
         if (region == RegionResolverKt.REGION_TEXT) {
-            editor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
+            if (editor.isInLongSelect()) {
+                var cursor = editor.getCursor();
+                editor.setSelectionRegion(cursor.getLeftLine(), cursor.getLeftColumn(), line, column, false, SelectionChangeEvent.CAUSE_TAP);
+                editor.endLongSelect();
+            } else {
+                editor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
+            }
         } else if (region == RegionResolverKt.REGION_LINE_NUMBER) {
             switch (lnAction) {
                 case DirectAccessProps.LN_ACTION_SELECT_LINE:
@@ -731,7 +737,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     public boolean onScaleBegin(ScaleGestureDetector detector) {
         scroller.forceFinished(true);
         textSizeStart = editor.getTextSizePx();
-        return editor.isScalable() && !editor.isFormatting();
+        return editor.isScalable() && !editor.isFormatting() && !holdingInsertHandle && touchedHandleType == -1;
     }
 
     long memoryPosition;

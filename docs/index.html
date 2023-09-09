@@ -54,7 +54,7 @@
 
       plugins: [
         EditOnGithubPlugin.create(
-          'https://github.com/Rosemoe/sora-editor/blob/master/docs/',
+          'https://github.com/Rosemoe/sora-editor/blob/main/docs',
           null,
           function (file) {
             if (file.indexOf('zh-cn') !== -1) {
@@ -76,6 +76,8 @@
 <script src="https://cdn.jsdelivr.net/npm/docsify-progress@latest/dist/progress.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/docsify-sidebar-collapse.min.js"></script>
 <script src="//polyfill.io/v3/polyfill.min.js?features=String.prototype.normalize"></script>
+<script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-java.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-kotlin.min.js"></script>
 </body>
 
 </html>

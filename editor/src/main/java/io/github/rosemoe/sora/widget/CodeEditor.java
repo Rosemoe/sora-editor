@@ -50,6 +50,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.PointerIcon;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -67,16 +68,10 @@ import android.widget.EdgeEffect;
 import android.widget.EditText;
 import android.widget.SearchView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Px;
 import androidx.annotation.UiThread;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
 import io.github.rosemoe.sora.I18nConfig;
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
@@ -147,6 +142,9 @@ import io.github.rosemoe.sora.widget.style.builtin.DefaultLineNumberTip;
 import io.github.rosemoe.sora.widget.style.builtin.HandleStyleDrop;
 import io.github.rosemoe.sora.widget.style.builtin.HandleStyleSideDrop;
 import io.github.rosemoe.sora.widget.style.builtin.MoveCursorAnimator;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import kotlin.text.StringsKt;
 
 /**
@@ -304,6 +302,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean lastCursorState;
     private boolean stickyTextSelection;
     private boolean highlightBracketPair;
+    private boolean isInLongSelect;
     private boolean anyWrapContentSet;
     private boolean renderFunctionCharacters;
     private SelectionHandleStyle.HandleDescriptor handleDescLeft;
@@ -1842,6 +1841,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private int findCursorBlock(List<CodeBlock> blocks) {
         int line = cursor.getLeftLine();
         int min = binarySearchEndBlock(line, blocks);
+        if (min == -1) {
+            min = 0;
+        }
         int max = blocks.size() - 1;
         int minDis = Integer.MAX_VALUE;
         int found = -1;
@@ -1876,35 +1878,18 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * Find the first code block that maybe seen on screen
-     * Because the code blocks is sorted by its end line position
-     * we can use binary search to quicken this process in order to decrease
-     * the time we use on finding
+     * Find the first code block that maybe seen on screen Because the code blocks is sorted by its
+     * end line position we can use binary search to quicken this process in order to decrease the
+     * time we use on finding
      *
      * @param firstVis The first visible line
      * @param blocks   Current code blocks
-     * @return The block we found. It is always a valid index(Unless there is no block)
+     * @return The index of the block we found or <code>-1</code> if no code block is found.
      */
     int binarySearchEndBlock(int firstVis, List<CodeBlock> blocks) {
-        //end > firstVis
-        int left = 0, right = blocks.size() - 1, mid, row;
-        int max = right;
-        while (left <= right) {
-            mid = (left + right) / 2;
-            if (mid < 0) return 0;
-            if (mid > max) return max;
-            row = blocks.get(mid).endLine;
-            if (row > firstVis) {
-                right = mid - 1;
-            } else if (row < firstVis) {
-                left = mid + 1;
-            } else {
-                left = mid;
-                break;
-            }
-        }
-        return Math.max(0, Math.min(left, max));
+        return CodeBlock.binarySearchEndBlock(firstVis, blocks);
     }
+
 
     /**
      * Get spans on the given line
@@ -2402,6 +2387,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see IntPair
      */
     public long getPointPositionOnScreen(float x, float y) {
+        var stuckLines = renderer.lastStuckLines;
+        if (stuckLines != null) {
+            if (y < stuckLines.size() * getRowHeight()) {
+                var index = (int) (y / getRowHeight());
+                return getPointPosition(x, layout.getCharLayoutOffset(stuckLines.get(index).startLine, 0)[0] - getRowHeight() / 2f);
+            }
+        }
         return getPointPosition(x + getOffsetX(), y + getOffsetY());
     }
 
@@ -2466,7 +2458,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * 1. Ligatures are divided into single characters.<br/>
      * 2. Text direction is always LTR (left-to-right).<br/>
      * 3. Some emojis with variation selector or fitzpatrick can not be shown correctly with specified attributes.<br/>
-     * 4. ZWJ and ZWNJ takes no effect.<br/>
+     * 4. ZWJ and ZWNJ take no effect.<br/>
      * Benefits:<br/>
      * Better performance when the text is very big, especially when you are displaying a text with long lines.
      *
@@ -2551,7 +2543,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Get the cursor range of editor
      */
     public TextRange getCursorRange() {
-        return new TextRange(cursor.left(), cursor.right());
+        return cursor.getRange();
     }
 
     /**
@@ -2683,7 +2675,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Undo last action
      */
     public void undo() {
-        text.undo();
+        var range = text.undo();
+        if (range != null) {
+            try {
+                setSelectionRegion(range.getStart().line, range.getStart().column, range.getEnd().line, range.getEnd().column, true, SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
+            } catch (IndexOutOfBoundsException e) {
+                // Suppressed, typically because an invalid position is memorized.
+            }
+        }
         notifyIMEExternalCursorChange();
         completionWindow.hide();
     }
@@ -3624,7 +3623,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         int start = getText().getCharIndex(lineLeft, columnLeft);
         int end = getText().getCharIndex(lineRight, columnRight);
         if (start == end) {
-            setSelection(lineLeft, columnLeft);
+            setSelection(lineLeft, columnLeft, makeRightVisible, cause);
             return;
         }
         if (start > end) {
@@ -4159,6 +4158,40 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         setSelection(line, 0);
     }
 
+    /**
+     * Mark current selection position as a point of cursor range.
+     * When user taps to select another point in text, the text between the marked point and
+     * newly chosen point is selected.
+     *
+     * @see #isInLongSelect()
+     * @see #endLongSelect()
+     */
+    public void beginLongSelect() {
+        if (!isEditable()) {
+            return;
+        }
+        if (cursor.isSelected()) {
+            setSelection(cursor.getLeftLine(), cursor.getLeftColumn());
+        }
+        isInLongSelect = true;
+        invalidate();
+    }
+
+    /**
+     * Checks whether long select mode is started
+     */
+    public boolean isInLongSelect() {
+        return isInLongSelect;
+    }
+
+    /**
+     * Marks long select mode is end.
+     * This does nothing but set the flag to false.
+     */
+    public void endLongSelect() {
+        isInLongSelect = false;
+    }
+
 
     //-------------------------------------------------------------------------------
     //-------------------------IME Interaction---------------------------------------
@@ -4587,7 +4620,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 break;
             case MotionEvent.ACTION_MOVE:
                 int deltaX = x - downX;
-                if (forceHorizontalScrollable) {
+                if (forceHorizontalScrollable && !touchHandler.hasAnyHeldHandle()) {
                     if (deltaX > 0 && getScroller().getCurrX() == 0
                             || deltaX < 0 && getScroller().getCurrX() == getScrollMaxX()) {
                         getParent().requestDisallowInterceptTouchEvent(false);
@@ -4624,6 +4657,34 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         text.resetBatchEdit();
         setExtracting(null);
         return inputConnection;
+    }
+
+    @Override
+    public PointerIcon onResolvePointerIcon(MotionEvent event, int pointerIndex) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
+                if (isFormatting()) {
+                    return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_WAIT);
+                }
+                if (touchHandler.hasAnyHeldHandle()) {
+                    return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_GRABBING);
+                }
+                var res = RegionResolverKt.resolveTouchRegion(this, event, pointerIndex);
+                var region = IntPair.getFirst(res);
+                var inbound = IntPair.getSecond(res) == RegionResolverKt.IN_BOUND;
+                if (region == RegionResolverKt.REGION_TEXT && inbound) {
+                    return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_TEXT);
+                } else if (region == RegionResolverKt.REGION_LINE_NUMBER) {
+                    switch (props.actionWhenLineNumberClicked) {
+                        case DirectAccessProps.LN_ACTION_SELECT_LINE:
+                        case DirectAccessProps.LN_ACTION_PLACE_SELECTION_HOME:
+                            return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_HAND);
+                    }
+                }
+                return super.onResolvePointerIcon(event, pointerIndex);
+            }
+        }
+        return super.onResolvePointerIcon(event, pointerIndex);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -4700,7 +4761,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (event.getAction() == MotionEvent.ACTION_SCROLL && event.isFromSource(InputDevice.SOURCE_CLASS_POINTER)) {
             float v_scroll = -event.getAxisValue(MotionEvent.AXIS_VSCROLL);
             float h_scroll = -event.getAxisValue(MotionEvent.AXIS_HSCROLL);
-            touchHandler.onScroll(event, event, h_scroll * verticalScrollFactor, v_scroll * verticalScrollFactor);
+            float distanceX = h_scroll * verticalScrollFactor;
+            float distanceY = v_scroll * verticalScrollFactor;
+            if (keyEventHandler.getKeyMetaStates().isAltPressed()) {
+                float multiplier = props.fastScrollSensitivity;
+                distanceX *= multiplier;
+                distanceY *= multiplier;
+            }
+            touchHandler.onScroll(event, event, distanceX, distanceY);
             return true;
         }
         return super.onGenericMotionEvent(event);

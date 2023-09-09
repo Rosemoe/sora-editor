@@ -37,9 +37,11 @@ const val REGION_TEXT = 5
 const val IN_BOUND = 0
 const val OUT_BOUND = 1
 
-fun CodeEditor.resolveTouchRegion(event: MotionEvent): Long {
-    val x = event.x + offsetX
-    val y = event.y + offsetY
+fun CodeEditor.resolveTouchRegion(event: MotionEvent) = resolveTouchRegion(event, -1)
+
+fun CodeEditor.resolveTouchRegion(event: MotionEvent, pointerIndex: Int = -1): Long {
+    val x = (if (pointerIndex == -1) event.x else event.getX(pointerIndex)) + offsetX
+    val y = (if (pointerIndex == -1) event.y else event.getY(pointerIndex)) + offsetY
     val lineNumberWidth = measureLineNumber()
     val iconWidth = if (renderer.hasSideHintIcons()) rowHeight else 0
     val textOffset = measureTextRegionOffset()

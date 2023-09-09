@@ -167,11 +167,40 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
             setColor(TEXT_NORMAL, Color.parseColor(foreground));
         }
 
+        String completionWindowBackground = (String) themeRaw.get("completionWindowBackground");
+        if (completionWindowBackground != null) {
+            setColor(COMPLETION_WND_BACKGROUND, Color.parseColor(completionWindowBackground));
+        }
+
+        String completionWindowBackgroundCurrent = (String) themeRaw.get("completionWindowBackgroundCurrent");
+        if (completionWindowBackgroundCurrent != null) {
+            setColor(COMPLETION_WND_ITEM_CURRENT, Color.parseColor(completionWindowBackgroundCurrent));
+        }
 
         String highlightedDelimetersForeground =
                 (String) themeRaw.get("highlightedDelimetersForeground");
         if (highlightedDelimetersForeground != null) {
             setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(highlightedDelimetersForeground));
+        }
+
+        String tooltipBackground = (String) themeRaw.get("tooltipBackground");
+        if (tooltipBackground != null) {
+            setColor(DIAGNOSTIC_TOOLTIP_BACKGROUND, Color.parseColor(tooltipBackground));
+        }
+
+        String tooltipBriefMessageColor = (String) themeRaw.get("tooltipBriefMessageColor");
+        if (tooltipBriefMessageColor != null) {
+            setColor(DIAGNOSTIC_TOOLTIP_BRIEF_MSG, Color.parseColor(tooltipBriefMessageColor));
+        }
+
+        String tooltipDetailedMessageColor = (String) themeRaw.get("tooltipDetailedMessageColor");
+        if (tooltipDetailedMessageColor != null) {
+            setColor(DIAGNOSTIC_TOOLTIP_DETAILED_MSG, Color.parseColor(tooltipDetailedMessageColor));
+        }
+
+        String tooltipActionColor = (String) themeRaw.get("tooltipActionColor");
+        if (tooltipActionColor != null) {
+            setColor(DIAGNOSTIC_TOOLTIP_ACTION, Color.parseColor(tooltipActionColor));
         }
 
 

@@ -1,5 +1,10 @@
 - 入门
   - [快速开始](/zh-cn/start/quickstart.md "快速开始")
+- 定制化
+  - [字体](/zh-cn/customization/font.md "字体")
+  - [滚动条](/zh-cn/customization/scrollbar.md "滚动条")
+  - [行号提示面板](/zh-cn/customization/line-panel.md "行号提示面板")
+  - [符号输入面板](/zh-cn/customization/symbol-input-view.md "符号输入面板")
 - Java 文档
   - [API接口](/zh-cn/api.md "API接口")
   - [常量](/zh-cn/constant.md "常量")

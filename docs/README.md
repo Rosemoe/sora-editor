@@ -1,6 +1,6 @@
 <div align="center">
 
-![Banner](https://github.com/Rosemoe/sora-editor/raw/main/images/editor_banner.jpg)
+![Banner](/images/editor_banner.jpg)
 ----
 [![CI](https://github.com/Rosemoe/CodeEditor/actions/workflows/gradle.yml/badge.svg?event=push)](https://github.com/Rosemoe/CodeEditor/actions/workflows/gradle.yml)
 [![GitHub license](https://img.shields.io/github/license/Rosemoe/CodeEditor)](https://github.com/Rosemoe/CodeEditor/blob/main/LICENSE)
@@ -12,8 +12,9 @@ sora-editor is a cool and optimized code editor on Android platform
 
 </div>
 
-Read this in other
-languages: [English](/README.md), [简体中文](/zh-cn/README.md), [Español](/es/README.md).
+Read this in other languages: [English](README.md), [简体中文](README.zh-cn.md), [Español](README.es.md).
+
+Note that statements in other languages may not be up-to-date.
 
 ***Work In Progress*** This project is still developing slowly.   
 Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/releases)
@@ -34,6 +35,7 @@ instead of cloning this repository directly.
 - [x] Error/Warning/Typo/Deprecated indicators
 - [x] Text magnifier
 - [x] Incremental highlight analysis
+- [x] Sticky Scroll
 - [x] Highlight bracket pairs
 - [x] Event System
 
@@ -53,8 +55,8 @@ See the [supported key bindings](./keybindings.md).
 ## Screenshots
 
 <div style="overflow: hidden">
-<img src="https://raw.githubusercontent.com/Rosemoe/sora-editor/main/images/general.jpg" alt="GeneralAppearance" width="40%" align="bottom" />
-<img src="https://raw.githubusercontent.com/Rosemoe/sora-editor/main/images/problem_indicators.jpg" alt="ProblemIndicator" width="40%" align="bottom" />
+<img src="/images/general.jpg" alt="GeneralAppearance" width="40%" align="bottom" />
+<img src="/images/problem_indicators.jpg" alt="ProblemIndicator" width="40%" align="bottom" />
 </div>
 
 ## Get started
@@ -81,15 +83,17 @@ Available modules:
   them by using this
   module. The internal implementation of textmate is from [tm4e](https://github.com/eclipse/tm4e).
 - language-treesitter   
-  Offer [tree-sitter](https://tree-sitter.github.io/tree-sitter/) support for editor. This can be
-  used to
-  parse the code to an AST fast and incrementally, which is helpful for accurate highlighting and
-  providing completions.
-  Note that this module only provides incremental paring and highlighting. Thanks to Java
-  bindings [android-tree-sitter](https://github.com/AndroidIDEOfficial/android-tree-sitter/)
+  Offer [tree-sitter](https://tree-sitter.github.io/tree-sitter/) support for editor. This can be used to 
+  parse the code to an AST fast and incrementally, which is helpful for accurate highlighting and providing completions.
+  Note that this module only provides incremental paring and highlighting. Thanks to Java bindings [android-tree-sitter](https://github.com/AndroidIDEOfficial/android-tree-sitter/)
 
 Check the newest version from the badge above
 or [Releases](https://github.com/Rosemoe/CodeEditor/releases).
+
+### Using Snapshot Versions
+Snapshot releases are automatically generated on repository push. You may combine current released version name
+and short commit hash to make a snapshot version name. For example, if the latest released version name is '0.21.1' and
+short commit hash is '97c4963', you may use version name '0.21.1-97c4963-SNAPSHOT' to import the snapshot version to your project.
 
 ## Discuss
 
@@ -132,4 +136,4 @@ additional information or have any questions
 
 Thanks to [JetBrains](https://www.jetbrains.com/?from=CodeEditor) for allocating free open-source
 licences for IDEs such as [IntelliJ IDEA](https://www.jetbrains.com/idea/?from=CodeEditor).   
-[<img src="https://raw.githubusercontent.com/Rosemoe/sora-editor/main/.github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)
+[<img src=".github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)

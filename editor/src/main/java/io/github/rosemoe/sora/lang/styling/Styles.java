@@ -59,6 +59,10 @@ public class Styles {
     public Map<Class<?>, MutableInt> styleTypeCount;
 
     public List<CodeBlock> blocks;
+    /**
+     * Internal, automatically generated
+     */
+    public List<CodeBlock> blocksByStart;
 
     public int suppressSwitch = Integer.MAX_VALUE;
 
@@ -271,6 +275,10 @@ public class Styles {
             if (sort) {
                 Collections.sort(blocks, CodeBlock.COMPARATOR_END);
             }
+            blocksByStart = new ArrayList<>(blocks);
+            Collections.sort(blocksByStart, CodeBlock.COMPARATOR_START);
+        } else {
+            blocksByStart = null;
         }
         if (lineStyles != null) {
             Collections.sort(lineStyles);

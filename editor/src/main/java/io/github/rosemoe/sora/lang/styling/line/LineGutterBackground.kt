@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2023  Rosemoe
@@ -20,41 +20,18 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- */
-package io.github.rosemoe.sora.text;
+ ******************************************************************************/
 
-import androidx.annotation.NonNull;
+package io.github.rosemoe.sora.lang.styling.line
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
+import io.github.rosemoe.sora.lang.styling.color.ResolvableColor
 
 /**
- * Utility class for creating {@link Content} objects.
+ * Set custom line gutter background color for the given line
  *
- * @deprecated Use {@link ContentIO} class instead
+ * @param line the line index
+ * @param color the gutter background color of this line
  * @author Rosemoe
  */
-@Deprecated(since = "0.21.1", forRemoval = true)
-public class ContentCreator {
-
-    /**
-     * Create a {@link Content} from stream.
-     * The stream will get closed if the operation is successfully done.
-     */
-    @NonNull
-    public static Content fromStream(@NonNull InputStream stream) throws IOException {
-        return ContentIO.createFrom(stream);
-    }
-
-    /**
-     * Create a {@link Content} from reader.
-     * <p>
-     * The reader will get closed if the operation is successfully done.
-     */
-    @NonNull
-    public static Content fromReader(@NonNull Reader reader) throws IOException {
-        return ContentIO.createFrom(reader);
-    }
-
-}
+class LineGutterBackground(override var line: Int, var color: ResolvableColor) :
+    LineAnchorStyle(line)

@@ -24,8 +24,8 @@
 package io.github.rosemoe.sora.lang.styling;
 
 import androidx.annotation.NonNull;
-
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -43,6 +43,7 @@ public class CodeBlock {
             return res;
         }
     };
+
     public static final Comparator<CodeBlock> COMPARATOR_START = (a, b) -> {
         var res = Integer.compare(a.startLine, b.startLine);
         if (res == 0) {
@@ -51,6 +52,74 @@ public class CodeBlock {
             return res;
         }
     };
+
+    /**
+     * Performs a binary search to find the index of the smallest code block whose end line is
+     * greater than or equal to the specified line.
+     * <p>
+     * This implementation also handles the case where the elements in the list are
+     * <code>null</code>. If a null element is encountered at <code>mid</code>, we look for the
+     * first non-null element either before and after the element and set it as <code>mid</code>.
+     *
+     * @param line   The line number to search for.
+     * @param blocks The list of code blocks to search within.
+     * @return The index of the smallest code block with an end line greater than or equal to the
+     * specified line. If no matching code block is found, -1 is returned.
+     */
+    public static int binarySearchEndBlock(int line, List<CodeBlock> blocks) {
+        if (blocks == null || blocks.isEmpty()) {
+            return -1;
+        }
+
+        int left = 0, right = blocks.size() - 1, mid, row;
+        int max = right;
+
+        while (left <= right) {
+            mid = left + (right - left) / 2;
+            if (mid < 0 || mid > max) {
+                return -1;
+            }
+
+            CodeBlock block = blocks.get(mid);
+            if (block == null) {
+                int nonNullLeft = mid - 1;
+                int nonNullRight = mid + 1;
+
+                while (true) {
+                    if (nonNullLeft < left && nonNullRight > right) {
+                        return -1;
+                    } else if (nonNullLeft >= left && blocks.get(nonNullLeft) != null) {
+                        mid = nonNullLeft;
+                        break;
+                    } else if (nonNullRight <= right && blocks.get(nonNullRight) != null) {
+                        mid = nonNullRight;
+                        break;
+                    }
+                    nonNullLeft--;
+                    nonNullRight++;
+                }
+
+                block = blocks.get(mid);
+            }
+
+            row = block.endLine;
+            if (row > line) {
+                right = mid - 1;
+            } else if (row < line) {
+                left = mid + 1;
+            } else {
+                left = mid;
+                break;
+            }
+        }
+
+        if (left < 0 || left > max) {
+            return -1;
+        }
+
+        return left;
+    }
+
     /**
      * Start line of code block
      */
@@ -79,10 +148,16 @@ public class CodeBlock {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         CodeBlock codeBlock = (CodeBlock) o;
-        return startLine == codeBlock.startLine && startColumn == codeBlock.startColumn && endLine == codeBlock.endLine && endColumn == codeBlock.endColumn && toBottomOfEndLine == codeBlock.toBottomOfEndLine;
+        return startLine == codeBlock.startLine && startColumn == codeBlock.startColumn &&
+          endLine == codeBlock.endLine && endColumn == codeBlock.endColumn &&
+          toBottomOfEndLine == codeBlock.toBottomOfEndLine;
     }
 
     @Override
@@ -93,6 +168,7 @@ public class CodeBlock {
     @NonNull
     @Override
     public String toString() {
+        //@formatter:off
         return "BlockLine{" +
                 "startLine=" + startLine +
                 ", startColumn=" + startColumn +
@@ -100,5 +176,6 @@ public class CodeBlock {
                 ", endColumn=" + endColumn +
                 ", toBottomOfEndLine=" + toBottomOfEndLine +
                 '}';
+        //@formatter:on
     }
 }
