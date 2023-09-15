@@ -24,6 +24,9 @@
 
 package io.github.rosemoe.sora.lsp.events
 
+import androidx.annotation.WorkerThread
+import kotlinx.coroutines.runBlocking
+
 class EventEmitter {
 
     private val listeners = HashMap<String, MutableList<EventListener>>()
@@ -66,12 +69,22 @@ class EventEmitter {
         return context
     }
 
+    @WorkerThread
+    fun emitBlocking(event: String, context: EventContext): EventContext = runBlocking {
+        emitAsync(event, context)
+    }
+
     fun emit(event: String): EventContext {
         return emit(event, EventContext())
     }
 
     suspend fun emitAsync(event: String): EventContext {
         return emitAsync(event, EventContext())
+    }
+
+    @WorkerThread
+    fun emitBlocking(event: String): EventContext = runBlocking {
+        emitAsync(event)
     }
 
     fun emit(event: String, vararg args: Any): EventContext {
@@ -88,6 +101,11 @@ class EventEmitter {
             context.put(i::class.java.name, i)
         }
         return emitAsync(event, context)
+    }
+
+    @WorkerThread
+    fun emitBlocking(event: String, vararg args: Any): EventContext = runBlocking {
+        emitAsync(event, *args)
     }
 
     fun clear(dispose: Boolean = false) {

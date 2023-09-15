@@ -24,8 +24,10 @@
 
 package io.github.rosemoe.sora.lsp.editor
 
+import androidx.annotation.WorkerThread
 import io.github.rosemoe.sora.lsp.events.EventContext
 import io.github.rosemoe.sora.lsp.events.EventListener
+import kotlinx.coroutines.runBlocking
 import org.eclipse.lsp4j.FormattingOptions
 import java.util.function.Supplier
 
@@ -86,6 +88,11 @@ class LspEventManager(
         return eventEmitter.emitAsync(eventName, createEventContext(*args))
     }
 
+    @WorkerThread
+    suspend fun emitBlocking(eventName: String, vararg args: Any) = runBlocking {
+        emitAsync(eventName, *args)
+    }
+
     fun emit(eventName: String, block: EventContext.() -> Unit): EventContext {
         val eventContext = createEventContext()
         eventContext.block()
@@ -96,6 +103,11 @@ class LspEventManager(
         val eventContext = createEventContext()
         eventContext.block()
         return eventEmitter.emitAsync(eventName, eventContext)
+    }
+
+    @WorkerThread
+    suspend fun emitBlocking(eventName: String, block: EventContext.() -> Unit) = runBlocking {
+        emitAsync(eventName, block)
     }
 
     /**

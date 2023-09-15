@@ -45,6 +45,7 @@ import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.subscribeEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.future
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.SignatureHelp
@@ -177,6 +178,11 @@ class LspEditor(
         }.isSuccess
     }
 
+    @WorkerThread
+    fun connectBlocking(throwException: Boolean = true): Boolean = runBlocking {
+        connect(throwException)
+    }
+
     /**
      * Try to connect to the language server repeatedly, this will cause threads blocking. Note: An error will be thrown if the language server is not connected after some time.
      *
@@ -212,6 +218,11 @@ class LspEditor(
 
     }
 
+    @WorkerThread
+    fun connectWithTimeoutBlocking() = runBlocking {
+        connectWithTimeout()
+    }
+
     /**
      * disconnect to the language server
      */
@@ -238,12 +249,22 @@ class LspEditor(
         eventManager.emitAsync(EventType.documentOpen)
     }
 
+    @WorkerThread
+    fun openDocumentBlocking() = runBlocking {
+        openDocument()
+    }
+
 
     /**
      * Notify language servers the document is saved
      */
     suspend fun saveDocument() {
         eventManager.emitAsync(EventType.documentSave)
+    }
+
+    @WorkerThread
+    fun saveDocumentBlocking() = runBlocking {
+        saveDocument()
     }
 
 

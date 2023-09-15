@@ -124,6 +124,7 @@ class LanguageServerWrapper(
      *
      * @return the languageServer capabilities, or null if initialization job didn't complete
      */
+    @WorkerThread
     fun getServerCapabilities(): ServerCapabilities? {
         if (initializeResult != null) {
             return initializeResult?.capabilities
@@ -178,6 +179,7 @@ class LanguageServerWrapper(
      *
      * @param throwException Whether to throw a startup failure exception
      */
+    @WorkerThread
     fun start(throwException: Boolean) {
         if (status != ServerStatus.STOPPED || alreadyShownCrash || alreadyShownTimeout) {
             return
