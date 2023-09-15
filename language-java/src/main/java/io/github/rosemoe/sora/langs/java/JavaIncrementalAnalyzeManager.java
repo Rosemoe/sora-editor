@@ -272,7 +272,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                     break;
                 case STRING:
                     classNamePrevious = false;
-                    final var span = new StaticColorSpan(
+                    final var span = StaticColorSpan.obtain(
                       0xff4caf50,
                       0xffffffff,
                       offset,
