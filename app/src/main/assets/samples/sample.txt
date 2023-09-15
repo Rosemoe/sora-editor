@@ -28,6 +28,14 @@ package io.github.rosemoe.sora.util;
  */
 public class Numbers {
 
+    final static String RED = "#f44336";
+
+    final static String BLUE = "#2196f3";
+
+    final static String GREEN = "#4caf50";
+
+    final static String SOME_COLOR = "#abcdef";
+
     final static char [] DigitTens = {
             '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
             '1', '1', '1', '1', '1', '1', '1', '1', '1', '1',

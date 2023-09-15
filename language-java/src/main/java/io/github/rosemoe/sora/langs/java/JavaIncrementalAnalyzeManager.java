@@ -24,23 +24,21 @@
 package io.github.rosemoe.sora.langs.java;
 
 import android.os.Bundle;
-
 import androidx.annotation.NonNull;
-
-import java.util.List;
-import java.util.Stack;
-
 import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager;
 import io.github.rosemoe.sora.lang.brackets.SimpleBracketsCollector;
 import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
+import io.github.rosemoe.sora.lang.styling.StaticColorSpan;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.util.ArrayList;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
+import java.util.List;
+import java.util.Stack;
 
 public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManager<State, Long> {
 
@@ -269,9 +267,25 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                 case CHARACTER_LITERAL:
                 case FLOATING_POINT_LITERAL:
                 case INTEGER_LITERAL:
-                case STRING:
                     classNamePrevious = false;
                     spans.add(Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.LITERAL, true)));
+                    break;
+                case STRING:
+                    classNamePrevious = false;
+                    final var span = new StaticColorSpan(
+                      0xff4caf50,
+                      0xffffffff,
+                      offset,
+                      TextStyle.makeStyle(
+                        EditorColorScheme.STATIC_SPAN_FOREGROUND,
+                        EditorColorScheme.STATIC_SPAN_BACKGROUND,
+                        true,
+                        false,
+                        false,
+                        true
+                      )
+                    );
+                    spans.add(span);
                     break;
                 case INT:
                 case LONG:
