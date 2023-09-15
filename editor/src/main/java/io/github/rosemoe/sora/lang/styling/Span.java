@@ -24,12 +24,8 @@
 package io.github.rosemoe.sora.lang.styling;
 
 import androidx.annotation.NonNull;
-
-import java.util.Collection;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
+import java.util.Collection;
 
 /**
  * The span model
@@ -38,7 +34,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
  */
 public class Span {
 
-    private static final BlockingQueue<Span> cacheQueue = new ArrayBlockingQueue<>(8192 * 2);
+    private static final SpanPool<Span> spanPool = new SpanPool<>(Span::new);
 
     public int column;
     /**
@@ -67,14 +63,7 @@ public class Span {
      * The result object will be initialized with the given arguments.
      */
     public static Span obtain(int column, long style) {
-        Span span = cacheQueue.poll();
-        if (span == null) {
-            return new Span(column, style);
-        } else {
-            span.column = column;
-            span.style = style;
-            return span;
-        }
+        return spanPool.obtain(column, style);
     }
 
     /**
@@ -133,7 +122,7 @@ public class Span {
     public boolean recycle() {
         column = underlineColor = 0;
         style = 0;
-        return cacheQueue.offer(this);
+        return spanPool.offer(this);
     }
 
     public int getForegroundColorId() {
