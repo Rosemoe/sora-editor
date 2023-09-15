@@ -59,6 +59,11 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize"/>
         <activity
+            android:name=".LspTestJavaActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"/>
+        <activity
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
             android:exported="true"

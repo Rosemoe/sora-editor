@@ -131,7 +131,7 @@ class LspTestActivity : AppCompatActivity() {
     private suspend fun connectToLanguageServer() = withContext(Dispatchers.IO) {
 
         withContext(Dispatchers.Main) {
-            toast("Starting Language Server...")
+            toast("(Kotlin Activity) Starting Language Server...")
             editor.editable = false
         }
 
@@ -242,30 +242,33 @@ class LspTestActivity : AppCompatActivity() {
 
     private fun ensureTextmateTheme() {
         var editorColorScheme = editor.colorScheme
-        if (editorColorScheme !is TextMateColorScheme) {
 
-            FileProviderRegistry.getInstance().addFileProvider(
-                AssetsFileResolver(
-                    assets
-                )
-            )
-
-            val themeRegistry = ThemeRegistry.getInstance()
-
-            val path = "textmate/quietlight.json"
-            themeRegistry.loadTheme(
-                ThemeModel(
-                    IThemeSource.fromInputStream(
-                        FileProviderRegistry.getInstance().tryGetInputStream(path), path, null
-                    ), "quitelight"
-                )
-            )
-
-            themeRegistry.setTheme("quietlight")
-
-            editorColorScheme = TextMateColorScheme.create(themeRegistry)
-            editor.colorScheme = editorColorScheme
+        if (editorColorScheme is TextMateColorScheme) {
+            return
         }
+
+        FileProviderRegistry.getInstance().addFileProvider(
+            AssetsFileResolver(
+                assets
+            )
+        )
+
+        val themeRegistry = ThemeRegistry.getInstance()
+
+        val path = "textmate/quietlight.json"
+        themeRegistry.loadTheme(
+            ThemeModel(
+                IThemeSource.fromInputStream(
+                    FileProviderRegistry.getInstance().tryGetInputStream(path), path, null
+                ), "quitelight"
+            )
+        )
+
+        themeRegistry.setTheme("quietlight")
+
+        editorColorScheme = TextMateColorScheme.create(themeRegistry)
+        editor.colorScheme = editorColorScheme
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -297,10 +300,6 @@ class LspTestActivity : AppCompatActivity() {
         }
         stopService(Intent(this@LspTestActivity, LspLanguageServerService::class.java))
     }
-
-    data class InitializationOption(
-        var stdFolder: String
-    )
 
 
     class EventListener(

@@ -91,6 +91,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
 import java.util.regex.PatternSyntaxException
+import kotlin.random.Random
 
 
 class MainActivity : AppCompatActivity() {
@@ -442,7 +443,7 @@ class MainActivity : AppCompatActivity() {
             if (idx == -1) {
                 text += "($matchText)"
             } else {
-                text += "(${idx+1} of $matchText)"
+                text += "(${idx + 1} of $matchText)"
             }
         }
         binding.positionDisplay.text = text
@@ -541,7 +542,12 @@ class MainActivity : AppCompatActivity() {
                         .setPositiveButton(android.R.string.ok, null)
                         .show()
                 } else {
-                    startActivity(Intent(this, LspTestActivity::class.java))
+                    val random = Math.random()
+                    if (random > 0.6) {
+                        startActivity(Intent(this, LspTestJavaActivity::class.java))
+                    } else {
+                        startActivity(Intent(this, LspTestActivity::class.java))
+                    }
                 }
             }
 
@@ -787,10 +793,14 @@ class MainActivity : AppCompatActivity() {
                                 editor.setEditorLanguage(TsLanguage(
                                     TsLanguageSpec(
                                         TSLanguageJava.newInstance(),
-                                        highlightScmSource = assets.open("tree-sitter-queries/java/highlights.scm").reader().readText(),
-                                        codeBlocksScmSource = assets.open("tree-sitter-queries/java/blocks.scm").reader().readText(),
-                                        bracketsScmSource = assets.open("tree-sitter-queries/java/brackets.scm").reader().readText(),
-                                        localsScmSource = assets.open("tree-sitter-queries/java/locals.scm").reader().readText(),
+                                        highlightScmSource = assets.open("tree-sitter-queries/java/highlights.scm")
+                                            .reader().readText(),
+                                        codeBlocksScmSource = assets.open("tree-sitter-queries/java/blocks.scm")
+                                            .reader().readText(),
+                                        bracketsScmSource = assets.open("tree-sitter-queries/java/brackets.scm")
+                                            .reader().readText(),
+                                        localsScmSource = assets.open("tree-sitter-queries/java/locals.scm")
+                                            .reader().readText(),
                                         localsCaptureSpec = object : LocalsCaptureSpec() {
 
                                             override fun isScopeCapture(captureName: String): Boolean {
@@ -811,12 +821,40 @@ class MainActivity : AppCompatActivity() {
 
                                         }
                                     )) {
-                                    TextStyle.makeStyle(EditorColorScheme.COMMENT, 0, false, true, false) applyTo "comment"
-                                    TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false) applyTo "keyword"
-                                    TextStyle.makeStyle(EditorColorScheme.LITERAL) applyTo arrayOf("constant.builtin", "string", "number")
-                                    TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_VAR) applyTo arrayOf("variable.builtin", "variable", "constant")
-                                    TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_NAME) applyTo arrayOf("type.builtin", "type", "attribute")
-                                    TextStyle.makeStyle(EditorColorScheme.FUNCTION_NAME) applyTo arrayOf("function.method", "function.builtin", "variable.field")
+                                    TextStyle.makeStyle(
+                                        EditorColorScheme.COMMENT,
+                                        0,
+                                        false,
+                                        true,
+                                        false
+                                    ) applyTo "comment"
+                                    TextStyle.makeStyle(
+                                        EditorColorScheme.KEYWORD,
+                                        0,
+                                        true,
+                                        false,
+                                        false
+                                    ) applyTo "keyword"
+                                    TextStyle.makeStyle(EditorColorScheme.LITERAL) applyTo arrayOf(
+                                        "constant.builtin",
+                                        "string",
+                                        "number"
+                                    )
+                                    TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_VAR) applyTo arrayOf(
+                                        "variable.builtin",
+                                        "variable",
+                                        "constant"
+                                    )
+                                    TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_NAME) applyTo arrayOf(
+                                        "type.builtin",
+                                        "type",
+                                        "attribute"
+                                    )
+                                    TextStyle.makeStyle(EditorColorScheme.FUNCTION_NAME) applyTo arrayOf(
+                                        "function.method",
+                                        "function.builtin",
+                                        "variable.field"
+                                    )
                                     TextStyle.makeStyle(EditorColorScheme.OPERATOR) applyTo "operator"
                                 })
                             }

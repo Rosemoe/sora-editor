@@ -105,7 +105,7 @@ class LspProject(
         return getEditor(path) ?: createEditor(path)
     }
 
-    suspend fun closeAllEditors() {
+    fun closeAllEditors() {
         editors.forEach {
             it.value.dispose()
         }
@@ -128,7 +128,7 @@ class LspProject(
         return wrapper
     }
 
-    suspend fun dispose() {
+    fun dispose() {
         closeAllEditors()
         languageServerWrappers.forEach {
             it.value.stop(false)
