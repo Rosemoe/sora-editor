@@ -45,6 +45,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import io.github.rosemoe.sora.util.RendererUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -453,7 +454,8 @@ public class EditorRenderer {
 
             if (offsetX + width > 0 || !visibleOnly) {
 
-                ExternalRenderer renderer = span instanceof AdvancedSpan ? ((AdvancedSpan) span).renderer : null;
+                AdvancedSpan advancedSpan = span instanceof AdvancedSpan ? (AdvancedSpan) span : null;
+                ExternalRenderer renderer = advancedSpan != null ? advancedSpan.renderer: null;
 
                 // Invoke external renderer preDraw
                 if (renderer != null && renderer.requirePreDraw()) {
@@ -480,21 +482,21 @@ public class EditorRenderer {
                     lastStyle = styleBits;
                 }
 
-                int backgroundColorId = span.getBackgroundColorId();
-                if (backgroundColorId != 0) {
-                    if (paintStart != paintEnd) {
-                        tmpRect.top = editor.getRowTop(row);
-                        tmpRect.bottom = editor.getRowBottom(row);
-                        tmpRect.left = offsetX;
-                        tmpRect.right = tmpRect.left + width;
-                        paintGeneral.setColor(editor.getColorScheme().getColor(backgroundColorId));
-                        canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintGeneral);
-                    }
+                // unboxing may result in NPE!
+                Integer backgroundColor = RendererUtils.getBackgroundColor(span, editor.getColorScheme());
+                if (backgroundColor != null && paintStart != paintEnd) {
+                    tmpRect.top = editor.getRowTop(row);
+                    tmpRect.bottom = editor.getRowBottom(row);
+                    tmpRect.left = offsetX;
+                    tmpRect.right = tmpRect.left + width;
+                    paintGeneral.setColor(backgroundColor);
+                    canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintGeneral);
                 }
 
 
                 // Draw text
-                drawRegionTextDirectional(canvas, offsetX, editor.getRowBaseline(row), line, paintStart, paintEnd, span.column, spanEnd, columnCount, editor.getColorScheme().getColor(span.getForegroundColorId()));
+                int foregroundColor = RendererUtils.getForegroundColor(span, editor.getColorScheme());
+                drawRegionTextDirectional(canvas, offsetX, editor.getRowBaseline(row), line, paintStart, paintEnd, span.column, spanEnd, columnCount, foregroundColor);
 
                 // Draw strikethrough
                 if (TextStyle.isStrikeThrough(span.style)) {
@@ -1383,20 +1385,20 @@ public class EditorRenderer {
                         lastStyle = styleBits;
                     }
 
-                    int backgroundColorId = span.getBackgroundColorId();
-                    if (backgroundColorId != 0) {
-                        if (paintStart != paintEnd) {
-                            tmpRect.top = editor.getRowTop(row) - editor.getOffsetY();
-                            tmpRect.bottom = editor.getRowBottom(row) - editor.getOffsetY();
-                            tmpRect.left = paintingOffset;
-                            tmpRect.right = tmpRect.left + width;
-                            paintGeneral.setColor(editor.getColorScheme().getColor(backgroundColorId));
-                            canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintGeneral);
-                        }
+                    // unboxing may result in NPE!
+                    Integer backgroundColor = RendererUtils.getBackgroundColor(span, editor.getColorScheme());
+                    if (backgroundColor != null && paintStart != paintEnd) {
+                        tmpRect.top = editor.getRowTop(row) - editor.getOffsetY();
+                        tmpRect.bottom = editor.getRowBottom(row) - editor.getOffsetY();
+                        tmpRect.left = paintingOffset;
+                        tmpRect.right = tmpRect.left + width;
+                        paintGeneral.setColor(backgroundColor);
+                        canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintGeneral);
                     }
 
                     // Draw text
-                    drawRegionTextDirectional(canvas, paintingOffset, editor.getRowBaseline(row) - editor.getOffsetY(), line, paintStart, paintEnd, span.column, spanEnd, columnCount, editor.getColorScheme().getColor(span.getForegroundColorId()));
+                    int foregroundColor = RendererUtils.getForegroundColor(span, editor.getColorScheme());
+                    drawRegionTextDirectional(canvas, paintingOffset, editor.getRowBaseline(row) - editor.getOffsetY(), line, paintStart, paintEnd, span.column, spanEnd, columnCount, foregroundColor);
 
                     // Draw strikethrough
                     if (TextStyle.isStrikeThrough(styleBits)) {
