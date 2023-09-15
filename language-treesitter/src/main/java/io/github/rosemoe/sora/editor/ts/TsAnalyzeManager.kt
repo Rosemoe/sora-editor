@@ -51,8 +51,9 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     var reference: ContentReference? = null
     var extraArguments: Bundle? = null
     var thread: TsLooperThread? = null
-    var styles = Styles()
     var spanFactory : TsSpanFactory = DefaultSpanFactory()
+
+    open var styles = Styles()
 
     fun updateTheme(theme: TsTheme) {
         this.theme = theme

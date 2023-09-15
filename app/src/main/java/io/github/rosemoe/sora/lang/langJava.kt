@@ -69,14 +69,11 @@ class TsJavaAnalyzeManager(
   theme: TsTheme
 ) : TsAnalyzeManager(languageSpec, theme) {
 
-  init {
-    spanFactory = TsJavaSpanFactory(reference, languageSpec.tsQuery, styles)
-  }
-
-  override fun rerun() {
-    super.rerun()
-    spanFactory = TsJavaSpanFactory(reference, languageSpec.tsQuery, styles)
-  }
+  override var styles: Styles = Styles()
+    set(value) {
+      field = value
+      spanFactory = TsJavaSpanFactory(reference, languageSpec.tsQuery, value)
+    }
 }
 
 class TsJavaSpanFactory(
