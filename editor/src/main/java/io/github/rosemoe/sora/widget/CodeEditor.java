@@ -68,10 +68,16 @@ import android.widget.EdgeEffect;
 import android.widget.EditText;
 import android.widget.SearchView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Px;
 import androidx.annotation.UiThread;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 import io.github.rosemoe.sora.I18nConfig;
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
@@ -137,9 +143,6 @@ import io.github.rosemoe.sora.widget.style.builtin.DefaultLineNumberTip;
 import io.github.rosemoe.sora.widget.style.builtin.HandleStyleDrop;
 import io.github.rosemoe.sora.widget.style.builtin.HandleStyleSideDrop;
 import io.github.rosemoe.sora.widget.style.builtin.MoveCursorAnimator;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import kotlin.text.StringsKt;
 
 /**
@@ -1639,8 +1642,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * Inserts indentation string at the start of the selected lines. Does nothing if the text is
-     * not selected.
+     * Indents the selected lines. Does nothing if the text is not selected.
      */
     public void indentSelection() {
 
@@ -1653,50 +1655,87 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         final var tabString = createTabString();
 
         final var text = getText();
+        final var tabWidth = getTabWidth();
         text.beginBatchEdit();
         for (int i = cursor.getLeftLine(); i <= cursor.getRightLine(); i++) {
-            text.insert(i, 0, tabString);
+            final var line = text.getLine(i);
+            final var result = TextUtils.countLeadingSpacesAndTabs(line);
+            final var spaceCount = IntPair.getFirst(result);
+            final var tabCount = IntPair.getSecond(result);
+            final var spaces = spaceCount + (tabCount * tabWidth);
+            final var endColumn = spaceCount + tabCount;
+
+            final var requiredSpaces = tabWidth - (spaces % tabWidth);
+            if (spaceCount > 0 && tabCount > 0) {
+                // indentation contains spaces as well as tabs
+                // replace the leading indentation with appropriate indendation (according to language.useTabs())
+                // this should be done while incrementing the indentation
+                final var finalSpaceCount = ((requiredSpaces == 0 ? tabWidth : requiredSpaces) + spaces) / tabWidth;
+                text.replace(i, 0, i, endColumn, StringsKt.repeat(tabString, finalSpaceCount));
+                continue;
+            }
+
+            if (requiredSpaces == 0) {
+                // line is evenly indented
+                // increase the indentation by \t or tabWidthSpaces
+                text.insert(i, endColumn, tabString);
+            } else {
+                // line in oddly indented
+                // We know that a line can never be oddly indented when it is indented only with tabs
+                // therefore, we insert spaces to align the line
+                text.insert(i, endColumn, StringsKt.repeat(" ", requiredSpaces));
+            }
         }
         text.endBatchEdit();
     }
 
-  /**
-   * Removes indentation from the start of the selected lines. If the text is not selected, or if
-   * the start and end selection is on the same line, only the line at the cursor position is
-   * unindented.
-   */
+    /**
+     * Removes indentation from the start of the selected lines. If the text is not selected, or if
+     * the start and end selection is on the same line, only the line at the cursor position is
+     * unindented.
+     */
     public void unindentSelection() {
-      final var cursor = getCursor();
-      final var text = getText();
+        final var cursor = getCursor();
+        final var text = getText();
+        final var tabWidth = getTabWidth();
+        final var tabString = createTabString();
 
-      text.beginBatchEdit();
-      for (int i = cursor.getLeftLine(); i <= cursor.getRightLine(); i++) {
-          final var line = text.getLineString(i);
-          var end = Math.min(getTabWidth(), line.length());
-          var substring = line.substring(0, end);
+        text.beginBatchEdit();
+        for (int i = cursor.getLeftLine(); i <= cursor.getRightLine(); i++) {
+            final var line = text.getLineString(i);
+            final var result = TextUtils.countLeadingSpacesAndTabs(line);
+            final var spaceCount = IntPair.getFirst(result);
+            final var tabCount = IntPair.getSecond(result);
+            final var spaces = spaceCount + (tabCount * tabWidth);
+            if (spaces == 0) {
+                // line is not indented
+                continue;
+            }
 
-          if (substring.isBlank()) {
-            text.delete(i, 0, i, end);
-            continue;
-          }
+            final var endColumn = spaceCount + tabCount;
 
-          // check for whitespace from the start instead of end
-          // this is because we are trying to remove indentation from the start
-          // if we check from the end and the the char at end is a whitespace but the char at start
-          // is not, we'll end up deleting unintended character(s)
-          end = 0;
-          while (isWhitespace(substring.charAt(end))) {
-              ++end;
-              if (end >= getTabWidth()) {
-                  break;
-              }
-          }
+            final var extraSpaces = spaces % tabWidth;
+            if (spaceCount > 0 && tabCount > 0) {
+                // indentation contains spaces as well as tabs
+                // replace the leading indentation with appropriate indendation (according to language.useTabs())
+                // this should be done while decrementing the indentation
+                final var finalSpaceCount = Math.abs(spaces - (extraSpaces == 0 ? tabWidth : extraSpaces)) / tabWidth;
+                text.replace(i, 0, i, endColumn, StringsKt.repeat(tabString, finalSpaceCount));
+                continue;
+            }
 
-          if (end != 0) {
-              text.delete(i, 0, i, end);
-          }
-      }
-      text.endBatchEdit();
+            if (extraSpaces == 0) {
+                // line is evenly indented
+                // remove tabString.length() characters from the start
+                text.delete(i, 0, i, tabString.length());
+            } else {
+                // line in oddly indented
+                // We know that a line can never be oddly indented when it is indented only with tabs
+                // therefore, we delete spaces to align the line
+                text.delete(i, 0, i, extraSpaces);
+            }
+        }
+        text.endBatchEdit();
     }
 
     /**

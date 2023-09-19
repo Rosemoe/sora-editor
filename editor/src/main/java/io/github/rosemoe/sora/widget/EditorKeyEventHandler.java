@@ -366,6 +366,8 @@ class EditorKeyEventHandler {
                         } else if (editorCursor.isSelected()) {
                             // Selection + TAB -> indent the selected lines
                             editor.indentSelection();
+                        } else {
+                            editor.commitTab();
                         }
                     } else {
                         editor.commitTab();
