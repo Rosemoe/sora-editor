@@ -267,25 +267,9 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                 case CHARACTER_LITERAL:
                 case FLOATING_POINT_LITERAL:
                 case INTEGER_LITERAL:
-                    classNamePrevious = false;
-                    spans.add(Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.LITERAL, true)));
-                    break;
                 case STRING:
                     classNamePrevious = false;
-                    final var span = StaticColorSpan.obtain(
-                      0xff4caf50,
-                      0xffffffff,
-                      offset,
-                      TextStyle.makeStyle(
-                        EditorColorScheme.STATIC_SPAN_FOREGROUND,
-                        EditorColorScheme.STATIC_SPAN_BACKGROUND,
-                        true,
-                        false,
-                        false,
-                        true
-                      )
-                    );
-                    spans.add(span);
+                    spans.add(Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.LITERAL, true)));
                     break;
                 case INT:
                 case LONG:
