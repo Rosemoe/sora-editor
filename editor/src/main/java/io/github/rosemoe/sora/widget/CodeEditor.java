@@ -1690,7 +1690,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 // increase the indentation by \t or tabWidthSpaces
                 text.insert(i, endColumn, tabString);
             } else {
-                // line in oddly indented
+                // line is oddly indented
                 // We know that a line can never be oddly indented when it is indented only with tabs
                 // therefore, we insert spaces to align the line
                 text.insert(i, endColumn, StringsKt.repeat(" ", requiredSpaces));
@@ -1737,12 +1737,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             if (extraSpaces == 0) {
                 // line is evenly indented
                 // remove tabString.length() characters from the start
-                text.delete(i, 0, i, tabString.length());
+
+                // do not use tabString.length()
+                text.delete(i, endColumn - (tabCount > 0 ? 1 : tabWidth), i, endColumn);
             } else {
-                // line in oddly indented
+                // line is oddly indented
                 // We know that a line can never be oddly indented when it is indented only with tabs
                 // therefore, we delete spaces to align the line
-                text.delete(i, 0, i, extraSpaces);
+                text.delete(i, endColumn - extraSpaces, i, endColumn);
             }
         }
         text.endBatchEdit();
