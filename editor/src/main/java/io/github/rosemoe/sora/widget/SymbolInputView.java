@@ -128,10 +128,8 @@ public class SymbolInputView extends LinearLayout {
                 if ("\t".equals(insertText[finalI])) {
                     if (editor.getSnippetController().isInSnippet()) {
                         editor.getSnippetController().shiftToNextTabStop();
-                    } else if (editor.getProps().indentSelectionWithTab && editor.getCursor().isSelected()) {
-                        editor.indentSelection();
                     } else {
-                        editor.insertText(insertText[finalI], 1);
+                        editor.indentOrCommitTab();
                     }
                 } else {
                     editor.insertText(insertText[finalI], 1);

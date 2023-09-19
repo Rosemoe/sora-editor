@@ -1645,17 +1645,27 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Indents the selected lines. Does nothing if the text is not selected.
      */
     public void indentSelection() {
+        indentLines(true);
+    }
+
+    /**
+     * Indents the lines. Does nothing if the <code>onlyIfSelected</code> is <code>true</code> and
+     * the no text is selected.
+     * 
+     * @param onlyIfSelected Set to <code>true</code> if lines must be indented only if the text is
+     *                      selected.
+     */
+    public void indentLines(boolean onlyIfSelected) {
 
         final var cursor = getCursor();
-        if (!cursor.isSelected()) {
-            Log.w(LOG_TAG, "indentSelection: text is not selected, ignoring.");
+        if (onlyIfSelected && !cursor.isSelected()) {
             return;
         }
 
         final var tabString = createTabString();
-
         final var text = getText();
         final var tabWidth = getTabWidth();
+        
         text.beginBatchEdit();
         for (int i = cursor.getLeftLine(); i <= cursor.getRightLine(); i++) {
             final var line = text.getLine(i);
@@ -1745,6 +1755,33 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (inputConnection != null && isEditable()) {
             inputConnection.commitTextInternal(createTabString(), true);
         }
+    }
+
+    /**
+     * Indents the line if text is not selected and the cursor is at the start of the line. Inserts
+     * an indentation string otherwise.
+     */
+    public void indentOrCommitTab() {
+        final var cursor = getCursor();
+        if (cursor.isSelected()) {
+            indentSelection();
+            return;
+        }
+
+        final var left = cursor.left();
+        final var line = getText().getLine(left.line);
+
+        final var count = TextUtils.countLeadingSpacesAndTabs(line);
+        final var spaceCount = IntPair.getFirst(count);
+        final var tabCount = IntPair.getSecond(count);
+
+        if (left.column > spaceCount + tabCount) {
+            // there is text before the cursor
+            commitTab();
+            return;
+        }
+
+        indentLines(false);
     }
 
     /**
