@@ -1650,7 +1650,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     /**
      * Indents the lines. Does nothing if the <code>onlyIfSelected</code> is <code>true</code> and
-     * the no text is selected.
+     * no text is selected.
      * 
      * @param onlyIfSelected Set to <code>true</code> if lines must be indented only if the text is
      *                      selected.
