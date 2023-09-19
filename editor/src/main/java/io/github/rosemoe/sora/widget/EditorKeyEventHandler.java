@@ -359,18 +359,11 @@ class EditorKeyEventHandler {
                         } else {
                             editor.getSnippetController().shiftToNextTabStop();
                         }
-                    } if (editor.getProps().indentSelectionWithTab) {
-                        if (isShiftPressed) {
-                            // Shift + TAB -> unindent the [selected] lines
-                            editor.unindentSelection();
-                        } else if (editorCursor.isSelected()) {
-                            // Selection + TAB -> indent the selected lines
-                            editor.indentSelection();
-                        } else {
-                            editor.commitTab();
-                        }
+                    } if (isShiftPressed) {
+                        // Shift + TAB -> unindent the [selected] lines
+                        editor.unindentSelection();
                     } else {
-                        editor.commitTab();
+                        editor.indentOrCommitTab();
                     }
                 }
                 return editorKeyEvent.result(true);
