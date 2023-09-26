@@ -82,7 +82,12 @@ class LineSpansGenerator(
             cursor.exec(languageSpec.tsQuery, tree.rootNode)
             var match = cursor.nextMatch()
             while (match != null) {
-                if (languageSpec.queryPredicator.doPredicate(languageSpec.predicates, content, match)) {
+                if (languageSpec.queryPredicator.doPredicate(
+                        languageSpec.predicates,
+                        content,
+                        match
+                    )
+                ) {
                     captures.addAll(match.captures)
                 }
                 match = cursor.nextMatch()
@@ -100,10 +105,11 @@ class LineSpansGenerator(
                             && pattern !in languageSpec.localsDefinitionValueIndices && pattern !in languageSpec.localsMembersScopeIndices)
                 ) {
                     if (start != lastIndex) {
-                        list.add(
-                            createSpan(
+                        list.addAll(
+                            createSpans(
                                 capture,
                                 lastIndex,
+                                start - 1,
                                 theme.normalTextStyle
                             )
                         )
@@ -131,8 +137,9 @@ class LineSpansGenerator(
                     if (style == 0L) {
                         style = theme.normalTextStyle
                     }
-                    list.add(createSpan(capture, start, style))
-                    lastIndex = (endByte / 2 - startIndex).coerceAtMost(endIndex)
+                    val end = (endByte / 2 - startIndex).coerceAtMost(endIndex)
+                    list.addAll(createSpans(capture, start, end, style))
+                    lastIndex = end
                 }
             }
             if (lastIndex != endIndex) {
@@ -145,11 +152,33 @@ class LineSpansGenerator(
         return list
     }
 
-    private fun createSpan(capture: TSQueryCapture, column: Int, style: Long) : Span {
-        return spanFactory.createSpan(capture, column, style)
+    private fun createSpans(
+        capture: TSQueryCapture,
+        startColumn: Int,
+        endColumn: Int,
+        style: Long
+    ): List<Span> {
+        val spans = spanFactory.createSpans(capture, startColumn, style)
+        if (spans.size > 1) {
+            var prevCol = spans[0].column
+            if (prevCol > endColumn) {
+                throw IndexOutOfBoundsException("Span's column is out of bounds! column=$prevCol, endColumn=$endColumn")
+            }
+            for (i in 1..spans.lastIndex) {
+                val col = spans[i].column
+                if (col <= prevCol) {
+                    throw IllegalStateException("Spans must not overlap! prevCol=$prevCol, col=$col")
+                }
+                if (col > endColumn) {
+                    throw IndexOutOfBoundsException("Span's column is out of bounds! column=$col, endColumn=$endColumn")
+                }
+                prevCol = col
+            }
+        }
+        return spans
     }
 
-    private fun emptySpan(column: Int) : Span {
+    private fun emptySpan(column: Int): Span {
         return Span.obtain(column, TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL))
     }
 

@@ -34,8 +34,8 @@ import io.github.rosemoe.sora.lang.styling.Span
  */
 open class DefaultSpanFactory : TsSpanFactory {
 
-  override fun createSpan(capture: TSQueryCapture, column: Int, spanStyle: Long) : Span {
-    return Span.obtain(column, spanStyle)
+  override fun createSpans(capture: TSQueryCapture, column: Int, spanStyle: Long): List<Span> {
+    return listOf(Span.obtain(column, spanStyle))
   }
 
   override fun close() {
