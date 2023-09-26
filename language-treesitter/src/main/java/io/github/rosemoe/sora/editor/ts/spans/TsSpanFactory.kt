@@ -42,5 +42,5 @@ interface TsSpanFactory : AutoCloseable {
    * @param spanStyle The style for the span.
    * @return The [Span] object.
    */
-  fun createSpan(capture: TSQueryCapture, column: Int, spanStyle: Long): Span
+  fun createSpans(capture: TSQueryCapture, column: Int, spanStyle: Long): List<Span>
 }
