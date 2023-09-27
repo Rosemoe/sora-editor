@@ -38,9 +38,9 @@ interface TsSpanFactory : AutoCloseable {
    * Creates the spans using the provided data.
    *
    * @param capture The query capture. More information about the node can be found using the [TSQueryCapture.node] object.
-   * @param column The column that should be used to create the span.
-   * @param spanStyle The style for the span.
-   * @return The [Span] object.
+   * @param column The start column index for the span.
+   * @param spanStyle The style for the spans.
+   * @return The [Span] objects.
    */
   fun createSpans(capture: TSQueryCapture, column: Int, spanStyle: Long): List<Span>
 }
