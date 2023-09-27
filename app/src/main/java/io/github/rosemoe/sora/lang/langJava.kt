@@ -186,7 +186,7 @@ class TsJavaSpanFactory(
             spans.add(Span.obtain(column + e + 1, spanStyle))
         }
 
-        return spans.toList()
+        return spans
     }
 
     override fun close() {
