@@ -1569,7 +1569,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @NonNull
     public List<Span> getSpansForLine(int line) {
         var spanMap = textStyles == null ? null : textStyles.spans;
-        if (defaultSpans.size() == 0) {
+        if (defaultSpans.isEmpty()) {
             defaultSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
         }
         try {
@@ -2576,7 +2576,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
                     @Override
                     public boolean onQueryTextChange(String text) {
-                        if (text == null || text.length() == 0) {
+                        if (text == null || text.isEmpty()) {
                             getSearcher().stopSearch();
                             return false;
                         }
@@ -2604,14 +2604,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     return false;
                 }
                 switch (p2.getItemId()) {
-                    case 1:
-                        getSearcher().gotoPrevious();
-                        break;
-                    case 0:
-                        getSearcher().gotoNext();
-                        break;
-                    case 2:
-                    case 3:
+                    case 1 -> getSearcher().gotoPrevious();
+                    case 0 -> getSearcher().gotoNext();
+                    case 2, 3 -> {
                         final boolean replaceAll = p2.getItemId() == 3;
                         final EditText et = new EditText(getContext());
                         et.setHint(I18nConfig.getResourceId(R.string.sora_editor_replacement));
@@ -2629,7 +2624,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                                     dialog.dismiss();
                                 })
                                 .show();
-                        break;
+                    }
                 }
                 return false;
             }
@@ -3523,7 +3518,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.w(LOG_TAG, e);
             Toast.makeText(getContext(), e.toString(), Toast.LENGTH_SHORT).show();
         }
     }
@@ -3558,7 +3553,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             if (e.getCause() instanceof TransactionTooLargeException) {
                 Toast.makeText(getContext(), I18nConfig.getResourceId(R.string.sora_editor_clip_text_length_too_large), Toast.LENGTH_SHORT).show();
             } else {
-                e.printStackTrace();
+                Log.w(LOG_TAG, e);
                 Toast.makeText(getContext(), e.getClass().toString(), Toast.LENGTH_SHORT).show();
             }
         }
@@ -4319,7 +4314,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     //-------------------------Override methods--------------------------------------
     //-------------------------------------------------------------------------------
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
 
         renderer.draw(canvas);
@@ -4379,33 +4374,41 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @Override
     public boolean performAccessibilityAction(int action, Bundle arguments) {
         switch (action) {
-            case AccessibilityNodeInfo.ACTION_COPY:
+            case AccessibilityNodeInfo.ACTION_COPY -> {
                 copyText();
                 return true;
-            case AccessibilityNodeInfo.ACTION_CUT:
+            }
+            case AccessibilityNodeInfo.ACTION_CUT -> {
                 cutText();
                 return true;
-            case AccessibilityNodeInfo.ACTION_PASTE:
+            }
+            case AccessibilityNodeInfo.ACTION_PASTE -> {
                 pasteText();
                 return true;
-            case AccessibilityNodeInfo.ACTION_SET_TEXT:
+            }
+            case AccessibilityNodeInfo.ACTION_SET_TEXT -> {
                 setText(arguments.getCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE));
                 return true;
-            case AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD:
+            }
+            case AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD -> {
                 movePageDown();
                 return true;
-            case AccessibilityNodeInfo.ACTION_SCROLL_FORWARD:
+            }
+            case AccessibilityNodeInfo.ACTION_SCROLL_FORWARD -> {
                 movePageUp();
                 return true;
+            }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             switch (action) {
-                case android.R.id.accessibilityActionScrollDown:
+                case android.R.id.accessibilityActionScrollDown -> {
                     movePageDown();
                     return true;
-                case android.R.id.accessibilityActionScrollUp:
+                }
+                case android.R.id.accessibilityActionScrollUp -> {
                     movePageUp();
                     return true;
+                }
             }
         }
         return super.performAccessibilityAction(action, arguments);
@@ -4420,13 +4423,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public boolean dispatchTouchEvent(MotionEvent event) {
         int x = (int) event.getX();
         switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_DOWN -> {
                 downX = x;
                 if (forceHorizontalScrollable) {
                     getParent().requestDisallowInterceptTouchEvent(true);
                 }
-                break;
-            case MotionEvent.ACTION_MOVE:
+            }
+            case MotionEvent.ACTION_MOVE -> {
                 int deltaX = x - downX;
                 if (forceHorizontalScrollable && !touchHandler.hasAnyHeldHandle()) {
                     if (deltaX > 0 && getScroller().getCurrX() == 0
@@ -4434,7 +4437,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                         getParent().requestDisallowInterceptTouchEvent(false);
                     }
                 }
-                break;
+            }
         }
         return super.dispatchTouchEvent(event);
     }
@@ -4484,9 +4487,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_TEXT);
                 } else if (region == RegionResolverKt.REGION_LINE_NUMBER) {
                     switch (props.actionWhenLineNumberClicked) {
-                        case DirectAccessProps.LN_ACTION_SELECT_LINE:
-                        case DirectAccessProps.LN_ACTION_PLACE_SELECTION_HOME:
+                        case DirectAccessProps.LN_ACTION_SELECT_LINE, DirectAccessProps.LN_ACTION_PLACE_SELECTION_HOME -> {
                             return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_HAND);
+                        }
                     }
                 }
                 return super.onResolvePointerIcon(event, pointerIndex);
@@ -4890,7 +4893,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     var end = cursorRange.getEnd();
                     setSelectionRegion(start.line, start.column, end.line, end.column);
                 } catch (IndexOutOfBoundsException e) {
-                    e.printStackTrace();
+                    Log.w(LOG_TAG, e);
                 }
             }
             getScroller().forceFinished(true);

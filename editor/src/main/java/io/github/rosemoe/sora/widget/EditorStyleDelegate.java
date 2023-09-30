@@ -39,7 +39,7 @@ import io.github.rosemoe.sora.lang.brackets.PairedBracket;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.styling.Styles;
 
-class EditorStyleDelegate implements StyleReceiver {
+public class EditorStyleDelegate implements StyleReceiver {
 
     private final WeakReference<CodeEditor> editorRef;
     private PairedBracket foundPair;

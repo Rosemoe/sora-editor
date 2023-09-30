@@ -52,7 +52,7 @@ import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
  * @author Rose
  * @author Akash Yadav
  */
-class EditorKeyEventHandler {
+public class EditorKeyEventHandler {
 
     private static final String TAG = "EditorKeyEventHandler";
     private final CodeEditor editor;
