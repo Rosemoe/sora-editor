@@ -676,6 +676,13 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        if (editor.getProps().singleDirectionFling) {
+            if (Math.abs(velocityX) > Math.abs(velocityY)) {
+                velocityY = 0;
+            } else {
+                velocityX = 0;
+            }
+        }
         if (!editor.getProps().scrollFling) {
             return false;
         }

@@ -371,4 +371,10 @@ public class DirectAccessProps implements Serializable {
      */
     @InvalidateRequired
     public boolean stickyScrollAutoCollapse = true;
+
+    /**
+     * Fling scroll in single direction (vertical or horizontal)
+     */
+    public boolean singleDirectionFling = true;
+
 }
