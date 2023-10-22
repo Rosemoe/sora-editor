@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.github.rosemoe.sora.data.ObjectAllocator;
@@ -107,6 +108,7 @@ public class Styles {
      * @param block Info of code block
      */
     public void addCodeBlock(@NonNull CodeBlock block) {
+        Objects.requireNonNull(block, "CodeBlock must not be null");
         blocks.add(block);
     }
 

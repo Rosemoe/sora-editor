@@ -1526,6 +1526,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         for (int i = min; i <= max; i++) {
             CodeBlock block = blocks.get(i);
+            if (block == null) {
+                continue;
+            }
             if (block.endLine >= line && block.startLine <= line) {
                 int dis = block.endLine - block.startLine;
                 if (dis < minDis) {
