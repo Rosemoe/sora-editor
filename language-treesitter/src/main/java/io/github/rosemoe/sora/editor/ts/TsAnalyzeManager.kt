@@ -273,7 +273,8 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                     match = it.nextMatch()
                 }
             }
-            val distinct = blocks.distinct().toMutableList()
+            // sequence should be preferred here in order to avoid allocating multiple lists and sets
+            val distinct = blocks.asSequence().distinct().toMutableList()
             styles.blocks = distinct
             styles.finishBuilding()
         }
