@@ -282,7 +282,11 @@ public class EditorSearcher {
             return;
         }
         if (isMatchedPositionSelected()) {
-            editor.commitText(replacement);
+            if (replacement.isEmpty()) {
+                editor.deleteText();
+            } else {
+                editor.commitText(replacement);
+            }
         } else {
             gotoNext();
         }
