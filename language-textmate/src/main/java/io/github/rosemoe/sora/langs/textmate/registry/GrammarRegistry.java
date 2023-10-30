@@ -291,6 +291,21 @@ public class GrammarRegistry {
         return grammarName == null ? name : grammarName;
     }
 
+    public synchronized void clear(boolean clearParent) {
+        grammarFileName2ScopeName.clear();
+        languageConfigurationMap.clear();
+        scopeName2GrammarId.clear();
+        scopeName2GrammarDefinition.clear();
+
+        if (parent != null && clearParent) {
+            parent.clear(true);
+        }
+    }
+
+    public void clear() {
+        clear(false);
+    }
+
     public synchronized void dispose(boolean closeParent) {
 
         if (registry == null) {
@@ -298,10 +313,9 @@ public class GrammarRegistry {
         }
 
         registry = null;
-        grammarFileName2ScopeName.clear();
-        languageConfigurationMap.clear();
-        scopeName2GrammarId.clear();
-        scopeName2GrammarDefinition.clear();
+
+        // False value because dispose will clean the parent if "closeParent" is true 
+        clear(false);
 
         // if (parent == null) {
         // ? need?
@@ -311,7 +325,6 @@ public class GrammarRegistry {
         if (parent != null && closeParent) {
             parent.dispose(true);
         }
-
 
     }
 
