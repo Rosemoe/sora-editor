@@ -54,7 +54,7 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
         super(new SymbolPairMatch.DefaultSymbolPairs());
         this.language = language;
 
-        updatePair();
+        setEnabled(true);
     }
 
     public void setEnabled(boolean enabled) {
