@@ -84,4 +84,6 @@
     <string name="search_option_regex">Regex</string>
     <string name="search_option_whole_word">Whole Word</string>
     <string name="search_option_match_case">Match Case</string>
+    <string name="enable_soft_keyboard">Enable soft keyboard</string>
+    <string name="hide_soft_kbd_if_hard_kbd_available">Hide soft kbd if hard kbd available</string>
 </resources>

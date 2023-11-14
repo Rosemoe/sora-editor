@@ -41,11 +41,7 @@ import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
-import com.itsaky.androidide.treesitter.java.TSLanguageJava
 import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
-import io.github.rosemoe.sora.editor.ts.LocalsCaptureSpec
-import io.github.rosemoe.sora.editor.ts.TsLanguage
-import io.github.rosemoe.sora.editor.ts.TsLanguageSpec
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EditorKeyEvent
 import io.github.rosemoe.sora.event.KeyBindingEvent
@@ -57,7 +53,6 @@ import io.github.rosemoe.sora.lang.JavaLanguageSpec
 import io.github.rosemoe.sora.lang.TsLanguageJava
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
-import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
@@ -962,6 +957,16 @@ class MainActivity : AppCompatActivity() {
 
             R.id.load_test_file -> {
                 openAssetsFile("samples/big_sample.txt")
+            }
+
+            R.id.softKbdEnabled -> {
+                editor.isSoftKeyboardEnabled = !editor.isSoftKeyboardEnabled
+                item.isChecked = editor.isSoftKeyboardEnabled
+            }
+
+            R.id.disableSoftKbdOnHardKbd -> {
+                editor.isDisableSoftKbdIfHardKbdAvailable = !editor.isDisableSoftKbdIfHardKbdAvailable
+                item.isChecked = editor.isDisableSoftKbdIfHardKbdAvailable
             }
         }
         return super.onOptionsItemSelected(item)
