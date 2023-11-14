@@ -116,6 +116,7 @@ import io.github.rosemoe.sora.util.Chars;
 import io.github.rosemoe.sora.util.EditorHandler;
 import io.github.rosemoe.sora.util.Floats;
 import io.github.rosemoe.sora.util.IntPair;
+import io.github.rosemoe.sora.util.KeyboardUtils;
 import io.github.rosemoe.sora.util.Logger;
 import io.github.rosemoe.sora.util.LongArrayList;
 import io.github.rosemoe.sora.util.Numbers;
@@ -303,6 +304,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean isInLongSelect;
     private boolean anyWrapContentSet;
     private boolean renderFunctionCharacters;
+    private boolean isSoftKbdEnabled;
+    private boolean isDisableSoftKbdOnHardKbd;
     private SelectionHandleStyle.HandleDescriptor handleDescLeft;
     private SelectionHandleStyle.HandleDescriptor handleDescRight;
     private SelectionHandleStyle.HandleDescriptor handleDescInsert;
@@ -601,6 +604,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         setInterceptParentHorizontalScrollIfNeeded(false);
         setTypefaceText(Typeface.DEFAULT);
         setCompletionWndPositionMode(WINDOW_POS_MODE_AUTO);
+        setSoftKeyboardEnabled(true);
+        setDisableSoftKbdIfHardKbdAvailable(true);
 
         // Issue #41 View being highlighted when focused on Android 11
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -4079,7 +4084,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Display soft input method for self
      */
     public void showSoftInput() {
-        if (isEditable() && isEnabled()) {
+        if (checkSoftInputEnabled() && isEditable() && isEnabled()) {
             if (isInTouchMode() && !isFocused()) {
                 requestFocusFromTouch();
             }
@@ -4096,6 +4101,73 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void hideSoftInput() {
         inputMethodManager.hideSoftInputFromWindow(getWindowToken(), 0);
+    }
+
+    /**
+     * Check whether the soft keyboard is enabled for this editor. Unlike {@link #isSoftKeyboardEnabled()},
+     * this method also checks whether a hardware keyboard is connected.
+     *
+     * @see #isSoftKeyboardEnabled()
+     * @see #isDisableSoftKbdIfHardKbdAvailable()
+     * @return Whether the editor should show soft keyboard.
+     */
+    protected boolean checkSoftInputEnabled() {
+        if (isDisableSoftKbdIfHardKbdAvailable()
+                && KeyboardUtils.INSTANCE.isHardKeyboardConnected(getContext())) {
+            return false;
+        }
+        return isSoftKeyboardEnabled();
+    }
+
+    /**
+     * Set whether the soft keyboard is enabled for this editor. Set to {@code true} by default.
+     *
+     * @param isEnabled Whether the soft keyboard is enabled.
+     */
+    public void setSoftKeyboardEnabled(boolean isEnabled) {
+        if (isSoftKeyboardEnabled() == isEnabled) {
+            // no need to do anything
+            return;
+        }
+
+        this.isSoftKbdEnabled = isEnabled;
+        hideSoftInput();
+        restartInput();
+    }
+
+    /**
+     * Returns whether the soft keyboard is enabled.
+     *
+     * @return Whether the soft keyboard is enabled.
+     */
+    public boolean isSoftKeyboardEnabled() {
+        return this.isSoftKbdEnabled;
+    }
+
+    /**
+     * Set whether the soft keyboard should be disabled for this editor if a hardware keyboard is
+     * connected to the device. Set to {@code true} by default.
+     *
+     * @param isDisabled Whether the soft keyboard should be enabled if hardware keyboard is connected.
+     */
+    public void setDisableSoftKbdIfHardKbdAvailable(boolean isDisabled) {
+        if (isDisableSoftKbdIfHardKbdAvailable() == isDisabled) {
+            // no need to do anything
+            return;
+        }
+
+        this.isDisableSoftKbdOnHardKbd = isDisabled;
+        hideSoftInput();
+        restartInput();
+    }
+
+    /**
+     * Returns whether the soft keyboard should be enabled if hardware keyboard is connected.
+     *
+     * @return Whether the soft keyboard should be enabled if hardware keyboard is connected.
+     */
+    public boolean isDisableSoftKbdIfHardKbdAvailable() {
+        return isDisableSoftKbdOnHardKbd;
     }
 
     /**
@@ -4455,7 +4527,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (!isEditable() || !isEnabled()) {
             return null;
         }
-        outAttrs.inputType = inputType != 0 ? inputType : EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
+        if (checkSoftInputEnabled()) {
+            outAttrs.inputType = inputType != 0 ? inputType : EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
+        } else {
+            outAttrs.inputType = InputType.TYPE_NULL;
+        }
         outAttrs.initialSelStart = getCursor() != null ? getCursor().getLeft() : 0;
         outAttrs.initialSelEnd = getCursor() != null ? getCursor().getRight() : 0;
         outAttrs.initialCapsMode = inputConnection.getCursorCapsMode(0);
