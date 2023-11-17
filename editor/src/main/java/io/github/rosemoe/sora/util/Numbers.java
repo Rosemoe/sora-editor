@@ -54,59 +54,47 @@ public class Numbers {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
     };
 
-    /**
-     * All possible chars for representing a number as a String
-     */
-    final static char[] digits = {
-            '0', '1', '2', '3', '4', '5',
-            '6', '7', '8', '9', 'a', 'b',
-            'c', 'd', 'e', 'f', 'g', 'h',
-            'i', 'j', 'k', 'l', 'm', 'n',
-            'o', 'p', 'q', 'r', 's', 't',
-            'u', 'v', 'w', 'x', 'y', 'z'
-    };
-
-    final static int[] sizeTable = {9, 99, 999, 9999, 99999, 999999, 9999999,
-            99999999, 999999999, Integer.MAX_VALUE};
-
-    // Requires positive x
     public static int stringSize(int x) {
-        for (int i = 0; ; i++)
-            if (x <= sizeTable[i])
-                return i + 1;
+        int d = 1;
+        if (x >= 0) {
+            d = 0;
+            x = -x;
+        }
+        int p = -10;
+        for (int i = 1; i < 10; i++) {
+            if (x > p)
+                return i + d;
+            p = 10 * p;
+        }
+        return 10 + d;
     }
 
     public static void getChars(int i, int index, char[] buf) {
         int q, r;
         int charPos = index;
-        char sign = 0;
 
-        if (i < 0) {
-            sign = '-';
+        boolean negative = i < 0;
+        if (!negative) {
             i = -i;
         }
 
         // Generate two digits per iteration
-        while (i >= 65536) {
+        while (i <= -100) {
             q = i / 100;
-            // really: r = i - (q * 100);
-            r = i - ((q << 6) + (q << 5) + (q << 2));
+            r = (q * 100) - i;
             i = q;
             buf[--charPos] = DigitOnes[r];
             buf[--charPos] = DigitTens[r];
         }
 
-        // Fall thru to fast mode for smaller numbers
-        // assert(i <= 65536, i);
-        for (; ; ) {
-            q = (i * 52429) >>> (16 + 3);
-            r = i - ((q << 3) + (q << 1));  // r = i-(q*10) ...
-            buf[--charPos] = digits[r];
-            i = q;
-            if (i == 0) break;
+        // We know there are at most two digits left at this point.
+        buf[--charPos] = DigitOnes[-i];
+        if (i < -9) {
+            buf[--charPos] = DigitTens[-i];
         }
-        if (sign != 0) {
-            buf[--charPos] = sign;
+
+        if (negative) {
+            buf[--charPos] = '-';
         }
     }
 
