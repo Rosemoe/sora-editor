@@ -1,8 +1,7 @@
 [versions]
-agp = "8.1.3"
-kotlin = "1.9.10"
-lifecycle = "2.5.1"
-tsBinding = "3.4.0"
+agp = "8.1.4"
+kotlin = "1.9.20"
+tsBinding = "4.0.0"
 lsp4j = "0.21.1"
 androidxAnnotation = "1.7.0"
 
@@ -19,8 +18,8 @@ kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "
 lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.6.2"}
 material = { module = "com.google.android.material:material", version = "1.10.0"}
 gms-instantapps = { module = "com.google.android.gms:play-services-instantapps", version = "18.0.1"}
-tree-sitter-java = { module = "com.itsaky.androidide:tree-sitter-java", version.ref = "tsBinding" }
-tree-sitter = { module = "com.itsaky.androidide:android-tree-sitter", version.ref = "tsBinding" }
+tree-sitter-java = { module = "com.itsaky.androidide.treesitter:tree-sitter-java", version.ref = "tsBinding" }
+tree-sitter = { module = "com.itsaky.androidide.treesitter:android-tree-sitter", version.ref = "tsBinding" }
 lsp4j = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j", version.ref = "lsp4j" }
 leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version = "2.12" }
 junit = { module = "junit:junit", version = "4.13.2" }
@@ -29,7 +28,7 @@ jcodings = { module = "org.jruby.jcodings:jcodings", version = "1.0.58" }
 joni = { module = "org.jruby.joni:joni", version = "2.2.1" }
 snakeyaml = { module = "org.yaml:snakeyaml", version = "2.2" }
 jdt-annotation = { module = "org.eclipse.jdt:org.eclipse.jdt.annotation", version = "2.2.700" }
-guava = { module = "com.google.guava:guava", version = "32.0.1-android" }
+guava = { module = "com.google.guava:guava", version = "32.1.3-android" }
 
 tests-google-truth = { module = "com.google.truth:truth", version = "1.1.5" }
 tests-robolectric = { module = "org.robolectric:robolectric", version = "4.11.1" }

@@ -77,7 +77,7 @@ class LineSpansGenerator(
     fun captureRegion(startIndex: Int, endIndex: Int): MutableList<Span> {
         val list = mutableListOf<Span>()
         val captures = mutableListOf<TSQueryCapture>()
-        TSQueryCursor().use { cursor ->
+        TSQueryCursor.create().use { cursor ->
             cursor.setByteRange(startIndex * 2, endIndex * 2)
             cursor.exec(languageSpec.tsQuery, tree.rootNode)
             var match = cursor.nextMatch()

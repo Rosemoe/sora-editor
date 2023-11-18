@@ -78,7 +78,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
             TextModification(
                 start.index,
                 end.index,
-                TSInputEdit(
+                TSInputEdit.create(
                     start.index * 2,
                     start.index * 2,
                     end.index * 2,
@@ -92,7 +92,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         (styles.spans as LineSpansGenerator?)?.apply {
             lineCount = reference!!.lineCount
             tree.edit(
-                TSInputEdit(
+                TSInputEdit.create(
                     start.index * 2,
                     start.index * 2,
                     end.index * 2,
@@ -110,7 +110,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
             TextModification(
                 start.index,
                 end.index,
-                TSInputEdit(
+                TSInputEdit.create(
                     start.index * 2,
                     end.index * 2,
                     start.index * 2,
@@ -124,7 +124,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         (styles.spans as LineSpansGenerator?)?.apply {
             lineCount = reference!!.lineCount
             tree.edit(
-                TSInputEdit(
+                TSInputEdit.create(
                     start.index * 2,
                     end.index * 2,
                     start.index * 2,
@@ -184,7 +184,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         @Volatile
         var abort: Boolean = false
         val localText: UTF16String = UTF16StringFactory.newString()
-        private val parser = TSParser().also {
+        private val parser = TSParser.create().also {
             it.language = languageSpec.language
         }
         var tree: TSTree? = null
@@ -235,7 +235,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                 return
             }
             val blocks = mutableListOf<CodeBlock>()
-            TSQueryCursor().use {
+            TSQueryCursor.create().use {
                 it.exec(languageSpec.blocksQuery, tree!!.rootNode)
                 var match = it.nextMatch()
                 while (match != null) {

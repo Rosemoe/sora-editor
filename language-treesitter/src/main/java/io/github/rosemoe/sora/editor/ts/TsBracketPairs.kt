@@ -46,7 +46,7 @@ class TsBracketPairs(
 
     override fun getPairedBracketAt(text: Content, index: Int): PairedBracket? {
         if (languageSpec.bracketsQuery.patternCount > 0 && languageSpec.bracketsQuery.canAccess() && tree.canAccess()) {
-            TSQueryCursor().use { cursor ->
+            TSQueryCursor.create().use { cursor ->
                 cursor.setByteRange(max(0, index - 1) * 2, index * 2 + 1)
                 cursor.exec(languageSpec.bracketsQuery, tree.rootNode)
                 var match = cursor.nextMatch()
