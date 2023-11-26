@@ -68,7 +68,7 @@ class LineSpansGenerator(
     }
 
     fun pushCache(line: Int, spans: MutableList<Span>) {
-        while (caches.size >= CACHE_THRESHOLD && caches.size > 0) {
+        while (caches.size >= CACHE_THRESHOLD) {
             caches.removeAt(caches.size - 1)
         }
         caches.add(0, SpanCache(spans, line))
