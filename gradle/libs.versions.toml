@@ -27,7 +27,7 @@ gson = { module = "com.google.code.gson:gson", version = "2.10.1" }
 jcodings = { module = "org.jruby.jcodings:jcodings", version = "1.0.58" }
 joni = { module = "org.jruby.joni:joni", version = "2.2.1" }
 snakeyaml = { module = "org.yaml:snakeyaml", version = "2.2" }
-jdt-annotation = { module = "org.eclipse.jdt:org.eclipse.jdt.annotation", version = "2.2.700" }
+jdt-annotation = { module = "org.eclipse.jdt:org.eclipse.jdt.annotation", version = "2.2.800" }
 guava = { module = "com.google.guava:guava", version = "32.1.3-android" }
 
 tests-google-truth = { module = "com.google.truth:truth", version = "1.1.5" }
