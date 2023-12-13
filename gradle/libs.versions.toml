@@ -3,7 +3,7 @@ agp = "8.2.0"
 kotlin = "1.9.20"
 tsBinding = "4.0.0"
 lsp4j = "0.21.1"
-androidxAnnotation = "1.7.0"
+androidxAnnotation = "1.7.1"
 
 [libraries]
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidxAnnotation" }
