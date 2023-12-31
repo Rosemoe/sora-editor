@@ -1,7 +1,7 @@
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -85,14 +85,20 @@ subprojects {
             publishToMavenCentral(SonatypeHost.S01)
             signAllPublications()
             if ("bom" != this@subprojects.name) {
-                configure(AndroidSingleVariantLibrary(publishJavadocJar = false))
+                configure(
+                    AndroidSingleVariantLibrary(
+                        variant = "release",
+                        sourcesJar = true,
+                        publishJavadocJar = false
+                    )
+                )
             }
         }
     }
 }
 
 tasks.register<Delete>("clean").configure {
-    delete(rootProject.buildDir)
+    delete(rootProject.layout.buildDirectory)
 }
 
 val excludeProjectName = arrayOf("app", "buildSrc")
