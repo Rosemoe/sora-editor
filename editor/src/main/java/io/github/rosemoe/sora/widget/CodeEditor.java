@@ -813,16 +813,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     /**
      * Enable/disable ligature of all types(except 'rlig').
-     * Generally you should disable them unless enabling this will have no effect on text measuring.
-     * <p>
-     * Disabled by default. If you want to enable ligature of a specified type, use
-     * {@link CodeEditor#setFontFeatureSettings(String)}
-     * <p>
-     * For enabling JetBrainsMono font's ligature, Use like this:
-     * <pre class="pretty-print">
-     * CodeEditor editor = ...;
-     * editor.setFontFeatureSettings(enabled ? null : "'liga' 0,'hlig' 0,'dlig' 0,'clig' 0");
-     * </pre>
      */
     public void setLigatureEnabled(boolean enabled) {
         this.ligatureEnabled = enabled;
