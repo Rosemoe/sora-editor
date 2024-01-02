@@ -117,21 +117,17 @@ class MainActivity : AppCompatActivity() {
         val typeface = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
         inputView.addSymbols(
             arrayOf(
-                "->",
-                "{",
-                "}",
-                "(",
-                ")",
-                ",",
-                ".",
-                ";",
-                "\"",
-                "?",
-                "+",
-                "-",
-                "*",
-                "/"
-            ), arrayOf("\t", "{}", "}", "(", ")", ",", ".", ";", "\"", "?", "+", "-", "*", "/")
+                "->", "{", "}", "(", ")",
+                ",", ".", ";", "\"", "?",
+                "+", "-", "*", "/", "<",
+                ">", "[", "]", ":"
+            ),
+            arrayOf(
+                "\t", "{}", "}", "(", ")",
+                ",", ".", ";", "\"", "?",
+                "+", "-", "*", "/", "<",
+                ">", "[", "]", ":"
+            )
         )
         inputView.forEachButton {
             it.typeface = typeface
