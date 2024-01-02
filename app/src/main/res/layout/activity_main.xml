@@ -22,109 +22,120 @@
   ~     additional information or have any questions
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
     <LinearLayout
-        android:id="@+id/search_panel"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:visibility="gone">
+        android:layout_alignParentStart="true"
+        android:layout_above="@id/main_bottom_bar">
 
-        <HorizontalScrollView
+        <LinearLayout
+            android:id="@+id/search_panel"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
 
-            <LinearLayout
-                android:layout_width="wrap_content"
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        style="?android:attr/buttonBarButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:onClick="gotoLast"
+                        android:text="@string/layout_tv_last" />
+
+                    <Button
+                        style="?android:attr/buttonBarButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:onClick="gotoNext"
+                        android:text="@string/layout_tv_next" />
+
+                    <Button
+                        style="?android:attr/buttonBarButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:onClick="replace"
+                        android:text="@string/layout_tv_replace" />
+
+                    <Button
+                        style="?android:attr/buttonBarButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:onClick="replaceAll"
+                        android:text="@string/layout_tv_replaceAll" />
+
+                    <Button
+                        android:id="@+id/search_options"
+                        style="?android:attr/buttonBarButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:onClick="showSearchOptions"
+                        android:text="@string/layout_tv_search_options" />
+
+                </LinearLayout>
+
+            </HorizontalScrollView>
+
+
+            <EditText
+                android:id="@+id/search_editor"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:hint="@string/text_to_search" />
 
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:onClick="gotoLast"
-                    android:text="@string/layout_tv_last"
-                    style="?android:attr/buttonBarButtonStyle" />
+            <EditText
+                android:id="@+id/replace_editor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/replacement" />
 
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:onClick="gotoNext"
-                    android:text="@string/layout_tv_next"
-                    style="?android:attr/buttonBarButtonStyle" />
+        </LinearLayout>
 
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:onClick="replace"
-                    android:text="@string/layout_tv_replace"
-                    style="?android:attr/buttonBarButtonStyle" />
-
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:onClick="replaceAll"
-                    android:text="@string/layout_tv_replaceAll"
-                    style="?android:attr/buttonBarButtonStyle" />
-
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:onClick="showSearchOptions"
-                    android:text="@string/layout_tv_search_options"
-                    android:id="@+id/search_options"
-                    style="?android:attr/buttonBarButtonStyle" />
-
-            </LinearLayout>
-
-        </HorizontalScrollView>
-
-
-        <EditText
-            android:id="@+id/search_editor"
+        <io.github.rosemoe.sora.widget.CodeEditor
+            android:id="@+id/editor"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/text_to_search" />
-
-        <EditText
-            android:id="@+id/replace_editor"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/replacement" />
+            android:layout_height="match_parent"
+            android:scrollbarThumbHorizontal="@drawable/scrollbar_thumb"
+            android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
+            android:scrollbarTrackHorizontal="@drawable/scrollbar_track"
+            android:scrollbarTrackVertical="@drawable/scrollbar_track"
+            app:lnPanelPosition="center"
+            app:lnPanelPositionMode="follow" />
 
     </LinearLayout>
 
-    <io.github.rosemoe.sora.widget.CodeEditor
-        android:id="@+id/editor"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="56dp"
-        android:scrollbarThumbHorizontal="@drawable/scrollbar_thumb"
-        android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
-        android:scrollbarTrackHorizontal="@drawable/scrollbar_track"
-        android:scrollbarTrackVertical="@drawable/scrollbar_track"
-        app:lnPanelPosition="center"
-        app:lnPanelPositionMode="follow" />
-
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginTop="-56dp"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:id="@+id/main_bottom_bar">
 
         <HorizontalScrollView
             android:layout_width="match_parent"
-            android:layout_height="40dp">
+            android:layout_height="wrap_content"
+            android:overScrollMode="never"
+            android:scrollbars="none">
 
             <io.github.rosemoe.sora.widget.SymbolInputView
                 android:id="@+id/symbol_input"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp" />
+                android:layout_height="wrap_content" />
 
         </HorizontalScrollView>
 
@@ -133,8 +144,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:textSize="13sp" />
+            android:textSize="14sp" />
 
     </LinearLayout>
 
-</LinearLayout>
+</RelativeLayout>
