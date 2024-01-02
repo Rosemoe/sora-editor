@@ -362,6 +362,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initialize(attrs, defStyleAttr, defStyleRes);
+        applyAttributeSets(attrs, defStyleAttr, defStyleRes);
     }
 
     /**
@@ -507,21 +508,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * <p>
      * Initialize variants
      */
-    private void initialize(AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    protected void initialize(AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         Log.v(LOG_TAG, COPYRIGHT);
 
         eventManager = new EventManager();
         renderFunctionCharacters = true;
         renderer = onCreateRenderer();
-
-        var array = getContext().obtainStyledAttributes(attrs, R.styleable.CodeEditor, defStyleAttr, defStyleRes);
-        setHorizontalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbHorizontal));
-        setHorizontalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackHorizontal));
-        setVerticalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbVertical));
-        setVerticalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackVertical));
-        setLnPanelPositionMode(array.getInt(R.styleable.CodeEditor_lnPanelPositionMode, LineInfoPanelPositionMode.FOLLOW));
-        setLnPanelPosition(array.getInt(R.styleable.CodeEditor_lnPanelPosition, LineInfoPanelPosition.CENTER));
-        array.recycle();
 
         styleDelegate = new EditorStyleDelegate(this);
 
@@ -618,6 +610,49 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         // Config scale detector
         scaleDetector.setQuickScaleEnabled(false);
         snippetController = new SnippetController(this);
+    }
+
+    /**
+     * Apply attributes from XML
+     */
+    protected void applyAttributeSets(AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        var array = getContext().obtainStyledAttributes(attrs, R.styleable.CodeEditor, defStyleAttr, defStyleRes);
+
+        setHorizontalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbHorizontal));
+        setHorizontalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackHorizontal));
+        setVerticalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbVertical));
+        setVerticalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackVertical));
+
+        setLnPanelPositionMode(array.getInt(R.styleable.CodeEditor_lnPanelPositionMode, LineInfoPanelPositionMode.FOLLOW));
+        setLnPanelPosition(array.getInt(R.styleable.CodeEditor_lnPanelPosition, LineInfoPanelPosition.CENTER));
+
+        setDividerWidth(array.getDimension(R.styleable.CodeEditor_dividerWidth, getDividerWidth()));
+        setDividerMargin(array.getDimension(R.styleable.CodeEditor_dividerMargin, this.dividerMarginLeft), array.getDimension(R.styleable.CodeEditor_dividerMargin, this.dividerMarginRight));
+        setPinLineNumber(array.getBoolean(R.styleable.CodeEditor_pinLineNumber, false));
+
+        setHighlightCurrentBlock(array.getBoolean(R.styleable.CodeEditor_highlightCurrentBlock, true));
+        setHighlightCurrentLine(array.getBoolean(R.styleable.CodeEditor_highlightCurrentLine, true));
+        setHighlightBracketPair(array.getBoolean(R.styleable.CodeEditor_highlightBracketPair, true));
+
+        setLigatureEnabled(array.getBoolean(R.styleable.CodeEditor_ligatures, true));
+        setLineNumberEnabled(array.getBoolean(R.styleable.CodeEditor_lineNumberVisible, isLineNumberEnabled()));
+        getComponent(EditorAutoCompletion.class).setEnabled(array.getBoolean(R.styleable.CodeEditor_autoCompleteEnabled, true));
+        props.symbolPairAutoCompletion = array.getBoolean(R.styleable.CodeEditor_symbolCompletionEnabled, true);
+        setRenderFunctionCharacters(array.getBoolean(R.styleable.CodeEditor_renderFunctionChars, isRenderFunctionCharacters()));
+        setScalable(array.getBoolean(R.styleable.CodeEditor_scalable, isScalable()));
+
+        setTextSizePx(array.getDimension(R.styleable.CodeEditor_textSize, getTextSizePx()));
+        setCursorBlinkPeriod(array.getInt(R.styleable.CodeEditor_cursorBlinkPeriod, getCursorBlink().period));
+        setTabWidth(array.getInt(R.styleable.CodeEditor_tabWidth, getTabWidth()));
+
+        int wordwrapMode = array.getInt(R.styleable.CodeEditor_wordwrapMode, 0);
+        if (wordwrapMode != 0) {
+            setWordwrap(true, wordwrapMode > 1);
+        }
+
+        setText(array.getString(R.styleable.CodeEditor_text));
+
+        array.recycle();
     }
 
     public SnippetController getSnippetController() {
