@@ -19,7 +19,7 @@ import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/theme.ts#L403">
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/theme.ts#L430">
  *      github.com/microsoft/vscode-textmate/blob/main/src/theme.ts</a>
  */
 public class ThemeTrieElementRule {
@@ -33,10 +33,8 @@ public class ThemeTrieElementRule {
 	public int foreground;
 	public int background;
 
-	public ThemeTrieElementRule(final int scopeDepth, @Nullable final List<String> parentScopes, final int fontStyle,
-		final int foreground,
-		final int background) {
-
+	public ThemeTrieElementRule(final int scopeDepth, @Nullable final List<String> parentScopes, final int fontStyle, final int foreground,
+			final int background) {
 		this.scopeDepth = scopeDepth;
 		this.parentScopes = parentScopes;
 		this.fontStyle = fontStyle;
@@ -46,8 +44,7 @@ public class ThemeTrieElementRule {
 
 	@Override
 	public ThemeTrieElementRule clone() {
-		return new ThemeTrieElementRule(this.scopeDepth, this.parentScopes, this.fontStyle, this.foreground,
-			this.background);
+		return new ThemeTrieElementRule(this.scopeDepth, this.parentScopes, this.fontStyle, this.foreground, this.background);
 	}
 
 	public static List<ThemeTrieElementRule> cloneArr(final List<ThemeTrieElementRule> arr) {
@@ -79,29 +76,23 @@ public class ThemeTrieElementRule {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + background;
-		result = prime * result + fontStyle;
-		result = prime * result + foreground;
-		result = prime * result + Objects.hashCode(parentScopes);
-		result = prime * result + scopeDepth;
-		return result;
+		int result = 31 + background;
+		result = 31 * result + fontStyle;
+		result = 31 * result + foreground;
+		result = 31 * result + Objects.hashCode(parentScopes);
+		return 31 * result + scopeDepth;
 	}
 
 	@Override
 	public boolean equals(@Nullable final Object obj) {
-		if (this == obj) {
+		if (this == obj)
 			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		final ThemeTrieElementRule other = (ThemeTrieElementRule) obj;
-		return background == other.background && fontStyle == other.fontStyle && foreground == other.foreground &&
-			Objects.equals(parentScopes, other.parentScopes) && scopeDepth == other.scopeDepth;
+		if (obj instanceof final ThemeTrieElementRule other)
+			return scopeDepth == other.scopeDepth
+					&& background == other.background
+					&& fontStyle == other.fontStyle
+					&& foreground == other.foreground
+					&& Objects.equals(parentScopes, other.parentScopes);
+		return false;
 	}
 }

@@ -15,12 +15,11 @@
  */
 package org.eclipse.tm4e.core.internal.grammar;
 
-import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.*;
+import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.defaultIfNull;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 import org.eclipse.jdt.annotation.Nullable;
@@ -30,7 +29,7 @@ import org.eclipse.tm4e.core.internal.utils.RegexSource;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/basicScopesAttributeProvider.ts#L18">
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/grammar/basicScopesAttributeProvider.ts#L18">
  *      github.com/microsoft/vscode-textmate/blob/main/src/basicScopesAttributeProvider.ts</a>
  */
 final class BasicScopeAttributesProvider {
@@ -77,27 +76,16 @@ final class BasicScopeAttributesProvider {
 			return OptionalStandardTokenType.NotSet;
 		}
 		final String group = m.group(1);
-
-		switch (Objects.requireNonNull(group)) {
-			case "comment":
-				return OptionalStandardTokenType.Comment;
-			case "string":
-				return OptionalStandardTokenType.String;
-			case "regex":
-				return OptionalStandardTokenType.RegEx;
-			case "meta.embedded":
-				// see https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/grammar/basicScopesAttributeProvider.ts#L66
-				// https://github.com/eclipse/tm4e/blob/df6edf32eafa3905190e07a30d30c6d335c14b9e/org.eclipse.tm4e.core/src/main/java/org/eclipse/tm4e/core/internal/grammar/BasicScopeAttributesProvider.java#L83
-				return OptionalStandardTokenType.Other;
-			default:
-				throw new TMException("Unexpected match for standard token type: " + group);
-		}
-
-
+		return switch (group) {
+			case "comment" -> OptionalStandardTokenType.Comment;
+			case "string" -> OptionalStandardTokenType.String;
+			case "regex" -> OptionalStandardTokenType.RegEx;
+			case "meta.embedded" -> OptionalStandardTokenType.Other;
+			default -> throw new TMException("Unexpected match for standard token type: " + group);
+		};
 	}
 
-	private static final Pattern STANDARD_TOKEN_TYPE_REGEXP = Pattern
-		.compile("\\b(comment|string|regex|meta\\.embedded)\\b");
+	private static final Pattern STANDARD_TOKEN_TYPE_REGEXP = Pattern.compile("\\b(comment|string|regex|meta\\.embedded)\\b");
 
 	private static final class ScopeMatcher<TValue> {
 
@@ -114,9 +102,9 @@ final class BasicScopeAttributesProvider {
 
 				// create the regex
 				final var escapedScopes = values.keySet().stream()
-					.map(RegexSource::escapeRegExpCharacters)
-					.sorted(Collections.reverseOrder()) // Longest scope first
-					.toArray(String[]::new);
+						.map(RegexSource::escapeRegExpCharacters)
+						.sorted(Collections.reverseOrder()) // Longest scope first
+						.toArray(String[]::new);
 
 				scopesRegExp = Pattern.compile("^((" + String.join(")|(", escapedScopes) + "))($|\\.)");
 			}

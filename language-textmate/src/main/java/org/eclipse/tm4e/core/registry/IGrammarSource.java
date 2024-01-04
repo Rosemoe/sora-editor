@@ -9,6 +9,8 @@
  */
 package org.eclipse.tm4e.core.registry;
 
+import org.eclipse.jdt.annotation.Nullable;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,10 +21,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-
-import org.eclipse.jdt.annotation.Nullable;
-
-import io.github.rosemoe.sora.text.CharArrayWrapper;
 
 public interface IGrammarSource {
 
@@ -38,36 +36,23 @@ public interface IGrammarSource {
     private static ContentType guessFileFormat(final String fileName) {
         final String extension = fileName.substring(fileName.lastIndexOf('.') + 1).trim().toLowerCase();
 
-        switch (extension) {
-            case "json":
-                return ContentType.JSON;
-            case "yaml":
-            case "yaml-tmlanguage":
-            case "yml":
-                return ContentType.YAML;
-            case "plist":
-            case "tmlanguage":
-            case "tmtheme":
-            case "xml":
-                return ContentType.XML;
-            default:
-                throw new IllegalArgumentException("Unsupported file type: " + fileName);
-        }
-
-
+        return switch (extension) {
+            case "json" -> ContentType.JSON;
+            case "yaml", "yaml-tmlanguage", "yml" -> ContentType.YAML;
+            case "plist", "tmlanguage", "xml" -> ContentType.XML;
+            default -> throw new IllegalArgumentException("Unsupported file type: " + fileName);
+        };
     }
 
     static IGrammarSource fromFile(final File file) {
         return fromFile(file, null, null);
     }
 
-    static IGrammarSource fromFile(final File file, @Nullable final ContentType contentType,
-                                   @Nullable final Charset charset) {
+    static IGrammarSource fromFile(final File file, @Nullable final ContentType contentType, @Nullable final Charset charset) {
 
         final var filePath = file.getAbsolutePath();
         final var contentType1 = contentType == null ? guessFileFormat(filePath) : contentType;
         return new IGrammarSource() {
-
 
             @Override
             public Reader getReader() throws IOException {
@@ -135,8 +120,8 @@ public interface IGrammarSource {
     /**
      * @throws IllegalArgumentException if the content type is unsupported or cannot be determined
      */
-    static IGrammarSource fromResource(final Class<?> clazz, final String resourceName,
-                                       @Nullable final ContentType contentType, @Nullable final Charset charset) {
+    static IGrammarSource fromResource(final Class<?> clazz, final String resourceName, @Nullable final ContentType contentType,
+                                       @Nullable final Charset charset) {
 
         final var contentType1 = contentType == null ? guessFileFormat(resourceName) : contentType;
         return new IGrammarSource() {

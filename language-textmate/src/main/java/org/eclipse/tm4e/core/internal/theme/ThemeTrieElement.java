@@ -11,11 +11,10 @@
  */
 package org.eclipse.tm4e.core.internal.theme;
 
-import static org.eclipse.tm4e.core.internal.utils.MoreCollections.*;
-import static org.eclipse.tm4e.core.internal.utils.StringUtils.*;
+import static org.eclipse.tm4e.core.internal.utils.MoreCollections.asArrayList;
+import static org.eclipse.tm4e.core.internal.utils.StringUtils.strArrCmp;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +23,7 @@ import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/theme.ts#L454">
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/theme.ts#L481">
  *      github.com/microsoft/vscode-textmate/blob/main/src/theme.ts</a>
  */
 public final class ThemeTrieElement {
@@ -38,16 +37,16 @@ public final class ThemeTrieElement {
 	}
 
 	public ThemeTrieElement(
-		final ThemeTrieElementRule mainRule,
-		final List<ThemeTrieElementRule> rulesWithParentScopes) {
+			final ThemeTrieElementRule mainRule,
+			final List<ThemeTrieElementRule> rulesWithParentScopes) {
 
 		this(mainRule, rulesWithParentScopes, new HashMap<>());
 	}
 
 	public ThemeTrieElement(
-		final ThemeTrieElementRule mainRule,
-		final List<ThemeTrieElementRule> rulesWithParentScopes,
-		final Map<String /*segment*/, ThemeTrieElement> children) {
+			final ThemeTrieElementRule mainRule,
+			final List<ThemeTrieElementRule> rulesWithParentScopes,
+			final Map<String /*segment*/, ThemeTrieElement> children) {
 
 		this._mainRule = mainRule;
 		this._rulesWithParentScopes = rulesWithParentScopes;
@@ -58,7 +57,7 @@ public final class ThemeTrieElement {
 		if (arr.size() == 1) {
 			return arr;
 		}
-		Collections.sort(arr, ThemeTrieElement::_cmpBySpecificity);
+		arr.sort(ThemeTrieElement::_cmpBySpecificity);
 		return arr;
 	}
 
@@ -92,8 +91,8 @@ public final class ThemeTrieElement {
 		}
 
 		final int dotIndex = scope.indexOf('.');
-		String head;
-		String tail;
+		final String head;
+		final String tail;
 		if (dotIndex == -1) {
 			head = scope;
 			tail = "";
@@ -109,16 +108,16 @@ public final class ThemeTrieElement {
 		return ThemeTrieElement._sortBySpecificity(asArrayList(this._mainRule, this._rulesWithParentScopes));
 	}
 
-	public void insert(final int scopeDepth, final String scope, @Nullable final List<String> parentScopes,
-		final int fontStyle, final int foreground, final int background) {
+	public void insert(final int scopeDepth, final String scope, @Nullable final List<String> parentScopes, final int fontStyle,
+			final int foreground, final int background) {
 		if (scope.isEmpty()) {
 			this.doInsertHere(scopeDepth, parentScopes, fontStyle, foreground, background);
 			return;
 		}
 
 		final int dotIndex = scope.indexOf('.');
-		String head;
-		String tail;
+		final String head;
+		final String tail;
 		if (dotIndex == -1) {
 			head = scope;
 			tail = "";
@@ -127,20 +126,19 @@ public final class ThemeTrieElement {
 			tail = scope.substring(dotIndex + 1);
 		}
 
-		ThemeTrieElement child;
+		final ThemeTrieElement child;
 		if (this._children.containsKey(head)) {
 			child = this._children.get(head);
 		} else {
-			child = new ThemeTrieElement(this._mainRule.clone(),
-				ThemeTrieElementRule.cloneArr(this._rulesWithParentScopes));
+			child = new ThemeTrieElement(this._mainRule.clone(), ThemeTrieElementRule.cloneArr(this._rulesWithParentScopes));
 			this._children.put(head, child);
 		}
 
 		child.insert(scopeDepth + 1, tail, parentScopes, fontStyle, foreground, background);
 	}
 
-	private void doInsertHere(final int scopeDepth, @Nullable final List<String> parentScopes, int fontStyle,
-		int foreground, int background) {
+	private void doInsertHere(final int scopeDepth, @Nullable final List<String> parentScopes, int fontStyle, int foreground,
+			int background) {
 
 		if (parentScopes == null) {
 			// Merge into the main rule
@@ -170,29 +168,24 @@ public final class ThemeTrieElement {
 			background = this._mainRule.background;
 		}
 
-		this._rulesWithParentScopes.add(
-			new ThemeTrieElementRule(scopeDepth, parentScopes, fontStyle, foreground, background));
+		this._rulesWithParentScopes.add(new ThemeTrieElementRule(scopeDepth, parentScopes, fontStyle, foreground, background));
 	}
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + _children.hashCode();
-		result = prime * result + _mainRule.hashCode();
-		result = prime * result + _rulesWithParentScopes.hashCode();
-		return result;
+		int result = 31 + _children.hashCode();
+		result = 31 * result + _mainRule.hashCode();
+		return 31 * result + _rulesWithParentScopes.hashCode();
 	}
 
 	@Override
 	public boolean equals(@Nullable final Object obj) {
 		if (this == obj)
 			return true;
-		if (obj == null || getClass() != obj.getClass())
-			return false;
-		final ThemeTrieElement other = (ThemeTrieElement) obj;
-		return _children.equals(other._children)
-			&& _mainRule.equals(other._mainRule)
-			&& _rulesWithParentScopes.equals(other._rulesWithParentScopes);
+		if (obj instanceof final ThemeTrieElement other)
+			return _children.equals(other._children)
+					&& _mainRule.equals(other._mainRule)
+					&& _rulesWithParentScopes.equals(other._rulesWithParentScopes);
+		return false;
 	}
 }

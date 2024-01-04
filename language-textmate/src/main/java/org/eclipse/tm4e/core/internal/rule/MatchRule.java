@@ -22,7 +22,7 @@ import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/rule.ts#L122">
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/rule.ts#L122">
  *      github.com/microsoft/vscode-textmate/blob/main/src/rule.ts</a>
  */
 public final class MatchRule extends Rule {
@@ -33,8 +33,7 @@ public final class MatchRule extends Rule {
 	@Nullable
 	private RegExpSourceList cachedCompiledPatterns;
 
-	MatchRule(final RuleId id, @Nullable final String name, final String match,
-		final List<@Nullable CaptureRule> captures) {
+	MatchRule(final RuleId id, @Nullable final String name, final String match, final List<@Nullable CaptureRule> captures) {
 		super(id, name, null);
 		this.match = new RegExpSource(match, this.id);
 		this.captures = captures;
@@ -52,7 +51,7 @@ public final class MatchRule extends Rule {
 
 	@Override
 	public CompiledRule compileAG(final IRuleRegistry grammar, @Nullable final String endRegexSource,
-		final boolean allowA, final boolean allowG) {
+			final boolean allowA, final boolean allowG) {
 		return getCachedCompiledPatterns(grammar).compileAG(allowA, allowG);
 	}
 

@@ -24,7 +24,7 @@ import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/main.ts#L41">
+ *      "https://github.com/microsoft/vscode-textmate/blob/16ac8e9940d2d5da29f9f5374db7cca12130ed97/src/main.ts#L44">
  *      github.com/microsoft/vscode-textmate/blob/main/src/main.ts</a>
  */
 public interface IGrammarConfiguration {

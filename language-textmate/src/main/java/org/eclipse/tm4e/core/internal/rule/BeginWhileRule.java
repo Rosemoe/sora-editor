@@ -16,7 +16,7 @@
  */
 package org.eclipse.tm4e.core.internal.rule;
 
-import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.*;
+import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.defaultIfNull;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ import org.eclipse.tm4e.core.internal.oniguruma.OnigCaptureIndex;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/rule.ts#L290">
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/rule.ts#L290">
  *      github.com/microsoft/vscode-textmate/blob/main/src/rule.ts</a>
  */
 public final class BeginWhileRule extends Rule {
@@ -44,9 +44,10 @@ public final class BeginWhileRule extends Rule {
 	@Nullable
 	private RegExpSourceList cachedCompiledWhilePatterns;
 
-	BeginWhileRule(final RuleId id, @Nullable final String name, @Nullable final String contentName, final String begin,
-		final List<@Nullable CaptureRule> beginCaptures, final String _while,
-		final List<@Nullable CaptureRule> whileCaptures, final CompilePatternsResult patterns) {
+	BeginWhileRule(final RuleId id, @Nullable final String name, @Nullable final String contentName,
+			final String begin, final List<@Nullable CaptureRule> beginCaptures,
+			final String _while, final List<@Nullable CaptureRule> whileCaptures,
+			final CompilePatternsResult patterns) {
 		super(/* $location, */id, name, contentName);
 		this.begin = new RegExpSource(begin, this.id);
 		this.beginCaptures = beginCaptures;
@@ -57,8 +58,7 @@ public final class BeginWhileRule extends Rule {
 		this.hasMissingPatterns = patterns.hasMissingPatterns;
 	}
 
-	public String getWhileWithResolvedBackReferences(final CharSequence lineText,
-		final OnigCaptureIndex[] captureIndices) {
+	public String getWhileWithResolvedBackReferences(final CharSequence lineText, final OnigCaptureIndex[] captureIndices) {
 		return this._while.resolveBackReferences(lineText, captureIndices);
 	}
 
@@ -74,8 +74,7 @@ public final class BeginWhileRule extends Rule {
 
 	@Override
 	public CompiledRule compileAG(final IRuleRegistry grammar, @Nullable final String endRegexSource,
-		final boolean allowA,
-		final boolean allowG) {
+			final boolean allowA, final boolean allowG) {
 		return getCachedCompiledPatterns(grammar).compileAG(allowA, allowG);
 	}
 
@@ -97,8 +96,8 @@ public final class BeginWhileRule extends Rule {
 		return getCachedCompiledWhilePatterns(endRegexSource).compile();
 	}
 
-	public CompiledRule compileWhileAG(@Nullable final String endRegexSource, final boolean allowA,
-		final boolean allowG) {
+	public CompiledRule compileWhileAG(@Nullable final String endRegexSource,
+			final boolean allowA, final boolean allowG) {
 		return getCachedCompiledWhilePatterns(endRegexSource).compileAG(allowA, allowG);
 	}
 

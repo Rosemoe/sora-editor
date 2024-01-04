@@ -20,7 +20,7 @@ import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/rule.ts#L96">
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/rule.ts#L96">
  *      github.com/microsoft/vscode-textmate/blob/main/src/rule.ts</a>
  */
 public final class CaptureRule extends Rule {
@@ -28,7 +28,7 @@ public final class CaptureRule extends Rule {
 	public final RuleId retokenizeCapturedWithRuleId;
 
 	CaptureRule(final RuleId id, @Nullable final String name, @Nullable final String contentName,
-		final RuleId retokenizeCapturedWithRuleId) {
+			final RuleId retokenizeCapturedWithRuleId) {
 		super(id, name, contentName);
 		this.retokenizeCapturedWithRuleId = retokenizeCapturedWithRuleId;
 	}
@@ -45,7 +45,7 @@ public final class CaptureRule extends Rule {
 
 	@Override
 	public CompiledRule compileAG(final IRuleRegistry grammar, @Nullable final String endRegexSource,
-		final boolean allowA, final boolean allowG) {
+			final boolean allowA, final boolean allowG) {
 		throw new UnsupportedOperationException();
 	}
 }

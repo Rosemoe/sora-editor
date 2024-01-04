@@ -17,46 +17,50 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.grammar.IGrammar;
 
 /**
- * TextMate model API.
+ * Provides tokenization related functionality of the text model.
  *
- * @see <a href="https://github.com/microsoft/vscode/blob/main/src/vs/editor/common/model/tokenizationTextModelPart.ts">
- *      github.com/microsoft/vscode/blob/main/src/vs/editor/common/model/tokenizationTextModelPart.ts</a>
+ * @see <a href="https://github.com/microsoft/vscode/blob/main/src/vs/editor/common/tokenizationTextModelPart.ts">
+ *      github.com/microsoft/vscode/main/src/vs/editor/common/tokenizationTextModelPart.ts
+ *      <code>#ITokenizationTextModelPart</code></a>
  */
-public interface ITMModel {
+public interface ITMModel extends ModelTokensChangedEvent.Listenable {
+
+	enum BackgroundTokenizationState {
+		IN_PROGRESS,
+		COMPLETED
+	}
+
+	BackgroundTokenizationState getBackgroundTokenizationState();
 
 	/**
-	 * Returns the TextMate grammar to use to parse for each lines of the document the TextMate tokens.
+	 * Returns the grammar to use to parse the lines of the document.
 	 *
-	 * @return the TextMate grammar to use to parse for each lines of the document the TextMate tokens.
+	 * @return the grammar to use to parse the lines of the document
 	 */
 	@Nullable
 	IGrammar getGrammar();
 
 	/**
-	 * Set the TextMate grammar to use to parse for each lines of the document the TextMate tokens.
+	 * Sets the grammar to use to parse the lines of the document.
 	 */
 	void setGrammar(IGrammar grammar);
 
-	/**
-	 * Add model tokens changed listener.
-	 *
-	 * @param listener to add
-	 */
-	void addModelTokensChangedListener(IModelTokensChangedListener listener);
-
-	/**
-	 * Remove model tokens changed listener.
-	 *
-	 * @param listener to remove
-	 */
-	void removeModelTokensChangedListener(IModelTokensChangedListener listener);
-
 	void dispose();
+
+	int getNumberOfLines();
 
 	/**
 	 * @param lineIndex 0-based
 	 *
-	 * @throws IndexOutOfBoundsException
+	 * @throws Exception if line does not exist in the underlying document
+	 */
+	String getLineText(int lineIndex) throws Exception;
+
+	/**
+	 * @param lineIndex 0-based
+	 *
+	 * @return <code>null</code> if line does not exist or has not yet been tokenized.
+	 * 
 	 */
 	@Nullable
 	List<TMToken> getLineTokens(int lineIndex);

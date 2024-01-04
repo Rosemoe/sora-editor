@@ -19,7 +19,7 @@ package org.eclipse.tm4e.core.grammar;
 /**
  * Represents a "pushed" state on the stack (as a linked list element).
  *
- * @see <a href="https://github.com/microsoft/vscode-textmate/blob/main/src/main.ts">
+ * @see <a href="https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/main.ts#L258">
  *      github.com/microsoft/vscode-textmate/blob/main/src/main.ts</a>
  */
 public interface IStateStack {

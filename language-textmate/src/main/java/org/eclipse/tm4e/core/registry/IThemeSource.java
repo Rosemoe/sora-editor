@@ -19,6 +19,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -28,52 +30,19 @@ public interface IThemeSource {
      * Supported theme content types
      */
     enum ContentType {
-        JSON, YAML, XML
+        JSON,
+        YAML,
+        XML
     }
 
     private static ContentType guessFileFormat(final String fileName) {
         final String extension = fileName.substring(fileName.lastIndexOf('.') + 1).trim().toLowerCase();
 
-        switch (extension) {
-            case "json":
-                return IThemeSource.ContentType.JSON;
-            case "yaml":
-            case "yaml-tmlanguage":
-            case "yml":
-                return IThemeSource.ContentType.YAML;
-            case "plist":
-            case "tmlanguage":
-            case "tmtheme":
-            case "xml":
-                return IThemeSource.ContentType.XML;
-            default:
-                throw new IllegalArgumentException("Unsupported file type: " + fileName);
-        }
-    }
-
-    static IThemeSource fromFile(final File file) {
-        return fromFile(file, null, null);
-    }
-
-    static IThemeSource fromFile(final File file, @Nullable final ContentType contentType, @Nullable final Charset charset) {
-
-        final var filePath = file.getAbsolutePath();
-        final var contentType1 = contentType == null ? guessFileFormat(filePath) : contentType;
-        return new IThemeSource() {
-            @Override
-            public Reader getReader() throws IOException {
-                return new BufferedReader(new InputStreamReader(new FileInputStream(file), charset == null ? StandardCharsets.UTF_8 : charset));
-            }
-
-            @Override
-            public String getFilePath() {
-                return filePath;
-            }
-
-            @Override
-            public ContentType getContentType() {
-                return contentType1;
-            }
+        return switch (extension) {
+            case "json" -> ContentType.JSON;
+            case "yaml", "yaml-tmtheme", "yml" -> ContentType.YAML;
+            case "plist", "tmtheme", "xml" -> ContentType.XML;
+            default -> throw new IllegalArgumentException("Unsupported file type: " + fileName);
         };
     }
 
@@ -118,6 +87,34 @@ public interface IThemeSource {
 
     }
 
+
+    static IThemeSource fromFile(final File file) {
+        return fromFile(file, null, null);
+    }
+
+    static IThemeSource fromFile(final File file, @Nullable final ContentType contentType, @Nullable final Charset charset) {
+
+        final var filePath = file.getPath();
+        final var contentType1 = contentType == null ? guessFileFormat(filePath) : contentType;
+        return new IThemeSource() {
+            @Override
+            public Reader getReader() throws IOException {
+                // use low level api
+                return new BufferedReader(new InputStreamReader(new FileInputStream(file), charset == null ? StandardCharsets.UTF_8 : charset));
+            }
+
+            @Override
+            public String getFilePath() {
+                return filePath;
+            }
+
+            @Override
+            public ContentType getContentType() {
+                return contentType1;
+            }
+        };
+    }
+
     /**
      * @throws IllegalArgumentException if the content type is unsupported or cannot be determined
      */
@@ -128,13 +125,16 @@ public interface IThemeSource {
     /**
      * @throws IllegalArgumentException if the content type is unsupported or cannot be determined
      */
-    static IThemeSource fromResource(final Class<?> clazz, final String resourceName, @Nullable final ContentType contentType, @Nullable final Charset charset) {
+    static IThemeSource fromResource(final Class<?> clazz, final String resourceName, @Nullable final ContentType contentType,
+                                     @Nullable final Charset charset) {
 
         final var contentType1 = contentType == null ? guessFileFormat(resourceName) : contentType;
         return new IThemeSource() {
             @Override
             public Reader getReader() throws IOException {
-                return new BufferedReader(new InputStreamReader(clazz.getResourceAsStream(resourceName), charset == null ? StandardCharsets.UTF_8 : charset));
+                return new BufferedReader(new InputStreamReader(
+                        clazz.getResourceAsStream(resourceName),
+                        charset == null ? StandardCharsets.UTF_8 : charset));
             }
 
             @Override

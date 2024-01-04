@@ -19,10 +19,11 @@ package org.eclipse.tm4e.core.internal.rule;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigCaptureIndex;
 import org.eclipse.tm4e.core.internal.utils.RegexSource;
+import org.eclipse.tm4e.core.internal.utils.StringUtils;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/rule.ts#L43">
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/rule.ts#L43">
  *      github.com/microsoft/vscode-textmate/blob/main/src/rule.ts</a>
  */
 public abstract class Rule {
@@ -67,7 +68,13 @@ public abstract class Rule {
 
 	public abstract CompiledRule compile(IRuleRegistry grammar, @Nullable String endRegexSource);
 
-	public abstract CompiledRule compileAG(IRuleRegistry grammar, @Nullable String endRegexSource, boolean allowA,
-		boolean allowG);
+	public abstract CompiledRule compileAG(IRuleRegistry grammar, @Nullable String endRegexSource, boolean allowA, boolean allowG);
 
+	@Override
+	public String toString() {
+		return StringUtils.toString(this, sb -> {
+			sb.append("id=").append(id);
+			sb.append(",name=").append(name);
+		});
+	}
 }

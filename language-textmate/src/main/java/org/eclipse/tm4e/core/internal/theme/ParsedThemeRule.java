@@ -18,7 +18,7 @@ import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/theme.ts#L267">
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/theme.ts#L294">
  *      github.com/microsoft/vscode-textmate/blob/main/src/theme.ts</a>
  */
 public class ParsedThemeRule {
@@ -41,8 +41,8 @@ public class ParsedThemeRule {
 	@Nullable
 	public final String background;
 
-	public ParsedThemeRule(final String scope, @Nullable final List<String> parentScopes, final int index,
-		final int fontStyle, @Nullable final String foreground, @Nullable final String background) {
+	public ParsedThemeRule(final String scope, @Nullable final List<String> parentScopes, final int index, final int fontStyle,
+			@Nullable final String foreground, @Nullable final String background) {
 		this.scope = scope;
 		this.parentScopes = parentScopes;
 		this.index = index;
@@ -53,31 +53,32 @@ public class ParsedThemeRule {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + fontStyle;
-		result = prime * result + index;
-		result = prime * result + Objects.hash(background, foreground, parentScopes, scope);
-		return result;
+		int result = 31 + fontStyle;
+		result = 31 * result + index;
+		result = 31 * result + Objects.hashCode(background);
+		result = 31 * result + Objects.hashCode(foreground);
+		result = 31 * result + Objects.hashCode(parentScopes);
+		return 31 * result + Objects.hashCode(scope);
 	}
 
 	@Override
 	public boolean equals(@Nullable final Object obj) {
 		if (this == obj)
 			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		final ParsedThemeRule other = (ParsedThemeRule) obj;
-		return Objects.equals(background, other.background) && fontStyle == other.fontStyle
-			&& Objects.equals(foreground, other.foreground) && index == other.index
-			&& Objects.equals(parentScopes, other.parentScopes) && Objects.equals(scope, other.scope);
+		if (obj instanceof final ParsedThemeRule other)
+			return fontStyle == other.fontStyle
+					&& index == other.index
+					&& Objects.equals(background, other.background)
+					&& Objects.equals(foreground, other.foreground)
+					&& Objects.equals(parentScopes, other.parentScopes)
+					&& Objects.equals(scope, other.scope);
+		return false;
+
 	}
 
 	@Override
 	public String toString() {
 		return "ParsedThemeRule [scope=" + scope + ", parentScopes=" + parentScopes + ", index=" + index
-			+ ", fontStyle=" + fontStyle + ", foreground=" + foreground + ", background=" + background + "]";
+				+ ", fontStyle=" + fontStyle + ", foreground=" + foreground + ", background=" + background + "]";
 	}
 }

@@ -19,7 +19,7 @@ package org.eclipse.tm4e.core.model;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.internal.utils.StringUtils;
 
-public class Range {
+public final class Range {
 
 	public final int fromLineNumber;
 	public int toLineNumber;
@@ -41,31 +41,22 @@ public class Range {
 	public boolean equals(@Nullable final Object obj) {
 		if (this == obj)
 			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		final Range other = (Range) obj;
-		if (fromLineNumber != other.fromLineNumber)
-			return false;
-		if (toLineNumber != other.toLineNumber)
-			return false;
-		return true;
+		if (obj instanceof final Range other)
+			return fromLineNumber == other.fromLineNumber
+					&& toLineNumber == other.toLineNumber;
+		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + fromLineNumber;
-		result = prime * result + toLineNumber;
-		return result;
+		final int result = 31 + fromLineNumber;
+		return 31 * result + toLineNumber;
 	}
 
 	@Override
 	public String toString() {
 		return StringUtils.toString(this, sb -> sb
-			.append("from=").append(fromLineNumber).append(", ")
-			.append("to=").append(toLineNumber));
+				.append("from=").append(fromLineNumber).append(", ")
+				.append("to=").append(toLineNumber));
 	}
 }

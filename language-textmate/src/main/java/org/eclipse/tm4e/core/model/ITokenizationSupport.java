@@ -22,8 +22,8 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.grammar.IStateStack;
 
 /**
- * @see <a href="https://github.com/microsoft/vscode/blob/main/src/vs/editor/common/languages.ts">
- *      github.com/microsoft/vscode/blob/main/src/vs/editor/common/languages.ts</a>
+ * @see <a href="https://github.com/microsoft/vscode/blob/d81ca6dfcae29a9bf0f648b94dff145b3665fac1/src/vs/editor/common/languages.ts#L101">
+ *      github.com/microsoft/vscode/main/src/vs/editor/common/languages.ts</a>
  */
 public interface ITokenizationSupport {
 
@@ -35,6 +35,5 @@ public interface ITokenizationSupport {
 	 * @param offsetDelta adds offsetDelta to each of the returned indices
 	 * @param timeLimit duration after which tokenization is stopped
 	 */
-	TokenizationResult tokenize(String line, @Nullable IStateStack state, @Nullable Integer offsetDelta,
-		@Nullable Duration timeLimit);
+	TokenizationResult tokenize(String line, @Nullable IStateStack state, @Nullable Integer offsetDelta, @Nullable Duration timeLimit);
 }

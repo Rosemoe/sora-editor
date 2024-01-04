@@ -254,7 +254,7 @@ public class GrammarRegistry {
 
     public synchronized void setTheme(ThemeModel themeModel) throws Exception {
         if (!themeModel.isLoaded()) {
-            themeModel.load();
+            themeModel.load(registry.getColorMap());
         }
         registry.setTheme(themeModel.getTheme());
     }

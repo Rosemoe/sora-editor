@@ -16,10 +16,7 @@
  * - Fabio Zadrozny <fabiofz@gmail.com> - Convert uniqueId to Object (for identity compare)
  * - Fabio Zadrozny <fabiofz@gmail.com> - Fix recursion error on creation of OnigRegExp with unicode chars
  */
-
 package org.eclipse.tm4e.core.internal.oniguruma;
-
-import java.nio.charset.StandardCharsets;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.TMException;
@@ -32,11 +29,16 @@ import org.joni.Syntax;
 import org.joni.WarnCallback;
 import org.joni.exception.SyntaxException;
 
+import java.nio.charset.StandardCharsets;
+
+import io.github.rosemoe.sora.util.Logger;
+
 /**
  * @see <a href="https://github.com/atom/node-oniguruma/blob/master/src/onig-reg-exp.cc">
  *      github.com/atom/node-oniguruma/blob/master/src/onig-reg-exp.cc</a>
  */
 public final class OnigRegExp {
+	private static final Logger LOGGER = Logger.instance(OnigRegExp.class.getName());
 
 	@Nullable
 	private OnigString lastSearchString;
@@ -55,7 +57,7 @@ public final class OnigRegExp {
 		final byte[] pattern = source.getBytes(StandardCharsets.UTF_8);
 		try {
 			regex = new Regex(pattern, 0, pattern.length, Option.CAPTURE_GROUP, UTF8Encoding.INSTANCE, Syntax.DEFAULT,
-				WarnCallback.DEFAULT);
+					WarnCallback.DEFAULT);
 		} catch (final SyntaxException ex) {
 			throw new TMException("Parsing regex pattern \"" + source + "\" failed with " + ex, ex);
 		}
@@ -68,15 +70,15 @@ public final class OnigRegExp {
 			// targets the current search position (\G)
 			return search(str.bytesUTF8, startPosition, str.bytesCount);
 		}
-		synchronized (this) {
-			final var lastSearchResult0 = this.lastSearchResult;
-			if (lastSearchString == str
-					&& lastSearchPosition <= startPosition
-					&& (lastSearchResult0 == null || lastSearchResult0.locationAt(0) >= startPosition)) {
-				return lastSearchResult0;
-			}
+
+		final var lastSearchResult0 = this.lastSearchResult;
+		if (lastSearchString == str
+				&& lastSearchPosition <= startPosition
+				&& (lastSearchResult0 == null || lastSearchResult0.locationAt(0) >= startPosition)) {
+			return lastSearchResult0;
 		}
 
+		// multi-thread, lock result
 		var result = search(str.bytesUTF8, startPosition, str.bytesCount);
 		synchronized (this) {
 			lastSearchString = str;
