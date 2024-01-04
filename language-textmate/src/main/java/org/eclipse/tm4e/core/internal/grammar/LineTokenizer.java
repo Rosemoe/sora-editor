@@ -63,7 +63,7 @@ final class LineTokenizer {
     }
 
     private static final class MatchInjectionsResult extends MatchResult {
-        boolean isPriorityMatch;
+        final boolean isPriorityMatch;
 
         MatchInjectionsResult(final RuleId matchedRuleId, final OnigCaptureIndex[] captureIndices, final boolean isPriorityMatch) {
             super(matchedRuleId, captureIndices);

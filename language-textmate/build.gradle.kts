@@ -63,7 +63,7 @@ dependencies {
     implementation(libs.jcodings)
     implementation(libs.joni)
 
-    implementation(libs.snakeyaml)
+    implementation(libs.snakeyaml.engine)
     implementation(libs.jdt.annotation)
     implementation(libs.guava)
 

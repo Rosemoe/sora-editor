@@ -81,13 +81,11 @@ public final class MoreCollections {
 	/**
 	 * Removes the last element in this list.
 	 *
-	 * @return the element previously at the specified position
-	 *
 	 * @throws UnsupportedOperationException if the {@code remove} operation is not supported by this list
-	 * @throws IndexOutOfBoundsException if the list is empty
+	 * @throws IndexOutOfBoundsException     if the list is empty
 	 */
-	public static <T> T removeLastElement(final List<T> list) {
-		return list.remove(list.size() - 1);
+	public static <T> void removeLastElement(final List<T> list) {
+		list.remove(list.size() - 1);
 	}
 
 	public static String toStringWithIndex(final List<?> list) {

@@ -42,11 +42,8 @@ public final class OnigResult {
 
 	int locationAt(final int index) {
 		final int bytes = region.getBeg(index);
-		if (bytes > 0) {
-			return bytes;
-		}
-		return 0;
-	}
+        return Math.max(bytes, 0);
+    }
 
 	public int count() {
 		return region.getNumRegs();
@@ -54,9 +51,6 @@ public final class OnigResult {
 
 	int lengthAt(final int index) {
 		final int bytes = region.getEnd(index) - region.getBeg(index);
-		if (bytes > 0) {
-			return bytes;
-		}
-		return 0;
-	}
+        return Math.max(bytes, 0);
+    }
 }

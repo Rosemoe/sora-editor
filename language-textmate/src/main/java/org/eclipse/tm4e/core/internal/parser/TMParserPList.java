@@ -90,14 +90,13 @@ public final class TMParserPList implements TMParser {
             final StringBuilder text = new StringBuilder();
 
             @Override
-            public void characters(final char @Nullable [] chars, final int start, final int count) throws SAXException {
+            public void characters(final char @Nullable [] chars, final int start, final int count) {
                 text.append(chars, start, count);
             }
 
             @Override
             @NonNullByDefault({})
-            public void startElement(final String uri, final String localName, final String qName, final Attributes attributes)
-                    throws SAXException {
+            public void startElement(final String uri, final String localName, final String qName, final Attributes attributes) {
                 text.setLength(0);
                 switch (localName) {
                     case PLIST_DICT: {
@@ -122,7 +121,7 @@ public final class TMParserPList implements TMParser {
 
             @Override
             @NonNullByDefault({})
-            public void endElement(final String uri, final String localName, final String qName) throws SAXException {
+            public void endElement(final String uri, final String localName, final String qName) {
                 switch (localName) {
                     case PLIST_ARRAY: {
                         final var parentRef = parents.remove(parents.size() - 1);
@@ -200,7 +199,7 @@ public final class TMParserPList implements TMParser {
             }
 
             @SuppressWarnings("unchecked")
-            protected void setCurrentProperty(final Object value) {
+            private void setCurrentProperty(final Object value) {
                 path.removeLast();
                 final var obj = parents.get(parents.size() - 1);
                 switch (obj.sourceKind) {

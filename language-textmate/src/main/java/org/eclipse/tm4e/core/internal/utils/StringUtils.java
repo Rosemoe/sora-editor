@@ -86,7 +86,7 @@ public final class StringUtils {
         var tmp = new String[8];
         int count = 0;
         int start = 0;
-        int end = line.indexOf(separator, 0);
+        int end = line.indexOf(separator);
         while (end >= 0) {
             if (count == tmp.length) { // check if array needs resize
                 final var tmp2 = new String[tmp.length + (tmp.length >> 1)];
@@ -123,7 +123,7 @@ public final class StringUtils {
 
         final var result = new ArrayList<String>(8);
         int start = 0;
-        int end = line.indexOf(separator, 0);
+        int end = line.indexOf(separator);
         while (end >= 0) {
             result.add(line.substring(start, end));
             start = end + 1;
