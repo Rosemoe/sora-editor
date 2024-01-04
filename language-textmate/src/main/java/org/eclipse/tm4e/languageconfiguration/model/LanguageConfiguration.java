@@ -238,7 +238,7 @@ public class LanguageConfiguration {
                     final var jsonObj = json.getAsJsonObject();
                     final var markersElem = jsonObj.get("markers"); //$NON-NLS-1$
                     if (markersElem != null && markersElem.isJsonObject()) {
-                        final var offSide = getAsBoolean(jsonObj.get("offSide"), false); //$NON-NLS-1$
+                        final var offSide = getAsBoolean(jsonObj.get("offSide")); //$NON-NLS-1$
                         final var markersObj = markersElem.getAsJsonObject();
                         final var startMarker = getAsPattern(markersObj.get("start")); //$NON-NLS-1$
                         final var endMarker = getAsPattern(markersObj.get("end")); //$NON-NLS-1$
@@ -287,14 +287,14 @@ public class LanguageConfiguration {
         }
     }
 
-    private static boolean getAsBoolean(@Nullable final JsonElement element, final boolean defaultValue) {
+    private static boolean getAsBoolean(@Nullable final JsonElement element) {
         if (element == null) {
-            return defaultValue;
+            return false;
         }
         try {
             return element.getAsBoolean();
         } catch (final Exception e) {
-            return defaultValue;
+            return false;
         }
     }
 

@@ -23,7 +23,6 @@
  */
 package org.eclipse.tm4e.languageconfiguration.supports;
 
-import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
 import org.eclipse.tm4e.languageconfiguration.model.IndentationRules;
 import org.eclipse.tm4e.languageconfiguration.utils.TextUtils;
 
@@ -95,9 +94,9 @@ public class IndentRulesSupport {
 
 
     public static class IndentConsts {
-        public static int INCREASE_MASK = 0b00000001;
-        public static int DECREASE_MASK = 0b00000010;
-        public static int INDENT_NEXTLINE_MASK = 0b00000100;
-        public static int UNINDENT_MASK = 0b00001000;
+        public static final int INCREASE_MASK = 0b00000001;
+        public static final int DECREASE_MASK = 0b00000010;
+        public static final int INDENT_NEXTLINE_MASK = 0b00000100;
+        public static final int UNINDENT_MASK = 0b00001000;
     }
 }

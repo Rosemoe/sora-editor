@@ -31,7 +31,7 @@ public class TMParserJSON implements TMParser {
 	}
 
 	@Override
-	public final <T extends PropertySettable<?>> T parse(final Reader source, final ObjectFactory<T> factory) throws Exception {
+	public final <T extends PropertySettable<?>> T parse(final Reader source, final ObjectFactory<T> factory) {
 		final Map<String, Object> rawRoot = loadRaw(source);
 		return transform(rawRoot, factory);
 	}

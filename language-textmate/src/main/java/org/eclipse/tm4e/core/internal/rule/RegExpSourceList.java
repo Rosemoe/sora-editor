@@ -19,6 +19,7 @@ package org.eclipse.tm4e.core.internal.rule;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -73,7 +74,7 @@ final class RegExpSourceList {
 	CompiledRule compile() {
 		var cached = this.cached;
 		if (cached == null) {
-			final List<String> regexps = items.stream().map(RegExpSource::getSource).toList();
+			final List<String> regexps = items.stream().map(RegExpSource::getSource).collect(Collectors.toList());
 			cached = this.cached = new CompiledRule(regexps, items.stream().map(e -> e.ruleId).toArray(RuleId[]::new));
 		}
 		return cached;
@@ -95,7 +96,7 @@ final class RegExpSourceList {
 	}
 
 	private CompiledRule resolveAnchors(final boolean allowA, final boolean allowG) {
-		final List<String> regexps = items.stream().map(e -> e.resolveAnchors(allowA, allowG)).toList();
+		final List<String> regexps = items.stream().map(e -> e.resolveAnchors(allowA, allowG)).collect(Collectors.toList());
 		return new CompiledRule(regexps, items.stream().map(e -> e.ruleId).toArray(RuleId[]::new));
 	}
 }

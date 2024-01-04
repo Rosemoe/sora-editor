@@ -40,7 +40,7 @@ import org.eclipse.tm4e.core.TMException;
  */
 public final class ColorMap {
 
-    private boolean _isFrozen;
+    private final boolean _isFrozen;
     private int _lastColorId = -1; // -1 and not 0 as in upstream project on purpose
     private final List<String> _id2color = new ArrayList<>();
     private final Map<String /*color*/, @Nullable Integer /*ID color*/> _color2id = new LinkedHashMap<>();

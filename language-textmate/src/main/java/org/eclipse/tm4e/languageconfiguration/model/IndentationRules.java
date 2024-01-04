@@ -24,7 +24,6 @@
 package org.eclipse.tm4e.languageconfiguration.model;
 
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.tm4e.core.internal.oniguruma.OnigRegExp;
 
 import java.util.regex.Pattern;
 

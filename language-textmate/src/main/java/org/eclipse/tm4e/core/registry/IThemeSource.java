@@ -19,8 +19,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+
 
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -65,7 +64,7 @@ public interface IThemeSource {
 
             return new IThemeSource() {
                 @Override
-                public Reader getReader() throws IOException {
+                public Reader getReader() {
                     return new StringReader(builder.toString());
                 }
 
@@ -131,7 +130,7 @@ public interface IThemeSource {
         final var contentType1 = contentType == null ? guessFileFormat(resourceName) : contentType;
         return new IThemeSource() {
             @Override
-            public Reader getReader() throws IOException {
+            public Reader getReader() {
                 return new BufferedReader(new InputStreamReader(
                         clazz.getResourceAsStream(resourceName),
                         charset == null ? StandardCharsets.UTF_8 : charset));
@@ -153,7 +152,7 @@ public interface IThemeSource {
 
         return new IThemeSource() {
             @Override
-            public Reader getReader() throws IOException {
+            public Reader getReader() {
                 return new StringReader(content);
             }
 

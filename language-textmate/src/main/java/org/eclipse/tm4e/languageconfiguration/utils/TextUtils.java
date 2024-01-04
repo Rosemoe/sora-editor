@@ -23,7 +23,6 @@
  */
 package org.eclipse.tm4e.languageconfiguration.utils;
 
-import io.github.rosemoe.sora.graphics.SingleCharacterWidths;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
@@ -55,7 +54,7 @@ public class TextUtils {
 
         final var result = new StringBuilder();
         if (!insertSpaces) {
-            final long tabsCnt = Math.round(Math.floor(spacesCnt / tabSize));
+            final long tabsCnt = Math.round(Math.floor((double) spacesCnt / tabSize));
             spacesCnt = spacesCnt % tabSize;
             for (int i = 0; i < tabsCnt; i++) {
                 result.append('\t');
