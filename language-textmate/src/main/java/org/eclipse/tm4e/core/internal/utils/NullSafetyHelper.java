@@ -34,6 +34,12 @@ public final class NullSafetyHelper {
 		return value;
 	}
 
+	@NonNull
+	@SuppressWarnings("null")
+	private static <T> T castNonNullUnsafe(final T value) {
+		return value;
+	}
+
 	/**
 	 * Casts a non-null value as {@link Nullable}.
 	 */
@@ -54,6 +60,15 @@ public final class NullSafetyHelper {
 			return defaultValue.get();
 		}
 		return object;
+	}
+
+	/**
+	 * Allows to initializes a @NonNull field with <code>null</code> that is lazy initialized
+	 */
+	@NonNull
+	@SuppressWarnings("unchecked")
+	public static <T> T lazyNonNull() {
+		return (T) castNonNullUnsafe(null);
 	}
 
 	private NullSafetyHelper() {

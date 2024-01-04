@@ -19,13 +19,12 @@ package org.eclipse.tm4e.core.internal.rule;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/rule.ts#L744">
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/rule.ts#L744">
  *      github.com/microsoft/vscode-textmate/blob/main/src/rule.ts</a>
  */
 final class RegExpSourceList {
@@ -74,7 +73,7 @@ final class RegExpSourceList {
 	CompiledRule compile() {
 		var cached = this.cached;
 		if (cached == null) {
-			final List<String> regexps = items.stream().map(RegExpSource::getSource).collect(Collectors.toList());
+			final List<String> regexps = items.stream().map(RegExpSource::getSource).toList();
 			cached = this.cached = new CompiledRule(regexps, items.stream().map(e -> e.ruleId).toArray(RuleId[]::new));
 		}
 		return cached;
@@ -96,8 +95,7 @@ final class RegExpSourceList {
 	}
 
 	private CompiledRule resolveAnchors(final boolean allowA, final boolean allowG) {
-		final List<String> regexps = items.stream().map(e -> e.resolveAnchors(allowA, allowG))
-			.collect(Collectors.toList());
+		final List<String> regexps = items.stream().map(e -> e.resolveAnchors(allowA, allowG)).toList();
 		return new CompiledRule(regexps, items.stream().map(e -> e.ruleId).toArray(RuleId[]::new));
 	}
 }

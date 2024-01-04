@@ -9,16 +9,16 @@
  * Contributors:
  * Angelo Zerr <angelo.zerr@gmail.com> - initial API and implementation
  */
-package org.eclipse.tm4e.core.internal.theme;
+package org.eclipse.tm4e.core.internal.theme.raw;
 
 import java.util.Collection;
-import java.util.HashMap;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.internal.parser.PropertySettable;
+import org.eclipse.tm4e.core.internal.theme.IThemeSetting;
 
-public final class ThemeRaw extends HashMap<String, @Nullable Object>
-		implements IRawTheme, IRawThemeSetting, IThemeSetting, PropertySettable<Object> {
+public final class RawTheme extends PropertySettable.HashMap<@Nullable Object>
+		implements IRawTheme, IRawThemeSetting, IThemeSetting {
 
 	private static final long serialVersionUID = 1L;
 
@@ -63,10 +63,5 @@ public final class ThemeRaw extends HashMap<String, @Nullable Object>
 	@Override
 	public String getForeground() {
 		return (String) super.get("foreground");
-	}
-
-	@Override
-	public void setProperty(final String name, final Object value) {
-		put(name, value);
 	}
 }

@@ -1,340 +1,490 @@
 /**
  * Copyright (c) 2015-2017 Angelo ZERR.
+ * Copyright (c) 2022-2023 Vegard IT GmbH and others.
+ * <p>
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- *
+ * <p>
  * SPDX-License-Identifier: EPL-2.0
- *
+ * <p>
  * Contributors:
  * Angelo Zerr <angelo.zerr@gmail.com> - initial API and implementation
+ * Sebastian Thomschke (Vegard IT GmbH) - major refactoring, performance improvement, solving out-of-sync issues
  */
 package org.eclipse.tm4e.core.model;
 
+import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.castNullable;
+import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.lazyNonNull;
 
-import static org.eclipse.tm4e.core.internal.utils.MoreCollections.*;
-import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.*;
-
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tm4e.core.grammar.IGrammar;
+import org.eclipse.tm4e.core.grammar.IStateStack;
+import org.eclipse.tm4e.core.internal.grammar.StateStack;
+import org.eclipse.tm4e.core.internal.utils.MoreCollections;
+import org.eclipse.tm4e.core.internal.utils.StringUtils;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.function.Consumer;
-
-import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.tm4e.core.grammar.IGrammar;
-import org.eclipse.tm4e.core.internal.utils.StringUtils;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import io.github.rosemoe.sora.util.Logger;
 
 /**
- * TextMate model class.
+ * The {@link TMModel} runs a background thread tokenizing out-of-date lines of the text model.
+ * <p>
+ * Concrete implementations of this class are supposed to announce editor's content changes using the
+ * {@link #onLinesReplaced(int, int, int)}
+ * method. This results in (re)tokenization of the changed lines resulting in {@link ModelTokensChangedEvent}s being emitted.
+ * <p>
+ * UI elements are supposed to subscribe and react to the events with
+ * {@link TMModel#addModelTokensChangedListener(ModelTokensChangedEvent.Listener)}.
  *
- * @see <a href="https://github.com/microsoft/vscode/blob/main/src/vs/editor/common/tokenizationTextModelPart.ts">
- *      github.com/microsoft/vscode/blob/main/src/vs/editor/common/tokenizationTextModelPart.ts</a>
+ * @see <a href="https://github.com/microsoft/vscode/blob/main/src/vs/editor/common/model/tokenizationTextModelPart.ts">
+ * github.com/microsoft/vscode/src/vs/editor/common/model/tokenizationTextModelPart.ts <code>#TokenizationTextModelPart</code></a>
  */
-public class TMModel implements ITMModel {
+public abstract class TMModel implements ITMModel {
 
-	private static final Logger LOGGER = Logger.instance(TMModel.class.getName());
+    private static final class Edit {
+        final int lineIndex;
+        final int replacedCount;
+        final int replacementCount;
 
-	/** The TextMate grammar to use to parse for each lines of the document the TextMate tokens. **/
-	@Nullable
-	private IGrammar grammar;
+        public Edit(final int lineIndex, final int replacedCount, final int replacementCount) {
+            this.lineIndex = lineIndex;
+            this.replacedCount = replacedCount;
+            this.replacementCount = replacementCount;
+        }
 
-	/** Listener when TextMate model tokens changed **/
-	private final Set<IModelTokensChangedListener> listeners = new CopyOnWriteArraySet<>();
+        @Override
+        public String toString() {
+            return "{lineNumber=" + (lineIndex + 1) + ", replacedCount=" + replacedCount + ", replacementCount=" + replacementCount + '}';
+        }
+    }
 
-	@Nullable
-	private TMTokenization tokenizer;
+    /**
+     * package visibility for tests
+     **/
+    static final class LineTokens {
+        volatile IStateStack startState = StateStack.NULL;
+        @Nullable
+        IStateStack endState;
+        @Nullable
+        volatile List<TMToken> tokens;
 
-	/** The background thread. */
-	@Nullable
-	private volatile TokenizerThread fThread;
+        void reset() {
+            startState = StateStack.NULL;
+            endState = null;
+            tokens = null;
+        }
 
-	private final AbstractModelLines modelLines;
-	private final PriorityBlockingQueue<Integer> invalidLines = new PriorityBlockingQueue<>();
+        @Override
+        public String toString() {
+            return "{startState=" + startState + ", tokens=" + tokens + '}';
+        }
+    }
 
-	public TMModel(final AbstractModelLines lines) {
-		modelLines = lines;
-		modelLines.setModel(this);
-		invalidateLine(0);
-	}
+    private static final Logger LOGGER = Logger.instance(TMModel.class.getName());
 
-	/**
-	 * The {@link TokenizerThread} continuously runs tokenizing in background on the lines found in
-	 * {@link TMModel#modelLines}.
-	 *
-	 * The {@link TMModel#modelLines} are expected to be accessed through {@link TMModel#getLines()} and manipulated by
-	 * the UI part to inform of needs to (re)tokenize area, then the {@link TokenizerThread} processes them and emits
-	 * events through the model.
-	 *
-	 * UI elements are supposed to subscribe and react to the events with
-	 * {@link TMModel#addModelTokensChangedListener(IModelTokensChangedListener)}.
-	 */
-	private final class TokenizerThread extends Thread {
+    /**
+     * The TextMate grammar to use to tokenize lines of the attached document
+     **/
+    private @Nullable IGrammar grammar;
 
-		/**
-		 * Creates a new background thread. The thread runs with minimal priority.
-		 *
-		 * @param name the thread's name
-		 */
-		TokenizerThread(final String name) {
-			super(name);
-			setPriority(Thread.MIN_PRIORITY);
-			setDaemon(true);
-		}
+    /**
+     * Listeners that are notified when (re)tokenization of changed lines was performed
+     **/
+    private final ModelTokensChangedEvent.Listeners listeners = new ModelTokensChangedEvent.Listeners();
 
-		@Override
-		public void run() {
-			while (!isInterrupted() && fThread == this) {
-				try {
-					final int lineIndexToProcess = invalidLines.take();
+    /**
+     * The background thread performing async line tokenizations
+     */
+    private @Nullable
+    volatile TokenizerThread tokenizerThread;
+    private volatile boolean tokenizerThreadHasWork;
+    private TMTokenizationSupport tokenizer = lazyNonNull();
 
-					// skip if the queued line is not invalid anymore
-					final var modelLine = modelLines.getOrNull(lineIndexToProcess);
-					if (modelLine == null || !modelLine.isInvalid)
-						continue;
+    /**
+     * package visibility for tests
+     **/
+    final ArrayList<LineTokens> lines;
+    final Object linesWriteLock;
 
-					try {
-						revalidateTokens(lineIndexToProcess);
-					} catch (final Exception ex) {
-						LOGGER.e(ex.getMessage(), ex);
-						invalidateLine(lineIndexToProcess);
-					}
-				} catch (final InterruptedException e) {
-					interrupt();
-				}
-			}
-		}
+    private final BlockingQueue<Edit> edits = new LinkedBlockingQueue<>();
 
-		private final int MAX_LOOP_TIME = 200; // process follow-up lines until this limit is reached
-		private final Duration MAX_TIME_PER_LINE = Duration.ofSeconds(1); // max time a single line can be processed
+    protected TMModel(final int initialNumberOfLines) {
+        lines = new ArrayList<>(Math.max(10, initialNumberOfLines));
+        linesWriteLock = lines;
+        onLinesReplaced(0, 0, initialNumberOfLines);
+    }
 
-		/**
-		 * @param startLineIndex 0-based
-		 */
-		private void revalidateTokens(final int startLineIndex) {
-			buildAndEmitEvent(eventBuilder -> {
-				int lineIndex = startLineIndex;
-				final long startTime = System.currentTimeMillis();
-				while (lineIndex < modelLines.getNumberOfLines()) {
-					switch (updateTokensOfLine(eventBuilder, lineIndex, MAX_TIME_PER_LINE)) {
-					case DONE:
-						return;
-					case UPDATE_FAILED:
-						// mark the current line as invalid and add it to the end of the queue
-						invalidateLine(lineIndex);
-						return;
-					case NEXT_LINE_IS_OUTDATED:
-						if (System.currentTimeMillis() - startTime >= MAX_LOOP_TIME) {
-							// mark the next line as invalid and add it to the end of the queue
-							invalidateLine(lineIndex + 1);
-							return;
-						}
-						lineIndex++;
-						break;
-					}
-				}
-			});
-		}
-	}
+    // if your want to debug the tokenization, set this to true
+    private static final boolean DEBUG_LOGGING = false;
 
-	private enum UpdateTokensOfLineResult {
-		DONE,
-		UPDATE_FAILED,
-		NEXT_LINE_IS_OUTDATED,
-	}
+    private void logDebug(final String msg, final Object... args) {
+        if (!DEBUG_LOGGING)
+            return;
+        final var t = Thread.currentThread();
+        final var caller = t.getStackTrace()[2];
+        final var threadName = t.getName().endsWith(TokenizerThread.class.getSimpleName()) ? "tknz" : t.getName();
+        LOGGER.i("[" + threadName + "] " + caller.getMethodName() + String.format(msg, args));
+    }
 
-	/**
-	 * @param lineIndex 0-based
-	 */
-	private UpdateTokensOfLineResult updateTokensOfLine(final ModelTokensChangedEventBuilder eventBuilder,
-		final int lineIndex, final Duration timeLimit) {
+    /**
+     * The {@link TokenizerThread} continuously runs tokenizing in background on the lines found in {@link TMModel#lines}.
+     */
+    private final class TokenizerThread extends Thread {
 
-		final var modelLine = modelLines.getOrNull(lineIndex);
-		if (modelLine == null) {
-			return UpdateTokensOfLineResult.DONE; // line does not exist anymore
-		}
+        /**
+         * max time allowed to tokenize a single line
+         */
+        private static final Duration MAX_TIME_PER_LINE_TOKENIZATION = Duration.ofSeconds(1);
 
-		/*
-		 * (re-)tokenize the requested line
-		 */
-		final TokenizationResult r;
-		final String lineText;
-		try {
-			lineText = modelLines.getLineText(lineIndex);
-			r = castNonNull(tokenizer).tokenize(lineText, modelLine.startState, 0, timeLimit);
-		} catch (final Exception ex) {
-			LOGGER.e( ex.toString());
-			return UpdateTokensOfLineResult.UPDATE_FAILED;
-		}
+        /**
+         * max time in milliseconds for multi-line validations before a consolidated {@link ModelTokensChangedEvent} is emitted
+         */
+        private static final int MAX_TIME_PER_MULTI_LINE_VALIDATIONS = 200;
 
-		if (r.stoppedEarly) {
-			// treat the rest of the line as one default token
-			r.tokens.add(new TMToken(r.actualStopOffset, ""));
-			// Use the line's starting state as end state in case of incomplete tokenization
-			r.endState = modelLine.startState;
-		}
+        /**
+         * Creates a new background thread. The thread runs with minimal priority.
+         */
+        TokenizerThread() {
+            super("tm4e." + TokenizerThread.class.getSimpleName());
+            setPriority(Thread.MIN_PRIORITY);
+            setDaemon(true);
+        }
 
-		modelLine.tokens = r.tokens;
-		eventBuilder.registerChangedTokens(lineIndex + 1);
-		modelLine.isInvalid = false;
+        @Override
+        public void run() {
+            try {
+                // loop as long as the thread is active
+                while (tokenizerThread == this) {
+                    tokenizerThreadHasWork = !(isAllTokensAreValid() && edits.isEmpty());
 
-		/*
-		 * check if the next line now requires a token update too
-		 */
-		final var nextModelLine = modelLines.getOrNull(lineIndex + 1);
-		if (nextModelLine == null) {
-			return UpdateTokensOfLineResult.DONE; // next line does not exist
-		}
+                    if (!tokenizerThreadHasWork || !edits.isEmpty()) {
+                        // wait for the first edit
+                        applyEdit(edits.take());
 
-		if (!nextModelLine.isInvalid && nextModelLine.startState.equals(r.endState)) {
-			return UpdateTokensOfLineResult.DONE; // next line is valid and has matching start state
-		}
+                        // poll all subsequent edits
+                        for (; ; ) {
+                            // wait up to 50ms for the next edit, so that edits made in fast succession (e.g. by a formater) are applied
+                            // in one go before the token revalidation loop happens
+                            final var edit = castNullable(edits.poll(50, TimeUnit.MILLISECONDS));
+                            if (edit == null)
+                                break;
+                            applyEdit(edit);
+                        }
+                    }
 
-		// next line is out of date
-		nextModelLine.startState = r.endState;
-		return UpdateTokensOfLineResult.NEXT_LINE_IS_OUTDATED;
-	}
+                    revalidateTokens();
+                }
+            } catch (final InterruptedException ex) {
+                interrupt();
+            } finally {
+                tokenizerThreadHasWork = false;
+            }
+        }
 
-	@Nullable
-	@Override
-	public IGrammar getGrammar() {
-		return grammar;
-	}
+        private int firstLineToRevalidate = -1;
 
-	@Override
-	public void setGrammar(final IGrammar grammar) {
-		if (!Objects.equals(grammar, this.grammar)) {
-			this.grammar = grammar;
-			final var tokenizer = this.tokenizer = new TMTokenization(grammar);
-			modelLines.get(0).startState = tokenizer.getInitialState();
-			startTokenizerThread();
-		}
-	}
+        private boolean isAllTokensAreValid() {
+            return firstLineToRevalidate == -1;
+        }
 
-	@Override
-	public synchronized void addModelTokensChangedListener(final IModelTokensChangedListener listener) {
-		listeners.add(listener);
-		startTokenizerThread();
-	}
+        private void setAllTokensAreValid() {
+            firstLineToRevalidate = -1;
+        }
 
-	@Override
-	public synchronized void removeModelTokensChangedListener(final IModelTokensChangedListener listener) {
-		listeners.remove(listener);
+        /**
+         * revalidates tokens of lines starting at {@link #firstLineToRevalidate} until all lines are processed or new {@link Edit} arrive.
+         *
+         * @throws InterruptedException
+         */
+        private void revalidateTokens() throws InterruptedException {
+            final int startLineIndex = firstLineToRevalidate;
+            final int startLineNumber = startLineIndex + 1;
+            if (DEBUG_LOGGING)
+                logDebug("(%d)", startLineNumber);
 
-		if (listeners.isEmpty()) {
-			// no need to keep tokenizing if no-one cares
-			stopTokenizerThread();
-		}
-	}
+            long startTime = System.currentTimeMillis();
+            var changedRanges = new ArrayList<Range>();
+            Range prevRange = null;
+            var prevLineTokens = getLineTokensOrNull(startLineIndex - 1);
 
-	@Override
-	public void dispose() {
-		stopTokenizerThread();
-		modelLines.dispose();
-	}
+            final int linesCount = lines.size();
+            int currLineIndex = -1;
 
-	private synchronized void startTokenizerThread() {
-		if (tokenizer != null && !listeners.isEmpty()) {
-			var fThread = this.fThread;
-			if (fThread == null || fThread.isInterrupted()) {
-				fThread = this.fThread = new TokenizerThread(getClass().getName());
-			}
-			if (!fThread.isAlive()) {
-				fThread.start();
-			}
-		}
-	}
+            // iterate over all lines from startLineIndex to end of file to check if (re)tokenization is required
+            for (currLineIndex = startLineIndex; currLineIndex < linesCount; currLineIndex++) {
 
-	/**
-	 * Interrupt the thread if running.
-	 */
-	private synchronized void stopTokenizerThread() {
-		final var fThread = this.fThread;
-		if (fThread == null) {
-			return;
-		}
-		fThread.interrupt();
-		this.fThread = null;
-	}
+                // check if TokenizerThread is still running
+                if (isInterrupted()) {
+                    break;
+                }
 
-	private void buildAndEmitEvent(final Consumer<ModelTokensChangedEventBuilder> callback) {
-		final ModelTokensChangedEventBuilder eventBuilder = new ModelTokensChangedEventBuilder(this);
+                // check if new edits are queued -> if so, abort current tokenization loop
+                if (!edits.isEmpty()) {
+                    break;
+                }
 
-		callback.accept(eventBuilder);
+                final var currLineTokens = lines.get(currLineIndex);
 
-		final ModelTokensChangedEvent event = eventBuilder.build();
-		if (event != null) {
-			emit(event);
-		}
-	}
+                if (currLineIndex == 0) {
+                    currLineTokens.startState = tokenizer.getInitialState();
+                }
 
-	private void emit(final ModelTokensChangedEvent e) {
-		for (final IModelTokensChangedListener listener : listeners) {
-			listener.modelTokensChanged(e);
-		}
-	}
+                final int currLineNumber = currLineIndex + 1;
 
-	@Override
-	@Nullable
-	public List<TMToken> getLineTokens(final int lineIndex) {
-		final var modelLine = modelLines.getOrNull(lineIndex);
-		return modelLine == null ? null : modelLine.tokens;
-	}
+                // check if (re)tokenization is required
+                if (prevLineTokens != null) {
+                    if (currLineTokens.tokens != null && currLineTokens.startState.equals(prevLineTokens.endState)) {
+                        // has matching start and has tokens ==> is up to date
+                        if (DEBUG_LOGGING)
+                            logDebug("(%d) >> DONE - tokens of line %d are up-to-date", startLineNumber, currLineNumber);
+                        firstLineToRevalidate = currLineIndex + 1;
+                        prevLineTokens = currLineTokens;
+                        continue;
+                    }
+                    if (prevLineTokens.endState != null)
+                        currLineTokens.startState = prevLineTokens.endState;
+                }
 
-	public int getNumberOfLines() {
-		return modelLines.getNumberOfLines();
-	}
+                // (re)tokenize the line
+                if (DEBUG_LOGGING)
+                    logDebug("(%d) >> tokenizing line %d...", startLineNumber, currLineNumber);
+                TokenizationResult r;
+                try {
+                    final String lineText = getLineText(currLineIndex);
+                    r = tokenizer.tokenize(lineText, currLineTokens.startState, 0, MAX_TIME_PER_LINE_TOKENIZATION);
+                } catch (final Exception ex) {
+                    LOGGER.e(ex.toString());
+                    r = new TokenizationResult(new ArrayList<>(1), 0, currLineTokens.startState, true);
+                }
 
-	/**
-	 * Marks the given line as out-of-date resulting in async re-parsing
-	 */
-	void invalidateLine(final int lineIndex) {
-		final var modelLine = modelLines.getOrNull(lineIndex);
-		if (modelLine != null) {
-			modelLine.isInvalid = true;
-			invalidLines.add(lineIndex);
-		}
-	}
+                // check if complete line was tokenized
+                if (r.stoppedEarly) {
+                    // treat the rest of the line as one default token
+                    r.tokens.add(new TMToken(r.actualStopOffset, ""));
+                    // Use the line's starting state as end state in case of incomplete tokenization
+                    r.endState = currLineTokens.startState;
+                }
 
-	private static final class ModelTokensChangedEventBuilder {
+                currLineTokens.endState = r.endState;
+                currLineTokens.tokens = r.tokens;
+                prevLineTokens = currLineTokens;
+                firstLineToRevalidate = currLineIndex + 1;
 
-		final ITMModel model;
-		final List<Range> ranges = new ArrayList<>();
+                // add the line number to the changed ranges
+                if (prevRange != null && prevRange.toLineNumber == currLineNumber - 1) {
+                    prevRange.toLineNumber = currLineNumber; // extend range from previous line change
+                } else {
+                    prevRange = new Range(currLineNumber);
+                    changedRanges.add(prevRange); // insert new range
+                }
 
-		ModelTokensChangedEventBuilder(final ITMModel model) {
-			this.model = model;
-		}
+                // if MAX_TIME_PER_MULTI_LINE_VALIDATIONS reached, notify listeners about line changes
+                if (System.currentTimeMillis() - startTime >= MAX_TIME_PER_MULTI_LINE_VALIDATIONS) {
+                    if (DEBUG_LOGGING)
+                        logDebug("(%d) >> changedRanges: %s", startLineNumber, changedRanges);
+                    listeners.dispatchEvent(changedRanges, TMModel.this);
+                    changedRanges = new ArrayList<>();
+                    prevRange = null;
+                    startTime = System.currentTimeMillis();
+                }
+            }
 
-		void registerChangedTokens(final int lineNumber) {
-			final Range previousRange = findLastElement(ranges);
+            // notify listeners about remaining line changes
+            if (DEBUG_LOGGING)
+                logDebug("(%d) >> changedRanges: %s", startLineNumber, changedRanges);
+            listeners.dispatchEvent(changedRanges, TMModel.this);
 
-			if (previousRange != null && previousRange.toLineNumber == lineNumber - 1) {
-				// extend previous range
-				previousRange.toLineNumber++;
-			} else {
-				// insert new range
-				ranges.add(new Range(lineNumber));
-			}
-		}
+            setAllTokensAreValid();
+        }
 
-		@Nullable
-		ModelTokensChangedEvent build() {
-			if (this.ranges.isEmpty()) {
-				return null;
-			}
-			return new ModelTokensChangedEvent(ranges, model);
-		}
-	}
+        private void applyEdit(final Edit edit) {
+            if (DEBUG_LOGGING)
+                logDebug("(%s)", edit);
 
-	@Override
-	public String toString() {
-		return StringUtils.toString(this, sb -> sb
-			.append("grammar=").append(grammar));
-	}
+            final var lineIndex = edit.lineIndex;
+            if (isAllTokensAreValid() || lineIndex < firstLineToRevalidate)
+                firstLineToRevalidate = lineIndex;
+
+            // check if single line update
+            if (edit.replacedCount == 1 && edit.replacementCount == 1) {
+                final var firstLineOfEdit = getLineTokensOrNull(lineIndex);
+                if (firstLineOfEdit == null)
+                    return;
+                // reuse the LineToken instance by resetting it's state
+                firstLineOfEdit.reset();
+                return;
+            }
+
+            final int replacedCount = Math.min(edit.replacedCount, lines.size() - lineIndex);
+            final var lineDiff = edit.replacementCount - edit.replacedCount;
+            final var editRange = lines.subList(lineIndex, lineIndex + replacedCount);
+
+            // (1) number of lines not changed by edit
+            if (lineDiff == 0) {
+                // reset tokenization state of affected lines
+                editRange.forEach(LineTokens::reset);
+                return;
+            }
+
+            // (2) new lines added by edit
+            if (lineDiff > 0) {
+                // reset tokenization state of affected lines
+                editRange.forEach(LineTokens::reset);
+
+                // add extra lines
+                final var additionalLines = new ArrayList<LineTokens>(lineDiff);
+                for (int i = 0; i < lineDiff; i++) {
+                    additionalLines.add(new LineTokens());
+                }
+                synchronized (linesWriteLock) {
+                    editRange.addAll(additionalLines);
+                }
+                return;
+            }
+
+            // (3) lines removed by edit
+            /* if (lineDiff < 0) */
+            {
+                synchronized (linesWriteLock) {
+                    editRange.subList(0, -lineDiff).clear();
+                }
+                // reset tokenization state of the other affected lines
+                editRange.forEach(LineTokens::reset);
+            }
+        }
+    }
+
+    private @Nullable LineTokens getLineTokensOrNull(final int index) {
+        return index > -1 && index < lines.size()
+                ? lines.get(index)
+                : null;
+    }
+
+    @Override
+    public BackgroundTokenizationState getBackgroundTokenizationState() {
+        return tokenizerThreadHasWork ? BackgroundTokenizationState.IN_PROGRESS : BackgroundTokenizationState.COMPLETED;
+    }
+
+    @Override
+    public @Nullable IGrammar getGrammar() {
+        return grammar;
+    }
+
+    @Override
+    public synchronized void setGrammar(final IGrammar grammar) {
+        if (!Objects.equals(grammar, this.grammar)) {
+            this.grammar = grammar;
+            final var tokenizer = this.tokenizer = new TMTokenizationSupport(grammar);
+            synchronized (linesWriteLock) {
+                if (!lines.isEmpty()) {
+                    lines.get(0).startState = tokenizer.getInitialState();
+                }
+                onLinesReplaced(0, 1, 1);
+            }
+            startTokenizerThread();
+        }
+    }
+
+    /**
+     * Informs the model about lines being replaced at the given index.
+     * <p>
+     * Examples, e.g. for replacements at line index 10:
+     * <li>for a single line update use <code>onLinesReplaced(10, 1, 1);</code>
+     * <li>for deletion of 5 lines use <code>onLinesReplaced(10, 5, 0);</code>
+     * <li>for inserting of 5 lines use <code>onLinesReplaced(10, 0, 5);</code>
+     * <li>for replacing 5 lines with 2 new lines use <code>onLinesReplaced(10, 5, 2);</code>
+     *
+     * @param lineIndex             (0-based)
+     * @param replacedLinesCount    number of lines that are replaced
+     * @param replacementLinesCount number of lines of the replacement text
+     */
+    public void onLinesReplaced(final int lineIndex, final int replacedLinesCount, final int replacementLinesCount) {
+        if (replacedLinesCount == 0 && replacementLinesCount == 0)
+            return;
+
+        if (DEBUG_LOGGING)
+            logDebug("(%d, -%d, +%d)", lineIndex + 1, replacedLinesCount, replacementLinesCount);
+
+        edits.add(new Edit(lineIndex, replacedLinesCount, replacementLinesCount));
+    }
+
+    @Override
+    public synchronized boolean addModelTokensChangedListener(final ModelTokensChangedEvent.Listener listener) {
+        if (listeners.add(listener)) {
+            startTokenizerThread();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public synchronized boolean removeModelTokensChangedListener(final ModelTokensChangedEvent.Listener listener) {
+        if (listeners.remove(listener)) {
+            if (listeners.isEmpty()) {
+                stopTokenizerThread(); // no need to keep tokenizing if no-one cares
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void dispose() {
+        stopTokenizerThread();
+    }
+
+    private synchronized void startTokenizerThread() {
+        if (grammar != null && listeners.isNotEmpty()) {
+            var thread = this.tokenizerThread;
+            if (thread == null || !thread.isAlive() || thread.isInterrupted()) {
+                thread = this.tokenizerThread = new TokenizerThread();
+                thread.start();
+            }
+        }
+    }
+
+    /**
+     * Interrupt the thread if running.
+     */
+    private synchronized void stopTokenizerThread() {
+        final var thread = this.tokenizerThread;
+        if (thread == null)
+            return;
+
+        thread.interrupt();
+        this.tokenizerThread = null;
+    }
+
+    @Override
+    public int getNumberOfLines() {
+        synchronized (linesWriteLock) {
+            return lines.size();
+        }
+    }
+
+    @Override
+    public @Nullable List<TMToken> getLineTokens(final int lineIndex) {
+        synchronized (linesWriteLock) {
+            final var lineTokens = getLineTokensOrNull(lineIndex);
+            return lineTokens == null ? null : lineTokens.tokens;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return StringUtils.toString(this, sb -> {
+            sb.append("grammar=").append(grammar);
+            synchronized (linesWriteLock) {
+                sb.append(", lines=").append(MoreCollections.toStringWithIndex(lines));
+            }
+        });
+    }
 }

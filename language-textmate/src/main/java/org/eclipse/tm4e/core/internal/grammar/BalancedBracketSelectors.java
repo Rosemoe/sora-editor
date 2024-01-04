@@ -24,31 +24,31 @@ import org.eclipse.tm4e.core.internal.matcher.Matcher;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/grammar.ts#L808">
- *      github.com/microsoft/vscode-textmate/blob/main/src/grammar.ts</a>
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/grammar/grammar.ts#L898">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/grammar/grammar.ts</a>
  */
-public class BalancedBracketSelectors {
+public final class BalancedBracketSelectors {
 	private final Matcher<List<String>>[] balancedBracketScopes;
 	private final Matcher<List<String>>[] unbalancedBracketScopes;
 
 	private boolean allowAny = false;
 
 	public BalancedBracketSelectors(
-		final List<String> balancedBracketScopes,
-		final List<String> unbalancedBracketScopes) {
+			final List<String> balancedBracketScopes,
+			final List<String> unbalancedBracketScopes) {
 		this.balancedBracketScopes = balancedBracketScopes.stream()
-			.flatMap(selector -> {
-				if ("*".equals(selector)) {
-					this.allowAny = true;
-					return Stream.empty();
-				}
-				return Matcher.createMatchers(selector).stream().map(m -> m.matcher);
-			})
-			.toArray(Matcher[]::new);
+				.flatMap(selector -> {
+					if ("*".equals(selector)) {
+						this.allowAny = true;
+						return Stream.empty();
+					}
+					return Matcher.createMatchers(selector).stream().map(m -> m.matcher);
+				})
+				.toArray(Matcher[]::new);
 
 		this.unbalancedBracketScopes = unbalancedBracketScopes.stream()
-			.flatMap(selector -> Matcher.createMatchers(selector).stream().map(m -> m.matcher))
-			.toArray(Matcher[]::new);
+				.flatMap(selector -> Matcher.createMatchers(selector).stream().map(m -> m.matcher))
+				.toArray(Matcher[]::new);
 	}
 
 	boolean matchesAlways() {

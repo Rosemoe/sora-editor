@@ -23,13 +23,13 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.TMException;
 import org.eclipse.tm4e.core.grammar.IGrammar;
 import org.eclipse.tm4e.core.internal.grammar.BalancedBracketSelectors;
-import org.eclipse.tm4e.core.internal.grammar.GrammarReader;
 import org.eclipse.tm4e.core.internal.grammar.dependencies.AbsoluteRuleReference;
 import org.eclipse.tm4e.core.internal.grammar.dependencies.ScopeDependencyProcessor;
+import org.eclipse.tm4e.core.internal.grammar.raw.RawGrammar;
+import org.eclipse.tm4e.core.internal.grammar.raw.RawGrammarReader;
 import org.eclipse.tm4e.core.internal.registry.SyncRegistry;
-import org.eclipse.tm4e.core.internal.theme.IRawTheme;
 import org.eclipse.tm4e.core.internal.theme.Theme;
-import org.eclipse.tm4e.core.internal.theme.ThemeReader;
+import org.eclipse.tm4e.core.internal.theme.raw.RawThemeReader;
 
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +41,7 @@ import io.github.rosemoe.sora.util.Logger;
  * The registry that will hold all grammars.
  *
  * @see <a href=
- * "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/main.ts#L51">
+ * "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/main.ts#L54">
  * github.com/microsoft/vscode-textmate/blob/main/src/main.ts</a>
  */
 public final class Registry {
@@ -69,16 +69,21 @@ public final class Registry {
      */
     public void setTheme(final IThemeSource source) throws TMException {
         try {
-            this._syncRegistry.setTheme(Theme.createFromRawTheme(
-                    ThemeReader.readTheme(source),
-                    _options.getColorMap()));
+            this._syncRegistry.setTheme(Theme.createFromRawTheme(RawThemeReader.readTheme(source), _options.getColorMap()));
         } catch (final Exception ex) {
             throw new TMException("Loading theme from '" + source.getFilePath() + "' failed: " + ex.getMessage(), ex);
         }
     }
 
-    public void setTheme(Theme theme) {
-        this._syncRegistry.setTheme(theme);
+    /**
+     * Change the theme. Once called, no previous `ruleStack` should be used anymore.
+     */
+    public void setTheme(final Theme source) throws TMException {
+        try {
+            this._syncRegistry.setTheme(source);
+        } catch (final Exception ex) {
+            throw new TMException("Loading theme from '" + source.toString() + "' failed: " + ex.getMessage(), ex);
+        }
     }
 
 
@@ -164,15 +169,21 @@ public final class Registry {
     private boolean _doLoadSingleGrammar(final String scopeName) {
         final var grammarSource = this._options.getGrammarSource(scopeName);
         if (grammarSource == null) {
-            LOGGER.w("No grammar source for scope [%s]", scopeName);
+            LOGGER.i("No grammar source for scope [{0}]", scopeName);
             return false;
         }
         try {
-            final var grammar = GrammarReader.readGrammar(grammarSource);
+            final var grammar = RawGrammarReader.readGrammar(grammarSource);
+
+            // this code is specific to the tm4e project and not from upstream:
+            // adjust the scopeName in case the name as defined inside the TextMate grammar file
+            // diverges from the scopeName with which it is registered in the plugin.xml.
+            grammar.put(RawGrammar.SCOPE_NAME, scopeName);
+
             this._syncRegistry.addGrammar(grammar, this._options.getInjections(scopeName));
         } catch (final Exception ex) {
-            LOGGER.w("Loading grammar for scope [%s] failed: {%s}", scopeName, ex.getMessage(), ex);
-            return false;
+            throw new TMException("Loading grammar for scope [" + scopeName + "] from [" +
+                    grammarSource.getFilePath() + "] failed: " + ex.getMessage(), ex);
         }
         return true;
     }
@@ -187,7 +198,7 @@ public final class Registry {
             @Nullable final Integer initialLanguage,
             @Nullable final Map<String, Integer> embeddedLanguages) throws TMException {
         try {
-            final var rawGrammar = GrammarReader.readGrammar(source);
+            final var rawGrammar = RawGrammarReader.readGrammar(source);
             this._syncRegistry.addGrammar(rawGrammar,
                     injections == null || injections.isEmpty()
                             ? this._options.getInjections(rawGrammar.getScopeName())
@@ -196,7 +207,7 @@ public final class Registry {
                     this._grammarForScopeName(rawGrammar.getScopeName(), initialLanguage, embeddedLanguages, null, null));
 
         } catch (final Exception ex) {
-            throw new TMException("Loading grammar from '" + source.getFilePath() + "' failed: " + ex.getMessage(), ex);
+            throw new TMException("Loading grammar from [" + source.getFilePath() + "] failed: " + ex.getMessage(), ex);
         }
     }
 
@@ -225,6 +236,4 @@ public final class Registry {
                 tokenTypes,
                 balancedBracketSelectors);
     }
-
-
 }

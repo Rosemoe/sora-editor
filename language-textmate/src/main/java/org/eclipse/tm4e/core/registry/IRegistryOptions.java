@@ -19,13 +19,12 @@ package org.eclipse.tm4e.core.registry;
 import java.util.Collection;
 import java.util.List;
 
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.tm4e.core.internal.theme.IRawTheme;
+import org.eclipse.tm4e.core.internal.theme.raw.IRawTheme;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/main.ts#L39">
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/main.ts#L22">
  *      github.com/microsoft/vscode-textmate/blob/main/src/main.ts</a>
  */
 public interface IRegistryOptions {
@@ -46,7 +45,7 @@ public interface IRegistryOptions {
 	}
 
 	@Nullable
-	default Collection<@NonNull String> getInjections(@SuppressWarnings("unused") final String scopeName) {
+	default Collection<String> getInjections(@SuppressWarnings("unused") final String scopeName) {
 		return null;
 	}
 }

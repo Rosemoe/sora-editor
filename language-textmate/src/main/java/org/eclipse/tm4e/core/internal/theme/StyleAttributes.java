@@ -20,15 +20,24 @@ import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/theme.ts#L163">
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/theme.ts#L190">
  *      github.com/microsoft/vscode-textmate/blob/main/src/theme.ts</a>
  */
 public class StyleAttributes {
+	private static final StyleAttributes NO_STYLE = new StyleAttributes(-1, 0, 0);
+
 	public final int fontStyle;
 	public final int foregroundId;
 	public final int backgroundId;
 
-	public StyleAttributes(final int fontStyle, final int foregroundId, final int backgroundId) {
+	public static StyleAttributes of(final int fontStyle, final int foregroundId, final int backgroundId) {
+		if (fontStyle == -1 && foregroundId == 0 && backgroundId == 0) {
+			return NO_STYLE;
+		}
+		return new StyleAttributes(fontStyle, foregroundId, backgroundId);
+	}
+
+	private StyleAttributes(final int fontStyle, final int foregroundId, final int backgroundId) {
 		this.fontStyle = fontStyle;
 		this.foregroundId = foregroundId;
 		this.backgroundId = backgroundId;
@@ -38,27 +47,17 @@ public class StyleAttributes {
 	public boolean equals(@Nullable final Object obj) {
 		if (this == obj)
 			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		final StyleAttributes other = (StyleAttributes) obj;
-		if (backgroundId != other.backgroundId)
-			return false;
-		if (fontStyle != other.fontStyle)
-			return false;
-		if (foregroundId != other.foregroundId)
-			return false;
-		return true;
+		if (obj instanceof final StyleAttributes other)
+			return backgroundId == other.backgroundId
+					&& fontStyle == other.fontStyle
+					&& foregroundId == other.foregroundId;
+		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + backgroundId;
-		result = prime * result + fontStyle;
-		result = prime * result + foregroundId;
-		return result;
+		int result = 31 + backgroundId;
+		result = 31 * result + fontStyle;
+		return 31 * result + foregroundId;
 	}
 }

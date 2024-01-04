@@ -24,12 +24,17 @@
 package io.github.rosemoe.sora.langs.textmate;
 
 import android.graphics.Color;
+import android.util.Log;
 
+import androidx.annotation.NonNull;
+
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-import org.eclipse.tm4e.core.internal.theme.IRawTheme;
 import org.eclipse.tm4e.core.internal.theme.Theme;
-import org.eclipse.tm4e.core.internal.theme.ThemeRaw;
+import org.eclipse.tm4e.core.internal.theme.raw.IRawTheme;
+import org.eclipse.tm4e.core.internal.theme.raw.RawTheme;
 import org.eclipse.tm4e.core.registry.IThemeSource;
 
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
@@ -101,16 +106,19 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
         }
         var settings = rawTheme.getSettings();
 
-        ThemeRaw themeRaw;
+        RawTheme rawSubTheme;
 
         if (settings == null) {
-            themeRaw = ((ThemeRaw) ((ThemeRaw) rawTheme).get("colors"));
-            applyVSCTheme(themeRaw);
-        } else {
-            themeRaw = (ThemeRaw) ((List<?>) settings).get(0);
-            themeRaw = (ThemeRaw) themeRaw.getSetting();
+            Log.e("theme", "load vscode theme");
+            rawSubTheme = ((RawTheme) ((RawTheme) rawTheme).get("colors"));
 
-            applyTMTheme(themeRaw);
+            applyVSCTheme(rawSubTheme);
+        } else {
+            Log.e("theme", "load default theme");
+            rawSubTheme = (RawTheme) ((List<?>) settings).get(0);
+            rawSubTheme = (RawTheme) rawSubTheme.getSetting();
+
+            applyTMTheme(rawSubTheme);
 
         }
 
@@ -118,93 +126,97 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
     }
 
 
-    private void applyVSCTheme(ThemeRaw themeRaw) {
+    private void applyVSCTheme(RawTheme RawTheme) {
+        Log.e("vsc theme",
+                Arrays.toString(Collections.singletonList(RawTheme).toArray()));
         setColor(LINE_DIVIDER, Color.TRANSPARENT);
 
-        String caret = (String) themeRaw.get("editorCursor.foreground");
+        String caret = (String) RawTheme.get("editorCursor.foreground");
         if (caret != null) {
             setColor(SELECTION_INSERT, Color.parseColor(caret));
         }
 
 
-        String selection = (String) themeRaw.get("editor.selectionBackground");
+        String selection = (String) RawTheme.get("editor.selectionBackground");
         if (selection != null) {
             setColor(SELECTED_TEXT_BACKGROUND, Color.parseColor(selection));
         }
 
-        String invisibles = (String) themeRaw.get("editorWhitespace.foreground");
+        String invisibles = (String) RawTheme.get("editorWhitespace.foreground");
         if (invisibles != null) {
             setColor(NON_PRINTABLE_CHAR, Color.parseColor(invisibles));
         }
 
-        String lineHighlight = (String) themeRaw.get("editor.lineHighlightBackground");
+        String lineHighlight = (String) RawTheme.get("editor.lineHighlightBackground");
         if (lineHighlight != null) {
             setColor(CURRENT_LINE, Color.parseColor(lineHighlight));
         }
 
-        String background = (String) themeRaw.get("editor.background");
+        String background = (String) RawTheme.get("editor.background");
+        Log.e("vsc forge", RawTheme.toString());
+        Log.e("vsc ??", background + "??");
         if (background != null) {
             setColor(WHOLE_BACKGROUND, Color.parseColor(background));
             setColor(LINE_NUMBER_BACKGROUND, Color.parseColor(background));
         }
 
-        String lineHighlightBackground = (String) themeRaw.get("editorLineNumber.foreground");
+        String lineHighlightBackground = (String) RawTheme.get("editorLineNumber.foreground");
 
         if (lineHighlightBackground != null) {
             setColor(LINE_NUMBER, Color.parseColor(lineHighlightBackground));
         }
 
-        String lineHighlightActiveForeground = (String) themeRaw.get("editorLineNumber.activeForeground");
+        String lineHighlightActiveForeground = (String) RawTheme.get("editorLineNumber.activeForeground");
 
         if (lineHighlightActiveForeground != null) {
             setColor(LINE_NUMBER_CURRENT, Color.parseColor(lineHighlightActiveForeground));
         }
 
 
-        String foreground = (String) themeRaw.get("editor.foreground");
+        String foreground = (String) RawTheme.get("editor.foreground");
 
         if (foreground != null) {
             setColor(TEXT_NORMAL, Color.parseColor(foreground));
         }
 
-        String completionWindowBackground = (String) themeRaw.get("completionWindowBackground");
+        String completionWindowBackground = (String) RawTheme.get("completionWindowBackground");
         if (completionWindowBackground != null) {
             setColor(COMPLETION_WND_BACKGROUND, Color.parseColor(completionWindowBackground));
         }
 
-        String completionWindowBackgroundCurrent = (String) themeRaw.get("completionWindowBackgroundCurrent");
+        String completionWindowBackgroundCurrent = (String) RawTheme.get("completionWindowBackgroundCurrent");
         if (completionWindowBackgroundCurrent != null) {
             setColor(COMPLETION_WND_ITEM_CURRENT, Color.parseColor(completionWindowBackgroundCurrent));
         }
 
         String highlightedDelimetersForeground =
-                (String) themeRaw.get("highlightedDelimetersForeground");
+                (String) RawTheme.get("highlightedDelimetersForeground");
         if (highlightedDelimetersForeground != null) {
             setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(highlightedDelimetersForeground));
         }
 
-        String tooltipBackground = (String) themeRaw.get("tooltipBackground");
+        String tooltipBackground = (String) RawTheme.get("tooltipBackground");
         if (tooltipBackground != null) {
             setColor(DIAGNOSTIC_TOOLTIP_BACKGROUND, Color.parseColor(tooltipBackground));
         }
 
-        String tooltipBriefMessageColor = (String) themeRaw.get("tooltipBriefMessageColor");
+        String tooltipBriefMessageColor = (String) RawTheme.get("tooltipBriefMessageColor");
         if (tooltipBriefMessageColor != null) {
             setColor(DIAGNOSTIC_TOOLTIP_BRIEF_MSG, Color.parseColor(tooltipBriefMessageColor));
         }
 
-        String tooltipDetailedMessageColor = (String) themeRaw.get("tooltipDetailedMessageColor");
+        String tooltipDetailedMessageColor = (String) RawTheme.get("tooltipDetailedMessageColor");
         if (tooltipDetailedMessageColor != null) {
             setColor(DIAGNOSTIC_TOOLTIP_DETAILED_MSG, Color.parseColor(tooltipDetailedMessageColor));
         }
 
-        String tooltipActionColor = (String) themeRaw.get("tooltipActionColor");
+        String tooltipActionColor = (String) RawTheme.get("tooltipActionColor");
         if (tooltipActionColor != null) {
             setColor(DIAGNOSTIC_TOOLTIP_ACTION, Color.parseColor(tooltipActionColor));
         }
 
 
-        String editorIndentGuideBackground = (String) themeRaw.get("editorIndentGuide.background");
+        String editorIndentGuideBackground = (String) RawTheme.get("editorIndentGuide.background");
         int blockLineColor = ((getColor(WHOLE_BACKGROUND) + getColor(TEXT_NORMAL)) / 2) & 0x00FFFFFF | 0x88000000;
         int blockLineColorCur = (blockLineColor) | 0xFF000000;
 
@@ -214,7 +226,7 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
             setColor(BLOCK_LINE, blockLineColor);
         }
 
-        String editorIndentGuideActiveBackground = (String) themeRaw.get("editorIndentGuide.activeBackground");
+        String editorIndentGuideActiveBackground = (String) RawTheme.get("editorIndentGuide.activeBackground");
 
         if (editorIndentGuideActiveBackground != null) {
             setColor(BLOCK_LINE_CURRENT, Color.parseColor(editorIndentGuideActiveBackground));
@@ -226,54 +238,54 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
 
     @Override
     public boolean isDark() {
-        var superIsDark =  super.isDark();
+        var superIsDark = super.isDark();
         if (superIsDark) {
             return true;
         }
-        if (currentTheme !=null) {
+        if (currentTheme != null) {
             return currentTheme.isDark();
         }
         return false;
     }
 
-    private void applyTMTheme(ThemeRaw themeRaw) {
+    private void applyTMTheme(RawTheme RawTheme) {
         setColor(LINE_DIVIDER, Color.TRANSPARENT);
 
 
-        String caret = (String) themeRaw.get("caret");
+        String caret = (String) RawTheme.get("caret");
         if (caret != null) {
             setColor(SELECTION_INSERT, Color.parseColor(caret));
         }
 
 
-        String selection = (String) themeRaw.get("selection");
+        String selection = (String) RawTheme.get("selection");
         if (selection != null) {
             setColor(SELECTED_TEXT_BACKGROUND, Color.parseColor(selection));
         }
 
-        String invisibles = (String) themeRaw.get("invisibles");
+        String invisibles = (String) RawTheme.get("invisibles");
         if (invisibles != null) {
             setColor(NON_PRINTABLE_CHAR, Color.parseColor(invisibles));
         }
 
-        String lineHighlight = (String) themeRaw.get("lineHighlight");
+        String lineHighlight = (String) RawTheme.get("lineHighlight");
         if (lineHighlight != null) {
             setColor(CURRENT_LINE, Color.parseColor(lineHighlight));
         }
 
-        String background = (String) themeRaw.get("background");
+        String background = (String) RawTheme.get("background");
         if (background != null) {
             setColor(WHOLE_BACKGROUND, Color.parseColor(background));
             setColor(LINE_NUMBER_BACKGROUND, Color.parseColor(background));
         }
 
-        String foreground = (String) themeRaw.get("foreground");
+        String foreground = (String) RawTheme.get("foreground");
         if (foreground != null) {
             setColor(TEXT_NORMAL, Color.parseColor(foreground));
         }
 
         String highlightedDelimetersForeground =
-                (String) themeRaw.get("highlightedDelimetersForeground");
+                (String) RawTheme.get("highlightedDelimetersForeground");
         if (highlightedDelimetersForeground != null) {
             setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(highlightedDelimetersForeground));
         }
@@ -306,13 +318,13 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
     }
 
     @Override
-    public void detachEditor(CodeEditor editor) {
+    public void detachEditor(@NonNull CodeEditor editor) {
         super.detachEditor(editor);
         themeRegistry.removeListener(this);
     }
 
     @Override
-    public void attachEditor(CodeEditor editor) {
+    public void attachEditor(@NonNull CodeEditor editor) {
         super.attachEditor(editor);
         try {
             themeRegistry.loadTheme(currentTheme);

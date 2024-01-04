@@ -16,11 +16,13 @@
  */
 package org.eclipse.tm4e.core.model;
 
+import org.eclipse.jdt.annotation.Nullable;
+
 /**
- * @see <a href="https://github.com/microsoft/vscode/blob/main/src/vs/editor/common/languages.ts">
- *      github.com/microsoft/vscode/blob/main/src/vs/editor/common/languages.ts</a>
+ * @see <a href="https://github.com/microsoft/vscode/blob/d81ca6dfcae29a9bf0f648b94dff145b3665fac1/src/vs/editor/common/languages.ts#L35">
+ *      github.com/microsoft/vscode/main/src/vs/editor/common/languages.ts <code>#Token</code></a>
  */
-public class TMToken {
+public final class TMToken {
 
 	public final int startIndex;
 	public final String type;
@@ -31,7 +33,23 @@ public class TMToken {
 	}
 
 	@Override
+	public boolean equals(final @Nullable Object obj) {
+		if (this == obj)
+			return true;
+		if (obj instanceof final TMToken other) {
+			return startIndex == other.startIndex
+					&& type.equals(other.type);
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return 31 * (31 + startIndex) + type.hashCode();
+	}
+
+	@Override
 	public String toString() {
-		return "(" + this.startIndex + ", " + this.type + ")";
+		return "(" + startIndex + ", " + (type.isEmpty() ? "<empty>" : type) + ")";
 	}
 }

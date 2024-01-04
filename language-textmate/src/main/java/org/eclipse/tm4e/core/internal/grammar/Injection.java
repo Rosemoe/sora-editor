@@ -18,14 +18,14 @@ package org.eclipse.tm4e.core.internal.grammar;
 
 import java.util.List;
 
+import org.eclipse.tm4e.core.internal.grammar.raw.IRawGrammar;
 import org.eclipse.tm4e.core.internal.matcher.Matcher;
 import org.eclipse.tm4e.core.internal.rule.RuleId;
-import org.eclipse.tm4e.core.internal.types.IRawGrammar;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/grammar.ts#L50">
- *      github.com/microsoft/vscode-textmate/blob/main/src/grammar.ts</a>
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/grammar/grammar.ts#L49">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/grammar/grammar.ts</a>
  */
 final class Injection {
 
@@ -35,8 +35,8 @@ final class Injection {
 	final RuleId ruleId;
 	final IRawGrammar grammar;
 
-	Injection(final String debugSelector, final Matcher<List<String>> matcher, final RuleId ruleId,
-		final IRawGrammar grammar, final int priority) {
+	Injection(final String debugSelector, final Matcher<List<String>> matcher, final RuleId ruleId, final IRawGrammar grammar,
+			final int priority) {
 		this.debugSelector = debugSelector;
 		this.matcher = matcher;
 		this.ruleId = ruleId;

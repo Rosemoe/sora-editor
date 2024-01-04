@@ -41,7 +41,7 @@ public final class OnigNextMatchResult {
 			final int loc = result.locationAt(i);
 			final int captureStart = source.getCharIndexOfByte(loc);
 			final int captureEnd = source.getCharIndexOfByte(loc + result.lengthAt(i));
-			captures[i] = new OnigCaptureIndex(i, captureStart, captureEnd);
+			captures[i] = new OnigCaptureIndex(captureStart, captureEnd);
 		}
 		return captures;
 	}
