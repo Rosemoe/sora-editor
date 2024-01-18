@@ -55,7 +55,7 @@ public abstract class OnigString {
 		int getByteIndexOfChar(final int charIndex) {
 			if (charIndex == lastCharIndex + 1) {
 				// One off can happen when finding the end of a regexp (it's the right boundary).
-				return lastCharIndex + 1;
+				return bytesCount;
 			}
 
 			if (charIndex < 0 || charIndex > lastCharIndex) {
@@ -166,10 +166,9 @@ public abstract class OnigString {
 		bytesCount = bytesUTF8.length;
 	}
 
-	protected final String throwOutOfBoundsException(final String indexName, final int index, final int minIndex,
-		final int maxIndex) {
+	protected final void throwOutOfBoundsException(final String indexName, final int index, final int minIndex, final int maxIndex) {
 		throw new ArrayIndexOutOfBoundsException(
-			indexName + " index " + index + " is out of range " + minIndex + ".." + maxIndex + " of " + this);
+				indexName + " index " + index + " is out of range " + minIndex + ".." + maxIndex + " of " + this);
 	}
 
 	abstract int getByteIndexOfChar(int charIndex);

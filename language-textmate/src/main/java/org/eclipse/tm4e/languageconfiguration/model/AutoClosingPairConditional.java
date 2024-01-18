@@ -24,7 +24,6 @@
 package org.eclipse.tm4e.languageconfiguration.model;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * @see <a href=

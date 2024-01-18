@@ -1,7 +1,7 @@
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -26,6 +26,8 @@ import com.android.build.gradle.BaseExtension
 import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
+import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
+import org.jetbrains.kotlin.gradle.model.KotlinAndroidExtension
 
 @Suppress("DSL_SCOPE_VIOLATION") // https://youtrack.jetbrains.com/issue/KTIJ-19369
 plugins {
@@ -44,16 +46,23 @@ fun Project.configureBaseExtension() {
         buildToolsVersion = Versions.buildToolsVersion
 
         defaultConfig {
-            minSdk = if (highApiProjects.contains(this@configureBaseExtension.name)) Versions.minSdkVersionHighApi else Versions.minSdkVersion
+            minSdk =
+                if (highApiProjects.contains(this@configureBaseExtension.name)) Versions.minSdkVersionHighApi else Versions.minSdkVersion
             targetSdk = Versions.targetSdkVersion
             versionCode = Versions.versionCode
             versionName = Versions.versionName
         }
 
         compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_11
-            targetCompatibility = JavaVersion.VERSION_11
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
         }
+    }
+}
+
+fun Project.configureKotlinExtension() {
+    extensions.findByType(KotlinAndroidProjectExtension::class)?.run {
+        jvmToolchain(17)
     }
 }
 
@@ -64,6 +73,9 @@ subprojects {
     plugins.withId("com.android.library") {
         configureBaseExtension()
     }
+    plugins.withId("org.jetbrains.kotlin.android") {
+        configureKotlinExtension()
+    }
 
     plugins.withId("com.vanniktech.maven.publish.base") {
         configure<MavenPublishBaseExtension> {
@@ -73,14 +85,20 @@ subprojects {
             publishToMavenCentral(SonatypeHost.S01)
             signAllPublications()
             if ("bom" != this@subprojects.name) {
-                configure(AndroidSingleVariantLibrary(publishJavadocJar = false))
+                configure(
+                    AndroidSingleVariantLibrary(
+                        variant = "release",
+                        sourcesJar = true,
+                        publishJavadocJar = false
+                    )
+                )
             }
         }
     }
 }
 
 tasks.register<Delete>("clean").configure {
-    delete(rootProject.buildDir)
+    delete(rootProject.layout.buildDirectory)
 }
 
 val excludeProjectName = arrayOf("app", "buildSrc")

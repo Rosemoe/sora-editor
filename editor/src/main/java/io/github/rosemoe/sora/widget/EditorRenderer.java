@@ -1,7 +1,7 @@
 /*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -30,6 +30,7 @@ import static io.github.rosemoe.sora.util.Numbers.stringSize;
 import android.annotation.SuppressLint;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -44,6 +45,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import io.github.rosemoe.sora.util.RendererUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -452,7 +454,8 @@ public class EditorRenderer {
 
             if (offsetX + width > 0 || !visibleOnly) {
 
-                ExternalRenderer renderer = span instanceof AdvancedSpan ? ((AdvancedSpan) span).renderer : null;
+                AdvancedSpan advancedSpan = span instanceof AdvancedSpan ? (AdvancedSpan) span : null;
+                ExternalRenderer renderer = advancedSpan != null ? advancedSpan.renderer: null;
 
                 // Invoke external renderer preDraw
                 if (renderer != null && renderer.requirePreDraw()) {
@@ -479,21 +482,21 @@ public class EditorRenderer {
                     lastStyle = styleBits;
                 }
 
-                int backgroundColorId = span.getBackgroundColorId();
-                if (backgroundColorId != 0) {
-                    if (paintStart != paintEnd) {
-                        tmpRect.top = editor.getRowTop(row);
-                        tmpRect.bottom = editor.getRowBottom(row);
-                        tmpRect.left = offsetX;
-                        tmpRect.right = tmpRect.left + width;
-                        paintGeneral.setColor(editor.getColorScheme().getColor(backgroundColorId));
-                        canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintGeneral);
-                    }
+                // unboxing may result in NPE!
+                Integer backgroundColor = RendererUtils.getBackgroundColor(span, editor.getColorScheme());
+                if (backgroundColor != null && paintStart != paintEnd) {
+                    tmpRect.top = editor.getRowTop(row);
+                    tmpRect.bottom = editor.getRowBottom(row);
+                    tmpRect.left = offsetX;
+                    tmpRect.right = tmpRect.left + width;
+                    paintGeneral.setColor(backgroundColor);
+                    canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintGeneral);
                 }
 
 
                 // Draw text
-                drawRegionTextDirectional(canvas, offsetX, editor.getRowBaseline(row), line, paintStart, paintEnd, span.column, spanEnd, columnCount, editor.getColorScheme().getColor(span.getForegroundColorId()));
+                int foregroundColor = RendererUtils.getForegroundColor(span, editor.getColorScheme());
+                drawRegionTextDirectional(canvas, offsetX, editor.getRowBaseline(row), line, paintStart, paintEnd, span.column, spanEnd, columnCount, foregroundColor);
 
                 // Draw strikethrough
                 if (TextStyle.isStrikeThrough(span.style)) {
@@ -1099,6 +1102,16 @@ public class EditorRenderer {
                 candidates = candidates.subList(0, maxLines);
             }
         }
+        if (editor.getCursor().isSelected() && editor.getProps().stickyScrollAutoCollapse) {
+            var limitLine = editor.getCursor().getLeftLine();
+            var firstVis = editor.getFirstVisibleLine();
+            int lastSelectionLine = editor.getCursor().getRightLine();
+            if (lastSelectionLine >= firstVis) {
+                while (!candidates.isEmpty() && firstVis + candidates.size() >= limitLine) {
+                    candidates.remove(candidates.size() - 1);
+                }
+            }
+        }
         return candidates;
     }
 
@@ -1372,20 +1385,20 @@ public class EditorRenderer {
                         lastStyle = styleBits;
                     }
 
-                    int backgroundColorId = span.getBackgroundColorId();
-                    if (backgroundColorId != 0) {
-                        if (paintStart != paintEnd) {
-                            tmpRect.top = editor.getRowTop(row) - editor.getOffsetY();
-                            tmpRect.bottom = editor.getRowBottom(row) - editor.getOffsetY();
-                            tmpRect.left = paintingOffset;
-                            tmpRect.right = tmpRect.left + width;
-                            paintGeneral.setColor(editor.getColorScheme().getColor(backgroundColorId));
-                            canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintGeneral);
-                        }
+                    // unboxing may result in NPE!
+                    Integer backgroundColor = RendererUtils.getBackgroundColor(span, editor.getColorScheme());
+                    if (backgroundColor != null && paintStart != paintEnd) {
+                        tmpRect.top = editor.getRowTop(row) - editor.getOffsetY();
+                        tmpRect.bottom = editor.getRowBottom(row) - editor.getOffsetY();
+                        tmpRect.left = paintingOffset;
+                        tmpRect.right = tmpRect.left + width;
+                        paintGeneral.setColor(backgroundColor);
+                        canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintGeneral);
                     }
 
                     // Draw text
-                    drawRegionTextDirectional(canvas, paintingOffset, editor.getRowBaseline(row) - editor.getOffsetY(), line, paintStart, paintEnd, span.column, spanEnd, columnCount, editor.getColorScheme().getColor(span.getForegroundColorId()));
+                    int foregroundColor = RendererUtils.getForegroundColor(span, editor.getColorScheme());
+                    drawRegionTextDirectional(canvas, paintingOffset, editor.getRowBaseline(row) - editor.getOffsetY(), line, paintStart, paintEnd, span.column, spanEnd, columnCount, foregroundColor);
 
                     // Draw strikethrough
                     if (TextStyle.isStrikeThrough(styleBits)) {
@@ -2349,7 +2362,6 @@ public class EditorRenderer {
         paintGeneral.setStyle(android.graphics.Paint.Style.FILL_AND_STROKE);
         paintGeneral.setFakeBoldText(editor.getProps().boldMatchingDelimiters);
         var positions = getTextRegionPositions(start, end);
-        Log.d(LOG_TAG, "positions = " + positions);
         patchTextRegions(canvas, textOffset, positions, (canvasLocal, horizontalOffset, row, line, startCol, endCol, style) -> {
             if (backgroundColor != 0) {
                 tmpRect.top = getRowTopForBackground(row) - editor.getOffsetY();
@@ -2791,12 +2803,24 @@ public class EditorRenderer {
                     && editor.getProps().showSelectionWhenSelected)
                     || (!(handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT
                     || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT) && (editor.getCursorBlink().visibility
-                    || editor.getEventHandler().holdInsertHandle()))) {
-                tmpRect.top = y - (editor.getProps().textBackgroundWrapTextOnly ? editor.getRowHeightOfText() : editor.getRowHeight());
-                tmpRect.bottom = y;
-                tmpRect.left = x - editor.getInsertSelectionWidth() / 2f;
-                tmpRect.right = x + editor.getInsertSelectionWidth() / 2f;
-                drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.SELECTION_INSERT), tmpRect);
+                    || editor.getEventHandler().holdInsertHandle() || editor.isInLongSelect()))) {
+                float startY = y - (editor.getProps().textBackgroundWrapTextOnly ? editor.getRowHeightOfText() : editor.getRowHeight());
+                float stopY = y;
+                paintGeneral.setColor(editor.getColorScheme().getColor(EditorColorScheme.SELECTION_INSERT));
+                paintGeneral.setStrokeWidth(editor.getInsertSelectionWidth());
+                paintGeneral.setStyle(android.graphics.Paint.Style.STROKE);
+                if (editor.isInLongSelect() && !(handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT
+                        || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT)) {
+                    paintGeneral.setPathEffect(new DashPathEffect(new float[]{(stopY - startY) / 8f, (stopY - startY) / 8f}, (stopY - startY) / 16f));
+                    paintGeneral.setStrokeWidth(editor.getInsertSelectionWidth() * 1.5f);
+                }
+                canvas.drawLine(x, startY, x, stopY, paintGeneral);
+                paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
+                paintGeneral.setPathEffect(null);
+            }
+            // Hide insert handle in long select mode
+            if (handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT && editor.isInLongSelect()) {
+                handleType = SelectionHandleStyle.HANDLE_TYPE_UNDEFINED;
             }
             if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED) {
                 editor.getHandleStyle().draw(canvas, handleType, x, y, editor.getRowHeight(), editor.getColorScheme().getColor(EditorColorScheme.SELECTION_HANDLE), descriptor);

@@ -1,7 +1,7 @@
 /*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -23,11 +23,13 @@
  */
 package io.github.rosemoe.sora.langs.textmate.registry.model;
 
-import org.eclipse.tm4e.core.internal.theme.IRawTheme;
 import org.eclipse.tm4e.core.internal.theme.Theme;
-import org.eclipse.tm4e.core.internal.theme.ThemeReader;
+import org.eclipse.tm4e.core.internal.theme.raw.IRawTheme;
+import org.eclipse.tm4e.core.internal.theme.raw.RawThemeReader;
 import org.eclipse.tm4e.core.registry.IThemeSource;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 import io.github.rosemoe.sora.langs.textmate.utils.StringUtils;
 
@@ -49,7 +51,7 @@ public class ThemeModel {
         this.name = StringUtils.getFileNameWithoutExtension(themeSource.getFilePath());
     }
 
-    public ThemeModel(IThemeSource themeSource,String name) {
+    public ThemeModel(IThemeSource themeSource, String name) {
         this.themeSource = themeSource;
         this.name = name;
     }
@@ -58,7 +60,7 @@ public class ThemeModel {
         themeSource = null;
         rawTheme = null;
         this.name = name;
-        theme = Theme.createFromRawTheme(null,null);
+        theme = Theme.createFromRawTheme(null, null);
     }
 
     public void setDark(boolean dark) {
@@ -69,10 +71,13 @@ public class ThemeModel {
         return isDark;
     }
 
-    //TODO colorMap support
     public void load() throws Exception {
-        rawTheme = ThemeReader.readTheme(themeSource);
-        theme = Theme.createFromRawTheme(rawTheme, null);
+        load(null);
+    }
+
+    public void load(List<String> colorMap) throws Exception {
+        rawTheme = RawThemeReader.readTheme(themeSource);
+        theme = Theme.createFromRawTheme(rawTheme, colorMap);
     }
 
     public boolean isLoaded() {

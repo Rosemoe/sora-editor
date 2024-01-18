@@ -1,7 +1,7 @@
 /*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -52,7 +52,7 @@ import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
  * @author Rose
  * @author Akash Yadav
  */
-class EditorKeyEventHandler {
+public class EditorKeyEventHandler {
 
     private static final String TAG = "EditorKeyEventHandler";
     private final CodeEditor editor;
@@ -179,6 +179,10 @@ class EditorKeyEventHandler {
             case KeyEvent.KEYCODE_BACK: {
                 if (editorCursor.isSelected()) {
                     editor.setSelection(editorCursor.getLeftLine(), editorCursor.getLeftColumn());
+                    return editorKeyEvent.result(true);
+                }
+                if (editor.isInLongSelect()) {
+                    editor.endLongSelect();
                     return editorKeyEvent.result(true);
                 }
                 return editorKeyEvent.result(false);
@@ -347,7 +351,7 @@ class EditorKeyEventHandler {
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_TAB:
                 if (editor.isEditable()) {
-                    if (completionWindow.isShowing()) {
+                    if (completionWindow.isShowing() && !isShiftPressed) {
                         completionWindow.select();
                     } else if (editor.getSnippetController().isInSnippet() && !isAltPressed && !isCtrlPressed) {
                         if (isShiftPressed) {
@@ -355,8 +359,11 @@ class EditorKeyEventHandler {
                         } else {
                             editor.getSnippetController().shiftToNextTabStop();
                         }
+                    } if (isShiftPressed) {
+                        // Shift + TAB -> unindent the [selected] lines
+                        editor.unindentSelection();
                     } else {
-                        editor.commitTab();
+                        editor.indentOrCommitTab();
                     }
                 }
                 return editorKeyEvent.result(true);

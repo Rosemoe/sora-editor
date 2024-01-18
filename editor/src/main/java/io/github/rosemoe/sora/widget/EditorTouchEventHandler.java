@@ -1,7 +1,7 @@
 /*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -528,7 +528,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     @Override
-    public boolean onSingleTapUp(MotionEvent e) {
+    public boolean onSingleTapUp(@NonNull MotionEvent e) {
         scroller.forceFinished(true);
         if (editor.isFormatting()) {
             return true;
@@ -560,7 +560,13 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         notifyLater();
         var lnAction = editor.getProps().actionWhenLineNumberClicked;
         if (region == RegionResolverKt.REGION_TEXT) {
-            editor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
+            if (editor.isInLongSelect()) {
+                var cursor = editor.getCursor();
+                editor.setSelectionRegion(cursor.getLeftLine(), cursor.getLeftColumn(), line, column, false, SelectionChangeEvent.CAUSE_TAP);
+                editor.endLongSelect();
+            } else {
+                editor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
+            }
         } else if (region == RegionResolverKt.REGION_LINE_NUMBER) {
             switch (lnAction) {
                 case DirectAccessProps.LN_ACTION_SELECT_LINE:
@@ -670,6 +676,13 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        if (editor.getProps().singleDirectionFling) {
+            if (Math.abs(velocityX) > Math.abs(velocityY)) {
+                velocityY = 0;
+            } else {
+                velocityX = 0;
+            }
+        }
         if (!editor.getProps().scrollFling) {
             return false;
         }

@@ -1,7 +1,7 @@
 /*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -121,12 +121,18 @@ public class SymbolInputView extends LinearLayout {
             addView(btn, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
             int finalI = i;
             btn.setOnClickListener((view) -> {
-                if (editor != null && editor.isEditable()) {
-                    if ("\t".equals(insertText[finalI]) && editor.getSnippetController().isInSnippet()) {
+                if (editor == null || !editor.isEditable()) {
+                    return;
+                }
+
+                if ("\t".equals(insertText[finalI])) {
+                    if (editor.getSnippetController().isInSnippet()) {
                         editor.getSnippetController().shiftToNextTabStop();
                     } else {
-                        editor.insertText(insertText[finalI], 1);
+                        editor.indentOrCommitTab();
                     }
+                } else {
+                    editor.insertText(insertText[finalI], 1);
                 }
             });
         }

@@ -1,7 +1,7 @@
 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ~    sora-editor - the awesome code editor for Android
   ~    https://github.com/Rosemoe/sora-editor
-  ~    Copyright (C) 2020-2023  Rosemoe
+  ~    Copyright (C) 2020-2024  Rosemoe
   ~
   ~     This library is free software; you can redistribute it and/or
   ~     modify it under the terms of the GNU Lesser General Public
@@ -47,13 +47,28 @@
         <attr name="text" format="string" />
         <attr name="textSize" format="dimension" />
         <attr name="dividerWidth" format="dimension" />
+        <attr name="dividerMargin" format="dimension" />
         <attr name="lineNumberVisible" format="boolean" />
         <attr name="autoCompleteEnabled" format="boolean" />
         <attr name="symbolCompletionEnabled" format="boolean" />
         <attr name="cursorBlinkPeriod" format="integer" />
-        <attr name="scrollbarsEnabled" format="boolean" />
         <attr name="verticalScrollbarEnabled" format="boolean" />
         <attr name="horizontalScrollbarEnabled" format="boolean" />
+        <attr name="pinLineNumber" format="boolean" />
+        <attr name="wordwrapMode">
+            <enum name="off" value="0" />
+            <!-- Without anti-word-breaking -->
+            <enum name="basic" value="1" />
+            <!-- With anti-word-breaking -->
+            <enum name="standard" value="2" />
+        </attr>
+        <attr name="highlightCurrentLine" format="boolean" />
+        <attr name="highlightCurrentBlock" format="boolean" />
+        <attr name="highlightBracketPair" format="boolean" />
+        <attr name="ligatures" format="boolean" />
+        <attr name="renderFunctionChars" format="boolean" />
+        <attr name="scalable" format="boolean" />
+        <attr name="tabWidth" format="integer" />
     </declare-styleable>
 
 </resources>

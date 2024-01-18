@@ -1,7 +1,7 @@
 /*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -50,6 +50,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.PointerIcon;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -67,10 +68,16 @@ import android.widget.EdgeEffect;
 import android.widget.EditText;
 import android.widget.SearchView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Px;
 import androidx.annotation.UiThread;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 import io.github.rosemoe.sora.I18nConfig;
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
@@ -109,6 +116,7 @@ import io.github.rosemoe.sora.util.Chars;
 import io.github.rosemoe.sora.util.EditorHandler;
 import io.github.rosemoe.sora.util.Floats;
 import io.github.rosemoe.sora.util.IntPair;
+import io.github.rosemoe.sora.util.KeyboardUtils;
 import io.github.rosemoe.sora.util.Logger;
 import io.github.rosemoe.sora.util.LongArrayList;
 import io.github.rosemoe.sora.util.Numbers;
@@ -136,9 +144,6 @@ import io.github.rosemoe.sora.widget.style.builtin.DefaultLineNumberTip;
 import io.github.rosemoe.sora.widget.style.builtin.HandleStyleDrop;
 import io.github.rosemoe.sora.widget.style.builtin.HandleStyleSideDrop;
 import io.github.rosemoe.sora.widget.style.builtin.MoveCursorAnimator;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import kotlin.text.StringsKt;
 
 /**
@@ -296,8 +301,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean lastCursorState;
     private boolean stickyTextSelection;
     private boolean highlightBracketPair;
+    private boolean isInLongSelect;
     private boolean anyWrapContentSet;
     private boolean renderFunctionCharacters;
+    private boolean isSoftKbdEnabled;
+    private boolean isDisableSoftKbdOnHardKbd;
     private SelectionHandleStyle.HandleDescriptor handleDescLeft;
     private SelectionHandleStyle.HandleDescriptor handleDescRight;
     private SelectionHandleStyle.HandleDescriptor handleDescInsert;
@@ -354,6 +362,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public CodeEditor(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initialize(attrs, defStyleAttr, defStyleRes);
+        applyAttributeSets(attrs, defStyleAttr, defStyleRes);
     }
 
     /**
@@ -499,21 +508,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * <p>
      * Initialize variants
      */
-    private void initialize(AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    protected void initialize(AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         Log.v(LOG_TAG, COPYRIGHT);
 
         eventManager = new EventManager();
         renderFunctionCharacters = true;
         renderer = onCreateRenderer();
-
-        var array = getContext().obtainStyledAttributes(attrs, R.styleable.CodeEditor, defStyleAttr, defStyleRes);
-        setHorizontalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbHorizontal));
-        setHorizontalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackHorizontal));
-        setVerticalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbVertical));
-        setVerticalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackVertical));
-        setLnPanelPositionMode(array.getInt(R.styleable.CodeEditor_lnPanelPositionMode, LineInfoPanelPositionMode.FOLLOW));
-        setLnPanelPosition(array.getInt(R.styleable.CodeEditor_lnPanelPosition, LineInfoPanelPosition.CENTER));
-        array.recycle();
 
         styleDelegate = new EditorStyleDelegate(this);
 
@@ -596,6 +596,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         setInterceptParentHorizontalScrollIfNeeded(false);
         setTypefaceText(Typeface.DEFAULT);
         setCompletionWndPositionMode(WINDOW_POS_MODE_AUTO);
+        setSoftKeyboardEnabled(true);
+        setDisableSoftKbdIfHardKbdAvailable(true);
 
         // Issue #41 View being highlighted when focused on Android 11
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -608,6 +610,49 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         // Config scale detector
         scaleDetector.setQuickScaleEnabled(false);
         snippetController = new SnippetController(this);
+    }
+
+    /**
+     * Apply attributes from XML
+     */
+    protected void applyAttributeSets(AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        var array = getContext().obtainStyledAttributes(attrs, R.styleable.CodeEditor, defStyleAttr, defStyleRes);
+
+        setHorizontalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbHorizontal));
+        setHorizontalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackHorizontal));
+        setVerticalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbVertical));
+        setVerticalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackVertical));
+
+        setLnPanelPositionMode(array.getInt(R.styleable.CodeEditor_lnPanelPositionMode, LineInfoPanelPositionMode.FOLLOW));
+        setLnPanelPosition(array.getInt(R.styleable.CodeEditor_lnPanelPosition, LineInfoPanelPosition.CENTER));
+
+        setDividerWidth(array.getDimension(R.styleable.CodeEditor_dividerWidth, getDividerWidth()));
+        setDividerMargin(array.getDimension(R.styleable.CodeEditor_dividerMargin, this.dividerMarginLeft), array.getDimension(R.styleable.CodeEditor_dividerMargin, this.dividerMarginRight));
+        setPinLineNumber(array.getBoolean(R.styleable.CodeEditor_pinLineNumber, false));
+
+        setHighlightCurrentBlock(array.getBoolean(R.styleable.CodeEditor_highlightCurrentBlock, true));
+        setHighlightCurrentLine(array.getBoolean(R.styleable.CodeEditor_highlightCurrentLine, true));
+        setHighlightBracketPair(array.getBoolean(R.styleable.CodeEditor_highlightBracketPair, true));
+
+        setLigatureEnabled(array.getBoolean(R.styleable.CodeEditor_ligatures, true));
+        setLineNumberEnabled(array.getBoolean(R.styleable.CodeEditor_lineNumberVisible, isLineNumberEnabled()));
+        getComponent(EditorAutoCompletion.class).setEnabled(array.getBoolean(R.styleable.CodeEditor_autoCompleteEnabled, true));
+        props.symbolPairAutoCompletion = array.getBoolean(R.styleable.CodeEditor_symbolCompletionEnabled, true);
+        setRenderFunctionCharacters(array.getBoolean(R.styleable.CodeEditor_renderFunctionChars, isRenderFunctionCharacters()));
+        setScalable(array.getBoolean(R.styleable.CodeEditor_scalable, isScalable()));
+
+        setTextSizePx(array.getDimension(R.styleable.CodeEditor_textSize, getTextSizePx()));
+        setCursorBlinkPeriod(array.getInt(R.styleable.CodeEditor_cursorBlinkPeriod, getCursorBlink().period));
+        setTabWidth(array.getInt(R.styleable.CodeEditor_tabWidth, getTabWidth()));
+
+        int wordwrapMode = array.getInt(R.styleable.CodeEditor_wordwrapMode, 0);
+        if (wordwrapMode != 0) {
+            setWordwrap(true, wordwrapMode > 1);
+        }
+
+        setText(array.getString(R.styleable.CodeEditor_text));
+
+        array.recycle();
     }
 
     public SnippetController getSnippetController() {
@@ -768,16 +813,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     /**
      * Enable/disable ligature of all types(except 'rlig').
-     * Generally you should disable them unless enabling this will have no effect on text measuring.
-     * <p>
-     * Disabled by default. If you want to enable ligature of a specified type, use
-     * {@link CodeEditor#setFontFeatureSettings(String)}
-     * <p>
-     * For enabling JetBrainsMono font's ligature, Use like this:
-     * <pre class="pretty-print">
-     * CodeEditor editor = ...;
-     * editor.setFontFeatureSettings(enabled ? null : "'liga' 0,'hlig' 0,'dlig' 0,'clig' 0");
-     * </pre>
      */
     public void setLigatureEnabled(boolean enabled) {
         this.ligatureEnabled = enabled;
@@ -1521,6 +1556,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         for (int i = min; i <= max; i++) {
             CodeBlock block = blocks.get(i);
+            if (block == null) {
+                continue;
+            }
             if (block.endLine >= line && block.startLine <= line) {
                 int dis = block.endLine - block.startLine;
                 if (dis < minDis) {
@@ -1564,7 +1602,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @NonNull
     public List<Span> getSpansForLine(int line) {
         var spanMap = textStyles == null ? null : textStyles.spans;
-        if (defaultSpans.size() == 0) {
+        if (defaultSpans.isEmpty()) {
             defaultSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
         }
         try {
@@ -1637,12 +1675,148 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * Indents the selected lines. Does nothing if the text is not selected.
+     */
+    public void indentSelection() {
+        indentLines(true);
+    }
+
+    /**
+     * Indents the lines. Does nothing if the <code>onlyIfSelected</code> is <code>true</code> and
+     * no text is selected.
+     * 
+     * @param onlyIfSelected Set to <code>true</code> if lines must be indented only if the text is
+     *                      selected.
+     */
+    public void indentLines(boolean onlyIfSelected) {
+
+        final var cursor = getCursor();
+        if (onlyIfSelected && !cursor.isSelected()) {
+            return;
+        }
+
+        final var tabString = createTabString();
+        final var text = getText();
+        final var tabWidth = getTabWidth();
+        
+        text.beginBatchEdit();
+        for (int i = cursor.getLeftLine(); i <= cursor.getRightLine(); i++) {
+            final var line = text.getLine(i);
+            final var result = TextUtils.countLeadingSpacesAndTabs(line);
+            final var spaceCount = IntPair.getFirst(result);
+            final var tabCount = IntPair.getSecond(result);
+            final var spaces = spaceCount + (tabCount * tabWidth);
+            final var endColumn = spaceCount + tabCount;
+
+            final var requiredSpaces = tabWidth - (spaces % tabWidth);
+            if (spaceCount > 0 && tabCount > 0) {
+                // indentation contains spaces as well as tabs
+                // replace the leading indentation with appropriate indendation (according to language.useTabs())
+                // this should be done while incrementing the indentation
+                final var finalSpaceCount = ((requiredSpaces == 0 ? tabWidth : requiredSpaces) + spaces) / tabWidth;
+                text.replace(i, 0, i, endColumn, StringsKt.repeat(tabString, finalSpaceCount));
+                continue;
+            }
+
+            if (requiredSpaces == 0) {
+                // line is evenly indented
+                // increase the indentation by \t or tabWidthSpaces
+                text.insert(i, endColumn, tabString);
+            } else {
+                // line is oddly indented
+                // We know that a line can never be oddly indented when it is indented only with tabs
+                // therefore, we insert spaces to align the line
+                text.insert(i, endColumn, StringsKt.repeat(" ", requiredSpaces));
+            }
+        }
+        text.endBatchEdit();
+    }
+
+    /**
+     * Removes indentation from the start of the selected lines. If the text is not selected, or if
+     * the start and end selection is on the same line, only the line at the cursor position is
+     * unindented.
+     */
+    public void unindentSelection() {
+        final var cursor = getCursor();
+        final var text = getText();
+        final var tabWidth = getTabWidth();
+        final var tabString = createTabString();
+
+        text.beginBatchEdit();
+        for (int i = cursor.getLeftLine(); i <= cursor.getRightLine(); i++) {
+            final var line = text.getLineString(i);
+            final var result = TextUtils.countLeadingSpacesAndTabs(line);
+            final var spaceCount = IntPair.getFirst(result);
+            final var tabCount = IntPair.getSecond(result);
+            final var spaces = spaceCount + (tabCount * tabWidth);
+            if (spaces == 0) {
+                // line is not indented
+                continue;
+            }
+
+            final var endColumn = spaceCount + tabCount;
+
+            final var extraSpaces = spaces % tabWidth;
+            if (spaceCount > 0 && tabCount > 0) {
+                // indentation contains spaces as well as tabs
+                // replace the leading indentation with appropriate indendation (according to language.useTabs())
+                // this should be done while decrementing the indentation
+                final var finalSpaceCount = Math.abs(spaces - (extraSpaces == 0 ? tabWidth : extraSpaces)) / tabWidth;
+                text.replace(i, 0, i, endColumn, StringsKt.repeat(tabString, finalSpaceCount));
+                continue;
+            }
+
+            if (extraSpaces == 0) {
+                // line is evenly indented
+                // remove tabString.length() characters from the start
+
+                // do not use tabString.length()
+                text.delete(i, endColumn - (tabCount > 0 ? 1 : tabWidth), i, endColumn);
+            } else {
+                // line is oddly indented
+                // We know that a line can never be oddly indented when it is indented only with tabs
+                // therefore, we delete spaces to align the line
+                text.delete(i, endColumn - extraSpaces, i, endColumn);
+            }
+        }
+        text.endBatchEdit();
+    }
+
+    /**
      * Commit a tab to cursor
      */
     protected void commitTab() {
         if (inputConnection != null && isEditable()) {
             inputConnection.commitTextInternal(createTabString(), true);
         }
+    }
+
+    /**
+     * Indents the line if text is not selected and the cursor is at the start of the line. Inserts
+     * an indentation string otherwise.
+     */
+    public void indentOrCommitTab() {
+        final var cursor = getCursor();
+        if (cursor.isSelected()) {
+            indentSelection();
+            return;
+        }
+
+        final var left = cursor.left();
+        final var line = getText().getLine(left.line);
+
+        final var count = TextUtils.countLeadingSpacesAndTabs(line);
+        final var spaceCount = IntPair.getFirst(count);
+        final var tabCount = IntPair.getSecond(count);
+
+        if (left.column > spaceCount + tabCount) {
+            // there is text before the cursor
+            commitTab();
+            return;
+        }
+
+        indentLines(false);
     }
 
     /**
@@ -2210,7 +2384,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Get the cursor range of editor
      */
     public TextRange getCursorRange() {
-        return new TextRange(cursor.left(), cursor.right());
+        return cursor.getRange();
     }
 
     /**
@@ -2342,7 +2516,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Undo last action
      */
     public void undo() {
-        text.undo();
+        var range = text.undo();
+        if (range != null) {
+            try {
+                setSelectionRegion(range.getStart().line, range.getStart().column, range.getEnd().line, range.getEnd().column, true, SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
+            } catch (IndexOutOfBoundsException e) {
+                // Suppressed, typically because an invalid position is memorized.
+            }
+        }
         notifyIMEExternalCursorChange();
         completionWindow.hide();
     }
@@ -2428,7 +2609,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
                     @Override
                     public boolean onQueryTextChange(String text) {
-                        if (text == null || text.length() == 0) {
+                        if (text == null || text.isEmpty()) {
                             getSearcher().stopSearch();
                             return false;
                         }
@@ -2456,14 +2637,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     return false;
                 }
                 switch (p2.getItemId()) {
-                    case 1:
-                        getSearcher().gotoPrevious();
-                        break;
-                    case 0:
-                        getSearcher().gotoNext();
-                        break;
-                    case 2:
-                    case 3:
+                    case 1 -> getSearcher().gotoPrevious();
+                    case 0 -> getSearcher().gotoNext();
+                    case 2, 3 -> {
                         final boolean replaceAll = p2.getItemId() == 3;
                         final EditText et = new EditText(getContext());
                         et.setHint(I18nConfig.getResourceId(R.string.sora_editor_replacement));
@@ -2481,7 +2657,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                                     dialog.dismiss();
                                 })
                                 .show();
-                        break;
+                    }
                 }
                 return false;
             }
@@ -3283,7 +3459,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         int start = getText().getCharIndex(lineLeft, columnLeft);
         int end = getText().getCharIndex(lineRight, columnRight);
         if (start == end) {
-            setSelection(lineLeft, columnLeft);
+            setSelection(lineLeft, columnLeft, makeRightVisible, cause);
             return;
         }
         if (start > end) {
@@ -3375,7 +3551,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.w(LOG_TAG, e);
             Toast.makeText(getContext(), e.toString(), Toast.LENGTH_SHORT).show();
         }
     }
@@ -3410,7 +3586,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             if (e.getCause() instanceof TransactionTooLargeException) {
                 Toast.makeText(getContext(), I18nConfig.getResourceId(R.string.sora_editor_clip_text_length_too_large), Toast.LENGTH_SHORT).show();
             } else {
-                e.printStackTrace();
+                Log.w(LOG_TAG, e);
                 Toast.makeText(getContext(), e.getClass().toString(), Toast.LENGTH_SHORT).show();
             }
         }
@@ -3818,6 +3994,40 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         setSelection(line, 0);
     }
 
+    /**
+     * Mark current selection position as a point of cursor range.
+     * When user taps to select another point in text, the text between the marked point and
+     * newly chosen point is selected.
+     *
+     * @see #isInLongSelect()
+     * @see #endLongSelect()
+     */
+    public void beginLongSelect() {
+        if (!isEditable()) {
+            return;
+        }
+        if (cursor.isSelected()) {
+            setSelection(cursor.getLeftLine(), cursor.getLeftColumn());
+        }
+        isInLongSelect = true;
+        invalidate();
+    }
+
+    /**
+     * Checks whether long select mode is started
+     */
+    public boolean isInLongSelect() {
+        return isInLongSelect;
+    }
+
+    /**
+     * Marks long select mode is end.
+     * This does nothing but set the flag to false.
+     */
+    public void endLongSelect() {
+        isInLongSelect = false;
+    }
+
 
     //-------------------------------------------------------------------------------
     //-------------------------IME Interaction---------------------------------------
@@ -3899,7 +4109,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Display soft input method for self
      */
     public void showSoftInput() {
-        if (isEditable() && isEnabled()) {
+        if (checkSoftInputEnabled() && isEditable() && isEnabled()) {
             if (isInTouchMode() && !isFocused()) {
                 requestFocusFromTouch();
             }
@@ -3916,6 +4126,73 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void hideSoftInput() {
         inputMethodManager.hideSoftInputFromWindow(getWindowToken(), 0);
+    }
+
+    /**
+     * Check whether the soft keyboard is enabled for this editor. Unlike {@link #isSoftKeyboardEnabled()},
+     * this method also checks whether a hardware keyboard is connected.
+     *
+     * @see #isSoftKeyboardEnabled()
+     * @see #isDisableSoftKbdIfHardKbdAvailable()
+     * @return Whether the editor should show soft keyboard.
+     */
+    protected boolean checkSoftInputEnabled() {
+        if (isDisableSoftKbdIfHardKbdAvailable()
+                && KeyboardUtils.INSTANCE.isHardKeyboardConnected(getContext())) {
+            return false;
+        }
+        return isSoftKeyboardEnabled();
+    }
+
+    /**
+     * Set whether the soft keyboard is enabled for this editor. Set to {@code true} by default.
+     *
+     * @param isEnabled Whether the soft keyboard is enabled.
+     */
+    public void setSoftKeyboardEnabled(boolean isEnabled) {
+        if (isSoftKeyboardEnabled() == isEnabled) {
+            // no need to do anything
+            return;
+        }
+
+        this.isSoftKbdEnabled = isEnabled;
+        hideSoftInput();
+        restartInput();
+    }
+
+    /**
+     * Returns whether the soft keyboard is enabled.
+     *
+     * @return Whether the soft keyboard is enabled.
+     */
+    public boolean isSoftKeyboardEnabled() {
+        return this.isSoftKbdEnabled;
+    }
+
+    /**
+     * Set whether the soft keyboard should be disabled for this editor if a hardware keyboard is
+     * connected to the device. Set to {@code true} by default.
+     *
+     * @param isDisabled Whether the soft keyboard should be enabled if hardware keyboard is connected.
+     */
+    public void setDisableSoftKbdIfHardKbdAvailable(boolean isDisabled) {
+        if (isDisableSoftKbdIfHardKbdAvailable() == isDisabled) {
+            // no need to do anything
+            return;
+        }
+
+        this.isDisableSoftKbdOnHardKbd = isDisabled;
+        hideSoftInput();
+        restartInput();
+    }
+
+    /**
+     * Returns whether the soft keyboard should be enabled if hardware keyboard is connected.
+     *
+     * @return Whether the soft keyboard should be enabled if hardware keyboard is connected.
+     */
+    public boolean isDisableSoftKbdIfHardKbdAvailable() {
+        return isDisableSoftKbdOnHardKbd;
     }
 
     /**
@@ -4137,7 +4414,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     //-------------------------Override methods--------------------------------------
     //-------------------------------------------------------------------------------
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
 
         renderer.draw(canvas);
@@ -4197,33 +4474,41 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @Override
     public boolean performAccessibilityAction(int action, Bundle arguments) {
         switch (action) {
-            case AccessibilityNodeInfo.ACTION_COPY:
+            case AccessibilityNodeInfo.ACTION_COPY -> {
                 copyText();
                 return true;
-            case AccessibilityNodeInfo.ACTION_CUT:
+            }
+            case AccessibilityNodeInfo.ACTION_CUT -> {
                 cutText();
                 return true;
-            case AccessibilityNodeInfo.ACTION_PASTE:
+            }
+            case AccessibilityNodeInfo.ACTION_PASTE -> {
                 pasteText();
                 return true;
-            case AccessibilityNodeInfo.ACTION_SET_TEXT:
+            }
+            case AccessibilityNodeInfo.ACTION_SET_TEXT -> {
                 setText(arguments.getCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE));
                 return true;
-            case AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD:
+            }
+            case AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD -> {
                 movePageDown();
                 return true;
-            case AccessibilityNodeInfo.ACTION_SCROLL_FORWARD:
+            }
+            case AccessibilityNodeInfo.ACTION_SCROLL_FORWARD -> {
                 movePageUp();
                 return true;
+            }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             switch (action) {
-                case android.R.id.accessibilityActionScrollDown:
+                case android.R.id.accessibilityActionScrollDown -> {
                     movePageDown();
                     return true;
-                case android.R.id.accessibilityActionScrollUp:
+                }
+                case android.R.id.accessibilityActionScrollUp -> {
                     movePageUp();
                     return true;
+                }
             }
         }
         return super.performAccessibilityAction(action, arguments);
@@ -4238,13 +4523,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public boolean dispatchTouchEvent(MotionEvent event) {
         int x = (int) event.getX();
         switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_DOWN -> {
                 downX = x;
                 if (forceHorizontalScrollable) {
                     getParent().requestDisallowInterceptTouchEvent(true);
                 }
-                break;
-            case MotionEvent.ACTION_MOVE:
+            }
+            case MotionEvent.ACTION_MOVE -> {
                 int deltaX = x - downX;
                 if (forceHorizontalScrollable && !touchHandler.hasAnyHeldHandle()) {
                     if (deltaX > 0 && getScroller().getCurrX() == 0
@@ -4252,7 +4537,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                         getParent().requestDisallowInterceptTouchEvent(false);
                     }
                 }
-                break;
+            }
         }
         return super.dispatchTouchEvent(event);
     }
@@ -4267,7 +4552,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (!isEditable() || !isEnabled()) {
             return null;
         }
-        outAttrs.inputType = inputType != 0 ? inputType : EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
+        if (checkSoftInputEnabled()) {
+            outAttrs.inputType = inputType != 0 ? inputType : EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
+        } else {
+            outAttrs.inputType = InputType.TYPE_NULL;
+        }
         outAttrs.initialSelStart = getCursor() != null ? getCursor().getLeft() : 0;
         outAttrs.initialSelEnd = getCursor() != null ? getCursor().getRight() : 0;
         outAttrs.initialCapsMode = inputConnection.getCursorCapsMode(0);
@@ -4283,6 +4572,34 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         text.resetBatchEdit();
         setExtracting(null);
         return inputConnection;
+    }
+
+    @Override
+    public PointerIcon onResolvePointerIcon(MotionEvent event, int pointerIndex) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
+                if (isFormatting()) {
+                    return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_WAIT);
+                }
+                if (touchHandler.hasAnyHeldHandle()) {
+                    return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_GRABBING);
+                }
+                var res = RegionResolverKt.resolveTouchRegion(this, event, pointerIndex);
+                var region = IntPair.getFirst(res);
+                var inbound = IntPair.getSecond(res) == RegionResolverKt.IN_BOUND;
+                if (region == RegionResolverKt.REGION_TEXT && inbound) {
+                    return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_TEXT);
+                } else if (region == RegionResolverKt.REGION_LINE_NUMBER) {
+                    switch (props.actionWhenLineNumberClicked) {
+                        case DirectAccessProps.LN_ACTION_SELECT_LINE, DirectAccessProps.LN_ACTION_PLACE_SELECTION_HOME -> {
+                            return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_HAND);
+                        }
+                    }
+                }
+                return super.onResolvePointerIcon(event, pointerIndex);
+            }
+        }
+        return super.onResolvePointerIcon(event, pointerIndex);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -4680,7 +4997,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     var end = cursorRange.getEnd();
                     setSelectionRegion(start.line, start.column, end.line, end.column);
                 } catch (IndexOutOfBoundsException e) {
-                    e.printStackTrace();
+                    Log.w(LOG_TAG, e);
                 }
             }
             getScroller().forceFinished(true);

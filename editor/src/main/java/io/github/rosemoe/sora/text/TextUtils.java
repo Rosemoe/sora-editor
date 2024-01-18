@@ -1,7 +1,7 @@
 /*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -25,6 +25,8 @@ package io.github.rosemoe.sora.text;
 
 import androidx.annotation.NonNull;
 
+import java.util.Objects;
+
 import io.github.rosemoe.sora.util.IntPair;
 
 /**
@@ -33,25 +35,38 @@ import io.github.rosemoe.sora.util.IntPair;
 public class TextUtils {
 
     /**
+     * Counts the number of whitespaces at the start of the given {@link CharSequence}.
+     *
+     * @param text     The text to count the spaces in.
+     * @return A long packed with the number of spaces and tabs at the start of the line.
+     * Use {@link IntPair#getFirst(long)} to get the number of spaces and {@link IntPair#getSecond(long)}
+     * for the number of tabs.
+     */
+    public static long countLeadingSpacesAndTabs(@NonNull CharSequence text) {
+        Objects.requireNonNull(text);
+
+        int p = 0, spaces = 0, tabs = 0;
+        char c;
+        while (p < text.length() && isWhitespace((c = text.charAt(p)))) {
+            if (c == '\t') {
+                tabs += 1;
+            } else {
+                spaces += 1;
+            }
+            ++p;
+        }
+
+        return IntPair.pack(spaces, tabs);
+    }
+
+    /**
      * Compute leading space count
      *
      * @param tabWidth Tab is considered in {@code tabWidth} spaces
      */
     public static int countLeadingSpaceCount(@NonNull CharSequence text, int tabWidth) {
-        int p = 0, count = 0;
-        while (p < text.length()) {
-            if (isWhitespace(text.charAt(p))) {
-                if (text.charAt(p) == '\t') {
-                    count += tabWidth;
-                } else {
-                    count++;
-                }
-                p++;
-            } else {
-                break;
-            }
-        }
-        return count;
+        final var result = countLeadingSpacesAndTabs(text);
+        return IntPair.getFirst(result) + (tabWidth * IntPair.getSecond(result));
     }
 
     /**
@@ -167,5 +182,4 @@ public class TextUtils {
         }
         return IntPair.pack(leading, trailing);
     }
-
 }

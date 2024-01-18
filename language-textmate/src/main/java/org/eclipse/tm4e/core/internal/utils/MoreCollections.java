@@ -21,10 +21,9 @@ import org.eclipse.jdt.annotation.Nullable;
 
 public final class MoreCollections {
 
-	@SafeVarargs
-	public static <T> List<T> asArrayList(final T... items) {
+	public static <T> List<T> asArrayList(final T firstItem) {
 		final var list = new ArrayList<T>();
-		Collections.addAll(list, items);
+		list.add(firstItem);
 		return list;
 	}
 
@@ -44,34 +43,64 @@ public final class MoreCollections {
 		return null;
 	}
 
+	/**
+	 * @return the last element or null if list is empty
+	 */
 	@Nullable
-	public static <T> T findLastElement(@Nullable final List<T> list) {
-		if (list == null || list.isEmpty())
+	public static <T> T findLastElement(final List<T> list) {
+		if (list.isEmpty())
 			return null;
 		return getLastElement(list);
 	}
 
 	/**
-	 * @param list a non-empty list with non-nullable elements
+	 * @param list a non-empty list
+	 * @param index the element to get. negative index counts from end of list, e.g. -1 = last element.
+	 *
+	 * @throws IndexOutOfBoundsException
+	 */
+	public static <T> T getElementAt(final List<T> list, final int index) {
+		if (index < 0)
+			return list.get(list.size() + index);
+		return list.get(index);
+	}
+
+	/**
+	 * @param list a non-empty list
+	 *
+	 * @throws IndexOutOfBoundsException if the list is empty
 	 */
 	public static <T> T getLastElement(final List<T> list) {
 		return list.get(list.size() - 1);
 	}
 
+	public static <T> List<T> nullToEmpty(@Nullable final List<T> list) {
+		return list == null ? Collections.emptyList() : list;
+	}
+
 	/**
 	 * Removes the last element in this list.
 	 *
-	 * @return the element previously at the specified position
-	 *
 	 * @throws UnsupportedOperationException if the {@code remove} operation is not supported by this list
-	 * @throws IndexOutOfBoundsException if the list is empty
+	 * @throws IndexOutOfBoundsException     if the list is empty
 	 */
-	public static <T> T removeLastElement(final List<T> list) {
-		return list.remove(list.size() - 1);
+	public static <T> void removeLastElement(final List<T> list) {
+		list.remove(list.size() - 1);
 	}
 
-	public static <T> List<T> nullToEmpty(@Nullable final List<T> list) {
-		return list == null ? Collections.emptyList() : list;
+	public static String toStringWithIndex(final List<?> list) {
+		if (list.isEmpty())
+			return "[]";
+
+		final var sb = new StringBuilder("[");
+		for (int i = 0, l = list.size(); i < l; i++) {
+			final var e = list.get(i);
+			sb.append(i).append(':').append(e == list ? "(this List)" : e);
+			if (i == l - 1)
+				break;
+			sb.append(", ");
+		}
+		return sb.append(']').toString();
 	}
 
 	private MoreCollections() {

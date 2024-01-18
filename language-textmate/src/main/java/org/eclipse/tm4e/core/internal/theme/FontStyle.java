@@ -1,13 +1,25 @@
-/**
- * Copyright (c) 2015-2017 Angelo ZERR.
- * This program and the accompanying materials are made
- * available under the terms of the Eclipse Public License 2.0
- * which is available at https://www.eclipse.org/legal/epl-2.0/
- * <p>
- * SPDX-License-Identifier: EPL-2.0
- * <p>
- * Contributors:
- * Angelo Zerr <angelo.zerr@gmail.com> - initial API and implementation
+/*
+ *    sora-editor - the awesome code editor for Android
+ *    https://github.com/Rosemoe/sora-editor
+ *    Copyright (C) 2020-2024  Rosemoe
+ *
+ *     This library is free software; you can redistribute it and/or
+ *     modify it under the terms of the GNU Lesser General Public
+ *     License as published by the Free Software Foundation; either
+ *     version 2.1 of the License, or (at your option) any later version.
+ *
+ *     This library is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *     Lesser General Public License for more details.
+ *
+ *     You should have received a copy of the GNU Lesser General Public
+ *     License along with this library; if not, write to the Free Software
+ *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *     USA
+ *
+ *     Please contact Rosemoe by email 2073412493@qq.com if you need
+ *     additional information or have any questions
  */
 package org.eclipse.tm4e.core.internal.theme;
 
@@ -15,8 +27,8 @@ package org.eclipse.tm4e.core.internal.theme;
  * Font style definitions.
  *
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/theme.ts#L279">
- *      https://github.com/microsoft/vscode-textmate/blob/main/src/theme.ts</a>
+ * "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/theme.ts#L306">
+ * https://github.com/microsoft/vscode-textmate/blob/main/src/theme.ts</a>
  */
 public final class FontStyle {
 
@@ -50,7 +62,8 @@ public final class FontStyle {
         if ((fontStyle & Strikethrough) == Strikethrough) {
             style.append("strikethrough ");
         }
-        if (style.length() == 0) {
+		// style.isEmpty() no available in android
+        if (style.length() < 1) {
             return "none";
         }
         style.setLength(style.length() - 1);

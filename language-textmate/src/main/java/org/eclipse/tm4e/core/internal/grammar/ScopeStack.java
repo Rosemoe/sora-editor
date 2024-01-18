@@ -24,10 +24,18 @@ import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/theme.ts#L101">
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/theme.ts#L101">
  *      github.com/microsoft/vscode-textmate/blob/main/src/theme.ts</a>
  */
-public class ScopeStack {
+public final class ScopeStack {
+
+	@Nullable
+	static ScopeStack push(@Nullable ScopeStack path, final List<String> scopeNames) {
+		for (final var name : scopeNames) {
+			path = new ScopeStack(path, name);
+		}
+		return path;
+	}
 
 	public static ScopeStack from(final String first) {
 		return new ScopeStack(null, first);
@@ -79,5 +87,32 @@ public class ScopeStack {
 	@Override
 	public String toString() {
 		return String.join(" ", getSegments());
+	}
+
+	public boolean isExtending(final ScopeStack other) {
+		if (this == other) {
+			return true;
+		}
+
+		final var parent = this.parent;
+		if (parent == null) {
+			return false;
+		}
+		return parent.isExtending(other);
+	}
+
+	public List<String> getExtensionIfDefined(@Nullable final ScopeStack base) {
+		final var result = new ArrayList<String>();
+		@Nullable
+		ScopeStack item = this;
+		while (item != null && item != base) {
+			result.add(item.scopeName);
+			item = item.parent;
+		}
+		if (item == base) {
+			Collections.reverse(result);
+			return result;
+		}
+		return Collections.emptyList();
 	}
 }

@@ -2,7 +2,7 @@
 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ~    sora-editor - the awesome code editor for Android
   ~    https://github.com/Rosemoe/sora-editor
-  ~    Copyright (C) 2020-2023  Rosemoe
+  ~    Copyright (C) 2020-2024  Rosemoe
   ~
   ~     This library is free software; you can redistribute it and/or
   ~     modify it under the terms of the GNU Lesser General Public
@@ -62,6 +62,13 @@
 				android:layout_width="45dp"
 				android:layout_height="45dp"
 				android:src="@drawable/round_content_paste_20"
+				android:background="#00000000" />
+
+			<ImageButton
+				android:id="@+id/panel_btn_long_select"
+				android:layout_width="45dp"
+				android:layout_height="45dp"
+				android:src="@drawable/editor_text_select_start"
 				android:background="#00000000" />
 
 			<ImageButton

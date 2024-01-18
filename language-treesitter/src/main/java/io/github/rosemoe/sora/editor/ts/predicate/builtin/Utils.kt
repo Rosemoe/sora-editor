@@ -1,7 +1,7 @@
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -53,14 +53,15 @@ fun getCaptureContent(
     text: CharSequence
 ) = match.captures.filter { tsQuery.getCaptureNameForId(it.index) == captureName }
     .map {
-        if (text is UTF16String) {
-            val utf16Name = text.subseqChars(it.node.startByte / 2, it.node.endByte / 2)
-            val name = utf16Name.toString()
-            utf16Name.close()
-            name
-        } else if(text is Content) {
-            text.substring(it.node.startByte / 2, it.node.endByte / 2)
-        } else {
-            text.substring(it.node.startByte / 2, it.node.endByte / 2)
+        when (text) {
+            is UTF16String -> {
+                val utf16Name = text.subseqChars(it.node.startByte / 2, it.node.endByte / 2)
+                val name = utf16Name.toString()
+                utf16Name.close()
+                name
+            }
+
+            is Content -> text.substring(it.node.startByte / 2, it.node.endByte / 2)
+            else -> text.substring(it.node.startByte / 2, it.node.endByte / 2)
         }
     }

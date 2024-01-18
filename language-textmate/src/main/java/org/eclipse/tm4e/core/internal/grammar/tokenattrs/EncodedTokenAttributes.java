@@ -16,15 +16,15 @@ import org.eclipse.tm4e.core.internal.theme.FontStyle;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/encodedTokenAttributes.ts">
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/encodedTokenAttributes.ts#L9">
  *      github.com/microsoft/vscode-textmate/blob/main/src/encodedTokenAttributes.ts</a>
  */
 public final class EncodedTokenAttributes {
 
 	public static String toBinaryStr(final int encodedTokenAttributes) {
 		return new StringBuilder(Integer.toBinaryString(encodedTokenAttributes))
-			.insert(0, "0".repeat(Integer.numberOfLeadingZeros(encodedTokenAttributes)))
-			.toString();
+				.insert(0, "0".repeat(Integer.numberOfLeadingZeros(encodedTokenAttributes)))
+				.toString();
 	}
 
 	public static String toString(final int encodedTokenAttributes) {
@@ -35,14 +35,14 @@ public final class EncodedTokenAttributes {
 		final var background = getBackground(encodedTokenAttributes);
 		final var containsBalancedBrackets = containsBalancedBrackets(encodedTokenAttributes);
 
-		return "{\n" +
-			"  languageId: " + languageId + ",\n" +
-			"  tokenType: " + tokenType + ",\n" +
-			"  fontStyle: " + fontStyle + ",\n" +
-			"  foreground: " + foreground + ",\n" +
-			"  background: " + background + "\n," +
-			"  containsBalancedBrackets: " + containsBalancedBrackets + "\n" +
-			"}";
+		return "{\n"
+				+ "  languageId: " + languageId + ",\n"
+				+ "  tokenType: " + tokenType + ",\n"
+				+ "  fontStyle: " + fontStyle + ",\n"
+				+ "  foreground: " + foreground + ",\n"
+				+ "  background: " + background + "\n,"
+				+ "  containsBalancedBrackets: " + containsBalancedBrackets + "\n"
+				+ "}";
 	}
 
 	public static int getLanguageId(final int metadata) {
@@ -74,22 +74,22 @@ public final class EncodedTokenAttributes {
 	 * A value of `0`, `NotSet` or `null` indicates that the corresponding field should be left as is.
 	 */
 	public static int set(final int metadata, final int languageId, final /*OptionalStandardTokenType*/ int tokenType,
-		@Nullable final Boolean containsBalancedBrackets, final int fontStyle, final int foreground,
-		final int background) {
+			@Nullable final Boolean containsBalancedBrackets, final int fontStyle, final int foreground, final int background) {
 		final var _languageId = languageId == 0 ? getLanguageId(metadata) : languageId;
 		final var _tokenType = tokenType == OptionalStandardTokenType.NotSet ? getTokenType(metadata) : tokenType;
-		final var _containsBalancedBracketsBit = (containsBalancedBrackets == null ? containsBalancedBrackets(metadata)
-			: containsBalancedBrackets) ? 1 : 0;
+		final var _containsBalancedBracketsBit = (containsBalancedBrackets == null
+				? containsBalancedBrackets(metadata)
+				: containsBalancedBrackets) ? 1 : 0;
 		final var _fontStyle = fontStyle == FontStyle.NotSet ? getFontStyle(metadata) : fontStyle;
 		final var _foreground = foreground == 0 ? getForeground(metadata) : foreground;
 		final var _background = background == 0 ? getBackground(metadata) : background;
 
 		return (_languageId << EncodedTokenDataConsts.LANGUAGEID_OFFSET
-			| _tokenType << EncodedTokenDataConsts.TOKEN_TYPE_OFFSET
-			| _containsBalancedBracketsBit << EncodedTokenDataConsts.BALANCED_BRACKETS_OFFSET
-			| _fontStyle << EncodedTokenDataConsts.FONT_STYLE_OFFSET
-			| _foreground << EncodedTokenDataConsts.FOREGROUND_OFFSET
-			| _background << EncodedTokenDataConsts.BACKGROUND_OFFSET) >>> 0;
+				| _tokenType << EncodedTokenDataConsts.TOKEN_TYPE_OFFSET
+				| _containsBalancedBracketsBit << EncodedTokenDataConsts.BALANCED_BRACKETS_OFFSET
+				| _fontStyle << EncodedTokenDataConsts.FONT_STYLE_OFFSET
+				| _foreground << EncodedTokenDataConsts.FOREGROUND_OFFSET
+				| _background << EncodedTokenDataConsts.BACKGROUND_OFFSET) >>> 0;
 	}
 
 	/**

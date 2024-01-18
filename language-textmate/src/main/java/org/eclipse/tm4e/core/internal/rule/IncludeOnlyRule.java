@@ -20,7 +20,7 @@ import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/rule.ts#L166">
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/rule.ts#L166">
  *      github.com/microsoft/vscode-textmate/blob/main/src/rule.ts</a>
  */
 final class IncludeOnlyRule extends Rule {
@@ -32,7 +32,7 @@ final class IncludeOnlyRule extends Rule {
 	private RegExpSourceList cachedCompiledPatterns;
 
 	IncludeOnlyRule(final RuleId id, @Nullable final String name, @Nullable final String contentName,
-		final CompilePatternsResult patterns) {
+			final CompilePatternsResult patterns) {
 		super(id, name, contentName);
 		this.patterns = patterns.patterns;
 		this.hasMissingPatterns = patterns.hasMissingPatterns;
@@ -53,8 +53,7 @@ final class IncludeOnlyRule extends Rule {
 
 	@Override
 	public CompiledRule compileAG(final IRuleRegistry grammar, @Nullable final String endRegexSource,
-		final boolean allowA,
-		final boolean allowG) {
+			final boolean allowA, final boolean allowG) {
 		return getCachedCompiledPatterns(grammar).compileAG(allowA, allowG);
 	}
 

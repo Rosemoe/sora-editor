@@ -1,7 +1,7 @@
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -41,11 +41,7 @@ import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
-import com.itsaky.androidide.treesitter.java.TSLanguageJava
 import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
-import io.github.rosemoe.sora.editor.ts.LocalsCaptureSpec
-import io.github.rosemoe.sora.editor.ts.TsLanguage
-import io.github.rosemoe.sora.editor.ts.TsLanguageSpec
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EditorKeyEvent
 import io.github.rosemoe.sora.event.KeyBindingEvent
@@ -53,9 +49,10 @@ import io.github.rosemoe.sora.event.PublishSearchResultEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.SideIconClickEvent
 import io.github.rosemoe.sora.lang.EmptyLanguage
+import io.github.rosemoe.sora.lang.JavaLanguageSpec
+import io.github.rosemoe.sora.lang.TsLanguageJava
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
-import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
@@ -121,21 +118,17 @@ class MainActivity : AppCompatActivity() {
         val typeface = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
         inputView.addSymbols(
             arrayOf(
-                "->",
-                "{",
-                "}",
-                "(",
-                ")",
-                ",",
-                ".",
-                ";",
-                "\"",
-                "?",
-                "+",
-                "-",
-                "*",
-                "/"
-            ), arrayOf("\t", "{}", "}", "(", ")", ",", ".", ";", "\"", "?", "+", "-", "*", "/")
+                "->", "{", "}", "(", ")",
+                ",", ".", ";", "\"", "?",
+                "+", "-", "*", "/", "<",
+                ">", "[", "]", ":"
+            ),
+            arrayOf(
+                "\t", "{}", "}", "(", ")",
+                ",", ".", ";", "\"", "?",
+                "+", "-", "*", "/", "<",
+                ">", "[", "]", ":"
+            )
         )
         inputView.forEachButton {
             it.typeface = typeface
@@ -789,74 +782,16 @@ class MainActivity : AppCompatActivity() {
 
                             7 -> loadTMLLauncher.launch("*/*")
                             8 -> {
-                                val lang = TSLanguageJava.newInstance()
-                                editor.setEditorLanguage(TsLanguage(
-                                    TsLanguageSpec(
-                                        TSLanguageJava.newInstance(),
-                                        highlightScmSource = assets.open("tree-sitter-queries/java/highlights.scm")
-                                            .reader().readText(),
-                                        codeBlocksScmSource = assets.open("tree-sitter-queries/java/blocks.scm")
-                                            .reader().readText(),
-                                        bracketsScmSource = assets.open("tree-sitter-queries/java/brackets.scm")
-                                            .reader().readText(),
-                                        localsScmSource = assets.open("tree-sitter-queries/java/locals.scm")
-                                            .reader().readText(),
-                                        localsCaptureSpec = object : LocalsCaptureSpec() {
-
-                                            override fun isScopeCapture(captureName: String): Boolean {
-                                                return captureName == "scope"
-                                            }
-
-                                            override fun isReferenceCapture(captureName: String): Boolean {
-                                                return captureName == "reference"
-                                            }
-
-                                            override fun isDefinitionCapture(captureName: String): Boolean {
-                                                return captureName == "definition.var" || captureName == "definition.field"
-                                            }
-
-                                            override fun isMembersScopeCapture(captureName: String): Boolean {
-                                                return captureName == "scope.members"
-                                            }
-
-                                        }
-                                    )) {
-                                    TextStyle.makeStyle(
-                                        EditorColorScheme.COMMENT,
-                                        0,
-                                        false,
-                                        true,
-                                        false
-                                    ) applyTo "comment"
-                                    TextStyle.makeStyle(
-                                        EditorColorScheme.KEYWORD,
-                                        0,
-                                        true,
-                                        false,
-                                        false
-                                    ) applyTo "keyword"
-                                    TextStyle.makeStyle(EditorColorScheme.LITERAL) applyTo arrayOf(
-                                        "constant.builtin",
-                                        "string",
-                                        "number"
+                                editor.setEditorLanguage(
+                                    TsLanguageJava(
+                                        JavaLanguageSpec(
+                                            highlightScmSource = assets.open("tree-sitter-queries/java/highlights.scm").reader().readText(),
+                                            codeBlocksScmSource = assets.open("tree-sitter-queries/java/blocks.scm").reader().readText(),
+                                            bracketsScmSource = assets.open("tree-sitter-queries/java/brackets.scm").reader().readText(),
+                                            localsScmSource = assets.open("tree-sitter-queries/java/locals.scm").reader().readText()
+                                        )
                                     )
-                                    TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_VAR) applyTo arrayOf(
-                                        "variable.builtin",
-                                        "variable",
-                                        "constant"
-                                    )
-                                    TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_NAME) applyTo arrayOf(
-                                        "type.builtin",
-                                        "type",
-                                        "attribute"
-                                    )
-                                    TextStyle.makeStyle(EditorColorScheme.FUNCTION_NAME) applyTo arrayOf(
-                                        "function.method",
-                                        "function.builtin",
-                                        "variable.field"
-                                    )
-                                    TextStyle.makeStyle(EditorColorScheme.OPERATOR) applyTo "operator"
-                                })
+                                )
                             }
 
                             else -> editor.setEditorLanguage(EmptyLanguage())
@@ -1024,6 +959,16 @@ class MainActivity : AppCompatActivity() {
 
             R.id.load_test_file -> {
                 openAssetsFile("samples/big_sample.txt")
+            }
+
+            R.id.softKbdEnabled -> {
+                editor.isSoftKeyboardEnabled = !editor.isSoftKeyboardEnabled
+                item.isChecked = editor.isSoftKeyboardEnabled
+            }
+
+            R.id.disableSoftKbdOnHardKbd -> {
+                editor.isDisableSoftKbdIfHardKbdAvailable = !editor.isDisableSoftKbdIfHardKbdAvailable
+                item.isChecked = editor.isDisableSoftKbdIfHardKbdAvailable
             }
         }
         return super.onOptionsItemSelected(item)

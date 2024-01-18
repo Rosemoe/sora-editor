@@ -94,7 +94,13 @@ or [Releases](https://github.com/Rosemoe/CodeEditor/releases).
 Snapshot releases are automatically generated on repository push. You may combine current released version name
 and short commit hash to make a snapshot version name. For example, if the latest released version name is '0.21.1' and
 short commit hash is '97c4963', you may use version name '0.21.1-97c4963-SNAPSHOT' to import the snapshot version to your project.
-
+Also, you need to add extra maven repository:
+```gradle
+repositories {
+    // ...
+    maven("https://s01.oss.sonatype.org/content/repositories/snapshots")
+}
+```
 ## Discuss
 
 * Official QQ Group:[216632648](https://jq.qq.com/?_wv=1027&k=n68uxQws)

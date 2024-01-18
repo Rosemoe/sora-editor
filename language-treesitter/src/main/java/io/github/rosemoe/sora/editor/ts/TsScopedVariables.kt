@@ -1,7 +1,7 @@
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -47,7 +47,7 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, val spec: TsLanguageSpe
     init {
         rootScope = Scope(0, tree.rootNode.endByte / 2)
         if (spec.localsDefinitionIndices.isNotEmpty()) {
-            TSQueryCursor().use { cursor ->
+            TSQueryCursor.create().use { cursor ->
                 cursor.exec(spec.tsQuery, tree.rootNode)
                 var match = cursor.nextMatch()
                 val captures = mutableListOf<TSQueryCapture>()

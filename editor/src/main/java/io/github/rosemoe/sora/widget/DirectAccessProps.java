@@ -1,7 +1,7 @@
 /*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -365,5 +365,16 @@ public class DirectAccessProps implements Serializable {
      * Limit for sticky scroll dataset size
      */
     public int stickyScrollIterationLimit = 1000;
+
+    /**
+     * Hide partially or all of the stuck lines when text is selected
+     */
+    @InvalidateRequired
+    public boolean stickyScrollAutoCollapse = true;
+
+    /**
+     * Fling scroll in single direction (vertical or horizontal)
+     */
+    public boolean singleDirectionFling = true;
 
 }

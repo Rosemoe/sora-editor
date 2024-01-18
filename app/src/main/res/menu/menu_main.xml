@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ~    sora-editor - the awesome code editor for Android
   ~    https://github.com/Rosemoe/sora-editor
-  ~    Copyright (C) 2020-2023  Rosemoe
+  ~    Copyright (C) 2020-2024  Rosemoe
   ~
   ~     This library is free software; you can redistribute it and/or
   ~     modify it under the terms of the GNU Lesser General Public
@@ -90,6 +90,16 @@
                 android:checkable="true"
                 android:checked="true"
                 android:title="@string/open_completion_window_animation" />
+            <item
+                android:id="@+id/softKbdEnabled"
+                android:checkable="true"
+                android:checked="true"
+                android:title="@string/enable_soft_keyboard" />
+            <item
+                android:id="@+id/disableSoftKbdOnHardKbd"
+                android:checkable="true"
+                android:checked="true"
+                android:title="@string/hide_soft_kbd_if_hard_kbd_available" />
         </menu>
     </item>
     <item android:title="@string/line_info_panel_position">

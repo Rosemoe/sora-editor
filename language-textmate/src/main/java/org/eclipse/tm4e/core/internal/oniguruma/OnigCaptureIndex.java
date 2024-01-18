@@ -18,28 +18,30 @@ package org.eclipse.tm4e.core.internal.oniguruma;
 
 import org.eclipse.jdt.annotation.Nullable;
 
+/**
+ * @see <a href="https://github.com/atom/node-oniguruma/blob/0c6b95fc7d79ab7e60a7ed63df6d05677ace2642/src/onig-scanner.cc#L110">
+ *      github.com/atom/node-oniguruma/blob/master/src/onig-scanner.cc#L110</a>
+ */
 public final class OnigCaptureIndex {
 
-	public final int index;
+	static final OnigCaptureIndex EMPTY = new OnigCaptureIndex(0, 0);
+
 	public final int start;
 	public final int end;
 
-	OnigCaptureIndex(final int index, final int start, final int end) {
-		this.index = index;
-		this.start = start >= 0 ? start : 0;
-		this.end = end >= 0 ? end : 0;
+	OnigCaptureIndex(final int start, final int end) {
+		this.start = Math.max(start, 0);
+		this.end = Math.max(end, 0);
 	}
 
 	@Override
 	public boolean equals(@Nullable final Object obj) {
 		if (this == obj)
 			return true;
-		if (obj == null || getClass() != obj.getClass())
-			return false;
-		final var other = (OnigCaptureIndex) obj;
-		return end == other.end
-				&& index == other.index
-				&& start == other.start;
+		if (obj instanceof final OnigCaptureIndex other)
+			return end == other.end
+					&& start == other.start;
+		return false;
 	}
 
 	public int getLength() {
@@ -48,21 +50,15 @@ public final class OnigCaptureIndex {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + end;
-		result = prime * result + index;
-		result = prime * result + start;
-		return result;
+		return 31 * (31 + end) + start;
 	}
 
 	@Override
 	public String toString() {
-		return "{" +
-				"\"index\": " + index +
-				", \"start\": " + start +
-				", \"end\": " + end +
-				", \"length\": " + getLength() +
-				"}";
+		return "{"
+				+ ", \"start\": " + start
+				+ ", \"end\": " + end
+				+ ", \"length\": " + getLength()
+				+ "}";
 	}
 }

@@ -1,7 +1,7 @@
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -53,9 +53,6 @@ android {
         // Flag to enable support for the new language APIs
         isCoreLibraryDesugaringEnabled = true
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
 }
 
 dependencies {
@@ -66,7 +63,7 @@ dependencies {
     implementation(libs.jcodings)
     implementation(libs.joni)
 
-    implementation(libs.snakeyaml)
+    implementation(libs.snakeyaml.engine)
     implementation(libs.jdt.annotation)
     implementation(libs.guava)
 

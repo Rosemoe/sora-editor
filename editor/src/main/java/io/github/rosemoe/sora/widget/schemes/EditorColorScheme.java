@@ -1,7 +1,7 @@
 /*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -151,12 +151,15 @@ public class EditorColorScheme {
     public static final int SIGNATURE_TEXT_NORMAL = 58;
     public static final int SIGNATURE_TEXT_HIGHLIGHTED_PARAMETER = 59;
 
+    public static final int STATIC_SPAN_BACKGROUND = 63;
+    public static final int STATIC_SPAN_FOREGROUND = 64;
+
     public static final int SIGNATURE_BACKGROUND = 60;
 
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 62;
+    protected static final int END_COLOR_ID = 64;
 
 
     /**
@@ -262,6 +265,7 @@ public class EditorColorScheme {
             case LINE_DIVIDER:
                 color = 0xeeeeeeee;
                 break;
+            case STATIC_SPAN_BACKGROUND:
             case WHOLE_BACKGROUND:
             case LINE_NUMBER_PANEL_TEXT:
             case COMPLETION_WND_BACKGROUND:
@@ -271,6 +275,7 @@ public class EditorColorScheme {
             case OPERATOR:
                 color = 0xFF0066D6;
                 break;
+            case STATIC_SPAN_FOREGROUND:
             case TEXT_NORMAL:
                 color = 0xFF333333;
                 break;

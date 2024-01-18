@@ -17,6 +17,26 @@
  */
 package org.eclipse.tm4e.core.internal.grammar;
 
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tm4e.core.grammar.IGrammar;
+import org.eclipse.tm4e.core.grammar.IStateStack;
+import org.eclipse.tm4e.core.grammar.IToken;
+import org.eclipse.tm4e.core.grammar.ITokenizeLineResult;
+import org.eclipse.tm4e.core.internal.grammar.raw.IRawGrammar;
+import org.eclipse.tm4e.core.internal.grammar.raw.IRawRepository;
+import org.eclipse.tm4e.core.internal.grammar.raw.IRawRule;
+import org.eclipse.tm4e.core.internal.grammar.raw.RawRule;
+import org.eclipse.tm4e.core.internal.grammar.tokenattrs.EncodedTokenAttributes;
+import org.eclipse.tm4e.core.internal.matcher.Matcher;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
+import org.eclipse.tm4e.core.internal.registry.IGrammarRepository;
+import org.eclipse.tm4e.core.internal.registry.IThemeProvider;
+import org.eclipse.tm4e.core.internal.rule.IRuleFactoryHelper;
+import org.eclipse.tm4e.core.internal.rule.Rule;
+import org.eclipse.tm4e.core.internal.rule.RuleFactory;
+import org.eclipse.tm4e.core.internal.rule.RuleId;
+import org.eclipse.tm4e.core.internal.utils.ObjectCloner;
+import org.eclipse.tm4e.core.internal.utils.StringUtils;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -28,35 +48,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
-import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.tm4e.core.grammar.IGrammar;
-import org.eclipse.tm4e.core.grammar.IStateStack;
-import org.eclipse.tm4e.core.grammar.IToken;
-import org.eclipse.tm4e.core.grammar.ITokenizeLineResult;
-import org.eclipse.tm4e.core.internal.grammar.tokenattrs.EncodedTokenAttributes;
-import org.eclipse.tm4e.core.internal.matcher.Matcher;
-import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
-import org.eclipse.tm4e.core.internal.registry.IGrammarRepository;
-import org.eclipse.tm4e.core.internal.registry.IThemeProvider;
-import org.eclipse.tm4e.core.internal.rule.IRuleFactoryHelper;
-import org.eclipse.tm4e.core.internal.rule.Rule;
-import org.eclipse.tm4e.core.internal.rule.RuleFactory;
-import org.eclipse.tm4e.core.internal.rule.RuleId;
-import org.eclipse.tm4e.core.internal.types.IRawGrammar;
-import org.eclipse.tm4e.core.internal.types.IRawRepository;
-import org.eclipse.tm4e.core.internal.types.IRawRule;
-import org.eclipse.tm4e.core.internal.utils.ObjectCloner;
-import org.eclipse.tm4e.core.internal.utils.StringUtils;
-
-import io.github.rosemoe.sora.langs.textmate.BuildConfig;
 import io.github.rosemoe.sora.util.Logger;
 
 /**
  * TextMate grammar implementation.
  *
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/grammar/grammar.ts#L99">
- *      github.com/microsoft/vscode-textmate/blob/main/src/grammar/grammar.ts</a>
+ * "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/grammar/grammar.ts#L98">
+ * github.com/microsoft/vscode-textmate/blob/main/src/grammar/grammar.ts</a>
  */
 public final class Grammar implements IGrammar, IRuleFactoryHelper {
 
@@ -65,7 +64,7 @@ public final class Grammar implements IGrammar, IRuleFactoryHelper {
     private final String rootScopeName;
 
     @Nullable
-    private RuleId _rootId = null;
+    private RuleId _rootId;
     private int _lastRuleId = 0;
     private final Map<RuleId, @Nullable Rule> _ruleId2desc = new HashMap<>();
     private final Map<String /*scopeName*/, IRawGrammar> includedGrammars = new HashMap<>();
@@ -92,9 +91,7 @@ public final class Grammar implements IGrammar, IRuleFactoryHelper {
             final IThemeProvider themeProvider) {
 
         this.rootScopeName = rootScopeName;
-        this._basicScopeAttributesProvider = new BasicScopeAttributesProvider(
-                initialLanguage,
-                embeddedLanguages);
+        this._basicScopeAttributesProvider = new BasicScopeAttributesProvider(initialLanguage, embeddedLanguages);
         this._grammarRepository = grammarRepository;
         this._grammar = initGrammar(grammar, null);
         this.balancedBracketSelectors = balancedBracketSelectors;
@@ -167,7 +164,7 @@ public final class Grammar implements IGrammar, IRuleFactoryHelper {
             // add injection grammars contributed for the current scope
             final var injectionScopeNames = this._grammarRepository.injections(scopeName);
             if (injectionScopeNames != null) {
-                for (String injectionScopeName : injectionScopeNames) {
+                injectionScopeNames.forEach(injectionScopeName -> {
                     final var injectionGrammar = Grammar.this.getExternalGrammar(injectionScopeName, null);
                     if (injectionGrammar != null) {
                         final var selector = injectionGrammar.getInjectionSelector();
@@ -180,7 +177,7 @@ public final class Grammar implements IGrammar, IRuleFactoryHelper {
                                     injectionGrammar);
                         }
                     }
-                }
+                });
             }
         }
 
@@ -194,11 +191,11 @@ public final class Grammar implements IGrammar, IRuleFactoryHelper {
         if (injections == null) {
             injections = this._injections = this._collectInjections();
 
-            if (BuildConfig.DEBUG && !injections.isEmpty()) {
-                LOGGER.d(
-                        "Grammar " + rootScopeName + " contains the following injections:");
+            // remove ??
+            if (/*LOGGER && */!injections.isEmpty()) {
+                LOGGER.i("Grammar " + rootScopeName + " contains the following injections:");
                 for (final var injection : injections) {
-                    LOGGER.d("  - " + injection.debugSelector);
+                    LOGGER.i("  - " + injection.debugSelector);
                 }
             }
         }
@@ -286,27 +283,27 @@ public final class Grammar implements IGrammar, IRuleFactoryHelper {
                     this._grammar.getRepository().getSelf(),
                     this,
                     this._grammar.getRepository());
+            // This ensures ids are deterministic, and thus equal in renderer and webworker.
+            this.getInjections();
         }
 
-        boolean isFirstLine;
-        if (prevState == null || prevState.equals(StateStack.NULL)) {
+        final boolean isFirstLine;
+        if (prevState == null || prevState == StateStack.NULL) {
             isFirstLine = true;
             final var rawDefaultMetadata = this._basicScopeAttributesProvider.getDefaultAttributes();
-            final var defaultTheme = this.themeProvider.getDefaults();
+            final var defaultStyle = this.themeProvider.getDefaults();
             final int defaultMetadata = EncodedTokenAttributes.set(
                     0,
                     rawDefaultMetadata.languageId,
                     rawDefaultMetadata.tokenType,
                     null,
-                    defaultTheme.fontStyle,
-                    defaultTheme.foregroundId,
-                    defaultTheme.backgroundId);
+                    defaultStyle.fontStyle,
+                    defaultStyle.foregroundId,
+                    defaultStyle.backgroundId);
 
-            final var rootScopeName = this.getRule(rootId).getName(
-                    null,
-                    null);
+            final var rootScopeName = this.getRule(rootId).getName(null, null);
 
-            AttributedScopeStack scopeList;
+            final AttributedScopeStack scopeList;
             if (rootScopeName != null) {
                 scopeList = AttributedScopeStack.createRootAndLookUpScopeName(
                         rootScopeName,
@@ -343,7 +340,7 @@ public final class Grammar implements IGrammar, IRuleFactoryHelper {
                 lineText,
                 _tokenTypeMatchers,
                 balancedBracketSelectors);
-        final var tokenizeResult = LineTokenizer.tokenizeString(
+        final var r = LineTokenizer.tokenizeString(
                 this,
                 onigLineText,
                 isFirstLine,
@@ -353,12 +350,12 @@ public final class Grammar implements IGrammar, IRuleFactoryHelper {
                 true,
                 timeLimit == null ? Duration.ZERO : timeLimit);
 
-        if (emitBinaryTokens) {
-            return (T) new TokenizeLineResult<>(lineTokens.getBinaryResult(tokenizeResult.stack, lineLength),
-                    tokenizeResult.stack, tokenizeResult.stoppedEarly);
-        }
-        return (T) new TokenizeLineResult<>(lineTokens.getResult(tokenizeResult.stack, lineLength),
-                tokenizeResult.stack, tokenizeResult.stoppedEarly);
+        return (T) new TokenizeLineResult<>(
+                emitBinaryTokens
+                        ? lineTokens.getBinaryResult(r.stack, lineLength)
+                        : lineTokens.getResult(r.stack, lineLength),
+                r.stack,
+                r.stoppedEarly);
     }
 
     @Override

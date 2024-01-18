@@ -28,7 +28,7 @@ import org.eclipse.tm4e.core.internal.utils.RegexSource;
 
 /**
  * @see <a href=
- * "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/rule.ts#L582">
+ * "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/rule.ts#L582">
  * github.com/microsoft/vscode-textmate/blob/main/src/rule.ts</a>
  */
 final class RegExpSource {
@@ -112,7 +112,7 @@ final class RegExpSource {
             capturedValues.add(lineText.subSequence(capture.start, capture.end).toString());
         }
 
-        //break change: use lower version of syntax to implement the same feature
+        // break change: use lower version of syntax to implement the same feature
 
         Function<Matcher, String> matchFunction = match -> {
             try {
@@ -159,34 +159,32 @@ final class RegExpSource {
         final var A1_G0_result = new StringBuilder(sourceLen);
         final var A1_G1_result = new StringBuilder(sourceLen);
 
-        for (int pos = 0, len = sourceLen; pos < len; pos++) {
+        for (int pos = 0; pos < sourceLen; pos++) {
             final char ch = source.charAt(pos);
             A0_G0_result.append(ch);
             A0_G1_result.append(ch);
             A1_G0_result.append(ch);
             A1_G1_result.append(ch);
 
-            if (ch == '\\') {
-                if (pos + 1 < len) {
-                    final char nextCh = source.charAt(pos + 1);
-                    if (nextCh == 'A') {
-                        A0_G0_result.append('\uFFFF');
-                        A0_G1_result.append('\uFFFF');
-                        A1_G0_result.append('A');
-                        A1_G1_result.append('A');
-                    } else if (nextCh == 'G') {
-                        A0_G0_result.append('\uFFFF');
-                        A0_G1_result.append('G');
-                        A1_G0_result.append('\uFFFF');
-                        A1_G1_result.append('G');
-                    } else {
-                        A0_G0_result.append(nextCh);
-                        A0_G1_result.append(nextCh);
-                        A1_G0_result.append(nextCh);
-                        A1_G1_result.append(nextCh);
-                    }
-                    pos++;
+            if (ch == '\\' && pos + 1 < sourceLen) {
+                final char nextCh = source.charAt(pos + 1);
+                if (nextCh == 'A') {
+                    A0_G0_result.append('\uFFFF');
+                    A0_G1_result.append('\uFFFF');
+                    A1_G0_result.append('A');
+                    A1_G1_result.append('A');
+                } else if (nextCh == 'G') {
+                    A0_G0_result.append('\uFFFF');
+                    A0_G1_result.append('G');
+                    A1_G0_result.append('\uFFFF');
+                    A1_G1_result.append('G');
+                } else {
+                    A0_G0_result.append(nextCh);
+                    A0_G1_result.append(nextCh);
+                    A1_G0_result.append(nextCh);
+                    A1_G1_result.append(nextCh);
                 }
+                pos++;
             }
         }
 

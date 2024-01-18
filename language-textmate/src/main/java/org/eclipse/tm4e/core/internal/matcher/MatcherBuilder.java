@@ -16,12 +16,11 @@
  */
 package org.eclipse.tm4e.core.internal.matcher;
 
+import org.eclipse.jdt.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import org.eclipse.jdt.annotation.Nullable;
 
 import io.github.rosemoe.sora.util.Logger;
 
@@ -52,14 +51,14 @@ final class MatcherBuilder<T> {
 			int priority = 0;
 			if (token.length() == 2 && token.charAt(1) == ':') {
 				switch (token.charAt(0)) {
-				case 'R':
-					priority = 1;
-					break;
-				case 'L':
-					priority = -1;
-					break;
-				default:
-					LOGGER.w( "Unknown priority %s in scope selector %s", token, selector);
+					case 'R':
+						priority = 1;
+						break;
+					case 'L':
+						priority = -1;
+						break;
+					default:
+						LOGGER.w("Unknown priority %s in scope selector %s", token, selector);
 				}
 				this.token = tokenizer.next();
 			}
@@ -166,9 +165,9 @@ final class MatcherBuilder<T> {
 		for (int i = 0; i < token.length(); i++) {
 			final char ch = token.charAt(i);
 			if (ch == '.' || ch == ':' || ch == '_'
-				|| ch >= 'a' && ch <= 'z'
-				|| ch >= 'A' && ch <= 'Z'
-				|| ch >= '0' && ch <= '9')
+					|| ch >= 'a' && ch <= 'z'
+					|| ch >= 'A' && ch <= 'Z'
+					|| ch >= '0' && ch <= '9')
 				continue;
 			return false;
 		}

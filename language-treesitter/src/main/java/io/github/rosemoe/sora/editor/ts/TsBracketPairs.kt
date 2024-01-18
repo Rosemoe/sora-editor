@@ -1,7 +1,7 @@
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.editor.ts
 
-import com.itsaky.androidide.treesitter.TSNode
 import com.itsaky.androidide.treesitter.TSQueryCursor
 import com.itsaky.androidide.treesitter.TSTree
 import io.github.rosemoe.sora.lang.brackets.BracketsProvider
@@ -45,16 +44,25 @@ class TsBracketPairs(
     }
 
     override fun getPairedBracketAt(text: Content, index: Int): PairedBracket? {
-        if (languageSpec.bracketsQuery.patternCount > 0 && languageSpec.bracketsQuery.isValid) {
-            TSQueryCursor().use { cursor ->
+        if (languageSpec.bracketsQuery.patternCount > 0 && languageSpec.bracketsQuery.canAccess() && tree.canAccess()) {
+            TSQueryCursor.create().use { cursor ->
                 cursor.setByteRange(max(0, index - 1) * 2, index * 2 + 1)
-                cursor.exec(languageSpec.bracketsQuery, tree.rootNode)
+                val rootNode = tree.rootNode
+                if (!rootNode.canAccess() || rootNode.hasChanges()) {
+                    return null
+                }
+                cursor.exec(languageSpec.bracketsQuery, rootNode)
                 var match = cursor.nextMatch()
                 var matched = false
+                val buffer = IntArray(4)
                 while (match != null && !matched) {
-                    if (languageSpec.bracketsPredicator.doPredicate(languageSpec.predicates, text, match)) {
-                        var startNode: TSNode? = null
-                        var endNode: TSNode? = null
+                    if (languageSpec.bracketsPredicator.doPredicate(
+                            languageSpec.predicates,
+                            text,
+                            match
+                        )
+                    ) {
+                        buffer.fill(-1)
                         for (capture in match.captures) {
                             val captureName =
                                 languageSpec.bracketsQuery.getCaptureNameForId(capture.index)
@@ -64,18 +72,20 @@ class TsBracketPairs(
                                     matched = true
                                 }
                                 if (captureName == OPEN_NAME) {
-                                    startNode = node
+                                    buffer[0] = node.startByte
+                                    buffer[1] = node.endByte
                                 } else {
-                                    endNode = node
+                                    buffer[2] = node.startByte
+                                    buffer[3] = node.endByte
                                 }
                             }
                         }
-                        if (matched && startNode != null && endNode != null) {
+                        if (matched && buffer[0] != -1 && buffer[2] != -1) {
                             return PairedBracket(
-                                startNode.startByte / 2,
-                                (startNode.endByte - startNode.startByte) / 2,
-                                endNode.startByte / 2,
-                                (endNode.endByte - endNode.startByte) / 2
+                                buffer[0] / 2,
+                                (buffer[1] - buffer[0]) / 2,
+                                buffer[2] / 2,
+                                (buffer[3] - buffer[2]) / 2
                             )
                         }
                     }

@@ -1,7 +1,7 @@
 /*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2024  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -64,5 +64,13 @@ public class TextRange {
 
     public int getEndIndex() {
         return end.index;
+    }
+
+    @Override
+    public String toString() {
+        return "TextRange{" +
+                "start=" + start +
+                ", end=" + end +
+                '}';
     }
 }

@@ -16,7 +16,7 @@
  */
 package org.eclipse.tm4e.core.internal.rule;
 
-import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.*;
+import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.defaultIfNull;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ import org.eclipse.tm4e.core.internal.oniguruma.OnigCaptureIndex;
 
 /**
  * @see <a href=
- *      "https://github.com/microsoft/vscode-textmate/blob/e8d1fc5d04b2fc91384c7a895f6c9ff296a38ac8/src/rule.ts#L209">
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/rule.ts#L209">
  *      github.com/microsoft/vscode-textmate/blob/main/src/rule.ts</a>
  */
 public final class BeginEndRule extends Rule {
@@ -45,9 +45,9 @@ public final class BeginEndRule extends Rule {
 	private RegExpSourceList cachedCompiledPatterns;
 
 	BeginEndRule(final RuleId id, @Nullable final String name, @Nullable final String contentName, final String begin,
-		final List<@Nullable CaptureRule> beginCaptures, @Nullable final String end,
-		final List<@Nullable CaptureRule> endCaptures, final boolean applyEndPatternLast,
-		final CompilePatternsResult patterns) {
+			final List<@Nullable CaptureRule> beginCaptures, @Nullable final String end,
+			final List<@Nullable CaptureRule> endCaptures, final boolean applyEndPatternLast,
+			final CompilePatternsResult patterns) {
 		super(id, name, contentName);
 		this.begin = new RegExpSource(begin, this.id);
 		this.beginCaptures = beginCaptures;
@@ -67,8 +67,7 @@ public final class BeginEndRule extends Rule {
 		return this.end.getSource();
 	}
 
-	public String getEndWithResolvedBackReferences(final CharSequence lineText,
-		final OnigCaptureIndex[] captureIndices) {
+	public String getEndWithResolvedBackReferences(final CharSequence lineText, final OnigCaptureIndex[] captureIndices) {
 		return this.end.resolveBackReferences(lineText, captureIndices);
 	}
 
@@ -83,13 +82,12 @@ public final class BeginEndRule extends Rule {
 	}
 
 	@Override
-	public CompiledRule compileAG(final IRuleRegistry grammar, @Nullable final String endRegexSource,
-		final boolean allowA, final boolean allowG) {
+	public CompiledRule compileAG(final IRuleRegistry grammar, @Nullable final String endRegexSource, final boolean allowA,
+			final boolean allowG) {
 		return getCachedCompiledPatterns(grammar, endRegexSource).compileAG(allowA, allowG);
 	}
 
-	private RegExpSourceList getCachedCompiledPatterns(final IRuleRegistry grammar,
-		@Nullable final String endRegexSource) {
+	private RegExpSourceList getCachedCompiledPatterns(final IRuleRegistry grammar, @Nullable final String endRegexSource) {
 		var cachedCompiledPatterns = this.cachedCompiledPatterns;
 		if (cachedCompiledPatterns == null) {
 			cachedCompiledPatterns = new RegExpSourceList();
