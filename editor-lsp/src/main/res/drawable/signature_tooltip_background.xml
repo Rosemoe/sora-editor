@@ -22,22 +22,7 @@
   ~     additional information or have any questions
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@drawable/signature_tooltip_background"
-    android:clipChildren="true"
-    android:orientation="vertical"
-    android:outlineProvider="background">
-
-
-    <TextView
-        android:id="@+id/signature_help_tooltip_text"
-        android:textSize="16sp"
-        style="?android:textAppearanceSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp" />
-
-</LinearLayout>
-
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <corners android:radius="8dp" />
+    <solid android:color="@android:color/white" />
+</shape>
