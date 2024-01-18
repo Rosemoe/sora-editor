@@ -1,4 +1,4 @@
-  /*******************************************************************************
+/*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2024  Rosemoe
@@ -21,32 +21,23 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
-    id("com.vanniktech.maven.publish.base")
-}
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
+package io.github.rosemoe.sora.lsp.client
 
-android {
-    namespace = "io.github.rosemoe.sora.lsp"
+import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
+import io.github.rosemoe.sora.lsp.editor.LspEditor
+import io.github.rosemoe.sora.lsp.utils.FileUri
 
-    defaultConfig {
-        consumerProguardFiles("consumer-rules.pro")
+
+class ServerWrapperBaseClientContext(private val wrapper: LanguageServerWrapper) :
+    ClientContext {
+    override fun getEditor(documentUri: FileUri): LspEditor? {
+        return wrapper.project.getEditor(documentUri)
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-}
+    override val projectPath = wrapper.project.projectUri
+    override val project = wrapper.project
+    override val requestManager = wrapper.requestManager
+    override val eventListener = wrapper.serverDefinition.eventListener
 
-dependencies {
-    compileOnly(projects.editor)
-    implementation(libs.lsp4j)
-    implementation(libs.kotlinx.coroutines)
 }

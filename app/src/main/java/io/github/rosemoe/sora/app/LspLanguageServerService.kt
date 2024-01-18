@@ -40,7 +40,6 @@ import kotlin.concurrent.thread
 
 class LspLanguageServerService : Service() {
 
-
     companion object {
         private const val TAG = "LanguageServer"
     }
@@ -62,27 +61,26 @@ class LspLanguageServerService : Service() {
 
             val socketClient = socket.accept()
 
-            Log.d(TAG, "connected to the client on port ${socketClient.localPort}")
+            Log.d(TAG, "connected to the client on port ${socketClient.port}")
 
             runCatching {
 
                 val server = LuaLanguageServer();
 
-
                 val inputStream = socketClient.getInputStream()
                 val outputStream = socketClient.getOutputStream()
-
 
                 val launcher = Launcher.createLauncher(
                     server, LuaLanguageClient::class.java,
                     inputStream, outputStream
-                );
+                )
+
                 val remoteProxy = launcher.remoteProxy
 
                 server.connect(remoteProxy);
 
                 launcher.startListening()
-                    .get(Long.MAX_VALUE,TimeUnit.SECONDS)
+                    .get()
 
                 /* XMLServerLauncher.launch(
                      socketClient.getInputStream(),
@@ -95,8 +93,6 @@ class LspLanguageServerService : Service() {
             socketClient.close()
 
             socket.close()
-
-
         }
 
         return START_STICKY

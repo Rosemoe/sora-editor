@@ -1,4 +1,4 @@
-  /*******************************************************************************
+/*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2024  Rosemoe
@@ -21,32 +21,42 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
-    id("com.vanniktech.maven.publish.base")
-}
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
+package io.github.rosemoe.sora.lsp.client.connection
 
-android {
-    namespace = "io.github.rosemoe.sora.lsp"
 
-    defaultConfig {
-        consumerProguardFiles("consumer-rules.pro")
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+import java.net.Socket
+
+
+/**
+ * Socket-based language server connection
+ */
+class SocketStreamConnectionProvider(
+    private val port:Int,
+    private val host:String? = null
+) : StreamConnectionProvider {
+    private lateinit var socket: Socket
+
+    @Throws(IOException::class)
+    override fun start() {
+        val port = port
+        socket = Socket(host ?: "localhost", port)
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+    override val inputStream: InputStream
+        get() = socket.getInputStream()
+
+    override val outputStream: OutputStream
+        get() = socket.getOutputStream()
+
+    override fun close() {
+        try {
+            socket.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
-}
-
-dependencies {
-    compileOnly(projects.editor)
-    implementation(libs.lsp4j)
-    implementation(libs.kotlinx.coroutines)
 }

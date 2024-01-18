@@ -88,6 +88,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
 import java.util.regex.PatternSyntaxException
+import kotlin.random.Random
 
 
 class MainActivity : AppCompatActivity() {
@@ -435,7 +436,7 @@ class MainActivity : AppCompatActivity() {
             if (idx == -1) {
                 text += "($matchText)"
             } else {
-                text += "(${idx+1} of $matchText)"
+                text += "(${idx + 1} of $matchText)"
             }
         }
         binding.positionDisplay.text = text
@@ -534,7 +535,12 @@ class MainActivity : AppCompatActivity() {
                         .setPositiveButton(android.R.string.ok, null)
                         .show()
                 } else {
-                    startActivity(Intent(this, LspTestActivity::class.java))
+                    val random = Math.random()
+                    if (random > 0.6) {
+                        startActivity(Intent(this, LspTestJavaActivity::class.java))
+                    } else {
+                        startActivity(Intent(this, LspTestActivity::class.java))
+                    }
                 }
             }
 

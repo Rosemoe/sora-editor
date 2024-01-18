@@ -1,4 +1,4 @@
-  /*******************************************************************************
+/*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2024  Rosemoe
@@ -21,32 +21,35 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
-    id("com.vanniktech.maven.publish.base")
+
+package io.github.rosemoe.sora.lsp.utils
+
+import java.io.File
+import java.net.URI
+import kotlin.io.path.pathString
+import kotlin.io.path.toPath
+
+fun FileUri.toFileUri(): String {
+    return "file://${this.path}"
 }
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
-
-android {
-    namespace = "io.github.rosemoe.sora.lsp"
-
-    defaultConfig {
-        consumerProguardFiles("consumer-rules.pro")
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
+fun String.toFileUri(): FileUri {
+    return FileUri(this)
 }
 
-dependencies {
-    compileOnly(projects.editor)
-    implementation(libs.lsp4j)
-    implementation(libs.kotlinx.coroutines)
+fun URI.toFileUri(): FileUri {
+    return FileUri(this.toPath().pathString)
+}
+
+@JvmInline
+value class FileUri(
+    val path: String
+) {
+    fun toFile(): File {
+        return File(toUri())
+    }
+
+    fun toUri(): URI {
+        return URI(this.toFileUri())
+    }
 }

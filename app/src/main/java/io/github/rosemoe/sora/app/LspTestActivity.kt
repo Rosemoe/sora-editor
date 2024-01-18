@@ -45,8 +45,7 @@ import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvid
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 import io.github.rosemoe.sora.lsp.editor.LspEditor
-import io.github.rosemoe.sora.lsp.editor.LspEditorManager
-import io.github.rosemoe.sora.lsp.utils.URIUtils
+import io.github.rosemoe.sora.lsp.editor.LspProject
 import io.github.rosemoe.sora.text.ContentIO
 import io.github.rosemoe.sora.widget.CodeEditor
 import kotlinx.coroutines.Dispatchers
@@ -59,6 +58,7 @@ import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent
 import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.tm4e.core.registry.IThemeSource
 import java.io.FileOutputStream
+import java.lang.ref.WeakReference
 import java.net.ServerSocket
 import java.util.zip.ZipFile
 
@@ -66,6 +66,7 @@ class LspTestActivity : AppCompatActivity() {
     private lateinit var editor: CodeEditor
 
     private lateinit var lspEditor: LspEditor
+    private lateinit var lspProject: LspProject
 
     private lateinit var rootMenu: Menu
 
@@ -130,7 +131,7 @@ class LspTestActivity : AppCompatActivity() {
     private suspend fun connectToLanguageServer() = withContext(Dispatchers.IO) {
 
         withContext(Dispatchers.Main) {
-            toast("Starting Language Server...")
+            toast("(Kotlin Activity) Starting Language Server...")
             editor.editable = false
         }
 
@@ -145,54 +146,65 @@ class LspTestActivity : AppCompatActivity() {
                 }
         )
 
-        val serverDefinition =
-            object : CustomLanguageServerDefinition(".lua",
-                { SocketStreamConnectionProvider { port } }
-            ) {
-               /* override fun getInitializationOptions(uri: URI?): Any {
-                    return InitializationOption(
-                        stdFolder = "file:/$projectPath/std/Lua53",
-                    )
-                }*/
-
-                override fun getEventListener(): EventHandler.EventListener {
-                    return EventListener()
+        val luaServerDefinition =
+            object : CustomLanguageServerDefinition("lua",
+                ServerConnectProvider {
+                    SocketStreamConnectionProvider(port)
                 }
+            ) {
+                /* override fun getInitializationOptions(uri: URI?): Any {
+                     return InitializationOption(
+                         stdFolder = "file:/$projectPath/std/Lua53",
+                     )
+                 }*/
+
+                private val _eventListener = EventListener(this@LspTestActivity)
+
+                override val eventListener: EventHandler.EventListener
+                    get() = _eventListener
+
             }
 
+        lspProject = LspProject(projectPath)
+
+        lspProject.addServerDefinition(luaServerDefinition)
+
         withContext(Dispatchers.Main) {
-            lspEditor = LspEditorManager
-                .getOrCreateEditorManager(projectPath)
-                .createEditor(
-                    URIUtils.fileToURI("$projectPath/sample.lua").toString(),
-                    serverDefinition
-                )
+            lspEditor = lspProject.createEditor("$projectPath/sample.lua")
             val wrapperLanguage = createTextMateLanguage()
-            lspEditor.setWrapperLanguage(wrapperLanguage)
+            lspEditor.wrapperLanguage = wrapperLanguage
             lspEditor.editor = editor
         }
 
-        lifecycleScope.launch(Dispatchers.Main) {
-            //delay(Timeout.getTimeout(Timeouts.INIT).toLong()) //wait for server start
-            try {
-                withContext(Dispatchers.IO) {
-                    lspEditor.connectWithTimeout()
-                    lspEditor.requestManager?.didChangeWorkspaceFolders(
-                        DidChangeWorkspaceFoldersParams().apply {
-                            this.event = WorkspaceFoldersChangeEvent().apply {
-                                added = listOf(WorkspaceFolder("file://$projectPath/std/Lua53"))
-                            }
-                        }
-                    )
-                }
+        var connected: Boolean
 
-                editor.editable = true
+        // delay(Timeout[Timeouts.INIT].toLong()) //wait for server start
+
+        try {
+            lspEditor.connectWithTimeout()
+
+            lspEditor.requestManager?.didChangeWorkspaceFolders(
+                DidChangeWorkspaceFoldersParams().apply {
+                    this.event = WorkspaceFoldersChangeEvent().apply {
+                        added = listOf(WorkspaceFolder("file://$projectPath/std/Lua53"))
+                    }
+                }
+            )
+
+            connected = true
+
+        } catch (e: Exception) {
+            connected = false
+            e.printStackTrace()
+        }
+
+        lifecycleScope.launch(Dispatchers.Main) {
+            if (connected) {
                 toast("Initialized Language server")
-            } catch (e: Exception) {
+            } else {
                 toast("Unable to connect language server")
-                editor.editable = true
-                e.printStackTrace()
             }
+            editor.editable = true
         }
     }
 
@@ -230,30 +242,33 @@ class LspTestActivity : AppCompatActivity() {
 
     private fun ensureTextmateTheme() {
         var editorColorScheme = editor.colorScheme
-        if (editorColorScheme !is TextMateColorScheme) {
 
-            FileProviderRegistry.getInstance().addFileProvider(
-                AssetsFileResolver(
-                    assets
-                )
-            )
-
-            val themeRegistry = ThemeRegistry.getInstance()
-
-            val path = "textmate/quietlight.json"
-            themeRegistry.loadTheme(
-                ThemeModel(
-                    IThemeSource.fromInputStream(
-                        FileProviderRegistry.getInstance().tryGetInputStream(path), path, null
-                    ), "quitelight"
-                )
-            )
-
-            themeRegistry.setTheme("quietlight")
-
-            editorColorScheme = TextMateColorScheme.create(themeRegistry)
-            editor.colorScheme = editorColorScheme
+        if (editorColorScheme is TextMateColorScheme) {
+            return
         }
+
+        FileProviderRegistry.getInstance().addFileProvider(
+            AssetsFileResolver(
+                assets
+            )
+        )
+
+        val themeRegistry = ThemeRegistry.getInstance()
+
+        val path = "textmate/quietlight.json"
+        themeRegistry.loadTheme(
+            ThemeModel(
+                IThemeSource.fromInputStream(
+                    FileProviderRegistry.getInstance().tryGetInputStream(path), path, null
+                ), "quitelight"
+            )
+        )
+
+        themeRegistry.setTheme("quietlight")
+
+        editorColorScheme = TextMateColorScheme.create(themeRegistry)
+        editor.colorScheme = editorColorScheme
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -279,23 +294,29 @@ class LspTestActivity : AppCompatActivity() {
         super.onDestroy()
 
         editor.release()
-        LspEditorManager.closeAllManager()
+        lifecycleScope.launch {
+            lspEditor.dispose()
+            lspProject.dispose()
+        }
         stopService(Intent(this@LspTestActivity, LspLanguageServerService::class.java))
     }
 
-    data class InitializationOption(
-        var stdFolder: String
-    )
 
-
-    inner class EventListener : EventHandler.EventListener {
-        override fun initialize(server: LanguageServer, result: InitializeResult) {
-            runOnUiThread {
-                rootMenu.findItem(R.id.code_format).isEnabled =
-                    result.capabilities.documentFormattingProvider != null
+    class EventListener(
+        activity: LspTestActivity
+    ) : EventHandler.EventListener {
+        private val activityRef = WeakReference(activity)
+        override fun initialize(server: LanguageServer?, result: InitializeResult) {
+            activityRef.get()?.apply {
+                runOnUiThread {
+                    rootMenu.findItem(R.id.code_format).isEnabled =
+                        result.capabilities.documentFormattingProvider != null
+                }
             }
         }
     }
 
+
 }
+
 

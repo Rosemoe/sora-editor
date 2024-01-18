@@ -1,4 +1,4 @@
-  /*******************************************************************************
+/*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2024  Rosemoe
@@ -21,32 +21,36 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
-    id("com.vanniktech.maven.publish.base")
-}
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
+package io.github.rosemoe.sora.lsp.client.connection
 
-android {
-    namespace = "io.github.rosemoe.sora.lsp"
+import androidx.annotation.WorkerThread
+import java.io.Closeable
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 
-    defaultConfig {
-        consumerProguardFiles("consumer-rules.pro")
-    }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-}
+interface StreamConnectionProvider : Closeable {
+    /**
+     * Connect to the server.
+     */
+    @Throws(IOException::class)
+    @WorkerThread
+    fun start()
 
-dependencies {
-    compileOnly(projects.editor)
-    implementation(libs.lsp4j)
-    implementation(libs.kotlinx.coroutines)
+    /**
+     * Get the input stream of the connection.
+     */
+    val inputStream: InputStream
+
+    /**
+     * Get the output stream of the connection.
+     */
+    val outputStream: OutputStream
+
+    /**
+     * Close the connection.
+     */
+    override fun close()
 }

@@ -178,8 +178,6 @@ data class FuzzyScoreOptions(
     companion object {
         @JvmStatic
         val default = FuzzyScoreOptions(boostFullMatch = true, firstMatchCanBeWeak = false)
-
-
     }
 
 }

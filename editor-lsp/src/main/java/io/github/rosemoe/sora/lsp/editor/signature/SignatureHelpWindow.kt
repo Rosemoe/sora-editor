@@ -27,7 +27,6 @@ package io.github.rosemoe.sora.lsp.editor.signature
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.text.SpannableStringBuilder
-import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.util.Log
@@ -39,7 +38,6 @@ import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent
 import io.github.rosemoe.sora.event.subscribeEvent
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
-import io.github.rosemoe.sora.widget.component.EditorBuiltinComponent
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.SignatureInformation
@@ -170,8 +168,6 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
         renderStringBuilder: SpannableStringBuilder,
         isCurrentSignature: Boolean
     ) {
-
-
         val label = signature.label
         val parameters = signature.parameters
         val activeParameter = parameters.getOrNull(activeParameterIndex)

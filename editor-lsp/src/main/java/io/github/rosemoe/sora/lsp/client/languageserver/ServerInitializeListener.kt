@@ -1,4 +1,4 @@
-  /*******************************************************************************
+/*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2024  Rosemoe
@@ -21,32 +21,19 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
-    id("com.vanniktech.maven.publish.base")
+
+package io.github.rosemoe.sora.lsp.client.languageserver
+
+import org.eclipse.lsp4j.InitializeResult
+import org.eclipse.lsp4j.services.LanguageServer
+
+
+fun interface ServerInitializeListener {
+    fun initialize(server: LanguageServer?, result: InitializeResult)
 }
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
-
-android {
-    namespace = "io.github.rosemoe.sora.lsp"
-
-    defaultConfig {
-        consumerProguardFiles("consumer-rules.pro")
+object EmptyServerInitializeListener : ServerInitializeListener {
+    override fun initialize(server: LanguageServer?, result: InitializeResult) {
+        // do nothing
     }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-}
-
-dependencies {
-    compileOnly(projects.editor)
-    implementation(libs.lsp4j)
-    implementation(libs.kotlinx.coroutines)
 }
