@@ -1877,14 +1877,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return The offset x of right cursor on view
      */
     protected float updateCursorAnchor() {
-        CursorAnchorInfo.Builder builder = anchorInfoBuilder;
-        builder.reset();
-        matrix.set(getMatrix());
-        int[] b = new int[2];
-        getLocationOnScreen(b);
-        matrix.postTranslate(b[0], b[1]);
-        builder.setMatrix(matrix);
-        builder.setSelectionRange(cursor.getLeft(), cursor.getRight());
         int l = cursor.getRightLine();
         int column = cursor.getRightColumn();
         boolean visible = true;
@@ -1895,8 +1887,18 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             visible = false;
             x = 0;
         }
-        builder.setInsertionMarkerLocation(x, getRowTop(l) - getOffsetY(), getRowBaseline(l) - getOffsetY(), getRowBottom(l) - getOffsetY(), visible ? CursorAnchorInfo.FLAG_HAS_VISIBLE_REGION : CursorAnchorInfo.FLAG_HAS_INVISIBLE_REGION);
-        inputMethodManager.updateCursorAnchorInfo(this, builder.build());
+        if (props.reportCursorAnchor) {
+            CursorAnchorInfo.Builder builder = anchorInfoBuilder;
+            builder.reset();
+            matrix.set(getMatrix());
+            int[] b = new int[2];
+            getLocationOnScreen(b);
+            matrix.postTranslate(b[0], b[1]);
+            builder.setMatrix(matrix);
+            builder.setSelectionRange(cursor.getLeft(), cursor.getRight());
+            builder.setInsertionMarkerLocation(x, getRowTop(l) - getOffsetY(), getRowBaseline(l) - getOffsetY(), getRowBottom(l) - getOffsetY(), visible ? CursorAnchorInfo.FLAG_HAS_VISIBLE_REGION : CursorAnchorInfo.FLAG_HAS_INVISIBLE_REGION);
+            inputMethodManager.updateCursorAnchorInfo(this, builder.build());
+        }
         return x;
     }
 
