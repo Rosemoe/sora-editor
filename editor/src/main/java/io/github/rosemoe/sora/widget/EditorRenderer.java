@@ -45,6 +45,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import io.github.rosemoe.sora.graphics.CharPosDesc;
 import io.github.rosemoe.sora.util.RendererUtils;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1213,8 +1214,8 @@ public class EditorRenderer {
                 lastPreparedLine = line;
             }
             // Get visible region on the line
-            float[] charPos = findDesiredVisibleChar(offset3, line, rowInf.startColumn, rowInf.endColumn);
-            float paintingOffset = charPos[1] - offset2;
+            long charPos = findDesiredVisibleChar(offset3, line, rowInf.startColumn, rowInf.endColumn);
+            float paintingOffset = CharPosDesc.getPixelWidthOrOffset(charPos) - offset2;
 
             var drawCurrentLineBg = line == currentLine && !editor.getCursorAnimator().isRunning() && editor.isEditable();
             if (!drawCurrentLineBg || editor.getProps().drawCustomLineBgOnCurrentLine) {
@@ -1323,10 +1324,11 @@ public class EditorRenderer {
             }
 
             // Get visible region on the line
-            float[] charPos = findDesiredVisibleChar(offset3, line, rowInf.startColumn, rowInf.endColumn);
-            int firstVisibleChar = (int) charPos[0];
-            float paintingOffset = charPos[1] - offset2;
-            int lastVisibleChar = (int) findDesiredVisibleChar(editor.getWidth() - paintingOffset, line, firstVisibleChar, rowInf.endColumn, rowInf.startColumn, true)[0];
+            long charPos = findDesiredVisibleChar(offset3, line, rowInf.startColumn, rowInf.endColumn);
+            int firstVisibleChar = (int) CharPosDesc.getTextOffset(charPos);
+            float paintingOffset = CharPosDesc.getPixelWidthOrOffset(charPos) - offset2;
+            charPos = findDesiredVisibleChar(editor.getWidth() - paintingOffset, line, firstVisibleChar, rowInf.endColumn, rowInf.startColumn, true);
+            int lastVisibleChar = (int) CharPosDesc.getTextOffset(charPos);
 
             float backupOffset = paintingOffset;
             int nonPrintableFlags = editor.getNonPrintablePaintingFlags();
@@ -2555,17 +2557,19 @@ public class EditorRenderer {
     // BEGIN Measure-------------------------------------
 
     @UnsupportedUserUsage
-    public float[] findDesiredVisibleChar(float target, int lineIndex, int start, int end) {
+    public long findDesiredVisibleChar(float target, int lineIndex, int start, int end) {
         return findDesiredVisibleChar(target, lineIndex, start, end, start, false);
     }
 
     /**
      * Find first visible character
+     *
+     * @return packed floating number pair (textOffset, pixelOffset).
      */
     @UnsupportedUserUsage
-    public float[] findDesiredVisibleChar(float target, int lineIndex, int start, int end, int contextStart, boolean forLast) {
+    public long findDesiredVisibleChar(float target, int lineIndex, int start, int end, int contextStart, boolean forLast) {
         if (start >= end) {
-            return new float[]{end, 0};
+            return CharPosDesc.make(end, 0);
         }
         var line = getLine(lineIndex);
         if (line.widthCache != null && line.timestamp < displayTimestamp) {
@@ -2580,7 +2584,7 @@ public class EditorRenderer {
 
         // Do some additional work here
 
-        var offset = (int) res[0];
+        var offset = CharPosDesc.getTextOffset(res);
         // Check RTL context
         var rtl = false;
         int runIndex = -1;
@@ -2658,19 +2662,20 @@ public class EditorRenderer {
             }
         }
         offset = Math.min(end, Math.max(start, offset));
-        res = new float[]{offset, gtr.measureText(start, offset)};
+        long result = CharPosDesc.make(offset, gtr.measureText(start, offset));
 
         gtr.recycle();
-        return res;
+        return result;
     }
 
     /**
      * Find first visible character
+     * @return Character position description, {@link CharPosDesc}
      */
     @UnsupportedUserUsage
-    public float[] findFirstVisibleCharForWordwrap(float target, int lineIndex, int start, int end, int contextStart, Paint paint) {
+    public long findFirstVisibleCharForWordwrap(float target, int lineIndex, int start, int end, int contextStart, Paint paint) {
         if (start >= end) {
-            return new float[]{end, 0};
+            return CharPosDesc.make(end, 0);
         }
         var gtr = GraphicTextRow.obtain(basicDisplayMode);
         gtr.set(content, lineIndex, contextStart, end, editor.getTabWidth(), sSpansForWordwrap, paint);

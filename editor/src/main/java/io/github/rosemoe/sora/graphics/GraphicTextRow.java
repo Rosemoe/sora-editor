@@ -47,7 +47,6 @@ import io.github.rosemoe.sora.util.IntPair;
 public class GraphicTextRow {
 
     private final static GraphicTextRow[] sCached = new GraphicTextRow[5];
-    private final float[] buffer;
     private Paint paint;
     private ContentLine text;
     private Directions directions;
@@ -61,7 +60,7 @@ public class GraphicTextRow {
     private final Directions tmpDirections = new Directions(new long[]{IntPair.pack(0, 0)}, 0);
 
     private GraphicTextRow() {
-        buffer = new float[2];
+
     }
 
     public static GraphicTextRow obtain(boolean quickMeasure) {
@@ -158,9 +157,10 @@ public class GraphicTextRow {
      * <p>
      * Note that the result array should not be stored.
      *
-     * @return Element 0 is offset, Element 1 is measured width
+     * @return text offset and measured width
+     * @see CharPosDesc Character position description
      */
-    public float[] findOffsetByAdvance(int start, float advance) {
+    public long findOffsetByAdvance(int start, float advance) {
         if (text.widthCache != null && useCache) {
             var cache = text.widthCache;
             var end = textEnd;
@@ -186,9 +186,7 @@ public class GraphicTextRow {
                 left--;
             }
             left = Math.max(start, Math.min(end, left));
-            buffer[0] = left;
-            buffer[1] = cache[left] - base;
-            return buffer;
+            return CharPosDesc.make(left, cache[left] - base);
         }
         var regionItr = new TextRegionIterator(textEnd, spans, softBreaks);
         float currentPosition = 0f;
@@ -272,9 +270,7 @@ public class GraphicTextRow {
             paint.setFakeBoldText(false);
             paint.setTextSkewX(0f);
         }
-        buffer[0] = offset;
-        buffer[1] = currentPosition;
-        return buffer;
+        return CharPosDesc.make(offset, currentPosition);
     }
 
     public float measureText(int start, int end) {

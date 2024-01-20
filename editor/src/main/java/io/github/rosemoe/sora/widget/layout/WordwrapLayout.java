@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import io.github.rosemoe.sora.graphics.CharPosDesc;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
@@ -180,7 +181,7 @@ public class WordwrapLayout extends AbstractLayout {
         var text = sequence.value;
 
         while (start < len) {
-            var next = (int) editor.getRenderer().findFirstVisibleCharForWordwrap(width, line, start, len, 0, paint == null ? editor.getTextPaint() : paint)[0];
+            var next = CharPosDesc.getTextOffset(editor.getRenderer().findFirstVisibleCharForWordwrap(width, line, start, len, 0, paint == null ? editor.getTextPaint() : paint));
             // Force to break the text, though no space is available
             if (next == start) {
                 next++;
@@ -197,7 +198,7 @@ public class WordwrapLayout extends AbstractLayout {
             breakpoints.add(next);
             start = next;
         }
-        if (breakpoints.size() != 0 && breakpoints.get(breakpoints.size() - 1) == sequence.length()) {
+        if (!breakpoints.isEmpty() && breakpoints.get(breakpoints.size() - 1) == sequence.length()) {
             breakpoints.remove(breakpoints.size() - 1);
         }
     }

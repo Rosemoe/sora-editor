@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.widget.layout
 
+import io.github.rosemoe.sora.graphics.CharPosDesc
 import io.github.rosemoe.sora.graphics.GraphicTextRow
 import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.widget.CodeEditor
@@ -118,9 +119,19 @@ object BidiLayoutHelper {
             val width = gtr.measureText(runStart, runEnd)
             if (offset + width >= targetOffset) {
                 val res = if (dirs.isRunRtl(i)) {
-                    gtr.findOffsetByAdvance(runStart, offset + width - targetOffset)[0].toInt()
+                    CharPosDesc.getTextOffset(
+                        gtr.findOffsetByAdvance(
+                            runStart,
+                            offset + width - targetOffset
+                        )
+                    )
                 } else {
-                    gtr.findOffsetByAdvance(runStart, targetOffset - offset)[0].toInt()
+                    CharPosDesc.getTextOffset(
+                        gtr.findOffsetByAdvance(
+                            runStart,
+                            targetOffset - offset
+                        )
+                    )
                 }
                 gtr.recycle()
                 return res
