@@ -2614,7 +2614,7 @@ public class EditorRenderer {
         } else {
             if (forLast) {
                 if (offset + 1 < end) {
-                    var itr = new UnicodeIterator(line, offset + 1, end);
+                    var itr = UnicodeIterator.obtain(line, offset + 1, end);
                     int codePoint;
                     var first = true;
                     while ((codePoint = itr.nextCodePoint()) != 0) {
@@ -2625,6 +2625,7 @@ public class EditorRenderer {
                             break;
                         }
                     }
+                    itr.recycle();
                 }
             } else {
                 if (offset < end) {
