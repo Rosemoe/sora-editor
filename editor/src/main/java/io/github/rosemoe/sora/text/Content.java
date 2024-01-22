@@ -246,8 +246,8 @@ public class Content implements CharSequence {
     }
 
     /**
-     * Get raw data of line
-     * The result is not expected to be modified
+     * Get raw data of line.
+     * The result should not be modified by code out of editor framework.
      *
      * @param line Line
      * @return Raw ContentLine used by Content

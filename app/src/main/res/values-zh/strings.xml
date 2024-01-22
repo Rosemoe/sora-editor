@@ -84,4 +84,10 @@
     <string name="search_option_regex">正则表达式</string>
     <string name="search_option_whole_word">全词匹配</string>
     <string name="search_option_match_case">区分大小写</string>
+    <string name="enable_soft_keyboard">启用软键盘</string>
+    <string name="hide_soft_kbd_if_hard_kbd_available">物理键盘连接时隐藏软键盘</string>
+    <string name="deleting_log_success">日志已删除。</string>
+    <string name="tip_side_icon">点击了侧边按钮</string>
+    <string name="dialog_lsp_entry_title">选择LSP活动</string>
+    <string name="dialog_lsp_entry_msg">是否要打开以Kotlin编写的LSP界面？</string>
 </resources>

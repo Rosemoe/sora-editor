@@ -41,6 +41,7 @@ import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EditorKeyEvent
@@ -66,6 +67,9 @@ import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolve
 import io.github.rosemoe.sora.text.ContentIO
 import io.github.rosemoe.sora.text.LineSeparator
 import io.github.rosemoe.sora.utils.CrashHandler
+import io.github.rosemoe.sora.utils.codePointStringAt
+import io.github.rosemoe.sora.utils.escapeCodePointIfNecessary
+import io.github.rosemoe.sora.utils.toast
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorSearcher.SearchOptions
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
@@ -80,17 +84,17 @@ import io.github.rosemoe.sora.widget.schemes.SchemeVS2019
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode
 import io.github.rosemoe.sora.widget.subscribeEvent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.eclipse.tm4e.core.registry.IGrammarSource
 import org.eclipse.tm4e.core.registry.IThemeSource
-import java.io.BufferedReader
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.IOException
-import java.io.InputStreamReader
 import java.util.regex.PatternSyntaxException
-import kotlin.random.Random
 
-
+/**
+ * Demo and debug Activity for the code editor
+ */
 class MainActivity : AppCompatActivity() {
 
     companion object {
@@ -99,6 +103,28 @@ class MainActivity : AppCompatActivity() {
             System.loadLibrary("android-tree-sitter")
             System.loadLibrary("tree-sitter-java")
         }
+
+        const val LOG_FILE = "crash-journal.log"
+
+        /**
+         * Symbols to be displayed in symbol input view
+         */
+        val SYMBOLS = arrayOf(
+            "->", "{", "}", "(", ")",
+            ",", ".", ";", "\"", "?",
+            "+", "-", "*", "/", "<",
+            ">", "[", "]", ":"
+        )
+
+        /**
+         * Texts to be committed to editor for symbols above
+         */
+        val SYMBOL_INSERT_TEXT = arrayOf(
+            "\t", "{}", "}", "(", ")",
+            ",", ".", ";", "\"", "?",
+            "+", "-", "*", "/", "<",
+            ">", "[", "]", ":"
+        )
 
     }
 
@@ -113,26 +139,15 @@ class MainActivity : AppCompatActivity() {
         CrashHandler.INSTANCE.init(this)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        val typeface = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
+
+        // Configure symbol input view
         val inputView = binding.symbolInput
         inputView.bindEditor(binding.editor)
-        val typeface = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
-        inputView.addSymbols(
-            arrayOf(
-                "->", "{", "}", "(", ")",
-                ",", ".", ";", "\"", "?",
-                "+", "-", "*", "/", "<",
-                ">", "[", "]", ":"
-            ),
-            arrayOf(
-                "\t", "{}", "}", "(", ")",
-                ",", ".", ";", "\"", "?",
-                "+", "-", "*", "/", "<",
-                ">", "[", "]", ":"
-            )
-        )
-        inputView.forEachButton {
-            it.typeface = typeface
-        }
+        inputView.addSymbols(SYMBOLS, SYMBOL_INSERT_TEXT)
+        inputView.forEachButton { it.typeface = typeface }
+
+        // Commit search when text changed
         binding.searchEditor.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {}
             override fun onTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {}
@@ -140,12 +155,15 @@ class MainActivity : AppCompatActivity() {
                 tryCommitSearch()
             }
         })
+
+        // Search options
         searchMenu = PopupMenu(this, binding.searchOptions)
         searchMenu.inflate(R.menu.menu_search_options)
         searchMenu.setOnMenuItemClickListener {
+            // Update option states
             it.isChecked = !it.isChecked
-            val ignoreCase = !searchMenu.menu.findItem(R.id.search_option_match_case)!!.isChecked
             if (it.isChecked) {
+                // Regex and whole word mode can not be both chose
                 when (it.itemId) {
                     R.id.search_option_regex -> {
                         searchMenu.menu.findItem(R.id.search_option_whole_word)!!.isChecked = false
@@ -156,19 +174,13 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-            var type = SearchOptions.TYPE_NORMAL
-            val regex = searchMenu.menu.findItem(R.id.search_option_regex)!!.isChecked
-            if (regex) {
-                type = SearchOptions.TYPE_REGULAR_EXPRESSION
-            }
-            val wholeWord = searchMenu.menu.findItem(R.id.search_option_whole_word)!!.isChecked
-            if (wholeWord) {
-                type = SearchOptions.TYPE_WHOLE_WORD
-            }
-            searchOptions = SearchOptions(type, ignoreCase)
+            // Update search options and commit search with the new options
+            computeSearchOptions()
             tryCommitSearch()
             true
         }
+
+        // Configure editor
         binding.editor.apply {
             typefaceText = typeface
             props.stickyScroll = true
@@ -176,6 +188,7 @@ class MainActivity : AppCompatActivity() {
             nonPrintablePaintingFlags =
                 CodeEditor.FLAG_DRAW_WHITESPACE_LEADING or CodeEditor.FLAG_DRAW_LINE_SEPARATOR or CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION
             // Update display dynamically
+            // Use CodeEditor#subscribeEvent to add listeners of different events to editor
             subscribeEvent<SelectionChangeEvent> { _, _ -> updatePositionText() }
             subscribeEvent<PublishSearchResultEvent> { _, _ -> updatePositionText() }
             subscribeEvent<ContentChangeEvent> { _, _ ->
@@ -185,7 +198,7 @@ class MainActivity : AppCompatActivity() {
                 )
             }
             subscribeEvent<SideIconClickEvent> { _, _ ->
-                Toast.makeText(this@MainActivity, "Side icon clicked", Toast.LENGTH_SHORT).show()
+                toast(R.string.tip_side_icon)
             }
 
             subscribeEvent<KeyBindingEvent> { event, _ ->
@@ -193,43 +206,63 @@ class MainActivity : AppCompatActivity() {
                     return@subscribeEvent
                 }
 
-                Toast.makeText(
-                    context,
+                toast(
                     "Keybinding event: " + generateKeybindingString(event),
                     Toast.LENGTH_LONG
-                ).show()
+                )
             }
 
             getComponent<EditorAutoCompletion>()
                 .setEnabledAnimation(true)
         }
 
-
-        loadDefaultThemes()
-        loadDefaultLanguages()
-
+        // Load textmate themes and grammars
+        setupTextmate()
+        // Before using Textmate Language, TextmateColorScheme should be applied
         ensureTextmateTheme()
 
+        // Set editor language to textmate Java
         val editor = binding.editor
         val language = TextMateLanguage.create(
             "source.java", true
         )
-
         editor.setEditorLanguage(language)
 
+        // Open assets file
         openAssetsFile("samples/sample.txt")
+
         updatePositionText()
         updateBtnState()
 
         switchThemeIfRequired(this, binding.editor)
     }
 
+    /**
+     * Generate new [SearchOptions] for text searching in editor
+     */
+    private fun computeSearchOptions() {
+        val caseInsensitive = !searchMenu.menu.findItem(R.id.search_option_match_case)!!.isChecked
+        var type = SearchOptions.TYPE_NORMAL
+        val regex = searchMenu.menu.findItem(R.id.search_option_regex)!!.isChecked
+        if (regex) {
+            type = SearchOptions.TYPE_REGULAR_EXPRESSION
+        }
+        val wholeWord = searchMenu.menu.findItem(R.id.search_option_whole_word)!!.isChecked
+        if (wholeWord) {
+            type = SearchOptions.TYPE_WHOLE_WORD
+        }
+        searchOptions = SearchOptions(type, caseInsensitive)
+    }
+
+    /**
+     * Commit a text search to editor
+     */
     private fun tryCommitSearch() {
-        val editable = binding.searchEditor.editableText
-        if (editable.isNotEmpty()) {
+        val query = binding.searchEditor.editableText
+        if (query.isNotEmpty()) {
             try {
                 binding.editor.searcher.search(
-                    editable.toString(),
+                    query.toString(),
                     searchOptions
                 )
             } catch (e: PatternSyntaxException) {
@@ -240,17 +273,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-    private /*suspend*/ fun loadDefaultThemes() /*= withContext(Dispatchers.IO)*/ {
-
-        //add assets file provider
+    /**
+     * Setup Textmate. Load our grammars and themes from assets
+     */
+    private fun setupTextmate() {
+        // Add assets file provider so that files in assets can be loaded
         FileProviderRegistry.getInstance().addFileProvider(
             AssetsFileResolver(
-                applicationContext.assets
+                applicationContext.assets // use application context
             )
         )
+        loadDefaultThemes()
+        loadDefaultLanguages()
+    }
 
 
+    /**
+     * Load default textmate themes
+     */
+    private /*suspend*/ fun loadDefaultThemes() /*= withContext(Dispatchers.IO)*/ {
         val themes = arrayOf("darcula", "abyss", "quietlight", "solarized_drak")
         val themeRegistry = ThemeRegistry.getInstance()
         themes.forEach { name ->
@@ -271,6 +312,11 @@ class MainActivity : AppCompatActivity() {
         themeRegistry.setTheme("quietlight")
     }
 
+    /**
+     * Load default languages from JSON configuration
+     *
+     * @see loadDefaultLanguagesWithDSL Load by Kotlin DSL
+     */
     private /*suspend*/ fun loadDefaultLanguages() /*= withContext(Dispatchers.Main)*/ {
         GrammarRegistry.getInstance().loadGrammars("textmate/languages.json")
     }
@@ -297,6 +343,9 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    /**
+     * Re-apply color scheme
+     */
     private fun resetColorScheme() {
         binding.editor.apply {
             val colorScheme = this.colorScheme
@@ -305,7 +354,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
+    /**
+     * Add diagnostic items to editor. For debug only.
+     */
     private fun setupDiagnostics() {
         val editor = binding.editor
         val container = DiagnosticsContainer()
@@ -322,6 +373,9 @@ class MainActivity : AppCompatActivity() {
         editor.diagnostics = container
     }
 
+    /**
+     * Ensure the editor uses a [TextMateColorScheme]
+     */
     private fun ensureTextmateTheme() {
         val editor = binding.editor
         var editorColorScheme = editor.colorScheme
@@ -349,31 +403,37 @@ class MainActivity : AppCompatActivity() {
         return sb.toString()
     }
 
+    /**
+     * Open file from assets, and set editor text
+     */
     private fun openAssetsFile(name: String) {
-        Thread {
-            try {
-                val text = ContentIO.createFrom(assets.open(name))
-                runOnUiThread {
-                    binding.editor.setText(text, null)
-                    //setupDiagnostics()
-                }
-            } catch (e: IOException) {
-                e.printStackTrace()
+        lifecycleScope.launch(Dispatchers.IO) {
+            val text = ContentIO.createFrom(assets.open(name))
+            withContext(Dispatchers.Main) {
+                binding.editor.setText(text, null)
+
+                updatePositionText()
+                updateBtnState()
             }
-        }.start()
-        updatePositionText()
-        updateBtnState()
+        }
     }
 
+    /**
+     * Update buttons state for undo/redo
+     */
     private fun updateBtnState() {
         undo?.isEnabled = binding.editor.canUndo()
         redo?.isEnabled = binding.editor.canRedo()
     }
 
+    /**
+     * Update editor position tracker text
+     */
     private fun updatePositionText() {
         val cursor = binding.editor.cursor
         var text =
             (1 + cursor.leftLine).toString() + ":" + cursor.leftColumn + ";" + cursor.left + " "
+
         text += if (cursor.isSelected) {
             "(" + (cursor.right - cursor.left) + " chars)"
         } else {
@@ -387,41 +447,13 @@ class MainActivity : AppCompatActivity() {
                     }
                 } + ">)"
             } else {
-                val char = binding.editor.text.charAt(
-                    cursor.leftLine,
-                    cursor.leftColumn
-                )
-                if (char.isLowSurrogate() && cursor.leftColumn > 0) {
-                    "(" + String(
-                        charArrayOf(
-                            binding.editor.text.charAt(
-                                cursor.leftLine,
-                                cursor.leftColumn - 1
-                            ), char
-                        )
-                    ) + ")"
-                } else if (char.isHighSurrogate() && cursor.leftColumn + 1 < binding.editor.text.getColumnCount(
-                        cursor.leftLine
-                    )
-                ) {
-                    "(" + String(
-                        charArrayOf(
-                            char, binding.editor.text.charAt(
-                                cursor.leftLine,
-                                cursor.leftColumn + 1
-                            )
-                        )
-                    ) + ")"
-                } else {
-                    "(" + escapeIfNecessary(
-                        binding.editor.text.charAt(
-                            cursor.leftLine,
-                            cursor.leftColumn
-                        )
-                    ) + ")"
-                }
+                "(" + content.getLine(cursor.leftLine)
+                    .codePointStringAt(cursor.leftColumn)
+                    .escapeCodePointIfNecessary() + ")"
             }
         }
+
+        // Indicator for text matching
         val searcher = binding.editor.searcher
         if (searcher.hasQuery()) {
             val idx = searcher.currentMatchedPositionIndex
@@ -433,23 +465,418 @@ class MainActivity : AppCompatActivity() {
             } else {
                 "$count matches"
             }
-            if (idx == -1) {
-                text += "($matchText)"
+            text += if (idx == -1) {
+                "($matchText)"
             } else {
-                text += "(${idx + 1} of $matchText)"
+                "(${idx + 1} of $matchText)"
             }
         }
+
         binding.positionDisplay.text = text
     }
 
-    private fun escapeIfNecessary(c: Char): String {
-        return when (c) {
-            '\n' -> "\\n"
-            '\t' -> "\\t"
-            '\r' -> "\\r"
-            ' ' -> "<ws>"
-            else -> c.toString()
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        switchThemeIfRequired(this, binding.editor)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        undo = menu.findItem(R.id.text_undo)
+        redo = menu.findItem(R.id.text_redo)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        binding.editor.release()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val id = item.itemId
+        val editor = binding.editor
+        when (id) {
+            R.id.open_test_activity -> startActivity(Intent(this, TestActivity::class.java))
+            R.id.open_lsp_activity -> {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                    AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.not_supported))
+                        .setMessage(getString(R.string.dialog_api_warning_msg))
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
+                } else {
+                    AlertDialog.Builder(this)
+                        .setTitle(R.string.dialog_lsp_entry_title)
+                        .setMessage(R.string.dialog_lsp_entry_msg)
+                        .setPositiveButton(android.R.string.yes) { _, _ ->
+                            startActivity(
+                                Intent(
+                                    this,
+                                    LspTestActivity::class.java
+                                )
+                            )
+                        }
+                        .setNegativeButton(android.R.string.no) { _, _ ->
+                            startActivity(
+                                Intent(
+                                    this,
+                                    LspTestJavaActivity::class.java
+                                )
+                            )
+                        }
+                        .setNeutralButton(android.R.string.cancel, null)
+                        .show()
+                }
+            }
+
+            R.id.text_undo -> editor.undo()
+            R.id.text_redo -> editor.redo()
+            R.id.goto_end -> editor.setSelection(
+                editor.text.lineCount - 1,
+                editor.text.getColumnCount(editor.text.lineCount - 1)
+            )
+
+            R.id.move_up -> editor.moveSelectionUp()
+            R.id.move_down -> editor.moveSelectionDown()
+            R.id.home -> editor.moveSelectionHome()
+            R.id.end -> editor.moveSelectionEnd()
+            R.id.move_left -> editor.moveSelectionLeft()
+            R.id.move_right -> editor.moveSelectionRight()
+            R.id.magnifier -> {
+                item.isChecked = !item.isChecked
+                editor.getComponent(Magnifier::class.java).isEnabled = item.isChecked
+            }
+
+            R.id.useIcu -> {
+                item.isChecked = !item.isChecked
+                editor.props.useICULibToSelectWords = item.isChecked
+            }
+
+            R.id.ln_panel_fixed -> chooseLineNumberPanelPosition()
+
+            R.id.ln_panel_follow -> {
+                val themes = arrayOf(
+                    getString(R.string.top),
+                    getString(R.string.center),
+                    getString(R.string.bottom)
+                )
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.fixed)
+                    .setSingleChoiceItems(themes, -1) { dialog: DialogInterface, which: Int ->
+                        editor.lnPanelPositionMode = LineInfoPanelPositionMode.FOLLOW
+                        when (which) {
+                            0 -> editor.lnPanelPosition = LineInfoPanelPosition.TOP
+                            1 -> editor.lnPanelPosition = LineInfoPanelPosition.CENTER
+                            2 -> editor.lnPanelPosition = LineInfoPanelPosition.BOTTOM
+                        }
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+            }
+
+            R.id.code_format -> editor.formatCodeAsync()
+            R.id.switch_language -> chooseLanguage()
+            R.id.search_panel_st -> toggleSearchPanel(item)
+
+            R.id.search_am -> {
+                binding.replaceEditor.setText("")
+                binding.searchEditor.setText("")
+                editor.searcher.stopSearch()
+                editor.beginSearchMode()
+            }
+
+            R.id.switch_colors -> chooseTheme()
+
+            R.id.text_wordwrap -> {
+                item.isChecked = !item.isChecked
+                editor.isWordwrap = item.isChecked
+            }
+
+            R.id.completionAnim -> {
+                item.isChecked = !item.isChecked
+                editor.getComponent<EditorAutoCompletion>()
+                    .setEnabledAnimation(item.isChecked)
+            }
+
+            R.id.open_logs -> openLogs()
+            R.id.clear_logs -> clearLogs()
+            
+            R.id.open_debug_logs -> {
+                //ignored
+                //editor.setText(Logs.getLogs());
+            }
+
+            R.id.editor_line_number -> {
+                editor.isLineNumberEnabled = !editor.isLineNumberEnabled
+                item.isChecked = editor.isLineNumberEnabled
+            }
+
+            R.id.pin_line_number -> {
+                editor.setPinLineNumber(!editor.isLineNumberPinned)
+                item.isChecked = editor.isLineNumberPinned
+            }
+
+            R.id.load_test_file -> {
+                openAssetsFile("samples/big_sample.txt")
+            }
+
+            R.id.softKbdEnabled -> {
+                editor.isSoftKeyboardEnabled = !editor.isSoftKeyboardEnabled
+                item.isChecked = editor.isSoftKeyboardEnabled
+            }
+
+            R.id.disableSoftKbdOnHardKbd -> {
+                editor.isDisableSoftKbdIfHardKbdAvailable = !editor.isDisableSoftKbdIfHardKbdAvailable
+                item.isChecked = editor.isDisableSoftKbdIfHardKbdAvailable
+            }
         }
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun chooseLineNumberPanelPosition() {
+        val editor = binding.editor
+        val themes = arrayOf(
+            getString(R.string.top),
+            getString(R.string.bottom),
+            getString(R.string.left),
+            getString(R.string.right),
+            getString(R.string.center),
+            getString(R.string.top_left),
+            getString(R.string.top_right),
+            getString(R.string.bottom_left),
+            getString(R.string.bottom_right)
+        )
+        AlertDialog.Builder(this)
+            .setTitle(R.string.fixed)
+            .setSingleChoiceItems(themes, -1) { dialog: DialogInterface, which: Int ->
+                editor.lnPanelPositionMode = LineInfoPanelPositionMode.FIXED
+                when (which) {
+                    0 -> editor.lnPanelPosition = LineInfoPanelPosition.TOP
+                    1 -> editor.lnPanelPosition = LineInfoPanelPosition.BOTTOM
+                    2 -> editor.lnPanelPosition = LineInfoPanelPosition.LEFT
+                    3 -> editor.lnPanelPosition = LineInfoPanelPosition.RIGHT
+                    4 -> editor.lnPanelPosition = LineInfoPanelPosition.CENTER
+                    5 -> editor.lnPanelPosition =
+                        LineInfoPanelPosition.TOP or LineInfoPanelPosition.LEFT
+
+                    6 -> editor.lnPanelPosition =
+                        LineInfoPanelPosition.TOP or LineInfoPanelPosition.RIGHT
+
+                    7 -> editor.lnPanelPosition =
+                        LineInfoPanelPosition.BOTTOM or LineInfoPanelPosition.LEFT
+
+                    8 -> editor.lnPanelPosition =
+                        LineInfoPanelPosition.BOTTOM or LineInfoPanelPosition.RIGHT
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun toggleSearchPanel(item: MenuItem) {
+        if (binding.searchPanel.visibility == View.GONE) {
+            binding.apply {
+                replaceEditor.setText("")
+                searchEditor.setText("")
+                editor.searcher.stopSearch()
+                searchPanel.visibility = View.VISIBLE
+                item.isChecked = true
+            }
+        } else {
+            binding.searchPanel.visibility = View.GONE
+            binding.editor.searcher.stopSearch()
+            item.isChecked = false
+        }
+    }
+
+    private fun openLogs() {
+        runCatching {
+            openFileInput(LOG_FILE).reader().readText()
+        }.onSuccess {
+            binding.editor.setText(it)
+        }.onFailure {
+            toast(it.toString())
+        }
+    }
+
+    private fun clearLogs() {
+        runCatching {
+            openFileOutput(LOG_FILE, MODE_PRIVATE)?.use {}
+        }.onFailure {
+            toast(it.toString())
+        }.onSuccess {
+            toast(R.string.deleting_log_success)
+        }
+    }
+
+    private fun chooseLanguage() {
+        val editor = binding.editor
+        val languageOptions = arrayOf(
+            "Java",
+            "TextMate Java",
+            "TextMate Kotlin",
+            "TextMate Python",
+            "TextMate Html",
+            "TextMate JavaScript",
+            "TextMate MarkDown",
+            "TM Language from file",
+            "Tree-sitter Java",
+            "Text"
+        )
+        val tmLanguages = mapOf(
+            "TextMate Java" to Pair("source.java", "source.java"),
+            "TextMate Kotlin" to Pair("source.kotlin", "source.kotlin"),
+            "TextMate Python" to Pair("source.java", "source.java"),
+            "TextMate Html" to Pair("text.html.basic", "text.html.basic"),
+            "TextMate JavaScript" to Pair("source.js", "source.js"),
+            "TextMate MarkDown" to Pair("text.html.markdown", "text.html.markdown")
+        )
+        AlertDialog.Builder(this)
+            .setTitle(R.string.switch_language)
+            .setSingleChoiceItems(languageOptions, -1) { dialog: DialogInterface, which: Int ->
+                val selected = languageOptions[which]
+                if (selected in tmLanguages) {
+                    val info = tmLanguages[selected]!!
+                    try {
+                        ensureTextmateTheme()
+                        val editorLanguage = editor.editorLanguage
+                        val language = if (editorLanguage is TextMateLanguage) {
+                            editorLanguage.updateLanguage(info.first)
+                            editorLanguage
+                        } else {
+                            TextMateLanguage.create(info.second, true)
+                        }
+                        editor.setEditorLanguage(language)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                } else {
+                    when (selected) {
+                        "Java" -> editor.setEditorLanguage(JavaLanguage())
+                        "Text" -> editor.setEditorLanguage(EmptyLanguage())
+                        "TM Language from file" -> loadTMLLauncher.launch("*/*")
+                        "Tree-sitter Java" -> {
+                            editor.setEditorLanguage(
+                                TsLanguageJava(
+                                    JavaLanguageSpec(
+                                        highlightScmSource = assets.open("tree-sitter-queries/java/highlights.scm")
+                                            .reader().readText(),
+                                        codeBlocksScmSource = assets.open("tree-sitter-queries/java/blocks.scm")
+                                            .reader().readText(),
+                                        bracketsScmSource = assets.open("tree-sitter-queries/java/brackets.scm")
+                                            .reader().readText(),
+                                        localsScmSource = assets.open("tree-sitter-queries/java/locals.scm")
+                                            .reader().readText()
+                                    )
+                                )
+                            )
+                        }
+                    }
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun chooseTheme() {
+        val editor = binding.editor
+        val themes = arrayOf(
+            "Default",
+            "GitHub",
+            "Eclipse",
+            "Darcula",
+            "VS2019",
+            "NotepadXX",
+            "QuietLight for TM(VSCode)",
+            "Darcula for TM",
+            "Abyss for TM",
+            "Solarized(Dark) for TM(VSCode)",
+            "TM theme from file"
+        )
+        AlertDialog.Builder(this)
+            .setTitle(R.string.color_scheme)
+            .setSingleChoiceItems(themes, -1) { dialog: DialogInterface, which: Int ->
+                when (which) {
+                    0 -> editor.colorScheme = EditorColorScheme()
+                    1 -> editor.colorScheme = SchemeGitHub()
+                    2 -> editor.colorScheme = SchemeEclipse()
+                    3 -> editor.colorScheme = SchemeDarcula()
+                    4 -> editor.colorScheme = SchemeVS2019()
+                    5 -> editor.colorScheme = SchemeNotepadXX()
+                    6 -> try {
+                        ensureTextmateTheme()
+                        ThemeRegistry.getInstance().setTheme("quietlight")
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
+                    7 -> try {
+                        ensureTextmateTheme()
+                        ThemeRegistry.getInstance().setTheme("darcula")
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
+                    8 -> try {
+                        ensureTextmateTheme()
+                        ThemeRegistry.getInstance().setTheme("abyss")
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
+                    9 -> try {
+                        ensureTextmateTheme()
+                        ThemeRegistry.getInstance().setTheme("solarized_drak")
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
+                    10 -> loadTMTLauncher.launch("*/*")
+                }
+                resetColorScheme()
+                dialog.dismiss()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    fun gotoNext(view: View) {
+        try {
+            binding.editor.searcher.gotoNext()
+        } catch (e: IllegalStateException) {
+            e.printStackTrace()
+        }
+    }
+
+    fun gotoLast(view: View) {
+        try {
+            binding.editor.searcher.gotoPrevious()
+        } catch (e: IllegalStateException) {
+            e.printStackTrace()
+        }
+    }
+
+    fun replace(view: View) {
+        try {
+            binding.editor.searcher.replaceThis(binding.replaceEditor.text.toString())
+        } catch (e: IllegalStateException) {
+            e.printStackTrace()
+        }
+    }
+
+    fun replaceAll(view: View) {
+        try {
+            binding.editor.searcher.replaceAll(binding.replaceEditor.text.toString())
+        } catch (e: IllegalStateException) {
+            e.printStackTrace()
+        }
+    }
+
+    fun showSearchOptions(view: View) {
+        searchMenu.show()
     }
 
     private val loadTMLLauncher = registerForActivityResult(GetContent()) { result: Uri? ->
@@ -504,509 +931,5 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
         }
     }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        switchThemeIfRequired(this, binding.editor)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_main, menu)
-        undo = menu.findItem(R.id.text_undo)
-        redo = menu.findItem(R.id.text_redo)
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        binding.editor.release()
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val id = item.itemId
-        val editor = binding.editor
-        when (id) {
-            R.id.open_test_activity -> startActivity(Intent(this, TestActivity::class.java))
-            R.id.open_lsp_activity -> {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                    AlertDialog.Builder(this)
-                        .setTitle(getString(R.string.not_supported))
-                        .setMessage(getString(R.string.dialog_api_warning_msg))
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show()
-                } else {
-                    val random = Math.random()
-                    if (random > 0.6) {
-                        startActivity(Intent(this, LspTestJavaActivity::class.java))
-                    } else {
-                        startActivity(Intent(this, LspTestActivity::class.java))
-                    }
-                }
-            }
-
-            R.id.text_undo -> editor.undo()
-            R.id.text_redo -> editor.redo()
-            R.id.goto_end -> editor.setSelection(
-                editor.text.lineCount - 1,
-                editor.text.getColumnCount(editor.text.lineCount - 1)
-            )
-
-            R.id.move_up -> editor.moveSelectionUp()
-            R.id.move_down -> editor.moveSelectionDown()
-            R.id.home -> editor.moveSelectionHome()
-            R.id.end -> editor.moveSelectionEnd()
-            R.id.move_left -> editor.moveSelectionLeft()
-            R.id.move_right -> editor.moveSelectionRight()
-            R.id.magnifier -> {
-                item.isChecked = !item.isChecked
-                editor.getComponent(Magnifier::class.java).isEnabled = item.isChecked
-            }
-
-            R.id.useIcu -> {
-                item.isChecked = !item.isChecked
-                editor.props.useICULibToSelectWords = item.isChecked
-            }
-
-            R.id.ln_panel_fixed -> {
-                val themes = arrayOf(
-                    getString(R.string.top),
-                    getString(R.string.bottom),
-                    getString(R.string.left),
-                    getString(R.string.right),
-                    getString(R.string.center),
-                    getString(R.string.top_left),
-                    getString(R.string.top_right),
-                    getString(R.string.bottom_left),
-                    getString(R.string.bottom_right)
-                )
-                AlertDialog.Builder(this)
-                    .setTitle(R.string.fixed)
-                    .setSingleChoiceItems(themes, -1) { dialog: DialogInterface, which: Int ->
-                        editor.lnPanelPositionMode = LineInfoPanelPositionMode.FIXED
-                        when (which) {
-                            0 -> editor.lnPanelPosition = LineInfoPanelPosition.TOP
-                            1 -> editor.lnPanelPosition = LineInfoPanelPosition.BOTTOM
-                            2 -> editor.lnPanelPosition = LineInfoPanelPosition.LEFT
-                            3 -> editor.lnPanelPosition = LineInfoPanelPosition.RIGHT
-                            4 -> editor.lnPanelPosition = LineInfoPanelPosition.CENTER
-                            5 -> editor.lnPanelPosition =
-                                LineInfoPanelPosition.TOP or LineInfoPanelPosition.LEFT
-
-                            6 -> editor.lnPanelPosition =
-                                LineInfoPanelPosition.TOP or LineInfoPanelPosition.RIGHT
-
-                            7 -> editor.lnPanelPosition =
-                                LineInfoPanelPosition.BOTTOM or LineInfoPanelPosition.LEFT
-
-                            8 -> editor.lnPanelPosition =
-                                LineInfoPanelPosition.BOTTOM or LineInfoPanelPosition.RIGHT
-                        }
-                        dialog.dismiss()
-                    }
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show()
-            }
-
-            R.id.ln_panel_follow -> {
-                val themes = arrayOf(
-                    getString(R.string.top),
-                    getString(R.string.center),
-                    getString(R.string.bottom)
-                )
-                AlertDialog.Builder(this)
-                    .setTitle(R.string.fixed)
-                    .setSingleChoiceItems(themes, -1) { dialog: DialogInterface, which: Int ->
-                        editor.lnPanelPositionMode = LineInfoPanelPositionMode.FOLLOW
-                        when (which) {
-                            0 -> editor.lnPanelPosition = LineInfoPanelPosition.TOP
-                            1 -> editor.lnPanelPosition = LineInfoPanelPosition.CENTER
-                            2 -> editor.lnPanelPosition = LineInfoPanelPosition.BOTTOM
-                        }
-                        dialog.dismiss()
-                    }
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show()
-            }
-
-            R.id.code_format -> editor.formatCodeAsync()
-            R.id.switch_language -> {
-                AlertDialog.Builder(this)
-                    .setTitle(R.string.switch_language)
-                    .setSingleChoiceItems(
-                        arrayOf(
-                            "Java",
-                            "TextMate Java",
-                            "TextMate Kotlin",
-                            "TextMate Python",
-                            "TextMate Html",
-                            "TextMate JavaScript",
-                            "TextMate MarkDown",
-                            "TM Language from file",
-                            "Tree-sitter Java",
-                            "None"
-                        ), -1
-                    ) { dialog: DialogInterface, which: Int ->
-                        when (which) {
-                            0 -> editor.setEditorLanguage(JavaLanguage())
-                            1 -> try {
-                                //TextMateLanguage only support TextMateColorScheme
-                                ensureTextmateTheme()
-                                val editorLanguage = editor.editorLanguage
-                                val language = if (editorLanguage is TextMateLanguage) {
-                                    editorLanguage.updateLanguage(
-                                        "source.java"
-                                    )
-                                    editorLanguage
-                                } else {
-                                    TextMateLanguage.create(
-                                        "source.java",
-                                        true
-                                    )
-                                }
-                                editor.setEditorLanguage(
-                                    language
-                                )
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-
-                            2 -> try {
-                                ensureTextmateTheme()
-                                val editorLanguage = editor.editorLanguage
-                                val language = if (editorLanguage is TextMateLanguage) {
-                                    editorLanguage.updateLanguage(
-                                        "source.kotlin"
-                                    )
-                                    editorLanguage
-                                } else {
-                                    TextMateLanguage.create(
-                                        "source.kotlin",
-                                        true
-                                    )
-                                }
-                                editor.setEditorLanguage(
-                                    language
-                                )
-
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-
-                            3 -> try {
-                                ensureTextmateTheme()
-                                val editorLanguage = editor.editorLanguage
-                                val language = if (editorLanguage is TextMateLanguage) {
-                                    editorLanguage.updateLanguage(
-                                        "source.python"
-                                    )
-                                    editorLanguage
-                                } else {
-                                    TextMateLanguage.create(
-                                        "source.python",
-                                        true
-                                    )
-                                }
-                                editor.setEditorLanguage(
-                                    language
-                                )
-
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-
-                            4 -> try {
-                                ensureTextmateTheme()
-                                val editorLanguage = editor.editorLanguage
-                                val language = if (editorLanguage is TextMateLanguage) {
-                                    editorLanguage.updateLanguage(
-                                        "text.html.basic"
-                                    )
-                                    editorLanguage
-                                } else {
-                                    TextMateLanguage.create(
-                                        "text.html.basic",
-                                        true
-                                    )
-                                }
-                                editor.setEditorLanguage(
-                                    language
-                                )
-
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-
-                            5 -> try {
-                                ensureTextmateTheme()
-                                val editorLanguage = editor.editorLanguage
-                                val language = if (editorLanguage is TextMateLanguage) {
-                                    editorLanguage.updateLanguage(
-                                        "source.js"
-                                    )
-                                    editorLanguage
-                                } else {
-                                    TextMateLanguage.create(
-                                        "source.js",
-                                        true
-                                    )
-                                }
-                                editor.setEditorLanguage(
-                                    language
-                                )
-
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-
-                            6 -> try {
-                                ensureTextmateTheme()
-                                val editorLanguage = editor.editorLanguage
-                                val language = if (editorLanguage is TextMateLanguage) {
-                                    editorLanguage.updateLanguage(
-                                        "text.html.markdown"
-                                    )
-                                    editorLanguage
-                                } else {
-                                    TextMateLanguage.create(
-                                        "text.html.markdown",
-                                        true
-                                    )
-                                }
-                                editor.setEditorLanguage(
-                                    language
-                                )
-
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-
-                            7 -> loadTMLLauncher.launch("*/*")
-                            8 -> {
-                                editor.setEditorLanguage(
-                                    TsLanguageJava(
-                                        JavaLanguageSpec(
-                                            highlightScmSource = assets.open("tree-sitter-queries/java/highlights.scm").reader().readText(),
-                                            codeBlocksScmSource = assets.open("tree-sitter-queries/java/blocks.scm").reader().readText(),
-                                            bracketsScmSource = assets.open("tree-sitter-queries/java/brackets.scm").reader().readText(),
-                                            localsScmSource = assets.open("tree-sitter-queries/java/locals.scm").reader().readText()
-                                        )
-                                    )
-                                )
-                            }
-
-                            else -> editor.setEditorLanguage(EmptyLanguage())
-                        }
-                        dialog.dismiss()
-                    }
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show()
-            }
-
-            R.id.search_panel_st -> {
-                if (binding.searchPanel.visibility == View.GONE) {
-                    binding.apply {
-                        replaceEditor.setText("")
-                        searchEditor.setText("")
-                        editor.searcher.stopSearch()
-                        searchPanel.visibility = View.VISIBLE
-                        item.isChecked = true
-                    }
-                } else {
-                    binding.searchPanel.visibility = View.GONE
-                    editor.searcher.stopSearch()
-                    item.isChecked = false
-                }
-            }
-
-            R.id.search_am -> {
-                binding.replaceEditor.setText("")
-                binding.searchEditor.setText("")
-                editor.searcher.stopSearch()
-                editor.beginSearchMode()
-            }
-
-            R.id.switch_colors -> {
-                val themes = arrayOf(
-                    "Default",
-                    "GitHub",
-                    "Eclipse",
-                    "Darcula",
-                    "VS2019",
-                    "NotepadXX",
-                    "QuietLight for TM(VSCode)",
-                    "Darcula for TM",
-                    "Abyss for TM",
-                    "Solarized(Dark) for TM(VSCode)",
-                    "TM theme from file"
-                )
-                AlertDialog.Builder(this)
-                    .setTitle(R.string.color_scheme)
-                    .setSingleChoiceItems(themes, -1) { dialog: DialogInterface, which: Int ->
-                        when (which) {
-                            0 -> editor.colorScheme = EditorColorScheme()
-                            1 -> editor.colorScheme = SchemeGitHub()
-                            2 -> editor.colorScheme = SchemeEclipse()
-                            3 -> editor.colorScheme = SchemeDarcula()
-                            4 -> editor.colorScheme = SchemeVS2019()
-                            5 -> editor.colorScheme = SchemeNotepadXX()
-                            6 -> try {
-                                ensureTextmateTheme()
-                                ThemeRegistry.getInstance().setTheme("quietlight")
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-
-                            7 -> try {
-                                ensureTextmateTheme()
-                                ThemeRegistry.getInstance().setTheme("darcula")
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-
-                            8 -> try {
-                                ensureTextmateTheme()
-                                ThemeRegistry.getInstance().setTheme("abyss")
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-
-                            9 -> try {
-                                ensureTextmateTheme()
-                                ThemeRegistry.getInstance().setTheme("solarized_drak")
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-
-                            10 -> loadTMTLauncher.launch("*/*")
-                        }
-                        resetColorScheme()
-                        dialog.dismiss()
-                    }
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show()
-            }
-
-            R.id.text_wordwrap -> {
-                item.isChecked = !item.isChecked
-                editor.isWordwrap = item.isChecked
-            }
-
-            R.id.completionAnim -> {
-                item.isChecked = !item.isChecked
-                editor.getComponent<EditorAutoCompletion>()
-                    .setEnabledAnimation(item.isChecked)
-            }
-
-            R.id.open_logs -> {
-                var fis: FileInputStream? = null
-                try {
-                    fis = openFileInput("crash-journal.log")
-                    val br = BufferedReader(InputStreamReader(fis))
-                    val sb = StringBuilder()
-                    var line: String?
-                    while (br.readLine().also { line = it } != null) {
-                        sb.append(line).append('\n')
-                    }
-                    Toast.makeText(this, "Succeeded", Toast.LENGTH_SHORT).show()
-                    editor.setText(sb, null)
-                } catch (e: Exception) {
-                    Toast.makeText(this, "Failed:$e", Toast.LENGTH_SHORT).show()
-                    e.printStackTrace()
-                } finally {
-                    if (fis != null) {
-                        try {
-                            fis.close()
-                        } catch (e: IOException) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-            }
-
-            R.id.clear_logs -> {
-                var fos: FileOutputStream? = null
-                try {
-                    fos = openFileOutput("crash-journal.log", MODE_PRIVATE)
-                    Toast.makeText(this, "Succeeded", Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
-                    Toast.makeText(this, "Failed:$e", Toast.LENGTH_SHORT).show()
-                    e.printStackTrace()
-                } finally {
-                    if (fos != null) {
-                        try {
-                            fos.close()
-                        } catch (e: IOException) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-            }
-
-            R.id.open_debug_logs -> {
-                //ignored
-                //editor.setText(Logs.getLogs());
-            }
-
-            R.id.editor_line_number -> {
-                editor.isLineNumberEnabled = !editor.isLineNumberEnabled
-                item.isChecked = editor.isLineNumberEnabled
-            }
-
-            R.id.pin_line_number -> {
-                editor.setPinLineNumber(!editor.isLineNumberPinned)
-                item.isChecked = editor.isLineNumberPinned
-            }
-
-            R.id.load_test_file -> {
-                openAssetsFile("samples/big_sample.txt")
-            }
-
-            R.id.softKbdEnabled -> {
-                editor.isSoftKeyboardEnabled = !editor.isSoftKeyboardEnabled
-                item.isChecked = editor.isSoftKeyboardEnabled
-            }
-
-            R.id.disableSoftKbdOnHardKbd -> {
-                editor.isDisableSoftKbdIfHardKbdAvailable = !editor.isDisableSoftKbdIfHardKbdAvailable
-                item.isChecked = editor.isDisableSoftKbdIfHardKbdAvailable
-            }
-        }
-        return super.onOptionsItemSelected(item)
-    }
-
-    fun gotoNext(view: View?) {
-        try {
-            binding.editor.searcher.gotoNext()
-        } catch (e: IllegalStateException) {
-            e.printStackTrace()
-        }
-    }
-
-    fun gotoLast(view: View?) {
-        try {
-            binding.editor.searcher.gotoPrevious()
-        } catch (e: IllegalStateException) {
-            e.printStackTrace()
-        }
-    }
-
-    fun replace(view: View?) {
-        try {
-            binding.editor.searcher.replaceThis(binding.replaceEditor.text.toString())
-        } catch (e: IllegalStateException) {
-            e.printStackTrace()
-        }
-    }
-
-    fun replaceAll(view: View?) {
-        try {
-            binding.editor.searcher.replaceAll(binding.replaceEditor.text.toString())
-        } catch (e: IllegalStateException) {
-            e.printStackTrace()
-        }
-    }
-
-    fun showSearchOptions(view: View?) {
-        searchMenu.show()
-    }
+    
 }

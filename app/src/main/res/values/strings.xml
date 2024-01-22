@@ -86,4 +86,8 @@
     <string name="search_option_match_case">Match Case</string>
     <string name="enable_soft_keyboard">Enable soft keyboard</string>
     <string name="hide_soft_kbd_if_hard_kbd_available">Hide soft kbd if hard kbd available</string>
+    <string name="deleting_log_success">Log removed.</string>
+    <string name="tip_side_icon">Side icon clicked.</string>
+    <string name="dialog_lsp_entry_title">Select LSP Activity</string>
+    <string name="dialog_lsp_entry_msg">Do you want to open LspActivity written in Kotlin?</string>
 </resources>
