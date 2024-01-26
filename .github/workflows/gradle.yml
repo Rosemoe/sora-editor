@@ -36,12 +36,12 @@ jobs:
 
       - name: Build debug APK
         id: build
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
         with:
           arguments: assembleDebug
 
       - name: Publish snapshot
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
         if: ${{ always() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.build.outcome == 'success' }}
         with:
           arguments: publishAllPublicationsToMavenCentral
