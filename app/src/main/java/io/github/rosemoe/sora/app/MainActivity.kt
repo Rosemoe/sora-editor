@@ -601,11 +601,6 @@ class MainActivity : AppCompatActivity() {
 
             R.id.open_logs -> openLogs()
             R.id.clear_logs -> clearLogs()
-            
-            R.id.open_debug_logs -> {
-                //ignored
-                //editor.setText(Logs.getLogs());
-            }
 
             R.id.editor_line_number -> {
                 editor.isLineNumberEnabled = !editor.isLineNumberEnabled

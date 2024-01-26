@@ -124,10 +124,6 @@
                 android:id="@+id/clear_logs"
                 android:title="@string/clear_crash_log" />
             <item
-                android:id="@+id/open_debug_logs"
-                android:title="@string/open_debug_logs"
-                android:visible="false" />
-            <item
                 android:id="@+id/load_test_file"
                 android:title="@string/open_debug_document"/>
         </menu>
