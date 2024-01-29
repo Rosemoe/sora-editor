@@ -123,7 +123,7 @@ public class CompletionPublisher {
             return;
         }
         this.comparator = comparator;
-        if (items.size() != 0 && comparator != null) {
+        if (!items.isEmpty() && comparator != null) {
             handler.post(() -> {
                 if (invalid) {
                     return;
@@ -217,7 +217,7 @@ public class CompletionPublisher {
 
             if (locked) {
                 try {
-                    if (candidates.size() == 0) {
+                    if (candidates.isEmpty()) {
                         callback.run();
                         return;
                     }
