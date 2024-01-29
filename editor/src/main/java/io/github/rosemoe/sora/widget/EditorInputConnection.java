@@ -286,6 +286,7 @@ class EditorInputConnection extends BaseInputConnection {
         } else if (composingText.isComposing()) {
             deleteComposingText();
         }
+
         // replace text
         SymbolPairMatch.SymbolPair pair = null;
         if (editor.getProps().symbolPairAutoCompletion && text.length() > 0) {
@@ -303,6 +304,7 @@ class EditorInputConnection extends BaseInputConnection {
                     inputText, firstCharFromText
             );
         }
+
         var editorText = editor.getText();
         var editorCursor = editor.getCursor();
 
