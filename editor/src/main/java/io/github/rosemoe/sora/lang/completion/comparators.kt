@@ -36,8 +36,8 @@ private fun CharSequence?.asString(): String {
 
 fun defaultComparator(a: CompletionItem, b: CompletionItem): Int {
     // check score
-    val p1Score = (a.extra as SortedCompletionItem?)?.score?.score ?: 0
-    val p2Score = (b.extra as SortedCompletionItem?)?.score?.score ?: 0
+    val p1Score = (a.extra as? SortedCompletionItem)?.score?.score ?: 0
+    val p2Score = (b.extra as? SortedCompletionItem)?.score?.score ?: 0
 
     // if score biggest, it better similar to input text
     if (p1Score < p2Score) {
