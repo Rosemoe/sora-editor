@@ -41,7 +41,6 @@ public class AssetsFileResolver implements FileResolver {
     @Nullable
     @Override
     public InputStream resolveStreamByPath(String path) {
-
         try {
             return assetManager.open(path);
         } catch (IOException e) {

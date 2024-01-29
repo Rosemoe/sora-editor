@@ -210,7 +210,6 @@ public class GrammarRegistry {
 
             if (languageConfigurationStream != null) {
 
-
                 var languageConfiguration = LanguageConfiguration.load(
                         new InputStreamReader(languageConfigurationStream)
                 );

@@ -64,7 +64,7 @@ public class FileProviderRegistry {
     public InputStream tryGetInputStream(String path) {
         for (var provider : allFileResolvers) {
             var stream = provider.resolveStreamByPath(path);
-            if (stream!=null) {
+            if (stream != null) {
                 return stream;
             }
         }
