@@ -30,8 +30,8 @@ public final class OnigCaptureIndex {
 	public final int end;
 
 	OnigCaptureIndex(final int start, final int end) {
-		this.start = Math.max(start, 0);
-		this.end = Math.max(end, 0);
+		this.start = start >= 0 ? start : 0;
+		this.end = end >= 0 ? end : 0;
 	}
 
 	@Override

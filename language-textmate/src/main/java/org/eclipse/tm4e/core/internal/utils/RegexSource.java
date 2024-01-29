@@ -24,22 +24,22 @@ import org.eclipse.tm4e.core.internal.oniguruma.OnigCaptureIndex;
 
 /**
  * @see <a href=
- * "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/utils.ts#L59">
- * github.com/microsoft/vscode-textmate/blob/main/src/utils.ts</a>
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/utils.ts#L59">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/utils.ts</a>
  */
 public final class RegexSource {
 
 	/* private static final Pattern CAPTURING_REGEX_SOURCE = Pattern
 		.compile("\\$(\\d+)|\\$\\{(\\d+):\\/(downcase|upcase)}");*/
 
-	//fix for android
-	private static final Pattern CAPTURING_REGEX_SOURCE = Pattern
-			.compile("\\$(\\d+)|\\$\\{(\\d+):/(downcase|upcase)\\}");
+    //fix for android
+    private static final Pattern CAPTURING_REGEX_SOURCE = Pattern
+            .compile("\\$(\\d+)|\\$\\{(\\d+):/(downcase|upcase)\\}");
 
 
     /**
      * Escapes/prefixes RegEx meta characters with a backslash in the given string.
-     * <p>
+     *
      * It is a non-regex based faster alternative to the <a href=
      * "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/utils.ts#L159">TypeScript
      * implementation</a>:

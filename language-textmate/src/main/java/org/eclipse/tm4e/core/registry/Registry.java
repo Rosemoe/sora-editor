@@ -23,13 +23,14 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.TMException;
 import org.eclipse.tm4e.core.grammar.IGrammar;
 import org.eclipse.tm4e.core.internal.grammar.BalancedBracketSelectors;
-import org.eclipse.tm4e.core.internal.grammar.dependencies.AbsoluteRuleReference;
 import org.eclipse.tm4e.core.internal.grammar.dependencies.ScopeDependencyProcessor;
 import org.eclipse.tm4e.core.internal.grammar.raw.RawGrammar;
 import org.eclipse.tm4e.core.internal.grammar.raw.RawGrammarReader;
 import org.eclipse.tm4e.core.internal.registry.SyncRegistry;
 import org.eclipse.tm4e.core.internal.theme.Theme;
 import org.eclipse.tm4e.core.internal.theme.raw.RawThemeReader;
+import org.eclipse.tm4e.core.internal.utils.ScopeNames;
+
 
 import java.util.HashMap;
 import java.util.List;
@@ -41,8 +42,9 @@ import io.github.rosemoe.sora.util.Logger;
  * The registry that will hold all grammars.
  *
  * @see <a href=
- * "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/main.ts#L54">
- * github.com/microsoft/vscode-textmate/blob/main/src/main.ts</a>
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/main.ts#L54">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/main.ts</a>
+ *
  */
 public final class Registry {
 
@@ -146,11 +148,13 @@ public final class Registry {
             @Nullable final Map<String, Integer> embeddedLanguages,
             @Nullable final Map<String, Integer> tokenTypes,
             @Nullable final BalancedBracketSelectors balancedBracketSelectors) {
+
+        if (!_loadSingleGrammar(initialScopeName))
+            return null;
+
         final var dependencyProcessor = new ScopeDependencyProcessor(this._syncRegistry, initialScopeName);
         while (!dependencyProcessor.Q.isEmpty()) {
-            for (AbsoluteRuleReference request : dependencyProcessor.Q) {
-                this._loadSingleGrammar(request.scopeName);
-            }
+            dependencyProcessor.Q.forEach(request -> this._loadSingleGrammar(request.scopeName));
             dependencyProcessor.processQueue();
         }
 
@@ -162,12 +166,17 @@ public final class Registry {
                 balancedBracketSelectors);
     }
 
-    private void _loadSingleGrammar(final String scopeName) {
-        this._ensureGrammarCache.computeIfAbsent(scopeName, this::_doLoadSingleGrammar);
+    private boolean _loadSingleGrammar(final String scopeName) {
+        return this._ensureGrammarCache.computeIfAbsent(scopeName, this::_doLoadSingleGrammar);
     }
 
     private boolean _doLoadSingleGrammar(final String scopeName) {
-        final var grammarSource = this._options.getGrammarSource(scopeName);
+        var grammarSource = this._options.getGrammarSource(scopeName);
+        if (grammarSource == null) {
+            final var scopeNameWithoutContributor = ScopeNames.withoutContributor(scopeName);
+            if (!scopeNameWithoutContributor.equals(scopeName))
+                grammarSource = this._options.getGrammarSource(scopeNameWithoutContributor);
+        }
         if (grammarSource == null) {
             LOGGER.i("No grammar source for scope [{0}]", scopeName);
             return false;
@@ -203,8 +212,7 @@ public final class Registry {
                     injections == null || injections.isEmpty()
                             ? this._options.getInjections(rawGrammar.getScopeName())
                             : injections);
-            return castNonNull(
-                    this._grammarForScopeName(rawGrammar.getScopeName(), initialLanguage, embeddedLanguages, null, null));
+            return castNonNull(this._grammarForScopeName(rawGrammar.getScopeName(), initialLanguage, embeddedLanguages, null, null));
 
         } catch (final Exception ex) {
             throw new TMException("Loading grammar from [" + source.getFilePath() + "] failed: " + ex.getMessage(), ex);

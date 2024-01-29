@@ -53,7 +53,7 @@ public final class RawGrammarReader {
 		try (var reader = source.getReader()) {
 			return switch (source.getContentType()) {
 				case JSON -> TMParserJSON.INSTANCE.parse(reader, OBJECT_FACTORY);
-				 case YAML -> TMParserYAML.INSTANCE.parse(reader, OBJECT_FACTORY);
+				case YAML -> TMParserYAML.INSTANCE.parse(reader, OBJECT_FACTORY);
 				default -> TMParserPList.INSTANCE.parse(reader, OBJECT_FACTORY);
 			};
 		}

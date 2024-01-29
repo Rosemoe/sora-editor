@@ -16,8 +16,14 @@
  */
 package org.eclipse.tm4e.core.internal.rule;
 
-import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.castNonNull;
-import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.defaultIfNull;
+
+import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.*;
+
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.internal.grammar.dependencies.IncludeReference;
@@ -26,17 +32,12 @@ import org.eclipse.tm4e.core.internal.grammar.raw.IRawRepository;
 import org.eclipse.tm4e.core.internal.grammar.raw.IRawRule;
 import org.eclipse.tm4e.core.internal.grammar.raw.RawRule;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 import io.github.rosemoe.sora.util.Logger;
 
 /**
  * @see <a href=
- * "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/rule.ts#L381">
- * github.com/microsoft/vscode-textmate/blob/main/src/rule.ts</a>
+ *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/rule.ts#L381">
+ *      github.com/microsoft/vscode-textmate/blob/main/src/rule.ts</a>
  */
 public final class RuleFactory {
 

@@ -29,13 +29,14 @@ import org.eclipse.tm4e.core.internal.grammar.ScopeStack;
 import org.eclipse.tm4e.core.internal.grammar.raw.IRawGrammar;
 import org.eclipse.tm4e.core.internal.theme.StyleAttributes;
 import org.eclipse.tm4e.core.internal.theme.Theme;
+import org.eclipse.tm4e.core.internal.utils.ScopeNames;
 
 /**
  * @see <a href=
  *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/registry.ts">
  *      github.com/microsoft/vscode-textmate/blob/main/src/registry.ts</a>
  */
-public final class SyncRegistry implements IGrammarRepository, IThemeProvider {
+public class SyncRegistry implements IGrammarRepository, IThemeProvider {
 
 	private final Map<String, Grammar> _grammars = new HashMap<>();
 	private final Map<String, @Nullable IRawGrammar> _rawGrammars = new HashMap<>();
@@ -66,9 +67,18 @@ public final class SyncRegistry implements IGrammarRepository, IThemeProvider {
 	}
 
 	@Override
-	@Nullable
-	public IRawGrammar lookup(final String scopeName) {
-		return this._rawGrammars.get(scopeName);
+	public @Nullable IRawGrammar lookup(final String scopeName) {
+		IRawGrammar grammar = this._rawGrammars.get(scopeName);
+		if (grammar == null) {
+			// this code is specific to the tm4e project and not from upstream:
+			// if no grammar was found for the given scopeName, check if the scopeName is qualified, e.g. "source.mylang@com.example.mylang.plugin"
+			// and if so try the unqualified scopeName "source.mylang" as fallback. See org.eclipse.tm4e.registry.internal.TMScope and
+			// for more details org.eclipse.tm4e.registry.internal.AbstractGrammarRegistryManager.getGrammarFor(IContentType...)
+			final var scopeNameWithoutContributor = ScopeNames.withoutContributor(scopeName);
+			if (!scopeNameWithoutContributor.equals(scopeName))
+				grammar = this._rawGrammars.get(scopeNameWithoutContributor);
+		}
+		return grammar;
 	}
 
 	@Override

@@ -109,12 +109,10 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
         RawTheme rawSubTheme;
 
         if (settings == null) {
-            Log.e("theme", "load vscode theme");
             rawSubTheme = ((RawTheme) ((RawTheme) rawTheme).get("colors"));
 
             applyVSCTheme(rawSubTheme);
         } else {
-            Log.e("theme", "load default theme");
             rawSubTheme = (RawTheme) ((List<?>) settings).get(0);
             rawSubTheme = (RawTheme) rawSubTheme.getSetting();
 
@@ -127,8 +125,6 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
 
 
     private void applyVSCTheme(RawTheme RawTheme) {
-        Log.e("vsc theme",
-                Arrays.toString(Collections.singletonList(RawTheme).toArray()));
         setColor(LINE_DIVIDER, Color.TRANSPARENT);
 
         String caret = (String) RawTheme.get("editorCursor.foreground");
@@ -153,8 +149,6 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
         }
 
         String background = (String) RawTheme.get("editor.background");
-        Log.e("vsc forge", RawTheme.toString());
-        Log.e("vsc ??", background + "??");
         if (background != null) {
             setColor(WHOLE_BACKGROUND, Color.parseColor(background));
             setColor(LINE_NUMBER_BACKGROUND, Color.parseColor(background));
