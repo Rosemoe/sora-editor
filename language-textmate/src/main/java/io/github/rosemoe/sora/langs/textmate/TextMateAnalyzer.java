@@ -29,6 +29,16 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 
+import org.eclipse.tm4e.core.grammar.IGrammar;
+import org.eclipse.tm4e.core.internal.grammar.tokenattrs.EncodedTokenAttributes;
+import org.eclipse.tm4e.core.internal.grammar.tokenattrs.StandardTokenType;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigRegExp;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
+import org.eclipse.tm4e.core.internal.theme.FontStyle;
+import org.eclipse.tm4e.core.internal.theme.Theme;
+import org.eclipse.tm4e.languageconfiguration.internal.model.LanguageConfiguration;
+
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -47,18 +57,6 @@ import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
 import io.github.rosemoe.sora.langs.textmate.utils.StringUtils;
 import io.github.rosemoe.sora.text.Content;
-
-import org.eclipse.tm4e.core.grammar.IGrammar;
-
-import org.eclipse.tm4e.core.internal.grammar.tokenattrs.EncodedTokenAttributes;
-import org.eclipse.tm4e.core.internal.grammar.tokenattrs.StandardTokenType;
-import org.eclipse.tm4e.core.internal.oniguruma.OnigRegExp;
-import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
-import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
-import org.eclipse.tm4e.core.internal.theme.FontStyle;
-import org.eclipse.tm4e.core.internal.theme.Theme;
-import org.eclipse.tm4e.languageconfiguration.model.LanguageConfiguration;
-
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.util.ArrayList;

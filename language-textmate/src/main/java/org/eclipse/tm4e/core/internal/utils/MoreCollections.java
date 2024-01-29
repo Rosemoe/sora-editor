@@ -15,6 +15,7 @@ package org.eclipse.tm4e.core.internal.utils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 import org.eclipse.jdt.annotation.Nullable;
@@ -81,11 +82,13 @@ public final class MoreCollections {
 	/**
 	 * Removes the last element in this list.
 	 *
+	 * @return the element previously at the specified position
+	 *
 	 * @throws UnsupportedOperationException if the {@code remove} operation is not supported by this list
-	 * @throws IndexOutOfBoundsException     if the list is empty
+	 * @throws IndexOutOfBoundsException if the list is empty
 	 */
-	public static <T> void removeLastElement(final List<T> list) {
-		list.remove(list.size() - 1);
+	public static <T> T removeLastElement(final List<T> list) {
+		return list.remove(list.size() - 1);
 	}
 
 	public static String toStringWithIndex(final List<?> list) {
@@ -101,6 +104,13 @@ public final class MoreCollections {
 			sb.append(", ");
 		}
 		return sb.append(']').toString();
+	}
+
+	/**
+	 * @return a new list without null elements
+	 */
+	public static <T> List<T> noNulls(final @Nullable List<T> coll) {
+		return coll == null || coll.isEmpty() ? Collections.emptyList() : coll.stream().filter(Objects::nonNull).toList();
 	}
 
 	private MoreCollections() {

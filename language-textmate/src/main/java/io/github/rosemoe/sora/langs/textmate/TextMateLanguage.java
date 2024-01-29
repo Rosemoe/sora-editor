@@ -32,7 +32,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.grammar.IGrammar;
 import org.eclipse.tm4e.core.registry.IGrammarSource;
 import org.eclipse.tm4e.core.registry.IThemeSource;
-import org.eclipse.tm4e.languageconfiguration.model.LanguageConfiguration;
+import org.eclipse.tm4e.languageconfiguration.internal.model.LanguageConfiguration;
 
 import java.io.Reader;
 import java.util.Objects;

@@ -1,10 +1,10 @@
 /**
  * Copyright (c) 2022 Sebastian Thomschke and others.
- * <p>
+ *
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
- * <p>
+ *
  * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.tm4e.core.internal.utils;
@@ -19,28 +19,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.function.Supplier;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-
 public final class ObjectCloner {
 
-	private static final LoadingCache<Class<?>, Optional<Method>> CLONE_METHODS = CacheBuilder.newBuilder().weakKeys()
-			.build(new CacheLoader<>() {
-				@Override
-				public Optional<Method> load(final Class<?> cls) {
-					try {
-						return Optional.of(cls.getMethod("clone"));
-					} catch (final Exception ex) {
-						return Optional.empty();
-					}
-				}
-			});
+	private static final WeakHashMap<Class<?>, Optional<Method>> CLONE_METHODS_CACHE = new WeakHashMap<>();
 
 	public static <@NonNull T> T deepClone(final T obj) {
 		return deepClone(obj, new IdentityHashMap<>());
@@ -57,9 +44,7 @@ public final class ObjectCloner {
 			var list = (List<T>) obj;
 			final var listClone = shallowClone(list, () -> new ArrayList<>(list));
 			clones.put(list, listClone);
-			for (var i = 0; i < listClone.size(); ++i) {
-				listClone.set(i, deepCloneNullable(listClone.get(i), clones));
-			}
+			listClone.replaceAll(v -> deepCloneNullable(v, clones));
 			return (T) listClone;
 		}
 
@@ -108,10 +93,15 @@ public final class ObjectCloner {
 
 	@SuppressWarnings("unchecked")
 	private static <@NonNull T> T shallowClone(final T obj, final Supplier<T> fallback) {
-		final var objClass = obj.getClass();
 		if (obj instanceof Cloneable) {
 			try {
-				final var cloneMethod = CLONE_METHODS.get(objClass);
+				final var cloneMethod = CLONE_METHODS_CACHE.computeIfAbsent(obj.getClass(), cls -> {
+					try {
+						return Optional.of(cls.getMethod("clone"));
+					} catch (final Exception ex) {
+						return Optional.empty();
+					}
+				});
 				if (cloneMethod.isPresent()) {
 					return (T) cloneMethod.get().invoke(obj);
 				}

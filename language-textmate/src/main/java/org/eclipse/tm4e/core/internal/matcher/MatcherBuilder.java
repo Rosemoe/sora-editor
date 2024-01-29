@@ -16,11 +16,12 @@
  */
 package org.eclipse.tm4e.core.internal.matcher;
 
-import org.eclipse.jdt.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import org.eclipse.jdt.annotation.Nullable;
 
 import io.github.rosemoe.sora.util.Logger;
 
