@@ -524,7 +524,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             TypedArray a = null;
             try {
                 a = getContext().obtainStyledAttributes(new int[]{android.R.attr.listPreferredItemHeight});
-                verticalScrollFactor = a.getFloat(0, 32);
+                verticalScrollFactor = a.getDimension(0, 32);
             } catch (Exception e) {
                 Log.e(LOG_TAG, "Failed to get scroll factor, using default.", e);
                 verticalScrollFactor = 32;
@@ -1684,9 +1684,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Indents the lines. Does nothing if the <code>onlyIfSelected</code> is <code>true</code> and
      * no text is selected.
-     * 
+     *
      * @param onlyIfSelected Set to <code>true</code> if lines must be indented only if the text is
-     *                      selected.
+     *                       selected.
      */
     public void indentLines(boolean onlyIfSelected) {
 
@@ -1698,7 +1698,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         final var tabString = createTabString();
         final var text = getText();
         final var tabWidth = getTabWidth();
-        
+
         text.beginBatchEdit();
         for (int i = cursor.getLeftLine(); i <= cursor.getRightLine(); i++) {
             final var line = text.getLine(i);
@@ -4134,9 +4134,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Check whether the soft keyboard is enabled for this editor. Unlike {@link #isSoftKeyboardEnabled()},
      * this method also checks whether a hardware keyboard is connected.
      *
+     * @return Whether the editor should show soft keyboard.
      * @see #isSoftKeyboardEnabled()
      * @see #isDisableSoftKbdIfHardKbdAvailable()
-     * @return Whether the editor should show soft keyboard.
      */
     protected boolean checkSoftInputEnabled() {
         if (isDisableSoftKbdIfHardKbdAvailable()
