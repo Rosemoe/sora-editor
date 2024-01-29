@@ -25,12 +25,14 @@ package io.github.rosemoe.sora.widget.component;
 
 import android.animation.LayoutTransition;
 import android.content.Context;
+import android.graphics.Outline;
 import android.graphics.drawable.GradientDrawable;
 import android.os.SystemClock;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -115,6 +117,8 @@ public class DefaultCompletionLayout implements CompletionLayout {
 
         rootLayout.setBackground(gd);
 
+        setRootViewOutlineProvider(rootView);
+
         listView.setDividerHeight(0);
         setLoading(true);
 
@@ -127,6 +131,8 @@ public class DefaultCompletionLayout implements CompletionLayout {
             }
         });
 
+
+
         return rootLayout;
     }
 
@@ -137,6 +143,8 @@ public class DefaultCompletionLayout implements CompletionLayout {
         gd.setStroke(1, colorScheme.getColor(EditorColorScheme.COMPLETION_WND_CORNER));
         gd.setColor(colorScheme.getColor(EditorColorScheme.COMPLETION_WND_BACKGROUND));
         rootView.setBackground(gd);
+
+        setRootViewOutlineProvider(rootView);
     }
 
     @Override
@@ -168,6 +176,16 @@ public class DefaultCompletionLayout implements CompletionLayout {
         ev = MotionEvent.obtain(down, down, MotionEvent.ACTION_CANCEL, 0, offset, 0);
         adpView.onTouchEvent(ev);
         ev.recycle();
+    }
+
+    private void setRootViewOutlineProvider(View rootView) {
+        rootView.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View view, Outline outline) {
+                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, view.getContext().getResources().getDisplayMetrics()));
+            }
+        });
+        rootView.setClipToOutline(true);
     }
 
     @Override
