@@ -94,7 +94,6 @@ public class TextMateLanguage extends EmptyLanguage {
         symbolPairMatch = new TextMateSymbolPairMatch(this);
 
         createAnalyzerAndNewlineHandler(grammar, languageConfiguration);
-
     }
 
 
@@ -272,7 +271,7 @@ public class TextMateLanguage extends EmptyLanguage {
     }
 
     @Override
-    public SymbolPairMatch getSymbolPairs() {
+    public TextMateSymbolPairMatch getSymbolPairs() {
         return symbolPairMatch;
     }
 

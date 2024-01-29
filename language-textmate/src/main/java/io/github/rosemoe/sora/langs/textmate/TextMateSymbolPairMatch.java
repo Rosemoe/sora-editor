@@ -45,7 +45,7 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
 
     private final TextMateLanguage language;
 
-    private boolean enabled;
+    private boolean enabled = true;
 
     public TextMateSymbolPairMatch(TextMateLanguage language) {
         super(new SymbolPairMatch.DefaultSymbolPairs());
@@ -190,11 +190,7 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
             var spansOnCurrentLine = editor.getSpansForLine(currentLine);
 
             var currentSpan = binarySearchSpan(spansOnCurrentLine, currentColumn);
-
-
             var extra = currentSpan.extra;
-
-
             if (extra instanceof Integer) {
                 var index = Arrays.binarySearch(notInTokenTypeArray, (Integer) extra);
                 return index < 0;
