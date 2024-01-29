@@ -78,7 +78,6 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
 
         removeAllPairs();
 
-
         var surroundingPairs = languageConfiguration.getSurroundingPairs();
 
         var autoClosingPairs = languageConfiguration.getAutoClosingPairs();
@@ -88,7 +87,6 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
         if (autoClosingPairs != null) {
             mergePairs.addAll(autoClosingPairs);
         }
-
 
         if (surroundingPairs != null) {
 
@@ -111,7 +109,6 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
 
                 }
                 mergePairs.add(newPair);
-
             }
         }
 
@@ -168,14 +165,12 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
             }
 
             Arrays.sort(notInTokenTypeArray);
-
         }
 
         @Override
         public boolean shouldDoReplace(CodeEditor editor, ContentLine contentLine, int leftColumn) {
-
             if (editor.getCursor().isSelected()) {
-                return true;
+                return isSurroundingPair;
             }
 
             if (notInTokenTypeArray == null) {
@@ -191,6 +186,7 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
 
             var currentSpan = binarySearchSpan(spansOnCurrentLine, currentColumn);
             var extra = currentSpan.extra;
+
             if (extra instanceof Integer) {
                 var index = Arrays.binarySearch(notInTokenTypeArray, (Integer) extra);
                 return index < 0;
