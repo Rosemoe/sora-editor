@@ -98,10 +98,11 @@ public final class OnigRegExp {
             }
         }
 
+        var result = search(str.bytesUTF8, startPosition, str.bytesCount);
         synchronized (this) {
             lastSearchString = str;
             lastSearchPosition = startPosition;
-            lastSearchResult = search(str.bytesUTF8, startPosition, str.bytesCount);
+            lastSearchResult = result;
         }
         return lastSearchResult;
     }
