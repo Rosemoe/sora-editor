@@ -126,6 +126,12 @@
             <item
                 android:id="@+id/load_test_file"
                 android:title="@string/open_debug_document"/>
+            <item
+                android:id="@+id/open_test_activity"
+                android:title="@string/open_new_activity" />
+            <item
+                android:id="@+id/open_lsp_activity"
+                android:title="@string/open_lsp_activity" />
         </menu>
     </item>
 
@@ -136,12 +142,6 @@
         android:id="@+id/switch_colors"
         android:title="@string/switch_color_scheme" />
 
-    <item
-        android:id="@+id/open_test_activity"
-        android:title="@string/open_new_activity" />
-    <item
-        android:id="@+id/open_lsp_activity"
-        android:title="@string/open_lsp_activity" />
     <item
         android:id="@+id/text_undo"
         android:icon="@drawable/undo"
