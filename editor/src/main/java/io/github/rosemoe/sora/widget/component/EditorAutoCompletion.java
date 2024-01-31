@@ -64,7 +64,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     protected WeakReference<List<CompletionItem>> lastAttachedItems;
     protected int currentSelection = -1;
     protected EditorCompletionAdapter adapter;
-    private CompletionLayout layout;
+    protected CompletionLayout layout;
     private long requestShow = 0;
     private long requestHide = -1;
     private boolean enabled = true;
@@ -339,7 +339,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
      *
      * @author Rosemoe
      */
-    public final class CompletionThread extends Thread implements TextReference.Validator {
+    public class CompletionThread extends Thread implements TextReference.Validator {
 
         private final Bundle extraData;
         private final CharPosition requestPosition;
@@ -347,7 +347,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         private final ContentReference contentRef;
         private final CompletionPublisher localPublisher;
         private long requestTimestamp;
-        private boolean isAborted;
+        private boolean aborted;
 
         public CompletionThread(long requestTime, @NonNull CompletionPublisher publisher) {
             requestTimestamp = requestTime;
@@ -357,14 +357,14 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             contentRef.setValidator(this);
             localPublisher = publisher;
             extraData = editor.getExtraArguments();
-            isAborted = false;
+            aborted = false;
         }
 
         /**
          * Abort the completion thread
          */
         public void cancel() {
-            isAborted = true;
+            aborted = true;
             var level = targetLanguage.getInterruptionLevel();
             if (level == Language.INTERRUPTION_LEVEL_STRONG) {
                 interrupt();
@@ -373,12 +373,12 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         }
 
         public boolean isCancelled() {
-            return isAborted;
+            return aborted;
         }
 
         @Override
         public void validate() {
-            if (requestTime != requestTimestamp || isAborted) {
+            if (requestTime != requestTimestamp || aborted) {
                 throw new CompletionCancelledException();
             }
         }
