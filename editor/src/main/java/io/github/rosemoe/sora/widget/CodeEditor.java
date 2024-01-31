@@ -4334,8 +4334,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             editorLanguage.destroy();
             editorLanguage = new EmptyLanguage();
         }
-        // avoid access to styles after releasing
+
+        // avoid access to language related after releasing
         textStyles = null;
+        diagnostics = null;
+        styleDelegate.reset();
+
         final var text = this.text;
         if (text != null) {
             text.removeContentListener(this);
