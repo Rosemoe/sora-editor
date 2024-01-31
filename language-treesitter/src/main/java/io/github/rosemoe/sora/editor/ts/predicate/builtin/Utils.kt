@@ -53,15 +53,16 @@ fun getCaptureContent(
     text: CharSequence
 ) = match.captures.filter { tsQuery.getCaptureNameForId(it.index) == captureName }
     .map {
+        val start = it.node.startByte / 2
+        val end = it.node.endByte / 2
         when (text) {
             is UTF16String -> {
-                val utf16Name = text.subseqChars(it.node.startByte / 2, it.node.endByte / 2)
-                val name = utf16Name.toString()
-                utf16Name.close()
-                name
+                text.subseqChars(start, end).use {
+                    it.toString()
+                }
             }
 
-            is Content -> text.substring(it.node.startByte / 2, it.node.endByte / 2)
-            else -> text.substring(it.node.startByte / 2, it.node.endByte / 2)
+            is Content -> text.substring(start, end)
+            else -> text.substring(start, end)
         }
     }

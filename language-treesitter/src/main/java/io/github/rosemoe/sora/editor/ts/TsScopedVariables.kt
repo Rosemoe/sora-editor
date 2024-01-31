@@ -42,10 +42,9 @@ import java.util.Stack
  */
 class TsScopedVariables(tree: TSTree, text: UTF16String, val spec: TsLanguageSpec) {
 
-    private val rootScope: Scope
+    private val rootScope: Scope = Scope(0, tree.rootNode.endByte / 2)
 
     init {
-        rootScope = Scope(0, tree.rootNode.endByte / 2)
         if (spec.localsDefinitionIndices.isNotEmpty()) {
             TSQueryCursor.create().use { cursor ->
                 cursor.exec(spec.tsQuery, tree.rootNode)
