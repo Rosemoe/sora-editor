@@ -1826,10 +1826,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     protected String createTabString() {
         final var language = getEditorLanguage();
-        if (language.useTab()) {
-            return "\t";
-        }
-        return StringsKt.repeat(" ", getTabWidth());
+        return TextUtils.createIndent(getTabWidth(), getTabWidth(), language.useTab());
     }
 
     public void updateCompletionWindowPosition() {
