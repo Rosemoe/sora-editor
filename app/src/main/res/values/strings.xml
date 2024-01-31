@@ -90,4 +90,6 @@
     <string name="tip_side_icon">Side icon clicked.</string>
     <string name="dialog_lsp_entry_title">Select LSP Activity</string>
     <string name="dialog_lsp_entry_msg">Do you want to open LspActivity written in Kotlin?</string>
+    <string name="choice_yes">Yes</string>
+    <string name="choice_no">No</string>
 </resources>

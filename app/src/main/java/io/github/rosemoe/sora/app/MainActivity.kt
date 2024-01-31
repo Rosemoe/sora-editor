@@ -496,7 +496,7 @@ class MainActivity : AppCompatActivity() {
         val id = item.itemId
         val editor = binding.editor
         when (id) {
-            R.id.open_test_activity -> startActivity(Intent(this, TestActivity::class.java))
+            R.id.open_test_activity -> startActivity<TestActivity>()
             R.id.open_lsp_activity -> {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                     AlertDialog.Builder(this)
@@ -508,21 +508,11 @@ class MainActivity : AppCompatActivity() {
                     AlertDialog.Builder(this)
                         .setTitle(R.string.dialog_lsp_entry_title)
                         .setMessage(R.string.dialog_lsp_entry_msg)
-                        .setPositiveButton(android.R.string.yes) { _, _ ->
-                            startActivity(
-                                Intent(
-                                    this,
-                                    LspTestActivity::class.java
-                                )
-                            )
+                        .setPositiveButton(R.string.choice_yes) { _, _ ->
+                            startActivity<LspTestActivity>()
                         }
-                        .setNegativeButton(android.R.string.no) { _, _ ->
-                            startActivity(
-                                Intent(
-                                    this,
-                                    LspTestJavaActivity::class.java
-                                )
-                            )
+                        .setNegativeButton(R.string.choice_no) { _, _ ->
+                            startActivity<LspTestJavaActivity>()
                         }
                         .setNeutralButton(android.R.string.cancel, null)
                         .show()

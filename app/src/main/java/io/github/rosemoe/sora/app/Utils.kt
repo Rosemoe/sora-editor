@@ -24,7 +24,9 @@
 
 package io.github.rosemoe.sora.app
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
@@ -47,4 +49,8 @@ fun switchThemeIfRequired(context: Context, editor: CodeEditor) {
         }
     }
     editor.invalidate()
+}
+
+inline fun <reified T : Activity> Context.startActivity() {
+    startActivity(Intent(this, T::class.java))
 }
