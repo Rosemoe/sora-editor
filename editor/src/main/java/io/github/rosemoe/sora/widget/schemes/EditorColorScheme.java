@@ -38,7 +38,9 @@ import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
  * This class manages the colors of editor.
- * You can use color ids that are not in pre-defined id pool due to new languages.
+ * You can use color IDs that are not in pre-defined id pool for custom languages. We recommend
+ *  adding a base offset for your custom color IDs. For example, first custom color ID is 256. This
+ *   leaves enough space for editor's future built-in colors.
  * <p>
  * This is also the default color scheme of editor.
  * Be careful to change this class, because this can cause its
@@ -91,6 +93,10 @@ public class EditorColorScheme {
      * Color for text strikethrough. If value is 0, text color of that region will be used.
      */
     public static final int STRIKETHROUGH = 57;
+    /**
+     * Alias for {@link #STRIKETHROUGH}
+     */
+    public static final int STRIKE_THROUGH = STRIKETHROUGH;
     public static final int DIAGNOSTIC_TOOLTIP_ACTION = 56;
     public static final int DIAGNOSTIC_TOOLTIP_DETAILED_MSG = 55;
     public static final int DIAGNOSTIC_TOOLTIP_BRIEF_MSG = 54;
