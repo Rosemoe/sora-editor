@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.editor.ts
 
+import com.itsaky.androidide.treesitter.TSInputEdit
 import com.itsaky.androidide.treesitter.TSPoint
 import com.itsaky.androidide.treesitter.TSQuery
 import com.itsaky.androidide.treesitter.TSQueryError
@@ -39,3 +40,16 @@ fun TSQuery.validateOrThrow(name: String = "unknown") {
         throw IllegalArgumentException("query(name:$name) parsing failed: ${errorType.name} at text offset $errorOffset")
     }
 }
+
+/**
+ * Create a new [TSInputEdit] object for the given positions
+ */
+fun newTSInputEdit(start: CharPosition, oldEnd: CharPosition, newEnd: CharPosition) =
+    TSInputEdit.create(
+        start.index * 2,
+        oldEnd.index * 2,
+        newEnd.index * 2,
+        start.toTSPoint(),
+        oldEnd.toTSPoint(),
+        newEnd.toTSPoint()
+    )
