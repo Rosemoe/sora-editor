@@ -4321,6 +4321,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         hideEditorWindows();
         if (!released) {
             dispatchEvent(new EditorReleaseEvent(this));
+        } else {
+            return;
         }
         released = true;
         completionWindow.cancelCompletion();
@@ -4332,6 +4334,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             editorLanguage.destroy();
             editorLanguage = new EmptyLanguage();
         }
+        // avoid access to styles after releasing
+        textStyles = null;
         final var text = this.text;
         if (text != null) {
             text.removeContentListener(this);
