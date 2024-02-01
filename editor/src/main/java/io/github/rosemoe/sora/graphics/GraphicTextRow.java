@@ -40,6 +40,7 @@ import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.bidi.Directions;
 import io.github.rosemoe.sora.text.bidi.TextBidi;
 import io.github.rosemoe.sora.util.IntPair;
+import io.github.rosemoe.sora.widget.rendering.RenderingConstants;
 
 /**
  * Manages graphical(actually measuring) operations of a text row
@@ -212,7 +213,7 @@ public class GraphicTextRow {
                     paint.setFakeBoldText(isBold(style));
                 }
                 if (isItalics(style) != isItalics(lastStyle)) {
-                    paint.setTextSkewX(isItalics(style) ? GraphicsConstants.TEXT_SKEW_X : 0f);
+                    paint.setTextSkewX(isItalics(style) ? RenderingConstants.TEXT_SKEW_X : 0f);
                 }
                 lastStyle = style;
             }
@@ -320,7 +321,7 @@ public class GraphicTextRow {
                     paint.setFakeBoldText(isBold(style));
                 }
                 if (isItalics(style) != isItalics(lastStyle)) {
-                    paint.setTextSkewX(isItalics(style) ? GraphicsConstants.TEXT_SKEW_X : 0f);
+                    paint.setTextSkewX(isItalics(style) ? RenderingConstants.TEXT_SKEW_X : 0f);
                 }
                 lastStyle = style;
             }

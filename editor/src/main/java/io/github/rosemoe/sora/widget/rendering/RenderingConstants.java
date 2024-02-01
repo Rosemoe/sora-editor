@@ -21,22 +21,33 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.graphics;
+package io.github.rosemoe.sora.widget.rendering;
 
 /**
  * Holds some shared constants in editor graphics properties
  *
  * @author Rosemoe
  */
-public class GraphicsConstants {
+public class RenderingConstants {
 
     /**
      * Text skew X applied in editor
      */
     public final static float TEXT_SKEW_X = -0.2f;
 
+    /**
+     * Edge radius multiplier for editor round rectangles
+     */
     public final static float ROUND_RECT_FACTOR = 0.13f;
 
+    /**
+     * Edge radius multiplier for editor bubbles
+     */
     public final static float ROUND_BUBBLE_FACTOR = 0.5f;
+
+    /**
+     * Shadow radius maximum for pinned line number, in dp unit
+     */
+    public final static float DIVIDER_SHADOW_MAX_RADIUS_DIP = 8f;
 
 }

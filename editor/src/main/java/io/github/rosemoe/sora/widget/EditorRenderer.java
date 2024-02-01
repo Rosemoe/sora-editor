@@ -56,7 +56,7 @@ import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.graphics.BubbleHelper;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
-import io.github.rosemoe.sora.graphics.GraphicsConstants;
+import io.github.rosemoe.sora.widget.rendering.RenderingConstants;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.lang.completion.snippet.SnippetItem;
@@ -476,7 +476,7 @@ public class EditorRenderer {
                 if (span.getStyleBits() != lastStyle) {
                     paintGeneral.setFakeBoldText(TextStyle.isBold(styleBits));
                     if (TextStyle.isItalics(styleBits)) {
-                        paintGeneral.setTextSkewX(GraphicsConstants.TEXT_SKEW_X);
+                        paintGeneral.setTextSkewX(RenderingConstants.TEXT_SKEW_X);
                     } else {
                         paintGeneral.setTextSkewX(0);
                     }
@@ -773,7 +773,7 @@ public class EditorRenderer {
     }
 
     protected void drawStuckLineNumbers(Canvas canvas, List<CodeBlock> candidates, float offset, float lineNumberWidth, int lineNumberColor) {
-        if (candidates == null || candidates.size() == 0 || !editor.isLineNumberEnabled()) {
+        if (candidates == null || candidates.isEmpty() || !editor.isLineNumberEnabled()) {
             return;
         }
         var cursor = editor.getCursor();
@@ -924,7 +924,7 @@ public class EditorRenderer {
     protected void drawColorRound(Canvas canvas, int color, RectF rect) {
         if (color != 0) {
             paintGeneral.setColor(color);
-            canvas.drawRoundRect(rect, rect.height() * GraphicsConstants.ROUND_RECT_FACTOR, rect.height() * GraphicsConstants.ROUND_RECT_FACTOR, paintGeneral);
+            canvas.drawRoundRect(rect, rect.height() * RenderingConstants.ROUND_RECT_FACTOR, rect.height() * RenderingConstants.ROUND_RECT_FACTOR, paintGeneral);
         }
     }
 
@@ -1042,7 +1042,7 @@ public class EditorRenderer {
         if (shadow) {
             canvas.save();
             canvas.clipRect(tmpRect.left, tmpRect.top, editor.getWidth(), tmpRect.bottom);
-            paintGeneral.setShadowLayer(Math.min(editor.getDpUnit() * 8, editor.getOffsetX()), 0, 0, Color.BLACK);
+            paintGeneral.setShadowLayer(Math.min(editor.getDpUnit() * RenderingConstants.DIVIDER_SHADOW_MAX_RADIUS_DIP, editor.getOffsetX()), 0, 0, Color.BLACK);
         }
         drawColor(canvas, color, tmpRect);
         if (shadow) {
@@ -1380,7 +1380,7 @@ public class EditorRenderer {
                     if (span.getStyleBits() != lastStyle) {
                         paintGeneral.setFakeBoldText(TextStyle.isBold(styleBits));
                         if (TextStyle.isItalics(styleBits)) {
-                            paintGeneral.setTextSkewX(GraphicsConstants.TEXT_SKEW_X);
+                            paintGeneral.setTextSkewX(RenderingConstants.TEXT_SKEW_X);
                         } else {
                             paintGeneral.setTextSkewX(0);
                         }
@@ -2260,7 +2260,7 @@ public class EditorRenderer {
                 radii = new float[8];
                 for (int i = 0; i < 8; i++) {
                     if (i != 5)
-                        radii[i] = tmpRect.height() * GraphicsConstants.ROUND_BUBBLE_FACTOR;
+                        radii[i] = tmpRect.height() * RenderingConstants.ROUND_BUBBLE_FACTOR;
                 }
             } else if (position == LineInfoPanelPosition.BOTTOM) {
                 tmpRect.top = topY + length - editor.getRowHeight() - 2 * expand;
@@ -2269,7 +2269,7 @@ public class EditorRenderer {
                 radii = new float[8];
                 for (int i = 0; i < 8; i++) {
                     if (i != 3)
-                        radii[i] = tmpRect.height() * GraphicsConstants.ROUND_BUBBLE_FACTOR;
+                        radii[i] = tmpRect.height() * RenderingConstants.ROUND_BUBBLE_FACTOR;
                 }
             } else {
                 float centerY = topY + length / 2f;
@@ -2378,7 +2378,7 @@ public class EditorRenderer {
                 }
             }
             if (color != 0) {
-                paintGeneral.setTextSkewX(TextStyle.isItalics(style) ? GraphicsConstants.TEXT_SKEW_X : 0f);
+                paintGeneral.setTextSkewX(TextStyle.isItalics(style) ? RenderingConstants.TEXT_SKEW_X : 0f);
                 paintGeneral.setStrikeThruText(TextStyle.isStrikeThrough(style));
                 drawText(canvas, getLine(line), startCol, endCol - startCol, startCol, endCol - startCol, false, horizontalOffset, editor.getRowBaseline(row) - editor.getOffsetY(), line);
             }
@@ -2474,7 +2474,7 @@ public class EditorRenderer {
                         var path = new Path();
                         var y = editor.getRowBottomOfText(position.row) - editor.getOffsetY();
                         path.moveTo(textOffset + position.left, y);
-                        path.lineTo(textOffset + position.left - GraphicsConstants.TEXT_SKEW_X * y, 0f);
+                        path.lineTo(textOffset + position.left - RenderingConstants.TEXT_SKEW_X * y, 0f);
                         path.lineTo(editor.getWidth(), 0f);
                         path.lineTo(editor.getWidth(), editor.getHeight());
                         path.close();
@@ -2487,7 +2487,7 @@ public class EditorRenderer {
                         var path = new Path();
                         var y = editor.getRowBottomOfText(position.row) - editor.getOffsetY();
                         path.moveTo(textOffset + position.right, y);
-                        path.lineTo(textOffset + position.right - GraphicsConstants.TEXT_SKEW_X * y, 0f);
+                        path.lineTo(textOffset + position.right - RenderingConstants.TEXT_SKEW_X * y, 0f);
                         path.lineTo(0, 0f);
                         path.lineTo(0, editor.getHeight());
                         path.close();
