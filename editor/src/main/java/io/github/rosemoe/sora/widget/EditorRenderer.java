@@ -804,7 +804,7 @@ public class EditorRenderer {
     }
 
     protected void drawStuckLines(Canvas canvas, List<CodeBlock> candidates, float offset) {
-        if (candidates == null || candidates.size() == 0) {
+        if (candidates == null || candidates.isEmpty()) {
             return;
         }
         var styles = editor.getStyles();
@@ -1298,7 +1298,7 @@ public class EditorRenderer {
                     try {
                         reader.moveToLine(-1);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Log.w(LOG_TAG, "Failed to release SpanReader", e);
                     }
                 }
                 // Get new reader and lock
@@ -1310,7 +1310,7 @@ public class EditorRenderer {
                 try {
                     reader.moveToLine(line);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Log.w(LOG_TAG, "Failed to read span", e);
                     reader = new EmptyReader();
                 }
                 if (reader.getSpanCount() == 0) {
@@ -1326,10 +1326,10 @@ public class EditorRenderer {
 
             // Get visible region on the line
             long charPos = findDesiredVisibleChar(offset3, line, rowInf.startColumn, rowInf.endColumn);
-            int firstVisibleChar = (int) CharPosDesc.getTextOffset(charPos);
+            int firstVisibleChar = CharPosDesc.getTextOffset(charPos);
             float paintingOffset = CharPosDesc.getPixelWidthOrOffset(charPos) - offset2;
             charPos = findDesiredVisibleChar(editor.getWidth() - paintingOffset, line, firstVisibleChar, rowInf.endColumn, rowInf.startColumn, true);
-            int lastVisibleChar = (int) CharPosDesc.getTextOffset(charPos);
+            int lastVisibleChar = CharPosDesc.getTextOffset(charPos);
 
             float backupOffset = paintingOffset;
             int nonPrintableFlags = editor.getNonPrintablePaintingFlags();
@@ -1533,7 +1533,7 @@ public class EditorRenderer {
             try {
                 reader.moveToLine(-1);
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.w(LOG_TAG, "Failed to release SpanReader", e);
             }
         }
 
@@ -2324,7 +2324,6 @@ public class EditorRenderer {
         if (controller.isInSnippet()) {
             var editing = controller.getEditingTabStop();
             if (editing != null) {
-                Log.d(LOG_TAG, "Patch editing");
                 patchTextRegionWithColor(canvas, textOffset, editing.getStartIndex(), editing.getEndIndex(), 0, editor.getColorScheme().getColor(EditorColorScheme.SNIPPET_BACKGROUND_EDITING), 0);
             }
             for (SnippetItem snippetItem : controller.getEditingRelatedTabStops()) {
@@ -2510,7 +2509,7 @@ public class EditorRenderer {
         try {
             reader.moveToLine(-1);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.w(LOG_TAG, "Failed to release SpanReader", e);
         }
     }
 
