@@ -714,6 +714,8 @@ public class EditorRenderer {
             drawSelectionOnAnimation(canvas);
         }
 
+        drawStuckLines(canvas, stuckLines, textOffset);
+
         if (editor.isLineNumberEnabled() && !lineNumberNotPinned) {
             drawLineNumberBackground(canvas, 0, lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
 
@@ -746,7 +748,6 @@ public class EditorRenderer {
             canvas.restore();
         }
 
-        drawStuckLines(canvas, stuckLines, textOffset);
         drawStuckLineNumbers(canvas, stuckLines, offsetX, lineNumberWidth, editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER));
         drawScrollBars(canvas);
         drawEdgeEffect(canvas);
