@@ -92,7 +92,7 @@ object Chars {
         var startLine = line
         var endLine = line
         val lineObj = text.getLine(line)
-        val edges = ICUUtils.getWordEdges(lineObj, column, useIcu)
+        val edges = ICUUtils.getWordRange(lineObj, column, useIcu)
         val startOffset = IntPair.getFirst(edges)
         val endOffset = IntPair.getSecond(edges)
         var startColumn = startOffset

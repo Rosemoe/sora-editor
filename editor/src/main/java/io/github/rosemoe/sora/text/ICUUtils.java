@@ -26,25 +26,27 @@ package io.github.rosemoe.sora.text;
 import android.icu.text.BreakIterator;
 import android.os.Build;
 
+import androidx.annotation.NonNull;
+
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.MyCharacter;
 
 /**
  * Utility class for invoking ICU library according to Android platform.
- * Provide some default implementation on old platforms without ICU.
+ * Provide default implementation on old platforms without ICU.
  *
  * @author Rosemoe
  */
 public class ICUUtils {
 
     /**
-     * Get word edges for the given offset
+     * Get word range for the given offset
      *
      * @param text   Text to analyze
      * @param offset Required char offset of word
-     * @return Packed value of (start, end) pair. Always contains the position {@code offset}
+     * @return Packed integer pair (start, end). Always contains the position {@code offset}
      */
-    public static long getWordEdges(CharSequence text, int offset, boolean useIcu) {
+    public static long getWordRange(@NonNull CharSequence text, int offset, boolean useIcu) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && useIcu) {
             var itr = BreakIterator.getWordInstance();
             itr.setText(new CharSequenceIterator(text));
@@ -53,17 +55,18 @@ public class ICUUtils {
             if (offset >= start && offset <= end) {
                 return IntPair.pack(start, end);
             } else {
-                return getWordEdgesFallback(text, offset);
+                return getWordRangeFallback(text, offset);
             }
         } else {
-            return getWordEdgesFallback(text, offset);
+            return getWordRangeFallback(text, offset);
         }
     }
 
     /**
-     * Primitive implementation of {@link #getWordEdges(CharSequence, int, boolean)} when ICU is not enabled
+     * Primitive implementation of {@link #getWordRange(CharSequence, int, boolean)}
+     * when ICU is not enabled
      */
-    public static long getWordEdgesFallback(CharSequence text, int offset) {
+    public static long getWordRangeFallback(@NonNull CharSequence text, int offset) {
         int start = offset;
         int end = offset;
         while (end < text.length() && MyCharacter.isJavaIdentifierPart(text.charAt(end))) {
