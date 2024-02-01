@@ -107,7 +107,8 @@ public interface Language {
      * @throws io.github.rosemoe.sora.lang.completion.CompletionCancelledException This thread can be abandoned
      *                                                                             by the editor framework because the auto-completion items of
      *                                                                             this invocation are no longer needed by the user. This can either be thrown
-     *                                                                             by {@link ContentReference} or {@link CompletionPublisher}. How the exceptions will be thrown is according to
+     *                                                                             by {@link ContentReference} or {@link CompletionPublisher}.
+     *                                                                             How the exceptions will be thrown is according to
      *                                                                             your settings: {@link #getInterruptionLevel()}
      * @see ContentReference
      * @see CompletionPublisher
@@ -120,10 +121,12 @@ public interface Language {
                              @NonNull Bundle extraArguments) throws CompletionCancelledException;
 
     /**
-     * Get advance for indent
+     * Get delta indent spaces count
      *
-     * @param content Content of a line
-     * @return Advance space count
+     * @param content Content of given line
+     * @param line    0-indexed line number
+     * @param column  Column on the given line, where a line separator is inserted
+     * @return Delta count of indent spaces. It can be a negative/positive number or zero.
      */
     @UiThread
     int getIndentAdvance(@NonNull ContentReference content, int line, int column);
