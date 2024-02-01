@@ -136,7 +136,7 @@ public class CodeSnippet implements Cloneable {
         }
 
         public Builder addPlaceholder(int id, List<String> choices) {
-            if (choices.size() == 0) {
+            if (choices.isEmpty()) {
                 return addPlaceholder(id);
             } else if (choices.size() == 1) {
                 return addPlaceholder(id, choices.get(0));

@@ -486,10 +486,7 @@ public class EditorRenderer {
                 // unboxing may result in NPE!
                 Integer backgroundColor = RendererUtils.getBackgroundColor(span, editor.getColorScheme());
                 if (backgroundColor != null && paintStart != paintEnd) {
-                    tmpRect.top = editor.getRowTop(row);
-                    tmpRect.bottom = editor.getRowBottom(row);
-                    tmpRect.left = offsetX;
-                    tmpRect.right = tmpRect.left + width;
+                    tmpRect.set(offsetX, editor.getRowTop(row), offsetX + width, editor.getRowBottom(row));
                     paintGeneral.setColor(backgroundColor);
                     canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintGeneral);
                 }
@@ -509,7 +506,7 @@ public class EditorRenderer {
                 // Draw underline
                 if (span.underlineColor != 0) {
                     tmpRect.bottom = editor.getRowBottom(row) - editor.getDpUnit() * 1;
-                    tmpRect.top = tmpRect.bottom - editor.getRowHeight() * 0.08f;
+                    tmpRect.top = tmpRect.bottom - editor.getRowHeight() * RenderingConstants.TEXT_UNDERLINE_WIDTH_FACTOR;
                     tmpRect.left = offsetX;
                     tmpRect.right = offsetX + width;
                     drawColor(canvas, span.underlineColor, tmpRect);
@@ -1186,7 +1183,7 @@ public class EditorRenderer {
         var composingLength = editor.inputConnection.composingText.endIndex - editor.inputConnection.composingText.startIndex;
         if (editor.shouldInitializeNonPrintable()) {
             float spaceWidth = paintGeneral.getSpaceWidth();
-            circleRadius = Math.min(editor.getRowHeight(), spaceWidth) * 0.125f;
+            circleRadius = Math.min(editor.getRowHeight(), spaceWidth) * RenderingConstants.NON_PRINTABLE_CIRCLE_RADIUS_FACTOR;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !editor.isWordwrap() && canvas.isHardwareAccelerated() && editor.isHardwareAcceleratedDrawAllowed()) {
             renderNodeHolder.keepCurrentInDisplay(firstVis, editor.getLastVisibleRow());
@@ -1413,7 +1410,7 @@ public class EditorRenderer {
                     // Draw underline
                     if (span.underlineColor != 0) {
                         tmpRect.bottom = editor.getRowBottom(row) - editor.getOffsetY() - editor.getDpUnit() * 1;
-                        tmpRect.top = tmpRect.bottom - editor.getRowHeight() * 0.08f;
+                        tmpRect.top = tmpRect.bottom - editor.getRowHeight() * RenderingConstants.TEXT_UNDERLINE_WIDTH_FACTOR;
                         tmpRect.left = paintingOffset;
                         tmpRect.right = paintingOffset + width;
                         drawColor(canvas, span.underlineColor, tmpRect);
@@ -2129,7 +2126,7 @@ public class EditorRenderer {
         if (!editor.getEventHandler().shouldDrawScrollBar()) {
             return;
         }
-        var size = editor.getDpUnit() * 10;
+        var size = editor.getDpUnit() * RenderingConstants.SCROLLBAR_WIDTH_DIP;
         if (editor.isHorizontalScrollBarEnabled() && !editor.isWordwrap() && editor.getScrollMaxX() > editor.getWidth() * 3 / 4) {
             canvas.save();
             canvas.translate(0f, size * editor.getEventHandler().getScrollBarMovementPercentage());
@@ -2158,7 +2155,7 @@ public class EditorRenderer {
     protected void drawScrollBarTrackVertical(Canvas canvas) {
         if (editor.getEventHandler().holdVerticalScrollBar()) {
             tmpRect.right = editor.getWidth();
-            tmpRect.left = editor.getWidth() - editor.getDpUnit() * 10;
+            tmpRect.left = editor.getWidth() - editor.getDpUnit() * RenderingConstants.SCROLLBAR_WIDTH_DIP;
             tmpRect.top = 0;
             tmpRect.bottom = editor.getHeight();
             if (verticalScrollbarTrackDrawable != null) {
@@ -2178,16 +2175,13 @@ public class EditorRenderer {
     protected void drawScrollBarVertical(Canvas canvas) {
         int height = editor.getHeight();
         float all = editor.getScrollMaxY() + height;
-        float length = height / all * height;
-        if (length < editor.getDpUnit() * 60) {
-            length = editor.getDpUnit() * 60;
-        }
+        float length = Math.max(height / all * height, editor.getDpUnit() * RenderingConstants.SCROLLBAR_LENGTH_MIN_DIP);
         float topY = editor.getOffsetY() * 1.0f / editor.getScrollMaxY() * (height - length);
         if (editor.getEventHandler().holdVerticalScrollBar()) {
             drawLineInfoPanel(canvas, topY, length);
         }
         tmpRect.right = editor.getWidth();
-        tmpRect.left = editor.getWidth() - editor.getDpUnit() * 10;
+        tmpRect.left = editor.getWidth() - editor.getDpUnit() * RenderingConstants.SCROLLBAR_WIDTH_DIP;
         tmpRect.top = topY;
         tmpRect.bottom = topY + length;
         verticalScrollBarRect.set(tmpRect);
@@ -2306,10 +2300,7 @@ public class EditorRenderer {
      */
     protected void drawScrollBarTrackHorizontal(Canvas canvas) {
         if (editor.getEventHandler().holdHorizontalScrollBar()) {
-            tmpRect.top = editor.getHeight() - editor.getDpUnit() * 10;
-            tmpRect.bottom = editor.getHeight();
-            tmpRect.right = editor.getWidth();
-            tmpRect.left = 0;
+            tmpRect.set(0, editor.getHeight() - editor.getDpUnit() * RenderingConstants.SCROLLBAR_WIDTH_DIP, editor.getWidth(), editor.getHeight());
             if (horizontalScrollbarTrackDrawable != null) {
                 horizontalScrollbarTrackDrawable.setBounds((int) tmpRect.left, (int) tmpRect.top, (int) tmpRect.right, (int) tmpRect.bottom);
                 horizontalScrollbarTrackDrawable.draw(canvas);
@@ -2360,7 +2351,7 @@ public class EditorRenderer {
 
     protected void patchTextRegionWithColor(Canvas canvas, float textOffset, int start, int end, int color, int backgroundColor, int underlineColor) {
         paintGeneral.setColor(color);
-        paintOther.setStrokeWidth(editor.getRowHeightOfText() * 0.1f);
+        paintOther.setStrokeWidth(editor.getRowHeightOfText() * RenderingConstants.MATCHING_DELIMITERS_UNDERLINE_WIDTH_FACTOR);
         paintGeneral.setStyle(android.graphics.Paint.Style.FILL_AND_STROKE);
         paintGeneral.setFakeBoldText(editor.getProps().boldMatchingDelimiters);
         var positions = getTextRegionPositions(start, end);
@@ -2537,10 +2528,10 @@ public class EditorRenderer {
         int page = editor.getWidth();
         float all = editor.getScrollMaxX();
         float length = page / (all + editor.getWidth()) * editor.getWidth();
-        float minLength = 60 * editor.getDpUnit();
+        float minLength = RenderingConstants.SCROLLBAR_LENGTH_MIN_DIP * editor.getDpUnit();
         if (length <= minLength) length = minLength;
         float leftX = editor.getOffsetX() / all * (editor.getWidth() - length);
-        tmpRect.top = editor.getHeight() - editor.getDpUnit() * 10;
+        tmpRect.top = editor.getHeight() - editor.getDpUnit() * RenderingConstants.SCROLLBAR_WIDTH_DIP;
         tmpRect.bottom = editor.getHeight();
         tmpRect.right = leftX + length;
         tmpRect.left = leftX;

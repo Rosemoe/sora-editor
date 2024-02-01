@@ -2316,7 +2316,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #setBasicDisplayMode(boolean)
      */
     public boolean isBasicDisplayMode() {
-        return renderer.basicDisplayMode;
+        return renderer.isBasicDisplayMode();
     }
 
     /**

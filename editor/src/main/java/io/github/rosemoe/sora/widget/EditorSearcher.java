@@ -106,7 +106,7 @@ public class EditorSearcher {
      * @throws java.util.regex.PatternSyntaxException if pattern is invalid when regex is enabled.
      */
     public void search(@NonNull String pattern, @NonNull SearchOptions options) {
-        if (pattern.length() == 0) {
+        if (pattern.isEmpty()) {
             throw new IllegalArgumentException("pattern length must be > 0");
         }
         if (options.type == SearchOptions.TYPE_REGULAR_EXPRESSION) {
