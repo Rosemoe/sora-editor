@@ -40,16 +40,18 @@ import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver
 import io.github.rosemoe.sora.lang.styling.CodeBlock
 import io.github.rosemoe.sora.lang.styling.Styles
+import io.github.rosemoe.sora.lang.util.BaseAnalyzeManager
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import java.util.concurrent.LinkedBlockingQueue
 
 open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme) :
-    AnalyzeManager {
+    BaseAnalyzeManager() {
 
-    var currentReceiver: StyleReceiver? = null
-    var reference: ContentReference? = null
-    var extraArguments: Bundle? = null
+    val currentReceiver: StyleReceiver?
+        get() = receiver
+    val reference: ContentReference?
+        get() = contentRef
     var thread: TsLooperThread? = null
     var spanFactory : TsSpanFactory = DefaultSpanFactory()
 
@@ -62,16 +64,6 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
             if (it is LineSpansGenerator)
                 it.theme = theme
         }
-    }
-
-    override fun setReceiver(receiver: StyleReceiver?) {
-        currentReceiver = receiver
-    }
-
-    override fun reset(content: ContentReference, extraArguments: Bundle) {
-        reference = content
-        this.extraArguments = extraArguments
-        rerun()
     }
 
     override fun insert(start: CharPosition, end: CharPosition, insertedContent: CharSequence) {
@@ -124,6 +116,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     override fun destroy() {
         destroyPreviousRes()
         spanFactory.close()
+        super.destroy()
     }
 
     /**

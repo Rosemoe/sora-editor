@@ -23,7 +23,6 @@
  */
 package io.github.rosemoe.sora.lang.analysis;
 
-import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
 
@@ -43,35 +42,31 @@ import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Spans;
 import io.github.rosemoe.sora.lang.styling.Styles;
+import io.github.rosemoe.sora.lang.util.BaseAnalyzeManager;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
-import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
-public abstract class AsyncIncrementalAnalyzeManager<S, T> implements IncrementalAnalyzeManager<S, T> {
+/**
+ * Asynchronous base implementation of {@link IncrementalAnalyzeManager}
+ * <p>
+ * {@inheritDoc}
+ *
+ * @author Rosemoe
+ */
+public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeManager implements IncrementalAnalyzeManager<S, T> {
 
     private final static int MSG_BASE = 11451400;
     private final static int MSG_INIT = MSG_BASE + 1;
     private final static int MSG_MOD = MSG_BASE + 2;
     private static int sThreadId = 0;
-    private StyleReceiver receiver;
-    private ContentReference ref;
-    private Bundle extraArguments;
     private LooperThread thread;
     private volatile long runCount;
 
     private synchronized static int nextThreadId() {
         sThreadId++;
         return sThreadId;
-    }
-
-    /**
-     * Get receiver
-     */
-    @Nullable
-    protected StyleReceiver getReceiver() {
-        return receiver;
     }
 
     /**
@@ -82,18 +77,6 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
         if (r != null) {
             consumer.accept(r);
         }
-    }
-
-    @Override
-    public void setReceiver(StyleReceiver receiver) {
-        this.receiver = receiver;
-    }
-
-    @Override
-    public void reset(@NonNull ContentReference content, @NonNull Bundle extraArguments) {
-        this.ref = content;
-        this.extraArguments = extraArguments;
-        rerun();
     }
 
     @Override
@@ -120,7 +103,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
                 thread.abort = true;
             }
         }
-        final var text = ref.getReference().copyText(false);
+        final var text = getContentRef().getReference().copyText(false);
         text.setUndoEnabled(false);
         thread = new LooperThread();
         thread.setName("AsyncAnalyzer-" + nextThreadId());
@@ -164,21 +147,19 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
             }
             thread.abort = true;
         }
-        receiver = null;
-        ref = null;
-        extraArguments = null;
         thread = null;
+        super.destroy();
     }
 
     private void sendNewStyles(Styles styles) {
-        final var r = receiver;
+        final var r = getReceiver();
         if (r != null) {
             r.setStyles(this, styles);
         }
     }
 
     private void sendUpdate(Styles styles, int startLine, int endLine) {
-        final var r = receiver;
+        final var r = getReceiver();
         if (r != null) {
             r.updateStyles(this, styles, new SequenceUpdateRange(startLine, endLine));
         }
@@ -190,10 +171,6 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> implements Incrementa
      * @param text The text. can be safely accessed.
      */
     public abstract List<CodeBlock> computeBlocks(Content text, CodeBlockAnalyzeDelegate delegate);
-
-    public Bundle getExtraArguments() {
-        return extraArguments;
-    }
 
     public Styles getManagedStyles() {
         var thread = Thread.currentThread();

@@ -29,10 +29,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
-import io.github.rosemoe.sora.lang.analysis.StyleReceiver;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
 import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
+import io.github.rosemoe.sora.lang.util.BaseAnalyzeManager;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentReference;
@@ -126,19 +126,10 @@ public class EmptyLanguage implements Language {
         }
     }
 
-    public static class EmptyAnalyzeManager implements AnalyzeManager {
+    public static class EmptyAnalyzeManager extends BaseAnalyzeManager {
 
         public final static EmptyAnalyzeManager INSTANCE = new EmptyAnalyzeManager();
 
-        @Override
-        public void setReceiver(@Nullable StyleReceiver receiver) {
-
-        }
-
-        @Override
-        public void reset(@NonNull ContentReference content, @NonNull Bundle extraArguments) {
-
-        }
 
         @Override
         public void insert(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence insertedContent) {
@@ -155,10 +146,6 @@ public class EmptyLanguage implements Language {
 
         }
 
-        @Override
-        public void destroy() {
-
-        }
     }
 }
 
