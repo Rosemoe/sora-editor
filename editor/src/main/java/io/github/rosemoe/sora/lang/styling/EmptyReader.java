@@ -31,7 +31,6 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 public class EmptyReader implements Spans.Reader {
 
     private final List<Span> spans;
-    private boolean moved;
 
     public EmptyReader() {
         spans = new ArrayList<>(1);
