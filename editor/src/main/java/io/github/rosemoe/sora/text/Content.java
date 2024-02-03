@@ -883,8 +883,7 @@ public class Content implements CharSequence {
 
     @Override
     public boolean equals(Object anotherObject) {
-        if (anotherObject instanceof Content) {
-            Content content = (Content) anotherObject;
+        if (anotherObject instanceof Content content) {
             if (content.length() != this.length()) {
                 return false;
             }
@@ -913,7 +912,7 @@ public class Content implements CharSequence {
     /**
      * Get the text in StringBuilder form
      * <p>
-     * This can improve the speed in char getting for tokenizing
+     * This can improve the speed in char reading for tokenizing
      *
      * @return StringBuilder form of Content
      */
@@ -942,11 +941,16 @@ public class Content implements CharSequence {
      */
     public void appendToStringBuilder(StringBuilder sb) {
         sb.ensureCapacity(sb.length() + length());
-        final int lines = getLineCount();
-        for (int i = 0; i < lines; i++) {
-            var line = this.lines.get(i);
-            line.appendTo(sb);
-            sb.append(line.getLineSeparator().getContent());
+        lock(false);
+        try {
+            final int lines = getLineCount();
+            for (int i = 0; i < lines; i++) {
+                var line = this.lines.get(i);
+                line.appendTo(sb);
+                sb.append(line.getLineSeparator().getContent());
+            }
+        } finally {
+            unlock(false);
         }
     }
 
