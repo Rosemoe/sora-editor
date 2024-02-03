@@ -3569,18 +3569,30 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      *                       cursor is not in selection mode.
      */
     public void copyText(boolean shouldCopyLine) {
+        if (cursor.isSelected()) {
+            copyTextToClipboard(getText(), cursor.getLeft(), cursor.getRight());
+        } else if (shouldCopyLine) {
+            copyLine();
+        } else {
+            var text = getLineSeparator().getContent();
+            copyTextToClipboard(text, 0, text.length());
+        }
+    }
+
+    /**
+     * Copy the given text region to clipboard, and follow editor's IPC properties.
+     */
+    protected void copyTextToClipboard(@NonNull CharSequence text, int start, int end) {
+        if (end < start) {
+            return;
+        }
+        if (end - start > props.clipboardTextLengthLimit) {
+            Toast.makeText(getContext(), I18nConfig.getResourceId(R.string.sora_editor_clip_text_length_too_large), Toast.LENGTH_SHORT).show();
+            return;
+        }
         try {
-            if (cursor.isSelected()) {
-                int length = cursor.getRight() - cursor.getLeft();
-                if (length > props.clipboardTextLengthLimit) {
-                    Toast.makeText(getContext(), I18nConfig.getResourceId(R.string.sora_editor_clip_text_length_too_large), Toast.LENGTH_SHORT).show();
-                } else {
-                    var clip = getText().substring(cursor.getLeft(), cursor.getRight());
-                    clipboardManager.setPrimaryClip(ClipData.newPlainText(clip, clip));
-                }
-            } else if (shouldCopyLine) {
-                copyLine();
-            }
+            var clip = (text instanceof Content) ? ((Content) text).substring(start, end) : text.subSequence(start, end).toString();
+            clipboardManager.setPrimaryClip(ClipData.newPlainText(clip, clip));
         } catch (RuntimeException e) {
             if (e.getCause() instanceof TransactionTooLargeException) {
                 Toast.makeText(getContext(), I18nConfig.getResourceId(R.string.sora_editor_clip_text_length_too_large), Toast.LENGTH_SHORT).show();
@@ -3634,6 +3646,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         final var column = getText().getColumnCount(left.line);
 
         if (line + 1 == getLineCount()) {
+            int columnCount = getText().getColumnCount(line);
+            if (columnCount == 0) {
+                // copy line separator
+                copyText(false);
+                return;
+            }
             setSelectionRegion(line, 0, line, getText().getColumnCount(line));
         } else {
             setSelectionRegion(line, 0, line + 1, 0);
