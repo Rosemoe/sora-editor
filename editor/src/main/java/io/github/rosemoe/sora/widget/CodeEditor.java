@@ -3536,10 +3536,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void pasteText() {
         try {
-            if (!clipboardManager.hasPrimaryClip() || clipboardManager.getPrimaryClip() == null) {
+            ClipData clip;
+            if (!clipboardManager.hasPrimaryClip() || (clip = clipboardManager.getPrimaryClip()) == null) {
                 return;
             }
-            var data = clipboardManager.getPrimaryClip().getItemAt(0);
+            var data = clip.getItemAt(0);
             var text = data.getText();
             if (text != null && inputConnection != null) {
                 inputConnection.commitText(text, 1);
@@ -3548,9 +3549,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 }
                 notifyIMEExternalCursorChange();
             }
-
         } catch (Exception e) {
-            Log.w(LOG_TAG, e);
+            Log.w(LOG_TAG, "Error pasting text to editor", e);
             Toast.makeText(getContext(), e.toString(), Toast.LENGTH_SHORT).show();
         }
     }
