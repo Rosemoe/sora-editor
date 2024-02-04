@@ -46,8 +46,19 @@ public class StylesUtils {
     /**
      * Get {@link Span} for the given position.
      */
-    @Nullable
     public static Span getSpanForPosition(@Nullable Styles styles, @NonNull CharPosition pos) {
+        return getSpanForPositionImpl(styles, pos, 0);
+    }
+
+    /**
+     * Get following {@link Span} for the given position.
+     */
+    public static Span getFollowingSpanForPosition(@Nullable Styles styles, @NonNull CharPosition pos) {
+        return getSpanForPositionImpl(styles, pos, 1);
+    }
+
+    @Nullable
+    private static Span getSpanForPositionImpl(@Nullable Styles styles, @NonNull CharPosition pos, int spanIndexOffset) {
         var line = pos.line;
         var column = pos.column;
         Spans spans;
@@ -69,7 +80,10 @@ public class StylesUtils {
                     break;
                 }
             }
-            index = Math.max(0, Math.min(index, reader.getSpanCount() - 1));
+            index = index + spanIndexOffset;
+            if (index < 0 || index >= reader.getSpanCount()) {
+                return null;
+            }
             return reader.getSpanAt(index);
         } catch (Exception e) {
             // Unexpected exception. Maybe there is something wrong in language implementation
