@@ -240,12 +240,12 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
             }
             Span span = Span.obtain(startIndex, TextStyle.makeStyle(foreground + 255, 0, (fontStyle & FontStyle.Bold) != 0, (fontStyle & FontStyle.Italic) != 0, false));
 
-            span.extra = tokenType;
+            span.setExtra(tokenType);
 
             if ((fontStyle & FontStyle.Underline) != 0) {
                 String color = theme.getColor(foreground);
                 if (color != null) {
-                    span.underlineColor = Color.parseColor(color);
+                    span.setUnderlineColor(Color.parseColor(color));
                 }
             }
 

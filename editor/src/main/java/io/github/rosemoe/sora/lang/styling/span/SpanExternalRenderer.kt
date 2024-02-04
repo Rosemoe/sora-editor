@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2024  Rosemoe
@@ -20,41 +20,43 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- */
-package io.github.rosemoe.sora.lang.styling;
+ ******************************************************************************/
 
-import android.graphics.Canvas;
-import android.graphics.Paint;
+package io.github.rosemoe.sora.lang.styling.span
 
-import io.github.rosemoe.sora.annotations.Experimental;
-import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
+import android.graphics.Canvas
+import android.graphics.Paint
+import io.github.rosemoe.sora.annotations.Experimental
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
  * External renderer for spans.
- * <p>
+ *
+ *
  * Users can attach this renderer to any span so that you can draw
  * extra content inside the rectangle on canvas of the span.
- * <p>
+ *
+ *
  * However, any implementation of this class should not create many new objects
  * in its methods but initialize your required resources when the renderer is
  * created.
- * <p>
+ *
+ *
  * Meanwhile, the renderer should be consistent with editor's current
  * color scheme. Use colors defined in your color schemes if possible.
- * <p>
- * Also try to create universal renderers for a certain effect.
- * <p>
- * Note: the Paint object should not be modified or used to draw objects on the canvas
- * It is only provided for measuring. Use another Paint created by yourself instead.
  *
- * @author Rosemoe
+ *
+ * Also, try to create universal renderers for a certain effect.
+ *
+ *
+ * Note: the [Paint] object should not be modified or used to draw objects on the canvas
+ * It is provided only for measuring. Use another [Paint] created by yourself instead.
  */
 @Experimental
-public interface ExternalRenderer {
+interface SpanExternalRenderer : SpanExt {
+    fun requirePreDraw(): Boolean
 
-    boolean requirePreDraw();
-
-    boolean requirePostDraw();
+    fun requirePostDraw(): Boolean
 
     /**
      * Called when the editor draws the given region.
@@ -64,6 +66,5 @@ public interface ExternalRenderer {
      * @param colorScheme Current color scheme
      * @param preOrPost   True for preDraw, False for postDraw
      */
-    void draw(Canvas canvas, Paint paint, EditorColorScheme colorScheme, boolean preOrPost);
-
+    fun draw(canvas: Canvas?, paint: Paint?, colorScheme: EditorColorScheme?, preOrPost: Boolean)
 }

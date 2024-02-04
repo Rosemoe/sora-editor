@@ -22,38 +22,19 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-plugins {
-    id("com.android.library")
-    id("com.vanniktech.maven.publish.base")
-    id("kotlin-android")
-}
+package io.github.rosemoe.sora.lang.styling.span
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
+/**
+ * Interaction attributes for a [Span].
+ */
+interface SpanInteractionInfo : SpanExt {
 
-android {
-    namespace = "io.github.rosemoe.sora"
+    fun isClickable(): Boolean
 
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
+    fun isLongClickable(): Boolean
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-}
+    fun isDoubleClickable(): Boolean
 
-dependencies {
-    api(libs.androidx.annotation)
-    implementation(libs.androidx.collection)
-    implementation(libs.kotlin.stdlib)
-    testImplementation(libs.junit)
-    testImplementation(libs.tests.google.truth)
-    testImplementation(libs.tests.robolectric)
-    androidTestImplementation(libs.androidx.test.junit)
-    androidTestImplementation(libs.androidx.test.espresso)
+    fun getData(): Any?
+
 }

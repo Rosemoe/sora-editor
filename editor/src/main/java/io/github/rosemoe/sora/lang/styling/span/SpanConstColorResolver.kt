@@ -22,38 +22,27 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-plugins {
-    id("com.android.library")
-    id("com.vanniktech.maven.publish.base")
-    id("kotlin-android")
-}
+package io.github.rosemoe.sora.lang.styling.span
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
+import io.github.rosemoe.sora.lang.styling.Span
+import io.github.rosemoe.sora.lang.styling.color.ConstColor
 
-android {
-    namespace = "io.github.rosemoe.sora"
+/**
+ * Override span's foreground and background with constant color.
+ * @param foreground Override foreground color, `0` for no override
+ * @param background Override background color, `0` for no override
+ *
+ * @author Rosemoe
+ */
+class SpanConstColorResolver(foreground: Int = 0, background: Int = 0) : SpanColorResolver {
 
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
+    private val foregroundColor = if (foreground == 0) null else ConstColor(foreground)
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-}
+    private val backgroundColor = if (background == 0) null else ConstColor(background)
 
-dependencies {
-    api(libs.androidx.annotation)
-    implementation(libs.androidx.collection)
-    implementation(libs.kotlin.stdlib)
-    testImplementation(libs.junit)
-    testImplementation(libs.tests.google.truth)
-    testImplementation(libs.tests.robolectric)
-    androidTestImplementation(libs.androidx.test.junit)
-    androidTestImplementation(libs.androidx.test.espresso)
+    override fun getForegroundColor(span: Span) = foregroundColor
+
+    override fun getBackgroundColor(span: Span) = backgroundColor
+
+
 }

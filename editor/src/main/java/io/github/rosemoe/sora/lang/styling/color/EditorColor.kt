@@ -23,7 +23,7 @@
  ******************************************************************************/
 package io.github.rosemoe.sora.lang.styling.color
 
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
  * An implementation of [ResolvableColor] describing a color based on editor's scheme
@@ -34,7 +34,7 @@ class EditorColor
 /**
  * @param colorId The color ID in [io.github.rosemoe.sora.widget.schemes.EditorColorScheme]
  */(private val colorId: Int) : ResolvableColor {
-    override fun resolve(editor: CodeEditor): Int {
-        return editor.colorScheme.getColor(colorId)
+    override fun resolve(cs: EditorColorScheme): Int {
+        return cs.getColor(colorId)
     }
 }

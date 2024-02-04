@@ -38,9 +38,10 @@ import io.github.rosemoe.sora.editor.ts.TsTheme
 import io.github.rosemoe.sora.editor.ts.TsThemeBuilder
 import io.github.rosemoe.sora.editor.ts.spans.DefaultSpanFactory
 import io.github.rosemoe.sora.lang.styling.Span
-import io.github.rosemoe.sora.lang.styling.StaticColorSpan
 import io.github.rosemoe.sora.lang.styling.Styles
 import io.github.rosemoe.sora.lang.styling.TextStyle.makeStyle
+import io.github.rosemoe.sora.lang.styling.span.SpanConstColorResolver
+import io.github.rosemoe.sora.lang.styling.span.SpanExtAttrs
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme.COMMENT
@@ -57,37 +58,37 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme.OPERATOR
  * @author Akash Yadav
  */
 class TsLanguageJava(
-  languageSpec: JavaLanguageSpec,
-  tab: Boolean = false
+    languageSpec: JavaLanguageSpec,
+    tab: Boolean = false
 ) : TsLanguage(languageSpec, tab, { buildTheme() }) {
 
-  override val analyzer: TsAnalyzeManager by lazy {
-    TsJavaAnalyzeManager(languageSpec, tsTheme)
-  }
-}
-
-class TsJavaAnalyzeManager(
-  languageSpec: TsLanguageSpec,
-  theme: TsTheme
-) : TsAnalyzeManager(languageSpec, theme) {
-
-  override var styles: Styles = Styles()
-    set(value) {
-      field = value
-      spanFactory = TsJavaSpanFactory(reference, languageSpec.tsQuery, value)
+    override val analyzer: TsAnalyzeManager by lazy {
+        TsJavaAnalyzeManager(languageSpec, tsTheme)
     }
 }
 
+class TsJavaAnalyzeManager(
+    languageSpec: TsLanguageSpec,
+    theme: TsTheme
+) : TsAnalyzeManager(languageSpec, theme) {
+
+    override var styles: Styles = Styles()
+        set(value) {
+            field = value
+            spanFactory = TsJavaSpanFactory(reference, languageSpec.tsQuery, value)
+        }
+}
+
 class TsJavaSpanFactory(
-  private var content : ContentReference?,
-  private var query: TSQuery?,
-  private var styles: Styles?
+    private var content: ContentReference?,
+    private var query: TSQuery?,
+    private var styles: Styles?
 ) : DefaultSpanFactory() {
 
-  companion object {
-    @JvmStatic
-    private val HEX_REGEX = "#\\b([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b".toRegex()
-  }
+    companion object {
+        @JvmStatic
+        private val HEX_REGEX = "#\\b([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b".toRegex()
+    }
 
     override fun createSpans(
         capture: TSQueryCapture, column: Int, spanStyle: Long
@@ -156,9 +157,7 @@ class TsJavaSpanFactory(
             }
 
             val col = column + result.range.first
-            val span = StaticColorSpan.obtain(
-                color,
-                textColor,
+            val span = Span.obtain(
                 col,
                 makeStyle(
                     EditorColorScheme.STATIC_SPAN_FOREGROUND,
@@ -168,6 +167,10 @@ class TsJavaSpanFactory(
                     false,
                     true
                 )
+            )
+            span.setSpanExt(
+                SpanExtAttrs.EXT_COLOR_RESOLVER,
+                SpanConstColorResolver(textColor, color)
             )
 
             spans.add(span)

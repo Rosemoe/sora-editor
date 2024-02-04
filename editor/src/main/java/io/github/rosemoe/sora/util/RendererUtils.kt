@@ -25,7 +25,8 @@
 package io.github.rosemoe.sora.util
 
 import io.github.rosemoe.sora.lang.styling.Span
-import io.github.rosemoe.sora.lang.styling.StaticColorSpan
+import io.github.rosemoe.sora.lang.styling.span.SpanColorResolver
+import io.github.rosemoe.sora.lang.styling.span.SpanExtAttrs
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
@@ -39,18 +40,14 @@ object RendererUtils {
    * Get the background color for the given span.
    */
   @JvmStatic
-  fun getBackgroundColor(span: Span, colorScheme: EditorColorScheme): Int? {
-    val colorId = span.backgroundColorId
+  fun getBackgroundColor(span: Span, colorScheme: EditorColorScheme): Int {
+    val resolver = span.getSpanExt<SpanColorResolver>(SpanExtAttrs.EXT_COLOR_RESOLVER)
+      ?: return colorScheme.getColor(span.backgroundColorId)
 
-    if (span is StaticColorSpan && colorId == EditorColorScheme.STATIC_SPAN_BACKGROUND) {
-      return span.backgroundColor
-    }
+    val color = resolver.getBackgroundColor(span)
+      ?: return colorScheme.getColor(span.backgroundColorId)
 
-    if (colorId == 0) {
-      return null
-    }
-
-    return colorScheme.getColor(colorId)
+    return color.resolve(colorScheme)
   }
 
   /**
@@ -58,12 +55,12 @@ object RendererUtils {
    */
   @JvmStatic
   fun getForegroundColor(span: Span, colorScheme: EditorColorScheme): Int {
-    val colorId = span.foregroundColorId
+    val resolver = span.getSpanExt<SpanColorResolver>(SpanExtAttrs.EXT_COLOR_RESOLVER)
+      ?: return colorScheme.getColor(span.foregroundColorId)
 
-    if (span is StaticColorSpan && colorId == EditorColorScheme.STATIC_SPAN_FOREGROUND) {
-      return span.foregroundColor
-    }
+    val color = resolver.getForegroundColor(span)
+      ?: return colorScheme.getColor(span.foregroundColorId)
 
-    return colorScheme.getColor(colorId)
+    return color.resolve(colorScheme)
   }
 }

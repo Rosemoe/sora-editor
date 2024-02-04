@@ -23,17 +23,18 @@
  ******************************************************************************/
 package io.github.rosemoe.sora.lang.styling.color
 
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.lang.styling.span.SpanExt
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
  * Describe a color that can be resolved when rendering.
  *
  * @author Rosemoe
  */
-fun interface ResolvableColor {
+fun interface ResolvableColor : SpanExt {
     /**
      * Resolve this color
      * @return Color int
      */
-    fun resolve(editor: CodeEditor): Int
+    fun resolve(colorScheme: EditorColorScheme): Int
 }

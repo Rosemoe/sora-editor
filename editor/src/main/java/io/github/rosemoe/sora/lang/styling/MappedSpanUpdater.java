@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lang.styling;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.github.rosemoe.sora.lang.styling.span.SpanExtAttrs;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
@@ -46,7 +47,7 @@ public class MappedSpanUpdater {
         List<Span> startLineSpans = map.get(startLine);
         int index = startLineSpans.size() - 1;
         while (index > 0) {
-            if (startLineSpans.get(index).column >= startColumn) {
+            if (startLineSpans.get(index).getColumn() >= startColumn) {
                 startLineSpans.remove(index).recycle();
                 index--;
             } else {
@@ -56,19 +57,17 @@ public class MappedSpanUpdater {
         // Shift end line
         List<Span> endLineSpans = map.remove(startLine + 1);
         for (int i = 0; i < endLineSpans.size(); i++) {
-            Span span = endLineSpans.get(i);
-            span.column -= endColumn;
-            span.column += startColumn;
+            endLineSpans.get(i).shiftColumnBy(startColumn - endColumn);
         }
         while (endLineSpans.size() > 1) {
-            if (endLineSpans.get(0).column <= startColumn && endLineSpans.get(1).column <= startColumn) {
+            if (endLineSpans.get(0).getColumn() <= startColumn && endLineSpans.get(1).getColumn() <= startColumn) {
                 endLineSpans.remove(0).recycle();
             } else {
                 break;
             }
         }
-        if (endLineSpans.get(0).column <= startColumn) {
-            endLineSpans.get(0).column = startColumn;
+        if (endLineSpans.get(0).getColumn() <= startColumn) {
+            endLineSpans.get(0).setColumn(startColumn);
         }
         startLineSpans.addAll(endLineSpans);
     }
@@ -95,16 +94,16 @@ public class MappedSpanUpdater {
         // Shift spans
         int delta = endCol - startCol;
         while (startIndex < spanList.size()) {
-            spanList.get(startIndex).column -= delta;
+            spanList.get(startIndex).shiftColumnBy(-delta);
             startIndex++;
         }
         // Ensure there is span
-        if (spanList.isEmpty() || spanList.get(0).column != 0) {
+        if (spanList.isEmpty() || spanList.get(0).getColumn() != 0) {
             spanList.add(0, Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
         }
         // Remove spans with length 0
         for (int i = 0; i + 1 < spanList.size(); i++) {
-            if (spanList.get(i).column >= spanList.get(i + 1).column) {
+            if (spanList.get(i).getColumn() >= spanList.get(i + 1).getColumn()) {
                 spanList.remove(i).recycle();
                 i--;
             }
@@ -124,13 +123,13 @@ public class MappedSpanUpdater {
         // Shift spans after insert position
         int delta = endCol - startCol;
         while (index < spanList.size()) {
-            spanList.get(index++).column += delta;
+            spanList.get(index++).shiftColumnBy(delta);
         }
         // Add extra span for line start
         if (originIndex == 0) {
             Span first = spanList.get(0);
-            if (first.style == EditorColorScheme.TEXT_NORMAL && first.underlineColor == 0) {
-                first.column = 0;
+            if (first.getColumn() == EditorColorScheme.TEXT_NORMAL && first.hasSpanExt(SpanExtAttrs.EXT_UNDERLINE_COLOR)) {
+                first.setColumn(0);
             } else {
                 spanList.add(0, Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
             }
@@ -144,7 +143,7 @@ public class MappedSpanUpdater {
         if (extendedSpanIndex == -1) {
             extendedSpanIndex = startLineSpans.size() - 1;
         }
-        if (startLineSpans.get(extendedSpanIndex).column > startColumn) {
+        if (startLineSpans.get(extendedSpanIndex).getColumn() > startColumn) {
             extendedSpanIndex--;
         }
         Span extendedSpan;
@@ -153,10 +152,12 @@ public class MappedSpanUpdater {
         } else {
             extendedSpan = startLineSpans.get(extendedSpanIndex);
         }
-        // Create map link for new lines
+        // Create map lines for new lines
         for (int i = 0; i < endLine - startLine; i++) {
             List<Span> list = new ArrayList<>();
-            list.add(extendedSpan.copy().setColumn(0));
+            var newSpan = extendedSpan.copy();
+            newSpan.setColumn(0);
+            list.add(newSpan);
             map.add(startLine + 1, list);
         }
         // Add original spans to new line
@@ -164,19 +165,21 @@ public class MappedSpanUpdater {
         int idx = extendedSpanIndex;
         while (idx < startLineSpans.size()) {
             Span span = startLineSpans.get(idx++);
-            endLineSpans.add(span.copy().setColumn(Math.max(0, span.column - startColumn + endColumn)));
+            Span newSpan = span.copy();
+            newSpan.setColumn(Math.max(0, span.getColumn() - startColumn + endColumn));
+            endLineSpans.add(newSpan);
         }
         while (extendedSpanIndex + 1 < startLineSpans.size()) {
             startLineSpans.remove(startLineSpans.size() - 1).recycle();
         }
-        if (endLineSpans.size() > 1 && endLineSpans.get(0).column == 0 && endLineSpans.get(1).column == 0) {
+        if (endLineSpans.size() > 1 && endLineSpans.get(0).getColumn() == 0 && endLineSpans.get(1).getColumn() == 0) {
             endLineSpans.remove(0).recycle();
         }
     }
 
     private static int findSpanIndexFor(List<Span> spans, int initialPosition, int targetCol) {
         for (int i = initialPosition; i < spans.size(); i++) {
-            if (spans.get(i).column >= targetCol) {
+            if (spans.get(i).getColumn() >= targetCol) {
                 return i;
             }
         }

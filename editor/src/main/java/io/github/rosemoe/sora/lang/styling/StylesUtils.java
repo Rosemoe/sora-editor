@@ -40,7 +40,7 @@ public class StylesUtils {
      */
     public static boolean checkNoCompletion(@Nullable Styles styles, @NonNull CharPosition pos) {
         var span = getSpanForPosition(styles, pos);
-        return span == null || TextStyle.isNoCompletion(span.style);
+        return span == null || TextStyle.isNoCompletion(span.getStyle());
     }
 
     /**
@@ -64,7 +64,7 @@ public class StylesUtils {
                 return null;
             }
             for (int i = 0; i < reader.getSpanCount(); i++) {
-                if (reader.getSpanAt(i).column > column) {
+                if (reader.getSpanAt(i).getColumn() > column) {
                     index = i - 1;
                     break;
                 }

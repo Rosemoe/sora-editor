@@ -44,7 +44,7 @@ import io.github.rosemoe.sora.util.ArrayList;
  * @author Rosemoe
  */
 @RequiresApi(29)
-class RenderNodeHolder {
+public class RenderNodeHolder {
 
     private final CodeEditor editor;
     private final ArrayList<TextRenderNode> cache;

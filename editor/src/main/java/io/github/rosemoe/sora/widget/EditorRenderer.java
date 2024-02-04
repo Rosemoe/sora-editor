@@ -44,8 +44,10 @@ import android.util.SparseArray;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.collection.MutableIntList;
 
 import io.github.rosemoe.sora.graphics.CharPosDesc;
+import io.github.rosemoe.sora.lang.styling.span.SpanExtAttrs;
 import io.github.rosemoe.sora.util.RendererUtils;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,10 +63,9 @@ import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.lang.completion.snippet.SnippetItem;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
-import io.github.rosemoe.sora.lang.styling.AdvancedSpan;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.EmptyReader;
-import io.github.rosemoe.sora.lang.styling.ExternalRenderer;
+import io.github.rosemoe.sora.lang.styling.span.SpanExternalRenderer;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Spans;
 import io.github.rosemoe.sora.lang.styling.Styles;
@@ -124,7 +125,7 @@ public class EditorRenderer {
     private final RectF verticalScrollBarRect;
     private final RectF horizontalScrollBarRect;
     private final LongArrayList postDrawLineNumbers = new LongArrayList();
-    private final LongArrayList postDrawCurrentLines = new LongArrayList();
+    private final MutableIntList postDrawCurrentLines = new MutableIntList();
     private final LongArrayList matchedPositions = new LongArrayList();
     private final SparseArray<ContentLine> preloadedLines = new SparseArray<>();
     private final SparseArray<Directions> preloadedDirections = new SparseArray<>();
@@ -446,17 +447,15 @@ public class EditorRenderer {
         Span span = spans.getSpanAt(spanOffset);
         // Draw by spans
         long lastStyle = 0;
-        while (columnCount > span.column) {
-            int spanEnd = spanOffset + 1 >= spans.getSpanCount() ? columnCount : spans.getSpanAt(spanOffset + 1).column;
+        while (columnCount > span.getColumn()) {
+            int spanEnd = spanOffset + 1 >= spans.getSpanCount() ? columnCount : spans.getSpanAt(spanOffset + 1).getColumn();
             spanEnd = Math.min(columnCount, spanEnd);
-            int paintStart = span.column;
+            int paintStart = span.getColumn();
             int paintEnd = Math.min(columnCount, spanEnd);
             float width = measureText(lineBuf, line, paintStart, paintEnd - paintStart);
 
             if (offsetX + width > 0 || !visibleOnly) {
-
-                AdvancedSpan advancedSpan = span instanceof AdvancedSpan ? (AdvancedSpan) span : null;
-                ExternalRenderer renderer = advancedSpan != null ? advancedSpan.renderer: null;
+                SpanExternalRenderer renderer = span.getSpanExt(SpanExtAttrs.EXT_EXTERNAL_RENDERER);
 
                 // Invoke external renderer preDraw
                 if (renderer != null && renderer.requirePreDraw()) {
@@ -483,9 +482,8 @@ public class EditorRenderer {
                     lastStyle = styleBits;
                 }
 
-                // unboxing may result in NPE!
-                Integer backgroundColor = RendererUtils.getBackgroundColor(span, editor.getColorScheme());
-                if (backgroundColor != null && paintStart != paintEnd) {
+                int backgroundColor = RendererUtils.getBackgroundColor(span, editor.getColorScheme());
+                if (backgroundColor != 0 && paintStart != paintEnd) {
                     tmpRect.set(offsetX, editor.getRowTop(row), offsetX + width, editor.getRowBottom(row));
                     paintGeneral.setColor(backgroundColor);
                     canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintGeneral);
@@ -494,22 +492,24 @@ public class EditorRenderer {
 
                 // Draw text
                 int foregroundColor = RendererUtils.getForegroundColor(span, editor.getColorScheme());
-                drawRegionTextDirectional(canvas, offsetX, editor.getRowBaseline(row), line, paintStart, paintEnd, span.column, spanEnd, columnCount, foregroundColor);
+                drawRegionTextDirectional(canvas, offsetX, editor.getRowBaseline(row), line, paintStart, paintEnd, span.getColumn(), spanEnd, columnCount, foregroundColor);
 
                 // Draw strikethrough
-                if (TextStyle.isStrikeThrough(span.style)) {
+                if (TextStyle.isStrikeThrough(span.getStyle())) {
                     var strikethroughColor = editor.getColorScheme().getColor(EditorColorScheme.STRIKETHROUGH);
                     paintOther.setColor(strikethroughColor == 0 ? paintGeneral.getColor() : strikethroughColor);
                     canvas.drawLine(offsetX, editor.getRowTop(row) + editor.getRowHeight() / 2f, offsetX + width, editor.getRowTop(row) + editor.getRowHeight() / 2f, paintOther);
                 }
 
                 // Draw underline
-                if (span.underlineColor != 0) {
+                var underlineColor = span.getUnderlineColor();
+                int underlineColorInt;
+                if (underlineColor != null && (underlineColorInt = underlineColor.resolve(editor.getColorScheme())) != 0) {
                     tmpRect.bottom = editor.getRowBottom(row) - editor.getDpUnit() * 1;
                     tmpRect.top = tmpRect.bottom - editor.getRowHeight() * RenderingConstants.TEXT_UNDERLINE_WIDTH_FACTOR;
                     tmpRect.left = offsetX;
                     tmpRect.right = offsetX + width;
-                    drawColor(canvas, span.underlineColor, tmpRect);
+                    drawColor(canvas, underlineColorInt, tmpRect);
                 }
 
                 // Invoke external renderer postDraw
@@ -649,8 +649,8 @@ public class EditorRenderer {
 
             canvas.save();
             canvas.clipRect(0, stuckLineCount * editor.getRowHeight(), editor.getWidth(), editor.getHeight());
-            for (int i = 0; i < postDrawCurrentLines.size(); i++) {
-                drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - editor.getDividerMarginRight()));
+            for (int i = 0; i < postDrawCurrentLines.count(); i++) {
+                drawRowBackground(canvas, currentLineBgColor, postDrawCurrentLines.get(i), (int) (textOffset - editor.getDividerMarginRight()));
             }
             // User defined gutter background
             drawUserGutterBackground(canvas, (int) (textOffset - editor.getDividerMarginRight()));
@@ -727,8 +727,8 @@ public class EditorRenderer {
                 tmpRect.right = (int) (textOffset - editor.getDividerMarginRight());
                 drawColor(canvas, currentLineBgColor, tmpRect);
             }
-            for (int i = 0; i < postDrawCurrentLines.size(); i++) {
-                drawRowBackground(canvas, currentLineBgColor, (int) postDrawCurrentLines.get(i), (int) (textOffset - editor.getDividerMarginRight() + editor.getOffsetX()));
+            for (int i = 0; i < postDrawCurrentLines.count(); i++) {
+                drawRowBackground(canvas, currentLineBgColor, postDrawCurrentLines.get(i), (int) (textOffset - editor.getDividerMarginRight() + editor.getOffsetX()));
             }
             drawUserGutterBackground(canvas, (int) (textOffset - editor.getDividerMarginRight() + editor.getOffsetX()));
             drawSideIcons(canvas, lineNumberWidth);
@@ -760,7 +760,7 @@ public class EditorRenderer {
         for (int line = firstVis; line <= lastVis; line++) {
             var bg = getUserGutterBackgroundForLine(line);
             if (bg != null) {
-                var bgColor = bg.resolve(editor);
+                var bgColor = bg.resolve(editor.getColorScheme());
                 var top = (int) (editor.getLayout().getCharLayoutOffset(line, 0)[0] / editor.getRowHeight()) - 1;
                 var count = editor.getLayout().getRowCountForLine(line);
                 for (int i = 0; i < count; i++) {
@@ -782,7 +782,7 @@ public class EditorRenderer {
         for (int i = 0; i < candidates.size(); i++) {
             var line = candidates.get(i).startLine;
             var bg = getUserGutterBackgroundForLine(line);
-            var color = bg != null ? bg.resolve(editor) : 0;
+            var color = bg != null ? bg.resolve(editor.getColorScheme()) : 0;
             if (currentLine == line || color != 0) {
                 tmpRect.top = editor.getRowTop(i) - offsetY;
                 tmpRect.bottom = editor.getRowBottom(i) - offsetY - editor.getDpUnit();
@@ -1166,7 +1166,7 @@ public class EditorRenderer {
      * @param postDrawLineNumbers Line numbers to be drawn later
      * @param postDrawCursor      Cursors to be drawn later
      */
-    protected void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<DrawCursorTask> postDrawCursor, LongArrayList postDrawCurrentLines, MutableInt requiredFirstLn) {
+    protected void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<DrawCursorTask> postDrawCursor, MutableIntList postDrawCurrentLines, MutableInt requiredFirstLn) {
         int firstVis = editor.getFirstVisibleRow();
         RowIterator rowIterator = editor.getLayout().obtainRowIterator(firstVis, preloadedLines);
         Spans spans = editor.getStyles() == null ? null : editor.getStyles().spans;
@@ -1220,7 +1220,7 @@ public class EditorRenderer {
                 // Draw custom background
                 var customBackground = getUserBackgroundForLine(line);
                 if (customBackground != null) {
-                    var color = customBackground.resolve(editor);
+                    var color = customBackground.resolve(editor.getColorScheme());
                     drawRowBackground(canvas, color, row);
                 }
             }
@@ -1332,11 +1332,15 @@ public class EditorRenderer {
             int nonPrintableFlags = editor.getNonPrintablePaintingFlags();
 
             // Draw text here
-            if (!editor.isHardwareAcceleratedDrawAllowed() || editor.getEventHandler().isScaling || !canvas.isHardwareAccelerated() || editor.isWordwrap() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || (rowInf.endColumn - rowInf.startColumn > 128 && !editor.getProps().cacheRenderNodeForLongLines) /* Save memory */) {
+            if (!editor.isHardwareAcceleratedDrawAllowed()
+                    || editor.getEventHandler().isScaling ||
+                    !canvas.isHardwareAccelerated() || editor.isWordwrap() ||
+                    Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+                    || (rowInf.endColumn - rowInf.startColumn > 128 && !editor.getProps().cacheRenderNodeForLongLines) /* Save memory */) {
                 // Draw without hardware acceleration
                 // Seek for first span
                 while (spanOffset + 1 < reader.getSpanCount()) {
-                    if (reader.getSpanAt(spanOffset + 1).column <= firstVisibleChar) {
+                    if (reader.getSpanAt(spanOffset + 1).getColumn() <= firstVisibleChar) {
                         spanOffset++;
                     } else {
                         break;
@@ -1344,10 +1348,11 @@ public class EditorRenderer {
                 }
                 Span span = reader.getSpanAt(spanOffset);
                 // Draw by spans
-                while (lastVisibleChar > span.column) {
-                    int spanEnd = spanOffset + 1 >= reader.getSpanCount() ? columnCount : reader.getSpanAt(spanOffset + 1).column;
+                while (lastVisibleChar > span.getColumn()) {
+                    int spanEnd = spanOffset + 1 >= reader.getSpanCount()
+                            ? columnCount : reader.getSpanAt(spanOffset + 1).getColumn();
                     spanEnd = Math.min(columnCount, spanEnd);
-                    int paintStart = Math.max(firstVisibleChar, span.column);
+                    int paintStart = Math.max(firstVisibleChar, span.getColumn());
                     paintStart = Math.max(0, paintStart);
                     if (paintStart >= columnCount) {
                         break;
@@ -1358,7 +1363,7 @@ public class EditorRenderer {
                         break;
                     }
                     float width = measureText(lineBuf, line, paintStart, paintEnd - paintStart);
-                    ExternalRenderer renderer = span instanceof AdvancedSpan ? ((AdvancedSpan) span).renderer : null;
+                    SpanExternalRenderer renderer = span.getSpanExt(SpanExtAttrs.EXT_EXTERNAL_RENDERER);
 
                     // Invoke external renderer preDraw
                     if (renderer != null && renderer.requirePreDraw()) {
@@ -1398,7 +1403,7 @@ public class EditorRenderer {
 
                     // Draw text
                     int foregroundColor = RendererUtils.getForegroundColor(span, editor.getColorScheme());
-                    drawRegionTextDirectional(canvas, paintingOffset, editor.getRowBaseline(row) - editor.getOffsetY(), line, paintStart, paintEnd, span.column, spanEnd, columnCount, foregroundColor);
+                    drawRegionTextDirectional(canvas, paintingOffset, editor.getRowBaseline(row) - editor.getOffsetY(), line, paintStart, paintEnd, span.getColumn(), spanEnd, columnCount, foregroundColor);
 
                     // Draw strikethrough
                     if (TextStyle.isStrikeThrough(styleBits)) {
@@ -1408,12 +1413,14 @@ public class EditorRenderer {
                     }
 
                     // Draw underline
-                    if (span.underlineColor != 0) {
+                    var underlineColor = span.getUnderlineColor();
+                    int underlineColorInt;
+                    if (underlineColor != null && (underlineColorInt = underlineColor.resolve(editor.getColorScheme())) != 0) {
                         tmpRect.bottom = editor.getRowBottom(row) - editor.getOffsetY() - editor.getDpUnit() * 1;
                         tmpRect.top = tmpRect.bottom - editor.getRowHeight() * RenderingConstants.TEXT_UNDERLINE_WIDTH_FACTOR;
                         tmpRect.left = paintingOffset;
                         tmpRect.right = paintingOffset + width;
-                        drawColor(canvas, span.underlineColor, tmpRect);
+                        drawColor(canvas, underlineColorInt, tmpRect);
                     }
 
                     // Invoke external renderer postDraw
@@ -2447,9 +2454,9 @@ public class EditorRenderer {
                     span = nextSpan;
                 }
                 nextSpan = i + 1 == spanCount ? null : reader.getSpanAt(i + 1);
-                var spanStart = Math.max(span.column, position.rowStart);
+                var spanStart = Math.max(span.getColumn(), position.rowStart);
                 var sharedStart = Math.max(startCol, spanStart);
-                var spanEnd = nextSpan == null ? column : nextSpan.column;
+                var spanEnd = nextSpan == null ? column : nextSpan.getColumn();
                 spanEnd = Math.min(column, spanEnd); // Spans can be corrupted
                 if (spanEnd <= position.startColumn) {
                     continue;
@@ -2488,7 +2495,7 @@ public class EditorRenderer {
                     }
 
                     // Patch the text
-                    patch.draw(canvas, horizontalOffset, position.row, line, spanStart, spanEnd, span.style);
+                    patch.draw(canvas, horizontalOffset, position.row, line, spanStart, spanEnd, span.getStyle());
                 }
                 if (spanEnd >= endCol) {
                     break;

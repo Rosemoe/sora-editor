@@ -24,7 +24,7 @@
 package io.github.rosemoe.sora.lang.styling.color
 
 import android.graphics.Color
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
  * An implementation of [ResolvableColor] containing a constant color
@@ -49,7 +49,7 @@ class ConstColor : ResolvableColor {
         this.color = Color.parseColor(color)
     }
 
-    override fun resolve(editor: CodeEditor): Int {
+    override fun resolve(editor: EditorColorScheme): Int {
         return color
     }
 }

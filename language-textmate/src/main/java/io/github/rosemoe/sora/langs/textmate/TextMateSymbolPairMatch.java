@@ -185,7 +185,7 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
             var spansOnCurrentLine = editor.getSpansForLine(currentLine);
 
             var currentSpan = binarySearchSpan(spansOnCurrentLine, currentColumn);
-            var extra = currentSpan.extra;
+            var extra = currentSpan.getExtra();
 
             if (extra instanceof Integer) {
                 var index = Arrays.binarySearch(notInTokenTypeArray, (Integer) extra);
@@ -208,14 +208,14 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
                 middle = (start + end) / 2;
 
                 currentSpan = spanList.get(middle);
-                if (currentSpan.column == column) {
+                if (currentSpan.getColumn() == column) {
                     break;
                 }
 
-                if (currentSpan.column < column) {
+                if (currentSpan.getColumn() < column) {
                     var nextSpan = spanList.get(checkIndex(middle + 1, size));
 
-                    if (nextSpan.column > column) {
+                    if (nextSpan.getColumn() > column) {
                         return currentSpan;
                     }
 
@@ -228,7 +228,7 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
                 // if (currentSpan.column > column)
                 var previousSpan = spanList.get(checkIndex(middle - 1, size));
 
-                if (previousSpan.column < column) {
+                if (previousSpan.getColumn() < column) {
                     return currentSpan;
                 }
 

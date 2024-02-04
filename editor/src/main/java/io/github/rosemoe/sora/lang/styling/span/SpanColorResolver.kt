@@ -22,38 +22,27 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-plugins {
-    id("com.android.library")
-    id("com.vanniktech.maven.publish.base")
-    id("kotlin-android")
-}
+package io.github.rosemoe.sora.lang.styling.span
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
+import io.github.rosemoe.sora.lang.styling.Span
+import io.github.rosemoe.sora.lang.styling.color.ResolvableColor
 
-android {
-    namespace = "io.github.rosemoe.sora"
+/**
+ * Override the foreground/background color resolving process. This class can provide service for
+ * multiple spans, at your option.
+ */
+interface SpanColorResolver : SpanExt {
 
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
+    /**
+     * Get override foreground color of the given [Span]. The given [Span] is readonly.
+     * Return null if the color is not overrode by this resolver.
+     */
+    fun getForegroundColor(span: Span): ResolvableColor?
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-}
+    /**
+     * Get override background color of the given [Span]. The given [Span] is readonly.
+     * Return null if the color is not overrode by this resolver.
+     */
+    fun getBackgroundColor(span: Span): ResolvableColor?
 
-dependencies {
-    api(libs.androidx.annotation)
-    implementation(libs.androidx.collection)
-    implementation(libs.kotlin.stdlib)
-    testImplementation(libs.junit)
-    testImplementation(libs.tests.google.truth)
-    testImplementation(libs.tests.robolectric)
-    androidTestImplementation(libs.androidx.test.junit)
-    androidTestImplementation(libs.androidx.test.espresso)
 }

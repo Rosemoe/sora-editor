@@ -103,7 +103,7 @@ class TextRegionIterator extends RegionIterator {
 
         @Override
         public int getPointAt(int index) {
-            return spans.get(index).column;
+            return spans.get(index).getColumn();
         }
 
     }
