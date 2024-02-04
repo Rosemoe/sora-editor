@@ -440,7 +440,7 @@ public class EditorRenderer {
         canvas.translate(0, offsetY);
         int columnCount = getColumnCount(line);
         if (spans == null || spans.getSpanCount() <= 0) {
-            spans = new EmptyReader();
+            spans = EmptyReader.getInstance();
         }
         int spanOffset = 0;
         int row = 0;
@@ -1303,16 +1303,16 @@ public class EditorRenderer {
                 // Otherwise, the spans of that line can be changed during the inter rendering time
                 // between two **rows** because the spans could have been changed concurrently
                 // See #290
-                reader = spans == null ? new EmptyReader() : spans.read();
+                reader = spans == null ? EmptyReader.getInstance() : spans.read();
                 try {
                     reader.moveToLine(line);
                 } catch (Exception e) {
                     Log.w(LOG_TAG, "Failed to read span", e);
-                    reader = new EmptyReader();
+                    reader = EmptyReader.getInstance();
                 }
                 if (reader.getSpanCount() == 0) {
                     // Unacceptable span count, use fallback reader
-                    reader = new EmptyReader();
+                    reader = EmptyReader.getInstance();
                 }
                 if (editor.shouldInitializeNonPrintable()) {
                     long positions = editor.findLeadingAndTrailingWhitespacePos(lineBuf);
@@ -2420,7 +2420,7 @@ public class EditorRenderer {
     protected void patchTextRegions(Canvas canvas, float textOffset, List<TextDisplayPosition> positions, @NonNull PatchDraw patch) {
         var styles = editor.getStyles();
         var spans = styles != null ? styles.getSpans() : null;
-        var reader = spans != null ? spans.read() : new EmptyReader();
+        var reader = spans != null ? spans.read() : EmptyReader.getInstance();
         var firstVisRow = editor.getFirstVisibleRow();
         var lastVisRow = editor.getLastVisibleRow();
         for (var position : positions) {

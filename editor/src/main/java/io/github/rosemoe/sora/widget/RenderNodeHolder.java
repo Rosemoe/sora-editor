@@ -134,11 +134,11 @@ public class RenderNodeHolder {
         var node = getNode(line);
         if (node.needsRecord()) {
             var spans = styles == null ? null : styles.spans;
-            var reader = spans == null ? new EmptyReader() : spans.read();
+            var reader = spans == null ? EmptyReader.getInstance() : spans.read();
             try {
                 reader.moveToLine(line);
             } catch (Exception e) {
-                reader = new EmptyReader();
+                reader = EmptyReader.getInstance();
             }
             editor.getRenderer().updateLineDisplayList(node.renderNode, line, reader);
             try {

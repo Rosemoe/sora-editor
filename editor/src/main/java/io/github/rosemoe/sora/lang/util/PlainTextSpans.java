@@ -57,7 +57,7 @@ public class PlainTextSpans implements Spans {
 
     @Override
     public Reader read() {
-        return new EmptyReader();
+        return EmptyReader.getInstance();
     }
 
     @Override

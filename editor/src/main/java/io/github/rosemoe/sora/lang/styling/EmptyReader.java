@@ -30,6 +30,8 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 public class EmptyReader implements Spans.Reader {
 
+    private final static EmptyReader INSTANCE = new EmptyReader();
+
     private final List<Span> spans;
 
     public EmptyReader() {
@@ -37,6 +39,9 @@ public class EmptyReader implements Spans.Reader {
         spans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
     }
 
+    public static EmptyReader getInstance() {
+        return INSTANCE;
+    }
 
     @Override
     public void moveToLine(int line) {
@@ -55,6 +60,6 @@ public class EmptyReader implements Spans.Reader {
 
     @Override
     public List<Span> getSpansOnLine(int line) {
-        return spans;
+        return new ArrayList<>(spans);
     }
 }
