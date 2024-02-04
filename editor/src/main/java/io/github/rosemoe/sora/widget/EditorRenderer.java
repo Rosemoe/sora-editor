@@ -1390,9 +1390,8 @@ public class EditorRenderer {
                         lastStyle = styleBits;
                     }
 
-                    // unboxing may result in NPE!
-                    Integer backgroundColor = RendererUtils.getBackgroundColor(span, editor.getColorScheme());
-                    if (backgroundColor != null && paintStart != paintEnd) {
+                    int backgroundColor = RendererUtils.getBackgroundColor(span, editor.getColorScheme());
+                    if (backgroundColor != 0 && paintStart != paintEnd) {
                         tmpRect.top = editor.getRowTop(row) - editor.getOffsetY();
                         tmpRect.bottom = editor.getRowBottom(row) - editor.getOffsetY();
                         tmpRect.left = paintingOffset;
