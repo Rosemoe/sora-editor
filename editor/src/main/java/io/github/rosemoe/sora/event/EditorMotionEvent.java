@@ -31,14 +31,59 @@ import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
- * Report a single click
+ * Base class for click events
  *
  * @author Rosemoe
+ * @see ClickEvent
+ * @see DoubleClickEvent
+ * @see LongPressEvent
  */
-public class ClickEvent extends EditorMotionEvent {
+public abstract class EditorMotionEvent extends Event {
 
-    public ClickEvent(@NonNull CodeEditor editor, @NonNull CharPosition position, @NonNull MotionEvent event) {
-        super(editor, position, event);
+    private final CharPosition pos;
+    private final MotionEvent event;
+
+    public EditorMotionEvent(@NonNull CodeEditor editor, @NonNull CharPosition position, @NonNull MotionEvent event) {
+        super(editor);
+        this.pos = position;
+        this.event = event;
+    }
+
+    @Override
+    public boolean canIntercept() {
+        return true;
+    }
+
+    public int getLine() {
+        return pos.line;
+    }
+
+    public int getColumn() {
+        return pos.column;
+    }
+
+    public int getIndex() {
+        return pos.index;
+    }
+
+    public CharPosition getCharPosition() {
+        return pos.fromThis();
+    }
+
+    public float getX() {
+        return event.getX();
+    }
+
+    public float getY() {
+        return event.getY();
+    }
+
+    /**
+     * Get original event object from Android framework
+     */
+    @NonNull
+    public MotionEvent getCausingEvent() {
+        return event;
     }
 
 }
