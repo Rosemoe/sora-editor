@@ -37,6 +37,7 @@ import androidx.annotation.NonNull;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.ClickEvent;
 import io.github.rosemoe.sora.event.DoubleClickEvent;
+import io.github.rosemoe.sora.event.EditorMotionEvent;
 import io.github.rosemoe.sora.event.HandleStateChangeEvent;
 import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.LongPressEvent;
@@ -44,10 +45,16 @@ import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.SideIconClickEvent;
 import io.github.rosemoe.sora.graphics.RectUtils;
+import io.github.rosemoe.sora.lang.styling.Span;
+import io.github.rosemoe.sora.lang.styling.StylesUtils;
 import io.github.rosemoe.sora.lang.styling.line.LineSideIcon;
+import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.util.IntPair;
+import io.github.rosemoe.sora.util.Numbers;
 import io.github.rosemoe.sora.widget.component.Magnifier;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
+import kotlin.jvm.functions.Function5;
 
 /**
  * Handles touch events of editor
@@ -106,8 +113,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         scaleMaxSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 26, Resources.getSystem().getDisplayMetrics());
         scaleMinSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 8, Resources.getSystem().getDisplayMetrics());
         magnifier = new Magnifier(editor);
-        this.leftHandle = new SelectionHandle(SelectionHandle.LEFT);
-        this.rightHandle = new SelectionHandle(SelectionHandle.RIGHT);
+        leftHandle = new SelectionHandle(SelectionHandle.LEFT);
+        rightHandle = new SelectionHandle(SelectionHandle.RIGHT);
         insertHandle = new SelectionHandle(SelectionHandle.BOTH);
     }
 
@@ -323,7 +330,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 final var allowedDistance = editor.getDpUnit() * 7;
                 if (shouldDrawInsertHandle() && RectUtils.almostContains(editor.getInsertHandleDescriptor().position, e.getX(), e.getY(), allowedDistance)) {
                     holdingInsertHandle = true;
-                    dispatchHandle(HandleStateChangeEvent.HANDLE_TYPE_INSERT, true);
+                    dispatchHandleStateChange(HandleStateChangeEvent.HANDLE_TYPE_INSERT, true);
                     thumbDownY = e.getY();
                     thumbDownX = e.getX();
                 }
@@ -337,7 +344,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                         selHandleType = SelectionHandle.RIGHT;
                         touchedHandleType = SelectionHandle.RIGHT;
                     }
-                    dispatchHandle(selHandleType, true);
+                    dispatchHandleStateChange(selHandleType, true);
                     thumbDownY = e.getY();
                     thumbDownX = e.getX();
                 }
@@ -396,14 +403,14 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     holdingInsertHandle = false;
                     editor.invalidate();
                     notifyLater();
-                    dispatchHandle(HandleStateChangeEvent.HANDLE_TYPE_INSERT, false);
+                    dispatchHandleStateChange(HandleStateChangeEvent.HANDLE_TYPE_INSERT, false);
                 }
                 if (selHandleType != -1) {
-                    dispatchHandle(selHandleType, false);
+                    dispatchHandleStateChange(selHandleType, false);
                     selHandleType = -1;
                 }
                 editor.invalidate();
-                // check touch event is related to text selection or not
+                // check whether touch event is related to text selection or not
                 if (touchedHandleType > -1) {
                     touchedHandleType = -1;
                 }
@@ -414,8 +421,26 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         return false;
     }
 
-    private void dispatchHandle(int type, boolean held) {
+    private void dispatchHandleStateChange(int type, boolean held) {
         editor.dispatchEvent(new HandleStateChangeEvent(editor, type, held));
+    }
+
+    private int dispatchEditorMotionEvent
+            (Function5<CodeEditor, CharPosition, MotionEvent, Span, TextRange, EditorMotionEvent> constructor,
+             @NonNull CharPosition pos, @NonNull MotionEvent event) {
+        var styles = editor.getStyles();
+        var text = editor.getText();
+        var span = StylesUtils.getSpanForPosition(styles, pos);
+        var nextSpan = StylesUtils.getSpanForPosition(styles, pos);
+        TextRange range = null;
+        if (span != null) {
+            var startPos = text.getIndexer().getCharPosition(pos.line, Numbers.coerceIn(span.getColumn(), 0, text.getColumnCount(pos.line)));
+            var endPos = nextSpan != null ?
+                    text.getIndexer().getCharPosition(pos.line, Numbers.coerceIn(nextSpan.getColumn(), 0, text.getColumnCount(pos.line)))
+                    : text.getIndexer().getCharPosition(pos.line, text.getColumnCount(pos.line));
+            range = new TextRange(startPos, endPos);
+        }
+        return editor.dispatchEvent(constructor.invoke(editor, pos, event, span, range));
     }
 
     private boolean handleSelectionChange(MotionEvent e) {
@@ -553,7 +578,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 }
             }
         }
-        if ((editor.dispatchEvent(new ClickEvent(editor, editor.getText().getIndexer().getCharPosition(line, column), e)) & InterceptTarget.TARGET_EDITOR) != 0) {
+        var position = editor.getText().getIndexer().getCharPosition(line, column);
+        if ((dispatchEditorMotionEvent(ClickEvent::new, position, e) & InterceptTarget.TARGET_EDITOR) != 0) {
             return true;
         }
         editor.showSoftInput();
@@ -585,14 +611,14 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     @Override
-    public void onLongPress(MotionEvent e) {
+    public void onLongPress(@NonNull MotionEvent e) {
         if (editor.isFormatting()) {
             return;
         }
         long res = editor.getPointPositionOnScreen(e.getX(), e.getY());
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);
-        if ((editor.dispatchEvent(new LongPressEvent(editor, editor.getText().getIndexer().getCharPosition(line, column), e)) & InterceptTarget.TARGET_EDITOR) != 0) {
+        if ((dispatchEditorMotionEvent(LongPressEvent::new, editor.getText().getIndexer().getCharPosition(line, column), e) & InterceptTarget.TARGET_EDITOR) != 0) {
             return;
         }
         if ((!editor.getProps().reselectOnLongPress && editor.getCursor().isSelected()) || e.getPointerCount() != 1) {
@@ -603,7 +629,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     @Override
-    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+    public boolean onScroll(MotionEvent e1, @NonNull MotionEvent e2, float distanceX, float distanceY) {
         int endX = scroller.getCurrX() + (int) distanceX;
         int endY = scroller.getCurrY() + (int) distanceY;
         endX = Math.max(endX, 0);
@@ -675,7 +701,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     @Override
-    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+    public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY) {
         if (editor.getProps().singleDirectionFling) {
             if (Math.abs(velocityX) > Math.abs(velocityY)) {
                 velocityY = 0;
@@ -711,7 +737,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     @Override
-    public boolean onScale(ScaleGestureDetector detector) {
+    public boolean onScale(@NonNull ScaleGestureDetector detector) {
         if (editor.isFormatting()) {
             return true;
         }
@@ -741,7 +767,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     @Override
-    public boolean onScaleBegin(ScaleGestureDetector detector) {
+    public boolean onScaleBegin(@NonNull ScaleGestureDetector detector) {
         scroller.forceFinished(true);
         textSizeStart = editor.getTextSizePx();
         return editor.isScalable() && !editor.isFormatting() && !holdingInsertHandle && touchedHandleType == -1;
@@ -752,7 +778,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     float focusY;
 
     @Override
-    public void onScaleEnd(ScaleGestureDetector detector) {
+    public void onScaleEnd(@NonNull ScaleGestureDetector detector) {
         isScaling = false;
         if (textSizeStart == editor.getTextSizePx()) {
             return;
@@ -771,28 +797,28 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     @Override
-    public boolean onDown(MotionEvent e) {
+    public boolean onDown(@NonNull MotionEvent e) {
         return editor.isEnabled();
     }
 
     @Override
-    public void onShowPress(MotionEvent e) {
+    public void onShowPress(@NonNull MotionEvent e) {
     }
 
     @Override
-    public boolean onSingleTapConfirmed(MotionEvent e) {
+    public boolean onSingleTapConfirmed(@NonNull MotionEvent e) {
         return true;
     }
 
     @Override
-    public boolean onDoubleTap(MotionEvent e) {
+    public boolean onDoubleTap(@NonNull MotionEvent e) {
         if (editor.isFormatting()) {
             return true;
         }
         long res = editor.getPointPositionOnScreen(e.getX(), e.getY());
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);
-        if ((editor.dispatchEvent(new DoubleClickEvent(editor, editor.getText().getIndexer().getCharPosition(line, column), e)) & InterceptTarget.TARGET_EDITOR) != 0) {
+        if ((dispatchEditorMotionEvent(DoubleClickEvent::new, editor.getText().getIndexer().getCharPosition(line, column), e) & InterceptTarget.TARGET_EDITOR) != 0) {
             return true;
         }
         if (editor.getCursor().isSelected() || e.getPointerCount() != 1) {
@@ -803,7 +829,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     @Override
-    public boolean onDoubleTapEvent(MotionEvent e) {
+    public boolean onDoubleTapEvent(@NonNull MotionEvent e) {
         return true;
     }
 
@@ -838,17 +864,11 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
          * @param e Event sent by EventHandler
          */
         public void applyPosition(MotionEvent e) {
-            SelectionHandleStyle.HandleDescriptor descriptor;
-            switch (type) {
-                case LEFT:
-                    descriptor = editor.getLeftHandleDescriptor();
-                    break;
-                case RIGHT:
-                    descriptor = editor.getRightHandleDescriptor();
-                    break;
-                default:
-                    descriptor = editor.getInsertHandleDescriptor();
-            }
+            SelectionHandleStyle.HandleDescriptor descriptor = switch (type) {
+                case LEFT -> editor.getLeftHandleDescriptor();
+                case RIGHT -> editor.getRightHandleDescriptor();
+                default -> editor.getInsertHandleDescriptor();
+            };
             var anotherDesc = type == LEFT ? editor.getRightHandleDescriptor() : editor.getLeftHandleDescriptor();
             float targetX = scroller.getCurrX() + e.getX() + (descriptor.alignment != SelectionHandleStyle.ALIGN_CENTER ? descriptor.position.width() : 0) * (descriptor.alignment == SelectionHandleStyle.ALIGN_LEFT ? 1 : -1);
             float targetY = scroller.getCurrY() + e.getY() - descriptor.position.height();
@@ -870,9 +890,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                             if (anotherLine > line || (anotherLine == line && anotherColumn > column)) {
                                 //Swap type
                                 if (checkNoIntersection(descriptor, anotherDesc)) {
-                                    dispatchHandle(selHandleType, false);
+                                    dispatchHandleStateChange(selHandleType, false);
                                     EditorTouchEventHandler.this.selHandleType = LEFT;
-                                    dispatchHandle(selHandleType, true);
+                                    dispatchHandleStateChange(selHandleType, true);
                                     this.type = LEFT;
                                     leftHandle.type = RIGHT;
                                     SelectionHandle tmp = rightHandle;
@@ -888,9 +908,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                             if (anotherLine < line || (anotherLine == line && anotherColumn < column)) {
                                 //Swap type
                                 if (checkNoIntersection(descriptor, anotherDesc)) {
-                                    dispatchHandle(selHandleType, false);
+                                    dispatchHandleStateChange(selHandleType, false);
                                     EditorTouchEventHandler.this.selHandleType = RIGHT;
-                                    dispatchHandle(selHandleType, true);
+                                    dispatchHandleStateChange(selHandleType, true);
                                     this.type = RIGHT;
                                     rightHandle.type = LEFT;
                                     SelectionHandle tmp = rightHandle;

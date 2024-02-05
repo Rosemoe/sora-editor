@@ -26,8 +26,11 @@ package io.github.rosemoe.sora.event;
 import android.view.MotionEvent;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
@@ -38,8 +41,9 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  */
 public class DoubleClickEvent extends EditorMotionEvent {
 
-    public DoubleClickEvent(@NonNull CodeEditor editor, @NonNull CharPosition position, @NonNull MotionEvent event) {
-        super(editor, position, event);
+    public DoubleClickEvent(@NonNull CodeEditor editor, @NonNull CharPosition position, @NonNull MotionEvent event,
+                            @Nullable Span span, @Nullable TextRange spanRange) {
+        super(editor, position, event, span, spanRange);
     }
 
 }

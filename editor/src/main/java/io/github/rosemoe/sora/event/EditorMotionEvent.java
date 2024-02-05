@@ -26,8 +26,11 @@ package io.github.rosemoe.sora.event;
 import android.view.MotionEvent;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.text.CharPosition;
+import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
@@ -42,11 +45,16 @@ public abstract class EditorMotionEvent extends Event {
 
     private final CharPosition pos;
     private final MotionEvent event;
+    private final Span span;
+    private final TextRange spanRange;
 
-    public EditorMotionEvent(@NonNull CodeEditor editor, @NonNull CharPosition position, @NonNull MotionEvent event) {
+    public EditorMotionEvent(@NonNull CodeEditor editor, @NonNull CharPosition position,
+                             @NonNull MotionEvent event, @Nullable Span span, @Nullable TextRange spanRange) {
         super(editor);
         this.pos = position;
         this.event = event;
+        this.span = span;
+        this.spanRange = spanRange;
     }
 
     @Override
@@ -84,6 +92,22 @@ public abstract class EditorMotionEvent extends Event {
     @NonNull
     public MotionEvent getCausingEvent() {
         return event;
+    }
+
+    /**
+     * Get span at event character position, maybe null.
+     */
+    @Nullable
+    public Span getSpan() {
+        return span;
+    }
+
+    /**
+     * Get span range at event character position, maybe null
+     */
+    @Nullable
+    public TextRange getSpanRange() {
+        return spanRange;
     }
 
 }
