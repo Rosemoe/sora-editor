@@ -34,6 +34,8 @@ import android.widget.TextView
 import io.github.rosemoe.sora.I18nConfig
 import io.github.rosemoe.sora.R
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent
+import io.github.rosemoe.sora.event.EditorFocusChangeEvent
+import io.github.rosemoe.sora.event.EditorReleaseEvent
 import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.subscribeEvent
@@ -75,6 +77,39 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
         super.setContentView(rootView)
         popup.animationStyle = R.style.diagnostic_popup_animation
         rootView.clipToOutline = true
+        registerEditorEvents()
+        popup.setOnDismissListener {
+            currentDiagnostic = null
+        }
+        quickfixText.setOnClickListener {
+            val quickfixes = currentDiagnostic?.quickfixes
+            if (!quickfixes.isNullOrEmpty()) {
+                quickfixes[0].executeQuickfix()
+                dismiss()
+            }
+        }
+        moreActionText.setText(I18nConfig.getResourceId(R.string.sora_editor_diagnostics_more_actions))
+        moreActionText.setOnClickListener { _ ->
+            val quickfixes = currentDiagnostic?.quickfixes
+            if (!quickfixes.isNullOrEmpty() && quickfixes.size > 1) {
+                popupMenu.menu.apply {
+                    clear()
+                    for (i in 1 until quickfixes.size) {
+                        add(0, i, 0, quickfixes[i].resolveTitle(editor.context))
+                    }
+                }
+                popupMenu.setOnMenuItemClickListener {
+                    quickfixes[it.itemId].executeQuickfix()
+                    dismiss()
+                    true
+                }
+                popupMenu.show()
+            }
+        }
+        applyColorScheme()
+    }
+
+    private fun registerEditorEvents() {
         eventManager.subscribeEvent<SelectionChangeEvent> { event, _ ->
             if (!isEnabled) {
                 return@subscribeEvent
@@ -85,7 +120,11 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
             }
             val diagnostics = editor.diagnostics
             if (diagnostics != null) {
-                diagnostics.queryInRegion(diagnosticList, event.left.index - 1, event.left.index + 1)
+                diagnostics.queryInRegion(
+                    diagnosticList,
+                    event.left.index - 1,
+                    event.left.index + 1
+                )
                 if (diagnosticList.isNotEmpty()) {
                     var minLength = diagnosticList[0].endIndex - diagnosticList[0].startIndex
                     var minIndex = 0
@@ -117,35 +156,14 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
         eventManager.subscribeEvent<ColorSchemeUpdateEvent> { _, _ ->
             applyColorScheme()
         }
-        popup.setOnDismissListener {
-            currentDiagnostic = null
-        }
-        quickfixText.setOnClickListener {
-            val quickfixes = currentDiagnostic?.quickfixes
-            if (!quickfixes.isNullOrEmpty()) {
-                quickfixes[0].executeQuickfix()
+        eventManager.subscribeEvent<EditorFocusChangeEvent> { event, _ ->
+            if (!event.isGainFocus) {
                 dismiss()
             }
         }
-        moreActionText.setText(I18nConfig.getResourceId(R.string.sora_editor_diagnostics_more_actions))
-        moreActionText.setOnClickListener { _ ->
-            val quickfixes = currentDiagnostic?.quickfixes
-            if (!quickfixes.isNullOrEmpty() && quickfixes.size > 1) {
-                popupMenu.menu.apply {
-                    clear()
-                    for (i in 1 until quickfixes.size) {
-                        add(0, i, 0, quickfixes[i].resolveTitle(editor.context))
-                    }
-                }
-                popupMenu.setOnMenuItemClickListener {
-                    quickfixes[it.itemId].executeQuickfix()
-                    dismiss()
-                    true
-                }
-                popupMenu.show()
-            }
+        eventManager.subscribeEvent<EditorReleaseEvent> { _, _ ->
+            isEnabled = false
         }
-        applyColorScheme()
     }
 
     protected open fun applyColorScheme() {
