@@ -46,7 +46,6 @@ import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.EventManager;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
-import io.github.rosemoe.sora.event.SideIconClickEvent;
 import io.github.rosemoe.sora.event.SnippetEvent;
 import io.github.rosemoe.sora.event.Unsubscribe;
 import io.github.rosemoe.sora.lang.Language;
@@ -70,6 +69,20 @@ import kotlin.jvm.functions.Function1;
  */
 public class EditorAutoCompletion extends EditorPopupWindow implements EditorBuiltinComponent {
 
+    /**
+     * Adjust the completion window's position scheme according to the device's screen size.
+     */
+    public static final int WINDOW_POS_MODE_AUTO = 0;
+    /**
+     * Completion window always follow the cursor
+     */
+    public static final int WINDOW_POS_MODE_FOLLOW_CURSOR_ALWAYS = 1;
+    /**
+     * Completion window always stay at the bottom of view and occupies the
+     * horizontal viewport
+     */
+    public static final int WINDOW_POS_MODE_FULL_WIDTH_ALWAYS = 2;
+
     private final static long SHOW_PROGRESS_BAR_DELAY = 50;
     private final CodeEditor editor;
     protected boolean cancelShowUp = false;
@@ -82,6 +95,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     protected EditorCompletionAdapter adapter;
     protected CompletionLayout layout;
     protected EventManager eventManager;
+    private int completionWndPosMode = WINDOW_POS_MODE_AUTO;
     private CharPosition previousSelection;
     private long requestShow = 0;
     private long requestHide = -1;
@@ -104,7 +118,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         eventManager.subscribeEvent(ScrollEvent.class, this::onEditorScroll);
         eventManager.subscribeEvent(EditorKeyEvent.class, this::onKeyEvent);
         eventManager.subscribeEvent(SelectionChangeEvent.class, this::onSelectionChange);
-        eventManager.subscribeEvent(EditorReleaseEvent.class, ((event, unsubscribe) -> cancelCompletion()));
+        eventManager.subscribeEvent(EditorReleaseEvent.class, (event, unsubscribe) -> setEnabled(false));
         subscribeEventForHide(EditorFormatEvent.class, EditorFormatEvent::isSuccess);
         subscribeEventForHide(ClickEvent.class, null);
         subscribeEventForHide(EditorLanguageChangeEvent.class, null);
@@ -220,14 +234,19 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         }
     }
 
+    /**
+     * Update the position of completion window
+     */
     public void updateCompletionWindowPosition() {
         updateCompletionWindowPosition(true);
     }
 
     /**
      * Apply new position of auto-completion window
+     *
+     * @param scrollEditor Scroll the editor if there is no enough space to display the window
      */
-    public void updateCompletionWindowPosition(boolean shift) {
+    public void updateCompletionWindowPosition(boolean scrollEditor) {
         var dp = editor.getDpUnit();
         var cursor = editor.getCursor();
         float panelX = editor.updateCursorAnchor() + dp * 20;
@@ -237,7 +256,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         float restY = editor.getHeight() - panelY;
         if (restY > dp * 200) {
             restY = dp * 200;
-        } else if (restY < dp * 100 && shift) {
+        } else if (restY < dp * 100 && scrollEditor) {
             float offset = 0;
             while (restY < dp * 100 && editor.getOffsetY() + offset + rowHeight <= editor.getScrollMaxY()) {
                 restY += rowHeight;
@@ -247,8 +266,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             editor.getScroller().startScroll(editor.getOffsetX(), editor.getOffsetY(), 0, (int) offset, 0);
         }
         int width;
-        var completionWndPosMode = editor.getCompletionWndPositionMode();
-        if ((editor.getWidth() < 500 * dp && completionWndPosMode == CodeEditor.WINDOW_POS_MODE_AUTO) || completionWndPosMode == CodeEditor.WINDOW_POS_MODE_FULL_WIDTH_ALWAYS) {
+        if ((editor.getWidth() < 500 * dp && completionWndPosMode == WINDOW_POS_MODE_AUTO) || completionWndPosMode == WINDOW_POS_MODE_FULL_WIDTH_ALWAYS) {
             // center mode
             width = editor.getWidth() * 7 / 8;
             panelX = editor.getWidth() / 8f / 2f;
@@ -262,6 +280,28 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         setSize(width, height);
     }
 
+    /**
+     * @see #setCompletionWndPositionMode(int)
+     */
+    public int getCompletionWndPositionMode() {
+        return completionWndPosMode;
+    }
+
+    /**
+     * Set how should we control the position&size of completion window
+     *
+     * @see #WINDOW_POS_MODE_AUTO
+     * @see #WINDOW_POS_MODE_FOLLOW_CURSOR_ALWAYS
+     * @see #WINDOW_POS_MODE_FULL_WIDTH_ALWAYS
+     */
+    public void setCompletionWndPositionMode(int mode) {
+        completionWndPosMode = mode;
+        updateCompletionWindowPosition();
+    }
+
+    /**
+     * Replace the layout of completion window
+     */
     @SuppressWarnings("unchecked")
     public void setLayout(@NonNull CompletionLayout layout) {
         this.layout = layout;
@@ -282,11 +322,16 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
         eventManager.setEnabled(enabled);
+        // do cleanup if disabled
         if (!enabled) {
+            cancelCompletion();
             hide();
         }
     }
 
+    /**
+     * Check if the completion background worker is running
+     */
     public boolean isCompletionInProgress() {
         final var thread = completionThread;
         return super.isShowing() || requestShow > requestHide || (thread != null && thread.isAlive());
@@ -295,12 +340,19 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     /**
      * Some layout may support to display more animations,
      * this method provides control over the animation of the layout。
+     *
      * @see CompletionLayout#setEnabledAnimation(boolean)
      */
     public void setEnabledAnimation(boolean enabledAnimation) {
         layout.setEnabledAnimation(enabledAnimation);
     }
 
+    /**
+     * Set adapter for auto-completion window
+     * This will take effect next time the window updates
+     *
+     * @param adapter New adapter, maybe null
+     */
     @SuppressWarnings("unchecked")
     public void setAdapter(@Nullable EditorCompletionAdapter adapter) {
         this.adapter = adapter;
@@ -325,6 +377,9 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         }, 70);
     }
 
+    /**
+     * Hide the completion window
+     */
     public void hide() {
         super.dismiss();
         cancelCompletion();
@@ -577,7 +632,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
                 if (e instanceof CompletionCancelledException) {
                     Log.v("CompletionThread", "Completion is cancelled");
                 } else {
-                    e.printStackTrace();
+                    Log.e("CompletionThread", "Completion failed", e);
                 }
             }
         }

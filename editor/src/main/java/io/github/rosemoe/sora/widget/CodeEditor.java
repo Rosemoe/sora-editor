@@ -222,19 +222,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #setNonPrintablePaintingFlags(int)
      */
     public static final int FLAG_DRAW_WHITESPACE_IN_SELECTION = 1 << 6;
-    /**
-     * Adjust the completion window's position scheme according to the device's screen size.
-     */
-    public static final int WINDOW_POS_MODE_AUTO = 0;
-    /**
-     * Completion window always follow the cursor
-     */
-    public static final int WINDOW_POS_MODE_FOLLOW_CURSOR_ALWAYS = 1;
-    /**
-     * Completion window always stay at the bottom of view and occupies the
-     * horizontal viewport
-     */
-    public static final int WINDOW_POS_MODE_FULL_WIDTH_ALWAYS = 2;
     /*
      * Internal state identifiers of action mode
      */
@@ -598,7 +585,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         setHardwareAcceleratedDrawAllowed(true);
         setInterceptParentHorizontalScrollIfNeeded(false);
         setTypefaceText(Typeface.DEFAULT);
-        setCompletionWndPositionMode(WINDOW_POS_MODE_AUTO);
         setSoftKeyboardEnabled(true);
         setDisableSoftKbdIfHardKbdAvailable(true);
 
@@ -660,25 +646,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     public SnippetController getSnippetController() {
         return snippetController;
-    }
-
-    /**
-     * @see #setCompletionWndPositionMode(int)
-     */
-    public int getCompletionWndPositionMode() {
-        return completionWndPosMode;
-    }
-
-    /**
-     * Set how should we control the position&size of completion window
-     *
-     * @see #WINDOW_POS_MODE_AUTO
-     * @see #WINDOW_POS_MODE_FOLLOW_CURSOR_ALWAYS
-     * @see #WINDOW_POS_MODE_FULL_WIDTH_ALWAYS
-     */
-    public void setCompletionWndPositionMode(int mode) {
-        completionWndPosMode = mode;
-        completionWindow.updateCompletionWindowPosition();
     }
 
     /**
@@ -773,16 +740,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             var pos = this.text.getIndexer().getCharPosition(cur.getRight() - (text.length() - selectionOffset));
             setSelection(pos.line, pos.column);
         }
-    }
-
-    /**
-     * Set adapter for auto-completion window
-     * Will take effect next time the window updates
-     *
-     * @param adapter New adapter, maybe null
-     */
-    public void setAutoCompletionItemAdapter(@Nullable EditorCompletionAdapter adapter) {
-        completionWindow.setAdapter(adapter);
     }
 
     /**
@@ -4336,6 +4293,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void hideEditorWindows() {
         completionWindow.cancelCompletion();
+        completionWindow.hide();
         textActionWindow.dismiss();
         touchHandler.magnifier.dismiss();
     }
