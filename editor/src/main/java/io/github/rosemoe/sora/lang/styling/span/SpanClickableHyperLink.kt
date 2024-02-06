@@ -35,5 +35,4 @@ class SpanClickableHyperLink(val link: String) : SpanInteractionInfo {
         return link
     }
 
-
 }

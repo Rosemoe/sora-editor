@@ -55,17 +55,19 @@ public class ContentChangeEvent extends Event {
      */
     public final static int ACTION_DELETE = 3;
 
-    private final int mAction;
-    private final CharPosition mStart;
-    private final CharPosition mEnd;
-    private final CharSequence mTextChanged;
+    private final int action;
+    private final CharPosition start;
+    private final CharPosition end;
+    private final CharSequence textChanged;
+    private final boolean causedByUndoManager;
 
-    public ContentChangeEvent(@NonNull CodeEditor editor, int action, @NonNull CharPosition changeStart, @NonNull CharPosition changeEnd, @NonNull CharSequence textChanged) {
+    public ContentChangeEvent(@NonNull CodeEditor editor, int action, @NonNull CharPosition changeStart, @NonNull CharPosition changeEnd, @NonNull CharSequence textChanged, boolean causeByUndoManager) {
         super(editor);
-        mAction = action;
-        mStart = changeStart;
-        mEnd = changeEnd;
-        mTextChanged = textChanged;
+        this.action = action;
+        start = changeStart;
+        end = changeEnd;
+        this.textChanged = textChanged;
+        causedByUndoManager = causeByUndoManager;
     }
 
     /**
@@ -76,7 +78,7 @@ public class ContentChangeEvent extends Event {
      * @see #ACTION_DELETE
      */
     public int getAction() {
-        return mAction;
+        return action;
     }
 
     /**
@@ -86,7 +88,7 @@ public class ContentChangeEvent extends Event {
      */
     @NonNull
     public CharPosition getChangeStart() {
-        return mStart;
+        return start;
     }
 
     /**
@@ -96,7 +98,7 @@ public class ContentChangeEvent extends Event {
      */
     @NonNull
     public CharPosition getChangeEnd() {
-        return mEnd;
+        return end;
     }
 
     /**
@@ -107,7 +109,13 @@ public class ContentChangeEvent extends Event {
      */
     @NonNull
     public CharSequence getChangedText() {
-        return mTextChanged;
+        return textChanged;
     }
 
+    /**
+     * If the content change is caused by undo/redo
+     */
+    public boolean isCausedByUndoManager() {
+        return causedByUndoManager;
+    }
 }

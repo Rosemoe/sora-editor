@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.widget.component;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,7 +34,21 @@ import androidx.annotation.Nullable;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
+import io.github.rosemoe.sora.event.ClickEvent;
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
+import io.github.rosemoe.sora.event.ContentChangeEvent;
+import io.github.rosemoe.sora.event.EditorFocusChangeEvent;
+import io.github.rosemoe.sora.event.EditorFormatEvent;
+import io.github.rosemoe.sora.event.EditorKeyEvent;
+import io.github.rosemoe.sora.event.EditorLanguageChangeEvent;
+import io.github.rosemoe.sora.event.EditorReleaseEvent;
+import io.github.rosemoe.sora.event.Event;
+import io.github.rosemoe.sora.event.EventManager;
+import io.github.rosemoe.sora.event.ScrollEvent;
+import io.github.rosemoe.sora.event.SelectionChangeEvent;
+import io.github.rosemoe.sora.event.SideIconClickEvent;
+import io.github.rosemoe.sora.event.SnippetEvent;
+import io.github.rosemoe.sora.event.Unsubscribe;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
@@ -46,6 +61,7 @@ import io.github.rosemoe.sora.text.TextReference;
 import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
+import kotlin.jvm.functions.Function1;
 
 /**
  * Auto complete window for editing code quicker
@@ -65,6 +81,8 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     protected int currentSelection = -1;
     protected EditorCompletionAdapter adapter;
     protected CompletionLayout layout;
+    protected EventManager eventManager;
+    private CharPosition previousSelection;
     private long requestShow = 0;
     private long requestHide = -1;
     private boolean enabled = true;
@@ -80,7 +98,168 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         this.editor = editor;
         adapter = new DefaultCompletionItemAdapter();
         setLayout(new DefaultCompletionLayout());
-        editor.subscribeEvent(ColorSchemeUpdateEvent.class, ((event, unsubscribe) -> applyColorScheme()));
+        eventManager = editor.createSubEventManager();
+        eventManager.subscribeEvent(ColorSchemeUpdateEvent.class, this::onColorSchemeUpdate);
+        eventManager.subscribeEvent(ContentChangeEvent.class, this::onContentChange);
+        eventManager.subscribeEvent(ScrollEvent.class, this::onEditorScroll);
+        eventManager.subscribeEvent(EditorKeyEvent.class, this::onKeyEvent);
+        eventManager.subscribeEvent(SelectionChangeEvent.class, this::onSelectionChange);
+        eventManager.subscribeEvent(EditorReleaseEvent.class, ((event, unsubscribe) -> cancelCompletion()));
+        subscribeEventForHide(EditorFormatEvent.class, EditorFormatEvent::isSuccess);
+        subscribeEventForHide(ClickEvent.class, null);
+        subscribeEventForHide(EditorLanguageChangeEvent.class, null);
+        subscribeEventForHide(EditorFocusChangeEvent.class, e -> !e.isGainFocus());
+        subscribeEventForHide(SnippetEvent.class, e -> e.getAction() == SnippetEvent.ACTION_SHIFT);
+    }
+
+    protected <T extends Event> void subscribeEventForHide(Class<T> clazz, Function1<T, Boolean> predicate) {
+        eventManager.subscribeEvent(clazz, (event, unsubscribe) -> {
+            if (predicate == null || predicate.invoke(event)) {
+                hide();
+            }
+        });
+    }
+
+    protected void onColorSchemeUpdate(@NonNull ColorSchemeUpdateEvent event, @NonNull Unsubscribe unsubscribe) {
+        applyColorScheme();
+    }
+
+    protected void onContentChange(@NonNull ContentChangeEvent event, @NonNull Unsubscribe unsubscribe) {
+        if (event.isCausedByUndoManager() || !isEnabled()
+                || event.getAction() == ContentChangeEvent.ACTION_SET_NEW_TEXT) {
+            hide();
+            return;
+        }
+        var start = event.getChangeStart();
+        var end = event.getChangeEnd();
+        var needCompletion = false;
+        switch (event.getAction()) {
+            case ContentChangeEvent.ACTION_INSERT -> {
+                if ((!editor.hasComposingText() || editor.getProps().autoCompletionOnComposing) && end.column != 0 && start.line == end.line) {
+                    needCompletion = true;
+                } else {
+                    hide();
+                }
+                updateCompletionWindowPosition(isShowing());
+            }
+            case ContentChangeEvent.ACTION_DELETE -> {
+                if (!editor.hasComposingText() && isShowing()) {
+                    if (start.line != end.line || start.column != end.column - 1) {
+                        hide();
+                    } else {
+                        needCompletion = true;
+                        updateCompletionWindowPosition();
+                    }
+                }
+            }
+        }
+        if (needCompletion) {
+            requireCompletion();
+        }
+    }
+
+    protected void onSelectionChange(@NonNull SelectionChangeEvent event, @NonNull Unsubscribe unsubscribe) {
+        if (event.isSelected() || event.getCause() == SelectionChangeEvent.CAUSE_IME
+                || event.getCause() == SelectionChangeEvent.CAUSE_SELECTION_HANDLE || event.getCause() == SelectionChangeEvent.CAUSE_TAP
+                || event.getCause() == SelectionChangeEvent.CAUSE_SEARCH || event.getCause() == SelectionChangeEvent.CAUSE_UNKNOWN) {
+            hide();
+            return;
+        }
+        if (previousSelection == null) {
+            previousSelection = event.getLeft().fromThis();
+            return;
+        }
+        if (event.getCause() == SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE) {
+            if (previousSelection.line != event.getLeft().line) {
+                hide();
+                return;
+            }
+            if (isShowing() && Math.abs(previousSelection.column - event.getLeft().column) <= 1) {
+                if (event.getLeft().column > 0)
+                    requireCompletion();
+                else
+                    hide();
+            }
+        }
+    }
+
+    protected void onEditorScroll(@NonNull ScrollEvent event, @NonNull Unsubscribe unsubscribe) {
+        if (event.getCause() == ScrollEvent.CAUSE_USER_DRAG) {
+            updateCompletionWindowPosition(false);
+        } else if (event.getCause() == ScrollEvent.CAUSE_USER_FLING) {
+            float minVe = editor.getDpUnit() * 2000;
+            float velocityX = event.getFlingVelocityX(), velocityY = event.getFlingVelocityY();
+            if (Math.abs(velocityX) >= minVe || Math.abs(velocityY) >= minVe) {
+                hide();
+            }
+        }
+    }
+
+    protected void onKeyEvent(@NonNull EditorKeyEvent event, @NonNull Unsubscribe unsubscribe) {
+        if (event.getEventType() == EditorKeyEvent.Type.DOWN && !event.isAltPressed()
+                && !event.isCtrlPressed() && !event.isShiftPressed() && isShowing()) {
+            switch (event.getKeyCode()) {
+                case KeyEvent.KEYCODE_DPAD_UP -> {
+                    moveUp();
+                    event.setResult(true);
+                    event.intercept();
+                }
+                case KeyEvent.KEYCODE_DPAD_DOWN -> {
+                    moveDown();
+                    event.setResult(true);
+                    event.intercept();
+                }
+                case KeyEvent.KEYCODE_PAGE_DOWN, KeyEvent.KEYCODE_PAGE_UP -> hide();
+                case KeyEvent.KEYCODE_TAB, KeyEvent.KEYCODE_ENTER -> {
+                    if (select()) {
+                        event.setResult(true);
+                        event.intercept();
+                    }
+                }
+            }
+        }
+    }
+
+    public void updateCompletionWindowPosition() {
+        updateCompletionWindowPosition(true);
+    }
+
+    /**
+     * Apply new position of auto-completion window
+     */
+    public void updateCompletionWindowPosition(boolean shift) {
+        var dp = editor.getDpUnit();
+        var cursor = editor.getCursor();
+        float panelX = editor.updateCursorAnchor() + dp * 20;
+        var rowHeight = editor.getRowHeight();
+        float[] rightLayoutOffset = editor.getLayout().getCharLayoutOffset(cursor.getRightLine(), cursor.getRightColumn());
+        float panelY = rightLayoutOffset[0] - editor.getOffsetY() + rowHeight / 2f;
+        float restY = editor.getHeight() - panelY;
+        if (restY > dp * 200) {
+            restY = dp * 200;
+        } else if (restY < dp * 100 && shift) {
+            float offset = 0;
+            while (restY < dp * 100 && editor.getOffsetY() + offset + rowHeight <= editor.getScrollMaxY()) {
+                restY += rowHeight;
+                panelY -= rowHeight;
+                offset += rowHeight;
+            }
+            editor.getScroller().startScroll(editor.getOffsetX(), editor.getOffsetY(), 0, (int) offset, 0);
+        }
+        int width;
+        var completionWndPosMode = editor.getCompletionWndPositionMode();
+        if ((editor.getWidth() < 500 * dp && completionWndPosMode == CodeEditor.WINDOW_POS_MODE_AUTO) || completionWndPosMode == CodeEditor.WINDOW_POS_MODE_FULL_WIDTH_ALWAYS) {
+            // center mode
+            width = editor.getWidth() * 7 / 8;
+            panelX = editor.getWidth() / 8f / 2f;
+        } else {
+            // follow cursor mode
+            width = (int) Math.min(300 * dp, editor.getWidth() / 2f);
+        }
+        int height = getHeight();
+        setMaxHeight((int) restY);
+        setLocation((int) panelX + editor.getOffsetX(), (int) panelY + editor.getOffsetY());
+        setSize(width, height);
     }
 
     @SuppressWarnings("unchecked")
@@ -102,6 +281,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     @Override
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+        eventManager.setEnabled(enabled);
         if (!enabled) {
             hide();
         }
@@ -221,13 +401,6 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     }
 
     /**
-     * Reject the requests from IME to set composing region/text
-     */
-    public boolean shouldRejectComposing() {
-        return cancelShowUp;
-    }
-
-    /**
      * Select current position
      *
      * @return if the action is performed
@@ -252,12 +425,17 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         final var completionThread = this.completionThread;
         if (!cursor.isSelected() && completionThread != null) {
             cancelShowUp = true;
-            editor.restartInput();
+            editor.beginComposingTextRejection();
             editor.getText().beginBatchEdit();
-            item.performCompletion(editor, editor.getText(), completionThread.requestPosition);
-            editor.getText().endBatchEdit();
-            editor.updateCursor();
-            cancelShowUp = false;
+            editor.restartInput();
+            try {
+                item.performCompletion(editor, editor.getText(), completionThread.requestPosition);
+                editor.updateCursor();
+            } finally {
+                editor.getText().endBatchEdit();
+                editor.endComposingTextRejection();
+                cancelShowUp = false;
+            }
             editor.restartInput();
         }
         hide();
@@ -319,7 +497,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             if (newHeight == 0) {
                 hide();
             }
-            editor.updateCompletionWindowPosition();
+            updateCompletionWindowPosition();
             setSize(getWidth(), (int) Math.min(newHeight, maxHeight));
             if (!isShowing()) {
                 show();

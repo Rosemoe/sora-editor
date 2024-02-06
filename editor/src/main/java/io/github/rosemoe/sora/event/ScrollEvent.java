@@ -57,54 +57,69 @@ public class ScrollEvent extends Event {
 
     public final static int CAUSE_SCALE_TEXT = 5;
 
-    private final int mStartX;
-    private final int mStartY;
-    private final int mEndX;
-    private final int mEndY;
-    private final int mCause;
+    private final int startX;
+    private final int startY;
+    private final int endX;
+    private final int endY;
+    private final int cause;
+    private float flingVelocityX;
+    private float flingVelocityY;
 
     public ScrollEvent(@NonNull CodeEditor editor, int startX, int startY, int endX, int endY, int cause) {
+        this(editor, startX, startY, endX, endY, cause, 0f, 0f);
+    }
+
+    public ScrollEvent(@NonNull CodeEditor editor, int startX, int startY, int endX, int endY, int cause, float vx, float vy) {
         super(editor);
-        mStartX = startX;
-        mStartY = startY;
-        mEndX = endX;
-        mEndY = endY;
-        mCause = cause;
+        this.startX = startX;
+        this.startY = startY;
+        this.endX = endX;
+        this.endY = endY;
+        this.cause = cause;
+        this.flingVelocityX = vx;
+        this.flingVelocityY = vy;
     }
 
     /**
      * Get the start x
      */
     public int getStartX() {
-        return mStartX;
+        return startX;
     }
 
     /**
      * Get the start y
      */
     public int getStartY() {
-        return mStartY;
+        return startY;
     }
 
     /**
      * Get end x
      */
     public int getEndX() {
-        return mEndX;
+        return endX;
     }
 
     /**
      * Get end y
      */
     public int getEndY() {
-        return mEndY;
+        return endY;
     }
 
     /**
      * Get the cause of the scroll
      */
     public int getCause() {
-        return mCause;
+        return cause;
     }
 
+    public float getFlingVelocityX() {
+        return flingVelocityX;
+    }
+
+    public float getFlingVelocityY() {
+        return flingVelocityY;
+    }
 }

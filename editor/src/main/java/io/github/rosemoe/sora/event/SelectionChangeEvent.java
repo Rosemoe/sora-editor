@@ -66,6 +66,10 @@ public class SelectionChangeEvent extends Event {
      * Search text by {@link EditorSearcher}
      */
     public final static int CAUSE_SEARCH = 6;
+    /**
+     * From keyboard or direct method invocation to change selection
+     */
+    public final static int CAUSE_KEYBOARD_OR_CODE = 7;
     private final CharPosition left;
     private final CharPosition right;
     private final int cause;

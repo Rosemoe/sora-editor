@@ -157,7 +157,7 @@ public class EditorKeyEventHandler {
 
         Boolean result = handleKeyEvent(event, editorKeyEvent, keybindingEvent, keyCode, isShiftPressed, isAltPressed, isCtrlPressed);
         if (result != null) {
-            return result;
+            return editorKeyEvent.result(result);
         }
 
         return editorKeyEvent.result(editor.onSuperKeyDown(keyCode, event));
@@ -174,7 +174,6 @@ public class EditorKeyEventHandler {
         final var connection = editor.inputConnection;
         final var editorCursor = editor.getCursor();
         final var editorText = editor.getText();
-        final var completionWindow = editor.getComponent(EditorAutoCompletion.class);
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK: {
                 if (editorCursor.isSelected()) {
@@ -351,9 +350,7 @@ public class EditorKeyEventHandler {
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_TAB:
                 if (editor.isEditable()) {
-                    if (completionWindow.isShowing() && !isShiftPressed) {
-                        completionWindow.select();
-                    } else if (editor.getSnippetController().isInSnippet() && !isAltPressed && !isCtrlPressed) {
+                    if (editor.getSnippetController().isInSnippet() && !isAltPressed && !isCtrlPressed) {
                         if (isShiftPressed) {
                             editor.getSnippetController().shiftToPreviousTabStop();
                         } else {
@@ -548,13 +545,9 @@ public class EditorKeyEventHandler {
         final var editor = this.editor;
         final var editorCursor = editor.getCursor();
         final var editorText = editor.getText();
-        final var completionWindow = editor.getComponent(EditorAutoCompletion.class);
         if (editor.isEditable()) {
             var lineSeparator = editor.getLineSeparator().getContent();
             final var editorLanguage = editor.getEditorLanguage();
-            if (completionWindow.isShowing() && completionWindow.select()) {
-                return true;
-            }
 
             if (isShiftPressed && !isAltPressed && !isCtrlPressed) {
                 // Shift + Enter

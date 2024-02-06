@@ -313,13 +313,11 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 if (RectUtils.contains(rect, e.getX(), e.getY(), editor.getDpUnit() * 10)) {
                     holdingScrollbarVertical = true;
                     thumbDownY = e.getY();
-                    editor.hideAutoCompleteWindow();
                 }
                 rect = editor.getRenderer().getHorizontalScrollBarRect();
                 if (rect.contains(e.getX(), e.getY())) {
                     holdingScrollbarHorizontal = true;
                     thumbDownX = e.getX();
-                    editor.hideAutoCompleteWindow();
                 }
                 if (holdingScrollbarVertical && holdingScrollbarHorizontal) {
                     holdingScrollbarHorizontal = false;
@@ -524,7 +522,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     public void scrollBy(float distanceX, float distanceY, boolean smooth) {
-        editor.hideAutoCompleteWindow();
         int endX = scroller.getCurrX() + (int) distanceX;
         int endY = scroller.getCurrY() + (int) distanceY;
         endX = Math.max(endX, 0);
@@ -572,7 +569,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 var style = editor.getRenderer().getLineStyle(inf.lineIndex, LineSideIcon.class);
                 if (style != null) {
                     if ((editor.dispatchEvent(new SideIconClickEvent(editor, style)) & InterceptTarget.TARGET_EDITOR) != 0) {
-                        editor.hideAutoCompleteWindow();
                         return true;
                     }
                 }
@@ -606,7 +602,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     // do nothing
             }
         }
-        editor.hideAutoCompleteWindow();
         return true;
     }
 
@@ -676,7 +671,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 scroller.getCurrY(),
                 endX - scroller.getCurrX(),
                 endY - scroller.getCurrY(), 0);
-        editor.updateCompletionWindowPosition(false);
         final float minOverPull = 2f;
         if (notifyY && scroller.getCurrY() + distanceY < -minOverPull) {
             editor.getVerticalEdgeEffect().onPull(-distanceY / editor.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / editor.getWidth())));
@@ -727,7 +721,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         float minVe = editor.getDpUnit() * 2000;
         if (Math.abs(velocityX) >= minVe || Math.abs(velocityY) >= minVe) {
             notifyScrolled();
-            editor.hideAutoCompleteWindow();
         }
         editor.releaseEdgeEffects();
         editor.dispatchEvent(new ScrollEvent(editor, scroller.getCurrX(),

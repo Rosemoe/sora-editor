@@ -84,6 +84,8 @@ import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.BuildEditorInfoEvent;
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
+import io.github.rosemoe.sora.event.EditorFocusChangeEvent;
+import io.github.rosemoe.sora.event.EditorFormatEvent;
 import io.github.rosemoe.sora.event.EditorReleaseEvent;
 import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.EventManager;
@@ -285,6 +287,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean displayLnPanel;
     private int lnPanelPosition;
     private int lnPanelPositionMode;
+    private int rejectComposingCount;
     private boolean released;
     private boolean lineNumberEnabled;
     private boolean blockLineEnabled;
@@ -675,7 +678,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void setCompletionWndPositionMode(int mode) {
         completionWndPosMode = mode;
-        updateCompletionWindowPosition();
+        completionWindow.updateCompletionWindowPosition();
     }
 
     /**
@@ -947,9 +950,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         this.textStyles = null;
         this.diagnostics = null;
 
-        if (completionWindow != null) {
-            completionWindow.hide();
-        }
         // Setup new one
         var mgr = lang.getAnalyzeManager();
         mgr.setReceiver(styleDelegate);
@@ -1829,51 +1829,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return TextUtils.createIndent(getTabWidth(), getTabWidth(), language.useTab());
     }
 
-    public void updateCompletionWindowPosition() {
-        updateCompletionWindowPosition(true);
-    }
-
-    /**
-     * Apply new position of auto-completion window
-     */
-    protected void updateCompletionWindowPosition(boolean shift) {
-        float panelX = updateCursorAnchor() + dpUnit * 20;
-        float[] rightLayoutOffset = layout.getCharLayoutOffset(cursor.getRightLine(), cursor.getRightColumn());
-        float panelY = rightLayoutOffset[0] - getOffsetY() + getRowHeight() / 2f;
-        float restY = getHeight() - panelY;
-        if (restY > dpUnit * 200) {
-            restY = dpUnit * 200;
-        } else if (restY < dpUnit * 100 && shift) {
-            float offset = 0;
-            while (restY < dpUnit * 100 && getOffsetY() + offset + getRowHeight() <= getScrollMaxY()) {
-                restY += getRowHeight();
-                panelY -= getRowHeight();
-                offset += getRowHeight();
-            }
-            getScroller().startScroll(getOffsetX(), getOffsetY(), 0, (int) offset, 0);
-        }
-        int width;
-        if ((getWidth() < 500 * dpUnit && completionWndPosMode == WINDOW_POS_MODE_AUTO) || completionWndPosMode == WINDOW_POS_MODE_FULL_WIDTH_ALWAYS) {
-            // center mode
-            width = getWidth() * 7 / 8;
-            panelX = getWidth() / 8f / 2f;
-        } else {
-            // follow cursor mode
-            width = (int) Math.min(300 * dpUnit, getWidth() / 2f);
-        }
-        int height = completionWindow.getHeight();
-        completionWindow.setMaxHeight((int) restY);
-        completionWindow.setLocation((int) panelX + getOffsetX(), (int) panelY + getOffsetY());
-        completionWindow.setSize(width, height);
-    }
-
     /**
      * Update the information of cursor
      * Such as the position of cursor on screen(For input method that can go to any position on screen like PC input method)
      *
      * @return The offset x of right cursor on view
      */
-    protected float updateCursorAnchor() {
+    public float updateCursorAnchor() {
         int l = cursor.getRightLine();
         int column = cursor.getRightColumn();
         boolean visible = true;
@@ -2082,6 +2044,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void setNonPrintablePaintingFlags(int flags) {
         this.nonPrintableOptions = flags;
         invalidate();
+    }
+
+    public boolean hasComposingText() {
+        return inputConnection.composingText.isComposing();
     }
 
     /**
@@ -2524,7 +2490,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
         }
         notifyIMEExternalCursorChange();
-        completionWindow.hide();
     }
 
     /**
@@ -2533,7 +2498,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void redo() {
         text.redo();
         notifyIMEExternalCursorChange();
-        completionWindow.hide();
     }
 
     /**
@@ -3172,6 +3136,30 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * Begin a rejection on composing texts
+     */
+    public void beginComposingTextRejection() {
+        rejectComposingCount++;
+    }
+
+    /**
+     * If the editor accepts composing text now, according to composing text rejection count
+     */
+    public boolean acceptsComposingText() {
+        return rejectComposingCount > 0;
+    }
+
+    /**
+     * End a rejection on composing texts
+     */
+    public void endComposingTextRejection() {
+        rejectComposingCount--;
+        if (rejectComposingCount < 0) {
+            rejectComposingCount = 0;
+        }
+    }
+
+    /**
      * Get the target cursor to move when shift is pressed
      */
     private CharPosition getSelectingTarget() {
@@ -3200,16 +3188,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void moveSelectionDown() {
         if (selectionAnchor == null) {
-            if (completionWindow.isShowing()) {
-                completionWindow.moveDown();
-                return;
-            }
             long pos = layout.getDownPosition(cursor.getLeftLine(), cursor.getLeftColumn());
-            setSelection(IntPair.getFirst(pos), IntPair.getSecond(pos));
+            setSelection(IntPair.getFirst(pos), IntPair.getSecond(pos), SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
         } else {
-            completionWindow.hide();
             long pos = layout.getDownPosition(getSelectingTarget().getLine(), getSelectingTarget().getColumn());
-            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
+            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
             ensureSelectingTargetVisible();
         }
     }
@@ -3220,16 +3203,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void moveSelectionUp() {
         if (selectionAnchor == null) {
-            if (completionWindow.isShowing()) {
-                completionWindow.moveUp();
-                return;
-            }
             long pos = layout.getUpPosition(cursor.getLeftLine(), cursor.getLeftColumn());
-            setSelection(IntPair.getFirst(pos), IntPair.getSecond(pos));
+            setSelection(IntPair.getFirst(pos), IntPair.getSecond(pos), SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
         } else {
-            completionWindow.hide();
             long pos = layout.getUpPosition(getSelectingTarget().getLine(), getSelectingTarget().getColumn());
-            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
+            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
             ensureSelectingTargetVisible();
         }
     }
@@ -3240,7 +3218,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void moveSelectionLeft() {
         if (selectionAnchor == null) {
             if (cursor.isSelected()) {
-                setSelection(cursor.getLeftLine(), cursor.getLeftColumn());
+                setSelection(cursor.getLeftLine(), cursor.getLeftColumn(), SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
                 return;
             }
             Cursor c = getCursor();
@@ -3249,20 +3227,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             long pos = cursor.getLeftOf(IntPair.pack(line, column));
             int lineAfter = IntPair.getFirst(pos);
             int columnAfter = IntPair.getSecond(pos);
-            setSelection(lineAfter, columnAfter);
-            if (line == lineAfter) {
-                if (completionWindow.isShowing()) {
-                    if (columnAfter == 0) {
-                        completionWindow.hide();
-                    } else {
-                        completionWindow.requireCompletion();
-                    }
-                }
-            }
+            setSelection(lineAfter, columnAfter, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
         } else {
-            completionWindow.hide();
             long pos = cursor.getLeftOf(getSelectingTarget().toIntPair());
-            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
+            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
             ensureSelectingTargetVisible();
         }
     }
@@ -3274,7 +3242,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (selectionAnchor == null) {
             Cursor c = getCursor();
             if (c.isSelected()) {
-                setSelection(c.getRightLine(), c.getRightColumn());
+                setSelection(c.getRightLine(), c.getRightColumn(), SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
                 return;
             }
             int line = c.getLeftLine();
@@ -3283,14 +3251,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             long pos = cursor.getRightOf(IntPair.pack(line, column));
             int lineAfter = IntPair.getFirst(pos);
             int columnAfter = IntPair.getSecond(pos);
-            setSelection(lineAfter, columnAfter);
-            if (line == lineAfter && completionWindow.isShowing()) {
-                completionWindow.requireCompletion();
-            }
+            setSelection(lineAfter, columnAfter, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
         } else {
-            completionWindow.hide();
             long pos = cursor.getRightOf(getSelectingTarget().toIntPair());
-            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false);
+            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
             ensureSelectingTargetVisible();
         }
     }
@@ -3303,13 +3267,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             int line = cursor.getLeftLine();
             if (props.enhancedHomeAndEnd && cursor.getLeftColumn() == getText().getColumnCount(line)) {
                 int column = IntPair.getSecond(TextUtils.findLeadingAndTrailingWhitespacePos(text.getLine(cursor.getLeftLine())));
-                setSelection(cursor.getLeftLine(), column);
+                setSelection(cursor.getLeftLine(), column, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
             } else {
-                setSelection(line, getText().getColumnCount(line));
+                setSelection(line, getText().getColumnCount(line), SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
             }
         } else {
             int line = getSelectingTarget().line;
-            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, line, getText().getColumnCount(line), false);
+            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, line, getText().getColumnCount(line), false, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
             ensureSelectingTargetVisible();
         }
     }
@@ -3321,12 +3285,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (selectionAnchor == null) {
             if (props.enhancedHomeAndEnd && cursor.getLeftColumn() == 0) {
                 int column = IntPair.getFirst(TextUtils.findLeadingAndTrailingWhitespacePos(text.getLine(cursor.getLeftLine())));
-                setSelection(cursor.getLeftLine(), column);
+                setSelection(cursor.getLeftLine(), column, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
             } else if (cursor.getLeftColumn() != 0) {
-                setSelection(cursor.getLeftLine(), 0);
+                setSelection(cursor.getLeftLine(), 0, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
             }
         } else {
-            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, getSelectingTarget().line, 0, false);
+            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, getSelectingTarget().line, 0, false, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
             ensureSelectingTargetVisible();
         }
     }
@@ -3383,7 +3347,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         updateCursor();
         updateSelection();
-        if (editable && !touchHandler.hasAnyHeldHandle() && !completionWindow.shouldRejectComposing()) {
+        if (editable && !touchHandler.hasAnyHeldHandle() && acceptsComposingText()) {
             cursorAnimator.markEndPos();
             cursorAnimator.start();
         }
@@ -3492,7 +3456,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         cursor.setRight(lineRight, columnRight);
         updateCursor();
         updateSelection();
-        completionWindow.hide();
         renderer.invalidateRenderNodes();
         if (makeRightVisible) {
             if (cause == SelectionChangeEvent.CAUSE_SEARCH) {
@@ -3513,7 +3476,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void movePageDown() {
         touchHandler.scrollBy(0, getHeight(), true);
-        completionWindow.hide();
     }
 
     /**
@@ -3521,7 +3483,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void movePageUp() {
         touchHandler.scrollBy(0, -getHeight(), true);
-        completionWindow.hide();
     }
 
     /**
@@ -3842,7 +3803,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             editorLanguage.getFormatter().cancel();
         }
 
-        dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_SET_NEW_TEXT, new CharPosition(), this.text.getIndexer().getCharPosition(getLineCount() - 1, this.text.getColumnCount(getLineCount() - 1)), this.text));
+        dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_SET_NEW_TEXT, new CharPosition(), this.text.getIndexer().getCharPosition(getLineCount() - 1, this.text.getColumnCount(getLineCount() - 1)), this.text, false));
         if (inputMethodManager != null) {
             inputMethodManager.restartInput(this);
         }
@@ -4340,7 +4301,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             return;
         }
         released = true;
-        completionWindow.cancelCompletion();
         if (editorLanguage != null) {
             editorLanguage.getAnalyzeManager().destroy();
             var formatter = editorLanguage.getFormatter();
@@ -4753,11 +4713,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         } else {
             cursorBlink.valid = false;
             cursorBlink.visibility = false;
-            completionWindow.hide();
             textActionWindow.dismiss();
             touchHandler.hideInsertHandle();
             removeCallbacks(cursorBlink);
         }
+        dispatchEvent(new EditorFocusChangeEvent(this, gainFocus));
         invalidate();
     }
 
@@ -4900,19 +4860,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         updateCursor();
         waitForNextChange = false;
 
-        // Auto completion
-        var needCompletion = false;
-        if (completionWindow.isEnabled() && !text.isUndoManagerWorking()) {
-            if ((!inputConnection.composingText.isComposing() || props.autoCompletionOnComposing) && endColumn != 0 && startLine == endLine) {
-                needCompletion = true;
-            } else {
-                completionWindow.hide();
-            }
-            updateCompletionWindowPosition(completionWindow.isShowing());
-        } else {
-            completionWindow.hide();
-        }
-
         //Log.d(LOG_TAG, "Ins: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + insertedContent);
         updateCursorAnchor();
         renderer.invalidateOnInsert(startLine, endLine);
@@ -4920,16 +4867,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         editorLanguage.getAnalyzeManager().insert(start, end, insertedContent);
         touchHandler.hideInsertHandle();
-        if (editable && !cursor.isSelected() && !inputConnection.composingText.isComposing() && !completionWindow.shouldRejectComposing()) {
+        if (editable && !cursor.isSelected() && !inputConnection.composingText.isComposing() && acceptsComposingText()) {
             cursorAnimator.markEndPos();
             cursorAnimator.start();
         }
-        dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_INSERT, start, end, insertedContent));
+        dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_INSERT, start, end, insertedContent, text.isUndoManagerWorking()));
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
         lastInsertion = new TextRange(start.fromThis(), end.fromThis());
-        if (needCompletion) {
-            completionWindow.requireCompletion();
-        }
     }
 
     @Override
@@ -4960,20 +4904,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         updateCursor();
 
-        var needCompletion = false;
-        if (completionWindow.isEnabled() && !text.isUndoManagerWorking()) {
-            if (!inputConnection.composingText.isComposing() && completionWindow.isShowing()) {
-                if (startLine != endLine || startColumn != endColumn - 1) {
-                    completionWindow.hide();
-                } else {
-                    needCompletion = true;
-                    updateCompletionWindowPosition();
-                }
-            }
-        } else {
-            completionWindow.hide();
-        }
-
         //Log.d(LOG_TAG, "Del: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + deletedContent);
         renderer.invalidateOnDelete(startLine, endLine);
         if (!waitForNextChange) {
@@ -4981,16 +4911,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             ensureSelectionVisible();
             touchHandler.hideInsertHandle();
         }
-        if (editable && !cursor.isSelected() && !waitForNextChange && !inputConnection.composingText.isComposing() && !completionWindow.shouldRejectComposing()) {
+        if (editable && !cursor.isSelected() && !waitForNextChange && !inputConnection.composingText.isComposing() && acceptsComposingText()) {
             cursorAnimator.markEndPos();
             cursorAnimator.start();
         }
         editorLanguage.getAnalyzeManager().delete(start, end, deletedContent);
-        dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_DELETE, start, end, deletedContent));
+        dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_DELETE, start, end, deletedContent, text.isUndoManagerWorking()));
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
-        if (needCompletion) {
-            completionWindow.requireCompletion();
-        }
     }
 
     @Override
@@ -5012,7 +4939,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     text.getColumnCount(text.getLineCount() - 1));
             text.insert(0, 0, string);
             text.endBatchEdit();
-            completionWindow.hide();
             inputConnection.invalid();
             if (cursorRange == null) {
                 setSelectionAround(line, column);
@@ -5032,12 +4958,16 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             touchHandler.scrollBy(0, 0);
             inputConnection.reset();
             restartInput();
+            dispatchEvent(new EditorFormatEvent(this, true));
         });
     }
 
     @Override
     public void onFormatFail(final Throwable throwable) {
-        postInLifecycle(() -> Toast.makeText(getContext(), "Format:" + throwable, Toast.LENGTH_SHORT).show());
+        postInLifecycle(() -> {
+            Toast.makeText(getContext(), "Format:" + throwable, Toast.LENGTH_SHORT).show();
+            dispatchEvent(new EditorFormatEvent(this, false));
+        });
     }
 
     @Override

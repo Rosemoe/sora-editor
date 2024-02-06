@@ -474,15 +474,11 @@ class EditorInputConnection extends BaseInputConnection {
         }
     }
 
-    private boolean shouldRejectComposing() {
-        return editor.getComponent(EditorAutoCompletion.class).shouldRejectComposing();
-    }
-
     @Override
     public boolean setComposingText(CharSequence text, int newCursorPosition) {
         if (DEBUG)
             logger.d("setComposingText, text = " + text + ", pos = " + newCursorPosition);
-        if (!editor.isEditable() || connectionInvalid || shouldRejectComposing()) {
+        if (!editor.isEditable() || connectionInvalid || !editor.acceptsComposingText()) {
             return false;
         }
         if (editor.getProps().disallowSuggestions) {
@@ -580,7 +576,6 @@ class EditorInputConnection extends BaseInputConnection {
         if (start == getCursor().getLeft() && end == getCursor().getRight()) {
             return true;
         }
-        editor.getComponent(EditorAutoCompletion.class).hide();
         Content content = editor.getText();
         CharPosition startPos = content.getIndexer().getCharPosition(start);
         CharPosition endPos = content.getIndexer().getCharPosition(end);
@@ -592,7 +587,7 @@ class EditorInputConnection extends BaseInputConnection {
     public boolean setComposingRegion(int start, int end) {
         if (DEBUG)
             logger.d("setComposingRegion, s = " + start + ", e = " + end);
-        if (!editor.isEditable() || connectionInvalid || shouldRejectComposing() || editor.getProps().disallowSuggestions) {
+        if (!editor.isEditable() || connectionInvalid || !editor.acceptsComposingText() || editor.getProps().disallowSuggestions) {
             return false;
         }
         if (start == end) {
