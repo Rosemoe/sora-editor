@@ -73,6 +73,6 @@ public class RenderingConstants {
     /**
      * Underline width multiplier for normal texts
      */
-    public final static float TEXT_UNDERLINE_WIDTH_FACTOR = 0.08f;
+    public final static float TEXT_UNDERLINE_WIDTH_FACTOR = 0.06f;
 
 }
