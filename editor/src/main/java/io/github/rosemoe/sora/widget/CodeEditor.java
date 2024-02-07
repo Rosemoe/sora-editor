@@ -4671,7 +4671,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         } else {
             cursorBlink.valid = false;
             cursorBlink.visibility = false;
-            textActionWindow.dismiss();
             touchHandler.hideInsertHandle();
             removeCallbacks(cursorBlink);
         }

@@ -34,13 +34,14 @@ import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 
 import io.github.rosemoe.sora.R;
-import io.github.rosemoe.sora.event.EventReceiver;
+import io.github.rosemoe.sora.event.EditorFocusChangeEvent;
+import io.github.rosemoe.sora.event.EditorReleaseEvent;
+import io.github.rosemoe.sora.event.EventManager;
 import io.github.rosemoe.sora.event.HandleStateChangeEvent;
 import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.LongPressEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
-import io.github.rosemoe.sora.event.Unsubscribe;
 import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.EditorTouchEventHandler;
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
@@ -50,8 +51,9 @@ import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
  *
  * @author Rosemoe
  */
-public class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickListener, EventReceiver<SelectionChangeEvent>, EditorBuiltinComponent {
+public class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickListener, EditorBuiltinComponent {
     private final static long DELAY = 200;
+    private final static long CHECK_FOR_DISMISS_INTERVAL = 100;
     private final CodeEditor editor;
     private final ImageButton pasteBtn;
     private final ImageButton copyBtn;
@@ -59,6 +61,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
     private final ImageButton longSelectBtn;
     private final View rootView;
     private final EditorTouchEventHandler handler;
+    private final EventManager eventManager;
     private long lastScroll;
     private int lastPosition;
     private int lastCause;
@@ -73,72 +76,122 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         super(editor, FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED);
         this.editor = editor;
         handler = editor.getEventHandler();
+        eventManager = editor.createSubEventManager();
+
         // Since popup window does provide decor view, we have to pass null to this method
         @SuppressLint("InflateParams")
-        View root = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_panel, null);
+        View root = this.rootView = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_panel, null);
         ImageButton selectAll = root.findViewById(R.id.panel_btn_select_all);
-        ImageButton cut = root.findViewById(R.id.panel_btn_cut);
-        ImageButton copy = root.findViewById(R.id.panel_btn_copy);
+        cutBtn = root.findViewById(R.id.panel_btn_cut);
+        copyBtn = root.findViewById(R.id.panel_btn_copy);
         longSelectBtn = root.findViewById(R.id.panel_btn_long_select);
         pasteBtn = root.findViewById(R.id.panel_btn_paste);
-        copyBtn = copy;
-        cutBtn = cut;
+
         selectAll.setOnClickListener(this);
-        cut.setOnClickListener(this);
-        copy.setOnClickListener(this);
+        cutBtn.setOnClickListener(this);
+        copyBtn.setOnClickListener(this);
         pasteBtn.setOnClickListener(this);
         longSelectBtn.setOnClickListener(this);
+
         GradientDrawable gd = new GradientDrawable();
         gd.setCornerRadius(5 * editor.getDpUnit());
         gd.setColor(0xffffffff);
         root.setBackground(gd);
         setContentView(root);
         setSize(0, (int) (this.editor.getDpUnit() * 48));
-        rootView = root;
-        editor.subscribeEvent(SelectionChangeEvent.class, this);
-        editor.subscribeEvent(ScrollEvent.class, ((event, unsubscribe) -> {
-            var last = lastScroll;
-            lastScroll = System.currentTimeMillis();
-            if (lastScroll - last < DELAY && lastCause != SelectionChangeEvent.CAUSE_SEARCH) {
-                postDisplay();
-            }
-        }));
-        editor.subscribeEvent(HandleStateChangeEvent.class, ((event, unsubscribe) -> {
-            if (event.isHeld()) {
-                postDisplay();
-            }
-        }));
-        editor.subscribeEvent(LongPressEvent.class, ((event, unsubscribe) -> {
-            if (editor.getCursor().isSelected() && lastCause == SelectionChangeEvent.CAUSE_SEARCH) {
-                var idx = event.getIndex();
-                if (idx >= editor.getCursor().getLeft() && idx <= editor.getCursor().getRight()) {
-                    lastCause = 0;
-                    displayWindow();
-                }
-                event.intercept(InterceptTarget.TARGET_EDITOR);
-            }
-        }));
-        editor.subscribeEvent(HandleStateChangeEvent.class, ((event, unsubscribe) -> {
-            if (!event.getEditor().getCursor().isSelected()
-                    && event.getHandleType() == HandleStateChangeEvent.HANDLE_TYPE_INSERT
-                    && !event.isHeld()) {
-                displayWindow();
-                // Also, post to hide the window on handle disappearance
-                editor.postDelayedInLifecycle(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (!editor.getEventHandler().shouldDrawInsertHandle()
-                                && !editor.getCursor().isSelected()) {
-                            dismiss();
-                        } else if (!editor.getCursor().isSelected()) {
-                            editor.postDelayedInLifecycle(this, 100);
-                        }
-                    }
-                }, 100);
-            }
-        }));
-
         getPopup().setAnimationStyle(R.style.text_action_popup_animation);
+
+        subscribeEvents();
+    }
+
+    protected void subscribeEvents() {
+        eventManager.subscribeAlways(SelectionChangeEvent.class, this::onSelectionChange);
+        eventManager.subscribeAlways(ScrollEvent.class, this::onEditorScroll);
+        eventManager.subscribeAlways(HandleStateChangeEvent.class, this::onHandleStateChange);
+        eventManager.subscribeAlways(LongPressEvent.class, this::onEditorLongPress);
+        eventManager.subscribeAlways(EditorFocusChangeEvent.class, this::onEditorFocusChange);
+        eventManager.subscribeAlways(EditorReleaseEvent.class, this::onEditorRelease);
+    }
+
+    protected void onEditorFocusChange(@NonNull EditorFocusChangeEvent event) {
+        if (!event.isGainFocus()) {
+            dismiss();
+        }
+    }
+
+    protected void onEditorRelease(@NonNull EditorReleaseEvent event) {
+        setEnabled(false);
+    }
+
+    protected void onEditorLongPress(@NonNull LongPressEvent event) {
+        if (editor.getCursor().isSelected() && lastCause == SelectionChangeEvent.CAUSE_SEARCH) {
+            var idx = event.getIndex();
+            if (idx >= editor.getCursor().getLeft() && idx <= editor.getCursor().getRight()) {
+                lastCause = 0;
+                displayWindow();
+            }
+            event.intercept(InterceptTarget.TARGET_EDITOR);
+        }
+    }
+
+    protected void onEditorScroll(@NonNull ScrollEvent event) {
+        var last = lastScroll;
+        lastScroll = System.currentTimeMillis();
+        if (lastScroll - last < DELAY && lastCause != SelectionChangeEvent.CAUSE_SEARCH) {
+            postDisplay();
+        }
+    }
+
+    protected void onHandleStateChange(@NonNull HandleStateChangeEvent event) {
+        if (event.isHeld()) {
+            postDisplay();
+        }
+        if (!event.getEditor().getCursor().isSelected()
+                && event.getHandleType() == HandleStateChangeEvent.HANDLE_TYPE_INSERT
+                && !event.isHeld()) {
+            displayWindow();
+            // Also, post to hide the window on handle disappearance
+            editor.postDelayedInLifecycle(new Runnable() {
+                @Override
+                public void run() {
+                    if (!editor.getEventHandler().shouldDrawInsertHandle()
+                            && !editor.getCursor().isSelected()) {
+                        dismiss();
+                    } else if (!editor.getCursor().isSelected()) {
+                        editor.postDelayedInLifecycle(this, CHECK_FOR_DISMISS_INTERVAL);
+                    }
+                }
+            }, CHECK_FOR_DISMISS_INTERVAL);
+        }
+    }
+
+    protected void onSelectionChange(@NonNull SelectionChangeEvent event) {
+        if (handler.hasAnyHeldHandle()) {
+            return;
+        }
+        lastCause = event.getCause();
+        if (event.isSelected()) {
+            // Always post show. See #193
+            if (event.getCause() != SelectionChangeEvent.CAUSE_SEARCH) {
+                editor.postInLifecycle(this::displayWindow);
+            } else {
+                dismiss();
+            }
+            lastPosition = -1;
+        } else {
+            var show = false;
+            if (event.getCause() == SelectionChangeEvent.CAUSE_TAP && event.getLeft().index == lastPosition && !isShowing() && !editor.getText().isInBatchEdit() && editor.isEditable()) {
+                editor.postInLifecycle(this::displayWindow);
+                show = true;
+            } else {
+                dismiss();
+            }
+            if (event.getCause() == SelectionChangeEvent.CAUSE_TAP && !show) {
+                lastPosition = event.getLeft().index;
+            } else {
+                lastPosition = -1;
+            }
+        }
     }
 
     @Override
@@ -149,6 +202,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
     @Override
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+        eventManager.setEnabled(enabled);
         if (!enabled) {
             dismiss();
         }
@@ -190,36 +244,6 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
                 }
             }
         }, DELAY);
-    }
-
-    @Override
-    public void onReceive(@NonNull SelectionChangeEvent event, @NonNull Unsubscribe unsubscribe) {
-        if (handler.hasAnyHeldHandle()) {
-            return;
-        }
-        lastCause = event.getCause();
-        if (event.isSelected()) {
-            // Always post show. See #193
-            if (event.getCause() != SelectionChangeEvent.CAUSE_SEARCH) {
-                editor.postInLifecycle(this::displayWindow);
-            } else {
-                dismiss();
-            }
-            lastPosition = -1;
-        } else {
-            var show = false;
-            if (event.getCause() == SelectionChangeEvent.CAUSE_TAP && event.getLeft().index == lastPosition && !isShowing() && !editor.getText().isInBatchEdit() && editor.isEditable()) {
-                editor.postInLifecycle(this::displayWindow);
-                show = true;
-            } else {
-                dismiss();
-            }
-            if (event.getCause() == SelectionChangeEvent.CAUSE_TAP && !show) {
-                lastPosition = event.getLeft().index;
-            } else {
-                lastPosition = -1;
-            }
-        }
     }
 
     private int selectTop(@NonNull RectF rect) {
@@ -267,7 +291,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
 
     @Override
     public void show() {
-        if (!enabled || editor.getSnippetController().isInSnippet()) {
+        if (!enabled || editor.getSnippetController().isInSnippet() || !editor.hasFocus()) {
             return;
         }
         super.show();

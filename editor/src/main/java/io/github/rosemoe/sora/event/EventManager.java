@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
 
 /**
  * This class manages event dispatching in editor.
@@ -165,6 +166,22 @@ public final class EventManager {
             }
         }
         return result;
+    }
+
+    /**
+     * @see #subscribeEvent(Class, EventReceiver)
+     */
+    @NonNull
+    public <T extends Event> SubscriptionReceipt<T> subscribe(@NonNull Class<T> eventType, @NonNull EventReceiver<T> receiver) {
+        return subscribeEvent(eventType, receiver);
+    }
+
+    /**
+     * Subscribe a event and never unsubscribe from event receiver
+     */
+    @NonNull
+    public <T extends Event> SubscriptionReceipt<T> subscribeAlways(@NonNull Class<T> eventType, @NonNull NoUnsubscribeReceiver<T> receiver) {
+        return subscribeEvent(eventType, ((event, unsubscribe) -> receiver.onReceive(event)));
     }
 
     /**
@@ -299,6 +316,12 @@ public final class EventManager {
         ReadWriteLock lock = new ReentrantReadWriteLock();
 
         List<EventReceiver<T>> receivers = new ArrayList<>();
+
+    }
+
+    public interface NoUnsubscribeReceiver<T extends Event> {
+
+        void onReceive(T event);
 
     }
 

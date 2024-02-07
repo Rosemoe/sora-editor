@@ -30,6 +30,7 @@ package io.github.rosemoe.sora.widget.component;
  * @see EditorAutoCompletion
  * @see EditorTextActionWindow
  * @see Magnifier
+ * @see EditorDiagnosticTooltipWindow
  */
 public interface EditorBuiltinComponent {
 
