@@ -74,3 +74,6 @@ class ImePrivateCommandEvent(editor: CodeEditor, val action: String, val data: B
 class BuildEditorInfoEvent(editor: CodeEditor, val editorInfo: EditorInfo) : Event(editor)
 
 class EditorFocusChangeEvent(editor: CodeEditor, val isGainFocus: Boolean) : Event(editor)
+
+class EditorAttachStateChangeEvent(editor: CodeEditor, val isAttachedToWindow: Boolean) :
+    Event(editor)

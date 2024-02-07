@@ -84,6 +84,7 @@ import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.BuildEditorInfoEvent;
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
+import io.github.rosemoe.sora.event.EditorAttachStateChangeEvent;
 import io.github.rosemoe.sora.event.EditorFocusChangeEvent;
 import io.github.rosemoe.sora.event.EditorFormatEvent;
 import io.github.rosemoe.sora.event.EditorReleaseEvent;
@@ -126,7 +127,6 @@ import io.github.rosemoe.sora.util.TemporaryFloatBuffer;
 import io.github.rosemoe.sora.util.ThemeUtils;
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 import io.github.rosemoe.sora.widget.component.EditorBuiltinComponent;
-import io.github.rosemoe.sora.widget.component.EditorCompletionAdapter;
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow;
 import io.github.rosemoe.sora.widget.component.EditorTextActionWindow;
 import io.github.rosemoe.sora.widget.component.Magnifier;
@@ -4655,8 +4655,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        dispatchEvent(new EditorAttachStateChangeEvent(this, false));
         cursorBlink.valid = false;
         removeCallbacks(cursorBlink);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        dispatchEvent(new EditorAttachStateChangeEvent(this, true));
     }
 
     @Override
