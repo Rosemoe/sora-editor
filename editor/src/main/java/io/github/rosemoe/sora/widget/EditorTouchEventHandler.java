@@ -429,7 +429,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         var styles = editor.getStyles();
         var text = editor.getText();
         var span = StylesUtils.getSpanForPosition(styles, pos);
-        var nextSpan = StylesUtils.getSpanForPosition(styles, pos);
+        var nextSpan = StylesUtils.getFollowingSpanForPosition(styles, pos);
         TextRange range = null;
         if (span != null) {
             var startPos = text.getIndexer().getCharPosition(pos.line, Numbers.coerceIn(span.getColumn(), 0, text.getColumnCount(pos.line)));
