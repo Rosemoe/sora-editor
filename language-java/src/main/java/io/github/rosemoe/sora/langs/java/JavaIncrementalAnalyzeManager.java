@@ -31,6 +31,7 @@ import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
+import io.github.rosemoe.sora.lang.styling.color.ConstColor;
 import io.github.rosemoe.sora.lang.styling.color.EditorColor;
 import io.github.rosemoe.sora.lang.styling.color.ResolvableColor;
 import io.github.rosemoe.sora.lang.styling.span.SpanClickableUrl;
@@ -48,7 +49,6 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
 
     private final static int STATE_NORMAL = 0;
     private final static int STATE_INCOMPLETE_COMMENT = 1;
-    private final static ResolvableColor UNDERLINE = new EditorColor(EditorColorScheme.UNDERLINE);
     private final static Pattern URL_PATTERN = Pattern.compile("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)");
     private final ThreadLocal<JavaTextTokenizer> tokenizerProvider = new ThreadLocal<>();
     protected IdentifierAutoComplete.SyncIdentifiers identifiers = new IdentifierAutoComplete.SyncIdentifiers();
@@ -434,7 +434,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
             }
             if (tokenRecord.url != null) {
                 span.setSpanExt(SpanExtAttrs.EXT_INTERACTION_INFO, new SpanClickableUrl(tokenRecord.url));
-                span.setUnderlineColor(UNDERLINE);
+                span.setUnderlineColor(new EditorColor(span.getForegroundColorId()));
             }
             spans.add(span);
         }
