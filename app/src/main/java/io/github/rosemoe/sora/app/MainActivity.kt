@@ -25,7 +25,6 @@ package io.github.rosemoe.sora.app
 
 import android.app.AlertDialog
 import android.content.DialogInterface
-import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Typeface
 import android.net.Uri
@@ -73,6 +72,7 @@ import io.github.rosemoe.sora.utils.toast
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorSearcher.SearchOptions
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
+import io.github.rosemoe.sora.widget.ext.EditorSpanInteractionHandler
 import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.getComponent
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
@@ -89,7 +89,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.eclipse.tm4e.core.registry.IGrammarSource
 import org.eclipse.tm4e.core.registry.IThemeSource
-import java.io.IOException
 import java.util.regex.PatternSyntaxException
 
 /**
@@ -212,6 +211,8 @@ class MainActivity : AppCompatActivity() {
                 )
             }
 
+            // Handle span interactions
+            EditorSpanInteractionHandler(this)
             getComponent<EditorAutoCompletion>()
                 .setEnabledAnimation(true)
         }
