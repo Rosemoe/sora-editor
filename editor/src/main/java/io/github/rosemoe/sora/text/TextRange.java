@@ -66,6 +66,14 @@ public class TextRange {
         return end.index;
     }
 
+    /**
+     * Check if the given position is inside the range
+     */
+    public boolean isPositionInside(@NonNull CharPosition pos) {
+        return pos.index >= start.index && pos.index < end.index;
+    }
+
+    @NonNull
     @Override
     public String toString() {
         return "TextRange{" +

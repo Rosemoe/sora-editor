@@ -159,6 +159,17 @@ public class SpanImpl implements Span {
         return pool.offer(this);
     }
 
+    @NonNull
+    @Override
+    public String toString() {
+        return "SpanImpl{" +
+                "column=" + column +
+                ", style=" + style +
+                ", extra=" + extra +
+                ", extMap=" + extMap +
+                '}';
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
