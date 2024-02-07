@@ -385,4 +385,9 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean reportCursorAnchor = true;
 
+    /**
+     * Place selection on previous line after cutting line
+     */
+    public boolean placeSelOnPreviousLineAfterCut = false;
+
 }

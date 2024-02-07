@@ -3576,6 +3576,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
 
         cutText();
+        if (props.placeSelOnPreviousLineAfterCut) {
+            moveSelectionLeft();
+        }
     }
 
     /**
