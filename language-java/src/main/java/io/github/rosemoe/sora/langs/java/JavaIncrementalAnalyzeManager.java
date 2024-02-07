@@ -31,6 +31,10 @@ import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
+import io.github.rosemoe.sora.lang.styling.color.EditorColor;
+import io.github.rosemoe.sora.lang.styling.color.ResolvableColor;
+import io.github.rosemoe.sora.lang.styling.span.SpanClickableUrl;
+import io.github.rosemoe.sora.lang.styling.span.SpanExtAttrs;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.util.ArrayList;
@@ -38,12 +42,14 @@ import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import java.util.List;
 import java.util.Stack;
+import java.util.regex.Pattern;
 
-public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManager<State, Long> {
+public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManager<State, JavaIncrementalAnalyzeManager.HighlightToken> {
 
     private final static int STATE_NORMAL = 0;
     private final static int STATE_INCOMPLETE_COMMENT = 1;
-
+    private final static ResolvableColor UNDERLINE = new EditorColor(EditorColorScheme.UNDERLINE);
+    private final static Pattern URL_PATTERN = Pattern.compile("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)");
     private final ThreadLocal<JavaTextTokenizer> tokenizerProvider = new ThreadLocal<>();
     protected IdentifierAutoComplete.SyncIdentifiers identifiers = new IdentifierAutoComplete.SyncIdentifiers();
 
@@ -57,7 +63,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
     }
 
     @Override
-    public List<CodeBlock> computeBlocks(Content text, AsyncIncrementalAnalyzeManager<State, Long>.CodeBlockAnalyzeDelegate delegate) {
+    public List<CodeBlock> computeBlocks(Content text, AsyncIncrementalAnalyzeManager<State, HighlightToken>.CodeBlockAnalyzeDelegate delegate) {
         var stack = new Stack<CodeBlock>();
         var blocks = new ArrayList<CodeBlock>();
         var maxSwitch = 0;
@@ -71,9 +77,9 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                 // Iterate tokens
                 for (int i1 = 0; i1 < state.tokens.size(); i1++) {
                     var tokenRecord = state.tokens.get(i1);
-                    var token = IntPair.getFirst(tokenRecord);
-                    if (token == ORDINAL_LBRACE) {
-                        var offset = IntPair.getSecond(tokenRecord);
+                    var token = tokenRecord.token;
+                    if (token == Tokens.LBRACE) {
+                        var offset = tokenRecord.offset;
                         if (stack.isEmpty()) {
                             if (currSwitch > maxSwitch) {
                                 maxSwitch = currSwitch;
@@ -85,8 +91,8 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                         block.startLine = i;
                         block.startColumn = offset;
                         stack.push(block);
-                    } else if (token == ORDINAL_RBRACE) {
-                        var offset = IntPair.getSecond(tokenRecord);
+                    } else if (token == Tokens.RBRACE) {
+                        var offset = tokenRecord.offset;
                         if (!stack.isEmpty()) {
                             CodeBlock block = stack.pop();
                             block.endLine = i;
@@ -99,19 +105,19 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                     var type = getType(token);
                     if (type > 0) {
                         if (isStart(token)) {
-                            bracketsStack.push(IntPair.pack(type, text.getCharIndex(i, IntPair.getSecond(tokenRecord))));
+                            bracketsStack.push(IntPair.pack(type, text.getCharIndex(i, tokenRecord.offset)));
                         } else {
                             if (!bracketsStack.isEmpty()) {
                                 var record = bracketsStack.pop();
                                 var typeRecord = IntPair.getFirst(record);
                                 if (typeRecord == type) {
-                                    brackets.add(IntPair.getSecond(record), text.getCharIndex(i, IntPair.getSecond(tokenRecord)));
+                                    brackets.add(IntPair.getSecond(record), text.getCharIndex(i, tokenRecord.offset));
                                 } else if (type == 3) {
                                     // Bad syntax, try to find type 3
                                     while (!bracketsStack.isEmpty()) {
                                         record = bracketsStack.pop();
                                         if (IntPair.getFirst(record) == 3) {
-                                            brackets.add(IntPair.getSecond(record), text.getCharIndex(i, IntPair.getSecond(tokenRecord)));
+                                            brackets.add(IntPair.getSecond(record), text.getCharIndex(i, tokenRecord.offset));
                                             break;
                                         }
                                     }
@@ -128,21 +134,21 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
         return blocks;
     }
 
-    private static int getType(int token) {
-        if (token == Tokens.LBRACE.ordinal() || token == Tokens.RBRACE.ordinal()) {
+    private static int getType(Tokens token) {
+        if (token == Tokens.LBRACE || token == Tokens.RBRACE) {
             return 3;
         }
-        if (token == Tokens.LBRACK.ordinal() || token == Tokens.RBRACK.ordinal()) {
+        if (token == Tokens.LBRACK || token == Tokens.RBRACK) {
             return 2;
         }
-        if (token == Tokens.LPAREN.ordinal() || token == Tokens.RPAREN.ordinal()) {
+        if (token == Tokens.LPAREN || token == Tokens.RPAREN) {
             return 1;
         }
         return 0;
     }
 
-    private static boolean isStart(int token) {
-        return token == Tokens.LBRACE.ordinal() || token == Tokens.LBRACK.ordinal() || token == Tokens.LPAREN.ordinal();
+    private static boolean isStart(Tokens token) {
+        return token == Tokens.LBRACE || token == Tokens.LBRACK || token == Tokens.LPAREN;
     }
 
     @Override
@@ -181,8 +187,8 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
     }
 
     @Override
-    public LineTokenizeResult<State, Long> tokenizeLine(CharSequence line, State state, int lineIndex) {
-        var tokens = new ArrayList<Long>();
+    public LineTokenizeResult<State, HighlightToken> tokenizeLine(CharSequence line, State state, int lineIndex) {
+        var tokens = new ArrayList<HighlightToken>();
         int newState = 0;
         var stateObj = new State();
         if (state.state == STATE_NORMAL) {
@@ -197,7 +203,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
             }
         }
         if (tokens.isEmpty()) {
-            tokens.add(token(Tokens.UNKNOWN, 0));
+            tokens.add(new HighlightToken(Tokens.UNKNOWN, 0));
         }
         stateObj.state = newState;
         return new LineTokenizeResult<>(stateObj, tokens);
@@ -206,7 +212,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
     /**
      * @return state and offset
      */
-    private long tryFillIncompleteComment(CharSequence line, List<Long> tokens) {
+    private long tryFillIncompleteComment(CharSequence line, List<HighlightToken> tokens) {
         char pre = '\0', cur = '\0';
         int offset = 0;
         while ((pre != '*' || cur != '/') && offset < line.length()) {
@@ -215,21 +221,40 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
             offset++;
         }
         if (pre == '*' && cur == '/') {
-            tokens.add(token(Tokens.LONG_COMMENT_COMPLETE, 0));
+            if (offset < 1000) {
+                detectHighlightUrls(line.subSequence(0, offset), 0, Tokens.LONG_COMMENT_COMPLETE, tokens);
+            } else {
+                tokens.add(new HighlightToken(Tokens.LONG_COMMENT_COMPLETE, 0));
+            }
             return IntPair.pack(STATE_NORMAL, offset);
         }
-        tokens.add(token(Tokens.LONG_COMMENT_INCOMPLETE, 0));
+        if (offset < 1000) {
+            detectHighlightUrls(line.subSequence(0, offset), 0, Tokens.LONG_COMMENT_INCOMPLETE, tokens);
+        } else {
+            tokens.add(new HighlightToken(Tokens.LONG_COMMENT_INCOMPLETE, 0));
+        }
         return IntPair.pack(STATE_INCOMPLETE_COMMENT, offset);
     }
 
-    private int tokenizeNormal(CharSequence text, int offset, List<Long> tokens, State st) {
+    private int tokenizeNormal(CharSequence text, int offset, List<HighlightToken> tokens, State st) {
         var tokenizer = obtainTokenizer();
         tokenizer.reset(text);
         tokenizer.offset = offset;
         Tokens token;
         int state = STATE_NORMAL;
         while ((token = tokenizer.nextToken()) != Tokens.EOF) {
-            tokens.add(token(token, tokenizer.offset));
+            if (tokenizer.getTokenLength() < 1000 &&
+                    (token == Tokens.STRING || token == Tokens.LONG_COMMENT_COMPLETE
+                            || token == Tokens.LONG_COMMENT_INCOMPLETE || token == Tokens.LINE_COMMENT)) {
+                // detect possible URLs, if the token is not too long
+                detectHighlightUrls(tokenizer.getTokenText(), tokenizer.offset, token, tokens);
+                if (token == Tokens.LONG_COMMENT_INCOMPLETE) {
+                    state = STATE_INCOMPLETE_COMMENT;
+                    break;
+                }
+                continue;
+            }
+            tokens.add(new HighlightToken(token, tokenizer.offset));
             if (token == Tokens.LBRACE || token == Tokens.RBRACE) {
                 st.hasBraces = true;
             }
@@ -244,31 +269,46 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
         return state;
     }
 
-    private static long token(Tokens type, int column) {
-        return IntPair.pack(type.ordinal(), column);
+    private void detectHighlightUrls(CharSequence tokenText, int offset, Tokens token, List<HighlightToken> tokens) {
+        var matcher = URL_PATTERN.matcher(tokenText);
+        var index = 0;
+        while (index < tokenText.length() && matcher.find(index)) {
+            var start = matcher.start();
+            var end = matcher.end();
+            if (start > index) {
+                tokens.add(new HighlightToken(token, offset + index));
+            }
+            tokens.add(new HighlightToken(token, offset + start, matcher.group()));
+            index = end;
+        }
+        if (index != tokenText.length()) {
+            tokens.add(new HighlightToken(token, offset + index));
+        }
     }
 
+
     @Override
-    public List<Span> generateSpansForLine(LineTokenizeResult<State, Long> lineResult) {
+    public List<Span> generateSpansForLine(LineTokenizeResult<State, HighlightToken> lineResult) {
         var spans = new ArrayList<Span>();
         var tokens = lineResult.tokens;
         Tokens previous = Tokens.UNKNOWN;
         boolean classNamePrevious = false;
         for (int i = 0; i < tokens.size(); i++) {
             var tokenRecord = tokens.get(i);
-            var token = ordinalToToken(IntPair.getFirst(tokenRecord));
-            int offset = IntPair.getSecond(tokenRecord);
+            var token = tokenRecord.token;
+            int offset = tokenRecord.offset;
+            Span span;
             switch (token) {
                 case WHITESPACE:
                 case NEWLINE:
-                    spans.add(Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)));
+                    span = Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL));
                     break;
                 case CHARACTER_LITERAL:
                 case FLOATING_POINT_LITERAL:
                 case INTEGER_LITERAL:
                 case STRING:
                     classNamePrevious = false;
-                    spans.add(Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.LITERAL, true)));
+                    span = Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.LITERAL, true));
                     break;
                 case INT:
                 case LONG:
@@ -281,7 +321,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                 case VOID:
                 case VAR:
                     classNamePrevious = true;
-                    spans.add(Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false)));
+                    span = Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false));
                     break;
                 case ABSTRACT:
                 case ASSERT:
@@ -330,12 +370,12 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                 case SEALED:
                 case PERMITS:
                     classNamePrevious = false;
-                    spans.add(Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false)));
+                    span = Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false));
                     break;
                 case LINE_COMMENT:
                 case LONG_COMMENT_COMPLETE:
                 case LONG_COMMENT_INCOMPLETE:
-                    spans.add(Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.COMMENT, 0, false, true, false, true)));
+                    span = Span.obtain(offset, TextStyle.makeStyle(EditorColorScheme.COMMENT, 0, false, true, false, true));
                     break;
                 case IDENTIFIER: {
                     int type = EditorColorScheme.IDENTIFIER_NAME;
@@ -351,7 +391,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                             var next = Tokens.UNKNOWN;
                             label:
                             while (j < tokens.size()) {
-                                next = ordinalToToken(IntPair.getFirst(tokens.get(j)));
+                                next = tokens.get(j).token;
                                 switch (next) {
                                     case WHITESPACE:
                                     case NEWLINE:
@@ -371,16 +411,16 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                             }
                         }
                     }
-                    spans.add(Span.obtain(offset, TextStyle.makeStyle(type)));
+                    span = Span.obtain(offset, TextStyle.makeStyle(type));
                     break;
                 }
                 default:
                     if (token == Tokens.LBRACK || (token == Tokens.RBRACK && previous == Tokens.LBRACK)) {
-                        spans.add(Span.obtain(offset, EditorColorScheme.OPERATOR));
+                        span = Span.obtain(offset, EditorColorScheme.OPERATOR);
                         break;
                     }
                     classNamePrevious = false;
-                    spans.add(Span.obtain(offset, EditorColorScheme.OPERATOR));
+                    span = Span.obtain(offset, EditorColorScheme.OPERATOR);
             }
             switch (token) {
                 case LINE_COMMENT:
@@ -392,23 +432,31 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                 default:
                     previous = token;
             }
+            if (tokenRecord.url != null) {
+                span.setSpanExt(SpanExtAttrs.EXT_INTERACTION_INFO, new SpanClickableUrl(tokenRecord.url));
+                span.setUnderlineColor(UNDERLINE);
+            }
+            spans.add(span);
         }
         return spans;
     }
 
-    private static Tokens ordinalToToken(int ordinal) {
-        if (mapping == null) {
-            var tokens = Tokens.values();
-            mapping = new Tokens[tokens.length];
-            for (var token : tokens) {
-                mapping[token.ordinal()] = token;
-            }
-        }
-        return mapping[ordinal];
-    }
+    public static class HighlightToken {
 
-    private static final int ORDINAL_LBRACE = Tokens.LBRACE.ordinal();
-    private static final int ORDINAL_RBRACE = Tokens.RBRACE.ordinal();
-    private static Tokens[] mapping;
+        public Tokens token;
+        public int offset;
+        public String url;
+
+        public HighlightToken(Tokens token, int offset) {
+            this.token = token;
+            this.offset = offset;
+        }
+
+        public HighlightToken(Tokens token, int offset, String url) {
+            this.token = token;
+            this.offset = offset;
+            this.url = url;
+        }
+    }
 
 }
