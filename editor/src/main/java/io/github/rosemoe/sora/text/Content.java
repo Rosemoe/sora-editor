@@ -350,14 +350,14 @@ public class Content implements CharSequence {
         int line = position.line, column = position.column, index = position.index;
         lock(false);
         try {
-            if (position.line < 0 || position.line >= getLineCount()) {
+            if (line < 0 || line >= getLineCount()) {
                 return false;
             }
             ContentLine text = getLine(line);
-            if (position.column > text.length() + text.getLineSeparator().getLength() || position.column < 0) {
+            if (column > text.length() + text.getLineSeparator().getLength() || column < 0) {
                 return false;
             }
-            return getIndexer().getCharIndex(line, column) == position.index;
+            return getIndexer().getCharIndex(line, column) == index;
         } finally {
             unlock(false);
         }
