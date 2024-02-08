@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.text;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -331,6 +332,32 @@ public class Content implements CharSequence {
         lock(false);
         try {
             return getIndexer().getCharIndex(line, column);
+        } finally {
+            unlock(false);
+        }
+    }
+
+    /**
+     * Check if the given {@link CharPosition} is valid in this text. Checks include line, column and index.
+     *
+     * @param position the position to check, maybe null
+     * @return if the position is valid in this text. null position is always invalid.
+     */
+    public boolean isValidPosition(@Nullable CharPosition position) {
+        if (position == null) {
+            return false;
+        }
+        int line = position.line, column = position.column, index = position.index;
+        lock(false);
+        try {
+            if (position.line < 0 || position.line >= getLineCount()) {
+                return false;
+            }
+            ContentLine text = getLine(line);
+            if (position.column > text.length() + text.getLineSeparator().getLength() || position.column < 0) {
+                return false;
+            }
+            return getIndexer().getCharIndex(line, column) == position.index;
         } finally {
             unlock(false);
         }

@@ -3144,7 +3144,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     protected void ensureSelectionAnchorAvailable() {
-        if (selectionAnchor == null) {
+        if (selectionAnchor == null || !text.isValidPosition(selectionAnchor)) {
             selectionAnchor = cursor.right();
         }
     }
