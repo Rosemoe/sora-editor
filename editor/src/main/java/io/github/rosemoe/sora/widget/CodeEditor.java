@@ -3703,6 +3703,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         styleDelegate.reset();
         textStyles = null;
         cursor = this.text.getCursor();
+        selectionAnchor = cursor.right();
         touchHandler.reset();
         this.text.addContentListener(this);
         this.text.setUndoEnabled(undoEnabled);
