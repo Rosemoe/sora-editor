@@ -35,12 +35,9 @@ import io.github.rosemoe.sora.event.EditorKeyEvent;
 import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.KeyBindingEvent;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
-import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.method.KeyMetaStates;
-import io.github.rosemoe.sora.util.Chars;
-import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 
 /**
  * Handles {@link KeyEvent}s in editor.
@@ -146,12 +143,6 @@ public class EditorKeyEventHandler {
             case KeyEvent.KEYCODE_DPAD_RIGHT:
             case KeyEvent.KEYCODE_MOVE_HOME:
             case KeyEvent.KEYCODE_MOVE_END:
-                final var cursor = editor.getCursor();
-                if (isShiftPressed && (!cursor.isSelected())) {
-                    editor.selectionAnchor = cursor.left();
-                } else if (!isShiftPressed && editor.selectionAnchor != null) {
-                    editor.selectionAnchor = null;
-                }
                 keyMetaStates.adjust();
         }
 
@@ -220,14 +211,17 @@ public class EditorKeyEventHandler {
                         editorText.endBatchEdit();
 
                         // Update selection
-                        final var newLeft = new CharPosition(left.line + 1, left.column);
-                        final var newRight = new CharPosition(right.line + 1, right.column);
+                        final var newLeft = editorText.getIndexer().getCharPosition(left.line + 1, left.column);
+                        final var newRight = editorText.getIndexer().getCharPosition(right.line + 1, right.column);
                         if (left.index != right.index) {
+                            var backupAnchor = editor.selectionAnchor;
                             editor.setSelectionRegion(newLeft.line, newLeft.column, newRight.line, newRight.column);
-                            if (editor.selectionAnchor.equals(left)) {
-                                editor.selectionAnchor = newLeft;
-                            } else {
-                                editor.selectionAnchor = newRight;
+                            if (backupAnchor != null) {
+                                if (backupAnchor.equals(left)) {
+                                    editor.selectionAnchor = newLeft;
+                                } else {
+                                    editor.selectionAnchor = newRight;
+                                }
                             }
                         } else {
                             editor.setSelection(newLeft.line, newLeft.column);
@@ -235,20 +229,16 @@ public class EditorKeyEventHandler {
 
                         return editorKeyEvent.result(true);
                     }
-                    final var dy = editor.getOffsetY() + editor.getRowHeight() > editor.getScrollMaxY()
-                            ? editor.getScrollMaxY() - editor.getOffsetY()
-                            : editor.getRowHeight();
-                    editor.getScroller().startScroll(editor.getOffsetX(), editor.getOffsetY(), 0, dy, 0);
+                    editor.getEventHandler().scrollBy(0, editor.getRowHeight());
                     return editorKeyEvent.result(true);
                 }
-                editor.moveSelectionDown();
+                editor.moveOrExtendSelection(SelectionMovement.DOWN, isShiftPressed);
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_DPAD_UP:
                 if (isCtrlPressed) {
                     if (isShiftPressed) {
                         final var left = editorCursor.left();
                         final var right = editorCursor.right();
-                        final var lines = editorText.getLineCount();
                         if (left.line == 0) {
                             // first line, cannot move up
                             return editorKeyEvent.result(true);
@@ -261,14 +251,17 @@ public class EditorKeyEventHandler {
                         editorText.endBatchEdit();
 
                         // Update selection
-                        final var newLeft = new CharPosition(left.line - 1, left.column);
-                        final var newRight = new CharPosition(right.line - 1, right.column);
+                        final var newLeft = editorText.getIndexer().getCharPosition(left.line - 1, left.column);
+                        final var newRight = editorText.getIndexer().getCharPosition(right.line - 1, right.column);
                         if (left.index != right.index) {
+                            var backupAnchor = editor.selectionAnchor;
                             editor.setSelectionRegion(newLeft.line, newLeft.column, newRight.line, newRight.column);
-                            if (editor.selectionAnchor.equals(left)) {
-                                editor.selectionAnchor = newLeft;
-                            } else {
-                                editor.selectionAnchor = newRight;
+                            if (backupAnchor != null) {
+                                if (backupAnchor.equals(left)) {
+                                    editor.selectionAnchor = newLeft;
+                                } else {
+                                    editor.selectionAnchor = newRight;
+                                }
                             }
                         } else {
                             editor.setSelection(newLeft.line, newLeft.column);
@@ -276,91 +269,70 @@ public class EditorKeyEventHandler {
 
                         return editorKeyEvent.result(true);
                     }
-                    if (editor.getOffsetY() == 0) {
-                        return editorKeyEvent.result(true);
-                    }
-                    var dy = -editor.getRowHeight();
-                    if (editor.getOffsetY() - editor.getRowHeight() < 0) {
-                        dy = -editor.getOffsetY();
-                    }
-                    editor.getScroller().startScroll(editor.getOffsetX(), editor.getOffsetY(), 0, dy, 0);
+                    editor.getEventHandler().scrollBy(0, -editor.getRowHeight());
                     return editorKeyEvent.result(true);
                 }
-                editor.moveSelectionUp();
+                editor.moveOrExtendSelection(SelectionMovement.UP, isShiftPressed);
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_DPAD_LEFT:
                 if (isCtrlPressed) {
-                    final var handle = editorCursor.left().equals(editor.selectionAnchor) ? editorCursor.right() : editorCursor.left();
-                    final var prevStart = Chars.prevWordStart(handle, editorText);
-                    if (editor.selectionAnchor != null) {
-                        editor.setSelectionRegion(editor.selectionAnchor.line, editor.selectionAnchor.column, prevStart.line, prevStart.column);
-                        editor.ensureSelectingTargetVisible();
-                        return editorKeyEvent.result(true);
-                    }
-                    editor.setSelection(prevStart.line, prevStart.column);
-                    return editorKeyEvent.result(true);
+                    editor.moveOrExtendSelection(SelectionMovement.PREVIOUS_WORD_BOUNDARY, isShiftPressed);
+                } else {
+                    editor.moveOrExtendSelection(SelectionMovement.LEFT, isShiftPressed);
                 }
-                editor.moveSelectionLeft();
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_DPAD_RIGHT:
                 if (isCtrlPressed) {
-                    final var handle = editorCursor.left().equals(editor.selectionAnchor) ? editorCursor.right() : editorCursor.left();
-                    final var nextEnd = Chars.nextWordEnd(handle, editorText);
-                    if (editor.selectionAnchor != null) {
-                        editor.setSelectionRegion(editor.selectionAnchor.line, editor.selectionAnchor.column, nextEnd.line, nextEnd.column);
-                        editor.ensureSelectingTargetVisible();
-                        return editorKeyEvent.result(true);
-                    }
-                    editor.setSelection(nextEnd.line, nextEnd.column);
-                    return editorKeyEvent.result(true);
+                    editor.moveOrExtendSelection(SelectionMovement.NEXT_WORD_BOUNDARY, isShiftPressed);
+                } else {
+                    editor.moveOrExtendSelection(SelectionMovement.RIGHT, isShiftPressed);
                 }
-                editor.moveSelectionRight();
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_MOVE_END:
-                final var lastLine = editorText.getLineCount() - 1;
-                final var lastColumn = editorText.getColumnCount(lastLine);
                 if (isCtrlPressed) {
-                    if (editor.selectionAnchor != null) {
-                        editor.setSelectionRegion(editor.selectionAnchor.line, editor.selectionAnchor.column, lastLine, lastColumn);
-                        editor.ensureSelectingTargetVisible();
-                        return editorKeyEvent.result(true);
-                    }
-                    editor.setSelection(lastLine, lastColumn);
-                    return editorKeyEvent.result(true);
+                    editor.moveOrExtendSelection(SelectionMovement.TEXT_END, isShiftPressed);
+                } else {
+                    editor.moveOrExtendSelection(SelectionMovement.LINE_END, isShiftPressed);
                 }
-                editor.moveSelectionEnd();
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_MOVE_HOME:
                 if (isCtrlPressed) {
-                    if (editor.selectionAnchor != null) {
-                        editor.setSelectionRegion(0, 0, editor.selectionAnchor.line, editor.selectionAnchor.column);
-                        editor.ensureSelectingTargetVisible();
-                        return editorKeyEvent.result(true);
-                    }
-                    editor.setSelection(0, 0);
-                    return editorKeyEvent.result(true);
+                    editor.moveOrExtendSelection(SelectionMovement.TEXT_START, isShiftPressed);
+                } else {
+                    editor.moveOrExtendSelection(SelectionMovement.LINE_START, isShiftPressed);
                 }
-                editor.moveSelectionHome();
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_PAGE_DOWN:
-                editor.movePageDown();
+                if (isCtrlPressed) {
+                    editor.moveOrExtendSelection(SelectionMovement.PAGE_END, isShiftPressed);
+                } else {
+                    editor.moveOrExtendSelection(SelectionMovement.PAGE_DOWN, isShiftPressed);
+                }
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_PAGE_UP:
-                editor.movePageUp();
+                if (isCtrlPressed) {
+                    editor.moveOrExtendSelection(SelectionMovement.PAGE_START, isShiftPressed);
+                } else {
+                    editor.moveOrExtendSelection(SelectionMovement.PAGE_UP, isShiftPressed);
+                }
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_TAB:
                 if (editor.isEditable()) {
-                    if (editor.getSnippetController().isInSnippet() && !isAltPressed && !isCtrlPressed) {
-                        if (isShiftPressed) {
-                            editor.getSnippetController().shiftToPreviousTabStop();
+                    if (!isAltPressed && !isCtrlPressed) {
+                        if (editor.getSnippetController().isInSnippet()) {
+                            if (isShiftPressed) {
+                                editor.getSnippetController().shiftToPreviousTabStop();
+                            } else {
+                                editor.getSnippetController().shiftToNextTabStop();
+                            }
                         } else {
-                            editor.getSnippetController().shiftToNextTabStop();
+                            if (isShiftPressed) {
+                                // Shift + TAB -> unindent the [selected] lines
+                                editor.unindentSelection();
+                            } else {
+                                editor.indentOrCommitTab();
+                            }
                         }
-                    } if (isShiftPressed) {
-                        // Shift + TAB -> unindent the [selected] lines
-                        editor.unindentSelection();
-                    } else {
-                        editor.indentOrCommitTab();
                     }
                 }
                 return editorKeyEvent.result(true);
@@ -483,56 +455,60 @@ public class EditorKeyEventHandler {
         final var connection = editor.inputConnection;
         final var editorText = editor.getText();
         final var editorCursor = editor.getCursor();
+        var editorResult = true;
         switch (keyCode) {
             case KeyEvent.KEYCODE_V:
                 if (editor.isEditable()) {
                     editor.pasteText();
                 }
-                return keybindingEvent.result(true) || e.result(true);
+                break;
             case KeyEvent.KEYCODE_C:
                 editor.copyText();
-                return keybindingEvent.result(true) || e.result(true);
+                break;
             case KeyEvent.KEYCODE_X:
                 if (editor.isEditable()) {
                     editor.cutText();
                 } else {
                     editor.copyText();
                 }
-                return keybindingEvent.result(true) || e.result(true);
+                break;
             case KeyEvent.KEYCODE_A:
                 editor.selectAll();
-                return keybindingEvent.result(true) || e.result(true);
+                break;
             case KeyEvent.KEYCODE_Z:
                 if (editor.isEditable()) {
                     editor.undo();
                 }
-                return keybindingEvent.result(true) || e.result(true);
+                break;
             case KeyEvent.KEYCODE_Y:
                 if (editor.isEditable()) {
                     editor.redo();
                 }
-                return keybindingEvent.result(true) || e.result(true);
+                break;
             case KeyEvent.KEYCODE_D:
                 if (editor.isEditable()) {
                     editor.duplicateLine();
                 }
-                return keybindingEvent.result(true) || e.result(true);
+                break;
             case KeyEvent.KEYCODE_W:
                 editor.selectCurrentWord();
-                return keybindingEvent.result(true) || e.result(true);
+                break;
             case KeyEvent.KEYCODE_J:
                 if (!isShiftPressed || editorCursor.isSelected()) {
                     // TODO If the cursor is selected, then the selected lines must be joined.
-                    return keybindingEvent.result(false) || e.result(false);
+                    editorResult = false;
+                    break;
                 }
 
                 final var line = editorCursor.getLeftLine();
                 editor.setSelection(line, editorText.getColumnCount(line));
                 connection.deleteSurroundingText(0, 1);
                 editor.ensureSelectionVisible();
-                return keybindingEvent.result(true) || e.result(true);
+                break;
+            default:
+                return null;
         }
-        return null;
+        return keybindingEvent.result(editorResult) || e.result(editorResult);
     }
 
     @NonNull
@@ -551,7 +527,7 @@ public class EditorKeyEventHandler {
 
             if (isShiftPressed && !isAltPressed && !isCtrlPressed) {
                 // Shift + Enter
-                return startNewLIne(editor, editorCursor, editorText, editorKeyEvent, keybindingEvent);
+                return startNewLine(editor, editorCursor, editorText, editorKeyEvent, keybindingEvent);
             }
 
             if (isCtrlPressed && !isShiftPressed) {
@@ -566,7 +542,7 @@ public class EditorKeyEventHandler {
                     } else {
                         line--;
                         editor.setSelection(line, editorText.getColumnCount(line));
-                        return startNewLIne(editor, editorCursor, editorText, editorKeyEvent, keybindingEvent);
+                        return startNewLine(editor, editorCursor, editorText, editorKeyEvent, keybindingEvent);
                     }
                 }
 
@@ -612,7 +588,7 @@ public class EditorKeyEventHandler {
         return editorKeyEvent.result(true);
     }
 
-    private boolean startNewLIne(CodeEditor editor, Cursor editorCursor, Content
+    private boolean startNewLine(CodeEditor editor, Cursor editorCursor, Content
             editorText, EditorKeyEvent e, KeyBindingEvent keybindingEvent) {
         final var line = editorCursor.right().line;
         editor.setSelection(line, editorText.getColumnCount(line));

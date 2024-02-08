@@ -95,11 +95,10 @@ public final class CharPosition {
 
     @Override
     public boolean equals(Object another) {
-        if (another instanceof CharPosition) {
-            CharPosition a = (CharPosition) another;
-            return a.column == column &&
-                    a.line == line &&
-                    a.index == index;
+        if (another instanceof CharPosition pos) {
+            return pos.column == column &&
+                    pos.line == line &&
+                    pos.index == index;
         }
         return false;
     }

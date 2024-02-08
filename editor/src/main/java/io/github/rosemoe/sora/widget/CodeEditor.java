@@ -242,7 +242,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     protected List<Span> defaultSpans = new ArrayList<>(2);
     protected EditorStyleDelegate styleDelegate;
     int startedActionMode;
-    CharPosition selectionAnchor;
+    protected CharPosition selectionAnchor;
     EditorInputConnection inputConnection;
     EventManager eventManager;
     Layout layout;
@@ -270,6 +270,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean editable;
     private boolean wordwrap;
     private boolean undoEnabled;
+    private boolean lastAnchorIsSelLeft;
     private volatile boolean layoutBusy;
     private boolean displayLnPanel;
     private int lnPanelPosition;
@@ -3122,7 +3123,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Get the target cursor to move when shift is pressed
      */
-    private CharPosition getSelectingTarget() {
+    protected CharPosition getSelectingTarget() {
         if (cursor.left().equals(selectionAnchor)) {
             return cursor.right();
         } else {
@@ -3133,7 +3134,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Make sure the moving selection is visible
      */
-    void ensureSelectingTargetVisible() {
+    protected void ensureSelectingTargetVisible() {
         if (cursor.left().equals(selectionAnchor)) {
             // Ensure right selection visible
             ensureSelectionVisible();
@@ -3142,117 +3143,69 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
     }
 
-    /**
-     * Move the selection down
-     * If the auto complete panel is shown,move the selection in panel to next
-     */
-    public void moveSelectionDown() {
+    protected void ensureSelectionAnchorAvailable() {
         if (selectionAnchor == null) {
-            long pos = layout.getDownPosition(cursor.getLeftLine(), cursor.getLeftColumn());
-            setSelection(IntPair.getFirst(pos), IntPair.getSecond(pos), SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
-        } else {
-            long pos = layout.getDownPosition(getSelectingTarget().getLine(), getSelectingTarget().getColumn());
-            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
-            ensureSelectingTargetVisible();
+            selectionAnchor = cursor.right();
         }
     }
 
     /**
-     * Move the selection up
-     * If Auto complete panel is shown,move the selection in panel to last
+     * Move or extend selection, according to {@code extend} param.
+     * @param extend True if you want to extend selection.
      */
-    public void moveSelectionUp() {
-        if (selectionAnchor == null) {
-            long pos = layout.getUpPosition(cursor.getLeftLine(), cursor.getLeftColumn());
-            setSelection(IntPair.getFirst(pos), IntPair.getSecond(pos), SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
+    public void moveOrExtendSelection(@NonNull SelectionMovement movement, boolean extend) {
+        if (extend) {
+            extendSelection(movement);
         } else {
-            long pos = layout.getUpPosition(getSelectingTarget().getLine(), getSelectingTarget().getColumn());
-            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
-            ensureSelectingTargetVisible();
+            moveSelection(movement);
         }
     }
 
     /**
-     * Move the selection left
+     * Extend the selection, based on the selection anchor (select text)
      */
-    public void moveSelectionLeft() {
-        if (selectionAnchor == null) {
-            if (cursor.isSelected()) {
+    public void extendSelection(@NonNull SelectionMovement movement) {
+        ensureSelectionAnchorAvailable();
+        CharPosition sel = movement.getPositionAfterMovement(this, getSelectingTarget());
+        setSelectionRegion(selectionAnchor.line, selectionAnchor.column, sel.line, sel.column, false, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
+        if (movement == SelectionMovement.PAGE_UP) {
+            touchHandler.scrollBy(0f, -getHeight(), true);
+        } else if (movement == SelectionMovement.PAGE_DOWN) {
+            touchHandler.scrollBy(0f, getHeight(), true);
+        }
+        ensureSelectingTargetVisible();
+    }
+
+    /**
+     * Move the selection. Selected text will be de-selected.
+     */
+    public void moveSelection(@NonNull SelectionMovement movement) {
+        if (cursor.isSelected()) {
+            if (movement == SelectionMovement.LEFT) {
                 setSelection(cursor.getLeftLine(), cursor.getLeftColumn(), SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
                 return;
             }
-            Cursor c = getCursor();
-            int line = c.getLeftLine();
-            int column = c.getLeftColumn();
-            long pos = cursor.getLeftOf(IntPair.pack(line, column));
-            int lineAfter = IntPair.getFirst(pos);
-            int columnAfter = IntPair.getSecond(pos);
-            setSelection(lineAfter, columnAfter, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
-        } else {
-            long pos = cursor.getLeftOf(getSelectingTarget().toIntPair());
-            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
-            ensureSelectingTargetVisible();
-        }
-    }
-
-    /**
-     * Move the selection right
-     */
-    public void moveSelectionRight() {
-        if (selectionAnchor == null) {
-            Cursor c = getCursor();
-            if (c.isSelected()) {
-                setSelection(c.getRightLine(), c.getRightColumn(), SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
+            if (movement == SelectionMovement.RIGHT) {
+                setSelection(cursor.getRightLine(), cursor.getRightColumn(), SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
                 return;
             }
-            int line = c.getLeftLine();
-            int column = c.getLeftColumn();
-            int c_column = getText().getColumnCount(line);
-            long pos = cursor.getRightOf(IntPair.pack(line, column));
-            int lineAfter = IntPair.getFirst(pos);
-            int columnAfter = IntPair.getSecond(pos);
-            setSelection(lineAfter, columnAfter, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
-        } else {
-            long pos = cursor.getRightOf(getSelectingTarget().toIntPair());
-            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, IntPair.getFirst(pos), IntPair.getSecond(pos), false, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
-            ensureSelectingTargetVisible();
         }
-    }
-
-    /**
-     * Move selection to end of line
-     */
-    public void moveSelectionEnd() {
-        if (selectionAnchor == null) {
-            int line = cursor.getLeftLine();
-            if (props.enhancedHomeAndEnd && cursor.getLeftColumn() == getText().getColumnCount(line)) {
-                int column = IntPair.getSecond(TextUtils.findLeadingAndTrailingWhitespacePos(text.getLine(cursor.getLeftLine())));
-                setSelection(cursor.getLeftLine(), column, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
-            } else {
-                setSelection(line, getText().getColumnCount(line), SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
+        CharPosition pos;
+        switch (movement.getBasePosition()) {
+            case LEFT_SELECTION -> pos = cursor.left();
+            case RIGHT_SELECTION -> pos = cursor.right();
+            default -> {
+                ensureSelectionAnchorAvailable();
+                pos = selectionAnchor;
             }
-        } else {
-            int line = getSelectingTarget().line;
-            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, line, getText().getColumnCount(line), false, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
-            ensureSelectingTargetVisible();
         }
-    }
-
-    /**
-     * Move selection to start of line
-     */
-    public void moveSelectionHome() {
-        if (selectionAnchor == null) {
-            if (props.enhancedHomeAndEnd && cursor.getLeftColumn() == 0) {
-                int column = IntPair.getFirst(TextUtils.findLeadingAndTrailingWhitespacePos(text.getLine(cursor.getLeftLine())));
-                setSelection(cursor.getLeftLine(), column, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
-            } else if (cursor.getLeftColumn() != 0) {
-                setSelection(cursor.getLeftLine(), 0, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
-            }
-        } else {
-            setSelectionRegion(selectionAnchor.line, selectionAnchor.column, getSelectingTarget().line, 0, false, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
-            ensureSelectingTargetVisible();
+        CharPosition sel = movement.getPositionAfterMovement(this, pos);
+        if (movement == SelectionMovement.PAGE_UP) {
+            touchHandler.scrollBy(0f, -getHeight(), true);
+        } else if (movement == SelectionMovement.PAGE_DOWN) {
+            touchHandler.scrollBy(0f, getHeight(), true);
         }
+        setSelection(sel.line, sel.column, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
     }
 
     /**
@@ -3311,6 +3264,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             cursorAnimator.markEndPos();
             cursorAnimator.start();
         }
+
+        // Update cursor anchor
+        selectionAnchor = cursor.right();
+
         renderer.invalidateRenderNodes();
         if (makeItVisible) {
             ensurePositionVisible(line, column);
@@ -3417,6 +3374,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         updateCursor();
         updateSelection();
         renderer.invalidateRenderNodes();
+
+        // Update selection anchor
+        if (!cursor.left().equals(selectionAnchor) && !cursor.right().equals(selectionAnchor)) {
+            selectionAnchor = cursor.right();
+        }
+
         if (makeRightVisible) {
             if (cause == SelectionChangeEvent.CAUSE_SEARCH) {
                 ensurePositionVisible(lineLeft, columnLeft);
@@ -3429,20 +3392,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             invalidate();
         }
         onSelectionChanged(cause);
-    }
-
-    /**
-     * Move to next page
-     */
-    public void movePageDown() {
-        touchHandler.scrollBy(0, getHeight(), true);
-    }
-
-    /**
-     * Move to previous page
-     */
-    public void movePageUp() {
-        touchHandler.scrollBy(0, -getHeight(), true);
     }
 
     /**
@@ -3580,7 +3529,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         cutText();
         if (props.placeSelOnPreviousLineAfterCut) {
-            moveSelectionLeft();
+            moveSelection(SelectionMovement.LEFT);
         }
     }
 
@@ -3662,7 +3611,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         final var start = range.getStart();
         final var end = range.getEnd();
         setSelectionRegion(start.line, start.column, end.line, end.column, SelectionChangeEvent.CAUSE_LONG_PRESS);
-        selectionAnchor = getCursor().left();
     }
 
     /**
@@ -4440,22 +4388,22 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 return true;
             }
             case AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD -> {
-                movePageDown();
+                moveSelection(SelectionMovement.PAGE_DOWN);
                 return true;
             }
             case AccessibilityNodeInfo.ACTION_SCROLL_FORWARD -> {
-                movePageUp();
+                moveSelection(SelectionMovement.PAGE_UP);
                 return true;
             }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             switch (action) {
                 case android.R.id.accessibilityActionScrollDown -> {
-                    movePageDown();
+                    moveSelection(SelectionMovement.PAGE_UP);
                     return true;
                 }
                 case android.R.id.accessibilityActionScrollUp -> {
-                    movePageUp();
+                    moveSelection(SelectionMovement.PAGE_DOWN);
                     return true;
                 }
             }
@@ -4841,6 +4789,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             cursorAnimator.markEndPos();
             cursorAnimator.start();
         }
+        selectionAnchor = lastAnchorIsSelLeft ? cursor.left() : cursor.right();
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_INSERT, start, end, insertedContent, text.isUndoManagerWorking()));
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
         lastInsertion = new TextRange(start.fromThis(), end.fromThis());
@@ -4886,6 +4835,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             cursorAnimator.start();
         }
         editorLanguage.getAnalyzeManager().delete(start, end, deletedContent);
+        selectionAnchor = lastAnchorIsSelLeft ? cursor.left() : cursor.right();
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_DELETE, start, end, deletedContent, text.isUndoManagerWorking()));
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
     }
@@ -4893,6 +4843,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @Override
     public void beforeModification(@NonNull Content content) {
         cursorAnimator.markStartPos();
+        lastAnchorIsSelLeft = cursor.left().equals(selectionAnchor);
     }
 
     @Override
