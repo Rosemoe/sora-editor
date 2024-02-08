@@ -291,7 +291,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
 
     @Override
     public void show() {
-        if (!enabled || editor.getSnippetController().isInSnippet() || !editor.hasFocus()) {
+        if (!enabled || editor.getSnippetController().isInSnippet() || !editor.hasFocus() || editor.isInMouseMode()) {
             return;
         }
         super.show();

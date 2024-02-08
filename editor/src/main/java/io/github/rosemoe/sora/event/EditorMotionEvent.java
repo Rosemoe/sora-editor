@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.event;
 
+import android.view.InputDevice;
 import android.view.MotionEvent;
 
 import androidx.annotation.NonNull;
@@ -60,6 +61,10 @@ public abstract class EditorMotionEvent extends Event {
     @Override
     public boolean canIntercept() {
         return true;
+    }
+
+    public boolean isFromMouse() {
+        return event.isFromSource(InputDevice.SOURCE_MOUSE);
     }
 
     public int getLine() {

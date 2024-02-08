@@ -41,6 +41,7 @@ public class KeyMetaStates extends android.text.method.MetaKeyKeyListener {
      * Dummy text used for Android original APIs
      */
     private final Editable dest = Editable.Factory.getInstance().newEditable("");
+    private boolean isCtrlPressed = false;
 
     public KeyMetaStates(CodeEditor editor) {
         this.editor = editor;
@@ -48,10 +49,16 @@ public class KeyMetaStates extends android.text.method.MetaKeyKeyListener {
 
     public void onKeyDown(KeyEvent event) {
         super.onKeyDown(editor, dest, event.getKeyCode(), event);
+        isCtrlPressed = event.isCtrlPressed();
     }
 
     public void onKeyUp(KeyEvent event) {
         super.onKeyUp(editor, dest, event.getKeyCode(), event);
+        isCtrlPressed = event.isCtrlPressed();
+    }
+
+    public boolean isCtrlPressed() {
+        return isCtrlPressed;
     }
 
     public boolean isShiftPressed() {

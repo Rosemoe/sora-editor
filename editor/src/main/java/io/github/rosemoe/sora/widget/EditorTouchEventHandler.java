@@ -26,16 +26,20 @@ package io.github.rosemoe.sora.widget;
 import android.content.res.Resources;
 import android.graphics.RectF;
 import android.os.Build;
+import android.os.SystemClock;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.ViewConfiguration;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.ClickEvent;
+import io.github.rosemoe.sora.event.ContextClickEvent;
 import io.github.rosemoe.sora.event.DoubleClickEvent;
 import io.github.rosemoe.sora.event.EditorMotionEvent;
 import io.github.rosemoe.sora.event.HandleStateChangeEvent;
@@ -100,7 +104,16 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     private int touchedHandleType = -1;
     private float edgeFieldSize;
     private int edgeFlags;
+    private final int touchSlop;
     private MotionEvent thumbMotionRecord;
+    private float mouseDownX;
+    private float mouseDownY;
+    private int mouseDownButtonState;
+    private long lastTimeMousePrimaryClickUp;
+    private boolean mouseDoubleClick;
+    boolean mouseClick;
+    boolean mouseCanMoveText;
+    CharPosition draggingSelection;
 
     /**
      * Create an event handler for the given editor
@@ -116,6 +129,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         leftHandle = new SelectionHandle(SelectionHandle.LEFT);
         rightHandle = new SelectionHandle(SelectionHandle.RIGHT);
         insertHandle = new SelectionHandle(SelectionHandle.BOTH);
+        var config = ViewConfiguration.get(editor.getContext());
+        touchSlop = config.getScaledTouchSlop();
     }
 
     public boolean hasAnyHeldHandle() {
@@ -419,13 +434,138 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         return false;
     }
 
+    /**
+     * Entry for mouse motion events
+     */
+    public boolean onMouseEvent(MotionEvent event) {
+        if (editor.isFormatting()) {
+            resetMouse();
+            return false;
+        }
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN -> {
+                mouseDownX = event.getX();
+                mouseDownY = event.getY();
+                mouseDownButtonState = event.getButtonState();
+                mouseClick = true;
+                if ((mouseDownButtonState & MotionEvent.BUTTON_PRIMARY) != 0) {
+                    if (SystemClock.uptimeMillis() - lastTimeMousePrimaryClickUp < ViewConfiguration.getDoubleTapTimeout()) {
+                        mouseDoubleClick = true;
+                        onDoubleTap(event);
+                        return true;
+                    }
+                    var pos = editor.getPointPositionOnScreen(mouseDownX, mouseDownY);
+                    int line = IntPair.getFirst(pos), column = IntPair.getSecond(pos);
+                    var charPos = editor.getText().getIndexer().getCharPosition(line, column);
+                    if (editor.isTextSelected() && editor.getCursorRange().isPositionInside(charPos) && editor.isScreenPointOnText(mouseDownX, mouseDownY)) {
+                        mouseCanMoveText = true;
+                    } else {
+                        mouseCanMoveText = false;
+                        editor.setSelection(line, column, SelectionChangeEvent.CAUSE_MOUSE_INPUT);
+                        editor.requestFocus();
+                    }
+                    draggingSelection = charPos;
+                    editor.postInvalidate();
+                }
+            }
+            case MotionEvent.ACTION_MOVE -> {
+                if (mouseDoubleClick) {
+                    return true;
+                }
+                if (Math.abs(event.getX() - mouseDownX) > touchSlop || Math.abs(event.getY() - mouseDownY) > touchSlop) {
+                    mouseClick = false;
+                }
+                if ((mouseDownButtonState & MotionEvent.BUTTON_PRIMARY) != 0) {
+                    var pos = editor.getPointPositionOnScreen(event.getX(), event.getY());
+                    int line = IntPair.getFirst(pos), column = IntPair.getSecond(pos);
+                    var charPos = editor.getText().getIndexer().getCharPosition(line, column);
+                    if (!mouseClick && !mouseCanMoveText) {
+                        var anchor = editor.selectionAnchor;
+                        editor.setSelectionRegion(anchor.line, anchor.column, line, column, SelectionChangeEvent.CAUSE_MOUSE_INPUT);
+                    }
+                    draggingSelection = charPos;
+                    editor.postInvalidate();
+                    scrollIfThumbReachesEdge(event);
+                }
+            }
+            case MotionEvent.ACTION_UP -> {
+                if (event.getEventTime() - event.getDownTime() > ViewConfiguration.getTapTimeout() * 2f) {
+                    mouseClick = false;
+                }
+                if (!mouseDoubleClick) {
+                    if (mouseCanMoveText && !mouseClick && (mouseDownButtonState & MotionEvent.BUTTON_PRIMARY) != 0) {
+                        var pos = editor.getPointPositionOnScreen(event.getX(), event.getY());
+                        int line = IntPair.getFirst(pos), column = IntPair.getSecond(pos);
+                        var dest = editor.getText().getIndexer().getCharPosition(line, column);
+                        var curRange = editor.getCursorRange();
+                        if (!curRange.isPositionInside(dest) && (editor.getKeyMetaStates().isCtrlPressed() || !curRange.getEnd().equals(dest))) {
+                            int length = (curRange.getEndIndex() - curRange.getStartIndex());
+                            int insIndex = editor.getKeyMetaStates().isCtrlPressed() ? dest.index : dest.index < curRange.getStartIndex() ? dest.index : dest.index - length;
+                            var text = editor.getText();
+                            var insText = text.substring(curRange.getStartIndex(), curRange.getEndIndex());
+                            CharPosition insPos;
+                            if (editor.getKeyMetaStates().isCtrlPressed()) {
+                                text.insert(dest.line, dest.column, insText);
+                                insPos = dest;
+                            } else {
+                                text.beginBatchEdit();
+                                editor.deleteText();
+                                insPos = text.getIndexer().getCharPosition(insIndex);
+                                text.insert(insPos.line, insPos.column, insText);
+                                text.endBatchEdit();
+                            }
+                            var endPos = text.getIndexer().getCharPosition(insIndex + length);
+                            editor.setSelectionRegion(insPos.getLine(), insPos.getColumn(), endPos.getLine(), endPos.getColumn(), SelectionChangeEvent.CAUSE_MOUSE_INPUT);
+                        }
+                    }
+                    if (mouseClick) {
+                        if ((mouseDownButtonState & MotionEvent.BUTTON_PRIMARY) != 0) {
+                            onSingleTapUp(event);
+                            lastTimeMousePrimaryClickUp = event.getEventTime();
+                        } else if ((mouseDownButtonState & MotionEvent.BUTTON_SECONDARY) != 0) {
+                            onContextClick(event);
+                        }
+                    }
+                }
+                resetMouse();
+            }
+            case MotionEvent.ACTION_CANCEL -> resetMouse();
+        }
+        return true;
+    }
+
+    /**
+     * Reset mouse handling state
+     */
+    private void resetMouse() {
+        mouseDownX = mouseDownY = 0f;
+        mouseClick = false;
+        mouseCanMoveText = false;
+        draggingSelection = null;
+        if (mouseDoubleClick) {
+            mouseDoubleClick = false;
+            lastTimeMousePrimaryClickUp = 0L;
+        }
+    }
+
+    /**
+     * Context click
+     */
+    public void onContextClick(MotionEvent event) {
+        dispatchEditorMotionEvent(ContextClickEvent::new, null, event);
+    }
+
     private void dispatchHandleStateChange(int type, boolean held) {
         editor.dispatchEvent(new HandleStateChangeEvent(editor, type, held));
     }
 
     private int dispatchEditorMotionEvent
             (Function5<CodeEditor, CharPosition, MotionEvent, Span, TextRange, EditorMotionEvent> constructor,
-             @NonNull CharPosition pos, @NonNull MotionEvent event) {
+             @Nullable CharPosition pos, @NonNull MotionEvent event) {
+        if (pos == null) {
+            var pt = editor.getPointPositionOnScreen(event.getX(), event.getY());
+            pos = editor.getText().getIndexer().getCharPosition(IntPair.getFirst(pt), IntPair.getSecond(pt));
+        }
         var styles = editor.getStyles();
         var text = editor.getText();
         var span = StylesUtils.getSpanForPosition(styles, pos);

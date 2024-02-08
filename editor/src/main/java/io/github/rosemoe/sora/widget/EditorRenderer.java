@@ -46,9 +46,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.collection.MutableIntList;
 
-import io.github.rosemoe.sora.graphics.CharPosDesc;
-import io.github.rosemoe.sora.lang.styling.span.SpanExtAttrs;
-import io.github.rosemoe.sora.util.RendererUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -57,15 +54,14 @@ import java.util.Objects;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.graphics.BubbleHelper;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
+import io.github.rosemoe.sora.graphics.CharPosDesc;
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
-import io.github.rosemoe.sora.widget.rendering.RenderingConstants;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.lang.completion.snippet.SnippetItem;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.EmptyReader;
-import io.github.rosemoe.sora.lang.styling.span.SpanExternalRenderer;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Spans;
 import io.github.rosemoe.sora.lang.styling.Styles;
@@ -76,6 +72,8 @@ import io.github.rosemoe.sora.lang.styling.line.LineBackground;
 import io.github.rosemoe.sora.lang.styling.line.LineGutterBackground;
 import io.github.rosemoe.sora.lang.styling.line.LineSideIcon;
 import io.github.rosemoe.sora.lang.styling.line.LineStyles;
+import io.github.rosemoe.sora.lang.styling.span.SpanExtAttrs;
+import io.github.rosemoe.sora.lang.styling.span.SpanExternalRenderer;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
@@ -87,10 +85,12 @@ import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
 import io.github.rosemoe.sora.util.MutableInt;
 import io.github.rosemoe.sora.util.Numbers;
+import io.github.rosemoe.sora.util.RendererUtils;
 import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 import io.github.rosemoe.sora.widget.layout.Row;
 import io.github.rosemoe.sora.widget.layout.RowIterator;
 import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
+import io.github.rosemoe.sora.widget.rendering.RenderingConstants;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition;
@@ -1181,6 +1181,7 @@ public class EditorRenderer {
         float circleRadius = 0f;
         var composingPosition = editor.inputConnection.composingText.isComposing() && editor.inputConnection.composingText.startIndex >= 0 && editor.inputConnection.composingText.startIndex < content.length() ? content.getIndexer().getCharPosition(editor.inputConnection.composingText.startIndex) : null;
         var composingLength = editor.inputConnection.composingText.endIndex - editor.inputConnection.composingText.startIndex;
+        var draggingSelection = editor.getEventHandler().draggingSelection;
         if (editor.shouldInitializeNonPrintable()) {
             float spaceWidth = paintGeneral.getSpaceWidth();
             circleRadius = Math.min(editor.getRowHeight(), spaceWidth) * RenderingConstants.NON_PRINTABLE_CIRCLE_RADIUS_FACTOR;
@@ -1529,6 +1530,20 @@ public class EditorRenderer {
                 float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(cursor.getLeftLine(), cursor.getLeftColumn())[1] - editor.getOffsetX();
                 postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), editor.getEventHandler().shouldDrawInsertHandle() ? SelectionHandleStyle.HANDLE_TYPE_INSERT : SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, editor.getInsertHandleDescriptor()));
             }
+            // Draw dragging selection or selecting target
+            if (draggingSelection != null) {
+                if (!(!cursor.isSelected() && cursor.getLeft() == draggingSelection.index) && draggingSelection.line == line && isInside(draggingSelection.column, rowInf.startColumn, rowInf.endColumn, line)) {
+                    float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(draggingSelection.line, draggingSelection.column)[1] - editor.getOffsetX();
+                    postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, null));
+                }
+            } else if (editor.isInMouseMode() && editor.isTextSelected()) {
+                var target = editor.getSelectingTarget();
+                if (target != null && target.line == line && isInside(target.column, rowInf.startColumn, rowInf.endColumn, line)) {
+                    float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(target.line, target.column)[1] - editor.getOffsetX();
+                    postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, null));
+                }
+            }
+
         }
 
         // Release last used reader object
@@ -2668,6 +2683,7 @@ public class EditorRenderer {
 
     /**
      * Find first visible character
+     *
      * @return Character position description, {@link CharPosDesc}
      */
     @UnsupportedUserUsage
@@ -2772,12 +2788,28 @@ public class EditorRenderer {
         protected float y;
         protected int handleType;
         protected SelectionHandleStyle.HandleDescriptor descriptor;
+        private final static SelectionHandleStyle.HandleDescriptor TMP_DESC = new SelectionHandleStyle.HandleDescriptor();
 
         public DrawCursorTask(float x, float y, int handleType, SelectionHandleStyle.HandleDescriptor descriptor) {
             this.x = x;
             this.y = y;
             this.handleType = handleType;
             this.descriptor = descriptor;
+        }
+
+        private boolean drawSelForLeftRight() {
+            return ((handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT)
+                    && editor.getProps().showSelectionWhenSelected && !editor.isInMouseMode());
+        }
+
+        private boolean drawSelForInsert() {
+            return (!(handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT)
+                    && (editor.getCursorBlink().visibility || editor.getEventHandler().holdInsertHandle() || editor.isInLongSelect()));
+        }
+
+        private boolean isSelForLongSelect() {
+            return editor.isInLongSelect() && !(handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT
+                    || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT);
         }
 
         protected void execute(Canvas canvas) {
@@ -2788,6 +2820,7 @@ public class EditorRenderer {
             if (handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT && !editor.isEditable()) {
                 return;
             }
+            var descriptor = this.descriptor == null ? TMP_DESC : this.descriptor;
             // Follow the thumb or stick to text row
             if (!descriptor.position.isEmpty()) {
                 boolean isInsertHandle = editor.getEventHandler().holdInsertHandle() && handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT;
@@ -2801,19 +2834,13 @@ public class EditorRenderer {
                 }
             }
 
-            if (((handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT
-                    || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT)
-                    && editor.getProps().showSelectionWhenSelected)
-                    || (!(handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT
-                    || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT) && (editor.getCursorBlink().visibility
-                    || editor.getEventHandler().holdInsertHandle() || editor.isInLongSelect()))) {
+            if (drawSelForLeftRight() || drawSelForInsert() || handleType == SelectionHandleStyle.HANDLE_TYPE_UNDEFINED) {
                 float startY = y - (editor.getProps().textBackgroundWrapTextOnly ? editor.getRowHeightOfText() : editor.getRowHeight());
                 float stopY = y;
                 paintGeneral.setColor(editor.getColorScheme().getColor(EditorColorScheme.SELECTION_INSERT));
                 paintGeneral.setStrokeWidth(editor.getInsertSelectionWidth());
                 paintGeneral.setStyle(android.graphics.Paint.Style.STROKE);
-                if (editor.isInLongSelect() && !(handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT
-                        || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT)) {
+                if (isSelForLongSelect()) {
                     paintGeneral.setPathEffect(new DashPathEffect(new float[]{(stopY - startY) / 8f, (stopY - startY) / 8f}, (stopY - startY) / 16f));
                     paintGeneral.setStrokeWidth(editor.getInsertSelectionWidth() * 1.5f);
                 }
@@ -2821,13 +2848,17 @@ public class EditorRenderer {
                 paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
                 paintGeneral.setPathEffect(null);
             }
+            var handleType = this.handleType;
             // Hide insert handle in long select mode
             if (handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT && editor.isInLongSelect()) {
                 handleType = SelectionHandleStyle.HANDLE_TYPE_UNDEFINED;
             }
-            if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED) {
+            if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED && !editor.isInMouseMode() /* hide if mouse inside */) {
                 editor.getHandleStyle().draw(canvas, handleType, x, y, editor.getRowHeight(), editor.getColorScheme().getColor(EditorColorScheme.SELECTION_HANDLE), descriptor);
-            } else if (descriptor != null) {
+                if (descriptor == TMP_DESC) {
+                    descriptor.setEmpty();
+                }
+            } else {
                 descriptor.setEmpty();
             }
         }

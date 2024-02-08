@@ -390,4 +390,9 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean placeSelOnPreviousLineAfterCut = false;
 
+    /**
+     * Force the editor to interact in mouse mode. This affects editor windows and selection handles.
+     */
+    public boolean forceMouseMode = false;
+
 }

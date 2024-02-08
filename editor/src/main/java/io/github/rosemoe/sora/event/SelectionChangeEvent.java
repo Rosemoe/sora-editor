@@ -70,6 +70,10 @@ public class SelectionChangeEvent extends Event {
      * From keyboard or direct method invocation to change selection
      */
     public final static int CAUSE_KEYBOARD_OR_CODE = 7;
+    /**
+     * From mouse
+     */
+    public final static int CAUSE_MOUSE_INPUT = 8;
     private final CharPosition left;
     private final CharPosition right;
     private final int cause;

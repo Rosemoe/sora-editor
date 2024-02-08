@@ -25,8 +25,12 @@
 package io.github.rosemoe.sora.event
 
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
 import io.github.rosemoe.sora.lang.Language
+import io.github.rosemoe.sora.lang.styling.Span
+import io.github.rosemoe.sora.text.CharPosition
+import io.github.rosemoe.sora.text.TextRange
 import io.github.rosemoe.sora.widget.CodeEditor
 
 /**
@@ -73,7 +77,24 @@ class ImePrivateCommandEvent(editor: CodeEditor, val action: String, val data: B
  */
 class BuildEditorInfoEvent(editor: CodeEditor, val editorInfo: EditorInfo) : Event(editor)
 
+/**
+ * Triggered when focus state is changed
+ */
 class EditorFocusChangeEvent(editor: CodeEditor, val isGainFocus: Boolean) : Event(editor)
 
+/**
+ * Trigger when the editor is attached to window/detached from window
+ */
 class EditorAttachStateChangeEvent(editor: CodeEditor, val isAttachedToWindow: Boolean) :
     Event(editor)
+
+/**
+ * Trigger when mouse right-clicked the editor
+ */
+class ContextClickEvent(
+    editor: CodeEditor,
+    position: CharPosition,
+    event: MotionEvent,
+    span: Span?,
+    spanRange: TextRange?
+) : EditorMotionEvent(editor, position, event, span, spanRange)

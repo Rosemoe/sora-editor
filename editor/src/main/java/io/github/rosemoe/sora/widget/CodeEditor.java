@@ -270,6 +270,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean editable;
     private boolean wordwrap;
     private boolean undoEnabled;
+    private boolean mouseHover;
     private boolean lastAnchorIsSelLeft;
     private volatile boolean layoutBusy;
     private boolean displayLnPanel;
@@ -2134,6 +2135,20 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * Check if the point on editor view, is inside text region on that row
+     */
+    public boolean isScreenPointOnText(float x, float y) {
+        var pos = getPointPositionOnScreen(x, y);
+        var rowIdx = layout.getRowIndexForPosition(text.getCharIndex(IntPair.getFirst(pos), IntPair.getSecond(pos)));
+        var row = layout.getRowAt(rowIdx);
+        var layoutMax = renderer.measureText(text.getLine(row.lineIndex), row.lineIndex, row.startColumn, row.endColumn - row.startColumn);
+        var textRegionX = measureTextRegionOffset();
+        var lineRegionRightX = textRegionX + layoutMax;
+        var offset = getOffsetX() + x;
+        return offset >= textRegionX && offset <= lineRegionRightX;
+    }
+
+    /**
      * Determine character position using positions in scroll coordinate
      *
      * @param xOffset Horizontal position in scroll coordinate
@@ -2154,6 +2169,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see IntPair
      */
     public long getPointPositionOnScreen(float x, float y) {
+        y = Math.max(0, y);
         var stuckLines = renderer.lastStuckLines;
         if (stuckLines != null) {
             if (y < stuckLines.size() * getRowHeight()) {
@@ -2311,6 +2327,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public TextRange getCursorRange() {
         return cursor.getRange();
+    }
+
+    /**
+     * If any text is selected
+     */
+    public boolean isTextSelected() {
+        return cursor.isSelected();
     }
 
     /**
@@ -3118,6 +3141,22 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (rejectComposingCount < 0) {
             rejectComposingCount = 0;
         }
+    }
+
+    /**
+     * Check if there is a mouse inside editor
+     */
+    public boolean hasMouseHovering() {
+        return mouseHover;
+    }
+
+    /**
+     * Check if editor is in mouse mode.
+     * Mouse mode is enabled, either when {@link #hasMouseHovering()} returns true,
+     * or {@link DirectAccessProps#forceMouseMode} is true
+     */
+    public boolean isInMouseMode() {
+        return hasMouseHovering() || props.forceMouseMode;
     }
 
     /**
@@ -4482,10 +4521,18 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 if (touchHandler.hasAnyHeldHandle()) {
                     return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_GRABBING);
                 }
+                if (getLeftHandleDescriptor().position.contains(event.getX(), event.getY())
+                        || getRightHandleDescriptor().position.contains(event.getX(), event.getY())
+                        || getInsertHandleDescriptor().position.contains(event.getX(), event.getY())) {
+                    return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_GRAB);
+                }
                 var res = RegionResolverKt.resolveTouchRegion(this, event, pointerIndex);
                 var region = IntPair.getFirst(res);
                 var inbound = IntPair.getSecond(res) == RegionResolverKt.IN_BOUND;
                 if (region == RegionResolverKt.REGION_TEXT && inbound) {
+                    if (touchHandler.mouseCanMoveText && !touchHandler.mouseClick) {
+                        return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_GRABBING);
+                    }
                     return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_TEXT);
                 } else if (region == RegionResolverKt.REGION_LINE_NUMBER) {
                     switch (props.actionWhenLineNumberClicked) {
@@ -4505,6 +4552,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public boolean onTouchEvent(MotionEvent event) {
         if (!isEnabled()) {
             return false;
+        }
+        if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
+            return touchHandler.onMouseEvent(event);
         }
         if (isFormatting()) {
             touchHandler.reset2();
@@ -4571,6 +4621,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     @Override
     public boolean onGenericMotionEvent(MotionEvent event) {
+        if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
+            if (event.getAction() == MotionEvent.ACTION_HOVER_ENTER) {
+                mouseHover = true;
+            } else if (event.getAction() == MotionEvent.ACTION_HOVER_EXIT) {
+                mouseHover = false;
+            }
+        }
         if (event.getAction() == MotionEvent.ACTION_SCROLL && event.isFromSource(InputDevice.SOURCE_CLASS_POINTER)) {
             float v_scroll = -event.getAxisValue(MotionEvent.AXIS_VSCROLL);
             float h_scroll = -event.getAxisValue(MotionEvent.AXIS_HSCROLL);
