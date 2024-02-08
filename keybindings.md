@@ -16,19 +16,19 @@ The following key bindings are currently supported by the editor :
 | `Ctrl + Right`         | Move to word end. If the cursor is already at the current word's end, moves the cursor to next word's end, skipping whitespaces.           |
 | `Ctrl + Up`            | Scroll up by one row.                                                                                                                      |
 | `Ctrl + Down`          | Scroll down by one row.                                                                                                                    |
-| `Ctrl + Home`          | Move the cursor to the beginning of content.                                                                                              |
-| `Ctrl + End`           | Move the cursor to the end of content.                                                                                                    |
-| `Ctrl + PgUp`          | Move the cursor to the page start.                                                                                     |
-| `Ctrl + PgDn`          | Move the cursor to the page end.                                                                                           |
+| `Ctrl + Home`          | Move the cursor to the beginning of content.                                                                                               |
+| `Ctrl + End`           | Move the cursor to the end of content.                                                                                                     |
+| `Ctrl + PgUp`          | Move the cursor to the page top.                                                                                                           |
+| `Ctrl + PgDn`          | Move the cursor to the page bottom.                                                                                                        |
 | `Ctrl + Enter`         | Split line. If content is selected, deletes the selected content then splits the line.                                                     |
-| `Ctrl + Shift + Left`  | Same as `Ctrl+Left`, but starts or updates the selection.                                                                             |
-| `Ctrl + Shift + Right` | Same as `Ctrl+Right`, but starts or updates the selection.                                                                            |
-| `Ctrl + Shift + Up`    | Move the current line (or all selected lines) up by one line.                                                                             |
-| `Ctrl + Shift + Down`  | Move the current line (or all selected lines) down by one line.                                                                           |
-| `Ctrl + Shift + Home`  | Same as `Ctrl+Home`, but starts or updates the selection.                                                                             |
-| `Ctrl + Shift + End`   | Same as `Ctrl+End`, but starts or updates the selection.                                                                              |
-| `Ctrl + Shift + PgUp`  | Move the cursor to the page start with selection.                                                                             |
-| `Ctrl + Shift + PgDn`  | Move the cursor to the page end with selection.                                                                             |
+| `Ctrl + Shift + Left`  | Same as `Ctrl+Left`, but starts or updates the selection.                                                                                  |
+| `Ctrl + Shift + Right` | Same as `Ctrl+Right`, but starts or updates the selection.                                                                                 |
+| `Ctrl + Shift + Up`    | Move the current line (or all selected lines) up by one line.                                                                              |
+| `Ctrl + Shift + Down`  | Move the current line (or all selected lines) down by one line.                                                                            |
+| `Ctrl + Shift + Home`  | Same as `Ctrl+Home`, but starts or updates the selection.                                                                                  |
+| `Ctrl + Shift + End`   | Same as `Ctrl+End`, but starts or updates the selection.                                                                                   |
+| `Ctrl + Shift + PgUp`  | Move the cursor to the page top with selection.                                                                                            |
+| `Ctrl + Shift + PgDn`  | Move the cursor to the page bottom with selection.                                                                                         |
 | `Ctrl + Alt + Enter`   | Start a new line before current line.                                                                                                      |
 | `Ctrl + Shift + J`     | Join current line and next line.                                                                                                           |
 | `Shift + Enter`        | Start a new line.                                                                                                                          |

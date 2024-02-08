@@ -106,8 +106,8 @@ enum class SelectionMovement(
         editor.text.indexer.getCharPosition(line, column)
     }),
 
-    /** Move To Page Start Line */
-    PAGE_START({ editor, pos ->
+    /** Move To Page Top */
+    PAGE_TOP({ editor, pos ->
         val layout = editor.layout
         val currIdx = layout.getRowIndexForPosition(pos.index)
         val selOffset = pos.column - layout.getRowAt(currIdx).startColumn
@@ -119,8 +119,8 @@ enum class SelectionMovement(
         editor.text.indexer.getCharPosition(line, column)
     }),
 
-    /** Move To Page End Line */
-    PAGE_END({ editor, pos ->
+    /** Move To Page Bottom */
+    PAGE_BOTTOM({ editor, pos ->
         val layout = editor.layout
         val currIdx = layout.getRowIndexForPosition(pos.index)
         val selOffset = pos.column - layout.getRowAt(currIdx).startColumn

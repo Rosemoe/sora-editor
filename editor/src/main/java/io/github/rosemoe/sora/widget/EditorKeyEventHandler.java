@@ -304,14 +304,14 @@ public class EditorKeyEventHandler {
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_PAGE_DOWN:
                 if (isCtrlPressed) {
-                    editor.moveOrExtendSelection(SelectionMovement.PAGE_END, isShiftPressed);
+                    editor.moveOrExtendSelection(SelectionMovement.PAGE_BOTTOM, isShiftPressed);
                 } else {
                     editor.moveOrExtendSelection(SelectionMovement.PAGE_DOWN, isShiftPressed);
                 }
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_PAGE_UP:
                 if (isCtrlPressed) {
-                    editor.moveOrExtendSelection(SelectionMovement.PAGE_START, isShiftPressed);
+                    editor.moveOrExtendSelection(SelectionMovement.PAGE_TOP, isShiftPressed);
                 } else {
                     editor.moveOrExtendSelection(SelectionMovement.PAGE_UP, isShiftPressed);
                 }
