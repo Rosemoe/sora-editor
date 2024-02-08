@@ -350,7 +350,7 @@ public class DirectAccessProps implements Serializable {
      */
     @IntRange(from = 1)
     @InvalidateRequired
-    public int stickyScrollMaxLines = 4;
+    public int stickyScrollMaxLines = 3;
 
     /**
      * Prefer inner scopes if true.
