@@ -2039,19 +2039,22 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         // y offset is the bottom of row
         float yOffset = layoutOffset[0];
 
-        float targetY = scroller.isFinished() ? getOffsetY() : scroller.getFinalY();
-        float targetX = scroller.isFinished() ? getOffsetX() : scroller.getFinalX();
+        float currFinalY = scroller.isFinished() ? getOffsetY() : scroller.getFinalY();
+        float currFinalX = scroller.isFinished() ? getOffsetX() : scroller.getFinalX();
+        float targetY = currFinalY;
+        float targetX = currFinalX;
 
-        if (yOffset - getRowHeight() < getOffsetY()) {
-            // top invisible
-            targetY = yOffset - getRowHeight() * 2f;
+        int topLines = props.stickyScroll ? props.stickyScrollMaxLines : 2;
+        if (yOffset - getRowHeight() * topLines < currFinalY) {
+            // top may be invisible
+            targetY = yOffset - getRowHeight() * topLines;
         }
-        if (yOffset > getHeight() + getOffsetY()) {
+        if (yOffset > getHeight() + currFinalY) {
             // bottom invisible
             targetY = yOffset - getHeight() + getRowHeight() * 1f;
         }
         float charWidth = column == 0 ? 0 : renderer.measureText(text.getLine(line), line, column - 1, 1);
-        if (xOffset < getOffsetX() + (pinLineNumber ? measureTextRegionOffset() : 0)) {
+        if (xOffset < currFinalX + (pinLineNumber ? measureTextRegionOffset() : 0)) {
             float backupX = targetX;
             var scrollSlopX = getWidth() / 2;
             targetX = xOffset + (pinLineNumber ? -measureTextRegionOffset() : 0) - charWidth;
@@ -2059,7 +2062,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 targetX = Math.max(1, backupX - scrollSlopX);
             }
         }
-        if (xOffset + charWidth > getOffsetX() + getWidth()) {
+        if (xOffset + charWidth > currFinalX + getWidth()) {
             targetX = xOffset + charWidth * 0.8f - getWidth();
         }
 
