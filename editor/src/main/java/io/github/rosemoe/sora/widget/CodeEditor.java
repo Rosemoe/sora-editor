@@ -126,6 +126,7 @@ import io.github.rosemoe.sora.util.LongArrayList;
 import io.github.rosemoe.sora.util.Numbers;
 import io.github.rosemoe.sora.util.TemporaryFloatBuffer;
 import io.github.rosemoe.sora.util.ThemeUtils;
+import io.github.rosemoe.sora.util.ViewUtils;
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 import io.github.rosemoe.sora.widget.component.EditorBuiltinComponent;
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow;
@@ -510,23 +511,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         styleDelegate = new EditorStyleDelegate(this);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            var configuration = ViewConfiguration.get(getContext());
-            verticalScrollFactor = configuration.getScaledVerticalScrollFactor();
-        } else {
-            TypedArray a = null;
-            try {
-                a = getContext().obtainStyledAttributes(new int[]{android.R.attr.listPreferredItemHeight});
-                verticalScrollFactor = a.getDimension(0, 32);
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "Failed to get scroll factor, using default.", e);
-                verticalScrollFactor = 32;
-            } finally {
-                if (a != null) {
-                    a.recycle();
-                }
-            }
-        }
+        verticalScrollFactor = ViewUtils.getVerticalScrollFactor(getContext());
         lineSeparator = LineSeparator.LF;
         lineNumberTipTextProvider = DefaultLineNumberTip.INSTANCE;
         formatTip = I18nConfig.getString(getContext(), R.string.sora_editor_editor_formatting);
