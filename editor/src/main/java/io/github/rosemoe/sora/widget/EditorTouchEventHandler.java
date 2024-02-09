@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.widget;
 
 import android.content.res.Resources;
+import android.graphics.PointF;
 import android.graphics.RectF;
 import android.os.Build;
 import android.os.SystemClock;
@@ -111,6 +112,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     private int mouseDownButtonState;
     private long lastTimeMousePrimaryClickUp;
     private boolean mouseDoubleClick;
+    private PointF lastContextClickPosition;
     boolean mouseClick;
     boolean mouseCanMoveText;
     CharPosition draggingSelection;
@@ -442,6 +444,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             resetMouse();
             return false;
         }
+        lastContextClickPosition = null;
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN -> {
                 mouseDownX = event.getX();
@@ -552,7 +555,13 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      * Context click
      */
     public void onContextClick(MotionEvent event) {
+        lastContextClickPosition = new PointF(event.getX(), event.getY());
         dispatchEditorMotionEvent(ContextClickEvent::new, null, event);
+    }
+
+    @Nullable
+    public PointF getLastContextClickPosition() {
+        return lastContextClickPosition;
     }
 
     private void dispatchHandleStateChange(int type, boolean held) {
