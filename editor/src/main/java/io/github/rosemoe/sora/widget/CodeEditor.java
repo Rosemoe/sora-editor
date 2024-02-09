@@ -273,6 +273,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean wordwrap;
     private boolean undoEnabled;
     private boolean mouseHover;
+    private boolean mouseButtonPressed;
     private boolean lastAnchorIsSelLeft;
     private volatile boolean layoutBusy;
     private boolean displayLnPanel;
@@ -3130,10 +3131,17 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * Check if there is a mouse inside editor
+     * Check if there is a mouse inside editor, hovering
      */
     public boolean hasMouseHovering() {
         return mouseHover;
+    }
+
+    /**
+     * Check if there is a mouse inside editor with any button pressed
+     */
+    public boolean hasMousePressed() {
+        return mouseButtonPressed;
     }
 
     /**
@@ -3151,7 +3159,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
         }
         // MOUSE_MODE_AUTO
-        return hasMouseHovering();
+        return hasMouseHovering() || hasMousePressed();
     }
 
     /**
@@ -4621,6 +4629,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 mouseHover = true;
             } else if (event.getAction() == MotionEvent.ACTION_HOVER_EXIT) {
                 mouseHover = false;
+            }
+            if (event.getActionMasked() == MotionEvent.ACTION_BUTTON_PRESS
+                    || event.getActionMasked() == MotionEvent.ACTION_BUTTON_RELEASE) {
+                mouseButtonPressed = event.getButtonState() != 0;
             }
             switch (event.getAction()) {
                 case MotionEvent.ACTION_HOVER_ENTER:
