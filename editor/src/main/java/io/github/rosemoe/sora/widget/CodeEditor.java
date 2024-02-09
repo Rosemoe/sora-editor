@@ -3152,11 +3152,20 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     /**
      * Check if editor is in mouse mode.
-     * Mouse mode is enabled, either when {@link #hasMouseHovering()} returns true,
-     * or {@link DirectAccessProps#forceMouseMode} is true
+     *
+     * @see DirectAccessProps#mouseMode
      */
     public boolean isInMouseMode() {
-        return hasMouseHovering() || props.forceMouseMode;
+        switch (props.mouseMode) {
+            case DirectAccessProps.MOUSE_MODE_ALWAYS -> {
+                return true;
+            }
+            case DirectAccessProps.MOUSE_MODE_NEVER -> {
+                return false;
+            }
+        }
+        // MOUSE_MODE_AUTO
+        return hasMouseHovering();
     }
 
     /**
@@ -4553,7 +4562,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (!isEnabled()) {
             return false;
         }
-        if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
+        if (event.isFromSource(InputDevice.SOURCE_MOUSE) && props.mouseMode != DirectAccessProps.MOUSE_MODE_NEVER) {
             return touchHandler.onMouseEvent(event);
         }
         if (isFormatting()) {

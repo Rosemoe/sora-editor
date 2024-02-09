@@ -391,8 +391,27 @@ public class DirectAccessProps implements Serializable {
     public boolean placeSelOnPreviousLineAfterCut = false;
 
     /**
-     * Force the editor to interact in mouse mode. This affects editor windows and selection handles.
+     * Enable mouse mode if a mouse is currently hovering in editor
      */
-    public boolean forceMouseMode = false;
+    public final static int MOUSE_MODE_AUTO = 0;
+
+    /**
+     * Always use mouse mode
+     */
+    public final static int MOUSE_MODE_ALWAYS = 1;
+
+    /**
+     * Do not use mouse mode
+     */
+    public final static int MOUSE_MODE_NEVER = 2;
+
+    /**
+     * When to enable mouse mode. This affects editor windows and selection handles.
+     *
+     * @see #MOUSE_MODE_AUTO
+     * @see #MOUSE_MODE_ALWAYS
+     * @see #MOUSE_MODE_NEVER
+     */
+    public int mouseMode = MOUSE_MODE_AUTO;
 
 }
