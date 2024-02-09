@@ -37,6 +37,10 @@ public class ViewUtils {
 
     public final static float DEFAULT_SCROLL_FACTOR = 32f;
 
+    public final static long HOVER_TOOLTIP_SHOW_TIMEOUT = 1000;
+
+    public static final int HOVER_TAP_SLOP = 20;
+
     public static float getVerticalScrollFactor(@NonNull Context context) {
         float verticalScrollFactor;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
