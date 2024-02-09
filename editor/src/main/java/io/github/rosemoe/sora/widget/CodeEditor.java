@@ -4647,6 +4647,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 distanceX *= multiplier;
                 distanceY *= multiplier;
             }
+            if (keyEventHandler.getKeyMetaStates().isShiftPressed()) {
+                float tmp = distanceX;
+                distanceX = distanceY;
+                distanceY = tmp;
+            }
             touchHandler.onScroll(event, event, distanceX, distanceY);
             return true;
         }
