@@ -91,6 +91,7 @@ import io.github.rosemoe.sora.event.EditorReleaseEvent;
 import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.EventManager;
 import io.github.rosemoe.sora.event.EventReceiver;
+import io.github.rosemoe.sora.event.HoverEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.SubscriptionReceipt;
@@ -4635,6 +4636,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 mouseHover = true;
             } else if (event.getAction() == MotionEvent.ACTION_HOVER_EXIT) {
                 mouseHover = false;
+            }
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_HOVER_ENTER:
+                case MotionEvent.ACTION_HOVER_MOVE:
+                case MotionEvent.ACTION_HOVER_EXIT:
+                    touchHandler.dispatchEditorMotionEvent(HoverEvent::new, null, event);
+                    return true;
             }
         }
         if (event.getAction() == MotionEvent.ACTION_SCROLL && event.isFromSource(InputDevice.SOURCE_CLASS_POINTER)) {

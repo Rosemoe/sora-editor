@@ -98,3 +98,14 @@ class ContextClickEvent(
     span: Span?,
     spanRange: TextRange?
 ) : EditorMotionEvent(editor, position, event, span, spanRange)
+
+/**
+ * Trigger when mouse hover updates
+ */
+class HoverEvent(
+    editor: CodeEditor,
+    position: CharPosition,
+    event: MotionEvent,
+    span: Span?,
+    spanRange: TextRange?
+) : EditorMotionEvent(editor, position, event, span, spanRange)

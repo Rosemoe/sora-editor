@@ -559,7 +559,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         editor.dispatchEvent(new HandleStateChangeEvent(editor, type, held));
     }
 
-    private int dispatchEditorMotionEvent
+    int dispatchEditorMotionEvent
             (Function5<CodeEditor, CharPosition, MotionEvent, Span, TextRange, EditorMotionEvent> constructor,
              @Nullable CharPosition pos, @NonNull MotionEvent event) {
         if (pos == null) {
