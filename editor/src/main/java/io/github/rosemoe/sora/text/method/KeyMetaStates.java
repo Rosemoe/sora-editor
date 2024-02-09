@@ -61,6 +61,10 @@ public class KeyMetaStates extends android.text.method.MetaKeyKeyListener {
         return isCtrlPressed;
     }
 
+    public int getMetaState(KeyEvent event) {
+        return getMetaState(dest, event);
+    }
+
     public boolean isShiftPressed() {
         return getMetaState(dest, META_SHIFT_ON) != 0;
     }

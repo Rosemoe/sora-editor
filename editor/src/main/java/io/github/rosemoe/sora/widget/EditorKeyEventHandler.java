@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.widget;
 
 import android.util.Log;
+import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 
 import androidx.annotation.NonNull;
@@ -375,8 +376,13 @@ public class EditorKeyEventHandler {
             int keyCode) {
         final var editorText = this.editor.getText();
         final var editorCursor = this.editor.getCursor();
-        if (event.isPrintingKey() && editor.isEditable()) {
-            String text = new String(Character.toChars(event.getUnicodeChar(event.getMetaState())));
+        int charCode = event.getUnicodeChar(keyMetaStates.getMetaState(event));
+        if (charCode != 0 && editor.isEditable()) {
+            if (charCode == KeyCharacterMap.HEX_INPUT || charCode == KeyCharacterMap.PICKER_DIALOG_INPUT) {
+                // unsupported: character picker dialog and hex input
+                return editor.onSuperKeyDown(keyCode, event);
+            }
+            String text = new String(Character.toChars(charCode));
             // replace text
             SymbolPairMatch.SymbolPair pair = null;
             if (editor.getProps().symbolPairAutoCompletion) {
