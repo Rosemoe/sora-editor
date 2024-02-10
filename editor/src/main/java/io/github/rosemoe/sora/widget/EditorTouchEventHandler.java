@@ -643,18 +643,26 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         return flags;
     }
 
-    public void scrollIfThumbReachesEdge(MotionEvent e) {
-        int flag = computeEdgeFlags(e.getX(), e.getY());
+    public void scrollIfThumbReachesEdge(@Nullable MotionEvent e) {
+        scrollIfReachesEdge(e, 0, 0);
+    }
+
+    public void scrollIfReachesEdge(@Nullable MotionEvent e, float x, float y) {
+        if (e != null) {
+            x = e.getX();
+            y = e.getY();
+        }
+        int flag = computeEdgeFlags(x, y);
         int initialDelta = (int) (8 * editor.getDpUnit());
         if (flag != 0 && edgeFlags == 0) {
             edgeFlags = flag;
-            thumbMotionRecord = MotionEvent.obtain(e);
+            thumbMotionRecord = e == null ? null : MotionEvent.obtain(e);
             editor.postInLifecycle(new EdgeScrollRunnable(initialDelta));
         } else if (flag == 0) {
             stopEdgeScroll();
         } else {
             edgeFlags = flag;
-            thumbMotionRecord = MotionEvent.obtain(e);
+            thumbMotionRecord = e == null ? null : MotionEvent.obtain(e);
         }
     }
 
@@ -1138,7 +1146,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             lastDy = dy;
 
             // Update selection
-            handleSelectionChange2(thumbMotionRecord);
+            if (thumbMotionRecord != null)
+                handleSelectionChange2(thumbMotionRecord);
 
             postTimes++;
             // Post for animation

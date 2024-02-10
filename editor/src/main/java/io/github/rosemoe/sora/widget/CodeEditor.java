@@ -42,7 +42,9 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.ActionMode;
+import android.view.ContentInfo;
 import android.view.ContextThemeWrapper;
+import android.view.DragEvent;
 import android.view.GestureDetector;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -115,6 +117,7 @@ import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.text.TextUtils;
 import io.github.rosemoe.sora.text.method.KeyMetaStates;
 import io.github.rosemoe.sora.util.Chars;
+import io.github.rosemoe.sora.util.ClipDataUtils;
 import io.github.rosemoe.sora.util.EditorHandler;
 import io.github.rosemoe.sora.util.Floats;
 import io.github.rosemoe.sora.util.IntPair;
@@ -4618,6 +4621,41 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             anyWrapContentSet = false;
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    }
+
+    @Override
+    public boolean onDragEvent(DragEvent event) {
+        switch (event.getAction()) {
+            case DragEvent.ACTION_DRAG_STARTED -> {
+                return true;
+            }
+            case DragEvent.ACTION_DRAG_ENTERED, DragEvent.ACTION_DRAG_LOCATION -> {
+                var pos = getPointPositionOnScreen(event.getX(), event.getY());
+                int line = IntPair.getFirst(pos), column = IntPair.getSecond(pos);
+                touchHandler.draggingSelection = getText().getIndexer().getCharPosition(line, column);
+                postInvalidate();
+                touchHandler.scrollIfReachesEdge(null, event.getX(), event.getY());
+                return true;
+            }
+            case DragEvent.ACTION_DRAG_EXITED -> {
+                touchHandler.draggingSelection = null;
+                postInvalidate();
+                return true;
+            }
+            case DragEvent.ACTION_DROP -> {
+                var targetPos = touchHandler.draggingSelection;
+                if (targetPos == null) {
+                    return false;
+                }
+                touchHandler.draggingSelection = null;
+                text.insert(targetPos.line, targetPos.column, ClipDataUtils.clipDataToString(event.getClipData()));
+                postInvalidate();
+                // Call super for notifying listeners
+                super.onDragEvent(event);
+                return true;
+            }
+        }
+        return super.onDragEvent(event);
     }
 
     @Override

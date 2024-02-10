@@ -1532,7 +1532,7 @@ public class EditorRenderer {
             }
             // Draw dragging selection or selecting target
             if (draggingSelection != null) {
-                if (!(!cursor.isSelected() && cursor.getLeft() == draggingSelection.index) && draggingSelection.line == line && isInside(draggingSelection.column, rowInf.startColumn, rowInf.endColumn, line)) {
+                if (draggingSelection.line == line && isInside(draggingSelection.column, rowInf.startColumn, rowInf.endColumn, line)) {
                     float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(draggingSelection.line, draggingSelection.column)[1] - editor.getOffsetX();
                     postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, null));
                 }
@@ -2814,8 +2814,10 @@ public class EditorRenderer {
 
         protected void execute(Canvas canvas) {
             // Hide cursors (API level 31)
-            if (editor.inputConnection.imeConsumingInput || !editor.isFocused()) {
-                return;
+            if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED) {
+                if (editor.inputConnection.imeConsumingInput || !editor.isFocused()) {
+                    return;
+                }
             }
             if (handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT && !editor.isEditable()) {
                 return;
