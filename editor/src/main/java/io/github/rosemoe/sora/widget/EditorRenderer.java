@@ -1528,7 +1528,7 @@ public class EditorRenderer {
                 }
             } else if (cursor.getLeftLine() == line && isInside(cursor.getLeftColumn(), rowInf.startColumn, rowInf.endColumn, line)) {
                 float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(cursor.getLeftLine(), cursor.getLeftColumn())[1] - editor.getOffsetX();
-                postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), editor.getEventHandler().shouldDrawInsertHandle() ? SelectionHandleStyle.HANDLE_TYPE_INSERT : SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, editor.getInsertHandleDescriptor()));
+                postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_INSERT, editor.getInsertHandleDescriptor()));
             }
             // Draw dragging selection or selecting target
             if (draggingSelection != null) {
@@ -2851,8 +2851,8 @@ public class EditorRenderer {
                 paintGeneral.setPathEffect(null);
             }
             var handleType = this.handleType;
-            // Hide insert handle in long select mode
-            if (handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT && editor.isInLongSelect()) {
+            // Hide insert handle conditionally
+            if (handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT && (editor.isInLongSelect() || !editor.getEventHandler().shouldDrawInsertHandle())) {
                 handleType = SelectionHandleStyle.HANDLE_TYPE_UNDEFINED;
             }
             if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED && !editor.isInMouseMode() /* hide if mouse inside */) {

@@ -48,7 +48,6 @@ import io.github.rosemoe.sora.text.ComposingText;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.util.Logger;
-import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 
 /**
  * Connection between input method and editor

@@ -124,6 +124,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      */
     public EditorTouchEventHandler(@NonNull CodeEditor editor) {
         this.editor = editor;
+        edgeFieldSize = editor.getDpUnit() * 18;
         scroller = new EditorScroller(editor);
         scaleMaxSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 26, Resources.getSystem().getDisplayMetrics());
         scaleMinSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 8, Resources.getSystem().getDisplayMetrics());
@@ -318,9 +319,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      * @return Whether this touch event is handled by this class
      */
     public boolean onTouchEvent(MotionEvent e) {
-        if (edgeFieldSize == 0) {
-            edgeFieldSize = editor.getDpUnit() * 18;
-        }
         motionY = e.getY();
         motionX = e.getX();
         switch (e.getAction()) {
@@ -653,20 +651,23 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             y = e.getY();
         }
         int flag = computeEdgeFlags(x, y);
-        int initialDelta = (int) (8 * editor.getDpUnit());
-        if (flag != 0 && edgeFlags == 0) {
+        if (flag != 0) {
+            var oldFlags = edgeFlags;
             edgeFlags = flag;
             thumbMotionRecord = e == null ? null : MotionEvent.obtain(e);
-            editor.postInLifecycle(new EdgeScrollRunnable(initialDelta));
-        } else if (flag == 0) {
-            stopEdgeScroll();
+            if (oldFlags == 0) {
+                int initialDelta = (int) (8 * editor.getDpUnit());
+                editor.postInLifecycle(new EdgeScrollRunnable(initialDelta));
+            }
         } else {
-            edgeFlags = flag;
-            thumbMotionRecord = e == null ? null : MotionEvent.obtain(e);
+            stopEdgeScroll();
         }
     }
 
-    private boolean isSameSign(int a, int b) {
+    private boolean isSameSign(float a, float b) {
+        if (Math.abs(a) < 1e5 || Math.abs(b) < 1e5) {
+            return false;
+        }
         return (a < 0 && b < 0) || (a > 0 && b > 0);
     }
 
@@ -1086,11 +1087,11 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         private final static int MAX_FACTOR = 32;
         private final static float INCREASE_FACTOR = 1.06f;
 
-        private final int initialDelta;
-        private int deltaHorizontal;
-        private int deltaVertical;
-        private int lastDx, lastDy;
-        private int factorX, factorY;
+        private final float initialDelta;
+        private float deltaHorizontal;
+        private float deltaVertical;
+        private float lastDx, lastDy;
+        private float factorX, factorY;
         private long postTimes;
 
         public EdgeScrollRunnable(int initDelta) {
@@ -1100,8 +1101,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
         @Override
         public void run() {
-            int dx = (((edgeFlags & LEFT_EDGE) != 0) ? -deltaHorizontal : 0) + (((edgeFlags & RIGHT_EDGE) != 0) ? deltaHorizontal : 0);
-            int dy = (((edgeFlags & TOP_EDGE) != 0) ? -deltaVertical : 0) + (((edgeFlags & BOTTOM_EDGE) != 0) ? deltaVertical : 0);
+            float dx = (((edgeFlags & LEFT_EDGE) != 0) ? -deltaHorizontal : 0) + (((edgeFlags & RIGHT_EDGE) != 0) ? deltaHorizontal : 0);
+            float dy = (((edgeFlags & TOP_EDGE) != 0) ? -deltaVertical : 0) + (((edgeFlags & BOTTOM_EDGE) != 0) ? deltaVertical : 0);
             if (dx > 0) {
                 // Check whether there is content at right
                 int line;

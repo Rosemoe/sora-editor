@@ -40,7 +40,6 @@ import io.github.rosemoe.sora.util.IntPair
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.IN_BOUND
 import io.github.rosemoe.sora.widget.REGION_TEXT
-import io.github.rosemoe.sora.widget.component.EditorBuiltinComponent
 import io.github.rosemoe.sora.widget.resolveTouchRegion
 
 /**

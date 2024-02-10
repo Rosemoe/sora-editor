@@ -42,7 +42,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.ActionMode;
-import android.view.ContentInfo;
 import android.view.ContextThemeWrapper;
 import android.view.DragEvent;
 import android.view.GestureDetector;
@@ -3453,18 +3452,23 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             if (!clipboardManager.hasPrimaryClip() || (clip = clipboardManager.getPrimaryClip()) == null) {
                 return;
             }
-            var data = clip.getItemAt(0);
-            var text = data.getText();
-            if (text != null && inputConnection != null) {
-                inputConnection.commitText(text, 1);
-                if (props.formatPastedText) {
-                    formatCodeAsync(lastInsertion.getStart(), lastInsertion.getEnd());
-                }
-                notifyIMEExternalCursorChange();
-            }
+            pasteText(ClipDataUtils.clipDataToString(clip));
         } catch (Exception e) {
             Log.w(LOG_TAG, "Error pasting text to editor", e);
             Toast.makeText(getContext(), e.toString(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Paste external text into editor
+     */
+    public void pasteText(@Nullable CharSequence text) {
+        if (text != null && inputConnection != null) {
+            inputConnection.commitText(text, 1);
+            if (props.formatPastedText) {
+                formatCodeAsync(lastInsertion.getStart(), lastInsertion.getEnd());
+            }
+            notifyIMEExternalCursorChange();
         }
     }
 
@@ -4629,7 +4633,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             case DragEvent.ACTION_DRAG_STARTED -> {
                 return true;
             }
-            case DragEvent.ACTION_DRAG_ENTERED, DragEvent.ACTION_DRAG_LOCATION -> {
+            case DragEvent.ACTION_DRAG_LOCATION -> {
                 var pos = getPointPositionOnScreen(event.getX(), event.getY());
                 int line = IntPair.getFirst(pos), column = IntPair.getSecond(pos);
                 touchHandler.draggingSelection = getText().getIndexer().getCharPosition(line, column);
@@ -4648,7 +4652,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     return false;
                 }
                 touchHandler.draggingSelection = null;
-                text.insert(targetPos.line, targetPos.column, ClipDataUtils.clipDataToString(event.getClipData()));
+                setSelection(targetPos.line, targetPos.column);
+                pasteText(ClipDataUtils.clipDataToString(event.getClipData()));
+                requestFocus();
                 postInvalidate();
                 // Call super for notifying listeners
                 super.onDragEvent(event);
