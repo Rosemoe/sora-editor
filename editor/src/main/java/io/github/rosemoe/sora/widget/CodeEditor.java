@@ -4046,14 +4046,17 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Display soft input method for self
      */
     public void showSoftInput() {
-        if (checkSoftInputEnabled() && isEditable() && isEnabled()) {
+        if (isEditable() && isEnabled()) {
+            // Note that we always try to get focused at this time.
             if (isInTouchMode() && !isFocused()) {
                 requestFocusFromTouch();
             }
             if (!isFocused()) {
                 requestFocus();
             }
-            inputMethodManager.showSoftInput(this, 0);
+
+            if (checkSoftInputEnabled())
+                inputMethodManager.showSoftInput(this, 0);
         }
         invalidate();
     }
