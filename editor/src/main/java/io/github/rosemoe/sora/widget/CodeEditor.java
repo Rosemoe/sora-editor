@@ -3127,7 +3127,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * If the editor accepts composing text now, according to composing text rejection count
      */
     public boolean acceptsComposingText() {
-        return rejectComposingCount > 0;
+        return rejectComposingCount == 0;
     }
 
     /**
@@ -3315,7 +3315,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (editable && !touchHandler.hasAnyHeldHandle() && acceptsComposingText()) {
             cursorAnimator.markEndPos();
             cursorAnimator.start();
+            Log.d(LOG_TAG, "Start cursor animation");
         }
+        Log.d(LOG_TAG, "Held = " + touchHandler.hasAnyHeldHandle() + " rejCnt = " + rejectComposingCount);
 
         // Update cursor anchor
         selectionAnchor = cursor.right();
