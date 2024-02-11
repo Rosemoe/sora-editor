@@ -50,22 +50,22 @@
 
         <activity
             android:name=".TestActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|screenSize|uiMode|keyboard|navigation"
             android:exported="false"
             android:windowSoftInputMode="adjustResize"/>
         <activity
             android:name=".LspTestActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|screenSize|uiMode|keyboard|navigation"
             android:exported="false"
             android:windowSoftInputMode="adjustResize"/>
         <activity
             android:name=".LspTestJavaActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|screenSize|uiMode|keyboard|navigation"
             android:exported="false"
             android:windowSoftInputMode="adjustResize"/>
         <activity
             android:name=".MainActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|screenSize|uiMode|keyboard|navigation"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
