@@ -42,6 +42,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.ActionMode;
+import android.view.ContextMenu;
 import android.view.ContextThemeWrapper;
 import android.view.DragEvent;
 import android.view.GestureDetector;
@@ -83,6 +84,7 @@ import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.BuildEditorInfoEvent;
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
+import io.github.rosemoe.sora.event.CreateContextMenuEvent;
 import io.github.rosemoe.sora.event.EditorAttachStateChangeEvent;
 import io.github.rosemoe.sora.event.EditorFocusChangeEvent;
 import io.github.rosemoe.sora.event.EditorFormatEvent;
@@ -129,6 +131,7 @@ import io.github.rosemoe.sora.util.ThemeUtils;
 import io.github.rosemoe.sora.util.ViewUtils;
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 import io.github.rosemoe.sora.widget.component.EditorBuiltinComponent;
+import io.github.rosemoe.sora.widget.component.EditorContextMenuCreator;
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow;
 import io.github.rosemoe.sora.widget.component.EditorTextActionWindow;
 import io.github.rosemoe.sora.widget.component.Magnifier;
@@ -241,6 +244,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     protected SymbolPairMatch languageSymbolPairs;
     protected EditorTextActionWindow textActionWindow;
     protected EditorDiagnosticTooltipWindow diagnosticTooltip;
+    protected EditorContextMenuCreator contextMenuCreator;
     protected List<Span> defaultSpans = new ArrayList<>(2);
     protected EditorStyleDelegate styleDelegate;
     int startedActionMode;
@@ -389,6 +393,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             return (T) textActionWindow;
         } else if (clazz == EditorDiagnosticTooltipWindow.class) {
             return (T) diagnosticTooltip;
+        } else if (clazz == EditorContextMenuCreator.class) {
+            return (T) contextMenuCreator;
         } else {
             throw new IllegalArgumentException("Unknown component type");
         }
@@ -414,6 +420,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             textActionWindow = (EditorTextActionWindow) replacement;
         } else if (clazz == EditorDiagnosticTooltipWindow.class) {
             diagnosticTooltip = (EditorDiagnosticTooltipWindow) replacement;
+        } else if (clazz == EditorContextMenuCreator.class) {
+            contextMenuCreator = (EditorContextMenuCreator) replacement;
         } else {
             throw new IllegalArgumentException("Unknown component type");
         }
@@ -559,6 +567,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         edgeEffectHorizontal = new EdgeEffect(getContext());
         textActionWindow = new EditorTextActionWindow(this);
         diagnosticTooltip = new EditorDiagnosticTooltipWindow(this);
+        contextMenuCreator = new EditorContextMenuCreator(this);
         setEditorLanguage(null);
         setText(null);
         setTabWidth(4);
@@ -4665,6 +4674,17 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
         }
         return super.onDragEvent(event);
+    }
+
+    @Override
+    protected void onCreateContextMenu(ContextMenu menu) {
+        super.onCreateContextMenu(menu);
+        final var pos = touchHandler.getLastContextClickPosition();
+        if (pos == null) {
+            return;
+        }
+        var charPos = getPointPositionOnScreen(pos.x, pos.y);
+        dispatchEvent(new CreateContextMenuEvent(this, menu, text.getIndexer().getCharPosition(IntPair.getFirst(charPos), IntPair.getSecond(charPos))));
     }
 
     @Override

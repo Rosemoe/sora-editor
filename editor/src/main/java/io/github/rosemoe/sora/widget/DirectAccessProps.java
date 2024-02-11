@@ -414,4 +414,9 @@ public class DirectAccessProps implements Serializable {
      */
     public int mouseMode = MOUSE_MODE_AUTO;
 
+    /**
+     * Try to show context menu for mouse
+     */
+    public boolean mouseContextMenu = true;
+
 }

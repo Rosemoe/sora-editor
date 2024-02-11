@@ -554,7 +554,23 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      */
     public void onContextClick(MotionEvent event) {
         lastContextClickPosition = new PointF(event.getX(), event.getY());
-        dispatchEditorMotionEvent(ContextClickEvent::new, null, event);
+        if ((dispatchEditorMotionEvent(ContextClickEvent::new, null, event) & InterceptTarget.TARGET_EDITOR) != 0) {
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            editor.performContextClick(event.getX(), event.getY());
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            editor.performContextClick();
+        }
+
+        if (editor.getProps().mouseContextMenu) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                editor.showContextMenu(event.getX(), event.getY());
+            } else {
+                editor.showContextMenu();
+            }
+        }
     }
 
     @Nullable

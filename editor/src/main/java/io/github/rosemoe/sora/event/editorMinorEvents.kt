@@ -25,6 +25,7 @@
 package io.github.rosemoe.sora.event
 
 import android.os.Bundle
+import android.view.ContextMenu
 import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
 import io.github.rosemoe.sora.lang.Language
@@ -109,3 +110,14 @@ class HoverEvent(
     span: Span?,
     spanRange: TextRange?
 ) : EditorMotionEvent(editor, position, event, span, spanRange)
+
+/**
+ * Trigger when the editor needs to create context menu
+ * @property menu [ContextMenu] for adding menu items
+ * @property position Target text position of the menu
+ */
+class CreateContextMenuEvent(
+    editor: CodeEditor,
+    val menu: ContextMenu,
+    val position: CharPosition
+) : Event(editor)
