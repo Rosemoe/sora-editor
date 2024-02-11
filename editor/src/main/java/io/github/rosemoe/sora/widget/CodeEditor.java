@@ -4692,6 +4692,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     protected void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         touchHandler.resetMouse();
+        mouseHover = mouseButtonPressed = false;
     }
 
     @Override
