@@ -28,6 +28,7 @@ import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
@@ -4685,6 +4686,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         var charPos = getPointPositionOnScreen(pos.x, pos.y);
         dispatchEvent(new CreateContextMenuEvent(this, menu, text.getIndexer().getCharPosition(IntPair.getFirst(charPos), IntPair.getSecond(charPos))));
+    }
+
+    @Override
+    protected void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        touchHandler.resetMouse();
     }
 
     @Override

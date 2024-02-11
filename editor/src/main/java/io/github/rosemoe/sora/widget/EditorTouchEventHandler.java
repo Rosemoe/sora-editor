@@ -538,7 +538,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     /**
      * Reset mouse handling state
      */
-    private void resetMouse() {
+    public void resetMouse() {
         mouseDownX = mouseDownY = 0f;
         mouseClick = false;
         mouseCanMoveText = false;
