@@ -59,24 +59,29 @@ open class EditorSpanInteractionHandler(val editor: CodeEditor) {
 
     init {
         eventManager.subscribeAlways<ClickEvent> { event ->
-            handleInteractionEvent(
-                event,
-                SpanInteractionInfo::isClickable,
-                ::handleSpanClick
-            )
+            if (!event.isFromMouse || (event.isFromMouse && editor.keyMetaStates.isCtrlPressed)) {
+                handleInteractionEvent(
+                    event,
+                    SpanInteractionInfo::isClickable,
+                    ::handleSpanClick,
+                    !event.isFromMouse
+                )
+            }
         }
         eventManager.subscribeAlways<DoubleClickEvent> { event ->
             handleInteractionEvent(
                 event,
                 SpanInteractionInfo::isDoubleClickable,
-                ::handleSpanDoubleClick
+                ::handleSpanDoubleClick,
+                !event.isFromMouse
             )
         }
         eventManager.subscribeAlways<LongPressEvent> { event ->
             handleInteractionEvent(
                 event,
                 SpanInteractionInfo::isLongClickable,
-                ::handleSpanLongClick
+                ::handleSpanLongClick,
+                !event.isFromMouse
             )
         }
     }
@@ -84,7 +89,8 @@ open class EditorSpanInteractionHandler(val editor: CodeEditor) {
     private fun handleInteractionEvent(
         event: EditorMotionEvent,
         predicate: (interactionInfo: SpanInteractionInfo) -> Boolean,
-        handler: (Span, SpanInteractionInfo, TextRange) -> Boolean
+        handler: (Span, SpanInteractionInfo, TextRange) -> Boolean,
+        checkCursorRange: Boolean = true
     ) {
         val regionInfo = editor.resolveTouchRegion(event.causingEvent)
         val span = event.span
@@ -93,7 +99,7 @@ open class EditorSpanInteractionHandler(val editor: CodeEditor) {
             IntPair.getSecond(regionInfo) == IN_BOUND &&
             span != null && spanRange != null
         ) {
-            if (spanRange.isPositionInside(editor.cursor.left())) {
+            if (!checkCursorRange || spanRange.isPositionInside(editor.cursor.left())) {
                 span.getSpanExt<SpanInteractionInfo>(SpanExtAttrs.EXT_INTERACTION_INFO)?.let {
                     if (predicate(it)) {
                         if (handler(span, it, spanRange)) {
