@@ -85,16 +85,11 @@ open class EditorContextMenuCreator(val editor: CodeEditor) : EditorBuiltinCompo
         private val items = mutableListOf<MenuItemBuilder>()
 
         fun item(builder: MenuItemBuilder.() -> Unit) {
-            val data = MenuItemBuilder(context)
-            data.builder()
-            items.add(data)
+            items.add(MenuItemBuilder(context).also { it.builder() })
         }
 
-
         fun subMenu(builder: SubMenuBuilder.() -> Unit) {
-            val data = SubMenuBuilder(context)
-            data.builder()
-            items.add(data)
+            items.add(SubMenuBuilder(context).also { it.builder() })
         }
 
         internal open fun build() {
@@ -135,16 +130,11 @@ open class EditorContextMenuCreator(val editor: CodeEditor) : EditorBuiltinCompo
         private val items = mutableListOf<MenuItemBuilder>()
 
         fun item(builder: MenuItemBuilder.() -> Unit) {
-            val data = MenuItemBuilder(context)
-            data.builder()
-            items.add(data)
+            items.add(MenuItemBuilder(context).also { it.builder() })
         }
 
-
         fun subMenu(builder: SubMenuBuilder.() -> Unit) {
-            val data = SubMenuBuilder(context)
-            data.builder()
-            items.add(data)
+            items.add(SubMenuBuilder(context).also { it.builder() })
         }
 
         override fun build(menu: Menu) {
