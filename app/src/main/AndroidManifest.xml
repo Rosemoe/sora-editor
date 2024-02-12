@@ -49,7 +49,7 @@
             tools:targetApi="q" />
 
         <activity
-            android:name=".TestActivity"
+            android:name=".tests.TestActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|uiMode|keyboard|navigation"
             android:exported="false"
             android:windowSoftInputMode="adjustResize"/>
