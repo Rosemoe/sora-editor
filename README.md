@@ -23,7 +23,7 @@ instead of cloning this repository directly.
 
 ## Features
 
-- [x] Syntax highlighting
+- [x] Syntax highlight
 - [x] Auto-completion (with [code snippets](https://macromates.com/manual/en/snippets))
 - [x] Auto indent
 - [x] Code block lines
@@ -38,6 +38,7 @@ instead of cloning this repository directly.
 - [x] Sticky Scroll
 - [x] Highlight bracket pairs
 - [x] Event System
+- [x] TextMate and TreeSitter support
 
 ## Key bindings
 
@@ -59,48 +60,15 @@ See the [supported key bindings](./keybindings.md).
 <img src="/images/problem_indicators.jpg" alt="ProblemIndicator" width="40%" align="bottom" />
 </div>
 
-## Get started
+## Documentation and Quickstart
 
-Add to your app's dependencies:
+To check out docs, please visit [Documentation Site](https://project-sora.github.io/sora-editor-docs/).
 
-```Gradle
-dependencies {
-    implementation(platform("io.github.Rosemoe.sora-editor:bom:<versionName>"))
-    implementation("io.github.Rosemoe.sora-editor:<moduleName>")
-}
-```
-
-Available modules:
-
-- editor   
-  Widget library containing all basic things of the framework
-- editor-lsp   
-  A convenient library for creating languages by using Language Server Protocol (aka LSP)
-- language-java   
-  A simple implementation for Java highlighting and identifier auto-completion
-- language-textmate   
-  An advanced highlighter for the editor. You can find textmate language bundles and themes and load
-  them by using this
-  module. The internal implementation of textmate is from [tm4e](https://github.com/eclipse/tm4e).
-- language-treesitter   
-  Offer [tree-sitter](https://tree-sitter.github.io/tree-sitter/) support for editor. This can be used to 
-  parse the code to an AST fast and incrementally, which is helpful for accurate highlighting and providing completions.
-  Note that this module only provides incremental paring and highlighting. Thanks to Java bindings [android-tree-sitter](https://github.com/AndroidIDEOfficial/android-tree-sitter/)
-
-Check the newest version from the badge above
-or [Releases](https://github.com/Rosemoe/CodeEditor/releases).
+* [Overview](https://project-sora.github.io/sora-editor-docs/guide/editor-overview)
+* [Quickstart](https://project-sora.github.io/sora-editor-docs/guide/getting-started)
 
 ### Using Snapshot Versions
-Snapshot releases are automatically generated on repository push. You may combine current released version name
-and short commit hash to make a snapshot version name. For example, if the latest released version name is '0.21.1' and
-short commit hash is '97c4963', you may use version name '0.21.1-97c4963-SNAPSHOT' to import the snapshot version to your project.
-Also, you need to add extra maven repository:
-```gradle
-repositories {
-    // ...
-    maven("https://s01.oss.sonatype.org/content/repositories/snapshots")
-}
-```
+
 ## Discuss
 
 * Official QQ Group:[216632648](https://jq.qq.com/?_wv=1027&k=n68uxQws)
