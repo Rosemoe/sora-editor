@@ -40,6 +40,13 @@ instead of cloning this repository directly.
 - [x] Event System
 - [x] TextMate and TreeSitter support
 
+## Documentation and Quickstart
+
+To check out docs, please visit [Documentation Site](https://project-sora.github.io/sora-editor-docs/).
+
+* [Overview](https://project-sora.github.io/sora-editor-docs/guide/editor-overview)
+* [Quickstart](https://project-sora.github.io/sora-editor-docs/guide/getting-started)
+
 ## Key bindings
 
 When working with a physical keyboard, you can use key bindings for performing various text
@@ -59,15 +66,6 @@ See the [supported key bindings](./keybindings.md).
 <img src="/images/general.jpg" alt="GeneralAppearance" width="40%" align="bottom" />
 <img src="/images/problem_indicators.jpg" alt="ProblemIndicator" width="40%" align="bottom" />
 </div>
-
-## Documentation and Quickstart
-
-To check out docs, please visit [Documentation Site](https://project-sora.github.io/sora-editor-docs/).
-
-* [Overview](https://project-sora.github.io/sora-editor-docs/guide/editor-overview)
-* [Quickstart](https://project-sora.github.io/sora-editor-docs/guide/getting-started)
-
-### Using Snapshot Versions
 
 ## Discuss
 
