@@ -57,12 +57,12 @@ public class KeyMetaStates extends android.text.method.MetaKeyKeyListener {
         isCtrlPressed = event.isCtrlPressed();
     }
 
-    public boolean isCtrlPressed() {
-        return isCtrlPressed;
-    }
-
     public int getMetaState(KeyEvent event) {
         return getMetaState(dest, event);
+    }
+
+    public boolean isCtrlPressed() {
+        return isCtrlPressed;
     }
 
     public boolean isShiftPressed() {
@@ -71,6 +71,10 @@ public class KeyMetaStates extends android.text.method.MetaKeyKeyListener {
 
     public boolean isAltPressed() {
         return getMetaState(dest, META_ALT_ON) != 0;
+    }
+
+    public boolean isSymPressed() {
+        return getMetaState(dest, META_SYM_ON) != 0;
     }
 
     public void adjust() {
