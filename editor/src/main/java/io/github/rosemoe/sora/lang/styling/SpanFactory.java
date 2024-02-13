@@ -23,43 +23,39 @@
  */
 package io.github.rosemoe.sora.lang.styling;
 
-import java.util.ArrayList;
-import java.util.List;
+import androidx.annotation.NonNull;
 
-import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
+import java.util.Collection;
 
-public class EmptyReader implements Spans.Reader {
+import io.github.rosemoe.sora.lang.styling.span.internal.SpanImpl;
 
-    private final static EmptyReader INSTANCE = new EmptyReader();
+/**
+ * Factory for {@link Span}
+ */
+public class SpanFactory {
 
-    private final List<Span> spans;
-
-    public EmptyReader() {
-        spans = new ArrayList<>(1);
-        spans.add(SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL));
-    }
-
-    public static EmptyReader getInstance() {
-        return INSTANCE;
-    }
-
-    @Override
-    public void moveToLine(int line) {
+    private SpanFactory() {
 
     }
 
-    @Override
-    public Span getSpanAt(int index) {
-        return spans.get(index);
+    /**
+     * Get an available {@link Span} object from either cache or new instance.
+     * The result object will be initialized with the given arguments.
+     */
+    @NonNull
+    public static Span obtain(int column, long style) {
+        return SpanImpl.obtain(column, style);
     }
 
-    @Override
-    public int getSpanCount() {
-        return 1;
+    /**
+     * Recycle all spans in the given collection
+     */
+    public static void recycleAll(@NonNull Collection<Span> spans) {
+        for (Span span : spans) {
+            if (!span.recycle()) {
+                return;
+            }
+        }
     }
 
-    @Override
-    public List<Span> getSpansOnLine(int line) {
-        return new ArrayList<>(spans);
-    }
 }

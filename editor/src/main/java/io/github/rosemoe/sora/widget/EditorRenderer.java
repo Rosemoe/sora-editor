@@ -63,6 +63,7 @@ import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.EmptyReader;
 import io.github.rosemoe.sora.lang.styling.Span;
+import io.github.rosemoe.sora.lang.styling.SpanFactory;
 import io.github.rosemoe.sora.lang.styling.Spans;
 import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
@@ -107,7 +108,7 @@ public class EditorRenderer {
     private final static List<Span> sSpansForWordwrap = new ArrayList<>();
 
     static {
-        sSpansForWordwrap.add(Span.obtain(0, TextStyle.makeStyle(0, 0, true, true, false)));
+        sSpansForWordwrap.add(SpanFactory.obtain(0, TextStyle.makeStyle(0, 0, true, true, false)));
     }
 
     private final static int[] PRESSED_DRAWABLE_STATE = new int[]{android.R.attr.state_pressed, android.R.attr.state_enabled};

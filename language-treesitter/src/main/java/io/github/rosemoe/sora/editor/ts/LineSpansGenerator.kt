@@ -28,6 +28,7 @@ import com.itsaky.androidide.treesitter.TSQueryCapture
 import com.itsaky.androidide.treesitter.TSQueryCursor
 import io.github.rosemoe.sora.editor.ts.spans.TsSpanFactory
 import io.github.rosemoe.sora.lang.styling.Span
+import io.github.rosemoe.sora.lang.styling.SpanFactory
 import io.github.rosemoe.sora.lang.styling.Spans
 import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.text.CharPosition
@@ -186,7 +187,10 @@ class LineSpansGenerator(
     }
 
     private fun emptySpan(column: Int): Span {
-        return Span.obtain(column, TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL))
+        return SpanFactory.obtain(
+            column,
+            TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)
+        )
     }
 
     override fun adjustOnInsert(start: CharPosition, end: CharPosition) {

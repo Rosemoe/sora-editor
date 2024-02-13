@@ -40,6 +40,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
+import io.github.rosemoe.sora.lang.styling.SpanFactory;
 import io.github.rosemoe.sora.lang.styling.Spans;
 import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.lang.util.BaseAnalyzeManager;
@@ -281,7 +282,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
 
             @Override
             public Span getSpanAt(int index) {
-                return line == null ? Span.obtain(0, EditorColorScheme.TEXT_NORMAL) : line.spans.get(index);
+                return line == null ? SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL) : line.spans.get(index);
             }
 
             @Override
@@ -326,7 +327,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                 try {
                     while (lines.size() <= line) {
                         var list = new ArrayList<Span>();
-                        list.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
+                        list.add(SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL));
                         lines.add(new Line(list));
                     }
                     var obj = lines.get(line);

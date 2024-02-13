@@ -105,6 +105,7 @@ import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
+import io.github.rosemoe.sora.lang.styling.SpanFactory;
 import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
@@ -1559,7 +1560,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public List<Span> getSpansForLine(int line) {
         var spanMap = textStyles == null ? null : textStyles.spans;
         if (defaultSpans.isEmpty()) {
-            defaultSpans.add(Span.obtain(0, EditorColorScheme.TEXT_NORMAL));
+            defaultSpans.add(SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL));
         }
         try {
             if (spanMap != null) {

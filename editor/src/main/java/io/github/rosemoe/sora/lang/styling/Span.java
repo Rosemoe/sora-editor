@@ -26,13 +26,12 @@ package io.github.rosemoe.sora.lang.styling;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.Collection;
+
 import io.github.rosemoe.sora.lang.styling.color.ConstColor;
 import io.github.rosemoe.sora.lang.styling.color.ResolvableColor;
 import io.github.rosemoe.sora.lang.styling.span.SpanExt;
 import io.github.rosemoe.sora.lang.styling.span.SpanExtAttrs;
-import io.github.rosemoe.sora.lang.styling.span.internal.SpanImpl;
-
-import java.util.Collection;
 
 /**
  * Span describes the appearance and other attributes of text segment
@@ -189,18 +188,14 @@ public interface Span {
      */
     @NonNull
     static Span obtain(int column, long style) {
-        return SpanImpl.obtain(column, style);
+        return SpanFactory.obtain(column, style);
     }
 
     /**
      * Recycle all spans in the given collection
      */
     static void recycleAll(@NonNull Collection<Span> spans) {
-        for (Span span : spans) {
-            if (!span.recycle()) {
-                return;
-            }
-        }
+        SpanFactory.recycleAll(spans);
     }
 
 }

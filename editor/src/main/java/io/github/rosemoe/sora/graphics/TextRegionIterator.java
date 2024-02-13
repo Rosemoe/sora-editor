@@ -29,6 +29,7 @@ import androidx.annotation.Nullable;
 import java.util.List;
 
 import io.github.rosemoe.sora.lang.styling.Span;
+import io.github.rosemoe.sora.lang.styling.SpanFactory;
 import io.github.rosemoe.sora.util.RegionIterator;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
@@ -69,7 +70,7 @@ class TextRegionIterator extends RegionIterator {
     public Span getSpan() {
         var idx = getRegionSourcePointer(0) - 1;
         if (idx < 0) {
-            return Span.obtain(0, EditorColorScheme.TEXT_NORMAL);
+            return SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL);
         }
         return spans.get(idx);
     }
