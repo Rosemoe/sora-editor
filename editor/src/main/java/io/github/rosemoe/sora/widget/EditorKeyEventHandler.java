@@ -35,6 +35,7 @@ import java.util.Objects;
 import io.github.rosemoe.sora.event.EditorKeyEvent;
 import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.KeyBindingEvent;
+import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.Cursor;
@@ -382,6 +383,42 @@ public class EditorKeyEventHandler {
                 // unsupported: character picker dialog and hex input
                 return editor.onSuperKeyDown(keyCode, event);
             }
+            // #547 Dead Chars
+            boolean dead = false;
+            if ((charCode & KeyCharacterMap.COMBINING_ACCENT) != 0) {
+                charCode = charCode & KeyCharacterMap.COMBINING_ACCENT_MASK;
+                dead = true;
+            }
+            if (dead) {
+                var cursor = editor.getCursor();
+                if (event.getRepeatCount() == 0) {
+                    if (cursor.getRightColumn() > 0) {
+                        var charCount = Character.charCount(Character.codePointBefore(editor.getText().getLine(cursor.getRightLine()), cursor.getRightColumn()));
+                        editor.setSelectionRegion(cursor.getRightLine(), cursor.getRightColumn() - charCount, cursor.getRightLine(), cursor.getRightColumn(), SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
+                        return true;
+                    } // Otherwise, insert the char directly
+                } else if (event.getRepeatCount() == 1) {
+                    // Try to combine the two characters
+                    if (cursor.isSelected() && cursor.getRightColumn() > 0) {
+                        var base = Character.codePointBefore(editor.getText().getLine(cursor.getRightLine()), cursor.getRightColumn());
+                        var charCount = Character.charCount(base);
+                        if (charCount == cursor.getRight() - cursor.getLeft()) {
+                            var composed = KeyCharacterMap.getDeadChar(charCode, base);
+                            if (composed != base) {
+                                editor.commitText(String.valueOf(Character.toChars(composed)));
+                            } else {
+                                editor.setSelection(cursor.getRightLine(), cursor.getRightColumn());
+                            }
+                            editor.notifyIMEExternalCursorChange();
+                            return true;
+                        }
+                    } // Otherwise, insert the char directly
+                } else {
+                    // Repeated key strokes are ignored
+                    return true;
+                }
+            }
+
             String text = new String(Character.toChars(charCode));
             // replace text
             SymbolPairMatch.SymbolPair pair = null;
