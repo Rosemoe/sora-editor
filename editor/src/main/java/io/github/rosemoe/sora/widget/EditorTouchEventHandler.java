@@ -529,8 +529,12 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     }
                 }
                 resetMouse();
+                stopEdgeScroll();
             }
-            case MotionEvent.ACTION_CANCEL -> resetMouse();
+            case MotionEvent.ACTION_CANCEL -> {
+                resetMouse();
+                stopEdgeScroll();
+            }
         }
         return true;
     }

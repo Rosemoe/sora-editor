@@ -3316,9 +3316,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (editable && !touchHandler.hasAnyHeldHandle() && acceptsComposingText()) {
             cursorAnimator.markEndPos();
             cursorAnimator.start();
-            Log.d(LOG_TAG, "Start cursor animation");
         }
-        Log.d(LOG_TAG, "Held = " + touchHandler.hasAnyHeldHandle() + " rejCnt = " + rejectComposingCount);
 
         // Update cursor anchor
         selectionAnchor = cursor.right();
@@ -4931,7 +4929,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         updateCursor();
         waitForNextChange = false;
 
-        //Log.d(LOG_TAG, "Ins: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + insertedContent);
         updateCursorAnchor();
         renderer.invalidateOnInsert(startLine, endLine);
         ensureSelectionVisible();
@@ -4976,7 +4973,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         updateCursor();
 
-        //Log.d(LOG_TAG, "Del: " + startLine + " " + startColumn + ", " + endLine + " " + endColumn + ", content = " + deletedContent);
         renderer.invalidateOnDelete(startLine, endLine);
         if (!waitForNextChange) {
             updateCursorAnchor();
