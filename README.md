@@ -17,8 +17,7 @@ Read this in other languages: [English](README.md), [简体中文](README.zh-cn.
 Note that statements in other languages may not be up-to-date.
 
 ***Work In Progress*** This project is still developing slowly.   
-Download the newest sources from [Releases](https://github.com/Rosemoe/CodeEditor/releases)
-instead of cloning this repository directly.
+
 **Issues and pull requests are welcome.**
 
 ## Features
@@ -46,6 +45,7 @@ To check out docs, please visit [Documentation Site](https://project-sora.github
 
 * [Overview](https://project-sora.github.io/sora-editor-docs/guide/editor-overview)
 * [Quickstart](https://project-sora.github.io/sora-editor-docs/guide/getting-started)
+* [Documentation Repository](https://github.com/project-sora/sora-editor-docs)
 
 ## Key bindings
 
