@@ -2536,7 +2536,7 @@ public class EditorRenderer {
         tmpRect.left = centerX - editor.getInsertSelectionWidth() / 2;
         tmpRect.right = centerX + editor.getInsertSelectionWidth() / 2;
         drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.SELECTION_INSERT), tmpRect);
-        if (editor.getEventHandler().shouldDrawInsertHandle()) {
+        if (editor.getEventHandler().shouldDrawInsertHandle() && !editor.isInMouseMode()) {
             editor.getHandleStyle().draw(canvas, SelectionHandleStyle.HANDLE_TYPE_INSERT, centerX, tmpRect.bottom, editor.getRowHeight(), editor.getColorScheme().getColor(EditorColorScheme.SELECTION_HANDLE), editor.getInsertHandleDescriptor());
         }
     }
