@@ -3040,7 +3040,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 int column = IntPair.getSecond(touchHandler.memoryPosition);
                 // Compute new scroll position
                 var row = ((WordwrapLayout) layout).findRow(line, column);
-                var afterScrollY = row * getRowHeight() - getHeight() + touchHandler.focusY;
+                var afterScrollY = row * getRowHeight() - touchHandler.focusY;
                 var scroller = touchHandler.getScroller();
                 dispatchEvent(new ScrollEvent(this, scroller.getCurrX(),
                         scroller.getCurrY(), 0, (int) afterScrollY, ScrollEvent.CAUSE_SCALE_TEXT));
