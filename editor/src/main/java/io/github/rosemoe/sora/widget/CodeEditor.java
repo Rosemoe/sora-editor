@@ -3033,18 +3033,20 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     @UnsupportedUserUsage
     public void setLayoutBusy(boolean busy) {
-        if (layoutBusy && !busy && wordwrap && touchHandler.positionNotApplied) {
-            touchHandler.positionNotApplied = false;
-            int line = IntPair.getFirst(touchHandler.memoryPosition);
-            int column = IntPair.getSecond(touchHandler.memoryPosition);
-            // Compute new scroll position
-            var row = ((WordwrapLayout) layout).findRow(line, column);
-            var afterScrollY = row * getRowHeight() - getHeight() + touchHandler.focusY;
-            var scroller = touchHandler.getScroller();
-            dispatchEvent(new ScrollEvent(this, scroller.getCurrX(),
-                    scroller.getCurrY(), 0, (int) afterScrollY, ScrollEvent.CAUSE_SCALE_TEXT));
-            scroller.startScroll(0, (int) afterScrollY, 0, 0, 0);
-            scroller.abortAnimation();
+        if (layoutBusy && !busy) {
+            if (wordwrap && touchHandler.positionNotApplied) {
+                touchHandler.positionNotApplied = false;
+                int line = IntPair.getFirst(touchHandler.memoryPosition);
+                int column = IntPair.getSecond(touchHandler.memoryPosition);
+                // Compute new scroll position
+                var row = ((WordwrapLayout) layout).findRow(line, column);
+                var afterScrollY = row * getRowHeight() - getHeight() + touchHandler.focusY;
+                var scroller = touchHandler.getScroller();
+                dispatchEvent(new ScrollEvent(this, scroller.getCurrX(),
+                        scroller.getCurrY(), 0, (int) afterScrollY, ScrollEvent.CAUSE_SCALE_TEXT));
+                scroller.startScroll(0, (int) afterScrollY, 0, 0, 0);
+                scroller.abortAnimation();
+            }
             // IMPORTANT restart input after clearing the busy flag
             // otherwise, the connection may fallback to inactive mode
             this.layoutBusy = false;
