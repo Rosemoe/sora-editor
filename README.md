@@ -22,7 +22,7 @@ Note that statements in other languages may not be up-to-date.
 
 ## Features
 
-- [x] Syntax highlight
+- [x] Incremental syntax highlight
 - [x] Auto-completion (with [code snippets](https://macromates.com/manual/en/snippets))
 - [x] Auto indent
 - [x] Code block lines
@@ -31,34 +31,24 @@ Note that statements in other languages may not be up-to-date.
 - [x] Search and replace
 - [x] Auto wordwrap
 - [x] Show non-printable characters
-- [x] Error/Warning/Typo/Deprecated indicators
+- [x] Diagnostic markers
 - [x] Text magnifier
-- [x] Incremental highlight analysis
 - [x] Sticky Scroll
 - [x] Highlight bracket pairs
 - [x] Event System
 - [x] TextMate and TreeSitter support
 
-## Documentation and Quickstart
+## Documentation
 
-To check out docs, please visit [Documentation Site](https://project-sora.github.io/sora-editor-docs/).
+To quickly getting started, please view
+this [Quickstart Guide](https://project-sora.github.io/sora-editor-docs/guide/getting-started).
 
-* [Overview](https://project-sora.github.io/sora-editor-docs/guide/editor-overview)
-* [Quickstart](https://project-sora.github.io/sora-editor-docs/guide/getting-started)
+To check out all docs, please
+visit [Documentation Site](https://project-sora.github.io/sora-editor-docs/).
+
+* [Editor Overview](https://project-sora.github.io/sora-editor-docs/guide/editor-overview)
+* [Reference](https://project-sora.github.io/sora-editor-docs/reference/xml-attributes)
 * [Documentation Repository](https://github.com/project-sora/sora-editor-docs)
-
-## Key bindings
-
-When working with a physical keyboard, you can use key bindings for performing various text
-actions.
-The editor provides support for some key bindings by default.
-However, you can subscribe
-to [`KeyBindingEvent`](https://github.com/Rosemoe/sora-editor/blob/main/editor/src/main/java/io/github/rosemoe/sora/event/KeyBindingEvent.java)
-and add your own key bindings. You can even override the default key bindings and perform actions of
-your own.
-
-The currently supported key bindings are mostly similar to Android Studio/Intellij IDEA.
-See the [supported key bindings](./keybindings.md).
 
 ## Screenshots
 
