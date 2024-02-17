@@ -29,22 +29,17 @@ jobs:
         with:
           java-version: 17
           distribution: 'temurin'
-          cache: 'gradle'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Build debug APK
         id: build
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: assembleDebug
+        run: ./gradlew assembleDebug
 
       - name: Publish snapshot
-        uses: gradle/gradle-build-action@v2
         if: ${{ always() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.build.outcome == 'success' }}
-        with:
-          arguments: publishAllPublicationsToMavenCentral
+        run: ./gradlew publishAllPublicationsToMavenCentral
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MVN_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MVN_PASSWORD }}

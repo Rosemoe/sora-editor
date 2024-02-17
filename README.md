@@ -40,7 +40,7 @@ Note that statements in other languages may not be up-to-date.
 
 ## Documentation
 
-To quickly getting started, please view
+To quickly get started, please view
 this [Quickstart Guide](https://project-sora.github.io/sora-editor-docs/guide/getting-started).
 
 To check out all docs, please
