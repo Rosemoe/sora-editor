@@ -43,6 +43,7 @@ import io.github.rosemoe.sora.lang.styling.Styles
 import io.github.rosemoe.sora.lang.styling.TextStyle.makeStyle
 import io.github.rosemoe.sora.lang.styling.span.SpanConstColorResolver
 import io.github.rosemoe.sora.lang.styling.span.SpanExtAttrs
+import io.github.rosemoe.sora.lang.styling.textStyle
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme.COMMENT
@@ -217,8 +218,8 @@ class TsJavaSpanFactory(
 }
 
 fun TsThemeBuilder.buildTheme() {
-    makeStyle(COMMENT, 0, false, true, false) applyTo "comment"
-    makeStyle(KEYWORD, 0, true, false, false) applyTo "keyword"
+    textStyle(COMMENT, italic = true) applyTo "comment"
+    textStyle(KEYWORD, bold = true) applyTo "keyword"
     makeStyle(LITERAL) applyTo arrayOf("constant.builtin", "string", "number")
     makeStyle(IDENTIFIER_VAR) applyTo arrayOf(
         "variable.builtin", "variable",

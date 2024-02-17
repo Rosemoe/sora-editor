@@ -25,7 +25,8 @@
 package io.github.rosemoe.sora.editor.ts
 
 /**
- * Defines what type of locals pattern of a capture
+ * [LocalsCaptureSpec] helps our parser to recognize local variables and generate different spans
+ * to highlight them.
  *
  * @author Rosemoe
  */
