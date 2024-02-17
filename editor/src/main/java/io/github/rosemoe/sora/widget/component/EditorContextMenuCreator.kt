@@ -80,6 +80,11 @@ open class EditorContextMenuCreator(val editor: CodeEditor) : EditorBuiltinCompo
     }
 
     override fun isEnabled() = eventManager.isEnabled
+
+    @DslMarker
+    annotation class MenuDslMarker
+
+    @MenuDslMarker
     open class MenuBuilder(val context: Context, val menu: Menu) {
 
         private val items = mutableListOf<MenuItemBuilder>()
@@ -100,6 +105,7 @@ open class EditorContextMenuCreator(val editor: CodeEditor) : EditorBuiltinCompo
 
     }
 
+    @MenuDslMarker
     open class ContextMenuBuilder(context: Context, val contextMenu: ContextMenu) :
         MenuBuilder(context, contextMenu) {
 
@@ -118,6 +124,7 @@ open class EditorContextMenuCreator(val editor: CodeEditor) : EditorBuiltinCompo
 
     }
 
+    @MenuDslMarker
     open class SubMenuBuilder(context: Context) : MenuItemBuilder(context) {
 
         var headerTitle: CharSequence? = null
@@ -156,6 +163,7 @@ open class EditorContextMenuCreator(val editor: CodeEditor) : EditorBuiltinCompo
 
     }
 
+    @MenuDslMarker
     open class MenuItemBuilder(val context: Context) {
         var groupId = 0
         var itemId = 0
