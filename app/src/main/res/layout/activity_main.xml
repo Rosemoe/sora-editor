@@ -108,10 +108,10 @@
             android:id="@+id/editor"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:scrollbarThumbHorizontal="@drawable/scrollbar_thumb"
-            android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
-            android:scrollbarTrackHorizontal="@drawable/scrollbar_track"
-            android:scrollbarTrackVertical="@drawable/scrollbar_track"
+            app:scrollbarThumbHorizontal="@drawable/scrollbar_thumb"
+            app:scrollbarThumbVertical="@drawable/scrollbar_thumb"
+            app:scrollbarTrackHorizontal="@drawable/scrollbar_track"
+            app:scrollbarTrackVertical="@drawable/scrollbar_track"
             app:lnPanelPosition="center"
             app:lnPanelPositionMode="follow" />
 

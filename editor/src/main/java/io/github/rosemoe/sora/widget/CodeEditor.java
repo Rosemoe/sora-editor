@@ -607,10 +607,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     protected void applyAttributeSets(AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         var array = getContext().obtainStyledAttributes(attrs, R.styleable.CodeEditor, defStyleAttr, defStyleRes);
 
-        setHorizontalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbHorizontal));
-        setHorizontalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackHorizontal));
-        setVerticalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarThumbVertical));
-        setVerticalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_android_scrollbarTrackVertical));
+        setHorizontalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_scrollbarThumbHorizontal));
+        setHorizontalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_scrollbarTrackHorizontal));
+        setVerticalScrollbarThumbDrawable(array.getDrawable(R.styleable.CodeEditor_scrollbarThumbVertical));
+        setVerticalScrollbarTrackDrawable(array.getDrawable(R.styleable.CodeEditor_scrollbarTrackVertical));
 
         setLnPanelPositionMode(array.getInt(R.styleable.CodeEditor_lnPanelPositionMode, LineInfoPanelPositionMode.FOLLOW));
         setLnPanelPosition(array.getInt(R.styleable.CodeEditor_lnPanelPosition, LineInfoPanelPosition.CENTER));

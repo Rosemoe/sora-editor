@@ -27,10 +27,10 @@
     <attr name="codeEditorStyle" format="reference" />
 
     <declare-styleable name="CodeEditor">
-        <attr name="android:scrollbarTrackHorizontal" />
-        <attr name="android:scrollbarThumbHorizontal" />
-        <attr name="android:scrollbarTrackVertical" />
-        <attr name="android:scrollbarThumbVertical" />
+        <attr name="scrollbarTrackHorizontal" format="reference" />
+        <attr name="scrollbarThumbHorizontal" format="reference" />
+        <attr name="scrollbarTrackVertical" format="reference" />
+        <attr name="scrollbarThumbVertical" format="reference" />
 
         <attr name="lnPanelPositionMode">
             <enum name="fixed" value="0" />
