@@ -3836,6 +3836,16 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * Subscribe event of the given type, without {@link io.github.rosemoe.sora.event.Unsubscribe}.
+     *
+     * @see EventManager#subscribeEvent(Class, EventReceiver)
+     */
+    public <T extends
+            Event> SubscriptionReceipt<T> subscribeAlways(Class<T> eventType, EventManager.NoUnsubscribeReceiver<T> receiver) {
+        return eventManager.subscribeAlways(eventType, receiver);
+    }
+
+    /**
      * Dispatch the given event
      *
      * @see EventManager#dispatchEvent(Event)

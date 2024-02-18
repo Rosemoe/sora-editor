@@ -30,9 +30,9 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
+        android:layout_above="@id/main_bottom_bar"
         android:layout_alignParentStart="true"
-        android:layout_above="@id/main_bottom_bar">
+        android:orientation="vertical">
 
         <LinearLayout
             android:id="@+id/search_panel"
@@ -41,54 +41,53 @@
             android:orientation="vertical"
             android:visibility="gone">
 
-            <HorizontalScrollView
+
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
+                <Button
+                    android:id="@+id/btn_goto_prev"
+                    style="?buttonBarButtonStyle"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:text="@string/layout_tv_prev" />
 
-                    <Button
-                        style="?android:attr/buttonBarButtonStyle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:onClick="gotoLast"
-                        android:text="@string/layout_tv_last" />
+                <Button
+                    android:id="@+id/btn_goto_next"
+                    style="?buttonBarButtonStyle"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/layout_tv_next" />
 
-                    <Button
-                        style="?android:attr/buttonBarButtonStyle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:onClick="gotoNext"
-                        android:text="@string/layout_tv_next" />
+                <Button
+                    android:id="@+id/btn_replace"
+                    style="?buttonBarButtonStyle"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/layout_tv_replace" />
 
-                    <Button
-                        style="?android:attr/buttonBarButtonStyle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:onClick="replace"
-                        android:text="@string/layout_tv_replace" />
+                <Button
+                    android:id="@+id/btn_replace_all"
+                    style="?buttonBarButtonStyle"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/layout_tv_replaceAll" />
 
-                    <Button
-                        style="?android:attr/buttonBarButtonStyle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:onClick="replaceAll"
-                        android:text="@string/layout_tv_replaceAll" />
+                <ImageView
+                    android:id="@+id/search_options"
+                    android:layout_weight="0.5"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/baseline_more_vert_24" />
 
-                    <Button
-                        android:id="@+id/search_options"
-                        style="?android:attr/buttonBarButtonStyle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:onClick="showSearchOptions"
-                        android:text="@string/layout_tv_search_options" />
-
-                </LinearLayout>
-
-            </HorizontalScrollView>
+            </LinearLayout>
 
 
             <EditText
@@ -119,12 +118,12 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/main_bottom_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
-        android:id="@+id/main_bottom_bar">
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical">
 
         <HorizontalScrollView
             android:layout_width="match_parent"

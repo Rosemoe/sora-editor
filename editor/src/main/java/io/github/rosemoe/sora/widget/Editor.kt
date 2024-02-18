@@ -25,9 +25,19 @@
 package io.github.rosemoe.sora.widget
 
 import io.github.rosemoe.sora.event.Event
+import io.github.rosemoe.sora.event.EventManager.NoUnsubscribeReceiver
 import io.github.rosemoe.sora.event.EventReceiver
 import io.github.rosemoe.sora.event.SubscriptionReceipt
 import io.github.rosemoe.sora.widget.component.EditorBuiltinComponent
+
+/**
+ * Subscribe event in editor, without [io.github.rosemoe.sora.event.Unsubscribe]
+ *
+ * @see CodeEditor.subscribeAlways
+ */
+inline fun <reified T : Event> CodeEditor.subscribeAlways(receiver: NoUnsubscribeReceiver<T>): SubscriptionReceipt<T> {
+    return subscribeAlways(T::class.java, receiver)
+}
 
 /**
  * Subscribe event in editor

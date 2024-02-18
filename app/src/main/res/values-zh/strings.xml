@@ -24,7 +24,7 @@
 
 <resources>
     <string name="open_debug_logs">打开调试日志</string>
-    <string name="layout_tv_last">上个</string>
+    <string name="layout_tv_prev">上个</string>
     <string name="layout_tv_next">下个</string>
     <string name="layout_tv_replace">替换</string>
     <string name="layout_tv_replaceAll">全部</string>

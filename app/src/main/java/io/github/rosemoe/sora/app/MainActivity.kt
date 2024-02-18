@@ -85,6 +85,7 @@ import io.github.rosemoe.sora.widget.schemes.SchemeNotepadXX
 import io.github.rosemoe.sora.widget.schemes.SchemeVS2019
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode
+import io.github.rosemoe.sora.widget.subscribeAlways
 import io.github.rosemoe.sora.widget.subscribeEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -140,7 +141,17 @@ class MainActivity : AppCompatActivity() {
         CrashHandler.INSTANCE.init(this)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         val typeface = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
+
+        // Setup Listeners
+        binding.apply {
+            btnGotoPrev.setOnClickListener(::gotoPrev)
+            btnGotoNext.setOnClickListener(::gotoNext)
+            btnReplace.setOnClickListener(::replace)
+            btnReplaceAll.setOnClickListener(::replaceAll)
+            searchOptions.setOnClickListener(::showSearchOptions)
+        }
 
         // Configure symbol input view
         val inputView = binding.symbolInput
@@ -190,27 +201,25 @@ class MainActivity : AppCompatActivity() {
                 CodeEditor.FLAG_DRAW_WHITESPACE_LEADING or CodeEditor.FLAG_DRAW_LINE_SEPARATOR or CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION
             // Update display dynamically
             // Use CodeEditor#subscribeEvent to add listeners of different events to editor
-            subscribeEvent<SelectionChangeEvent> { _, _ -> updatePositionText() }
-            subscribeEvent<PublishSearchResultEvent> { _, _ -> updatePositionText() }
-            subscribeEvent<ContentChangeEvent> { _, _ ->
+            subscribeAlways<SelectionChangeEvent> { updatePositionText() }
+            subscribeAlways<PublishSearchResultEvent> { updatePositionText() }
+            subscribeAlways<ContentChangeEvent> {
                 postDelayedInLifecycle(
                     ::updateBtnState,
                     50
                 )
             }
-            subscribeEvent<SideIconClickEvent> { _, _ ->
+            subscribeAlways<SideIconClickEvent> {
                 toast(R.string.tip_side_icon)
             }
 
-            subscribeEvent<KeyBindingEvent> { event, _ ->
-                if (event.eventType != EditorKeyEvent.Type.DOWN) {
-                    return@subscribeEvent
+            subscribeAlways<KeyBindingEvent> { event ->
+                if (event.eventType == EditorKeyEvent.Type.DOWN) {
+                    toast(
+                        "Keybinding event: " + generateKeybindingString(event),
+                        Toast.LENGTH_LONG
+                    )
                 }
-
-                toast(
-                    "Keybinding event: " + generateKeybindingString(event),
-                    Toast.LENGTH_LONG
-                )
             }
 
             // Handle span interactions
@@ -839,7 +848,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun gotoLast(view: View) {
+    fun gotoPrev(view: View) {
         try {
             binding.editor.searcher.gotoPrevious()
         } catch (e: IllegalStateException) {
