@@ -25,6 +25,8 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigCaptureIndex;
 import org.eclipse.tm4e.core.internal.utils.RegexSource;
 
+import io.github.rosemoe.sora.langs.textmate.utils.MatcherUtils;
+
 /**
  * @see <a href=
  *      "https://github.com/microsoft/vscode-textmate/blob/88baacf1a6637c5ec08dce18cea518d935fcf0a0/src/rule.ts#L582">
@@ -110,7 +112,7 @@ final class RegExpSource {
 		for (final var capture : captureIndices) {
 			capturedValues.add(lineText.subSequence(capture.start, capture.end).toString());
 		}
-		return BACK_REFERENCING_END.matcher(this.source).replaceAll(match -> {
+		return MatcherUtils.replaceAll(this.source, BACK_REFERENCING_END.matcher(this.source), (match -> {
 			try {
 				final int index = Integer.parseInt(match.group(1));
 				if (index < captureIndices.length) {
@@ -121,7 +123,7 @@ final class RegExpSource {
 				// ignore
 			}
 			return "";
-		});
+		}));
 	}
 
 	private String[][] buildAnchorCache() {
