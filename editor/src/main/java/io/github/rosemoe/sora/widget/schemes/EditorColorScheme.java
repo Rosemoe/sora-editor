@@ -53,7 +53,7 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  * <p>
  * However, we also accept you to extend this class to customize
  * your own ColorScheme to use different default colors.
- * Subclasses is expected to override {@link #applyDefault()}
+ * Subclasses are expected to override {@link #applyDefault()}
  * to define colors, though other methods are not final.
  * After overriding this method, you will have to call super class's
  * applyDefault() and then a series of {@link #setColor(int, int)} calls

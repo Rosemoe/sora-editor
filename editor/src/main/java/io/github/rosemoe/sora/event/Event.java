@@ -38,25 +38,25 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  */
 public abstract class Event {
 
-    private final long mEventTime;
-    private final CodeEditor mEditor;
-    private int mInterceptTargets;
+    private final long eventTime;
+    private final CodeEditor editor;
+    private int interceptTargets;
 
     public Event(@NonNull CodeEditor editor) {
         this(editor, System.currentTimeMillis());
     }
 
     public Event(@NonNull CodeEditor editor, long eventTime) {
-        mEditor = Objects.requireNonNull(editor);
-        mEventTime = eventTime;
-        mInterceptTargets = 0;
+        this.editor = Objects.requireNonNull(editor);
+        this.eventTime = eventTime;
+        interceptTargets = 0;
     }
 
     /**
      * Get event time
      */
     public long getEventTime() {
-        return mEventTime;
+        return eventTime;
     }
 
     /**
@@ -64,7 +64,7 @@ public abstract class Event {
      */
     @NonNull
     public CodeEditor getEditor() {
-        return mEditor;
+        return editor;
     }
 
     /**
@@ -93,7 +93,7 @@ public abstract class Event {
         if (!canIntercept()) {
             throw new UnsupportedOperationException("intercept() not supported");
         }
-        mInterceptTargets = InterceptTarget.TARGET_EDITOR | InterceptTarget.TARGET_RECEIVERS;
+        interceptTargets = InterceptTarget.TARGET_EDITOR | InterceptTarget.TARGET_RECEIVERS;
     }
 
     /**
@@ -106,7 +106,7 @@ public abstract class Event {
         if (!canIntercept()) {
             throw new UnsupportedOperationException("intercept() not supported");
         }
-        mInterceptTargets = targets;
+        interceptTargets = targets;
     }
 
     /**
@@ -116,7 +116,7 @@ public abstract class Event {
      * @see InterceptTarget
      */
     public int getInterceptTargets() {
-        return mInterceptTargets;
+        return interceptTargets;
     }
 
     /**
@@ -125,7 +125,7 @@ public abstract class Event {
      * @see #getInterceptTargets()
      */
     public boolean isIntercepted() {
-        return mInterceptTargets != 0;
+        return interceptTargets != 0;
     }
 
 }
