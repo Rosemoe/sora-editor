@@ -186,7 +186,8 @@ class LspTestActivity : AppCompatActivity() {
             lspEditor.requestManager?.didChangeWorkspaceFolders(
                 DidChangeWorkspaceFoldersParams().apply {
                     this.event = WorkspaceFoldersChangeEvent().apply {
-                        added = listOf(WorkspaceFolder("file://$projectPath/std/Lua53"))
+                        added =
+                            listOf(WorkspaceFolder("file://$projectPath/std/Lua53", "MyLuaProject"))
                     }
                 }
             )
