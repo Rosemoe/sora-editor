@@ -22,8 +22,6 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     `kotlin-dsl`
 }
