@@ -178,7 +178,7 @@ public class WordwrapLayout extends AbstractLayout {
     private void breakLine(int line, ContentLine sequence, List<Integer> breakpoints, @Nullable Paint paint) {
         int start = 0;
         int len = sequence.length();
-        var text = sequence.getRawData();
+        var text = sequence.getBackingCharArray();
 
         while (start < len) {
             var next = CharPosDesc.getTextOffset(editor.getRenderer().findFirstVisibleCharForWordwrap(width, line, start, len, 0, paint == null ? editor.getTextPaint() : paint));

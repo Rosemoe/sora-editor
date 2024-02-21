@@ -193,7 +193,7 @@ public class GraphicTextRow {
         float currentPosition = 0f;
         // Find in each region
         var lastStyle = 0L;
-        var chars = text.getRawData();
+        var chars = text.getBackingCharArray();
         float tabAdvance = paint.getSpaceWidth() * tabWidth;
         int offset = start;
         var first = true;
@@ -352,7 +352,7 @@ public class GraphicTextRow {
             int end1 = Math.min(end, dirs.getRunEnd(i));
             if (end1 > start1) {
                 // Can be called directly
-                width += paint.myGetTextRunAdvances(text.getRawData(), start1, end1 - start1, ctxStart, ctxEnd - ctxStart, dirs.isRunRtl(i), widths, widths == null ? 0 : start1, quickMeasureMode);
+                width += paint.myGetTextRunAdvances(text.getBackingCharArray(), start1, end1 - start1, ctxStart, ctxEnd - ctxStart, dirs.isRunRtl(i), widths, widths == null ? 0 : start1, quickMeasureMode);
             }
             if (dirs.getRunStart(i) >= end) {
                 break;

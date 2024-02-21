@@ -189,7 +189,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
 
                     // It's safe here to use raw data because the Content is only held by this thread
                     var length = model.getColumnCount(startLine);
-                    var chars = model.getLine(startLine).getRawData();
+                    var chars = model.getLine(startLine).getBackingCharArray();
 
                     codeBlock.startColumn = IndentRange.computeStartColumn(chars, length, language.getTabSize());
                     codeBlock.endColumn = codeBlock.startColumn;
@@ -252,7 +252,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
 
             tokens.add(span);
         }
-        return new LineTokenizeResult<>(new MyState(lineTokens.getRuleStack(), cachedRegExp == null ? null : cachedRegExp.search(OnigString.of(line), 0), IndentRange.computeIndentLevel(((ContentLine) lineC).getRawData(), line.length() - 1, language.getTabSize()), identifiers), null, tokens);
+        return new LineTokenizeResult<>(new MyState(lineTokens.getRuleStack(), cachedRegExp == null ? null : cachedRegExp.search(OnigString.of(line), 0), IndentRange.computeIndentLevel(((ContentLine) lineC).getBackingCharArray(), line.length() - 1, language.getTabSize()), identifiers), null, tokens);
     }
 
     @Override

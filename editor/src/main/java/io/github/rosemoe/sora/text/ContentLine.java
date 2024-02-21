@@ -333,7 +333,7 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
      * The result array should not be modified.
      */
     @NonNull
-    public char[] getRawData() {
+    public char[] getBackingCharArray() {
         return value;
     }
 

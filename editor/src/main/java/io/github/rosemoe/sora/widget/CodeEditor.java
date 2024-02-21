@@ -1376,7 +1376,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param line The line to search
      */
     protected long findLeadingAndTrailingWhitespacePos(ContentLine line) {
-        var buffer = line.getRawData();
+        var buffer = line.getBackingCharArray();
         int column = line.length();
         int leading = 0;
         int trailing = column;
@@ -1833,7 +1833,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             int line = cur.getLeftLine();
             if (props.deleteEmptyLineFast || (props.deleteMultiSpaces != 1 && col > 0 && text.charAt(line, col - 1) == ' ')) {
                 // Check whether selection is in leading spaces
-                var text = this.text.getLine(cur.getLeftLine()).getRawData();
+                var text = this.text.getLine(cur.getLeftLine()).getBackingCharArray();
                 var inLeading = true;
                 for (int i = col - 1; i >= 0; i--) {
                     char ch = text[i];

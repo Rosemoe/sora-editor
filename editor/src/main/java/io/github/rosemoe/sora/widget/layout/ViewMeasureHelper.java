@@ -47,7 +47,7 @@ public class ViewMeasureHelper {
                 var lines = View.MeasureSpec.getMode(heightMeasureSpec) != View.MeasureSpec.EXACTLY ? new int[text.getLineCount()] : null;
                 var lineMaxSize = new MutableInt(0);
                 text.runReadActionsOnLines(0, text.getLineCount() - 1, (Content.ContentLineConsumer) (index, line, directions) -> {
-                    int measured = (int) Math.ceil(measurer.measureText(line.getRawData(), 0, line.length(), paint));
+                    int measured = (int) Math.ceil(measurer.measureText(line.getBackingCharArray(), 0, line.length(), paint));
                     if (measured > lineMaxSize.value) {
                         lineMaxSize.value = measured;
                     }
@@ -78,7 +78,7 @@ public class ViewMeasureHelper {
                         rowCount.value = text.length();
                     } else {
                         text.runReadActionsOnLines(0, text.getLineCount() - 1, (Content.ContentLineConsumer) (index, line, directions) -> {
-                            int measured = (int) Math.ceil(measurer.measureText(line.getRawData(), 0, line.length(), paint));
+                            int measured = (int) Math.ceil(measurer.measureText(line.getBackingCharArray(), 0, line.length(), paint));
                             rowCount.value += Math.max(1, Math.ceil(1.0 * measured / availableSize));
                         });
                     }
@@ -90,7 +90,7 @@ public class ViewMeasureHelper {
             if (View.MeasureSpec.getMode(widthMeasureSpec) != View.MeasureSpec.EXACTLY) {
                 var lineMaxSize = new MutableInt(0);
                 text.runReadActionsOnLines(0, text.getLineCount() - 1, (Content.ContentLineConsumer) (index, line, directions) -> {
-                    int measured = (int) Math.ceil(measurer.measureText(line.getRawData(), 0, line.length(), paint));
+                    int measured = (int) Math.ceil(measurer.measureText(line.getBackingCharArray(), 0, line.length(), paint));
                     if (measured > lineMaxSize.value) {
                         lineMaxSize.value = measured;
                     }

@@ -1673,7 +1673,7 @@ public class EditorRenderer {
             float spaceWidth = paintGeneral.getSpaceWidth();
             float rowCenter = (editor.getRowTop(row) + editor.getRowBottom(row)) / 2f - editor.getOffsetY();
             offset += measureText(lineBuf, line, rowStart, paintStart - rowStart);
-            var chars = lineBuf.getRawData();
+            var chars = lineBuf.getBackingCharArray();
             var lastPos = paintStart;
             while (paintStart < paintEnd) {
                 char ch = chars[paintStart];
@@ -1937,7 +1937,7 @@ public class EditorRenderer {
      */
     protected void drawText(Canvas canvas, ContentLine line, int index, int count, int contextStart, int contextCount, boolean isRtl, float offX, float offY, int lineNumber) {
         int end = index + count;
-        var src = line.getRawData();
+        var src = line.getBackingCharArray();
         end = Math.min(src.length, end);
         int st = index;
         var renderFuncChars = editor.isRenderFunctionCharacters();
@@ -2642,7 +2642,7 @@ public class EditorRenderer {
                 }
             } else {
                 if (offset < end) {
-                    var chars = line.getRawData();
+                    var chars = line.getBackingCharArray();
                     while (offset > start) {
                         char ch = chars[offset];
                         if (Character.isLowSurrogate(ch)) {
@@ -2666,7 +2666,7 @@ public class EditorRenderer {
         }
         if (!rtl && !forLast && offset > start) {
             // Try to combine one character again
-            var chars = line.getRawData();
+            var chars = line.getBackingCharArray();
             if (Character.isLowSurrogate(chars[offset - 1])) {
                 if (offset - 1 > start && !couldBeEmojiPart(Character.toCodePoint(chars[offset - 2], chars[offset - 1]))) {
                     offset -= 2;

@@ -172,7 +172,7 @@ public class Paint extends android.graphics.Paint {
         if (fast) {
             ensureCacheObject();
             var width = 0f;
-            var textChars = text.getRawData();
+            var textChars = text.getBackingCharArray();
             for (int i = start; i < end; i++) {
                 char ch = textChars[i];
                 float charWidth;
@@ -195,7 +195,7 @@ public class Paint extends android.graphics.Paint {
         if (renderFunctionCharacters) {
             int lastEnd = start;
             float current = 0f;
-            var textChars = text.getRawData();
+            var textChars = text.getBackingCharArray();
             for (int i = start;i < end;i++) {
                 char ch = textChars[i];
                 if (FunctionCharacters.isEditorFunctionChar(ch)) {
@@ -222,9 +222,9 @@ public class Paint extends android.graphics.Paint {
 
     private int breakTextImpl(ContentLine text, int start, int end, float advance) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return getOffsetForAdvance(text.getRawData(), start, end, start, end, false, advance);
+            return getOffsetForAdvance(text.getBackingCharArray(), start, end, start, end, false, advance);
         } else {
-            return start + breakText(text.getRawData(), start, end - start, advance, null);
+            return start + breakText(text.getBackingCharArray(), start, end - start, advance, null);
         }
     }
 

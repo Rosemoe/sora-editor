@@ -167,7 +167,7 @@ public class TextUtils {
      * @param line The line to search
      */
     public static long findLeadingAndTrailingWhitespacePos(ContentLine line) {
-        var buffer = line.getRawData();
+        var buffer = line.getBackingCharArray();
         int column = line.length();
         int leading = 0;
         int trailing = column;
