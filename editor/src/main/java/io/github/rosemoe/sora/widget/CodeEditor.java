@@ -97,6 +97,7 @@ import io.github.rosemoe.sora.event.HoverEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.SubscriptionReceipt;
+import io.github.rosemoe.sora.event.TextSizeChangeEvent;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
@@ -1270,7 +1271,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param size Text size in pixel unit
      */
     protected void setTextSizePxDirect(float size) {
+        float oldTextSize = getTextSizePx();
         renderer.setTextSizePxDirect(size);
+        dispatchEvent(new TextSizeChangeEvent(this, oldTextSize, size));
     }
 
     protected void requestLayoutIfNeeded() {

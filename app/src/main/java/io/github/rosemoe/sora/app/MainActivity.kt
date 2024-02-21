@@ -32,6 +32,7 @@ import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
@@ -49,6 +50,7 @@ import io.github.rosemoe.sora.event.KeyBindingEvent
 import io.github.rosemoe.sora.event.PublishSearchResultEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.SideIconClickEvent
+import io.github.rosemoe.sora.event.TextSizeChangeEvent
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.JavaLanguageSpec
 import io.github.rosemoe.sora.lang.TsLanguageJava
@@ -86,7 +88,6 @@ import io.github.rosemoe.sora.widget.schemes.SchemeVS2019
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode
 import io.github.rosemoe.sora.widget.subscribeAlways
-import io.github.rosemoe.sora.widget.subscribeEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -106,6 +107,7 @@ class MainActivity : AppCompatActivity() {
             System.loadLibrary("tree-sitter-java")
         }
 
+        private const val TAG = "MainActivity"
         const val LOG_FILE = "crash-journal.log"
 
         /**
@@ -211,6 +213,12 @@ class MainActivity : AppCompatActivity() {
             }
             subscribeAlways<SideIconClickEvent> {
                 toast(R.string.tip_side_icon)
+            }
+            subscribeAlways<TextSizeChangeEvent> { event ->
+                Log.d(
+                    TAG,
+                    "TextSizeChangeEvent onReceive() called with: oldTextSize = [${event.oldTextSize}], newTextSize = [${event.newTextSize}]"
+                )
             }
 
             subscribeAlways<KeyBindingEvent> { event ->
@@ -624,7 +632,8 @@ class MainActivity : AppCompatActivity() {
             }
 
             R.id.disableSoftKbdOnHardKbd -> {
-                editor.isDisableSoftKbdIfHardKbdAvailable = !editor.isDisableSoftKbdIfHardKbdAvailable
+                editor.isDisableSoftKbdIfHardKbdAvailable =
+                    !editor.isDisableSoftKbdIfHardKbdAvailable
                 item.isChecked = editor.isDisableSoftKbdIfHardKbdAvailable
             }
         }
@@ -928,5 +937,5 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
         }
     }
-    
+
 }
