@@ -49,7 +49,7 @@ class ConstColor : ResolvableColor {
         this.color = Color.parseColor(color)
     }
 
-    override fun resolve(editor: EditorColorScheme): Int {
+    override fun resolve(colorScheme: EditorColorScheme): Int {
         return color
     }
 }
