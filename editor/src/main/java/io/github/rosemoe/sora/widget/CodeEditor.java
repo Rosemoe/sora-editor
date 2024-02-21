@@ -314,6 +314,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private ClipboardManager clipboardManager;
     private InputMethodManager inputMethodManager;
     private Cursor cursor;
+    private Cursor lastCursor;
     private Content text;
     private Matrix matrix;
     private EditorColorScheme colorScheme;
@@ -4376,7 +4377,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Called when the text is edited or {@link CodeEditor#setSelection} is called
      */
     protected void onSelectionChanged(int cause) {
-        dispatchEvent(new SelectionChangeEvent(this, cause));
+        CharPosition oldLeft = null;
+        CharPosition oldRight = null;
+        final Cursor lastCursor =  this.lastCursor;
+        if (lastCursor != null) {
+            oldLeft = lastCursor.left();
+            oldRight = lastCursor.right();
+        }
+        dispatchEvent(new SelectionChangeEvent(this, oldLeft, oldRight, cause));
+        this.lastCursor = cursor;
     }
 
     protected void releaseEdgeEffects() {

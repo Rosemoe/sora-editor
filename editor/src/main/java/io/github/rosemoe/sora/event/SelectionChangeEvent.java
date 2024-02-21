@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.event;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.widget.CodeEditor;
@@ -74,12 +75,18 @@ public class SelectionChangeEvent extends Event {
      * From mouse
      */
     public final static int CAUSE_MOUSE_INPUT = 8;
+    @Nullable
+    private final CharPosition oldLeft;
+    @Nullable
+    private final CharPosition oldRight;
     private final CharPosition left;
     private final CharPosition right;
     private final int cause;
 
-    public SelectionChangeEvent(@NonNull CodeEditor editor, int cause) {
+    public SelectionChangeEvent(@NonNull CodeEditor editor, @Nullable CharPosition oldLeft, @Nullable CharPosition oldRight, int cause) {
         super(editor);
+        this.oldLeft = oldLeft;
+        this.oldRight = oldRight;
         var cursor = editor.getText().getCursor();
         left = cursor.left();
         right = cursor.right();
@@ -99,6 +106,22 @@ public class SelectionChangeEvent extends Event {
      */
     public int getCause() {
         return cause;
+    }
+
+    /**
+     * Get the last left selection before changed
+     */
+    @Nullable
+    public CharPosition getOldLeft() {
+        return oldLeft;
+    }
+
+    /**
+     * Get the last right selection's position before changed
+     */
+    @Nullable
+    public CharPosition getOldRight() {
+        return oldRight;
     }
 
     /**
