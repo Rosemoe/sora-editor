@@ -264,7 +264,7 @@ public class EditorSearcher {
     }
 
     /**
-     * Check if selected region is in search result
+     * Check if selected region is exactly a search result
      * @throws IllegalStateException if no search is in progress
      */
     public boolean isMatchedPositionSelected() {
@@ -272,12 +272,26 @@ public class EditorSearcher {
     }
 
     /**
-     * Replace currently selected region if it is in search result. Otherwise, attempt to jump to
-     * next matched position.
+     * Replace currently selected region if the region is exactly a match of searching pattern.
+     * Otherwise, attempt to jump to next matched position.
+     *
+     * @param replacement The text for replacement
+     * @throws IllegalStateException if no search is in progress
+     * @deprecated Confusing method name. Use {@link #replaceCurrentMatch(String)} instead.
+     */
+    @Deprecated(since = "0.24.0", forRemoval = true)
+    public void replaceThis(@NonNull String replacement) {
+        replaceCurrentMatch(replacement);
+    }
+
+    /**
+     * Replace currently selected region if the region is exactly a match of searching pattern.
+     * Otherwise, attempt to jump to next matched position.
+     *
      * @param replacement The text for replacement
      * @throws IllegalStateException if no search is in progress
      */
-    public void replaceThis(@NonNull String replacement) {
+    public void replaceCurrentMatch(@NonNull String replacement) {
         if (!editor.isEditable()) {
             return;
         }

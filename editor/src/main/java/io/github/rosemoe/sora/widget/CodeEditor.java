@@ -2599,7 +2599,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                                     if (replaceAll) {
                                         getSearcher().replaceAll(et.getText().toString(), am::finish);
                                     } else {
-                                        getSearcher().replaceThis(et.getText().toString());
+                                        getSearcher().replaceCurrentMatch(et.getText().toString());
                                         am.finish();
                                     }
                                     dialog.dismiss();

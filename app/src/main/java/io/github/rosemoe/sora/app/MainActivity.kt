@@ -867,7 +867,7 @@ class MainActivity : AppCompatActivity() {
 
     fun replace(view: View) {
         try {
-            binding.editor.searcher.replaceThis(binding.replaceEditor.text.toString())
+            binding.editor.searcher.replaceCurrentMatch(binding.replaceEditor.text.toString())
         } catch (e: IllegalStateException) {
             e.printStackTrace()
         }
