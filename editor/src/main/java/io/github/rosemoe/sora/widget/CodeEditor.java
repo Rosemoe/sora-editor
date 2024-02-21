@@ -347,6 +347,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private boolean horizontalAbsorb;
     private LineSeparator lineSeparator;
     private TextRange lastInsertion;
+    private TextRange lastSelectedTextRange;
     private SnippetController snippetController;
 
     public CodeEditor(Context context) {
@@ -3209,6 +3210,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     /**
      * Move or extend selection, according to {@code extend} param.
+     *
      * @param extend True if you want to extend selection.
      */
     public void moveOrExtendSelection(@NonNull SelectionMovement movement, boolean extend) {
@@ -4376,7 +4378,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Called when the text is edited or {@link CodeEditor#setSelection} is called
      */
     protected void onSelectionChanged(int cause) {
-        dispatchEvent(new SelectionChangeEvent(this, cause));
+        CharPosition oldLeft = null;
+        CharPosition oldRight = null;
+        final TextRange lastTextRange = this.lastSelectedTextRange;
+        if (lastTextRange != null) {
+            oldLeft = lastTextRange.getStart();
+            oldRight = lastTextRange.getEnd();
+        }
+        dispatchEvent(new SelectionChangeEvent(this, oldLeft, oldRight, cause));
+        this.lastSelectedTextRange = getCursorRange();
     }
 
     protected void releaseEdgeEffects() {
