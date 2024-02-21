@@ -4379,6 +4379,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         dispatchEvent(new SelectionChangeEvent(this, cause));
     }
 
+    /**
+     * Release active edge effects on thumbs up
+     */
     protected void releaseEdgeEffects() {
         edgeEffectHorizontal.onRelease();
         edgeEffectVertical.onRelease();

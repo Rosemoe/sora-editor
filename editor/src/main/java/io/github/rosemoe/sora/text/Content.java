@@ -42,7 +42,7 @@ import io.github.rosemoe.sora.text.bidi.Directions;
  * It is thread-safe by default. Use {@link #Content(CharSequence, boolean)} constructor to
  * create a non thread-safe one.
  *
- * @author Rose
+ * @author Rosemoe
  */
 public class Content implements CharSequence {
 
