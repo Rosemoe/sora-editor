@@ -147,7 +147,7 @@ public class ContentIO {
             text.runReadActionsOnLines(0, text.getLineCount() - 1, (Content.ContentLineConsumer2) (index, line, flag) -> {
                 try {
                     // Write line content
-                    buffered.write(line.value, 0, line.length());
+                    buffered.write(line.getRawData(), 0, line.length());
                     // Write line feed (the last line has empty line feed)
                     buffered.write(line.getLineSeparator().getChars());
                 } catch (IOException e) {

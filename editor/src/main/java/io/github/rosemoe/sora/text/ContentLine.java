@@ -34,8 +34,7 @@ import io.github.rosemoe.sora.text.bidi.TextBidi;
 
 public class ContentLine implements CharSequence, GetChars, BidiRequirementChecker {
 
-    @UnsupportedUserUsage
-    public char[] value;
+    private char[] value;
     /**
      * Width of each character inside
      */

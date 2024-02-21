@@ -1673,7 +1673,7 @@ public class EditorRenderer {
             float spaceWidth = paintGeneral.getSpaceWidth();
             float rowCenter = (editor.getRowTop(row) + editor.getRowBottom(row)) / 2f - editor.getOffsetY();
             offset += measureText(lineBuf, line, rowStart, paintStart - rowStart);
-            var chars = lineBuf.value;
+            var chars = lineBuf.getRawData();
             var lastPos = paintStart;
             while (paintStart < paintEnd) {
                 char ch = chars[paintStart];
@@ -1937,8 +1937,8 @@ public class EditorRenderer {
      */
     protected void drawText(Canvas canvas, ContentLine line, int index, int count, int contextStart, int contextCount, boolean isRtl, float offX, float offY, int lineNumber) {
         int end = index + count;
-        end = Math.min(line.value.length, end);
-        var src = line.value;
+        var src = line.getRawData();
+        end = Math.min(src.length, end);
         int st = index;
         var renderFuncChars = editor.isRenderFunctionCharacters();
         for (int i = index; i < end; i++) {
