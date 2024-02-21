@@ -66,7 +66,7 @@ abstract class LanguageServerDefinition {
         }
     }
 
-    fun callExitForLanguageServer(): Boolean {
+    open fun callExitForLanguageServer(): Boolean {
         return false
     }
 
@@ -88,7 +88,7 @@ abstract class LanguageServerDefinition {
         }
     }
 
-    fun getInitializationOptions(uri: URI?): Any? {
+    open fun getInitializationOptions(uri: URI?): Any? {
         return null
     }
 
@@ -110,7 +110,7 @@ abstract class LanguageServerDefinition {
         get() = EventHandler.EventListener.DEFAULT
 
     /**
-     * Return language id for the given extension. if there is no langauge ids registered then the
+     * Return language id for the given extension. if there is no language ids registered then the
      * return value will be the value of `extension`.
      */
     fun languageIdFor(extension: String): String {
