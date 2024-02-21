@@ -121,3 +121,14 @@ class CreateContextMenuEvent(
     val menu: ContextMenu,
     val position: CharPosition
 ) : Event(editor)
+
+/**
+ * Trigger when the editor text size changed
+ * @property oldTextSize text size before changed
+ * @property newTextSize new text size after changed
+ */
+class TextSizeChangeEvent(
+    editor: CodeEditor,
+    val oldTextSize: Float,
+    val newTextSize: Float
+) : Event(editor)
