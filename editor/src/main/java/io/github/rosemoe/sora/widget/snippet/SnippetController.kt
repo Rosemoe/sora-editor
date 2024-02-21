@@ -326,8 +326,9 @@ class SnippetController(private val editor: CodeEditor) {
         val line = text.getLine(pos.line)
         var indentEnd = 0
         for (i in 0 until pos.column) {
-            if (line.value[i] == ' ' || line.value[i] == '\t') {
-                indentEnd++;
+            val char = line[i]
+            if (char == ' ' || char == '\t') {
+                indentEnd++
             } else {
                 break
             }
