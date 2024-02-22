@@ -385,26 +385,10 @@ public class EditorRenderer {
         }
     }
 
-    public void invalidateInRegion(int start, int end) {
-        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            renderNodeHolder.invalidateInRegion(start, end);
-        }
-    }
 
     public void invalidateInRegion(@NonNull StyleUpdateRange range) {
         if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             renderNodeHolder.invalidateInRegion(range);
-        }
-    }
-
-    /**
-     * Invalidate the region in hardware-accelerated renderer
-     */
-    public void invalidateChanged(int startLine) {
-        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && cursor != null) {
-            if (renderNodeHolder.invalidateInRegion(startLine, Integer.MAX_VALUE)) {
-                editor.invalidate();
-            }
         }
     }
 
@@ -750,7 +734,6 @@ public class EditorRenderer {
         drawScrollBars(canvas);
         drawEdgeEffect(canvas);
 
-        editor.rememberDisplayedLines();
         releasePreloadedData();
         lastStuckLines = stuckLines;
         drawFormatTip(canvas);
@@ -2585,12 +2568,14 @@ public class EditorRenderer {
             return CharPosDesc.make(end, 0);
         }
         var line = getLine(lineIndex);
-        if (line.widthCache != null && line.timestamp < displayTimestamp) {
+        var context = editor.getRenderContext();
+        var cache = context.getCache().queryMeasureCache(lineIndex);
+        if (cache != null && cache.getWidths() != null && cache.getUpdateTimestamp() < displayTimestamp) {
             buildMeasureCacheForLines(lineIndex, lineIndex, displayTimestamp, false);
         }
         var gtr = GraphicTextRow.obtain(basicDisplayMode);
-        gtr.set(line, getLineDirections(lineIndex), contextStart, end, editor.getTabWidth(), line.widthCache == null ? editor.getSpansForLine(lineIndex) : null, paintGeneral);
-        if (editor.getLayout() instanceof WordwrapLayout && line.widthCache == null) {
+        gtr.set(content, lineIndex, contextStart, end, cache == null || cache.getWidths() == null ? editor.getSpansForLine(lineIndex) : null, paintGeneral, context);
+        if (editor.getLayout() instanceof WordwrapLayout && (cache == null || cache.getWidths() == null)) {
             gtr.setSoftBreaks(((WordwrapLayout) editor.getLayout()).getSoftBreaksForLine(lineIndex));
         }
         var res = gtr.findOffsetByAdvance(start, target);
@@ -2693,7 +2678,7 @@ public class EditorRenderer {
             return CharPosDesc.make(end, 0);
         }
         var gtr = GraphicTextRow.obtain(basicDisplayMode);
-        gtr.set(content, lineIndex, contextStart, end, editor.getTabWidth(), sSpansForWordwrap, paint);
+        gtr.set(content, lineIndex, contextStart, end, sSpansForWordwrap, paint, editor.getRenderContext());
         gtr.disableCache();
         var res = gtr.findOffsetByAdvance(start, target);
         gtr.recycle();
@@ -2705,26 +2690,28 @@ public class EditorRenderer {
      */
     protected void buildMeasureCacheForLines(int startLine, int endLine, long timestamp, boolean useCachedContent) {
         var text = content;
+        var context = editor.getRenderContext();
         while (startLine <= endLine && startLine < text.getLineCount()) {
             var line = useCachedContent ? getLine(startLine) : getLineDirect(startLine);
-            if (line.timestamp < timestamp) {
+            var cache = editor.getRenderContext().getCache().getOrCreateMeasureCache(startLine);
+            if (cache.getUpdateTimestamp() < timestamp) {
                 var gtr = GraphicTextRow.obtain(basicDisplayMode);
                 var forced = false;
-                if (line.widthCache == null || line.widthCache.length < line.length()) {
-                    line.widthCache = editor.obtainFloatArray(Math.max(line.length() + 8, 90), useCachedContent);
+                if (cache.getWidths() == null || cache.getWidths().length < line.length()) {
+                    cache.setWidths(new float[Math.max(line.length() + 8, 90)]);
                     forced = true;
                 }
                 var spans = editor.getSpansForLine(startLine);
-                gtr.set(text, startLine, 0, line.length(), editor.getTabWidth(), spans, paintGeneral);
+                gtr.set(text, startLine, 0, line.length(), spans, paintGeneral, context);
                 var softBreaks = (editor.layout instanceof WordwrapLayout) ? ((WordwrapLayout) editor.layout).getSoftBreaksForLine(startLine) : null;
                 gtr.setSoftBreaks(softBreaks);
                 var hash = Objects.hash(spans, line.length(), editor.getTabWidth(), basicDisplayMode, softBreaks, paintGeneral.getFlags(), paintGeneral.getTextSize(), paintGeneral.getTextScaleX(), paintGeneral.getLetterSpacing(), paintGeneral.getFontFeatureSettings());
-                if (line.styleHash != hash || forced) {
+                if (context.getCache().getStyleHash(startLine) != hash || forced) {
                     gtr.buildMeasureCache();
-                    line.styleHash = hash;
+                    context.getCache().setStyleHash(startLine, hash);
                 }
                 gtr.recycle();
-                line.timestamp = timestamp;
+                cache.setUpdateTimestamp(timestamp);
             }
             startLine++;
         }
@@ -2744,17 +2731,19 @@ public class EditorRenderer {
      */
     @UnsupportedUserUsage
     public float measureText(ContentLine text, int line, int index, int count) {
-        var cache = text.widthCache;
-        if (text.timestamp < displayTimestamp && cache != null || (cache != null && cache.length >= index + count)) {
-            buildMeasureCacheForLines(line, line);
+        var cache = editor.getRenderContext().getCache().queryMeasureCache(line);
+        if (cache != null) {
+            if (cache.getUpdateTimestamp() < displayTimestamp && cache.getWidths() != null || (cache.getWidths() != null && cache.getWidths().length >= index + count)) {
+                buildMeasureCacheForLines(line, line);
+            }
         }
         var gtr = GraphicTextRow.obtain(basicDisplayMode);
         List<Span> spans = editor.defaultSpans;
-        if (text.widthCache == null) {
+        if (cache == null || cache.getWidths() == null) {
             spans = editor.getSpansForLine(line);
         }
-        gtr.set(text, text.mayNeedBidi() ? getLineDirections(line) : null, 0, text.length(), editor.getTabWidth(), spans, paintGeneral);
-        if (editor.layout instanceof WordwrapLayout && text.widthCache == null) {
+        gtr.set(content, line, 0, text.length(), spans, paintGeneral, editor.getRenderContext());
+        if (editor.layout instanceof WordwrapLayout && (cache == null || cache.getWidths() == null)) {
             gtr.setSoftBreaks(((WordwrapLayout) editor.layout).getSoftBreaksForLine(line));
         }
         var res = gtr.measureText(index, index + count);

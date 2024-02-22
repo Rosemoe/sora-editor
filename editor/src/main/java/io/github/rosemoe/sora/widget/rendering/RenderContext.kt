@@ -33,6 +33,8 @@ class RenderContext {
 
     val cache = RenderCache()
 
+    var tabWidth = 4
+
     fun updateForInsertion(startLine: Int, endLine: Int) {
         cache.updateForInsertion(startLine, endLine)
     }

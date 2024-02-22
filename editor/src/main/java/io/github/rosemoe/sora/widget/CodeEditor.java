@@ -142,6 +142,7 @@ import io.github.rosemoe.sora.widget.layout.Layout;
 import io.github.rosemoe.sora.widget.layout.LineBreakLayout;
 import io.github.rosemoe.sora.widget.layout.ViewMeasureHelper;
 import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
+import io.github.rosemoe.sora.widget.rendering.RenderContext;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.snippet.SnippetController;
 import io.github.rosemoe.sora.widget.style.CursorAnimator;
@@ -339,6 +340,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private Bundle extraArguments;
     private Styles textStyles;
     private DiagnosticsContainer diagnostics;
+    private RenderContext renderContext;
     private EditorRenderer renderer;
     private boolean hardwareAccAllowed;
     private float scrollerFinalX;
@@ -520,6 +522,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         eventManager = new EventManager();
         renderFunctionCharacters = true;
+        renderContext = new RenderContext();
         renderer = onCreateRenderer();
 
         styleDelegate = new EditorStyleDelegate(this);
@@ -1302,45 +1305,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return renderer;
     }
 
+    public RenderContext getRenderContext() {
+        return renderContext;
+    }
+
     public Paint.FontMetricsInt getLineNumberMetrics() {
         return renderer.getLineNumberMetrics();
-    }
-
-    /**
-     * Update displayed lines after drawing
-     */
-    protected void rememberDisplayedLines() {
-        availableFloatArrayRegion = IntPair.pack(getFirstVisibleLine(), getLastVisibleLine());
-    }
-
-    /**
-     * Obtain a float array from previously displayed lines, or either create a new one
-     * if no float array matches the requirement.
-     */
-    protected float[] obtainFloatArray(int desiredSize, boolean usePainter) {
-        var start = IntPair.getFirst(availableFloatArrayRegion);
-        var end = IntPair.getSecond(availableFloatArrayRegion);
-        var firstVis = getFirstVisibleLine();
-        var lastVis = getLastVisibleLine();
-        start = Math.max(0, start - 5);
-        end = Math.min(end + 5, getLineCount());
-        for (int i = start; i < end; i++) {
-            // Find line that is not displaying currently
-            if (i < firstVis || i > lastVis) {
-                var line = usePainter ? renderer.getLine(i) : text.getLine(i);
-                if (line.widthCache != null && line.widthCache.length >= desiredSize) {
-                    line.timestamp = 0;
-                    var res = line.widthCache;
-                    line.widthCache = null;
-                    return res;
-                }
-            }
-            // Skip the region because we can't obtain arrays from here
-            if (i >= firstVis && i <= lastVis) {
-                i = lastVis;
-            }
-        }
-        return new float[desiredSize];
     }
 
     /**
@@ -1384,7 +1354,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         while (leading < column && isWhitespace(buffer[leading])) {
             leading++;
         }
-        // Only them this action is needed
+        // Only when this action is needed
         if (leading != column && (nonPrintableOptions & (FLAG_DRAW_WHITESPACE_INNER | FLAG_DRAW_WHITESPACE_TRAILING)) != 0) {
             while (trailing > 0 && isWhitespace(buffer[trailing - 1])) {
                 trailing--;
@@ -3773,6 +3743,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         this.text.addContentListener(this);
         this.text.setUndoEnabled(undoEnabled);
         this.text.setLineListener(this);
+        renderContext.reset(this.text.getLineCount());
         renderer.onEditorFullTextUpdate();
 
         if (editorLanguage != null) {
@@ -4932,6 +4903,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @Override
     public void afterInsert(@NonNull Content content, int startLine, int startColumn, int endLine,
                             int endColumn, @NonNull CharSequence insertedContent) {
+        renderContext.updateForInsertion(startLine, endLine);
         renderer.updateTimestamp();
         styleDelegate.onTextChange();
         var start = text.getIndexer().getCharPosition(startLine, startColumn);
@@ -4976,6 +4948,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @Override
     public void afterDelete(@NonNull Content content, int startLine, int startColumn, int endLine,
                             int endColumn, @NonNull CharSequence deletedContent) {
+        renderContext.updateForDeletion(startLine, endLine);
         renderer.updateTimestamp();
         styleDelegate.onTextChange();
         var start = text.getIndexer().getCharPosition(startLine, startColumn);

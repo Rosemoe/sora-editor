@@ -48,9 +48,9 @@ object BidiLayoutHelper {
             line,
             0,
             lineText.length,
-            editor.tabWidth,
             layout.getSpans(line),
-            editor.textPaint
+            editor.textPaint,
+            editor.renderContext
         )
         if (layout is WordwrapLayout) {
             gtr.setSoftBreaks(layout.getSoftBreaksForLine(line))
@@ -94,9 +94,9 @@ object BidiLayoutHelper {
             line,
             0,
             lineText.length,
-            editor.tabWidth,
             layout.getSpans(line),
-            editor.textPaint
+            editor.textPaint,
+            editor.renderContext
         )
         if (layout is WordwrapLayout) {
             gtr.setSoftBreaks(layout.getSoftBreaksForLine(line))

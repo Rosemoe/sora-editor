@@ -156,19 +156,7 @@ public class Paint extends android.graphics.Paint {
     /**
      * Find offset for a certain advance returned by {@link #measureTextRunAdvance(char[], int, int, int, int, boolean)}
      */
-    public int findOffsetByRunAdvance(ContentLine text, int start, int end, float advance, boolean useCache, boolean fast) {
-        if (text.widthCache != null && useCache) {
-            var cache = text.widthCache;
-            var offset = start;
-            var currAdvance = 0f;
-            for (; offset < end && currAdvance < advance; offset++) {
-                currAdvance += cache[offset + 1] - cache[offset];
-            }
-            if (currAdvance > advance) {
-                offset--;
-            }
-            return Math.max(offset, start);
-        }
+    public int findOffsetByRunAdvance(ContentLine text, int start, int end, float advance, boolean fast) {
         if (fast) {
             ensureCacheObject();
             var width = 0f;
