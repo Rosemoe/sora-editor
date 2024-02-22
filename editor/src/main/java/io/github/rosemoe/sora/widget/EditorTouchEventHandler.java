@@ -962,7 +962,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         } else {
             positionNotApplied = false;
         }
-        editor.getRenderer().invalidateRenderNodes();
+        editor.getRenderContext().invalidateRenderNodes();
         editor.getRenderer().updateTimestamp();
         editor.invalidate();
     }

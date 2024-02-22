@@ -522,7 +522,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         eventManager = new EventManager();
         renderFunctionCharacters = true;
-        renderContext = new RenderContext();
+        renderContext = new RenderContext(this);
         renderer = onCreateRenderer();
 
         styleDelegate = new EditorStyleDelegate(this);
@@ -933,7 +933,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (snippetController != null) {
             snippetController.stopSnippet();
         }
-        renderer.invalidateRenderNodes();
+        renderContext.invalidateRenderNodes();
         invalidate();
     }
 
@@ -1043,7 +1043,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             requestLayoutIfNeeded();
             createLayout();
             if (!wordwrap) {
-                renderer.invalidateRenderNodes();
+                renderContext.invalidateRenderNodes();
             }
             invalidate();
         }
@@ -1337,7 +1337,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void setHardwareAcceleratedDrawAllowed(boolean acceleratedDraw) {
         hardwareAccAllowed = acceleratedDraw;
         if (acceleratedDraw && !isWordwrap()) {
-            renderer.invalidateRenderNodes();
+            renderContext.invalidateRenderNodes();
         }
     }
 
@@ -2221,7 +2221,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void setBasicDisplayMode(boolean enabled) {
         text.setBidiEnabled(!enabled);
-        renderer.invalidateRenderNodes();
+        renderContext.invalidateRenderNodes();
         renderer.basicDisplayMode = enabled;
         renderer.updateTimestamp();
         invalidate();
@@ -2327,7 +2327,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             throw new IllegalArgumentException("width can not be under 1");
         }
         tabWidth = width;
-        renderer.invalidateRenderNodes();
+        renderContext.invalidateRenderNodes();
         renderer.updateTimestamp();
         requestLayoutIfNeeded();
         invalidate();
@@ -3298,7 +3298,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         // Update cursor anchor
         selectionAnchor = cursor.right();
 
-        renderer.invalidateRenderNodes();
+        renderContext.invalidateRenderNodes();
         if (makeItVisible) {
             ensurePositionVisible(line, column);
         } else {
@@ -3403,7 +3403,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         cursor.setRight(lineRight, columnRight);
         updateCursor();
         updateSelection();
-        renderer.invalidateRenderNodes();
+        renderContext.invalidateRenderNodes();
 
         // Update selection anchor
         if (!cursor.left().equals(selectionAnchor) && !cursor.right().equals(selectionAnchor)) {
@@ -3757,7 +3757,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         createLayout();
         requestLayout();
-        renderer.invalidateRenderNodes();
+        renderContext.invalidateRenderNodes();
         invalidate();
     }
 
@@ -3993,7 +3993,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (highlightCurrentBlock) {
             cursorPosition = findCursorBlock();
         }
-        renderer.invalidateRenderNodes();
+        renderContext.invalidateRenderNodes();
         renderer.updateTimestamp();
         invalidate();
     }
@@ -4007,7 +4007,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (highlightCurrentBlock) {
             cursorPosition = findCursorBlock();
         }
-        renderer.invalidateInRegion(range);
+        renderContext.updateForRange(range);
         renderer.updateTimestamp();
         invalidate();
     }
@@ -4309,7 +4309,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void onColorUpdated(int type) {
         dispatchEvent(new ColorSchemeUpdateEvent(this));
-        renderer.invalidateRenderNodes();
+        renderContext.invalidateRenderNodes();
         invalidate();
     }
 
@@ -4318,7 +4318,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void onColorFullUpdate() {
         dispatchEvent(new ColorSchemeUpdateEvent(this));
-        renderer.invalidateRenderNodes();
+        renderContext.invalidateRenderNodes();
         invalidate();
     }
 
@@ -4930,7 +4930,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         waitForNextChange = false;
 
         updateCursorAnchor();
-        renderer.invalidateOnInsert(startLine, endLine);
         ensureSelectionVisible();
 
         editorLanguage.getAnalyzeManager().insert(start, end, insertedContent);
@@ -4974,7 +4973,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         updateCursor();
 
-        renderer.invalidateOnDelete(startLine, endLine);
         if (!waitForNextChange) {
             updateCursorAnchor();
             ensureSelectionVisible();

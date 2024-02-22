@@ -91,6 +91,7 @@ import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 import io.github.rosemoe.sora.widget.layout.Row;
 import io.github.rosemoe.sora.widget.layout.RowIterator;
 import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
+import io.github.rosemoe.sora.widget.rendering.RenderNodeHolder;
 import io.github.rosemoe.sora.widget.rendering.RenderingConstants;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
@@ -142,7 +143,6 @@ public class EditorRenderer {
     private Drawable verticalScrollbarThumbDrawable;
     @Nullable
     private Drawable verticalScrollbarTrackDrawable;
-    protected RenderNodeHolder renderNodeHolder;
     private volatile long displayTimestamp;
     private Paint.FontMetricsInt metricsLineNumber;
     private Paint.FontMetricsInt metricsGraph;
@@ -159,9 +159,6 @@ public class EditorRenderer {
         verticalScrollBarRect = new RectF();
         horizontalScrollBarRect = new RectF();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            renderNodeHolder = new RenderNodeHolder(editor);
-        }
         bufferedDrawPoints = new BufferedDrawPoints();
 
         paintGeneral = new Paint(editor.isRenderFunctionCharacters());
@@ -280,7 +277,7 @@ public class EditorRenderer {
         metricsText = paintGeneral.getFontMetricsInt();
         metricsLineNumber = paintOther.getFontMetricsInt();
         metricsGraph = paintGraph.getFontMetricsInt();
-        invalidateRenderNodes();
+        editor.getRenderContext().invalidateRenderNodes();
         updateTimestamp();
     }
 
@@ -295,7 +292,7 @@ public class EditorRenderer {
         }
         paintGeneral.setTypefaceWrapped(typefaceText);
         metricsText = paintGeneral.getFontMetricsInt();
-        invalidateRenderNodes();
+        editor.getRenderContext().invalidateRenderNodes();
         updateTimestamp();
         editor.createLayout();
         editor.invalidate();
@@ -327,7 +324,7 @@ public class EditorRenderer {
         metricsGraph = paintGraph.getFontMetricsInt();
         metricsLineNumber = paintOther.getFontMetricsInt();
         metricsText = paintGeneral.getFontMetricsInt();
-        invalidateRenderNodes();
+        editor.getRenderContext().invalidateRenderNodes();
         updateTimestamp();
         editor.createLayout();
         editor.invalidate();
@@ -376,38 +373,10 @@ public class EditorRenderer {
         return getLine(line).length();
     }
 
-    /**
-     * Invalidate the whole hardware-accelerated renderer
-     */
-    public void invalidateRenderNodes() {
-        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            renderNodeHolder.invalidate();
-        }
-    }
-
-
-    public void invalidateInRegion(@NonNull StyleUpdateRange range) {
-        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            renderNodeHolder.invalidateInRegion(range);
-        }
-    }
-
-    public void invalidateOnInsert(int startLine, int endLine) {
-        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            renderNodeHolder.afterInsert(startLine, endLine);
-        }
-    }
-
-    public void invalidateOnDelete(int startLine, int endLine) {
-        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            renderNodeHolder.afterDelete(startLine, endLine);
-        }
-    }
-
     // draw methods
 
     @RequiresApi(29)
-    protected void updateLineDisplayList(RenderNode renderNode, int line, Spans.Reader spans) {
+    public void updateLineDisplayList(RenderNode renderNode, int line, Spans.Reader spans) {
         int columnCount = getColumnCount(line);
         float widthLine = measureText(lineBuf, line, 0, columnCount) + editor.getDpUnit() * 20;
         renderNode.setPosition(0, 0, (int) (widthLine + paintGraph.measureText("↵") * 1.5f), editor.getRowHeight());
@@ -1171,7 +1140,7 @@ public class EditorRenderer {
             circleRadius = Math.min(editor.getRowHeight(), spaceWidth) * RenderingConstants.NON_PRINTABLE_CIRCLE_RADIUS_FACTOR;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !editor.isWordwrap() && canvas.isHardwareAccelerated() && editor.isHardwareAcceleratedDrawAllowed()) {
-            renderNodeHolder.keepCurrentInDisplay(firstVis, editor.getLastVisibleRow());
+            editor.getRenderContext().getRenderNodeHolder().keepCurrentInDisplay(firstVis, editor.getLastVisibleRow());
         }
         float offset2 = editor.getOffsetX() - editor.measureTextRegionOffset();
         float offset3 = offset2 - editor.getDpUnit() * 15;
@@ -1439,7 +1408,7 @@ public class EditorRenderer {
                     drawMiniGraph(canvas, paintingOffset, row, "↵");
                 }
             } else {
-                paintingOffset = offset + renderNodeHolder.drawLineHardwareAccelerated(canvas, line, offset, editor.getRowTop(line) - editor.getOffsetY()) - editor.getDpUnit() * 20;
+                paintingOffset = offset + editor.getRenderContext().getRenderNodeHolder().drawLineHardwareAccelerated(canvas, line, offset, editor.getRowTop(line) - editor.getOffsetY()) - editor.getDpUnit() * 20;
                 lastVisibleChar = columnCount;
             }
 
