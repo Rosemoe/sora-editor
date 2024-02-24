@@ -75,7 +75,7 @@ class ContentShallowCopyTest {
     fun `test shallow copy modification`() {
         val text = Content(TEXT, false)
         val insertion = "//Test Content\n"
-        val copy = text.copyTextShallow(false)
+        val copy = text.copyTextShallow()
         copy.insert(0, 0, insertion)
         assertThat(copy.lineCount).isEqualTo(text.lineCount + 1)
         for (i in 0 until copy.lineCount) {
@@ -95,6 +95,17 @@ class ContentShallowCopyTest {
         for (i in 0..1) {
             assertThat(text.getLine(i).isMutable()).isTrue()
         }
+    }
+
+    @Test
+    fun `test shallow copy modification 2`() {
+        val text = Content(TEXT, false)
+        val copy = text.copyTextShallow()
+        copy.delete(0, 5)
+        assertThat(text.toString()).isEqualTo(TEXT)
+        assertThat(copy.toString()).isEqualTo(TEXT.substring(5))
+        assertThat(text.getLine(0).isMutable()).isTrue()
+        assertThat(copy.getLine(0).isMutable()).isTrue()
     }
 
     @Test

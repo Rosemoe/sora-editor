@@ -391,13 +391,7 @@ public class Content implements CharSequence {
 
         int workLine = line;
         int workIndex = column;
-        var currLine = lines.get(workLine);
-        if (!currLine.isMutable()) {
-            var mut = currLine.toMutable();
-            currLine.release();
-            currLine = mut;
-            lines.set(workLine, currLine);
-        }
+        var currLine = makeLineMutable(workLine);
         var helper = InsertTextHelper.forInsertion(text);
         int type, peekType = InsertTextHelper.TYPE_EOF;
         boolean fromPeek = false;
@@ -497,7 +491,7 @@ public class Content implements CharSequence {
         }
         var changedContent = new StringBuilder();
         if (startLine == endLine) {
-            var curr = lines.get(startLine);
+            var curr = makeLineMutable(startLine);
             int len = curr.length();
             if (columnOnStartLine < 0 || columnOnEndLine > len || columnOnStartLine > columnOnEndLine) {
                 throw new StringIndexOutOfBoundsException("invalid bounds");
@@ -531,13 +525,7 @@ public class Content implements CharSequence {
             }
 
             int currEnd = startLine + 1;
-            var start = lines.get(startLine);
-            if (!start.isMutable()) {
-                var mut = start.toMutable();
-                start.release();
-                start = mut;
-                lines.set(startLine, start);
-            }
+            var start = makeLineMutable(startLine);
             var end = lines.get(currEnd);
             textLength -= start.length() - columnOnStartLine;
             changedContent.insert(0, start, columnOnStartLine, start.length())
@@ -554,6 +542,19 @@ public class Content implements CharSequence {
             throw new IllegalArgumentException("start line > end line");
         }
         this.dispatchAfterDelete(startLine, columnOnStartLine, endLine, columnOnEndLine, changedContent);
+    }
+
+    /**
+     * Make the given line mutable
+     */
+    private ContentLine makeLineMutable(int line) {
+        var data = lines.get(line);
+        var mut = data.toMutable();
+        if (mut != data) {
+            lines.set(line, mut);
+            data.release();
+        }
+        return mut;
     }
 
     /**
