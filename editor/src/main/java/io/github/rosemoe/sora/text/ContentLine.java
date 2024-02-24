@@ -28,17 +28,21 @@ import android.text.GetChars;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.text.bidi.BidiRequirementChecker;
 import io.github.rosemoe.sora.text.bidi.TextBidi;
+import io.github.rosemoe.sora.util.ShareableData;
 
-public class ContentLine implements CharSequence, GetChars, BidiRequirementChecker {
+public class ContentLine implements CharSequence, GetChars, BidiRequirementChecker, ShareableData<ContentLine> {
 
     private char[] value;
     private int length;
 
     private int rtlAffectingCount;
     private LineSeparator lineSeparator;
+    private final AtomicInteger refCount = new AtomicInteger(1);
 
     public ContentLine() {
         this(true);
@@ -348,5 +352,46 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
             return LineSeparator.NONE;
         }
         return lineSeparator;
+    }
+
+    /**
+     * Copy the object.
+     * The new instance can be safely modified without affecting the original instance.
+     */
+    @NonNull
+    public ContentLine copy() {
+        var clone = new ContentLine(false);
+        clone.length = length;
+        clone.value = new char[value.length];
+        System.arraycopy(value, 0, clone.value, 0, length);
+        clone.rtlAffectingCount = rtlAffectingCount;
+        clone.lineSeparator = lineSeparator;
+        return clone;
+    }
+
+    @Override
+    public void retain() {
+        refCount.incrementAndGet();
+    }
+
+    @Override
+    public void release() {
+        int count = refCount.decrementAndGet();
+        if (count < 0) {
+            throw new IllegalStateException("illegal operation. There is no active owner");
+        }
+    }
+
+    @Override
+    public boolean isMutable() {
+        return refCount.get() == 1;
+    }
+
+    @Override
+    public ContentLine toMutable() {
+        if (isMutable()) {
+            return this;
+        }
+        return copy();
     }
 }

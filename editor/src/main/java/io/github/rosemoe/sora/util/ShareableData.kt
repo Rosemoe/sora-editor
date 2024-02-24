@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2024  Rosemoe
@@ -20,24 +20,31 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- */
-package io.github.rosemoe.sora.text;
+ ******************************************************************************/
 
-import androidx.annotation.NonNull;
+package io.github.rosemoe.sora.util
 
-/**
- * A listener to know when a ContentLine object is removed from Content object
- *
- * @author Rose
- */
-public interface LineRemoveListener {
+interface ShareableData<T> : Cloneable {
 
     /**
-     * When a ContentLine is removed from Content, this method is called
-     *
-     * @param content Caller Content
-     * @param line    ContentLine object removed
+     * Declare that the object is retained by an owner
      */
-    void onRemove(@NonNull Content content, @NonNull ContentLine line);
+    fun retain()
+
+    /**
+     * Declare that the object is no longer used by an owner
+     */
+    fun release()
+
+    /**
+     * Check if this object can be modified directly
+     */
+    fun isMutable(): Boolean
+
+    /**
+     * If this object is mutable, returns itself.
+     * Otherwise, the object is cloned and the cloned object is returned.
+     */
+    fun toMutable(): T
 
 }

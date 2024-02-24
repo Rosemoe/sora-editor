@@ -114,7 +114,6 @@ import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
-import io.github.rosemoe.sora.text.LineRemoveListener;
 import io.github.rosemoe.sora.text.LineSeparator;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
 import io.github.rosemoe.sora.text.TextRange;
@@ -169,7 +168,7 @@ import kotlin.text.StringsKt;
  * @author Rosemoe
  */
 @SuppressWarnings("unused")
-public class CodeEditor extends View implements ContentListener, Formatter.FormatResultReceiver, LineRemoveListener {
+public class CodeEditor extends View implements ContentListener, Formatter.FormatResultReceiver {
 
     /**
      * The default text size when creating the editor object. Unit is sp.
@@ -3722,7 +3721,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         if (this.text != null) {
             this.text.removeContentListener(this);
-            this.text.setLineListener(null);
             this.text.resetBatchEdit();
         }
         this.extraArguments = extraArguments == null ? new Bundle() : extraArguments;
@@ -3742,7 +3740,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         touchHandler.reset();
         this.text.addContentListener(this);
         this.text.setUndoEnabled(undoEnabled);
-        this.text.setLineListener(this);
         renderContext.reset(this.text.getLineCount());
         renderer.onEditorFullTextUpdate();
 
@@ -4279,7 +4276,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         final var text = this.text;
         if (text != null) {
             text.removeContentListener(this);
-            text.setLineListener(null);
         }
         colorScheme.detachEditor(this);
     }
@@ -5037,11 +5033,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             Toast.makeText(getContext(), "Format:" + throwable, Toast.LENGTH_SHORT).show();
             dispatchEvent(new EditorFormatEvent(this, false));
         });
-    }
-
-    @Override
-    public void onRemove(@NonNull Content content, @NonNull ContentLine line) {
-        layout.onRemove(content, line);
     }
 
 }
