@@ -103,15 +103,19 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                 thread.interrupt();
                 thread.abort = true;
             }
+            thread = null;
         }
-        final var text = getContentRef().getReference().copyText(false);
-        text.setUndoEnabled(false);
-        thread = new LooperThread();
-        thread.setName("AsyncAnalyzer-" + nextThreadId());
-        thread.offerMessage(MSG_INIT, text);
-        increaseRunCount();
-        sendNewStyles(null);
-        thread.start();
+        var ref = getContentRef();
+        if (ref != null) {
+            final var text = ref.getReference().copyText(false);
+            text.setUndoEnabled(false);
+            thread = new LooperThread();
+            thread.setName("AsyncAnalyzer-" + nextThreadId());
+            thread.offerMessage(MSG_INIT, text);
+            increaseRunCount();
+            sendNewStyles(null);
+            thread.start();
+        }
     }
 
     @Override
@@ -183,6 +187,8 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
 
     private static class LockedSpans implements Spans {
 
+        private static final String LOG_TAG = "LockedSpans";
+
         private final Lock lock;
         private final List<Line> lines;
 
@@ -227,10 +233,6 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
 
             public List<Span> spans;
 
-            public Line() {
-                this(null);
-            }
-
             public Line(List<Span> s) {
                 spans = s;
             }
@@ -255,7 +257,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                     try {
                         locked = lock.tryLock(100, TimeUnit.MICROSECONDS);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        Log.w(LOG_TAG, "failed to acquire the lock", e);
                         Thread.currentThread().interrupt();
                     }
                     if (locked) {
@@ -292,7 +294,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                 try {
                     locked = lock.tryLock(1, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Log.w(LOG_TAG, "failed to acquire the lock", e);
                 }
                 if (locked) {
                     Line obj = null;
