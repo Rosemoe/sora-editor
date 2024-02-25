@@ -70,7 +70,6 @@ public class SymbolPairMatch {
      * @see SymbolPair
      */
     public void putPair(char singleCharacter, SymbolPair symbolPair) {
-        //pairMaps.put(new char[]{singleCharacter}, symbolPair);
         singleCharPairMaps.put(singleCharacter, symbolPair);
     }
 
@@ -243,13 +242,13 @@ public class SymbolPairMatch {
         }
 
 
-        protected boolean shouldNotReplace(CodeEditor editor) {
+        protected boolean shouldDoReplace(CodeEditor editor) {
             if (symbolPairEx == null) {
                 return false;
             }
             var content = editor.getText();
             ContentLine currentLine = content.getLine(content.getCursor().getLeftLine());
-            return !symbolPairEx.shouldDoReplace(editor, currentLine, content.getCursor().getLeftColumn());
+            return symbolPairEx.shouldDoReplace(editor, currentLine, content.getCursor().getLeftColumn());
         }
 
         protected boolean shouldDoAutoSurround(Content content) {
@@ -323,11 +322,6 @@ public class SymbolPairMatch {
                     return content.getCursor().isSelected();
                 }
             }));
-            // test for java
-
-            // if (BuildConfig.DEBUG) {
-            //    super.putPair("/*".toCharArray(), new SymbolPair("/*", " */"));
-            // }
         }
 
     }

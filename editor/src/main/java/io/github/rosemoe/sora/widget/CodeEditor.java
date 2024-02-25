@@ -1874,21 +1874,88 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (text.length() == 0) {
             return;
         }
-        var cur = cursor;
-        if (cur.isSelected()) {
-            if (text.length() > 0 && text.length() == 1) {
-                var quoteHandler = editorLanguage.getQuickQuoteHandler();
-                System.out.println(quoteHandler);
-                var result = quoteHandler == null ? null : quoteHandler.onHandleTyping(text.toString(), this.text, getCursorRange(), getStyles());
-                if (result != null && result.isConsumed()) {
-                    var range = result.getNewCursorRange();
-                    if (range != null) {
-                        setSelectionRegion(range.getStart().line, range.getStart().column, range.getEnd().line, range.getEnd().column);
-                    }
-                    return;
-                }
+
+        // replace text
+        SymbolPairMatch.SymbolPair pair = null;
+        if (getProps().symbolPairAutoCompletion && text.length() > 0) {
+            var firstCharFromText = text.charAt(0);
+
+            char[] inputText = null;
+
+            //size > 1
+            if (text.length() > 1) {
+                inputText = text.toString().toCharArray();
             }
-            this.text.replace(cur.getLeftLine(), cur.getLeftColumn(), cur.getRightLine(), cur.getRightColumn(), text);
+
+            pair = languageSymbolPairs.matchBestPair(
+                    this.text, cursor.left(),
+                    inputText, firstCharFromText
+            );
+        }
+
+        var cur = cursor;
+        var editorText = this.text;
+        var quoteHandler = editorLanguage.getQuickQuoteHandler();
+
+        if (pair != null && pair != SymbolPairMatch.SymbolPair.EMPTY_SYMBOL_PAIR
+                && (pair.shouldDoReplace(this))
+        ) {
+
+            // QuickQuoteHandler can easily implement the feature of AutoSurround
+            // and is at a higher level (customizable),
+            // so if the language implemented QuickQuoteHandler,
+            // the AutoSurround feature is not considered needed because it can be implemented through QuickQuoteHandler
+            if (pair.shouldDoAutoSurround(editorText) && quoteHandler == null) {
+
+                editorText.beginBatchEdit();
+                // insert left
+                editorText.insert(cur.getLeftLine(), cur.getLeftColumn(), pair.open);
+                // editorText.insert(editorCursor.getLeftLine(),editorCursor.getLeftColumn(),selectText);
+                // insert right
+                editorText.insert(cur.getRightLine(), cur.getRightColumn(), pair.close);
+                editorText.endBatchEdit();
+
+                // setSelection
+                setSelectionRegion(cur.getLeftLine(), cur.getLeftColumn(),
+                        cur.getRightLine(), cur.getRightColumn() - pair.close.length());
+
+                return;
+            } else if (cur.isSelected() && quoteHandler != null) {
+                if (text.length() > 0 && text.length() == 1) {
+                    var result = quoteHandler.onHandleTyping(text.toString(), this.text, getCursorRange(), getStyles());
+                    if (result.isConsumed()) {
+                        var range = result.getNewCursorRange();
+                        if (range != null) {
+                            setSelectionRegion(range.getStart().line, range.getStart().column, range.getEnd().line, range.getEnd().column);
+                        }
+                        return;
+                    }
+                }
+            } else {
+                editorText.beginBatchEdit();
+
+                var insertPosition = editorText
+                        .getIndexer()
+                        .getCharPosition(pair.getInsertOffset());
+
+                editorText.replace(insertPosition.line, insertPosition.column,
+                        cur.getRightLine(), cur.getRightColumn(), pair.open);
+                editorText.insert(insertPosition.line, insertPosition.column + pair.open.length(), pair.close);
+                editorText.endBatchEdit();
+
+                var cursorPosition = editorText
+                        .getIndexer()
+                        .getCharPosition(pair.getCursorOffset());
+
+                setSelection(cursorPosition.line, cursorPosition.column);
+
+                return;
+            }
+        }
+
+
+        if (cur.isSelected()) {
+            editorText.replace(cur.getLeftLine(), cur.getLeftColumn(), cur.getRightLine(), cur.getRightColumn(), text);
         } else {
             if (props.autoIndent && text.length() != 0 && applyAutoIndent) {
                 char first = text.charAt(0);
@@ -1921,7 +1988,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     text = sb;
                 }
             }
-            this.text.insert(cur.getLeftLine(), cur.getLeftColumn(), text);
+            editorText.insert(cur.getLeftLine(), cur.getLeftColumn(), text);
         }
     }
 
