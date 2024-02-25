@@ -242,13 +242,13 @@ public class SymbolPairMatch {
         }
 
 
-        protected boolean shouldDoReplace(CodeEditor editor) {
+        protected boolean shouldReplace(CodeEditor editor) {
             if (symbolPairEx == null) {
                 return false;
             }
             var content = editor.getText();
             ContentLine currentLine = content.getLine(content.getCursor().getLeftLine());
-            return symbolPairEx.shouldDoReplace(editor, currentLine, content.getCursor().getLeftColumn());
+            return symbolPairEx.shouldReplace(editor, currentLine, content.getCursor().getLeftColumn());
         }
 
         protected boolean shouldDoAutoSurround(Content content) {
@@ -286,7 +286,7 @@ public class SymbolPairMatch {
              * @param currentLine The current line edit in the editor,quick analysis it to decide whether to replaced
              * @param leftColumn  return current cursor column
              */
-            default boolean shouldDoReplace(CodeEditor editor, ContentLine currentLine, int leftColumn) {
+            default boolean shouldReplace(CodeEditor editor, ContentLine currentLine, int leftColumn) {
                 return true;
             }
 
