@@ -168,7 +168,7 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
         }
 
         @Override
-        public boolean shouldDoReplace(CodeEditor editor, ContentLine contentLine, int leftColumn) {
+        public boolean shouldReplace(CodeEditor editor, ContentLine contentLine, int leftColumn) {
             if (editor.getCursor().isSelected()) {
                 return isSurroundingPair;
             }

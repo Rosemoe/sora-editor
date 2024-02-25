@@ -1898,7 +1898,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         var quoteHandler = editorLanguage.getQuickQuoteHandler();
 
         if (pair != null && pair != SymbolPairMatch.SymbolPair.EMPTY_SYMBOL_PAIR
-                && (pair.shouldDoReplace(this))
+                && (pair.shouldReplace(this))
         ) {
 
             // QuickQuoteHandler can easily implement the feature of AutoSurround
