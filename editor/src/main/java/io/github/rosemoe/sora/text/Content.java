@@ -1131,12 +1131,14 @@ public class Content implements CharSequence {
         try {
             var n = new Content(null, newContentThreadSafe);
             n.lines.remove(0);
-            for (int i = 0; i < getLineCount(); i++) {
-                var line = lines.get(i);
-                if (shallow) {
+            ((ArrayList<ContentLine>) n.lines).ensureCapacity(getLineCount());
+            if (shallow) {
+                for (ContentLine line : lines) {
                     line.retain();
-                    n.lines.add(line);
-                } else {
+                }
+                n.lines.addAll(lines);
+            } else {
+                for (ContentLine line : lines) {
                     n.lines.add(new ContentLine(line));
                 }
             }

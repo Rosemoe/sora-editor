@@ -27,13 +27,19 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
+import kotlin.time.DurationUnit
+import kotlin.time.measureTime
 
 @RunWith(RobolectricTestRunner::class)
+@Config(manifest = Config.NONE)
 class ContentShallowCopyTest {
 
     companion object {
+        val DEFAULT_CHARSET = "abcdefghijklmnopqrstuvwxyz1234567890 \n\n\n"
+
         val TEXT = """
             implementation(libs.androidx.constraintlayout)
             implementation(libs.gms.instantapps)
@@ -46,6 +52,32 @@ class ContentShallowCopyTest {
             implementation(libs.androidx.core.ktx)
             implementation(libs.androidx.appcompat)
             implementation(libs.lifecycle.runtime)""".trimIndent().trim().replace("\r\n", "\n")
+    }
+
+    @Test
+    fun `test shallow copy performance`() {
+        val text = Content(TEXT.repeat(100), false)
+        val iterationCount = 1000
+        val timeDeep = measureTime {
+            repeat(iterationCount) {
+                text.copyText(false)
+            }
+        }
+        val timeShallow = measureTime {
+            repeat(iterationCount) {
+                text.copyTextShallow()
+            }
+        }
+        println(
+            "Content Shallow Copy Perf Test Result:\n" +
+                    "Deep Copy Time = $timeDeep, Shallow Copy Time = $timeShallow," +
+                    " Ratio = ${
+                        timeDeep.toLong(DurationUnit.NANOSECONDS) / timeShallow.toLong(
+                            DurationUnit.NANOSECONDS
+                        ).toDouble()
+                    }"
+        )
+        assertThat(timeShallow).isAtMost(timeDeep)
     }
 
     @Test
@@ -108,8 +140,15 @@ class ContentShallowCopyTest {
         assertThat(copy.getLine(0).isMutable()).isTrue()
     }
 
-    @Test
     fun `test shallow copy random modification`() {
+        testRandomModification(DEFAULT_CHARSET)
+    }
+
+    fun `test shallow copy random modification 2`() {
+        testRandomModification(DEFAULT_CHARSET.replace("\n", ""))
+    }
+
+    private fun testRandomModification(charset: String) {
         val text = Content(TEXT, false)
         val deepCopy = text.copyText(false)
         val shallowCopy = text.copyTextShallow()
@@ -181,10 +220,10 @@ class ContentShallowCopyTest {
         editCount: Int = 1000,
         insertionLen: Int = 50,
         insertionProbability: Float = 0.8f,
-        seed: Int = 10000
+        seed: Int = 10000,
+        charset: String = DEFAULT_CHARSET
     ): List<Edit> {
         val edits = mutableListOf<Edit>()
-        val charset = "abcdefghijklmnopqrstuvwxyz1234567890 \n\n\n"
         var len = initialLen
         val r = Random(seed)
         for (i in 0 until editCount) {
