@@ -3816,17 +3816,17 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
 
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_SET_NEW_TEXT, new CharPosition(), this.text.getIndexer().getCharPosition(getLineCount() - 1, this.text.getColumnCount(getLineCount() - 1)), this.text, false));
+        createLayout();
         if (inputMethodManager != null) {
             inputMethodManager.restartInput(this);
         }
-        createLayout();
         requestLayout();
         renderContext.invalidateRenderNodes();
         invalidate();
     }
 
     /**
-     * Set the editor's text size in sp unit. This value must be > 0
+     * Set the editor's text size in sp unit. This value must be greater than 0
      *
      * @param textSize the editor's text size in <strong>Sp</strong> units.
      */
