@@ -52,7 +52,7 @@ import io.github.rosemoe.sora.util.Logger;
 /**
  * Connection between input method and editor
  *
- * @author Rose
+ * @author Rosemoe
  */
 class EditorInputConnection extends BaseInputConnection {
 
@@ -81,7 +81,7 @@ class EditorInputConnection extends BaseInputConnection {
         });
     }
 
-    protected void invalid() {
+    protected void markInvalid() {
         connectionInvalid = true;
         composingText.reset();
         resetBatchEdit();

@@ -5071,7 +5071,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     text.getColumnCount(text.getLineCount() - 1));
             text.insert(0, 0, string);
             text.endBatchEdit();
-            inputConnection.invalid();
+            inputConnection.markInvalid();
             if (cursorRange == null) {
                 setSelectionAround(line, column);
             } else {
