@@ -419,4 +419,10 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean mouseContextMenu = true;
 
+    /**
+     * Disable {@link android.view.inputmethod.InputConnection#getExtractedText(ExtractedTextRequest, int)}
+     * for IME
+     */
+    public boolean disableTextExtracting = false;
+
 }

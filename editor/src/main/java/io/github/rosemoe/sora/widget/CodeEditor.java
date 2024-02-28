@@ -4248,7 +4248,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Extract text in editor for input method
      */
     protected ExtractedText extractText(@NonNull ExtractedTextRequest request) {
-        if (getProps().disallowSuggestions) {
+        if (getProps().disallowSuggestions || getProps().disableTextExtracting) {
             return null;
         }
         Cursor cur = getCursor();

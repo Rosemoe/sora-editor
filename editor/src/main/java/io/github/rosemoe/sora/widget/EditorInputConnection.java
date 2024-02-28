@@ -593,7 +593,7 @@ class EditorInputConnection extends BaseInputConnection {
     public ExtractedText getExtractedText(ExtractedTextRequest request, int flags) {
         if (DEBUG)
             logger.d("getExtractedText, flags = " + flags);
-        if (editor.getProps().disallowSuggestions) {
+        if (editor.getProps().disallowSuggestions || editor.getProps().disableTextExtracting) {
             return null;
         }
         if ((flags & GET_EXTRACTED_TEXT_MONITOR) != 0) {
