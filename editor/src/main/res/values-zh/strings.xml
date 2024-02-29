@@ -35,4 +35,5 @@
     <string name="sora_editor_more">更多</string>
     <string name="sora_editor_diagnostics_more_actions">更多操作…</string>
     <string name="sora_editor_clip_text_length_too_large">文本过大，无法复制</string>
+    <string name="sora_editor_long_select">长选择</string>
 </resources>
