@@ -25,16 +25,12 @@ package io.github.rosemoe.sora.text
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 import kotlin.time.DurationUnit
 import kotlin.time.measureTime
 
-@RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
+
 class ContentShallowCopyTest {
 
     companion object {
