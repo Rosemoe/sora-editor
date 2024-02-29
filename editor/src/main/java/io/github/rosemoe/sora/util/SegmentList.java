@@ -75,13 +75,24 @@ public class SegmentList<T> extends AbstractList<T> {
     }
 
     private FindResult<T> getSegment(int index) {
+        if (segments.isEmpty()) {
+            segments.add(new Segment<>());
+        }
         int offset = 0;
-        for (int i = 0; i < segments.size(); i++) {
+        int backOffset = size() - segments.get(segments.size() - 1).size();
+        for (int i = 0, j = segments.size() - 1; i <= j; i++, j--) {
             var block = segments.get(i);
-            if (index >= offset && index < offset + block.size() || i + 1 == segments.size()) {
+            if ((index >= offset && index < offset + block.size()) || i + 1 == segments.size()) {
                 return new FindResult<>(block, offset, i);
             }
             offset += block.size();
+
+            block = segments.get(j);
+            if ((index >= backOffset && index < backOffset + block.size()) || (j == segments.size() - 1 && index == length)) {
+                return new FindResult<>(block, backOffset, j);
+            }
+            if (j > 0)
+                backOffset -= segments.get(j - 1).size();
         }
         throw new IllegalStateException("unreachable");
     }
@@ -145,6 +156,38 @@ public class SegmentList<T> extends AbstractList<T> {
     }
 
     @Override
+    protected void removeRange(int fromIndex, int toIndex) {
+        if (fromIndex > toIndex) throw new IndexOutOfBoundsException("start > end");
+        if (fromIndex < 0 || toIndex > length)
+            throw new IndexOutOfBoundsException("start = " + fromIndex + ", end = " + toIndex + ", length = " + size());
+        if (fromIndex == toIndex) return;
+        var res = getSegment(fromIndex);
+        int offset = res.offset;
+        int index = res.blockIndex;
+        var seg = res.segment;
+
+        while (toIndex - offset > 0 && index < segments.size()) {
+            int segLength = seg.size();
+            if (fromIndex <= offset && toIndex >= offset + segLength) {
+                // Remove the segment
+                segments.remove(index);
+                seg.release();
+            } else {
+                ensureMutable(index);
+                seg = segments.get(index);
+                var sub = seg.subList(Math.max(fromIndex - offset, 0), Math.min(toIndex - offset, segLength));
+                sub.clear();
+                index++;
+            }
+            offset += segLength;
+            if (index < segments.size())
+                seg = segments.get(index);
+        }
+        mergeSegment(index - 1, index);
+        length -= toIndex - fromIndex;
+    }
+
+    @Override
     public int size() {
         return length;
     }
@@ -158,13 +201,24 @@ public class SegmentList<T> extends AbstractList<T> {
         length = 0;
     }
 
+    public SegmentList<T> shallowCopy() {
+        var list = new SegmentList<T>(segmentCapacity);
+        list.segments.clear();
+        for (var seg : segments) {
+            seg.retain();
+            list.segments.add(seg);
+        }
+        list.length = length;
+        return list;
+    }
+
     private void mergeSegment(int blk1, int blk2) {
         if (blk1 > blk2) {
             int tmp = blk1;
             blk1 = blk2;
             blk2 = tmp;
         }
-        if (blk1 == blk2 || blk1 < 0 || blk2 >= length) return;
+        if (blk1 == blk2 || blk1 < 0 || blk2 >= segments.size()) return;
         var pre = segments.get(blk1);
         var aft = segments.get(blk2);
         if (pre.size() + aft.size() <= segmentCapacity * 3 / 4) {
