@@ -42,7 +42,7 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
 
     private int rtlAffectingCount;
     private LineSeparator lineSeparator;
-    private final AtomicInteger refCount = new AtomicInteger(1);
+    private AtomicInteger refCount;
 
     public ContentLine() {
         this(true);
@@ -371,11 +371,18 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
 
     @Override
     public void retain() {
+        if (refCount == null) {
+            refCount = new AtomicInteger(2);
+            return;
+        }
         refCount.incrementAndGet();
     }
 
     @Override
     public void release() {
+        if (refCount == null) {
+            return;
+        }
         int count = refCount.decrementAndGet();
         if (count < 0) {
             throw new IllegalStateException("illegal operation. There is no active owner");
@@ -384,7 +391,7 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
 
     @Override
     public boolean isMutable() {
-        return refCount.get() == 1;
+        return refCount == null || refCount.get() == 1;
     }
 
     @Override
