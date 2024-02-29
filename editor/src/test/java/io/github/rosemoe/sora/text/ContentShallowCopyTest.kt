@@ -136,10 +136,12 @@ class ContentShallowCopyTest {
         assertThat(copy.getLine(0).isMutable()).isTrue()
     }
 
+    @Test
     fun `test shallow copy random modification`() {
         testRandomModification(DEFAULT_CHARSET)
     }
 
+    @Test
     fun `test shallow copy random modification 2`() {
         testRandomModification(DEFAULT_CHARSET.replace("\n", ""))
     }
