@@ -84,8 +84,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     private final EditorScroller scroller;
     private final SelectionHandle insertHandle;
     Magnifier magnifier;
-    int candidateSelHandleType = -1;
     int selHandleType = -1;
+    boolean selHandleMoving;
     float motionX;
     float motionY;
     boolean glowTopOrBottom; //true for bottom
@@ -137,6 +137,10 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     public boolean hasAnyHeldHandle() {
         return selHandleType != -1;
+    }
+
+    public boolean isHandleMoving() {
+        return selHandleMoving;
     }
 
     /**
@@ -249,7 +253,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      * @return Whether handling
      */
     public boolean handlingMotions() {
-        return holdHorizontalScrollBar() || holdVerticalScrollBar() || holdInsertHandle() || selHandleType != -1;
+        return holdHorizontalScrollBar() || holdVerticalScrollBar() || hasAnyHeldHandle();
     }
 
     /**
@@ -274,7 +278,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      */
     public void reset2() {
         holdingScrollbarHorizontal = holdingScrollbarVertical = false;
-        candidateSelHandleType = selHandleType = -1;
+        selHandleType = -1;
         dismissMagnifier();
     }
 
@@ -342,16 +346,16 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     final var allowedDistance = editor.getDpUnit() * 7;
                     if (shouldDrawInsertHandle() && RectUtils.almostContains(editor.getInsertHandleDescriptor().position, e.getX(), e.getY(), allowedDistance)) {
                         selHandleType = SelectionHandle.BOTH;
-                        dispatchHandleStateChange(HandleStateChangeEvent.HANDLE_TYPE_INSERT, true);
                     }
                     boolean left = RectUtils.almostContains(editor.getLeftHandleDescriptor().position, e.getX(), e.getY(), allowedDistance);
                     boolean right = RectUtils.almostContains(editor.getRightHandleDescriptor().position, e.getX(), e.getY(), allowedDistance);
-                    if (left || right) {
-                        if (left) {
-                            selHandleType = SelectionHandle.LEFT;
-                        } else {
-                            selHandleType = SelectionHandle.RIGHT;
-                        }
+                    if (left) {
+                        selHandleType = SelectionHandle.LEFT;
+                    } else if (right) {
+                        selHandleType = SelectionHandle.RIGHT;
+                    }
+                    if (selHandleType != -1) {
+                        selHandleMoving = false;
                         dispatchHandleStateChange(selHandleType, true);
                     }
                 }
@@ -379,30 +383,23 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     scrollBy(dx, 0);
                     return true;
                 }
-                if (handleSelectionChange(e)) {
+                if (!selHandleMoving && (Math.abs(e.getX() - thumbDownX) > touchSlop || Math.abs(e.getY() - thumbDownY) > touchSlop)) {
+                    selHandleMoving = true;
+                }
+                if (selHandleMoving && handleSelectionChange(e)) {
                     if (magnifier.isShowing() || Math.sqrt((e.getX() - thumbDownX) * (e.getX() - thumbDownX) +
                             (e.getY() - thumbDownY) * (e.getY() - thumbDownY)) >= MAGNIFIER_TOUCH_SLOP) {
                         updateMagnifier(e);
                     }
-                    if (selHandleType != -1) {
-                        editor.invalidate();
-                    }
+                    editor.invalidate();
                     return true;
-                } else {
-                    return false;
                 }
+                return false;
             }
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                if (holdingScrollbarVertical) {
-                    holdingScrollbarVertical = false;
-                    editor.invalidate();
-                    timeLastScroll = System.currentTimeMillis();
-                    notifyScrolled();
-                }
-                if (holdingScrollbarHorizontal) {
-                    holdingScrollbarHorizontal = false;
-                    editor.invalidate();
+                if (holdingScrollbarVertical || holdingScrollbarHorizontal) {
+                    holdingScrollbarVertical = holdingScrollbarHorizontal = false;
                     timeLastScroll = System.currentTimeMillis();
                     notifyScrolled();
                 }
