@@ -378,6 +378,11 @@ public class DirectAccessProps implements Serializable {
     public boolean singleDirectionFling = true;
 
     /**
+     * Dragging scroll in single direction (vertical or horizontal)
+     */
+    public boolean singleDirectionDragging = true;
+
+    /**
      * Report cursor anchor info to system.
      * <p>
      * Enable this if the IME needs to get the position of cursor on screen. For example, the

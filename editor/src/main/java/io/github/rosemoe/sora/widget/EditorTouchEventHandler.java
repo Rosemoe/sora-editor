@@ -803,6 +803,13 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     @Override
     public boolean onScroll(MotionEvent e1, @NonNull MotionEvent e2, float distanceX, float distanceY) {
+        if (editor.getProps().singleDirectionDragging) {
+            if (Math.abs(distanceX) > Math.abs(distanceY)) {
+                distanceY = 0;
+            } else {
+                distanceX = 0;
+            }
+        }
         int endX = scroller.getCurrX() + (int) distanceX;
         int endY = scroller.getCurrY() + (int) distanceY;
         endX = Math.max(endX, 0);
