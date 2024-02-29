@@ -57,7 +57,6 @@ import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
 import io.github.rosemoe.sora.graphics.CharPosDesc;
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.Paint;
-import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.lang.completion.snippet.SnippetItem;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
@@ -91,7 +90,6 @@ import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 import io.github.rosemoe.sora.widget.layout.Row;
 import io.github.rosemoe.sora.widget.layout.RowIterator;
 import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
-import io.github.rosemoe.sora.widget.rendering.RenderNodeHolder;
 import io.github.rosemoe.sora.widget.rendering.RenderingConstants;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
@@ -2097,13 +2095,17 @@ public class EditorRenderer {
     protected void drawScrollBars(Canvas canvas) {
         verticalScrollBarRect.setEmpty();
         horizontalScrollBarRect.setEmpty();
-        if (!editor.getEventHandler().shouldDrawScrollBar()) {
+        if (!editor.getEventHandler().shouldDrawScrollBarForTouch() && !(editor.isInMouseMode() && editor.getProps().mouseModeAlwaysShowScrollbars)) {
             return;
+        }
+        var percentage = editor.getEventHandler().getScrollBarFadeOutPercentageForTouch();
+        if (editor.isInMouseMode() && editor.getProps().mouseModeAlwaysShowScrollbars) {
+            percentage = 0f;
         }
         var size = editor.getDpUnit() * RenderingConstants.SCROLLBAR_WIDTH_DIP;
         if (editor.isHorizontalScrollBarEnabled() && !editor.isWordwrap() && editor.getScrollMaxX() > editor.getWidth() * 3 / 4) {
             canvas.save();
-            canvas.translate(0f, size * editor.getEventHandler().getScrollBarMovementPercentage());
+            canvas.translate(0f, size * percentage);
 
             drawScrollBarTrackHorizontal(canvas);
             drawScrollBarHorizontal(canvas);
@@ -2112,7 +2114,7 @@ public class EditorRenderer {
         }
         if (editor.isVerticalScrollBarEnabled() && editor.getScrollMaxY() > editor.getHeight() / 2) {
             canvas.save();
-            canvas.translate(size * editor.getEventHandler().getScrollBarMovementPercentage(), 0f);
+            canvas.translate(size * percentage, 0f);
 
             drawScrollBarTrackVertical(canvas);
             drawScrollBarVertical(canvas);

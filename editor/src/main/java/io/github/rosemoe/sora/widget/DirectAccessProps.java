@@ -425,6 +425,11 @@ public class DirectAccessProps implements Serializable {
     public boolean mouseContextMenu = true;
 
     /**
+     * Always show scrollbars when the editor is in mouse mode
+     */
+    public boolean mouseModeAlwaysShowScrollbars = true;
+
+    /**
      * Disable {@link android.view.inputmethod.InputConnection#getExtractedText(ExtractedTextRequest, int)}
      * for IME
      */

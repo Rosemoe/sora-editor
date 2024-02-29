@@ -148,12 +148,12 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      *
      * @return whether draw scroll bars
      */
-    public boolean shouldDrawScrollBar() {
+    public boolean shouldDrawScrollBarForTouch() {
         return System.currentTimeMillis() - timeLastScroll < HIDE_DELAY + SCROLLBAR_FADE_ANIMATION_TIME || holdingScrollbarVertical || holdingScrollbarHorizontal;
     }
 
     @UnsupportedUserUsage
-    public float getScrollBarMovementPercentage() {
+    public float getScrollBarFadeOutPercentageForTouch() {
         if (System.currentTimeMillis() - timeLastScroll < HIDE_DELAY || holdingScrollbarVertical || holdingScrollbarHorizontal) {
             return 0f;
         } else if (System.currentTimeMillis() - timeLastScroll >= HIDE_DELAY && System.currentTimeMillis() - timeLastScroll < HIDE_DELAY + SCROLLBAR_FADE_ANIMATION_TIME) {
@@ -417,6 +417,10 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         return false;
     }
 
+    private boolean shouldForwardToTouch() {
+        return holdingScrollbarHorizontal || holdingScrollbarVertical;
+    }
+
     /**
      * Entry for mouse motion events
      */
@@ -424,6 +428,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         if (editor.isFormatting()) {
             resetMouse();
             return false;
+        }
+        if (shouldForwardToTouch()) {
+            return onTouchEvent(event);
         }
         lastContextClickPosition = null;
         switch (event.getActionMasked()) {
@@ -433,6 +440,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 mouseDownButtonState = event.getButtonState();
                 mouseClick = true;
                 if ((mouseDownButtonState & MotionEvent.BUTTON_PRIMARY) != 0) {
+                    if (onTouchEvent(event) && shouldForwardToTouch()) {
+                        return true;
+                    }
                     if (SystemClock.uptimeMillis() - lastTimeMousePrimaryClickUp < ViewConfiguration.getDoubleTapTimeout()) {
                         mouseDoubleClick = true;
                         onDoubleTap(event);
