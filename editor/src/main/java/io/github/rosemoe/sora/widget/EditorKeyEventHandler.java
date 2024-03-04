@@ -612,10 +612,6 @@ public class EditorKeyEventHandler {
             }
         }
 
-        if (!keyMetaStates.isShiftPressed() && this.editor.selectionAnchor != null && !cursor.isSelected()) {
-            this.editor.selectionAnchor = null;
-            return e.result(true);
-        }
         return e.result(this.editor.onSuperKeyUp(keyCode, event));
     }
 
