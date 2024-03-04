@@ -430,6 +430,11 @@ public class DirectAccessProps implements Serializable {
     public boolean mouseModeAlwaysShowScrollbars = true;
 
     /**
+     * Adjust scrolling speed in mouse wheel scrolling
+     */
+    public float mouseWheelScrollFactor = 1.2f;
+
+    /**
      * Disable {@link android.view.inputmethod.InputConnection#getExtractedText(ExtractedTextRequest, int)}
      * for IME
      */
