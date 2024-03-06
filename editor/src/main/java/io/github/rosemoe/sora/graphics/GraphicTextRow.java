@@ -158,33 +158,35 @@ public class GraphicTextRow {
      * @see CharPosDesc Character position description
      */
     public long findOffsetByAdvance(int start, float advance) {
-        var cacheItem = context.getCache().queryMeasureCache(line);
-        if (cacheItem != null && cacheItem.getWidths() != null && useCache) {
-            var cache = cacheItem.getWidths();
-            var end = textEnd;
-            int left = start, right = end;
-            var base = cache[start];
-            while (left <= right) {
-                var mid = (left + right) / 2;
-                if (mid < start || mid >= end) {
-                    left = mid;
-                    break;
+        if (useCache) {
+            var cacheItem = context.getCache().queryMeasureCache(line);
+            if (cacheItem != null && cacheItem.getWidths() != null) {
+                var cache = cacheItem.getWidths();
+                var end = textEnd;
+                int left = start, right = end;
+                var base = cache[start];
+                while (left <= right) {
+                    var mid = (left + right) / 2;
+                    if (mid < start || mid >= end) {
+                        left = mid;
+                        break;
+                    }
+                    var value = cache[mid] - base;
+                    if (value > advance) {
+                        right = mid - 1;
+                    } else if (value < advance) {
+                        left = mid + 1;
+                    } else {
+                        left = mid;
+                        break;
+                    }
                 }
-                var value = cache[mid] - base;
-                if (value > advance) {
-                    right = mid - 1;
-                } else if (value < advance) {
-                    left = mid + 1;
-                } else {
-                    left = mid;
-                    break;
+                if (cache[left] - base > advance) {
+                    left--;
                 }
+                left = Math.max(start, Math.min(end, left));
+                return CharPosDesc.make(left, cache[left] - base);
             }
-            if (cache[left] - base > advance) {
-                left--;
-            }
-            left = Math.max(start, Math.min(end, left));
-            return CharPosDesc.make(left, cache[left] - base);
         }
         var regionItr = new TextRegionIterator(textEnd, spans, softBreaks);
         float currentPosition = 0f;
@@ -280,10 +282,12 @@ public class GraphicTextRow {
                 Log.w("GraphicTextRow", "start > end. if this is caused by editor, please provide feedback", new Throwable());
             return 0f;
         }
-        var cache = context.getCache().queryMeasureCache(line);
-        if (cache != null && cache.getWidths() != null && useCache && end < cache.getWidths().length) {
-            var widths = cache.getWidths();
-            return widths[end] - widths[start];
+        if (useCache) {
+            var cache = context.getCache().queryMeasureCache(line);
+            if (cache != null && cache.getWidths() != null && end < cache.getWidths().length) {
+                var widths = cache.getWidths();
+                return widths[end] - widths[start];
+            }
         }
         return measureTextInternal(start, end, null);
     }

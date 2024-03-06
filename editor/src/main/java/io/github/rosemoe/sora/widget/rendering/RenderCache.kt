@@ -25,6 +25,8 @@
 package io.github.rosemoe.sora.widget.rendering
 
 import androidx.collection.MutableIntList
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Cache for editor rendering, including line-based data and measure
@@ -34,26 +36,31 @@ import androidx.collection.MutableIntList
  */
 class RenderCache {
 
+    private val lock = ReentrantLock()
     private val lines = MutableIntList()
     private val cache = mutableListOf<MeasureCacheItem>()
     private var maxCacheCount = 75
 
     fun getOrCreateMeasureCache(line: Int): MeasureCacheItem {
         return queryMeasureCache(line) ?: run {
-            MeasureCacheItem(line, null, 0L).also {
-                cache.add(it)
-                while (cache.size > maxCacheCount && cache.isNotEmpty()) {
-                    cache.removeFirst()
+            lock.withLock {
+                MeasureCacheItem(line, null, 0L).also {
+                    cache.add(it)
+                    while (cache.size > maxCacheCount && cache.isNotEmpty()) {
+                        cache.removeFirst()
+                    }
                 }
             }
         }
     }
 
     fun queryMeasureCache(line: Int) =
-        cache.firstOrNull { it.line == line }.also {
-            if (it != null) {
-                cache.remove(it)
-                cache.add(it)
+        lock.withLock {
+            cache.firstOrNull { it.line == line }.also {
+                if (it != null) {
+                    cache.remove(it)
+                    cache.add(it)
+                }
             }
         }
 
