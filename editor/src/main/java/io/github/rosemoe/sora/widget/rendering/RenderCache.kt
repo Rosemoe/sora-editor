@@ -77,9 +77,11 @@ class RenderCache {
             } else {
                 lines.addAll(startLine, IntArray(endLine - startLine) { 0 })
             }
-            cache.forEach {
-                if (it.line > startLine) {
-                    it.line += endLine - startLine
+            lock.withLock {
+                cache.forEach {
+                    if (it.line > startLine) {
+                        it.line += endLine - startLine
+                    }
                 }
             }
         }
@@ -88,10 +90,12 @@ class RenderCache {
     fun updateForDeletion(startLine: Int, endLine: Int) {
         if (startLine != endLine) {
             lines.removeRange(startLine, endLine)
-            cache.removeAll { it.line in startLine..endLine }
-            cache.forEach {
-                if (it.line > endLine) {
-                    it.line -= endLine - startLine
+            lock.withLock {
+                cache.removeAll { it.line in startLine..endLine }
+                cache.forEach {
+                    if (it.line > endLine) {
+                        it.line -= endLine - startLine
+                    }
                 }
             }
         }
@@ -99,14 +103,16 @@ class RenderCache {
 
     fun reset(lineCount: Int) {
         if (lines.size > lineCount) {
-            lines.removeRange(lines.size, lineCount)
+            lines.removeRange(lineCount, lines.size)
         } else if (lines.size < lineCount) {
             repeat(lineCount - lines.size) {
                 lines.add(0)
             }
         }
         lines.indices.forEach { lines[it] = 0 }
-        cache.clear()
+        lock.withLock {
+            cache.clear()
+        }
     }
 
 }
