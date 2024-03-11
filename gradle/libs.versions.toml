@@ -28,7 +28,7 @@ gson = { module = "com.google.code.gson:gson", version = "2.10.1" }
 jcodings = { module = "org.jruby.jcodings:jcodings", version = "1.0.58" }
 joni = { module = "org.jruby.joni:joni", version = "2.2.1" }
 snakeyaml-engine = { module = "org.snakeyaml:snakeyaml-engine", version = "2.7" }
-jdt-annotation = { module = "org.eclipse.jdt:org.eclipse.jdt.annotation", version = "2.2.800" }
+jdt-annotation = { module = "org.eclipse.jdt:org.eclipse.jdt.annotation", version = "2.3.0" }
 
 tests-google-truth = { module = "com.google.truth:truth", version = "1.4.2" }
 tests-robolectric = { module = "org.robolectric:robolectric", version = "4.11.1" }
