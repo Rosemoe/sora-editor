@@ -427,7 +427,7 @@ public class EditorSearcher {
             localThread = Thread.currentThread();
             var results = new LongArrayList();
             var textLength = text.length();
-            var ignoreCase = searchOptions.caseInsensitive;
+            var ignoreCase = options.caseInsensitive;
             var pattern = this.pattern;
             switch (options.type) {
                 case SearchOptions.TYPE_NORMAL: {
