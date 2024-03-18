@@ -24,12 +24,10 @@
 package io.github.rosemoe.sora.lang;
 
 import android.os.Bundle;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.annotation.WorkerThread;
-
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;
@@ -121,15 +119,36 @@ public interface Language {
                              @NonNull Bundle extraArguments) throws CompletionCancelledException;
 
     /**
-     * Get delta indent spaces count
+     * Get delta indent spaces count.
      *
-     * @param content Content of given line
-     * @param line    0-indexed line number
-     * @param column  Column on the given line, where a line separator is inserted
+     * @param content Content of given line.
+     * @param line    0-indexed line number. The indentation is applied on line index: {@code line + 1}.
+     * @param column  Column on the given line, where a line separator is inserted.
      * @return Delta count of indent spaces. It can be a negative/positive number or zero.
      */
     @UiThread
     int getIndentAdvance(@NonNull ContentReference content, int line, int column);
+
+    /**
+     * Get delta indent spaces count.
+     *
+     * @param content          Content of given line.
+     * @param line             0-indexed line number. The indentation is applied on line index: {@code line + 1}.
+     * @param column           Column on the given line, where a line separator is inserted.
+     * @param spaceCountOnLine The number of spaces on {@code line}.
+     * @param tabCountOnLine   The number of tabs on {@code line}.
+     * @return Delta count of indent spaces. It can be a negative/positive number or zero.
+     */
+    @UiThread
+    default int getIndentAdvance(
+      @NonNull ContentReference content,
+      int line,
+      int column,
+      int spaceCountOnLine,
+      int tabCountOnLine
+    ) {
+        return getIndentAdvance(content, line, column);
+    }
 
     /**
      * Use tab to format

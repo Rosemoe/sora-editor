@@ -1961,21 +1961,28 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 char first = text.charAt(0);
                 if (first == '\n' || first == '\r') {
                     String line = this.text.getLineString(cur.getLeftLine());
-                    int p = 0, count = 0;
+                    int p = 0, spaceCount = 0, tabCount = 0;
                     while (p < cur.getLeftColumn()) {
                         if (isWhitespace(line.charAt(p))) {
                             if (line.charAt(p) == '\t') {
-                                count += tabWidth;
+                                ++tabCount;
                             } else {
-                                count++;
+                                ++spaceCount;
                             }
                             p++;
                         } else {
                             break;
                         }
                     }
+                    int count = spaceCount + (tabCount * tabWidth);
                     try {
-                        count += editorLanguage.getIndentAdvance(new ContentReference(this.text), cur.getLeftLine(), cur.getLeftColumn());
+                        count += editorLanguage.getIndentAdvance(
+                          new ContentReference(this.text),
+                          cur.getLeftLine(),
+                          cur.getLeftColumn(),
+                          spaceCount,
+                          tabCount
+                        );
                     } catch (Exception e) {
                         Log.w(LOG_TAG, "Language object error", e);
                     }
