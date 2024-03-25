@@ -56,9 +56,6 @@ android {
             proguardFiles("proguard-rules.pro")
         }
     }
-    compileOptions {
-        isCoreLibraryDesugaringEnabled = true
-    }
     androidResources {
         additionalParameters.add("--warn-manifest-validation")
     }
@@ -82,9 +79,6 @@ android {
 dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.gms.instantapps)
-
-    // Desugar
-    coreLibraryDesugaring(libs.desugar)
 
     // androidx & material
     implementation(libs.material)
