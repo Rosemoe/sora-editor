@@ -33,6 +33,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Grant Permissions for Gradle
+        run: chmod +x gradlew
+
       - name: Build debug APK
         id: build
         run: ./gradlew assembleDebug
