@@ -21,37 +21,47 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-@file:Suppress("UnstableApiUsage")
 
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+plugins {
+    id("com.android.library")
+    id("com.vanniktech.maven.publish.base")
+    kotlin("android")
+}
 
-pluginManagement {
-    includeBuild("build-logic")
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
+group = "io.github.Rosemoe.sora-editor"
+version = Versions.versionName
+
+android {
+    namespace = "io.github.rosemoe.sora.langs.monarch"
+
+    defaultConfig {
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
+    }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
     }
 }
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://repo.eclipse.org/content/groups/releases/")
-        maven("https://maven.aliyun.com/nexus/content/groups/public/")
-    }
-}
+dependencies {
 
-rootProject.name="sora-editor"
-include(
-    ":bom",
-    ":editor",
-    ":app",
-    ":language-monarch",
-    ":language-java",
-    ":language-textmate",
-    ":editor-lsp",
-    ":language-treesitter"
-)
+    compileOnly(projects.editor)
+    implementation(libs.monarch.code)
+    implementation(libs.monarch.json)
+    implementation(libs.regex.onig)
+
+    implementation(libs.snakeyaml.engine)
+    implementation(libs.jdt.annotation)
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.espresso)
+}
