@@ -85,9 +85,16 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
 
     open fun show(signatureHelp: SignatureHelp) {
         this.signatureHelp = signatureHelp
-        renderSignatureHelp()
-        updateWindowSizeAndLocation()
-        show()
+
+        if (signatureHelp.activeSignature != null && signatureHelp.activeParameter != null) {
+            renderSignatureHelp()
+            updateWindowSizeAndLocation()
+            show()
+        } else {
+            Log.d("SignatureHelpWindow", "activeSignature or activeParameter is null")
+            return
+        }
+        
     }
 
 
@@ -132,6 +139,7 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
 
         val activeSignatureIndex = signatureHelp.activeSignature
         val activeParameterIndex = signatureHelp.activeParameter
+
         val signatures = signatureHelp.signatures
 
         val renderStringBuilder = SpannableStringBuilder()
@@ -145,6 +153,8 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
             Log.d("SignatureHelpWindow", "activeSignature is out of range")
             return
         }
+        
+        
 
         // Get only the activated signature
         for (i in 0..activeSignatureIndex) {

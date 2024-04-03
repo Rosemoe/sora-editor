@@ -81,13 +81,9 @@ class DocumentChangeEvent : AsyncEventListener() {
         editor: LspEditor,
         data: ContentChangeEvent
     ): List<TextDocumentContentChangeEvent> {
-        val text = data.changedText.toString()
+        val text = data.editor.text.toString()
         return listOf(
             editor.uri.createTextDocumentContentChangeEvent(
-                createRange(
-                    data.changeStart,
-                    data.changeEnd
-                ),
                 if (data.action == ContentChangeEvent.ACTION_DELETE) "" else text
             )
         )
