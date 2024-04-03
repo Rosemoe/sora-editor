@@ -64,4 +64,10 @@ class ThemeTrieElement(private val mainRule: ThemeTrieElementRule) {
         val child = children.getOrPut(head) { ThemeTrieElement(mainRule.clone()) }
         child.insert(tail, fontStyle, foreground, background)
     }
+
+    override fun toString(): String {
+        return "ThemeTrieElement(mainRule=$mainRule, children=$children)"
+    }
+
+
 }

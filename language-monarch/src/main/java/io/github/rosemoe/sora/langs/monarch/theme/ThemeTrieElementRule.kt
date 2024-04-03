@@ -53,4 +53,10 @@ class ThemeTrieElementRule(
                 (this.foreground shl MetadataConsts.FOREGROUND_OFFSET) or
                 (this.background shl MetadataConsts.BACKGROUND_OFFSET)
     }
+
+    override fun toString(): String {
+        return "ThemeTrieElementRule(fontStyle=$fontStyle, foreground=$foreground, background=$background, metadata=$metadata)"
+    }
+
+
 }

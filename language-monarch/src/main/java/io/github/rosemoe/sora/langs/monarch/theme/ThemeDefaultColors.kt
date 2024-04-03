@@ -22,46 +22,33 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-plugins {
-    id("com.android.library")
-    id("com.vanniktech.maven.publish.base")
-    kotlin("android")
-}
+package io.github.rosemoe.sora.langs.monarch.theme
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
+class ThemeDefaultColors(defaultColors: Map<String, String>) {
+    private val colors = mutableMapOf<String, String>()
 
-android {
-    namespace = "io.github.rosemoe.sora.langs.monarch"
-
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
+    init {
+        colors.putAll(defaultColors)
     }
 
-    buildFeatures {
-        buildConfig = true
+    constructor() : this(emptyMap())
+
+
+    fun putColors(map: Map<String, String>) {
+        colors.putAll(map)
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
+    fun getColor(key: String): String? {
+        return colors[key]
     }
-}
 
-dependencies {
+    fun getColors(): Map<String, String> {
+        return colors
+    }
 
-    compileOnly(projects.editor)
-    implementation(libs.monarch.code)
-    implementation(libs.monarch.json)
-    implementation(libs.regex.onig)
+    override fun toString(): String {
+        return "ThemeDefaultColors(colors=$colors)"
+    }
 
-    implementation(libs.snakeyaml.engine)
-    implementation(libs.moshi)
 
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.test.junit)
-    androidTestImplementation(libs.androidx.test.espresso)
 }

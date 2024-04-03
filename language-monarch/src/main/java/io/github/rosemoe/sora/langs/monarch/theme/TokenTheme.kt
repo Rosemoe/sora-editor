@@ -29,7 +29,9 @@ import io.github.dingyi222666.monarch.types.StandardTokenType
 
 class TokenTheme internal constructor(
     private val colorMap: ColorMap,
-    private val root: ThemeTrieElement
+    private val root: ThemeTrieElement,
+    private val themeDefaultColors: ThemeDefaultColors = ThemeDefaultColors(),
+    val themeType: String = "light"
 ) {
     private val cache: MutableMap<String, Int> = mutableMapOf()
 
@@ -58,14 +60,41 @@ class TokenTheme internal constructor(
         return (match(token) or (languageId shl MetadataConsts.LANGUAGEID_OFFSET)).toInt()
     }
 
+    fun getDefaults(): ThemeDefaultColors = themeDefaultColors
+
+    override fun toString(): String {
+        return "TokenTheme(colorMap=$colorMap, root=$root, themeDefaultColors=$themeDefaultColors, themeType='$themeType', cache=$cache)"
+    }
+
+
     companion object {
-        fun createFromRawTokenTheme(source: List<ITokenThemeRule>, customTokenColors: Array<String>): TokenTheme {
-            return createFromParsedTokenTheme(source.parseTokenTheme(), customTokenColors)
+        fun createFromRawTokenTheme(
+            source: List<ITokenThemeRule>,
+            customTokenColors: List<String> = emptyList(),
+            themeDefaultColors: ThemeDefaultColors = ThemeDefaultColors(),
+            themeType: String = "light"
+        ): TokenTheme {
+            return createFromParsedTokenTheme(
+                source.parseTokenTheme(),
+                customTokenColors,
+                themeDefaultColors,
+                themeType
+            )
         }
 
-        fun createFromParsedTokenTheme(source: List<ParsedTokenThemeRule>, customTokenColors: Array<String>): TokenTheme {
-            return source.resolveParsedTokenThemeRules( customTokenColors)
+        fun createFromParsedTokenTheme(
+            source: List<ParsedTokenThemeRule>,
+            customTokenColors: List<String> = emptyList(),
+            themeDefaultColors: ThemeDefaultColors = ThemeDefaultColors(),
+            themeType: String = "light"
+        ): TokenTheme {
+            return source.resolveParsedTokenThemeRules(
+                customTokenColors,
+                themeDefaultColors,
+                themeType
+            )
         }
+
     }
 }
 

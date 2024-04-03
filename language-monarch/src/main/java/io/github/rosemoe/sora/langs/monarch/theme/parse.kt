@@ -59,7 +59,11 @@ fun List<ITokenThemeRule>.parseTokenTheme(): List<ParsedTokenThemeRule> {
     return result
 }
 
-fun List<ParsedTokenThemeRule>.resolveParsedTokenThemeRules(customTokenColors: Array<String>): TokenTheme {
+fun List<ParsedTokenThemeRule>.resolveParsedTokenThemeRules(
+    customTokenColors: List<String> = emptyList(),
+    themeDefaultColors: ThemeDefaultColors = ThemeDefaultColors(),
+    themeType: String = "light"
+): TokenTheme {
     // Sort rules lexicographically, and then by index if necessary
     // this.sortWith(compareBy({ it.token }, { it.index }))
     val parsedThemeRules = sortedWith(compareBy({ it.token }, { it.index })).toMutableList()
@@ -96,11 +100,11 @@ fun List<ParsedTokenThemeRule>.resolveParsedTokenThemeRules(customTokenColors: A
     for (rule in parsedThemeRules) {
         root.insert(
             rule.token, rule.fontStyle, colorMap.getId(
-                requireNotNull(rule.foreground)
+                rule.foreground
             ),
-            colorMap.getId(requireNotNull(rule.background))
+            colorMap.getId(rule.background)
         )
     }
 
-    return TokenTheme(colorMap, root)
+    return TokenTheme(colorMap, root, themeDefaultColors, themeType)
 }

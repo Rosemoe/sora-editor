@@ -26,12 +26,15 @@ package io.github.rosemoe.sora.langs.monarch.theme
 
 class ColorMap {
 
-    private var lastColorId: Int = 0
+    private var lastColorId: Int = -1
     private val id2color = mutableListOf<String>()
-    private val color2id = mutableMapOf<String,Int>()
+    private val color2id = mutableMapOf<String, Int>()
 
-    fun getId(color: String): Int {
 
+    fun getId(color: String?): Int {
+        if (color == null) {
+            return 0
+        }
         return color2id.getOrPut(color) {
             lastColorId++
             id2color.add(lastColorId, color)
@@ -46,5 +49,10 @@ class ColorMap {
     fun getColorMap(): List<String> {
         return id2color.toList()
     }
+
+    override fun toString(): String {
+        return "ColorMap(lastColorId=$lastColorId, id2color=$id2color, color2id=$color2id)"
+    }
+
 
 }

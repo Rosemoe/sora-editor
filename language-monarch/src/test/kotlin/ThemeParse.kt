@@ -1,3 +1,7 @@
+import io.github.rosemoe.sora.langs.monarch.theme.toTokenTheme
+import org.junit.Test
+import java.io.File
+
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
@@ -22,46 +26,14 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-plugins {
-    id("com.android.library")
-    id("com.vanniktech.maven.publish.base")
-    kotlin("android")
-}
+class ThemeParse {
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
+    @Test
+    fun parse() {
+        val themeJson = File("src/test/resources/sakura-color-theme.json")
 
-android {
-    namespace = "io.github.rosemoe.sora.langs.monarch"
+        val tokenTheme = themeJson.readText().toTokenTheme()
 
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
+        println(tokenTheme)
     }
-
-    buildFeatures {
-        buildConfig = true
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-}
-
-dependencies {
-
-    compileOnly(projects.editor)
-    implementation(libs.monarch.code)
-    implementation(libs.monarch.json)
-    implementation(libs.regex.onig)
-
-    implementation(libs.snakeyaml.engine)
-    implementation(libs.moshi)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.test.junit)
-    androidTestImplementation(libs.androidx.test.espresso)
 }
