@@ -29,5 +29,6 @@ import io.github.dingyi222666.regex.Regex
 data class OnEnterRule(
     val beforeText: Regex,
     val afterText: Regex? = null,
+    val previousLineText: Regex? = null,
     val action: EnterAction
 )

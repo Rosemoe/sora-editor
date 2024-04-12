@@ -24,6 +24,8 @@
 
 package io.github.rosemoe.sora.langs.monarch.languageconfiguration.model
 
+import io.github.dingyi222666.regex.Regex
+
 data class FoldingMarkers(
     val start: Regex,
     val end: Regex

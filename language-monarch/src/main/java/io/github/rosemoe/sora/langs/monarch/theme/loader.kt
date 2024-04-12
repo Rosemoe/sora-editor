@@ -29,6 +29,8 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import io.github.dingyi222666.monarch.loader.json.addLast
+import io.github.rosemoe.sora.langs.monarch.languageconfiguration.LanguageConfigurationAdapter
+import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
 
 class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
     override fun fromJson(reader: JsonReader): TokenTheme {
@@ -42,7 +44,7 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
         reader.beginObject()
 
         while (reader.hasNext()) {
-            when (val name = reader.nextName()) {
+            when (reader.nextName()) {
                 "type" -> {
                     themeType = reader.nextString()
                 }
@@ -155,11 +157,18 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
 }
 
 internal val MoshiRoot: Moshi = Moshi.Builder()
-    .addLast<TokenTheme>(TokenThemeAdapter())
+    .apply {
+        addLast<TokenTheme>(TokenThemeAdapter())
+        addLast<LanguageConfiguration>(LanguageConfigurationAdapter())
+    }
     .build()
 
 fun String.toTokenTheme(): TokenTheme {
     return MoshiRoot.adapter(TokenTheme::class.java).fromJson(this)!!
+}
+
+fun String.toLanguageConfiguration(): LanguageConfiguration {
+    return MoshiRoot.adapter(LanguageConfiguration::class.java).fromJson(this)!!
 }
 
 internal data class TokenThemeRule(

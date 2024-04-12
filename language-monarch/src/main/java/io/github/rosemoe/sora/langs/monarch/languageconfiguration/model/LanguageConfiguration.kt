@@ -62,23 +62,23 @@ data class LanguageConfiguration(
      * selected string is surrounded by the open and close characters. If not set, the autoclosing pairs
      * settings will be used.
      */
-    val surroundingPairs: List<AutoClosingPair>? = null,
+    val surroundingPairs: List<BaseAutoClosingPair>? = null,
     /**
      * Defines a list of bracket pairs that are colorized depending on their nesting level.
      * If not set, the configured brackets will be used.
      */
-    val colorizedBracketPairs: List<CharacterPair>,
+    val colorizedBracketPairs: List<CharacterPair>? = null,
     /**
      * Defines what characters must be after the cursor for bracket or quote autoclosing to occur when using the \'languageDefined\' autoclosing setting.
      *
      * This is typically the set of characters which can not start an expression, such as whitespace, closing brackets, non-unary operators, etc.
      */
-    val autoCloseBefore: String,
+    val autoCloseBefore: String? = null,
 
     /**
      * The language's folding rules.
      */
-    val folding: FoldingRules
+    val folding: FoldingRules? = null
 )
 
 typealias CharacterPair = Pair<String, String>

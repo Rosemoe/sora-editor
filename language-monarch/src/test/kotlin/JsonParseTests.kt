@@ -1,3 +1,4 @@
+import io.github.rosemoe.sora.langs.monarch.theme.toLanguageConfiguration
 import io.github.rosemoe.sora.langs.monarch.theme.toTokenTheme
 import org.junit.Test
 import java.io.File
@@ -26,10 +27,19 @@ import java.io.File
  *     additional information or have any questions
  ******************************************************************************/
 
-class ThemeParse {
+class JsonParseTests {
 
     @Test
-    fun parse() {
+    fun parseLanguageConfiguration() {
+        val languageJson = File("src/test/resources/javascript-language-configuration.json")
+
+        val languageConfiguration = languageJson.readText().toLanguageConfiguration()
+
+        println(languageConfiguration)
+    }
+
+    @Test
+    fun parseTheme() {
         val themeJson = File("src/test/resources/sakura-color-theme.json")
 
         val tokenTheme = themeJson.readText().toTokenTheme()
