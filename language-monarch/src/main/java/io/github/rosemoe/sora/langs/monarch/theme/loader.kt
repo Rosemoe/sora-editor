@@ -38,6 +38,7 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
         val tokenThemeRuleList = mutableListOf<TokenThemeRule>()
         val themeColorsMap = mutableMapOf<String, String>()
         var themeType = "light"
+        var themeName = ""
 
         // ignore name
 
@@ -60,6 +61,9 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
                     }
                     reader.endObject()
                 }
+                "name" -> {
+                    themeName = reader.nextString()
+                }
                 else -> {
                     reader.skipValue()
                 }
@@ -73,9 +77,11 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
             emptyList(),
             ThemeDefaultColors(themeColorsMap),
             themeType,
+            themeName
         )
 
     }
+
 
     private fun readTokenColors(
         reader: JsonReader,

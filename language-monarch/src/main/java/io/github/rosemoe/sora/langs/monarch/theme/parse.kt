@@ -62,7 +62,8 @@ fun List<ITokenThemeRule>.parseTokenTheme(): List<ParsedTokenThemeRule> {
 fun List<ParsedTokenThemeRule>.resolveParsedTokenThemeRules(
     customTokenColors: List<String> = emptyList(),
     themeDefaultColors: ThemeDefaultColors = ThemeDefaultColors(),
-    themeType: String = "light"
+    themeType: String = "light",
+    name: String
 ): TokenTheme {
     // Sort rules lexicographically, and then by index if necessary
     // this.sortWith(compareBy({ it.token }, { it.index }))
@@ -106,5 +107,5 @@ fun List<ParsedTokenThemeRule>.resolveParsedTokenThemeRules(
         )
     }
 
-    return TokenTheme(colorMap, root, themeDefaultColors, themeType)
+    return TokenTheme(colorMap, root, themeDefaultColors, themeType, name)
 }

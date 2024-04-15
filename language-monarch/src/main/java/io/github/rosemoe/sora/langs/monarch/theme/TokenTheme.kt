@@ -33,6 +33,7 @@ class TokenTheme internal constructor(
     private val colorMap: ColorMap,
     private val root: ThemeTrieElement,
     private val themeDefaultColors: ThemeDefaultColors = ThemeDefaultColors(),
+    val name: String = "default",
     val themeType: String = "light"
 ) {
     private val cache: MutableMap<String, Int> = mutableMapOf()
@@ -74,13 +75,15 @@ class TokenTheme internal constructor(
             source: List<ITokenThemeRule>,
             customTokenColors: List<String> = emptyList(),
             themeDefaultColors: ThemeDefaultColors = ThemeDefaultColors(),
-            themeType: String = "light"
+            themeType: String = "light",
+            name: String = "default"
         ): TokenTheme {
             return createFromParsedTokenTheme(
                 source.parseTokenTheme(),
                 customTokenColors,
                 themeDefaultColors,
-                themeType
+                themeType,
+                name
             )
         }
 
@@ -88,12 +91,14 @@ class TokenTheme internal constructor(
             source: List<ParsedTokenThemeRule>,
             customTokenColors: List<String> = emptyList(),
             themeDefaultColors: ThemeDefaultColors = ThemeDefaultColors(),
-            themeType: String = "light"
+            themeType: String = "light",
+            name: String = "default"
         ): TokenTheme {
             return source.resolveParsedTokenThemeRules(
                 customTokenColors,
                 themeDefaultColors,
-                themeType
+                themeType,
+                name
             )
         }
 
