@@ -24,9 +24,11 @@
 
 package io.github.rosemoe.sora.langs.monarch.theme
 
+import com.squareup.moshi.JsonClass
 import io.github.dingyi222666.monarch.types.MetadataConsts
 import io.github.dingyi222666.monarch.types.StandardTokenType
 
+@JsonClass(generateAdapter = false)
 class TokenTheme internal constructor(
     private val colorMap: ColorMap,
     private val root: ThemeTrieElement,

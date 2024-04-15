@@ -22,44 +22,12 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-plugins {
-    id("com.android.library")
-    id("com.vanniktech.maven.publish.base")
-    kotlin("android")
-}
+package io.github.rosemoe.sora.langs.monarch.folding
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
+import io.github.dingyi222666.regex.MatchResult
 
-android {
-    namespace = "io.github.rosemoe.sora.langs.monarch"
+interface FoldingHelper {
+    fun getResultFor(line: Int): MatchResult
 
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
-
-    buildFeatures {
-        buildConfig = true
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-}
-
-dependencies {
-    compileOnly(projects.editor)
-    implementation(libs.monarch.code)
-    implementation(libs.monarch.json)
-    implementation(libs.regex.onig)
-
-    implementation(libs.moshi)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.test.junit)
-    androidTestImplementation(libs.androidx.test.espresso)
+    fun getIndentFor(line: Int): Int
 }

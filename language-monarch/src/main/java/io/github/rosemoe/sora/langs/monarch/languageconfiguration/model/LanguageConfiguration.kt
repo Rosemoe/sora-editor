@@ -24,8 +24,10 @@
 
 package io.github.rosemoe.sora.langs.monarch.languageconfiguration.model
 
+import com.squareup.moshi.JsonClass
 import io.github.dingyi222666.regex.Regex
 
+@JsonClass(generateAdapter = false)
 data class LanguageConfiguration(
     /**
      * The language's comment settings.
