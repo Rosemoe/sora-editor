@@ -28,8 +28,8 @@ import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.Language
 
 data class GrammarDefinition<T>(
     val name: String,
-    val languageConfiguration: LanguageConfiguration?,
-    val scopeName: String,
+    val grammar: T,
     val embeddedLanguages: Map<String, String>,
-    val grammar: T
+    val languageConfiguration: LanguageConfiguration? = null,
+    var scopeName: String,
 )

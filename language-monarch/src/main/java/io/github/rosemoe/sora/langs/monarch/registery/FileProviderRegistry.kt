@@ -34,14 +34,14 @@ object FileProviderRegistry : FileResolver {
     }
 
     @Synchronized
-    fun addFileProvider(fileResolver: FileResolver) {
+    fun addProvider(fileResolver: FileResolver) {
         if (fileResolver !== FileResolver.DEFAULT) {
             fileResolvers.add(fileResolver)
         }
     }
 
     @Synchronized
-    fun removeFileProvider(fileResolver: FileResolver) {
+    fun removeProvider(fileResolver: FileResolver) {
         if (fileResolver !== FileResolver.DEFAULT) {
             fileResolvers.remove(fileResolver)
         }

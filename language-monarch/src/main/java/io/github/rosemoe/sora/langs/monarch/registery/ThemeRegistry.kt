@@ -63,13 +63,13 @@ object ThemeRegistry {
         if (!themeModel.isLoaded) {
             themeModel.load()
         }
-        val theme: ThemeModel =
-            findThemeByThemeName(themeModel.getName())
+        val theme =
+            findTheme(themeModel.name)
         if (theme != null) {
             setTheme(theme)
             return
         }
-        allThemeModel.add(themeModel)
+
         if (isCurrentTheme) {
             setTheme(themeModel)
         }
@@ -86,7 +86,7 @@ object ThemeRegistry {
         }
 
         // need?
-        targetModel = findThemeByThemeName(name)
+        targetModel = findTheme(name)
 
         if (targetModel != null) {
             setTheme(targetModel)
@@ -94,6 +94,43 @@ object ThemeRegistry {
         }
 
         return false
+    }
+
+    @Synchronized
+    fun setTheme(themeModel: ThemeModel) {
+        currentTheme = themeModel
+        themeChangeListeners.forEach {
+            it.onChangeTheme(themeModel)
+        }
+        if (!themes.contains(themeModel)) {
+            themes.add(themeModel)
+        }
+        dispatchThemeChange(themeModel)
+    }
+
+    private fun dispatchThemeChange(targetThemeModel: ThemeModel) {
+        for (listener in themeChangeListeners) {
+            listener.onChangeTheme(targetThemeModel)
+        }
+    }
+
+    fun hasListener(themeChangeListener: ThemeChangeListener): Boolean {
+        return themeChangeListeners.contains(themeChangeListener)
+    }
+
+    @Synchronized
+    fun addListener(themeChangeListener: ThemeChangeListener) {
+        themeChangeListeners.add(themeChangeListener)
+    }
+
+    @Synchronized
+    fun removeListener(themeChangeListener: ThemeChangeListener) {
+        themeChangeListeners.remove(themeChangeListener)
+    }
+
+
+    fun dispose() {
+        themeChangeListeners.clear()
     }
 
     fun findThemeByFileName(name: String): ThemeModel? {
