@@ -22,18 +22,21 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.event
+package io.github.rosemoe.sora.text
 
-import io.github.rosemoe.sora.widget.CodeEditor
+import com.google.common.truth.Truth.assertThat
+import org.junit.Test
+import java.io.StringWriter
 
-/**
- * Event when search result is available in main thread.
- * Note that this is also triggered when query is changed to null.
- *
- * @author Rosemoe
- */
-class PublishSearchResultEvent(editor: CodeEditor) : Event(editor) {
+class ContentIOTest {
 
-    fun getSearcher() = editor.searcher
+    @Test
+    fun testWriter() {
+        val text = "Hello\nWorld\r\nTest\rTest"
+        val content = Content(text)
+        val writer = StringWriter()
+        ContentIO.writeTo(content, writer, true)
+        assertThat(writer.buffer.toString()).isEqualTo(text)
+    }
 
 }

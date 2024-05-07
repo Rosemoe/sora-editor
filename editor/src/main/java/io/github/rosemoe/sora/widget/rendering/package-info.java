@@ -21,23 +21,9 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.text;
 
-import androidx.annotation.NonNull;
 
 /**
- * A listener to know when a ContentLine object is removed from Content object
- *
- * @author Rose
+ * This package contains classes related to editor rendering.
  */
-public interface LineRemoveListener {
-
-    /**
-     * When a ContentLine is removed from Content, this method is called
-     *
-     * @param content Caller Content
-     * @param line    ContentLine object removed
-     */
-    void onRemove(@NonNull Content content, @NonNull ContentLine line);
-
-}
+package io.github.rosemoe.sora.widget.rendering;

@@ -57,7 +57,6 @@ import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
 import io.github.rosemoe.sora.graphics.CharPosDesc;
 import io.github.rosemoe.sora.graphics.GraphicTextRow;
 import io.github.rosemoe.sora.graphics.Paint;
-import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.lang.completion.snippet.SnippetItem;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
@@ -142,7 +141,6 @@ public class EditorRenderer {
     private Drawable verticalScrollbarThumbDrawable;
     @Nullable
     private Drawable verticalScrollbarTrackDrawable;
-    protected RenderNodeHolder renderNodeHolder;
     private volatile long displayTimestamp;
     private Paint.FontMetricsInt metricsLineNumber;
     private Paint.FontMetricsInt metricsGraph;
@@ -159,9 +157,6 @@ public class EditorRenderer {
         verticalScrollBarRect = new RectF();
         horizontalScrollBarRect = new RectF();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            renderNodeHolder = new RenderNodeHolder(editor);
-        }
         bufferedDrawPoints = new BufferedDrawPoints();
 
         paintGeneral = new Paint(editor.isRenderFunctionCharacters());
@@ -280,7 +275,7 @@ public class EditorRenderer {
         metricsText = paintGeneral.getFontMetricsInt();
         metricsLineNumber = paintOther.getFontMetricsInt();
         metricsGraph = paintGraph.getFontMetricsInt();
-        invalidateRenderNodes();
+        editor.getRenderContext().invalidateRenderNodes();
         updateTimestamp();
     }
 
@@ -295,7 +290,7 @@ public class EditorRenderer {
         }
         paintGeneral.setTypefaceWrapped(typefaceText);
         metricsText = paintGeneral.getFontMetricsInt();
-        invalidateRenderNodes();
+        editor.getRenderContext().invalidateRenderNodes();
         updateTimestamp();
         editor.createLayout();
         editor.invalidate();
@@ -327,7 +322,7 @@ public class EditorRenderer {
         metricsGraph = paintGraph.getFontMetricsInt();
         metricsLineNumber = paintOther.getFontMetricsInt();
         metricsText = paintGeneral.getFontMetricsInt();
-        invalidateRenderNodes();
+        editor.getRenderContext().invalidateRenderNodes();
         updateTimestamp();
         editor.createLayout();
         editor.invalidate();
@@ -376,54 +371,10 @@ public class EditorRenderer {
         return getLine(line).length();
     }
 
-    /**
-     * Invalidate the whole hardware-accelerated renderer
-     */
-    public void invalidateRenderNodes() {
-        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            renderNodeHolder.invalidate();
-        }
-    }
-
-    public void invalidateInRegion(int start, int end) {
-        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            renderNodeHolder.invalidateInRegion(start, end);
-        }
-    }
-
-    public void invalidateInRegion(@NonNull StyleUpdateRange range) {
-        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            renderNodeHolder.invalidateInRegion(range);
-        }
-    }
-
-    /**
-     * Invalidate the region in hardware-accelerated renderer
-     */
-    public void invalidateChanged(int startLine) {
-        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && cursor != null) {
-            if (renderNodeHolder.invalidateInRegion(startLine, Integer.MAX_VALUE)) {
-                editor.invalidate();
-            }
-        }
-    }
-
-    public void invalidateOnInsert(int startLine, int endLine) {
-        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            renderNodeHolder.afterInsert(startLine, endLine);
-        }
-    }
-
-    public void invalidateOnDelete(int startLine, int endLine) {
-        if (renderNodeHolder != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            renderNodeHolder.afterDelete(startLine, endLine);
-        }
-    }
-
     // draw methods
 
     @RequiresApi(29)
-    protected void updateLineDisplayList(RenderNode renderNode, int line, Spans.Reader spans) {
+    public void updateLineDisplayList(RenderNode renderNode, int line, Spans.Reader spans) {
         int columnCount = getColumnCount(line);
         float widthLine = measureText(lineBuf, line, 0, columnCount) + editor.getDpUnit() * 20;
         renderNode.setPosition(0, 0, (int) (widthLine + paintGraph.measureText("↵") * 1.5f), editor.getRowHeight());
@@ -750,7 +701,6 @@ public class EditorRenderer {
         drawScrollBars(canvas);
         drawEdgeEffect(canvas);
 
-        editor.rememberDisplayedLines();
         releasePreloadedData();
         lastStuckLines = stuckLines;
         drawFormatTip(canvas);
@@ -1188,7 +1138,7 @@ public class EditorRenderer {
             circleRadius = Math.min(editor.getRowHeight(), spaceWidth) * RenderingConstants.NON_PRINTABLE_CIRCLE_RADIUS_FACTOR;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !editor.isWordwrap() && canvas.isHardwareAccelerated() && editor.isHardwareAcceleratedDrawAllowed()) {
-            renderNodeHolder.keepCurrentInDisplay(firstVis, editor.getLastVisibleRow());
+            editor.getRenderContext().getRenderNodeHolder().keepCurrentInDisplay(firstVis, editor.getLastVisibleRow());
         }
         float offset2 = editor.getOffsetX() - editor.measureTextRegionOffset();
         float offset3 = offset2 - editor.getDpUnit() * 15;
@@ -1456,7 +1406,7 @@ public class EditorRenderer {
                     drawMiniGraph(canvas, paintingOffset, row, "↵");
                 }
             } else {
-                paintingOffset = offset + renderNodeHolder.drawLineHardwareAccelerated(canvas, line, offset, editor.getRowTop(line) - editor.getOffsetY()) - editor.getDpUnit() * 20;
+                paintingOffset = offset + editor.getRenderContext().getRenderNodeHolder().drawLineHardwareAccelerated(canvas, line, offset, editor.getRowTop(line) - editor.getOffsetY()) - editor.getDpUnit() * 20;
                 lastVisibleChar = columnCount;
             }
 
@@ -1673,7 +1623,7 @@ public class EditorRenderer {
             float spaceWidth = paintGeneral.getSpaceWidth();
             float rowCenter = (editor.getRowTop(row) + editor.getRowBottom(row)) / 2f - editor.getOffsetY();
             offset += measureText(lineBuf, line, rowStart, paintStart - rowStart);
-            var chars = lineBuf.value;
+            var chars = lineBuf.getBackingCharArray();
             var lastPos = paintStart;
             while (paintStart < paintEnd) {
                 char ch = chars[paintStart];
@@ -1937,8 +1887,8 @@ public class EditorRenderer {
      */
     protected void drawText(Canvas canvas, ContentLine line, int index, int count, int contextStart, int contextCount, boolean isRtl, float offX, float offY, int lineNumber) {
         int end = index + count;
-        end = Math.min(line.value.length, end);
-        var src = line.value;
+        var src = line.getBackingCharArray();
+        end = Math.min(src.length, end);
         int st = index;
         var renderFuncChars = editor.isRenderFunctionCharacters();
         for (int i = index; i < end; i++) {
@@ -2145,13 +2095,17 @@ public class EditorRenderer {
     protected void drawScrollBars(Canvas canvas) {
         verticalScrollBarRect.setEmpty();
         horizontalScrollBarRect.setEmpty();
-        if (!editor.getEventHandler().shouldDrawScrollBar()) {
+        if (!editor.getEventHandler().shouldDrawScrollBarForTouch() && !(editor.isInMouseMode() && editor.getProps().mouseModeAlwaysShowScrollbars)) {
             return;
+        }
+        var percentage = editor.getEventHandler().getScrollBarFadeOutPercentageForTouch();
+        if (editor.isInMouseMode() && editor.getProps().mouseModeAlwaysShowScrollbars) {
+            percentage = 0f;
         }
         var size = editor.getDpUnit() * RenderingConstants.SCROLLBAR_WIDTH_DIP;
         if (editor.isHorizontalScrollBarEnabled() && !editor.isWordwrap() && editor.getScrollMaxX() > editor.getWidth() * 3 / 4) {
             canvas.save();
-            canvas.translate(0f, size * editor.getEventHandler().getScrollBarMovementPercentage());
+            canvas.translate(0f, size * percentage);
 
             drawScrollBarTrackHorizontal(canvas);
             drawScrollBarHorizontal(canvas);
@@ -2160,7 +2114,7 @@ public class EditorRenderer {
         }
         if (editor.isVerticalScrollBarEnabled() && editor.getScrollMaxY() > editor.getHeight() / 2) {
             canvas.save();
-            canvas.translate(size * editor.getEventHandler().getScrollBarMovementPercentage(), 0f);
+            canvas.translate(size * percentage, 0f);
 
             drawScrollBarTrackVertical(canvas);
             drawScrollBarVertical(canvas);
@@ -2585,12 +2539,14 @@ public class EditorRenderer {
             return CharPosDesc.make(end, 0);
         }
         var line = getLine(lineIndex);
-        if (line.widthCache != null && line.timestamp < displayTimestamp) {
+        var context = editor.getRenderContext();
+        var cache = context.getCache().queryMeasureCache(lineIndex);
+        if (cache != null && cache.getWidths() != null && cache.getUpdateTimestamp() < displayTimestamp) {
             buildMeasureCacheForLines(lineIndex, lineIndex, displayTimestamp, false);
         }
         var gtr = GraphicTextRow.obtain(basicDisplayMode);
-        gtr.set(line, getLineDirections(lineIndex), contextStart, end, editor.getTabWidth(), line.widthCache == null ? editor.getSpansForLine(lineIndex) : null, paintGeneral);
-        if (editor.getLayout() instanceof WordwrapLayout && line.widthCache == null) {
+        gtr.set(content, lineIndex, contextStart, end, cache == null || cache.getWidths() == null ? editor.getSpansForLine(lineIndex) : null, paintGeneral, context);
+        if (editor.getLayout() instanceof WordwrapLayout && (cache == null || cache.getWidths() == null)) {
             gtr.setSoftBreaks(((WordwrapLayout) editor.getLayout()).getSoftBreaksForLine(lineIndex));
         }
         var res = gtr.findOffsetByAdvance(start, target);
@@ -2642,7 +2598,7 @@ public class EditorRenderer {
                 }
             } else {
                 if (offset < end) {
-                    var chars = line.getRawData();
+                    var chars = line.getBackingCharArray();
                     while (offset > start) {
                         char ch = chars[offset];
                         if (Character.isLowSurrogate(ch)) {
@@ -2666,7 +2622,7 @@ public class EditorRenderer {
         }
         if (!rtl && !forLast && offset > start) {
             // Try to combine one character again
-            var chars = line.getRawData();
+            var chars = line.getBackingCharArray();
             if (Character.isLowSurrogate(chars[offset - 1])) {
                 if (offset - 1 > start && !couldBeEmojiPart(Character.toCodePoint(chars[offset - 2], chars[offset - 1]))) {
                     offset -= 2;
@@ -2693,7 +2649,7 @@ public class EditorRenderer {
             return CharPosDesc.make(end, 0);
         }
         var gtr = GraphicTextRow.obtain(basicDisplayMode);
-        gtr.set(content, lineIndex, contextStart, end, editor.getTabWidth(), sSpansForWordwrap, paint);
+        gtr.set(content, lineIndex, contextStart, end, sSpansForWordwrap, paint, editor.getRenderContext());
         gtr.disableCache();
         var res = gtr.findOffsetByAdvance(start, target);
         gtr.recycle();
@@ -2705,26 +2661,28 @@ public class EditorRenderer {
      */
     protected void buildMeasureCacheForLines(int startLine, int endLine, long timestamp, boolean useCachedContent) {
         var text = content;
+        var context = editor.getRenderContext();
         while (startLine <= endLine && startLine < text.getLineCount()) {
             var line = useCachedContent ? getLine(startLine) : getLineDirect(startLine);
-            if (line.timestamp < timestamp) {
+            var cache = editor.getRenderContext().getCache().getOrCreateMeasureCache(startLine);
+            if (cache.getUpdateTimestamp() < timestamp) {
                 var gtr = GraphicTextRow.obtain(basicDisplayMode);
                 var forced = false;
-                if (line.widthCache == null || line.widthCache.length < line.length()) {
-                    line.widthCache = editor.obtainFloatArray(Math.max(line.length() + 8, 90), useCachedContent);
+                if (cache.getWidths() == null || cache.getWidths().length < line.length()) {
+                    cache.setWidths(new float[Math.max(line.length() + 8, 90)]);
                     forced = true;
                 }
                 var spans = editor.getSpansForLine(startLine);
-                gtr.set(text, startLine, 0, line.length(), editor.getTabWidth(), spans, paintGeneral);
+                gtr.set(text, startLine, 0, line.length(), spans, paintGeneral, context);
                 var softBreaks = (editor.layout instanceof WordwrapLayout) ? ((WordwrapLayout) editor.layout).getSoftBreaksForLine(startLine) : null;
                 gtr.setSoftBreaks(softBreaks);
                 var hash = Objects.hash(spans, line.length(), editor.getTabWidth(), basicDisplayMode, softBreaks, paintGeneral.getFlags(), paintGeneral.getTextSize(), paintGeneral.getTextScaleX(), paintGeneral.getLetterSpacing(), paintGeneral.getFontFeatureSettings());
-                if (line.styleHash != hash || forced) {
+                if (context.getCache().getStyleHash(startLine) != hash || forced) {
                     gtr.buildMeasureCache();
-                    line.styleHash = hash;
+                    context.getCache().setStyleHash(startLine, hash);
                 }
                 gtr.recycle();
-                line.timestamp = timestamp;
+                cache.setUpdateTimestamp(timestamp);
             }
             startLine++;
         }
@@ -2744,17 +2702,19 @@ public class EditorRenderer {
      */
     @UnsupportedUserUsage
     public float measureText(ContentLine text, int line, int index, int count) {
-        var cache = text.widthCache;
-        if (text.timestamp < displayTimestamp && cache != null || (cache != null && cache.length >= index + count)) {
-            buildMeasureCacheForLines(line, line);
+        var cache = editor.getRenderContext().getCache().queryMeasureCache(line);
+        if (cache != null) {
+            if (cache.getUpdateTimestamp() < displayTimestamp && cache.getWidths() != null || (cache.getWidths() != null && cache.getWidths().length >= index + count)) {
+                buildMeasureCacheForLines(line, line);
+            }
         }
         var gtr = GraphicTextRow.obtain(basicDisplayMode);
         List<Span> spans = editor.defaultSpans;
-        if (text.widthCache == null) {
+        if (cache == null || cache.getWidths() == null) {
             spans = editor.getSpansForLine(line);
         }
-        gtr.set(text, text.mayNeedBidi() ? getLineDirections(line) : null, 0, text.length(), editor.getTabWidth(), spans, paintGeneral);
-        if (editor.layout instanceof WordwrapLayout && text.widthCache == null) {
+        gtr.set(content, line, 0, text.length(), spans, paintGeneral, editor.getRenderContext());
+        if (editor.layout instanceof WordwrapLayout && (cache == null || cache.getWidths() == null)) {
             gtr.setSoftBreaks(((WordwrapLayout) editor.layout).getSoftBreaksForLine(line));
         }
         var res = gtr.measureText(index, index + count);
@@ -2826,11 +2786,9 @@ public class EditorRenderer {
             var descriptor = this.descriptor == null ? TMP_DESC : this.descriptor;
             // Follow the thumb or stick to text row
             if (!descriptor.position.isEmpty()) {
-                boolean isInsertHandle = editor.getEventHandler().holdInsertHandle() && handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT;
-                boolean isLeftHandle = editor.getEventHandler().selHandleType == EditorTouchEventHandler.SelectionHandle.LEFT && handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT;
-                boolean isRightHandle = editor.getEventHandler().selHandleType == EditorTouchEventHandler.SelectionHandle.RIGHT && handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT;
                 if (!editor.isStickyTextSelection()) {
-                    if (isInsertHandle || isLeftHandle || isRightHandle) {
+                    if (editor.getEventHandler().getTouchedHandleType() == handleType
+                            && handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED && editor.getEventHandler().isHandleMoving()) {
                         x = editor.getEventHandler().motionX + (descriptor.alignment != SelectionHandleStyle.ALIGN_CENTER ? descriptor.position.width() : 0) * (descriptor.alignment == SelectionHandleStyle.ALIGN_LEFT ? 1 : -1);
                         y = editor.getEventHandler().motionY - descriptor.position.height() * 2 / 3f;
                     }

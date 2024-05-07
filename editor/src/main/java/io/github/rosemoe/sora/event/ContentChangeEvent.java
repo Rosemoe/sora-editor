@@ -104,8 +104,8 @@ public class ContentChangeEvent extends Event {
     /**
      * Return the changed text in this modification.
      * If action is {@link #ACTION_SET_NEW_TEXT}, Content instance is returned.
-     * If action is {@link #ACTION_INSERT}, inserted text is the result.
-     * If action is {@link #ACTION_DELETE}, deleted text is the result.
+     * If action is {@link #ACTION_INSERT}, inserted text is returned.
+     * If action is {@link #ACTION_DELETE}, deleted text is returned.
      */
     @NonNull
     public CharSequence getChangedText() {

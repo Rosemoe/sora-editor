@@ -40,6 +40,7 @@ import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.bidi.Directions;
 import io.github.rosemoe.sora.text.bidi.TextBidi;
 import io.github.rosemoe.sora.util.IntPair;
+import io.github.rosemoe.sora.widget.rendering.RenderContext;
 import io.github.rosemoe.sora.widget.rendering.RenderingConstants;
 
 /**
@@ -50,7 +51,9 @@ public class GraphicTextRow {
     private final static GraphicTextRow[] sCached = new GraphicTextRow[5];
     private Paint paint;
     private ContentLine text;
+    private RenderContext context;
     private Directions directions;
+    private int line;
     private int textStart;
     private int textEnd;
     private int tabWidth;
@@ -85,10 +88,11 @@ public class GraphicTextRow {
         st.text = null;
         st.spans = null;
         st.paint = null;
-        st.textStart = st.textEnd = st.tabWidth = 0;
+        st.textStart = st.textEnd = st.tabWidth = st.line = 0;
         st.useCache = true;
         st.softBreaks = null;
         st.directions = null;
+        st.context = null;
         synchronized (sCached) {
             for (int i = 0; i < sCached.length; ++i) {
                 if (sCached[i] == null) {
@@ -103,26 +107,17 @@ public class GraphicTextRow {
         recycle(this);
     }
 
-    public void set(@NonNull Content content, int line, int start, int end, int tabWidth, @Nullable List<Span> spans, @NonNull Paint paint) {
+    public void set(@NonNull Content content, int line, int start, int end, @Nullable List<Span> spans, @NonNull Paint paint, @NonNull RenderContext context) {
         this.paint = paint;
         text = content.getLine(line);
-        directions = content.getLineDirections(line);
-        this.tabWidth = tabWidth;
+        directions = text.mayNeedBidi() ? content.getLineDirections(line) : null;
         textStart = start;
         textEnd = end;
         this.spans = spans;
+        tabWidth = context.getTabWidth();
+        this.context = context;
+        this.line = line;
         tmpDirections.setLength(text.length());
-    }
-
-    public void set(@NonNull ContentLine text, @Nullable Directions dirs, int start, int end, int tabWidth, @Nullable List<Span> spans, @NonNull Paint paint) {
-        this.paint = paint;
-        this.text = text;
-        directions = dirs;
-        this.tabWidth = tabWidth;
-        textStart = start;
-        textEnd = end;
-        this.spans = spans;
-        tmpDirections.setLength(this.text.length());
     }
 
     public void setSoftBreaks(@Nullable List<Integer> softBreaks) {
@@ -137,12 +132,13 @@ public class GraphicTextRow {
      * Build measure cache for the text
      */
     public void buildMeasureCache() {
-        if (text.widthCache == null || text.widthCache.length < textEnd + 4) {
-            text.widthCache = new float[Math.max(90, text.length() + 16)];
+        var cacheItem = context.getCache().getOrCreateMeasureCache(line);
+        if (cacheItem.getWidths() == null || cacheItem.getWidths().length < textEnd + 4) {
+            cacheItem.setWidths(new float[Math.max(90, text.length() + 16)]);
         }
-        measureTextInternal(textStart, textEnd, text.widthCache);
+        measureTextInternal(textStart, textEnd, cacheItem.getWidths());
         // Generate prefix sum
-        var cache = text.widthCache;
+        var cache = cacheItem.getWidths();
         var pending = cache[0];
         cache[0] = 0f;
         for (int i = 1; i <= textEnd; i++) {
@@ -162,38 +158,41 @@ public class GraphicTextRow {
      * @see CharPosDesc Character position description
      */
     public long findOffsetByAdvance(int start, float advance) {
-        if (text.widthCache != null && useCache) {
-            var cache = text.widthCache;
-            var end = textEnd;
-            int left = start, right = end;
-            var base = cache[start];
-            while (left <= right) {
-                var mid = (left + right) / 2;
-                if (mid < start || mid >= end) {
-                    left = mid;
-                    break;
+        if (useCache) {
+            var cacheItem = context.getCache().queryMeasureCache(line);
+            if (cacheItem != null && cacheItem.getWidths() != null) {
+                var cache = cacheItem.getWidths();
+                var end = textEnd;
+                int left = start, right = end;
+                var base = cache[start];
+                while (left <= right) {
+                    var mid = (left + right) / 2;
+                    if (mid < start || mid >= end) {
+                        left = mid;
+                        break;
+                    }
+                    var value = cache[mid] - base;
+                    if (value > advance) {
+                        right = mid - 1;
+                    } else if (value < advance) {
+                        left = mid + 1;
+                    } else {
+                        left = mid;
+                        break;
+                    }
                 }
-                var value = cache[mid] - base;
-                if (value > advance) {
-                    right = mid - 1;
-                } else if (value < advance) {
-                    left = mid + 1;
-                } else {
-                    left = mid;
-                    break;
+                if (cache[left] - base > advance) {
+                    left--;
                 }
+                left = Math.max(start, Math.min(end, left));
+                return CharPosDesc.make(left, cache[left] - base);
             }
-            if (cache[left] - base > advance) {
-                left--;
-            }
-            left = Math.max(start, Math.min(end, left));
-            return CharPosDesc.make(left, cache[left] - base);
         }
         var regionItr = new TextRegionIterator(textEnd, spans, softBreaks);
         float currentPosition = 0f;
         // Find in each region
         var lastStyle = 0L;
-        var chars = text.value;
+        var chars = text.getBackingCharArray();
         float tabAdvance = paint.getSpaceWidth() * tabWidth;
         int offset = start;
         var first = true;
@@ -227,7 +226,7 @@ public class GraphicTextRow {
                         // Here is a tab
                         // Try to find advance
                         if (lastStart != i) {
-                            int idx = paint.findOffsetByRunAdvance(text, lastStart, i, advance - currentPosition, useCache, quickMeasureMode);
+                            int idx = paint.findOffsetByRunAdvance(text, lastStart, i, advance - currentPosition, quickMeasureMode);
                             currentPosition += paint.measureTextRunAdvance(chars, lastStart, idx, regionStart, regionEnd, quickMeasureMode);
                             if (idx < i) {
                                 res = idx;
@@ -252,7 +251,7 @@ public class GraphicTextRow {
                     }
                 }
                 if (res == -1) {
-                    int idx = paint.findOffsetByRunAdvance(text, lastStart, regionEnd, advance - currentPosition, useCache, quickMeasureMode);
+                    int idx = paint.findOffsetByRunAdvance(text, lastStart, regionEnd, advance - currentPosition, quickMeasureMode);
                     currentPosition += measureText(lastStart, idx);
                     res = idx;
                 }
@@ -283,9 +282,12 @@ public class GraphicTextRow {
                 Log.w("GraphicTextRow", "start > end. if this is caused by editor, please provide feedback", new Throwable());
             return 0f;
         }
-        var cache = text.widthCache;
-        if (cache != null && useCache && end < cache.length) {
-            return cache[end] - cache[start];
+        if (useCache) {
+            var cache = context.getCache().queryMeasureCache(line);
+            if (cache != null && cache.getWidths() != null && end < cache.getWidths().length) {
+                var widths = cache.getWidths();
+                return widths[end] - widths[start];
+            }
         }
         return measureTextInternal(start, end, null);
     }
@@ -352,7 +354,7 @@ public class GraphicTextRow {
             int end1 = Math.min(end, dirs.getRunEnd(i));
             if (end1 > start1) {
                 // Can be called directly
-                width += paint.myGetTextRunAdvances(text.value, start1, end1 - start1, ctxStart, ctxEnd - ctxStart, dirs.isRunRtl(i), widths, widths == null ? 0 : start1, quickMeasureMode);
+                width += paint.myGetTextRunAdvances(text.getBackingCharArray(), start1, end1 - start1, ctxStart, ctxEnd - ctxStart, dirs.isRunRtl(i), widths, widths == null ? 0 : start1, quickMeasureMode);
             }
             if (dirs.getRunStart(i) >= end) {
                 break;

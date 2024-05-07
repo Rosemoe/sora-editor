@@ -25,6 +25,8 @@
 package io.github.rosemoe.sora.widget.rendering
 
 import androidx.collection.MutableIntList
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Cache for editor rendering, including line-based data and measure
@@ -34,26 +36,31 @@ import androidx.collection.MutableIntList
  */
 class RenderCache {
 
+    private val lock = ReentrantLock()
     private val lines = MutableIntList()
     private val cache = mutableListOf<MeasureCacheItem>()
     private var maxCacheCount = 75
 
     fun getOrCreateMeasureCache(line: Int): MeasureCacheItem {
         return queryMeasureCache(line) ?: run {
-            MeasureCacheItem(line, null, 0L).also {
-                cache.add(it)
-                while (cache.size > maxCacheCount && cache.isNotEmpty()) {
-                    cache.removeFirst()
+            lock.withLock {
+                MeasureCacheItem(line, null, 0L).also {
+                    cache.add(it)
+                    while (cache.size > maxCacheCount && cache.isNotEmpty()) {
+                        cache.removeFirst()
+                    }
                 }
             }
         }
     }
 
     fun queryMeasureCache(line: Int) =
-        cache.firstOrNull { it.line == line }.also {
-            if (it != null) {
-                cache.remove(it)
-                cache.add(it)
+        lock.withLock {
+            cache.firstOrNull { it.line == line }.also {
+                if (it != null) {
+                    cache.remove(it)
+                    cache.add(it)
+                }
             }
         }
 
@@ -70,9 +77,11 @@ class RenderCache {
             } else {
                 lines.addAll(startLine, IntArray(endLine - startLine) { 0 })
             }
-            cache.forEach {
-                if (it.line > startLine) {
-                    it.line += endLine - startLine
+            lock.withLock {
+                cache.forEach {
+                    if (it.line > startLine) {
+                        it.line += endLine - startLine
+                    }
                 }
             }
         }
@@ -81,10 +90,12 @@ class RenderCache {
     fun updateForDeletion(startLine: Int, endLine: Int) {
         if (startLine != endLine) {
             lines.removeRange(startLine, endLine)
-            cache.removeAll { it.line in startLine..endLine }
-            cache.forEach {
-                if (it.line > endLine) {
-                    it.line -= endLine - startLine
+            lock.withLock {
+                cache.removeAll { it.line in startLine..endLine }
+                cache.forEach {
+                    if (it.line > endLine) {
+                        it.line -= endLine - startLine
+                    }
                 }
             }
         }
@@ -92,14 +103,16 @@ class RenderCache {
 
     fun reset(lineCount: Int) {
         if (lines.size > lineCount) {
-            lines.removeRange(lines.size, lineCount)
+            lines.removeRange(lineCount, lines.size)
         } else if (lines.size < lineCount) {
             repeat(lineCount - lines.size) {
                 lines.add(0)
             }
         }
         lines.indices.forEach { lines[it] = 0 }
-        cache.clear()
+        lock.withLock {
+            cache.clear()
+        }
     }
 
 }

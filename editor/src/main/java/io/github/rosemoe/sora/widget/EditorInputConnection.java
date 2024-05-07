@@ -52,7 +52,7 @@ import io.github.rosemoe.sora.util.Logger;
 /**
  * Connection between input method and editor
  *
- * @author Rose
+ * @author Rosemoe
  */
 class EditorInputConnection extends BaseInputConnection {
 
@@ -81,7 +81,7 @@ class EditorInputConnection extends BaseInputConnection {
         });
     }
 
-    protected void invalid() {
+    protected void markInvalid() {
         connectionInvalid = true;
         composingText.reset();
         resetBatchEdit();
@@ -286,73 +286,8 @@ class EditorInputConnection extends BaseInputConnection {
             deleteComposingText();
         }
 
-        // replace text
-        SymbolPairMatch.SymbolPair pair = null;
-        if (editor.getProps().symbolPairAutoCompletion && text.length() > 0) {
-            var firstCharFromText = text.charAt(0);
+        editor.commitText(text, applyAutoIndent);
 
-            char[] inputText = null;
-
-            //size > 1
-            if (text.length() > 1) {
-                inputText = text.toString().toCharArray();
-            }
-
-            pair = editor.languageSymbolPairs.matchBestPair(
-                    editor.getText(), editor.getCursor().left(),
-                    inputText, firstCharFromText
-            );
-        }
-
-        var editorText = editor.getText();
-        var editorCursor = editor.getCursor();
-
-        // newCursorPosition ignored
-        // Call onCommitText() can make auto indent and delete text selected automatically
-        if (pair == null || pair == SymbolPairMatch.SymbolPair.EMPTY_SYMBOL_PAIR
-                || (pair.shouldNotReplace(editor))) {
-            editor.commitText(text, applyAutoIndent);
-        } else {
-
-            // QuickQuoteHandler can easily implement the feature of AutoSurround
-            // and is at a higher level (customizable),
-            // so if the language implemented QuickQuoteHandler,
-            // the AutoSurround feature is not considered needed because it can be implemented through QuickQuoteHandler
-
-            if (pair.shouldDoAutoSurround(editorText) && editor.getEditorLanguage().getQuickQuoteHandler() == null) {
-
-                editorText.beginBatchEdit();
-                // insert left
-                editorText.insert(editorCursor.getLeftLine(), editorCursor.getLeftColumn(), pair.open);
-                // editorText.insert(editorCursor.getLeftLine(),editorCursor.getLeftColumn(),selectText);
-                // insert right
-                editorText.insert(editorCursor.getRightLine(), editorCursor.getRightColumn(), pair.close);
-                editorText.endBatchEdit();
-
-                // setSelection
-                editor.setSelectionRegion(editorCursor.getLeftLine(), editorCursor.getLeftColumn(),
-                        editorCursor.getRightLine(), editorCursor.getRightColumn() - pair.close.length());
-            } else if (editorCursor.isSelected() && editor.getEditorLanguage().getQuickQuoteHandler() != null) {
-                editor.commitText(text, applyAutoIndent);
-            } else {
-                editorText.beginBatchEdit();
-
-                var insertPosition = editorText
-                        .getIndexer()
-                        .getCharPosition(pair.getInsertOffset());
-
-                editorText.replace(insertPosition.line, insertPosition.column,
-                        editorCursor.getRightLine(), editorCursor.getRightColumn(), pair.open);
-                editorText.insert(insertPosition.line, insertPosition.column + pair.open.length(), pair.close);
-                editorText.endBatchEdit();
-
-                var cursorPosition = editorText
-                        .getIndexer()
-                        .getCharPosition(pair.getCursorOffset());
-
-                editor.setSelection(cursorPosition.line, cursorPosition.column);
-            }
-        }
         if (composingStateBefore) {
             endBatchEdit();
         }
@@ -658,7 +593,7 @@ class EditorInputConnection extends BaseInputConnection {
     public ExtractedText getExtractedText(ExtractedTextRequest request, int flags) {
         if (DEBUG)
             logger.d("getExtractedText, flags = " + flags);
-        if (editor.getProps().disallowSuggestions) {
+        if (editor.getProps().disallowSuggestions || editor.getProps().disableTextExtracting) {
             return null;
         }
         if ((flags & GET_EXTRACTED_TEXT_MONITOR) != 0) {

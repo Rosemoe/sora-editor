@@ -1,5 +1,5 @@
 [versions]
-agp = "8.2.2"
+agp = "8.3.0"
 kotlin = "1.9.22"
 tsBinding = "4.1.0"
 lsp4j = "0.22.0"
@@ -28,13 +28,13 @@ gson = { module = "com.google.code.gson:gson", version = "2.10.1" }
 jcodings = { module = "org.jruby.jcodings:jcodings", version = "1.0.58" }
 joni = { module = "org.jruby.joni:joni", version = "2.2.1" }
 snakeyaml-engine = { module = "org.snakeyaml:snakeyaml-engine", version = "2.7" }
-jdt-annotation = { module = "org.eclipse.jdt:org.eclipse.jdt.annotation", version = "2.2.800" }
+jdt-annotation = { module = "org.eclipse.jdt:org.eclipse.jdt.annotation", version = "2.3.0" }
 
-tests-google-truth = { module = "com.google.truth:truth", version = "1.4.1" }
+tests-google-truth = { module = "com.google.truth:truth", version = "1.4.2" }
 tests-robolectric = { module = "org.robolectric:robolectric", version = "4.11.1" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-publish = { id = "com.vanniktech.maven.publish.base", version = "0.27.0" }
+publish = { id = "com.vanniktech.maven.publish.base", version = "0.28.0" }

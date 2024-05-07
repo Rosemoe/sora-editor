@@ -21,35 +21,30 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-package io.github.rosemoe.sora.lang.styling.color
 
-import android.graphics.Color
-import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+package io.github.rosemoe.sora.util
 
-/**
- * An implementation of [ResolvableColor] containing a constant color
- *
- * @author Rosemoe
- */
-class ConstColor : ResolvableColor {
-    private val color: Int
+interface ShareableData<T> : Cloneable {
 
     /**
-     * @param color Color int
+     * Declare that the object is retained by an owner
      */
-    constructor(color: Int) {
-        this.color = color
-    }
+    fun retain()
 
     /**
-     * @param color Hex color string
-     * @see Color.parseColor
+     * Declare that the object is no longer used by an owner
      */
-    constructor(color: String) {
-        this.color = Color.parseColor(color)
-    }
+    fun release()
 
-    override fun resolve(colorScheme: EditorColorScheme): Int {
-        return color
-    }
+    /**
+     * Check if this object can be modified directly
+     */
+    fun isMutable(): Boolean
+
+    /**
+     * If this object is mutable, returns itself.
+     * Otherwise, the object is cloned and the cloned object is returned.
+     */
+    fun toMutable(): T
+
 }

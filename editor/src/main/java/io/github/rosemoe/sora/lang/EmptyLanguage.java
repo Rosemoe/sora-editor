@@ -86,6 +86,13 @@ public class EmptyLanguage implements Language {
         return 0;
     }
 
+    @Nullable
+    @Override
+    public QuickQuoteHandler getQuickQuoteHandler() {
+        return null;
+    }
+
+
     @Override
     public void destroy() {
 

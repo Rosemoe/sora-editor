@@ -105,7 +105,7 @@ public class IndentRange {
         previousRegions.add(new PreviousRegion(-1, line, line));
 
         for (line = model.getLineCount() - 1; line >= 0 && delegate.isNotCancelled(); line--) {
-            int indent = helper.getIndentFor(line);//computeIndentLevel(model.getLine(line).getRawData(), model.getColumnCount(line), tabSize);
+            int indent = helper.getIndentFor(line);//computeIndentLevel(model.getLine(line).getBackingCharArray(), model.getColumnCount(line), tabSize);
             PreviousRegion previous = previousRegions.get(previousRegions.size() - 1);
             if (indent == -1) {
                 if (offSide) {

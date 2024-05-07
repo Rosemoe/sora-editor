@@ -27,6 +27,7 @@ package io.github.rosemoe.sora.editor.ts
 import android.os.Bundle
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
+import io.github.rosemoe.sora.lang.QuickQuoteHandler
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher
 import io.github.rosemoe.sora.lang.format.Formatter
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler
@@ -104,6 +105,8 @@ open class TsLanguage(
     override fun getSymbolPairs(): SymbolPairMatch = EmptyLanguage.EMPTY_SYMBOL_PAIRS
 
     override fun getNewlineHandlers() = emptyArray<NewlineHandler>()
+
+    override fun getQuickQuoteHandler() = null
 
     override fun destroy() {
         languageSpec.close()

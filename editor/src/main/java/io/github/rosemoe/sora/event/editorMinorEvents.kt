@@ -132,3 +132,15 @@ class TextSizeChangeEvent(
     val oldTextSize: Float,
     val newTextSize: Float
 ) : Event(editor)
+
+/**
+ * Event when search result is available in main thread.
+ * Note that this event is also triggered when query is changed to null.
+ *
+ * @author Rosemoe
+ */
+class PublishSearchResultEvent(editor: CodeEditor) : Event(editor) {
+
+    fun getSearcher() = editor.searcher
+
+}

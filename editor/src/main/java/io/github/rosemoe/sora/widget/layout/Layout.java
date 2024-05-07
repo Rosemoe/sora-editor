@@ -30,7 +30,6 @@ import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentListener;
-import io.github.rosemoe.sora.text.LineRemoveListener;
 
 /**
  * Layout is a manager class for editor to display text
@@ -39,7 +38,7 @@ import io.github.rosemoe.sora.text.LineRemoveListener;
  *
  * @author Rose
  */
-public interface Layout extends LineRemoveListener, ContentListener {
+public interface Layout extends ContentListener {
 
     /**
      * Called by editor to destroy this layout

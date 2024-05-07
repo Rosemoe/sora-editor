@@ -29,7 +29,7 @@ import io.github.rosemoe.sora.util.ObjectPool;
 
 public class UnicodeIterator {
 
-    private final static ObjectPool<UnicodeIterator> sPool = new ObjectPool<UnicodeIterator>() {
+    private final static ObjectPool<UnicodeIterator> sPool = new ObjectPool<>() {
         @Override
         protected UnicodeIterator allocateNew() {
             return new UnicodeIterator();

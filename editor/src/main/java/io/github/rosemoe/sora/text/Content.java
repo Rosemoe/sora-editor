@@ -42,7 +42,7 @@ import io.github.rosemoe.sora.text.bidi.Directions;
  * It is thread-safe by default. Use {@link #Content(CharSequence, boolean)} constructor to
  * create a non thread-safe one.
  *
- * @author Rose
+ * @author Rosemoe
  */
 public class Content implements CharSequence {
 
@@ -65,7 +65,6 @@ public class Content implements CharSequence {
     private final ContentBidi bidi;
     private UndoManager undoManager;
     private Cursor cursor;
-    private LineRemoveListener lineListener;
 
     /**
      * This constructor will create a Content object with no text
@@ -85,7 +84,8 @@ public class Content implements CharSequence {
     }
 
     /**
-     * Create a Content object with the given content text. Specify whether thread-safe is enabled.
+     * Create a Content object with the given content text. Specify whether thread-safe access
+     * to single instance is enabled.
      */
     public Content(CharSequence src, boolean threadSafe) {
         if (src == null) {
@@ -136,15 +136,18 @@ public class Content implements CharSequence {
     }
 
     /**
-     * Test whether the two ContentLine have the same content
+     * Test whether the two ContentLine have the same text
      *
      * @param a ContentLine
      * @param b another ContentLine
-     * @return Whether equals in content
+     * @return Whether the text in the given two lines equal
      */
-    private static boolean equals(ContentLine a, ContentLine b) {
+    private static boolean textEquals(@NonNull ContentLine a, @NonNull ContentLine b) {
         if (a.length() != b.length()) {
             return false;
+        }
+        if (a == b) {
+            return true;
         }
         for (int i = 0; i < a.length(); i++) {
             if (a.charAt(i) != b.charAt(i)) {
@@ -234,16 +237,6 @@ public class Content implements CharSequence {
         } finally {
             unlock(false);
         }
-    }
-
-    /**
-     * Set a line listener
-     *
-     * @param lis the listener,maybe null
-     * @see LineRemoveListener
-     */
-    public void setLineListener(LineRemoveListener lis) {
-        this.lineListener = lis;
     }
 
     /**
@@ -398,7 +391,7 @@ public class Content implements CharSequence {
 
         int workLine = line;
         int workIndex = column;
-        var currLine = lines.get(workLine);
+        var currLine = makeLineMutable(workLine);
         var helper = InsertTextHelper.forInsertion(text);
         int type, peekType = InsertTextHelper.TYPE_EOF;
         boolean fromPeek = false;
@@ -425,6 +418,7 @@ public class Content implements CharSequence {
                 newLine.insert(0, currLine, workIndex, currLine.length());
                 currLine.delete(workIndex, currLine.length());
                 workIndex = 0;
+                // Newly created lines are always mutable
                 currLine = newLine;
                 newLines.add(newLine);
                 workLine++;
@@ -497,7 +491,7 @@ public class Content implements CharSequence {
         }
         var changedContent = new StringBuilder();
         if (startLine == endLine) {
-            var curr = lines.get(startLine);
+            var curr = makeLineMutable(startLine);
             int len = curr.length();
             if (columnOnStartLine < 0 || columnOnEndLine > len || columnOnStartLine > columnOnEndLine) {
                 throw new StringIndexOutOfBoundsException("invalid bounds");
@@ -520,22 +514,18 @@ public class Content implements CharSequence {
 
             for (int i = startLine + 1; i <= endLine - 1; i++) {
                 var line = lines.get(i);
-                if (lineListener != null) {
-                    lineListener.onRemove(this, line);
-                }
                 var separator = lines.get(i).getLineSeparator();
                 textLength -= line.length() + separator.getLength();
-                changedContent.append(line).append(separator.getContent());
-            }
-            if (lineListener != null) {
-                lineListener.onRemove(this, lines.get(endLine));
+                line.appendTo(changedContent);
+                changedContent.append(separator.getContent());
+                line.release();
             }
             if (endLine > startLine + 1) {
                 lines.subList(startLine + 1, endLine).clear();
             }
 
             int currEnd = startLine + 1;
-            var start = lines.get(startLine);
+            var start = makeLineMutable(startLine);
             var end = lines.get(currEnd);
             textLength -= start.length() - columnOnStartLine;
             changedContent.insert(0, start, columnOnStartLine, start.length())
@@ -543,15 +533,28 @@ public class Content implements CharSequence {
             start.delete(columnOnStartLine, start.length());
             textLength -= columnOnEndLine;
             changedContent.append(end, 0, columnOnEndLine);
-            end.delete(0, columnOnEndLine);
             textLength -= start.getLineSeparator().getLength();
             lines.remove(currEnd);
-            start.append(end);
+            start.append(new TextReference(end, columnOnEndLine, end.length()));
             start.setLineSeparator(end.getLineSeparator());
+            end.release();
         } else {
             throw new IllegalArgumentException("start line > end line");
         }
         this.dispatchAfterDelete(startLine, columnOnStartLine, endLine, columnOnEndLine, changedContent);
+    }
+
+    /**
+     * Make the given line mutable
+     */
+    private ContentLine makeLineMutable(int line) {
+        var data = lines.get(line);
+        var mut = data.toMutable();
+        if (mut != data) {
+            lines.set(line, mut);
+            data.release();
+        }
+        return mut;
     }
 
     /**
@@ -915,7 +918,7 @@ public class Content implements CharSequence {
                 return false;
             }
             for (int i = 0; i < this.getLineCount(); i++) {
-                if (!equals(lines.get(i), content.lines.get(i))) {
+                if (!textEquals(lines.get(i), content.lines.get(i))) {
                     return false;
                 }
             }
@@ -1104,7 +1107,8 @@ public class Content implements CharSequence {
 
     /**
      * Copy text in this Content object.
-     * Returns a new thread-safe Content object with the same text as this object.
+     * Returns a new thread-safe Content object with the same text as this object. By default, the object is
+     * thread-safe and access operations are locked when accessed by multiple threads.
      */
     public Content copyText() {
         return copyText(true);
@@ -1115,18 +1119,70 @@ public class Content implements CharSequence {
      * Returns a new Content object with the same text as this object.
      */
     public Content copyText(boolean newContentThreadSafe) {
+        return copyText(newContentThreadSafe, false);
+    }
+
+    /**
+     * Copy text in this Content object.
+     * Returns a new Content object with the same text as this object.
+     */
+    public Content copyText(boolean newContentThreadSafe, boolean shallow) {
         lock(false);
         try {
             var n = new Content(null, newContentThreadSafe);
             n.lines.remove(0);
-            for (int i = 0; i < getLineCount(); i++) {
-                var line = lines.get(i);
-                n.lines.add(new ContentLine(line));
+            ((ArrayList<ContentLine>) n.lines).ensureCapacity(getLineCount());
+            if (shallow) {
+                for (ContentLine line : lines) {
+                    line.retain();
+                }
+                n.lines.addAll(lines);
+            } else {
+                for (ContentLine line : lines) {
+                    n.lines.add(new ContentLine(line));
+                }
             }
             n.textLength = textLength;
             return n;
         } finally {
             unlock(false);
+        }
+    }
+
+    /**
+     * Shallow copy text in this Content object.
+     * Returns a new Content object with the same text as this object. By default, the object is not
+     * thread-safe and should be accessed by a single thread.
+     */
+    public Content copyTextShallow() {
+        return copyTextShallow(false);
+    }
+
+    /**
+     * Shallow copy text in this Content object.
+     * Returns a new Content object with the same text as this object.
+     */
+    public Content copyTextShallow(boolean newContentThreadSafe) {
+        return copyText(newContentThreadSafe, true);
+    }
+
+    /**
+     * Release this text object.
+     * Release any shareable instance currently held. It's recommended to call this after a shallow copied
+     * instance is no longer used.
+     */
+    public void release() {
+        lock(true);
+        try {
+            for (ContentLine line : lines) {
+                line.release();
+            }
+            lines.clear();
+            textLength = 0;
+            this.cursor = null;
+            this.bidi.destroy();
+        } finally {
+            unlock(true);
         }
     }
 

@@ -378,6 +378,11 @@ public class DirectAccessProps implements Serializable {
     public boolean singleDirectionFling = true;
 
     /**
+     * Dragging scroll in single direction (vertical or horizontal)
+     */
+    public boolean singleDirectionDragging = true;
+
+    /**
      * Report cursor anchor info to system.
      * <p>
      * Enable this if the IME needs to get the position of cursor on screen. For example, the
@@ -418,5 +423,21 @@ public class DirectAccessProps implements Serializable {
      * Try to show context menu for mouse
      */
     public boolean mouseContextMenu = true;
+
+    /**
+     * Always show scrollbars when the editor is in mouse mode
+     */
+    public boolean mouseModeAlwaysShowScrollbars = true;
+
+    /**
+     * Adjust scrolling speed in mouse wheel scrolling
+     */
+    public float mouseWheelScrollFactor = 1.2f;
+
+    /**
+     * Disable {@link android.view.inputmethod.InputConnection#getExtractedText(ExtractedTextRequest, int)}
+     * for IME
+     */
+    public boolean disableTextExtracting = false;
 
 }

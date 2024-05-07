@@ -420,68 +420,10 @@ public class EditorKeyEventHandler {
             }
 
             String text = new String(Character.toChars(charCode));
-            // replace text
-            SymbolPairMatch.SymbolPair pair = null;
-            if (editor.getProps().symbolPairAutoCompletion) {
 
-                var firstCharFromText = text.charAt(0);
+            editor.commitText(text);
+            editor.notifyIMEExternalCursorChange();
 
-                char[] inputText = null;
-
-                //size > 1
-                if (text.length() > 1) {
-                    inputText = text.toCharArray();
-                }
-
-                pair = editor.languageSymbolPairs.matchBestPair(
-                        editor.getText(), editor.getCursor().left(),
-                        inputText, firstCharFromText
-                );
-            }
-            if (pair == null || pair == SymbolPairMatch.SymbolPair.EMPTY_SYMBOL_PAIR
-                    || pair.shouldNotReplace(editor)) {
-                editor.commitText(text);
-                editor.notifyIMEExternalCursorChange();
-            } else {
-
-                // QuickQuoteHandler can easily implement the feature of AutoSurround
-                // and is at a higher level (customizable),
-                // so if the language implemented QuickQuoteHandler,
-                // the AutoSurround feature is not considered needed because it can be implemented through QuickQuoteHandler
-
-                if (pair.shouldDoAutoSurround(editorText) && editor.getEditorLanguage().getQuickQuoteHandler() == null) {
-                    editorText.beginBatchEdit();
-                    // insert left
-                    editorText.insert(editorCursor.getLeftLine(), editorCursor.getLeftColumn(), pair.open);
-                    // editorText.insert(editorCursor.getLeftLine(),editorCursor.getLeftColumn(),selectText);
-                    // insert right
-                    editorText.insert(editorCursor.getRightLine(), editorCursor.getRightColumn(), pair.close);
-                    editorText.endBatchEdit();
-
-                    // setSelection
-                    editor.setSelectionRegion(editorCursor.getLeftLine(), editorCursor.getLeftColumn(),
-                            editorCursor.getRightLine(), editorCursor.getRightColumn() - pair.close.length());
-                } else if (editorCursor.isSelected() && editor.getEditorLanguage().getQuickQuoteHandler() != null) {
-                    editor.commitText(text);
-                } else {
-                    editorText.beginBatchEdit();
-
-                    var insertPosition = editorText
-                            .getIndexer()
-                            .getCharPosition(pair.getInsertOffset());
-
-                    editorText.replace(insertPosition.line, insertPosition.column, editorCursor.getRightLine(), editorCursor.getRightColumn(), pair.open);
-                    editorText.insert(insertPosition.line, insertPosition.column + pair.open.length(), pair.close);
-                    editorText.endBatchEdit();
-
-                    var cursorPosition = editorText
-                            .getIndexer()
-                            .getCharPosition(pair.getCursorOffset());
-
-                    editor.setSelection(cursorPosition.line, cursorPosition.column);
-                }
-                editor.notifyIMEExternalCursorChange();
-            }
         } else {
             return editor.onSuperKeyDown(keyCode, event);
         }
@@ -670,10 +612,6 @@ public class EditorKeyEventHandler {
             }
         }
 
-        if (!keyMetaStates.isShiftPressed() && this.editor.selectionAnchor != null && !cursor.isSelected()) {
-            this.editor.selectionAnchor = null;
-            return e.result(true);
-        }
         return e.result(this.editor.onSuperKeyUp(keyCode, event));
     }
 

@@ -37,5 +37,6 @@
     <string name="sora_editor_more">More</string>
     <string name="sora_editor_diagnostics_more_actions">More Actions...</string>
     <string name="sora_editor_clip_text_length_too_large">Text is too large to copy</string>
+    <string name="sora_editor_long_select">Long Select</string>
 
 </resources>
