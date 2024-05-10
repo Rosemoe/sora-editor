@@ -25,6 +25,7 @@
 package io.github.rosemoe.sora.langs.monarch.theme
 
 import com.squareup.moshi.JsonClass
+import io.github.dingyi222666.monarch.types.ITokenTheme
 import io.github.dingyi222666.monarch.types.MetadataConsts
 import io.github.dingyi222666.monarch.types.StandardTokenType
 
@@ -35,7 +36,7 @@ class TokenTheme internal constructor(
     private val themeDefaultColors: ThemeDefaultColors = ThemeDefaultColors.EMPTY,
     val name: String = "default",
     val themeType: String = "light"
-) {
+): ITokenTheme {
     private val cache: MutableMap<String, Int> = mutableMapOf()
 
     val colorMap: List<String>
@@ -60,7 +61,7 @@ class TokenTheme internal constructor(
         return result
     }
 
-    fun match(languageId: Int, token: String): Int {
+    override fun match(languageId: Int, token: String): Int {
         return (match(token) or (languageId shl MetadataConsts.LANGUAGEID_OFFSET)).toInt()
     }
 

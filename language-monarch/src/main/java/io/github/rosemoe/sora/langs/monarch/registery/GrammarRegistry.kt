@@ -24,7 +24,6 @@
 package io.github.rosemoe.sora.langs.monarch.registery
 
 
-import io.github.dingyi222666.monarch.types.MonarchLanguage
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
 import io.github.rosemoe.sora.langs.monarch.registery.dsl.LanguageDefinitionListBuilder
 import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
@@ -86,23 +85,6 @@ abstract class GrammarRegistry<T> {
         return parent?.findGrammar(scopeName, true)
     }
 
-
-    /**
-     * Adapted to use streams to read and load language configuration files by yourself [TextMateLanguage.create].
-     *
-     * @param languageConfiguration loaded language configuration
-     * @param grammar               Binding to grammar
-     */
-    @Deprecated("The grammar file and language configuration file should in most cases be on local file, use {@link GrammarDefinition#getLanguageConfiguration()} and {@link FileResolver} to read the language configuration file")
-    @Synchronized
-    fun languageConfigurationToGrammar(
-        languageConfiguration: LanguageConfiguration,
-        grammar: T
-    ) {
-        languageConfigurationMap[doTransformGrammar(grammar).scopeName] = languageConfiguration
-    }
-
-
     fun findLanguageConfiguration(scopeName: String): LanguageConfiguration? {
         return findLanguageConfiguration(scopeName, true)
     }
@@ -145,6 +127,10 @@ abstract class GrammarRegistry<T> {
         return list.map { loadGrammar(it) }
     }
 
+    fun loadGrammars(jsonPath: String): List<T> {
+        return loadGrammars(doLoadGrammarsFromJsonPath(jsonPath))
+    }
+
     // TODO: load grammars by json path
     /* fun loadGrammars(jsonPath: String?): List<IGrammar> {
          return loadGrammars(LanguageDefinitionReader.read(jsonPath))
@@ -157,6 +143,7 @@ abstract class GrammarRegistry<T> {
         if (grammarFileName2ScopeName.containsKey(languageName) && grammarDefinition.scopeName.isNotEmpty()) {
             //loaded
             return doSearchGrammar(grammarDefinition.scopeName)
+                ?: throw RuntimeException("Grammar cannot be find by scope name: $languageName")
         }
 
 
@@ -242,11 +229,12 @@ abstract class GrammarRegistry<T> {
     }
 
 
-    abstract fun doLoadGrammar(grammarDefinition: GrammarDefinition<T>): T
+    protected abstract fun doLoadGrammar(grammarDefinition: GrammarDefinition<T>): T
 
-    abstract fun doSetGrammarRegistryTheme(themeModel: ThemeModel)
+    protected abstract fun doSetGrammarRegistryTheme(themeModel: ThemeModel)
 
-    abstract fun doTransformGrammar(grammar: T): GrammarDefinition<T>
+    protected abstract fun doLoadGrammarsFromJsonPath(jsonPath: String): List<GrammarDefinition<T>>
 
-    abstract fun doSearchGrammar(scopeName: String): T
+    protected abstract fun doSearchGrammar(scopeName: String): T?
 }
+
