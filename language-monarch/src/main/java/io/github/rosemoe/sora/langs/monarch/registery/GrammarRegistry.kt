@@ -24,11 +24,11 @@
 package io.github.rosemoe.sora.langs.monarch.registery
 
 
+import io.github.dingyi222666.monarch.types.MonarchLanguage
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
 import io.github.rosemoe.sora.langs.monarch.registery.dsl.LanguageDefinitionListBuilder
 import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
 import io.github.rosemoe.sora.langs.monarch.registery.model.ThemeModel
-
 
 abstract class GrammarRegistry<T> {
     private var parent: GrammarRegistry<T>? = null

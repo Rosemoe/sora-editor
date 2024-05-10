@@ -30,21 +30,22 @@ import io.github.dingyi222666.monarch.types.StandardTokenType
 
 @JsonClass(generateAdapter = false)
 class TokenTheme internal constructor(
-    private val colorMap: ColorMap,
+    private val privateColorMap: ColorMap,
     private val root: ThemeTrieElement,
-    private val themeDefaultColors: ThemeDefaultColors = ThemeDefaultColors(),
+    private val themeDefaultColors: ThemeDefaultColors = ThemeDefaultColors.EMPTY,
     val name: String = "default",
     val themeType: String = "light"
 ) {
     private val cache: MutableMap<String, Int> = mutableMapOf()
 
-    fun getColorMap(): List<String> {
-        return colorMap.getColorMap()
-    }
+    val colorMap: List<String>
+        get() = privateColorMap.colorMap
 
-    fun getThemeTrieElement(): ExternalThemeTrieElement {
-        return root.toExternalThemeTrieElement()
-    }
+    val themeTrieElement: ExternalThemeTrieElement
+        get() = root.toExternalThemeTrieElement()
+
+    val defaults: ThemeDefaultColors
+        get() = themeDefaultColors
 
     private fun _match(token: String): ThemeTrieElementRule {
         return root.match(token)
@@ -63,7 +64,6 @@ class TokenTheme internal constructor(
         return (match(token) or (languageId shl MetadataConsts.LANGUAGEID_OFFSET)).toInt()
     }
 
-    fun getDefaults(): ThemeDefaultColors = themeDefaultColors
 
     override fun toString(): String {
         return "TokenTheme(colorMap=$colorMap, root=$root, themeDefaultColors=$themeDefaultColors, themeType='$themeType', cache=$cache)"

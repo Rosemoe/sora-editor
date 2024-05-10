@@ -30,7 +30,6 @@ class ColorMap {
     private val id2color = mutableListOf<String>()
     private val color2id = mutableMapOf<String, Int>()
 
-
     fun getId(color: String?): Int {
         if (color == null) {
             return 0
@@ -46,9 +45,9 @@ class ColorMap {
         return id2color[id]
     }
 
-    fun getColorMap(): List<String> {
-        return id2color.toList()
-    }
+
+    val colorMap: List<String>
+        get() = id2color.toList()
 
     override fun toString(): String {
         return "ColorMap(lastColorId=$lastColorId, id2color=$id2color, color2id=$color2id)"

@@ -36,7 +36,7 @@ class ThemeModel {
     var name: String
         private set
 
-    var isDark: Boolean = false
+    var isDark = false
         private set
 
     constructor(themeSource: ThemeSource) {

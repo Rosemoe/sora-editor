@@ -33,6 +33,9 @@ class ThemeDefaultColors(defaultColors: Map<String, String>) {
 
     constructor() : this(emptyMap())
 
+    operator fun get(key: String): String? {
+        return colors[key]
+    }
 
     fun putColors(map: Map<String, String>) {
         colors.putAll(map)
@@ -50,5 +53,8 @@ class ThemeDefaultColors(defaultColors: Map<String, String>) {
         return "ThemeDefaultColors(colors=$colors)"
     }
 
+    companion object {
+        val EMPTY = ThemeDefaultColors()
+    }
 
 }
