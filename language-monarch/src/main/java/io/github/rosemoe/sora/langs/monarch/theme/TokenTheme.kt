@@ -37,7 +37,7 @@ class TokenTheme internal constructor(
     val name: String = "default",
     val themeType: String = "light"
 ): ITokenTheme {
-    private val cache: MutableMap<String, Int> = mutableMapOf()
+    private val cache = mutableMapOf<String, Int>()
 
     val colorMap: List<String>
         get() = privateColorMap.colorMap

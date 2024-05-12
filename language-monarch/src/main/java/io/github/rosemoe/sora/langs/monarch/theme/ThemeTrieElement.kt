@@ -25,7 +25,7 @@
 package io.github.rosemoe.sora.langs.monarch.theme
 
 class ThemeTrieElement(private val mainRule: ThemeTrieElementRule) {
-    private val children: MutableMap<String, ThemeTrieElement> = mutableMapOf()
+    private val children = mutableMapOf<String, ThemeTrieElement>()
 
     fun toExternalThemeTrieElement(): ExternalThemeTrieElement {
         val children = children.mapValues { it.value.toExternalThemeTrieElement() }.toMutableMap()

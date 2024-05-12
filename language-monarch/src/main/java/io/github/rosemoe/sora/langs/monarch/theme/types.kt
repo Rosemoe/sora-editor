@@ -24,8 +24,6 @@
 
 package io.github.rosemoe.sora.langs.monarch.theme
 
-import io.github.dingyi222666.monarch.types.FontStyle
-
 
 interface ITokenThemeRule {
     var token: String

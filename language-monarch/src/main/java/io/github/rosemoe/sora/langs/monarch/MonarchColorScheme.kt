@@ -186,7 +186,6 @@ class MonarchColorScheme(
         super.colors.put(type, newColor)
 
         return newColor
-
     }
 
     override fun isDark(): Boolean {

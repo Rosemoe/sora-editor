@@ -36,7 +36,7 @@ class MonarchGrammarRegistry(
     parent: GrammarRegistry<Language>? = null
 ) : GrammarRegistry<Language>(parent), IThemeService {
 
-    private var currentTheme: ThemeModel = ThemeModel.EMPTY
+    private var currentTheme = ThemeModel.EMPTY
 
     override fun doLoadGrammar(grammarDefinition: GrammarDefinition<Language>): Language {
         return grammarDefinition.grammar.also {

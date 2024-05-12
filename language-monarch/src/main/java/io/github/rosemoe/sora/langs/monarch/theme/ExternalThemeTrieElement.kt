@@ -28,5 +28,5 @@ class ExternalThemeTrieElement(
     val mainRule: ThemeTrieElementRule,
     children: Map<String, ExternalThemeTrieElement> = mapOf()
 ) {
-    val children: MutableMap<String, ExternalThemeTrieElement> = children.toMutableMap()
+    val children = children.toMutableMap()
 }
