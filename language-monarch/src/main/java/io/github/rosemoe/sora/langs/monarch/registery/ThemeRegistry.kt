@@ -34,7 +34,8 @@ object ThemeRegistry {
 
     private val themes = mutableListOf<ThemeModel>()
 
-    private var currentTheme: ThemeModel = ThemeModel.EMPTY
+    var currentTheme: ThemeModel = ThemeModel.EMPTY
+        private set
 
     @Throws(Exception::class)
     fun loadTheme(themeSource: ThemeSource) {

@@ -44,7 +44,7 @@ class MonarchLanguage : EmptyLanguage() {
 
     var autoCompleteEnabled = false
 
-    private var createIdentifiers = false
+    var createIdentifiers = false
 
    // var monarchAnalyzer: MonarchAnalyzer? = null
 

@@ -47,6 +47,9 @@ class FoldingRegions(
         }
     }
 
+    val indices: IntRange
+        get() = IntRange(0, length)
+
     val length: Int
         get() = _startIndexes.size()
 
