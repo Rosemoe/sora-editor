@@ -22,12 +22,42 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.langs.monarch.folding
+package io.github.rosemoe.sora.langs.monarch.utils
 
-import io.github.dingyi222666.regex.MatchResult
+fun String.checkSurrogate(): Boolean {
+    for (element in this) {
+        if (Character.isSurrogate(element)) {
+            return true
+        }
+    }
+    return false
+}
 
-interface FoldingHelper {
-    fun getResultFor(line: Int): MatchResult?
 
-    fun getIndentFor(line: Int): Int
+fun String.convertUnicodeOffsetToUtf16(offset: Int, isSurrogatePairConsidered: Boolean): Int {
+    if (offset < 0) {
+        throw IllegalArgumentException("Offset cannot be negative.")
+    }
+
+    if (!isSurrogatePairConsidered) {
+        return offset
+    }
+
+    var i = 0
+    while (i < length) {
+        if (i == offset) {
+            return i
+        }
+
+        val ch = this[i]
+
+        if (Character.isHighSurrogate(ch) && i + 1 < length && Character.isLowSurrogate(this[i + 1])) {
+            i += 2
+            continue
+        }
+
+        i++
+    }
+
+    return offset
 }

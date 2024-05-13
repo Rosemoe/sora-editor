@@ -24,28 +24,37 @@
 
 package io.github.rosemoe.sora.langs.monarch
 
+import android.graphics.Color
 import android.os.Bundle
+import io.github.dingyi222666.monarch.tokenization.TokenMetadata
+import io.github.dingyi222666.monarch.types.FontStyle
 import io.github.dingyi222666.monarch.types.ITokenizationSupport
+import io.github.dingyi222666.monarch.types.StandardTokenType
 import io.github.dingyi222666.regex.GlobalRegexLib
 import io.github.dingyi222666.regex.MatchResult
 import io.github.dingyi222666.regex.Regex
 import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager
 import io.github.rosemoe.sora.lang.analysis.IncrementalAnalyzeManager.LineTokenizeResult
-import io.github.rosemoe.sora.lang.analysis.StyleReceiver
 import io.github.rosemoe.sora.lang.brackets.BracketsProvider
 import io.github.rosemoe.sora.lang.brackets.OnlineBracketsMatcher
 import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete.SyncIdentifiers
 import io.github.rosemoe.sora.lang.styling.CodeBlock
 import io.github.rosemoe.sora.lang.styling.Span
+import io.github.rosemoe.sora.lang.styling.SpanFactory
+import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.langs.monarch.folding.FoldingHelper
 import io.github.rosemoe.sora.langs.monarch.folding.IndentRange
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
 import io.github.rosemoe.sora.langs.monarch.registery.ThemeChangeListener
 import io.github.rosemoe.sora.langs.monarch.registery.ThemeRegistry
 import io.github.rosemoe.sora.langs.monarch.registery.model.ThemeModel
+import io.github.rosemoe.sora.langs.monarch.utils.checkSurrogate
+import io.github.rosemoe.sora.langs.monarch.utils.convertUnicodeOffsetToUtf16
 import io.github.rosemoe.sora.text.Content
+import io.github.rosemoe.sora.text.ContentLine
 import io.github.rosemoe.sora.text.ContentReference
-import io.github.rosemoe.sora.util.ArrayList
+import io.github.rosemoe.sora.util.MyCharacter
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 class MonarchAnalyzer(
     private val language: MonarchLanguage,
@@ -119,7 +128,7 @@ class MonarchAnalyzer(
         return getState(line).state.indent
     }
 
-    override fun getResultFor(line: Int): MatchResult {
+    override fun getResultFor(line: Int): MatchResult? {
         return getState(line).state.foldingCache
     }
 
@@ -196,17 +205,99 @@ class MonarchAnalyzer(
 
 
     override fun tokenizeLine(
-        line: CharSequence?,
+        lineC: CharSequence,
         state: MonarchState?,
         lineIndex: Int
     ): LineTokenizeResult<MonarchState, Span> {
-        TODO("Not yet implemented")
+        val line =
+            if ((lineC is ContentLine)) lineC.toStringWithNewline() else lineC.toString()
+
+        val tokens = ArrayList<Span>()
+        val surrogate = line.checkSurrogate()
+        val lineTokens = tokenization.tokenizeEncoded(
+            line, false, state?.tokenizeState ?: initialState.tokenizeState
+        )
+
+        val tokensLength = lineTokens.tokens.size / 2
+        val identifiers = if (language.createIdentifiers) mutableListOf<String>() else null
+
+        for (index in 0 until tokensLength) {
+            val startIndex =
+                line.convertUnicodeOffsetToUtf16(
+                    lineTokens.tokens[2 * index], surrogate
+                )
+            if (index == 0 && startIndex != 0) {
+                tokens.add(SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL.toLong()))
+            }
+            val metadata = lineTokens.tokens[2 * index + 1]
+            val foreground = TokenMetadata.getForeground(metadata)
+            val fontStyle = TokenMetadata.getFontStyle(metadata)
+            val tokenType = TokenMetadata.getTokenType(metadata)
+
+            if (language.createIdentifiers &&
+                tokenType == StandardTokenType.Other
+            ) {
+                val end = if (index + 1 == tokensLength)
+                    lineC.length
+                else
+                    line.convertUnicodeOffsetToUtf16(
+                        lineTokens.tokens[2 * (index + 1)],
+                        surrogate
+                    )
+                if (end > startIndex && MyCharacter.isJavaIdentifierStart(line[startIndex])) {
+                    var isValidIdentifier = true
+                    for (j in startIndex + 1 until end) {
+                        if (!MyCharacter.isJavaIdentifierPart(line[j])) {
+                            isValidIdentifier = false
+                            break
+                        }
+                    }
+                    if (isValidIdentifier) {
+                        identifiers?.add(line.substring(startIndex, end))
+                    }
+                }
+            }
+
+            val span = SpanFactory.obtain(
+                startIndex, TextStyle.makeStyle(
+                    foreground + 255,
+                    0,
+                    (fontStyle and FontStyle.Bold) != 0,
+                    (fontStyle and FontStyle.Italic) != 0,
+                    false
+                )
+            )
+
+            span.extra = tokenType
+
+            if ((fontStyle and FontStyle.Underline) != 0) {
+                val color = theme.theme.colorMap.getColor(foreground)
+                if (color != null) {
+                    span.setUnderlineColor(Color.parseColor(color))
+                }
+            }
+
+            tokens.add(span)
+        }
+
+        return LineTokenizeResult(
+            MonarchState(
+                lineTokens.endState,
+                cachedFoldingRegExp?.search(
+                    line, 0
+                ),
+                IndentRange.computeIndentLevel(
+                    (lineC as ContentLine).backingCharArray, line.length - 1, language.tabSize
+                ),
+                identifiers
+            ), null, tokens
+        )
     }
 
     override fun onAddState(state: MonarchState) {
         super.onAddState(state)
         if (language.createIdentifiers) {
-            for (identifier in state.identifiers) {
+            state.identifiers?.forEach { identifier ->
                 syncIdentifiers.identifierIncrease(identifier)
             }
         }
@@ -215,8 +306,8 @@ class MonarchAnalyzer(
     override fun onAbandonState(state: MonarchState) {
         super.onAbandonState(state)
         if (language.createIdentifiers) {
-            for (identifier in state.identifiers) {
-                syncIdentifiers.identifierDecrease(identifier)
+            state.identifiers?.forEach { identifier ->
+                syncIdentifiers.identifierIncrease(identifier)
             }
         }
     }

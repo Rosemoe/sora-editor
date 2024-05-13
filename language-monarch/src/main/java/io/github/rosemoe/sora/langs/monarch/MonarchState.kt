@@ -29,7 +29,7 @@ import io.github.dingyi222666.regex.MatchResult
 
 data class MonarchState(
     val tokenizeState: TokenizeState,
-    val foldingCache: MatchResult,
+    val foldingCache: MatchResult?,
     val indent: Int,
-    val identifiers: List<String>
+    val identifiers: List<String>?
 )

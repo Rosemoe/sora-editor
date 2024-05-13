@@ -41,8 +41,8 @@ class ColorMap {
         }
     }
 
-    fun getColor(id: Int): String {
-        return id2color[id]
+    fun getColor(id: Int): String? {
+        return id2color.getOrNull(id)
     }
 
 

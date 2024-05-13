@@ -178,7 +178,7 @@ class MonarchColorScheme(
         }
 
         val theme = currentThemeModel.theme
-        val color = theme.colorMap.getOrNull(type - 255)
+        val color = theme.colorMap.getColor(type - 255)
         val newColor = if (color != null) Color.parseColor(color) else super.getColor(
             TEXT_NORMAL
         )

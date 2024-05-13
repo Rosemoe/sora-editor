@@ -39,8 +39,8 @@ class TokenTheme internal constructor(
 ): ITokenTheme {
     private val cache = mutableMapOf<String, Int>()
 
-    val colorMap: List<String>
-        get() = privateColorMap.colorMap
+    val colorMap: ColorMap
+        get() = privateColorMap
 
     val themeTrieElement: ExternalThemeTrieElement
         get() = root.toExternalThemeTrieElement()
