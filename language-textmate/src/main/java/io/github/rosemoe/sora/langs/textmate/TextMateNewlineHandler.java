@@ -454,7 +454,7 @@ public class TextMateNewlineHandler implements NewlineHandler {
 
 
     private String normalizeIndentation(final String str) {
-        return TextUtils.normalizeIndentation(str, language.getTabSize(), language.useTab());
+        return TextUtils.normalizeIndentation(str, language.getTabSize(), !language.useTab());
     }
 
 
