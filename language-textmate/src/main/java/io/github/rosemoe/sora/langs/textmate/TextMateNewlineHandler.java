@@ -414,24 +414,27 @@ public class TextMateNewlineHandler implements NewlineHandler {
             return null;
         }
 
+        final EnterAction.IndentAction indentAction = enterResult.indentAction;
+        String appendText = enterResult.appendText;
+        final Integer removeText = enterResult.removeText;
         // Here we add `\t` to appendText first because enterAction is leveraging
         // appendText and removeText to change indentation.
-        if (enterResult.appendText == null) {
-            if (enterResult.indentAction == EnterAction.IndentAction.Indent || enterResult.indentAction == EnterAction.IndentAction.IndentOutdent) {
-                enterResult.appendText = "\t";
+        if (appendText == null) {
+            if (indentAction == EnterAction.IndentAction.Indent
+                    || indentAction == EnterAction.IndentAction.IndentOutdent) {
+                appendText = "\t";
             } else {
-                enterResult.appendText = "";
+                appendText = "";
             }
-        } else if (enterResult.indentAction == EnterAction.IndentAction.Indent) {
-            enterResult.appendText = "\t" + enterResult.appendText;
+        } else if (indentAction == EnterAction.IndentAction.Indent) {
+            appendText = "\t" + appendText;
         }
 
-        final var removeText = enterResult.removeText;
         if (removeText != null) {
             indentation = indentation.substring(0, indentation.length() - removeText);
         }
 
-        return new CompleteEnterAction(enterResult.indentAction, enterResult.appendText, enterResult.removeText, indentation);
+        return new CompleteEnterAction(indentAction, appendText, removeText, indentation);
 
     }
 
