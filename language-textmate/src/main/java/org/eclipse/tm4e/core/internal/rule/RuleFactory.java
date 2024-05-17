@@ -247,7 +247,7 @@ public final class RuleFactory {
             }
         }
 
-        return new CompilePatternsResult(r.toArray(RuleId[]::new), patterns.size() != r.size());
+        return new CompilePatternsResult(r.toArray(new RuleId[0]), patterns.size() != r.size());
     }
 
     private RuleFactory() {
