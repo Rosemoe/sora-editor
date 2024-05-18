@@ -59,7 +59,7 @@ class MonarchColorScheme(
             currentThemeModel.load()
         }
 
-        applyThemeSettings(currentThemeModel.theme.defaults)
+        applyThemeSettings(currentThemeModel.value.defaults)
     }
 
     private fun applyThemeSettings(defaultColors: ThemeDefaultColors) {
@@ -177,7 +177,7 @@ class MonarchColorScheme(
             return superColor
         }
 
-        val theme = currentThemeModel.theme
+        val theme = currentThemeModel.value
         val color = theme.colorMap.getColor(type - 255)
         val newColor = if (color != null) Color.parseColor(color) else super.getColor(
             TEXT_NORMAL

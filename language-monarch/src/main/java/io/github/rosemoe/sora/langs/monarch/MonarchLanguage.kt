@@ -25,34 +25,50 @@
 package io.github.rosemoe.sora.langs.monarch
 
 import android.os.Bundle
+import io.github.dingyi222666.monarch.language.Language
 import io.github.rosemoe.sora.lang.EmptyLanguage
+import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
 import io.github.rosemoe.sora.lang.completion.CompletionHelper
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher
 import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete
-import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete.SyncIdentifiers
+import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
 import io.github.rosemoe.sora.langs.monarch.registery.MonarchGrammarRegistry
+import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.util.MyCharacter
 
-class MonarchLanguage : EmptyLanguage() {
+class MonarchLanguage(
+    private var grammar: Language,
+    private var languageConfiguration: LanguageConfiguration?,
+    private var grammarRegistry: MonarchGrammarRegistry,
+    private var autoCompleteEnabled: Boolean
+) : EmptyLanguage() {
     var tabSize = 4
 
     var useTab = false
 
-    val autoCompleter = IdentifierAutoComplete()
+    private val autoCompleter by lazy(LazyThreadSafetyMode.NONE) {
+        IdentifierAutoComplete()
+    }
 
-    var autoCompleteEnabled = false
+    internal var createIdentifiers = false
 
-    var createIdentifiers = false
+    private var monarchAnalyzer: MonarchAnalyzer? = null
 
-   // var monarchAnalyzer: MonarchAnalyzer? = null
+    init {
+        createAnalyzerAndNewlineHandler(grammar, languageConfiguration)
+    }
 
-    private lateinit var grammarRegistry: MonarchGrammarRegistry
-   /*
-    var newlineHandlers: Array<TextMateNewlineHandler>
 
-    var symbolPairMatch: TextMateSymbolPairMatch? = null*/
+    /*
+     var newlineHandlers: Array<TextMateNewlineHandler>
+
+     var symbolPairMatch: TextMateSymbolPairMatch? = null*/
+
+    override fun getAnalyzeManager(): AnalyzeManager {
+        return monarchAnalyzer ?: EmptyAnalyzeManager.INSTANCE
+    }
 
     override fun useTab() = useTab
 
@@ -66,17 +82,122 @@ class MonarchLanguage : EmptyLanguage() {
         publisher: CompletionPublisher,
         extraArguments: Bundle
     ) {
-        if (!autoCompleteEnabled) {
+        val monarchAnalyzer = monarchAnalyzer
+        if (!autoCompleteEnabled || monarchAnalyzer == null) {
             return
         }
         val prefix = CompletionHelper.computePrefix(
             content, position
         ) { key: Char -> MyCharacter.isJavaIdentifierPart(key) }
-        /*val idt: SyncIdentifiers = textMateAnalyzer.syncIdentifiers
-        autoComplete.requireAutoComplete(content, position, prefix, publisher, idt)*/
+        val idt = monarchAnalyzer.syncIdentifiers
+        autoCompleter.requireAutoComplete(content, position, prefix, publisher, idt)
     }
 
     fun setCompleterKeywords(keywords: Array<String?>?) {
         autoCompleter.setKeywords(keywords, false)
+    }
+
+    private fun createAnalyzerAndNewlineHandler(
+        grammar: Language,
+        languageConfiguration: LanguageConfiguration?
+    ) {
+        val old = monarchAnalyzer
+        if (old != null) {
+            old.setReceiver(null)
+            old.destroy()
+        }
+        try {
+            monarchAnalyzer = MonarchAnalyzer(
+                this,
+                grammarRegistry.languageRegistry.getTokenizer(grammar.languageId)
+                    ?: throw Exception("No tokenizer found for language ${grammar.languageId}"),
+                languageConfiguration
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        this.languageConfiguration = languageConfiguration
+        /*newlineHandler = TextMateNewlineHandler(this)
+        newlineHandlers = arrayOf<TextMateNewlineHandler>(newlineHandler)
+        if (languageConfiguration != null) {
+            // because the editor will only get the symbol pair matcher once
+            // (caching object to stop repeated new object created),
+            // the symbol pair needs to be updated inside the symbol pair matcher.
+            symbolPairMatch.updatePair()
+        }*/
+    }
+
+    companion object {
+
+        @JvmStatic
+        fun create(languageScopeName: String, autoCompleteEnabled: Boolean): MonarchLanguage {
+            return create(
+                languageScopeName,
+                MonarchGrammarRegistry.INSTANCE,
+                autoCompleteEnabled
+            )
+        }
+
+        @JvmStatic
+        fun create(
+            languageScopeName: String,
+            grammarRegistry: MonarchGrammarRegistry,
+            autoCompleteEnabled: Boolean
+        ): MonarchLanguage {
+            val grammar = grammarRegistry.findGrammar(languageScopeName)
+                ?: throw IllegalArgumentException(
+                    String.format(
+                        "Language with %s scope name not found",
+                        grammarRegistry
+                    )
+                )
+
+            val languageConfiguration =
+                grammarRegistry.findLanguageConfiguration(
+                    grammar.monarchLanguage.tokenPostfix ?: grammar.languageName
+                )
+
+            return MonarchLanguage(
+                grammar,
+                languageConfiguration,
+                grammarRegistry,
+                autoCompleteEnabled
+            )
+        }
+
+
+        @JvmStatic
+        fun create(
+            grammarDefinition: GrammarDefinition<Language>,
+            autoCompleteEnabled: Boolean
+        ): MonarchLanguage {
+            return create(
+                grammarDefinition,
+                MonarchGrammarRegistry.INSTANCE,
+                autoCompleteEnabled
+            )
+        }
+
+        @JvmStatic
+        fun create(
+            grammarDefinition: GrammarDefinition<Language>,
+            grammarRegistry: MonarchGrammarRegistry,
+            autoCompleteEnabled: Boolean
+        ): MonarchLanguage {
+            val grammar = grammarRegistry.loadGrammar(grammarDefinition)
+
+            val languageConfiguration =
+                grammarRegistry.findLanguageConfiguration(
+                    grammar.monarchLanguage.tokenPostfix ?: grammar.languageName
+                )
+
+            return MonarchLanguage(
+                grammar,
+                languageConfiguration,
+                grammarRegistry,
+                autoCompleteEnabled
+            )
+        }
+
     }
 }

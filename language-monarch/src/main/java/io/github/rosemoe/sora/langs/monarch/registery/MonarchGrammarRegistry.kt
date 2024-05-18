@@ -32,7 +32,7 @@ import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
 import io.github.rosemoe.sora.langs.monarch.registery.model.ThemeModel
 
 class MonarchGrammarRegistry(
-    private val languageRegistry: LanguageRegistry = LanguageRegistry(),
+    internal val languageRegistry: LanguageRegistry = LanguageRegistry(),
     parent: GrammarRegistry<Language>? = null
 ) : GrammarRegistry<Language>(parent), IThemeService {
 
@@ -41,6 +41,7 @@ class MonarchGrammarRegistry(
     override fun doLoadGrammar(grammarDefinition: GrammarDefinition<Language>): Language {
         return grammarDefinition.grammar.also {
             languageRegistry.registerLanguage(it, true, this)
+            grammarDefinition.scopeName = it.monarchLanguage.tokenPostfix ?: it.languageName
         }
     }
 
@@ -61,6 +62,13 @@ class MonarchGrammarRegistry(
 
 
     override fun currentColorTheme(): ITokenTheme {
-        return currentTheme.theme
+        return currentTheme.value
+    }
+
+    companion object {
+        val INSTANCE by lazy {
+            MonarchGrammarRegistry()
+        }
     }
 }
+

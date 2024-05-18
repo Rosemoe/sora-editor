@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.langs.monarch.registery
 import io.github.rosemoe.sora.langs.monarch.registery.provider.FileResolver
 import java.io.InputStream
 
+
 object FileProviderRegistry : FileResolver {
     private val fileResolvers = mutableListOf<FileResolver>()
 
@@ -46,6 +47,7 @@ object FileProviderRegistry : FileResolver {
             fileResolvers.remove(fileResolver)
         }
     }
+
 
     override fun resolve(path: String): InputStream? {
         return fileResolvers.firstNotNullOfOrNull { it.resolve(path) }

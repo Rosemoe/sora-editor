@@ -56,13 +56,13 @@ class TokenTheme internal constructor(
         val result = cache.getOrPut(token) {
             val rule = _match(token)
             val standardToken = token.toStandardTokenType()
-            (rule.metadata or (standardToken shl MetadataConsts.TOKEN_TYPE_OFFSET)).toInt()
+            (rule.metadata or (standardToken shl MetadataConsts.TOKEN_TYPE_OFFSET))
         }
         return result
     }
 
     override fun match(languageId: Int, token: String): Int {
-        return (match(token) or (languageId shl MetadataConsts.LANGUAGEID_OFFSET)).toInt()
+        return (match(token) or (languageId shl MetadataConsts.LANGUAGEID_OFFSET))
     }
 
 

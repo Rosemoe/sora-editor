@@ -142,7 +142,7 @@ object ThemeRegistry {
 
     fun findTheme(name: String): ThemeModel? {
         return themes.firstOrNull {
-            it.theme.name == name
+            it.value.name == name
         }
     }
 }

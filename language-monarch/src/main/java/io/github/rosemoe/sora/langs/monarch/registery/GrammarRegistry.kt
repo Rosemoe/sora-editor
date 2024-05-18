@@ -131,6 +131,19 @@ abstract class GrammarRegistry<T> {
         return loadGrammars(doLoadGrammarsFromJsonPath(jsonPath))
     }
 
+    /**
+     * Adapted to use streams to read and load language configuration files by yourself [TextMateLanguage.create].
+     *
+     * @param languageConfiguration loaded language configuration
+     * @param grammar               Binding to grammar
+     */
+    fun languageConfigurationToGrammar(
+        languageConfiguration: LanguageConfiguration,
+        scopeName: String
+    ) {
+        languageConfigurationMap[scopeName] = languageConfiguration
+    }
+
     // TODO: load grammars by json path
     /* fun loadGrammars(jsonPath: String?): List<IGrammar> {
          return loadGrammars(LanguageDefinitionReader.read(jsonPath))
@@ -152,6 +165,9 @@ abstract class GrammarRegistry<T> {
         if (grammarDefinition.scopeName.isNotEmpty()) {
             grammarFileName2ScopeName[languageName] = grammarDefinition.scopeName
             scopeName2GrammarDefinition[grammarDefinition.scopeName] = grammarDefinition
+            grammarDefinition.languageConfiguration?.also {
+                languageConfigurationMap[grammarDefinition.scopeName] = it
+            }
         }
 
         return grammar

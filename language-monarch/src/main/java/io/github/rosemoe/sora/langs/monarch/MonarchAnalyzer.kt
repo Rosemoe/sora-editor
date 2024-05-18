@@ -66,8 +66,8 @@ class MonarchAnalyzer(
     private var cachedFoldingRegExp: Regex? = null
     private var foldingOffside = false
     private var bracketsProvider: BracketsProvider? = null
-    private val syncIdentifiers = SyncIdentifiers()
     private var theme = ThemeRegistry.currentTheme
+    internal val syncIdentifiers = SyncIdentifiers()
 
 
     init {
@@ -271,7 +271,7 @@ class MonarchAnalyzer(
             span.extra = tokenType
 
             if ((fontStyle and FontStyle.Underline) != 0) {
-                val color = theme.theme.colorMap.getColor(foreground)
+                val color = theme.value.colorMap.getColor(foreground)
                 if (color != null) {
                     span.setUnderlineColor(Color.parseColor(color))
                 }

@@ -30,7 +30,7 @@ import io.github.rosemoe.sora.langs.monarch.theme.toTokenTheme
 
 class ThemeModel {
     private var themeSource: ThemeSource? = null
-    lateinit var theme: TokenTheme
+    lateinit var value: TokenTheme
         private set
 
     var name: String
@@ -46,7 +46,7 @@ class ThemeModel {
 
     internal constructor(name: String) {
         this.name = name
-        theme = TokenTheme.createFromParsedTokenTheme(emptyList())
+        value = TokenTheme.createFromParsedTokenTheme(emptyList())
     }
 
 
@@ -59,14 +59,14 @@ class ThemeModel {
         }
 
         if (rawThemeString != null) {
-            theme = rawThemeString.toTokenTheme()
+            value = rawThemeString.toTokenTheme()
         }
 
-        isDark = theme.themeType == "dark"
+        isDark = value.themeType == "dark"
     }
 
     val isLoaded: Boolean
-        get() = ::theme.isInitialized
+        get() = ::value.isInitialized
 
 
     companion object {
