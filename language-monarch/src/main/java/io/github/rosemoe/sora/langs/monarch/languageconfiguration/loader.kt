@@ -41,7 +41,6 @@ import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.IndentAc
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.IndentationRule
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.OnEnterRule
-import java.util.Locale
 import kotlin.properties.Delegates
 
 class LanguageConfigurationAdapter : JsonAdapter<LanguageConfiguration>() {
@@ -141,7 +140,7 @@ class LanguageConfigurationAdapter : JsonAdapter<LanguageConfiguration>() {
         val list = mutableListOf<AutoClosingPairConditional>()
 
         while (reader.hasNext()) {
-            val pair = readAutoClosingPairConditional(reader)
+            val pair = readAutoClosingPairConditional(reader, false)
 
             list.add(pair)
         }
@@ -345,7 +344,7 @@ class LanguageConfigurationAdapter : JsonAdapter<LanguageConfiguration>() {
         val list = mutableListOf<BaseAutoClosingPair>()
 
         while (reader.hasNext()) {
-            list.add(readAutoClosingPair(reader))
+            list.add(readAutoClosingPair(reader, true))
         }
 
         reader.endArray()
@@ -353,9 +352,12 @@ class LanguageConfigurationAdapter : JsonAdapter<LanguageConfiguration>() {
         return list
     }
 
-    private fun readAutoClosingPair(reader: JsonReader): BaseAutoClosingPair {
+    private fun readAutoClosingPair(
+        reader: JsonReader,
+        isSurroundingPair: Boolean
+    ): BaseAutoClosingPair {
         if (reader.peek() == JsonReader.Token.BEGIN_OBJECT) {
-            return readAutoClosingPairConditional(reader)
+            return readAutoClosingPairConditional(reader, isSurroundingPair)
         }
 
         reader.beginArray()
@@ -365,15 +367,18 @@ class LanguageConfigurationAdapter : JsonAdapter<LanguageConfiguration>() {
 
         if (reader.hasNext()) {
             val notIn = readStringArray(reader)
-            return AutoClosingPairConditional(open, close, notIn)
+            return AutoClosingPairConditional(open, close, notIn, isSurroundingPair)
         }
 
         reader.endArray()
 
-        return AutoClosingPair(open, close)
+        return AutoClosingPair(open, close, isSurroundingPair)
     }
 
-    private fun readAutoClosingPairConditional(reader: JsonReader): AutoClosingPairConditional {
+    private fun readAutoClosingPairConditional(
+        reader: JsonReader,
+        isSurroundingPair: Boolean
+    ): AutoClosingPairConditional {
         reader.beginObject()
 
         var open by Delegates.notNull<String>()
@@ -398,7 +403,7 @@ class LanguageConfigurationAdapter : JsonAdapter<LanguageConfiguration>() {
 
         reader.endObject()
 
-        return AutoClosingPairConditional(open, close, notIn ?: emptyList())
+        return AutoClosingPairConditional(open, close, notIn ?: emptyList(), isSurroundingPair)
     }
 
     private fun readStringArray(reader: JsonReader): List<String> {

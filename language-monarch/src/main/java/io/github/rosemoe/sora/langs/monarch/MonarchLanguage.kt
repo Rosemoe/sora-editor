@@ -37,34 +37,41 @@ import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.util.MyCharacter
+import io.github.rosemoe.sora.widget.SymbolPairMatch
 
 class MonarchLanguage(
     private var grammar: Language,
-    private var languageConfiguration: LanguageConfiguration?,
+    internal var languageConfiguration: LanguageConfiguration?,
     private var grammarRegistry: MonarchGrammarRegistry,
     private var autoCompleteEnabled: Boolean
 ) : EmptyLanguage() {
-    var tabSize = 4
-
-    var useTab = false
 
     private val autoCompleter by lazy(LazyThreadSafetyMode.NONE) {
         IdentifierAutoComplete()
     }
 
+    private var monarchAnalyzer: MonarchAnalyzer? = null
+
+    private val symbolPairMatch by lazy(LazyThreadSafetyMode.NONE) {
+        MonarchSymbolPairMatch(this)
+    }
+
     internal var createIdentifiers = false
 
-    private var monarchAnalyzer: MonarchAnalyzer? = null
+    var tabSize = 4
+
+    var useTab = false
+
+    // var newlineHandlers: Array<TextMateNewlineHandler>
+
 
     init {
         createAnalyzerAndNewlineHandler(grammar, languageConfiguration)
     }
 
-
-    /*
-     var newlineHandlers: Array<TextMateNewlineHandler>
-
-     var symbolPairMatch: TextMateSymbolPairMatch? = null*/
+    override fun getSymbolPairs(): SymbolPairMatch {
+        return symbolPairMatch
+    }
 
     override fun getAnalyzeManager(): AnalyzeManager {
         return monarchAnalyzer ?: EmptyAnalyzeManager.INSTANCE
@@ -72,9 +79,6 @@ class MonarchLanguage(
 
     override fun useTab() = useTab
 
-    override fun destroy() {
-        super.destroy()
-    }
 
     override fun requireAutoComplete(
         content: ContentReference,

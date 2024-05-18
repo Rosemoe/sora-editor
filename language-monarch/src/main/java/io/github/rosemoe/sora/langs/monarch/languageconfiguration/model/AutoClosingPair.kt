@@ -27,15 +27,18 @@ package io.github.rosemoe.sora.langs.monarch.languageconfiguration.model
 interface BaseAutoClosingPair {
     val open: String
     val close: String
+    val isSurroundingPair: Boolean
 }
 
 data class AutoClosingPair(
     override val open: String,
-    override val close: String
+    override val close: String,
+    override val isSurroundingPair: Boolean = false
 ): BaseAutoClosingPair
 
 data class AutoClosingPairConditional(
     override val open: String,
     override val close: String,
-    val notIn: List<String>
+    val notIn: List<String>,
+    override val isSurroundingPair: Boolean = false
 ): BaseAutoClosingPair
