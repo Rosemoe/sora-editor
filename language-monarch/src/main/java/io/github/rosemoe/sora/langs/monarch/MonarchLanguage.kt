@@ -122,13 +122,13 @@ class MonarchLanguage(
         }
         this.languageConfiguration = languageConfiguration
         /*newlineHandler = TextMateNewlineHandler(this)
-        newlineHandlers = arrayOf<TextMateNewlineHandler>(newlineHandler)
+        newlineHandlers = arrayOf<TextMateNewlineHandler>(newlineHandler) */
         if (languageConfiguration != null) {
             // because the editor will only get the symbol pair matcher once
             // (caching object to stop repeated new object created),
             // the symbol pair needs to be updated inside the symbol pair matcher.
             symbolPairMatch.updatePair()
-        }*/
+        }
     }
 
     companion object {

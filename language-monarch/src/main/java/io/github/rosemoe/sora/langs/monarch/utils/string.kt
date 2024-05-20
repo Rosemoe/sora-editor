@@ -24,6 +24,8 @@
 
 package io.github.rosemoe.sora.langs.monarch.utils
 
+import io.github.dingyi222666.regex.Regex
+
 fun String.checkSurrogate(): Boolean {
     for (element in this) {
         if (Character.isSurrogate(element)) {
@@ -61,3 +63,21 @@ fun String.convertUnicodeOffsetToUtf16(offset: Int, isSurrogatePairConsidered: B
 
     return offset
 }
+
+fun Regex.matchesFully(text: String): Boolean {
+    val result = search(text, 0) ?: return false
+    return result.count == 1 && result.value.length == text.length
+}
+
+fun Regex.matchesPartially(text: String): Boolean {
+    return search(text, 0) != null
+}
+
+inline fun String.matchesFully(regex:Regex): Boolean {
+    return regex.matchesFully(this)
+}
+
+inline fun String.matchesPartially(regex: Regex): Boolean {
+    return regex.matchesPartially(this)
+}
+

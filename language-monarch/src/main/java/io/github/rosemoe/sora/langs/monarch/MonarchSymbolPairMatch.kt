@@ -78,7 +78,6 @@ class MonarchSymbolPairMatch(
         mergePairs.addAll(autoClosingPairs)
 
 
-
         for (surroundingPair in surroundingPairs) {
 
             val originAutoClosingPair = mergePairs.find {
