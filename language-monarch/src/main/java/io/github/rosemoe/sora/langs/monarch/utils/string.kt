@@ -73,11 +73,21 @@ fun Regex.matchesPartially(text: String): Boolean {
     return search(text, 0) != null
 }
 
-inline fun String.matchesFully(regex:Regex): Boolean {
+inline fun String.matchesFully(regex: Regex): Boolean {
     return regex.matchesFully(this)
 }
 
 inline fun String.matchesPartially(regex: Regex): Boolean {
     return regex.matchesPartially(this)
+}
+
+/**
+ * Escapes regular expression characters in a given string
+ */
+fun String.escapeRegExpCharacters(): String {
+    return replace(
+        "[\\-\\\\\\{\\}\\*\\+\\?\\|\\^\\$\\.\\[\\]\\(\\)\\#]".toRegex(),
+        "\\\\$0"
+    ) //$NON-NLS-1$ //$NON-NLS-2$
 }
 
