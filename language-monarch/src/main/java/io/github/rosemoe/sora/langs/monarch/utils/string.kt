@@ -25,6 +25,12 @@
 package io.github.rosemoe.sora.langs.monarch.utils
 
 import io.github.dingyi222666.regex.Regex
+import io.github.rosemoe.sora.text.CharPosition
+import io.github.rosemoe.sora.text.Content
+import io.github.rosemoe.sora.text.TextUtils
+import io.github.rosemoe.sora.util.CharCode
+import io.github.rosemoe.sora.util.IntPair
+
 
 fun String.checkSurrogate(): Boolean {
     for (element in this) {
@@ -35,6 +41,129 @@ fun String.checkSurrogate(): Boolean {
     return false
 }
 
+
+/**
+ * Returns the leading whitespace of the string.
+ * If the string contains only whitespaces, returns entire string
+ */
+fun String.getLeadingWhitespace(start: Int = 0, end: Int = length): String {
+    for (index in start..end) {
+        val chCode = this[index].code
+        if (chCode != CharCode.Space && chCode != CharCode.Tab) {
+            return substring(start, index)
+        }
+    }
+    return substring(start, end);
+}
+
+/**
+ * Returns first index of the string that is not whitespace. If string is empty
+ * or contains only whitespaces, returns -1
+ */
+fun String.firstNonWhitespaceIndex(): Int {
+    var i = 0
+    while (i < length) {
+        val c = this[i]
+        if (c != ' ' && c != '\t') {
+            return i
+        }
+        i++
+    }
+    return -1
+}
+
+fun String.normalizeIndentation(tabSize: Int, insertSpaces: Boolean): String {
+    var firstNonWhitespaceIndex = this.firstNonWhitespaceIndex()
+    if (firstNonWhitespaceIndex == -1) {
+        firstNonWhitespaceIndex = length
+    }
+
+    return substring(0, firstNonWhitespaceIndex).normalizeIndentationFromWhitespace(
+        tabSize,
+        insertSpaces
+    ) + substring(firstNonWhitespaceIndex);
+}
+
+fun String.getIndentationFromWhitespace(tabSize: Int, insertSpaces: Boolean): String {
+    val tab = "\t" //$NON-NLS-1$
+    var indentOffset = 0
+    var startsWithTab = true
+    var startsWithSpaces = true
+    val spaces = if (insertSpaces
+    ) " ".repeat(tabSize)
+    else ""
+    while (startsWithTab || startsWithSpaces) {
+        startsWithTab = this.startsWith(tab, indentOffset)
+        startsWithSpaces = insertSpaces && this.startsWith(spaces, indentOffset)
+        if (startsWithTab) {
+            indentOffset += tab.length
+        }
+        if (startsWithSpaces) {
+            indentOffset += spaces.length
+        }
+    }
+    return this.substring(0, indentOffset)
+}
+
+fun String.normalizeIndentationFromWhitespace(
+    tabSize: Int,
+    insertSpaces: Boolean
+): String {
+    var spacesCnt = 0
+
+    for (element in this) {
+        if (element == '\t') {
+            spacesCnt += tabSize
+        } else {
+            spacesCnt++
+        }
+    }
+
+    val result = StringBuilder()
+    if (!insertSpaces) {
+        val tabsCnt = (spacesCnt / tabSize).toLong()
+        spacesCnt %= tabSize
+        for (i in 0 until tabsCnt) {
+            result.append('\t')
+        }
+    }
+
+    for (i in 0 until spacesCnt) {
+        result.append(' ')
+    }
+
+    return result.toString()
+}
+
+fun Content.getLinePrefixingWhitespaceAtPosition(position: CharPosition): String {
+    val line = getLine(position.line)
+
+    val startIndex = IntPair.getFirst(
+        TextUtils.findLeadingAndTrailingWhitespacePos(
+            line
+        )
+    )
+
+    return line.subSequence(0, startIndex).toString()
+}
+
+
+fun String.outdentString(useTab: Boolean = false, tabSize: Int = 4): String {
+    if (startsWith("\t")) { // $NON-NLS-1$
+        return substring(1)
+    }
+
+    if (useTab) {
+        val chars = CharArray(tabSize) {
+            ' '
+        }
+        val spaces = String(chars)
+        if (startsWith(spaces)) {
+            return substring(spaces.length)
+        }
+    }
+    return this
+}
 
 fun String.convertUnicodeOffsetToUtf16(offset: Int, isSurrogatePairConsidered: Boolean): Int {
     if (offset < 0) {

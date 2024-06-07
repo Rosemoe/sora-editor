@@ -31,6 +31,7 @@ import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
 import io.github.rosemoe.sora.lang.completion.CompletionHelper
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher
 import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete
+import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
 import io.github.rosemoe.sora.langs.monarch.registery.MonarchGrammarRegistry
 import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
@@ -46,7 +47,7 @@ class MonarchLanguage(
     private var autoCompleteEnabled: Boolean
 ) : EmptyLanguage() {
 
-    private val autoCompleter by lazy(LazyThreadSafetyMode.NONE) {
+    val autoCompleter by lazy(LazyThreadSafetyMode.NONE) {
         IdentifierAutoComplete()
     }
 
@@ -62,7 +63,8 @@ class MonarchLanguage(
 
     var useTab = false
 
-    // var newlineHandlers: Array<TextMateNewlineHandler>
+    internal var newlineHandlers: Array<NewlineHandler>? = emptyArray()
+    internal lateinit var newlineHandler: MonarchNewlineHandler
 
 
     init {
@@ -92,12 +94,16 @@ class MonarchLanguage(
         }
         val prefix = CompletionHelper.computePrefix(
             content, position
-        ) { key: Char -> MyCharacter.isJavaIdentifierPart(key) }
+        ) { key -> MyCharacter.isJavaIdentifierPart(key) }
         val idt = monarchAnalyzer.syncIdentifiers
         autoCompleter.requireAutoComplete(content, position, prefix, publisher, idt)
     }
 
-    fun setCompleterKeywords(keywords: Array<String?>?) {
+    override fun getNewlineHandlers(): Array<NewlineHandler>? =
+        newlineHandlers ?: super.getNewlineHandlers()
+
+
+    fun setCompleterKeywords(keywords: Array<String>) {
         autoCompleter.setKeywords(keywords, false)
     }
 
@@ -121,8 +127,8 @@ class MonarchLanguage(
             e.printStackTrace()
         }
         this.languageConfiguration = languageConfiguration
-        /*newlineHandler = TextMateNewlineHandler(this)
-        newlineHandlers = arrayOf<TextMateNewlineHandler>(newlineHandler) */
+        newlineHandler = MonarchNewlineHandler(this)
+        newlineHandlers = arrayOf(newlineHandler)
         if (languageConfiguration != null) {
             // because the editor will only get the symbol pair matcher once
             // (caching object to stop repeated new object created),

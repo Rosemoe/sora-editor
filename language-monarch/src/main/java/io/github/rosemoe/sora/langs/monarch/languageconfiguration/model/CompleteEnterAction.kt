@@ -28,7 +28,7 @@ data class CompleteEnterAction(
     /**
      * Describe what to do with the indentation.
      */
-    val indentAction: IndentAction,
+    val indentAction: Int,
     /**
      * Describes text to be appended after the new line and after the indentation.
      */
@@ -36,7 +36,7 @@ data class CompleteEnterAction(
     /**
      * Describes the number of characters to remove from the new line's indentation.
      */
-    val removeText: Int,
+    val removeText: Int?,
     /**
      * The line's indentation minus removeText
      */

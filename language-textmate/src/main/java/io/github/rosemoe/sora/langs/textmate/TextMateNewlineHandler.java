@@ -56,11 +56,13 @@ public class TextMateNewlineHandler implements NewlineHandler {
 
     private CompleteEnterAction enterAction;
 
+    private Pair<String, String> indentForEnter;
+
     private boolean isEnabled = true;
 
     //private static final Pattern precedingValidPattern = Pattern.compile("^\\s+$");
 
-    private Pair<String, String> indentForEnter;
+
 
     private LanguageConfiguration languageConfiguration;
 

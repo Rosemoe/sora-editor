@@ -36,10 +36,6 @@ import java.util.regex.Pattern
 
 // See https://github.com/microsoft/vscode/blob/aa31bfc9fd1746626b3efe86f41b9c172d5f4d23/src/vs/editor/common/languages/supports/onEnter.ts#
 
-data class OnEnterSupportOptions(
-    val brackets: List<CharacterPair>?,
-    val onEnterRules: List<OnEnterRule>?
-)
 
 data class ProcessedBracketPair(
     val open: String,
@@ -49,14 +45,15 @@ data class ProcessedBracketPair(
 )
 
 class OnEnterSupport(
-    options: OnEnterSupportOptions
+    brackets: List<CharacterPair>?,
+    onEnterRules: List<OnEnterRule>?
 ) {
 
     private val brackets: List<ProcessedBracketPair>
     private val regExpRules: List<OnEnterRule>
 
     init {
-        val brackets = options.brackets ?: listOf(
+        val brackets = brackets ?: listOf(
             CharacterPair("(", ")"),
             CharacterPair("[", "]"),
             CharacterPair("{", "}")
@@ -81,7 +78,7 @@ class OnEnterSupport(
 
 
         this.brackets = processedBracketPairs
-        this.regExpRules = options.onEnterRules ?: emptyList()
+        this.regExpRules = onEnterRules ?: emptyList()
     }
 
     fun onEnter(
