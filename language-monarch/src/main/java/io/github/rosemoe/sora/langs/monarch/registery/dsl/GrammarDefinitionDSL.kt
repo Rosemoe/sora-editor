@@ -28,7 +28,7 @@ import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
 
 
 abstract class LanguageDefinitionListBuilder<T> {
-    private val allBuilder = mutableListOf<LanguageDefinitionBuilder>()
+    protected val allBuilder = mutableListOf<LanguageDefinitionBuilder>()
 
     fun language(name: String, block: LanguageDefinitionBuilder.() -> Unit) {
         allBuilder.add(LanguageDefinitionBuilder(name).also(block))
