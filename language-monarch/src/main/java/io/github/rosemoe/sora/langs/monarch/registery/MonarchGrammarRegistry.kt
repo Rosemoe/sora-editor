@@ -24,17 +24,35 @@
 
 package io.github.rosemoe.sora.langs.monarch.registery
 
+import com.squareup.moshi.Moshi
 import io.github.dingyi222666.monarch.language.Language
 import io.github.dingyi222666.monarch.language.LanguageRegistry
+import io.github.dingyi222666.monarch.loader.json.addLast
 import io.github.dingyi222666.monarch.types.IThemeService
 import io.github.dingyi222666.monarch.types.ITokenTheme
+import io.github.rosemoe.sora.langs.monarch.languageconfiguration.LanguageConfigurationAdapter
+import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
+import io.github.rosemoe.sora.langs.monarch.registery.grammardefinition.MonarchGrammarDefinitionReader
+import io.github.rosemoe.sora.langs.monarch.registery.grammardefinition.ParsedGrammarDefinitionList
 import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
 import io.github.rosemoe.sora.langs.monarch.registery.model.ThemeModel
+import io.github.rosemoe.sora.langs.monarch.theme.MoshiRoot
+import io.github.rosemoe.sora.langs.monarch.theme.TokenTheme
+import io.github.rosemoe.sora.langs.monarch.theme.TokenThemeAdapter
+import io.github.rosemoe.sora.langs.monarch.theme.adapter
+import java.io.File
 
 class MonarchGrammarRegistry(
     internal val languageRegistry: LanguageRegistry = LanguageRegistry(),
     parent: GrammarRegistry<Language>? = null
 ) : GrammarRegistry<Language>(parent), IThemeService {
+
+    val moshi: Moshi = Moshi.Builder()
+        .apply {
+            addLast<ParsedGrammarDefinitionList<Language>>(MonarchGrammarDefinitionReader())
+        }
+        .build()
+
 
     private var currentTheme = ThemeModel.EMPTY
 
@@ -50,7 +68,9 @@ class MonarchGrammarRegistry(
     }
 
     override fun doLoadGrammarsFromJsonPath(jsonPath: String): List<GrammarDefinition<Language>> {
-        TODO("Not yet implemented")
+        val adapter = moshi.adapter<ParsedGrammarDefinitionList<Language>>()
+        return (adapter.fromJson(File(jsonPath).readText())
+            ?: ParsedGrammarDefinitionList.empty()).grammarDefinition
     }
 
     override fun doSearchGrammar(scopeName: String): Language? {

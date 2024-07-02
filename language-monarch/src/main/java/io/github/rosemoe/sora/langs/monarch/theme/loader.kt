@@ -28,9 +28,12 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
+import io.github.dingyi222666.monarch.language.Language
 import io.github.dingyi222666.monarch.loader.json.addLast
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.LanguageConfigurationAdapter
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
+import io.github.rosemoe.sora.langs.monarch.registery.grammardefinition.MonarchGrammarDefinitionReader
+import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
 
 class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
     override fun fromJson(reader: JsonReader): TokenTheme {
@@ -61,9 +64,11 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
                     }
                     reader.endObject()
                 }
+
                 "name" -> {
                     themeName = reader.nextString()
                 }
+
                 else -> {
                     reader.skipValue()
                 }
@@ -156,9 +161,7 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
         reader.endArray()
     }
 
-    override fun toJson(p0: JsonWriter, p1: TokenTheme?) {
-        TODO("Not yet implemented")
-    }
+    override fun toJson(p0: JsonWriter, p1: TokenTheme?) {}
 
 }
 
@@ -166,15 +169,21 @@ internal val MoshiRoot: Moshi = Moshi.Builder()
     .apply {
         addLast<TokenTheme>(TokenThemeAdapter())
         addLast<LanguageConfiguration>(LanguageConfigurationAdapter())
+
     }
     .build()
 
+internal inline fun <reified T> Moshi.adapter(): JsonAdapter<T> {
+    return this.adapter(T::class.java)
+}
+
+
 fun String.toTokenTheme(): TokenTheme {
-    return MoshiRoot.adapter(TokenTheme::class.java).fromJson(this)!!
+    return MoshiRoot.adapter<TokenTheme>().fromJson(this)!!
 }
 
 fun String.toLanguageConfiguration(): LanguageConfiguration {
-    return MoshiRoot.adapter(LanguageConfiguration::class.java).fromJson(this)!!
+    return MoshiRoot.adapter<LanguageConfiguration>().fromJson(this)!!
 }
 
 internal data class TokenThemeRule(

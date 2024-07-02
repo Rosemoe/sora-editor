@@ -144,10 +144,6 @@ abstract class GrammarRegistry<T> {
         languageConfigurationMap[scopeName] = languageConfiguration
     }
 
-    // TODO: load grammars by json path
-    /* fun loadGrammars(jsonPath: String?): List<IGrammar> {
-         return loadGrammars(LanguageDefinitionReader.read(jsonPath))
-     }*/
 
     @Synchronized
     fun loadGrammar(grammarDefinition: GrammarDefinition<T>): T {

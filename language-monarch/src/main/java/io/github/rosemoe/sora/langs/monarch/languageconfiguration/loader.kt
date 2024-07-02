@@ -468,8 +468,6 @@ class LanguageConfigurationAdapter : JsonAdapter<LanguageConfiguration>() {
         return CharacterPair(first, second)
     }
 
-    override fun toJson(p0: JsonWriter, p1: LanguageConfiguration?) {
-        TODO("Not yet implemented")
-    }
+    override fun toJson(p0: JsonWriter, p1: LanguageConfiguration?) {}
 
 }
