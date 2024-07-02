@@ -21,37 +21,40 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-@file:Suppress("UnstableApiUsage")
 
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+package io.github.rosemoe.sora.langs.monarch.theme
 
-pluginManagement {
-    includeBuild("build-logic")
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
+class ThemeDefaultColors(defaultColors: Map<String, String>) {
+    private val colors = mutableMapOf<String, String>()
+
+    init {
+        colors.putAll(defaultColors)
     }
-}
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://repo.eclipse.org/content/groups/releases/")
-        maven("https://maven.aliyun.com/nexus/content/groups/public/")
+    constructor() : this(emptyMap())
+
+    operator fun get(key: String): String? {
+        return colors[key]
     }
-}
 
-rootProject.name="sora-editor"
-include(
-    ":bom",
-    ":editor",
-    ":app",
-    ":language-monarch",
-    ":language-java",
-    ":language-textmate",
-    ":editor-lsp",
-    ":language-treesitter"
-)
+    fun putColors(map: Map<String, String>) {
+        colors.putAll(map)
+    }
+
+    fun getColor(key: String): String? {
+        return colors[key]
+    }
+
+    fun getColors(): Map<String, String> {
+        return colors
+    }
+
+    override fun toString(): String {
+        return "ThemeDefaultColors(colors=$colors)"
+    }
+
+    companion object {
+        val EMPTY = ThemeDefaultColors()
+    }
+
+}
