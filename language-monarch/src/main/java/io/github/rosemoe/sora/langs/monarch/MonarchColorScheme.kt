@@ -33,26 +33,40 @@ import io.github.rosemoe.sora.langs.monarch.theme.ThemeDefaultColors
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
+
 class MonarchColorScheme(
     themeModel: ThemeModel
 ) : EditorColorScheme(), ThemeChangeListener {
 
-    var currentThemeModel = themeModel
+
+    var currentThemeModel: ThemeModel = themeModel
         set(value) {
             field = value
             onChangeTheme(value)
         }
 
+    init {
+        applyDefault()
+    }
+
     override fun onChangeTheme(newTheme: ThemeModel) {
-        super.colors.clear();
+        super.colors.clear()
         applyDefault();
     }
+
 
     override fun applyDefault() {
         super.applyDefault()
 
         if (!ThemeRegistry.hasListener(this)) {
             ThemeRegistry.addListener(this)
+        }
+
+        val themeModel: ThemeModel? = currentThemeModel
+
+        // no initialized
+        if (themeModel == null) {
+            return
         }
 
         if (!currentThemeModel.isLoaded) {
@@ -193,7 +207,8 @@ class MonarchColorScheme(
         if (superIsDark) {
             return true
         }
-        return currentThemeModel.isDark
+        val themeModel: ThemeModel? = currentThemeModel
+        return themeModel?.isDark ?: false
     }
 
     override fun detachEditor(editor: CodeEditor) {
@@ -220,9 +235,11 @@ class MonarchColorScheme(
 
 
         fun create(themeModel: ThemeModel): MonarchColorScheme {
+            println(themeModel)
             return MonarchColorScheme(themeModel)
         }
 
+        fun create() = create(ThemeRegistry.currentTheme)
 
     }
 }

@@ -45,7 +45,7 @@ class MonarchGrammarDefinitionReader : GrammarDefinitionReader<Language>() {
             Language(
                 monarchLanguage = monarchLanguage,
                 languageName = grammarDefinition.name,
-                languageId = monarchLanguage.tokenPostfix ?: grammarDefinition.name,
+                languageId = grammarDefinition.scopeName ?: "source${monarchLanguage.tokenPostfix}",
                 fileExtensions = emptyList(),
                 embeddedLanguages = grammarDefinition.embeddedLanguages,
             )

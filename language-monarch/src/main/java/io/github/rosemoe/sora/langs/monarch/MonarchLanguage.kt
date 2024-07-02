@@ -137,6 +137,25 @@ class MonarchLanguage(
         }
     }
 
+    fun updateLanguage(
+        languageScopeName: String,
+    ) {
+        val grammar = grammarRegistry.findGrammar(languageScopeName)
+            ?: throw IllegalArgumentException(
+                String.format(
+                    "Language with %s scope name not found",
+                    grammarRegistry
+                )
+            )
+
+        val languageConfiguration =
+            grammarRegistry.findLanguageConfiguration(
+                languageScopeName
+            )
+
+        createAnalyzerAndNewlineHandler(grammar, languageConfiguration)
+    }
+
     companion object {
 
         @JvmStatic
@@ -164,7 +183,7 @@ class MonarchLanguage(
 
             val languageConfiguration =
                 grammarRegistry.findLanguageConfiguration(
-                    grammar.monarchLanguage.tokenPostfix ?: grammar.languageName
+                    languageScopeName
                 )
 
             return MonarchLanguage(
@@ -198,7 +217,7 @@ class MonarchLanguage(
 
             val languageConfiguration =
                 grammarRegistry.findLanguageConfiguration(
-                    grammar.monarchLanguage.tokenPostfix ?: grammar.languageName
+                    grammarDefinition.scopeName
                 )
 
             return MonarchLanguage(

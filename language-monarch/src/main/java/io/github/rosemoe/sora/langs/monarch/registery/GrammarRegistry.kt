@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.langs.monarch.registery
 
 
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
+import io.github.rosemoe.sora.langs.monarch.registery.dsl.LanguageDefinitionBuilder
 import io.github.rosemoe.sora.langs.monarch.registery.dsl.LanguageDefinitionListBuilder
 import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
 import io.github.rosemoe.sora.langs.monarch.registery.model.ThemeModel
@@ -118,16 +119,17 @@ abstract class GrammarRegistry<T> {
         return grammar to languageConfiguration
     }
 
-    fun loadGrammars(builder: LanguageDefinitionListBuilder<T>): List<T> {
+    fun <R : LanguageDefinitionBuilder> loadGrammars(builder: LanguageDefinitionListBuilder<T, R>): List<T> {
         return loadGrammars(builder.build())
     }
+
 
     fun loadGrammars(list: List<GrammarDefinition<T>>): List<T> {
         prepareLoadGrammars(list)
         return list.map { loadGrammar(it) }
     }
 
-    fun loadGrammars(jsonPath: String): List<T> {
+    open fun loadGrammars(jsonPath: String): List<T> {
         return loadGrammars(doLoadGrammarsFromJsonPath(jsonPath))
     }
 
@@ -147,7 +149,7 @@ abstract class GrammarRegistry<T> {
 
     @Synchronized
     fun loadGrammar(grammarDefinition: GrammarDefinition<T>): T {
-        val languageName = grammarDefinition.name
+        val languageName = grammarDefinition.scopeName
 
         if (grammarFileName2ScopeName.containsKey(languageName) && grammarDefinition.scopeName.isNotEmpty()) {
             //loaded

@@ -42,6 +42,9 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import io.github.dingyi222666.monarch.languages.JavaLanguage
+import io.github.dingyi222666.monarch.languages.KotlinLanguage
+import io.github.dingyi222666.monarch.languages.PythonLanguage
 import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
 import io.github.rosemoe.sora.app.tests.TestActivity
 import io.github.rosemoe.sora.event.ContentChangeEvent
@@ -57,6 +60,11 @@ import io.github.rosemoe.sora.lang.TsLanguageJava
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.langs.java.JavaLanguage
+import io.github.rosemoe.sora.langs.monarch.MonarchColorScheme
+import io.github.rosemoe.sora.langs.monarch.MonarchLanguage
+import io.github.rosemoe.sora.langs.monarch.registery.MonarchGrammarRegistry
+import io.github.rosemoe.sora.langs.monarch.registery.dsl.monarchLanguages
+import io.github.rosemoe.sora.langs.monarch.registery.model.ThemeSource
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry
@@ -238,6 +246,10 @@ class MainActivity : AppCompatActivity() {
 
         // Load textmate themes and grammars
         setupTextmate()
+
+        // Load monarch themes and grammars
+        setupMonarch()
+
         // Before using Textmate Language, TextmateColorScheme should be applied
         ensureTextmateTheme()
 
@@ -303,15 +315,15 @@ class MainActivity : AppCompatActivity() {
                 applicationContext.assets // use application context
             )
         )
-        loadDefaultThemes()
-        loadDefaultLanguages()
+        loadDefaultTextMateThemes()
+        loadDefaultTextMateLanguages()
     }
 
 
     /**
      * Load default textmate themes
      */
-    private /*suspend*/ fun loadDefaultThemes() /*= withContext(Dispatchers.IO)*/ {
+    private /*suspend*/ fun loadDefaultTextMateThemes() /*= withContext(Dispatchers.IO)*/ {
         val themes = arrayOf("darcula", "abyss", "quietlight", "solarized_drak")
         val themeRegistry = ThemeRegistry.getInstance()
         themes.forEach { name ->
@@ -337,8 +349,71 @@ class MainActivity : AppCompatActivity() {
      *
      * @see loadDefaultLanguagesWithDSL Load by Kotlin DSL
      */
-    private /*suspend*/ fun loadDefaultLanguages() /*= withContext(Dispatchers.Main)*/ {
+    private /*suspend*/ fun loadDefaultTextMateLanguages() /*= withContext(Dispatchers.Main)*/ {
         GrammarRegistry.getInstance().loadGrammars("textmate/languages.json")
+    }
+
+    /**
+     * Setup monarch. Load our grammars and themes from assets
+     */
+    private fun setupMonarch() {
+        // Add assets file provider so that files in assets can be loaded
+        io.github.rosemoe.sora.langs.monarch.registery.FileProviderRegistry.addProvider(
+            io.github.rosemoe.sora.langs.monarch.registery.provider.AssetsFileResolver(
+                applicationContext.assets // use application context
+            )
+        )
+        loadDefaultMonarchThemes()
+        loadDefaultMonarchLanguages()
+    }
+
+
+    /**
+     * Load default monarch themes
+     *
+     */
+    private /*suspend*/ fun loadDefaultMonarchThemes() /*= withContext(Dispatchers.IO)*/ {
+        val themes = arrayOf("darcula", "abyss", "quietlight", "solarized_drak")
+
+        themes.forEach { name ->
+            val path = "textmate/$name.json"
+            io.github.rosemoe.sora.langs.monarch.registery.ThemeRegistry.loadTheme(
+                io.github.rosemoe.sora.langs.monarch.registery.model.ThemeModel(
+                    ThemeSource(path, name)
+                ).apply {
+                    if (name != "quietlight") {
+                        isDark = true
+                    }
+                }, false
+            )
+        }
+
+        io.github.rosemoe.sora.langs.monarch.registery.ThemeRegistry.setTheme("quietlight")
+    }
+
+    /**
+     * Load default languages from Monarch
+     */
+    private fun loadDefaultMonarchLanguages() {
+        MonarchGrammarRegistry.INSTANCE.loadGrammars(
+            monarchLanguages {
+                language("java") {
+                    monarchLanguage = JavaLanguage
+                    defaultScopeName()
+                    languageConfiguration = "textmate/java/language-configuration.json"
+                }
+                language("kotlin") {
+                    monarchLanguage = KotlinLanguage
+                    defaultScopeName()
+                    languageConfiguration = "textmate/kotlin/language-configuration.json"
+                }
+                language("python") {
+                    monarchLanguage = PythonLanguage
+                    defaultScopeName()
+                    languageConfiguration = "textmate/python/language-configuration.json"
+                }
+            }
+        )
     }
 
     private fun loadDefaultLanguagesWithDSL() {
@@ -402,6 +477,19 @@ class MainActivity : AppCompatActivity() {
         if (editorColorScheme !is TextMateColorScheme) {
             editorColorScheme = TextMateColorScheme.create(ThemeRegistry.getInstance())
             editor.colorScheme = editorColorScheme
+        }
+    }
+
+    /**
+     * Ensure the editor uses a [MonarchColorScheme]
+     */
+    private fun ensureMonarchTheme() {
+        val editor = binding.editor
+        var editorColorScheme = editor.colorScheme
+        if (editorColorScheme !is MonarchColorScheme) {
+            editorColorScheme = TextMateColorScheme.create(ThemeRegistry.getInstance())
+            editor.colorScheme = editorColorScheme
+            switchThemeIfRequired(this, editor)
         }
     }
 
@@ -729,6 +817,9 @@ class MainActivity : AppCompatActivity() {
             "TextMate MarkDown",
             "TM Language from file",
             "Tree-sitter Java",
+            "Monarch Java",
+            "Monarch Kotlin",
+            "Monarch Python",
             "Text"
         )
         val tmLanguages = mapOf(
@@ -739,45 +830,75 @@ class MainActivity : AppCompatActivity() {
             "TextMate JavaScript" to Pair("source.js", "source.js"),
             "TextMate MarkDown" to Pair("text.html.markdown", "text.html.markdown")
         )
+
+        val monarchLanguages = mapOf(
+            "Monarch Java" to "source.java",
+            "Monarch Kotlin" to "source.kotlin",
+            "Monarch Python" to "source.python",
+        )
+
         AlertDialog.Builder(this)
             .setTitle(R.string.switch_language)
             .setSingleChoiceItems(languageOptions, -1) { dialog: DialogInterface, which: Int ->
-                val selected = languageOptions[which]
-                if (selected in tmLanguages) {
-                    val info = tmLanguages[selected]!!
-                    try {
-                        ensureTextmateTheme()
-                        val editorLanguage = editor.editorLanguage
-                        val language = if (editorLanguage is TextMateLanguage) {
-                            editorLanguage.updateLanguage(info.first)
-                            editorLanguage
-                        } else {
-                            TextMateLanguage.create(info.second, true)
+                when (val selected = languageOptions[which]) {
+                    in tmLanguages -> {
+                        val info = tmLanguages[selected]!!
+                        try {
+                            ensureTextmateTheme()
+                            val editorLanguage = editor.editorLanguage
+                            val language = if (editorLanguage is TextMateLanguage) {
+                                editorLanguage.updateLanguage(info.first)
+                                editorLanguage
+                            } else {
+                                TextMateLanguage.create(info.second, true)
+                            }
+                            editor.setEditorLanguage(language)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
                         }
-                        editor.setEditorLanguage(language)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
                     }
-                } else {
-                    when (selected) {
-                        "Java" -> editor.setEditorLanguage(JavaLanguage())
-                        "Text" -> editor.setEditorLanguage(EmptyLanguage())
-                        "TM Language from file" -> loadTMLLauncher.launch("*/*")
-                        "Tree-sitter Java" -> {
-                            editor.setEditorLanguage(
-                                TsLanguageJava(
-                                    JavaLanguageSpec(
-                                        highlightScmSource = assets.open("tree-sitter-queries/java/highlights.scm")
-                                            .reader().readText(),
-                                        codeBlocksScmSource = assets.open("tree-sitter-queries/java/blocks.scm")
-                                            .reader().readText(),
-                                        bracketsScmSource = assets.open("tree-sitter-queries/java/brackets.scm")
-                                            .reader().readText(),
-                                        localsScmSource = assets.open("tree-sitter-queries/java/locals.scm")
-                                            .reader().readText()
+
+                    in monarchLanguages -> {
+                        val info = monarchLanguages[selected]!!
+
+                        try {
+                            ensureMonarchTheme()
+
+                            val editorLanguage = editor.editorLanguage
+
+                            val language = if (editorLanguage is MonarchLanguage) {
+                                editorLanguage.updateLanguage(info)
+                                editorLanguage
+                            } else {
+                                MonarchLanguage.create(info, true)
+                            }
+                            editor.setEditorLanguage(language)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+
+                    else -> {
+                        when (selected) {
+                            "Java" -> editor.setEditorLanguage(JavaLanguage())
+                            "Text" -> editor.setEditorLanguage(EmptyLanguage())
+                            "TM Language from file" -> loadTMLLauncher.launch("*/*")
+                            "Tree-sitter Java" -> {
+                                editor.setEditorLanguage(
+                                    TsLanguageJava(
+                                        JavaLanguageSpec(
+                                            highlightScmSource = assets.open("tree-sitter-queries/java/highlights.scm")
+                                                .reader().readText(),
+                                            codeBlocksScmSource = assets.open("tree-sitter-queries/java/blocks.scm")
+                                                .reader().readText(),
+                                            bracketsScmSource = assets.open("tree-sitter-queries/java/brackets.scm")
+                                                .reader().readText(),
+                                            localsScmSource = assets.open("tree-sitter-queries/java/locals.scm")
+                                                .reader().readText()
+                                        )
                                     )
                                 )
-                            )
+                            }
                         }
                     }
                 }

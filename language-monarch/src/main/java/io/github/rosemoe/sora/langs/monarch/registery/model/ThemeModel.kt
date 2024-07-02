@@ -37,7 +37,6 @@ class ThemeModel {
         private set
 
     var isDark = false
-        private set
 
     constructor(themeSource: ThemeSource) {
         this.themeSource = themeSource
@@ -60,9 +59,12 @@ class ThemeModel {
 
         if (rawThemeString != null) {
             value = rawThemeString.toTokenTheme()
+            if (value.themeType == "dark") {
+                isDark = true
+            }
         }
 
-        isDark = value.themeType == "dark"
+
     }
 
     val isLoaded: Boolean

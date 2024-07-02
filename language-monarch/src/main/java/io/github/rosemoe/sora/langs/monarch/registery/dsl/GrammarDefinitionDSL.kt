@@ -27,17 +27,15 @@ package io.github.rosemoe.sora.langs.monarch.registery.dsl
 import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
 
 
-abstract class LanguageDefinitionListBuilder<T> {
-    protected val allBuilder = mutableListOf<LanguageDefinitionBuilder>()
+abstract class LanguageDefinitionListBuilder<T, R : LanguageDefinitionBuilder> {
+    protected val allBuilder = mutableListOf<R>()
 
-    fun language(name: String, block: LanguageDefinitionBuilder.() -> Unit) {
-        allBuilder.add(LanguageDefinitionBuilder(name).also(block))
-    }
+    abstract fun language(name: String, block: R.() -> Unit)
 
     abstract fun build(): List<GrammarDefinition<T>>
 }
 
-class LanguageDefinitionBuilder(var name: String) {
+open class LanguageDefinitionBuilder(var name: String) {
     lateinit var grammar: String
     var scopeName: String? = null
     var languageConfiguration: String? = null

@@ -53,9 +53,9 @@ android {
 
 dependencies {
     compileOnly(projects.editor)
-    implementation(libs.monarch.code)
-    implementation(libs.monarch.json)
-    implementation(libs.regex.onig)
+    api(libs.monarch.code)
+    api(libs.monarch.json)
+    api(libs.regex.onig)
 
     implementation(libs.moshi)
 

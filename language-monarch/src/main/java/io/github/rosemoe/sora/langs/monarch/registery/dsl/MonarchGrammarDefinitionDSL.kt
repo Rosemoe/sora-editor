@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.langs.monarch.registery.dsl
 
 import io.github.dingyi222666.monarch.language.Language
 import io.github.dingyi222666.monarch.loader.json.loadMonarchJson
+import io.github.dingyi222666.monarch.types.IMonarchLanguage
 import io.github.rosemoe.sora.langs.monarch.registery.FileProviderRegistry
 import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
 import io.github.rosemoe.sora.langs.monarch.theme.toLanguageConfiguration
@@ -33,24 +34,28 @@ import java.io.File
 import java.nio.charset.Charset
 
 
-class MonarchLanguageDefinitionListBuilder : LanguageDefinitionListBuilder<Language>() {
+class MonarchLanguageDefinitionListBuilder :
+    LanguageDefinitionListBuilder<Language, MonarchLanguageDefinitionBuilder>() {
+    override fun language(name: String, block: MonarchLanguageDefinitionBuilder.() -> Unit) {
+        allBuilder.add(MonarchLanguageDefinitionBuilder(name).also(block))
+    }
+
     override fun build(): List<GrammarDefinition<Language>> = allBuilder.map { languageDefinition ->
-        val monarchSource = runCatching {
-            FileProviderRegistry.resolve(languageDefinition.grammar ?: "")?.use {
+        val monarchLanguage = languageDefinition.monarchLanguage ?: languageDefinition.runCatching {
+            FileProviderRegistry.resolve(languageDefinition.grammar)?.use {
                 it.bufferedReader().readText()
             }
         }.getOrNull()?.runCatching {
-            val monarchLanguage =
-                loadMonarchJson(this) ?: throw Exception("Failed to load monarch source")
-
-            Language(
-                monarchLanguage = monarchLanguage,
-                languageName = languageDefinition.name,
-                languageId = monarchLanguage.tokenPostfix ?: languageDefinition.name,
-                fileExtensions = emptyList(),
-                embeddedLanguages = languageDefinition.embeddedLanguages,
-            )
+            loadMonarchJson(this) ?: throw Exception("Failed to load monarch source")
         }?.getOrNull() ?: throw Exception("Failed to load monarch source")
+
+        val language = Language(
+            monarchLanguage = monarchLanguage,
+            languageName = languageDefinition.name,
+            languageId = languageDefinition.scopeName ?: "source.${monarchLanguage.tokenPostfix ?: languageDefinition.name}",
+            fileExtensions = emptyList(),
+            embeddedLanguages = languageDefinition.embeddedLanguages,
+        )
 
         val languageConfiguration = languageDefinition.languageConfiguration?.let { configuration ->
             kotlin.runCatching {
@@ -65,13 +70,19 @@ class MonarchLanguageDefinitionListBuilder : LanguageDefinitionListBuilder<Langu
 
         GrammarDefinition(
             name = languageDefinition.name,
-            grammar = monarchSource,
+            grammar = language,
             embeddedLanguages = languageDefinition.embeddedLanguages ?: emptyMap(),
             languageConfiguration = languageConfiguration,
-            scopeName = languageDefinition.scopeName ?: monarchSource.languageId
+            scopeName = languageDefinition.scopeName ?: language.languageId
         )
 
 
     }
 }
 
+class MonarchLanguageDefinitionBuilder(name: String) : LanguageDefinitionBuilder(name) {
+    var monarchLanguage: IMonarchLanguage? = null
+}
+
+fun monarchLanguages(block: MonarchLanguageDefinitionListBuilder.() -> Unit) =
+    MonarchLanguageDefinitionListBuilder().apply(block)
