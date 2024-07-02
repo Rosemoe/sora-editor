@@ -21,37 +21,37 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-@file:Suppress("UnstableApiUsage")
 
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+package io.github.rosemoe.sora.langs.monarch.theme
 
-pluginManagement {
-    includeBuild("build-logic")
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
+class ColorMap {
+
+    private var lastColorId: Int = -1
+    private val id2color = mutableListOf<String>()
+    private val color2id = mutableMapOf<String, Int>()
+
+    fun getId(color: String?): Int {
+        if (color == null) {
+            return 0
+        }
+        return color2id.getOrPut(color) {
+            lastColorId++
+            id2color.add(lastColorId, color)
+            lastColorId
+        }
     }
-}
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://repo.eclipse.org/content/groups/releases/")
-        maven("https://maven.aliyun.com/nexus/content/groups/public/")
+    fun getColor(id: Int): String? {
+        return id2color.getOrNull(id)
     }
-}
 
-rootProject.name="sora-editor"
-include(
-    ":bom",
-    ":editor",
-    ":app",
-    ":language-monarch",
-    ":language-java",
-    ":language-textmate",
-    ":editor-lsp",
-    ":language-treesitter"
-)
+
+    val colorMap: List<String>
+        get() = id2color.toList()
+
+    override fun toString(): String {
+        return "ColorMap(lastColorId=$lastColorId, id2color=$id2color, color2id=$color2id)"
+    }
+
+
+}
