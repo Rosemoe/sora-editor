@@ -31,7 +31,7 @@ snakeyaml-engine = { module = "org.snakeyaml:snakeyaml-engine", version = "2.7" 
 jdt-annotation = { module = "org.eclipse.jdt:org.eclipse.jdt.annotation", version = "2.3.0" }
 
 tests-google-truth = { module = "com.google.truth:truth", version = "1.4.2" }
-tests-robolectric = { module = "org.robolectric:robolectric", version = "4.11.1" }
+tests-robolectric = { module = "org.robolectric:robolectric", version = "4.13" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
