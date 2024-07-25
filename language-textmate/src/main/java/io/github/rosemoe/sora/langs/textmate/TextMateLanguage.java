@@ -270,6 +270,10 @@ public class TextMateLanguage extends EmptyLanguage {
         return newlineHandler;
     }
 
+    public LanguageConfiguration getLanguageConfiguration() {
+        return languageConfiguration;
+    }
+
     @Override
     public TextMateSymbolPairMatch getSymbolPairs() {
         return symbolPairMatch;
