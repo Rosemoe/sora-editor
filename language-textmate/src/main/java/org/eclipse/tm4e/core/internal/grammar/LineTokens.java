@@ -227,7 +227,7 @@ final class LineTokens {
 			this._tokens.getLast().setStartIndex(0);
 		}
 
-		return this._tokens.toArray(IToken[]::new);
+		return this._tokens.toArray(new IToken[0]);
 	}
 
 	int[] getBinaryResult(final StateStack stack, final int lineLength) {

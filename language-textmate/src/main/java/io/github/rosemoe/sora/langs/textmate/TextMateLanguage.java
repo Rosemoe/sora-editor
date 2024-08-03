@@ -35,7 +35,6 @@ import org.eclipse.tm4e.core.registry.IThemeSource;
 import org.eclipse.tm4e.languageconfiguration.internal.model.LanguageConfiguration;
 
 import java.io.Reader;
-import java.util.Objects;
 
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
@@ -51,7 +50,6 @@ import io.github.rosemoe.sora.langs.textmate.utils.StringUtils;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.util.MyCharacter;
-import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
 public class TextMateLanguage extends EmptyLanguage {
 
@@ -237,7 +235,10 @@ public class TextMateLanguage extends EmptyLanguage {
     @NonNull
     @Override
     public AnalyzeManager getAnalyzeManager() {
-        return Objects.requireNonNullElse(textMateAnalyzer, EmptyAnalyzeManager.INSTANCE);
+        if (textMateAnalyzer == null) {
+            return EmptyAnalyzeManager.INSTANCE;
+        }
+        return textMateAnalyzer;
     }
 
     @Override
@@ -268,6 +269,10 @@ public class TextMateLanguage extends EmptyLanguage {
 
     public TextMateNewlineHandler getNewlineHandler() {
         return newlineHandler;
+    }
+
+    public LanguageConfiguration getLanguageConfiguration() {
+        return languageConfiguration;
     }
 
     @Override

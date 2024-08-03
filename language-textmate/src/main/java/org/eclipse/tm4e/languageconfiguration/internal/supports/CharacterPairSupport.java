@@ -18,6 +18,7 @@ package org.eclipse.tm4e.languageconfiguration.internal.supports;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.languageconfiguration.internal.model.AutoClosingPair;
@@ -50,7 +51,7 @@ public final class CharacterPairSupport {
 			if (!brackets.isEmpty()) {
 				this.autoClosingPairs = brackets.stream()
 						.map(el -> new AutoClosingPairConditional(el.open, el.close, Collections.emptyList()))
-						.toList();
+						.collect(Collectors.toList());
 			} else {
 				this.autoClosingPairs = Collections.emptyList();
 			}
