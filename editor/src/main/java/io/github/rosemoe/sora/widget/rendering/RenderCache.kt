@@ -47,7 +47,7 @@ class RenderCache {
                 MeasureCacheItem(line, null, 0L).also {
                     cache.add(it)
                     while (cache.size > maxCacheCount && cache.isNotEmpty()) {
-                        cache.removeFirst()
+                        cache.removeAt(0)
                     }
                 }
             }
