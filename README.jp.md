@@ -84,7 +84,7 @@ dependencies {
 
 ## ディスカッション
 
-* QQ グループ: [216632648](https://jq.qq.com/?_wv=1027&k=n68uxQws)
+* QQ グループ: [734652304](https://qm.qq.com/q/kKBqRsVrQ4)
 * [Telegram グループ](https://t.me/rosemoe_code_editor)
 
 ## 貢献者
