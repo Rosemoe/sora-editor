@@ -172,6 +172,10 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
             if (editor.getCursor().isSelected()) {
                 return isSurroundingPair;
             }
+            // No text was selected，so should not complete surrounding pair
+            if (isSurroundingPair) {
+                return false;
+            }
 
             if (notInTokenTypeArray == null) {
                 return true;
