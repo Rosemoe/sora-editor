@@ -89,7 +89,7 @@ public class SymbolPairMatch {
         }
 
         list.add(symbolPair);
-        multipleCharByEndPairMaps.put(charArray[charArray.length - 1], list);
+        multipleCharByEndPairMaps.put(endChar, list);
     }
 
     /**
