@@ -125,7 +125,8 @@ public class SymbolPairMatch {
     }
 
     @Nullable
-    public final SymbolPair matchBestPair(Content content, CharPosition cursorPosition, char[] inputCharArray, char firstChar) {
+    public final SymbolPair matchBestPair(CodeEditor editor, CharPosition cursorPosition, char[] inputCharArray, char firstChar) {
+        final Content content = editor.getText();
         // do not apply single character pairs for text with length > 1
         var singleCharPair = inputCharArray == null ? matchBestPairBySingleChar(firstChar) : null;
 
@@ -140,6 +141,9 @@ public class SymbolPairMatch {
 
         SymbolPair matchPair = null;
         for (var pair : matchList) {
+            if (!pair.shouldReplace(editor)) {
+                continue;
+            }
             var openCharArray = pair.open.toCharArray();
 
             // if flag is not 1, no match
