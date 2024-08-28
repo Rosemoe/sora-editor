@@ -1878,7 +1878,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         // replace text
         SymbolPairMatch.SymbolPair pair = null;
         if (getProps().symbolPairAutoCompletion && text.length() > 0) {
-            var firstCharFromText = text.charAt(0);
+            var endCharFromText = text.charAt(text.length() - 1);
 
             char[] inputText = null;
 
@@ -1889,7 +1889,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
             pair = languageSymbolPairs.matchBestPair(
                     this, cursor.left(),
-                    inputText, firstCharFromText
+                    inputText, endCharFromText
             );
         }
 
