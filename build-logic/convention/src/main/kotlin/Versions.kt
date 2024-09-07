@@ -29,7 +29,7 @@ object Versions {
 
     val versionName by lazy {
         if (CI.isCiBuild) {
-            "$version-${CI.commitHash}-SNAPSHOT"
+            "$version-${CI.commitHash}"
         } else version
     }
 
