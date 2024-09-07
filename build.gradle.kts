@@ -82,7 +82,7 @@ subprojects {
             group = "io.github.shadow3aaa.sora-editor"
             version = Versions.versionName
             pomFromGradleProperties()
-            publishToMavenCentral(SonatypeHost.S01)
+            publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
             //signAllPublications()
             if ("bom" != this@subprojects.name) {
                 configure(
