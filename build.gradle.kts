@@ -79,11 +79,11 @@ subprojects {
 
     plugins.withId("com.vanniktech.maven.publish.base") {
         configure<MavenPublishBaseExtension> {
-            group = "io.github.Rosemoe.sora-editor"
+            group = "io.github.shadow3aaa.sora-editor"
             version = Versions.versionName
             pomFromGradleProperties()
             publishToMavenCentral(SonatypeHost.S01)
-            signAllPublications()
+            //signAllPublications()
             if ("bom" != this@subprojects.name) {
                 configure(
                     AndroidSingleVariantLibrary(
