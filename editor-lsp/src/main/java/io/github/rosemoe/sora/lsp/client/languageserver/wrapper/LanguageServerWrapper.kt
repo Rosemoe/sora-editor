@@ -44,6 +44,7 @@ import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.ClientCapabilities
 import org.eclipse.lsp4j.CodeActionCapabilities
+import org.eclipse.lsp4j.CodeActionKindCapabilities
 import org.eclipse.lsp4j.CodeActionLiteralSupportCapabilities
 import org.eclipse.lsp4j.CompletionCapabilities
 import org.eclipse.lsp4j.CompletionItemCapabilities
@@ -353,7 +354,7 @@ class LanguageServerWrapper(
         val textDocumentClientCapabilities = TextDocumentClientCapabilities().apply {
             codeAction = CodeActionCapabilities()
             codeAction.codeActionLiteralSupport =
-                CodeActionLiteralSupportCapabilities()
+                CodeActionLiteralSupportCapabilities(CodeActionKindCapabilities())
             completion =
                 CompletionCapabilities(CompletionItemCapabilities(true))
             definition = DefinitionCapabilities()
