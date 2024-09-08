@@ -27,7 +27,7 @@ plugins {
     id("com.vanniktech.maven.publish.base")
 }
 
-group = "io.github.shadow3.sora-editor"
+group = "io.github.shadow3"
 version = Versions.versionName
 
 android {
