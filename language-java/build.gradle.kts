@@ -27,7 +27,7 @@ plugins {
     id("com.vanniktech.maven.publish.base")
 }
 
-group = "io.github.shadow3"
+group = "io.github.shadow3aaa"
 version = Versions.versionName
 
 android {

@@ -79,7 +79,7 @@ subprojects {
 
     plugins.withId("com.vanniktech.maven.publish.base") {
         configure<MavenPublishBaseExtension> {
-            group = "io.github.shadow3aaa.sora-editor"
+            group = "io.github.shadow3aaa"
             version = Versions.versionName
             pomFromGradleProperties()
             publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)

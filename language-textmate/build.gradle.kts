@@ -28,7 +28,7 @@ plugins {
     kotlin("android")
 }
 
-group = "io.github.shadow3"
+group = "io.github.shadow3aaa"
 version = Versions.versionName
 
 android {
