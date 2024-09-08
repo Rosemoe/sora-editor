@@ -83,7 +83,7 @@ subprojects {
             version = Versions.versionName
             pomFromGradleProperties()
             publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
-            //signAllPublications()
+            signAllPublications()
             if ("bom" != this@subprojects.name) {
                 configure(
                     AndroidSingleVariantLibrary(
