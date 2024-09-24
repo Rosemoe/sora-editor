@@ -177,7 +177,7 @@ class MonarchLanguage(
                 ?: throw IllegalArgumentException(
                     String.format(
                         "Language with %s scope name not found",
-                        grammarRegistry
+                        languageScopeName
                     )
                 )
 

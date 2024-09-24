@@ -50,8 +50,8 @@ class MonarchNewlineHandler(
     private val language: MonarchLanguage
 ) : NewlineHandler {
 
-    private lateinit var enterSupport: OnEnterSupport
-    private lateinit var indentRulesSupport: IndentRulesSupport
+    private var enterSupport: OnEnterSupport? = null
+    private var indentRulesSupport: IndentRulesSupport? = null
 
     private var enterAction: CompleteEnterAction? = null
     private var indentForEnter: Pair<String, String>? = null
@@ -148,7 +148,7 @@ class MonarchNewlineHandler(
             afterEnterIndent = beforeEnterIndent.toString() + indent
         }
 
-        if (indentRulesSupport.shouldDecrease(afterEnterText)) {
+        if (indentRulesSupport?.shouldDecrease(afterEnterText) == true) {
             // afterEnterIndent = indentConverter.unshiftIndent(afterEnterIndent);
 
             afterEnterIndent = beforeEnterIndent.substring(
@@ -343,7 +343,7 @@ class MonarchNewlineHandler(
         if (lineNumber > 0) {
             for (lastLineNumber in lineNumber - 1 downTo 0) {
                 val lineContent = content.getLineContent(lastLineNumber);
-                if (indentRulesSupport.shouldIgnore(lineContent) || precedingValidPattern.matches(
+                if (indentRulesSupport?.shouldIgnore(lineContent) == true || precedingValidPattern.matches(
                         lineContent
                     ) || lineContent.isEmpty()
                 ) {
@@ -376,6 +376,7 @@ class MonarchNewlineHandler(
     ): InheritIndentResult? {
         // https://github.com/microsoft/vscode/blob/bf63ea1932dd253745f38a4cbe26bb9be01801b1/src/vs/editor/common/languages/autoIndent.ts#L73
 
+        val indentRulesSupport = requireNotNull(indentRulesSupport)
         if (line < 1) {
             return InheritIndentResult("", 0)
         }

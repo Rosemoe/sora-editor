@@ -75,7 +75,7 @@ fun List<ParsedTokenThemeRule>.resolveParsedTokenThemeRules(
     var defaultBackground = "#ffffff"
     while (parsedThemeRules.isNotEmpty() && parsedThemeRules[0].token == "") {
         val incomingDefaults = parsedThemeRules[0]
-        parsedThemeRules.removeFirst()
+        parsedThemeRules.removeAt(0)
         if (incomingDefaults.fontStyle != FontStyle.NotSet) {
             defaultFontStyle = incomingDefaults.fontStyle
         }
@@ -107,5 +107,5 @@ fun List<ParsedTokenThemeRule>.resolveParsedTokenThemeRules(
         )
     }
 
-    return TokenTheme(colorMap, root, themeDefaultColors, themeType, name)
+    return TokenTheme(colorMap, root, themeDefaultColors, name, themeType)
 }

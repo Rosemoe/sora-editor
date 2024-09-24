@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.langs.monarch.registery.dsl
 
+import android.util.Log
 import io.github.dingyi222666.monarch.language.Language
 import io.github.dingyi222666.monarch.loader.json.loadMonarchJson
 import io.github.dingyi222666.monarch.types.IMonarchLanguage
@@ -52,7 +53,8 @@ class MonarchLanguageDefinitionListBuilder :
         val language = Language(
             monarchLanguage = monarchLanguage,
             languageName = languageDefinition.name,
-            languageId = languageDefinition.scopeName ?: "source.${monarchLanguage.tokenPostfix ?: languageDefinition.name}",
+            languageId = languageDefinition.scopeName
+                ?: "source.${monarchLanguage.tokenPostfix ?: languageDefinition.name}",
             fileExtensions = emptyList(),
             embeddedLanguages = languageDefinition.embeddedLanguages,
         )

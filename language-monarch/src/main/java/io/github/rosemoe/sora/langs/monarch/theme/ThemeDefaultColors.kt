@@ -24,7 +24,10 @@
 
 package io.github.rosemoe.sora.langs.monarch.theme
 
-class ThemeDefaultColors(defaultColors: Map<String, String>) {
+class ThemeDefaultColors(
+    defaultColors: Map<String, String>,
+    val oldTextMateStyle: Boolean = false
+) {
     private val colors = mutableMapOf<String, String>()
 
     init {

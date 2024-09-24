@@ -58,6 +58,9 @@ class TokenTheme internal constructor(
             val standardToken = token.toStandardTokenType()
             (rule.metadata or (standardToken shl MetadataConsts.TOKEN_TYPE_OFFSET))
         }
+        if (token.isNotEmpty()) {
+            println("token: $token, result: $result")
+        }
         return result
     }
 
@@ -67,7 +70,7 @@ class TokenTheme internal constructor(
 
 
     override fun toString(): String {
-        return "TokenTheme(colorMap=$colorMap, root=$root, themeDefaultColors=$themeDefaultColors, themeType='$themeType', cache=$cache)"
+        return "TokenTheme(name=$name, colorMap=$colorMap, root=$root, themeDefaultColors=$themeDefaultColors, themeType='$themeType', cache=$cache)"
     }
 
 

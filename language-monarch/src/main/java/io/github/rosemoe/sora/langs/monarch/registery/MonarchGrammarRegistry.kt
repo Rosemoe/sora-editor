@@ -27,6 +27,7 @@ package io.github.rosemoe.sora.langs.monarch.registery
 import com.squareup.moshi.Moshi
 import io.github.dingyi222666.monarch.language.Language
 import io.github.dingyi222666.monarch.language.LanguageRegistry
+import io.github.dingyi222666.monarch.loader.dsl.splitToRegex
 import io.github.dingyi222666.monarch.loader.json.addLast
 import io.github.dingyi222666.monarch.types.IThemeService
 import io.github.dingyi222666.monarch.types.ITokenTheme
@@ -79,7 +80,11 @@ class MonarchGrammarRegistry(
     override fun doSearchGrammar(scopeName: String): Language? {
         // fast search?
         return languageRegistry.getRegisteredLanguages().find {
-            "source${it.monarchLanguage.tokenPostfix}" == scopeName
+            "source${it.monarchLanguage.tokenPostfix}" == scopeName ||
+                    "source.${it.monarchLanguage.tokenPostfix}" == scopeName ||
+                    "source.${it.languageId}" == scopeName ||
+                    it.languageId == scopeName
+
         }
     }
 

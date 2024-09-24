@@ -28,12 +28,9 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
-import io.github.dingyi222666.monarch.language.Language
 import io.github.dingyi222666.monarch.loader.json.addLast
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.LanguageConfigurationAdapter
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
-import io.github.rosemoe.sora.langs.monarch.registery.grammardefinition.MonarchGrammarDefinitionReader
-import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
 
 class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
     override fun fromJson(reader: JsonReader): TokenTheme {
@@ -42,6 +39,7 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
         val themeColorsMap = mutableMapOf<String, String>()
         var themeType = "light"
         var themeName = ""
+        var isOldTextMateTheme = false
 
         // ignore name
 
@@ -58,11 +56,12 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
                 }
 
                 "colors" -> {
-                    reader.beginObject()
-                    while (reader.hasNext()) {
-                        themeColorsMap[reader.nextName()] = reader.nextString()
-                    }
-                    reader.endObject()
+                    readThemeColors(reader, themeColorsMap)
+                }
+
+                "settings" -> {
+                    isOldTextMateTheme = true
+                    readTextMateTokenColors(reader, tokenThemeRuleList, themeColorsMap)
                 }
 
                 "name" -> {
@@ -77,16 +76,31 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
 
         reader.endObject()
 
+        println("$themeName $tokenThemeRuleList")
+
         return TokenTheme.createFromRawTokenTheme(
             tokenThemeRuleList,
             emptyList(),
-            ThemeDefaultColors(themeColorsMap),
+            ThemeDefaultColors(themeColorsMap, isOldTextMateTheme),
             themeType,
             themeName
         )
 
     }
 
+    private fun readThemeColors(
+        reader: JsonReader,
+        themeColorsMap: MutableMap<String, String>
+    ) {
+        reader.beginObject()
+
+        while (reader.hasNext()) {
+            val key = reader.nextName()
+            themeColorsMap[key] = reader.nextString()
+        }
+
+        reader.endObject()
+    }
 
     private fun readTokenColors(
         reader: JsonReader,
@@ -95,67 +109,135 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
         reader.beginArray()
 
         while (reader.hasNext()) {
-            reader.beginObject()
-            val tokenList = mutableListOf<String>()
-            var foreground: String? = null
-            var background: String? = null
-            var fontStyle: String? = null
+            readTokenColor(reader, tokenThemeRuleList)
+        }
 
-            while (reader.hasNext()) {
-                when (reader.nextName()) {
-                    "scope" -> {
-                        if (reader.peek() == JsonReader.Token.BEGIN_ARRAY) {
-                            reader.beginArray()
-                            while (reader.hasNext()) {
-                                tokenList.add(reader.nextString())
-                            }
-                            reader.endArray()
-                        } else {
-                            tokenList.add(reader.nextString())
-                        }
-                    }
+        reader.endArray()
+    }
 
-                    "settings" -> {
-                        reader.beginObject()
+    private fun readTokenColor(
+        reader: JsonReader,
+        tokenThemeRuleList: MutableList<TokenThemeRule>
+    ) {
+        reader.beginObject()
+        val tokenList = mutableListOf<String>()
+        var foreground: String? = null
+        var background: String? = null
+        var fontStyle: String? = null
+
+        val processToken = { token: String ->
+            if (token.contains(",")) {
+                tokenList.addAll(token.split(",").map {
+                    it.trim()
+                })
+            } else {
+                tokenList.add(token)
+            }
+        }
+
+        while (reader.hasNext()) {
+            when (reader.nextName()) {
+                "scope" -> {
+                    if (reader.peek() == JsonReader.Token.BEGIN_ARRAY) {
+                        reader.beginArray()
                         while (reader.hasNext()) {
-                            when (reader.nextName()) {
-                                "foreground" -> {
-                                    foreground = reader.nextString()
-                                }
+                            processToken(reader.nextString())
+                        }
+                        reader.endArray()
+                    } else {
+                        val token = reader.nextString()
 
-                                "background" -> {
-                                    background = reader.nextString()
-                                }
+                        processToken(token)
+                    }
+                }
 
-                                "fontStyle" -> {
-                                    fontStyle = reader.nextString()
-                                }
+                "settings" -> {
+                    reader.beginObject()
+                    while (reader.hasNext()) {
+                        when (reader.nextName()) {
+                            "foreground" -> {
+                                foreground = reader.nextString()
+                            }
+
+                            "background" -> {
+                                background = reader.nextString()
+                            }
+
+                            "fontStyle" -> {
+                                fontStyle = reader.nextString()
                             }
                         }
-                        reader.endObject()
                     }
-
-                    else -> {
-                        reader.skipValue()
-                    }
+                    reader.endObject()
                 }
 
-            }
-
-            if (tokenList.isNotEmpty()) {
-                for (token in tokenList) {
-                    tokenThemeRuleList.add(
-                        TokenThemeRule(
-                            token,
-                            foreground,
-                            background,
-                            fontStyle
-                        )
-                    )
+                else -> {
+                    reader.skipValue()
                 }
             }
 
-            reader.endObject()
+        }
+
+        reader.endObject()
+
+        if (tokenList.isEmpty()) {
+            return
+        }
+
+        for (token in tokenList) {
+            tokenThemeRuleList.add(
+                TokenThemeRule(
+                    token,
+                    foreground,
+                    background,
+                    fontStyle
+                )
+            )
+        }
+
+
+    }
+
+    private fun readTextMateTokenColors(
+        reader: JsonReader,
+        tokenThemeRuleList: MutableList<TokenThemeRule>,
+        themeColorsMap: MutableMap<String, String>
+    ) {
+        reader.beginArray()
+
+        //  "settings": [{
+        //        "settings": {
+        //            "background": "#242424",
+        //            "foreground": "#cccccc",
+        //            "lineHighlight": "#2B2B2B",
+        //            "selection": "#214283",
+        //            "highlightedDelimetersForeground": "#57f6c0"
+        //        }
+        //    },
+        //        {
+        //            "name": "Comment",
+        //            "scope": "comment",
+        //            "settings": {
+        //                "foreground": "#707070"
+        //            }
+        //        },
+
+        // object 0: settings object
+
+        reader.beginObject()
+
+        while (reader.hasNext()) {
+            if (reader.nextName() == "settings") {
+                readThemeColors(reader, themeColorsMap)
+            }
+        }
+
+        reader.endObject()
+
+        // other: object
+
+        while (reader.hasNext()) {
+            readTokenColor(reader, tokenThemeRuleList)
         }
 
         reader.endArray()
@@ -169,7 +251,6 @@ internal val MoshiRoot: Moshi = Moshi.Builder()
     .apply {
         addLast<TokenTheme>(TokenThemeAdapter())
         addLast<LanguageConfiguration>(LanguageConfigurationAdapter())
-
     }
     .build()
 

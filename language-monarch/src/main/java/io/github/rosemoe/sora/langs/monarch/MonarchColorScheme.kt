@@ -38,18 +38,15 @@ class MonarchColorScheme(
     themeModel: ThemeModel
 ) : EditorColorScheme(), ThemeChangeListener {
 
-
     var currentThemeModel: ThemeModel = themeModel
-        set(value) {
-            field = value
-            onChangeTheme(value)
-        }
+        private set
 
     init {
         applyDefault()
     }
 
     override fun onChangeTheme(newTheme: ThemeModel) {
+        this.currentThemeModel = newTheme
         super.colors.clear()
         applyDefault();
     }
@@ -69,18 +66,24 @@ class MonarchColorScheme(
             return
         }
 
-        if (!currentThemeModel.isLoaded) {
-            currentThemeModel.load()
+        if (!themeModel.isLoaded) {
+            themeModel.load()
         }
 
-        applyThemeSettings(currentThemeModel.value.defaults)
+
+        val value = themeModel.value
+
+        println("current theme： ${value.defaults.oldTextMateStyle}, name: ${value.name}, loaded: ${themeModel.isLoaded}")
+
+        if (value.defaults.oldTextMateStyle) {
+            applyTMTheme(value.defaults)
+        } else {
+            applyThemeSettings(value.defaults)
+        }
     }
 
     private fun applyThemeSettings(defaultColors: ThemeDefaultColors) {
-        setColor(LINE_DIVIDER, Color.TRANSPARENT)
-
-
-        defaultColors["editor.foreground"]?.let {
+        defaultColors["editorCursor.foreground"]?.let {
             setColor(SELECTION_INSERT, Color.parseColor(it))
         }
 
@@ -88,27 +91,22 @@ class MonarchColorScheme(
             setColor(SELECTED_TEXT_BACKGROUND, Color.parseColor(it))
         }
 
-
         defaultColors["editorWhitespace.foreground"]?.let {
             setColor(NON_PRINTABLE_CHAR, Color.parseColor(it))
         }
 
-
         defaultColors["editor.lineHighlightBackground"]?.let {
             setColor(CURRENT_LINE, Color.parseColor(it))
         }
-
 
         defaultColors["editor.background"]?.let {
             setColor(WHOLE_BACKGROUND, Color.parseColor(it))
             setColor(LINE_NUMBER_BACKGROUND, Color.parseColor(it))
         }
 
-
         defaultColors["editorLineNumber.foreground"]?.let {
             setColor(LINE_NUMBER, Color.parseColor(it))
         }
-
 
         defaultColors["editorLineNumber.activeForeground"]?.let {
             setColor(LINE_NUMBER_CURRENT, Color.parseColor(it))
@@ -118,51 +116,38 @@ class MonarchColorScheme(
             setColor(TEXT_NORMAL, Color.parseColor(it))
         }
 
-
         defaultColors["completionWindowBackground"]?.let {
             setColor(COMPLETION_WND_BACKGROUND, Color.parseColor(it))
         }
 
         defaultColors["completionWindowBackgroundCurrent"]?.let {
-            setColor(
-                COMPLETION_WND_ITEM_CURRENT,
-                Color.parseColor(it)
-            )
+            setColor(COMPLETION_WND_ITEM_CURRENT, Color.parseColor(it))
         }
 
-
         defaultColors["highlightedDelimetersForeground"]?.let {
-            setColor(
-                HIGHLIGHTED_DELIMITERS_FOREGROUND,
-                Color.parseColor(it)
-            )
+            setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(it))
         }
 
         defaultColors["tooltipBackground"]?.let {
             setColor(DIAGNOSTIC_TOOLTIP_BACKGROUND, Color.parseColor(it))
         }
 
-
         defaultColors["tooltipBriefMessageColor"]?.let {
             setColor(DIAGNOSTIC_TOOLTIP_BRIEF_MSG, Color.parseColor(it))
         }
-
 
         defaultColors["tooltipDetailedMessageColor"]?.let {
             setColor(DIAGNOSTIC_TOOLTIP_DETAILED_MSG, Color.parseColor(it))
         }
 
-
         defaultColors["tooltipActionColor"]?.let {
             setColor(DIAGNOSTIC_TOOLTIP_ACTION, Color.parseColor(it))
         }
 
-
         val editorIndentGuideBackground = defaultColors["editorIndentGuide.background"]
         val blockLineColor =
-            (getColor(WHOLE_BACKGROUND) + getColor(TEXT_NORMAL)) / 2 and 0x00FFFFFF or -0x78000000
-        val blockLineColorCur = (blockLineColor) or -0x1000000
-
+            (getColor(WHOLE_BACKGROUND) + getColor(TEXT_NORMAL)) / 2 and 0x00FFFFFF or 0x88000000.toInt()
+        val blockLineColorCur = blockLineColor or 0xFF000000.toInt()
 
         if (editorIndentGuideBackground != null) {
             setColor(BLOCK_LINE, Color.parseColor(editorIndentGuideBackground))
@@ -177,6 +162,46 @@ class MonarchColorScheme(
         } else {
             setColor(BLOCK_LINE_CURRENT, blockLineColorCur)
         }
+    }
+
+    private fun applyTMTheme(defaultColors: ThemeDefaultColors) {
+        setColor(LINE_DIVIDER, Color.TRANSPARENT)
+
+        defaultColors["caret"]?.let {
+            setColor(SELECTION_INSERT, Color.parseColor(it))
+        }
+
+        defaultColors["selection"]?.let {
+            setColor(SELECTED_TEXT_BACKGROUND, Color.parseColor(it))
+        }
+
+        defaultColors["invisibles"]?.let {
+            setColor(NON_PRINTABLE_CHAR, Color.parseColor(it))
+        }
+
+        defaultColors["lineHighlight"]?.let {
+            setColor(CURRENT_LINE, Color.parseColor(it))
+        }
+
+        defaultColors["background"]?.let {
+            setColor(WHOLE_BACKGROUND, Color.parseColor(it))
+            setColor(LINE_NUMBER_BACKGROUND, Color.parseColor(it))
+        }
+
+        defaultColors["foreground"]?.let {
+            setColor(TEXT_NORMAL, Color.parseColor(it))
+        }
+
+        defaultColors["highlightedDelimetersForeground"]?.let {
+            setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(it))
+        }
+
+        // TMTheme seems to have no fields to control BLOCK_LINE colors
+        val blockLineColor =
+            (getColor(WHOLE_BACKGROUND) + getColor(TEXT_NORMAL)) / 2 and 0x00FFFFFF or 0x88000000.toInt()
+        setColor(BLOCK_LINE, blockLineColor)
+        val blockLineColorCur = blockLineColor or 0xFF000000.toInt()
+        setColor(BLOCK_LINE_CURRENT, blockLineColorCur)
     }
 
     override fun getColor(type: Int): Int {
@@ -235,7 +260,6 @@ class MonarchColorScheme(
 
 
         fun create(themeModel: ThemeModel): MonarchColorScheme {
-            println(themeModel)
             return MonarchColorScheme(themeModel)
         }
 

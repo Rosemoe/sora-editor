@@ -64,12 +64,8 @@ object ThemeRegistry {
         if (!themeModel.isLoaded) {
             themeModel.load()
         }
-        val theme =
-            findTheme(themeModel.name)
-        if (theme != null) {
-            setTheme(theme)
-            return
-        }
+
+        themes.add(themeModel)
 
         if (isCurrentTheme) {
             setTheme(themeModel)
@@ -100,12 +96,6 @@ object ThemeRegistry {
     @Synchronized
     fun setTheme(themeModel: ThemeModel) {
         currentTheme = themeModel
-        themeChangeListeners.forEach {
-            it.onChangeTheme(themeModel)
-        }
-        if (!themes.contains(themeModel)) {
-            themes.add(themeModel)
-        }
         dispatchThemeChange(themeModel)
     }
 

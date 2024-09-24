@@ -45,7 +45,6 @@ class ColorMap {
         return id2color.getOrNull(id)
     }
 
-
     val colorMap: List<String>
         get() = id2color.toList()
 

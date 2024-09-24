@@ -57,13 +57,15 @@ class ThemeModel {
             }
         }
 
-        if (rawThemeString != null) {
-            value = rawThemeString.toTokenTheme()
-            if (value.themeType == "dark") {
-                isDark = true
-            }
+        if (rawThemeString == null) {
+            throw Exception("Theme source is null")
         }
 
+        value = rawThemeString.toTokenTheme()
+
+        if (value.themeType == "dark") {
+            isDark = true
+        }
 
     }
 

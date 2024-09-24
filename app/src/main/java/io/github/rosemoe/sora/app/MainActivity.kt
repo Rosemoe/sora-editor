@@ -487,7 +487,7 @@ class MainActivity : AppCompatActivity() {
         val editor = binding.editor
         var editorColorScheme = editor.colorScheme
         if (editorColorScheme !is MonarchColorScheme) {
-            editorColorScheme = TextMateColorScheme.create(ThemeRegistry.getInstance())
+            editorColorScheme = MonarchColorScheme.create(io.github.rosemoe.sora.langs.monarch.registery.ThemeRegistry.currentTheme)
             editor.colorScheme = editorColorScheme
             switchThemeIfRequired(this, editor)
         }
