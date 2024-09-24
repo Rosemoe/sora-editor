@@ -45,6 +45,7 @@ import androidx.lifecycle.lifecycleScope
 import io.github.dingyi222666.monarch.languages.JavaLanguage
 import io.github.dingyi222666.monarch.languages.KotlinLanguage
 import io.github.dingyi222666.monarch.languages.PythonLanguage
+import io.github.dingyi222666.monarch.languages.TypescriptLanguage
 import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
 import io.github.rosemoe.sora.app.tests.TestActivity
 import io.github.rosemoe.sora.event.ContentChangeEvent
@@ -395,9 +396,11 @@ class MainActivity : AppCompatActivity() {
      * Load default languages from Monarch
      */
     private fun loadDefaultMonarchLanguages() {
+        MonarchGrammarRegistry.INSTANCE.loadGrammar(Lan)
         MonarchGrammarRegistry.INSTANCE.loadGrammars(
             monarchLanguages {
                 language("java") {
+
                     monarchLanguage = JavaLanguage
                     defaultScopeName()
                     languageConfiguration = "textmate/java/language-configuration.json"
@@ -411,6 +414,11 @@ class MainActivity : AppCompatActivity() {
                     monarchLanguage = PythonLanguage
                     defaultScopeName()
                     languageConfiguration = "textmate/python/language-configuration.json"
+                }
+                language("typescript") {
+                    monarchLanguage = TypescriptLanguage
+                    defaultScopeName()
+                    languageConfiguration = "textmate/javascript/language-configuration.json"
                 }
             }
         )
@@ -820,6 +828,7 @@ class MainActivity : AppCompatActivity() {
             "Monarch Java",
             "Monarch Kotlin",
             "Monarch Python",
+            "Monarch TypeScript",
             "Text"
         )
         val tmLanguages = mapOf(
@@ -835,6 +844,7 @@ class MainActivity : AppCompatActivity() {
             "Monarch Java" to "source.java",
             "Monarch Kotlin" to "source.kotlin",
             "Monarch Python" to "source.python",
+            "Monarch TypeScript" to "source.typescript"
         )
 
         AlertDialog.Builder(this)

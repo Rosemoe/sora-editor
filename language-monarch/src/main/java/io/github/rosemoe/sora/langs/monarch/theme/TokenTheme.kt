@@ -36,7 +36,7 @@ class TokenTheme internal constructor(
     private val themeDefaultColors: ThemeDefaultColors = ThemeDefaultColors.EMPTY,
     val name: String = "default",
     val themeType: String = "light"
-): ITokenTheme {
+) : ITokenTheme {
     private val cache = mutableMapOf<String, Int>()
 
     val colorMap: ColorMap
@@ -54,12 +54,48 @@ class TokenTheme internal constructor(
 
     fun match(token: String): Int {
         val result = cache.getOrPut(token) {
-            val rule = _match(token)
+            var rule = _match(token)
+
+            if (rule === root.mainRule) {
+                when {
+                    // monarch -> textmate
+                    token.startsWith("identifier") -> {
+                        // ?
+                        rule = _match(token.replace("identifier", "source"))
+                    }
+
+                    token.startsWith("attribute") -> {
+                        rule = _match(token.replace("attribute", "entity.other.attribute-name"))
+                    }
+
+                    token.startsWith("regexp") -> {
+                        rule = _match(token.replace("regexp", "string.regexp"))
+                    }
+
+                    token.startsWith("type") -> {
+                        rule = _match(token.replace("type", "entity.name.type"))
+                    }
+
+                    token.startsWith("delimiter") -> {
+                        rule = _match(token.replace("delimiter", "punctuation"))
+                    }
+
+                    token.startsWith("annotation") -> {
+                        rule = _match(token.replace("annotation", "storage.type.annotation"))
+                    }
+
+                    token.startsWith("tag") -> {
+                        rule = _match(token.replace("tag", "entity.name.tag"))
+                    }
+
+                    token.startsWith("number") -> {
+                        rule = _match(token.replace("number", "constant.numeric"))
+                    }
+                }
+            }
+
             val standardToken = token.toStandardTokenType()
             (rule.metadata or (standardToken shl MetadataConsts.TOKEN_TYPE_OFFSET))
-        }
-        if (token.isNotEmpty()) {
-            println("token: $token, result: $result")
         }
         return result
     }

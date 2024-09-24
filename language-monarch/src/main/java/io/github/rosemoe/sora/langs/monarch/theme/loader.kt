@@ -117,7 +117,8 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
 
     private fun readTokenColor(
         reader: JsonReader,
-        tokenThemeRuleList: MutableList<TokenThemeRule>
+        tokenThemeRuleList: MutableList<TokenThemeRule>,
+        themeColorsMap: MutableMap<String, String>? = null
     ) {
         reader.beginObject()
         val tokenList = mutableListOf<String>()
@@ -154,7 +155,7 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
                 "settings" -> {
                     reader.beginObject()
                     while (reader.hasNext()) {
-                        when (reader.nextName()) {
+                        when (val key = reader.nextName()) {
                             "foreground" -> {
                                 foreground = reader.nextString()
                             }
@@ -165,6 +166,14 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
 
                             "fontStyle" -> {
                                 fontStyle = reader.nextString()
+                            }
+
+                            else -> {
+                                if (themeColorsMap != null) {
+                                    themeColorsMap[key] = reader.nextString()
+                                } else {
+                                    reader.skipValue()
+                                }
                             }
                         }
                     }
@@ -181,7 +190,7 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
         reader.endObject()
 
         if (tokenList.isEmpty()) {
-            return
+            tokenList.add("")
         }
 
         for (token in tokenList) {
@@ -194,6 +203,21 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
                 )
             )
         }
+
+        val updates = mapOf(
+            "foreground" to foreground,
+            "background" to background,
+            "fontStyle" to fontStyle
+        )
+
+        if (themeColorsMap == null) return
+
+        updates
+            .filterValues { it != null }
+            .mapValues { requireNotNull(it.value) }
+            .let {
+                themeColorsMap.putAll(it)
+            }
 
 
     }
@@ -224,15 +248,9 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
 
         // object 0: settings object
 
-        reader.beginObject()
 
-        while (reader.hasNext()) {
-            if (reader.nextName() == "settings") {
-                readThemeColors(reader, themeColorsMap)
-            }
-        }
+        readTokenColor(reader, tokenThemeRuleList, themeColorsMap)
 
-        reader.endObject()
 
         // other: object
 

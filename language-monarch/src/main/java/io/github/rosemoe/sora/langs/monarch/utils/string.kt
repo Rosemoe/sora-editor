@@ -47,7 +47,7 @@ fun String.checkSurrogate(): Boolean {
  * If the string contains only whitespaces, returns entire string
  */
 fun String.getLeadingWhitespace(start: Int = 0, end: Int = length): String {
-    for (index in start..end) {
+    for (index in start until end) {
         val chCode = this[index].code
         if (chCode != CharCode.Space && chCode != CharCode.Tab) {
             return substring(start, index)

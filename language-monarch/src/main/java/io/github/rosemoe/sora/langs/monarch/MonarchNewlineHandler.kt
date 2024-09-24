@@ -376,10 +376,11 @@ class MonarchNewlineHandler(
     ): InheritIndentResult? {
         // https://github.com/microsoft/vscode/blob/bf63ea1932dd253745f38a4cbe26bb9be01801b1/src/vs/editor/common/languages/autoIndent.ts#L73
 
-        val indentRulesSupport = requireNotNull(indentRulesSupport)
-        if (line < 1) {
+        if (line < 1 || indentRulesSupport == null) {
             return InheritIndentResult("", 0)
         }
+
+        val indentRulesSupport = requireNotNull(indentRulesSupport)
 
         val precedingUnIgnoredLine = getPrecedingValidLine(model, line)
 
