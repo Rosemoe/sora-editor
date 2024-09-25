@@ -70,10 +70,7 @@ class MonarchColorScheme(
             themeModel.load()
         }
 
-
         val value = themeModel.value
-
-        println("current theme： ${value.defaults.oldTextMateStyle}, name: ${value.name}, loaded: ${themeModel.isLoaded}")
 
         if (value.defaults.oldTextMateStyle) {
             applyTMTheme(value.defaults)

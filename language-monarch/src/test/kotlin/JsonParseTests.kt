@@ -1,8 +1,3 @@
-import io.github.rosemoe.sora.langs.monarch.theme.toLanguageConfiguration
-import io.github.rosemoe.sora.langs.monarch.theme.toTokenTheme
-import org.junit.Test
-import java.io.File
-
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
@@ -26,6 +21,12 @@ import java.io.File
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
+
+import io.github.rosemoe.sora.langs.monarch.theme.toLanguageConfiguration
+import io.github.rosemoe.sora.langs.monarch.theme.toTokenTheme
+import org.junit.Test
+import java.io.File
+
 
 class JsonParseTests {
 

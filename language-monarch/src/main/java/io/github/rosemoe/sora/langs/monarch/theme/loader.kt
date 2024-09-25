@@ -76,8 +76,6 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
 
         reader.endObject()
 
-        println("$themeName $tokenThemeRuleList")
-
         return TokenTheme.createFromRawTokenTheme(
             tokenThemeRuleList,
             emptyList(),
