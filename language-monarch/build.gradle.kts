@@ -56,6 +56,7 @@ dependencies {
     api(libs.monarch.code)
     api(libs.monarch.json)
     api(libs.regex.onig)
+    api(libs.regex.re2j)
 
     implementation(libs.moshi)
 

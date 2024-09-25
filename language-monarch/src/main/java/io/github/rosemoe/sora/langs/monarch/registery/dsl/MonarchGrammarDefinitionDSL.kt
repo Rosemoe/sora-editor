@@ -62,11 +62,13 @@ class MonarchLanguageDefinitionListBuilder :
         val languageConfiguration = languageDefinition.languageConfiguration?.let { configuration ->
             kotlin.runCatching {
                 configuration.toLanguageConfiguration()
-            }.getOrNull() ?: runCatching {
+            }
+                .getOrNull() ?: runCatching {
                 FileProviderRegistry.resolve(languageDefinition.languageConfiguration ?: "")?.use {
                     it.bufferedReader().readText()
                 }?.toLanguageConfiguration()
-            }.getOrNull()
+            }
+                .getOrNull()
         }
 
 

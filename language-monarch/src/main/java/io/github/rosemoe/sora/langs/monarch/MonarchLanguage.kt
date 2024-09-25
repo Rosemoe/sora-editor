@@ -26,6 +26,9 @@ package io.github.rosemoe.sora.langs.monarch
 
 import android.os.Bundle
 import io.github.dingyi222666.monarch.language.Language
+import io.github.dingyi222666.regex.GlobalRegexLib
+import io.github.dingyi222666.regex.oniguruma.OnigRegexLib
+import io.github.dingyi222666.regex.regex.re2j.Re2JRegexLib
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
 import io.github.rosemoe.sora.lang.completion.CompletionHelper
@@ -228,5 +231,8 @@ class MonarchLanguage(
             )
         }
 
+        init {
+            //GlobalRegexLib.defaultRegexLib = Re2JRegexLib()
+        }
     }
 }

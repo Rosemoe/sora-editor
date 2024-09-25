@@ -140,9 +140,15 @@ class LanguageConfigurationAdapter : JsonAdapter<LanguageConfiguration>() {
         val list = mutableListOf<AutoClosingPairConditional>()
 
         while (reader.hasNext()) {
-            val pair = readAutoClosingPairConditional(reader, false)
+            if (reader.peek() == JsonReader.Token.BEGIN_OBJECT) {
+                val pair = readAutoClosingPairConditional(reader, false)
 
-            list.add(pair)
+                list.add(pair)
+            } else {
+                val pair = readAutoClosingPair(reader, false)
+
+                list.add(AutoClosingPairConditional(pair.open, pair.close, emptyList()))
+            }
         }
 
         reader.endArray()

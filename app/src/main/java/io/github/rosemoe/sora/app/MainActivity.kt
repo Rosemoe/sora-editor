@@ -396,11 +396,9 @@ class MainActivity : AppCompatActivity() {
      * Load default languages from Monarch
      */
     private fun loadDefaultMonarchLanguages() {
-        MonarchGrammarRegistry.INSTANCE.loadGrammar(Lan)
         MonarchGrammarRegistry.INSTANCE.loadGrammars(
             monarchLanguages {
                 language("java") {
-
                     monarchLanguage = JavaLanguage
                     defaultScopeName()
                     languageConfiguration = "textmate/java/language-configuration.json"
