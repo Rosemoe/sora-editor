@@ -30,7 +30,7 @@ package io.github.rosemoe.sora.text
  * @see Content.beginBatchEdit
  * @see Content.endBatchEdit
  */
-fun Content.batchEdit(block: (Content) -> Unit): Content {
+inline fun Content.batchEdit(block: (Content) -> Unit): Content {
     this.beginBatchEdit()
     block(this)
     this.endBatchEdit()
