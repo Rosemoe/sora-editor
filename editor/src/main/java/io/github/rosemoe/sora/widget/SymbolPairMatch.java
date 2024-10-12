@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import android.text.TextUtils;
+
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
@@ -89,7 +91,7 @@ public class SymbolPairMatch {
         }
 
         list.add(symbolPair);
-        multipleCharByEndPairMaps.put(charArray[charArray.length - 1], list);
+        multipleCharByEndPairMaps.put(endChar, list);
     }
 
     /**
@@ -125,9 +127,10 @@ public class SymbolPairMatch {
     }
 
     @Nullable
-    public final SymbolPair matchBestPair(Content content, CharPosition cursorPosition, char[] inputCharArray, char firstChar) {
+    public final SymbolPair matchBestPair(CodeEditor editor, CharPosition cursorPosition, char[] inputCharArray, char endChar) {
+        final Content content = editor.getText();
         // do not apply single character pairs for text with length > 1
-        var singleCharPair = inputCharArray == null ? matchBestPairBySingleChar(firstChar) : null;
+        var singleCharPair = inputCharArray == null ? matchBestPairBySingleChar(endChar) : null;
 
         // matches single character symbol pair first
         if (singleCharPair != null) {
@@ -136,17 +139,20 @@ public class SymbolPairMatch {
         }
 
         // find all possible lists, with a single character for fast search
-        var matchList = matchBestPairList(firstChar);
+        var matchList = matchBestPairList(endChar);
 
         SymbolPair matchPair = null;
         for (var pair : matchList) {
+            if (!pair.shouldReplace(editor)) {
+                continue;
+            }
             var openCharArray = pair.open.toCharArray();
 
             // if flag is not 1, no match
             var matchFlag = 1;
             var insertIndex = cursorPosition.index;
 
-            // the size = 1
+            // the size = 1, we need compare characters before cursor, ensure it match the whole open char array
             if (inputCharArray == null) {
                 var arrayIndex = openCharArray.length - 2;
                 while (arrayIndex >= 0) {
@@ -174,19 +180,17 @@ public class SymbolPairMatch {
                     matchFlag &= inputCharArray[charIndex] == openCharArray[pairIndex] ? 1 : 0;
                 }
 
-                // input text and symbol pair text equal
-                if (pairIndex == 0) {
-                    continue;
-                }
+                // input text and symbol pair text not equal fully, continue compare characters before cursor
+                if (matchFlag == 1 && pairIndex > 0) {
+                    // When the loop is stopped the character position
+                    // is still in the first position of the matched characters,
+                    // we need to replace this character,
+                    // so we need to subtract a character position
+                    insertIndex--;
 
-                // When the loop is stopped the character position
-                // is still in the first position of the matched characters,
-                // we need to replace this character,
-                // so we need to subtract a character position
-                insertIndex--;
-
-                for (; pairIndex >= 0; insertIndex--, pairIndex--) {
-                    matchFlag &= content.charAt(insertIndex) == openCharArray[pairIndex] ? 1 : 0;
+                    for (; pairIndex >= 0; insertIndex--, pairIndex--) {
+                        matchFlag &= content.charAt(insertIndex) == openCharArray[pairIndex] ? 1 : 0;
+                    }
                 }
             }
 
