@@ -24,12 +24,14 @@
 
 package io.github.rosemoe.sora.lsp.editor.completion
 
+import android.util.Log
 import io.github.rosemoe.sora.lang.completion.CompletionItemKind
 import io.github.rosemoe.sora.lang.completion.SimpleCompletionIconDrawer.draw
 import io.github.rosemoe.sora.lang.completion.snippet.parser.CodeSnippetParser
 import io.github.rosemoe.sora.lsp.editor.LspEventManager
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.document.applyEdits
+import io.github.rosemoe.sora.lsp.utils.OtherUtils
 import io.github.rosemoe.sora.lsp.utils.asLspPosition
 import io.github.rosemoe.sora.lsp.utils.createPosition
 import io.github.rosemoe.sora.lsp.utils.createRange
@@ -116,13 +118,21 @@ class LspCompletionItem(
             val codeSnippet = CodeSnippetParser.parse(textEdit.newText)
             val startIndex =
                 text.getCharIndex(textEdit.range.start.line, textEdit.range.start.character)
-            val endIndex = text.getCharIndex(textEdit.range.end.line, textEdit.range.end.character)
-            val selectedText = text.subSequence(startIndex, endIndex).toString()
-            text.delete(startIndex, endIndex)
-
-            editor.snippetController
-                .startSnippet(startIndex, codeSnippet, selectedText)
-
+            var endIndex = 0;
+            try {
+                endIndex = text.getCharIndex(textEdit.range.end.line, textEdit.range.end.character)
+            } catch (e:StringIndexOutOfBoundsException) {
+                //fix StringIndexOutOfBoundsException
+                OtherUtils.handleOutOfBoundIndex(e,editor)
+                endIndex = text.getCharIndex(textEdit.range.end.line, textEdit.range.end.character)
+            }
+            
+            if (startIndex < endIndex) {
+                val selectedText = text.subSequence(startIndex, endIndex).toString()
+                text.delete(startIndex, endIndex)
+                editor.snippetController
+                    .startSnippet(startIndex, codeSnippet, selectedText)
+            }
         } else {
             eventManager.emit(EventType.applyEdits) {
                 put("edits", listOf(finalTextEdit))
@@ -133,7 +143,7 @@ class LspCompletionItem(
 
         if (completionItem.additionalTextEdits != null) {
             eventManager.emit(EventType.applyEdits) {
-                put("edits", listOf(completionItem.additionalTextEdits))
+                put("edits", completionItem.additionalTextEdits)
                 put(text)
             }
         }
