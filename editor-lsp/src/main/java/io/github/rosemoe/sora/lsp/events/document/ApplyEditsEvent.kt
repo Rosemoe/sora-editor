@@ -37,32 +37,31 @@ class ApplyEditsEvent : EventListener {
     override val eventName: String = "textDocument/applyEdits"
 
     override fun handle(context: EventContext) {
-        val editList: List<ArrayList<TextEdit>> = context.get("edits")
+        val editList: List<TextEdit> = context.get("edits")
         val content = context.getByClass<Content>() ?: return
 
-        editList.forEach { list: ArrayList<TextEdit> ->
-            list.forEach { textEdit : TextEdit -> 
-                val range = textEdit.range
-                val text = textEdit.newText
-                var startIndex =
-                  content.getCharIndex(range.start.line, range.start.character)
-                var endIndex =
-                   content.getCharIndex(range.end.line, range.end.character)
-                if (endIndex < startIndex) {
-                    Logger.instance(this.javaClass.name)
-                        .w(
-                            "Invalid location information found applying edits from %s to %s",
-                            range.start,
-                            range.end
-                        )
-                    val diff = startIndex - endIndex
-                    endIndex = startIndex
-                    startIndex = endIndex - diff
-                }
-                content.replace(startIndex, endIndex, text)
+        editList.forEach { textEdit: TextEdit ->
+            val range = textEdit.range
+            val text = textEdit.newText
+            var startIndex =
+                content.getCharIndex(range.start.line, range.start.character)
+            var endIndex =
+                content.getCharIndex(range.end.line, range.end.character)
+            if (endIndex < startIndex) {
+                Logger.instance(this.javaClass.name)
+                    .w(
+                        "Invalid location information found applying edits from %s to %s",
+                        range.start,
+                        range.end
+                    )
+                val diff = startIndex - endIndex
+                endIndex = startIndex
+                startIndex = endIndex - diff
             }
+            content.replace(startIndex, endIndex, text)
         }
     }
+
 
 }
 
