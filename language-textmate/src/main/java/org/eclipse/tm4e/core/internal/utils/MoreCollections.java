@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -110,7 +111,9 @@ public final class MoreCollections {
 	 * @return a new list without null elements
 	 */
 	public static <T> List<T> noNulls(final @Nullable List<T> coll) {
-		return coll == null || coll.isEmpty() ? Collections.emptyList() : coll.stream().filter(Objects::nonNull).toList();
+		return coll == null || coll.isEmpty() ? Collections.emptyList() : coll.stream()
+				.filter(t -> t != null)
+				.collect(Collectors.toList());
 	}
 
 	private MoreCollections() {

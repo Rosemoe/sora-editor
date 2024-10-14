@@ -1878,7 +1878,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         // replace text
         SymbolPairMatch.SymbolPair pair = null;
         if (getProps().symbolPairAutoCompletion && text.length() > 0) {
-            var firstCharFromText = text.charAt(0);
+            var endCharFromText = text.charAt(text.length() - 1);
 
             char[] inputText = null;
 
@@ -1888,8 +1888,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
 
             pair = languageSymbolPairs.matchBestPair(
-                    this.text, cursor.left(),
-                    inputText, firstCharFromText
+                    this, cursor.left(),
+                    inputText, endCharFromText
             );
         }
 
@@ -1897,9 +1897,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         var editorText = this.text;
         var quoteHandler = editorLanguage.getQuickQuoteHandler();
 
-        if (pair != null && pair != SymbolPairMatch.SymbolPair.EMPTY_SYMBOL_PAIR
-                && (pair.shouldReplace(this))
-        ) {
+        if (pair != null && pair != SymbolPairMatch.SymbolPair.EMPTY_SYMBOL_PAIR) {
 
             // QuickQuoteHandler can easily implement the feature of AutoSurround
             // and is at a higher level (customizable),

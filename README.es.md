@@ -86,7 +86,7 @@ Compruebe la versión más reciente ingresando a [Releases](https://github.com/R
 
 ## Comunidad
 
-* [Grupo Oficial de QQ](https://jq.qq.com/?_wv=1027&k=n68uxQws)
+* [Grupo Oficial de QQ](https://qm.qq.com/q/kKBqRsVrQ4)
 * [Grupo Oficial de Telegram](https://t.me/rosemoe_code_editor)
 
 ## Colaboradores

@@ -95,19 +95,6 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
                 var newPair = new AutoClosingPairConditional(surroundingPair.open, surroundingPair.close,
                         surroundingPairFlagWithList);
 
-                var mergePairIndex = mergePairs.indexOf(newPair);
-
-                if (mergePairIndex >= 0) {
-                    var mergePair = mergePairs.get(mergePairIndex);
-
-                    if (mergePair.notIn == null || mergePair.notIn.isEmpty()) {
-                        mergePairs.add(newPair);
-                        continue;
-                    }
-
-                    mergePair.notIn.add(surroundingPairFlag);
-
-                }
                 mergePairs.add(newPair);
             }
         }
@@ -171,6 +158,10 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
         public boolean shouldReplace(CodeEditor editor, ContentLine contentLine, int leftColumn) {
             if (editor.getCursor().isSelected()) {
                 return isSurroundingPair;
+            }
+            // No text was selected，so should not complete surrounding pair
+            if (isSurroundingPair) {
+                return false;
             }
 
             if (notInTokenTypeArray == null) {

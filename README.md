@@ -59,7 +59,7 @@ visit [Documentation Site](https://project-sora.github.io/sora-editor-docs/).
 
 ## Discuss
 
-* Official QQ Group:[216632648](https://jq.qq.com/?_wv=1027&k=n68uxQws)
+* Official QQ Group:[734652304](https://qm.qq.com/q/kKBqRsVrQ4)
 * Official [Telegram Group](https://t.me/rosemoe_code_editor)
 
 ## Contributors

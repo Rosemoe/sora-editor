@@ -53,7 +53,7 @@ sora-editor是一款高效的安卓代码编辑器
 
 ## 讨论
 
-* QQ群:[216632648](https://jq.qq.com/?_wv=1027&k=n68uxQws)
+* QQ群:[734652304](https://qm.qq.com/q/kKBqRsVrQ4)
 * [Telegram 群组](https://t.me/rosemoe_code_editor)
 
 ## 贡献者
