@@ -7,7 +7,7 @@ androidxAnnotation = "1.8.2"
 
 [libraries]
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidxAnnotation" }
-androidx-collection = { module = "androidx.collection:collection", version = "1.4.4" }
+androidx-collection = { module = "androidx.collection:collection", version = "1.4.5" }
 androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version = "2.1.4" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.13.1" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.7.0" }
