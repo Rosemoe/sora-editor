@@ -181,13 +181,35 @@ public class EditorKeyEventHandler {
             }
             case KeyEvent.KEYCODE_DEL:
                 if (editor.isEditable()) {
-                    editor.deleteText();
+                    if (editor.isTextSelected()) {
+                        editor.deleteText();
+                    } else {
+                        if (isCtrlPressed) {
+                            editor.extendSelection(SelectionMovement.PREVIOUS_WORD_BOUNDARY);
+                            if (editor.isTextSelected()) {
+                                editor.deleteText();
+                            }
+                        } else {
+                            editor.deleteText();
+                        }
+                    }
                     editor.notifyIMEExternalCursorChange();
                 }
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_FORWARD_DEL: {
                 if (editor.isEditable()) {
-                    connection.deleteSurroundingText(0, 1);
+                    if (editor.isTextSelected()) {
+                        editor.deleteText();
+                    } else {
+                        if (isCtrlPressed) {
+                            editor.extendSelection(SelectionMovement.NEXT_WORD_BOUNDARY);
+                            if (editor.isTextSelected()) {
+                                editor.deleteText();
+                            }
+                        } else {
+                            connection.deleteSurroundingText(0, 1);
+                        }
+                    }
                     editor.notifyIMEExternalCursorChange();
                 }
                 return editorKeyEvent.result(true);
