@@ -68,7 +68,7 @@ public abstract class CompletionItem {
      * an icon is chosen by the editor.
      */
     @Nullable
-    protected CompletionItemKind kind;
+    public CompletionItemKind kind;
 
     /**
      * Use for default sort
