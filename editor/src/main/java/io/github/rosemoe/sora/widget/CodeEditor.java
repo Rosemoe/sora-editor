@@ -1895,7 +1895,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         var cur = cursor;
         var editorText = this.text;
-        var quoteHandler = editorLanguage.getQuickQuoteHandler();
+        var quoteHandler = LanguageHelper.getQuickQuoteHandler(editorLanguage);
 
         if (pair != null && pair != SymbolPairMatch.SymbolPair.EMPTY_SYMBOL_PAIR) {
 
@@ -1974,12 +1974,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     }
                     int count = spaceCount + (tabCount * tabWidth);
                     try {
-                        count += editorLanguage.getIndentAdvance(
-                          new ContentReference(this.text),
-                          cur.getLeftLine(),
-                          cur.getLeftColumn(),
-                          spaceCount,
-                          tabCount
+                        count += LanguageHelper.getIndentAdvance(
+                                editorLanguage,
+                                new ContentReference(this.text),
+                                cur.getLeftLine(),
+                                cur.getLeftColumn(),
+                                spaceCount,
+                                tabCount
                         );
                     } catch (Exception e) {
                         Log.w(LOG_TAG, "Language object error", e);
@@ -4625,7 +4626,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_TEXT);
                 } else if (region == RegionResolverKt.REGION_LINE_NUMBER) {
                     switch (props.actionWhenLineNumberClicked) {
-                        case DirectAccessProps.LN_ACTION_SELECT_LINE, DirectAccessProps.LN_ACTION_PLACE_SELECTION_HOME -> {
+                        case DirectAccessProps.LN_ACTION_SELECT_LINE,
+                             DirectAccessProps.LN_ACTION_PLACE_SELECTION_HOME -> {
                             return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_HAND);
                         }
                     }
