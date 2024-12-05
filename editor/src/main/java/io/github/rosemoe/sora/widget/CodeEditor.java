@@ -3512,7 +3512,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             if (!clipboardManager.hasPrimaryClip() || (clip = clipboardManager.getPrimaryClip()) == null) {
                 return;
             }
-            pasteText(ClipDataUtils.clipDataToString(getContext(), clip));
+            pasteText(ClipDataUtils.clipDataToString(clip));
         } catch (Exception e) {
             Log.w(LOG_TAG, "Error pasting text to editor", e);
             Toast.makeText(getContext(), e.toString(), Toast.LENGTH_SHORT).show();
@@ -4736,7 +4736,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 }
                 touchHandler.draggingSelection = null;
                 setSelection(targetPos.line, targetPos.column);
-                pasteText(ClipDataUtils.clipDataToString(getContext(), event.getClipData()));
+                pasteText(ClipDataUtils.clipDataToString(event.getClipData()));
                 requestFocus();
                 postInvalidate();
                 // Call super for notifying listeners
