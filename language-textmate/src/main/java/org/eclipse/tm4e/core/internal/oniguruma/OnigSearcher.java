@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tm4e.core.TMException;
+import org.joni.exception.JOniException;
 
 /**
  * @see <a href="https://github.com/atom/node-oniguruma/blob/master/src/onig-searcher.cc">
@@ -30,7 +32,22 @@ final class OnigSearcher {
 	private final List<OnigRegExp> regExps;
 
 	OnigSearcher(final List<String> regExps) {
-		this.regExps = regExps.stream().map(OnigRegExp::new).collect(Collectors.toList());
+		this.regExps = regExps.stream().map(OnigSearcher::createRegExp).collect(Collectors.toList());
+	}
+
+	private static OnigRegExp createRegExp(String exp) {
+		// workaround for regular expressions that are unsupported by joni
+		// from https://github.com/JetBrains/intellij-community/blob/881c9bc397b850bad1d393a67bcbc82861d55d79/plugins/textmate/core/src/org/jetbrains/plugins/textmate/regex/joni/JoniRegexFactory.kt#L32
+		try {
+			return new OnigRegExp(exp);
+		} catch (TMException e) {
+			if (e.getCause() instanceof JOniException) {
+				e.printStackTrace();
+				return new OnigRegExp("^$");
+			} else {
+				throw e;
+			}
+		}
 	}
 
 	@Nullable
