@@ -43,7 +43,8 @@ class RenderContext(val editor: CodeEditor) {
         null
     }
 
-    var tabWidth = 4
+    val tabWidth
+        get() = editor.tabWidth
 
     fun updateForRange(range: StyleUpdateRange) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
