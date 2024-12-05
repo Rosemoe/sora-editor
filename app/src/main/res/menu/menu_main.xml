@@ -141,6 +141,9 @@
     <item
         android:id="@+id/switch_colors"
         android:title="@string/switch_color_scheme" />
+    <item
+        android:id="@+id/switch_typeface"
+        android:title="@string/switch_typeface" />
 
     <item
         android:id="@+id/text_undo"

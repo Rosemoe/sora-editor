@@ -48,6 +48,7 @@
     <string name="search_panel">Search Panel</string>
     <string name="code_navigation">Code Navigation</string>
     <string name="switch_language">Switch Language</string>
+    <string name="switch_typeface">Switch Typeface</string>
     <string name="format">Format</string>
     <string name="code_navi">Code Navigation</string>
     <string name="navi_err_msg">Code navigation not prepared or unsupported</string>

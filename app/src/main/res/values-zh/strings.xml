@@ -47,6 +47,7 @@
     <string name="search_panel">搜索面板</string>
     <string name="code_navigation">代码导航</string>
     <string name="switch_language">调节程序语言</string>
+    <string name="switch_typeface">更换字体</string>
     <string name="format">格式化</string>
     <string name="app_name">Sora-editor Demo</string>
     <string name="code_navi">代码导航</string>

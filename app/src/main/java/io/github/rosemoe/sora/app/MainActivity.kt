@@ -636,8 +636,34 @@ class MainActivity : AppCompatActivity() {
                     !editor.isDisableSoftKbdIfHardKbdAvailable
                 item.isChecked = editor.isDisableSoftKbdIfHardKbdAvailable
             }
+
+            R.id.switch_typeface -> chooseTypeface()
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun chooseTypeface() {
+        val fonts = arrayOf(
+            "JetBrains Mono",
+            "Ubuntu",
+            "Roboto"
+        )
+        val assetsPaths = arrayOf(
+            "JetBrainsMono-Regular.ttf",
+            "Ubuntu-Regular.ttf",
+            "Roboto-Regular.ttf"
+        )
+        AlertDialog.Builder(this)
+            .setTitle(android.R.string.dialog_alert_title)
+            .setSingleChoiceItems(fonts, -1) { dialog: DialogInterface, which: Int ->
+                if (which in assetsPaths.indices) {
+                    binding.editor.typefaceText =
+                        Typeface.createFromAsset(assets, assetsPaths[which])
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun chooseLineNumberPanelPosition() {
