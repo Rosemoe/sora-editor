@@ -24,12 +24,17 @@
 package io.github.rosemoe.sora.util;
 
 import android.content.ClipData;
+import android.content.Context;
 
 import androidx.annotation.Nullable;
 
 public class ClipDataUtils {
 
     public static String clipDataToString(@Nullable ClipData clipData) {
+        return clipDataToString(null, clipData);
+    }
+
+    public static String clipDataToString(@Nullable Context context, @Nullable ClipData clipData) {
         if (clipData == null) {
             return "";
         }
@@ -39,11 +44,9 @@ public class ClipDataUtils {
                 sb.append('\n');
             }
             var item = clipData.getItemAt(i);
-            var text = item.getText();
-            if (text == null) {
-                text = item.toString();
-            }
-            sb.append(text);
+            var text = context != null ? item.coerceToText(context) : item.getText();
+            if (text != null)
+                sb.append(text);
         }
         return sb.toString();
     }
