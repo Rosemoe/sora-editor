@@ -33,7 +33,7 @@ jdt-annotation = { module = "org.eclipse.jdt:org.eclipse.jdt.annotation", versio
 monarch-code = { module = "io.github.dingyi222666.monarch:monarch", version = "1.0.3" }
 monarch-language-pack = { module = "io.github.dingyi222666.monarch:monarch-language-pack", version = "1.0.2" }
 monarch-json = { module = "io.github.dingyi222666.monarch:monarch-json-loader", version = "1.0.2" }
-regex-onig = { module = "io.github.dingyi222666.regex-lib:regex-lib-oniguruma", version = "1.0.2" }
+regex-onig = { module = "io.github.dingyi222666.regex-lib:regex-lib-oniguruma", version = "1.0.3" }
 regex-re2j = { module = "io.github.dingyi222666.regex-lib:regex-lib-re2j", version = "1.0.2" }
 
 tests-google-truth = { module = "com.google.truth:truth", version = "1.4.2" }
