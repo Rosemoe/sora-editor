@@ -27,6 +27,7 @@ package io.github.rosemoe.sora.langs.monarch
 import io.github.dingyi222666.monarch.types.StandardTokenType
 import io.github.rosemoe.sora.lang.styling.Span
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.AutoClosingPairConditional
+import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.BaseAutoClosingPair
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
 import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.text.ContentLine
@@ -70,19 +71,22 @@ class MonarchSymbolPairMatch(
             languageConfiguration.surroundingPairs ?: emptyList()
 
         val autoClosingPairs: List<AutoClosingPairConditional> =
-            languageConfiguration.autoClosingPairs ?: emptyList()
+            languageConfiguration.autoClosingPairs?.toMutableList() ?: emptyList()
 
-        val mergePairs =
-            mutableListOf<AutoClosingPairConditional>()
+        val pairs = mutableMapOf<String, SymbolPair>()
 
-        mergePairs.addAll(autoClosingPairs)
-
+        autoClosingPairs.forEach {
+            pairs[it.open] = SymbolPair(
+                it.open,
+                it.close,
+                SymbolPairEx(it, false)
+            )
+        }
 
         for (surroundingPair in surroundingPairs) {
-
-            val originAutoClosingPair = mergePairs.find {
+            val originAutoClosingPair = autoClosingPairs.find {
                 it.open == surroundingPair.open && it.close == surroundingPair.close
-            }
+            } as? AutoClosingPairConditional
 
             val surroundingPairNotInList = if (surroundingPair is AutoClosingPairConditional) {
                 surroundingPair.notIn
@@ -90,46 +94,39 @@ class MonarchSymbolPairMatch(
 
 
             if (originAutoClosingPair == null) {
-                mergePairs.add(
-                    AutoClosingPairConditional(
-                        surroundingPair.open,
-                        surroundingPair.close,
-                        surroundingPairNotInList,
-                        true
-                    )
+                pairs[surroundingPair.open] = SymbolPair(
+                    surroundingPair.open,
+                    surroundingPair.close,
+                    SymbolPairEx(surroundingPair, false)
                 )
                 continue
             }
 
 
-            mergePairs.remove(originAutoClosingPair)
-            mergePairs.add(
-                AutoClosingPairConditional(
-                    surroundingPair.open,
-                    surroundingPair.close,
-                    (surroundingPairNotInList + originAutoClosingPair.notIn).distinct(),
-                    true
-                )
+            pairs.remove(surroundingPair.open)
+            val pair = AutoClosingPairConditional(
+                surroundingPair.open,
+                surroundingPair.close,
+                (surroundingPairNotInList + originAutoClosingPair.notIn).distinct(),
+                true
             )
 
-
-            mergePairs.forEach {
-                putPair(
-                    it.open,
-                    SymbolPair(
-                        it.open,
-                        it.close,
-                        SymbolPairEx(it)
-                    )
-                )
-            }
-
-
+            pairs[pair.open] = SymbolPair(
+                pair.open,
+                pair.close,
+                SymbolPairEx(pair, true)
+            )
         }
+
+        pairs.forEach {
+            putPair(it.key, it.value)
+        }
+
     }
 
     class SymbolPairEx(
-        autoClosingPairConditional: AutoClosingPairConditional
+        private val autoClosingPairConditional: BaseAutoClosingPair,
+        private val isAutoClosingPair: Boolean
     ) :
         SymbolPair.SymbolPairEx {
 
@@ -139,7 +136,10 @@ class MonarchSymbolPairMatch(
 
         init {
             run {
-                val excludeTokenTypeList = autoClosingPairConditional.notIn.toMutableList()
+                val excludeTokenTypeList =
+                    if (autoClosingPairConditional is AutoClosingPairConditional)
+                        autoClosingPairConditional.notIn.toMutableList()
+                    else emptyList()
 
                 if (excludeTokenTypeList.isEmpty()) {
                     excludeTokenTypesArray = null
@@ -173,6 +173,11 @@ class MonarchSymbolPairMatch(
         ): Boolean {
             if (editor.cursor.isSelected) {
                 return isSurroundingPair
+            }
+
+            // No text was selected, so should not complete surrounding pair
+            if (!isAutoClosingPair) {
+                return false;
             }
 
             val excludedTokenTypes = excludeTokenTypesArray ?: return true
