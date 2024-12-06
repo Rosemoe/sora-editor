@@ -79,7 +79,7 @@ class MonarchSymbolPairMatch(
             pairs[it.open] = SymbolPair(
                 it.open,
                 it.close,
-                SymbolPairEx(it, false)
+                SymbolPairEx(it, true)
             )
         }
 
