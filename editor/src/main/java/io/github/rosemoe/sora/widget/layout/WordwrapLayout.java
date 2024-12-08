@@ -57,10 +57,10 @@ public class WordwrapLayout extends AbstractLayout {
     private final boolean antiWordBreaking;
     private List<RowRegion> rowTable;
 
-    public WordwrapLayout(CodeEditor editor, Content text, boolean antiWordBreaking, List<RowRegion> extended, boolean clearCache) {
+    public WordwrapLayout(@NonNull CodeEditor editor, @NonNull Content text, boolean antiWordBreaking, @Nullable WordwrapLayout oldLayout, boolean clearCache) {
         super(editor, text);
         this.antiWordBreaking = antiWordBreaking;
-        rowTable = extended != null ? extended : new ArrayList<>();
+        rowTable = oldLayout != null ? oldLayout.rowTable : new ArrayList<>();
         if (clearCache) {
             rowTable.clear();
         }
@@ -68,14 +68,10 @@ public class WordwrapLayout extends AbstractLayout {
         breakAllLines();
     }
 
-    public List<RowRegion> getRowTable() {
-        return rowTable;
-    }
-
     private void breakAllLines() {
         var taskCount = Math.min(SUBTASK_COUNT, (int) Math.ceil((float) text.getLineCount() / MIN_LINE_COUNT_FOR_SUBTASK));
         var sizeEachTask = text.getLineCount() / taskCount;
-        var monitor = new TaskMonitor(taskCount,(results, cancelledCount) -> {
+        var monitor = new TaskMonitor(taskCount, (results, cancelledCount) -> {
             final var editor = this.editor;
             if (editor != null) {
                 List<WordwrapResult> r2 = new ArrayList<>();

@@ -1586,7 +1586,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 return;
             }
             if (layout instanceof WordwrapLayout && wordwrap) {
-                var newLayout = new WordwrapLayout(this, text, antiWordBreaking, ((WordwrapLayout) layout).getRowTable(), clearWordwrapCache);
+                var newLayout = new WordwrapLayout(this, text, antiWordBreaking, (WordwrapLayout) layout, clearWordwrapCache);
                 layout.destroyLayout();
                 layout = newLayout;
                 return;
