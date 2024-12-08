@@ -62,6 +62,7 @@ public abstract class AbstractLayout implements Layout {
         this.text = text;
     }
 
+    @NonNull
     protected List<Span> getSpans(int line) {
         return editor.getSpansForLine(line);
     }
@@ -82,7 +83,7 @@ public abstract class AbstractLayout implements Layout {
         text = null;
     }
 
-    protected void submitTask(LayoutTask<?> task) {
+    protected void submitTask(@NonNull LayoutTask<?> task) {
         executor.submit(task);
     }
 
@@ -94,7 +95,7 @@ public abstract class AbstractLayout implements Layout {
         private int completedCount = 0;
         private int cancelledCount = 0;
 
-        public TaskMonitor(int totalTask, Callback callback) {
+        public TaskMonitor(int totalTask, @NonNull Callback callback) {
             taskCount = totalTask;
             results = new Object[totalTask];
             this.callback = callback;
@@ -113,7 +114,7 @@ public abstract class AbstractLayout implements Layout {
         }
 
         public interface Callback {
-            void onCompleted(Object[] results, int cancelledCount);
+            void onCompleted(@NonNull Object[] results, int cancelledCount);
         }
 
     }
@@ -121,7 +122,7 @@ public abstract class AbstractLayout implements Layout {
     protected abstract class LayoutTask<T> implements Runnable {
         private final TaskMonitor monitor;
 
-        protected LayoutTask(TaskMonitor monitor) {
+        protected LayoutTask(@NonNull TaskMonitor monitor) {
             this.monitor = monitor;
         }
 
