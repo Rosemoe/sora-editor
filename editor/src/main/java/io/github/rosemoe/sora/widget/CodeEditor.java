@@ -4317,7 +4317,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void updateCursor() {
         updateCursorAnchor();
         updateExtractedText();
-        if (text.getNestedBatchEdit() > 1 && !inputConnection.composingText.isComposing()) {
+        if (text.getNestedBatchEdit() <= 1 && !inputConnection.composingText.isComposing()) {
             updateSelection();
         }
     }
