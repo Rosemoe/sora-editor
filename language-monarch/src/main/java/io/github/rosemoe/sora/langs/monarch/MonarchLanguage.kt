@@ -57,7 +57,8 @@ class MonarchLanguage(
         MonarchSymbolPairMatch(this)
     }
 
-    internal var createIdentifiers = false
+    internal val createIdentifiers
+        get() = autoCompleteEnabled
 
     var tabSize = 4
 
@@ -81,7 +82,6 @@ class MonarchLanguage(
 
     override fun useTab() = useTab
 
-
     override fun requireAutoComplete(
         content: ContentReference,
         position: CharPosition,
@@ -100,8 +100,7 @@ class MonarchLanguage(
     }
 
     override fun getNewlineHandlers(): Array<NewlineHandler>? =
-        newlineHandlers ?: super.getNewlineHandlers()
-
+        newlineHandlers ?: super.newlineHandlers
 
     fun setCompleterKeywords(keywords: Array<String>) {
         autoCompleter.setKeywords(keywords, false)
@@ -113,7 +112,7 @@ class MonarchLanguage(
     ) {
         val old = monarchAnalyzer
         if (old != null) {
-            old.setReceiver(null)
+            old.receiver = null
             old.destroy()
         }
         try {

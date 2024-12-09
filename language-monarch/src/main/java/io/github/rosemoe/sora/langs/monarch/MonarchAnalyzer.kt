@@ -237,23 +237,30 @@ class MonarchAnalyzer(
             if (language.createIdentifiers &&
                 tokenType == StandardTokenType.Other
             ) {
-                val end = if (index + 1 == tokensLength)
+                var end = if (index + 1 == tokensLength)
                     lineC.length
                 else
                     line.convertUnicodeOffsetToUtf16(
                         lineTokens.tokens[2 * (index + 1)],
                         surrogate
                     )
-                if (end > startIndex && MyCharacter.isJavaIdentifierStart(line[startIndex])) {
+                var start = startIndex
+                while (start < end && line[start] == ' ') {
+                    start++
+                }
+                while (end > start && line[end - 1] == ' ') {
+                    end--
+                }
+                if (end > start && MyCharacter.isJavaIdentifierStart(line[start])) {
                     var isValidIdentifier = true
-                    for (j in startIndex + 1 until end) {
+                    for (j in start + 1 until end) {
                         if (!MyCharacter.isJavaIdentifierPart(line[j])) {
                             isValidIdentifier = false
                             break
                         }
                     }
                     if (isValidIdentifier) {
-                        identifiers?.add(line.substring(startIndex, end))
+                        identifiers?.add(line.substring(start, end))
                     }
                 }
             }
@@ -307,7 +314,7 @@ class MonarchAnalyzer(
         super.onAbandonState(state)
         if (language.createIdentifiers) {
             state.identifiers?.forEach { identifier ->
-                syncIdentifiers.identifierIncrease(identifier)
+                syncIdentifiers.identifierDecrease(identifier)
             }
         }
     }
