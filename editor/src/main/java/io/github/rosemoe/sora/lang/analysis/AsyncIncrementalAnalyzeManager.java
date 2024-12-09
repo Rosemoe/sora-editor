@@ -445,7 +445,6 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
         }
 
         private void initialize() {
-            var time = System.currentTimeMillis();
             styles = new Styles(spans = new LockedSpans());
             S state = getInitialState();
             var mdf = spans.modify();
