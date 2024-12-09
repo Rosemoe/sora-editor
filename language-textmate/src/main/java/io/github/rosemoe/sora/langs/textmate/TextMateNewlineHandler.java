@@ -185,9 +185,9 @@ public class TextMateNewlineHandler implements NewlineHandler {
         var indent = "";
 
         if (language.useTab()) {
-            indent = " ".repeat(language.getTabSize());
-        } else {
             indent = "\t";
+        } else {
+            indent = " ".repeat(language.getTabSize());
         }
 
 
