@@ -98,7 +98,6 @@ class MonarchNewlineHandler(
         }
 
         enterAction = getEnterAction(text, position)
-
         indentForEnter = null
 
         if (enterAction == null) {
@@ -112,11 +111,8 @@ class MonarchNewlineHandler(
         // https://github.com/microsoft/vscode/blob/bf63ea1932dd253745f38a4cbe26bb9be01801b1/src/vs/editor/common/languages/autoIndent.ts#L278
 
         val currentLineText = text.getLineString(position.line)
-
         val beforeEnterText = currentLineText.substring(0, position.column)
-
         val afterEnterText = currentLineText.substring(position.column)
-
 
         val beforeEnterIndent =
             beforeEnterText.getLeadingWhitespace(0, beforeEnterText.length)
@@ -124,10 +120,8 @@ class MonarchNewlineHandler(
         val afterEnterAction =
             getInheritIndentForLine(
                 WrapperContent(text, position.line, beforeEnterText),
-                true,
                 position.line + 1
             ) ?: return beforeEnterIndent to beforeEnterIndent
-
 
         var afterEnterIndent = afterEnterAction.indentation
         val indent = if (language.useTab()) {
@@ -293,7 +287,6 @@ class MonarchNewlineHandler(
             enterResult = onEnterSupport.onEnter(previousLineText, beforeEnterText, afterEnterText)
         } catch (e: Exception) {
             e.printStackTrace()
-            // onUnexpectedError(e);
         }
 
         if (enterResult == null) {
@@ -331,8 +324,8 @@ class MonarchNewlineHandler(
     /**
      * Get nearest preceding line which doesn't match unIndentPattern or contains all whitespace.
      * Result:
-     * -1: run into the boundary of embedded languages
-     * 0: every line above are invalid
+     * -2: run into the boundary of embedded languages
+     * -1: every line above are invalid
      * else: nearest preceding line of the same language
      */
     fun getPrecedingValidLine(content: WrapperContent, lineNumber: Int): Int {
@@ -345,14 +338,13 @@ class MonarchNewlineHandler(
                         lineContent
                     ) || lineContent.isEmpty()
                 ) {
-                    continue;
+                    continue
                 }
                 return lastLineNumber
             }
-
         }
 
-        return -1
+        return -2
     }
 
     /**
@@ -370,11 +362,15 @@ class MonarchNewlineHandler(
 
     private fun getInheritIndentForLine(
         model: WrapperContent,
-        honorIntentialIndent: Boolean, line: Int
+        line: Int,
+        honorIntentialIndent: Boolean = true
     ): InheritIndentResult? {
         // https://github.com/microsoft/vscode/blob/bf63ea1932dd253745f38a4cbe26bb9be01801b1/src/vs/editor/common/languages/autoIndent.ts#L73
 
-        if (line < 1 || indentRulesSupport == null) {
+        if (indentRulesSupport == null) {
+            return null
+        }
+        if (line < 1) {
             return InheritIndentResult("", 0)
         }
 
@@ -382,9 +378,9 @@ class MonarchNewlineHandler(
 
         val precedingUnIgnoredLine = getPrecedingValidLine(model, line)
 
-        if (precedingUnIgnoredLine < 0) {
+        if (precedingUnIgnoredLine < -1) {
             return null
-        } else if (precedingUnIgnoredLine < 1) {
+        } else if (precedingUnIgnoredLine < 0) {
             return InheritIndentResult("", 0)
         }
 
