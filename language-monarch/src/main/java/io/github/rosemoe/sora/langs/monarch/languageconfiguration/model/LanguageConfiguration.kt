@@ -53,7 +53,7 @@ data class LanguageConfiguration(
     /**
      * The language's rules to be evaluated when pressing Enter.
      */
-    val onEnterRules: List<OnEnterRule>? = null,
+    val onEnterRules: List<OnEnterRule> = listOf(),
     /**
      * The language's auto closing pairs. The 'close' character is automatically inserted with the
      * 'open' character is typed. If not set, the configured brackets will be used.

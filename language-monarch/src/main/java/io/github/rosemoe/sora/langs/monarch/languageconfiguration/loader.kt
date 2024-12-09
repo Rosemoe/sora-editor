@@ -57,7 +57,7 @@ class LanguageConfigurationAdapter : JsonAdapter<LanguageConfiguration>() {
 
         var indentationRules: IndentationRule? = null
 
-        var onEnterRules: List<OnEnterRule>? = null
+        var onEnterRules: List<OnEnterRule> = listOf()
 
         var autoCloseBefore: String? = null
 

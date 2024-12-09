@@ -71,13 +71,7 @@ class MonarchNewlineHandler(
             val brackets = languageConfiguration.brackets
 
             val indentationsRules = languageConfiguration.indentationRules
-            if (enterRules != null) {
-                enterSupport =
-                    OnEnterSupport(
-                        brackets,
-                        enterRules
-                    )
-            }
+            enterSupport = OnEnterSupport(brackets, enterRules)
 
             if (indentationsRules != null) {
                 indentRulesSupport = IndentRulesSupport(
