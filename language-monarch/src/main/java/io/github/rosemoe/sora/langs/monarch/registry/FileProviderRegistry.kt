@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2024  Rosemoe
@@ -20,38 +20,45 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
-@file:Suppress("UnstableApiUsage")
+ */
+package io.github.rosemoe.sora.langs.monarch.registry
 
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+import io.github.rosemoe.sora.langs.monarch.registry.provider.FileResolver
+import java.io.InputStream
 
-pluginManagement {
-    includeBuild("build-logic")
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
+
+object FileProviderRegistry : FileResolver {
+    private val fileResolvers = mutableListOf<FileResolver>()
+
+    init {
+        fileResolvers.add(FileResolver.DEFAULT)
     }
-}
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://repo.eclipse.org/content/groups/releases/")
-        maven("https://maven.aliyun.com/nexus/content/groups/public/")
+    @Synchronized
+    fun addProvider(fileResolver: FileResolver) {
+        if (fileResolver !== FileResolver.DEFAULT) {
+            fileResolvers.add(fileResolver)
+        }
     }
-}
 
-rootProject.name="sora-editor"
-include(
-    ":bom",
-    ":editor",
-    ":app",
-    ":language-monarch",
-    ":language-java",
-    ":language-textmate",
-    ":editor-lsp",
-    ":language-treesitter"
-)
+    @Synchronized
+    fun removeProvider(fileResolver: FileResolver) {
+        if (fileResolver !== FileResolver.DEFAULT) {
+            fileResolvers.remove(fileResolver)
+        }
+    }
+
+
+    override fun resolve(path: String): InputStream? {
+        return fileResolvers.firstNotNullOfOrNull { it.resolve(path) }
+    }
+
+    override fun dispose() {
+        fileResolvers.forEach {
+            it.dispose()
+        }
+        fileResolvers.clear()
+    }
+
+
+}

@@ -28,6 +28,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import io.github.rosemoe.sora.langs.monarch.MonarchColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
 import io.github.rosemoe.sora.widget.CodeEditor
@@ -38,12 +39,16 @@ fun switchThemeIfRequired(context: Context, editor: CodeEditor) {
     if ((context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES) {
         if (editor.colorScheme is TextMateColorScheme) {
             ThemeRegistry.getInstance().setTheme("darcula")
+        } else if (editor.colorScheme is MonarchColorScheme) {
+            io.github.rosemoe.sora.langs.monarch.registry.ThemeRegistry.setTheme("darcula")
         } else {
             editor.colorScheme = SchemeDarcula()
         }
     } else {
         if (editor.colorScheme is TextMateColorScheme) {
             ThemeRegistry.getInstance().setTheme("quietlight")
+        } else if (editor.colorScheme is MonarchColorScheme) {
+            io.github.rosemoe.sora.langs.monarch.registry.ThemeRegistry.setTheme("quietlight")
         } else {
             editor.colorScheme = EditorColorScheme()
         }

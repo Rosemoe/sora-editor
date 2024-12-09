@@ -96,11 +96,15 @@ dependencies {
     implementation(projects.editor)
     implementation(projects.languageJava)
     implementation(projects.languageTextmate)
+    implementation(projects.languageMonarch)
     implementation(projects.editorLsp)
     implementation(projects.languageTreesitter)
 
     // Tree-sitter languages
     implementation(libs.tree.sitter.java)
+
+    // Monarch Languages
+    implementation(libs.monarch.language.pack)
 
     // Kotlin coroutines
     implementation(libs.kotlinx.coroutines)

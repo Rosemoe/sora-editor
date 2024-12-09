@@ -460,6 +460,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
             styles.blocks = computeBlocks(shadowed, delegate);
             styles.setSuppressSwitch(delegate.suppressSwitch);
             styles.finishBuilding();
+
             if (!abort)
                 sendNewStyles(styles);
         }

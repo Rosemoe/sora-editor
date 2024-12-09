@@ -21,37 +21,30 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-@file:Suppress("UnstableApiUsage")
 
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+import io.github.rosemoe.sora.langs.monarch.theme.toLanguageConfiguration
+import io.github.rosemoe.sora.langs.monarch.theme.toTokenTheme
+import org.junit.Test
+import java.io.File
 
-pluginManagement {
-    includeBuild("build-logic")
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
+
+class JsonParseTests {
+
+    @Test
+    fun parseLanguageConfiguration() {
+        val languageJson = File("src/test/resources/javascript-language-configuration.json")
+
+        val languageConfiguration = languageJson.readText().toLanguageConfiguration()
+
+        println(languageConfiguration)
+    }
+
+    @Test
+    fun parseTheme() {
+        val themeJson = File("src/test/resources/sakura-color-theme.json")
+
+        val tokenTheme = themeJson.readText().toTokenTheme()
+
+        println(tokenTheme)
     }
 }
-
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://repo.eclipse.org/content/groups/releases/")
-        maven("https://maven.aliyun.com/nexus/content/groups/public/")
-    }
-}
-
-rootProject.name="sora-editor"
-include(
-    ":bom",
-    ":editor",
-    ":app",
-    ":language-monarch",
-    ":language-java",
-    ":language-textmate",
-    ":editor-lsp",
-    ":language-treesitter"
-)

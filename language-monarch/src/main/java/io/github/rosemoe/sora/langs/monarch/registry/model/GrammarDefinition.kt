@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2024  Rosemoe
@@ -20,38 +20,16 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
-@file:Suppress("UnstableApiUsage")
+ */
+package io.github.rosemoe.sora.langs.monarch.registry.model;
 
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
 
-pluginManagement {
-    includeBuild("build-logic")
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
-    }
-}
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://repo.eclipse.org/content/groups/releases/")
-        maven("https://maven.aliyun.com/nexus/content/groups/public/")
-    }
-}
-
-rootProject.name="sora-editor"
-include(
-    ":bom",
-    ":editor",
-    ":app",
-    ":language-monarch",
-    ":language-java",
-    ":language-textmate",
-    ":editor-lsp",
-    ":language-treesitter"
+data class GrammarDefinition<T>(
+    val name: String,
+    val grammar: T,
+    val embeddedLanguages: Map<String, String>,
+    val languageConfiguration: LanguageConfiguration? = null,
+    var scopeName: String,
 )

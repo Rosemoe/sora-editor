@@ -21,37 +21,33 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-@file:Suppress("UnstableApiUsage")
 
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+package io.github.rosemoe.sora.langs.monarch.registry.grammardefinition
 
-pluginManagement {
-    includeBuild("build-logic")
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
-    }
+import io.github.dingyi222666.monarch.language.Language
+import io.github.dingyi222666.monarch.loader.json.loadMonarchJson
+import io.github.rosemoe.sora.langs.monarch.registry.FileProviderRegistry
+import io.github.rosemoe.sora.langs.monarch.registry.model.GrammarDefinition
+
+class MonarchGrammarDefinitionReader : GrammarDefinitionReader<Language>() {
+
+    override fun readGrammar(grammarDefinition: GrammarDefinition<Unit>, path: String): Language? =
+        runCatching {
+            FileProviderRegistry.resolve(path)?.use {
+                it.bufferedReader().readText()
+            }
+        }.getOrNull()?.runCatching {
+            val monarchLanguage =
+                loadMonarchJson(this) ?: throw Exception("Failed to load monarch source")
+
+            Language(
+                monarchLanguage = monarchLanguage,
+                languageName = grammarDefinition.name,
+                languageId = grammarDefinition.scopeName ?: "source${monarchLanguage.tokenPostfix}",
+                fileExtensions = emptyList(),
+                embeddedLanguages = grammarDefinition.embeddedLanguages,
+            )
+        }?.getOrNull()
+
+
 }
-
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://repo.eclipse.org/content/groups/releases/")
-        maven("https://maven.aliyun.com/nexus/content/groups/public/")
-    }
-}
-
-rootProject.name="sora-editor"
-include(
-    ":bom",
-    ":editor",
-    ":app",
-    ":language-monarch",
-    ":language-java",
-    ":language-textmate",
-    ":editor-lsp",
-    ":language-treesitter"
-)
