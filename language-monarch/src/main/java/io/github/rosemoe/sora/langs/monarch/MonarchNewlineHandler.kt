@@ -130,12 +130,10 @@ class MonarchNewlineHandler(
 
 
         var afterEnterIndent = afterEnterAction.indentation
-        var indent = ""
-
-        indent = if (language.useTab()) {
-            " ".repeat(language.tabSize)
-        } else {
+        val indent = if (language.useTab()) {
             "\t"
+        } else {
+            " ".repeat(language.tabSize)
         }
 
 
