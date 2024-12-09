@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2024  Rosemoe
@@ -20,45 +20,28 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- */
-package io.github.rosemoe.sora.langs.monarch.registery
+ ******************************************************************************/
 
-import io.github.rosemoe.sora.langs.monarch.registery.provider.FileResolver
+package io.github.rosemoe.sora.langs.monarch.registry.provider
+
+import java.io.File
+import java.io.FileInputStream
 import java.io.InputStream
 
+fun interface FileResolver {
+    fun resolve(path: String): InputStream?
 
-object FileProviderRegistry : FileResolver {
-    private val fileResolvers = mutableListOf<FileResolver>()
-
-    init {
-        fileResolvers.add(FileResolver.DEFAULT)
+    fun dispose() {
+        // no-op
     }
 
-    @Synchronized
-    fun addProvider(fileResolver: FileResolver) {
-        if (fileResolver !== FileResolver.DEFAULT) {
-            fileResolvers.add(fileResolver)
+    companion object DEFAULT : FileResolver {
+        override fun resolve(path: String): InputStream? {
+            val file = File(path)
+
+            return runCatching {
+                FileInputStream(file)
+            }.getOrNull()
         }
     }
-
-    @Synchronized
-    fun removeProvider(fileResolver: FileResolver) {
-        if (fileResolver !== FileResolver.DEFAULT) {
-            fileResolvers.remove(fileResolver)
-        }
-    }
-
-
-    override fun resolve(path: String): InputStream? {
-        return fileResolvers.firstNotNullOfOrNull { it.resolve(path) }
-    }
-
-    override fun dispose() {
-        fileResolvers.forEach {
-            it.dispose()
-        }
-        fileResolvers.clear()
-    }
-
-
 }

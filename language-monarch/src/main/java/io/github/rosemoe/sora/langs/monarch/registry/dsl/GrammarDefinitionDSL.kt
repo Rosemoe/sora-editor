@@ -22,9 +22,9 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.langs.monarch.registery.dsl
+package io.github.rosemoe.sora.langs.monarch.registry.dsl
 
-import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
+import io.github.rosemoe.sora.langs.monarch.registry.model.GrammarDefinition
 
 
 abstract class LanguageDefinitionListBuilder<T, R : LanguageDefinitionBuilder> {

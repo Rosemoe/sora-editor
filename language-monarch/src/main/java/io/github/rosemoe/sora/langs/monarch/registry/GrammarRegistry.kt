@@ -21,14 +21,14 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.monarch.registery
+package io.github.rosemoe.sora.langs.monarch.registry
 
 
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
-import io.github.rosemoe.sora.langs.monarch.registery.dsl.LanguageDefinitionBuilder
-import io.github.rosemoe.sora.langs.monarch.registery.dsl.LanguageDefinitionListBuilder
-import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
-import io.github.rosemoe.sora.langs.monarch.registery.model.ThemeModel
+import io.github.rosemoe.sora.langs.monarch.registry.dsl.LanguageDefinitionBuilder
+import io.github.rosemoe.sora.langs.monarch.registry.dsl.LanguageDefinitionListBuilder
+import io.github.rosemoe.sora.langs.monarch.registry.model.GrammarDefinition
+import io.github.rosemoe.sora.langs.monarch.registry.model.ThemeModel
 
 abstract class GrammarRegistry<T> {
     private var parent: GrammarRegistry<T>? = null

@@ -21,18 +21,15 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.monarch.registery.provider
+package io.github.rosemoe.sora.langs.monarch.registry.model;
 
-import android.content.res.AssetManager
-import java.io.InputStream
+import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
 
-class AssetsFileResolver(private var assetManager: AssetManager?) : FileResolver {
-    override fun resolve(path: String): InputStream? {
-        return assetManager?.open(path)
-    }
 
-    override fun dispose() {
-        // assetManager?.close()
-        assetManager = null
-    }
-}
+data class GrammarDefinition<T>(
+    val name: String,
+    val grammar: T,
+    val embeddedLanguages: Map<String, String>,
+    val languageConfiguration: LanguageConfiguration? = null,
+    var scopeName: String,
+)

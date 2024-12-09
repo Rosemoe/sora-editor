@@ -22,28 +22,18 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.langs.monarch.registery
+package io.github.rosemoe.sora.langs.monarch.registry
 
 import com.squareup.moshi.Moshi
 import io.github.dingyi222666.monarch.language.Language
 import io.github.dingyi222666.monarch.language.LanguageRegistry
-import io.github.dingyi222666.monarch.loader.dsl.splitToRegex
 import io.github.dingyi222666.monarch.loader.json.addLast
 import io.github.dingyi222666.monarch.types.IThemeService
 import io.github.dingyi222666.monarch.types.ITokenTheme
-import io.github.rosemoe.sora.langs.monarch.languageconfiguration.LanguageConfigurationAdapter
-import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
-import io.github.rosemoe.sora.langs.monarch.registery.dsl.LanguageDefinitionBuilder
-import io.github.rosemoe.sora.langs.monarch.registery.dsl.LanguageDefinitionListBuilder
-import io.github.rosemoe.sora.langs.monarch.registery.dsl.MonarchLanguageDefinitionBuilder
-import io.github.rosemoe.sora.langs.monarch.registery.dsl.MonarchLanguageDefinitionListBuilder
-import io.github.rosemoe.sora.langs.monarch.registery.grammardefinition.MonarchGrammarDefinitionReader
-import io.github.rosemoe.sora.langs.monarch.registery.grammardefinition.ParsedGrammarDefinitionList
-import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
-import io.github.rosemoe.sora.langs.monarch.registery.model.ThemeModel
-import io.github.rosemoe.sora.langs.monarch.theme.MoshiRoot
-import io.github.rosemoe.sora.langs.monarch.theme.TokenTheme
-import io.github.rosemoe.sora.langs.monarch.theme.TokenThemeAdapter
+import io.github.rosemoe.sora.langs.monarch.registry.grammardefinition.MonarchGrammarDefinitionReader
+import io.github.rosemoe.sora.langs.monarch.registry.grammardefinition.ParsedGrammarDefinitionList
+import io.github.rosemoe.sora.langs.monarch.registry.model.GrammarDefinition
+import io.github.rosemoe.sora.langs.monarch.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.monarch.theme.adapter
 import java.io.File
 

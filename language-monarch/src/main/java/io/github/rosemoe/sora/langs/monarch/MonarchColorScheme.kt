@@ -25,10 +25,10 @@
 package io.github.rosemoe.sora.langs.monarch
 
 import android.graphics.Color
-import io.github.rosemoe.sora.langs.monarch.registery.ThemeChangeListener
-import io.github.rosemoe.sora.langs.monarch.registery.ThemeRegistry
-import io.github.rosemoe.sora.langs.monarch.registery.model.ThemeModel
-import io.github.rosemoe.sora.langs.monarch.registery.model.ThemeSource
+import io.github.rosemoe.sora.langs.monarch.registry.ThemeChangeListener
+import io.github.rosemoe.sora.langs.monarch.registry.ThemeRegistry
+import io.github.rosemoe.sora.langs.monarch.registry.model.ThemeModel
+import io.github.rosemoe.sora.langs.monarch.registry.model.ThemeSource
 import io.github.rosemoe.sora.langs.monarch.theme.ThemeDefaultColors
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme

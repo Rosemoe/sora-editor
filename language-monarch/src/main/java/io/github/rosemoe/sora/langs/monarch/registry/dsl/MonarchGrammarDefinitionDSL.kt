@@ -22,17 +22,14 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.langs.monarch.registery.dsl
+package io.github.rosemoe.sora.langs.monarch.registry.dsl
 
-import android.util.Log
 import io.github.dingyi222666.monarch.language.Language
 import io.github.dingyi222666.monarch.loader.json.loadMonarchJson
 import io.github.dingyi222666.monarch.types.IMonarchLanguage
-import io.github.rosemoe.sora.langs.monarch.registery.FileProviderRegistry
-import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
+import io.github.rosemoe.sora.langs.monarch.registry.FileProviderRegistry
+import io.github.rosemoe.sora.langs.monarch.registry.model.GrammarDefinition
 import io.github.rosemoe.sora.langs.monarch.theme.toLanguageConfiguration
-import java.io.File
-import java.nio.charset.Charset
 
 
 class MonarchLanguageDefinitionListBuilder :

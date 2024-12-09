@@ -22,11 +22,11 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.langs.monarch.registery
+package io.github.rosemoe.sora.langs.monarch.registry
 
 
-import io.github.rosemoe.sora.langs.monarch.registery.model.ThemeModel
-import io.github.rosemoe.sora.langs.monarch.registery.model.ThemeSource
+import io.github.rosemoe.sora.langs.monarch.registry.model.ThemeModel
+import io.github.rosemoe.sora.langs.monarch.registry.model.ThemeSource
 
 object ThemeRegistry {
 

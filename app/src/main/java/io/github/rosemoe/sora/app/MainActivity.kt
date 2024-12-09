@@ -63,9 +63,9 @@ import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.monarch.MonarchColorScheme
 import io.github.rosemoe.sora.langs.monarch.MonarchLanguage
-import io.github.rosemoe.sora.langs.monarch.registery.MonarchGrammarRegistry
-import io.github.rosemoe.sora.langs.monarch.registery.dsl.monarchLanguages
-import io.github.rosemoe.sora.langs.monarch.registery.model.ThemeSource
+import io.github.rosemoe.sora.langs.monarch.registry.MonarchGrammarRegistry
+import io.github.rosemoe.sora.langs.monarch.registry.dsl.monarchLanguages
+import io.github.rosemoe.sora.langs.monarch.registry.model.ThemeSource
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry
@@ -359,8 +359,8 @@ class MainActivity : AppCompatActivity() {
      */
     private fun setupMonarch() {
         // Add assets file provider so that files in assets can be loaded
-        io.github.rosemoe.sora.langs.monarch.registery.FileProviderRegistry.addProvider(
-            io.github.rosemoe.sora.langs.monarch.registery.provider.AssetsFileResolver(
+        io.github.rosemoe.sora.langs.monarch.registry.FileProviderRegistry.addProvider(
+            io.github.rosemoe.sora.langs.monarch.registry.provider.AssetsFileResolver(
                 applicationContext.assets // use application context
             )
         )
@@ -378,8 +378,8 @@ class MainActivity : AppCompatActivity() {
 
         themes.forEach { name ->
             val path = "textmate/$name.json"
-            io.github.rosemoe.sora.langs.monarch.registery.ThemeRegistry.loadTheme(
-                io.github.rosemoe.sora.langs.monarch.registery.model.ThemeModel(
+            io.github.rosemoe.sora.langs.monarch.registry.ThemeRegistry.loadTheme(
+                io.github.rosemoe.sora.langs.monarch.registry.model.ThemeModel(
                     ThemeSource(path, name)
                 ).apply {
                     if (name != "quietlight") {
@@ -389,7 +389,7 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        io.github.rosemoe.sora.langs.monarch.registery.ThemeRegistry.setTheme("quietlight")
+        io.github.rosemoe.sora.langs.monarch.registry.ThemeRegistry.setTheme("quietlight")
     }
 
     /**
@@ -493,7 +493,8 @@ class MainActivity : AppCompatActivity() {
         val editor = binding.editor
         var editorColorScheme = editor.colorScheme
         if (editorColorScheme !is MonarchColorScheme) {
-            editorColorScheme = MonarchColorScheme.create(io.github.rosemoe.sora.langs.monarch.registery.ThemeRegistry.currentTheme)
+            editorColorScheme =
+                MonarchColorScheme.create(io.github.rosemoe.sora.langs.monarch.registry.ThemeRegistry.currentTheme)
             editor.colorScheme = editorColorScheme
             switchThemeIfRequired(this, editor)
         }

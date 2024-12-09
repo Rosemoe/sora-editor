@@ -21,15 +21,44 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.monarch.registery.model;
+package io.github.rosemoe.sora.langs.monarch.registry
 
-import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
+import io.github.rosemoe.sora.langs.monarch.registry.provider.FileResolver
+import java.io.InputStream
 
 
-data class GrammarDefinition<T>(
-    val name: String,
-    val grammar: T,
-    val embeddedLanguages: Map<String, String>,
-    val languageConfiguration: LanguageConfiguration? = null,
-    var scopeName: String,
-)
+object FileProviderRegistry : FileResolver {
+    private val fileResolvers = mutableListOf<FileResolver>()
+
+    init {
+        fileResolvers.add(FileResolver.DEFAULT)
+    }
+
+    @Synchronized
+    fun addProvider(fileResolver: FileResolver) {
+        if (fileResolver !== FileResolver.DEFAULT) {
+            fileResolvers.add(fileResolver)
+        }
+    }
+
+    @Synchronized
+    fun removeProvider(fileResolver: FileResolver) {
+        if (fileResolver !== FileResolver.DEFAULT) {
+            fileResolvers.remove(fileResolver)
+        }
+    }
+
+
+    override fun resolve(path: String): InputStream? {
+        return fileResolvers.firstNotNullOfOrNull { it.resolve(path) }
+    }
+
+    override fun dispose() {
+        fileResolvers.forEach {
+            it.dispose()
+        }
+        fileResolvers.clear()
+    }
+
+
+}

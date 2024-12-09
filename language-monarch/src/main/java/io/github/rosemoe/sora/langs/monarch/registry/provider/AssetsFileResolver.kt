@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2024  Rosemoe
@@ -20,28 +20,19 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.langs.monarch.registry.provider
 
-package io.github.rosemoe.sora.langs.monarch.registery.provider
-
-import java.io.File
-import java.io.FileInputStream
+import android.content.res.AssetManager
 import java.io.InputStream
 
-fun interface FileResolver {
-    fun resolve(path: String): InputStream?
-
-    fun dispose() {
-        // no-op
+class AssetsFileResolver(private var assetManager: AssetManager?) : FileResolver {
+    override fun resolve(path: String): InputStream? {
+        return assetManager?.open(path)
     }
 
-    companion object DEFAULT : FileResolver {
-        override fun resolve(path: String): InputStream? {
-            val file = File(path)
-
-            return runCatching {
-                FileInputStream(file)
-            }.getOrNull()
-        }
+    override fun dispose() {
+        // assetManager?.close()
+        assetManager = null
     }
 }

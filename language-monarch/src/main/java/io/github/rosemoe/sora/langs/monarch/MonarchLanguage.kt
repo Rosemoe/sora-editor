@@ -26,9 +26,6 @@ package io.github.rosemoe.sora.langs.monarch
 
 import android.os.Bundle
 import io.github.dingyi222666.monarch.language.Language
-import io.github.dingyi222666.regex.GlobalRegexLib
-import io.github.dingyi222666.regex.oniguruma.OnigRegexLib
-import io.github.dingyi222666.regex.regex.re2j.Re2JRegexLib
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
 import io.github.rosemoe.sora.lang.completion.CompletionHelper
@@ -36,8 +33,8 @@ import io.github.rosemoe.sora.lang.completion.CompletionPublisher
 import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
-import io.github.rosemoe.sora.langs.monarch.registery.MonarchGrammarRegistry
-import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
+import io.github.rosemoe.sora.langs.monarch.registry.MonarchGrammarRegistry
+import io.github.rosemoe.sora.langs.monarch.registry.model.GrammarDefinition
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.util.MyCharacter

@@ -22,14 +22,14 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.langs.monarch.registery.grammardefinition
+package io.github.rosemoe.sora.langs.monarch.registry.grammardefinition
 
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
-import io.github.rosemoe.sora.langs.monarch.registery.FileProviderRegistry
-import io.github.rosemoe.sora.langs.monarch.registery.model.GrammarDefinition
+import io.github.rosemoe.sora.langs.monarch.registry.FileProviderRegistry
+import io.github.rosemoe.sora.langs.monarch.registry.model.GrammarDefinition
 import io.github.rosemoe.sora.langs.monarch.theme.toLanguageConfiguration
 
 abstract class GrammarDefinitionReader<T> : JsonAdapter<ParsedGrammarDefinitionList<T>>() {

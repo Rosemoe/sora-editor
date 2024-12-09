@@ -40,7 +40,7 @@ fun switchThemeIfRequired(context: Context, editor: CodeEditor) {
         if (editor.colorScheme is TextMateColorScheme) {
             ThemeRegistry.getInstance().setTheme("darcula")
         } else if (editor.colorScheme is MonarchColorScheme) {
-            io.github.rosemoe.sora.langs.monarch.registery.ThemeRegistry.setTheme("darcula")
+            io.github.rosemoe.sora.langs.monarch.registry.ThemeRegistry.setTheme("darcula")
         } else {
             editor.colorScheme = SchemeDarcula()
         }
@@ -48,7 +48,7 @@ fun switchThemeIfRequired(context: Context, editor: CodeEditor) {
         if (editor.colorScheme is TextMateColorScheme) {
             ThemeRegistry.getInstance().setTheme("quietlight")
         } else if (editor.colorScheme is MonarchColorScheme) {
-            io.github.rosemoe.sora.langs.monarch.registery.ThemeRegistry.setTheme("quietlight")
+            io.github.rosemoe.sora.langs.monarch.registry.ThemeRegistry.setTheme("quietlight")
         } else {
             editor.colorScheme = EditorColorScheme()
         }

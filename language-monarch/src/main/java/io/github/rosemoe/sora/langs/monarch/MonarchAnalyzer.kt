@@ -45,9 +45,9 @@ import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.langs.monarch.folding.FoldingHelper
 import io.github.rosemoe.sora.langs.monarch.folding.IndentRange
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
-import io.github.rosemoe.sora.langs.monarch.registery.ThemeChangeListener
-import io.github.rosemoe.sora.langs.monarch.registery.ThemeRegistry
-import io.github.rosemoe.sora.langs.monarch.registery.model.ThemeModel
+import io.github.rosemoe.sora.langs.monarch.registry.ThemeChangeListener
+import io.github.rosemoe.sora.langs.monarch.registry.ThemeRegistry
+import io.github.rosemoe.sora.langs.monarch.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.monarch.utils.checkSurrogate
 import io.github.rosemoe.sora.langs.monarch.utils.convertUnicodeOffsetToUtf16
 import io.github.rosemoe.sora.text.Content
