@@ -64,9 +64,7 @@ class MonarchLanguage(
 
     var useTab = false
 
-    internal var localNewlineHandlers: Array<NewlineHandler>? = emptyArray()
-    internal lateinit var newlineHandler: MonarchNewlineHandler
-
+    internal var localNewlineHandlers: Array<NewlineHandler> = emptyArray()
 
     init {
         createAnalyzerAndNewlineHandler(grammar, languageConfiguration)
@@ -99,9 +97,7 @@ class MonarchLanguage(
         autoCompleter.requireAutoComplete(content, position, prefix, publisher, idt)
     }
 
-    override fun getNewlineHandlers(): Array<NewlineHandler>? =
-        localNewlineHandlers ?: arrayOf()
-
+    override fun getNewlineHandlers(): Array<NewlineHandler> = localNewlineHandlers
 
     fun setCompleterKeywords(keywords: Array<String>) {
         autoCompleter.setKeywords(keywords, false)
@@ -127,8 +123,7 @@ class MonarchLanguage(
             e.printStackTrace()
         }
         this.languageConfiguration = languageConfiguration
-        newlineHandler = MonarchNewlineHandler(this)
-        localNewlineHandlers = arrayOf(newlineHandler)
+        localNewlineHandlers = arrayOf(MonarchNewlineHandler(this))
         if (languageConfiguration != null) {
             // because the editor will only get the symbol pair matcher once
             // (caching object to stop repeated new object created),
