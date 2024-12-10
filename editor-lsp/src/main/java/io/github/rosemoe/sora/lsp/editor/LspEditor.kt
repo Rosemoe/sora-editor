@@ -26,11 +26,13 @@ package io.github.rosemoe.sora.lsp.editor
 
 import androidx.annotation.WorkerThread
 import io.github.rosemoe.sora.event.ContentChangeEvent
+import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEventReceiver
+import io.github.rosemoe.sora.lsp.editor.event.LspEditorSelectionChangeEventReceiver
 import io.github.rosemoe.sora.lsp.editor.signature.SignatureHelpWindow
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.diagnostics.publishDiagnostics
@@ -67,6 +69,8 @@ class LspEditor(
 
     private lateinit var editorContentChangeEventReceiver: LspEditorContentChangeEventReceiver
 
+    private lateinit var editorSelectionChangeEventReceiver: LspEditorSelectionChangeEventReceiver
+
     private var currentLanguage: LspLanguage? = null
 
     private var isClose = false
@@ -102,12 +106,25 @@ class LspEditor(
 
             editorContentChangeEventReceiver = LspEditorContentChangeEventReceiver(this)
 
-            val subscriptionReceipt =
-                currentEditor.subscribeEvent<ContentChangeEvent>(
-                    editorContentChangeEventReceiver
+            editorSelectionChangeEventReceiver = LspEditorSelectionChangeEventReceiver(this)
+
+            val subscriptionReceipts =
+                mutableListOf(
+                    currentEditor.subscribeEvent<ContentChangeEvent>(
+                        editorContentChangeEventReceiver
+                    ),
+                    currentEditor.subscribeEvent<SelectionChangeEvent>(
+                        editorSelectionChangeEventReceiver
+                    )
                 )
 
-            unsubscribeFunction = Runnable { subscriptionReceipt.unsubscribe() }
+            unsubscribeFunction =
+                Runnable {
+                    subscriptionReceipts.removeAll {
+                        it.unsubscribe()
+                        true
+                    }
+                }
         }
         get() {
             return _currentEditor.get()
@@ -207,7 +224,9 @@ class LspEditor(
                 exception.printStackTrace();
             }
             start = System.currentTimeMillis()
-            Thread.sleep((retryTime / 10).toLong())
+            withContext(Dispatchers.IO) {
+                Thread.sleep((retryTime / 10).toLong())
+            }
         }
 
         if (!isConnected && start > maxRetryTime) {

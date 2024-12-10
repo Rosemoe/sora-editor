@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lsp.editor.event
 
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EventReceiver
+import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.Unsubscribe
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.EventType
@@ -55,3 +56,19 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
     }
 }
 
+class LspEditorSelectionChangeEventReceiver(private val editor: LspEditor): EventReceiver<SelectionChangeEvent> {
+    override fun onReceive(event: SelectionChangeEvent, unsubscribe: Unsubscribe) {
+
+        editor.coroutineScope.launch(Dispatchers.IO) {
+
+            if (editor.hitReTrigger(event.editor.text[event.left.index].toString())) {
+                editor.showSignatureHelp(null)
+                return@launch
+            }
+
+            editor.eventManager.emitAsync(EventType.signatureHelp, event.left)
+        }
+
+
+    }
+}
