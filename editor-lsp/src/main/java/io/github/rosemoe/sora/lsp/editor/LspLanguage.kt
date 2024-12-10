@@ -96,7 +96,7 @@ class LspLanguage(var editor: LspEditor) : Language {
         }*/
 
         val prefix = computePrefix(content, position)
-        Log.d("prefix", prefix);
+
         val prefixLength = prefix.length
 
         val documentChangeEvent =
