@@ -62,7 +62,7 @@ class CustomConnectProvider(private val streamProvider: StreamProvider) : Stream
     /**
      * Provider of language server connection
      */
-    interface StreamProvider {
+    fun interface StreamProvider {
         @WorkerThread
         fun getStreams(): Pair<InputStream, OutputStream>
     }

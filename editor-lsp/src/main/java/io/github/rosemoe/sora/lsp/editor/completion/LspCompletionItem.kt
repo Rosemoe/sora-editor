@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.lsp.editor.completion
 
+import android.util.Log
 import io.github.rosemoe.sora.lang.completion.CompletionItemKind
 import io.github.rosemoe.sora.lang.completion.SimpleCompletionIconDrawer.draw
 import io.github.rosemoe.sora.lang.completion.snippet.parser.CodeSnippetParser

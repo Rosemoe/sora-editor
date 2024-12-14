@@ -40,7 +40,7 @@ class PublishDiagnosticsEvent : EventListener {
 
         val lspEditor = context.get<LspEditor>("lsp-editor")
         val originEditor = lspEditor.editor ?: return
-        val data = context.get<List<Diagnostic>>("data")
+        val data = context.getOrNull<List<Diagnostic>>("data") ?: return
 
         val diagnosticsContainer =
             originEditor.diagnostics ?: DiagnosticsContainer()
@@ -51,7 +51,10 @@ class PublishDiagnosticsEvent : EventListener {
             data.transformToEditorDiagnostics(originEditor)
         )
 
-        originEditor.diagnostics = diagnosticsContainer
+        // run on ui thread
+        originEditor.post {
+            originEditor.diagnostics = diagnosticsContainer
+        }
     }
 
 
