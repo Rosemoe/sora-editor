@@ -46,6 +46,7 @@ import io.github.rosemoe.sora.lsp.utils.clearVersions
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.subscribeEvent
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.future
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -224,9 +225,7 @@ class LspEditor(
                 exception.printStackTrace();
             }
             start = System.currentTimeMillis()
-            withContext(Dispatchers.IO) {
-                Thread.sleep((retryTime / 10).toLong())
-            }
+            delay((retryTime / 10).toLong())
         }
 
         if (!isConnected && start > maxRetryTime) {
