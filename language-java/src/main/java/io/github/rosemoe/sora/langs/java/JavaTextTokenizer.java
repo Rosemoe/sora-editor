@@ -240,12 +240,6 @@ public class JavaTextTokenizer {
         }
     }
 
-    protected final void throwIfNeeded() {
-        if (offset + length == bufferLen) {
-            throw new RuntimeException("Token too long");
-        }
-    }
-
     protected void scanNewline() {
         if (offset + length < bufferLen && charAt(offset + length) == '\n') {
             length++;
@@ -262,7 +256,9 @@ public class JavaTextTokenizer {
     }
 
     protected void scanTrans() {
-        throwIfNeeded();
+        if (offset + length == bufferLen) {
+            return;
+        }
         char ch = charAt();
         if (ch == '\\' || ch == 't' || ch == 'f' || ch == 'n' || ch == 'r' || ch == '0' || ch == '\"' || ch == '\''
                 || ch == 'b') {
@@ -270,8 +266,7 @@ public class JavaTextTokenizer {
         } else if (ch == 'u') {
             length++;
             for (int i = 0; i < 4; i++) {
-                throwIfNeeded();
-                if (!isDigit(charAt(offset + length))) {
+                if (offset + length >= bufferLen || !isDigit(charAt(offset + length))) {
                     return;
                 }
                 length++;
@@ -280,7 +275,9 @@ public class JavaTextTokenizer {
     }
 
     protected void scanStringLiteral() {
-        throwIfNeeded();
+        if (offset + length == bufferLen) {
+            return;
+        }
         char ch;
         while (offset + length < bufferLen && (ch = charAt(offset + length)) != '\"') {
             if (ch == '\\') {
@@ -299,7 +296,9 @@ public class JavaTextTokenizer {
     }
 
     protected void scanCharLiteral() {
-        throwIfNeeded();
+        if (offset + length == bufferLen) {
+            return;
+        }
         char ch;
         while (offset + length < bufferLen && (ch = charAt(offset + length)) != '\'') {
             if (ch == '\\') {
@@ -310,7 +309,6 @@ public class JavaTextTokenizer {
                     return;
                 }
                 length++;
-                throwIfNeeded();
             }
         }
         if (offset + length != bufferLen) {
@@ -341,11 +339,10 @@ public class JavaTextTokenizer {
             if (flag) {
                 return Tokens.INTEGER_LITERAL;
             }
-            if (offset + length + 1 == bufferLen) {
-                return Tokens.INTEGER_LITERAL;
-            }
             length++;
-            throwIfNeeded();
+            if (offset + length == bufferLen) {
+                return Tokens.FLOATING_POINT_LITERAL;
+            }
             while (offset + length < bufferLen && isDigit(charAt())) {
                 length++;
             }
@@ -355,10 +352,11 @@ public class JavaTextTokenizer {
             ch = charAt();
             if (ch == 'e' || ch == 'E') {
                 length++;
-                throwIfNeeded();
+                if (offset + length == bufferLen) {
+                    return Tokens.FLOATING_POINT_LITERAL;
+                }
                 if (charAt() == '-' || charAt() == '+') {
                     length++;
-                    throwIfNeeded();
                 }
                 while (offset + length < bufferLen && isPrimeDigit(charAt())) {
                     length++;
