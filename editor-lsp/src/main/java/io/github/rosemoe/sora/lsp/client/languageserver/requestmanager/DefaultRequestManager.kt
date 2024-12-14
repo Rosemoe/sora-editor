@@ -49,6 +49,8 @@ import org.eclipse.lsp4j.DidCloseTextDocumentParams
 import org.eclipse.lsp4j.DidOpenTextDocumentParams
 import org.eclipse.lsp4j.DidSaveTextDocumentParams
 import org.eclipse.lsp4j.DocumentColorParams
+import org.eclipse.lsp4j.DocumentDiagnosticParams
+import org.eclipse.lsp4j.DocumentDiagnosticReport
 import org.eclipse.lsp4j.DocumentFormattingParams
 import org.eclipse.lsp4j.DocumentHighlight
 import org.eclipse.lsp4j.DocumentHighlightParams
@@ -482,6 +484,19 @@ class DefaultRequestManager(
         return if (checkStatus()) {
             try {
                 if (serverCapabilities.documentOnTypeFormattingProvider != null) textDocumentService.onTypeFormatting(
+                    params
+                ) else null
+            } catch (e: Exception) {
+                crashed(e)
+                null
+            }
+        } else null
+    }
+
+    override fun diagnostic(params: DocumentDiagnosticParams?): CompletableFuture<DocumentDiagnosticReport?>? {
+        return if (checkStatus()) {
+            try {
+                if (serverCapabilities.diagnosticProvider != null) textDocumentService.diagnostic(
                     params
                 ) else null
             } catch (e: Exception) {

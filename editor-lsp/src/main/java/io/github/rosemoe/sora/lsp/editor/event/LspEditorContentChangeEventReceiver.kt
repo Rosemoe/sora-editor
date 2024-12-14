@@ -24,16 +24,23 @@
 
 package io.github.rosemoe.sora.lsp.editor.event
 
+import android.util.Log
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EventReceiver
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.Unsubscribe
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.EventType
+import io.github.rosemoe.sora.lsp.events.diagnostics.publishDiagnostics
+import io.github.rosemoe.sora.lsp.events.diagnostics.queryDocumentDiagnostics
 import io.github.rosemoe.sora.lsp.events.document.documentChange
 import io.github.rosemoe.sora.lsp.events.signature.signatureHelp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.eclipse.lsp4j.DocumentDiagnosticReport
+import org.eclipse.lsp4j.FullDocumentDiagnosticReport
+import org.eclipse.lsp4j.UnchangedDocumentDiagnosticReport
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 
 
 class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
@@ -50,13 +57,29 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
             }
 
             editor.eventManager.emitAsync(EventType.signatureHelp, event.changeStart)
+
+            val diagnostics =
+                editor.eventManager.emitAsync(EventType.queryDocumentDiagnostics)
+                    .getOrNull<DocumentDiagnosticReport>("diagnostics") ?: return@launch
+
+            if (diagnostics.isRelatedUnchangedDocumentDiagnosticReport) {
+                // no-op
+                return@launch
+            }
+
+            if (diagnostics.isRelatedFullDocumentDiagnosticReport) {
+                editor.eventManager.emit(EventType.publishDiagnostics) {
+                    put("data", diagnostics.left.items)
+                }
+            }
         }
 
 
     }
 }
 
-class LspEditorSelectionChangeEventReceiver(private val editor: LspEditor): EventReceiver<SelectionChangeEvent> {
+class LspEditorSelectionChangeEventReceiver(private val editor: LspEditor) :
+    EventReceiver<SelectionChangeEvent> {
     override fun onReceive(event: SelectionChangeEvent, unsubscribe: Unsubscribe) {
 
         editor.coroutineScope.launch(Dispatchers.IO) {
