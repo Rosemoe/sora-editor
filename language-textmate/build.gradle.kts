@@ -49,15 +49,9 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
-    compileOptions {
-        // Flag to enable support for the new language APIs
-        isCoreLibraryDesugaringEnabled = true
-    }
 }
 
 dependencies {
-    coreLibraryDesugaring(libs.desugar)
-
     compileOnly(projects.editor)
     implementation(libs.gson)
     implementation(libs.jcodings)
