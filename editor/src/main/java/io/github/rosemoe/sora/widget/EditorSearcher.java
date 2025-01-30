@@ -299,7 +299,7 @@ public class EditorSearcher {
             if (replacement.isEmpty()) {
                 editor.deleteText();
             } else {
-                editor.commitText(replacement);
+                editor.commitText(replacement, false, false);
             }
         } else {
             gotoNext();

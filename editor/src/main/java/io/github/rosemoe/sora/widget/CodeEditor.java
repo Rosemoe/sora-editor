@@ -1874,16 +1874,28 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Commit text at current state from IME
      *
-     * @param text Text commit by InputConnection
+     * @param text            Text commit by InputConnection
+     * @param applyAutoIndent Apply automatic indentation
      */
     public void commitText(CharSequence text, boolean applyAutoIndent) {
+        commitText(text, true, true);
+    }
+
+    /**
+     * Commit text with given options
+     *
+     * @param text Text commit by InputConnection
+     * @param applyAutoIndent Apply automatic indentation
+     * @param applySymbolCompletion Apply symbol surroundings and completions
+     */
+    public void commitText(CharSequence text, boolean applyAutoIndent, boolean applySymbolCompletion) {
         if (text.length() == 0) {
             return;
         }
 
         // replace text
         SymbolPairMatch.SymbolPair pair = null;
-        if (getProps().symbolPairAutoCompletion && text.length() > 0) {
+        if (applySymbolCompletion && getProps().symbolPairAutoCompletion && text.length() > 0) {
             var endCharFromText = text.charAt(text.length() - 1);
 
             char[] inputText = null;
