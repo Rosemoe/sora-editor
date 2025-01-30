@@ -69,7 +69,7 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
     }
 
     override fun registerCapability(params: RegistrationParams): CompletableFuture<Void> {
-        //Not prepared to support this feature
+        // Not prepared to support this feature
         return CompletableFuture.completedFuture(null)
     }
 
@@ -83,8 +83,6 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
     }
 
     override fun publishDiagnostics(publishDiagnosticsParams: PublishDiagnosticsParams) {
-        // FIXME: support it.
-
         val diagnosticsContainer = context.project.diagnosticsContainer
         val uri = URI(publishDiagnosticsParams.uri).toFileUri()
 
@@ -96,7 +94,6 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
         val editor = context.getEditor(uri)
 
         editor?.onDiagnosticsUpdate()
-
     }
 
     override fun refreshDiagnostics(): CompletableFuture<Void> {

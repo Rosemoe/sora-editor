@@ -161,7 +161,7 @@ class EventContext {
     }
 
     fun <T : Any> getOrNull(key: String): T? {
-        return data[key] as T?
+        return data[key] as? T?
     }
 
     fun put(key: String, value: Any) {

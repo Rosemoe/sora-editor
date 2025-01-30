@@ -48,22 +48,10 @@ class QueryDocumentDiagnosticsEvent : AsyncEventListener() {
             .diagnostic(
                 editor.uri.createDocumentDiagnosticParams()
             )
-            .thenApply { either: DocumentDiagnosticReport ->
-                if (either.isRelatedFullDocumentDiagnosticReport)
-                    either.relatedFullDocumentDiagnosticReport
-                        .relatedDocuments
-                else
-                    either.relatedUnchangedDocumentDiagnosticReport
-                        .relatedDocuments
-            }
 
         this.future = future.thenAccept { }
 
-        val result = future.await()
-
-        if (result.isEmpty()) {
-            return
-        }
+        val result = future.await() ?: return
 
         context.put("diagnostics", result)
     }
