@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.internal.grammar.ScopeStack;
@@ -46,7 +47,7 @@ public final class Theme {
 		return resolveParsedThemeRules(source, colorMap);
 	}
 
-	private final Map<String /* scopeName */, List<ThemeTrieElementRule>> _cachedMatchRoot = new HashMap<>();
+	private final Map<String /* scopeName */, List<ThemeTrieElementRule>> _cachedMatchRoot = new ConcurrentHashMap<>();
 
 	private final ColorMap _colorMap;
 	private final StyleAttributes _defaults;
