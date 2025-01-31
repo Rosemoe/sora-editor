@@ -77,6 +77,7 @@ import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
 import io.github.rosemoe.sora.text.ContentIO
 import io.github.rosemoe.sora.text.LineSeparator
+import io.github.rosemoe.sora.util.regex.RegexBackrefGrammar
 import io.github.rosemoe.sora.utils.CrashHandler
 import io.github.rosemoe.sora.utils.codePointStringAt
 import io.github.rosemoe.sora.utils.escapeCodePointIfNecessary
@@ -284,7 +285,7 @@ class MainActivity : AppCompatActivity() {
         if (wholeWord) {
             type = SearchOptions.TYPE_WHOLE_WORD
         }
-        searchOptions = SearchOptions(type, caseInsensitive)
+        searchOptions = SearchOptions(type, caseInsensitive, RegexBackrefGrammar.DEFAULT)
     }
 
     /**

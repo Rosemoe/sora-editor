@@ -30,6 +30,8 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.github.rosemoe.sora.I18nConfig;
@@ -41,6 +43,10 @@ import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.TextUtils;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
+import io.github.rosemoe.sora.util.regex.RegexBackrefGrammar;
+import io.github.rosemoe.sora.util.regex.RegexBackrefHelper;
+import io.github.rosemoe.sora.util.regex.RegexBackrefParser;
+import io.github.rosemoe.sora.util.regex.RegexBackrefToken;
 
 /**
  * Search text in editor.
@@ -299,6 +305,17 @@ public class EditorSearcher {
             if (replacement.isEmpty()) {
                 editor.deleteText();
             } else {
+                if (searchOptions.type == SearchOptions.TYPE_REGULAR_EXPRESSION &&
+                        searchOptions.regexBackrefGrammar != null) {
+                    var cursor = editor.getCursor();
+                    String currentText = editor.getText().substring(cursor.getLeft(), cursor.getRight());
+                    var pattern = Pattern.compile(currentPattern, (searchOptions.caseInsensitive ? Pattern.CASE_INSENSITIVE : 0) | Pattern.MULTILINE);
+                    var matcher = pattern.matcher(currentText);
+                    if (!matcher.find()) {
+                        return;
+                    }
+                    replacement = RegexBackrefHelper.computeReplacement(matcher, searchOptions.regexBackrefGrammar, replacement);
+                }
                 editor.commitText(replacement, false, false);
             }
         } else {
@@ -337,18 +354,50 @@ public class EditorSearcher {
         var context = editor.getContext();
         final var dialog = ProgressDialog.show(context, I18nConfig.getString(context, R.string.sora_editor_replaceAll), I18nConfig.getString(context, R.string.sora_editor_editor_search_replacing), true, false);
         final var res = lastResults;
+        final var options = searchOptions;
+        final var pattern = currentPattern;
         new Thread(() -> {
             try {
                 var sb = editor.getText().toStringBuilder();
-                int newLength = replacement.length();
-                int delta = 0;
-                for (int i = 0; i < res.size(); i++) {
-                    var region = res.get(i);
-                    var start = IntPair.getFirst(region);
-                    var end = IntPair.getSecond(region);
-                    var oldLength = end - start;
-                    sb.replace(start + delta, end + delta, replacement);
-                    delta += newLength - oldLength;
+                if (options.type == SearchOptions.TYPE_REGULAR_EXPRESSION && options.regexBackrefGrammar != null) {
+                    var regex = Pattern.compile(pattern, (options.caseInsensitive ? Pattern.CASE_INSENSITIVE : 0) | Pattern.MULTILINE);
+                    Matcher matcher = null;
+                    List<RegexBackrefToken> tokens = null;
+                    int delta = 0;
+                    var text = sb.toString();
+                    for (int i = 0; i < res.size(); i++) {
+                        var region = res.get(i);
+                        var start = IntPair.getFirst(region);
+                        var end = IntPair.getSecond(region);
+                        var regionText = text.substring(start, end);
+                        if (matcher == null) {
+                            matcher = regex.matcher(regionText);
+                        } else {
+                            matcher.reset(regionText);
+                        }
+                        if (!matcher.find()) {
+                            continue;
+                        }
+                        if (tokens == null) {
+                            tokens = new RegexBackrefParser(options.regexBackrefGrammar).parse(replacement, matcher.groupCount());
+                        }
+                        var computedReplacement = RegexBackrefHelper.computeReplacement(matcher, tokens);
+                        var newLength = computedReplacement.length();
+                        var oldLength = end - start;
+                        sb.replace(start + delta, end + delta, computedReplacement);
+                        delta += newLength - oldLength;
+                    }
+                } else {
+                    int newLength = replacement.length();
+                    int delta = 0;
+                    for (int i = 0; i < res.size(); i++) {
+                        var region = res.get(i);
+                        var start = IntPair.getFirst(region);
+                        var end = IntPair.getSecond(region);
+                        var oldLength = end - start;
+                        sb.replace(start + delta, end + delta, replacement);
+                        delta += newLength - oldLength;
+                    }
                 }
                 editor.postInLifecycle(() -> {
                     var pos = editor.getCursor().left();
@@ -361,6 +410,7 @@ public class EditorSearcher {
                     }
                 });
             } catch (Exception e) {
+
                 editor.postInLifecycle(() -> {
                     Toast.makeText(editor.getContext(), "Replace failed:" + e, Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
@@ -381,6 +431,7 @@ public class EditorSearcher {
         public final boolean caseInsensitive;
         @IntRange(from = 1, to = 3)
         public final int type;
+        public final RegexBackrefGrammar regexBackrefGrammar;
         /**
          * Normal text searching
          */
@@ -407,11 +458,26 @@ public class EditorSearcher {
          * @see #TYPE_REGULAR_EXPRESSION
          */
         public SearchOptions(@IntRange(from = 1, to = 3) int type, boolean caseInsensitive) {
+            this(type, caseInsensitive, null);
+        }
+
+        /**
+         * Create a new searching option with the given attributes.
+         *
+         * @param type                type of searching method
+         * @param caseInsensitive     Case insensitive
+         * @param regexBackrefGrammar Back reference grammar in regular expression replace mode
+         * @see #TYPE_NORMAL
+         * @see #TYPE_WHOLE_WORD
+         * @see #TYPE_REGULAR_EXPRESSION
+         */
+        public SearchOptions(@IntRange(from = 1, to = 3) int type, boolean caseInsensitive, @Nullable RegexBackrefGrammar regexBackrefGrammar) {
             if (type < 1 || type > 3) {
                 throw new IllegalArgumentException("invalid type");
             }
             this.type = type;
             this.caseInsensitive = caseInsensitive;
+            this.regexBackrefGrammar = regexBackrefGrammar;
         }
 
     }
