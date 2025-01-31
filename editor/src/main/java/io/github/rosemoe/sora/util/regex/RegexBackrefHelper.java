@@ -40,7 +40,8 @@ public class RegexBackrefHelper {
         var sb = new StringBuilder();
         for (var token : tokens) {
             if (token.isReference()) {
-                sb.append(matcher.group(token.getGroup()));
+                String text = matcher.group(token.getGroup());
+                sb.append(text == null ? "" : text);
             } else {
                 sb.append(token.getText());
             }
