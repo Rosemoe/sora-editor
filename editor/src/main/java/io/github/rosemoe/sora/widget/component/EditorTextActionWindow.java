@@ -24,6 +24,8 @@
 package io.github.rosemoe.sora.widget.component;
 
 import android.annotation.SuppressLint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.RectF;
 import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
@@ -34,6 +36,7 @@ import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 
 import io.github.rosemoe.sora.R;
+import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
 import io.github.rosemoe.sora.event.EditorFocusChangeEvent;
 import io.github.rosemoe.sora.event.EditorReleaseEvent;
 import io.github.rosemoe.sora.event.EventManager;
@@ -45,6 +48,7 @@ import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.EditorTouchEventHandler;
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
  * This window will show when selecting text to present text actions.
@@ -55,6 +59,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
     private final static long DELAY = 200;
     private final static long CHECK_FOR_DISMISS_INTERVAL = 100;
     private final CodeEditor editor;
+    private final ImageButton selectAllBtn;
     private final ImageButton pasteBtn;
     private final ImageButton copyBtn;
     private final ImageButton cutBtn;
@@ -81,27 +86,45 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         // Since popup window does provide decor view, we have to pass null to this method
         @SuppressLint("InflateParams")
         View root = this.rootView = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_panel, null);
-        ImageButton selectAll = root.findViewById(R.id.panel_btn_select_all);
+        selectAllBtn = root.findViewById(R.id.panel_btn_select_all);
         cutBtn = root.findViewById(R.id.panel_btn_cut);
         copyBtn = root.findViewById(R.id.panel_btn_copy);
         longSelectBtn = root.findViewById(R.id.panel_btn_long_select);
         pasteBtn = root.findViewById(R.id.panel_btn_paste);
 
-        selectAll.setOnClickListener(this);
+        selectAllBtn.setOnClickListener(this);
         cutBtn.setOnClickListener(this);
         copyBtn.setOnClickListener(this);
         pasteBtn.setOnClickListener(this);
         longSelectBtn.setOnClickListener(this);
 
-        GradientDrawable gd = new GradientDrawable();
-        gd.setCornerRadius(5 * editor.getDpUnit());
-        gd.setColor(0xffffffff);
-        root.setBackground(gd);
+        applyColorScheme();
         setContentView(root);
         setSize(0, (int) (this.editor.getDpUnit() * 48));
         getPopup().setAnimationStyle(R.style.text_action_popup_animation);
 
         subscribeEvents();
+    }
+
+    protected void applyColorFilter(ImageButton btn, int color) {
+        var drawable = btn.getDrawable();
+        if (drawable == null) {
+            return;
+        }
+        btn.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_ATOP));
+    }
+
+    protected void applyColorScheme() {
+        GradientDrawable gd = new GradientDrawable();
+        gd.setCornerRadius(5 * editor.getDpUnit());
+        gd.setColor(editor.getColorScheme().getColor(EditorColorScheme.TEXT_ACTION_WINDOW_BACKGROUND));
+        rootView.setBackground(gd);
+        int color = editor.getColorScheme().getColor(EditorColorScheme.TEXT_ACTION_WINDOW_ICON_COLOR);
+        applyColorFilter(selectAllBtn, color);
+        applyColorFilter(cutBtn, color);
+        applyColorFilter(copyBtn, color);
+        applyColorFilter(pasteBtn, color);
+        applyColorFilter(longSelectBtn, color);
     }
 
     protected void subscribeEvents() {
@@ -111,6 +134,11 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         eventManager.subscribeAlways(LongPressEvent.class, this::onEditorLongPress);
         eventManager.subscribeAlways(EditorFocusChangeEvent.class, this::onEditorFocusChange);
         eventManager.subscribeAlways(EditorReleaseEvent.class, this::onEditorRelease);
+        eventManager.subscribeAlways(ColorSchemeUpdateEvent.class, this::onEditorColorChange);
+    }
+
+    protected void onEditorColorChange(@NonNull ColorSchemeUpdateEvent event) {
+        applyColorScheme();
     }
 
     protected void onEditorFocusChange(@NonNull EditorFocusChangeEvent event) {

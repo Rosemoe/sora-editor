@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.widget.schemes;
 
+import android.graphics.Color;
 import android.util.SparseIntArray;
 
 import androidx.annotation.NonNull;
@@ -149,11 +150,6 @@ public class EditorColorScheme {
     public static final int LINE_NUMBER = 2;
     public static final int LINE_DIVIDER = 1;
 
-    /**
-     * Min pre-defined color id
-     */
-    protected static final int START_COLOR_ID = 1;
-
     public static final int SIGNATURE_TEXT_NORMAL = 58;
     public static final int SIGNATURE_TEXT_HIGHLIGHTED_PARAMETER = 59;
 
@@ -162,10 +158,18 @@ public class EditorColorScheme {
 
     public static final int SIGNATURE_BACKGROUND = 60;
 
+    public static final int TEXT_ACTION_WINDOW_BACKGROUND = 65;
+    public static final int TEXT_ACTION_WINDOW_ICON_COLOR = 66;
+
+    /**
+     * Min pre-defined color id
+     */
+    protected static final int START_COLOR_ID = 1;
+
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 64;
+    protected static final int END_COLOR_ID = 66;
 
 
     /**
@@ -404,7 +408,11 @@ public class EditorColorScheme {
                 break;
             case SIGNATURE_BACKGROUND:
             case DIAGNOSTIC_TOOLTIP_BACKGROUND:
+            case TEXT_ACTION_WINDOW_BACKGROUND:
                 color = isDark() ? BACKGROUND_COLOR_DARK : BACKGROUND_COLOR_LIGHT;
+                break;
+            case TEXT_ACTION_WINDOW_ICON_COLOR:
+                color = isDark() ? 0xffeeeeee : Color.GRAY;
                 break;
             case DIAGNOSTIC_TOOLTIP_ACTION:
                 color = 0xff42A5F5;
