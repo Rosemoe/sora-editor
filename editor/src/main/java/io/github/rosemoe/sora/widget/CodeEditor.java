@@ -1878,7 +1878,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param applyAutoIndent Apply automatic indentation
      */
     public void commitText(CharSequence text, boolean applyAutoIndent) {
-        commitText(text, true, true);
+        commitText(text, applyAutoIndent, true);
     }
 
     /**
