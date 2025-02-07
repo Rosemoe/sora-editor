@@ -150,7 +150,7 @@ object IndentRange {
             if (previous.indent > indent) {
                 // discard all regions with larger indent
                 while (previousRegions.last().indent > indent) {
-                    previousRegions.removeLast()
+                    previousRegions.removeLastOrNull()
                     previous = previousRegions.last()
                 }
 

@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.SAXParserFactory;
 
 import io.github.rosemoe.sora.util.Logger;
@@ -125,7 +124,7 @@ public final class TMParserPList implements TMParser {
 					case PLIST_ARRAY: {
 						final var parentRef = parents.remove(parents.size() - 1);
 
-						path.removeLast(); // removes the remaining array index from the path
+						path.removeLastElement(); // removes the remaining array index from the path
 						setCurrentProperty(parentRef.parent); // register the constructed object with it's parent
 						break;
 					}
@@ -199,7 +198,7 @@ public final class TMParserPList implements TMParser {
 
 			@SuppressWarnings("unchecked")
 			private void setCurrentProperty(final Object value) {
-				path.removeLast();
+				path.removeLastElement();
 				final var obj = parents.get(parents.size() - 1);
 				switch (obj.sourceKind) {
 					case PLIST_ARRAY:

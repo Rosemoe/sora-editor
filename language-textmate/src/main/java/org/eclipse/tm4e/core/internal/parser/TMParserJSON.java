@@ -67,7 +67,7 @@ public class TMParserJSON implements TMParser {
 		} else {
 			setProperty(parent, propertyId, rawChild);
 		}
-		path.removeLast();
+		path.removeLastElement();
 	}
 
 	/**

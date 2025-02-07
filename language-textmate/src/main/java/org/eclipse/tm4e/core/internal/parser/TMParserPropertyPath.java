@@ -62,7 +62,7 @@ final class TMParserPropertyPath extends ArrayList<Object> implements TMParser.P
 		return get(size() - 1);
 	}
 
-	Object removeLast() {
+	Object removeLastElement() {
 		return remove(size() - 1);
 	}
 
