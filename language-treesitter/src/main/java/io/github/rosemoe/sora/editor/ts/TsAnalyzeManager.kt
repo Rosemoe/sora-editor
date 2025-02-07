@@ -178,7 +178,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
             if (thread == this && messageQueue.isEmpty()) {
                 val oldTree = (styles.spans as LineSpansGenerator?)?.safeTree
                 val newTree = SafeTsTree(tree!!.copy())
-                styles.spans = LineSpansGenerator(
+                val newSpans = LineSpansGenerator(
                     newTree,
                     reference!!.lineCount,
                     reference!!.reference,
@@ -190,6 +190,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                 val oldBlocks = styles.blocks
                 updateCodeBlocks()
                 currentReceiver?.setStyles(this@TsAnalyzeManager, styles) {
+                    styles.spans = newSpans
                     oldTree?.close()
                     if (oldBlocks != null) {
                         ObjectAllocator.recycleBlockLines(oldBlocks)
