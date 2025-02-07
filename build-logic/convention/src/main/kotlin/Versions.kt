@@ -34,9 +34,9 @@ object Versions {
     }
 
     // Platform & Tool versions
-    const val buildToolsVersion = "34.0.0"
-    const val compileSdkVersion = 34
+    const val buildToolsVersion = "35.0.1"
+    const val compileSdkVersion = 35
     const val minSdkVersion = 21
     const val minSdkVersionHighApi = 26
-    const val targetSdkVersion = 34
+    const val targetSdkVersion = 35
 }
