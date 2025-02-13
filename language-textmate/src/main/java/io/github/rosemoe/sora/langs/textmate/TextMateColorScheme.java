@@ -298,7 +298,12 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
             var superColor = super.getColor(type);
             if (superColor == 0) {
                 if (theme != null) {
-                    String color = theme.getColor(type - 255);
+                    String color;
+                    try {
+                        color = theme.getColor(type - 255);
+                    } catch (IndexOutOfBoundsException e) {
+                        return super.getColor(TEXT_NORMAL);
+                    }
                     var newColor = color != null ? Color.parseColor(color) : super.getColor(TEXT_NORMAL);
                     super.colors.put(type, newColor);
                     return newColor;
