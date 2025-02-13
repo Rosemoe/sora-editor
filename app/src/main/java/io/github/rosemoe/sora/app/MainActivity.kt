@@ -326,7 +326,7 @@ class MainActivity : AppCompatActivity() {
      * Load default textmate themes
      */
     private /*suspend*/ fun loadDefaultTextMateThemes() /*= withContext(Dispatchers.IO)*/ {
-        val themes = arrayOf("darcula", "abyss", "quietlight", "solarized_drak")
+        val themes = arrayOf("darcula", "abyss", "quietlight", "solarized_dark")
         val themeRegistry = ThemeRegistry.getInstance()
         themes.forEach { name ->
             val path = "textmate/$name.json"
@@ -375,7 +375,7 @@ class MainActivity : AppCompatActivity() {
      *
      */
     private /*suspend*/ fun loadDefaultMonarchThemes() /*= withContext(Dispatchers.IO)*/ {
-        val themes = arrayOf("darcula", "abyss", "quietlight", "solarized_drak")
+        val themes = arrayOf("darcula", "abyss", "quietlight", "solarized_dark")
 
         themes.forEach { name ->
             val path = "textmate/$name.json"
@@ -992,7 +992,7 @@ class MainActivity : AppCompatActivity() {
 
                     9 -> try {
                         ensureTextmateTheme()
-                        ThemeRegistry.getInstance().setTheme("solarized_drak")
+                        ThemeRegistry.getInstance().setTheme("solarized_dark")
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
