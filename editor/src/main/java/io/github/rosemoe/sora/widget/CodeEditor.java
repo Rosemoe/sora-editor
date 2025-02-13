@@ -2234,8 +2234,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         y = Math.max(0, y);
         var stuckLines = renderer.lastStuckLines;
         if (stuckLines != null) {
-            if (y < stuckLines.size() * getRowHeight()) {
-                var index = (int) (y / getRowHeight());
+            // position Y maybe negative
+            var index = (int) Math.max(0, (y / getRowHeight()));
+            if (y < stuckLines.size() * getRowHeight() && index < stuckLines.size()) {
                 return getPointPosition(x, layout.getCharLayoutOffset(stuckLines.get(index).startLine, 0)[0] - getRowHeight() / 2f);
             }
         }
