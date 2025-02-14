@@ -249,7 +249,8 @@ public final class Theme {
 
 		// Determine defaults
 		int defaultFontStyle = FontStyle.None;
-		String defaultForeground = "#000000";
+		// sora-editor CHANGE: ref to default text color instead of hardcoded #000000
+		String defaultForeground = "@default";
 		String defaultBackground = "#ffffff";
 		while (!parsedThemeRules.isEmpty() && parsedThemeRules.get(0).scope.isEmpty()) {
 			final var incomingDefaults = parsedThemeRules.remove(0);

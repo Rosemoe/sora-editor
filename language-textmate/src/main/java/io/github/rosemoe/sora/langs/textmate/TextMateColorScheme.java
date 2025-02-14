@@ -107,20 +107,17 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
         var settings = rawTheme.getSettings();
 
         RawTheme rawSubTheme;
-
         if (settings == null) {
             rawSubTheme = ((RawTheme) ((RawTheme) rawTheme).get("colors"));
-
-            applyVSCTheme(rawSubTheme);
+            if (rawSubTheme != null)
+                applyVSCTheme(rawSubTheme);
         } else {
             rawSubTheme = (RawTheme) ((List<?>) settings).get(0);
-            rawSubTheme = (RawTheme) rawSubTheme.getSetting();
-
-            applyTMTheme(rawSubTheme);
-
+            if (rawSubTheme != null)
+                rawSubTheme = (RawTheme) rawSubTheme.getSetting();
+            if (rawSubTheme != null)
+                applyTMTheme(rawSubTheme);
         }
-
-
     }
 
 
@@ -131,7 +128,6 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
         if (caret != null) {
             setColor(SELECTION_INSERT, Color.parseColor(caret));
         }
-
 
         String selection = (String) RawTheme.get("editor.selectionBackground");
         if (selection != null) {
@@ -155,20 +151,16 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
         }
 
         String lineHighlightBackground = (String) RawTheme.get("editorLineNumber.foreground");
-
         if (lineHighlightBackground != null) {
             setColor(LINE_NUMBER, Color.parseColor(lineHighlightBackground));
         }
 
         String lineHighlightActiveForeground = (String) RawTheme.get("editorLineNumber.activeForeground");
-
         if (lineHighlightActiveForeground != null) {
             setColor(LINE_NUMBER_CURRENT, Color.parseColor(lineHighlightActiveForeground));
         }
 
-
         String foreground = (String) RawTheme.get("editor.foreground");
-
         if (foreground != null) {
             setColor(TEXT_NORMAL, Color.parseColor(foreground));
         }
@@ -209,7 +201,6 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
             setColor(DIAGNOSTIC_TOOLTIP_ACTION, Color.parseColor(tooltipActionColor));
         }
 
-
         String editorIndentGuideBackground = (String) RawTheme.get("editorIndentGuide.background");
         int blockLineColor = ((getColor(WHOLE_BACKGROUND) + getColor(TEXT_NORMAL)) / 2) & 0x00FFFFFF | 0x88000000;
         int blockLineColorCur = (blockLineColor) | 0xFF000000;
@@ -227,7 +218,6 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
         } else {
             setColor(BLOCK_LINE_CURRENT, blockLineColorCur);
         }
-
     }
 
     @Override
@@ -245,12 +235,10 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
     private void applyTMTheme(RawTheme RawTheme) {
         setColor(LINE_DIVIDER, Color.TRANSPARENT);
 
-
         String caret = (String) RawTheme.get("caret");
         if (caret != null) {
             setColor(SELECTION_INSERT, Color.parseColor(caret));
         }
-
 
         String selection = (String) RawTheme.get("selection");
         if (selection != null) {
@@ -304,7 +292,8 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
                     } catch (IndexOutOfBoundsException e) {
                         return super.getColor(TEXT_NORMAL);
                     }
-                    var newColor = color != null ? Color.parseColor(color) : super.getColor(TEXT_NORMAL);
+                    var newColor = (color != null && !"@default".equalsIgnoreCase(color)) ?
+                            Color.parseColor(color) : super.getColor(TEXT_NORMAL);
                     super.colors.put(type, newColor);
                     return newColor;
                 }
