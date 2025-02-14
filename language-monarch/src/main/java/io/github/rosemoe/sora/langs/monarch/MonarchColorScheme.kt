@@ -121,7 +121,7 @@ class MonarchColorScheme(
             setColor(COMPLETION_WND_ITEM_CURRENT, Color.parseColor(it))
         }
 
-        defaultColors["highlightedDelimetersForeground"]?.let {
+        defaultColors["highlightedDelimitersForeground"]?.let {
             setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(it))
         }
 
@@ -189,7 +189,7 @@ class MonarchColorScheme(
             setColor(TEXT_NORMAL, Color.parseColor(it))
         }
 
-        defaultColors["highlightedDelimetersForeground"]?.let {
+        defaultColors["highlightedDelimitersForeground"]?.let {
             setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(it))
         }
 

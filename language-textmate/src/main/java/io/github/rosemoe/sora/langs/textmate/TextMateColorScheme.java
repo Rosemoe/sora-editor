@@ -183,10 +183,10 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
             setColor(COMPLETION_WND_ITEM_CURRENT, Color.parseColor(completionWindowBackgroundCurrent));
         }
 
-        String highlightedDelimetersForeground =
-                (String) RawTheme.get("highlightedDelimetersForeground");
-        if (highlightedDelimetersForeground != null) {
-            setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(highlightedDelimetersForeground));
+        String highlightedDelimitersForeground =
+                (String) RawTheme.get("highlightedDelimitersForeground");
+        if (highlightedDelimitersForeground != null) {
+            setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(highlightedDelimitersForeground));
         }
 
         String tooltipBackground = (String) RawTheme.get("tooltipBackground");
@@ -278,10 +278,10 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
             setColor(TEXT_NORMAL, Color.parseColor(foreground));
         }
 
-        String highlightedDelimetersForeground =
-                (String) RawTheme.get("highlightedDelimetersForeground");
-        if (highlightedDelimetersForeground != null) {
-            setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(highlightedDelimetersForeground));
+        String highlightedDelimitersForeground =
+                (String) RawTheme.get("highlightedDelimitersForeground");
+        if (highlightedDelimitersForeground != null) {
+            setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(highlightedDelimitersForeground));
         }
 
         //TMTheme seems to have no fields to control BLOCK_LINE colors

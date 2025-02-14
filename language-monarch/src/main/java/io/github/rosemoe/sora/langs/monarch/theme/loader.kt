@@ -223,7 +223,7 @@ class TokenThemeAdapter : JsonAdapter<TokenTheme>() {
         //            "foreground": "#cccccc",
         //            "lineHighlight": "#2B2B2B",
         //            "selection": "#214283",
-        //            "highlightedDelimetersForeground": "#57f6c0"
+        //            "highlightedDelimitersForeground": "#57f6c0"
         //        }
         //    },
         //        {
