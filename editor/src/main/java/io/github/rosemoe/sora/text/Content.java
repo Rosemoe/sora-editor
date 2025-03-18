@@ -60,6 +60,8 @@ public class Content implements CharSequence {
     private final ReadWriteLock lock;
     private int textLength;
     private int nestedBatchEdit;
+    private int scrollX;
+    private int scrollY;
     private final AtomicLong documentVersion = new AtomicLong(1L);
     private final Indexer indexer;
     private final ContentBidi bidi;
@@ -98,6 +100,8 @@ public class Content implements CharSequence {
         }
         textLength = 0;
         nestedBatchEdit = 0;
+        scrollX = 0;
+        scrollY = 0;
         lines = new ArrayList<>(getInitialLineCapacity());
         lines.add(new ContentLine());
         contentListeners = new ArrayList<>();
@@ -1001,6 +1005,34 @@ public class Content implements CharSequence {
      */
     public boolean isCursorCreated() {
         return cursor != null;
+    }
+
+    /**
+     * Get horizontal scroll position of editor
+     */
+    public int getScrollX() {
+        return scrollX;
+    }
+
+    /**
+     * Get vertical scroll position of editor
+     */
+    public int getScrollY() {
+        return scrollY;
+    }
+
+    /**
+     * Set horizontal scroll position. This does not affect the editor.
+     */
+    public void setScrollX(int scrollX) {
+        this.scrollX = scrollX;
+    }
+
+    /**
+     * Set vertical scroll position. This does not affect the editor.
+     */
+    public void setScrollY(int scrollY) {
+        this.scrollY = scrollY;
     }
 
     /**

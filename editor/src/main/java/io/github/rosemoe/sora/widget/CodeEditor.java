@@ -4846,6 +4846,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Override
+    protected void onScrollChanged(int l, int t, int oldl, int oldt) {
+        super.onScrollChanged(l, t, oldl, oldt);
+        text.setScrollX(l);
+        text.setScrollY(t);
+    }
+
+    @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         dispatchEvent(new EditorAttachStateChangeEvent(this, false));
