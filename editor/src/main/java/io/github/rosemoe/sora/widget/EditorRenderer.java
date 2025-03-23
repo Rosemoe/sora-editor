@@ -2333,8 +2333,11 @@ public class EditorRenderer {
     protected void patchTextRegionWithColor(Canvas canvas, float textOffset, int start, int end, int color, int backgroundColor, int underlineColor) {
         paintGeneral.setColor(color);
         paintOther.setStrokeWidth(editor.getRowHeightOfText() * RenderingConstants.MATCHING_DELIMITERS_UNDERLINE_WIDTH_FACTOR);
-        paintGeneral.setStyle(android.graphics.Paint.Style.FILL_AND_STROKE);
-        paintGeneral.setFakeBoldText(editor.getProps().boldMatchingDelimiters);
+        
+        var useBoldStyle = editor.getProps().boldMatchingDelimiters;
+        paintGeneral.setStyle(useBoldStyle ? Paint.Style.FILL_AND_STROKE : Paint.Style.FILL);
+        paintGeneral.setFakeBoldText(useBoldStyle);
+
         var positions = getTextRegionPositions(start, end);
         patchTextRegions(canvas, textOffset, positions, (canvasLocal, horizontalOffset, row, line, startCol, endCol, style) -> {
             if (backgroundColor != 0) {
