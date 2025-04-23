@@ -1211,7 +1211,11 @@ public class EditorRenderer {
                     tmpRect.left = paintingOffset;
                     tmpRect.right = tmpRect.left + paintGeneral.getSpaceWidth() * 2;
                     paintGeneral.setColor(editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
-                    canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintGeneral);
+                    if (editor.getProps().enableRoundTextBackground) {
+                        canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintGeneral);
+                    } else {
+                        canvas.drawRect(tmpRect, paintGeneral);
+                    }
                 } else if (selectionStart < selectionEnd) {
                     drawRowRegionBackground(canvas, row, line, selectionStart, selectionEnd, rowInf.startColumn, rowInf.endColumn, editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
                 }
