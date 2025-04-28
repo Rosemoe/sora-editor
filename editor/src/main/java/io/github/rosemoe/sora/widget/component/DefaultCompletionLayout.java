@@ -83,7 +83,7 @@ public class DefaultCompletionLayout implements CompletionLayout {
             });
             rootView.setLayoutTransition(transition);
             listView.setLayoutTransition(transition);
-        } else  {
+        } else {
             rootView.setLayoutTransition(null);
             listView.setLayoutTransition(null);
         }
@@ -132,7 +132,6 @@ public class DefaultCompletionLayout implements CompletionLayout {
         });
 
 
-
         return rootLayout;
     }
 
@@ -140,7 +139,10 @@ public class DefaultCompletionLayout implements CompletionLayout {
     public void onApplyColorScheme(@NonNull EditorColorScheme colorScheme) {
         GradientDrawable gd = new GradientDrawable();
         gd.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, editorAutoCompletion.getContext().getResources().getDisplayMetrics()));
-        gd.setStroke(1, colorScheme.getColor(EditorColorScheme.COMPLETION_WND_CORNER));
+        gd.setStroke(
+                (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, editorAutoCompletion.getContext().getResources().getDisplayMetrics()),
+                colorScheme.getColor(EditorColorScheme.COMPLETION_WND_CORNER)
+        );
         gd.setColor(colorScheme.getColor(EditorColorScheme.COMPLETION_WND_BACKGROUND));
         rootView.setBackground(gd);
 
