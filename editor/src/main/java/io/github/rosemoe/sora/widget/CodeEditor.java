@@ -1911,6 +1911,24 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             );
         }
 
+        // skip closing character
+        if (applySymbolCompletion && getProps().symbolPairAutoCompletion && text.length() == 1) {
+            var editChar = text.charAt(0);
+            var symbolPair = languageSymbolPairs.findPairBySingleChar(editChar);
+            if (symbolPair != null) {
+                int rightLine = cursor.getRightLine();
+                int rightColumn = cursor.getRightColumn();
+                ContentLine currentLine = this.text.getLine(rightLine);
+
+                if (rightColumn < currentLine.length() && currentLine.charAt(rightColumn) == editChar) {
+                    if (editChar == symbolPair.close.charAt(0)) {
+                        setSelection(rightLine, rightColumn + 1);
+                        return;
+                    }
+                }
+            }
+        }
+
         var cur = cursor;
         var editorText = this.text;
         var quoteHandler = LanguageHelper.getQuickQuoteHandler(editorLanguage);
