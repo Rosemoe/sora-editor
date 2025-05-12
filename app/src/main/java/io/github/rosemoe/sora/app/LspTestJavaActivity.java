@@ -92,12 +92,10 @@ public class LspTestJavaActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         editor = new CodeEditor(this);
         setContentView(editor);
 
         var font = Typeface.createFromAsset(getAssets(), "JetBrainsMono-Regular.ttf");
-
         editor.setTypefaceLineNumber(font);
         editor.setTypefaceText(font);
 
@@ -117,15 +115,12 @@ public class LspTestJavaActivity extends AppCompatActivity {
                 throw new RuntimeException(e);
             }
         });
-
     }
 
 
     private void setEditorText() throws IOException {
         var file = new File(getExternalCacheDir(), "testProject/sample.lua");
-
         var text = ContentIO.createFrom(new FileInputStream(file));
-
         runOnUiThread(() -> editor.setText(text, null));
     }
 
@@ -137,24 +132,15 @@ public class LspTestJavaActivity extends AppCompatActivity {
         });
 
         var port = randomPort();
-
         var projectPath = new File(getExternalCacheDir(), "testProject").getAbsolutePath();
-
         var intent = new Intent(this, LspLanguageServerService.class);
-
         intent.putExtra("port", port);
-
-        startService(
-                intent
-        );
+        startService(intent);
 
         var luaServerDefinition =
                 new CustomLanguageServerDefinition("lua",
                         workingDir -> new SocketStreamConnectionProvider(port, null)) {
-
                     private EventListener eventListener = new EventListener(LspTestJavaActivity.this);
-
-
                     @NonNull
                     @Override
                     public EventHandler.EventListener getEventListener() {
@@ -163,57 +149,40 @@ public class LspTestJavaActivity extends AppCompatActivity {
                 };
 
         lspProject = new LspProject(projectPath);
-
         lspProject.addServerDefinition(luaServerDefinition);
 
         final Object lock = new Object();
 
         runOnUiThread(() -> {
             lspEditor = lspProject.createEditor("$projectPath/sample.lua");
-
             var wrapperLanguage = createTextMateLanguage();
             lspEditor.setWrapperLanguage(wrapperLanguage);
             lspEditor.setEditor(editor);
-
             synchronized (lock) {
                 lock.notify();
             }
         });
-
 
         synchronized (lock) {
             lock.wait();
         }
 
         boolean connected;
-
         // delay(Timeout[Timeouts.INIT].toLong()) //wait for server start
-
         try {
             lspEditor.connectWithTimeoutBlocking();
-
             var changeWorkspaceFoldersParams = new DidChangeWorkspaceFoldersParams();
-
             changeWorkspaceFoldersParams.setEvent(new WorkspaceFoldersChangeEvent());
-
             changeWorkspaceFoldersParams.getEvent().setAdded(List.of(new WorkspaceFolder("file://$projectPath/std/Lua53", "MyLuaProject")));
-
-            Objects.requireNonNull(lspEditor.getRequestManager())
-                    .didChangeWorkspaceFolders(
-                            changeWorkspaceFoldersParams
-                    );
-
+            Objects.requireNonNull(lspEditor.getRequestManager()).didChangeWorkspaceFolders(changeWorkspaceFoldersParams);
             connected = true;
-
         } catch (Exception e) {
             connected = false;
             e.printStackTrace();
         }
-
-        boolean finalConnected = connected;
-
+        //boolean finalConnected = connected;
         runOnUiThread(() -> {
-            if (finalConnected) {
+            if (connected) {
                 toast("Initialized Language server");
             } else {
                 toast("Unable to connect language server");
@@ -224,25 +193,18 @@ public class LspTestJavaActivity extends AppCompatActivity {
 
 
     private void toast(String text) {
-        Toast.makeText(
-                this,
-                text,
-                Toast.LENGTH_SHORT
-        ).show();
+        Toast.makeText(this,  text,Toast.LENGTH_SHORT).show();
     }
 
     private int randomPort() throws IOException {
         var serverSocket = new ServerSocket(0);
-
         var port = serverSocket.getLocalPort();
         serverSocket.close();
         return port;
     }
 
     private TextMateLanguage createTextMateLanguage() {
-
         var builder = new LanguageDefinitionListBuilder();
-
         builder.language("lua", languageDefinitionBuilder -> {
             languageDefinitionBuilder.setGrammar("textmate/lua/syntaxes/lua.tmLanguage.json");
             languageDefinitionBuilder.setScopeName("source.lua");
@@ -250,19 +212,13 @@ public class LspTestJavaActivity extends AppCompatActivity {
             return Unit.INSTANCE;
         });
 
-        GrammarRegistry.getInstance().loadGrammars(
-                builder.build()
-        );
-
-        return TextMateLanguage.create(
-                "source.lua", false
-        );
+        GrammarRegistry.getInstance().loadGrammars( builder.build() );
+        return TextMateLanguage.create( "source.lua", false );
     }
 
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-
         switchThemeIfRequired(this, editor);
     }
 
@@ -291,7 +247,6 @@ public class LspTestJavaActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
         editor.release();
         try {
             ForkJoinPool.commonPool().execute(() -> {
@@ -317,14 +272,11 @@ public class LspTestJavaActivity extends AppCompatActivity {
                 File filePath = new File(getExternalCacheDir(), fileName.substring("assets/".length()));
                 filePath.getParentFile().mkdirs();
                 FileOutputStream outputStream = new FileOutputStream(filePath);
-
                 byte[] buffer = new byte[1024];
-
                 int len;
                 while ((len = inputStream.read(buffer)) != -1) {
                     outputStream.write(buffer, 0, len);
                 }
-
                 inputStream.close();
                 outputStream.close();
             }
@@ -334,9 +286,7 @@ public class LspTestJavaActivity extends AppCompatActivity {
     }
 
     private void ensureTextmateTheme() throws Exception {
-
         var editorColorScheme = editor.getColorScheme();
-
         if (editorColorScheme instanceof TextMateColorScheme) {
             return;
         }
@@ -348,49 +298,35 @@ public class LspTestJavaActivity extends AppCompatActivity {
         );
 
         var themeRegistry = ThemeRegistry.getInstance();
-
         var path = "textmate/quietlight.json";
-
-
         themeRegistry.loadTheme(
                 new ThemeModel(
-                        IThemeSource.fromInputStream(
-                                FileProviderRegistry.getInstance().tryGetInputStream(path), path, null
-                        ), "quitelight"
+                        IThemeSource.fromInputStream( FileProviderRegistry.getInstance().tryGetInputStream(path), path, null ) , 
+                       "quitelight"
                 )
         );
 
         themeRegistry.setTheme("quietlight");
-
         editorColorScheme = TextMateColorScheme.create(themeRegistry);
-
         editor.setColorScheme(editorColorScheme);
-
     }
 
     class EventListener implements EventHandler.EventListener {
         private WeakReference<LspTestJavaActivity> ref;
-
         public EventListener(LspTestJavaActivity activity) {
             this.ref = new WeakReference<>(activity);
         }
 
         @Override
         public void initialize(@Nullable LanguageServer server, @NonNull InitializeResult result) {
-
-
             var activity = ref.get();
-
             if (activity == null) {
                 return;
             }
 
             activity.runOnUiThread(() -> {
                 var item = rootMenu.findItem(R.id.code_format);
-
-                var isEnabled =
-                        result.getCapabilities().getDocumentFormattingProvider() != null;
-
+                var isEnabled = result.getCapabilities().getDocumentFormattingProvider() != null;
                 item.setEnabled(isEnabled);
             });
 
