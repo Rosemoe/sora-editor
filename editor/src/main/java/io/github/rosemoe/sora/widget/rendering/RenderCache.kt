@@ -75,7 +75,7 @@ class RenderCache {
             if (endLine - startLine == 1) {
                 lines.add(startLine, 0)
             } else {
-                lines.addAll(startLine, IntArray(endLine - startLine) { 0 })
+                lines.addAll(startLine, IntArray(endLine - startLine))
             }
             lock.withLock {
                 cache.forEach {

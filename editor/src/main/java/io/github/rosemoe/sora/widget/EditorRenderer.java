@@ -38,6 +38,7 @@ import android.graphics.RenderNode;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.os.SystemClock;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -332,7 +333,7 @@ public class EditorRenderer {
      * Update timestamp required for measuring cache
      */
     protected void updateTimestamp() {
-        displayTimestamp = System.nanoTime();
+        displayTimestamp = SystemClock.elapsedRealtimeNanos();
     }
 
     protected void prepareLine(int line) {
