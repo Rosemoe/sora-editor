@@ -105,6 +105,24 @@ public class SymbolPairMatch {
         putPair(openString.toCharArray(), symbolPair);
     }
 
+    @Nullable
+    public final SymbolPair findPairBySingleChar(char editChar) {
+        SymbolPair symbolPair = null;
+        for (List<SymbolPair> pairList : multipleCharByEndPairMaps.values()) {
+            for (SymbolPair pair : pairList) {
+                if (pair.open.length() == 1 && pair.close.length() == 1) {
+                    if (pair.open.charAt(0) == editChar || pair.close.charAt(0) == editChar) {
+                        symbolPair = pair;
+                        break;
+                    }
+                }
+            }
+        }
+        if (symbolPair == null && parent != null) {
+            return parent.findPairBySingleChar(editChar);
+        }
+        return symbolPair;
+    }
 
     @Nullable
     public final SymbolPair matchBestPairBySingleChar(char editChar) {

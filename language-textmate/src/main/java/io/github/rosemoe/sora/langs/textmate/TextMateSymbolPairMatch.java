@@ -27,6 +27,7 @@ import org.eclipse.tm4e.core.internal.grammar.tokenattrs.StandardTokenType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import io.github.rosemoe.sora.lang.styling.Span;
@@ -82,7 +83,7 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
 
         var autoClosingPairs = languageConfiguration.getAutoClosingPairs();
 
-        var mergePairs = new ArrayList<AutoClosingPairConditional>();
+        var mergePairs = new HashSet<AutoClosingPairConditional>();
 
         if (autoClosingPairs != null) {
             mergePairs.addAll(autoClosingPairs);
