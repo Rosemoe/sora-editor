@@ -315,6 +315,8 @@ public class LspTestJavaActivity extends AppCompatActivity {
                 InputStream inputStream = zipFile.getInputStream(zipEntry);
                 //The compiler will be optimized here, don't worry
                 File filePath = new File(getExternalCacheDir(), fileName.substring("assets/".length()));
+                // SECURITY FIX: Validate that the file path is within the target directory
+                ensureZipPathSafety(filePath, getExternalCacheDir());
                 filePath.getParentFile().mkdirs();
                 FileOutputStream outputStream = new FileOutputStream(filePath);
 
