@@ -25,7 +25,6 @@
 package io.github.rosemoe.sora.lsp.editor
 
 import android.os.Bundle
-import android.util.Log
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
@@ -44,7 +43,6 @@ import io.github.rosemoe.sora.lsp.events.completion.completion
 import io.github.rosemoe.sora.lsp.events.document.DocumentChangeEvent
 import io.github.rosemoe.sora.lsp.requests.Timeout
 import io.github.rosemoe.sora.lsp.requests.Timeouts
-
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.util.MyCharacter
@@ -123,20 +121,24 @@ class LspLanguage(var editor: LspEditor) : Language {
                 context.get<List<org.eclipse.lsp4j.CompletionItem>>("completion-items")
             }
 
-        serverResultCompletionItems.thenAccept { completions ->
-            completions.forEach { completionItem: org.eclipse.lsp4j.CompletionItem ->
-                completionList.add(
-                    completionItemProvider.createCompletionItem(
-                        completionItem,
-                        editor.eventManager,
-                        prefixLength
+        try {
+            serverResultCompletionItems.thenAccept { completions ->
+                completions.forEach { completionItem: org.eclipse.lsp4j.CompletionItem ->
+                    completionList.add(
+                        completionItemProvider.createCompletionItem(
+                            completionItem,
+                            editor.eventManager,
+                            prefixLength
+                        )
                     )
-                )
-            }
-        }.exceptionally { throwable: Throwable ->
-            publisher.cancel()
-            throw CompletionCancelledException(throwable.message)
-        }.get(Timeout[Timeouts.COMPLETION].toLong(), TimeUnit.MILLISECONDS)
+                }
+            }.exceptionally { throwable: Throwable ->
+                publisher.cancel()
+                throw CompletionCancelledException(throwable.message)
+            }.get(Timeout[Timeouts.COMPLETION].toLong(), TimeUnit.MILLISECONDS)
+        } catch (e: InterruptedException) {
+            return
+        }
 
         publisher.setComparator(getCompletionItemComparator(content, position, completionList))
         publisher.addItems(completionList)
@@ -144,29 +146,28 @@ class LspLanguage(var editor: LspEditor) : Language {
     }
 
     private fun computePrefix(text: ContentReference, position: CharPosition): String {
-        val delimiters: MutableList<String> = ArrayList(
-            editor.completionTriggers
-        )
-        if (delimiters.isEmpty()) {
+        val triggers = editor.completionTriggers
+        if (triggers.isEmpty()) {
             return CompletionHelper.computePrefix(text, position) { key: Char ->
-                MyCharacter.isJavaIdentifierPart(
-                    key
-                )
+                MyCharacter.isJavaIdentifierPart(key)
             }
         }
 
-        // add whitespace as delimiter, otherwise forced completion does not work
-        delimiters.addAll(" \t\n\r".split(""))
-        val offset = position.index
+        val delimiters = triggers.toMutableList().apply {
+            addAll(listOf(" ", "\t", "\n", "\r"))
+        }
+
         val s = StringBuilder()
-        for (i in 0 until offset) {
-            val singleLetter = text[offset - i - 1]
-            if (delimiters.contains(singleLetter.toString())) {
+
+        val line = text.getLine(position.line)
+        for (i in position.column - 1 downTo 0) {
+            val char = line[i]
+            if (delimiters.contains(char.toString())) {
                 return s.reverse().toString()
             }
-            s.append(singleLetter)
+            s.append(char)
         }
-        return ""
+        return s.toString()
     }
 
     override fun getIndentAdvance(content: ContentReference, line: Int, column: Int): Int {

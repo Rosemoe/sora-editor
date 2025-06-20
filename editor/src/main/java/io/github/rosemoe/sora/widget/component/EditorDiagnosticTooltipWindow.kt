@@ -229,7 +229,6 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
 
     override fun dismiss() {
         if (isShowing) {
-            Thread.dumpStack()
             super.dismiss()
         }
     }

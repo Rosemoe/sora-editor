@@ -51,7 +51,7 @@ class ApplyEditsEvent : EventListener {
             var endIndex =
                 content.getCharIndex(
                     endLine,
-                    range.end.character.coerceAtMost(content.getColumnCount(endLine) - 1)
+                    range.end.character
                 )
 
             if (endIndex < startIndex) {
