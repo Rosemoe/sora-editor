@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.app;
 
+import static android.os.Build.VERSION.SDK_INT;
 import static io.github.rosemoe.sora.app.UtilsKt.switchThemeIfRequired;
 
 import android.content.Intent;
@@ -33,12 +34,15 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme;
@@ -96,6 +100,15 @@ public class LspTestJavaActivity extends AppCompatActivity {
         editor = new CodeEditor(this);
         setContentView(editor);
 
+        // Edge to Edge Support
+        if (SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            ViewCompat.setOnApplyWindowInsetsListener((View) editor.getParent(), (v, insets) -> {
+                var systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                return insets;
+            });
+        }
+
         var font = Typeface.createFromAsset(getAssets(), "JetBrainsMono-Regular.ttf");
 
         editor.setTypefaceLineNumber(font);
@@ -152,7 +165,7 @@ public class LspTestJavaActivity extends AppCompatActivity {
                 new CustomLanguageServerDefinition("lua",
                         workingDir -> new SocketStreamConnectionProvider(port, null)) {
 
-                    private EventListener eventListener = new EventListener(LspTestJavaActivity.this);
+                    private final EventListener eventListener = new EventListener(LspTestJavaActivity.this);
 
 
                     @NonNull
