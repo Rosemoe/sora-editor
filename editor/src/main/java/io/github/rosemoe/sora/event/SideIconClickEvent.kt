@@ -32,4 +32,6 @@ import io.github.rosemoe.sora.widget.CodeEditor
  * If you would like to avoid [ClickEvent] to be triggered, you are expected to intercept editor by
  * calling [SideIconClickEvent.intercept]
  */
-class SideIconClickEvent(editor: CodeEditor, val clickedIcon: LineSideIcon) : Event(editor)
+class SideIconClickEvent(editor: CodeEditor, val clickedIcon: LineSideIcon) : Event(editor) {
+    override fun canIntercept(): Boolean = true
+}
