@@ -119,11 +119,15 @@ class LspCompletionItem(
                 text.getCharIndex(textEdit.range.start.line, textEdit.range.start.character)
             val endIndex = text.getCharIndex(textEdit.range.end.line, textEdit.range.end.character)
             val selectedText = text.subSequence(startIndex, endIndex).toString()
+
+            if (startIndex >= endIndex) {
+                throw RuntimeException("startIndex >= endIndex at $textEdit")
+            }
+
             text.delete(startIndex, endIndex)
 
             editor.snippetController
                 .startSnippet(startIndex, codeSnippet, selectedText)
-
         } else {
             eventManager.emit(EventType.applyEdits) {
                 put("edits", listOf(finalTextEdit))
@@ -131,10 +135,9 @@ class LspCompletionItem(
             }
         }
 
-
         if (completionItem.additionalTextEdits != null) {
             eventManager.emit(EventType.applyEdits) {
-                put("edits", listOf(completionItem.additionalTextEdits))
+                put("edits", completionItem.additionalTextEdits)
                 put(text)
             }
         }
