@@ -107,9 +107,8 @@ class LspLanguage(var editor: LspEditor) : Language {
 
         if (documentChangeFuture?.isDone == false || documentChangeFuture?.isCompletedExceptionally == false || documentChangeFuture?.isCancelled == false) {
             runCatching {
-                documentChangeFuture[Timeout[Timeouts.WILLSAVE].toLong(), TimeUnit.MILLISECONDS]
+                documentChangeFuture.get(Timeout[Timeouts.WILLSAVE].toLong(), TimeUnit.MILLISECONDS)
             }
-
         }
 
         val completionList = ArrayList<CompletionItem>()

@@ -36,6 +36,7 @@ import io.github.rosemoe.sora.lsp.events.diagnostics.queryDocumentDiagnostics
 import io.github.rosemoe.sora.lsp.events.document.documentChange
 import io.github.rosemoe.sora.lsp.events.signature.signatureHelp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.DocumentDiagnosticReport
 import org.eclipse.lsp4j.FullDocumentDiagnosticReport
@@ -56,7 +57,6 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
                 return@launch
             }
 
-            editor.eventManager.emitAsync(EventType.signatureHelp, event.changeStart)
 
             val diagnostics =
                 editor.eventManager.emitAsync(EventType.queryDocumentDiagnostics)
@@ -72,6 +72,8 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
                     put("data", diagnostics.left.items)
                 }
             }
+
+            editor.eventManager.emitAsync(EventType.signatureHelp, event.changeStart)
         }
 
 
