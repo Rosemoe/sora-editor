@@ -129,10 +129,9 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
     }
 
     private fun renderSignatureHelp() {
-
-        val activeSignatureIndex = signatureHelp.activeSignature
-        val activeParameterIndex = signatureHelp.activeParameter
-        val signatures = signatureHelp.signatures
+        val activeSignatureIndex = signatureHelp.activeSignature ?: return
+        val activeParameterIndex = signatureHelp.activeParameter ?: return
+        val signatures = signatureHelp.signatures ?: return
 
         val renderStringBuilder = SpannableStringBuilder()
 

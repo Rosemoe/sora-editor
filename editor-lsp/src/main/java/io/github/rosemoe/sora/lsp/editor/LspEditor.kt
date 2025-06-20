@@ -103,7 +103,7 @@ class LspEditor(
             unsubscribeFunction?.run()
 
             currentEditor.setEditorLanguage(currentLanguage)
-            signatureHelpWindowWeakReference = WeakReference(SignatureHelpWindow(currentEditor))
+            signatureHelpWindowWeakReference =  WeakReference(SignatureHelpWindow(currentEditor))
 
             editorContentChangeEventReceiver = LspEditorContentChangeEventReceiver(this)
 
