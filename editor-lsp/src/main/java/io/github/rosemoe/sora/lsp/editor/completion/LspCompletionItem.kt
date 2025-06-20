@@ -102,7 +102,7 @@ class LspCompletionItem(
             // allow completion items to be wrong with a too wide range
             val documentEnd = createPosition(
                 text.lineCount - 1,
-                text.getColumnCount(0.coerceAtLeast(position.line - 1))
+                text.getColumnCount(0.coerceAtLeast(position.line - 1)) - 1
             )
             val textEditEnd = textEdit.range.end
             if (documentEnd.line < textEditEnd.line || documentEnd.line == textEditEnd.line && documentEnd.character < textEditEnd.character

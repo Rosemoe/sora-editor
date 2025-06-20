@@ -474,7 +474,9 @@ class LanguageServerWrapper(
 
             editor.signatureHelpTriggers = signatureHelpTriggers
             editor.signatureHelpReTriggers = signatureHelpReTriggers
-            editor.completionTriggers = completionTriggers
+            editor.completionTriggers = completionTriggers.toMutableSet().apply {
+                addAll(arrayOf("[","{","(","<","."))
+            }.toList()
 
             commonCoroutineScope.future {
                 editor.openDocument()
