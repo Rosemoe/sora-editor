@@ -47,6 +47,9 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
     EventReceiver<ContentChangeEvent> {
     override fun onReceive(event: ContentChangeEvent, unsubscribe: Unsubscribe) {
+        if (!editor.isConnected) {
+            return
+        }
 
         editor.coroutineScope.launch(Dispatchers.IO) {
             // send to server
@@ -83,9 +86,10 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
 class LspEditorSelectionChangeEventReceiver(private val editor: LspEditor) :
     EventReceiver<SelectionChangeEvent> {
     override fun onReceive(event: SelectionChangeEvent, unsubscribe: Unsubscribe) {
-
+        if (!editor.isConnected) {
+            return
+        }
         editor.coroutineScope.launch(Dispatchers.IO) {
-
             if (editor.hitReTrigger(event.editor.text[event.left.index].toString())) {
                 editor.showSignatureHelp(null)
                 return@launch

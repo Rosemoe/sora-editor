@@ -41,7 +41,7 @@ class EventEmitter {
 
     fun <T : EventListener> getEventListener(clazz: Class<T>): T? {
         return listeners.flatMap { it.value }
-            .find { it::class.java == clazz } as T?
+            .find { it::class.java == clazz } as T
     }
 
     fun <T : EventListener> removeListener(listenerClass: Class<T>) {

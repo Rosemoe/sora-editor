@@ -95,6 +95,10 @@ class LspLanguage(var editor: LspEditor) : Language {
             return;
         }*/
 
+        if (!editor.isConnected) {
+            return
+        }
+
         val prefix = computePrefix(content, position)
 
         val prefixLength = prefix.length
@@ -132,7 +136,7 @@ class LspLanguage(var editor: LspEditor) : Language {
         }.exceptionally { throwable: Throwable ->
             publisher.cancel()
             throw CompletionCancelledException(throwable.message)
-        }[Timeout[Timeouts.COMPLETION].toLong(), TimeUnit.MILLISECONDS]
+        }.get(Timeout[Timeouts.COMPLETION].toLong(), TimeUnit.MILLISECONDS)
 
         publisher.setComparator(getCompletionItemComparator(content, position, completionList))
         publisher.addItems(completionList)

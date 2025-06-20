@@ -74,7 +74,7 @@ class LspEditor(
 
     private var currentLanguage: LspLanguage? = null
 
-    private var isClose = false
+    private var isClosed = false
 
     private var unsubscribeFunction: Runnable? = null
 
@@ -147,6 +147,9 @@ class LspEditor(
             }
         }
 
+    var isConnected: Boolean = false
+        private set
+
     val languageServerWrapper: LanguageServerWrapper
         get() = project.getOrCreateLanguageServerWrapper(fileExt)
 
@@ -189,10 +192,13 @@ class LspEditor(
                 ?: throw TimeoutException("Unable to connect language server")
 
             languageServerWrapper.connect(this@LspEditor)
+
+            isConnected = true
         }.onFailure {
             if (throwException) {
                 throw it
             }
+            isConnected = false
         }.isSuccess
     }
 
@@ -255,7 +261,9 @@ class LspEditor(
                 this@LspEditor
             )
 
-        }.onFailure {
+            isConnected = false
+        } .onFailure {
+            isConnected = false
             throw it
         }
     }
@@ -325,7 +333,7 @@ class LspEditor(
 
     @WorkerThread
     fun dispose() {
-        if (isClose) {
+        if (isClosed) {
             return
             // throw IllegalStateException("Editor is already closed")
         }
@@ -336,7 +344,7 @@ class LspEditor(
             it == this.uri
         }
         project.removeEditor(this)
-        isClose = true
+        isClosed = true
     }
 
     suspend fun disposeAsync() = withContext(Dispatchers.IO) {
