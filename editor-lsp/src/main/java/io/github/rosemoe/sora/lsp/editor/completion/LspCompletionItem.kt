@@ -116,8 +116,17 @@ class LspCompletionItem(
         if (completionItem.insertTextFormat == InsertTextFormat.Snippet) {
             val codeSnippet = CodeSnippetParser.parse(textEdit.newText)
             val startIndex =
-                text.getCharIndex(textEdit.range.start.line, textEdit.range.start.character)
-            val endIndex = text.getCharIndex(textEdit.range.end.line, textEdit.range.end.character)
+                text.getCharIndex(
+                    textEdit.range.start.line, (text.getColumnCount(textEdit.range.start.line) - 1)
+                        .coerceAtMost(textEdit.range.start.character)
+                )
+
+            val endIndex = text.getCharIndex(
+                textEdit.range.end.line,
+                (text.getColumnCount(textEdit.range.end.line) - 1)
+                    .coerceAtMost(textEdit.range.end.character)
+            )
+
             val selectedText = text.subSequence(startIndex, endIndex).toString()
 
             if (startIndex >= endIndex) {
