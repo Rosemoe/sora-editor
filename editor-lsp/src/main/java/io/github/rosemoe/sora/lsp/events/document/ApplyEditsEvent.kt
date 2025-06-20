@@ -45,8 +45,15 @@ class ApplyEditsEvent : EventListener {
             val text = textEdit.newText
             var startIndex =
                 content.getCharIndex(range.start.line, range.start.character)
+
+            val endLine = range.end.line.coerceAtMost(content.lineCount - 1)
+
             var endIndex =
-                content.getCharIndex(range.end.line, range.end.character)
+                content.getCharIndex(
+                    endLine,
+                    range.end.character.coerceAtMost(content.getColumnCount(endLine) - 1)
+                )
+
             if (endIndex < startIndex) {
                 Logger.instance(this.javaClass.name)
                     .w(

@@ -100,7 +100,6 @@ class DocumentChangeEvent : AsyncEventListener() {
     ): DidChangeTextDocumentParams {
         val kind = editor.textDocumentSyncKind
         val isFullSync = kind == TextDocumentSyncKind.None || kind == TextDocumentSyncKind.Full
-        println(isFullSync)
 
         return editor.uri.createDidChangeTextDocumentParams(
             if (isFullSync) createFullTextDocumentContentChangeEvent(editor) else createIncrementTextDocumentContentChangeEvent(

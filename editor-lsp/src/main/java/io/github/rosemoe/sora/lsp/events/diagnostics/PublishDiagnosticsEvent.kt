@@ -37,7 +37,6 @@ class PublishDiagnosticsEvent : EventListener {
     override val eventName: String = "editor/publishDiagnostics"
 
     override fun handle(context: EventContext) {
-
         val lspEditor = context.get<LspEditor>("lsp-editor")
         val originEditor = lspEditor.editor ?: return
         val data = context.getOrNull<List<Diagnostic>>("data") ?: return

@@ -295,11 +295,14 @@ class LspEditor(
 
 
     fun onDiagnosticsUpdate() {
+
         publishDiagnostics(diagnostics)
     }
 
     private fun publishDiagnostics(diagnostics: List<Diagnostic>) {
-        eventManager.emit(EventType.publishDiagnostics, diagnostics)
+        eventManager.emit(EventType.publishDiagnostics) {
+            put("data", diagnostics)
+        }
     }
 
     fun showSignatureHelp(signatureHelp: SignatureHelp?) {
