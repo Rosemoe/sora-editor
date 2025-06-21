@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ~    sora-editor - the awesome code editor for Android
   ~    https://github.com/Rosemoe/sora-editor
-  ~    Copyright (C) 2020-2024  Rosemoe
+  ~    Copyright (C) 2020-2025  Rosemoe
   ~
   ~     This library is free software; you can redistribute it and/or
   ~     modify it under the terms of the GNU Lesser General Public
@@ -24,10 +24,12 @@
 
 <resources>
 
-    <style name="AppTheme" parent="Theme.MaterialComponents.NoActionBar">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-    </style>
+    <color name="indigo_500">#3F51B5</color>
+    <color name="indigo_700">#303F9F</color>
+    <color name="pink_400">#EC407A</color>
+
+    <color name="colorPrimary">@color/indigo_500</color>
+    <color name="colorPrimaryDark">@color/indigo_700</color>
+    <color name="colorAccent">@color/pink_400</color>
 
 </resources>

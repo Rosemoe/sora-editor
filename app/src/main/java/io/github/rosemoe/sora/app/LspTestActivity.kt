@@ -30,9 +30,7 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
@@ -48,7 +46,6 @@ import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspProject
 import io.github.rosemoe.sora.text.ContentIO
-import io.github.rosemoe.sora.widget.CodeEditor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -63,20 +60,17 @@ import java.lang.ref.WeakReference
 import java.net.ServerSocket
 import java.util.zip.ZipFile
 
-class LspTestActivity : AppCompatActivity() {
-    private lateinit var editor: CodeEditor
+class LspTestActivity : BaseEditorActivity() {
 
     private lateinit var lspEditor: LspEditor
     private lateinit var lspProject: LspProject
 
     private lateinit var rootMenu: Menu
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        editor = CodeEditor(this)
-        setContentView(editor)
-
-        edgeToEdgePaddingOnView(editor.parent as View)
+        setTitle("LSP Test - Kotlin")
 
         val font = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
 

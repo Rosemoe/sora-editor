@@ -66,13 +66,13 @@ inline fun <reified T : Activity> Context.startActivity() {
 }
 
 /**
- * Adjust the padding of view due to edge-to-edge since API 35
+ * Adjust the top padding of view to the height of status bar due to edge-to-edge since API 35
  */
-fun edgeToEdgePaddingOnView(paddingView: View) {
+fun edgeToEdgeStatusBarPaddingOnView(paddingView: View) {
     if (SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
         ViewCompat.setOnApplyWindowInsetsListener(paddingView) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+            v.setPadding(0, statusBar.top, 0, 0)
             insets
         }
     }

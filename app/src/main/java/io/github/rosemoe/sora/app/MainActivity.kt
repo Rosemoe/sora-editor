@@ -154,7 +154,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        edgeToEdgePaddingOnView(binding.mainLayout)
+        setSupportActionBar(binding.activityToolbar)
+        edgeToEdgeStatusBarPaddingOnView(binding.toolbarContainer)
 
         val typeface = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
 

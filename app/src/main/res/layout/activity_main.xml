@@ -35,6 +35,24 @@
         android:layout_alignParentStart="true"
         android:orientation="vertical">
 
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimaryDark"
+            android:id="@+id/toolbar_container">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                android:elevation="4dp"
+                style="@style/ToolbarTheme"
+                android:id="@+id/activity_toolbar" />
+
+        </FrameLayout>
+
+
         <LinearLayout
             android:id="@+id/search_panel"
             android:layout_width="match_parent"

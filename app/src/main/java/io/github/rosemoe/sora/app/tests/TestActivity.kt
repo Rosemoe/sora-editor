@@ -27,28 +27,44 @@ package io.github.rosemoe.sora.app.tests
 import android.content.res.Configuration
 import android.graphics.Typeface
 import android.os.Bundle
-import android.view.View
-import androidx.appcompat.app.AppCompatActivity
-import io.github.rosemoe.sora.app.edgeToEdgePaddingOnView
+import io.github.rosemoe.sora.app.BaseEditorActivity
 import io.github.rosemoe.sora.app.switchThemeIfRequired
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.lang.diagnostic.Quickfix
 import io.github.rosemoe.sora.langs.java.JavaLanguage
-import io.github.rosemoe.sora.widget.CodeEditor
 
-class TestActivity : AppCompatActivity() {
-    private lateinit var editor: CodeEditor
+class TestActivity : BaseEditorActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        editor = CodeEditor(this)
-        setContentView(editor)
-        edgeToEdgePaddingOnView(editor.parent as View)
+        setTitle("Diagnostics Display Test")
+
         editor.typefaceText = Typeface.createFromAsset(assets, "Roboto-Regular.ttf")
         editor.setEditorLanguage(JavaLanguage())
         switchThemeIfRequired(this, editor)
+
+        val text = generateText()
+        editor.setText(text)
+
+        editor.diagnostics = DiagnosticsContainer().also {
+            it.addDiagnostic(
+                DiagnosticRegion(
+                    37, 50, DiagnosticRegion.SEVERITY_ERROR, 0L, DiagnosticDetail(
+                        "TestMessage",
+                        "This is a test error message\nYou can add your content here\ntest scroll\ntest\ntest\ntest\ntest",
+                        listOf(
+                            Quickfix("Fix Quick", 0L, {}), Quickfix("Test", 0L, {})
+                        )
+                    )
+                )
+            )
+        }
+        assert(text == editor.text.toString()) { "Text check failed" }
+    }
+
+    private fun generateText(): String {
         val text = StringBuilder("    private final PopupWindow mWindow;\r\n" +
                 "    private final CodeEditor mEditor;\r\n" +
                 "    private final int mFeatures;\n\r" +
@@ -62,14 +78,7 @@ class TestActivity : AppCompatActivity() {
             text.append(i.toChar())
         }
         text.append(127.toChar())
-        editor.setText(text)
-        editor.diagnostics = DiagnosticsContainer().also {
-            it.addDiagnostic(DiagnosticRegion(37, 50, DiagnosticRegion.SEVERITY_ERROR, 0L, DiagnosticDetail("TestMessage", "This is a test error message\nYou can add your content here\ntest scroll\ntest\ntest\ntest\ntest", listOf(
-                Quickfix("Fix Quick", 0L, {}), Quickfix("Test", 0L, {})
-            ))))
-        }
-        val stringText = text.toString()
-        assert(stringText == editor.text.toString()) { "Text check failed" }
+        return text.toString()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

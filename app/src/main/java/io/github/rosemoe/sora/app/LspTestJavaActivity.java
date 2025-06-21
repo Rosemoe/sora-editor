@@ -32,13 +32,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
 
 import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.InitializeResult;
@@ -76,12 +74,10 @@ import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.editor.LspProject;
 import io.github.rosemoe.sora.text.ContentIO;
-import io.github.rosemoe.sora.widget.CodeEditor;
 import kotlin.Unit;
 
-public class LspTestJavaActivity extends AppCompatActivity {
+public class LspTestJavaActivity extends BaseEditorActivity {
     private volatile LspEditor lspEditor;
-    private CodeEditor editor;
     private volatile LspProject lspProject;
     private Menu rootMenu;
 
@@ -89,11 +85,7 @@ public class LspTestJavaActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        editor = new CodeEditor(this);
-        setContentView(editor);
-
-        UtilsKt.edgeToEdgePaddingOnView((View) editor.getParent());
+        setTitle("LSP Test - Java");
 
         var font = Typeface.createFromAsset(getAssets(), "JetBrainsMono-Regular.ttf");
 
