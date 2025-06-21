@@ -139,14 +139,15 @@ fun LspEditor.createDidSaveTextDocumentParams(): DidSaveTextDocumentParams {
 }
 
 fun Position.getIndex(editor: CodeEditor): Int {
-    return editor.text.getCharIndex(this.line, this.character)
+    return editor.text.getCharIndex(this.line,
+        editor.text.getColumnCount(this.line).coerceAtMost(this.character)
+    )
 }
 
 fun List<Diagnostic>.transformToEditorDiagnostics(editor: CodeEditor): List<DiagnosticRegion> {
     val result = ArrayList<DiagnosticRegion>()
     var id = 0L
     for (diagnosticSource in this) {
-        Log.w("diagnostic message", "diagnostic: " + diagnosticSource.message)
         val diagnostic = DiagnosticRegion(
             diagnosticSource.range.start.getIndex(editor),
             diagnosticSource.range.end.getIndex(editor),

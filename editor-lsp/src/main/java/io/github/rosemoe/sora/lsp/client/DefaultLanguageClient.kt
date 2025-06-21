@@ -97,7 +97,7 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
     }
 
     override fun refreshDiagnostics(): CompletableFuture<Void> {
-        // support it.
+        //TODO: support it.
         return CompletableFuture.completedFuture(null)
     }
 

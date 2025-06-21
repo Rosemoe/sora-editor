@@ -36,6 +36,7 @@ import io.github.rosemoe.sora.lsp.utils.createPosition
 import io.github.rosemoe.sora.lsp.utils.createRange
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.Content
+import io.github.rosemoe.sora.util.Logger
 import io.github.rosemoe.sora.widget.CodeEditor
 import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.InsertTextFormat
@@ -102,7 +103,7 @@ class LspCompletionItem(
             // allow completion items to be wrong with a too wide range
             val documentEnd = createPosition(
                 text.lineCount - 1,
-                text.getColumnCount(0.coerceAtLeast(position.line - 1))
+                text.getColumnCount(0.coerceAtLeast(text.lineCount - 1)) - 1
             )
             val textEditEnd = textEdit.range.end
             if (documentEnd.line < textEditEnd.line || documentEnd.line == textEditEnd.line && documentEnd.character < textEditEnd.character
@@ -115,15 +116,34 @@ class LspCompletionItem(
 
         if (completionItem.insertTextFormat == InsertTextFormat.Snippet) {
             val codeSnippet = CodeSnippetParser.parse(textEdit.newText)
-            val startIndex =
-                text.getCharIndex(textEdit.range.start.line, textEdit.range.start.character)
-            val endIndex = text.getCharIndex(textEdit.range.end.line, textEdit.range.end.character)
+            var startIndex =
+                text.getCharIndex(
+                    textEdit.range.start.line, textEdit.range.start.character)
+
+            var endIndex = text.getCharIndex(
+                textEdit.range.end.line,
+                (text.getColumnCount(textEdit.range.end.line) - 1)
+                    .coerceAtMost(textEdit.range.end.character)
+            )
+
             val selectedText = text.subSequence(startIndex, endIndex).toString()
+
+            if (endIndex < startIndex) {
+                Logger.instance(this.javaClass.name)
+                    .w(
+                        "Invalid location information found applying edits from %s to %s",
+                        textEdit.range.start,
+                        textEdit.range.end
+                    )
+                val diff = startIndex - endIndex
+                endIndex = startIndex
+                startIndex = endIndex - diff
+            }
+
             text.delete(startIndex, endIndex)
 
             editor.snippetController
                 .startSnippet(startIndex, codeSnippet, selectedText)
-
         } else {
             eventManager.emit(EventType.applyEdits) {
                 put("edits", listOf(finalTextEdit))
@@ -131,10 +151,9 @@ class LspCompletionItem(
             }
         }
 
-
         if (completionItem.additionalTextEdits != null) {
             eventManager.emit(EventType.applyEdits) {
-                put("edits", listOf(completionItem.additionalTextEdits))
+                put("edits", completionItem.additionalTextEdits)
                 put(text)
             }
         }

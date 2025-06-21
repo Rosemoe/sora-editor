@@ -29,6 +29,7 @@ import android.content.res.Configuration
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -41,6 +42,8 @@ import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import io.github.dingyi222666.monarch.languages.JavaLanguage
 import io.github.dingyi222666.monarch.languages.KotlinLanguage
@@ -154,7 +157,17 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Edge to Edge Support
+        if (SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            ViewCompat.setOnApplyWindowInsetsListener(binding.mainLayout) { v, insets ->
+                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+                insets
+            }
+        }
+
         val typeface = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
+
 
         // Setup Listeners
         binding.apply {

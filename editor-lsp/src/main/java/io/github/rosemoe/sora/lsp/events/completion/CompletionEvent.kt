@@ -34,6 +34,7 @@ import io.github.rosemoe.sora.lsp.utils.asLspPosition
 import io.github.rosemoe.sora.lsp.utils.createCompletionParams
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.util.Logger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.future.await
 import org.eclipse.lsp4j.CompletionContext
@@ -78,11 +79,11 @@ class CompletionEvent : AsyncEventListener() {
         try {
             context.put("completion-items", future.await())
         } catch (e: Exception) {
-            if (e !is TimeoutCancellationException) {
+            if (e !is TimeoutCancellationException)  {
                 Logger.instance(this.javaClass.name)
                     .e("Request completion failed", e)
+                throw e
             }
-
         }
     }
 

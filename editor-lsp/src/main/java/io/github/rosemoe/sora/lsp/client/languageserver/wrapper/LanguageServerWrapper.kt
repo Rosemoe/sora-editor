@@ -131,7 +131,7 @@ class LanguageServerWrapper(
         }
 
         try {
-            start();
+            start(true);
 
             initializeFuture?.get(
                 if (capabilitiesAlreadyRequested) 0L else Timeout[Timeouts.INIT].toLong(),
@@ -201,7 +201,6 @@ class LanguageServerWrapper(
             eventHandler = EventHandler(
                 serverDefinition.eventListener
             ) { status != ServerStatus.STOPPED }
-
 
             client =
                 DefaultLanguageClient(ServerWrapperBaseClientContext(this@LanguageServerWrapper))
@@ -365,7 +364,7 @@ class LanguageServerWrapper(
             rangeFormatting = RangeFormattingCapabilities()
             references = ReferencesCapabilities()
             rename = RenameCapabilities()
-            signatureHelp = SignatureHelpCapabilities()
+            signatureHelp = SignatureHelpCapabilities(true)
             synchronization =
                 SynchronizationCapabilities(true, true, true)
         }
@@ -475,7 +474,9 @@ class LanguageServerWrapper(
 
             editor.signatureHelpTriggers = signatureHelpTriggers
             editor.signatureHelpReTriggers = signatureHelpReTriggers
-            editor.completionTriggers = completionTriggers
+            editor.completionTriggers = completionTriggers.toMutableSet().apply {
+                addAll(arrayOf("[","{","(","<","."))
+            }.toList()
 
             commonCoroutineScope.future {
                 editor.openDocument()

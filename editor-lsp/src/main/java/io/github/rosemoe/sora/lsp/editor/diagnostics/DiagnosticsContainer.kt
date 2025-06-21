@@ -47,7 +47,7 @@ class DiagnosticsContainer {
     private fun findDiagnostic(uri: FileUri, line: Int, column: Int): Diagnostic? {
         return diagnosticsMap[uri]?.find {
             it.range.start.line == line &&
-                    it.range.start.character == column &&
+                    it.range.start.character == column ||
                     it.range.end.line == line &&
                     it.range.end.character == column
         }

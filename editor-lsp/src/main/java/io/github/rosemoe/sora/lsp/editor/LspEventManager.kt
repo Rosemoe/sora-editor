@@ -28,6 +28,8 @@ import androidx.annotation.WorkerThread
 import io.github.rosemoe.sora.lsp.events.EventContext
 import io.github.rosemoe.sora.lsp.events.EventListener
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.eclipse.lsp4j.FormattingOptions
 import java.util.function.Supplier
 
@@ -84,7 +86,7 @@ class LspEventManager(
         return eventEmitter.emit(eventName, createEventContext(*args))
     }
 
-    suspend fun emitAsync(eventName: String, vararg args: Any): EventContext {
+    suspend fun emitAsync(eventName: String, vararg args: Any): EventContext  {
         return eventEmitter.emitAsync(eventName, createEventContext(*args))
     }
 

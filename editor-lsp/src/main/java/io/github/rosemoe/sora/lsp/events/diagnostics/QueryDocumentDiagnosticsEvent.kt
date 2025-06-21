@@ -47,7 +47,7 @@ class QueryDocumentDiagnosticsEvent : AsyncEventListener() {
         val future = requestManager
             .diagnostic(
                 editor.uri.createDocumentDiagnosticParams()
-            )
+            ) ?: return
 
         this.future = future.thenAccept { }
 

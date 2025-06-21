@@ -85,6 +85,12 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
 
     open fun show(signatureHelp: SignatureHelp) {
         this.signatureHelp = signatureHelp
+
+        if (signatureHelp.signatures == null || signatureHelp.activeSignature == null || signatureHelp.activeParameter == null)  {
+            dismiss()
+            return
+        }
+
         renderSignatureHelp()
         updateWindowSizeAndLocation()
         show()
@@ -129,7 +135,6 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
     }
 
     private fun renderSignatureHelp() {
-
         val activeSignatureIndex = signatureHelp.activeSignature
         val activeParameterIndex = signatureHelp.activeParameter
         val signatures = signatureHelp.signatures

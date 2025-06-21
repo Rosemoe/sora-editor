@@ -36,6 +36,7 @@ import io.github.rosemoe.sora.lsp.events.diagnostics.queryDocumentDiagnostics
 import io.github.rosemoe.sora.lsp.events.document.documentChange
 import io.github.rosemoe.sora.lsp.events.signature.signatureHelp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.DocumentDiagnosticReport
 import org.eclipse.lsp4j.FullDocumentDiagnosticReport
@@ -46,6 +47,9 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
     EventReceiver<ContentChangeEvent> {
     override fun onReceive(event: ContentChangeEvent, unsubscribe: Unsubscribe) {
+        if (!editor.isConnected) {
+            return
+        }
 
         editor.coroutineScope.launch(Dispatchers.IO) {
             // send to server
@@ -56,7 +60,6 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
                 return@launch
             }
 
-            editor.eventManager.emitAsync(EventType.signatureHelp, event.changeStart)
 
             val diagnostics =
                 editor.eventManager.emitAsync(EventType.queryDocumentDiagnostics)
@@ -72,6 +75,8 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
                     put("data", diagnostics.left.items)
                 }
             }
+
+            editor.eventManager.emitAsync(EventType.signatureHelp, event.changeStart)
         }
 
 
@@ -81,9 +86,10 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
 class LspEditorSelectionChangeEventReceiver(private val editor: LspEditor) :
     EventReceiver<SelectionChangeEvent> {
     override fun onReceive(event: SelectionChangeEvent, unsubscribe: Unsubscribe) {
-
+        if (!editor.isConnected) {
+            return
+        }
         editor.coroutineScope.launch(Dispatchers.IO) {
-
             if (editor.hitReTrigger(event.editor.text[event.left.index].toString())) {
                 editor.showSignatureHelp(null)
                 return@launch
