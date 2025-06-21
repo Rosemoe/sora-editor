@@ -97,8 +97,10 @@ class ContextClickEvent(
     position: CharPosition,
     event: MotionEvent,
     span: Span?,
-    spanRange: TextRange?
-) : EditorMotionEvent(editor, position, event, span, spanRange)
+    spanRange: TextRange?,
+    motionRegion: Int,
+    motionBound: Int,
+) : EditorMotionEvent(editor, position, event, span, spanRange, motionRegion, motionBound)
 
 /**
  * Trigger when mouse hover updates
@@ -108,8 +110,10 @@ class HoverEvent(
     position: CharPosition,
     event: MotionEvent,
     span: Span?,
-    spanRange: TextRange?
-) : EditorMotionEvent(editor, position, event, span, spanRange)
+    spanRange: TextRange?,
+    motionRegion: Int,
+    motionBound: Int,
+) : EditorMotionEvent(editor, position, event, span, spanRange, motionRegion, motionBound)
 
 /**
  * Trigger when the editor needs to create context menu
