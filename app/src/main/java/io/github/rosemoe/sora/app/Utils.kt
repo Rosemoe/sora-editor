@@ -28,6 +28,11 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
+import android.view.View
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import io.github.rosemoe.sora.langs.monarch.MonarchColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
@@ -58,4 +63,17 @@ fun switchThemeIfRequired(context: Context, editor: CodeEditor) {
 
 inline fun <reified T : Activity> Context.startActivity() {
     startActivity(Intent(this, T::class.java))
+}
+
+/**
+ * Adjust the padding of view due to edge-to-edge since API 35
+ */
+fun edgeToEdgePaddingOnView(paddingView: View) {
+    if (SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+        ViewCompat.setOnApplyWindowInsetsListener(paddingView) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+    }
 }

@@ -26,13 +26,10 @@ package io.github.rosemoe.sora.app.tests
 
 import android.content.res.Configuration
 import android.graphics.Typeface
-import android.os.Build
-import android.os.Build.VERSION.SDK_INT
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.appcompat.app.AppCompatActivity
+import io.github.rosemoe.sora.app.edgeToEdgePaddingOnView
 import io.github.rosemoe.sora.app.switchThemeIfRequired
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
@@ -40,7 +37,6 @@ import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.lang.diagnostic.Quickfix
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.widget.CodeEditor
-import java.lang.StringBuilder
 
 class TestActivity : AppCompatActivity() {
     private lateinit var editor: CodeEditor
@@ -49,13 +45,7 @@ class TestActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         editor = CodeEditor(this)
         setContentView(editor)
-        if (SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            ViewCompat.setOnApplyWindowInsetsListener(editor.parent as View) { v, insets ->
-                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-                insets
-            }
-        }
+        edgeToEdgePaddingOnView(editor.parent as View)
         editor.typefaceText = Typeface.createFromAsset(assets, "Roboto-Regular.ttf")
         editor.setEditorLanguage(JavaLanguage())
         switchThemeIfRequired(this, editor)

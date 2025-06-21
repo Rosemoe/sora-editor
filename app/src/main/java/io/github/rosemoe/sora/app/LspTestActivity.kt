@@ -27,16 +27,12 @@ package io.github.rosemoe.sora.app
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Typeface
-import android.os.Build
-import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
@@ -80,14 +76,7 @@ class LspTestActivity : AppCompatActivity() {
         editor = CodeEditor(this)
         setContentView(editor)
 
-        // Edge to Edge Support
-        if (SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            ViewCompat.setOnApplyWindowInsetsListener(editor.parent as View) { v, insets ->
-                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-                insets
-            }
-        }
+        edgeToEdgePaddingOnView(editor.parent as View)
 
         val font = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
 
