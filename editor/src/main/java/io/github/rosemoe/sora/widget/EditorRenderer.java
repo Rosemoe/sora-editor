@@ -1172,11 +1172,10 @@ public class EditorRenderer {
 
             final var lineBgOverlapBehavior = editor.getProps().cursorLineBgOverlapBehavior;
 
-            final var drawCurrentLineBg = line == currentLine &&
+            var drawCurrentLineBg = line == currentLine &&
                     !editor.getCursorAnimator().isRunning() &&
                     editor.isHighlightCurrentLine() &&
-                    editor.isEditable() &&
-                    lineBgOverlapBehavior != CURSOR_LINE_BG_OVERLAP_CURSOR;
+                    editor.isEditable();
 
             final var drawCustomLineBg = lineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_CURSOR
                     || lineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_MIXED
@@ -1197,6 +1196,11 @@ public class EditorRenderer {
                     drawRowBackground(canvas, color, row);
                 }
             }
+
+            if (isOverlapping) {
+                drawCurrentLineBg &= lineBgOverlapBehavior != CURSOR_LINE_BG_OVERLAP_CURSOR;
+            }
+
             if (drawCurrentLineBg) {
                 if (isOverlapping && lineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_MIXED) {
                     // alpha = 0.5f = 0.5 * 255 = 128 = 0x80
