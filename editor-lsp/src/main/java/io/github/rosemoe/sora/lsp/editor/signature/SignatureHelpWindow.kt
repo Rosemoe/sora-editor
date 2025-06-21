@@ -86,8 +86,10 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
     open fun show(signatureHelp: SignatureHelp) {
         this.signatureHelp = signatureHelp
 
-        if (signatureHelp.signatures == null || signatureHelp.activeSignature == null || signatureHelp.activeParameter == null)
+        if (signatureHelp.signatures == null || signatureHelp.activeSignature == null || signatureHelp.activeParameter == null)  {
+            dismiss()
             return
+        }
 
         renderSignatureHelp()
         updateWindowSizeAndLocation()

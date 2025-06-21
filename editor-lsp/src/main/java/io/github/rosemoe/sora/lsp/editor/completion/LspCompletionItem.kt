@@ -36,6 +36,7 @@ import io.github.rosemoe.sora.lsp.utils.createPosition
 import io.github.rosemoe.sora.lsp.utils.createRange
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.Content
+import io.github.rosemoe.sora.util.Logger
 import io.github.rosemoe.sora.widget.CodeEditor
 import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.InsertTextFormat
@@ -115,11 +116,11 @@ class LspCompletionItem(
 
         if (completionItem.insertTextFormat == InsertTextFormat.Snippet) {
             val codeSnippet = CodeSnippetParser.parse(textEdit.newText)
-            val startIndex =
+            var startIndex =
                 text.getCharIndex(
                     textEdit.range.start.line, textEdit.range.start.character)
 
-            val endIndex = text.getCharIndex(
+            var endIndex = text.getCharIndex(
                 textEdit.range.end.line,
                 (text.getColumnCount(textEdit.range.end.line) - 1)
                     .coerceAtMost(textEdit.range.end.character)
@@ -127,8 +128,16 @@ class LspCompletionItem(
 
             val selectedText = text.subSequence(startIndex, endIndex).toString()
 
-            if (startIndex >= endIndex) {
-                throw RuntimeException("startIndex >= endIndex at $textEdit")
+            if (endIndex < startIndex) {
+                Logger.instance(this.javaClass.name)
+                    .w(
+                        "Invalid location information found applying edits from %s to %s",
+                        textEdit.range.start,
+                        textEdit.range.end
+                    )
+                val diff = startIndex - endIndex
+                endIndex = startIndex
+                startIndex = endIndex - diff
             }
 
             text.delete(startIndex, endIndex)
