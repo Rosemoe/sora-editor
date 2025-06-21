@@ -2396,7 +2396,7 @@ public class EditorRenderer {
                 canvas.drawLine(0, bottom, editor.getWidth(), bottom, paintOther);
             }
         });
-        paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
+        paintGeneral.setStyle(Paint.Style.FILL);
         paintGeneral.setFakeBoldText(false);
         paintGeneral.setTextSkewX(0f);
         paintGeneral.setStrikeThruText(false);
