@@ -27,6 +27,7 @@ import static io.github.rosemoe.sora.graphics.GraphicCharacter.couldBeEmojiPart;
 import static io.github.rosemoe.sora.graphics.GraphicCharacter.isCombiningCharacter;
 import static io.github.rosemoe.sora.util.Numbers.stringSize;
 import static io.github.rosemoe.sora.widget.DirectAccessProps.CURSOR_LINE_BG_OVERLAP_CURSOR;
+import static io.github.rosemoe.sora.widget.DirectAccessProps.CURSOR_LINE_BG_OVERLAP_CUSTOM;
 import static io.github.rosemoe.sora.widget.DirectAccessProps.CURSOR_LINE_BG_OVERLAP_MIXED;
 
 import android.annotation.SuppressLint;
@@ -1178,9 +1179,7 @@ public class EditorRenderer {
                     editor.isEditable();
 
             final var drawCustomLineBg = !drawCurrentLineBg
-                    || editor.getProps().drawCustomLineBgOnCurrentLine
-                    || lineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_CURSOR
-                    || lineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_MIXED;
+                    || (editor.getProps().drawCustomLineBgOnCurrentLine && lineBgOverlapBehavior != CURSOR_LINE_BG_OVERLAP_CUSTOM);
 
             var isOverlapping = false;
 
