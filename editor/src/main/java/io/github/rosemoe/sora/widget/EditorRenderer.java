@@ -1177,10 +1177,10 @@ public class EditorRenderer {
                     editor.isHighlightCurrentLine() &&
                     editor.isEditable();
 
-            final var drawCustomLineBg = lineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_CURSOR
-                    || lineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_MIXED
-                    || !drawCurrentLineBg
-                    || editor.getProps().drawCustomLineBgOnCurrentLine;
+            final var drawCustomLineBg = !drawCurrentLineBg
+                    || editor.getProps().drawCustomLineBgOnCurrentLine
+                    || lineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_CURSOR
+                    || lineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_MIXED;
 
             var isOverlapping = false;
 
