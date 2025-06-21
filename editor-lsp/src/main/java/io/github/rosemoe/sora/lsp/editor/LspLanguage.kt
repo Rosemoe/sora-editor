@@ -118,11 +118,12 @@ class LspLanguage(var editor: LspEditor) : Language {
         val serverResultCompletionItems =
             editor.coroutineScope.future {
                 val context = editor.eventManager.emitAsync(EventType.completion,position)
-                context.get<List<org.eclipse.lsp4j.CompletionItem>>("completion-items")
+                context.getOrNull<List<org.eclipse.lsp4j.CompletionItem>>("completion-items") ?: emptyList()
             }
 
         try {
-            serverResultCompletionItems.thenAccept { completions ->
+            serverResultCompletionItems
+                .thenAccept { completions ->
                 completions.forEach { completionItem: org.eclipse.lsp4j.CompletionItem ->
                     completionList.add(
                         completionItemProvider.createCompletionItem(
