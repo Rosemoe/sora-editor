@@ -60,6 +60,7 @@ import io.github.rosemoe.sora.util.Numbers;
 import io.github.rosemoe.sora.widget.component.Magnifier;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 import kotlin.jvm.functions.Function5;
+import kotlin.jvm.functions.Function7;
 
 /**
  * Handles touch events of editor
@@ -580,8 +581,15 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     int dispatchEditorMotionEvent
-            (Function5<CodeEditor, CharPosition, MotionEvent, Span, TextRange, EditorMotionEvent> constructor,
+            (Function7<CodeEditor, CharPosition, MotionEvent, Span, TextRange, Integer, Integer, EditorMotionEvent> constructor,
              @Nullable CharPosition pos, @NonNull MotionEvent event) {
+        final var region = RegionResolverKt.resolveTouchRegion(editor, event);
+        return dispatchEditorMotionEvent(constructor, pos, event, IntPair.getFirst(region), IntPair.getSecond(region));
+    }
+
+    int dispatchEditorMotionEvent
+            (Function7<CodeEditor, CharPosition, MotionEvent, Span, TextRange, Integer, Integer, EditorMotionEvent> constructor,
+             @Nullable CharPosition pos, @NonNull MotionEvent event, int motionRegion, int motionBound) {
         if (pos == null) {
             var pt = editor.getPointPositionOnScreen(event.getX(), event.getY());
             pos = editor.getText().getIndexer().getCharPosition(IntPair.getFirst(pt), IntPair.getSecond(pt));
@@ -598,7 +606,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     : text.getIndexer().getCharPosition(pos.line, text.getColumnCount(pos.line));
             range = new TextRange(startPos, endPos);
         }
-        return editor.dispatchEvent(constructor.invoke(editor, pos, event, span, range));
+        return editor.dispatchEvent(constructor.invoke(editor, pos, event, span, range, motionRegion, motionBound));
     }
 
     private boolean handleSelectionChange(MotionEvent e) {
@@ -726,6 +734,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         }
         var resolved = RegionResolverKt.resolveTouchRegion(editor, e);
         var region = IntPair.getFirst(resolved);
+        var regionBound = IntPair.getSecond(resolved);
         long res = editor.getPointPositionOnScreen(e.getX(), e.getY());
         int line = IntPair.getFirst(res);
         int column = IntPair.getSecond(res);
@@ -744,7 +753,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             }
         }
         var position = editor.getText().getIndexer().getCharPosition(line, column);
-        if ((dispatchEditorMotionEvent(ClickEvent::new, position, e) & InterceptTarget.TARGET_EDITOR) != 0) {
+        if ((dispatchEditorMotionEvent(ClickEvent::new, position, e, region, regionBound) & InterceptTarget.TARGET_EDITOR) != 0) {
             return true;
         }
         editor.showSoftInput();
