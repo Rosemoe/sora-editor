@@ -26,6 +26,9 @@ package io.github.rosemoe.sora.widget;
 import static io.github.rosemoe.sora.graphics.GraphicCharacter.couldBeEmojiPart;
 import static io.github.rosemoe.sora.graphics.GraphicCharacter.isCombiningCharacter;
 import static io.github.rosemoe.sora.util.Numbers.stringSize;
+import static io.github.rosemoe.sora.widget.DirectAccessProps.CURSOR_LINE_BG_OVERLAP_CURSOR;
+import static io.github.rosemoe.sora.widget.DirectAccessProps.CURSOR_LINE_BG_OVERLAP_CUSTOM;
+import static io.github.rosemoe.sora.widget.DirectAccessProps.CURSOR_LINE_BG_OVERLAP_MIXED;
 
 import android.annotation.SuppressLint;
 import android.graphics.Canvas;
@@ -1168,19 +1171,41 @@ public class EditorRenderer {
             long charPos = findDesiredVisibleChar(offset3, line, rowInf.startColumn, rowInf.endColumn);
             float paintingOffset = CharPosDesc.getPixelWidthOrOffset(charPos) - offset2;
 
+            final var lineBgOverlapBehavior = editor.getProps().cursorLineBgOverlapBehavior;
+
             var drawCurrentLineBg = line == currentLine &&
                     !editor.getCursorAnimator().isRunning() &&
                     editor.isHighlightCurrentLine() &&
                     editor.isEditable();
-            if (!drawCurrentLineBg || editor.getProps().drawCustomLineBgOnCurrentLine) {
+
+            final var drawCustomLineBg = !drawCurrentLineBg
+                    || (editor.getProps().drawCustomLineBgOnCurrentLine && lineBgOverlapBehavior != CURSOR_LINE_BG_OVERLAP_CUSTOM);
+
+            var isOverlapping = false;
+
+            if (drawCustomLineBg) {
                 // Draw custom background
                 var customBackground = getUserBackgroundForLine(line);
                 if (customBackground != null) {
                     var color = customBackground.resolve(editor.getColorScheme());
+                    if (line == currentLine) {
+                        isOverlapping = true;
+                    }
+
                     drawRowBackground(canvas, color, row);
                 }
             }
+
+            if (isOverlapping) {
+                drawCurrentLineBg &= lineBgOverlapBehavior != CURSOR_LINE_BG_OVERLAP_CURSOR;
+            }
+
             if (drawCurrentLineBg) {
+                if (isOverlapping && lineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_MIXED) {
+                    // alpha = 0.5f = 0.5 * 255 = 128 = 0x80
+                    currentLineBgColor = (currentLineBgColor & 0x00FFFFFF) | 0x80000000;
+                }
+
                 // Draw current line background
                 drawRowBackground(canvas, currentLineBgColor, row);
                 postDrawCurrentLines.add(row);
