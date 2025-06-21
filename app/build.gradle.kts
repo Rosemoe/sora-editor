@@ -40,8 +40,8 @@ android {
             storePassword = "114514"
             keyAlias = "debug"
             keyPassword = "114514"
-            this.enableV1Signing = true
-            this.enableV2Signing = true
+            enableV1Signing = true
+            enableV2Signing = true
         }
     }
     buildTypes {
@@ -80,9 +80,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.constraintlayout)
-    implementation(libs.gms.instantapps)
-
     // Desugar
     coreLibraryDesugaring(libs.desugar)
 
@@ -90,6 +87,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.constraintlayout)
     implementation(libs.lifecycle.runtime)
 
     // Editor
