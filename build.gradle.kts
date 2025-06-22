@@ -27,7 +27,6 @@ import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
-import org.jetbrains.kotlin.gradle.model.KotlinAndroidExtension
 
 @Suppress("DSL_SCOPE_VIOLATION") // https://youtrack.jetbrains.com/issue/KTIJ-19369
 plugins {
@@ -99,13 +98,4 @@ subprojects {
 
 tasks.register<Delete>("clean").configure {
     delete(rootProject.layout.buildDirectory)
-}
-
-val excludeProjectName = arrayOf("app", "buildSrc")
-
-tasks.register("bundleAll") {
-    group = "Rosemoe"
-    allprojects
-        .filter { it.name !in excludeProjectName }
-        .forEach { dependsOn(it.getTasksByName("bundleReleaseAar", false)) }
 }
