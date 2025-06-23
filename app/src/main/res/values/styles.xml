@@ -28,7 +28,7 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="colorControlNormal">@android:color/white</item>
+        <item name="colorControlNormal">@color/control_normal</item>
     </style>
 
     <style name="ToolbarTheme" parent="Widget.MaterialComponents.Toolbar">
