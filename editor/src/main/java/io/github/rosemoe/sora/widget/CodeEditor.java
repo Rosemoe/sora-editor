@@ -4288,7 +4288,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         text.startOffset = startOffset;
         text.selectionStart = selBegin - startOffset;
         text.selectionEnd = selEnd - startOffset;
-        if (selBegin != selEnd) {
+        if (getKeyMetaStates().isSelecting()) {
             text.flags |= ExtractedText.FLAG_SELECTING;
         }
         return text;
