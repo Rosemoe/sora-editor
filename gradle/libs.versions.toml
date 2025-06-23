@@ -1,5 +1,5 @@
 [versions]
-agp = "8.8.0"
+agp = "8.10.1"
 kotlin = "2.1.21"
 tsBinding = "4.3.1"
 lsp4j = "0.24.0"
