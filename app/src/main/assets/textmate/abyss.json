@@ -8,7 +8,8 @@
 			"invisibles": "#002040",
 			"lineHighlight": "#082050",
 			"selection": "#770811",
-			"guide": "#002952"
+			"guide": "#002952",
+			"highlightedDelimitersForeground": "#CC8242"
 		}
 	}, {
 		"scope": ["meta.embedded", "source.groovy.embedded"],
