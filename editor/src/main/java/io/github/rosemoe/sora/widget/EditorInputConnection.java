@@ -32,9 +32,12 @@ import android.text.TextUtils;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.SurroundingText;
+import android.view.inputmethod.TextAttribute;
+import android.view.inputmethod.TextSnapshot;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -57,6 +60,11 @@ import io.github.rosemoe.sora.util.Logger;
 class EditorInputConnection extends BaseInputConnection {
 
     private final static Logger logger = Logger.instance("EditorInputConnection");
+    /**
+     * Memory efficient text length from Android {@link EditorInfo}
+     */
+    private final static int MEMORY_EFFICIENT_TEXT_LENGTH = 2048;
+
     static boolean DEBUG = false;
     private final CodeEditor editor;
     protected ComposingText composingText = new ComposingText();
@@ -659,5 +667,45 @@ class EditorInputConnection extends BaseInputConnection {
         return true;
     }
 
+    @Override
+    public boolean replaceText(int start, int end, @NonNull CharSequence text, int newCursorPosition, @Nullable TextAttribute textAttribute) {
+        if (DEBUG) {
+            logger.d("replaceText, st = " + start + ", ed = " + end + ", text = "
+                    + text + ", nCurPos = " + newCursorPosition);
+        }
+        var length = editor.getText().length();
+        if (start < 0 || end < 0 || start > end || start > length || end > length) {
+            return false;
+        }
+        beginBatchEdit();
+        finishComposingText();
+        setSelection(start, end);
+        commitText(text, newCursorPosition);
+        endBatchEdit();
+        return true;
+    }
 
+    @Nullable
+    @Override
+    @RequiresApi(33)
+    public TextSnapshot takeSnapshot() {
+        int composingStart = -1;
+        int composingEnd = -1;
+        if (composingText.isComposing()) {
+            composingStart = composingText.startIndex;
+            composingEnd = composingText.endIndex;
+        }
+
+        final SurroundingText surroundingText = getSurroundingText(
+                MEMORY_EFFICIENT_TEXT_LENGTH / 2,
+                MEMORY_EFFICIENT_TEXT_LENGTH / 2, GET_TEXT_WITH_STYLES);
+        if (surroundingText == null) {
+            return null;
+        }
+
+        final int cursorCapsMode = getCursorCapsMode(TextUtils.CAP_MODE_CHARACTERS
+                | TextUtils.CAP_MODE_WORDS | TextUtils.CAP_MODE_SENTENCES);
+
+        return new TextSnapshot(surroundingText, composingStart, composingEnd, cursorCapsMode);
+    }
 }
