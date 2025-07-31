@@ -1204,13 +1204,14 @@ public class EditorRenderer {
             }
 
             if (drawCurrentLineBg) {
+                int commitCurrentLineBg = currentLineBgColor;
                 if (isOverlapping && lineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_MIXED) {
                     // alpha = 0.5f = 0.5 * 255 = 128 = 0x80
-                    currentLineBgColor = (currentLineBgColor & 0x00FFFFFF) | 0x80000000;
+                    commitCurrentLineBg = (commitCurrentLineBg & 0x00FFFFFF) | 0x80000000;
                 }
 
                 // Draw current line background
-                drawRowBackground(canvas, currentLineBgColor, row);
+                drawRowBackground(canvas, commitCurrentLineBg, row);
                 postDrawCurrentLines.add(row);
             }
         }
