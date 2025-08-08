@@ -44,6 +44,7 @@ import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.ClientCapabilities
 import org.eclipse.lsp4j.CodeActionCapabilities
+import org.eclipse.lsp4j.CodeActionKindCapabilities
 import org.eclipse.lsp4j.CodeActionLiteralSupportCapabilities
 import org.eclipse.lsp4j.CompletionCapabilities
 import org.eclipse.lsp4j.CompletionItemCapabilities
@@ -71,6 +72,7 @@ import org.eclipse.lsp4j.WorkspaceFolder
 import org.eclipse.lsp4j.launch.LSPLauncher
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageServer
+import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -343,6 +345,7 @@ class LanguageServerWrapper(
         }
         val workspaceFolder = WorkspaceFolder().apply {
             uri = initParams.rootUri
+            name = File(URI.create(uri)).name
         }
         // Maybe the user should be allowed to customize the WorkspaceFolder?
         // workspaceFolder.setName("");
@@ -351,8 +354,9 @@ class LanguageServerWrapper(
 
         val textDocumentClientCapabilities = TextDocumentClientCapabilities().apply {
             codeAction = CodeActionCapabilities()
-            codeAction.codeActionLiteralSupport =
-                CodeActionLiteralSupportCapabilities()
+            codeAction.codeActionLiteralSupport = CodeActionLiteralSupportCapabilities().apply {
+                codeActionKind = CodeActionKindCapabilities()
+            }
             completion =
                 CompletionCapabilities(CompletionItemCapabilities(true))
             definition = DefinitionCapabilities()
