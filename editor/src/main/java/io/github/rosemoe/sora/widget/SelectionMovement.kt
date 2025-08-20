@@ -140,10 +140,11 @@ enum class SelectionMovement(
                     editor.text.getLine(pos.line)
                 )
             )
-            if (pos.column != column) {
-                editor.text.indexer.getCharPosition(pos.line, column)
-            } else {
+            if (pos.column == column || column == editor.text.getColumnCount(pos.line)) {
+                // Move to start if already at enhanced start / line is space-filled
                 editor.text.indexer.getCharPosition(pos.line, 0)
+            } else {
+                editor.text.indexer.getCharPosition(pos.line, column)
             }
         } else {
             editor.text.indexer.getCharPosition(pos.line, 0)
@@ -184,16 +185,23 @@ enum class SelectionMovement(
         val layout = editor.layout
         val rowIndex = layout.getRowIndexForPosition(pos.index)
         val row = layout.getRowAt(rowIndex)
+        val maxColumn =
+            if (rowIndex + 1 == layout.rowCount || layout.getRowAt(rowIndex + 1).lineIndex != row.lineIndex) {
+                row.endColumn
+            } else {
+                row.endColumn - 1
+            }
         if (editor.props.enhancedHomeAndEnd) {
             val column = IntPair.getFirst(
                 TextUtils.findLeadingAndTrailingWhitespacePos(
-                    editor.text.getLine(pos.line), row.startColumn, row.endColumn
+                    editor.text.getLine(pos.line), row.startColumn, maxColumn
                 )
             )
-            if (pos.column != column) {
-                editor.text.indexer.getCharPosition(pos.line, column)
-            } else {
+            if (pos.column == column || column == maxColumn) {
+                // Move to start if already at enhanced start / line is space-filled
                 editor.text.indexer.getCharPosition(pos.line, row.startColumn)
+            } else {
+                editor.text.indexer.getCharPosition(pos.line, column)
             }
         } else {
             editor.text.indexer.getCharPosition(row.lineIndex, row.startColumn)
