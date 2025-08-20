@@ -475,4 +475,11 @@ public class DirectAccessProps implements Serializable {
      */
     @InvalidateRequired
     public int cursorLineBgOverlapBehavior = CURSOR_LINE_BG_OVERLAP_DEFAULT;
+
+    /**
+     * If {@code true}, Home and End shortcuts will be based on visual lines (editor rows)
+     * instead of physical lines.
+     */
+    public boolean rowBasedHomeEnd = true;
+
 }

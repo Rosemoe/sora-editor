@@ -132,7 +132,7 @@ enum class SelectionMovement(
         editor.text.indexer.getCharPosition(line, column)
     }),
 
-    /** Move To Line Start */
+    /** Move To Physical Line Start */
     LINE_START({ editor, pos ->
         if (editor.props.enhancedHomeAndEnd) {
             val column = IntPair.getFirst(
@@ -150,7 +150,7 @@ enum class SelectionMovement(
         }
     }),
 
-    /** Move To Line End */
+    /** Move To Physical Line End */
     LINE_END({ editor, pos ->
         val colNum = editor.text.getColumnCount(pos.line)
         if (editor.props.enhancedHomeAndEnd) {
@@ -177,6 +177,54 @@ enum class SelectionMovement(
     /** Move To Text End */
     TEXT_END({ editor, _ ->
         editor.text.indexer.getCharPosition(editor.text.length)
+    }),
+
+    /** Move To Visual Line Start */
+    ROW_START({ editor, pos ->
+        val layout = editor.layout
+        val rowIndex = layout.getRowIndexForPosition(pos.index)
+        val row = layout.getRowAt(rowIndex)
+        if (editor.props.enhancedHomeAndEnd) {
+            val column = IntPair.getFirst(
+                TextUtils.findLeadingAndTrailingWhitespacePos(
+                    editor.text.getLine(pos.line), row.startColumn, row.endColumn
+                )
+            )
+            if (pos.column != column) {
+                editor.text.indexer.getCharPosition(pos.line, column)
+            } else {
+                editor.text.indexer.getCharPosition(pos.line, row.startColumn)
+            }
+        } else {
+            editor.text.indexer.getCharPosition(row.lineIndex, row.startColumn)
+        }
+    }),
+
+    /** Move To Visual Line End */
+    ROW_END({ editor, pos ->
+        val layout = editor.layout
+        val rowIndex = layout.getRowIndexForPosition(pos.index)
+        val row = layout.getRowAt(rowIndex)
+        val maxColumn =
+            if (rowIndex + 1 == layout.rowCount || layout.getRowAt(rowIndex + 1).lineIndex != row.lineIndex) {
+                row.endColumn
+            } else {
+                row.endColumn - 1
+            }
+        if (editor.props.enhancedHomeAndEnd) {
+            val column = IntPair.getSecond(
+                TextUtils.findLeadingAndTrailingWhitespacePos(
+                    editor.text.getLine(pos.line), row.startColumn, maxColumn
+                )
+            )
+            if (pos.column != column) {
+                editor.text.indexer.getCharPosition(pos.line, column)
+            } else {
+                editor.text.indexer.getCharPosition(pos.line, maxColumn)
+            }
+        } else {
+            editor.text.indexer.getCharPosition(row.lineIndex, maxColumn)
+        }
     });
 
     /**
