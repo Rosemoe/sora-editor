@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.app
 
 import android.app.Service
 import android.content.Intent
+import android.net.LocalServerSocket
 import android.os.IBinder
 import android.util.Log
 import com.tang.vscode.LuaLanguageClient
@@ -55,13 +56,12 @@ class LspLanguageServerService : Service() {
         thread {
             val port = intent?.getIntExtra("port", 0) ?: 0
 
-            val socket = ServerSocket(port)
+            val socket = LocalServerSocket("lua-lsp")
 
-            Log.d(TAG, "Starting socket on port ${socket.localPort}")
+            Log.d(TAG, "Starting socket on address ${socket.localSocketAddress}")
 
             val socketClient = socket.accept()
 
-            Log.d(TAG, "connected to the client on port ${socketClient.port}")
 
             runCatching {
 

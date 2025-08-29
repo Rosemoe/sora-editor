@@ -112,7 +112,6 @@ class LspCompletionItem(
             }
         }
 
-        val finalTextEdit = textEdit
 
         if (completionItem.insertTextFormat == InsertTextFormat.Snippet) {
             val codeSnippet = CodeSnippetParser.parse(textEdit.newText)
@@ -146,7 +145,7 @@ class LspCompletionItem(
                 .startSnippet(startIndex, codeSnippet, selectedText)
         } else {
             eventManager.emit(EventType.applyEdits) {
-                put("edits", listOf(finalTextEdit))
+                put("edits", listOf(textEdit))
                 put(text)
             }
         }

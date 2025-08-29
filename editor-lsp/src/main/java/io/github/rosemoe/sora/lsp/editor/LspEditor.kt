@@ -295,7 +295,6 @@ class LspEditor(
 
 
     fun onDiagnosticsUpdate() {
-
         publishDiagnostics(diagnostics)
     }
 

@@ -46,6 +46,7 @@ import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
 import io.github.rosemoe.sora.langs.textmate.registry.dsl.languages
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
+import io.github.rosemoe.sora.lsp.client.connection.LocalSocketStreamConnectionProvider
 import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvider
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
@@ -149,21 +150,16 @@ class LspTestActivity : AppCompatActivity() {
             editor.editable = false
         }
 
-        val port = randomPort()
-
         val projectPath = externalCacheDir?.resolve("testProject")?.absolutePath ?: ""
 
         startService(
             Intent(this@LspTestActivity, LspLanguageServerService::class.java)
-                .apply {
-                    putExtra("port", port)
-                }
         )
 
         val luaServerDefinition =
             object : CustomLanguageServerDefinition("lua",
                 ServerConnectProvider {
-                    SocketStreamConnectionProvider(port)
+                    LocalSocketStreamConnectionProvider("lua-lsp")
                 }
             ) {
                 /* override fun getInitializationOptions(uri: URI?): Any {
@@ -229,14 +225,6 @@ class LspTestActivity : AppCompatActivity() {
             text,
             Toast.LENGTH_SHORT
         ).show()
-    }
-
-    private fun randomPort(): Int {
-        val serverSocket = ServerSocket(0)
-
-        val port = serverSocket.localPort
-        serverSocket.close()
-        return port
     }
 
     private fun createTextMateLanguage(): TextMateLanguage {

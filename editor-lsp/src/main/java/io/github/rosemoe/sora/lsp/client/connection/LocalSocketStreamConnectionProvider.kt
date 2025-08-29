@@ -25,27 +25,25 @@
 package io.github.rosemoe.sora.lsp.client.connection
 
 
+import android.net.LocalSocket
+import android.net.LocalSocketAddress
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.net.Socket
-import java.net.SocketAddress
 
 
 /**
- * Socket-based language server connection. Use for cross host connections.
+ * LocalSocket-based language server connection. Recommend for local connections.
  */
-class SocketStreamConnectionProvider(
-    private val port:Int,
-    private val host:String? = null
+class LocalSocketStreamConnectionProvider(
+    private val name: String
 ) : StreamConnectionProvider {
-    private lateinit var socket: Socket
+    private lateinit var socket: LocalSocket
 
     @Throws(IOException::class)
     override fun start() {
-        val port = port
-        socket = Socket(host ?: "localhost", port)
-        socket.soTimeout = 0
+        socket = LocalSocket()
+        socket.connect(LocalSocketAddress(name,LocalSocketAddress.Namespace.ABSTRACT))
     }
 
     override val inputStream: InputStream

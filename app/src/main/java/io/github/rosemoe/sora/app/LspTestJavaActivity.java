@@ -53,6 +53,7 @@ import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
 import io.github.rosemoe.sora.langs.textmate.registry.dsl.LanguageDefinitionListBuilder;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver;
+import io.github.rosemoe.sora.lsp.client.connection.LocalSocketStreamConnectionProvider;
 import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvider;
 import io.github.rosemoe.sora.lsp.client.connection.StreamConnectionProvider;
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition;
@@ -149,13 +150,9 @@ public class LspTestJavaActivity extends AppCompatActivity {
             editor.setEditable(false);
         });
 
-        var port = randomPort();
-
         var projectPath = new File(getExternalCacheDir(), "testProject").getAbsolutePath();
 
         var intent = new Intent(this, LspLanguageServerService.class);
-
-        intent.putExtra("port", port);
 
         startService(
                 intent
@@ -163,7 +160,7 @@ public class LspTestJavaActivity extends AppCompatActivity {
 
         var luaServerDefinition =
                 new CustomLanguageServerDefinition("lua",
-                        workingDir -> new SocketStreamConnectionProvider(port, null)) {
+                        workingDir -> new LocalSocketStreamConnectionProvider("lua-lsp")) {
 
                     private final EventListener eventListener = new EventListener(LspTestJavaActivity.this);
 
@@ -242,14 +239,6 @@ public class LspTestJavaActivity extends AppCompatActivity {
                 text,
                 Toast.LENGTH_SHORT
         ).show();
-    }
-
-    private int randomPort() throws IOException {
-        var serverSocket = new ServerSocket(0);
-
-        var port = serverSocket.getLocalPort();
-        serverSocket.close();
-        return port;
     }
 
     private TextMateLanguage createTextMateLanguage() {
