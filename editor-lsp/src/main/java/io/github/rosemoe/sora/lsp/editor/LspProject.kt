@@ -131,7 +131,7 @@ class LspProject(
     fun dispose() {
         closeAllEditors()
         languageServerWrappers.forEach {
-            it.value.stop(false)
+            it.value.stop(true)
         }
         serverDefinitions.clear()
         coroutineScope.coroutineContext.cancelChildren()
