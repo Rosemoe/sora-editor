@@ -47,7 +47,6 @@ import io.github.rosemoe.sora.langs.textmate.registry.dsl.languages
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
 import io.github.rosemoe.sora.lsp.client.connection.LocalSocketStreamConnectionProvider
-import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvider
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 import io.github.rosemoe.sora.lsp.editor.LspEditor
@@ -65,7 +64,6 @@ import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.tm4e.core.registry.IThemeSource
 import java.io.FileOutputStream
 import java.lang.ref.WeakReference
-import java.net.ServerSocket
 import java.util.zip.ZipFile
 
 class LspTestActivity : AppCompatActivity() {
