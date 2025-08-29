@@ -28,6 +28,7 @@ package io.github.rosemoe.sora.lsp.client.connection
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketAddress
 
@@ -44,7 +45,8 @@ class SocketStreamConnectionProvider(
     @Throws(IOException::class)
     override fun start() {
         val port = port
-        socket = Socket(host ?: "localhost", port)
+        socket = Socket()
+        socket.connect(InetSocketAddress(host ?: "host", port), 20)
         socket.soTimeout = 0
     }
 
