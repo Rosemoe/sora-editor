@@ -496,7 +496,7 @@ class DefaultRequestManager(
     override fun diagnostic(params: DocumentDiagnosticParams?): CompletableFuture<DocumentDiagnosticReport?>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.diagnosticProvider != null) textDocumentService.diagnostic(
+                if (serverCapabilities.diagnosticProvider != null && (serverCapabilities.diagnosticProvider.isInterFileDependencies || serverCapabilities.diagnosticProvider.isWorkspaceDiagnostics)) textDocumentService.diagnostic(
                     params
                 ) else null
             } catch (e: Exception) {
