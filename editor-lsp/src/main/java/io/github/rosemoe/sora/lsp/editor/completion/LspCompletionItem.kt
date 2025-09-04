@@ -76,6 +76,7 @@ class LspCompletionItem(
             ), position.asLspPosition()
         )
 
+
         if (completionItem.insertText != null) {
             textEdit.newText = completionItem.insertText
         }
@@ -103,8 +104,9 @@ class LspCompletionItem(
             // allow completion items to be wrong with a too wide range
             val documentEnd = createPosition(
                 text.lineCount - 1,
-                text.getColumnCount(0.coerceAtLeast(text.lineCount - 1)) - 1
+                text.getColumnCount(0.coerceAtLeast(text.lineCount - 1))
             )
+
             val textEditEnd = textEdit.range.end
             if (documentEnd.line < textEditEnd.line || documentEnd.line == textEditEnd.line && documentEnd.character < textEditEnd.character
             ) {
@@ -112,12 +114,12 @@ class LspCompletionItem(
             }
         }
 
-
         if (completionItem.insertTextFormat == InsertTextFormat.Snippet) {
             val codeSnippet = CodeSnippetParser.parse(textEdit.newText)
             var startIndex =
                 text.getCharIndex(
-                    textEdit.range.start.line, textEdit.range.start.character)
+                    textEdit.range.start.line, textEdit.range.start.character
+                )
 
             var endIndex = text.getCharIndex(
                 textEdit.range.end.line,
