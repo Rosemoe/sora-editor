@@ -45,8 +45,8 @@ public class LongPressEvent extends EditorMotionEvent {
 
 
     public LongPressEvent(@NonNull CodeEditor editor, @NonNull CharPosition position, @NonNull MotionEvent event,
-                          @Nullable Span span, @Nullable TextRange spanRange) {
-        super(editor, position, event, span, spanRange);
+                          @Nullable Span span, @Nullable TextRange spanRange, int motionRegion, int motionBound) {
+        super(editor, position, event, span, spanRange, motionRegion, motionBound);
     }
 
 }

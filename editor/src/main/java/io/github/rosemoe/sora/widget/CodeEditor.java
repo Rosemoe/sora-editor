@@ -1867,7 +1867,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Commit text to the content from IME
      */
-    public void commitText(CharSequence text) {
+    public void commitText(@NonNull CharSequence text) {
         commitText(text, true);
     }
 
@@ -1877,7 +1877,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param text            Text commit by InputConnection
      * @param applyAutoIndent Apply automatic indentation
      */
-    public void commitText(CharSequence text, boolean applyAutoIndent) {
+    public void commitText(@NonNull CharSequence text, boolean applyAutoIndent) {
         commitText(text, applyAutoIndent, true);
     }
 
@@ -1888,11 +1888,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param applyAutoIndent Apply automatic indentation
      * @param applySymbolCompletion Apply symbol surroundings and completions
      */
-    public void commitText(CharSequence text, boolean applyAutoIndent, boolean applySymbolCompletion) {
-        if (text.length() == 0) {
-            return;
-        }
-
+    public void commitText(@NonNull CharSequence text, boolean applyAutoIndent, boolean applySymbolCompletion) {
         // replace text
         SymbolPairMatch.SymbolPair pair = null;
         if (applySymbolCompletion && getProps().symbolPairAutoCompletion && text.length() > 0) {
@@ -4292,7 +4288,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         text.startOffset = startOffset;
         text.selectionStart = selBegin - startOffset;
         text.selectionEnd = selEnd - startOffset;
-        if (selBegin != selEnd) {
+        if (getKeyMetaStates().isSelecting()) {
             text.flags |= ExtractedText.FLAG_SELECTING;
         }
         return text;

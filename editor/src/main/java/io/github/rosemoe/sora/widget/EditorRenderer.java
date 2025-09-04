@@ -26,6 +26,9 @@ package io.github.rosemoe.sora.widget;
 import static io.github.rosemoe.sora.graphics.GraphicCharacter.couldBeEmojiPart;
 import static io.github.rosemoe.sora.graphics.GraphicCharacter.isCombiningCharacter;
 import static io.github.rosemoe.sora.util.Numbers.stringSize;
+import static io.github.rosemoe.sora.widget.DirectAccessProps.CURSOR_LINE_BG_OVERLAP_CURSOR;
+import static io.github.rosemoe.sora.widget.DirectAccessProps.CURSOR_LINE_BG_OVERLAP_CUSTOM;
+import static io.github.rosemoe.sora.widget.DirectAccessProps.CURSOR_LINE_BG_OVERLAP_MIXED;
 
 import android.annotation.SuppressLint;
 import android.graphics.Canvas;
@@ -1111,6 +1114,17 @@ public class EditorRenderer {
     }
 
     /**
+     * Draw current line background during animation
+     */
+    protected void drawAnimatedCurrentLineBackground(Canvas canvas, int currentLineBgColor) {
+        tmpRect.bottom = editor.getCursorAnimator().animatedLineBottom() - editor.getOffsetY();
+        tmpRect.top = tmpRect.bottom - editor.getCursorAnimator().animatedLineHeight();
+        tmpRect.left = 0;
+        tmpRect.right = viewRect.right;
+        drawColor(canvas, currentLineBgColor, tmpRect);
+    }
+
+    /**
      * Draw rows with a {@link RowIterator}
      *
      * @param canvas              Canvas to draw
@@ -1146,15 +1160,69 @@ public class EditorRenderer {
 
         // Step 1 - Draw background of rows
 
-        // Draw current line background on animation
-        if (editor.getCursorAnimator().isRunning() && editor.isHighlightCurrentLine()) {
-            tmpRect.bottom = editor.getCursorAnimator().animatedLineBottom() - editor.getOffsetY();
-            tmpRect.top = tmpRect.bottom - editor.getCursorAnimator().animatedLineHeight();
-            tmpRect.left = 0;
-            tmpRect.right = viewRect.right;
-            drawColor(canvas, currentLineBgColor, tmpRect);
+        // Pre-draw animated current line background
+        if (editor.getCursorAnimator().isRunning() && editor.isHighlightCurrentLine()
+                && (editor.getProps().cursorLineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_CURSOR || editor.getProps().cursorLineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_MIXED)) {
+            drawAnimatedCurrentLineBackground(canvas, currentLineBgColor);
         }
-        // Other backgrounds
+        // Draw custom line backgrounds & normal current line background
+        for (int row = firstVis; row <= editor.getLastVisibleRow() && rowIterator.hasNext(); row++) {
+            Row rowInf = rowIterator.next();
+            int line = rowInf.lineIndex;
+            if (lastPreparedLine != line) {
+                prepareLine(line);
+                lastPreparedLine = line;
+            }
+
+            final var lineBgOverlapBehavior = editor.getProps().cursorLineBgOverlapBehavior;
+
+            var drawCurrentLineBg = line == currentLine &&
+                    !editor.getCursorAnimator().isRunning() &&
+                    editor.isHighlightCurrentLine() &&
+                    editor.isEditable();
+
+            final var drawCustomLineBg = !drawCurrentLineBg
+                    || (editor.getProps().drawCustomLineBgOnCurrentLine && lineBgOverlapBehavior != CURSOR_LINE_BG_OVERLAP_CUSTOM);
+
+            var isOverlapping = false;
+
+            if (drawCustomLineBg) {
+                // Draw custom background
+                var customBackground = getUserBackgroundForLine(line);
+                if (customBackground != null) {
+                    var color = customBackground.resolve(editor.getColorScheme());
+                    if (line == currentLine) {
+                        isOverlapping = true;
+                    }
+
+                    drawRowBackground(canvas, color, row);
+                }
+            }
+
+            if (isOverlapping) {
+                drawCurrentLineBg &= lineBgOverlapBehavior != CURSOR_LINE_BG_OVERLAP_CURSOR;
+            }
+
+            if (drawCurrentLineBg) {
+                int commitCurrentLineBg = currentLineBgColor;
+                if (isOverlapping && lineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_MIXED) {
+                    // alpha = 0.5f = 0.5 * 255 = 128 = 0x80
+                    commitCurrentLineBg = (commitCurrentLineBg & 0x00FFFFFF) | 0x80000000;
+                }
+
+                // Draw current line background
+                drawRowBackground(canvas, commitCurrentLineBg, row);
+                postDrawCurrentLines.add(row);
+            }
+        }
+        // Post-draw animated current line background
+        if (editor.getCursorAnimator().isRunning() && editor.isHighlightCurrentLine()
+                && editor.getProps().cursorLineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_CUSTOM) {
+            drawAnimatedCurrentLineBackground(canvas, currentLineBgColor);
+        }
+        rowIterator.reset();
+
+        // Other system line background are drawn last
         for (int row = firstVis; row <= editor.getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
             int line = rowInf.lineIndex;
@@ -1167,24 +1235,6 @@ public class EditorRenderer {
             // Get visible region on the line
             long charPos = findDesiredVisibleChar(offset3, line, rowInf.startColumn, rowInf.endColumn);
             float paintingOffset = CharPosDesc.getPixelWidthOrOffset(charPos) - offset2;
-
-            var drawCurrentLineBg = line == currentLine &&
-                    !editor.getCursorAnimator().isRunning() &&
-                    editor.isHighlightCurrentLine() &&
-                    editor.isEditable();
-            if (!drawCurrentLineBg || editor.getProps().drawCustomLineBgOnCurrentLine) {
-                // Draw custom background
-                var customBackground = getUserBackgroundForLine(line);
-                if (customBackground != null) {
-                    var color = customBackground.resolve(editor.getColorScheme());
-                    drawRowBackground(canvas, color, row);
-                }
-            }
-            if (drawCurrentLineBg) {
-                // Draw current line background
-                drawRowBackground(canvas, currentLineBgColor, row);
-                postDrawCurrentLines.add(row);
-            }
 
             // Draw matched text background
             if (matchedPositions.size() > 0) {
@@ -2371,7 +2421,7 @@ public class EditorRenderer {
                 canvas.drawLine(0, bottom, editor.getWidth(), bottom, paintOther);
             }
         });
-        paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
+        paintGeneral.setStyle(Paint.Style.FILL);
         paintGeneral.setFakeBoldText(false);
         paintGeneral.setTextSkewX(0f);
         paintGeneral.setStrikeThruText(false);

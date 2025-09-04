@@ -23,7 +23,6 @@
  */
 package io.github.rosemoe.sora.app;
 
-import static android.os.Build.VERSION.SDK_INT;
 import static io.github.rosemoe.sora.app.UtilsKt.switchThemeIfRequired;
 
 import android.content.Intent;
@@ -33,33 +32,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-
-
-import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme;
-import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
-import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry;
-import io.github.rosemoe.sora.langs.textmate.registry.GrammarRegistry;
-import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
-import io.github.rosemoe.sora.langs.textmate.registry.dsl.LanguageDefinitionListBuilder;
-import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
-import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver;
-import io.github.rosemoe.sora.lsp.client.connection.LocalSocketStreamConnectionProvider;
-import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition;
-import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler;
-import io.github.rosemoe.sora.lsp.editor.LspEditor;
-import io.github.rosemoe.sora.lsp.editor.LspProject;
-import io.github.rosemoe.sora.text.ContentIO;
-import io.github.rosemoe.sora.widget.CodeEditor;
-import kotlin.Unit;
 
 import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.InitializeResult;
@@ -82,9 +59,24 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public class LspTestJavaActivity extends AppCompatActivity {
+import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme;
+import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
+import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry;
+import io.github.rosemoe.sora.langs.textmate.registry.GrammarRegistry;
+import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
+import io.github.rosemoe.sora.langs.textmate.registry.dsl.LanguageDefinitionListBuilder;
+import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
+import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver;
+import io.github.rosemoe.sora.lsp.client.connection.LocalSocketStreamConnectionProvider;
+import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition;
+import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler;
+import io.github.rosemoe.sora.lsp.editor.LspEditor;
+import io.github.rosemoe.sora.lsp.editor.LspProject;
+import io.github.rosemoe.sora.text.ContentIO;
+import kotlin.Unit;
+
+public class LspTestJavaActivity extends BaseEditorActivity {
     private volatile LspEditor lspEditor;
-    private CodeEditor editor;
     private volatile LspProject lspProject;
     private Menu rootMenu;
 
@@ -92,18 +84,7 @@ public class LspTestJavaActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        editor = new CodeEditor(this);
-        setContentView(editor);
-
-        // Edge to Edge Support
-        if (SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            ViewCompat.setOnApplyWindowInsetsListener((View) editor.getParent(), (v, insets) -> {
-                var systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-                return insets;
-            });
-        }
+        setTitle("LSP Test - Java");
 
         var font = Typeface.createFromAsset(getAssets(), "JetBrainsMono-Regular.ttf");
 

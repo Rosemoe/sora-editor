@@ -25,11 +25,8 @@
 import com.android.build.gradle.BaseExtension
 import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
-import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
-import org.jetbrains.kotlin.gradle.model.KotlinAndroidExtension
 
-@Suppress("DSL_SCOPE_VIOLATION") // https://youtrack.jetbrains.com/issue/KTIJ-19369
 plugins {
     id("build-logic.root-project")
     alias(libs.plugins.android.application) apply false
@@ -67,6 +64,9 @@ fun Project.configureKotlinExtension() {
 }
 
 subprojects {
+    group = "io.github.rosemoe"
+    version = Versions.versionName
+
     plugins.withId("com.android.application") {
         configureBaseExtension()
     }
@@ -79,12 +79,12 @@ subprojects {
 
     plugins.withId("com.vanniktech.maven.publish.base") {
         configure<MavenPublishBaseExtension> {
-            group = "io.github.Rosemoe.sora-editor"
+            group = "io.github.rosemoe"
             version = Versions.versionName
             pomFromGradleProperties()
-            publishToMavenCentral(SonatypeHost.S01)
+            publishToMavenCentral()
             signAllPublications()
-            if ("bom" != this@subprojects.name) {
+            if ("editor-bom" != this@subprojects.name) {
                 configure(
                     AndroidSingleVariantLibrary(
                         variant = "release",
@@ -99,13 +99,4 @@ subprojects {
 
 tasks.register<Delete>("clean").configure {
     delete(rootProject.layout.buildDirectory)
-}
-
-val excludeProjectName = arrayOf("app", "buildSrc")
-
-tasks.register("bundleAll") {
-    group = "Rosemoe"
-    allprojects
-        .filter { it.name !in excludeProjectName }
-        .forEach { dependsOn(it.getTasksByName("bundleReleaseAar", false)) }
 }

@@ -162,20 +162,30 @@ public class TextUtils {
     }
 
     /**
-     * As the name is, we find where leading spaces end and trailing spaces start
+     * Find where leading spaces end and trailing spaces start
      *
      * @param line The line to search
      */
     public static long findLeadingAndTrailingWhitespacePos(ContentLine line) {
+        return findLeadingAndTrailingWhitespacePos(line, 0, line.length());
+    }
+
+    /**
+     * Find where leading spaces end and trailing spaces start
+     *
+     * @param line  The line to search
+     * @param start Range start (inclusive)
+     * @param end   Range end (exclusive)
+     */
+    public static long findLeadingAndTrailingWhitespacePos(ContentLine line, int start, int end) {
         var buffer = line.getBackingCharArray();
-        int column = line.length();
-        int leading = 0;
-        int trailing = column;
-        while (leading < column && isWhitespace(buffer[leading])) {
+        int leading = start;
+        int trailing = end;
+        while (leading < end && isWhitespace(buffer[leading])) {
             leading++;
         }
-        // Only them this action is needed
-        if (leading != column) {
+        // Skip for space-filled line
+        if (leading != end) {
             while (trailing > 0 && isWhitespace(buffer[trailing - 1])) {
                 trailing--;
             }

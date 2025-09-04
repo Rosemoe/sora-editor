@@ -45,6 +45,35 @@ import io.github.rosemoe.sora.annotations.InvalidateRequired;
 public class DirectAccessProps implements Serializable {
 
     /**
+     * Rendering behavior for {@link #cursorLineBgOverlapBehavior}.
+     * <p>
+     * If the cursor line has a custom background set, then draw the cursor line background on top
+     * of the custom background. For backwards compatibility, this is the default behavior.
+     */
+    public static final int CURSOR_LINE_BG_OVERLAP_CUSTOM = 0;
+
+    /**
+     * Rendering behavior for {@link #cursorLineBgOverlapBehavior}.
+     * <p>
+     * If the cursor line has a custom background set, then don't draw the cursor line background.
+     */
+    public static final int CURSOR_LINE_BG_OVERLAP_CURSOR = 1;
+
+    /**
+     * Rendering behavior for {@link #cursorLineBgOverlapBehavior}.
+     * <p>
+     * If the cursor line has a custom background set, then draw the cursor line background on top
+     * of the custom background, but make the cursor line background partly transparent so that both
+     * background colors are visible.
+     */
+    public static final int CURSOR_LINE_BG_OVERLAP_MIXED = 2;
+
+    /**
+     * The default rendering behavior for {@link #cursorLineBgOverlapBehavior}.
+     */
+    public static final int CURSOR_LINE_BG_OVERLAP_DEFAULT = CURSOR_LINE_BG_OVERLAP_CUSTOM;
+
+    /**
      * Define symbol pairs for any language,
      * Override language settings.
      */
@@ -439,5 +468,18 @@ public class DirectAccessProps implements Serializable {
      * for IME
      */
     public boolean disableTextExtracting = false;
+
+    /**
+     * Specifies the cursor line background rendering behavior when the cursor is at a line which
+     * also has a custom line background set.
+     */
+    @InvalidateRequired
+    public int cursorLineBgOverlapBehavior = CURSOR_LINE_BG_OVERLAP_DEFAULT;
+
+    /**
+     * If {@code true}, Home and End shortcuts will be based on visual lines (editor rows)
+     * instead of physical lines.
+     */
+    public boolean rowBasedHomeEnd = true;
 
 }

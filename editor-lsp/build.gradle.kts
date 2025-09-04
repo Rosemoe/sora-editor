@@ -27,9 +27,6 @@ plugins {
     id("com.vanniktech.maven.publish.base")
 }
 
-group = "io.github.Rosemoe.sora-editor"
-version = Versions.versionName
-
 android {
     namespace = "io.github.rosemoe.sora.lsp"
 

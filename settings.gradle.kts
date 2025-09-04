@@ -46,7 +46,7 @@ dependencyResolutionManagement {
 
 rootProject.name="sora-editor"
 include(
-    ":bom",
+    ":editor-bom",
     ":editor",
     ":app",
     ":language-monarch",

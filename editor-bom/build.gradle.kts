@@ -31,7 +31,7 @@ plugins {
 dependencies {
     constraints {
         project.rootProject.subprojects.forEach { subproject ->
-            if (subproject.name != "bom") {
+            if (subproject.name != "editor-bom") {
                 api(subproject)
             }
         }

@@ -33,6 +33,7 @@ import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.RegionResolverKt;
 
 /**
  * Base class for click events
@@ -41,21 +42,84 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  * @see ClickEvent
  * @see DoubleClickEvent
  * @see LongPressEvent
+ * @see ContextClickEvent
+ * @see HoverEvent
  */
 public abstract class EditorMotionEvent extends Event {
+
+    /**
+     * Motion occurred outside of editor.
+     *
+     * @see EditorMotionEvent#getMotionRegion()
+     */
+    public static final int REGION_OUTBOUND = RegionResolverKt.REGION_OUTBOUND;
+
+    /**
+     * Motion occurred in line number region.
+     *
+     * @see EditorMotionEvent#getMotionRegion()
+     */
+    public static final int REGION_LINE_NUMBER = RegionResolverKt.REGION_LINE_NUMBER;
+
+    /**
+     * Motion occurred in side icon region.
+     *
+     * @see EditorMotionEvent#getMotionRegion()
+     */
+    public static final int REGION_SIDE_ICON = RegionResolverKt.REGION_SIDE_ICON;
+
+    /**
+     * Motion occurred in divider margin region.
+     *
+     * @see EditorMotionEvent#getMotionRegion()
+     */
+    public static final int REGION_DIVIDER_MARGIN = RegionResolverKt.REGION_DIVIDER_MARGIN;
+
+    /**
+     * Motion occurred in line divider region.
+     *
+     * @see EditorMotionEvent#getMotionRegion()
+     */
+    public static final int REGION_DIVIDER = RegionResolverKt.REGION_DIVIDER;
+
+    /**
+     * Motion occurred in text region.
+     *
+     * @see EditorMotionEvent#getMotionRegion()
+     */
+    public static final int REGION_TEXT = RegionResolverKt.REGION_TEXT;
+
+    /**
+     * Motion occurred in editor bounds on the Y-axis.
+     *
+     * @see EditorMotionEvent#getMotionRegion()
+     */
+    public static final int IN_BOUND = RegionResolverKt.IN_BOUND;
+
+    /**
+     * Motion occurred outside of editor bounds on the Y-axis.
+     *
+     * @see EditorMotionEvent#getMotionRegion()
+     */
+    public static final int OUT_BOUND = RegionResolverKt.OUT_BOUND;
 
     private final CharPosition pos;
     private final MotionEvent event;
     private final Span span;
     private final TextRange spanRange;
+    private final int motionRegion;
+    private final int motionBound;
 
     public EditorMotionEvent(@NonNull CodeEditor editor, @NonNull CharPosition position,
-                             @NonNull MotionEvent event, @Nullable Span span, @Nullable TextRange spanRange) {
+                             @NonNull MotionEvent event, @Nullable Span span, @Nullable TextRange spanRange,
+                             int motionRegion, int motionBound) {
         super(editor);
         this.pos = position;
         this.event = event;
         this.span = span;
         this.spanRange = spanRange;
+        this.motionRegion = motionRegion;
+        this.motionBound = motionBound;
     }
 
     @Override
@@ -115,4 +179,33 @@ public abstract class EditorMotionEvent extends Event {
         return spanRange;
     }
 
+    /**
+     * Get the X-axis region where the motion event occurred. Check
+     * {@link #getMotionBound()} to get the Y-axis bound.
+     *
+     * @return The region within editor where the motion event occurred.
+     * @see #REGION_OUTBOUND
+     * @see #REGION_LINE_NUMBER
+     * @see #REGION_SIDE_ICON
+     * @see #REGION_DIVIDER_MARGIN
+     * @see #REGION_DIVIDER
+     * @see #REGION_TEXT
+     * @see #getMotionBound()
+     */
+    public int getMotionRegion() {
+        return motionRegion;
+    }
+
+    /**
+     * Get the Y-axis bounds of the motion event. Check {@link #getMotionRegion()} to get the
+     * X-axis region.
+     *
+     * @return The bound of the motion event.
+     * @see #IN_BOUND
+     * @see #OUT_BOUND
+     * @see #getMotionRegion()
+     */
+    public int getMotionBound() {
+        return motionBound;
+    }
 }

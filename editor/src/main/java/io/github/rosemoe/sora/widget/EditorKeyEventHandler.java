@@ -316,14 +316,16 @@ public class EditorKeyEventHandler {
                 if (isCtrlPressed) {
                     editor.moveOrExtendSelection(SelectionMovement.TEXT_END, isShiftPressed);
                 } else {
-                    editor.moveOrExtendSelection(SelectionMovement.LINE_END, isShiftPressed);
+                    var movement = editor.getProps().rowBasedHomeEnd ? SelectionMovement.ROW_END : SelectionMovement.LINE_END;
+                    editor.moveOrExtendSelection(movement, isShiftPressed);
                 }
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_MOVE_HOME:
                 if (isCtrlPressed) {
                     editor.moveOrExtendSelection(SelectionMovement.TEXT_START, isShiftPressed);
                 } else {
-                    editor.moveOrExtendSelection(SelectionMovement.LINE_START, isShiftPressed);
+                    var movement = editor.getProps().rowBasedHomeEnd ? SelectionMovement.ROW_START : SelectionMovement.LINE_START;
+                    editor.moveOrExtendSelection(movement, isShiftPressed);
                 }
                 return editorKeyEvent.result(true);
             case KeyEvent.KEYCODE_PAGE_DOWN:
