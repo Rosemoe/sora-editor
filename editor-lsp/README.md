@@ -10,11 +10,16 @@ languages, such as auto-completion, formatting, etc.
 
 ## Features(already available)
 
-1.`textDocument/formatting`
+- `textDocument/formatting`
+- `textDocument/rangeFormatting`
+- `textDocument/diagnostic`
+- `textDocument/signatureHelp`
+- `textDocument/completion`
+- `textDocument.publishDiagnostics`
 
-2.`textDocument/rangeFormatting`
+## TODO
 
-3.`textDocument/diagnostic`
+- [ ] `textDocument/semanticTokens`
 
 ## How to connect to the language server
 
@@ -22,6 +27,6 @@ We recommend to use socket to connect to the language server, you can let the la
 another process without worrying that a crash of the language server will cause the main process to
 crash.
 
-See [this](https://github.com/Rosemoe/sora-editor/blob/main/app/src/main/java/io/github/rosemoe/sora/app/LspTestActivity.kt#L135)
+See [this](https://github.com/Rosemoe/sora-editor/blob/main/app/src/main/java/io/github/rosemoe/sora/app/LspTestActivity.kt)
 to see example of connecting to a language server
 

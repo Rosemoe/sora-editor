@@ -60,6 +60,7 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
                 return@launch
             }
 
+            editor.eventManager.emitAsync(EventType.signatureHelp, event.changeStart)
 
             val diagnostics =
                 editor.eventManager.emitAsync(EventType.queryDocumentDiagnostics)
@@ -75,8 +76,6 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
                     put("data", diagnostics.left.items)
                 }
             }
-
-            editor.eventManager.emitAsync(EventType.signatureHelp, event.changeStart)
         }
 
 
