@@ -142,7 +142,6 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
                 updateDiagnostic(null, null)
                 return@subscribeEvent
             }
-            Log.w("Diagnostic", event.left.toString())
             updateDiagnostic(event.left)
         }
         eventManager.subscribeEvent<ScrollEvent> { _, _ ->
