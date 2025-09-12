@@ -238,7 +238,7 @@ public class SymbolPairMatch {
          * This class defines these symbol pairs
          */
         public SymbolPair(String open, String close) {
-            this(open, close, true);
+            this(open, close, false);
         }
 
         public SymbolPair(String open, String close, boolean isBracket) {
@@ -248,7 +248,7 @@ public class SymbolPairMatch {
         }
 
         public SymbolPair(String open, String close, SymbolPairEx symbolPairEx) {
-            this(open, close, true);
+            this(open, close, false);
             this.symbolPairEx = symbolPairEx;
         }
 

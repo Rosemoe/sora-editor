@@ -23,10 +23,13 @@
  */
 package io.github.rosemoe.sora.langs.textmate;
 
+import androidx.annotation.NonNull;
+
 import org.eclipse.tm4e.core.internal.grammar.tokenattrs.StandardTokenType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import io.github.rosemoe.sora.lang.styling.Span;
@@ -35,7 +38,10 @@ import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
 
+import org.eclipse.tm4e.languageconfiguration.internal.model.AutoClosingPair;
 import org.eclipse.tm4e.languageconfiguration.internal.model.AutoClosingPairConditional;
+import org.eclipse.tm4e.languageconfiguration.internal.model.CharacterPair;
+import org.eclipse.tm4e.languageconfiguration.internal.model.LanguageConfiguration;
 
 public class TextMateSymbolPairMatch extends SymbolPairMatch {
 
@@ -79,7 +85,27 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
         removeAllPairs();
 
         var surroundingPairs = languageConfiguration.getSurroundingPairs();
+        var brackets = languageConfiguration.getBrackets();
 
+        var mergePairs = getAutoClosingPairConditionals(languageConfiguration, surroundingPairs);
+        var bracketMaps = new HashMap<String, CharacterPair>();
+
+        for (int i = 0; i < brackets.size(); i++) {
+            var pair = brackets.get(i);
+            bracketMaps.put(pair.open, pair);
+        }
+
+        for (var pair : mergePairs) {
+            var bracket = bracketMaps.get(pair.open);
+            putPair(pair.open, new SymbolPair(pair.open, pair.close, new SymbolPairEx(pair),
+                    bracket != null && bracket.close.equals(pair.close)));
+        }
+
+    }
+
+    @NonNull
+    private ArrayList<AutoClosingPairConditional> getAutoClosingPairConditionals(LanguageConfiguration languageConfiguration,
+                                                                                        List<AutoClosingPair> surroundingPairs) {
         var autoClosingPairs = languageConfiguration.getAutoClosingPairs();
 
         var mergePairs = new ArrayList<AutoClosingPairConditional>();
@@ -89,20 +115,14 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
         }
 
         if (surroundingPairs != null) {
-
             for (var surroundingPair : surroundingPairs) {
-
                 var newPair = new AutoClosingPairConditional(surroundingPair.open, surroundingPair.close,
                         surroundingPairFlagWithList);
 
                 mergePairs.add(newPair);
             }
         }
-
-        for (var pair : mergePairs) {
-            putPair(pair.open, new SymbolPair(pair.open, pair.close, new SymbolPairEx(pair)));
-        }
-
+        return mergePairs;
     }
 
     static class SymbolPairEx implements SymbolPair.SymbolPairEx {
