@@ -73,13 +73,16 @@ class MonarchSymbolPairMatch(
         val autoClosingPairs: List<AutoClosingPairConditional> =
             languageConfiguration.autoClosingPairs?.toMutableList() ?: emptyList()
 
+        val brackets = languageConfiguration.brackets?.associate { it.first to it } ?: emptyMap()
+
         val pairs = mutableMapOf<String, SymbolPair>()
 
         autoClosingPairs.forEach {
             pairs[it.open] = SymbolPair(
                 it.open,
                 it.close,
-                SymbolPairEx(it, true)
+                SymbolPairEx(it, true),
+                brackets.containsKey(it.open) && brackets[it.open]?.second == it.close
             )
         }
 
@@ -92,16 +95,15 @@ class MonarchSymbolPairMatch(
                 surroundingPair.notIn
             } else emptyList()
 
-
             if (originAutoClosingPair == null) {
                 pairs[surroundingPair.open] = SymbolPair(
                     surroundingPair.open,
                     surroundingPair.close,
-                    SymbolPairEx(surroundingPair, false)
+                    SymbolPairEx(surroundingPair, false),
+                    brackets.containsKey(surroundingPair.open) && brackets[surroundingPair.open]?.second == surroundingPair.close
                 )
                 continue
             }
-
 
             pairs.remove(surroundingPair.open)
             val pair = AutoClosingPairConditional(
@@ -114,7 +116,8 @@ class MonarchSymbolPairMatch(
             pairs[pair.open] = SymbolPair(
                 pair.open,
                 pair.close,
-                SymbolPairEx(pair, true)
+                SymbolPairEx(pair, true),
+                brackets.containsKey(pair.open) && brackets[pair.open]?.second == pair.close
             )
         }
 
