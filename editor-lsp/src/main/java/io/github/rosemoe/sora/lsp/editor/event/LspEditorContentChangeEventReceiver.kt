@@ -72,9 +72,16 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
             }
 
             if (diagnostics.isRelatedFullDocumentDiagnosticReport) {
-                editor.eventManager.emit(EventType.publishDiagnostics) {
-                    put("data", diagnostics.left.items)
-                }
+                val diagnosticsContainer = editor.project.diagnosticsContainer
+                val fileUri = editor.uri
+                diagnosticsContainer.clearDiagnostics(fileUri)
+
+                diagnosticsContainer.addDiagnostics(
+                    fileUri,
+                    diagnostics.left.items
+                )
+
+                editor.onDiagnosticsUpdate()
             }
         }
 

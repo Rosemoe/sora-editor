@@ -139,8 +139,9 @@ fun LspEditor.createDidSaveTextDocumentParams(): DidSaveTextDocumentParams {
 }
 
 fun Position.getIndex(editor: CodeEditor): Int {
-    return editor.text.getCharIndex(this.line,
-        editor.text.getColumnCount(this.line).coerceAtMost(this.character)
+    val line = line.coerceAtMost(editor.lineCount - 1)
+    return editor.text.getCharIndex(line,
+        editor.text.getColumnCount(line).coerceAtMost(this.character)
     )
 }
 

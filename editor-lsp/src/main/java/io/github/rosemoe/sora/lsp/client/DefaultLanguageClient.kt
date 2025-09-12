@@ -86,6 +86,8 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
         val diagnosticsContainer = context.project.diagnosticsContainer
         val uri = URI(publishDiagnosticsParams.uri).toFileUri()
 
+        diagnosticsContainer.clearDiagnostics(uri)
+
         diagnosticsContainer.addDiagnostics(
             uri,
             publishDiagnosticsParams.diagnostics
