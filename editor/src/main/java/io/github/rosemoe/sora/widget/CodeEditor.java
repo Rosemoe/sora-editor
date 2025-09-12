@@ -1920,7 +1920,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             var matcherPairByCursorLeft = languageSymbolPairs.matchBestPair(this, cursor.left(),
                     inputText, cursorLeftChar);
 
-            // Symbol Pair: ('{','}'), User Input: '}' -> cursor will be move after the char '}'
+            // Text: {<cursor>}， Symbol Pair: ('{','}'), User Input: '}' -> cursor will be move after the char '}' -> {}<cursor>
             // See https://github.com/Rosemoe/sora-editor/issues/699
             if (!cursor.isSelected() && matcherPairByCursorLeft != null &&
                     // close == close
@@ -1931,6 +1931,25 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     text.equals(matcherPairByCursorLeft.close) && matcherPairByCursorLeft.isBracket) {
 
                 setSelection(cur.getLeftLine(), cur.getLeftColumn() + 1);
+                return;
+            }
+            
+
+            // Text: <cursor>{}, Symbol Pair: ('{','}'), User Input: '{' -> will direct insert '{' -> >{<cursor>{}
+            cursorLeftChar = editorText.charAt(cursor.left().index);
+            // Increment 1 to match }
+            cursorRightChar = editorText.charAt(cursor.left().index + 1);
+
+            if (!cursor.isSelected() && pair != null &&
+                    // close == close
+                    pair.close.length() == 1 && pair.close.charAt(0) == cursorRightChar &&
+                    // open == open
+                    pair.open.length() == 1 && pair.open.charAt(0) == cursorLeftChar &&
+                    // isBracket and input == open
+                    text.equals(pair.open) && pair.isBracket) {
+
+                // Direct insert
+                editorText.insert(cur.getLeftLine(), cur.getLeftColumn(), text);
                 return;
             }
         }
