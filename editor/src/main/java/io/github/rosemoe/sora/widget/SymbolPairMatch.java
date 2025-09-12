@@ -222,6 +222,8 @@ public class SymbolPairMatch {
 
         public final String close;
 
+        public final boolean isBracket;
+
         private SymbolPairEx symbolPairEx;
 
         private int cursorOffset;
@@ -236,12 +238,22 @@ public class SymbolPairMatch {
          * This class defines these symbol pairs
          */
         public SymbolPair(String open, String close) {
+            this(open, close, true);
+        }
+
+        public SymbolPair(String open, String close, boolean isBracket) {
             this.open = open;
             this.close = close;
+            this.isBracket = isBracket;
         }
 
         public SymbolPair(String open, String close, SymbolPairEx symbolPairEx) {
-            this(open, close);
+            this(open, close, true);
+            this.symbolPairEx = symbolPairEx;
+        }
+
+        public SymbolPair(String open, String close, SymbolPairEx symbolPairEx, boolean isBracket) {
+            this(open, close, isBracket);
             this.symbolPairEx = symbolPairEx;
         }
 
@@ -303,7 +315,6 @@ public class SymbolPairMatch {
             default boolean shouldDoAutoSurround(Content content) {
                 return false;
             }
-
         }
 
     }
@@ -311,9 +322,10 @@ public class SymbolPairMatch {
     public final static class DefaultSymbolPairs extends SymbolPairMatch {
 
         public DefaultSymbolPairs() {
-            super.putPair('{', new SymbolPair("{", "}"));
-            super.putPair('(', new SymbolPair("(", ")"));
-            super.putPair('[', new SymbolPair("[", "]"));
+            super.putPair('{', new SymbolPair("{", "}",true));
+            super.putPair('(', new SymbolPair("(", ")",true));
+            super.putPair('[', new SymbolPair("[", "]",true));
+            super.putPair('<', new SymbolPair("<", ">",true));
             super.putPair('"', new SymbolPair("\"", "\"", new SymbolPair.SymbolPairEx() {
                 @Override
                 public boolean shouldDoAutoSurround(Content content) {

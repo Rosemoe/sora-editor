@@ -78,6 +78,7 @@ import androidx.annotation.UiThread;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 
 import io.github.rosemoe.sora.I18nConfig;
 import io.github.rosemoe.sora.R;
@@ -98,6 +99,7 @@ import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.SubscriptionReceipt;
 import io.github.rosemoe.sora.event.TextSizeChangeEvent;
+import io.github.rosemoe.sora.event.Unsubscribe;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
@@ -114,6 +116,7 @@ import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
+import io.github.rosemoe.sora.text.Indexer;
 import io.github.rosemoe.sora.text.LineSeparator;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
 import io.github.rosemoe.sora.text.TextRange;
@@ -1161,7 +1164,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Set display position mode the line number panel beside vertical scroll bar
      *
      * @param mode Default LineInfoPanelPosition.FOLLOW
-     * @see io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode
+     * @see LineInfoPanelPositionMode
      */
     public void setLnPanelPositionMode(int mode) {
         this.lnPanelPositionMode = mode;
@@ -1181,7 +1184,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Only TOP,CENTER and BOTTOM will be effective when position mode is follow.
      *
      * @param position default TOP|RIGHT
-     * @see io.github.rosemoe.sora.widget.style.LineInfoPanelPosition
+     * @see LineInfoPanelPosition
      */
     public void setLnPanelPosition(int position) {
         this.lnPanelPosition = position;
@@ -1884,13 +1887,18 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Commit text with given options
      *
-     * @param text Text commit by InputConnection
-     * @param applyAutoIndent Apply automatic indentation
+     * @param text                  Text commit by InputConnection
+     * @param applyAutoIndent       Apply automatic indentation
      * @param applySymbolCompletion Apply symbol surroundings and completions
      */
     public void commitText(@NonNull CharSequence text, boolean applyAutoIndent, boolean applySymbolCompletion) {
         // replace text
         SymbolPairMatch.SymbolPair pair = null;
+
+        var cur = cursor;
+        var editorText = this.text;
+        var quoteHandler = LanguageHelper.getQuickQuoteHandler(editorLanguage);
+
         if (applySymbolCompletion && getProps().symbolPairAutoCompletion && text.length() > 0) {
             var endCharFromText = text.charAt(text.length() - 1);
 
@@ -1905,11 +1913,28 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     this, cursor.left(),
                     inputText, endCharFromText
             );
+
+            var cursorLeftChar = editorText.charAt(cursor.left().index - 1);
+            var cursorRightChar = editorText.charAt(cursor.left().index);
+
+            var matcherPairByCursorLeft = languageSymbolPairs.matchBestPair(this, cursor.left(),
+                    inputText, cursorLeftChar);
+
+            // Symbol Pair: ('{','}'), User Input: '}' -> cursor will be move after the char '}'
+            // See https://github.com/Rosemoe/sora-editor/issues/699
+            if (!cursor.isSelected() && matcherPairByCursorLeft != null &&
+                    // close == close
+                    matcherPairByCursorLeft.close.length() == 1 && matcherPairByCursorLeft.close.charAt(0) == cursorRightChar &&
+                    // open == open
+                    matcherPairByCursorLeft.open.length() == 1 && matcherPairByCursorLeft.open.charAt(0) == cursorLeftChar &&
+                    // isBracket and input == close
+                    text.equals(matcherPairByCursorLeft.close) && matcherPairByCursorLeft.isBracket) {
+
+                setSelection(cur.getLeftLine(), cur.getLeftColumn() + 1);
+                return;
+            }
         }
 
-        var cur = cursor;
-        var editorText = this.text;
-        var quoteHandler = LanguageHelper.getQuickQuoteHandler(editorLanguage);
 
         if (pair != null && pair != SymbolPairMatch.SymbolPair.EMPTY_SYMBOL_PAIR) {
 
@@ -2359,7 +2384,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Format text in the given region.
      * <p>
      * Note: Make sure the given positions are valid (line, column and index). Typically, you should
-     * obtain a position by an object of {@link io.github.rosemoe.sora.text.Indexer}
+     * obtain a position by an object of {@link Indexer}
      *
      * @param start Start position created by Indexer
      * @param end   End position created by Indexer
@@ -3897,7 +3922,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * Subscribe event of the given type, without {@link io.github.rosemoe.sora.event.Unsubscribe}.
+     * Subscribe event of the given type, without {@link Unsubscribe}.
      *
      * @see EventManager#subscribeEvent(Class, EventReceiver)
      */
@@ -4224,7 +4249,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     protected void updateSelection() {
         if (props.disallowSuggestions) {
-            var index = new java.util.Random().nextInt();
+            var index = new Random().nextInt();
             inputMethodManager.updateSelection(this, index, index, -1, -1);
             return;
         }
