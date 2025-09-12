@@ -288,7 +288,7 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
         }
 
         // update the cursor position first
-        memorizedPosition = position ?: memorizedPosition
+        memorizedPosition = position
 
         if (diagnostic == currentDiagnostic) {
             if (diagnostic != null && !editor.isInMouseMode) {
@@ -296,7 +296,6 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
             }
             return
         }
-
         currentDiagnostic = diagnostic
         if (diagnostic == null) {
             dismiss()
