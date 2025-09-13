@@ -105,6 +105,7 @@ public class DiagnosticsContainer {
         if (!shiftEnabled) {
             return;
         }
+
         var length = deleteEnd - deleteStart;
         var garbage = new ArrayList<DiagnosticRegion>();
         for (var region : regions) {

@@ -1793,6 +1793,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             inputMethodManager.updateCursorAnchorInfo(this, builder.build());
         }
         return x;
+
     }
 
     /**
@@ -1892,119 +1893,56 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param applySymbolCompletion Apply symbol surroundings and completions
      */
     public void commitText(@NonNull CharSequence text, boolean applyAutoIndent, boolean applySymbolCompletion) {
-        // replace text
-        SymbolPairMatch.SymbolPair pair = null;
 
         var cur = cursor;
         var editorText = this.text;
         var quoteHandler = LanguageHelper.getQuickQuoteHandler(editorLanguage);
 
-        if (applySymbolCompletion && getProps().symbolPairAutoCompletion && text.length() > 0) {
-            var endCharFromText = text.charAt(text.length() - 1);
-
-            char[] inputText = null;
-
-            //size > 1
-            if (text.length() > 1) {
-                inputText = text.toString().toCharArray();
-            }
-
-            pair = languageSymbolPairs.matchBestPair(
-                    this, cursor.left(),
-                    inputText, endCharFromText
-            );
-
-            var cursorLeftChar = editorText.charAt(cursor.left().index - 1);
-            var cursorRightChar = editorText.charAt(cursor.left().index);
-
-            var matcherPairByCursorLeft = languageSymbolPairs.matchBestPair(this, cursor.left(),
-                    inputText, cursorLeftChar);
-
-            // Text: {<cursor>}， Symbol Pair: ('{','}'), User Input: '}' -> cursor will be move after the char '}' -> {}<cursor>
-            // See https://github.com/Rosemoe/sora-editor/issues/699
-            if (!cursor.isSelected() && matcherPairByCursorLeft != null &&
-                    // close == close
-                    matcherPairByCursorLeft.close.length() == 1 && matcherPairByCursorLeft.close.charAt(0) == cursorRightChar &&
-                    // open == open
-                    matcherPairByCursorLeft.open.length() == 1 && matcherPairByCursorLeft.open.charAt(0) == cursorLeftChar &&
-                    // isBracket and input == close
-                    text.equals(matcherPairByCursorLeft.close) && matcherPairByCursorLeft.isBracket) {
-
-                setSelection(cur.getLeftLine(), cur.getLeftColumn() + 1);
-                return;
-            }
-            
-
-            // Text: <cursor>{}, Symbol Pair: ('{','}'), User Input: '{' -> will direct insert '{' -> >{<cursor>{}
-            cursorLeftChar = editorText.charAt(cursor.left().index);
-            // Increment 1 to match }
-            cursorRightChar = editorText.charAt(cursor.left().index + 1);
-
-            if (!cursor.isSelected() && pair != null &&
-                    // close == close
-                    pair.close.length() == 1 && pair.close.charAt(0) == cursorRightChar &&
-                    // open == open
-                    pair.open.length() == 1 && pair.open.charAt(0) == cursorLeftChar &&
-                    // isBracket and input == open
-                    text.equals(pair.open) && pair.isBracket) {
-
-                // Direct insert
-                editorText.insert(cur.getLeftLine(), cur.getLeftColumn(), text);
-                return;
+        // QuickQuoteHandler can easily implement the feature of AutoSurround
+        // and is at a higher level (customizable),
+        // so if the language implemented QuickQuoteHandler,
+        // the AutoSurround feature is not considered needed because it can be implemented through QuickQuoteHandler
+        if (cur.isSelected() && quoteHandler != null) {
+            if (text.length() > 0 && text.length() == 1) {
+                var result = quoteHandler.onHandleTyping(text.toString(), this.text, getCursorRange(), getStyles());
+                if (result.isConsumed()) {
+                    var range = result.getNewCursorRange();
+                    if (range != null) {
+                        setSelectionRegion(range.getStart().line, range.getStart().column, range.getEnd().line, range.getEnd().column);
+                    }
+                    return;
+                }
             }
         }
 
+        if (applySymbolCompletion && getProps().symbolPairAutoCompletion && text.length() > 0) {
+            var insertAction = languageSymbolPairs.matchAndInsert(this, cursor.left(), text.toString());
 
-        if (pair != null && pair != SymbolPairMatch.SymbolPair.EMPTY_SYMBOL_PAIR) {
+            if (insertAction instanceof SymbolPairMatch.InsertAction.MoveCursor moveCursor) {
+                setSelection(cur.getLeftLine(), cur.getLeftColumn() + moveCursor.getCharacterCount());
+                return;
+            } else if (insertAction instanceof SymbolPairMatch.InsertAction.CompletePair completePair) {
+                editorText.beginBatchEdit();
+                editorText.insert(cur.getLeftLine(), cur.getLeftColumn(), text);
+                editorText.insert(cur.getLeftLine(), cur.getLeftColumn() + text.length(), completePair.getCloseText());
+                editorText.endBatchEdit();
 
-            // QuickQuoteHandler can easily implement the feature of AutoSurround
-            // and is at a higher level (customizable),
-            // so if the language implemented QuickQuoteHandler,
-            // the AutoSurround feature is not considered needed because it can be implemented through QuickQuoteHandler
-            if (pair.shouldDoAutoSurround(editorText) && quoteHandler == null) {
-
+                setSelection(cur.getLeftLine(), cur.getLeftColumn());
+                return;
+            } else if (insertAction instanceof SymbolPairMatch.InsertAction.SurroundSelection surroundSelection) {
                 editorText.beginBatchEdit();
                 // insert left
-                editorText.insert(cur.getLeftLine(), cur.getLeftColumn(), pair.open);
+                editorText.insert(cur.getLeftLine(), cur.getLeftColumn(), surroundSelection.getOpenText());
+
                 // editorText.insert(editorCursor.getLeftLine(),editorCursor.getLeftColumn(),selectText);
+
                 // insert right
-                editorText.insert(cur.getRightLine(), cur.getRightColumn(), pair.close);
+                editorText.insert(cur.getRightLine(), cur.getRightColumn(), surroundSelection.getCloseText());
                 editorText.endBatchEdit();
 
                 // setSelection
                 setSelectionRegion(cur.getLeftLine(), cur.getLeftColumn(),
-                        cur.getRightLine(), cur.getRightColumn() - pair.close.length());
-
-                return;
-            } else if (cur.isSelected() && quoteHandler != null) {
-                if (text.length() > 0 && text.length() == 1) {
-                    var result = quoteHandler.onHandleTyping(text.toString(), this.text, getCursorRange(), getStyles());
-                    if (result.isConsumed()) {
-                        var range = result.getNewCursorRange();
-                        if (range != null) {
-                            setSelectionRegion(range.getStart().line, range.getStart().column, range.getEnd().line, range.getEnd().column);
-                        }
-                        return;
-                    }
-                }
-            } else {
-                editorText.beginBatchEdit();
-
-                var insertPosition = editorText
-                        .getIndexer()
-                        .getCharPosition(pair.getInsertOffset());
-
-                editorText.replace(insertPosition.line, insertPosition.column,
-                        cur.getRightLine(), cur.getRightColumn(), pair.open);
-                editorText.insert(insertPosition.line, insertPosition.column + pair.open.length(), pair.close);
-                editorText.endBatchEdit();
-
-                var cursorPosition = editorText
-                        .getIndexer()
-                        .getCharPosition(pair.getCursorOffset());
-
-                setSelection(cursorPosition.line, cursorPosition.column);
-
+                        cur.getRightLine(), cur.getRightColumn() - surroundSelection.getCloseText().length());
                 return;
             }
         }
@@ -2055,6 +1993,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             editorText.insert(cur.getLeftLine(), cur.getLeftColumn(), text);
         }
     }
+
 
     /**
      * @see #setLineInfoTextSize(float)
@@ -5030,7 +4969,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Override
-    public void afterInsert(@NonNull Content content, int startLine, int startColumn, int endLine,
+    public void afterInsert(@NonNull Content content, int startLine, int startColumn,
+                            int endLine,
                             int endColumn, @NonNull CharSequence insertedContent) {
         renderContext.updateForInsertion(startLine, endLine);
         renderer.updateTimestamp();
@@ -5074,7 +5014,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Override
-    public void afterDelete(@NonNull Content content, int startLine, int startColumn, int endLine,
+    public void afterDelete(@NonNull Content content, int startLine, int startColumn,
+                            int endLine,
                             int endColumn, @NonNull CharSequence deletedContent) {
         renderContext.updateForDeletion(startLine, endLine);
         renderer.updateTimestamp();

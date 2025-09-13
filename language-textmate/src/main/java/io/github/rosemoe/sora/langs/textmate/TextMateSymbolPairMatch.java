@@ -30,6 +30,7 @@ import org.eclipse.tm4e.core.internal.grammar.tokenattrs.StandardTokenType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import io.github.rosemoe.sora.lang.styling.Span;
@@ -85,43 +86,33 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
         removeAllPairs();
 
         var surroundingPairs = languageConfiguration.getSurroundingPairs();
-        var brackets = languageConfiguration.getBrackets();
 
         var mergePairs = getAutoClosingPairConditionals(languageConfiguration, surroundingPairs);
-        var bracketMaps = new HashMap<String, CharacterPair>();
-
-        for (int i = 0; i < brackets.size(); i++) {
-            var pair = brackets.get(i);
-            bracketMaps.put(pair.open, pair);
-        }
 
         for (var pair : mergePairs) {
-            var bracket = bracketMaps.get(pair.open);
-            putPair(pair.open, new SymbolPair(pair.open, pair.close, new SymbolPairEx(pair),
-                    bracket != null && bracket.close.equals(pair.close)));
+            putPair(pair.open, new SymbolPair(pair.open, pair.close, new SymbolPairEx(pair)));
         }
 
     }
 
     @NonNull
-    private ArrayList<AutoClosingPairConditional> getAutoClosingPairConditionals(LanguageConfiguration languageConfiguration,
-                                                                                        List<AutoClosingPair> surroundingPairs) {
+    private HashSet<AutoClosingPairConditional> getAutoClosingPairConditionals(LanguageConfiguration languageConfiguration,
+                                                                               List<AutoClosingPair> surroundingPairs) {
         var autoClosingPairs = languageConfiguration.getAutoClosingPairs();
 
-        var mergePairs = new ArrayList<AutoClosingPairConditional>();
+        var mergePairs = new HashSet<AutoClosingPairConditional>();
 
         if (autoClosingPairs != null) {
             mergePairs.addAll(autoClosingPairs);
         }
 
-        if (surroundingPairs != null) {
-            for (var surroundingPair : surroundingPairs) {
-                var newPair = new AutoClosingPairConditional(surroundingPair.open, surroundingPair.close,
-                        surroundingPairFlagWithList);
+        for (var surroundingPair : surroundingPairs) {
+            var newPair = new AutoClosingPairConditional(surroundingPair.open, surroundingPair.close,
+                    surroundingPairFlagWithList);
 
-                mergePairs.add(newPair);
-            }
+            mergePairs.add(newPair);
         }
+
         return mergePairs;
     }
 

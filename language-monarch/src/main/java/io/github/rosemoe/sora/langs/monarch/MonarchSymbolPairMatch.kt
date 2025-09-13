@@ -73,16 +73,13 @@ class MonarchSymbolPairMatch(
         val autoClosingPairs: List<AutoClosingPairConditional> =
             languageConfiguration.autoClosingPairs?.toMutableList() ?: emptyList()
 
-        val brackets = languageConfiguration.brackets?.associate { it.first to it } ?: emptyMap()
-
         val pairs = mutableMapOf<String, SymbolPair>()
 
         autoClosingPairs.forEach {
             pairs[it.open] = SymbolPair(
                 it.open,
                 it.close,
-                SymbolPairEx(it, true),
-                brackets.containsKey(it.open) && brackets[it.open]?.second == it.close
+                SymbolPairEx(it, true)
             )
         }
 
@@ -99,8 +96,7 @@ class MonarchSymbolPairMatch(
                 pairs[surroundingPair.open] = SymbolPair(
                     surroundingPair.open,
                     surroundingPair.close,
-                    SymbolPairEx(surroundingPair, false),
-                    brackets.containsKey(surroundingPair.open) && brackets[surroundingPair.open]?.second == surroundingPair.close
+                    SymbolPairEx(surroundingPair, false)
                 )
                 continue
             }
@@ -116,8 +112,7 @@ class MonarchSymbolPairMatch(
             pairs[pair.open] = SymbolPair(
                 pair.open,
                 pair.close,
-                SymbolPairEx(pair, true),
-                brackets.containsKey(pair.open) && brackets[pair.open]?.second == pair.close
+                SymbolPairEx(pair, true)
             )
         }
 
@@ -138,40 +133,39 @@ class MonarchSymbolPairMatch(
         private var isSurroundingPair = autoClosingPairConditional.isSurroundingPair
 
         init {
-            run {
-                val excludeTokenTypeList =
-                    if (autoClosingPairConditional is AutoClosingPairConditional)
-                        autoClosingPairConditional.notIn.toMutableList()
-                    else emptyList()
+            val excludeTokenTypeList =
+                if (autoClosingPairConditional is AutoClosingPairConditional)
+                    autoClosingPairConditional.notIn.toMutableList()
+                else emptyList()
 
-                if (excludeTokenTypeList.isEmpty()) {
-                    excludeTokenTypesArray = null
-                }
-
-                val excludeTokenTypesArray = IntArray(excludeTokenTypeList.size)
-
-                for (i in excludeTokenTypesArray.indices) {
-                    val excludeTokenName =
-                        excludeTokenTypeList[i].lowercase(Locale.getDefault())
-
-                    var excludeTokenType = StandardTokenType.String
-
-                    when (excludeTokenName) {
-                        "comment" -> excludeTokenType = StandardTokenType.Comment
-                        "regex" -> excludeTokenType = StandardTokenType.RegEx
-                    }
-                    excludeTokenTypesArray[i] = excludeTokenType
-                }
-
-                Arrays.sort(excludeTokenTypesArray)
-
-                this.excludeTokenTypesArray = excludeTokenTypesArray
+            if (excludeTokenTypeList.isEmpty()) {
+                excludeTokenTypesArray = null
             }
+
+            val excludeTokenTypesArray = IntArray(excludeTokenTypeList.size)
+
+            for (i in excludeTokenTypesArray.indices) {
+                val excludeTokenName =
+                    excludeTokenTypeList[i].lowercase(Locale.getDefault())
+
+                var excludeTokenType = StandardTokenType.String
+
+                when (excludeTokenName) {
+                    "comment" -> excludeTokenType = StandardTokenType.Comment
+                    "regex" -> excludeTokenType = StandardTokenType.RegEx
+                }
+                excludeTokenTypesArray[i] = excludeTokenType
+            }
+
+            Arrays.sort(excludeTokenTypesArray)
+
+            this.excludeTokenTypesArray = excludeTokenTypesArray
+
         }
 
         override fun shouldReplace(
             editor: CodeEditor,
-            contentLine: ContentLine?,
+            currentLine: ContentLine,
             leftColumn: Int
         ): Boolean {
             if (editor.cursor.isSelected) {
