@@ -118,7 +118,7 @@ class LspEventManager(
     fun <T> getOption(optionClass: Class<T>): T? {
         for (option in options) {
             if (optionClass.isInstance(option)) {
-                return option as T
+                return option as? T
             }
         }
         return null

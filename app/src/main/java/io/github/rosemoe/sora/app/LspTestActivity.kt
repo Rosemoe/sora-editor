@@ -40,7 +40,7 @@ import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
 import io.github.rosemoe.sora.langs.textmate.registry.dsl.languages
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
-import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvider
+import io.github.rosemoe.sora.lsp.client.connection.LocalSocketStreamConnectionProvider
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 import io.github.rosemoe.sora.lsp.editor.LspEditor
@@ -57,7 +57,6 @@ import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.tm4e.core.registry.IThemeSource
 import java.io.FileOutputStream
 import java.lang.ref.WeakReference
-import java.net.ServerSocket
 import java.util.zip.ZipFile
 
 class LspTestActivity : BaseEditorActivity() {
@@ -132,21 +131,16 @@ class LspTestActivity : BaseEditorActivity() {
             editor.editable = false
         }
 
-        val port = randomPort()
-
         val projectPath = externalCacheDir?.resolve("testProject")?.absolutePath ?: ""
 
         startService(
             Intent(this@LspTestActivity, LspLanguageServerService::class.java)
-                .apply {
-                    putExtra("port", port)
-                }
         )
 
         val luaServerDefinition =
             object : CustomLanguageServerDefinition("lua",
                 ServerConnectProvider {
-                    SocketStreamConnectionProvider(port)
+                    LocalSocketStreamConnectionProvider("lua-lsp")
                 }
             ) {
                 /* override fun getInitializationOptions(uri: URI?): Any {
@@ -212,14 +206,6 @@ class LspTestActivity : BaseEditorActivity() {
             text,
             Toast.LENGTH_SHORT
         ).show()
-    }
-
-    private fun randomPort(): Int {
-        val serverSocket = ServerSocket(0)
-
-        val port = serverSocket.localPort
-        serverSocket.close()
-        return port
     }
 
     private fun createTextMateLanguage(): TextMateLanguage {
