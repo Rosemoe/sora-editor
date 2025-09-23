@@ -23,10 +23,13 @@
  */
 package io.github.rosemoe.sora.widget.layout;
 
+import android.icu.text.BreakIterator;
+import android.os.Build;
 import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +38,7 @@ import java.util.NoSuchElementException;
 
 import io.github.rosemoe.sora.graphics.CharPosDesc;
 import io.github.rosemoe.sora.graphics.Paint;
+import io.github.rosemoe.sora.text.CharSequenceIterator;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.IntPair;
@@ -171,7 +175,45 @@ public class WordwrapLayout extends AbstractLayout {
         rowTable.addAll(insertPosition, newRegions);
     }
 
-    private void breakLine(int line, ContentLine sequence, List<Integer> breakpoints, @Nullable Paint paint) {
+    /**
+     * Break text with ICU library for higher quality
+     */
+    @RequiresApi(Build.VERSION_CODES.N)
+    private void breakLineApiN(int line, ContentLine sequence, List<Integer> breakpoints, @Nullable Paint paint) {
+        int start = 0;
+        int len = sequence.length();
+        var text = sequence.getBackingCharArray();
+        var textIterator = new CharSequenceIterator(sequence);
+        var wrappingIterator = BreakIterator.getLineInstance();
+        wrappingIterator.setText(textIterator);
+
+        while (start < len) {
+            var next = CharPosDesc.getTextOffset(editor.getRenderer().findFirstVisibleCharForWordwrap(width, line, start, len, 0, paint == null ? editor.getTextPaint() : paint));
+            // Force to break the text, though no space is available
+            if (next == start) {
+                next++;
+            }
+            if (antiWordBreaking) {
+                // Merging trailing whitespaces is not supported by editor, so force to break here
+                if (next > 0 && !Character.isWhitespace(text[next - 1]) && !wrappingIterator.isBoundary(next)) {
+                    int lastBoundary = wrappingIterator.preceding(next);
+                    if (lastBoundary != BreakIterator.DONE) {
+                        int suggestedNext = Math.max(start, Math.min(next, lastBoundary));
+                        if (suggestedNext > start) {
+                            next = suggestedNext;
+                        }
+                    }
+                }
+            }
+            breakpoints.add(next);
+            start = next;
+        }
+        if (!breakpoints.isEmpty() && breakpoints.get(breakpoints.size() - 1) == sequence.length()) {
+            breakpoints.remove(breakpoints.size() - 1);
+        }
+    }
+
+    private void breakLineSimple(int line, ContentLine sequence, List<Integer> breakpoints, @Nullable Paint paint) {
         int start = 0;
         int len = sequence.length();
         var text = sequence.getBackingCharArray();
@@ -182,7 +224,8 @@ public class WordwrapLayout extends AbstractLayout {
             if (next == start) {
                 next++;
             }
-            if (antiWordBreaking && MyCharacter.isAlpha(text[next - 1]) && next < len && (MyCharacter.isAlpha(text[next]) || text[next] == '-')) {
+            if (antiWordBreaking && MyCharacter.isAlpha(text[next - 1]) &&
+                    next < len && (MyCharacter.isAlpha(text[next]) || text[next] == '-')) {
                 int wordStart = next - 1;
                 while (wordStart > start && MyCharacter.isAlpha(text[wordStart - 1])) {
                     wordStart--;
@@ -196,6 +239,14 @@ public class WordwrapLayout extends AbstractLayout {
         }
         if (!breakpoints.isEmpty() && breakpoints.get(breakpoints.size() - 1) == sequence.length()) {
             breakpoints.remove(breakpoints.size() - 1);
+        }
+    }
+
+    private void breakLine(int line, ContentLine sequence, List<Integer> breakpoints, @Nullable Paint paint) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            breakLineApiN(line, sequence, breakpoints, paint);
+        } else {
+            breakLineSimple(line, sequence, breakpoints, paint);
         }
     }
 
