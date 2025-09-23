@@ -4384,6 +4384,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         completionWindow.hide();
         textActionWindow.dismiss();
         touchHandler.magnifier.dismiss();
+        diagnosticTooltip.dismiss();
     }
 
     /**

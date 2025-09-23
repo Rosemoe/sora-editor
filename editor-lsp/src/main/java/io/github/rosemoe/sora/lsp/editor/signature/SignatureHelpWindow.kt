@@ -35,6 +35,7 @@ import android.view.View
 import android.view.View.MeasureSpec
 import android.widget.TextView
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent
+import io.github.rosemoe.sora.event.EditorReleaseEvent
 import io.github.rosemoe.sora.event.subscribeEvent
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
@@ -69,6 +70,9 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
 
         eventManager.subscribeEvent<ColorSchemeUpdateEvent> { _, _ ->
             applyColorScheme()
+        }
+        eventManager.subscribeEvent<EditorReleaseEvent> { _, _ ->
+            dismiss()
         }
 
         applyColorScheme()
