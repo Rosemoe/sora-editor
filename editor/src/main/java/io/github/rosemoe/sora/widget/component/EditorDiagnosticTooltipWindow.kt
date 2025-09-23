@@ -25,6 +25,7 @@
 package io.github.rosemoe.sora.widget.component
 
 import android.graphics.drawable.GradientDrawable
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -285,6 +286,10 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
         if (!isEnabled) {
             return
         }
+
+        // update the cursor position first
+        memorizedPosition = position
+
         if (diagnostic == currentDiagnostic) {
             if (diagnostic != null && !editor.isInMouseMode) {
                 updateWindowPosition()
@@ -292,7 +297,6 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
             return
         }
         currentDiagnostic = diagnostic
-        memorizedPosition = position
         if (diagnostic == null) {
             dismiss()
             return

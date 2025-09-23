@@ -74,6 +74,10 @@ class DiagnosticsContainer {
         diagnosticsMap[uri] = diagnostics
     }
 
+    fun clearDiagnostics(uri: FileUri) {
+        diagnosticsMap.remove(uri)
+    }
+
 
     fun getDiagnostics(uri: FileUri): List<Diagnostic> {
         return diagnosticsMap.getOrPut(uri) { mutableListOf() }

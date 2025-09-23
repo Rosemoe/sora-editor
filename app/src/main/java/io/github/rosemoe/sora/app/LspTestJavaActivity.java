@@ -52,7 +52,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.net.ServerSocket;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
@@ -68,7 +67,7 @@ import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
 import io.github.rosemoe.sora.langs.textmate.registry.dsl.LanguageDefinitionListBuilder;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver;
-import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvider;
+import io.github.rosemoe.sora.lsp.client.connection.LocalSocketStreamConnectionProvider;
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition;
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
@@ -127,13 +126,9 @@ public class LspTestJavaActivity extends BaseEditorActivity {
             editor.setEditable(false);
         });
 
-        var port = randomPort();
-
         var projectPath = new File(getExternalCacheDir(), "testProject").getAbsolutePath();
 
         var intent = new Intent(this, LspLanguageServerService.class);
-
-        intent.putExtra("port", port);
 
         startService(
                 intent
@@ -141,7 +136,7 @@ public class LspTestJavaActivity extends BaseEditorActivity {
 
         var luaServerDefinition =
                 new CustomLanguageServerDefinition("lua",
-                        workingDir -> new SocketStreamConnectionProvider(port, null)) {
+                        workingDir -> new LocalSocketStreamConnectionProvider("lua-lsp")) {
 
                     private final EventListener eventListener = new EventListener(LspTestJavaActivity.this);
 
@@ -220,14 +215,6 @@ public class LspTestJavaActivity extends BaseEditorActivity {
                 text,
                 Toast.LENGTH_SHORT
         ).show();
-    }
-
-    private int randomPort() throws IOException {
-        var serverSocket = new ServerSocket(0);
-
-        var port = serverSocket.getLocalPort();
-        serverSocket.close();
-        return port;
     }
 
     private TextMateLanguage createTextMateLanguage() {

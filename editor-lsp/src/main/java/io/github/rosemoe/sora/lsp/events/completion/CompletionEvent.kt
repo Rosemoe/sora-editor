@@ -63,7 +63,7 @@ class CompletionEvent : AsyncEventListener() {
                 )
             )?.thenApply {
                 if (it == null) {
-                    return@thenApply emptyList<CompletionItem>()
+                    return@thenApply emptyList()
                 }
                 if (it.isLeft) {
                     return@thenApply it.left

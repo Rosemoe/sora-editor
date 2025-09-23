@@ -231,7 +231,7 @@ class LspEditor(
                 exception.printStackTrace();
             }
             start = System.currentTimeMillis()
-            delay((retryTime / 10).toLong())
+            delay((retryTime / 200).toLong())
         }
 
         if (!isConnected && start > maxRetryTime) {
@@ -295,7 +295,6 @@ class LspEditor(
 
 
     fun onDiagnosticsUpdate() {
-
         publishDiagnostics(diagnostics)
     }
 

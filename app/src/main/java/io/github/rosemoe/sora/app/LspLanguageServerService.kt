@@ -26,16 +26,22 @@ package io.github.rosemoe.sora.app
 
 import android.app.Service
 import android.content.Intent
+import android.net.LocalServerSocket
+import android.net.LocalSocket
 import android.os.IBinder
 import android.util.Log
 import com.tang.vscode.LuaLanguageClient
 import com.tang.vscode.LuaLanguageServer
 import org.eclipse.lsp4j.jsonrpc.Launcher
-import java.net.ServerSocket
+import java.util.concurrent.Future
 import kotlin.concurrent.thread
 
 
 class LspLanguageServerService : Service() {
+
+    private lateinit var future: Future<Void>
+    private lateinit var socket: LocalServerSocket
+    private lateinit var socketClient: LocalSocket
 
     companion object {
         private const val TAG = "LanguageServer"
@@ -47,18 +53,13 @@ class LspLanguageServerService : Service() {
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        //Only used in test
-
+        // Only used in test
         thread {
-            val port = intent?.getIntExtra("port", 0) ?: 0
+            socket = LocalServerSocket("lua-lsp")
 
-            val socket = ServerSocket(port)
+            Log.d(TAG, "Starting socket on address ${socket.localSocketAddress}")
 
-            Log.d(TAG, "Starting socket on port ${socket.localPort}")
-
-            val socketClient = socket.accept()
-
-            Log.d(TAG, "connected to the client on port ${socketClient.port}")
+            socketClient = socket.accept()
 
             runCatching {
 
@@ -76,8 +77,10 @@ class LspLanguageServerService : Service() {
 
                 server.connect(remoteProxy);
 
-                launcher.startListening()
-                    .get()
+                future = launcher.startListening()
+
+                // Blocking call
+                future.get()
 
                 /* XMLServerLauncher.launch(
                      socketClient.getInputStream(),
@@ -94,6 +97,14 @@ class LspLanguageServerService : Service() {
 
         return START_STICKY
     }
+
+    override fun onDestroy() {
+        future.cancel(true)
+        socket.close()
+        socketClient.close()
+        super.onDestroy()
+    }
+
 
 
 }
