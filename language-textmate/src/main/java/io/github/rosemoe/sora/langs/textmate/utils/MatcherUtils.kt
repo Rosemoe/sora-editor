@@ -21,30 +21,33 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.textmate.folding;
+package io.github.rosemoe.sora.langs.textmate.utils
 
-public class FoldingRegion {
+import java.util.regex.MatchResult
+import java.util.regex.Matcher
 
-    private final FoldingRegions ranges;
-    private final int index;
-
-    public FoldingRegion(FoldingRegions ranges, int index) {
-        this.ranges = ranges;
-        this.index = index;
-    }
-
-    public int getStartLineNumber() {
-        return this.ranges.getStartLineNumber(this.index);
-    }
-
-    public int getEndLineNumber() {
-        return this.ranges.getEndLineNumber(this.index);
-    }
-
-    public int getRegionIndex() {
-        return this.index;
-    }
-    public int getParentIndex() throws Exception {
-        return this.ranges.getParentIndex(this.index);
+object MatcherUtils {
+    @JvmStatic
+    fun replaceAll(
+        source: CharSequence,
+        matcher: Matcher,
+        replacer: (MatchResult) -> String
+    ): String {
+        matcher.reset()
+        val sb = StringBuilder()
+        var appendPos = 0
+        while (matcher.find()) {
+            val result = matcher.toMatchResult()
+            val replacement = replacer.invoke(result)
+            sb.append(source, appendPos, result.start())
+            sb.append(replacement)
+            appendPos = result.end()
+        }
+        if (sb.isEmpty()) {
+            // no match
+            return source.toString()
+        }
+        sb.append(source, appendPos, source.length)
+        return sb.toString()
     }
 }

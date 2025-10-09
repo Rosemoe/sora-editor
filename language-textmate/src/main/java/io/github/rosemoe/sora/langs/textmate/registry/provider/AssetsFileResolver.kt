@@ -21,30 +21,23 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.textmate.registry.model;
+package io.github.rosemoe.sora.langs.textmate.registry.provider
 
+import android.content.res.AssetManager
+import java.io.IOException
+import java.io.InputStream
 
-import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.tm4e.core.registry.IGrammarSource;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-public interface GrammarDefinition {
-
-    String getName();
-
-    @Nullable
-    String getLanguageConfiguration();
-
-    @Nullable
-    String getScopeName();
-
-    default Map<String,String> getEmbeddedLanguages() {
-        return Collections.emptyMap();
+class AssetsFileResolver(private var assetManager: AssetManager?) : FileResolver {
+    override fun resolveStreamByPath(path: String): InputStream? {
+        try {
+            return assetManager?.open(path)
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return null
     }
 
-    IGrammarSource getGrammar();
-
+    override fun dispose() {
+        assetManager = null
+    }
 }
