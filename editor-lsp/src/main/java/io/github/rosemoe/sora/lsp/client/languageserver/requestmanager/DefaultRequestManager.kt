@@ -29,7 +29,6 @@ import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWr
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams
 import org.eclipse.lsp4j.ApplyWorkspaceEditResponse
 import org.eclipse.lsp4j.CodeAction
-import org.eclipse.lsp4j.CodeActionOptions
 import org.eclipse.lsp4j.CodeActionParams
 import org.eclipse.lsp4j.CodeLens
 import org.eclipse.lsp4j.CodeLensParams
@@ -254,7 +253,7 @@ class DefaultRequestManager(
     override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<Either<List<SymbolInformation>, List<WorkspaceSymbol?>>>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.workspaceSymbolProvider.right != null) workspaceService.symbol(
+                if (serverCapabilities.workspaceSymbolProvider?.left == true || serverCapabilities.workspaceSymbolProvider?.right != null) workspaceService.symbol(
                     params
                 ) else null
             } catch (e: Exception) {
@@ -367,7 +366,7 @@ class DefaultRequestManager(
     override fun resolveCompletionItem(unresolved: CompletionItem): CompletableFuture<CompletionItem>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.completionProvider.resolveProvider == true) textDocumentService.resolveCompletionItem(
+                if (serverCapabilities.completionProvider?.resolveProvider == true) textDocumentService.resolveCompletionItem(
                     unresolved
                 ) else null
             } catch (e: Exception) {
@@ -377,6 +376,7 @@ class DefaultRequestManager(
         } else null
     }
 
+    @Deprecated("")
     override fun hover(params: TextDocumentPositionParams): CompletableFuture<Hover>? {
         return hover(HoverParams(params.textDocument, params.position))
     }
@@ -384,7 +384,7 @@ class DefaultRequestManager(
     override fun hover(params: HoverParams): CompletableFuture<Hover>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.hoverProvider.right != null) textDocumentService.hover(params) else null
+                if (serverCapabilities.hoverProvider?.left == true || serverCapabilities.hoverProvider?.right != null) textDocumentService.hover(params) else null
             } catch (e: Exception) {
                 crashed(e)
                 null
@@ -392,6 +392,7 @@ class DefaultRequestManager(
         } else null
     }
 
+    @Deprecated("")
     override fun signatureHelp(params: TextDocumentPositionParams): CompletableFuture<SignatureHelp>? {
         return signatureHelp(SignatureHelpParams(params.textDocument, params.position))
     }
@@ -412,7 +413,7 @@ class DefaultRequestManager(
     override fun references(params: ReferenceParams): CompletableFuture<List<Location?>>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.referencesProvider.right != null) textDocumentService.references(
+                if (serverCapabilities.referencesProvider.left == true || serverCapabilities.referencesProvider.right != null) textDocumentService.references(
                     params
                 ) else null
             } catch (e: Exception) {
@@ -422,6 +423,7 @@ class DefaultRequestManager(
         } else null
     }
 
+    @Deprecated("")
     override fun documentHighlight(params: TextDocumentPositionParams): CompletableFuture<List<DocumentHighlight>>? {
         return documentHighlight(DocumentHighlightParams(params.textDocument, params.position))
     }
@@ -496,7 +498,7 @@ class DefaultRequestManager(
     override fun diagnostic(params: DocumentDiagnosticParams?): CompletableFuture<DocumentDiagnosticReport?>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.diagnosticProvider != null && (serverCapabilities.diagnosticProvider.isInterFileDependencies || serverCapabilities.diagnosticProvider.isWorkspaceDiagnostics)) textDocumentService.diagnostic(
+                if (serverCapabilities.diagnosticProvider?.isInterFileDependencies == true || serverCapabilities.diagnosticProvider?.isWorkspaceDiagnostics == true) textDocumentService.diagnostic(
                     params
                 ) else null
             } catch (e: Exception) {
@@ -506,6 +508,7 @@ class DefaultRequestManager(
         } else null
     }
 
+    @Deprecated("")
     override fun definition(params: TextDocumentPositionParams): CompletableFuture<Either<List<Location>, List<LocationLink>>>? {
         return definition(DefinitionParams(params.textDocument, params.position))
     }
@@ -513,7 +516,7 @@ class DefaultRequestManager(
     override fun definition(params: DefinitionParams): CompletableFuture<Either<List<Location>, List<LocationLink>>>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.definitionProvider.right != null) textDocumentService.definition(
+                if (serverCapabilities.definitionProvider?.left == true || serverCapabilities.definitionProvider?.right != null) textDocumentService.definition(
                     params
                 ) else null
             } catch (e: Exception) {
@@ -526,9 +529,10 @@ class DefaultRequestManager(
     override fun codeAction(params: CodeActionParams): CompletableFuture<List<Either<Command, CodeAction>>>? {
         return if (checkStatus()) {
             try {
-                if (checkCodeActionProvider(serverCapabilities.codeActionProvider)) textDocumentService.codeAction(
-                    params
-                ) else null
+                if (serverCapabilities.codeActionProvider?.left == true || serverCapabilities.codeActionProvider?.right != null)
+                    textDocumentService.codeAction(
+                        params
+                    ) else null
             } catch (e: Exception) {
                 crashed(e)
                 null
@@ -550,10 +554,10 @@ class DefaultRequestManager(
     override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens>? {
         return if (checkStatus()) {
             try {
-                val codeLensProvider = serverCapabilities.codeLensProvider
-                if (codeLensProvider != null && codeLensProvider.resolveProvider != null && codeLensProvider.resolveProvider) textDocumentService.resolveCodeLens(
-                    unresolved
-                ) else null
+                if (serverCapabilities.codeLensProvider?.resolveProvider != null && serverCapabilities.codeLensProvider?.resolveProvider == true)
+                    textDocumentService.resolveCodeLens(
+                        unresolved
+                    ) else null
             } catch (e: Exception) {
                 crashed(e)
                 null
@@ -577,9 +581,9 @@ class DefaultRequestManager(
     override fun documentLinkResolve(unresolved: DocumentLink): CompletableFuture<DocumentLink>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.documentLinkProvider != null && serverCapabilities
-                        .documentLinkProvider.resolveProvider
-                ) textDocumentService.documentLinkResolve(unresolved) else null
+                if (serverCapabilities.documentLinkProvider?.resolveProvider == true) textDocumentService.documentLinkResolve(
+                    unresolved
+                ) else null
             } catch (e: Exception) {
                 crashed(e)
                 null
@@ -637,10 +641,5 @@ class DefaultRequestManager(
     private fun crashed(e: Exception) {
         e.printStackTrace(System.err)
         wrapper.crashed(e)
-    }
-
-    private fun checkCodeActionProvider(provider: Either<Boolean, CodeActionOptions?>?): Boolean {
-        return provider != null && (provider.isLeft && provider.left || (provider.isRight
-                && provider.right != null))
     }
 }
