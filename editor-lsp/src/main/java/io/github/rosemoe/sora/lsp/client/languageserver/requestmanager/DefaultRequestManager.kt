@@ -413,7 +413,7 @@ class DefaultRequestManager(
     override fun references(params: ReferenceParams): CompletableFuture<List<Location?>>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.referencesProvider.left == true || serverCapabilities.referencesProvider.right != null) textDocumentService.references(
+                if (serverCapabilities.referencesProvider?.left == true || serverCapabilities.referencesProvider?.right != null) textDocumentService.references(
                     params
                 ) else null
             } catch (e: Exception) {
