@@ -84,10 +84,17 @@ class DocumentChangeEvent : AsyncEventListener() {
         val text = data.changedText.toString()
         return listOf(
             editor.uri.createTextDocumentContentChangeEvent(
-                createRange(
-                    data.changeStart,
-                    data.changeEnd
-                ),
+                if (data.action == ContentChangeEvent.ACTION_DELETE) {
+                    createRange(
+                        data.changeStart,
+                        data.changeEnd
+                    )
+                } else {
+                    createRange(
+                        data.changeStart,
+                        data.changeStart
+                    )
+                },
                 if (data.action == ContentChangeEvent.ACTION_DELETE) "" else text
             )
         )
