@@ -21,37 +21,19 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.textmate.registry.provider;
+package io.github.rosemoe.sora.langs.textmate.registry.model
 
-import android.content.res.AssetManager;
+import org.eclipse.tm4e.core.registry.IGrammarSource
 
-import androidx.annotation.Nullable;
+interface GrammarDefinition {
+    val name: String
 
-import java.io.IOException;
-import java.io.InputStream;
+    val languageConfiguration: String?
 
-public class AssetsFileResolver implements FileResolver {
+    val scopeName: String?
 
-    private AssetManager assetManager;
+    val embeddedLanguages: Map<String, String>
+        get() = mutableMapOf()
 
-    public AssetsFileResolver(AssetManager assetManager) {
-        this.assetManager = assetManager;
-    }
-
-    @Nullable
-    @Override
-    public InputStream resolveStreamByPath(String path) {
-        try {
-            return assetManager.open(path);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-
-    }
-
-    @Override
-    public void dispose() {
-        assetManager = null;
-    }
+    val grammar: IGrammarSource
 }

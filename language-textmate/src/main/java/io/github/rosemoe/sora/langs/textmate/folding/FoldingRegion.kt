@@ -21,20 +21,16 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.textmate.folding;
+package io.github.rosemoe.sora.langs.textmate.folding
 
-public class PreviousRegion {
-    // indent or -2 if a marker
-    public int indent;
-    // end line number for the region above
-    public int endAbove;
-    // start line of the region. Only used for marker regions.
-    public int line;
+data class FoldingRegion(private val ranges: FoldingRegions, val regionIndex: Int) {
+    val startLineNumber: Int
+        get() = ranges.getStartLineNumber(regionIndex)
 
-    public PreviousRegion(int indent, int endAbove, int line) {
-        this.indent = indent;
-        this.endAbove = endAbove;
-        this.line = line;
-    }
+    val endLineNumber: Int
+        get() = ranges.getEndLineNumber(regionIndex)
 
+    @get:Throws(Exception::class)
+    val parentIndex: Int
+        get() = ranges.getParentIndex(regionIndex)
 }

@@ -21,14 +21,10 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.textmate.folding;
+package io.github.rosemoe.sora.langs.textmate.folding
 
-import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
-
-public interface FoldingHelper {
-
-    OnigResult getResultFor(int line);
-
-    int getIndentFor(int line);
-
-}
+data class PreviousRegion(// indent or -2 if a marker
+    var indent: Int, // end line number for the region above
+    var endAbove: Int, // start line of the region. Only used for marker regions.
+    var line: Int
+)

@@ -21,33 +21,15 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.textmate.utils;
+package io.github.rosemoe.sora.langs.textmate.utils
 
-import androidx.annotation.NonNull;
+import java.util.regex.Pattern
 
-import java.util.function.Function;
-import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
+object StringUtils {
+    private val MATCH_PATTERN: Pattern = Pattern.compile(".*/|\\..*")
 
-public class MatcherUtils {
-
-    public static String replaceAll(@NonNull CharSequence source, @NonNull Matcher matcher, @NonNull Function<MatchResult, String> replacer) {
-        matcher.reset();
-        var sb = new StringBuilder();
-        int appendPos = 0;
-        while (matcher.find()) {
-            var result = matcher.toMatchResult();
-            var replacement = replacer.apply(result);
-            sb.append(source, appendPos, result.start());
-            sb.append(replacement);
-            appendPos = result.end();
-        }
-        if (sb.length() == 0) {
-            // no match
-            return source.toString();
-        }
-        sb.append(source, appendPos, source.length());
-        return sb.toString();
+    @JvmStatic
+    fun getFileNameWithoutExtension(filePath: String): String {
+        return MATCH_PATTERN.matcher(filePath).replaceAll("")
     }
-
 }
