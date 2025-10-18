@@ -73,6 +73,7 @@ import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.editor.LspProject;
 import io.github.rosemoe.sora.text.ContentIO;
+import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 import kotlin.Unit;
 
 public class LspTestJavaActivity extends BaseEditorActivity {
@@ -117,6 +118,8 @@ public class LspTestJavaActivity extends BaseEditorActivity {
         var text = ContentIO.createFrom(new FileInputStream(file));
 
         runOnUiThread(() -> editor.setText(text, null));
+
+        editor.getComponent(EditorAutoCompletion.class).setEnabledAnimation(true);
     }
 
 
@@ -312,7 +315,6 @@ public class LspTestJavaActivity extends BaseEditorActivity {
     }
 
     private void ensureTextmateTheme() throws Exception {
-
         var editorColorScheme = editor.getColorScheme();
 
         if (editorColorScheme instanceof TextMateColorScheme) {

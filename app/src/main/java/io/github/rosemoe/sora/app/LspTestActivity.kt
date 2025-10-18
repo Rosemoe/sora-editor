@@ -46,6 +46,8 @@ import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspProject
 import io.github.rosemoe.sora.text.ContentIO
+import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
+import io.github.rosemoe.sora.widget.getComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -100,6 +102,7 @@ class LspTestActivity : BaseEditorActivity() {
             )
         }
         editor.setText(text, null)
+        editor.getComponent<EditorAutoCompletion>().setEnabledAnimation(true)
     }
 
     private suspend fun unAssets() = withContext(Dispatchers.IO) {

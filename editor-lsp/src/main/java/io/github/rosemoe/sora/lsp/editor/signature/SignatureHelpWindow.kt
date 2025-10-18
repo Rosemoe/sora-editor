@@ -155,16 +155,24 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
             return
         }
 
-        // Get only the activated signature
-        for (i in 0..activeSignatureIndex) {
-            formatSignature(
-                signatures[i],
-                activeParameterIndex,
-                renderStringBuilder,
-                isCurrentSignature = i == activeSignatureIndex
-            )
-            if (i < activeSignatureIndex) {
+        // Render the current signature first, then the others in order
+        formatSignature(
+            signatures[activeSignatureIndex],
+            activeParameterIndex,
+            renderStringBuilder,
+            isCurrentSignature = true
+        )
+
+        // Render all other signatures in their original order
+        for (i in signatures.indices) {
+            if (i != activeSignatureIndex) {
                 renderStringBuilder.append("\n")
+                formatSignature(
+                    signatures[i],
+                    activeParameterIndex,
+                    renderStringBuilder,
+                    isCurrentSignature = false
+                )
             }
         }
 
@@ -181,7 +189,7 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
         val parameters = signature.parameters
         val activeParameter = parameters.getOrNull(activeParameterIndex)
 
-        val parameterStart = label.substring(0, label.indexOf('('))
+        val parameterStart = label.substringBefore('(')
         val currentIndex = 0.coerceAtLeast(renderStringBuilder.lastIndex);
 
         renderStringBuilder.append(
