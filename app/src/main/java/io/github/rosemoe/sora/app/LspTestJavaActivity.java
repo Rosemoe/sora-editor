@@ -117,9 +117,11 @@ public class LspTestJavaActivity extends BaseEditorActivity {
 
         var text = ContentIO.createFrom(new FileInputStream(file));
 
-        runOnUiThread(() -> editor.setText(text, null));
+        runOnUiThread(() -> {
+            editor.setText(text, null);
+            editor.getComponent(EditorAutoCompletion.class).setEnabledAnimation(true);
+        });
 
-        editor.getComponent(EditorAutoCompletion.class).setEnabledAnimation(true);
     }
 
 
