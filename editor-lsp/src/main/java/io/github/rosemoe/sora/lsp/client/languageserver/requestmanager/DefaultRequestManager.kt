@@ -72,7 +72,11 @@ import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.LocationLink
 import org.eclipse.lsp4j.MessageActionItem
 import org.eclipse.lsp4j.MessageParams
+import org.eclipse.lsp4j.PrepareRenameDefaultBehavior
+import org.eclipse.lsp4j.PrepareRenameParams
+import org.eclipse.lsp4j.PrepareRenameResult
 import org.eclipse.lsp4j.PublishDiagnosticsParams
+import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.ReferenceParams
 import org.eclipse.lsp4j.RegistrationParams
 import org.eclipse.lsp4j.RenameParams
@@ -91,6 +95,7 @@ import org.eclipse.lsp4j.WorkspaceEdit
 import org.eclipse.lsp4j.WorkspaceSymbol
 import org.eclipse.lsp4j.WorkspaceSymbolParams
 import org.eclipse.lsp4j.jsonrpc.messages.Either
+import org.eclipse.lsp4j.jsonrpc.messages.Either3
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.lsp4j.services.TextDocumentService
@@ -591,18 +596,32 @@ class DefaultRequestManager(
         } else null
     }
 
+    override fun prepareRename(params: PrepareRenameParams?): CompletableFuture<Either3<Range?, PrepareRenameResult?, PrepareRenameDefaultBehavior?>?>? {
+        return if (checkStatus()) {
+            try {
+                if (serverCapabilities.renameProvider?.right?.prepareProvider == true)
+                    textDocumentService.prepareRename(
+                        params
+                    ) else null
+            } catch (e: Exception) {
+                crashed(e)
+                null
+            }
+        } else null
+    }
+
     override fun rename(params: RenameParams): CompletableFuture<WorkspaceEdit>? {
-        //        if (checkStatus()) {
-        //            try {
-        //                return (checkProvider((Either<Boolean, StaticRegistrationOptions>)serverCapabilities.getRenameProvider())) ?
-        //                        textDocumentService.rename(params) :
-        //                        null;
-        //            } catch (Exception e) {
-        //                crashed(e);
-        //                return null;
-        //            }
-        //        }
-        return null
+        return if (checkStatus()) {
+            try {
+                if (serverCapabilities.renameProvider?.left == true || serverCapabilities.renameProvider?.right != null)
+                    textDocumentService.rename(
+                        params
+                    ) else null
+            } catch (e: Exception) {
+                crashed(e)
+                null
+            }
+        } else null
     }
 
     override fun implementation(params: ImplementationParams): CompletableFuture<Either<List<Location>, List<LocationLink>>>? {

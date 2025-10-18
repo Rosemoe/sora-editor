@@ -367,7 +367,7 @@ class LanguageServerWrapper(
             onTypeFormatting = OnTypeFormattingCapabilities()
             rangeFormatting = RangeFormattingCapabilities()
             references = ReferencesCapabilities()
-            rename = RenameCapabilities()
+            rename = RenameCapabilities(true, false)
             signatureHelp = SignatureHelpCapabilities(true)
             synchronization =
                 SynchronizationCapabilities(true, true, true)
