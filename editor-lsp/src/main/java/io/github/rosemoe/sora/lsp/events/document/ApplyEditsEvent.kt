@@ -29,7 +29,9 @@ import io.github.rosemoe.sora.lsp.events.EventListener
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.getByClass
 import io.github.rosemoe.sora.text.Content
+import io.github.rosemoe.sora.text.batchEdit
 import io.github.rosemoe.sora.util.Logger
+import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.TextEdit
 
 
@@ -40,35 +42,32 @@ class ApplyEditsEvent : EventListener {
         val editList: List<TextEdit> = context.get("edits")
         val content = context.getByClass<Content>() ?: return
 
-        editList.forEach { textEdit: TextEdit ->
-            val range = textEdit.range
-            val text = textEdit.newText
-            var startIndex =
-                content.getCharIndex(range.start.line, range.start.character)
-
-            val endLine = range.end.line.coerceAtMost(content.lineCount - 1)
-
-            var endIndex =
-                content.getCharIndex(
-                    endLine,
-                    range.end.character
-                )
-
-            if (endIndex < startIndex) {
-                Logger.instance(this.javaClass.name)
-                    .w(
-                        "Invalid location information found applying edits from %s to %s",
-                        range.start,
-                        range.end
-                    )
-                val diff = startIndex - endIndex
-                endIndex = startIndex
-                startIndex = endIndex - diff
+        content.batchEdit {
+            editList.forEach { textEdit ->
+                val (startIndex, endIndex) = calculateIndices(it, textEdit.range)
+                it.replace(startIndex, endIndex, textEdit.newText)
             }
-            content.replace(startIndex, endIndex, text)
         }
     }
 
+    fun calculateIndices(content: Content, range: Range): Pair<Int, Int> {
+        var startIndex = content.getCharIndex(range.start.line, range.start.character)
+        val endLine = range.end.line.coerceAtMost(content.lineCount - 1)
+        var endIndex = content.getCharIndex(endLine, range.end.character)
+
+        if (endIndex < startIndex) {
+            Logger.instance(this.javaClass.name).w(
+                "Invalid location information found applying edits from %s to %s",
+                range.start,
+                range.end
+            )
+            val diff = startIndex - endIndex
+            endIndex = startIndex
+            startIndex = endIndex - diff
+        }
+
+        return startIndex to endIndex
+    }
 
 }
 
