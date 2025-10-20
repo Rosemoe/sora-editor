@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.lsp.editor.completion
 
-import android.util.Log
 import io.github.rosemoe.sora.lang.completion.CompletionItemKind
 import io.github.rosemoe.sora.lang.completion.SimpleCompletionIconDrawer.draw
 import io.github.rosemoe.sora.lang.completion.snippet.parser.CodeSnippetParser
@@ -116,18 +115,15 @@ class LspCompletionItem(
 
         if (completionItem.insertTextFormat == InsertTextFormat.Snippet) {
             val codeSnippet = CodeSnippetParser.parse(textEdit.newText)
-            var startIndex =
-                text.getCharIndex(
-                    textEdit.range.start.line, textEdit.range.start.character
-                )
+            var startIndex = text.getCharIndex(
+                textEdit.range.start.line,
+                textEdit.range.start.character.coerceAtMost(text.getColumnCount(textEdit.range.start.line))
+            )
 
             var endIndex = text.getCharIndex(
                 textEdit.range.end.line,
-                (text.getColumnCount(textEdit.range.end.line) - 1)
-                    .coerceAtMost(textEdit.range.end.character)
+                textEdit.range.end.character.coerceAtMost(text.getColumnCount(textEdit.range.end.line))
             )
-
-            val selectedText = text.subSequence(startIndex, endIndex).toString()
 
             if (endIndex < startIndex) {
                 Logger.instance(this.javaClass.name)
@@ -140,6 +136,8 @@ class LspCompletionItem(
                 endIndex = startIndex
                 startIndex = endIndex - diff
             }
+
+            val selectedText = text.subSequence(startIndex, endIndex).toString()
 
             text.delete(startIndex, endIndex)
 
