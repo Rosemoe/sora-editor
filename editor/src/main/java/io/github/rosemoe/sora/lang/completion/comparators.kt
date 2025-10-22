@@ -281,7 +281,6 @@ fun List<CompletionItem>.highlightMatchLabel(colorSchema: EditorColorScheme?): L
             return@forEach
         }
 
-        println("777 ${item.label} ${extra.score.matches} ${matchedColor.toString(16)}")
 
         val score = extra.score
         val spannable = SpannableString(item.label)
