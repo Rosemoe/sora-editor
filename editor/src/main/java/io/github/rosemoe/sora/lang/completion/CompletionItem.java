@@ -83,6 +83,14 @@ public abstract class CompletionItem {
     @Nullable
     public String sortText;
 
+    /**
+     * A string that should be used when comparing this item
+     * with other items. When null the {@link #sortText sortText}
+     * is used.
+     */
+    @Nullable
+    public String filterText;
+
     @Nullable
     protected Object extra;
 

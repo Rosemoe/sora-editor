@@ -59,6 +59,7 @@ class LspCompletionItem(
                 completionItem.kind.name
             )
         sortText = completionItem.sortText
+        filterText = completionItem.filterText
         val labelDetails = completionItem.labelDetails
         if (labelDetails != null && labelDetails.description != null) {
             desc = labelDetails.description

@@ -49,8 +49,6 @@ public class DefaultCompletionLayout implements CompletionLayout {
     private LinearLayout rootView;
     private EditorAutoCompletion editorAutoCompletion;
 
-    private boolean enabledAnimation = false;
-
     @Override
     public void setEditorCompletion(@NonNull EditorAutoCompletion completion) {
         editorAutoCompletion = completion;
@@ -58,8 +56,6 @@ public class DefaultCompletionLayout implements CompletionLayout {
 
     @Override
     public void setEnabledAnimation(boolean enabledAnimation) {
-        this.enabledAnimation = enabledAnimation;
-
         if (enabledAnimation) {
             var transition = new LayoutTransition();
             transition.enableTransitionType(LayoutTransition.CHANGING);

@@ -31,7 +31,7 @@ import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.util.CharCode
 
 private fun CharSequence?.asString(): String {
-    return if (this == null) " " else if (this is String) this else this.toString()
+    return if (this == null) " " else this as? String ?: this.toString()
 }
 
 fun defaultComparator(a: CompletionItem, b: CompletionItem): Int {
@@ -86,11 +86,12 @@ fun snippetUpComparator(a: CompletionItem, b: CompletionItem): Int {
 }
 
 
-fun getCompletionItemComparator(
+fun filterCompletionItems(
     source: ContentReference,
     cursorPosition: CharPosition,
     completionItemList: Collection<CompletionItem>
-): Comparator<CompletionItem> {
+): List<CompletionItem> {
+    val result = mutableListOf<CompletionItem>()
 
     source.validateAccess()
 
@@ -167,11 +168,13 @@ fun getCompletionItemComparator(
                 }
             }
 
+            val filterText = originItem.filterText ?: originItem.sortText
+
             if (wordPos >= wordLen) {
                 // the wordPos at which scoring starts is the whole word
                 // and therefore the same rules as not having a word apply
                 item.score = FuzzyScore.default;
-            } else if (originItem.sortText?.isNotEmpty() == true) {
+            } else if (filterText?.isNotEmpty() == true) {
                 // when there is a `filterText` it must match the `word`.
                 // if it matches we check with the label to compute highlights
                 // and if that doesn't yield a result we have no highlights,
@@ -181,30 +184,29 @@ fun getCompletionItemComparator(
                     word,
                     wordLow,
                     wordPos,
-                    originItem.sortText.asString(),
-                    originItem.sortText.asString().lowercase(),
+                    filterText.asString(),
+                    filterText.asString().lowercase(),
                     0,
                     FuzzyScoreOptions.default
                 ) ?: continue; // NO match
 
                 // compareIgnoreCase(item.completion.filterText, item.textLabel) === 0
-                if (originItem.sortText === originItem.label) {
+                if (filterText === originItem.label) {
                     // filterText and label are actually the same -> use good highlights
                     item.score = match;
                 } else {
                     // re-run the scorer on the label in the hope of a result BUT use the rank
                     // of the filterText-match
-                    val labelMatch = scoreFn.calculateScore(
+                    val labelMatch = anyScore(
                         word,
                         wordLow,
                         wordPos,
                         originItem.label.asString(),
                         originItem.label.asString().lowercase(),
-                        0,
-                        FuzzyScoreOptions.default
-                    ) ?: continue; // NO match
+                        0
+                    )
                     item.score = labelMatch
-                    labelMatch.matches[0] = match.matches[0]
+                    labelMatch.matches[0] = match.matches[0] // use score from filterText
                 }
 
             } else {
@@ -218,17 +220,44 @@ fun getCompletionItemComparator(
                     0,
                     FuzzyScoreOptions.default
                 ) ?: continue; // NO match
+
                 item.score = match;
             }
 
             originItem.extra = item
 
         }
+
+        result.add(originItem)
     }
 
+    return result
+}
+
+fun createCompletionItemComparator(completionItemList: Collection<CompletionItem>): Comparator<CompletionItem> {
+    if (completionItemList.isNotEmpty() && completionItemList.first().extra != null && completionItemList.first().extra !is SortedCompletionItem) {
+        throw IllegalArgumentException("The completionItemList must run through the filterCompletionItems() method first")
+    }
+
+    
     return Comparator { o1, o2 ->
         snippetUpComparator(o1, o2)
     }
+}
+
+/**
+ * Use [filterCompletionItems] and [createCompletionItemComparator] instead
+ */
+@Deprecated("Use filterCompletionItems and createCompletionItemComparator instead")
+fun getCompletionItemComparator(
+    source: ContentReference,
+    cursorPosition: CharPosition,
+    completionItemList: Collection<CompletionItem>
+): Comparator<CompletionItem> {
+
+    filterCompletionItems(source, cursorPosition, completionItemList)
+
+    return createCompletionItemComparator(completionItemList)
 }
 
 data class SortedCompletionItem(

@@ -183,7 +183,7 @@ class EventContext {
     }
 
     fun <T : Any> remove(key: String): T? {
-        return data.remove(key) as T?
+        return data.remove(key) as? T?
     }
 
     fun <T : Any> getByClass(clazz: Class<T>): T? {
