@@ -32,6 +32,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.lang.ref.WeakReference;
+import java.util.Collection;
 import java.util.List;
 
 import io.github.rosemoe.sora.event.ClickEvent;
@@ -49,6 +50,7 @@ import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.SnippetEvent;
 import io.github.rosemoe.sora.event.Unsubscribe;
 import io.github.rosemoe.sora.lang.Language;
+import io.github.rosemoe.sora.lang.completion.Comparators;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionItem;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
@@ -101,6 +103,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     private long requestHide = -1;
     private boolean enabled = true;
     private boolean loading = false;
+    private boolean highlightMatchedLabel = true;
 
     /**
      * Create a panel instance for the given editor
@@ -418,7 +421,18 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         } else {
             layout.setLoading(false);
         }
+    }
 
+    /**
+     * Highlight matched label
+     * <p>
+     * Only relevant when the list has been filtered using {@link Comparators#filterCompletionItems(ContentReference, CharPosition, Collection)}.
+     * <p>
+     * This sorting is used by default, so manual configuration is usually unnecessary.
+     * @param state Whether highlight
+     */
+    public void setHighlightMatchedLabel(boolean state) {
+        highlightMatchedLabel = state;
     }
 
     /**
@@ -541,6 +555,9 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         currentSelection = -1;
         publisher = new CompletionPublisher(editor.getHandler(), () -> {
             var items = publisher.getItems();
+            if (highlightMatchedLabel) {
+                Comparators.highlightMatchLabel(items, editor.getColorScheme());
+            }
             if (lastAttachedItems == null || lastAttachedItems.get() != items) {
                 adapter.attachValues(this, items);
                 adapter.notifyDataSetInvalidated();

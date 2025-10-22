@@ -34,6 +34,7 @@ import io.github.rosemoe.sora.lang.completion.CompletionItem
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher
 import io.github.rosemoe.sora.lang.completion.createCompletionItemComparator
 import io.github.rosemoe.sora.lang.completion.filterCompletionItems
+import io.github.rosemoe.sora.lang.completion.highlightMatchLabel
 import io.github.rosemoe.sora.lang.format.Formatter
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler
 import io.github.rosemoe.sora.lsp.editor.completion.CompletionItemProvider
@@ -48,6 +49,7 @@ import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.util.MyCharacter
 import io.github.rosemoe.sora.widget.SymbolPairMatch
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit

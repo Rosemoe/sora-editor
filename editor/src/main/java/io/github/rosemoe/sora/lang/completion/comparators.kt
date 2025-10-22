@@ -26,9 +26,13 @@
 
 package io.github.rosemoe.sora.lang.completion
 
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.util.CharCode
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 private fun CharSequence?.asString(): String {
     return if (this == null) " " else this as? String ?: this.toString()
@@ -239,7 +243,7 @@ fun createCompletionItemComparator(completionItemList: Collection<CompletionItem
         throw IllegalArgumentException("The completionItemList must run through the filterCompletionItems() method first")
     }
 
-    
+
     return Comparator { o1, o2 ->
         snippetUpComparator(o1, o2)
     }
@@ -258,6 +262,44 @@ fun getCompletionItemComparator(
     filterCompletionItems(source, cursorPosition, completionItemList)
 
     return createCompletionItemComparator(completionItemList)
+}
+
+/**
+ * An helper method to highlight the matched label of completion items.
+ */
+fun List<CompletionItem>.highlightMatchLabel(colorSchema: EditorColorScheme?): List<CompletionItem> {
+    val notNullColorScheme = colorSchema ?: EditorColorScheme.getDefault()
+    val matchedColor = notNullColorScheme.getColor(EditorColorScheme.COMPLETION_WND_TEXT_MATCHED)
+    forEach { item ->
+        val extra = item.extra
+        if (extra == null || extra !is SortedCompletionItem) {
+            return@forEach
+        }
+
+        // skip if is spannable
+        if (item.label is Spannable) {
+            return@forEach
+        }
+
+        println("777 ${item.label} ${extra.score.matches} ${matchedColor.toString(16)}")
+
+        val score = extra.score
+        val spannable = SpannableString(item.label)
+
+        for (index in score.matches.indices.reversed()) {
+            val matchIndex = score.matches[index]
+            spannable.setSpan(
+                ForegroundColorSpan(matchedColor),
+                matchIndex,
+                spannable.lastIndex.coerceAtMost(matchIndex + 1),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+
+        item.label = spannable
+
+    }
+    return this
 }
 
 data class SortedCompletionItem(

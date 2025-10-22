@@ -119,6 +119,7 @@ public class EditorColorScheme {
     public static final int MATCHED_TEXT_BACKGROUND = 29;
     public static final int COMPLETION_WND_CORNER = 20;
     public static final int COMPLETION_WND_BACKGROUND = 19;
+    public static final int COMPLETION_WND_TEXT_MATCHED = 67;
     public static final int COMPLETION_WND_TEXT_PRIMARY = 42;
     public static final int COMPLETION_WND_TEXT_SECONDARY = 43;
     public static final int COMPLETION_WND_ITEM_CURRENT = 44;
@@ -169,7 +170,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 66;
+    protected static final int END_COLOR_ID = 67;
 
 
     /**
@@ -349,6 +350,9 @@ public class EditorColorScheme {
                 break;
             case MATCHED_TEXT_BACKGROUND:
                 color = 0xffffff00;
+                break;
+            case COMPLETION_WND_TEXT_MATCHED:
+                color = 0xFF4daafc;
                 break;
             case NON_PRINTABLE_CHAR:
                 color = 0xeecccccc;

@@ -201,6 +201,28 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
             setColor(DIAGNOSTIC_TOOLTIP_ACTION, Color.parseColor(tooltipActionColor));
         }
 
+        String suggestHighlightForeground = (String) RawTheme.get("editorSuggestWidget.highlightForeground");
+        if (suggestHighlightForeground != null) {
+            setColor(COMPLETION_WND_TEXT_MATCHED, Color.parseColor(suggestHighlightForeground));
+        }
+
+        String suggestBackground = (String) RawTheme.get("editorSuggestWidget.background");
+        if (suggestBackground != null) {
+            setColor(COMPLETION_WND_BACKGROUND, Color.parseColor(suggestBackground));
+        }
+
+        String suggestForeground = (String) RawTheme.get("editorSuggestWidget.foreground");
+        if (suggestForeground != null) {
+            setColor(COMPLETION_WND_TEXT_PRIMARY, Color.parseColor(suggestForeground));
+        }
+
+        String suggestSelectedBackground = (String) RawTheme.get("editorSuggestWidget.selectedBackground");
+        if (suggestSelectedBackground != null) {
+            setColor(COMPLETION_WND_ITEM_CURRENT, Color.parseColor(suggestSelectedBackground));
+        }
+
+
+
         String editorIndentGuideBackground = (String) RawTheme.get("editorIndentGuide.background");
         int blockLineColor = ((getColor(WHOLE_BACKGROUND) + getColor(TEXT_NORMAL)) / 2) & 0x00FFFFFF | 0x88000000;
         int blockLineColorCur = (blockLineColor) | 0xFF000000;
