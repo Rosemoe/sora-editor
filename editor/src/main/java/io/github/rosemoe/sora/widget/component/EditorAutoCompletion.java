@@ -429,6 +429,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
      * Only relevant when the list has been filtered using {@link Comparators#filterCompletionItems(ContentReference, CharPosition, Collection)}.
      * <p>
      * This sorting is used by default, so manual configuration is usually unnecessary.
+     *
      * @param state Whether highlight
      */
     public void setHighlightMatchedLabel(boolean state) {
@@ -571,6 +572,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             }
             updateCompletionWindowPosition();
             setSize(getWidth(), (int) Math.min(newHeight, maxHeight));
+            resetScrollPosition();
             if (!isShowing()) {
                 show();
             }
@@ -582,6 +584,12 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
 
     public void setMaxHeight(int height) {
         maxHeight = height;
+    }
+
+    public void resetScrollPosition() {
+        editor.postDelayedInLifecycle(() -> {
+            layout.ensureListPositionVisible(0, 0);
+        },10);
     }
 
     /**
