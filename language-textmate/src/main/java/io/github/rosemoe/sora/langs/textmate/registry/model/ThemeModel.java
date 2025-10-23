@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.langs.textmate.registry.model;
 
 import org.eclipse.tm4e.core.internal.theme.Theme;
 import org.eclipse.tm4e.core.internal.theme.raw.IRawTheme;
+import org.eclipse.tm4e.core.internal.theme.raw.RawTheme;
 import org.eclipse.tm4e.core.internal.theme.raw.RawThemeReader;
 import org.eclipse.tm4e.core.registry.IThemeSource;
 import org.jetbrains.annotations.Nullable;
