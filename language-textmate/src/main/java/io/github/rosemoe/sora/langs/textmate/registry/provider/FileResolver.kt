@@ -21,35 +21,25 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.langs.textmate.registry.provider;
+package io.github.rosemoe.sora.langs.textmate.registry.provider
 
-import androidx.annotation.Nullable;
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileNotFoundException
+import java.io.InputStream
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+fun interface FileResolver {
+    fun resolveStreamByPath(path: String): InputStream?
 
-@FunctionalInterface
-public interface FileResolver {
-    @Nullable
-    InputStream resolveStreamByPath(String path);
+    fun dispose() {}
 
-    default void dispose() {
-
-    }
-
-    FileResolver DEFAULT = path -> {
-        var file = new File(path);
-        if (file.isFile()) {
-            try {
-                return new FileInputStream(file);
-            } catch (FileNotFoundException e) {
-                return null;
-            }
-        } else {
-            return null;
+    companion object {
+        @JvmField
+        val DEFAULT: FileResolver = FileResolver { path: String ->
+            return@FileResolver runCatching {
+                val file = File(path)
+                if (file.isFile) file.inputStream() else null
+            }.getOrNull()
         }
-
-    };
+    }
 }
