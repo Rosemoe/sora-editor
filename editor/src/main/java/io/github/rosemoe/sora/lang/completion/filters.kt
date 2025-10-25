@@ -177,7 +177,7 @@ data class FuzzyScoreOptions(
 
     companion object {
         @JvmStatic
-        val default = FuzzyScoreOptions(boostFullMatch = true, firstMatchCanBeWeak = false)
+        val default = FuzzyScoreOptions(boostFullMatch = true, firstMatchCanBeWeak = true)
     }
 
 }
@@ -282,7 +282,7 @@ fun fuzzyScore(
             }
 
             var diagScore = 0
-            if (score != Int.MAX_VALUE) {
+            if (score != Int.MIN_VALUE) {
                 canComeDiag = true
                 diagScore = score + table[row - 1][column - 1]
             }

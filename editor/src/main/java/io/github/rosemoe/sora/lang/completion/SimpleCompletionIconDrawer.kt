@@ -45,12 +45,10 @@ internal class CircleDrawable(kind: CompletionItemKind, circle: Boolean) :
     Drawable() {
     private val mPaint: Paint
     private val mTextPaint: Paint
-    private val mKind: CompletionItemKind
-    private val mCircle: Boolean
+    private val mKind: CompletionItemKind = kind
+    private val mCircle: Boolean = circle
 
     init {
-        mKind = kind
-        mCircle = circle
         mPaint = Paint().apply {
             isAntiAlias = true
             color = kind.defaultDisplayBackgroundColor.toInt()

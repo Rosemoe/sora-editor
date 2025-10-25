@@ -39,6 +39,7 @@ import org.eclipse.tm4e.core.registry.IThemeSource;
 
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
+import io.github.rosemoe.sora.langs.textmate.utils.ColorUtils;
 import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
@@ -126,79 +127,89 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
 
         String caret = (String) RawTheme.get("editorCursor.foreground");
         if (caret != null) {
-            setColor(SELECTION_INSERT, Color.parseColor(caret));
+            setColor(SELECTION_INSERT, ColorUtils.parseRGBAToARGB(caret));
         }
 
         String selection = (String) RawTheme.get("editor.selectionBackground");
         if (selection != null) {
-            setColor(SELECTED_TEXT_BACKGROUND, Color.parseColor(selection));
+            setColor(SELECTED_TEXT_BACKGROUND, ColorUtils.parseRGBAToARGB(selection));
         }
 
         String invisibles = (String) RawTheme.get("editorWhitespace.foreground");
         if (invisibles != null) {
-            setColor(NON_PRINTABLE_CHAR, Color.parseColor(invisibles));
+            setColor(NON_PRINTABLE_CHAR, ColorUtils.parseRGBAToARGB(invisibles));
         }
 
         String lineHighlight = (String) RawTheme.get("editor.lineHighlightBackground");
         if (lineHighlight != null) {
-            setColor(CURRENT_LINE, Color.parseColor(lineHighlight));
+            setColor(CURRENT_LINE, ColorUtils.parseRGBAToARGB(lineHighlight));
         }
 
         String background = (String) RawTheme.get("editor.background");
         if (background != null) {
-            setColor(WHOLE_BACKGROUND, Color.parseColor(background));
-            setColor(LINE_NUMBER_BACKGROUND, Color.parseColor(background));
+            setColor(WHOLE_BACKGROUND, ColorUtils.parseRGBAToARGB(background));
+            setColor(LINE_NUMBER_BACKGROUND, ColorUtils.parseRGBAToARGB(background));
         }
 
         String lineHighlightBackground = (String) RawTheme.get("editorLineNumber.foreground");
         if (lineHighlightBackground != null) {
-            setColor(LINE_NUMBER, Color.parseColor(lineHighlightBackground));
+            setColor(LINE_NUMBER, ColorUtils.parseRGBAToARGB(lineHighlightBackground));
         }
 
         String lineHighlightActiveForeground = (String) RawTheme.get("editorLineNumber.activeForeground");
         if (lineHighlightActiveForeground != null) {
-            setColor(LINE_NUMBER_CURRENT, Color.parseColor(lineHighlightActiveForeground));
+            setColor(LINE_NUMBER_CURRENT, ColorUtils.parseRGBAToARGB(lineHighlightActiveForeground));
         }
 
         String foreground = (String) RawTheme.get("editor.foreground");
         if (foreground != null) {
-            setColor(TEXT_NORMAL, Color.parseColor(foreground));
-        }
-
-        String completionWindowBackground = (String) RawTheme.get("completionWindowBackground");
-        if (completionWindowBackground != null) {
-            setColor(COMPLETION_WND_BACKGROUND, Color.parseColor(completionWindowBackground));
-        }
-
-        String completionWindowBackgroundCurrent = (String) RawTheme.get("completionWindowBackgroundCurrent");
-        if (completionWindowBackgroundCurrent != null) {
-            setColor(COMPLETION_WND_ITEM_CURRENT, Color.parseColor(completionWindowBackgroundCurrent));
+            setColor(TEXT_NORMAL, ColorUtils.parseRGBAToARGB(foreground));
         }
 
         String highlightedDelimitersForeground =
                 (String) RawTheme.get("highlightedDelimitersForeground");
         if (highlightedDelimitersForeground != null) {
-            setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(highlightedDelimitersForeground));
+            setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, ColorUtils.parseRGBAToARGB(highlightedDelimitersForeground));
         }
 
         String tooltipBackground = (String) RawTheme.get("tooltipBackground");
         if (tooltipBackground != null) {
-            setColor(DIAGNOSTIC_TOOLTIP_BACKGROUND, Color.parseColor(tooltipBackground));
+            setColor(DIAGNOSTIC_TOOLTIP_BACKGROUND, ColorUtils.parseRGBAToARGB(tooltipBackground));
         }
 
         String tooltipBriefMessageColor = (String) RawTheme.get("tooltipBriefMessageColor");
         if (tooltipBriefMessageColor != null) {
-            setColor(DIAGNOSTIC_TOOLTIP_BRIEF_MSG, Color.parseColor(tooltipBriefMessageColor));
+            setColor(DIAGNOSTIC_TOOLTIP_BRIEF_MSG, ColorUtils.parseRGBAToARGB(tooltipBriefMessageColor));
         }
 
         String tooltipDetailedMessageColor = (String) RawTheme.get("tooltipDetailedMessageColor");
         if (tooltipDetailedMessageColor != null) {
-            setColor(DIAGNOSTIC_TOOLTIP_DETAILED_MSG, Color.parseColor(tooltipDetailedMessageColor));
+            setColor(DIAGNOSTIC_TOOLTIP_DETAILED_MSG, ColorUtils.parseRGBAToARGB(tooltipDetailedMessageColor));
         }
 
         String tooltipActionColor = (String) RawTheme.get("tooltipActionColor");
         if (tooltipActionColor != null) {
-            setColor(DIAGNOSTIC_TOOLTIP_ACTION, Color.parseColor(tooltipActionColor));
+            setColor(DIAGNOSTIC_TOOLTIP_ACTION, ColorUtils.parseRGBAToARGB(tooltipActionColor));
+        }
+
+        String suggestHighlightForeground = (String) RawTheme.get("editorSuggestWidget.highlightForeground");
+        if (suggestHighlightForeground != null) {
+            setColor(COMPLETION_WND_TEXT_MATCHED, ColorUtils.parseRGBAToARGB(suggestHighlightForeground));
+        }
+
+        String suggestBackground = (String) RawTheme.get("editorSuggestWidget.background");
+        if (suggestBackground != null) {
+            setColor(COMPLETION_WND_BACKGROUND, ColorUtils.parseRGBAToARGB(suggestBackground));
+        }
+
+        String suggestForeground = (String) RawTheme.get("editorSuggestWidget.foreground");
+        if (suggestForeground != null) {
+            setColor(COMPLETION_WND_TEXT_PRIMARY, ColorUtils.parseRGBAToARGB(suggestForeground));
+        }
+
+        String suggestSelectedBackground = (String) RawTheme.get("editorSuggestWidget.selectedBackground");
+        if (suggestSelectedBackground != null) {
+            setColor(COMPLETION_WND_ITEM_CURRENT, ColorUtils.parseRGBAToARGB(suggestSelectedBackground));
         }
 
         String editorIndentGuideBackground = (String) RawTheme.get("editorIndentGuide.background");
@@ -206,7 +217,7 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
         int blockLineColorCur = (blockLineColor) | 0xFF000000;
 
         if (editorIndentGuideBackground != null) {
-            setColor(BLOCK_LINE, Color.parseColor(editorIndentGuideBackground));
+            setColor(BLOCK_LINE, ColorUtils.parseRGBAToARGB(editorIndentGuideBackground));
         } else {
             setColor(BLOCK_LINE, blockLineColor);
         }
@@ -214,7 +225,7 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
         String editorIndentGuideActiveBackground = (String) RawTheme.get("editorIndentGuide.activeBackground");
 
         if (editorIndentGuideActiveBackground != null) {
-            setColor(BLOCK_LINE_CURRENT, Color.parseColor(editorIndentGuideActiveBackground));
+            setColor(BLOCK_LINE_CURRENT, ColorUtils.parseRGBAToARGB(editorIndentGuideActiveBackground));
         } else {
             setColor(BLOCK_LINE_CURRENT, blockLineColorCur);
         }
@@ -237,39 +248,49 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
 
         String caret = (String) RawTheme.get("caret");
         if (caret != null) {
-            setColor(SELECTION_INSERT, Color.parseColor(caret));
+            setColor(SELECTION_INSERT, ColorUtils.parseRGBAToARGB(caret));
         }
 
         String selection = (String) RawTheme.get("selection");
         if (selection != null) {
-            setColor(SELECTED_TEXT_BACKGROUND, Color.parseColor(selection));
+            setColor(SELECTED_TEXT_BACKGROUND, ColorUtils.parseRGBAToARGB(selection));
         }
 
         String invisibles = (String) RawTheme.get("invisibles");
         if (invisibles != null) {
-            setColor(NON_PRINTABLE_CHAR, Color.parseColor(invisibles));
+            setColor(NON_PRINTABLE_CHAR, ColorUtils.parseRGBAToARGB(invisibles));
         }
 
         String lineHighlight = (String) RawTheme.get("lineHighlight");
         if (lineHighlight != null) {
-            setColor(CURRENT_LINE, Color.parseColor(lineHighlight));
+            setColor(CURRENT_LINE, ColorUtils.parseRGBAToARGB(lineHighlight));
         }
 
         String background = (String) RawTheme.get("background");
         if (background != null) {
-            setColor(WHOLE_BACKGROUND, Color.parseColor(background));
-            setColor(LINE_NUMBER_BACKGROUND, Color.parseColor(background));
+            setColor(WHOLE_BACKGROUND, ColorUtils.parseRGBAToARGB(background));
+            setColor(LINE_NUMBER_BACKGROUND, ColorUtils.parseRGBAToARGB(background));
         }
 
         String foreground = (String) RawTheme.get("foreground");
         if (foreground != null) {
-            setColor(TEXT_NORMAL, Color.parseColor(foreground));
+            setColor(TEXT_NORMAL, ColorUtils.parseRGBAToARGB(foreground));
         }
 
         String highlightedDelimitersForeground =
                 (String) RawTheme.get("highlightedDelimitersForeground");
         if (highlightedDelimitersForeground != null) {
-            setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, Color.parseColor(highlightedDelimitersForeground));
+            setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, ColorUtils.parseRGBAToARGB(highlightedDelimitersForeground));
+        }
+
+        String completionWindowBackground = (String) RawTheme.get("completionWindowBackground");
+        if (completionWindowBackground != null) {
+            setColor(COMPLETION_WND_BACKGROUND, ColorUtils.parseRGBAToARGB(completionWindowBackground));
+        }
+
+        String completionWindowBackgroundCurrent = (String) RawTheme.get("completionWindowBackgroundCurrent");
+        if (completionWindowBackgroundCurrent != null) {
+            setColor(COMPLETION_WND_ITEM_CURRENT, ColorUtils.parseRGBAToARGB(completionWindowBackgroundCurrent));
         }
 
         //TMTheme seems to have no fields to control BLOCK_LINE colors
@@ -293,7 +314,7 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
                         return super.getColor(TEXT_NORMAL);
                     }
                     var newColor = (color != null && !"@default".equalsIgnoreCase(color)) ?
-                            Color.parseColor(color) : super.getColor(TEXT_NORMAL);
+                            ColorUtils.parseRGBAToARGB(color) : super.getColor(TEXT_NORMAL);
                     super.colors.put(type, newColor);
                     return newColor;
                 }

@@ -49,8 +49,6 @@ public class DefaultCompletionLayout implements CompletionLayout {
     private LinearLayout rootView;
     private EditorAutoCompletion editorAutoCompletion;
 
-    private boolean enabledAnimation = false;
-
     @Override
     public void setEditorCompletion(@NonNull EditorAutoCompletion completion) {
         editorAutoCompletion = completion;
@@ -58,8 +56,6 @@ public class DefaultCompletionLayout implements CompletionLayout {
 
     @Override
     public void setEnabledAnimation(boolean enabledAnimation) {
-        this.enabledAnimation = enabledAnimation;
-
         if (enabledAnimation) {
             var transition = new LayoutTransition();
             transition.enableTransitionType(LayoutTransition.CHANGING);
@@ -193,6 +189,11 @@ public class DefaultCompletionLayout implements CompletionLayout {
     @Override
     public void ensureListPositionVisible(int position, int increment) {
         listView.post(() -> {
+            // Used for reset scroll position
+            if (position == 0 && increment == 0) {
+                listView.setSelectionFromTop(0, 0);
+                return;
+            }
             while (listView.getFirstVisiblePosition() + 1 > position && listView.canScrollList(-1)) {
                 performScrollList(increment / 2);
             }

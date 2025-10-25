@@ -114,9 +114,11 @@ public class IdentifierAutoComplete {
             @NonNull ContentReference reference, @NonNull CharPosition position,
             @NonNull String prefix, @NonNull CompletionPublisher publisher, @Nullable Identifiers userIdentifiers) {
 
-        var completionItemList = createCompletionItemList(prefix, userIdentifiers);
+        var completionItemList = Comparators.filterCompletionItems(
+                reference, position, createCompletionItemList(prefix, userIdentifiers)
+        );
 
-        var comparator = Comparators.getCompletionItemComparator(reference, position, completionItemList);
+        var comparator = Comparators.createCompletionItemComparator(completionItemList);
 
         publisher.addItems(completionItemList);
 
@@ -340,7 +342,7 @@ public class IdentifierAutoComplete {
 
                         var score = fuzzyScore == null ? -100 : fuzzyScore.getScore();
 
-                        if ((TextUtils.startsWith(s, prefix, true) || score >= -20)  && !(prefix.length() == s.length() && TextUtils.startsWith(prefix, s, false))) {
+                        if ((TextUtils.startsWith(s, prefix, true) || score >= -20) && !(prefix.length() == s.length() && TextUtils.startsWith(prefix, s, false))) {
                             dest.add(s);
                         }
                     }
