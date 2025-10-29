@@ -78,7 +78,7 @@ class HoverEvent : AsyncEventListener() {
         } catch (exception: Exception) {
             // throw?
             exception.printStackTrace()
-            Log.e("LSP client", "show signatureHelp timeout", exception)
+            Log.e("LSP client", "show hover timeout", exception)
         }
     }
 

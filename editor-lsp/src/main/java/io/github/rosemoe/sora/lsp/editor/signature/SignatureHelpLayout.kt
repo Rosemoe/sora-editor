@@ -15,4 +15,6 @@ interface SignatureHelpLayout {
     fun applyColorScheme(colorScheme: EditorColorScheme, typeface: Typeface)
     /** Render the provided signature help content. */
     fun renderSignatures(signatureHelp: SignatureHelp)
+    /** Notify the layout that the editor text size changed. */
+    fun onTextSizeChanged(oldSize: Float, newSize: Float)
 }

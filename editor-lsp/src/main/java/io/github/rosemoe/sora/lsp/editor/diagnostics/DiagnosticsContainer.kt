@@ -45,12 +45,9 @@ class DiagnosticsContainer {
         }
     }
 
-    private fun findDiagnostic(uri: FileUri, line: Int, column: Int): Diagnostic? {
+    private fun findDiagnostic(uri: FileUri, line: Int): Diagnostic? {
         return diagnosticsMap[uri]?.find {
-            it.range.start.line == line &&
-                    it.range.start.character == column ||
-                    it.range.end.line == line &&
-                    it.range.end.character == column
+            it.range.start.line == line || it.range.end.line == line
         }
     }
 
@@ -58,8 +55,7 @@ class DiagnosticsContainer {
         val diagnostics = diagnosticsMap[uri] ?: CopyOnWriteArrayList()
         findDiagnostic(
             uri,
-            newDiagnostic.range.start.line,
-            newDiagnostic.range.start.character
+            newDiagnostic.range.start.line
         )?.let { removeDiagnostic(uri, it) }
         diagnostics.add(newDiagnostic)
         diagnosticsMap[uri] = diagnostics

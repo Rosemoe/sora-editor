@@ -30,6 +30,8 @@ import io.github.rosemoe.sora.event.Unsubscribe
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.hover.hover
+import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
+import io.github.rosemoe.sora.widget.getComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -46,8 +48,10 @@ class LspEditorSelectionChangeEvent(private val editor: LspEditor) :
 
         val hoverWindow = editor.hoverWindow ?: return
 
+        val isInCompletion = originEditor.getComponent<EditorAutoCompletion>().isShowing
+        val isInSignatureHelp = editor.isShowSignatureHelp
 
-        if (!originEditor.hasMouseHovering() && !hoverWindow.alwaysShowOnTouchHover) {
+        if ((!originEditor.hasMouseHovering() && !hoverWindow.alwaysShowOnTouchHover) || isInCompletion || isInSignatureHelp) {
             return
         }
 

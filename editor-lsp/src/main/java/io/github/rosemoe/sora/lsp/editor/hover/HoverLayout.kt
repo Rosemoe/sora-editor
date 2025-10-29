@@ -15,4 +15,6 @@ interface HoverLayout {
     fun applyColorScheme(colorScheme: EditorColorScheme, typeface: Typeface)
     /** Render the provided hover content. */
     fun renderHover(hover: Hover)
+    /** Notify the layout that the editor text size changed. */
+    fun onTextSizeChanged(oldSize: Float, newSize: Float)
 }

@@ -47,6 +47,8 @@ import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.FileUri
 import io.github.rosemoe.sora.lsp.utils.clearVersions
 import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
+import io.github.rosemoe.sora.widget.getComponent
 import io.github.rosemoe.sora.widget.subscribeEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -178,6 +180,32 @@ class LspEditor(
     val hoverWindow: HoverWindow?
         get() = hoverWindowWeakReference.get()
 
+    var isEnableHover: Boolean = true
+        get() = hoverWindow?.isEnabled() ?: false
+        set(value) {
+            field = value
+            if (value) {
+                editor?.let { hoverWindowWeakReference = WeakReference(HoverWindow(it)) }
+            } else {
+                hoverWindow?.setEnabled(false)
+                hoverWindowWeakReference.clear()
+            }
+        }
+
+    var isEnableSignatureHelp: Boolean = true
+        get() = signatureHelpWindow?.isEnabled() ?: false
+        set(value) {
+            field = value
+            if (value) {
+                editor?.let {
+                    signatureHelpWindowWeakReference = WeakReference(SignatureHelpWindow(it))
+                }
+            } else {
+                signatureHelpWindow?.setEnabled(false)
+                signatureHelpWindowWeakReference.clear()
+            }
+        }
+
     val requestManager: RequestManager?
         get() = languageServerWrapper.requestManager
 
@@ -278,7 +306,7 @@ class LspEditor(
             )
 
             isConnected = false
-        } .onFailure {
+        }.onFailure {
             isConnected = false
             throw it
         }
@@ -322,8 +350,6 @@ class LspEditor(
     fun showSignatureHelp(signatureHelp: SignatureHelp?) {
         val signatureHelpWindow = signatureHelpWindowWeakReference.get() ?: return
 
-        if (!signatureHelpWindow.isEnabled()) return
-
         if (signatureHelp == null) {
             editor?.post { signatureHelpWindow.dismiss() }
             return
@@ -334,9 +360,9 @@ class LspEditor(
     fun showHover(hover: Hover?) {
         val hoverWindow = hoverWindowWeakReference.get() ?: return
 
-        if (!hoverWindow.isEnabled()) return
+        val isInSignatureHelp = isShowSignatureHelp
 
-        if (hover == null) {
+        if (hover == null || isInSignatureHelp) {
             editor?.post { hoverWindow.dismiss() }
             return
         }

@@ -30,6 +30,7 @@ import android.view.View.MeasureSpec
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent
 import io.github.rosemoe.sora.event.EditorReleaseEvent
 import io.github.rosemoe.sora.event.ScrollEvent
+import io.github.rosemoe.sora.event.TextSizeChangeEvent
 import io.github.rosemoe.sora.event.subscribeEvent
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
@@ -88,6 +89,14 @@ open class SignatureHelpWindow(
             }
         }
 
+        eventManager.subscribeEvent<TextSizeChangeEvent> { event, _ ->
+            layout.onTextSizeChanged(event.oldTextSize, event.newTextSize)
+            if (isShowing) {
+                renderSignatureHelp()
+                updateWindowSizeAndLocation()
+            }
+        }
+
     }
 
     fun isEnabled() = eventManager.isEnabled
@@ -100,6 +109,10 @@ open class SignatureHelpWindow(
     }
 
     open fun show(signatureHelp: SignatureHelp) {
+        if (!isEnabled()) {
+            return
+        }
+
         val completionShowing = editor.getComponent<EditorAutoCompletion>().isShowing
 
         if (signatureHelp.signatures.isEmpty() || completionShowing) {
@@ -136,7 +149,8 @@ open class SignatureHelpWindow(
         val selection = editor.cursor.left()
         val charX = editor.getCharOffsetX(selection.line, selection.column)
         val margin = editor.dpUnit * 10
-        val anchor = editor.getCharOffsetY(selection.line, selection.column) - editor.rowHeight - margin
+        val anchor =
+            editor.getCharOffsetY(selection.line, selection.column) - editor.rowHeight - margin
         val maxY = (editor.height - height).coerceAtLeast(0)
         val aboveTop = anchor - height
         val belowTop = (anchor + editor.rowHeight * 1.5f).coerceAtLeast(0f)

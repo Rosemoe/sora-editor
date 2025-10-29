@@ -6,6 +6,7 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
@@ -28,6 +29,11 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
     private lateinit var counterView: TextView
     private var textColor = 0
     private var highlightColor = 0
+    private var baselineEditorTextSize: Float? = null
+    private var baselineSignatureTextSize: Float? = null
+    private var baselineDocumentationTextSize: Float? = null
+    private var baselineCounterTextSize: Float? = null
+    private var latestEditorTextSize: Float? = null
 
     private var signatureHelp: SignatureHelp? = null
     private var currentIndex = 0
@@ -45,6 +51,10 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
         previousButton = root.findViewById(R.id.signature_help_previous)
         nextButton = root.findViewById(R.id.signature_help_next)
         counterView = root.findViewById(R.id.signature_help_counter)
+        baselineSignatureTextSize = signatureTextView.textSize
+        baselineDocumentationTextSize = documentationTextView.textSize
+        baselineCounterTextSize = counterView.textSize
+        latestEditorTextSize?.let { applyEditorScale(it) }
 
         previousButton.setOnClickListener {
             signatureHelp?.let {
@@ -135,6 +145,26 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
         container.post { container.smoothScrollTo(0, 0) }
     }
 
+    override fun onTextSizeChanged(oldSize: Float, newSize: Float) {
+        if (!::signatureTextView.isInitialized) {
+            return
+        }
+        if (newSize <= 0f) {
+            return
+        }
+        if (baselineEditorTextSize == null) {
+            if (oldSize <= 0f) {
+                return
+            }
+            baselineEditorTextSize = oldSize
+            baselineSignatureTextSize = baselineSignatureTextSize ?: signatureTextView.textSize
+            baselineDocumentationTextSize = baselineDocumentationTextSize ?: documentationTextView.textSize
+            baselineCounterTextSize = baselineCounterTextSize ?: counterView.textSize
+        }
+        latestEditorTextSize = newSize
+        applyEditorScale(newSize)
+    }
+
     private fun appendSignatureText(
         builder: SpannableStringBuilder,
         signature: SignatureInformation,
@@ -161,7 +191,6 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
             val highlight = parameter == activeParameter && activeParameterIndex >= 0
             val color = when {
                 highlight -> highlightColor
-                // isActiveSignature -> activeSignatureColor
                 else -> textColor
             }
             builder.setSpan(
@@ -178,8 +207,7 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
             }
-            val hasNext = i != parameters.lastIndex
-            if (hasNext) {
+            if (i != parameters.lastIndex) {
                 builder.append(", ")
             }
         }
@@ -192,5 +220,21 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
             )
         }
+    }
+
+    private fun applyEditorScale(targetEditorSize: Float) {
+        val editorBaseline = baselineEditorTextSize ?: return
+        val scale = targetEditorSize / editorBaseline
+        if (scale <= 0f) {
+            return
+        }
+        scaleTextView(signatureTextView, baselineSignatureTextSize, scale)
+        scaleTextView(documentationTextView, baselineDocumentationTextSize, scale)
+        scaleTextView(counterView, baselineCounterTextSize, scale)
+    }
+
+    private fun scaleTextView(textView: TextView, baselineSize: Float?, scale: Float) {
+        val base = baselineSize ?: textView.textSize
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, base * scale)
     }
 }

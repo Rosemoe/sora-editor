@@ -25,7 +25,6 @@
 package io.github.rosemoe.sora.widget.component
 
 import android.graphics.drawable.GradientDrawable
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -36,6 +35,7 @@ import android.widget.TextView
 import io.github.rosemoe.sora.I18nConfig
 import io.github.rosemoe.sora.R
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent
+import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EditorFocusChangeEvent
 import io.github.rosemoe.sora.event.EditorReleaseEvent
 import io.github.rosemoe.sora.event.HoverEvent
@@ -52,6 +52,7 @@ import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
 import io.github.rosemoe.sora.widget.getComponent
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+import kotlin.math.PI
 import kotlin.math.abs
 
 open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(editor, FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED), EditorBuiltinComponent {
@@ -284,6 +285,12 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
 
     protected open fun updateDiagnostic(diagnostic: DiagnosticDetail?, position: CharPosition?) {
         if (!isEnabled) {
+            return
+        }
+
+        // dismiss if completion windows is showing
+        if (editor.getComponent<EditorAutoCompletion>().isShowing) {
+            dismiss()
             return
         }
 
