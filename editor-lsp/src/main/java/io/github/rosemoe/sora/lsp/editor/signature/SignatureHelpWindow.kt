@@ -110,7 +110,7 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
 
         val completionShowing = editor.getComponent<EditorAutoCompletion>().isShowing
 
-        if (signatureHelp.signatures == null || signatureHelp.activeSignature == null || signatureHelp.activeParameter == null || completionShowing)  {
+        if (signatureHelp.signatures == null || signatureHelp.activeSignature == null || signatureHelp.activeParameter == null || completionShowing) {
             dismiss()
             return
         }

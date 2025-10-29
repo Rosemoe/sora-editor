@@ -46,7 +46,7 @@ class SocketStreamConnectionProvider(
     override fun start() {
         val port = port
         socket = Socket()
-        socket.connect(InetSocketAddress(host ?: "host", port), 20)
+        socket.connect(InetSocketAddress(host ?: "localhost", port), 20)
         socket.soTimeout = 0
     }
 

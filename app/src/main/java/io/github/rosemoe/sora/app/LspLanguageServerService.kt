@@ -65,8 +65,8 @@ class LspLanguageServerService : Service() {
 
                 val server = LuaLanguageServer();
 
-                val inputStream = socketClient.getInputStream()
-                val outputStream = socketClient.getOutputStream()
+                val inputStream = socketClient.inputStream
+                val outputStream = socketClient.outputStream
 
                 val launcher = Launcher.createLauncher(
                     server, LuaLanguageClient::class.java,
@@ -104,7 +104,6 @@ class LspLanguageServerService : Service() {
         socketClient.close()
         super.onDestroy()
     }
-
 
 
 }

@@ -172,7 +172,7 @@ fun filterCompletionItems(
                 }
             }
 
-            val filterText = originItem.filterText ?: originItem.sortText
+            val filterText = originItem.filterText
 
             if (wordPos >= overwriteBefore) {
                 // the wordPos at which scoring starts is the whole word
@@ -195,7 +195,7 @@ fun filterCompletionItems(
                 ) ?: continue; // NO match
 
                 // compareIgnoreCase(item.completion.filterText, item.textLabel) === 0
-                if (filterText === originItem.label) {
+                if (filterText.equals(originItem.label.toString(), ignoreCase = true)) {
                     // filterText and label are actually the same -> use good highlights
                     item.score = match;
                 } else {

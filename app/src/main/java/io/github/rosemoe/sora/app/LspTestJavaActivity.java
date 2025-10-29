@@ -187,7 +187,7 @@ public class LspTestJavaActivity extends BaseEditorActivity {
 
             changeWorkspaceFoldersParams.setEvent(new WorkspaceFoldersChangeEvent());
 
-            changeWorkspaceFoldersParams.getEvent().setAdded(List.of(new WorkspaceFolder("file://$projectPath/std/Lua53", "MyLuaProject")));
+            changeWorkspaceFoldersParams.getEvent().setAdded(List.of(new WorkspaceFolder("file://" + projectPath + "/std/Lua53", "MyLuaProject")));
 
             Objects.requireNonNull(lspEditor.getRequestManager())
                     .didChangeWorkspaceFolders(

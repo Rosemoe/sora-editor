@@ -60,7 +60,7 @@ class LspCompletionItem(
         sortText = completionItem.sortText
         filterText = completionItem.filterText
         val labelDetails = completionItem.labelDetails
-        if (labelDetails != null && labelDetails.description != null) {
+        if (labelDetails != null && labelDetails.description?.isNotEmpty() == true) {
             desc = labelDetails.description
         }
         icon = draw(kind ?: CompletionItemKind.Text)
