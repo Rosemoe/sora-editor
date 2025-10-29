@@ -85,9 +85,12 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
         counterView.setTextColor(textColor)
        /* previousButton.setTextColor(textColor)
         nextButton.setTextColor(textColor)*/
-        val drawable = GradientDrawable()
-        drawable.cornerRadius = editor.dpUnit * 8
-        drawable.setColor(colorScheme.getColor(EditorColorScheme.SIGNATURE_BACKGROUND))
+        val drawable = GradientDrawable().apply {
+            cornerRadius = editor.dpUnit * 8
+            setColor(colorScheme.getColor(EditorColorScheme.SIGNATURE_BACKGROUND))
+            val strokeWidth = editor.dpUnit.toInt().coerceAtLeast(1)
+            setStroke(strokeWidth, colorScheme.getColor(EditorColorScheme.SIGNATURE_BORDER))
+        }
         root.background = drawable
     }
 

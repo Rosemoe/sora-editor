@@ -39,13 +39,15 @@ class DefaultHoverLayout : HoverLayout {
 
     override fun applyColorScheme(colorScheme: EditorColorScheme, typeface: Typeface) {
         val editor = window.editor
-        textColor = colorScheme.getColor(EditorColorScheme.SIGNATURE_TEXT_NORMAL)
+        textColor = colorScheme.getColor(EditorColorScheme.HOVER_TEXT_NORMAL)
         hoverTextView.typeface = typeface
         hoverTextView.setTextColor(textColor)
 
         val drawable = GradientDrawable().apply {
             cornerRadius = editor.dpUnit * 8
-            setColor(colorScheme.getColor(EditorColorScheme.SIGNATURE_BACKGROUND))
+            setColor(colorScheme.getColor(EditorColorScheme.HOVER_BACKGROUND))
+            val strokeWidth = editor.dpUnit.toInt().coerceAtLeast(1)
+            setStroke(strokeWidth, colorScheme.getColor(EditorColorScheme.HOVER_BORDER))
         }
         root.background = drawable
     }
