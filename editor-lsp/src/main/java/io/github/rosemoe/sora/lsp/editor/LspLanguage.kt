@@ -96,16 +96,13 @@ class LspLanguage(var editor: LspEditor) : Language {
             return;
         }*/
 
-        val lineText = content.getLine(position.line)
-        if (!editor.isConnected || lineText.trim().isEmpty()) {
+        if (!editor.isConnected) {
             return
         }
 
         val prefix = computePrefix(content, position)
 
         val prefixLength = prefix.length
-
-        println("$prefixLength $prefix $lineText")
 
         val documentChangeEvent =
             editor.eventManager.getEventListener<DocumentChangeEvent>() ?: return

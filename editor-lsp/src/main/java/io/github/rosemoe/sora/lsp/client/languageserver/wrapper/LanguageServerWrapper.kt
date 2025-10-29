@@ -479,7 +479,7 @@ class LanguageServerWrapper(
             editor.signatureHelpTriggers = signatureHelpTriggers
             editor.signatureHelpReTriggers = signatureHelpReTriggers
             editor.completionTriggers = completionTriggers.toMutableSet().apply {
-                addAll(arrayOf("[","{","(","<","."))
+                addAll(arrayOf("[", "{", "(", "<", ".", ","))
             }.toList()
 
             commonCoroutineScope.future {

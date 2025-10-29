@@ -36,9 +36,13 @@ import android.view.View.MeasureSpec
 import android.widget.TextView
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent
 import io.github.rosemoe.sora.event.EditorReleaseEvent
+import io.github.rosemoe.sora.event.ScrollEvent
+import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.subscribeEvent
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
+import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
+import io.github.rosemoe.sora.widget.getComponent
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.SignatureInformation
@@ -56,6 +60,7 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
 
     private val maxWidth = (editor.width * 0.67).toInt()
     private val maxHeight = (editor.dpUnit * 235).toInt()
+    private val buffer = FloatArray(2)
 
     private val text =
         rootView.findViewById<TextView>(io.github.rosemoe.sora.lsp.R.id.signature_help_tooltip_text)
@@ -75,6 +80,19 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
             dismiss()
         }
 
+        eventManager.subscribeEvent<ScrollEvent> { _, _ ->
+            if (editor.isInMouseMode) {
+                return@subscribeEvent
+            }
+            if (isShowing) {
+                if (!isSelectionVisible()) {
+                    dismiss()
+                } else {
+                    updateWindowPosition()
+                }
+            }
+        }
+
         applyColorScheme()
     }
 
@@ -90,7 +108,9 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
     open fun show(signatureHelp: SignatureHelp) {
         this.signatureHelp = signatureHelp
 
-        if (signatureHelp.signatures == null || signatureHelp.activeSignature == null || signatureHelp.activeParameter == null)  {
+        val completionShowing = editor.getComponent<EditorAutoCompletion>().isShowing
+
+        if (signatureHelp.signatures == null || signatureHelp.activeSignature == null || signatureHelp.activeParameter == null || completionShowing)  {
             dismiss()
             return
         }
@@ -100,6 +120,11 @@ open class SignatureHelpWindow(editor: CodeEditor) : EditorPopupWindow(
         show()
     }
 
+    protected fun isSelectionVisible(): Boolean {
+        val selection = editor.cursor.left()
+        editor.layout.getCharLayoutOffset(selection.line, selection.column, buffer)
+        return buffer[0] >= editor.offsetY && buffer[0] - editor.rowHeight <= editor.offsetY + editor.height && buffer[1] >= editor.offsetX && buffer[1] - 100f /* larger than a single character */ <= editor.offsetX + editor.width
+    }
 
     private fun updateWindowSizeAndLocation() {
         rootView.measure(
