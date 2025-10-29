@@ -1,28 +1,4 @@
-/*******************************************************************************
- *    sora-editor - the awesome code editor for Android
- *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2024  Rosemoe
- *
- *     This library is free software; you can redistribute it and/or
- *     modify it under the terms of the GNU Lesser General Public
- *     License as published by the Free Software Foundation; either
- *     version 2.1 of the License, or (at your option) any later version.
- *
- *     This library is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
- *
- *     You should have received a copy of the GNU Lesser General Public
- *     License along with this library; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *     USA
- *
- *     Please contact Rosemoe by email 2073412493@qq.com if you need
- *     additional information or have any questions
- ******************************************************************************/
-
-package io.github.rosemoe.sora.lsp.editor.signature
+package io.github.rosemoe.sora.lsp.editor.hover
 
 import android.view.LayoutInflater
 import android.view.View
@@ -33,11 +9,12 @@ import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.subscribeEvent
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
-import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
-import io.github.rosemoe.sora.widget.getComponent
-import org.eclipse.lsp4j.SignatureHelp
+import org.eclipse.lsp4j.Hover
+import org.eclipse.lsp4j.MarkedString
+import org.eclipse.lsp4j.MarkupContent
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 
-open class SignatureHelpWindow(
+open class HoverWindow(
     editor: CodeEditor,
 ) : EditorPopupWindow(
     editor,
@@ -45,15 +22,17 @@ open class SignatureHelpWindow(
 ) {
 
     private lateinit var rootView: View
-    private val maxWidth = (editor.width * 0.727).toInt()
-    private val maxHeight = (editor.dpUnit * 355).toInt()
+    private val maxWidth = (editor.width * 0.8).toInt()
+    private val maxHeight = (editor.dpUnit * 280).toInt()
     private val buffer = FloatArray(2)
     protected val eventManager = editor.createSubEventManager()
-    private var signatureHelp: SignatureHelp? = null
+    private var hover: Hover? = null
 
-    private var layoutImpl: SignatureHelpLayout = DefaultSignatureHelpLayout()
+    private var layoutImpl: HoverLayout = DefaultHoverLayout()
 
-    var layout: SignatureHelpLayout
+    var alwaysShowOnTouchHover = true
+
+    var layout: HoverLayout
         get() = layoutImpl
         set(value) {
             if (::rootView.isInitialized && layoutImpl === value) {
@@ -74,7 +53,6 @@ open class SignatureHelpWindow(
         eventManager.subscribeEvent<EditorReleaseEvent> { _, _ ->
             dismiss()
         }
-
         eventManager.subscribeEvent<ScrollEvent> { _, _ ->
             if (editor.isInMouseMode) {
                 return@subscribeEvent
@@ -87,7 +65,6 @@ open class SignatureHelpWindow(
                 }
             }
         }
-
     }
 
     fun isEnabled() = eventManager.isEnabled
@@ -99,16 +76,14 @@ open class SignatureHelpWindow(
         }
     }
 
-    open fun show(signatureHelp: SignatureHelp) {
-        val completionShowing = editor.getComponent<EditorAutoCompletion>().isShowing
-
-        if (signatureHelp.signatures.isEmpty() || completionShowing) {
+    open fun show(hover: Hover) {
+        if (!hover.hasContent()) {
             dismiss()
             return
         }
 
-        this.signatureHelp = signatureHelp
-        renderSignatureHelp()
+        this.hover = hover
+        renderHover()
         updateWindowSizeAndLocation()
         show()
     }
@@ -116,7 +91,7 @@ open class SignatureHelpWindow(
     protected fun isSelectionVisible(): Boolean {
         val selection = editor.cursor.left()
         editor.layout.getCharLayoutOffset(selection.line, selection.column, buffer)
-        return buffer[0] >= editor.offsetY && buffer[0] - editor.rowHeight <= editor.offsetY + editor.height && buffer[1] >= editor.offsetX && buffer[1] - 100f /* larger than a single character */ <= editor.offsetX + editor.width
+        return buffer[0] >= editor.offsetY && buffer[0] - editor.rowHeight <= editor.offsetY + editor.height && buffer[1] >= editor.offsetX && buffer[1] - 100f <= editor.offsetX + editor.width
     }
 
     private fun updateWindowSizeAndLocation() {
@@ -149,16 +124,19 @@ open class SignatureHelpWindow(
         setLocationAbsolutely(windowX.toInt(), windowY.toInt())
     }
 
-    private fun renderSignatureHelp() {
-        val data = signatureHelp ?: return
-        layout.renderSignatures(data)
+    private fun renderHover() {
+        val data = hover ?: return
+        layout.renderHover(data)
     }
-
 
     private fun applyColorScheme() {
         layout.applyColorScheme(editor.colorScheme, editor.typefaceText)
         if (isShowing) {
-            renderSignatureHelp()
+            renderHover()
         }
     }
+
+
+
 }
+

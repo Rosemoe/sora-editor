@@ -56,12 +56,15 @@ import org.eclipse.lsp4j.HoverCapabilities
 import org.eclipse.lsp4j.InitializeParams
 import org.eclipse.lsp4j.InitializeResult
 import org.eclipse.lsp4j.InitializedParams
+import org.eclipse.lsp4j.MarkupKind
 import org.eclipse.lsp4j.OnTypeFormattingCapabilities
+import org.eclipse.lsp4j.PublishDiagnosticsCapabilities
 import org.eclipse.lsp4j.RangeFormattingCapabilities
 import org.eclipse.lsp4j.ReferencesCapabilities
 import org.eclipse.lsp4j.RenameCapabilities
 import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.SignatureHelpCapabilities
+import org.eclipse.lsp4j.SignatureInformationCapabilities
 import org.eclipse.lsp4j.SymbolCapabilities
 import org.eclipse.lsp4j.SynchronizationCapabilities
 import org.eclipse.lsp4j.TextDocumentClientCapabilities
@@ -363,7 +366,8 @@ class LanguageServerWrapper(
             documentHighlight =
                 null // The feature is not currently supported in the sora-editor
             formatting = FormattingCapabilities()
-            hover = HoverCapabilities()
+            // TODO: Markdown support on popup window
+            hover = HoverCapabilities( false)
             onTypeFormatting = OnTypeFormattingCapabilities()
             rangeFormatting = RangeFormattingCapabilities()
             references = ReferencesCapabilities()
@@ -371,6 +375,7 @@ class LanguageServerWrapper(
             signatureHelp = SignatureHelpCapabilities(true)
             synchronization =
                 SynchronizationCapabilities(true, true, true)
+            publishDiagnostics = PublishDiagnosticsCapabilities(true)
         }
 
         initParams.apply {

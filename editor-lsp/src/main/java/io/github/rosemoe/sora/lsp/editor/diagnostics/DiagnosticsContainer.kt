@@ -25,17 +25,18 @@ package io.github.rosemoe.sora.lsp.editor.diagnostics
 
 import io.github.rosemoe.sora.lsp.utils.FileUri
 import org.eclipse.lsp4j.Diagnostic
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
 class DiagnosticsContainer {
-
     private val diagnosticsMap by lazy(
         LazyThreadSafetyMode.NONE
     ) {
-        HashMap<FileUri, MutableList<Diagnostic>>()
+        ConcurrentHashMap<FileUri, CopyOnWriteArrayList<Diagnostic>>()
     }
 
-    fun setDiagnostics(uri: FileUri, diagnostics: MutableList<Diagnostic>) {
-        diagnosticsMap[uri] = diagnostics
+    fun setDiagnostics(uri: FileUri, diagnostics: List<Diagnostic>) {
+        diagnosticsMap[uri] = CopyOnWriteArrayList(diagnostics)
     }
 
     fun addDiagnostics(uri: FileUri, diagnostics: List<Diagnostic>) {
@@ -54,7 +55,7 @@ class DiagnosticsContainer {
     }
 
     private fun findOrReplaceDiagnostic(uri: FileUri, newDiagnostic: Diagnostic) {
-        val diagnostics = diagnosticsMap[uri] ?: mutableListOf()
+        val diagnostics = diagnosticsMap[uri] ?: CopyOnWriteArrayList()
         findDiagnostic(
             uri,
             newDiagnostic.range.start.line,
@@ -69,7 +70,7 @@ class DiagnosticsContainer {
     }
 
     fun addDiagnostic(uri: FileUri, diagnostic: Diagnostic) {
-        val diagnostics = diagnosticsMap[uri] ?: mutableListOf()
+        val diagnostics = diagnosticsMap[uri] ?: CopyOnWriteArrayList()
         findOrReplaceDiagnostic(uri, diagnostic)
         diagnosticsMap[uri] = diagnostics
     }
@@ -80,7 +81,7 @@ class DiagnosticsContainer {
 
 
     fun getDiagnostics(uri: FileUri): List<Diagnostic> {
-        return diagnosticsMap.getOrPut(uri) { mutableListOf() }
+        return diagnosticsMap.getOrPut(uri) { CopyOnWriteArrayList() }
     }
 
     fun clear() {

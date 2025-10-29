@@ -389,6 +389,7 @@ class DefaultRequestManager(
     override fun hover(params: HoverParams): CompletableFuture<Hover>? {
         return if (checkStatus()) {
             try {
+                println(serverCapabilities.hoverProvider)
                 if (serverCapabilities.hoverProvider?.left == true || serverCapabilities.hoverProvider?.right != null) textDocumentService.hover(
                     params
                 ) else null

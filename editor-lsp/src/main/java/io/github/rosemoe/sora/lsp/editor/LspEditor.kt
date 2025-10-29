@@ -26,13 +26,16 @@ package io.github.rosemoe.sora.lsp.editor
 
 import androidx.annotation.WorkerThread
 import io.github.rosemoe.sora.event.ContentChangeEvent
+import io.github.rosemoe.sora.event.HoverEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
-import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEventReceiver
-import io.github.rosemoe.sora.lsp.editor.event.LspEditorSelectionChangeEventReceiver
+import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEvent
+import io.github.rosemoe.sora.lsp.editor.event.LspEditorHoverEvent
+import io.github.rosemoe.sora.lsp.editor.event.LspEditorSelectionChangeEvent
+import io.github.rosemoe.sora.lsp.editor.hover.HoverWindow
 import io.github.rosemoe.sora.lsp.editor.signature.SignatureHelpWindow
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.diagnostics.publishDiagnostics
@@ -51,6 +54,7 @@ import kotlinx.coroutines.future.future
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.eclipse.lsp4j.Diagnostic
+import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import java.lang.ref.WeakReference
@@ -68,9 +72,8 @@ class LspEditor(
     private var signatureHelpWindowWeakReference: WeakReference<SignatureHelpWindow?> =
         WeakReference(null)
 
-    private lateinit var editorContentChangeEventReceiver: LspEditorContentChangeEventReceiver
-
-    private lateinit var editorSelectionChangeEventReceiver: LspEditorSelectionChangeEventReceiver
+    private var hoverWindowWeakReference: WeakReference<HoverWindow?> =
+        WeakReference(null)
 
     private var currentLanguage: LspLanguage? = null
 
@@ -104,10 +107,11 @@ class LspEditor(
 
             currentEditor.setEditorLanguage(currentLanguage)
             signatureHelpWindowWeakReference = WeakReference(SignatureHelpWindow(currentEditor))
+            hoverWindowWeakReference = WeakReference(HoverWindow(currentEditor))
 
-            editorContentChangeEventReceiver = LspEditorContentChangeEventReceiver(this)
-
-            editorSelectionChangeEventReceiver = LspEditorSelectionChangeEventReceiver(this)
+            val editorContentChangeEventReceiver = LspEditorContentChangeEvent(this)
+            val editorSelectionChangeEventReceiver = LspEditorSelectionChangeEvent(this)
+            val editorHoverEvent = LspEditorHoverEvent(this)
 
             val subscriptionReceipts =
                 mutableListOf(
@@ -116,6 +120,9 @@ class LspEditor(
                     ),
                     currentEditor.subscribeEvent<SelectionChangeEvent>(
                         editorSelectionChangeEventReceiver
+                    ),
+                    currentEditor.subscribeEvent<HoverEvent>(
+                        editorHoverEvent
                     )
                 )
 
@@ -164,6 +171,12 @@ class LspEditor(
 
     val signatureHelpWindow: SignatureHelpWindow?
         get() = signatureHelpWindowWeakReference.get()
+
+    val isShowHover: Boolean
+        get() = hoverWindowWeakReference.get()?.isShowing ?: false
+
+    val hoverWindow: HoverWindow?
+        get() = hoverWindowWeakReference.get()
 
     val requestManager: RequestManager?
         get() = languageServerWrapper.requestManager
@@ -309,11 +322,26 @@ class LspEditor(
     fun showSignatureHelp(signatureHelp: SignatureHelp?) {
         val signatureHelpWindow = signatureHelpWindowWeakReference.get() ?: return
 
+        if (!signatureHelpWindow.isEnabled()) return
+
         if (signatureHelp == null) {
             editor?.post { signatureHelpWindow.dismiss() }
             return
         }
         editor?.post { signatureHelpWindow.show(signatureHelp) }
+    }
+
+    fun showHover(hover: Hover?) {
+        val hoverWindow = hoverWindowWeakReference.get() ?: return
+
+        if (!hoverWindow.isEnabled()) return
+
+        if (hover == null) {
+            editor?.post { hoverWindow.dismiss() }
+            return
+        }
+
+        editor?.post { hoverWindow.show(hover) }
     }
 
     fun hitReTrigger(eventText: CharSequence): Boolean {
@@ -344,6 +372,8 @@ class LspEditor(
         disconnect()
         unsubscribeFunction?.run()
         _currentEditor.clear()
+        signatureHelpWindowWeakReference.clear()
+        hoverWindowWeakReference.clear()
         clearVersions {
             it == this.uri
         }

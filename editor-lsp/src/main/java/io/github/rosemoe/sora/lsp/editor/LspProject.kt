@@ -39,6 +39,7 @@ import io.github.rosemoe.sora.lsp.events.document.DocumentOpenEvent
 import io.github.rosemoe.sora.lsp.events.document.DocumentSaveEvent
 import io.github.rosemoe.sora.lsp.events.format.FullFormattingEvent
 import io.github.rosemoe.sora.lsp.events.format.RangeFormattingEvent
+import io.github.rosemoe.sora.lsp.events.hover.HoverEvent
 import io.github.rosemoe.sora.lsp.events.signature.SignatureHelpEvent
 import io.github.rosemoe.sora.lsp.utils.FileUri
 import io.github.rosemoe.sora.lsp.utils.toFileUri
@@ -151,7 +152,7 @@ class LspProject(
             ::ApplyEditsEvent, ::CompletionEvent,
             ::PublishDiagnosticsEvent, ::FullFormattingEvent,
             ::RangeFormattingEvent, ::QueryDocumentDiagnosticsEvent,
-            ::DocumentOpenEvent
+            ::DocumentOpenEvent, ::HoverEvent
         )
 
         events.forEach {

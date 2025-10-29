@@ -33,8 +33,11 @@ class EventEmitter {
 
     var throwableListener: ((Throwable) -> Unit) = { t -> throw t }
 
-    fun addListener(listener: EventListener) {
+    fun addListener(listener: EventListener): EventDisposable {
         listeners.getOrPut(listener.eventName) { ArrayList() }.add(listener)
+        return {
+            removeListener(listener)
+        }
     }
 
     fun removeListener(listener: EventListener) {
@@ -217,3 +220,5 @@ inline fun <reified T : EventListener> EventEmitter.getEventListener(): T? {
 }
 
 object EventType
+
+typealias EventDisposable = () -> Unit
