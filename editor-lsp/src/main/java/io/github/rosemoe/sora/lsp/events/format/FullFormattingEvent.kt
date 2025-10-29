@@ -46,7 +46,7 @@ import org.eclipse.lsp4j.TextEdit
 
 
 class FullFormattingEvent : AsyncEventListener() {
-    override val eventName = "textDocument/formatting"
+    override val eventName = EventType.fullFormatting
 
     override suspend fun handleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")

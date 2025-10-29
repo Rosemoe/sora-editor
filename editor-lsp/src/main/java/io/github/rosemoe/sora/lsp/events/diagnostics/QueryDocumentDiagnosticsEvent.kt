@@ -35,7 +35,7 @@ import java.util.concurrent.CompletableFuture
 
 
 class QueryDocumentDiagnosticsEvent : AsyncEventListener() {
-    override val eventName = "textDocument/diagnostics"
+    override val eventName = EventType.queryDocumentDiagnostics
 
     var future: CompletableFuture<Void>? = null
 

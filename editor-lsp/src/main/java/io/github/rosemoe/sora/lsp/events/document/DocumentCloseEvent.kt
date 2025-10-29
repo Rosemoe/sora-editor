@@ -34,7 +34,7 @@ import java.util.concurrent.CompletableFuture
 
 
 class DocumentCloseEvent : AsyncEventListener() {
-    override val eventName = "textDocument/didClose"
+    override val eventName = EventType.documentClose
 
     var future: CompletableFuture<Void>? = null
 

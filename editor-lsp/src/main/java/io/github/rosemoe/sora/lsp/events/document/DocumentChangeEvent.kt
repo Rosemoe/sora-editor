@@ -42,7 +42,7 @@ import org.eclipse.lsp4j.TextDocumentSyncKind
 import java.util.concurrent.CompletableFuture
 
 class DocumentChangeEvent : AsyncEventListener() {
-    override val eventName = "textDocument/didChange"
+    override val eventName = EventType.documentChange
 
     var future: CompletableFuture<Void>? = null
 

@@ -36,7 +36,7 @@ import org.eclipse.lsp4j.TextEdit
 
 
 class ApplyEditsEvent : EventListener {
-    override val eventName: String = "textDocument/applyEdits"
+    override val eventName: String = EventType.applyEdits
 
     override fun handle(context: EventContext) {
         val editList: List<TextEdit> = context.get("edits")

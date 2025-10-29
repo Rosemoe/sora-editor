@@ -43,7 +43,7 @@ import java.util.concurrent.CompletableFuture
 
 
 class CompletionEvent : AsyncEventListener() {
-    override val eventName: String = "textDocument/completion"
+    override val eventName = EventType.completion
 
     private var future: CompletableFuture<List<CompletionItem>>? = null
 
@@ -79,7 +79,7 @@ class CompletionEvent : AsyncEventListener() {
         try {
             context.put("completion-items", future.await())
         } catch (e: Exception) {
-            if (e !is TimeoutCancellationException)  {
+            if (e !is TimeoutCancellationException) {
                 Logger.instance(this.javaClass.name)
                     .e("Request completion failed", e)
                 throw e

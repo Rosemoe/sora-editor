@@ -36,7 +36,7 @@ import org.eclipse.lsp4j.Diagnostic
 
 
 class PublishDiagnosticsEvent : EventListener {
-    override val eventName: String = "editor/publishDiagnostics"
+    override val eventName: String = EventType.publishDiagnostics
 
     override fun handle(context: EventContext) {
         val lspEditor = context.get<LspEditor>("lsp-editor")

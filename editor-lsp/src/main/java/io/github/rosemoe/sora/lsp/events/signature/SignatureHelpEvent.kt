@@ -44,7 +44,7 @@ import org.eclipse.lsp4j.SignatureHelpParams
 import java.util.concurrent.CompletableFuture
 
 class SignatureHelpEvent : AsyncEventListener() {
-    override val eventName: String = "textDocument/signatureHelp"
+    override val eventName: String = EventType.signatureHelp
 
     var future: CompletableFuture<Void>? = null
 
