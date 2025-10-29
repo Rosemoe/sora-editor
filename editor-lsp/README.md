@@ -15,7 +15,7 @@ languages, such as auto-completion, formatting, etc.
 - `textDocument/diagnostic`
 - `textDocument/signatureHelp`
 - `textDocument/completion`
-- `textDocument.publishDiagnostics`
+- `textDocument/publishDiagnostics`
 
 ## TODO
 

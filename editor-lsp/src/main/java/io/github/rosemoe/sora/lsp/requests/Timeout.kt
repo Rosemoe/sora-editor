@@ -52,7 +52,7 @@ object Timeout {
         ConcurrentHashMap<Timeouts, Int>()
 
     init {
-        Timeouts.values().forEach {
+        Timeouts.entries.forEach {
             timeouts[it] = it.defaultTimeout
         }
     }

@@ -50,7 +50,7 @@ import java.util.concurrent.ForkJoinPool
 import kotlin.reflect.KFunction0
 
 class LspProject(
-    private val projectPath: String,
+    projectPath: String,
 ) {
 
     val projectUri = FileUri(projectPath)

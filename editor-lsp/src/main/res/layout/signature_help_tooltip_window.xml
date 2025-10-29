@@ -26,18 +26,85 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/signature_tooltip_background"
+    android:baselineAligned="false"
     android:clipChildren="true"
-    android:orientation="vertical"
-    android:outlineProvider="background">
+    android:orientation="horizontal"
+    android:outlineProvider="background"
+    android:paddingVertical="4dp"
+    android:paddingHorizontal="8dp">
 
+    <ScrollView
+        android:id="@+id/signature_help_scroll_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginTop="2dp">
 
-    <TextView
-        android:id="@+id/signature_help_tooltip_text"
-        android:textSize="16sp"
-        style="?android:textAppearanceSmall"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/signature_help_signature_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="15sp"
+                style="?android:textAppearanceSmall" />
+
+            <TextView
+                android:id="@+id/signature_help_documentation_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textSize="13sp"
+                style="?android:textAppearanceSmall" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/signature_help_navigation_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp" />
+        android:layout_gravity="bottom"
+        android:layout_marginStart="8dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/signature_help_previous"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/signature_help_prev"
+            android:padding="3dp"
+            android:src="@drawable/icon_arrow_up"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/signature_help_counter"
+            style="?android:textAppearanceSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
+            android:gravity="center"
+            android:textAlignment="center"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/signature_help_next"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginTop="2dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/signature_help_next"
+            android:padding="3dp"
+            android:src="@drawable/icon_arrow_down"
+            android:visibility="gone" />
+    </LinearLayout>
 
 </LinearLayout>
-

@@ -91,7 +91,7 @@ class LspEventManager(
     }
 
     @WorkerThread
-    suspend fun emitBlocking(eventName: String, vararg args: Any) = runBlocking {
+    fun emitBlocking(eventName: String, vararg args: Any) = runBlocking {
         emitAsync(eventName, *args)
     }
 
@@ -108,7 +108,7 @@ class LspEventManager(
     }
 
     @WorkerThread
-    suspend fun emitBlocking(eventName: String, block: EventContext.() -> Unit) = runBlocking {
+    fun emitBlocking(eventName: String, block: EventContext.() -> Unit) = runBlocking {
         emitAsync(eventName, block)
     }
 

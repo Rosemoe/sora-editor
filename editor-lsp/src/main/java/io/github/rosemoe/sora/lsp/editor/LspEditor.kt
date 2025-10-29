@@ -162,6 +162,9 @@ class LspEditor(
     val isShowSignatureHelp: Boolean
         get() = signatureHelpWindowWeakReference.get()?.isShowing ?: false
 
+    val signatureHelpWindow: SignatureHelpWindow?
+        get() = signatureHelpWindowWeakReference.get()
+
     val requestManager: RequestManager?
         get() = languageServerWrapper.requestManager
 
@@ -292,7 +295,6 @@ class LspEditor(
     fun saveDocumentBlocking() = runBlocking {
         saveDocument()
     }
-
 
     fun onDiagnosticsUpdate() {
         publishDiagnostics(diagnostics)
