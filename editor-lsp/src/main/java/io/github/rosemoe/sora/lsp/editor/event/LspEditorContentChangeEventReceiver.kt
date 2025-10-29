@@ -57,10 +57,9 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
 
             if (editor.hitReTrigger(event.changedText)) {
                 editor.showSignatureHelp(null)
-                return@launch
+            } else {
+                editor.eventManager.emitAsync(EventType.signatureHelp, event.changeStart)
             }
-
-            editor.eventManager.emitAsync(EventType.signatureHelp, event.changeStart)
 
             val diagnostics =
                 editor.eventManager.emitAsync(EventType.queryDocumentDiagnostics)
@@ -95,15 +94,7 @@ class LspEditorSelectionChangeEventReceiver(private val editor: LspEditor) :
         if (!editor.isConnected) {
             return
         }
-        editor.coroutineScope.launch(Dispatchers.IO) {
-            if (editor.hitReTrigger(event.editor.text[event.left.index].toString())) {
-                editor.showSignatureHelp(null)
-                return@launch
-            }
 
-            editor.eventManager.emitAsync(EventType.signatureHelp, event.left)
-        }
-
-
+        editor.showSignatureHelp(null)
     }
 }
