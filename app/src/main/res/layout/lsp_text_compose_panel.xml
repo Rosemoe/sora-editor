@@ -87,7 +87,7 @@
                 android:layout_width="45dp"
                 android:layout_height="45dp"
                 android:contentDescription="More"
-                android:src="@drawable/round_content_cut_20"
+                android:src="@drawable/more_vert"
                 android:background="?android:attr/selectableItemBackground" />
 
 		</LinearLayout>

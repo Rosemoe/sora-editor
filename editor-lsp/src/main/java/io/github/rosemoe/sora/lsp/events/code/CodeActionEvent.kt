@@ -22,7 +22,7 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lsp.events.codeaction
+package io.github.rosemoe.sora.lsp.events.code
 
 import android.util.Log
 import io.github.rosemoe.sora.lsp.requests.Timeout
@@ -33,8 +33,6 @@ import io.github.rosemoe.sora.lsp.events.EventContext
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.getByClass
 import io.github.rosemoe.sora.lsp.utils.createTextDocumentIdentifier
-import io.github.rosemoe.sora.lsp.utils.asLspPosition
-import io.github.rosemoe.sora.text.CharPosition
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withContext
@@ -44,8 +42,6 @@ import org.eclipse.lsp4j.CodeActionContext
 import org.eclipse.lsp4j.CodeActionParams
 import org.eclipse.lsp4j.Command
 import org.eclipse.lsp4j.Range
-import org.eclipse.lsp4j.SignatureHelp
-import org.eclipse.lsp4j.SignatureHelpParams
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import java.util.concurrent.CompletableFuture
 
@@ -75,18 +71,18 @@ class CodeActionEventEvent : AsyncEventListener() {
         this@CodeActionEventEvent.future = future.thenAccept { }
 
         try {
-            var codeAction: List<Either<Command, CodeAction>>? = null
+            var codeActions: List<Either<Command, CodeAction>>? = null
 
-            withTimeout(Timeout[Timeouts.SIGNATURE].toLong()) {
-                codeAction =
-                    future.await()
+            withTimeout(Timeout[Timeouts.CODEACTION].toLong()) {
+                codeActions =
+                    future.await() ?: emptyList()
             }
 
-            context.put("codeAction", codeAction)
+            editor.showCodeActions(range, codeActions)
         } catch (exception: Exception) {
             // throw?
             exception.printStackTrace()
-            Log.e("LSP client", "show signatureHelp timeout", exception)
+            Log.e("LSP client", "show code action timeout", exception)
         }
     }
 

@@ -25,6 +25,9 @@
 package io.github.rosemoe.sora.lsp.client
 
 import android.util.Log
+import io.github.rosemoe.sora.lsp.events.EventContext
+import io.github.rosemoe.sora.lsp.events.EventType
+import io.github.rosemoe.sora.lsp.events.workspace.workSpaceApplyEdit
 
 
 import io.github.rosemoe.sora.lsp.utils.toFileUri
@@ -47,11 +50,23 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
     LanguageClient {
 
     override fun applyEdit(params: ApplyWorkspaceEditParams): CompletableFuture<ApplyWorkspaceEditResponse> {
-        /* boolean response = WorkspaceEditHandler.applyEdit(params.getEdit(), "LSP edits");*/
-        // FIXME: Support it?
-        return CompletableFuture.supplyAsync {
-            ApplyWorkspaceEditResponse(
-                false
+        val eventContext = EventContext().apply {
+            put("arg-0", params.edit)
+            put("lsp-project", context.project)
+        }
+
+        try {
+            context.project.eventEmitter.emit(EventType.workSpaceApplyEdit, eventContext, true)
+
+            return CompletableFuture.completedFuture(
+                ApplyWorkspaceEditResponse(true)
+            )
+        } catch (e: Throwable) {
+            return CompletableFuture.completedFuture(
+                ApplyWorkspaceEditResponse().apply {
+                    isApplied = true
+                    failureReason = e.message
+                }
             )
         }
     }

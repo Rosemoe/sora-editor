@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.ScrollView
 import android.widget.TextView
 import io.github.rosemoe.sora.lsp.R
+import io.github.rosemoe.sora.lsp.editor.curvedTextScale
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.MarkedString
@@ -82,7 +83,8 @@ class DefaultHoverLayout : HoverLayout {
         if (scale <= 0f) {
             return
         }
-        hoverTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, textBaseline * scale)
+        val curvedScale = curvedTextScale(scale)
+        hoverTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, textBaseline * curvedScale)
     }
 
     private fun buildHoverText(hover: Hover): CharSequence {

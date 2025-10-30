@@ -28,6 +28,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.View.MeasureSpec
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent
+import io.github.rosemoe.sora.event.EditorFocusChangeEvent
 import io.github.rosemoe.sora.event.EditorReleaseEvent
 import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.TextSizeChangeEvent
@@ -72,7 +73,9 @@ open class SignatureHelpWindow(
         eventManager.subscribeEvent<ColorSchemeUpdateEvent> { _, _ ->
             applyColorScheme()
         }
+
         eventManager.subscribeEvent<EditorReleaseEvent> { _, _ ->
+            setEnabled(false)
             dismiss()
         }
 
@@ -97,6 +100,11 @@ open class SignatureHelpWindow(
             }
         }
 
+        eventManager.subscribeEvent<EditorFocusChangeEvent> { event, _ ->
+            if (!event.isGainFocus) {
+                dismiss()
+            }
+        }
     }
 
     fun isEnabled() = eventManager.isEnabled

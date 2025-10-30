@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.widget.component;
+package io.github.rosemoe.sora.app.lsp;
 
 import android.annotation.SuppressLint;
 import android.graphics.PorterDuff;
@@ -34,8 +34,11 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-import io.github.rosemoe.sora.R;
+import java.util.Objects;
+
+import io.github.rosemoe.sora.app.R;
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
 import io.github.rosemoe.sora.event.EditorFocusChangeEvent;
 import io.github.rosemoe.sora.event.EditorReleaseEvent;
@@ -45,9 +48,12 @@ import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.LongPressEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
+import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.EditorTouchEventHandler;
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
+import io.github.rosemoe.sora.widget.component.EditorBuiltinComponent;
+import io.github.rosemoe.sora.widget.component.EditorTextActionWindow;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
@@ -55,15 +61,19 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
  *
  * @author Rosemoe
  */
-public class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickListener, EditorBuiltinComponent {
+public class LspEditorTextActionWindow extends EditorPopupWindow implements View.OnClickListener, EditorBuiltinComponent {
     private final static long DELAY = 200;
     private final static long CHECK_FOR_DISMISS_INTERVAL = 100;
+    private final LspEditor lspEditor;
     private final CodeEditor editor;
     private final ImageButton selectAllBtn;
     private final ImageButton pasteBtn;
     private final ImageButton copyBtn;
     private final ImageButton cutBtn;
     private final ImageButton longSelectBtn;
+    private final ImageButton moreBtn;
+    @Nullable
+    private OnMoreButtonClickListener moreButtonClickListener;
     private final View rootView;
     private final EditorTouchEventHandler handler;
     private final EventManager eventManager;
@@ -77,41 +87,38 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
      *
      * @param editor Target editor
      */
-    public EditorTextActionWindow(CodeEditor editor) {
-        super(editor, FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED);
-        this.editor = editor;
-        handler = editor.getEventHandler();
-        eventManager = editor.createSubEventManager();
+    public LspEditorTextActionWindow(LspEditor editor) {
+        super(Objects.requireNonNull(editor.getEditor()), FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED);
+        var soraEditor = editor.getEditor();
+        this.lspEditor = editor;
+        this.editor = soraEditor;
+        handler = soraEditor.getEventHandler();
+        eventManager = soraEditor.createSubEventManager();
 
         // Since popup window does provide decor view, we have to pass null to this method
         @SuppressLint("InflateParams")
-        View root = this.rootView = LayoutInflater.from(editor.getContext()).inflate(R.layout.text_compose_panel, null);
+        View root = this.rootView = LayoutInflater.from(soraEditor.getContext()).inflate(R.layout.lsp_text_compose_panel, null);
         selectAllBtn = root.findViewById(R.id.panel_btn_select_all);
         cutBtn = root.findViewById(R.id.panel_btn_cut);
         copyBtn = root.findViewById(R.id.panel_btn_copy);
         longSelectBtn = root.findViewById(R.id.panel_btn_long_select);
         pasteBtn = root.findViewById(R.id.panel_btn_paste);
+        moreBtn = root.findViewById(R.id.panel_more);
 
         selectAllBtn.setOnClickListener(this);
         cutBtn.setOnClickListener(this);
         copyBtn.setOnClickListener(this);
         pasteBtn.setOnClickListener(this);
         longSelectBtn.setOnClickListener(this);
+        moreBtn.setOnClickListener(this);
+        moreBtn.setVisibility(View.GONE);
 
         applyColorScheme();
         setContentView(root);
         setSize(0, (int) (this.editor.getDpUnit() * 48));
-        getPopup().setAnimationStyle(R.style.text_action_popup_animation);
+        getPopup().setAnimationStyle(io.github.rosemoe.sora.R.style.text_action_popup_animation);
 
         subscribeEvents();
-    }
-
-    protected void applyColorFilter(ImageButton btn, int color) {
-        var drawable = btn.getDrawable();
-        if (drawable == null) {
-            return;
-        }
-        btn.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_ATOP));
     }
 
     protected void applyColorScheme() {
@@ -125,6 +132,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         applyColorFilter(copyBtn, color);
         applyColorFilter(pasteBtn, color);
         applyColorFilter(longSelectBtn, color);
+        applyColorFilter(moreBtn, color);
     }
 
     protected void subscribeEvents() {
@@ -139,12 +147,6 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
 
     protected void onEditorColorChange(@NonNull ColorSchemeUpdateEvent event) {
         applyColorScheme();
-    }
-
-    protected void onEditorFocusChange(@NonNull EditorFocusChangeEvent event) {
-        if (!event.isGainFocus()) {
-            dismiss();
-        }
     }
 
     protected void onEditorRelease(@NonNull EditorReleaseEvent event) {
@@ -162,12 +164,26 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         }
     }
 
+    protected void onEditorFocusChange(@NonNull EditorFocusChangeEvent event) {
+        if (!event.isGainFocus()) {
+            dismiss();
+        }
+    }
+
     protected void onEditorScroll(@NonNull ScrollEvent event) {
         var last = lastScroll;
         lastScroll = System.currentTimeMillis();
         if (lastScroll - last < DELAY && lastCause != SelectionChangeEvent.CAUSE_SEARCH) {
             postDisplay();
         }
+    }
+
+    protected void applyColorFilter(ImageButton btn, int color) {
+        var drawable = btn.getDrawable();
+        if (drawable == null) {
+            return;
+        }
+        btn.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_ATOP));
     }
 
     protected void onHandleStateChange(@NonNull HandleStateChangeEvent event) {
@@ -236,21 +252,13 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         }
     }
 
-    /**
-     * Get the view root of the panel.
-     * <p>
-     * Root view is {@link android.widget.LinearLayout}
-     * Inside is a {@link android.widget.HorizontalScrollView}
-     *
-     * @see R.id#panel_root
-     * @see R.id#panel_hv
-     * @see R.id#panel_btn_select_all
-     * @see R.id#panel_btn_copy
-     * @see R.id#panel_btn_cut
-     * @see R.id#panel_btn_paste
-     */
-    public ViewGroup getView() {
-        return (ViewGroup) getPopup().getContentView();
+    public void setOnMoreButtonClickListener(@Nullable OnMoreButtonClickListener listener) {
+        moreButtonClickListener = listener;
+        if (isShowing()) {
+            updateBtnState();
+        } else {
+            moreBtn.setVisibility(listener != null ? View.VISIBLE : View.GONE);
+        }
     }
 
     private void postDisplay() {
@@ -313,6 +321,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         pasteBtn.setVisibility(editor.isEditable() ? View.VISIBLE : View.GONE);
         cutBtn.setVisibility((editor.getCursor().isSelected() && editor.isEditable()) ? View.VISIBLE : View.GONE);
         longSelectBtn.setVisibility((!editor.getCursor().isSelected() && editor.isEditable()) ? View.VISIBLE : View.GONE);
+        moreBtn.setVisibility(moreButtonClickListener != null ? View.VISIBLE : View.GONE);
         rootView.measure(View.MeasureSpec.makeMeasureSpec(1000000, View.MeasureSpec.AT_MOST), View.MeasureSpec.makeMeasureSpec(100000, View.MeasureSpec.AT_MOST));
         setSize(Math.min(rootView.getMeasuredWidth(), (int) (editor.getDpUnit() * 230)), getHeight());
     }
@@ -331,7 +340,8 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         if (id == R.id.panel_btn_select_all) {
             editor.selectAll();
             return;
-        } else if (id == R.id.panel_btn_cut) {
+        }
+        if (id == R.id.panel_btn_cut) {
             if (editor.getCursor().isSelected()) {
                 editor.cutText();
             }
@@ -343,9 +353,17 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
             editor.setSelection(editor.getCursor().getRightLine(), editor.getCursor().getRightColumn());
         } else if (id == R.id.panel_btn_long_select) {
             editor.beginLongSelect();
+        } else if (id == R.id.panel_more) {
+            if (moreButtonClickListener != null) {
+                moreButtonClickListener.onMoreButtonClick(this, lspEditor);
+            }
         }
         dismiss();
     }
 
-}
+    @FunctionalInterface
+    public interface OnMoreButtonClickListener {
+        void onMoreButtonClick(@NonNull LspEditorTextActionWindow window, @NonNull LspEditor editor);
+    }
 
+}

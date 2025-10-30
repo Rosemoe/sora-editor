@@ -37,6 +37,10 @@ fun String.toFileUri(): FileUri {
     return FileUri(this)
 }
 
+fun String.toURI(): URI {
+    return URI(this)
+}
+
 fun URI.toFileUri(): FileUri {
     return FileUri(this.toPath().pathString)
 }

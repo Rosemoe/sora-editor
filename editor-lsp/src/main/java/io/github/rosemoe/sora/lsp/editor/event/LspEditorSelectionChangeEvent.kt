@@ -51,7 +51,8 @@ class LspEditorSelectionChangeEvent(private val editor: LspEditor) :
         val isInCompletion = originEditor.getComponent<EditorAutoCompletion>().isShowing
         val isInSignatureHelp = editor.isShowSignatureHelp
 
-        if ((!originEditor.hasMouseHovering() && !hoverWindow.alwaysShowOnTouchHover) || isInCompletion || isInSignatureHelp) {
+        if ((!originEditor.hasMouseHovering() && (!hoverWindow.alwaysShowOnTouchHover || event.isSelected)) || isInCompletion || isInSignatureHelp) {
+            editor.showHover(null)
             return
         }
 

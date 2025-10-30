@@ -24,7 +24,10 @@
 
 package io.github.rosemoe.sora.lsp.utils
 
+import android.graphics.Color
 import android.util.Log
+import androidx.annotation.ColorInt
+import androidx.annotation.FloatRange
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lsp.editor.LspEditor
@@ -103,6 +106,10 @@ fun CharPosition.asLspPosition(): Position {
     return Position(this.line, this.column)
 }
 
+fun Position.asCharPosition(): CharPosition {
+    return CharPosition(this.line, this.character)
+}
+
 fun TextRange.asLspRange(): Range {
     return Range(this.start.asLspPosition(), this.end.asLspPosition())
 }
@@ -140,7 +147,8 @@ fun LspEditor.createDidSaveTextDocumentParams(): DidSaveTextDocumentParams {
 
 fun Position.getIndex(editor: CodeEditor): Int {
     val line = line.coerceAtMost(editor.lineCount - 1)
-    return editor.text.getCharIndex(line,
+    return editor.text.getCharIndex(
+        line,
         editor.text.getColumnCount(line).coerceAtMost(this.character)
     )
 }
@@ -191,4 +199,16 @@ private fun getVersion(fileUri: FileUri): Int {
 
 fun clearVersions(func: (FileUri) -> Boolean) {
     versionMap.keys.filter(func).forEach { versionMap.remove(it) }
+}
+
+fun blendARGB(
+    @ColorInt color1: Int, @ColorInt color2:Int,
+    @FloatRange(from = 0.0, to = 1.0) ratio: Float
+): Int {
+    val inverseRatio = 1 - ratio;
+    val a = Color.alpha(color1) * inverseRatio + Color.alpha(color2) * ratio;
+    val r = Color.red(color1) * inverseRatio + Color.red(color2) * ratio;
+    val g = Color.green(color1) * inverseRatio + Color.green(color2) * ratio;
+    val b = Color.blue(color1) * inverseRatio + Color.blue(color2) * ratio;
+    return Color.argb(a.toInt(), r.toInt(), g.toInt(), b.toInt())
 }

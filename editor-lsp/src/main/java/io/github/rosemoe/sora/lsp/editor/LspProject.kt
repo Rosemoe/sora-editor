@@ -29,6 +29,7 @@ import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWr
 import io.github.rosemoe.sora.lsp.editor.diagnostics.DiagnosticsContainer
 import io.github.rosemoe.sora.lsp.events.EventEmitter
 import io.github.rosemoe.sora.lsp.events.EventListener
+import io.github.rosemoe.sora.lsp.events.code.CodeActionEventEvent
 import io.github.rosemoe.sora.lsp.events.completion.CompletionEvent
 import io.github.rosemoe.sora.lsp.events.diagnostics.PublishDiagnosticsEvent
 import io.github.rosemoe.sora.lsp.events.diagnostics.QueryDocumentDiagnosticsEvent
@@ -41,6 +42,8 @@ import io.github.rosemoe.sora.lsp.events.format.FullFormattingEvent
 import io.github.rosemoe.sora.lsp.events.format.RangeFormattingEvent
 import io.github.rosemoe.sora.lsp.events.hover.HoverEvent
 import io.github.rosemoe.sora.lsp.events.signature.SignatureHelpEvent
+import io.github.rosemoe.sora.lsp.events.workspace.WorkSpaceApplyEditEvent
+import io.github.rosemoe.sora.lsp.events.workspace.WorkSpaceExecuteCommand
 import io.github.rosemoe.sora.lsp.utils.FileUri
 import io.github.rosemoe.sora.lsp.utils.toFileUri
 import kotlinx.coroutines.CoroutineScope
@@ -152,7 +155,8 @@ class LspProject(
             ::ApplyEditsEvent, ::CompletionEvent,
             ::PublishDiagnosticsEvent, ::FullFormattingEvent,
             ::RangeFormattingEvent, ::QueryDocumentDiagnosticsEvent,
-            ::DocumentOpenEvent, ::HoverEvent
+            ::DocumentOpenEvent, ::HoverEvent, ::CodeActionEventEvent,
+            ::WorkSpaceApplyEditEvent, ::WorkSpaceExecuteCommand
         )
 
         events.forEach {

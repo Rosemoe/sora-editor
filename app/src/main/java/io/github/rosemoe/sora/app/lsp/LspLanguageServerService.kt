@@ -1,7 +1,7 @@
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2024  Rosemoe
+ *    Copyright (C) 2020-2025  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.app
+package io.github.rosemoe.sora.app.lsp
 
 import android.app.Service
 import android.content.Intent

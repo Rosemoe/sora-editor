@@ -367,12 +367,11 @@ class LanguageServerWrapper(
             documentHighlight =
                 null // The feature is not currently supported in the sora-editor
             formatting = FormattingCapabilities()
-            // TODO: Markdown support on popup window
-            hover = HoverCapabilities( false)
+            hover = HoverCapabilities( true)
             onTypeFormatting = OnTypeFormattingCapabilities()
             rangeFormatting = RangeFormattingCapabilities()
             references = ReferencesCapabilities()
-            rename = RenameCapabilities(true, false)
+            rename = RenameCapabilities(true, true)
             signatureHelp = SignatureHelpCapabilities(true)
             synchronization =
                 SynchronizationCapabilities(true, true, true)

@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.View.MeasureSpec
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent
+import io.github.rosemoe.sora.event.EditorFocusChangeEvent
 import io.github.rosemoe.sora.event.EditorReleaseEvent
 import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.TextSizeChangeEvent
@@ -11,6 +12,8 @@ import io.github.rosemoe.sora.event.subscribeEvent
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
+import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
+import io.github.rosemoe.sora.widget.component.EditorTextActionWindow
 import io.github.rosemoe.sora.widget.getComponent
 import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.MarkedString
@@ -54,6 +57,7 @@ open class HoverWindow(
             applyColorScheme()
         }
         eventManager.subscribeEvent<EditorReleaseEvent> { _, _ ->
+            setEnabled(false)
             dismiss()
         }
         eventManager.subscribeEvent<ScrollEvent> { _, _ ->
@@ -75,6 +79,11 @@ open class HoverWindow(
                 updateWindowSizeAndLocation()
             }
         }
+        eventManager.subscribeEvent<EditorFocusChangeEvent> { event, _ ->
+            if (!event.isGainFocus) {
+                dismiss()
+            }
+        }
     }
 
     fun isEnabled() = eventManager.isEnabled
@@ -87,9 +96,10 @@ open class HoverWindow(
     }
 
     open fun show(hover: Hover) {
-        val isInCompletion = editor?.getComponent<EditorAutoCompletion>()?.isShowing ?: false
+        val isInCompletion = editor.getComponent<EditorAutoCompletion>().isShowing
+        val isInDiagnostic = editor.getComponent<EditorDiagnosticTooltipWindow>().isShowing
 
-        if (!hover.hasContent() || !isEnabled() || isInCompletion) {
+        if (!hover.hasContent() || !isEnabled() || isInCompletion || isInDiagnostic) {
             dismiss()
             return
         }

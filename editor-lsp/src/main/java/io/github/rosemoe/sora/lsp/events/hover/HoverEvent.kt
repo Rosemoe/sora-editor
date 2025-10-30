@@ -69,7 +69,7 @@ class HoverEvent : AsyncEventListener() {
         try {
             val hover: Hover?
 
-            withTimeout(Timeout[Timeouts.SIGNATURE].toLong()) {
+            withTimeout(Timeout[Timeouts.HOVER].toLong()) {
                 hover =
                     future.await()
             }

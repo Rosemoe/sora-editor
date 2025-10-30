@@ -13,6 +13,7 @@ import android.widget.ImageView
 import android.widget.ScrollView
 import android.widget.TextView
 import io.github.rosemoe.sora.lsp.R
+import io.github.rosemoe.sora.lsp.editor.curvedTextScale
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import org.eclipse.lsp4j.SignatureInformation
 import org.eclipse.lsp4j.SignatureHelp
@@ -231,9 +232,10 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
         if (scale <= 0f) {
             return
         }
-        scaleTextView(signatureTextView, baselineSignatureTextSize, scale)
-        scaleTextView(documentationTextView, baselineDocumentationTextSize, scale)
-        scaleTextView(counterView, baselineCounterTextSize, scale)
+        val curvedScale = curvedTextScale(scale)
+        scaleTextView(signatureTextView, baselineSignatureTextSize, curvedScale)
+        scaleTextView(documentationTextView, baselineDocumentationTextSize, curvedScale)
+        scaleTextView(counterView, baselineCounterTextSize, curvedScale)
     }
 
     private fun scaleTextView(textView: TextView, baselineSize: Float?, scale: Float) {

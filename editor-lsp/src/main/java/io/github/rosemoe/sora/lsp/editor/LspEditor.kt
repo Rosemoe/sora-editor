@@ -32,6 +32,8 @@ import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
+import io.github.rosemoe.sora.lsp.editor.codeaction.CodeActionWindow
+import io.github.rosemoe.sora.lsp.editor.diagnostics.LspDiagnosticTooltipLayout
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEvent
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorHoverEvent
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorSelectionChangeEvent
@@ -47,7 +49,9 @@ import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.FileUri
 import io.github.rosemoe.sora.lsp.utils.clearVersions
 import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.component.DefaultDiagnosticTooltipLayout
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
+import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
 import io.github.rosemoe.sora.widget.getComponent
 import io.github.rosemoe.sora.widget.subscribeEvent
 import kotlinx.coroutines.Dispatchers
@@ -55,9 +59,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.future
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import org.eclipse.lsp4j.CodeAction
+import org.eclipse.lsp4j.Command
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.Hover
+import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.SignatureHelp
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeoutException
@@ -76,7 +84,8 @@ class LspEditor(
 
     private var hoverWindowWeakReference: WeakReference<HoverWindow?> =
         WeakReference(null)
-
+    private var codeActionWindowWeakReference: WeakReference<CodeActionWindow?> =
+        WeakReference(null)
     private var currentLanguage: LspLanguage? = null
 
     private var isClosed = false
@@ -110,9 +119,18 @@ class LspEditor(
             currentEditor.setEditorLanguage(currentLanguage)
             signatureHelpWindowWeakReference = WeakReference(SignatureHelpWindow(currentEditor))
             hoverWindowWeakReference = WeakReference(HoverWindow(currentEditor))
+            codeActionWindowWeakReference = WeakReference(CodeActionWindow(this, currentEditor))
+
+            val currentDiagnosticTooltipWindow =
+                currentEditor.getComponent<EditorDiagnosticTooltipWindow>()
+
+            if (currentDiagnosticTooltipWindow.layout is DefaultDiagnosticTooltipLayout) {
+                currentDiagnosticTooltipWindow.layout = LspDiagnosticTooltipLayout()
+            }
 
             val editorContentChangeEventReceiver = LspEditorContentChangeEvent(this)
             val editorSelectionChangeEventReceiver = LspEditorSelectionChangeEvent(this)
+
             val editorHoverEvent = LspEditorHoverEvent(this)
 
             val subscriptionReceipts =
@@ -156,31 +174,35 @@ class LspEditor(
             }
         }
 
-    var isConnected: Boolean = false
+    var isConnected= false
         private set
 
     val languageServerWrapper: LanguageServerWrapper
         get() = project.getOrCreateLanguageServerWrapper(fileExt)
 
-    var diagnostics: List<Diagnostic>
+    var diagnostics
         get() = project.diagnosticsContainer.getDiagnostics(uri)
         set(value) {
             publishDiagnostics(value)
         }
 
-    val isShowSignatureHelp: Boolean
+    val diagnosticsContainer
+        get() = project.diagnosticsContainer
+
+    val isShowSignatureHelp
         get() = signatureHelpWindowWeakReference.get()?.isShowing ?: false
 
-    val signatureHelpWindow: SignatureHelpWindow?
-        get() = signatureHelpWindowWeakReference.get()
 
-    val isShowHover: Boolean
+    val isShowHover
         get() = hoverWindowWeakReference.get()?.isShowing ?: false
 
-    val hoverWindow: HoverWindow?
-        get() = hoverWindowWeakReference.get()
 
-    var isEnableHover: Boolean = true
+    val isShowCodeActions
+        get() = codeActionWindowWeakReference.get()?.isShowing ?: false
+
+
+
+    var isEnableHover = true
         get() = hoverWindow?.isEnabled() ?: false
         set(value) {
             field = value
@@ -192,7 +214,7 @@ class LspEditor(
             }
         }
 
-    var isEnableSignatureHelp: Boolean = true
+    var isEnableSignatureHelp = true
         get() = signatureHelpWindow?.isEnabled() ?: false
         set(value) {
             field = value
@@ -206,7 +228,16 @@ class LspEditor(
             }
         }
 
-    val requestManager: RequestManager?
+    val hoverWindow
+        get() = hoverWindowWeakReference.get()
+
+    val codeActionWindow
+        get() = codeActionWindowWeakReference.get()
+
+    val signatureHelpWindow
+        get() = signatureHelpWindowWeakReference.get()
+
+    val requestManager
         get() = languageServerWrapper.requestManager
 
     init {
@@ -368,6 +399,21 @@ class LspEditor(
         }
 
         editor?.post { hoverWindow.show(hover) }
+    }
+
+    fun showCodeActions(range: Range?, actions: List<Either<Command, CodeAction>>?) {
+        val window = codeActionWindowWeakReference.get() ?: return
+        val originEditor = editor ?: return
+
+        val isInCompletion = originEditor.getComponent<EditorAutoCompletion>().isShowing
+        val isInSignatureHelp = isShowSignatureHelp
+
+        if (range == null || actions.isNullOrEmpty() || isInCompletion || isInSignatureHelp) {
+            originEditor.post { window.dismiss() }
+            return
+        }
+
+        originEditor.post { window.show(range, actions) }
     }
 
     fun hitReTrigger(eventText: CharSequence): Boolean {

@@ -22,54 +22,99 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lsp.events.document
+package io.github.rosemoe.sora.lsp.events.workspace
 
+import io.github.rosemoe.sora.lsp.editor.LspEditor
+import io.github.rosemoe.sora.lsp.editor.LspProject
 import io.github.rosemoe.sora.lsp.events.EventContext
 import io.github.rosemoe.sora.lsp.events.EventListener
 import io.github.rosemoe.sora.lsp.events.EventType
+import io.github.rosemoe.sora.lsp.events.document.applyEdits
 import io.github.rosemoe.sora.lsp.events.getByClass
-import io.github.rosemoe.sora.text.Content
-import io.github.rosemoe.sora.text.batchEdit
-import io.github.rosemoe.sora.util.Logger
-import org.eclipse.lsp4j.Range
+import io.github.rosemoe.sora.lsp.utils.FileUri
+import io.github.rosemoe.sora.lsp.utils.LSPException
+import io.github.rosemoe.sora.lsp.utils.toFileUri
+import io.github.rosemoe.sora.lsp.utils.toURI
+import org.eclipse.lsp4j.ApplyWorkspaceEditParams
+import org.eclipse.lsp4j.ResourceOperation
+import org.eclipse.lsp4j.TextDocumentEdit
 import org.eclipse.lsp4j.TextEdit
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 
 
-class ApplyEditsEvent : EventListener {
-    override val eventName: String = EventType.applyEdits
+class WorkSpaceApplyEditEvent : EventListener {
+    override val eventName: String = EventType.workSpaceApplyEdit
+
 
     override fun handle(context: EventContext) {
-        val editList: List<TextEdit> = context.get("edits")
-        val content = context.getByClass<Content>() ?: return
+        val workspaceEditParams = context.getByClass<ApplyWorkspaceEditParams>() ?: return
 
-        content.batchEdit {
-            editList.forEach { textEdit ->
-                val (startIndex, endIndex) = calculateIndices(it, textEdit.range)
-                it.replace(startIndex, endIndex, textEdit.newText)
+        val documentChanges = workspaceEditParams.edit.documentChanges
+
+        if (documentChanges != null) {
+            applyDocumentChanges(context, documentChanges)
+        } else {
+            applyChanges(context, workspaceEditParams.edit.changes)
+        }
+    }
+
+    private fun applyDocumentChanges(
+        context: EventContext,
+        documentChanges: List<Either<TextDocumentEdit, ResourceOperation>>
+    ) {
+        val project = context.getByClass<LspProject>() ?: return
+
+        documentChanges.forEach {
+            if (it.isRight) {
+                applyResourceOperation(it.right)
+            } else {
+                applyTextDocumentEdit(project, it.left)
             }
         }
     }
 
-    fun calculateIndices(content: Content, range: Range): Pair<Int, Int> {
-        var startIndex = content.getCharIndex(range.start.line, range.start.character)
-        val endLine = range.end.line.coerceAtMost(content.lineCount - 1)
-        var endIndex = content.getCharIndex(endLine, range.end.character)
+    private fun applyResourceOperation(operation: ResourceOperation) {
+        throw LSPException("ResourceOperation is not supported now $operation")
+    }
 
-        if (endIndex < startIndex) {
-            Logger.instance(this.javaClass.name).w(
-                "Invalid location information found applying edits from %s to %s",
-                range.start,
-                range.end
-            )
-            val diff = startIndex - endIndex
-            endIndex = startIndex
-            startIndex = endIndex - diff
+    private fun applyTextDocumentEdit(
+        project: LspProject,
+        textDocumentEdit: TextDocumentEdit
+    ) {
+        val textDocument = textDocumentEdit.textDocument
+        val uri = textDocument.uri.toURI().toFileUri()
+        val editor = project.getEditor(uri)
+            ?: throw LSPException("The url ${textDocument.uri} is not opened.")
+
+        applySingleChange(editor, uri, textDocumentEdit.edits)
+
+    }
+
+    private fun applyChanges(context: EventContext, changes: Map<String, List<TextEdit>>) {
+        val project = context.getByClass<LspProject>() ?: return
+
+
+        changes.forEach { (uri, textEdits) ->
+            val fileUri = uri.toURI().toFileUri()
+            val editor =
+                project.getEditor(uri) ?: throw LSPException("The url $uri is not opened.")
+
+
+            applySingleChange(editor, fileUri, textEdits)
         }
+    }
 
-        return startIndex to endIndex
+    private fun applySingleChange(editor: LspEditor, uri: FileUri, textEdits: List<TextEdit>) {
+        editor.eventManager.emit(EventType.applyEdits) {
+            put("edits", textEdits)
+            put(
+                "content",
+                editor.editor?.text ?: throw LSPException("The editor content $uri is null.")
+            )
+        }
     }
 
 }
 
-val EventType.applyEdits: String
-    get() = "textDocument/applyEdits"
+val EventType.workSpaceApplyEdit: String
+    get() = "workspace/applyEdit"

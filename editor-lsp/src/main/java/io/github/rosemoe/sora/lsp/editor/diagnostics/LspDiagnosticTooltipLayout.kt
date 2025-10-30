@@ -22,6 +22,8 @@ import io.github.rosemoe.sora.lsp.utils.blendARGB
 import io.github.rosemoe.sora.widget.component.DiagnosticTooltipLayout
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+import io.github.rosemoe.sora.lsp.editor.curvedTextScale
+import kotlin.math.abs
 
 /**
  * Diagnostic tooltip layout tuned for LSP that only renders the detailed message.
@@ -43,7 +45,10 @@ class LspDiagnosticTooltipLayout : DiagnosticTooltipLayout {
     private var borderWidthDp: Float = 1f
     private var severityBlendRatio = 0.25f
     private var pointerOverPopup = false
-    private var detailTextSizePx: Float = -1f
+    private var baselineEditorTextSizePx: Float? = null
+    private var baselineDetailTextSizePx: Float? = null
+    private var appliedDetailTextSizePx: Float = -1f
+    private var pendingEditorTextSizePx: Float? = null
 
     init {
         installDefaultSeverityPalette()
@@ -79,7 +84,10 @@ class LspDiagnosticTooltipLayout : DiagnosticTooltipLayout {
         copyButton.isEnabled = false
         copyButton.visibility = View.GONE
         updateCopyButtonTint(null)
-        updateDetailMessageTextSize(window.editor.textSizePx)
+        baselineDetailTextSizePx = detailMessageText.textSize
+        val initialEditorSize = pendingEditorTextSizePx ?: window.editor.textSizePx
+        applyDetailMessageTextSize(initialEditorSize)
+        pendingEditorTextSizePx = null
         return view
     }
 
@@ -96,7 +104,14 @@ class LspDiagnosticTooltipLayout : DiagnosticTooltipLayout {
     }
 
     override fun onTextSizeChanged(oldSizePx: Float, newSizePx: Float) {
-        updateDetailMessageTextSize(newSizePx)
+        if (newSizePx <= 0f) {
+            return
+        }
+        if (!::detailMessageText.isInitialized) {
+            pendingEditorTextSizePx = newSizePx
+            return
+        }
+        applyDetailMessageTextSize(newSizePx)
     }
 
     override fun renderDiagnostic(diagnostic: DiagnosticDetail?) {
@@ -134,16 +149,12 @@ class LspDiagnosticTooltipLayout : DiagnosticTooltipLayout {
     }
 
     override fun measureContent(maxWidth: Int, maxHeight: Int): Pair<Int, Int> {
-        val widthSpec = MeasureSpec.makeMeasureSpec(maxWidth, MeasureSpec.AT_MOST)
-        val heightSpec = MeasureSpec.makeMeasureSpec(maxHeight, MeasureSpec.AT_MOST)
-        val layoutParams = messagePanel.layoutParams
-        layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
-        messagePanel.layoutParams = layoutParams
-        messagePanel.measure(widthSpec, heightSpec)
-        val messageHeight = messagePanel.measuredHeight.coerceAtMost(maxHeight)
-        layoutParams.height = messageHeight
-        messagePanel.layoutParams = layoutParams
-        val dialogWidth = messagePanel.measuredWidth.coerceAtMost(maxWidth)
+        root.measure(
+            MeasureSpec.makeMeasureSpec(maxWidth, MeasureSpec.AT_MOST),
+            MeasureSpec.makeMeasureSpec(maxHeight, MeasureSpec.AT_MOST)
+        )
+        val messageHeight = root.measuredHeight.coerceAtMost(maxHeight)
+        val dialogWidth = root.measuredWidth.coerceAtMost(maxWidth)
         return dialogWidth to messageHeight
     }
 
@@ -223,15 +234,34 @@ class LspDiagnosticTooltipLayout : DiagnosticTooltipLayout {
         severityColors[DiagnosticRegion.SEVERITY_ERROR] = Color.parseColor("#FFFB7185")
     }
 
-    private fun updateDetailMessageTextSize(sizePx: Float) {
-        if (!::detailMessageText.isInitialized || sizePx <= 0f) {
+    private fun applyDetailMessageTextSize(sizePx: Float) {
+        if (sizePx <= 0f) {
             return
         }
-        if (detailTextSizePx == sizePx) {
+        if (!::detailMessageText.isInitialized) {
+            pendingEditorTextSizePx = sizePx
             return
         }
-        detailTextSizePx = sizePx
-        detailMessageText.setTextSize(TypedValue.COMPLEX_UNIT_PX, sizePx)
+        if (baselineEditorTextSizePx == null) {
+            baselineEditorTextSizePx = sizePx
+            baselineDetailTextSizePx = sizePx
+        }
+        val editorBaseline = baselineEditorTextSizePx ?: return
+        if (editorBaseline <= 0f) {
+            return
+        }
+        val detailBaseline = baselineDetailTextSizePx ?: detailMessageText.textSize
+        val rawScale = sizePx / editorBaseline
+        if (rawScale <= 0f) {
+            return
+        }
+        val curvedScale = curvedTextScale(rawScale)
+        val targetSize = detailBaseline * curvedScale
+        if (abs(appliedDetailTextSizePx - targetSize) < 0.5f) {
+            return
+        }
+        appliedDetailTextSizePx = targetSize
+        detailMessageText.setTextSize(TypedValue.COMPLEX_UNIT_PX, targetSize)
     }
 
     private fun copyDetailedMessageToClipboard() {

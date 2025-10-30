@@ -24,95 +24,77 @@
 
 package io.github.rosemoe.sora.lsp.events.workspace
 
+import android.util.Log
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspProject
+import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp.events.EventContext
 import io.github.rosemoe.sora.lsp.events.EventListener
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.document.applyEdits
+import io.github.rosemoe.sora.lsp.events.get
 import io.github.rosemoe.sora.lsp.events.getByClass
+import io.github.rosemoe.sora.lsp.requests.Timeout
+import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.FileUri
 import io.github.rosemoe.sora.lsp.utils.LSPException
+import io.github.rosemoe.sora.lsp.utils.asLspPosition
+import io.github.rosemoe.sora.lsp.utils.createTextDocumentIdentifier
 import io.github.rosemoe.sora.lsp.utils.toFileUri
 import io.github.rosemoe.sora.lsp.utils.toURI
+import io.github.rosemoe.sora.text.CharPosition
+import kotlinx.coroutines.future.await
+import kotlinx.coroutines.withTimeout
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams
+import org.eclipse.lsp4j.ExecuteCommandParams
 import org.eclipse.lsp4j.ResourceOperation
+import org.eclipse.lsp4j.SignatureHelpParams
 import org.eclipse.lsp4j.TextDocumentEdit
 import org.eclipse.lsp4j.TextEdit
 import org.eclipse.lsp4j.jsonrpc.messages.Either
+import java.util.concurrent.CompletableFuture
 
 
-class WorkSpaceApplyEditEvent : EventListener {
-    override val eventName: String = EventType.workSpaceApplyEdit
+class WorkSpaceExecuteCommand : AsyncEventListener() {
+    override val eventName: String = EventType.workSpaceExecuteCommand
 
+    override val isAsync = true
 
-    override fun handle(context: EventContext) {
-        val workspaceEditParams = context.getByClass<ApplyWorkspaceEditParams>() ?: return
+    var future: CompletableFuture<Void>? = null
 
-        val documentChanges = workspaceEditParams.edit.documentChanges
+    override suspend fun handleAsync(context: EventContext) {
+        val command = context.get<String>("command")
+        val args = context.get<List<Any>>("args")
 
-        if (documentChanges != null) {
-            applyDocumentChanges(context, documentChanges)
-        } else {
-            applyChanges(context, workspaceEditParams.edit.changes)
-        }
-    }
+        val editor = context.get<LspEditor>("lsp-editor")
+        val requestManager = editor.requestManager ?: return
+        val executeCommandParams = ExecuteCommandParams(command, args)
+        val future = requestManager.executeCommand(executeCommandParams)
 
-    private fun applyDocumentChanges(
-        context: EventContext,
-        documentChanges: List<Either<TextDocumentEdit, ResourceOperation>>
-    ) {
-        val project = context.getByClass<LspProject>() ?: return
+        this@WorkSpaceExecuteCommand.future = future?.thenAccept { }
 
-        documentChanges.forEach {
-            if (it.isRight) {
-                applyResourceOperation(it.right)
-            } else {
-                applyTextDocumentEdit(project, it.left)
+        try {
+            val result: Any?
+
+            withTimeout(Timeout[Timeouts.EXECUTE_COMMAND].toLong()) {
+                result =
+                    future?.await()
             }
+
+            context.put("result", result)
+
+        } catch (exception: Exception) {
+            // throw?
+            exception.printStackTrace()
+            Log.e("LSP client", "workspace execute command timeout", exception)
         }
     }
 
-    private fun applyResourceOperation(operation: ResourceOperation) {
-        throw LSPException("ResourceOperation is not supported now $operation")
+    override fun dispose() {
+        future?.cancel(true);
+        future = null;
     }
-
-    private fun applyTextDocumentEdit(
-        project: LspProject,
-        textDocumentEdit: TextDocumentEdit
-    ) {
-        val textDocument = textDocumentEdit.textDocument
-        val uri = textDocument.uri.toURI().toFileUri()
-        val editor = project.getEditor(uri)
-            ?: throw LSPException("The url ${textDocument.uri} is not opened.")
-
-        applySingleChange(editor, uri, textDocumentEdit.edits)
-
-    }
-
-    private fun applyChanges(context: EventContext, changes: Map<String, List<TextEdit>>) {
-        val project = context.getByClass<LspProject>() ?: return
-
-        changes.forEach { (uri, textEdits) ->
-            val fileUri = uri.toURI().toFileUri()
-            val editor =
-                project.getEditor(uri) ?: throw LSPException("The url $uri is not opened.")
-
-            applySingleChange(editor, fileUri, textEdits)
-        }
-    }
-
-    private fun applySingleChange(editor: LspEditor, uri: FileUri, textEdits: List<TextEdit>) {
-        editor.eventManager.emit(EventType.applyEdits) {
-            put("edits", textEdits)
-            put(
-                "content",
-                editor.editor?.context ?: throw LSPException("The editor content $uri is null.")
-            )
-        }
-    }
-
 }
 
-val EventType.workSpaceApplyEdit: String
-    get() = "workspace/applyEdit"
+val EventType.workSpaceExecuteCommand: String
+    get() = "workspace/executeCommand"
