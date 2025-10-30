@@ -9,6 +9,7 @@ import io.github.rosemoe.sora.event.EditorReleaseEvent
 import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.TextSizeChangeEvent
 import io.github.rosemoe.sora.event.subscribeEvent
+import io.github.rosemoe.sora.util.ViewUtils
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
@@ -16,7 +17,6 @@ import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
 import io.github.rosemoe.sora.widget.component.EditorTextActionWindow
 import io.github.rosemoe.sora.widget.getComponent
 import org.eclipse.lsp4j.Hover
-import org.eclipse.lsp4j.MarkedString
 import org.eclipse.lsp4j.MarkupContent
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 
@@ -33,10 +33,20 @@ open class HoverWindow(
     private val buffer = FloatArray(2)
     protected val eventManager = editor.createSubEventManager()
     private var hover: Hover? = null
+    private var pendingHover: Hover? = null
+    private val showRunnable = Runnable {
+        val nextHover = pendingHover
+        pendingHover = null
+        if (nextHover != null) {
+            performShow(nextHover)
+        }
+    }
 
     private var layoutImpl: HoverLayout = DefaultHoverLayout()
 
     var alwaysShowOnTouchHover = true
+
+    var HOVER_TOOLTIP_SHOW_TIMEOUT = 1000L
 
     var layout: HoverLayout
         get() = layoutImpl
@@ -96,18 +106,17 @@ open class HoverWindow(
     }
 
     open fun show(hover: Hover) {
-        val isInCompletion = editor.getComponent<EditorAutoCompletion>().isShowing
-        val isInDiagnostic = editor.getComponent<EditorDiagnosticTooltipWindow>().isShowing
+        editor.removeCallbacks(showRunnable)
+        pendingHover = null
+        super.dismiss()
+        pendingHover = hover
+        editor.postDelayedInLifecycle(showRunnable, HOVER_TOOLTIP_SHOW_TIMEOUT)
+    }
 
-        if (!hover.hasContent() || !isEnabled() || isInCompletion || isInDiagnostic) {
-            dismiss()
-            return
-        }
-
-        this.hover = hover
-        renderHover()
-        updateWindowSizeAndLocation()
-        show()
+    override fun dismiss() {
+        editor.removeCallbacks(showRunnable)
+        pendingHover = null
+        super.dismiss()
     }
 
     protected fun isSelectionVisible(): Boolean {
@@ -157,6 +166,21 @@ open class HoverWindow(
         if (isShowing) {
             renderHover()
         }
+    }
+
+    private fun performShow(hover: Hover) {
+        val isInCompletion = editor.getComponent<EditorAutoCompletion>().isShowing
+        val isInDiagnostic = editor.getComponent<EditorDiagnosticTooltipWindow>().isShowing
+
+        if (!hover.hasContent() || !isEnabled() || isInCompletion || isInDiagnostic) {
+            dismiss()
+            return
+        }
+
+        this.hover = hover
+        renderHover()
+        updateWindowSizeAndLocation()
+        super.show()
     }
 
 

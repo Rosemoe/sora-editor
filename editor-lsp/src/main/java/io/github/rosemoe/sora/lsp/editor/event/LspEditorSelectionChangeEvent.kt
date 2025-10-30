@@ -43,6 +43,7 @@ class LspEditorSelectionChangeEvent(private val editor: LspEditor) :
         }
 
         editor.showSignatureHelp(null)
+        editor.showHover(null)
 
         val originEditor = editor.editor ?: return
 
@@ -52,7 +53,6 @@ class LspEditorSelectionChangeEvent(private val editor: LspEditor) :
         val isInSignatureHelp = editor.isShowSignatureHelp
 
         if ((!originEditor.hasMouseHovering() && (!hoverWindow.alwaysShowOnTouchHover || event.isSelected)) || isInCompletion || isInSignatureHelp) {
-            editor.showHover(null)
             return
         }
 
