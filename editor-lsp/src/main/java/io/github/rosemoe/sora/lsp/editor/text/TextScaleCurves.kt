@@ -1,4 +1,4 @@
-package io.github.rosemoe.sora.lsp.editor
+package io.github.rosemoe.sora.lsp.editor.text
 
 import kotlin.math.pow
 

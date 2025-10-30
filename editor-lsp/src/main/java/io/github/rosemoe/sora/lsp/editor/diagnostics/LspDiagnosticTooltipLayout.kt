@@ -22,7 +22,7 @@ import io.github.rosemoe.sora.lsp.utils.blendARGB
 import io.github.rosemoe.sora.widget.component.DiagnosticTooltipLayout
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
-import io.github.rosemoe.sora.lsp.editor.curvedTextScale
+import io.github.rosemoe.sora.lsp.editor.text.curvedTextScale
 import kotlin.math.abs
 
 /**

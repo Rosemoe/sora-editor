@@ -1,17 +1,18 @@
 package io.github.rosemoe.sora.lsp.editor.codeaction
 
+import android.graphics.Outline
 import android.graphics.Typeface
-import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewOutlineProvider
 import android.widget.AbsListView
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.TextView
-import io.github.rosemoe.sora.lsp.editor.curvedTextScale
+import io.github.rosemoe.sora.lsp.editor.text.curvedTextScale
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 class DefaultCodeActionLayout : CodeActionLayout {
@@ -84,10 +85,26 @@ class DefaultCodeActionLayout : CodeActionLayout {
             setStroke(strokeWidth, colorScheme.getColor(EditorColorScheme.HOVER_BORDER))
         }
         root.background = background
-        listView.selector = ColorDrawable(highlightColor)
+
+        setRootViewOutlineProvider(root, cornerRadius)
+
+        val selectorDrawable = GradientDrawable().apply {
+            this.cornerRadius = cornerRadius * 0.6f
+            setColor(highlightColor)
+        }
+        listView.selector = selectorDrawable
         listView.setBackgroundColor(0)
         adapter.updateTypeface(typeface)
         adapter.updateTextColor(textColor)
+    }
+
+    private fun setRootViewOutlineProvider(rootView: View, cornerRadius: Float) {
+        rootView.outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: Outline) {
+                outline.setRoundRect(0, 0, view.width, view.height, cornerRadius)
+            }
+        }
+        rootView.clipToOutline = true
     }
 
     override fun renderActions(actions: List<CodeActionItem>) {
@@ -164,9 +181,12 @@ class DefaultCodeActionLayout : CodeActionLayout {
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
                 setPadding(horizontalPaddingPx, verticalPaddingPx, horizontalPaddingPx, verticalPaddingPx)
-                isClickable = false
-                isFocusable = false
                 textAlignment = View.TEXT_ALIGNMENT_VIEW_START
+
+                // Add ripple effect
+                val outValue = android.util.TypedValue()
+                context.theme.resolveAttribute(android.R.attr.selectableItemBackground, outValue, true)
+                setBackgroundResource(outValue.resourceId)
             }
         }
 

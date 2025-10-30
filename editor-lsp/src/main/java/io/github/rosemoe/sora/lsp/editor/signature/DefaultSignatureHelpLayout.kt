@@ -1,9 +1,12 @@
 package io.github.rosemoe.sora.lsp.editor.signature
 
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.method.LinkMovementMethod
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.util.TypedValue
@@ -13,7 +16,8 @@ import android.widget.ImageView
 import android.widget.ScrollView
 import android.widget.TextView
 import io.github.rosemoe.sora.lsp.R
-import io.github.rosemoe.sora.lsp.editor.curvedTextScale
+import io.github.rosemoe.sora.lsp.editor.text.SimpleMarkdownRenderer
+import io.github.rosemoe.sora.lsp.editor.text.curvedTextScale
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import org.eclipse.lsp4j.SignatureInformation
 import org.eclipse.lsp4j.SignatureHelp
@@ -30,11 +34,13 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
     private lateinit var counterView: TextView
     private var textColor = 0
     private var highlightColor = 0
+    private var codeTypeface: Typeface = Typeface.MONOSPACE
     private var baselineEditorTextSize: Float? = null
     private var baselineSignatureTextSize: Float? = null
     private var baselineDocumentationTextSize: Float? = null
     private var baselineCounterTextSize: Float? = null
     private var latestEditorTextSize: Float? = null
+    private val markdownRenderer = SimpleMarkdownRenderer()
 
     private var signatureHelp: SignatureHelp? = null
     private var currentIndex = 0
@@ -78,14 +84,19 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
         val editor = window.editor
         textColor = colorScheme.getColor(EditorColorScheme.SIGNATURE_TEXT_NORMAL)
         highlightColor = colorScheme.getColor(EditorColorScheme.SIGNATURE_TEXT_HIGHLIGHTED_PARAMETER)
+        codeTypeface = typeface
         signatureTextView.typeface = typeface
         signatureTextView.setTextColor(textColor)
-        documentationTextView.typeface = typeface
         documentationTextView.setTextColor(textColor)
+        documentationTextView.movementMethod = LinkMovementMethod()
         counterView.typeface = typeface
         counterView.setTextColor(textColor)
-       /* previousButton.setTextColor(textColor)
-        nextButton.setTextColor(textColor)*/
+        previousButton.apply {
+            colorFilter = PorterDuffColorFilter(textColor, PorterDuff.Mode.SRC_ATOP)
+        }
+        nextButton.apply {
+            colorFilter = PorterDuffColorFilter(textColor, PorterDuff.Mode.SRC_ATOP)
+        }
         val drawable = GradientDrawable().apply {
             cornerRadius = editor.dpUnit * 8
             setColor(colorScheme.getColor(EditorColorScheme.SIGNATURE_BACKGROUND))
@@ -142,7 +153,21 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
             documentation.isLeft -> documentation.left
             else -> documentation.right?.value ?: ""
         }
-        documentationTextView.text = documentationText
+
+        val renderedDocumentation = if (documentationText.isNotEmpty()) {
+            markdownRenderer.render(
+                markdown = documentationText,
+                boldColor = highlightColor,
+                inlineCodeColor = highlightColor,
+                blockCodeColor = textColor,
+                codeTypeface = codeTypeface,
+                linkColor = highlightColor
+            )
+        } else {
+            ""
+        }
+
+        documentationTextView.text = renderedDocumentation
         documentationTextView.visibility = if (documentationText.isEmpty()) View.GONE else View.VISIBLE
 
         counterView.text = "${currentIndex + 1}/${signatures.size}"

@@ -154,6 +154,7 @@ public class EditorColorScheme {
     public static final int SIGNATURE_TEXT_NORMAL = 58;
     public static final int SIGNATURE_TEXT_HIGHLIGHTED_PARAMETER = 59;
     public static final int HOVER_TEXT_NORMAL = 68;
+    public static final int HOVER_TEXT_HIGHLIGHTED = 72;
     public static final int HOVER_BACKGROUND = 69;
     public static final int HOVER_BORDER = 70;
 
@@ -174,7 +175,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 71;
+    protected static final int END_COLOR_ID = 72;
 
 
     /**
@@ -305,6 +306,7 @@ public class EditorColorScheme {
                 break;
             case ANNOTATION:
             case SIGNATURE_TEXT_HIGHLIGHTED_PARAMETER:
+            case HOVER_TEXT_HIGHLIGHTED:
             case IDENTIFIER_NAME:
                 color = 0xFF03A9F4;
                 break;

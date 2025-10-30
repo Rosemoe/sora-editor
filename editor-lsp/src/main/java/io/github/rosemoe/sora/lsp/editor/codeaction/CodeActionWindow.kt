@@ -169,24 +169,28 @@ class CodeActionWindow(
     }
 
     private fun updateWindowSizeAndLocation() {
-        val fallbackWidth = (editor.dpUnit * 160).toInt().coerceAtLeast(160)
-        val fallbackHeight = (editor.dpUnit * 200).toInt().coerceAtLeast(200)
-        val widthSpecSize = if (editor.width > 0) {
-            maxWidth.coerceAtLeast(fallbackWidth)
-        } else {
-            fallbackWidth
-        }
-        val heightSpecSize = if (editor.height > 0) {
-            maxHeight.coerceAtLeast(fallbackHeight)
-        } else {
-            fallbackHeight
-        }
+        val anchor = anchorPosition?.let { normalizePosition(it) } ?: return
+        val charY = editor.getCharOffsetY(anchor.line, anchor.column)
+        val margin = editor.dpUnit * 6
+        val rowHeight = editor.rowHeight
+
+        // Calculate available space below and above cursor (similar to EditorAutoCompletion)
+        val spaceBelow = editor.height - (charY + rowHeight + margin)
+        val spaceAbove = charY - margin
+        val availableHeight = maxOf(spaceBelow, spaceAbove).coerceAtLeast(editor.dpUnit * 100)
+        val constrainedMaxHeight = availableHeight.coerceAtMost(maxHeight.toFloat()).toInt()
+
+        // Measure to get actual content height
         rootView.measure(
-            MeasureSpec.makeMeasureSpec(widthSpecSize, MeasureSpec.AT_MOST),
-            MeasureSpec.makeMeasureSpec(heightSpecSize, MeasureSpec.AT_MOST)
+            MeasureSpec.makeMeasureSpec(maxWidth, MeasureSpec.AT_MOST),
+            MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         )
-        val width = rootView.measuredWidth
-        val height = rootView.measuredHeight
+
+        val width = rootView.measuredWidth.coerceAtLeast((editor.dpUnit * 160).toInt())
+        // Like EditorAutoCompletion: use actual height but limit to maxHeight
+        val actualHeight = rootView.measuredHeight
+        val height = actualHeight.coerceAtMost(constrainedMaxHeight)
+
         setSize(width, height)
         updateWindowPosition()
     }
