@@ -163,7 +163,7 @@ fun List<Diagnostic>.transformToEditorDiagnostics(editor: CodeEditor): List<Diag
             diagnosticSource.severity.toEditorLevel(),
             id++,
             DiagnosticDetail(
-                diagnosticSource.severity.name, diagnosticSource.message, null, null
+                diagnosticSource.severity.name, diagnosticSource.message, null, diagnosticSource
             )
         )
         result.add(diagnostic)
@@ -198,7 +198,8 @@ private fun getVersion(fileUri: FileUri): Int {
 }
 
 fun clearVersions(func: (FileUri) -> Boolean) {
-    versionMap.keys.filter(func).forEach { versionMap.remove(it) }
+    val keysToDelete = versionMap.keys.filter(func)
+    keysToDelete.forEach { versionMap.remove(it) }
 }
 
 fun blendARGB(
