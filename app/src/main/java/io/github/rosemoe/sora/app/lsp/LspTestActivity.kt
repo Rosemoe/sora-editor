@@ -22,7 +22,7 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.app
+package io.github.rosemoe.sora.app.lsp
 
 import android.content.Intent
 import android.content.res.Configuration
@@ -32,6 +32,9 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
+import io.github.rosemoe.sora.app.BaseEditorActivity
+import io.github.rosemoe.sora.app.R
+import io.github.rosemoe.sora.app.switchThemeIfRequired
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry
@@ -41,11 +44,13 @@ import io.github.rosemoe.sora.langs.textmate.registry.dsl.languages
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
 import io.github.rosemoe.sora.lsp.client.connection.LocalSocketStreamConnectionProvider
-import io.github.rosemoe.sora.lsp.client.connection.SocketStreamConnectionProvider
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspProject
+import io.github.rosemoe.sora.lsp.events.EventType
+import io.github.rosemoe.sora.lsp.events.code.codeAction
+import io.github.rosemoe.sora.lsp.utils.asLspRange
 import io.github.rosemoe.sora.text.ContentIO
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.getComponent
@@ -58,7 +63,6 @@ import org.eclipse.lsp4j.WorkspaceFolder
 import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent
 import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.tm4e.core.registry.IThemeSource
-import java.io.File
 import java.io.FileOutputStream
 import java.lang.ref.WeakReference
 import java.util.zip.ZipFile
@@ -73,7 +77,7 @@ class LspTestActivity : BaseEditorActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        title = "LSP Test - Kotlin"
+        setTitle("LSP Test - Kotlin")
 
         val font = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
 
@@ -100,7 +104,7 @@ class LspTestActivity : BaseEditorActivity() {
     private suspend fun setEditorText() {
         val text = withContext(Dispatchers.IO) {
             ContentIO.createFrom(
-                File("/storage/emulated/0/MT2/apks/testProject/test.ts").inputStream()
+                externalCacheDir?.resolve("testProject/sample.lua")!!.inputStream()
             )
         }
         editor.setText(text, null)
@@ -136,16 +140,16 @@ class LspTestActivity : BaseEditorActivity() {
             editor.editable = false
         }
 
-        val projectPath = "/sdcard/MT2/apks/testProject" // externalCacheDir?.resolve("testProject")?.absolutePath ?: ""
+        val projectPath = externalCacheDir?.resolve("testProject")?.absolutePath ?: ""
 
         startService(
             Intent(this@LspTestActivity, LspLanguageServerService::class.java)
         )
 
         val luaServerDefinition =
-            object : CustomLanguageServerDefinition("ts",
+            object : CustomLanguageServerDefinition("lua",
                 ServerConnectProvider {
-                   SocketStreamConnectionProvider(2088, "127.0.0.1")
+                    LocalSocketStreamConnectionProvider("lua-lsp")
                 }
             ) {
                 /* override fun getInitializationOptions(uri: URI?): Any {
@@ -166,10 +170,17 @@ class LspTestActivity : BaseEditorActivity() {
         lspProject.addServerDefinition(luaServerDefinition)
 
         withContext(Dispatchers.Main) {
-            lspEditor = lspProject.createEditor("$projectPath/test.ts")
+            lspEditor = lspProject.createEditor("$projectPath/sample.lua")
             val wrapperLanguage = createTextMateLanguage()
             lspEditor.wrapperLanguage = wrapperLanguage
             lspEditor.editor = editor
+            LspEditorTextActionWindow(lspEditor).setOnMoreButtonClickListener { window, lspEditor ->
+                lspEditor.coroutineScope.launch {
+                    lspEditor.eventManager.emitAsync(EventType.codeAction) {
+                        put(editor.cursor.range.asLspRange())
+                    }
+                }
+            }
         }
 
         var connected: Boolean
@@ -182,8 +193,8 @@ class LspTestActivity : BaseEditorActivity() {
             lspEditor.requestManager?.didChangeWorkspaceFolders(
                 DidChangeWorkspaceFoldersParams().apply {
                     this.event = WorkspaceFoldersChangeEvent().apply {
-                        /*added =
-                            listOf(WorkspaceFolder("file://$projectPath/std/Lua53", "MyLuaProject"))*/
+                        added =
+                            listOf(WorkspaceFolder("file://$projectPath/std/Lua53", "MyLuaProject"))
                     }
                 }
             )
@@ -221,16 +232,11 @@ class LspTestActivity : BaseEditorActivity() {
                     scopeName = "source.lua"
                     languageConfiguration = "textmate/lua/language-configuration.json"
                 }
-                language("js") {
-                    grammar = "textmate/javascript/syntaxes/JavaScript.tmLanguage.json"
-                    scopeName = "source.js"
-                    languageConfiguration = "textmate/javascript/language-configuration.json"
-                }
             }
         )
 
         return TextMateLanguage.create(
-            "source.js", false
+            "source.lua", false
         )
     }
 
@@ -312,5 +318,4 @@ class LspTestActivity : BaseEditorActivity() {
 
 
 }
-
 
