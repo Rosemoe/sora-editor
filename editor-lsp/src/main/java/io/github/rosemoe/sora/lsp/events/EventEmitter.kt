@@ -25,7 +25,9 @@
 package io.github.rosemoe.sora.lsp.events
 
 import androidx.annotation.WorkerThread
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 class EventEmitter {
 
@@ -148,7 +150,7 @@ interface EventListener {
 
     fun handle(context: EventContext)
 
-    suspend fun handleAsync(context: EventContext) {
+    suspend fun handleAsync(context: EventContext) = withContext(Dispatchers.Main) {
         handle(context)
     }
 
