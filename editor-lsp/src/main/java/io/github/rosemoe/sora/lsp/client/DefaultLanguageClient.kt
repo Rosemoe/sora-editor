@@ -64,7 +64,7 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
         } catch (e: Throwable) {
             return CompletableFuture.completedFuture(
                 ApplyWorkspaceEditResponse().apply {
-                    isApplied = true
+                    isApplied = false
                     failureReason = e.message
                 }
             )
