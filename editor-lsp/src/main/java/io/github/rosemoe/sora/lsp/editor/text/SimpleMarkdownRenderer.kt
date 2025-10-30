@@ -41,7 +41,7 @@ class SimpleMarkdownRenderer {
         for (block in blocks) {
             if (builder.isNotEmpty()) {
                 if (!firstBlock) {
-                    builder.append('\n')
+                    builder.append("\n\n")
                 }
             }
             when (block) {

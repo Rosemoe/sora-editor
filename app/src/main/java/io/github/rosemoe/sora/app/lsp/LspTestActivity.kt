@@ -53,6 +53,7 @@ import io.github.rosemoe.sora.lsp.events.code.codeAction
 import io.github.rosemoe.sora.lsp.utils.asLspRange
 import io.github.rosemoe.sora.text.ContentIO
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
+import io.github.rosemoe.sora.widget.component.EditorTextActionWindow
 import io.github.rosemoe.sora.widget.getComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -109,6 +110,7 @@ class LspTestActivity : BaseEditorActivity() {
         }
         editor.setText(text, null)
         editor.getComponent<EditorAutoCompletion>().setEnabledAnimation(true)
+        editor.getComponent<EditorTextActionWindow>().isEnabled = false
     }
 
     private suspend fun unAssets() = withContext(Dispatchers.IO) {
@@ -134,7 +136,6 @@ class LspTestActivity : BaseEditorActivity() {
 
 
     private suspend fun connectToLanguageServer() = withContext(Dispatchers.IO) {
-
         withContext(Dispatchers.Main) {
             toast("(Kotlin Activity) Starting Language Server...")
             editor.editable = false
