@@ -1,7 +1,7 @@
 /*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2025  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.app;
+package io.github.rosemoe.sora.app.lsp;
 
 import static io.github.rosemoe.sora.app.UtilsKt.switchThemeIfRequired;
 
@@ -59,6 +59,8 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import io.github.rosemoe.sora.app.BaseEditorActivity;
+import io.github.rosemoe.sora.app.R;
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme;
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage;
 import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry;
@@ -187,7 +189,7 @@ public class LspTestJavaActivity extends BaseEditorActivity {
 
             changeWorkspaceFoldersParams.setEvent(new WorkspaceFoldersChangeEvent());
 
-            changeWorkspaceFoldersParams.getEvent().setAdded(List.of(new WorkspaceFolder("file://$projectPath/std/Lua53", "MyLuaProject")));
+            changeWorkspaceFoldersParams.getEvent().setAdded(List.of(new WorkspaceFolder("file://" + projectPath + "/std/Lua53", "MyLuaProject")));
 
             Objects.requireNonNull(lspEditor.getRequestManager())
                     .didChangeWorkspaceFolders(

@@ -34,7 +34,7 @@ import java.util.concurrent.CompletableFuture
 
 
 class DocumentSaveEvent : AsyncEventListener() {
-    override val eventName = "textDocument/didSave"
+    override val eventName = EventType.documentSave
 
     var future: CompletableFuture<Void>? = null
 

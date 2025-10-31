@@ -44,6 +44,7 @@ import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.ClientCapabilities
 import org.eclipse.lsp4j.CodeActionCapabilities
+import org.eclipse.lsp4j.CodeActionKind
 import org.eclipse.lsp4j.CodeActionKindCapabilities
 import org.eclipse.lsp4j.CodeActionLiteralSupportCapabilities
 import org.eclipse.lsp4j.CompletionCapabilities
@@ -56,12 +57,15 @@ import org.eclipse.lsp4j.HoverCapabilities
 import org.eclipse.lsp4j.InitializeParams
 import org.eclipse.lsp4j.InitializeResult
 import org.eclipse.lsp4j.InitializedParams
+import org.eclipse.lsp4j.MarkupKind
 import org.eclipse.lsp4j.OnTypeFormattingCapabilities
+import org.eclipse.lsp4j.PublishDiagnosticsCapabilities
 import org.eclipse.lsp4j.RangeFormattingCapabilities
 import org.eclipse.lsp4j.ReferencesCapabilities
 import org.eclipse.lsp4j.RenameCapabilities
 import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.SignatureHelpCapabilities
+import org.eclipse.lsp4j.SignatureInformationCapabilities
 import org.eclipse.lsp4j.SymbolCapabilities
 import org.eclipse.lsp4j.SynchronizationCapabilities
 import org.eclipse.lsp4j.TextDocumentClientCapabilities
@@ -363,14 +367,15 @@ class LanguageServerWrapper(
             documentHighlight =
                 null // The feature is not currently supported in the sora-editor
             formatting = FormattingCapabilities()
-            hover = HoverCapabilities()
+            hover = HoverCapabilities( true)
             onTypeFormatting = OnTypeFormattingCapabilities()
             rangeFormatting = RangeFormattingCapabilities()
             references = ReferencesCapabilities()
-            rename = RenameCapabilities(true, false)
+            rename = RenameCapabilities(true, true)
             signatureHelp = SignatureHelpCapabilities(true)
             synchronization =
                 SynchronizationCapabilities(true, true, true)
+            publishDiagnostics = PublishDiagnosticsCapabilities(true)
         }
 
         initParams.apply {
@@ -479,7 +484,7 @@ class LanguageServerWrapper(
             editor.signatureHelpTriggers = signatureHelpTriggers
             editor.signatureHelpReTriggers = signatureHelpReTriggers
             editor.completionTriggers = completionTriggers.toMutableSet().apply {
-                addAll(arrayOf("[","{","(","<","."))
+                addAll(arrayOf("[", "{", "(", "<", ".", ","))
             }.toList()
 
             commonCoroutineScope.future {

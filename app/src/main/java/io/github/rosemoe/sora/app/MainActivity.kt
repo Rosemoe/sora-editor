@@ -47,6 +47,8 @@ import io.github.dingyi222666.monarch.languages.KotlinLanguage
 import io.github.dingyi222666.monarch.languages.PythonLanguage
 import io.github.dingyi222666.monarch.languages.TypescriptLanguage
 import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
+import io.github.rosemoe.sora.app.lsp.LspTestActivity
+import io.github.rosemoe.sora.app.lsp.LspTestJavaActivity
 import io.github.rosemoe.sora.app.tests.TestActivity
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EditorKeyEvent

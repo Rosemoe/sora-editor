@@ -389,7 +389,9 @@ class DefaultRequestManager(
     override fun hover(params: HoverParams): CompletableFuture<Hover>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.hoverProvider?.left == true || serverCapabilities.hoverProvider?.right != null) textDocumentService.hover(params) else null
+                if (serverCapabilities.hoverProvider?.left == true || serverCapabilities.hoverProvider?.right != null) textDocumentService.hover(
+                    params
+                ) else null
             } catch (e: Exception) {
                 crashed(e)
                 null
@@ -503,9 +505,11 @@ class DefaultRequestManager(
     override fun diagnostic(params: DocumentDiagnosticParams?): CompletableFuture<DocumentDiagnosticReport?>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.diagnosticProvider?.isInterFileDependencies == true || serverCapabilities.diagnosticProvider?.isWorkspaceDiagnostics == true) textDocumentService.diagnostic(
-                    params
-                ) else null
+                if (serverCapabilities.diagnosticProvider?.isInterFileDependencies == true || serverCapabilities.diagnosticProvider?.isWorkspaceDiagnostics == true) {
+                    textDocumentService.diagnostic(
+                        params
+                    )
+                } else null
             } catch (e: Exception) {
                 crashed(e)
                 null

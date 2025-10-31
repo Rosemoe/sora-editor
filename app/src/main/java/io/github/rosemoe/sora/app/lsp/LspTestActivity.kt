@@ -22,7 +22,7 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.app
+package io.github.rosemoe.sora.app.lsp
 
 import android.content.Intent
 import android.content.res.Configuration
@@ -32,6 +32,9 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
+import io.github.rosemoe.sora.app.BaseEditorActivity
+import io.github.rosemoe.sora.app.R
+import io.github.rosemoe.sora.app.switchThemeIfRequired
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry
@@ -45,8 +48,12 @@ import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomL
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspProject
+import io.github.rosemoe.sora.lsp.events.EventType
+import io.github.rosemoe.sora.lsp.events.code.codeAction
+import io.github.rosemoe.sora.lsp.utils.asLspRange
 import io.github.rosemoe.sora.text.ContentIO
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
+import io.github.rosemoe.sora.widget.component.EditorTextActionWindow
 import io.github.rosemoe.sora.widget.getComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -103,6 +110,7 @@ class LspTestActivity : BaseEditorActivity() {
         }
         editor.setText(text, null)
         editor.getComponent<EditorAutoCompletion>().setEnabledAnimation(true)
+        editor.getComponent<EditorTextActionWindow>().isEnabled = false
     }
 
     private suspend fun unAssets() = withContext(Dispatchers.IO) {
@@ -128,7 +136,6 @@ class LspTestActivity : BaseEditorActivity() {
 
 
     private suspend fun connectToLanguageServer() = withContext(Dispatchers.IO) {
-
         withContext(Dispatchers.Main) {
             toast("(Kotlin Activity) Starting Language Server...")
             editor.editable = false
@@ -168,6 +175,13 @@ class LspTestActivity : BaseEditorActivity() {
             val wrapperLanguage = createTextMateLanguage()
             lspEditor.wrapperLanguage = wrapperLanguage
             lspEditor.editor = editor
+            LspEditorTextActionWindow(lspEditor).setOnMoreButtonClickListener { window, lspEditor ->
+                lspEditor.coroutineScope.launch {
+                    lspEditor.eventManager.emitAsync(EventType.codeAction) {
+                        put(editor.cursor.range.asLspRange())
+                    }
+                }
+            }
         }
 
         var connected: Boolean
@@ -305,5 +319,4 @@ class LspTestActivity : BaseEditorActivity() {
 
 
 }
-
 

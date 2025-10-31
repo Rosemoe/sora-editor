@@ -132,14 +132,14 @@ fun filterCompletionItems(
     }
 
     for (originItem in completionItemList) {
-
         source.validateAccess()
 
         val overwriteBefore = originItem.prefixLength
         val wordLen = overwriteBefore
         if (word.length != wordLen) {
             word = if (wordLen == 0) "" else sourceLine.substring(
-                sourceLine.length - wordLen
+                cursorPosition.column - wordLen,
+                cursorPosition.column
             )
             wordLow = word.lowercase()
         }
@@ -152,7 +152,7 @@ fun filterCompletionItems(
         // the fallback-sort using the initial sort order.
         // use a score of `-100` because that is out of the
         // bound of values `fuzzyScore` will return
-        if (wordLen == 0) {
+        if (overwriteBefore == 0) {
             // when there is nothing to score against, don't
             // event try to do. Use a const rank and rely on
             // the fallback-sort using the initial sort order.
@@ -172,9 +172,9 @@ fun filterCompletionItems(
                 }
             }
 
-            val filterText = originItem.filterText ?: originItem.sortText
+            val filterText = originItem.filterText
 
-            if (wordPos >= wordLen) {
+            if (wordPos >= overwriteBefore) {
                 // the wordPos at which scoring starts is the whole word
                 // and therefore the same rules as not having a word apply
                 item.score = FuzzyScore.default;
@@ -195,7 +195,7 @@ fun filterCompletionItems(
                 ) ?: continue; // NO match
 
                 // compareIgnoreCase(item.completion.filterText, item.textLabel) === 0
-                if (filterText === originItem.label) {
+                if (filterText.equals(originItem.label.toString(), ignoreCase = true)) {
                     // filterText and label are actually the same -> use good highlights
                     item.score = match;
                 } else {
@@ -290,7 +290,7 @@ fun List<CompletionItem>.highlightMatchLabel(colorSchema: EditorColorScheme?): L
             spannable.setSpan(
                 ForegroundColorSpan(matchedColor),
                 matchIndex,
-                spannable.lastIndex.coerceAtMost(matchIndex + 1),
+                spannable.length.coerceAtMost(matchIndex + 1),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
         }

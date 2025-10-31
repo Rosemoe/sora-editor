@@ -30,11 +30,13 @@ import io.github.rosemoe.sora.lsp.events.EventContext
 import io.github.rosemoe.sora.lsp.events.EventListener
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.utils.transformToEditorDiagnostics
+import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
+import io.github.rosemoe.sora.widget.getComponent
 import org.eclipse.lsp4j.Diagnostic
 
 
 class PublishDiagnosticsEvent : EventListener {
-    override val eventName: String = "editor/publishDiagnostics"
+    override val eventName: String = EventType.publishDiagnostics
 
     override fun handle(context: EventContext) {
         val lspEditor = context.get<LspEditor>("lsp-editor")
@@ -51,7 +53,12 @@ class PublishDiagnosticsEvent : EventListener {
         )
 
         // run on ui thread
-        originEditor.post {
+        originEditor.postOnAnimation {
+            if (data.isEmpty()) {
+                originEditor.diagnostics = null
+                originEditor.getComponent<EditorDiagnosticTooltipWindow>().dismiss()
+                return@postOnAnimation
+            }
             originEditor.diagnostics = diagnosticsContainer
         }
     }

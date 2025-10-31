@@ -24,32 +24,27 @@
 
 package io.github.rosemoe.sora.lsp.editor.event
 
-import android.util.Log
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EventReceiver
-import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.Unsubscribe
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.EventType
-import io.github.rosemoe.sora.lsp.events.diagnostics.publishDiagnostics
 import io.github.rosemoe.sora.lsp.events.diagnostics.queryDocumentDiagnostics
 import io.github.rosemoe.sora.lsp.events.document.documentChange
 import io.github.rosemoe.sora.lsp.events.signature.signatureHelp
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.DocumentDiagnosticReport
-import org.eclipse.lsp4j.FullDocumentDiagnosticReport
-import org.eclipse.lsp4j.UnchangedDocumentDiagnosticReport
-import org.eclipse.lsp4j.jsonrpc.messages.Either
 
 
-class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
+class LspEditorContentChangeEvent(private val editor: LspEditor) :
     EventReceiver<ContentChangeEvent> {
     override fun onReceive(event: ContentChangeEvent, unsubscribe: Unsubscribe) {
         if (!editor.isConnected) {
             return
         }
+
+        editor.showHover(null)
 
         editor.coroutineScope.launch(Dispatchers.IO) {
             // send to server
@@ -57,10 +52,9 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
 
             if (editor.hitReTrigger(event.changedText)) {
                 editor.showSignatureHelp(null)
-                return@launch
+            } else {
+                editor.eventManager.emitAsync(EventType.signatureHelp, event.changeStart)
             }
-
-            editor.eventManager.emitAsync(EventType.signatureHelp, event.changeStart)
 
             val diagnostics =
                 editor.eventManager.emitAsync(EventType.queryDocumentDiagnostics)
@@ -74,8 +68,8 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
             if (diagnostics.isRelatedFullDocumentDiagnosticReport) {
                 val diagnosticsContainer = editor.project.diagnosticsContainer
                 val fileUri = editor.uri
-                diagnosticsContainer.clearDiagnostics(fileUri)
 
+                diagnosticsContainer.clearDiagnostics(fileUri)
                 diagnosticsContainer.addDiagnostics(
                     fileUri,
                     diagnostics.left.items
@@ -89,21 +83,3 @@ class LspEditorContentChangeEventReceiver(private val editor: LspEditor) :
     }
 }
 
-class LspEditorSelectionChangeEventReceiver(private val editor: LspEditor) :
-    EventReceiver<SelectionChangeEvent> {
-    override fun onReceive(event: SelectionChangeEvent, unsubscribe: Unsubscribe) {
-        if (!editor.isConnected) {
-            return
-        }
-        editor.coroutineScope.launch(Dispatchers.IO) {
-            if (editor.hitReTrigger(event.editor.text[event.left.index].toString())) {
-                editor.showSignatureHelp(null)
-                return@launch
-            }
-
-            editor.eventManager.emitAsync(EventType.signatureHelp, event.left)
-        }
-
-
-    }
-}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/signature_tooltip_background"
+    android:clipChildren="true"
+    android:outlineProvider="background"
+    android:paddingVertical="4dp"
+    android:paddingHorizontal="4dp">
+
+    <ScrollView
+        android:id="@+id/hover_scroll_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/hover_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            style="?android:textAppearanceSmall" />
+    </ScrollView>
+
+</LinearLayout>

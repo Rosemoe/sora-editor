@@ -60,7 +60,7 @@ class LspCompletionItem(
         sortText = completionItem.sortText
         filterText = completionItem.filterText
         val labelDetails = completionItem.labelDetails
-        if (labelDetails != null && labelDetails.description != null) {
+        if (labelDetails != null && labelDetails.description?.isNotEmpty() == true) {
             desc = labelDetails.description
         }
         icon = draw(kind ?: CompletionItemKind.Text)
@@ -82,8 +82,9 @@ class LspCompletionItem(
         }
 
         if (completionItem.textEdit != null && completionItem.textEdit.isLeft) {
-            //TODO: support InsertReplaceEdit
             textEdit = completionItem.textEdit.left
+        } else if (completionItem.textEdit?.isRight == true) {
+            textEdit = TextEdit(completionItem.textEdit.right.insert, completionItem.textEdit.right.newText)
         }
 
         if (textEdit.newText == null && completionItem.label != null) {

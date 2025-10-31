@@ -47,7 +47,7 @@ import org.eclipse.lsp4j.TextEdit
 
 
 class RangeFormattingEvent : AsyncEventListener() {
-    override val eventName = "textDocument/rangeFormatting"
+    override val eventName = EventType.rangeFormatting
 
     override suspend fun handleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")

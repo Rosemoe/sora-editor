@@ -39,7 +39,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <service
-            android:name=".LspLanguageServerService"
+            android:name=".lsp.LspLanguageServerService"
             android:enabled="true"
             android:exported="false"
             android:process=":languageServerService" />
@@ -54,12 +54,12 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize"/>
         <activity
-            android:name=".LspTestActivity"
+            android:name=".lsp.LspTestActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|uiMode|keyboard|navigation"
             android:exported="false"
             android:windowSoftInputMode="adjustResize"/>
         <activity
-            android:name=".LspTestJavaActivity"
+            android:name=".lsp.LspTestJavaActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|uiMode|keyboard|navigation"
             android:exported="false"
             android:windowSoftInputMode="adjustResize"/>

@@ -33,7 +33,7 @@ import kotlinx.coroutines.future.await
 import java.util.concurrent.CompletableFuture
 
 class DocumentOpenEvent : AsyncEventListener() {
-    override val eventName = "textDocument/didOpen"
+    override val eventName = EventType.documentOpen
 
     var future: CompletableFuture<Void>? = null
 

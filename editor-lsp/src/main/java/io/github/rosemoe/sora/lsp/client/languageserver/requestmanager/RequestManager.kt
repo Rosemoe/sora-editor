@@ -104,8 +104,7 @@ import java.util.concurrent.CompletableFuture
  *
  * **Some features are not directly supported in the sora-editor.**
  *
- * (e.g. viewing method signatures),
- *  consider to remove them or abstract additional classes for the caller to provide support
+ * (e.g. goto, rename)
  *
  */
 abstract class RequestManager : LanguageClient, TextDocumentService, WorkspaceService,

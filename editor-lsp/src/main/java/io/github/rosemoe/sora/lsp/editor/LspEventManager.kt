@@ -91,7 +91,7 @@ class LspEventManager(
     }
 
     @WorkerThread
-    suspend fun emitBlocking(eventName: String, vararg args: Any) = runBlocking {
+    fun emitBlocking(eventName: String, vararg args: Any) = runBlocking {
         emitAsync(eventName, *args)
     }
 
@@ -108,7 +108,7 @@ class LspEventManager(
     }
 
     @WorkerThread
-    suspend fun emitBlocking(eventName: String, block: EventContext.() -> Unit) = runBlocking {
+    fun emitBlocking(eventName: String, block: EventContext.() -> Unit) = runBlocking {
         emitAsync(eventName, block)
     }
 
@@ -118,7 +118,7 @@ class LspEventManager(
     fun <T> getOption(optionClass: Class<T>): T? {
         for (option in options) {
             if (optionClass.isInstance(option)) {
-                return option as? T
+                return option as? T?
             }
         }
         return null

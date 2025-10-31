@@ -153,11 +153,16 @@ public class EditorColorScheme {
 
     public static final int SIGNATURE_TEXT_NORMAL = 58;
     public static final int SIGNATURE_TEXT_HIGHLIGHTED_PARAMETER = 59;
+    public static final int HOVER_TEXT_NORMAL = 68;
+    public static final int HOVER_TEXT_HIGHLIGHTED = 72;
+    public static final int HOVER_BACKGROUND = 69;
+    public static final int HOVER_BORDER = 70;
 
     public static final int STATIC_SPAN_BACKGROUND = 63;
     public static final int STATIC_SPAN_FOREGROUND = 64;
 
     public static final int SIGNATURE_BACKGROUND = 60;
+    public static final int SIGNATURE_BORDER = 71;
 
     public static final int TEXT_ACTION_WINDOW_BACKGROUND = 65;
     public static final int TEXT_ACTION_WINDOW_ICON_COLOR = 66;
@@ -170,7 +175,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 67;
+    protected static final int END_COLOR_ID = 72;
 
 
     /**
@@ -301,6 +306,7 @@ public class EditorColorScheme {
                 break;
             case ANNOTATION:
             case SIGNATURE_TEXT_HIGHLIGHTED_PARAMETER:
+            case HOVER_TEXT_HIGHLIGHTED:
             case IDENTIFIER_NAME:
                 color = 0xFF03A9F4;
                 break;
@@ -393,6 +399,7 @@ public class EditorColorScheme {
                 color = 0x66dddddd;
                 break;
             case SIGNATURE_TEXT_NORMAL:
+            case HOVER_TEXT_NORMAL:
                 color = isDark() ? 0xffeeeeee : 0xff000000;
                 break;
             case STICKY_SCROLL_DIVIDER:
@@ -411,12 +418,17 @@ public class EditorColorScheme {
                 color = isDark() ? SECONDARY_TEXT_COLOR_DARK : SECONDARY_TEXT_COLOR_LIGHT;
                 break;
             case SIGNATURE_BACKGROUND:
+            case HOVER_BACKGROUND:
             case DIAGNOSTIC_TOOLTIP_BACKGROUND:
             case TEXT_ACTION_WINDOW_BACKGROUND:
                 color = isDark() ? BACKGROUND_COLOR_DARK : BACKGROUND_COLOR_LIGHT;
                 break;
             case TEXT_ACTION_WINDOW_ICON_COLOR:
                 color = isDark() ? 0xffeeeeee : Color.GRAY;
+                break;
+            case HOVER_BORDER:
+            case SIGNATURE_BORDER:
+                color = 0xff999999;
                 break;
             case DIAGNOSTIC_TOOLTIP_ACTION:
                 color = 0xff42A5F5;
