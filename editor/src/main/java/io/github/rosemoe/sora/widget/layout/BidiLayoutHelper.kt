@@ -63,14 +63,18 @@ object BidiLayoutHelper {
             if (runStart > column || runStart > runEnd) {
                 break
             }
-            offset += if (runEnd < column) {
+            offset += if (runEnd <= column) {
                 gtr.measureText(runStart, runEnd)
-            } else { //runEnd > targetColumn
+            } else {
                 if (dirs.isRunRtl(i)) {
-                    gtr.measureText(targetColumn, runEnd)
+                    gtr.measureText(column, runEnd)
                 } else {
                     gtr.measureText(runStart, column)
                 }
+            }
+            // break here to make selection stay at the end of LTR text
+            if (runEnd == column && i + 1 < dirs.runCount && dirs.isRunRtl(i + 1)) {
+                break
             }
         }
         gtr.recycle()
@@ -119,12 +123,17 @@ object BidiLayoutHelper {
             val width = gtr.measureText(runStart, runEnd)
             if (offset + width >= targetOffset) {
                 val res = if (dirs.isRunRtl(i)) {
-                    CharPosDesc.getTextOffset(
+                    val result = CharPosDesc.getTextOffset(
                         gtr.findOffsetByAdvance(
                             runStart,
                             offset + width - targetOffset
                         )
                     )
+                    if (result == runEnd - 1) {
+                        runStart
+                    } else {
+                        (result + 1).coerceAtMost(runEnd)
+                    }
                 } else {
                     CharPosDesc.getTextOffset(
                         gtr.findOffsetByAdvance(
