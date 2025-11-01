@@ -80,9 +80,11 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.lang.ref.WeakReference
 import java.net.URI
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.Executors
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.Future
@@ -431,7 +433,7 @@ class LanguageServerWrapper(
         start()
 
         if (initializeFuture == null) {
-            synchronized(readyToConnect) { readyToConnect.add(editor) }
+            readyToConnect.add(editor)
             return
         }
 

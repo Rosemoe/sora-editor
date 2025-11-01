@@ -69,6 +69,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicReference
 
 class LspEditor(
     val project: LspProject,
@@ -90,7 +91,7 @@ class LspEditor(
 
     private var isClosed = false
 
-    private var unsubscribeFunction: Runnable? = null
+    private val unsubscribeFunctionRef = AtomicReference<Runnable?>()
 
     val eventManager = LspEventManager(project, this)
 
@@ -114,7 +115,7 @@ class LspEditor(
 
             _currentEditor = WeakReference(currentEditor)
 
-            unsubscribeFunction?.run()
+            clearSubscriptions()
 
             currentEditor.setEditorLanguage(currentLanguage)
             signatureHelpWindowWeakReference = WeakReference(SignatureHelpWindow(currentEditor))
@@ -146,13 +147,14 @@ class LspEditor(
                     )
                 )
 
-            unsubscribeFunction =
+            val unsubscribeRunnable =
                 Runnable {
                     subscriptionReceipts.forEach {
                         it.unsubscribe()
                     }
                     subscriptionReceipts.clear()
                 }
+            unsubscribeFunctionRef.set(unsubscribeRunnable)
         }
         get() {
             return _currentEditor.get()
@@ -434,6 +436,9 @@ class LspEditor(
         return false
     }
 
+    private fun clearSubscriptions() {
+        unsubscribeFunctionRef.getAndSet(null)?.run()
+    }
 
     @WorkerThread
     fun dispose() {
@@ -442,10 +447,11 @@ class LspEditor(
             // throw IllegalStateException("Editor is already closed")
         }
         disconnect()
-        unsubscribeFunction?.run()
+        clearSubscriptions()
         _currentEditor.clear()
         signatureHelpWindowWeakReference.clear()
         hoverWindowWeakReference.clear()
+        codeActionWindowWeakReference.clear()
         clearVersions {
             it == this.uri
         }
