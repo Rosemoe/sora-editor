@@ -199,11 +199,7 @@ class LspLanguage(var editor: LspEditor) : Language {
 
     override fun destroy() {
         formatter.destroy()
-
         wrapperLanguage?.destroy()
-        editor.project.coroutineScope.launch {
-            editor.dispose()
-        }
         lspFormatter = null
     }
 

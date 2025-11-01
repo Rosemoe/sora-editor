@@ -176,7 +176,7 @@ class LspEditor(
             }
         }
 
-    var isConnected= false
+    var isConnected = false
         private set
 
     val languageServerWrapper: LanguageServerWrapper
@@ -201,8 +201,6 @@ class LspEditor(
 
     val isShowCodeActions
         get() = codeActionWindowWeakReference.get()?.isShowing ?: false
-
-
 
     var isEnableHover = true
         get() = hoverWindow?.isEnabled() ?: false
