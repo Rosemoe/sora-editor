@@ -122,8 +122,7 @@ class LanguageServerWrapper(
 
     private val readyToConnect = HashSet<LspEditor>()
 
-    private val commonCoroutineScope =
-        CoroutineScope(ForkJoinPool.commonPool().asCoroutineDispatcher())
+    private val commonCoroutineScope = project.coroutineScope
 
     private var eventHandler: EventHandler? = null
 
