@@ -72,7 +72,8 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
     }
 
     override fun configuration(configurationParams: ConfigurationParams): CompletableFuture<List<Any>> {
-        return super.configuration(configurationParams)
+        // Not prepared to support this feature
+        return CompletableFuture.completedFuture(emptyList())
     }
 
     override fun workspaceFolders(): CompletableFuture<List<WorkspaceFolder>> {
