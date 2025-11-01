@@ -433,7 +433,7 @@ class LanguageServerWrapper(
         start()
 
         if (initializeFuture == null) {
-            readyToConnect.add(editor)
+            synchronized(readyToConnect) { readyToConnect.add(editor) }
             return
         }
 
@@ -450,7 +450,6 @@ class LanguageServerWrapper(
         if (connectedEditors.contains(editor)) {
             return
         }
-
 
         val localInitializeFuture = initializeFuture ?: return
 
