@@ -57,16 +57,15 @@ import java.util.concurrent.TimeUnit
 
 class LspLanguage(var editor: LspEditor) : Language {
 
-    var lspFormatter: LspFormatter? = null
-        private set
+    var formatter: Formatter? = null
 
     var wrapperLanguage: Language? = null
     var completionItemProvider: CompletionItemProvider<*>
 
     init {
-        lspFormatter = LspFormatter(this)
+        formatter = LspFormatter(this)
         completionItemProvider =
-            CompletionItemProvider { completionItem: org.eclipse.lsp4j.CompletionItem, eventManager: LspEventManager, prefixLength: Int ->
+            CompletionItemProvider { completionItem, eventManager, prefixLength ->
                 LspCompletionItem(
                     completionItem,
                     eventManager,
@@ -121,7 +120,8 @@ class LspLanguage(var editor: LspEditor) : Language {
         val serverResultCompletionItems =
             editor.coroutineScope.future {
                 editor.eventManager.emitAsync(EventType.completion, position)
-                    .getOrNull<List<org.eclipse.lsp4j.CompletionItem>>("completion-items") ?: emptyList()
+                    .getOrNull<List<org.eclipse.lsp4j.CompletionItem>>("completion-items")
+                    ?: emptyList()
             }
 
         try {
@@ -186,7 +186,7 @@ class LspLanguage(var editor: LspEditor) : Language {
     }
 
     override fun getFormatter(): Formatter {
-        return lspFormatter ?: EmptyLanguage.EmptyFormatter.INSTANCE
+        return formatter ?: wrapperLanguage?.formatter ?: EmptyLanguage.EmptyFormatter.INSTANCE
     }
 
     override fun getSymbolPairs(): SymbolPairMatch {
@@ -198,9 +198,8 @@ class LspLanguage(var editor: LspEditor) : Language {
     }
 
     override fun destroy() {
-        formatter.destroy()
+        formatter?.destroy()
         wrapperLanguage?.destroy()
-        lspFormatter = null
     }
 
 

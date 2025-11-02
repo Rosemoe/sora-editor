@@ -37,6 +37,7 @@ import io.github.rosemoe.sora.lsp.editor.diagnostics.LspDiagnosticTooltipLayout
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEvent
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorHoverEvent
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorSelectionChangeEvent
+import io.github.rosemoe.sora.lsp.editor.format.LspFormatter
 import io.github.rosemoe.sora.lsp.editor.hover.HoverWindow
 import io.github.rosemoe.sora.lsp.editor.signature.SignatureHelpWindow
 import io.github.rosemoe.sora.lsp.events.EventType
@@ -263,10 +264,16 @@ class LspEditor(
             languageServerWrapper.start()
 
             //wait for language server start
-            languageServerWrapper.getServerCapabilities()
+            val capabilities = languageServerWrapper.getServerCapabilities()
                 ?: throw TimeoutException("Unable to connect language server")
 
             languageServerWrapper.connect(this@LspEditor)
+
+            currentLanguage?.let { language ->
+                if (capabilities.documentFormattingProvider != null) {
+                    language.formatter = LspFormatter(language)
+                }
+            }
 
             isConnected = true
         }.onFailure {
@@ -354,7 +361,6 @@ class LspEditor(
     fun openDocumentBlocking() = runBlocking {
         openDocument()
     }
-
 
     /**
      * Notify language servers the document is saved

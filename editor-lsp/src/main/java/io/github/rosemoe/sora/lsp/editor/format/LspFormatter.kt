@@ -43,11 +43,9 @@ class LspFormatter(private var language: LspLanguage?) :
     private val coroutineScope = requireNotNull(language).editor.coroutineScope
 
     override fun formatAsync(text: Content, cursorRange: TextRange): TextRange? {
-
         coroutineScope.future {
             eventManager.emitAsync(EventType.fullFormatting, text)
         }.get()
-
         return null
     }
 

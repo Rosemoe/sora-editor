@@ -41,9 +41,7 @@ fun Hover.hasContent(): Boolean {
 }
 
 fun formatMarkedStringEither(either: Either<String, MarkedString>?): String? {
-    if (either == null) {
-        return null
-    }
+    either ?: return null
     return if (either.isLeft) {
         either.left
     } else {
@@ -52,12 +50,9 @@ fun formatMarkedStringEither(either: Either<String, MarkedString>?): String? {
 }
 
 fun formatMarkedString(markedString: MarkedString?): String? {
-    if (markedString == null) {
-        return null
-    }
-    val value = markedString.value ?: return null
+    val value = markedString?.value ?: return null
     val language = markedString.language
-    return if (language.isNullOrEmpty()) value else "$language:\n$value"
+    return if (language.isNullOrEmpty()) value else  "```$language\n$value\n```"
 }
 
 fun formatMarkupContent(markupContent: MarkupContent?): String? {
