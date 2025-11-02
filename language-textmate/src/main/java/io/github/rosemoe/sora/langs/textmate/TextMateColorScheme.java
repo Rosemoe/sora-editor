@@ -341,6 +341,7 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
             //throw new RuntimeException(e);
         }
         setTheme(currentTheme);
+        editor.rerunAnalysis();
     }
 
     @Deprecated

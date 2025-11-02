@@ -246,6 +246,7 @@ class MonarchColorScheme(
             //throw new RuntimeException(e);
         }
         onChangeTheme(currentThemeModel)
+        editor.rerunAnalysis()
     }
 
     companion object {
