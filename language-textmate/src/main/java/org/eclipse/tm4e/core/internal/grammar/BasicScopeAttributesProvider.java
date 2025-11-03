@@ -17,9 +17,12 @@ package org.eclipse.tm4e.core.internal.grammar;
 
 import static org.eclipse.tm4e.core.internal.utils.NullSafetyHelper.defaultIfNull;
 
+import android.os.Build;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import org.eclipse.jdt.annotation.Nullable;
@@ -37,7 +40,7 @@ final class BasicScopeAttributesProvider {
 	private final BasicScopeAttributes _defaultAttributes;
 	private final ScopeMatcher<Integer /* languageId */> _embeddedLanguagesMatcher;
 
-	private final Map<String /*scopeName*/, BasicScopeAttributes> cache = new HashMap<>();
+	private final Map<String /*scopeName*/, BasicScopeAttributes> cache = new ConcurrentHashMap<>();
 
 	BasicScopeAttributesProvider(final int initialLanguage, @Nullable final Map<String, Integer> embeddedLanguages) {
 		this._defaultAttributes = new BasicScopeAttributes(initialLanguage, OptionalStandardTokenType.NotSet);
@@ -53,11 +56,22 @@ final class BasicScopeAttributesProvider {
 			return BasicScopeAttributesProvider._NULL_SCOPE_METADATA;
 		}
 
-		return cache.computeIfAbsent(scopeName, scopeName2 -> {
-			final var languageId = this._scopeToLanguage(scopeName);
-			final var standardTokenType = _toStandardTokenType(scopeName);
-			return new BasicScopeAttributes(languageId, standardTokenType);
-		});
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            return cache.computeIfAbsent(scopeName, scopeName2 -> {
+                final var languageId = this._scopeToLanguage(scopeName);
+                final var standardTokenType = _toStandardTokenType(scopeName);
+                return new BasicScopeAttributes(languageId, standardTokenType);
+            });
+        } else {
+            var basicScopeAttributes = cache.get(scopeName);
+            if (basicScopeAttributes == null) {
+                final var languageId = this._scopeToLanguage(scopeName);
+                final var standardTokenType = _toStandardTokenType(scopeName);
+                basicScopeAttributes = new BasicScopeAttributes(languageId, standardTokenType);
+                cache.put(scopeName, basicScopeAttributes);
+            }
+            return basicScopeAttributes;
+        }
 	}
 
 	private static final BasicScopeAttributes _NULL_SCOPE_METADATA = new BasicScopeAttributes(0, 0);
