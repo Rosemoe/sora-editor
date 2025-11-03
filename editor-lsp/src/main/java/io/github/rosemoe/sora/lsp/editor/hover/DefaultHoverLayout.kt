@@ -98,10 +98,10 @@ class DefaultHoverLayout : HoverLayout {
         val hoverContents = hover.contents ?: return ""
         val rawText = if (hoverContents.isLeft) {
             val items = hoverContents.left.orEmpty()
-            items.joinToString("\n\n") { either -> formatMarkedStringEither(either) }
+            items.joinToString("\n\n") { either -> formatMarkedStringEither(either) ?: ""}
         } else {
             val markup = hoverContents.right
-            formatMarkupContent(markup)
+            formatMarkupContent(markup) ?: ""
         }
 
         return markdownRenderer.render(
@@ -114,34 +114,4 @@ class DefaultHoverLayout : HoverLayout {
         )
     }
 
-    private fun formatMarkedStringEither(either: Either<String, MarkedString>?): String {
-        if (either == null) {
-            return ""
-        }
-        return if (either.isLeft) {
-            either.left ?: ""
-        } else {
-            formatMarkedString(either.right)
-        }
-    }
-
-    private fun formatMarkedString(markedString: MarkedString?): String {
-        if (markedString == null) {
-            return ""
-        }
-        val language = markedString.language
-        val value = markedString.value ?: return ""
-        if (language.isNullOrEmpty()) {
-            return value
-        }
-        return "```$language\n$value\n```"
-    }
-
-    private fun formatMarkupContent(markupContent: MarkupContent?): String {
-        if (markupContent == null) {
-            return ""
-        }
-        val value = markupContent.value
-        return value ?: ""
-    }
 }

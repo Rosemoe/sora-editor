@@ -50,6 +50,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancelChildren
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ForkJoinPool
 import kotlin.reflect.KFunction0
 
@@ -61,11 +62,11 @@ class LspProject(
 
     val eventEmitter = EventEmitter()
 
-    private val languageServerWrappers = mutableMapOf<String, LanguageServerWrapper>()
+    private val languageServerWrappers = ConcurrentHashMap<String, LanguageServerWrapper>()
 
     private val serverDefinitions = mutableMapOf<String, LanguageServerDefinition>()
 
-    private val editors = mutableMapOf<FileUri, LspEditor>()
+    private val editors = ConcurrentHashMap<FileUri, LspEditor>()
 
     val diagnosticsContainer = DiagnosticsContainer()
 
@@ -110,8 +111,9 @@ class LspProject(
     }
 
     fun closeAllEditors() {
-        editors.forEach {
-            it.value.dispose()
+        val editorsSnapshot = editors.values.toList()
+        editorsSnapshot.forEach {
+            it.dispose()
         }
         editors.clear()
     }
@@ -137,6 +139,7 @@ class LspProject(
         languageServerWrappers.forEach {
             it.value.stop(true)
         }
+        languageServerWrappers.clear()
         serverDefinitions.clear()
         coroutineScope.coroutineContext.cancelChildren()
     }

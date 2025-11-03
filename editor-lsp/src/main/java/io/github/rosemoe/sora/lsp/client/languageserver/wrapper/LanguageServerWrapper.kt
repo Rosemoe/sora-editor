@@ -80,9 +80,11 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.lang.ref.WeakReference
 import java.net.URI
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.Executors
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.Future
@@ -120,8 +122,7 @@ class LanguageServerWrapper(
 
     private val readyToConnect = HashSet<LspEditor>()
 
-    private val commonCoroutineScope =
-        CoroutineScope(ForkJoinPool.commonPool().asCoroutineDispatcher())
+    private val commonCoroutineScope = project.coroutineScope
 
     private var eventHandler: EventHandler? = null
 
@@ -448,7 +449,6 @@ class LanguageServerWrapper(
         if (connectedEditors.contains(editor)) {
             return
         }
-
 
         val localInitializeFuture = initializeFuture ?: return
 

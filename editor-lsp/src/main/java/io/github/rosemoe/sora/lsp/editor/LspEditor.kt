@@ -37,6 +37,7 @@ import io.github.rosemoe.sora.lsp.editor.diagnostics.LspDiagnosticTooltipLayout
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEvent
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorHoverEvent
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorSelectionChangeEvent
+import io.github.rosemoe.sora.lsp.editor.format.LspFormatter
 import io.github.rosemoe.sora.lsp.editor.hover.HoverWindow
 import io.github.rosemoe.sora.lsp.editor.signature.SignatureHelpWindow
 import io.github.rosemoe.sora.lsp.events.EventType
@@ -69,6 +70,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicReference
 
 class LspEditor(
     val project: LspProject,
@@ -90,7 +92,7 @@ class LspEditor(
 
     private var isClosed = false
 
-    private var unsubscribeFunction: Runnable? = null
+    private val unsubscribeFunctionRef = AtomicReference<Runnable?>()
 
     val eventManager = LspEventManager(project, this)
 
@@ -114,7 +116,7 @@ class LspEditor(
 
             _currentEditor = WeakReference(currentEditor)
 
-            unsubscribeFunction?.run()
+            clearSubscriptions()
 
             currentEditor.setEditorLanguage(currentLanguage)
             signatureHelpWindowWeakReference = WeakReference(SignatureHelpWindow(currentEditor))
@@ -146,13 +148,14 @@ class LspEditor(
                     )
                 )
 
-            unsubscribeFunction =
+            val unsubscribeRunnable =
                 Runnable {
                     subscriptionReceipts.forEach {
                         it.unsubscribe()
                     }
                     subscriptionReceipts.clear()
                 }
+            unsubscribeFunctionRef.set(unsubscribeRunnable)
         }
         get() {
             return _currentEditor.get()
@@ -174,7 +177,7 @@ class LspEditor(
             }
         }
 
-    var isConnected= false
+    var isConnected = false
         private set
 
     val languageServerWrapper: LanguageServerWrapper
@@ -199,8 +202,6 @@ class LspEditor(
 
     val isShowCodeActions
         get() = codeActionWindowWeakReference.get()?.isShowing ?: false
-
-
 
     var isEnableHover = true
         get() = hoverWindow?.isEnabled() ?: false
@@ -263,10 +264,16 @@ class LspEditor(
             languageServerWrapper.start()
 
             //wait for language server start
-            languageServerWrapper.getServerCapabilities()
+            val capabilities = languageServerWrapper.getServerCapabilities()
                 ?: throw TimeoutException("Unable to connect language server")
 
             languageServerWrapper.connect(this@LspEditor)
+
+            currentLanguage?.let { language ->
+                if (capabilities.documentFormattingProvider != null) {
+                    language.formatter = LspFormatter(language)
+                }
+            }
 
             isConnected = true
         }.onFailure {
@@ -355,7 +362,6 @@ class LspEditor(
         openDocument()
     }
 
-
     /**
      * Notify language servers the document is saved
      */
@@ -434,6 +440,9 @@ class LspEditor(
         return false
     }
 
+    private fun clearSubscriptions() {
+        unsubscribeFunctionRef.getAndSet(null)?.run()
+    }
 
     @WorkerThread
     fun dispose() {
@@ -442,10 +451,11 @@ class LspEditor(
             // throw IllegalStateException("Editor is already closed")
         }
         disconnect()
-        unsubscribeFunction?.run()
+        clearSubscriptions()
         _currentEditor.clear()
         signatureHelpWindowWeakReference.clear()
         hoverWindowWeakReference.clear()
+        codeActionWindowWeakReference.clear()
         clearVersions {
             it == this.uri
         }
