@@ -64,7 +64,7 @@ public final class Grammar implements IGrammar, IRuleFactoryHelper {
 	private final String rootScopeName;
 
 	@Nullable
-	private RuleId _rootId;
+	private volatile RuleId _rootId;
 	private int _lastRuleId = 0;
 	private final Map<RuleId, @Nullable Rule> _ruleId2desc = new HashMap<>();
 	private final Map<String /*scopeName*/, IRawGrammar> includedGrammars = new HashMap<>();
@@ -277,15 +277,21 @@ public final class Grammar implements IGrammar, IRuleFactoryHelper {
 			@Nullable StateStack prevState,
 			final boolean emitBinaryTokens,
 			@Nullable final Duration timeLimit) {
-		var rootId = this._rootId;
-		if (rootId == null) {
-			rootId = this._rootId = RuleFactory.getCompiledRuleId(
-					this._grammar.getRepository().getSelf(),
-					this,
-					this._grammar.getRepository());
-			// This ensures ids are deterministic, and thus equal in renderer and webworker.
-			this.getInjections();
-		}
+
+        if (this._rootId == null) {
+            synchronized (this) {
+                if (this._rootId == null) {
+                    this._rootId = RuleFactory.getCompiledRuleId(
+                            this._grammar.getRepository().getSelf(),
+                            this,
+                            this._grammar.getRepository());
+                    // This ensures ids are deterministic, and thus equal in renderer and webworker.
+                    this.getInjections();
+                }
+            }
+        }
+
+        var rootId = this._rootId;
 
 		final boolean isFirstLine;
 		if (prevState == null || prevState == StateStack.NULL) {
