@@ -116,6 +116,13 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     boolean mouseClick;
     boolean mouseCanMoveText;
     CharPosition draggingSelection;
+    private boolean dragSelectActive;
+    private boolean dragSelectStarted;
+    private int dragSelectInitialCharIndex = -1;
+    private int dragSelectInitialLeftIndex = -1;
+    private int dragSelectInitialRightIndex = -1;
+    private int dragSelectLastDragIndex = -1;
+    private boolean suppressSelectionHandles;
 
     /**
      * Create an event handler for the given editor
@@ -211,6 +218,10 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         return (System.currentTimeMillis() - timeLastSetSelection < HIDE_DELAY_HANDLE || holdInsertHandle());
     }
 
+    public boolean shouldSuppressSelectionHandles() {
+        return suppressSelectionHandles;
+    }
+
     /**
      * Notify the editor later to hide scroll bars
      */
@@ -280,6 +291,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     public void reset2() {
         holdingScrollbarHorizontal = holdingScrollbarVertical = false;
         selHandleType = -1;
+        finishDragSelect();
         dismissMagnifier();
     }
 
@@ -316,6 +328,103 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         magnifier.dismiss();
     }
 
+    private void beginDragSelect(int line, int column) {
+        var text = editor.getText();
+        dragSelectInitialCharIndex = text.getCharIndex(line, column);
+        var cursor = editor.getCursor();
+        dragSelectInitialLeftIndex = text.getCharIndex(cursor.getLeftLine(), cursor.getLeftColumn());
+        dragSelectInitialRightIndex = text.getCharIndex(cursor.getRightLine(), cursor.getRightColumn());
+        dragSelectLastDragIndex = dragSelectInitialCharIndex;
+        dragSelectActive = true;
+        dragSelectStarted = false;
+    }
+
+    private void updateDragSelectMagnifier(MotionEvent e) {
+        if (edgeFlags != 0 || !magnifier.isEnabled()) {
+            if (magnifier.isShowing()) {
+                magnifier.dismiss();
+            }
+            return;
+        }
+        if (!dragSelectStarted) {
+            if (magnifier.isShowing()) {
+                magnifier.dismiss();
+            }
+            return;
+        }
+        if (!magnifier.isShowing()) {
+            double dx = e.getX() - thumbDownX;
+            double dy = e.getY() - thumbDownY;
+            if (Math.sqrt(dx * dx + dy * dy) < MAGNIFIER_TOUCH_SLOP) {
+                return;
+            }
+        }
+        int x = (int) e.getX();
+        int y = (int) (e.getY() - editor.getRowHeight());
+        magnifier.show(x, y);
+    }
+
+    private boolean handleDragSelect(MotionEvent e) {
+        if (!dragSelectActive) {
+            return false;
+        }
+        var text = editor.getText();
+        int lineCount = editor.getLineCount();
+        if (lineCount == 0 || text.length() == 0) {
+            return true;
+        }
+        long res = editor.getPointPositionOnScreen(e.getX(), e.getY());
+        int line = Numbers.coerceIn(IntPair.getFirst(res), 0, lineCount - 1);
+        int column = Numbers.coerceIn(IntPair.getSecond(res), 0, text.getColumnCount(line));
+        int currentIndex = Numbers.coerceIn(text.getCharIndex(line, column), 0, text.length());
+        if (!dragSelectStarted) {
+            if (currentIndex == dragSelectInitialCharIndex) {
+                scrollIfThumbReachesEdge(e);
+                return true;
+            }
+            dragSelectStarted = true;
+        }
+        if (!suppressSelectionHandles) {
+            suppressSelectionHandles = true;
+            editor.invalidate();
+        }
+        if (currentIndex == dragSelectLastDragIndex) {
+            updateDragSelectMagnifier(e);
+            scrollIfThumbReachesEdge(e);
+            return true;
+        }
+        int anchorIndex = currentIndex <= dragSelectInitialCharIndex ? dragSelectInitialRightIndex : dragSelectInitialLeftIndex;
+        anchorIndex = Numbers.coerceIn(anchorIndex, 0, text.length());
+        int startIndex = Math.min(anchorIndex, currentIndex);
+        int endIndex = Math.max(anchorIndex, currentIndex);
+        var indexer = text.getIndexer();
+        if (startIndex == endIndex) {
+            var pos = indexer.getCharPosition(startIndex);
+            editor.setSelection(pos.line, pos.column, false, SelectionChangeEvent.CAUSE_SELECTION_HANDLE);
+        } else {
+            var startPos = indexer.getCharPosition(startIndex);
+            var endPos = indexer.getCharPosition(endIndex);
+            editor.setSelectionRegion(startPos.line, startPos.column, endPos.line, endPos.column, false, SelectionChangeEvent.CAUSE_SELECTION_HANDLE);
+        }
+        dragSelectLastDragIndex = currentIndex;
+        updateDragSelectMagnifier(e);
+        scrollIfThumbReachesEdge(e);
+        return true;
+    }
+
+    private void finishDragSelect() {
+        if (suppressSelectionHandles) {
+            suppressSelectionHandles = false;
+            editor.invalidate();
+        }
+        dragSelectActive = false;
+        dragSelectStarted = false;
+        dragSelectInitialCharIndex = -1;
+        dragSelectInitialLeftIndex = -1;
+        dragSelectInitialRightIndex = -1;
+        dragSelectLastDragIndex = -1;
+    }
+
     /**
      * Handle events apart from detectors
      *
@@ -327,6 +436,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         motionX = e.getX();
         switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN: {
+                finishDragSelect();
                 thumbDownY = e.getY();
                 thumbDownX = e.getX();
                 holdingScrollbarVertical = holdingScrollbarHorizontal = false;
@@ -384,6 +494,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     scrollBy(dx, 0);
                     return true;
                 }
+                if (handleDragSelect(e)) {
+                    return true;
+                }
                 if (!selHandleMoving && (Math.abs(e.getX() - thumbDownX) > touchSlop || Math.abs(e.getY() - thumbDownY) > touchSlop)) {
                     selHandleMoving = true;
                 }
@@ -404,6 +517,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     timeLastScroll = System.currentTimeMillis();
                     notifyScrolled();
                 }
+                finishDragSelect();
                 if (selHandleType != -1) {
                     dispatchHandleStateChange(selHandleType, false);
                     if (selHandleType == SelectionHandle.BOTH)
@@ -799,6 +913,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         }
         editor.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
         editor.selectWord(line, column);
+        if (editor.getCursor().isSelected()) {
+            beginDragSelect(line, column);
+        }
     }
 
     @Override
@@ -1174,8 +1291,11 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             lastDy = dy;
 
             // Update selection
-            if (thumbMotionRecord != null)
-                handleSelectionChange2(thumbMotionRecord);
+            if (thumbMotionRecord != null) {
+                if (!handleDragSelect(thumbMotionRecord)) {
+                    handleSelectionChange2(thumbMotionRecord);
+                }
+            }
 
             postTimes++;
             // Post for animation
@@ -1185,4 +1305,3 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         }
     }
 }
-
