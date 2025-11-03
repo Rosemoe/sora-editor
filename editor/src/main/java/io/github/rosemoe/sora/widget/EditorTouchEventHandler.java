@@ -329,6 +329,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     private void beginDragSelect(int line, int column) {
+        if (!editor.getProps().dragSelectAfterLongPress) {
+            return;
+        }
         var text = editor.getText();
         dragSelectInitialCharIndex = text.getCharIndex(line, column);
         var cursor = editor.getCursor();
@@ -340,6 +343,12 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     private void updateDragSelectMagnifier(MotionEvent e) {
+        if (!editor.getProps().dragSelectAfterLongPress) {
+            if (magnifier.isShowing()) {
+                magnifier.dismiss();
+            }
+            return;
+        }
         if (edgeFlags != 0 || !magnifier.isEnabled()) {
             if (magnifier.isShowing()) {
                 magnifier.dismiss();
@@ -365,6 +374,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     private boolean handleDragSelect(MotionEvent e) {
+        if (!editor.getProps().dragSelectAfterLongPress) {
+            return false;
+        }
         if (!dragSelectActive) {
             return false;
         }
@@ -413,6 +425,19 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     }
 
     private void finishDragSelect() {
+        if (!editor.getProps().dragSelectAfterLongPress) {
+            if (suppressSelectionHandles) {
+                suppressSelectionHandles = false;
+                editor.invalidate();
+            }
+            dragSelectActive = false;
+            dragSelectStarted = false;
+            dragSelectInitialCharIndex = -1;
+            dragSelectInitialLeftIndex = -1;
+            dragSelectInitialRightIndex = -1;
+            dragSelectLastDragIndex = -1;
+            return;
+        }
         if (suppressSelectionHandles) {
             suppressSelectionHandles = false;
             editor.invalidate();
