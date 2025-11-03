@@ -122,7 +122,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     private int dragSelectInitialLeftIndex = -1;
     private int dragSelectInitialRightIndex = -1;
     private int dragSelectLastDragIndex = -1;
-    private boolean suppressSelectionHandles;
 
     /**
      * Create an event handler for the given editor
@@ -216,10 +215,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      */
     public boolean shouldDrawInsertHandle() {
         return (System.currentTimeMillis() - timeLastSetSelection < HIDE_DELAY_HANDLE || holdInsertHandle());
-    }
-
-    public boolean shouldSuppressSelectionHandles() {
-        return suppressSelectionHandles;
     }
 
     /**
@@ -396,10 +391,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             }
             dragSelectStarted = true;
         }
-        if (!suppressSelectionHandles) {
-            suppressSelectionHandles = true;
-            editor.invalidate();
-        }
         if (currentIndex == dragSelectLastDragIndex) {
             updateDragSelectMagnifier(e);
             scrollIfThumbReachesEdge(e);
@@ -426,10 +417,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     private void finishDragSelect() {
         if (!editor.getProps().dragSelectAfterLongPress) {
-            if (suppressSelectionHandles) {
-                suppressSelectionHandles = false;
-                editor.invalidate();
-            }
             dragSelectActive = false;
             dragSelectStarted = false;
             dragSelectInitialCharIndex = -1;
@@ -437,10 +424,6 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             dragSelectInitialRightIndex = -1;
             dragSelectLastDragIndex = -1;
             return;
-        }
-        if (suppressSelectionHandles) {
-            suppressSelectionHandles = false;
-            editor.invalidate();
         }
         dragSelectActive = false;
         dragSelectStarted = false;

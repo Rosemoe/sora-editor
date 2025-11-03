@@ -2882,10 +2882,6 @@ public class EditorRenderer {
             if (handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT && (editor.isInLongSelect() || !editor.getEventHandler().shouldDrawInsertHandle())) {
                 handleType = SelectionHandleStyle.HANDLE_TYPE_UNDEFINED;
             }
-            if ((handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT)
-                    && editor.getEventHandler().shouldSuppressSelectionHandles()) {
-                handleType = SelectionHandleStyle.HANDLE_TYPE_UNDEFINED;
-            }
             if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED && !editor.isInMouseMode() /* hide if mouse inside */) {
                 editor.getHandleStyle().draw(canvas, handleType, x, y, editor.getRowHeight(), editor.getColorScheme().getColor(EditorColorScheme.SELECTION_HANDLE), descriptor);
                 if (descriptor == TMP_DESC) {
