@@ -37,6 +37,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.os.TransactionTooLargeException;
 import android.text.InputType;
 import android.util.AttributeSet;
@@ -3755,7 +3756,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * @return Text displaying, the result is read-only. You should not make changes to this object as it is used internally
+     * @return The text displaying.
+     * <strong>Changes to this object are expected to be done in main thread
+     * due to editor limitations, while the object can be read concurrently.</strong>
+     *
      * @see CodeEditor#setText(CharSequence)
      * @see CodeEditor#setText(CharSequence, Bundle)
      */
