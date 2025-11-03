@@ -57,13 +57,13 @@ import java.util.concurrent.TimeUnit
 
 class LspLanguage(var editor: LspEditor) : Language {
 
-    var formatter: Formatter? = null
+    private var _formatter: Formatter? = null
 
     var wrapperLanguage: Language? = null
     var completionItemProvider: CompletionItemProvider<*>
 
     init {
-        formatter = LspFormatter(this)
+        _formatter = LspFormatter(this)
         completionItemProvider =
             CompletionItemProvider { completionItem, eventManager, prefixLength ->
                 LspCompletionItem(
@@ -186,7 +186,11 @@ class LspLanguage(var editor: LspEditor) : Language {
     }
 
     override fun getFormatter(): Formatter {
-        return formatter ?: wrapperLanguage?.formatter ?: EmptyLanguage.EmptyFormatter.INSTANCE
+        return _formatter ?: wrapperLanguage?.formatter ?: EmptyLanguage.EmptyFormatter.INSTANCE
+    }
+
+    fun setFormatter(formatter: Formatter) {
+        this._formatter = formatter
     }
 
     override fun getSymbolPairs(): SymbolPairMatch {
@@ -198,7 +202,7 @@ class LspLanguage(var editor: LspEditor) : Language {
     }
 
     override fun destroy() {
-        formatter?.destroy()
+        formatter.destroy()
         wrapperLanguage?.destroy()
     }
 
