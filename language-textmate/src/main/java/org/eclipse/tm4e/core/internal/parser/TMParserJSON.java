@@ -19,12 +19,16 @@ import java.util.Map;
 import org.eclipse.jdt.annotation.NonNull;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.Strictness;
 
 public class TMParserJSON implements TMParser {
 
 	public static final TMParserJSON INSTANCE = new TMParserJSON();
 
-	private static final Gson LOADER = new Gson();
+    private static final Gson LOADER = new GsonBuilder()
+            .setStrictness(Strictness.LENIENT)
+            .create();
 
 	protected Map<String, Object> loadRaw(final Reader source) {
 		return LOADER.fromJson(source, Map.class);
