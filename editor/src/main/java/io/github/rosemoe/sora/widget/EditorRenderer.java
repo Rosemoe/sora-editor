@@ -1148,6 +1148,7 @@ public class EditorRenderer {
         int leadingWhitespaceEnd = 0;
         int trailingWhitespaceStart = 0;
         float circleRadius = 0f;
+        float miniGraphWidth = editor.isWordwrap() && (editor.getNonPrintablePaintingFlags() & CodeEditor.FLAG_DRAW_SOFT_WRAP) != 0 ? getMiniGraphWidth() : 0f;
         var composingPosition = editor.inputConnection.composingText.isComposing() && editor.inputConnection.composingText.startIndex >= 0 && editor.inputConnection.composingText.startIndex < content.length() ? content.getIndexer().getCharPosition(editor.inputConnection.composingText.startIndex) : null;
         var composingLength = editor.inputConnection.composingText.endIndex - editor.inputConnection.composingText.startIndex;
         var draggingSelection = editor.getEventHandler().draggingSelection;
@@ -1238,6 +1239,7 @@ public class EditorRenderer {
             // Get visible region on the line
             long charPos = findDesiredVisibleChar(offset3, line, rowInf.startColumn, rowInf.endColumn);
             float paintingOffset = CharPosDesc.getPixelWidthOrOffset(charPos) - offset2;
+            paintingOffset += miniGraphWidth;
 
             // Draw matched text background
             if (matchedPositions.size() > 0) {
@@ -1338,6 +1340,12 @@ public class EditorRenderer {
             long charPos = findDesiredVisibleChar(offset3, line, rowInf.startColumn, rowInf.endColumn);
             int firstVisibleChar = CharPosDesc.getTextOffset(charPos);
             float paintingOffset = CharPosDesc.getPixelWidthOrOffset(charPos) - offset2;
+            if (!rowInf.isLeadingRow) {
+                if ((editor.getNonPrintablePaintingFlags() & CodeEditor.FLAG_DRAW_SOFT_WRAP) != 0) {
+                    drawMiniGraph(canvas, offset, row, editor.getContext().getDrawable(R.drawable.softwrap_left));
+                }
+                paintingOffset += miniGraphWidth;
+            }
             charPos = findDesiredVisibleChar(editor.getWidth() - paintingOffset, line, firstVisibleChar, rowInf.endColumn, rowInf.startColumn, true);
             int lastVisibleChar = CharPosDesc.getTextOffset(charPos);
 
@@ -1730,21 +1738,34 @@ public class EditorRenderer {
         }
     }
 
+    public float getMiniGraphWidth() {
+        float height = editor.getRowHeightOfText() * editor.getProps().miniMarkerSizeFactor;
+        var graph = editor.getContext().getDrawable(R.drawable.line_break);
+        if (graph == null) {
+            return 0;
+        }
+        int w = graph.getIntrinsicWidth(), h = graph.getIntrinsicHeight();
+        if (w <= 0 || h <= 0 || height <= 0) {
+            return 0f;
+        }
+        return height * ((float) w / h);
+    }
+
     /**
      * Draw small characters as graph
      */
     protected void drawMiniGraph(Canvas canvas, float offset, int row, Drawable graph) {
         float baseline = row == -1 ? (editor.getRowBottom(0) - metricsGraph.descent) : (editor.getRowBottom(row) - editor.getOffsetY() - metricsGraph.descent);
         float height = editor.getRowHeightOfText() * editor.getProps().miniMarkerSizeFactor;
-        if (height <= 0) {
+        if (height <= 0 || graph == null) {
             return;
         }
-        graph.setColorFilter(editor.getColorScheme().getColor(EditorColorScheme.NON_PRINTABLE_CHAR), PorterDuff.Mode.SRC_ATOP);
         int w = graph.getIntrinsicWidth(), h = graph.getIntrinsicHeight();
         if (w <= 0 || h <= 0) {
             return;
         }
         float width = height * ((float) w / h);
+        graph.setColorFilter(editor.getColorScheme().getColor(EditorColorScheme.NON_PRINTABLE_CHAR), PorterDuff.Mode.SRC_ATOP);
         graph.setBounds((int) offset, (int) (baseline - height), (int) (offset + width), (int) baseline);
         graph.draw(canvas);
     }
@@ -2458,6 +2479,9 @@ public class EditorRenderer {
             position.row = i;
             var line = content.getLine(row.lineIndex);
             position.left = measureText(line, row.lineIndex, row.startColumn, startOnRow - row.startColumn);
+            if (!row.isLeadingRow && (editor.getNonPrintablePaintingFlags() & CodeEditor.FLAG_DRAW_SOFT_WRAP) != 0) {
+                position.left += getMiniGraphWidth();
+            }
             position.right = position.left + measureText(line, row.lineIndex, startOnRow, endOnRow - startOnRow);
             position.startColumn = startOnRow;
             position.endColumn = endOnRow;
@@ -2487,11 +2511,15 @@ public class EditorRenderer {
             }
             var startCol = position.startColumn;
             var endCol = position.endColumn;
-            var limitCol = editor.getLayout().getRowAt(position.row).endColumn;
+            var rowRegion = editor.getLayout().getRowAt(position.row);
+            var limitCol = rowRegion.endColumn;
             var lineText = getLine(line);
             var column = lineText.length();
             canvas.save();
             var horizontalOffset = textOffset;
+            if ((editor.getNonPrintablePaintingFlags() & CodeEditor.FLAG_DRAW_SOFT_WRAP) != 0 && !rowRegion.isLeadingRow) {
+                horizontalOffset += getMiniGraphWidth();
+            }
             boolean first = true;
             // Find spans to draw
             Span nextSpan = null;
@@ -2718,24 +2746,6 @@ public class EditorRenderer {
 
         gtr.recycle();
         return result;
-    }
-
-    /**
-     * Find first visible character
-     *
-     * @return Character position description, {@link CharPosDesc}
-     */
-    @UnsupportedUserUsage
-    public long findFirstVisibleCharForWordwrap(float target, int lineIndex, int start, int end, int contextStart, Paint paint) {
-        if (start >= end) {
-            return CharPosDesc.make(end, 0);
-        }
-        var gtr = GraphicTextRow.obtain(basicDisplayMode);
-        gtr.set(content, lineIndex, contextStart, end, sSpansForWordwrap, paint, editor.getRenderContext());
-        gtr.disableCache();
-        var res = gtr.findOffsetByAdvance(start, target);
-        gtr.recycle();
-        return res;
     }
 
     @UnsupportedUserUsage

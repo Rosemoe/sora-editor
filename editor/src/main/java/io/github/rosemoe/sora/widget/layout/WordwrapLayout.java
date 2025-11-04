@@ -59,6 +59,7 @@ import io.github.rosemoe.sora.widget.CodeEditor;
 public class WordwrapLayout extends AbstractLayout {
 
     private final int width;
+    private final float miniGraphWidth;
     private final boolean antiWordBreaking;
     private List<RowRegion> rowTable;
 
@@ -69,7 +70,9 @@ public class WordwrapLayout extends AbstractLayout {
         if (clearCache) {
             rowTable.clear();
         }
-        width = editor.getWidth() - (int) (editor.measureTextRegionOffset() + editor.getTextPaint().measureText("a") * 1.5f);
+        miniGraphWidth = (editor.getNonPrintablePaintingFlags() & CodeEditor.FLAG_DRAW_SOFT_WRAP) != 0 ?
+                editor.getRenderer().getMiniGraphWidth() : 0f;
+        width = editor.getWidth() - (int) (editor.measureTextRegionOffset() + editor.getTextPaint().measureText("a")) - (int) miniGraphWidth * 2;
         breakAllLines();
     }
 
@@ -379,6 +382,9 @@ public class WordwrapLayout extends AbstractLayout {
         int row = (int) (yOffset / editor.getRowHeight());
         row = Math.max(0, Math.min(row, rowTable.size() - 1));
         RowRegion region = rowTable.get(row);
+        if (region.startColumn != 0) {
+            xOffset -= miniGraphWidth;
+        }
         int column = BidiLayout.horizontalIndex(editor, this, text, region.line, region.startColumn, region.endColumn, xOffset);
         return IntPair.pack(region.line, column);
     }
@@ -412,6 +418,9 @@ public class WordwrapLayout extends AbstractLayout {
             }
             dest[0] = editor.getRowBottom(row);
             dest[1] = BidiLayout.horizontalOffset(editor, this, text, region.line, region.startColumn, region.endColumn, column);
+            if (region.startColumn != 0) {
+                dest[1] += miniGraphWidth;
+            }
         } else {
             dest[0] = dest[1] = 0;
         }
