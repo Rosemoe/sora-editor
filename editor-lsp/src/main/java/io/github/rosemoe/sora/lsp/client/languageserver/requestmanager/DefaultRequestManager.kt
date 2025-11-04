@@ -438,7 +438,7 @@ class DefaultRequestManager(
     override fun documentHighlight(params: DocumentHighlightParams): CompletableFuture<List<DocumentHighlight>>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.documentHighlightProvider != null) textDocumentService.documentHighlight(
+                if (serverCapabilities.documentHighlightProvider?.left == true || serverCapabilities.documentHighlightProvider?.right != null) textDocumentService.documentHighlight(
                     params
                 ) else null
             } catch (e: Exception) {
@@ -451,7 +451,7 @@ class DefaultRequestManager(
     override fun documentSymbol(params: DocumentSymbolParams): CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.documentSymbolProvider != null) textDocumentService.documentSymbol(
+                if (serverCapabilities.documentSymbolProvider?.left == true || serverCapabilities.documentSymbolProvider?.right != null) textDocumentService.documentSymbol(
                     params
                 ) else null
             } catch (e: Exception) {
@@ -464,7 +464,7 @@ class DefaultRequestManager(
     override fun formatting(params: DocumentFormattingParams): CompletableFuture<List<TextEdit>>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.documentFormattingProvider != null) textDocumentService.formatting(
+                if (serverCapabilities.documentFormattingProvider?.left == true || serverCapabilities.documentFormattingProvider?.right != null) textDocumentService.formatting(
                     params
                 ) else null
             } catch (e: Exception) {
@@ -479,7 +479,7 @@ class DefaultRequestManager(
     override fun rangeFormatting(params: DocumentRangeFormattingParams): CompletableFuture<List<TextEdit>>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.documentRangeFormattingProvider != null) textDocumentService.rangeFormatting(
+                if (serverCapabilities.documentRangeFormattingProvider?.left == true || serverCapabilities.documentRangeFormattingProvider?.right != null) textDocumentService.rangeFormatting(
                     params
                 ) else null
             } catch (e: Exception) {
@@ -647,7 +647,7 @@ class DefaultRequestManager(
     override fun foldingRange(params: FoldingRangeRequestParams): CompletableFuture<List<FoldingRange>>? {
         return if (checkStatus()) {
             try {
-                if (serverCapabilities.foldingRangeProvider != null) textDocumentService.foldingRange(
+                if (serverCapabilities.foldingRangeProvider?.left == true || serverCapabilities.foldingRangeProvider?.right != null) textDocumentService.foldingRange(
                     params
                 ) else null
             } catch (e: Exception) {
