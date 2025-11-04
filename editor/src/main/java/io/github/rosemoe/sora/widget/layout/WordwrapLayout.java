@@ -184,7 +184,7 @@ public class WordwrapLayout extends AbstractLayout {
         int len = sequence.length();
 
         float[] advances = editor.getRenderer().computeLineAdvances(line, paint == null ? editor.getTextPaint() : paint);
-        var breaker = new GraphemeBoundsBreaker(advances, sequence.length(), width);
+        var breaker = new GraphemeBoundsBreaker(advances, len, width);
         var optimizer = antiWordBreaking ? WordBreaker.Factory.newInstance(sequence) : WordBreakerEmpty.INSTANCE;
         while (start < len) {
             int next = breaker.findGraphemeBreakPoint(start);
@@ -197,7 +197,7 @@ public class WordwrapLayout extends AbstractLayout {
             breakpoints.add(next);
             start = next;
         }
-        if (!breakpoints.isEmpty() && breakpoints.get(breakpoints.size() - 1) == sequence.length()) {
+        if (!breakpoints.isEmpty() && breakpoints.get(breakpoints.size() - 1) == len) {
             breakpoints.remove(breakpoints.size() - 1);
         }
         TemporaryFloatBuffer.recycle(advances);
