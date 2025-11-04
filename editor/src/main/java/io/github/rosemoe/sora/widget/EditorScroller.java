@@ -44,8 +44,7 @@ public class EditorScroller {
     }
 
     public void startScroll(int startX, int startY, int dx, int dy) {
-        scroller.startScroll(startX, startY, dx, dy);
-        setEditorOffsets();
+        startScroll(startX, startY, dx, dy, editor.getProps().scrollAnimationDurationMs);
     }
 
     public void startScroll(int startX, int startY, int dx, int dy, int duration) {

@@ -165,6 +165,14 @@ public class DirectAccessProps implements Serializable {
     public boolean scrollFling = true;
 
     /**
+     * Duration in milliseconds for smooth scrolling animations triggered by the editor.
+     * Controls how long programmatic scrolls take to reach their destination.
+     * Default value is {@code 250}.
+     */
+    @IntRange(from = 0)
+    public int scrollAnimationDurationMs = 250;
+
+    /**
      * If the two completion requests are sent within this time, the completion will not
      * show.
      */
@@ -345,6 +353,13 @@ public class DirectAccessProps implements Serializable {
      * selected.
      */
     public boolean reselectOnLongPress = true;
+
+    /**
+     * Enable drag-select after a long-press. When true (default), the editor suppresses selection
+     * handles during the drag gesture and lets the magnifier follow the finger until the drag
+     * completes.
+     */
+    public boolean dragSelectAfterLongPress = true;
 
     /**
      * Show selection above selection handle when text is selected
