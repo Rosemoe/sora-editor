@@ -149,6 +149,17 @@ public class GraphicTextRow {
     }
 
     /**
+     * Get text advances for current text.
+     * Advances of characters are store in the corresponding position in the given float array.
+     */
+    public void getCharsAdvances(float[] outAdvances) {
+        if (outAdvances.length < textEnd) {
+            throw new IllegalArgumentException("array length not enough");
+        }
+        measureTextInternal(textStart, textEnd, outAdvances);
+    }
+
+    /**
      * From {@code start} to measure characters, until measured width add next char's width is bigger
      * than {@code advance}.
      * <p>

@@ -91,6 +91,7 @@ import io.github.rosemoe.sora.util.MutableInt;
 import io.github.rosemoe.sora.util.Numbers;
 import io.github.rosemoe.sora.util.RendererUtils;
 import io.github.rosemoe.sora.util.TemporaryCharBuffer;
+import io.github.rosemoe.sora.util.TemporaryFloatBuffer;
 import io.github.rosemoe.sora.widget.layout.Row;
 import io.github.rosemoe.sora.widget.layout.RowIterator;
 import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
@@ -2720,6 +2721,17 @@ public class EditorRenderer {
         var res = gtr.findOffsetByAdvance(start, target);
         gtr.recycle();
         return res;
+    }
+
+    @UnsupportedUserUsage
+    public float[] computeLineAdvances(int line, Paint paint) {
+        var gtr = GraphicTextRow.obtain(basicDisplayMode);
+        int end = content.getColumnCount(line);
+        gtr.set(content, line, 0, end, sSpansForWordwrap, paint, editor.getRenderContext());
+        float[] result = TemporaryFloatBuffer.obtain(end);
+        gtr.getCharsAdvances(result);
+        gtr.recycle();
+        return result;
     }
 
     /**

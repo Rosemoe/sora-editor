@@ -43,6 +43,7 @@ import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.MyCharacter;
+import io.github.rosemoe.sora.util.TemporaryFloatBuffer;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
@@ -187,8 +188,10 @@ public class WordwrapLayout extends AbstractLayout {
         var wrappingIterator = BreakIterator.getLineInstance();
         wrappingIterator.setText(textIterator);
 
+        float[] advances = editor.getRenderer().computeLineAdvances(line, paint == null ? editor.getTextPaint() : paint);
+        var breaker = new GraphemeBoundsBreaker(advances, sequence.length(), width);
         while (start < len) {
-            var next = CharPosDesc.getTextOffset(editor.getRenderer().findFirstVisibleCharForWordwrap(width, line, start, len, 0, paint == null ? editor.getTextPaint() : paint));
+            int next = breaker.findGraphemeBreakPoint(start);
             // Force to break the text, though no space is available
             if (next == start) {
                 next++;
@@ -211,6 +214,7 @@ public class WordwrapLayout extends AbstractLayout {
         if (!breakpoints.isEmpty() && breakpoints.get(breakpoints.size() - 1) == sequence.length()) {
             breakpoints.remove(breakpoints.size() - 1);
         }
+        TemporaryFloatBuffer.recycle(advances);
     }
 
     private void breakLineSimple(int line, ContentLine sequence, List<Integer> breakpoints, @Nullable Paint paint) {
@@ -218,8 +222,10 @@ public class WordwrapLayout extends AbstractLayout {
         int len = sequence.length();
         var text = sequence.getBackingCharArray();
 
+        float[] advances = editor.getRenderer().computeLineAdvances(line, paint == null ? editor.getTextPaint() : paint);
+        var breaker = new GraphemeBoundsBreaker(advances, sequence.length(), width);
         while (start < len) {
-            var next = CharPosDesc.getTextOffset(editor.getRenderer().findFirstVisibleCharForWordwrap(width, line, start, len, 0, paint == null ? editor.getTextPaint() : paint));
+            int next = breaker.findGraphemeBreakPoint(start);
             // Force to break the text, though no space is available
             if (next == start) {
                 next++;
@@ -240,6 +246,7 @@ public class WordwrapLayout extends AbstractLayout {
         if (!breakpoints.isEmpty() && breakpoints.get(breakpoints.size() - 1) == sequence.length()) {
             breakpoints.remove(breakpoints.size() - 1);
         }
+        TemporaryFloatBuffer.recycle(advances);
     }
 
     private void breakLine(int line, ContentLine sequence, List<Integer> breakpoints, @Nullable Paint paint) {
@@ -625,6 +632,39 @@ public class WordwrapLayout extends AbstractLayout {
             });
             return new WordwrapResult(id, list);
         }
+    }
+
+    private static class GraphemeBoundsBreaker {
+
+        private final float[] advances;
+        private final int length;
+
+        private final int width;
+
+        public GraphemeBoundsBreaker(float[] advances, int length, int width) {
+            this.advances = advances;
+            this.length = length;
+            this.width = width;
+        }
+
+        public int findGraphemeBreakPoint(int start) {
+            float currentWidth = 0;
+            int next = start;
+            while (next < length) {
+                if (advances[next] == 0) {
+                    // Not grapheme bound
+                    next++;
+                    continue;
+                }
+                if (currentWidth + advances[next] > width) {
+                    break;
+                }
+                currentWidth += advances[next];
+                next++;
+            }
+            return next;
+        }
+
     }
 
 }
