@@ -37,6 +37,7 @@ import androidx.annotation.NonNull;
 
 import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
+import io.github.rosemoe.sora.event.DragSelectStopEvent;
 import io.github.rosemoe.sora.event.EditorFocusChangeEvent;
 import io.github.rosemoe.sora.event.EditorReleaseEvent;
 import io.github.rosemoe.sora.event.EventManager;
@@ -135,6 +136,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         eventManager.subscribeAlways(EditorFocusChangeEvent.class, this::onEditorFocusChange);
         eventManager.subscribeAlways(EditorReleaseEvent.class, this::onEditorRelease);
         eventManager.subscribeAlways(ColorSchemeUpdateEvent.class, this::onEditorColorChange);
+        eventManager.subscribeAlways(DragSelectStopEvent.class, this::onDragSelectingStop);
     }
 
     protected void onEditorColorChange(@NonNull ColorSchemeUpdateEvent event) {
@@ -145,6 +147,10 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         if (!event.isGainFocus()) {
             dismiss();
         }
+    }
+
+    protected void onDragSelectingStop(@NonNull DragSelectStopEvent event) {
+        displayWindow();
     }
 
     protected void onEditorRelease(@NonNull EditorReleaseEvent event) {
@@ -195,6 +201,10 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
 
     protected void onSelectionChange(@NonNull SelectionChangeEvent event) {
         if (handler.hasAnyHeldHandle()) {
+            return;
+        }
+        if (handler.isDragSelecting()) {
+            dismiss();
             return;
         }
         lastCause = event.getCause();

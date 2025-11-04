@@ -42,6 +42,7 @@ import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.ClickEvent;
 import io.github.rosemoe.sora.event.ContextClickEvent;
 import io.github.rosemoe.sora.event.DoubleClickEvent;
+import io.github.rosemoe.sora.event.DragSelectStopEvent;
 import io.github.rosemoe.sora.event.EditorMotionEvent;
 import io.github.rosemoe.sora.event.HandleStateChangeEvent;
 import io.github.rosemoe.sora.event.InterceptTarget;
@@ -116,6 +117,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     boolean mouseClick;
     boolean mouseCanMoveText;
     CharPosition draggingSelection;
+
+    /* dragging selection fields */
     private boolean dragSelectActive;
     private boolean dragSelectStarted;
     private int dragSelectInitialCharIndex = -1;
@@ -337,23 +340,15 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         dragSelectStarted = false;
     }
 
+    public boolean isDragSelecting() {
+        return dragSelectActive;
+    }
+
     private void updateDragSelectMagnifier(MotionEvent e) {
-        if (!editor.getProps().dragSelectAfterLongPress) {
-            if (magnifier.isShowing()) {
-                magnifier.dismiss();
-            }
-            return;
-        }
-        if (edgeFlags != 0 || !magnifier.isEnabled()) {
-            if (magnifier.isShowing()) {
-                magnifier.dismiss();
-            }
-            return;
-        }
-        if (!dragSelectStarted) {
-            if (magnifier.isShowing()) {
-                magnifier.dismiss();
-            }
+        if (!editor.getProps().dragSelectAfterLongPress ||
+                edgeFlags != 0 || !magnifier.isEnabled() || !dragSelectStarted
+        ) {
+            dismissMagnifier();
             return;
         }
         if (!magnifier.isShowing()) {
@@ -368,32 +363,29 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         magnifier.show(x, y);
     }
 
-    private boolean handleDragSelect(MotionEvent e) {
-        if (!editor.getProps().dragSelectAfterLongPress) {
-            return false;
-        }
-        if (!dragSelectActive) {
+    private boolean handleDragSelect(MotionEvent e, boolean fromEdgeScroll) {
+        if (!editor.getProps().dragSelectAfterLongPress || !dragSelectActive) {
             return false;
         }
         var text = editor.getText();
-        int lineCount = editor.getLineCount();
-        if (lineCount == 0 || text.length() == 0) {
+        if (text.length() == 0) {
             return true;
         }
         long res = editor.getPointPositionOnScreen(e.getX(), e.getY());
-        int line = Numbers.coerceIn(IntPair.getFirst(res), 0, lineCount - 1);
-        int column = Numbers.coerceIn(IntPair.getSecond(res), 0, text.getColumnCount(line));
-        int currentIndex = Numbers.coerceIn(text.getCharIndex(line, column), 0, text.length());
+        int line = IntPair.getFirst(res), column = IntPair.getSecond(res);
+        int currentIndex = text.getCharIndex(line, column);
         if (!dragSelectStarted) {
             if (currentIndex == dragSelectInitialCharIndex) {
-                scrollIfThumbReachesEdge(e);
+                if (!fromEdgeScroll)
+                    scrollIfThumbReachesEdge(e);
                 return true;
             }
             dragSelectStarted = true;
         }
         if (currentIndex == dragSelectLastDragIndex) {
             updateDragSelectMagnifier(e);
-            scrollIfThumbReachesEdge(e);
+            if (!fromEdgeScroll)
+                scrollIfThumbReachesEdge(e);
             return true;
         }
         int anchorIndex = currentIndex <= dragSelectInitialCharIndex ? dragSelectInitialRightIndex : dragSelectInitialLeftIndex;
@@ -411,26 +403,22 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         }
         dragSelectLastDragIndex = currentIndex;
         updateDragSelectMagnifier(e);
-        scrollIfThumbReachesEdge(e);
+        if (!fromEdgeScroll)
+            scrollIfThumbReachesEdge(e);
         return true;
     }
 
     private void finishDragSelect() {
-        if (!editor.getProps().dragSelectAfterLongPress) {
-            dragSelectActive = false;
-            dragSelectStarted = false;
-            dragSelectInitialCharIndex = -1;
-            dragSelectInitialLeftIndex = -1;
-            dragSelectInitialRightIndex = -1;
-            dragSelectLastDragIndex = -1;
-            return;
-        }
+        boolean startedBefore = dragSelectStarted;
         dragSelectActive = false;
         dragSelectStarted = false;
         dragSelectInitialCharIndex = -1;
         dragSelectInitialLeftIndex = -1;
         dragSelectInitialRightIndex = -1;
         dragSelectLastDragIndex = -1;
+        if (startedBefore) {
+            editor.dispatchEvent(new DragSelectStopEvent(editor));
+        }
     }
 
     /**
@@ -502,7 +490,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     scrollBy(dx, 0);
                     return true;
                 }
-                if (handleDragSelect(e)) {
+                if (handleDragSelect(e, false)) {
                     return true;
                 }
                 if (!selHandleMoving && (Math.abs(e.getX() - thumbDownX) > touchSlop || Math.abs(e.getY() - thumbDownY) > touchSlop)) {
@@ -1300,7 +1288,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
             // Update selection
             if (thumbMotionRecord != null) {
-                if (!handleDragSelect(thumbMotionRecord)) {
+                if (!handleDragSelect(thumbMotionRecord, true)) {
                     handleSelectionChange2(thumbMotionRecord);
                 }
             }

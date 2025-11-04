@@ -116,6 +116,13 @@ class HoverEvent(
 ) : EditorMotionEvent(editor, position, event, span, spanRange, motionRegion, motionBound)
 
 /**
+ * Triggered when drag selecting is stopped
+ */
+class DragSelectStopEvent(
+    editor: CodeEditor
+) : Event(editor)
+
+/**
  * Trigger when the editor needs to create context menu
  * @property menu [ContextMenu] for adding menu items
  * @property position Target text position of the menu
