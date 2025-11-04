@@ -64,7 +64,6 @@ public class Magnifier implements EditorBuiltinComponent {
     private final Paint paint;
     private final float maxTextSize;
     private int x, y;
-    private long expectedRequestTime;
     private boolean enabled = true;
     private boolean withinEditorForcibly = false;
     private View parentView;
@@ -256,14 +255,9 @@ public class Magnifier implements EditorBuiltinComponent {
         }
         var pos = new int[2];
         view.getLocationInWindow(pos);
-        final var requestTime = System.currentTimeMillis();
-        expectedRequestTime = requestTime;
         var clip = Bitmap.createBitmap(right - left, bottom - top, Bitmap.Config.ARGB_8888);
         try {
             PixelCopy.request(activity.getWindow(), new Rect(pos[0] + left, pos[1] + top, pos[0] + right, pos[1] + bottom), clip, (var statusCode) -> {
-                if (requestTime != expectedRequestTime) {
-                    return;
-                }
                 if (statusCode == PixelCopy.SUCCESS) {
                     var dest = Bitmap.createBitmap(popup.getWidth(), popup.getHeight(), Bitmap.Config.ARGB_8888);
                     var scaled = Bitmap.createScaledBitmap(clip, popup.getWidth(), popup.getHeight(), true);
