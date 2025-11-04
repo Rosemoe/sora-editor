@@ -2487,6 +2487,7 @@ public class EditorRenderer {
             }
             var startCol = position.startColumn;
             var endCol = position.endColumn;
+            var limitCol = editor.getLayout().getRowAt(position.row).endColumn;
             var lineText = getLine(line);
             var column = lineText.length();
             canvas.save();
@@ -2506,6 +2507,7 @@ public class EditorRenderer {
                 var spanStart = Math.max(span.getColumn(), position.rowStart);
                 var sharedStart = Math.max(startCol, spanStart);
                 var spanEnd = nextSpan == null ? column : nextSpan.getColumn();
+                spanEnd = Math.min(limitCol, spanEnd);
                 spanEnd = Math.min(column, spanEnd); // Spans can be corrupted
                 if (spanEnd <= position.startColumn) {
                     continue;
