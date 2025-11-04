@@ -177,84 +177,30 @@ public class WordwrapLayout extends AbstractLayout {
     }
 
     /**
-     * Break text with ICU library for higher quality
+     * Break a single line
      */
-    @RequiresApi(Build.VERSION_CODES.N)
-    private void breakLineApiN(int line, ContentLine sequence, List<Integer> breakpoints, @Nullable Paint paint) {
-        int start = 0;
-        int len = sequence.length();
-        var text = sequence.getBackingCharArray();
-        var textIterator = new CharSequenceIterator(sequence);
-        var wrappingIterator = BreakIterator.getLineInstance();
-        wrappingIterator.setText(textIterator);
-
-        float[] advances = editor.getRenderer().computeLineAdvances(line, paint == null ? editor.getTextPaint() : paint);
-        var breaker = new GraphemeBoundsBreaker(advances, sequence.length(), width);
-        while (start < len) {
-            int next = breaker.findGraphemeBreakPoint(start);
-            // Force to break the text, though no space is available
-            if (next == start) {
-                next++;
-            }
-            if (antiWordBreaking) {
-                // Merging trailing whitespaces is not supported by editor, so force to break here
-                if (next > 0 && !Character.isWhitespace(text[next - 1]) && !wrappingIterator.isBoundary(next)) {
-                    int lastBoundary = wrappingIterator.preceding(next);
-                    if (lastBoundary != BreakIterator.DONE) {
-                        int suggestedNext = Math.max(start, Math.min(next, lastBoundary));
-                        if (suggestedNext > start) {
-                            next = suggestedNext;
-                        }
-                    }
-                }
-            }
-            breakpoints.add(next);
-            start = next;
-        }
-        if (!breakpoints.isEmpty() && breakpoints.get(breakpoints.size() - 1) == sequence.length()) {
-            breakpoints.remove(breakpoints.size() - 1);
-        }
-        TemporaryFloatBuffer.recycle(advances);
-    }
-
-    private void breakLineSimple(int line, ContentLine sequence, List<Integer> breakpoints, @Nullable Paint paint) {
-        int start = 0;
-        int len = sequence.length();
-        var text = sequence.getBackingCharArray();
-
-        float[] advances = editor.getRenderer().computeLineAdvances(line, paint == null ? editor.getTextPaint() : paint);
-        var breaker = new GraphemeBoundsBreaker(advances, sequence.length(), width);
-        while (start < len) {
-            int next = breaker.findGraphemeBreakPoint(start);
-            // Force to break the text, though no space is available
-            if (next == start) {
-                next++;
-            }
-            if (antiWordBreaking && MyCharacter.isAlpha(text[next - 1]) &&
-                    next < len && (MyCharacter.isAlpha(text[next]) || text[next] == '-')) {
-                int wordStart = next - 1;
-                while (wordStart > start && MyCharacter.isAlpha(text[wordStart - 1])) {
-                    wordStart--;
-                }
-                if (wordStart > start) {
-                    next = wordStart;
-                }
-            }
-            breakpoints.add(next);
-            start = next;
-        }
-        if (!breakpoints.isEmpty() && breakpoints.get(breakpoints.size() - 1) == sequence.length()) {
-            breakpoints.remove(breakpoints.size() - 1);
-        }
-        TemporaryFloatBuffer.recycle(advances);
-    }
-
     private void breakLine(int line, ContentLine sequence, List<Integer> breakpoints, @Nullable Paint paint) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            breakLineApiN(line, sequence, breakpoints, paint);
-        } else {
-            breakLineSimple(line, sequence, breakpoints, paint);
+        int start = 0;
+        int len = sequence.length();
+
+        float[] advances = editor.getRenderer().computeLineAdvances(line, paint == null ? editor.getTextPaint() : paint);
+        var breaker = new GraphemeBoundsBreaker(advances, sequence.length(), width);
+        var optimizer = antiWordBreaking ? WordBreaker.Factory.newInstance(sequence) : WordBreakerEmpty.INSTANCE;
+        while (start < len) {
+            int next = breaker.findGraphemeBreakPoint(start);
+            // Force to break the text, though no space is available
+            if (next == start) {
+                next++;
+            }
+            // do anti-word-breaking
+            next = optimizer.getOptimizedBreakPoint(start, next);
+            breakpoints.add(next);
+            start = next;
         }
+        if (!breakpoints.isEmpty() && breakpoints.get(breakpoints.size() - 1) == sequence.length()) {
+            breakpoints.remove(breakpoints.size() - 1);
+        }
+        TemporaryFloatBuffer.recycle(advances);
     }
 
     @Override
@@ -665,6 +611,95 @@ public class WordwrapLayout extends AbstractLayout {
             return next;
         }
 
+    }
+
+    private interface WordBreaker {
+
+        int getOptimizedBreakPoint(int start, int end);
+
+        class Factory {
+
+            @NonNull
+            public static WordBreaker newInstance(@NonNull ContentLine text) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    return new WordBreakerApiN(text);
+                }
+                return new WordBreakerFallback(text);
+            }
+
+        }
+
+    }
+
+    private static class WordBreakerApiN implements WordBreaker {
+
+        private final BreakIterator wrappingIterator;
+
+        private final char[] chars;
+
+        @RequiresApi(Build.VERSION_CODES.N)
+        public WordBreakerApiN(@NonNull ContentLine text) {
+            this.chars = text.getBackingCharArray();
+            var textIterator = new CharSequenceIterator(text);
+            wrappingIterator = BreakIterator.getLineInstance();
+            wrappingIterator.setText(textIterator);
+        }
+
+        public int getOptimizedBreakPoint(int start, int end) {
+            // Merging trailing whitespaces is not supported by editor, so force to break here
+            if (end > 0 && !Character.isWhitespace(chars[end - 1]) && !wrappingIterator.isBoundary(end)) {
+                // Break text at last boundary
+                int lastBoundary = wrappingIterator.preceding(end);
+                if (lastBoundary != BreakIterator.DONE) {
+                    int suggestedNext = Math.max(start, Math.min(end, lastBoundary));
+                    if (suggestedNext > start) {
+                        end = suggestedNext;
+                    }
+                }
+            }
+            return end;
+        }
+
+    }
+
+    private static class WordBreakerFallback implements WordBreaker {
+
+        private final char[] text;
+        private final int len;
+
+        public WordBreakerFallback(@NonNull ContentLine text) {
+            this.text = text.getBackingCharArray();
+            this.len = text.length();
+        }
+
+        @Override
+        public int getOptimizedBreakPoint(int start, int end) {
+            if (MyCharacter.isAlpha(text[end - 1]) &&
+                    end < len && (MyCharacter.isAlpha(text[end]) || text[end] == '-')) {
+                int wordStart = end - 1;
+                while (wordStart > start && MyCharacter.isAlpha(text[wordStart - 1])) {
+                    wordStart--;
+                }
+                if (wordStart > start) {
+                    end = wordStart;
+                }
+            }
+            return end;
+        }
+    }
+
+    private static class WordBreakerEmpty implements WordBreaker {
+
+        public static WordBreaker INSTANCE = new WordBreakerEmpty();
+
+        private WordBreakerEmpty() {
+
+        }
+
+        @Override
+        public int getOptimizedBreakPoint(int start, int end) {
+            return end;
+        }
     }
 
 }
