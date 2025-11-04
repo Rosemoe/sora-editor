@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?><!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~    sora-editor - the awesome code editor for Android
+  ~    https://github.com/Rosemoe/sora-editor
+  ~    Copyright (C) 2020-2025  Rosemoe
+  ~
+  ~     This library is free software; you can redistribute it and/or
+  ~     modify it under the terms of the GNU Lesser General Public
+  ~     License as published by the Free Software Foundation; either
+  ~     version 2.1 of the License, or (at your option) any later version.
+  ~
+  ~     This library is distributed in the hope that it will be useful,
+  ~     but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  ~     Lesser General Public License for more details.
+  ~
+  ~     You should have received a copy of the GNU Lesser General Public
+  ~     License along with this library; if not, write to the Free Software
+  ~     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+  ~     USA
+  ~
+  ~     Please contact Rosemoe by email 2073412493@qq.com if you need
+  ~     additional information or have any questions
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="50dp"
+    android:height="80dp"
+    android:viewportWidth="50"
+    android:viewportHeight="80">
+
+    <path
+        android:pathData="M25,25 A10,10 0 1,0 7.93,32.07 L42,66.14"
+        android:strokeWidth="6"
+        android:fillColor="#00000000"
+        android:strokeColor="#000000" />
+
+    <path
+        android:pathData="M42,66.14 m0,-0.88 l-20,0"
+        android:strokeWidth="6"
+        android:fillColor="#00000000"
+        android:strokeColor="#000000" />
+
+    <path
+        android:pathData="M42,66.14 m-0.88,0 m0,2.12 l0,-2.12 l0,-20"
+        android:strokeWidth="6"
+        android:fillColor="#00000000"
+        android:strokeColor="#000000" />
+</vector>

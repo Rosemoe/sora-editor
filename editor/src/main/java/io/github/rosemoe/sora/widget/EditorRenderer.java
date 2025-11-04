@@ -35,6 +35,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.RenderNode;
@@ -55,6 +56,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.graphics.BubbleHelper;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
@@ -503,7 +505,7 @@ public class EditorRenderer {
         int nonPrintableFlags = editor.getNonPrintablePaintingFlags();
         // Draw hard wrap
         if ((nonPrintableFlags & CodeEditor.FLAG_DRAW_LINE_SEPARATOR) != 0) {
-            drawMiniGraph(canvas, offsetX, -1, "↵");
+            drawMiniGraph(canvas, offsetX, -1, editor.getContext().getDrawable(R.drawable.line_break));
         }
         paintGeneral.setTextSkewX(0);
         paintGeneral.setFakeBoldText(false);
@@ -1462,7 +1464,9 @@ public class EditorRenderer {
 
                 // Draw hard wrap
                 if (lastVisibleChar == columnCount && (nonPrintableFlags & CodeEditor.FLAG_DRAW_LINE_SEPARATOR) != 0) {
-                    drawMiniGraph(canvas, paintingOffset, row, "↵");
+                    drawMiniGraph(canvas, paintingOffset, row, editor.getContext().getDrawable(R.drawable.line_break));
+                } else if (lastVisibleChar != columnCount && editor.isWordwrap() && (nonPrintableFlags & CodeEditor.FLAG_DRAW_SOFT_WRAP) != 0) {
+                    drawMiniGraph(canvas, paintingOffset, row, editor.getContext().getDrawable(R.drawable.softwrap_right));
                 }
             } else {
                 paintingOffset = offset + editor.getRenderContext().getRenderNodeHolder().drawLineHardwareAccelerated(canvas, line, offset, editor.getRowTop(line) - editor.getOffsetY()) - editor.getDpUnit() * 20;
@@ -1729,11 +1733,20 @@ public class EditorRenderer {
     /**
      * Draw small characters as graph
      */
-    protected void drawMiniGraph(Canvas canvas, float offset, int row, String graph) {
-        // Draw
-        paintGraph.setColor(editor.getColorScheme().getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
+    protected void drawMiniGraph(Canvas canvas, float offset, int row, Drawable graph) {
         float baseline = row == -1 ? (editor.getRowBottom(0) - metricsGraph.descent) : (editor.getRowBottom(row) - editor.getOffsetY() - metricsGraph.descent);
-        canvas.drawText(graph, 0, graph.length(), offset, baseline, paintGraph);
+        float height = editor.getRowHeightOfText() * editor.getProps().miniMarkerSizeFactor;
+        if (height <= 0) {
+            return;
+        }
+        graph.setColorFilter(editor.getColorScheme().getColor(EditorColorScheme.NON_PRINTABLE_CHAR), PorterDuff.Mode.SRC_ATOP);
+        int w = graph.getIntrinsicWidth(), h = graph.getIntrinsicHeight();
+        if (w <= 0 || h <= 0) {
+            return;
+        }
+        float width = height * ((float) w / h);
+        graph.setBounds((int) offset, (int) (baseline - height), (int) (offset + width), (int) baseline);
+        graph.draw(canvas);
     }
 
     protected int getRowTopForBackground(int row) {

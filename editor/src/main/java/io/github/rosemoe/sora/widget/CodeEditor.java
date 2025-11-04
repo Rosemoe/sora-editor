@@ -232,6 +232,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @see #setNonPrintablePaintingFlags(int)
      */
     public static final int FLAG_DRAW_WHITESPACE_IN_SELECTION = 1 << 6;
+    /**
+     * Draw soft-wrap indicator in text
+     *
+     * @see #setNonPrintablePaintingFlags(int)
+     */
+    public static final int FLAG_DRAW_SOFT_WRAP = 1 << 7;
     /*
      * Internal state identifiers of action mode
      */

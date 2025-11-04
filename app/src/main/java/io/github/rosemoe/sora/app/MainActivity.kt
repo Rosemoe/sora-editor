@@ -216,7 +216,7 @@ class MainActivity : AppCompatActivity() {
             props.stickyScroll = true
             setLineSpacing(2f, 1.1f)
             nonPrintablePaintingFlags =
-                CodeEditor.FLAG_DRAW_WHITESPACE_LEADING or CodeEditor.FLAG_DRAW_LINE_SEPARATOR or CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION
+                CodeEditor.FLAG_DRAW_WHITESPACE_LEADING or CodeEditor.FLAG_DRAW_LINE_SEPARATOR or CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION or CodeEditor.FLAG_DRAW_SOFT_WRAP
             // Update display dynamically
             // Use CodeEditor#subscribeEvent to add listeners of different events to editor
             subscribeAlways<SelectionChangeEvent> { updatePositionText() }

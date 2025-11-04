@@ -69,7 +69,7 @@ public class WordwrapLayout extends AbstractLayout {
         if (clearCache) {
             rowTable.clear();
         }
-        width = editor.getWidth() - (int) (editor.measureTextRegionOffset() + editor.getTextPaint().measureText("a"));
+        width = editor.getWidth() - (int) (editor.measureTextRegionOffset() + editor.getTextPaint().measureText("a") * 1.5f);
         breakAllLines();
     }
 
