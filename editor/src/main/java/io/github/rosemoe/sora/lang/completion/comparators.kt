@@ -287,13 +287,25 @@ fun List<CompletionItem>.highlightMatchLabel(colorSchema: EditorColorScheme?): L
 
         for (index in score.matches.indices.reversed()) {
             val matchIndex = score.matches[index]
-            spannable.setSpan(
-                ForegroundColorSpan(matchedColor),
-                matchIndex,
-                spannable.length.coerceAtMost(matchIndex + 1),
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
+        
+            // Skip invalid indices
+            if (matchIndex < 0 || matchIndex >= spannable.length) continue
+        
+            val end = (matchIndex + 1).coerceAtMost(spannable.length)
+            if (end <= matchIndex) continue
+        
+            try {
+                spannable.setSpan(
+                    ForegroundColorSpan(matchedColor),
+                    matchIndex,
+                    end,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
+
 
         item.label = spannable
 
