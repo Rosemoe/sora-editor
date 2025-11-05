@@ -31,14 +31,105 @@ import io.github.rosemoe.sora.util.MyCharacter
 // Migrating from vscode
 // https://github.com/microsoft/vscode/blob/main/src/vs/base/common/filters.ts
 
+private const val MAX_LEN = 32
 
-private var maxLen = 32
-private val minWordMatchPosArray = IntArray(2 * maxLen)
-private val maxWordMatchPosArray = IntArray(2 * maxLen)
+private data class Scratch(
+    val minWordMatchPosArray: IntArray = IntArray(2 * MAX_LEN),
+    val maxWordMatchPosArray: IntArray = IntArray(2 * MAX_LEN),
+    val diag: Array<IntArray> = Array(MAX_LEN) { IntArray(MAX_LEN) }, // the length of a contiguous diagonal match
+    val table: Array<IntArray> = Array(MAX_LEN) { IntArray(MAX_LEN) },
+    val arrows: Array<IntArray> = Array(MAX_LEN) { IntArray(MAX_LEN) },
+) {
+    fun reset() {
+        minWordMatchPosArray.fill(0)
+        maxWordMatchPosArray.fill(0)
+        for (row in 0 until MAX_LEN) {
+            diag[row].fill(0)
+            table[row].fill(0)
+            arrows[row].fill(0)
+        }
+    }
 
-val diag = Array(maxLen) { IntArray(maxLen) } // the length of a contiguous diagonal match
-val table = Array(maxLen) { IntArray(maxLen) }
-val arrows = Array(maxLen) { IntArray(maxLen) }
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Scratch
+
+        if (!minWordMatchPosArray.contentEquals(other.minWordMatchPosArray)) return false
+        if (!maxWordMatchPosArray.contentEquals(other.maxWordMatchPosArray)) return false
+        if (!diag.contentDeepEquals(other.diag)) return false
+        if (!table.contentDeepEquals(other.table)) return false
+        if (!arrows.contentDeepEquals(other.arrows)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = minWordMatchPosArray.contentHashCode()
+        result = 31 * result + maxWordMatchPosArray.contentHashCode()
+        result = 31 * result + diag.contentDeepHashCode()
+        result = 31 * result + table.contentDeepHashCode()
+        result = 31 * result + arrows.contentDeepHashCode()
+        return result
+    }
+}
+
+private val scratchLocal =
+    object : ThreadLocal<Scratch>() {
+        override fun initialValue(): Scratch {
+            return Scratch()
+        }
+    };
+
+private inline fun <T> withScratch(block: Scratch.() -> T): T {
+    val scratch = scratchLocal.get()
+    scratch ?: error("Not Found Scratch")
+    scratch.reset()
+    return scratch.block()
+}
+
+private fun Scratch.isPatternInWord(
+    patternLow: String,
+    patternPos: Int,
+    patternLen: Int,
+    wordLow: String,
+    wordPos: Int,
+    wordLen: Int,
+    fillMinWordPosArr: Boolean
+): Boolean {
+    var patternPosMut = patternPos
+    var wordPosMut = wordPos
+    while (patternPosMut < patternLen && wordPosMut < wordLen) {
+        if (patternLow[patternPosMut] == wordLow[wordPosMut]) {
+            if (fillMinWordPosArr) {
+                minWordMatchPosArray[patternPosMut] = wordPosMut
+            }
+            patternPosMut += 1
+        }
+        wordPosMut += 1
+    }
+    return patternPosMut == patternLen
+}
+
+private fun Scratch.fillInMaxWordMatchPos(
+    patternLen: Int,
+    wordLen: Int,
+    patternStart: Int,
+    wordStart: Int,
+    patternLow: String,
+    wordLow: String
+) {
+    var patternPos = patternLen - 1
+    var wordPos = wordLen - 1
+    while (patternPos >= patternStart && wordPos >= wordStart) {
+        if (patternLow[patternPos] == wordLow[wordPos]) {
+            maxWordMatchPosArray[patternPos] = wordPos
+            patternPos--
+        }
+        wordPos--
+    }
+}
 
 
 object Arrow {
@@ -57,19 +148,17 @@ fun isPatternInWord(
     wordLen: Int,
     fillMinWordPosArr: Boolean = false
 ): Boolean {
-    var patternPosMut = patternPos
-    var wordPosMut = wordPos
-    while (patternPosMut < patternLen && wordPosMut < wordLen) {
-        if (patternLow[patternPosMut] == wordLow[wordPosMut]) {
-            if (fillMinWordPosArr) {
-                // Remember the min word position for each pattern position
-                minWordMatchPosArray[patternPosMut] = wordPosMut
-            }
-            patternPosMut += 1
-        }
-        wordPosMut += 1
+    return withScratch {
+        this.isPatternInWord(
+            patternLow,
+            patternPos,
+            patternLen,
+            wordLow,
+            wordPos,
+            wordLen,
+            fillMinWordPosArr
+        )
     }
-    return patternPosMut == patternLen // pattern must be exhausted
 }
 
 
@@ -81,14 +170,15 @@ internal fun fillInMaxWordMatchPos(
     patternLow: String,
     wordLow: String
 ) {
-    var patternPos = patternLen - 1
-    var wordPos = wordLen - 1
-    while (patternPos >= patternStart && wordPos >= wordStart) {
-        if (patternLow[patternPos] == wordLow[wordPos]) {
-            maxWordMatchPosArray[patternPos] = wordPos
-            patternPos--
-        }
-        wordPos--
+    withScratch {
+        this.fillInMaxWordMatchPos(
+            patternLen,
+            wordLen,
+            patternStart,
+            wordStart,
+            patternLow,
+            wordLow
+        )
     }
 }
 
@@ -230,166 +320,189 @@ fun fuzzyScore(
     options: FuzzyScoreOptions? = FuzzyScoreOptions.default
 ): FuzzyScore? {
 
-    val patternLen = if (pattern.length > maxLen) maxLen else pattern.length
-    val wordLen = if (word.length > maxLen - 1) maxLen - 1 else word.length
+    val patternLen = if (pattern.length > MAX_LEN) MAX_LEN else pattern.length
+    val wordLen = if (word.length > MAX_LEN - 1) MAX_LEN - 1 else word.length
 
     if (patternStart >= patternLen || wordStart >= wordLen || (patternLen - patternStart) > (wordLen - wordStart)) {
         return null
     }
 
-    // Run a simple check if the characters of pattern occur
-    // (in order) at all in word. If that isn't the case we
-    // stop because no match will be possible
-    if (!isPatternInWord(patternLow, patternStart, patternLen, wordLow, wordStart, wordLen, true)) {
-        return null
-    }
+    return withScratch {
+        val minWordPositions = this.minWordMatchPosArray
+        val maxWordPositions = this.maxWordMatchPosArray
+        val diagMatrix = this.diag
+        val tableMatrix = this.table
+        val arrowsMatrix = this.arrows
 
-    // Find the max matching word position for each pattern position
-    // NOTE: the min matching word position was filled in above, in the `isPatternInWord` call
-    fillInMaxWordMatchPos(patternLen, wordLen, patternStart, wordStart, patternLow, wordLow)
-
-    var row = 1
-    var column = 1
-    var patternPos = patternStart
-    var wordPos: Int
-
-    val hasStrongFirstMatch = booleanArrayOf(false)
-
-    // There will be a match, fill in tables
-    while (patternPos < patternLen) {
-
-        // Reduce search space to possible matching word positions and to possible access from next row
-        val minWordMatchPos = minWordMatchPosArray[patternPos]
-        val maxWordMatchPos = maxWordMatchPosArray[patternPos]
-        val nextMaxWordMatchPos =
-            if (patternPos + 1 < patternLen) maxWordMatchPosArray[patternPos + 1] else wordLen
-
-        column = minWordMatchPos - wordStart + 1
-        wordPos = minWordMatchPos
-
-        while (wordPos < nextMaxWordMatchPos) {
-
-            var score = Int.MIN_VALUE
-            var canComeDiag = false
-
-            if (wordPos <= maxWordMatchPos) {
-                score = doScore(
-                    pattern, patternLow, patternPos, patternStart,
-                    word, wordLow, wordPos, wordLen, wordStart,
-                    diag[row - 1][column - 1] == 0,
-                    hasStrongFirstMatch
-                )
-            }
-
-            var diagScore = 0
-            if (score != Int.MIN_VALUE) {
-                canComeDiag = true
-                diagScore = score + table[row - 1][column - 1]
-            }
-
-            val canComeLeft = wordPos > minWordMatchPos
-            val leftScore =
-                if (canComeLeft) table[row][column - 1] + (if (diag[row][column - 1] > 0) -5 else 0) else 0 // penalty for a gap start
-
-            val canComeLeftLeft = wordPos > minWordMatchPos + 1 && diag[row][column - 1] > 0
-            val leftLeftScore =
-                if (canComeLeftLeft) table[row][column - 2] + (if (diag[row][column - 2] > 0) -5 else 0) else 0 // penalty for a gap start
-
-            if (canComeLeftLeft && (!canComeLeft || leftLeftScore >= leftScore) && (!canComeDiag || leftLeftScore >= diagScore)) {
-                // always prefer choosing left left to jump over a diagonal because that means a match is earlier in the word
-                table[row][column] = leftLeftScore
-                arrows[row][column] = Arrow.LeftLeft
-                diag[row][column] = 0
-            } else if (canComeLeft && (!canComeDiag || leftScore >= diagScore)) {
-                // always prefer choosing left since that means a match is earlier in the word
-                table[row][column] = leftScore
-                arrows[row][column] = Arrow.Left
-                diag[row][column] = 0
-            } else if (canComeDiag) {
-                table[row][column] = diagScore
-                arrows[row][column] = Arrow.Diag
-                diag[row][column] = diag[row - 1][column - 1] + 1
-            } else {
-                error("not possible")
-            }
-            column++
-            wordPos++
-        }
-        row++
-        patternPos++
-    }
-
-
-
-    if (!hasStrongFirstMatch[0] && options?.firstMatchCanBeWeak == false) {
-        return null
-    }
-
-    row--
-    column--
-
-    val result = FuzzyScore(table[row][column], wordStart)
-
-    var backwardsDiagLength = 0
-    var maxMatchColumn = 0
-
-    while (row >= 1) {
-        // Find the column where we go diagonally up
-        var diagColumn = column
-        do {
-            val arrow = arrows[row][diagColumn]
-            if (arrow == Arrow.LeftLeft) {
-                diagColumn -= 2
-            } else if (arrow == Arrow.Left) {
-                diagColumn -= 1
-            } else {
-                // found the diagonal
-                break
-            }
-        } while (diagColumn >= 1)
-
-        // Overturn the "forwards" decision if keeping the "backwards" diagonal would give a better match
-        if (
-            backwardsDiagLength > 1 // only if we would have a contiguous match of 3 characters
-            && patternLow[patternStart + row - 1] == wordLow[wordStart + column - 1] // only if we can do a contiguous match diagonally
-            && !isUpperCaseAtPos(
-                diagColumn + wordStart - 1,
-                word,
-                wordLow
-            ) // only if the forwards chose diagonal is not an uppercase
-            && backwardsDiagLength + 1 > diag[row][diagColumn] // only if our contiguous match would be longer than the "forwards" contiguous match
+        // Run a simple check if the characters of pattern occur
+        // (in order) at all in word. If that isn't the case we
+        // stop because no match will be possible
+        if (!this.isPatternInWord(
+                patternLow,
+                patternStart,
+                patternLen,
+                wordLow,
+                wordStart,
+                wordLen,
+                true
+            )
         ) {
-            diagColumn = column
+            return@withScratch null
         }
 
-        if (diagColumn == column) {
-            // this is a contiguous match
-            backwardsDiagLength++
-        } else {
-            backwardsDiagLength = 1
+        // Find the max matching word position for each pattern position
+        // NOTE: the min matching word position was filled in above, in the `isPatternInWord` call
+        this.fillInMaxWordMatchPos(
+            patternLen,
+            wordLen,
+            patternStart,
+            wordStart,
+            patternLow,
+            wordLow
+        )
+
+        var row = 1
+        var column = 1
+        var patternPos = patternStart
+        var wordPos: Int
+
+        val hasStrongFirstMatch = booleanArrayOf(false)
+
+        // There will be a match, fill in tables
+        while (patternPos < patternLen) {
+
+            // Reduce search space to possible matching word positions and to possible access from next row
+            val minWordMatchPos = minWordPositions[patternPos]
+            val maxWordMatchPos = maxWordPositions[patternPos]
+            val nextMaxWordMatchPos =
+                if (patternPos + 1 < patternLen) maxWordPositions[patternPos + 1] else wordLen
+
+            column = minWordMatchPos - wordStart + 1
+            wordPos = minWordMatchPos
+
+            while (wordPos < nextMaxWordMatchPos) {
+
+                var score = Int.MIN_VALUE
+                var canComeDiag = false
+
+                if (wordPos <= maxWordMatchPos) {
+                    score = doScore(
+                        pattern, patternLow, patternPos, patternStart,
+                        word, wordLow, wordPos, wordLen, wordStart,
+                        diagMatrix[row - 1][column - 1] == 0,
+                        hasStrongFirstMatch
+                    )
+                }
+
+                var diagScore = 0
+                if (score != Int.MIN_VALUE) {
+                    canComeDiag = true
+                    diagScore = score + tableMatrix[row - 1][column - 1]
+                }
+
+                val canComeLeft = wordPos > minWordMatchPos
+                val leftScore =
+                    if (canComeLeft) tableMatrix[row][column - 1] + (if (diagMatrix[row][column - 1] > 0) -5 else 0) else 0 // penalty for a gap start
+
+                val canComeLeftLeft =
+                    wordPos > minWordMatchPos + 1 && diagMatrix[row][column - 1] > 0
+                val leftLeftScore =
+                    if (canComeLeftLeft) tableMatrix[row][column - 2] + (if (diagMatrix[row][column - 2] > 0) -5 else 0) else 0 // penalty for a gap start
+
+                if (canComeLeftLeft && (!canComeLeft || leftLeftScore >= leftScore) && (!canComeDiag || leftLeftScore >= diagScore)) {
+                    // always prefer choosing left left to jump over a diagonal because that means a match is earlier in the word
+                    tableMatrix[row][column] = leftLeftScore
+                    arrowsMatrix[row][column] = Arrow.LeftLeft
+                    diagMatrix[row][column] = 0
+                } else if (canComeLeft && (!canComeDiag || leftScore >= diagScore)) {
+                    // always prefer choosing left since that means a match is earlier in the word
+                    tableMatrix[row][column] = leftScore
+                    arrowsMatrix[row][column] = Arrow.Left
+                    diagMatrix[row][column] = 0
+                } else if (canComeDiag) {
+                    tableMatrix[row][column] = diagScore
+                    arrowsMatrix[row][column] = Arrow.Diag
+                    diagMatrix[row][column] = diagMatrix[row - 1][column - 1] + 1
+                } else {
+                    error("not possible")
+                }
+                column++
+                wordPos++
+            }
+            row++
+            patternPos++
         }
 
-        if (maxMatchColumn == 0) {
-            // remember the last matched column
-            maxMatchColumn = diagColumn
+        if (!hasStrongFirstMatch[0] && options?.firstMatchCanBeWeak == false) {
+            return@withScratch null
         }
 
         row--
-        column = diagColumn - 1
-        result.matches.add(column)
+        column--
+
+        val result = FuzzyScore(tableMatrix[row][column], wordStart)
+
+        var backwardsDiagLength = 0
+        var maxMatchColumn = 0
+
+        while (row >= 1) {
+            // Find the column where we go diagonally up
+            var diagColumn = column
+            do {
+                val arrow = arrowsMatrix[row][diagColumn]
+                if (arrow == Arrow.LeftLeft) {
+                    diagColumn -= 2
+                } else if (arrow == Arrow.Left) {
+                    diagColumn -= 1
+                } else {
+                    // found the diagonal
+                    break
+                }
+            } while (diagColumn >= 1)
+
+            // Overturn the "forwards" decision if keeping the "backwards" diagonal would give a better match
+            if (
+                backwardsDiagLength > 1 // only if we would have a contiguous match of 3 characters
+                && patternLow[patternStart + row - 1] == wordLow[wordStart + column - 1] // only if we can do a contiguous match diagonally
+                && !isUpperCaseAtPos(
+                    diagColumn + wordStart - 1,
+                    word,
+                    wordLow
+                ) // only if the forwards chose diagonal is not an uppercase
+                && backwardsDiagLength + 1 > diagMatrix[row][diagColumn] // only if our contiguous match would be longer than the "forwards" contiguous match
+            ) {
+                diagColumn = column
+            }
+
+            if (diagColumn == column) {
+                // this is a contiguous match
+                backwardsDiagLength++
+            } else {
+                backwardsDiagLength = 1
+            }
+
+            if (maxMatchColumn == 0) {
+                // remember the last matched column
+                maxMatchColumn = diagColumn
+            }
+
+            row--
+            column = diagColumn - 1
+            result.matches.add(column)
+        }
+
+        if (wordLen == patternLen && options?.boostFullMatch == true) {
+            // the word matches the pattern with all characters!
+            // giving the score a total match boost (to come up ahead other words)
+            result.score += 2
+        }
+
+        // Add 1 penalty for each skipped character in the word
+        val skippedCharsCount = maxMatchColumn - patternLen
+        result.score -= skippedCharsCount
+
+        return@withScratch result
     }
-
-    if (wordLen == patternLen && options?.boostFullMatch == true) {
-        // the word matches the pattern with all characters!
-        // giving the score a total match boost (to come up ahead other words)
-        result.score += 2
-    }
-
-    // Add 1 penalty for each skipped character in the word
-    val skippedCharsCount = maxMatchColumn - patternLen
-    result.score -= skippedCharsCount
-
-    return result
 }
 
 
@@ -517,15 +630,15 @@ fun fuzzyScoreGraceful(
 }
 
 internal fun fuzzyScoreWithPermutations(
-        pattern: String,
-        lowPattern: String,
-        patternPos: Int,
-        word: String,
-        lowWord: String,
-        wordPos: Int,
-        aggressive: Boolean,
-        options: FuzzyScoreOptions?
-    ): FuzzyScore? {
+    pattern: String,
+    lowPattern: String,
+    patternPos: Int,
+    word: String,
+    lowWord: String,
+    wordPos: Int,
+    aggressive: Boolean,
+    options: FuzzyScoreOptions?
+): FuzzyScore? {
     var top = fuzzyScore(
         pattern,
         lowPattern,
@@ -579,7 +692,6 @@ internal fun fuzzyScoreWithPermutations(
 }
 
 internal fun nextTypoPermutation(pattern: String, patternPos: Int): String? {
-
     if (patternPos + 1 >= pattern.length) {
         return null
     }
@@ -591,6 +703,6 @@ internal fun nextTypoPermutation(pattern: String, patternPos: Int): String? {
         return null
     }
 
-    return pattern.substring(0, patternPos) + swap2 + swap1 + pattern.substring(patternPos + 2)
+    return pattern.take(patternPos) + swap2 + swap1 + pattern.substring(patternPos + 2)
 }
 
