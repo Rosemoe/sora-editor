@@ -70,4 +70,12 @@ public class IntPair {
         return (int) (packedValue >> 32L);
     }
 
+    public static long packIntFloat(int first, float second) {
+        return pack(first, Float.floatToRawIntBits(second));
+    }
+
+    public static float getSecondAsFloat(long packedValue) {
+        return Float.intBitsToFloat(getSecond(packedValue));
+    }
+
 }

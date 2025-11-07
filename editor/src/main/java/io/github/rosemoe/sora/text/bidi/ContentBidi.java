@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import io.github.rosemoe.sora.text.Content;
+import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.util.IntPair;
 
@@ -57,9 +58,9 @@ public class ContentBidi implements ContentListener {
     }
 
     @NonNull
-    public Directions getLineDirections(int line) {
+    public Directions getLineDirections(ContentLine lineText, int line) {
         if (!enabled) {
-            return new Directions(new long[]{IntPair.pack(0, 0)}, text.getLine(line).length());
+            return new Directions(new long[]{IntPair.pack(0, 0)}, lineText.length());
         }
         synchronized (this) {
             for (int i = 0; i < entries.length; i++) {
@@ -69,7 +70,7 @@ public class ContentBidi implements ContentListener {
                 }
             }
         }
-        var dir = TextBidi.getDirections(text.getLine(line));
+        var dir = TextBidi.getDirections(lineText);
         synchronized (this) {
             System.arraycopy(entries, 0, entries, 1, entries.length - 1);
             entries[0] = new DirectionsEntry(dir, line);

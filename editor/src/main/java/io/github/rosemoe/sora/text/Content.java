@@ -887,7 +887,7 @@ public class Content implements CharSequence {
     public Directions getLineDirections(int line) {
         lock(false);
         try {
-            return bidi.getLineDirections(line);
+            return bidi.getLineDirections(lines.get(line), line);
         } finally {
             unlock(false);
         }
@@ -1206,7 +1206,8 @@ public class Content implements CharSequence {
         lock(false);
         try {
             for (int i = startLine; i <= endLine; i++) {
-                consumer.accept(i, lines.get(i), bidi.getLineDirections(i));
+                var t = lines.get(i);
+                consumer.accept(i, t, bidi.getLineDirections(t, i));
             }
         } finally {
             unlock(false);

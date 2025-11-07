@@ -28,6 +28,7 @@ import android.util.SparseArray;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentListener;
 
@@ -158,5 +159,7 @@ public interface Layout extends ContentListener {
      * Get row index for text index
      */
     int getRowIndexForPosition(int index);
+
+    void invalidateLines(StyleUpdateRange range);
 
 }

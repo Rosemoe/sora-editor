@@ -22,31 +22,15 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lang.styling.inlayHint
+package io.github.rosemoe.sora.util
 
-import io.github.rosemoe.sora.lang.styling.util.PointAnchoredObject
+class ReversedListView<E>(private val src: List<E>) : AbstractList<E>() {
 
-/**
- * Choose which side of character to display the inlay hint.
- *
- * No effect if the given character position is at line start or end.
- */
-enum class CharacterSide {
-    LEFT,
-    RIGHT
-}
+    override val size: Int
+        get() = src.size
 
-open class InlayHint(
-    override var line: Int,
-    override var column: Int,
-    val type: String,
-    val displaySide: CharacterSide = CharacterSide.LEFT
-) : PointAnchoredObject {
-
-    init {
-        if (line < 0 || column < 0) {
-            throw IllegalArgumentException("negative number")
-        }
+    override fun get(index: Int): E {
+        return src[src.size - 1 - index]
     }
 
 }

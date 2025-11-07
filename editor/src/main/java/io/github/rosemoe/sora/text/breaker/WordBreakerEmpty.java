@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2025  Rosemoe
@@ -20,33 +20,19 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
-
-package io.github.rosemoe.sora.lang.styling.inlayHint
-
-import io.github.rosemoe.sora.lang.styling.util.PointAnchoredObject
-
-/**
- * Choose which side of character to display the inlay hint.
- *
- * No effect if the given character position is at line start or end.
  */
-enum class CharacterSide {
-    LEFT,
-    RIGHT
-}
+package io.github.rosemoe.sora.text.breaker;
 
-open class InlayHint(
-    override var line: Int,
-    override var column: Int,
-    val type: String,
-    val displaySide: CharacterSide = CharacterSide.LEFT
-) : PointAnchoredObject {
+public class WordBreakerEmpty implements WordBreaker {
 
-    init {
-        if (line < 0 || column < 0) {
-            throw IllegalArgumentException("negative number")
-        }
+    public static WordBreaker INSTANCE = new WordBreakerEmpty();
+
+    private WordBreakerEmpty() {
+
     }
 
+    @Override
+    public int getOptimizedBreakPoint(int start, int end) {
+        return end;
+    }
 }

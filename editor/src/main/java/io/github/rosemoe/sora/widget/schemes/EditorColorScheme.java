@@ -406,7 +406,7 @@ public class EditorColorScheme {
                 color = isDark() ? 0x99eeeeee : 0x99000000;
                 break;
             case TEXT_INLAY_HINT_BACKGROUND:
-                color = isDark() ? 0xffeeeeee : 0x1D000000;
+                color = isDark() ? 0x1deeeeee : 0x1D000000;
                 break;
             case HARD_WRAP_MARKER:
                 color = !isDark() ? 0xffeeeeee : 0x1D000000;

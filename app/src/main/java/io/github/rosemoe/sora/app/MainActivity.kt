@@ -57,11 +57,14 @@ import io.github.rosemoe.sora.event.PublishSearchResultEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.SideIconClickEvent
 import io.github.rosemoe.sora.event.TextSizeChangeEvent
+import io.github.rosemoe.sora.graphics.inlayHint.TextInlayHintRenderer
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.JavaLanguageSpec
 import io.github.rosemoe.sora.lang.TsLanguageJava
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer
+import io.github.rosemoe.sora.lang.styling.inlayHint.TextInlayHint
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.monarch.MonarchColorScheme
 import io.github.rosemoe.sora.langs.monarch.MonarchLanguage
@@ -212,6 +215,7 @@ class MainActivity : AppCompatActivity() {
 
         // Configure editor
         binding.editor.apply {
+            registerInlayHintRenderer(TextInlayHintRenderer)
             typefaceText = typeface
             props.stickyScroll = true
             setLineSpacing(2f, 1.1f)
@@ -536,6 +540,12 @@ class MainActivity : AppCompatActivity() {
 
                 updatePositionText()
                 updateBtnState()
+
+                binding.editor.inlayHints = InlayHintsContainer().also {
+                    it.add(TextInlayHint(28, 0, "unit:"))
+                    it.add(TextInlayHint(28, 7, "open"))
+                    it.add(TextInlayHint(28, 22, "^class"))
+                }
             }
         }
     }

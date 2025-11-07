@@ -75,9 +75,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Px;
 import androidx.annotation.UiThread;
+import androidx.collection.MutableIntSet;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import io.github.rosemoe.sora.I18nConfig;
@@ -100,6 +103,8 @@ import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.SubscriptionReceipt;
 import io.github.rosemoe.sora.event.TextSizeChangeEvent;
 import io.github.rosemoe.sora.graphics.Paint;
+import io.github.rosemoe.sora.graphics.inlayHint.InlayHintRenderer;
+import io.github.rosemoe.sora.graphics.inlayHint.InlayHintRendererProvider;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
@@ -109,6 +114,8 @@ import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.SpanFactory;
 import io.github.rosemoe.sora.lang.styling.Styles;
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer;
+import io.github.rosemoe.sora.lang.styling.inlayHint.IntSetUpdateRange;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
@@ -170,7 +177,7 @@ import kotlin.text.StringsKt;
  * @author Rosemoe
  */
 @SuppressWarnings("unused")
-public class CodeEditor extends View implements ContentListener, Formatter.FormatResultReceiver {
+public class CodeEditor extends View implements ContentListener, Formatter.FormatResultReceiver, InlayHintRendererProvider {
 
     /**
      * The default text size when creating the editor object. Unit is sp.
@@ -347,6 +354,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private Bundle extraArguments;
     private Styles textStyles;
     private DiagnosticsContainer diagnostics;
+    private InlayHintsContainer inlayHints;
     private RenderContext renderContext;
     private EditorRenderer renderer;
     private boolean hardwareAccAllowed;
@@ -358,6 +366,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private TextRange lastInsertion;
     private TextRange lastSelectedTextRange;
     private SnippetController snippetController;
+    private final Map<String, InlayHintRenderer> inlayHintRendererMap = new HashMap<>();
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -439,6 +448,42 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             throw new IllegalArgumentException("Unknown component type");
         }
         replacement.setEnabled(isEnabled);
+    }
+
+    public void registerInlayHintRenderers(InlayHintRenderer... renderers) {
+        var needLayout = false;
+        for (var renderer : renderers) {
+            var oldValue = inlayHintRendererMap.put(renderer.getTypeName(), renderer);
+            needLayout |= oldValue != renderer;
+        }
+        if (needLayout) {
+            createLayout();
+        }
+    }
+
+    public void registerInlayHintRenderer(@NonNull InlayHintRenderer renderer) {
+        var oldValue = inlayHintRendererMap.put(renderer.getTypeName(), renderer);
+        if (oldValue != renderer) {
+            createLayout();
+        }
+    }
+
+    public void removeInlayHintRenderer(@NonNull InlayHintRenderer renderer) {
+        var oldValue = inlayHintRendererMap.get(renderer.getTypeName());
+        if (oldValue == renderer) {
+            inlayHintRendererMap.remove(renderer.getTypeName());
+            createLayout();
+        }
+    }
+
+    @NonNull
+    public List<InlayHintRenderer> getInlayHintRenderers() {
+        return inlayHintRendererMap.values().stream().toList();
+    }
+
+    @Nullable
+    public InlayHintRenderer getInlayHintRendererForType(String type) {
+        return inlayHintRendererMap.get(type);
     }
 
     /**
@@ -2125,7 +2170,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             // bottom invisible
             targetY = yOffset - getHeight() + getRowHeight() * 1f;
         }
-        float charWidth = column == 0 ? 0 : renderer.measureText(text.getLine(line), line, column - 1, 1);
+        float charWidth = column == 0 ? 0 : getTextPaint().measureText("a");
         if (xOffset < currFinalX + (pinLineNumber ? measureTextRegionOffset() : 0)) {
             float backupX = targetX;
             var scrollSlopX = getWidth() / 2;
@@ -2210,12 +2255,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public boolean isScreenPointOnText(float x, float y) {
         var pos = getPointPositionOnScreen(x, y);
         var rowIdx = layout.getRowIndexForPosition(text.getCharIndex(IntPair.getFirst(pos), IntPair.getSecond(pos)));
-        var row = layout.getRowAt(rowIdx);
-        var layoutMax = renderer.measureText(text.getLine(row.lineIndex), row.lineIndex, row.startColumn, row.endColumn - row.startColumn);
+        var layoutMax = renderer.getRowWidth(rowIdx);
         var textRegionX = measureTextRegionOffset();
-        var lineRegionRightX = textRegionX + layoutMax;
+        var rowRegionRightX = textRegionX + layoutMax;
         var offset = getOffsetX() + x;
-        return offset >= textRegionX && offset <= lineRegionRightX;
+        return offset >= textRegionX && offset <= rowRegionRightX;
     }
 
     /**
@@ -2304,33 +2348,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public EditorSearcher getSearcher() {
         return editorSearcher;
-    }
-
-    /**
-     * Set whether the editor use basic display mode to render and measure texts.<br/>
-     * When basic display mode is enabled, the following changes will take:<br/>
-     * 1. Ligatures are divided into single characters.<br/>
-     * 2. Text direction is always LTR (left-to-right).<br/>
-     * 3. Some emojis with variation selector or fitzpatrick can not be shown correctly with specified attributes.<br/>
-     * 4. ZWJ and ZWNJ take no effect.<br/>
-     * Benefits:<br/>
-     * Better performance when the text is very big, especially when you are displaying a text with long lines.
-     *
-     * @see #isBasicDisplayMode()
-     */
-    public void setBasicDisplayMode(boolean enabled) {
-        text.setBidiEnabled(!enabled);
-        renderContext.invalidateRenderNodes();
-        renderer.basicDisplayMode = enabled;
-        renderer.updateTimestamp();
-        invalidate();
-    }
-
-    /**
-     * @see #setBasicDisplayMode(boolean)
-     */
-    public boolean isBasicDisplayMode() {
-        return renderer.isBasicDisplayMode();
     }
 
     /**
@@ -3835,7 +3852,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         } else {
             this.text = new Content(text);
         }
-        this.text.setBidiEnabled(!renderer.basicDisplayMode);
         styleDelegate.reset();
         textStyles = null;
         cursor = this.text.getCursor();
@@ -4121,6 +4137,30 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void setDiagnostics(@Nullable DiagnosticsContainer diagnostics) {
         this.diagnostics = diagnostics;
         invalidate();
+    }
+
+    public void setInlayHints(@Nullable InlayHintsContainer inlayHints) {
+        var affectedLines = new MutableIntSet();
+        var oldInlayHints = this.inlayHints;
+        if (oldInlayHints != null) {
+            affectedLines.addAll(oldInlayHints.getLineNumbers());
+        }
+        if (inlayHints != null) {
+            affectedLines.addAll(inlayHints.getLineNumbers());
+        }
+        this.inlayHints = inlayHints;
+        var range = new IntSetUpdateRange(affectedLines);
+        if (!layoutBusy) {
+            layout.invalidateLines(range);
+        } else {
+            createLayout();
+        }
+        renderContext.invalidateRenderNodes();
+    }
+
+    @Nullable
+    public InlayHintsContainer getInlayHints() {
+        return inlayHints;
     }
 
     /**
@@ -5019,6 +5059,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             if (diagnostics != null) {
                 diagnostics.shiftOnInsert(start.index, end.index);
             }
+            if (inlayHints != null) {
+                inlayHints.updateOnInsertion(startLine, startColumn, endLine, endColumn);
+            }
         } catch (Exception e) {
             Log.w(LOG_TAG, "Update failure", e);
         }
@@ -5064,6 +5107,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
             if (diagnostics != null) {
                 diagnostics.shiftOnDelete(start.index, end.index);
+            }
+            if (inlayHints != null) {
+                inlayHints.updateOnDeletion(startLine, startColumn, endLine, endColumn);
             }
         } catch (Exception e) {
             Log.w(LOG_TAG, "Update failure", e);

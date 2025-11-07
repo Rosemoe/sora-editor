@@ -24,13 +24,16 @@
 package io.github.rosemoe.sora.widget.layout;
 
 import androidx.annotation.NonNull;
+import androidx.collection.ObjectFloatMap;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import io.github.rosemoe.sora.lang.styling.Span;
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.widget.CodeEditor;
@@ -45,7 +48,6 @@ public abstract class AbstractLayout implements Layout {
 
     protected static final int SUBTASK_COUNT = 8;
     protected static final int MIN_LINE_COUNT_FOR_SUBTASK = 3000;
-    protected static final BidiLayoutHelper BidiLayout = BidiLayoutHelper.INSTANCE;
     private static final ThreadPoolExecutor executor;
 
     static {
@@ -65,6 +67,15 @@ public abstract class AbstractLayout implements Layout {
     @NonNull
     protected List<Span> getSpans(int line) {
         return editor.getSpansForLine(line);
+    }
+
+    @NonNull
+    protected List<InlayHint> getInlayHints(int line) {
+        var inlayHints = editor.getInlayHints();
+        if (inlayHints != null) {
+            return inlayHints.getForLine(line);
+        }
+        return Collections.emptyList();
     }
 
     @Override

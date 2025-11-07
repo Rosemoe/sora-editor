@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2025  Rosemoe
@@ -20,33 +20,36 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
-
-package io.github.rosemoe.sora.lang.styling.inlayHint
-
-import io.github.rosemoe.sora.lang.styling.util.PointAnchoredObject
-
-/**
- * Choose which side of character to display the inlay hint.
- *
- * No effect if the given character position is at line start or end.
  */
-enum class CharacterSide {
-    LEFT,
-    RIGHT
-}
+package io.github.rosemoe.sora.text.breaker;
 
-open class InlayHint(
-    override var line: Int,
-    override var column: Int,
-    val type: String,
-    val displaySide: CharacterSide = CharacterSide.LEFT
-) : PointAnchoredObject {
+import androidx.annotation.NonNull;
 
-    init {
-        if (line < 0 || column < 0) {
-            throw IllegalArgumentException("negative number")
-        }
+import io.github.rosemoe.sora.text.ContentLine;
+import io.github.rosemoe.sora.util.MyCharacter;
+
+public class WordBreakerFallback implements WordBreaker {
+
+    private final char[] text;
+    private final int len;
+
+    public WordBreakerFallback(@NonNull ContentLine text) {
+        this.text = text.getBackingCharArray();
+        this.len = text.length();
     }
 
+    @Override
+    public int getOptimizedBreakPoint(int start, int end) {
+        if (MyCharacter.isAlpha(text[end - 1]) &&
+                end < len && (MyCharacter.isAlpha(text[end]) || text[end] == '-')) {
+            int wordStart = end - 1;
+            while (wordStart > start && MyCharacter.isAlpha(text[wordStart - 1])) {
+                wordStart--;
+            }
+            if (wordStart > start) {
+                end = wordStart;
+            }
+        }
+        return end;
+    }
 }

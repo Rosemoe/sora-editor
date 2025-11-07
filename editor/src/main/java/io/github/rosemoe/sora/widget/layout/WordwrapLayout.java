@@ -36,11 +36,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import io.github.rosemoe.sora.graphics.CharPosDesc;
+import io.github.rosemoe.sora.graphics.GraphemeBoundsBreaker;
 import io.github.rosemoe.sora.graphics.Paint;
+import io.github.rosemoe.sora.graphics.TextRow;
+import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
+import io.github.rosemoe.sora.lang.styling.Span;
+import io.github.rosemoe.sora.lang.styling.SpanFactory;
+import io.github.rosemoe.sora.lang.styling.TextStyle;
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
 import io.github.rosemoe.sora.text.CharSequenceIterator;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
+import io.github.rosemoe.sora.text.breaker.WordBreaker;
+import io.github.rosemoe.sora.text.breaker.WordBreakerEmpty;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.MyCharacter;
 import io.github.rosemoe.sora.util.TemporaryFloatBuffer;
@@ -57,6 +65,17 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  * @author Rose
  */
 public class WordwrapLayout extends AbstractLayout {
+
+    /**
+     * When measuring text in wordwrap mode, we must use the max possible width of the character sequence
+     * so that no character will be invisible after its styles are applied on actual drawing.
+     */
+
+    private final static List<Span> sSpansForWordwrap = new ArrayList<>();
+
+    static {
+        sSpansForWordwrap.add(SpanFactory.obtain(0, TextStyle.makeStyle(0, 0, true, true, false)));
+    }
 
     private final int width;
     private final float miniGraphWidth;
@@ -165,16 +184,9 @@ public class WordwrapLayout extends AbstractLayout {
                 break;
             }
         }
-        List<Integer> breakpoints = new ArrayList<>();
         List<RowRegion> newRegions = new ArrayList<>();
         for (int i = startLine; i <= endLine; i++) {
-            breakLine(i, text.getLine(i), breakpoints, null);
-            for (int j = -1; j < breakpoints.size(); j++) {
-                int start = j == -1 ? 0 : breakpoints.get(j);
-                int end = j + 1 < breakpoints.size() ? breakpoints.get(j + 1) : text.getColumnCount(i);
-                newRegions.add(new RowRegion(i, start, end));
-            }
-            breakpoints.clear();
+            newRegions.addAll(breakLine(i, text.getLine(i), null));
         }
         rowTable.addAll(insertPosition, newRegions);
     }
@@ -182,28 +194,20 @@ public class WordwrapLayout extends AbstractLayout {
     /**
      * Break a single line
      */
-    private void breakLine(int line, ContentLine sequence, List<Integer> breakpoints, @Nullable Paint paint) {
-        int start = 0;
-        int len = sequence.length();
-
-        float[] advances = editor.getRenderer().computeLineAdvances(line, paint == null ? editor.getTextPaint() : paint);
-        var breaker = new GraphemeBoundsBreaker(advances, len, width);
-        var optimizer = antiWordBreaking ? WordBreaker.Factory.newInstance(sequence) : WordBreakerEmpty.INSTANCE;
-        while (start < len) {
-            int next = breaker.findGraphemeBreakPoint(start);
-            // Force to break the text, though no space is available
-            if (next == start) {
-                next++;
-            }
-            // do anti-word-breaking
-            next = optimizer.getOptimizedBreakPoint(start, next);
-            breakpoints.add(next);
-            start = next;
+    private List<RowRegion> breakLine(int line, ContentLine sequence, Paint paint) {
+        Paint p = paint;
+        if (p == null) {
+            p = new Paint(editor.isRenderFunctionCharacters());
+            p.set(editor.getTextPaint());
         }
-        if (!breakpoints.isEmpty() && breakpoints.get(breakpoints.size() - 1) == len) {
-            breakpoints.remove(breakpoints.size() - 1);
+        var tr = new TextRow();
+        tr.set(sequence, 0, sequence.length(), sSpansForWordwrap, getInlayHints(line), text.getLineDirections(line), p, null, editor.getRenderer().createTextRowParams());
+        var rows = tr.breakText(width, antiWordBreaking);
+        var results = new ArrayList<RowRegion>();
+        for (var row : rows) {
+            results.add(new RowRegion(line, row.startColumn, row.endColumn, row.inlayHints));
         }
-        TemporaryFloatBuffer.recycle(advances);
+        return results;
     }
 
     @Override
@@ -258,14 +262,15 @@ public class WordwrapLayout extends AbstractLayout {
     @Override
     public Row getRowAt(int rowIndex) {
         if (rowTable.isEmpty()) {
-            var r = new Row();
+            var r = new Row(this);
             r.startColumn = 0;
             r.endColumn = text.getColumnCount(rowIndex);
             r.isLeadingRow = true;
             r.lineIndex = rowIndex;
+            r.inlayHints = getInlayHints(rowIndex);
             return r;
         }
-        return rowTable.get(rowIndex).toRow();
+        return rowTable.get(rowIndex).toRow(this);
     }
 
     @Override
@@ -279,7 +284,7 @@ public class WordwrapLayout extends AbstractLayout {
     @NonNull
     @Override
     public RowIterator obtainRowIterator(int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
-        return rowTable.isEmpty() ? new LineBreakLayout.LineBreakLayoutRowItr(text, initialRow, preloadedLines) : new WordwrapLayoutRowItr(initialRow);
+        return rowTable.isEmpty() ? new LineBreakLayout.LineBreakLayoutRowItr(this, text, initialRow, preloadedLines) : new WordwrapLayoutRowItr(initialRow);
     }
 
     @Override
@@ -372,11 +377,17 @@ public class WordwrapLayout extends AbstractLayout {
     }
 
     @Override
+    public void invalidateLines(StyleUpdateRange range) {
+
+    }
+
+    @Override
     public long getCharPositionForLayoutOffset(float xOffset, float yOffset) {
         if (rowTable.isEmpty()) {
             int lineCount = text.getLineCount();
             int line = Math.min(lineCount - 1, Math.max((int) (yOffset / editor.getRowHeight()), 0));
-            int res = BidiLayout.horizontalIndex(editor, this, text, line, 0, text.getColumnCount(line), xOffset);
+            var tr = editor.getRenderer().createTextRow(line);
+            int res = tr.getIndexForCursorOffset(xOffset);
             return IntPair.pack(line, res);
         }
         int row = (int) (yOffset / editor.getRowHeight());
@@ -385,7 +396,8 @@ public class WordwrapLayout extends AbstractLayout {
         if (region.startColumn != 0) {
             xOffset -= miniGraphWidth;
         }
-        int column = BidiLayout.horizontalIndex(editor, this, text, region.line, region.startColumn, region.endColumn, xOffset);
+        var tr = editor.getRenderer().createTextRow(row);
+        int column = tr.getIndexForCursorOffset(xOffset);
         return IntPair.pack(region.line, column);
     }
 
@@ -397,7 +409,8 @@ public class WordwrapLayout extends AbstractLayout {
         }
         if (rowTable.isEmpty()) {
             dest[0] = editor.getRowBottom(line);
-            dest[1] = BidiLayout.horizontalOffset(editor, this, text, line, 0, text.getColumnCount(line), column);
+            var tr = editor.getRenderer().createTextRow(line);
+            dest[1] = tr.getCursorOffsetForIndex(column);
             return dest;
         }
         int row = findRow(line);
@@ -417,7 +430,8 @@ public class WordwrapLayout extends AbstractLayout {
                 }
             }
             dest[0] = editor.getRowBottom(row);
-            dest[1] = BidiLayout.horizontalOffset(editor, this, text, region.line, region.startColumn, region.endColumn, column);
+            var tr = editor.getRenderer().createTextRow(row);
+            dest[1] = tr.getCursorOffsetForIndex(column);
             if (region.startColumn != 0) {
                 dest[1] += miniGraphWidth;
             }
@@ -472,20 +486,23 @@ public class WordwrapLayout extends AbstractLayout {
 
         final int startColumn;
         final int endColumn;
+        List<InlayHint> inlayHints;
         int line;
 
-        RowRegion(int line, int start, int end) {
+        RowRegion(int line, int start, int end, List<InlayHint> inlayHints) {
             this.line = line;
             startColumn = start;
             endColumn = end;
+            this.inlayHints = inlayHints;
         }
 
-        public Row toRow() {
-            var row = new Row();
+        public Row toRow(AbstractLayout layout) {
+            var row = new Row(layout);
             row.isLeadingRow = startColumn == 0;
             row.startColumn = startColumn;
             row.endColumn = endColumn;
             row.lineIndex = line;
+            row.inlayHints = inlayHints == null ? Collections.emptyList() : inlayHints;
             return row;
         }
 
@@ -524,7 +541,7 @@ public class WordwrapLayout extends AbstractLayout {
 
         WordwrapLayoutRowItr(int initialRow) {
             initRow = currentRow = initialRow;
-            result = new Row();
+            result = new Row(WordwrapLayout.this);
         }
 
         @NonNull
@@ -537,6 +554,7 @@ public class WordwrapLayout extends AbstractLayout {
             result.lineIndex = region.line;
             result.startColumn = region.startColumn;
             result.endColumn = region.endColumn;
+            result.inlayHints = region.inlayHints == null ? Collections.emptyList() : region.inlayHints;
             result.isLeadingRow = currentRow <= 0 || rowTable.get(currentRow - 1).line != region.line;
             currentRow++;
             return result;
@@ -572,142 +590,13 @@ public class WordwrapLayout extends AbstractLayout {
         protected WordwrapResult compute() {
             editor.setLayoutBusy(true);
             var list = new ArrayList<RowRegion>();
-            var breakpoints = new ArrayList<Integer>();
             text.runReadActionsOnLines(start, end, (int index, ContentLine line, Content.ContentLineConsumer2.AbortFlag abortFlag) -> {
-                breakLine(index, line, breakpoints, paint);
-                for (int j = -1; j < breakpoints.size(); j++) {
-                    int start = j == -1 ? 0 : breakpoints.get(j);
-                    int end = j + 1 < breakpoints.size() ? breakpoints.get(j + 1) : line.length();
-                    list.add(new RowRegion(index, start, end));
-                }
+                list.addAll(breakLine(index, line, paint));
                 if (!shouldRun()) {
                     abortFlag.set = true;
                 }
-                breakpoints.clear();
             });
             return new WordwrapResult(id, list);
-        }
-    }
-
-    private static class GraphemeBoundsBreaker {
-
-        private final float[] advances;
-        private final int length;
-
-        private final int width;
-
-        public GraphemeBoundsBreaker(float[] advances, int length, int width) {
-            this.advances = advances;
-            this.length = length;
-            this.width = width;
-        }
-
-        public int findGraphemeBreakPoint(int start) {
-            float currentWidth = 0;
-            int next = start;
-            while (next < length) {
-                if (advances[next] == 0) {
-                    // Not grapheme bound
-                    next++;
-                    continue;
-                }
-                if (currentWidth + advances[next] > width) {
-                    break;
-                }
-                currentWidth += advances[next];
-                next++;
-            }
-            return next;
-        }
-
-    }
-
-    private interface WordBreaker {
-
-        int getOptimizedBreakPoint(int start, int end);
-
-        class Factory {
-
-            @NonNull
-            public static WordBreaker newInstance(@NonNull ContentLine text) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    return new WordBreakerApiN(text);
-                }
-                return new WordBreakerFallback(text);
-            }
-
-        }
-
-    }
-
-    private static class WordBreakerApiN implements WordBreaker {
-
-        private final BreakIterator wrappingIterator;
-
-        private final char[] chars;
-
-        @RequiresApi(Build.VERSION_CODES.N)
-        public WordBreakerApiN(@NonNull ContentLine text) {
-            this.chars = text.getBackingCharArray();
-            var textIterator = new CharSequenceIterator(text);
-            wrappingIterator = BreakIterator.getLineInstance();
-            wrappingIterator.setText(textIterator);
-        }
-
-        public int getOptimizedBreakPoint(int start, int end) {
-            // Merging trailing whitespaces is not supported by editor, so force to break here
-            if (end > 0 && !Character.isWhitespace(chars[end - 1]) && !wrappingIterator.isBoundary(end)) {
-                // Break text at last boundary
-                int lastBoundary = wrappingIterator.preceding(end);
-                if (lastBoundary != BreakIterator.DONE) {
-                    int suggestedNext = Math.max(start, Math.min(end, lastBoundary));
-                    if (suggestedNext > start) {
-                        end = suggestedNext;
-                    }
-                }
-            }
-            return end;
-        }
-
-    }
-
-    private static class WordBreakerFallback implements WordBreaker {
-
-        private final char[] text;
-        private final int len;
-
-        public WordBreakerFallback(@NonNull ContentLine text) {
-            this.text = text.getBackingCharArray();
-            this.len = text.length();
-        }
-
-        @Override
-        public int getOptimizedBreakPoint(int start, int end) {
-            if (MyCharacter.isAlpha(text[end - 1]) &&
-                    end < len && (MyCharacter.isAlpha(text[end]) || text[end] == '-')) {
-                int wordStart = end - 1;
-                while (wordStart > start && MyCharacter.isAlpha(text[wordStart - 1])) {
-                    wordStart--;
-                }
-                if (wordStart > start) {
-                    end = wordStart;
-                }
-            }
-            return end;
-        }
-    }
-
-    private static class WordBreakerEmpty implements WordBreaker {
-
-        public static WordBreaker INSTANCE = new WordBreakerEmpty();
-
-        private WordBreakerEmpty() {
-
-        }
-
-        @Override
-        public int getOptimizedBreakPoint(int start, int end) {
-            return end;
         }
     }
 

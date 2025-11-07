@@ -1,7 +1,7 @@
 /*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2024  Rosemoe
+ *    Copyright (C) 2020-2025  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -23,56 +23,54 @@
  */
 package io.github.rosemoe.sora.text.bidi;
 
+import android.icu.text.Bidi;
+
 import androidx.annotation.NonNull;
+
 
 import io.github.rosemoe.sora.util.IntPair;
 
-/**
- * Manages directions in a text segment
- *
- * @author Rosemoe
- */
-public class Directions implements IDirections {
+public class VisualDirections implements IDirections {
 
-    private long[] runs;
-    private int length;
+    private final long[] ranges;
+    private final int[] levels;
 
-    public Directions(@NonNull long[] runs, int length) {
-        this.runs = runs;
-        this.length = length;
+    public VisualDirections(@NonNull Directions dirs) {
+        int runCount = dirs.getRunCount();
+        ranges = new long[runCount];
+        levels = new int[runCount];
+        var paramLevels = new byte[runCount];
+        for (int i = 0; i < runCount; i++) {
+            paramLevels[i] = (byte) dirs.getRunLevel(i);
+        }
+        int[] indices = Bidi.reorderVisual(paramLevels);
+        for (int i = 0; i < runCount; i++) {
+            int j = indices[i];
+            ranges[i] = IntPair.pack(dirs.getRunStart(j), dirs.getRunEnd(j));
+            levels[i] = dirs.getRunLevel(j);
+        }
     }
 
-    public void setData(@NonNull long[] runs, int length) {
-        this.runs = runs;
-        this.length = length;
-    }
-
-    public void setLength(int length) {
-        this.length = length;
-    }
-
-    public int getLength() {
-        return length;
-    }
 
     public int getRunCount() {
-        return runs.length;
+        return ranges.length;
     }
 
     public int getRunStart(int i) {
-        return IntPair.getFirst(runs[i]);
+        return IntPair.getFirst(ranges[i]);
     }
 
     public int getRunEnd(int i) {
-        return i == runs.length - 1 ? length : getRunStart(i + 1);
+        return IntPair.getSecond(ranges[i]);
     }
 
     public int getRunLevel(int i) {
-        return IntPair.getSecond(runs[i]);
+        return levels[i];
     }
 
     public boolean isRunRtl(int i) {
-        return (getRunLevel(i) & 1) == 1;
+        return (getRunLevel(i) & 1) != 0;
     }
+
 
 }

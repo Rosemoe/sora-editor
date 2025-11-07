@@ -34,7 +34,7 @@ import io.github.rosemoe.sora.util.RegionIterator;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
- * Helper class for {@link GraphicTextRow} to iterate text regions
+ * Helper class to iterate text regions
  *
  * @author Rosemoe
  */

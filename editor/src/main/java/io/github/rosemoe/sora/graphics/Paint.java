@@ -97,89 +97,39 @@ public class Paint extends android.graphics.Paint {
     }
 
     @SuppressLint("NewApi")
-    public float myGetTextRunAdvances(@NonNull char[] chars, int index, int count, int contextIndex, int contextCount, boolean isRtl, @Nullable float[] advances, int advancesIndex, boolean fast) {
-        if (fast) {
-            ensureCacheObject();
-            var width = 0f;
+    public float myGetTextRunAdvances(@NonNull char[] chars, int index, int count, int contextIndex, int contextCount, boolean isRtl, @Nullable float[] advances, int advancesIndex) {
+        float advance = getTextRunAdvances(chars, index, count, contextIndex, contextCount, isRtl, advances, advancesIndex);
+        if (renderFunctionCharacters) {
             for (int i = 0; i < count; i++) {
-                char ch = chars[i + index];
-                float charWidth;
-                if (Character.isHighSurrogate(ch) && i + 1 < count && Character.isLowSurrogate(chars[index + i + 1])) {
-                    charWidth = widths.measureCodePoint(Character.toCodePoint(ch, chars[index + i + 1]), this);
+                char ch = chars[index + i];
+                if (FunctionCharacters.isEditorFunctionChar(ch)) {
+                    float width = measureText(FunctionCharacters.getNameForFunctionCharacter(ch));
                     if (advances != null) {
-                        advances[advancesIndex + i] = charWidth;
-                        advances[advancesIndex + i + 1] = 0f;
+                        advance -= advances[advancesIndex + i];
+                        advances[advancesIndex + i] = width;
+                    } else {
+                        advance -= measureText(Character.toString(ch));
                     }
-                    i++;
-                } else if (renderFunctionCharacters && FunctionCharacters.isEditorFunctionChar(ch)) {
-                    charWidth = widths.measureText(FunctionCharacters.getNameForFunctionCharacter(ch), this);
-                    if (advances != null) {
-                        advances[advancesIndex + i] = charWidth;
-                    }
-                } else {
-                    charWidth = (ch == '\t') ? tabWidth : widths.measureChar(ch, this);
-                    if (advances != null) {
-                        advances[advancesIndex + i] = charWidth;
-                    }
-                }
-                width += charWidth;
-            }
-            return width;
-        } else {
-            float advance = getTextRunAdvances(chars, index, count, contextIndex, contextCount, isRtl, advances, advancesIndex);
-            if (renderFunctionCharacters) {
-                for (int i = 0;i < count;i++) {
-                    char ch = chars[index + i];
-                    if (FunctionCharacters.isEditorFunctionChar(ch)) {
-                        float width = measureText(FunctionCharacters.getNameForFunctionCharacter(ch));
-                        if (advances != null) {
-                            advance -= advances[advancesIndex + i];
-                            advances[advancesIndex + i] = width;
-                        } else {
-                            advance -= measureText(Character.toString(ch));
-                        }
-                        advance += width;
-                    }
+                    advance += width;
                 }
             }
-            return advance;
         }
+        return advance;
     }
 
     /**
      * Get the advance of text with the context positions related to shaping the characters
      */
     public float measureTextRunAdvance(char[] text, int start, int end, int contextStart, int contextEnd, boolean fast) {
-        return myGetTextRunAdvances(text, start, end - start, contextStart, contextEnd - contextStart, false, null, 0, fast);
+        return myGetTextRunAdvances(text, start, end - start, contextStart, contextEnd - contextStart, false, null, 0);
     }
 
     /**
      * Find offset for a certain advance returned by {@link #measureTextRunAdvance(char[], int, int, int, int, boolean)}
      */
-    public int findOffsetByRunAdvance(ContentLine text, int start, int end, float advance, boolean fast) {
-        if (fast) {
-            ensureCacheObject();
-            var width = 0f;
-            var textChars = text.getBackingCharArray();
-            for (int i = start; i < end; i++) {
-                char ch = textChars[i];
-                float charWidth;
-                int j = i;
-                if (Character.isHighSurrogate(ch) && i + 1 < end && Character.isLowSurrogate(textChars[i + 1])) {
-                    charWidth = widths.measureCodePoint(Character.toCodePoint(ch, textChars[i + 1]), this);
-                    i++;
-                } else if (renderFunctionCharacters && FunctionCharacters.isEditorFunctionChar(ch)) {
-                    charWidth = widths.measureText(FunctionCharacters.getNameForFunctionCharacter(ch), this);
-                } else {
-                    charWidth = (ch == '\t') ? tabWidth : widths.measureChar(ch, this);
-                }
-                width += charWidth;
-                if (width > advance) {
-                    return Math.max(start, j - 1);
-                }
-            }
-            return end;
-        }
+    public int findOffsetByRunAdvance(ContentLine text, int start, int end,
+                                      int contextStart, int contextEnd, boolean isRtl,
+                                      float advance) {
         if (renderFunctionCharacters) {
             int lastEnd = start;
             float current = 0f;
@@ -187,11 +137,11 @@ public class Paint extends android.graphics.Paint {
             for (int i = start;i < end;i++) {
                 char ch = textChars[i];
                 if (FunctionCharacters.isEditorFunctionChar(ch)) {
-                    int result = lastEnd == i ? i : breakTextImpl(text, lastEnd, i, advance - current);
+                    int result = lastEnd == i ? i : breakTextImpl(text, lastEnd, i, contextStart, contextEnd, isRtl, advance - current);
                     if (result < i) {
                         return result;
                     }
-                    current += measureTextRunAdvance(textChars, lastEnd, i, lastEnd, i, false);
+                    current += measureTextRunAdvance(textChars, lastEnd, i, contextStart, contextEnd, isRtl);
                     current += measureText(FunctionCharacters.getNameForFunctionCharacter(ch));
                     if (current >= advance) {
                         return i;
@@ -200,17 +150,17 @@ public class Paint extends android.graphics.Paint {
                 }
             }
             if (lastEnd < end) {
-                return breakTextImpl(text, lastEnd, end, advance - current);
+                return breakTextImpl(text, lastEnd, end, contextStart, contextEnd, isRtl, advance - current);
             }
             return end;
         } else {
-            return breakTextImpl(text, start, end, advance);
+            return breakTextImpl(text, start, end, contextStart, contextEnd, isRtl, advance);
         }
     }
 
-    private int breakTextImpl(ContentLine text, int start, int end, float advance) {
+    private int breakTextImpl(ContentLine text, int start, int end, int contextStart, int contextEnd, boolean isRtl, float advance) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return getOffsetForAdvance(text.getBackingCharArray(), start, end, start, end, false, advance);
+            return getOffsetForAdvance(text.getBackingCharArray(), start, end, contextStart, contextEnd, isRtl, advance);
         } else {
             return start + breakText(text.getBackingCharArray(), start, end - start, advance, null);
         }

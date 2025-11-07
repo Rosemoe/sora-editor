@@ -28,12 +28,17 @@ import android.util.SparseArray;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.graphics.SingleCharacterWidths;
+import io.github.rosemoe.sora.graphics.TextRow;
+import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.BlockIntList;
@@ -50,6 +55,7 @@ public class LineBreakLayout extends AbstractLayout {
 
     private final AtomicInteger reuseCount = new AtomicInteger(0);
     private BlockIntList widthMaintainer;
+    private BlockIntList inlineElementsWidths;
     private SingleCharacterWidths measurer;
 
     public LineBreakLayout(CodeEditor editor, Content text) {
@@ -57,10 +63,11 @@ public class LineBreakLayout extends AbstractLayout {
         measurer = new SingleCharacterWidths(editor.getTabWidth());
         measurer.setHandleFunctionCharacters(editor.isRenderFunctionCharacters());
         widthMaintainer = new BlockIntList();
-        measureAllLines(widthMaintainer);
+        inlineElementsWidths = new BlockIntList();
+        measureAllLines(widthMaintainer, inlineElementsWidths);
     }
 
-    private void measureAllLines(BlockIntList widthMaintainer) {
+    private void measureAllLines(BlockIntList widthMaintainer, BlockIntList inlineElementsWidths) {
         if (text == null) {
             return;
         }
@@ -92,8 +99,10 @@ public class LineBreakLayout extends AbstractLayout {
                     editor.setLayoutBusy(true);
                     text.runReadActionsOnLines(0, text.getLineCount() - 1, (int index, ContentLine line, Content.ContentLineConsumer2.AbortFlag abortFlag) -> {
                         var width = (int) measurerLocal.measureText(line, 0, line.length(), shadowPaint);
+                        var inlineElementsWidth = measureInlayHints(getInlayHints(index), shadowPaint);
                         if (shouldRun()) {
-                            widthMaintainer.add(width);
+                            widthMaintainer.add(width + inlineElementsWidth);
+                            inlineElementsWidths.add(inlineElementsWidth);
                         } else {
                             abortFlag.set = true;
                         }
@@ -112,12 +121,28 @@ public class LineBreakLayout extends AbstractLayout {
         submitTask(task);
     }
 
-    private int measureLine(int lineIndex) {
-        ContentLine line = text.getLine(lineIndex);
-        return (int) measurer.measureText(line, 0, line.length(), editor.getTextPaint());
+    private int measureInlayHints(List<InlayHint> inlayHints, Paint paint) {
+        var width = 0f;
+        for (var inlayHint : inlayHints) {
+            var renderer = editor.getInlayHintRendererForType(inlayHint.getType());
+            if (renderer == null) {
+                continue;
+            }
+            var w = renderer.measure(inlayHint, paint, editor.getRenderer().getTextMetrics(),
+                    editor.getRowHeightOfText(), editor.getRowBaseline(0));
+            width += w;
+        }
+        return (int) width;
     }
 
-    private int measureRegion(int lineIndex, int start, int end) {
+    private int measureLineAndUpdateInlineWidths(int lineIndex) {
+        ContentLine line = text.getLine(lineIndex);
+        var inlayHintsWidth = measureInlayHints(getInlayHints(lineIndex), editor.getTextPaint());
+        inlineElementsWidths.set(lineIndex, inlayHintsWidth);
+        return (int) measurer.measureText(line, 0, line.length(), editor.getTextPaint()) + inlayHintsWidth;
+    }
+
+    private int measureTextRegion(int lineIndex, int start, int end) {
         ContentLine line = text.getLine(lineIndex);
         return (int) measurer.measureText(line, start, end, editor.getTextPaint());
     }
@@ -125,7 +150,16 @@ public class LineBreakLayout extends AbstractLayout {
     @NonNull
     @Override
     public RowIterator obtainRowIterator(int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
-        return new LineBreakLayoutRowItr(text, initialRow, preloadedLines);
+        return new LineBreakLayoutRowItr(this, text, initialRow, preloadedLines);
+    }
+
+    @Override
+    public void invalidateLines(StyleUpdateRange range) {
+        var itr = range.lineIndexIterator(text.getLineCount() - 1);
+        while (itr.hasNext()) {
+            var line = itr.nextInt();
+            widthMaintainer.set(line, measureLineAndUpdateInlineWidths(line));
+        }
     }
 
     @Override
@@ -144,12 +178,15 @@ public class LineBreakLayout extends AbstractLayout {
         for (int i = startLine; i <= endLine; i++) {
             if (i == startLine) {
                 if (endLine == startLine) {
-                    widthMaintainer.set(i, widthMaintainer.get(i) + measureRegion(i, startColumn, endColumn));
+                    var oldInlayWidths = inlineElementsWidths.get(i);
+                    var newInlayWidths = measureInlayHints(getInlayHints(i), editor.getTextPaint());
+                    inlineElementsWidths.set(i, newInlayWidths);
+                    widthMaintainer.set(i, widthMaintainer.get(i) + measureTextRegion(i, startColumn, endColumn) + (newInlayWidths - oldInlayWidths));
                 } else {
-                    widthMaintainer.set(i, measureLine(i));
+                    widthMaintainer.set(i, measureLineAndUpdateInlineWidths(i));
                 }
             } else {
-                widthMaintainer.add(i, measureLine(i));
+                widthMaintainer.add(i, measureLineAndUpdateInlineWidths(i));
             }
         }
     }
@@ -159,22 +196,29 @@ public class LineBreakLayout extends AbstractLayout {
         super.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
         if (startLine < endLine) {
             widthMaintainer.removeRange(startLine + 1, endLine + 1);
+            inlineElementsWidths.removeRange(startLine + 1, endLine + 1);
         }
         if (startLine == endLine) {
-            widthMaintainer.set(startLine, widthMaintainer.get(startLine) - (int) measurer.measureText(deletedContent, 0, endColumn - startColumn, editor.getTextPaint()));
+            var oldInlayWidths = inlineElementsWidths.get(startLine);
+            var newInlayWidths = measureInlayHints(getInlayHints(startLine), editor.getTextPaint());
+            inlineElementsWidths.set(startLine, newInlayWidths);
+            widthMaintainer.set(startLine, widthMaintainer.get(startLine)
+                    - (int) measurer.measureText(deletedContent, 0, endColumn - startColumn, editor.getTextPaint())
+                    + (newInlayWidths - oldInlayWidths));
         } else {
-            widthMaintainer.set(startLine, measureLine(startLine));
+            widthMaintainer.set(startLine, measureLineAndUpdateInlineWidths(startLine));
         }
     }
 
     @NonNull
     @Override
     public Row getRowAt(int rowIndex) {
-        var row = new Row();
+        var row = new Row(this);
         row.lineIndex = rowIndex;
         row.startColumn = 0;
         row.isLeadingRow = true;
         row.endColumn = text.getColumnCount(rowIndex);
+        row.inlayHints = getInlayHints(rowIndex);
         return row;
     }
 
@@ -208,7 +252,8 @@ public class LineBreakLayout extends AbstractLayout {
     public long getCharPositionForLayoutOffset(float xOffset, float yOffset) {
         int lineCount = text.getLineCount();
         int line = Math.min(lineCount - 1, Math.max((int) (yOffset / editor.getRowHeight()), 0));
-        int res = BidiLayout.horizontalIndex(editor, this, text, line, 0, text.getColumnCount(line), xOffset);
+        var tr = editor.getRenderer().createTextRow(line);
+        int res = tr.getIndexForCursorOffset(xOffset);
         return IntPair.pack(line, res);
     }
 
@@ -219,7 +264,8 @@ public class LineBreakLayout extends AbstractLayout {
             dest = new float[2];
         }
         dest[0] = editor.getRowBottom(line);
-        dest[1] = BidiLayout.horizontalOffset(editor, this, text, line, 0, text.getColumnCount(line), column);
+        var tr = editor.getRenderer().createTextRow(line);
+        dest[1] = tr.getCursorOffsetForIndex(column);
         return dest;
     }
 
@@ -263,9 +309,9 @@ public class LineBreakLayout extends AbstractLayout {
             if (widthMaintainer.lock.tryLock(5, TimeUnit.MILLISECONDS)) {
                 widthMaintainer.lock.unlock();
                 widthMaintainer.clear();
-                measureAllLines(widthMaintainer);
+                measureAllLines(widthMaintainer, inlineElementsWidths);
             } else {
-                measureAllLines(widthMaintainer = new BlockIntList());
+                measureAllLines(widthMaintainer = new BlockIntList(), inlineElementsWidths = new BlockIntList());
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("Unable to wait for lock", e);
@@ -279,11 +325,13 @@ public class LineBreakLayout extends AbstractLayout {
         private final int initRow;
         private final SparseArray<ContentLine> preloadedLines;
         private int currentRow;
+        private final AbstractLayout layout;
 
-        LineBreakLayoutRowItr(@NonNull Content text, int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
+        LineBreakLayoutRowItr(AbstractLayout layout, @NonNull Content text, int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
             initRow = currentRow = initialRow;
-            result = new Row();
+            result = new Row(layout);
             this.text = text;
+            this.layout = layout;
             result.isLeadingRow = true;
             result.startColumn = 0;
             this.preloadedLines = preloadedLines;
@@ -301,6 +349,7 @@ public class LineBreakLayout extends AbstractLayout {
                 line = text.getLine(currentRow);
             }
             result.endColumn = line.length();
+            result.inlayHints = layout.getInlayHints(result.lineIndex);
             currentRow++;
             return result;
         }

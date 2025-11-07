@@ -22,31 +22,26 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lang.styling.inlayHint
+package io.github.rosemoe.sora.graphics
 
-import io.github.rosemoe.sora.lang.styling.util.PointAnchoredObject
+import android.graphics.Paint
+import io.github.rosemoe.sora.graphics.inlayHint.InlayHintRendererProvider
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
-/**
- * Choose which side of character to display the inlay hint.
- *
- * No effect if the given character position is at line start or end.
- */
-enum class CharacterSide {
-    LEFT,
-    RIGHT
-}
-
-open class InlayHint(
-    override var line: Int,
-    override var column: Int,
-    val type: String,
-    val displaySide: CharacterSide = CharacterSide.LEFT
-) : PointAnchoredObject {
-
-    init {
-        if (line < 0 || column < 0) {
-            throw IllegalArgumentException("negative number")
-        }
-    }
-
-}
+data class TextRowParams(
+    val tabWidth: Int,
+    val textMetrics: Paint.FontMetricsInt,
+    val textTop: Int,
+    val textBottom: Int,
+    val textHeight: Int,
+    val textBaseline: Int,
+    val rowTop: Int,
+    val rowBottom: Int,
+    val rowHeight: Int,
+    val roundTextBackgroundFactor: Float,
+    val inlayHintRendererProvider: InlayHintRendererProvider,
+    val colorScheme: EditorColorScheme,
+    val miscPaint: Paint,
+    val graphPaint: Paint,
+    val graphMetrics: Paint.FontMetricsInt
+)

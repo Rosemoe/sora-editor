@@ -23,6 +23,15 @@
  */
 package io.github.rosemoe.sora.widget.layout;
 
+import androidx.annotation.NonNull;
+
+import java.util.Iterator;
+import java.util.List;
+
+import io.github.rosemoe.sora.lang.styling.inlayHint.CharacterSide;
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
+import io.github.rosemoe.sora.lang.styling.util.PointAnchoredContainer;
+
 /**
  * This class represents a 'row' in editor.
  * Editor uses this to draw rows
@@ -52,5 +61,78 @@ public class Row {
      * End index in target line
      */
     public int endColumn;
+
+    public List<InlayHint> inlayHints;
+
+    private AbstractLayout layout;
+
+    public Row(@NonNull AbstractLayout layout) {
+        this.layout = layout;
+    }
+
+    public Iterator<RowElement> elements() {
+        return new Iterator<>() {
+            final List<InlayHint> inlays = layout.getInlayHints(lineIndex);
+            int inlayIndex = 0;
+            int lastEndIndex = startColumn;
+            final int columnCount = layout.text.getColumnCount(lineIndex);
+            final RowElement element = new RowElement();
+
+            {
+                inlays.sort((a, b) -> {
+                    int res = PointAnchoredContainer.Companion.getComparator().compare(a, b);
+                    if (res == 0) {
+                        return Integer.compare(a.getDisplaySide().ordinal(), b.getDisplaySide().ordinal());
+                    }
+                    return res;
+                });
+                while (inlayIndex < inlays.size() && inlays.get(inlayIndex).getColumn() < startColumn) {
+                    inlayIndex++;
+                }
+            }
+
+            private int getExpectedInlayColumn() {
+                var inlay = inlays.get(inlayIndex);
+                var position = inlay.getColumn();
+                if (inlay.getDisplaySide() == CharacterSide.RIGHT) {
+                    position = Math.min(columnCount, position + 1);
+                }
+                return position;
+            }
+
+            @Override
+            public boolean hasNext() {
+                return lastEndIndex < endColumn || (inlayIndex < inlays.size() && getExpectedInlayColumn() <= endColumn);
+            }
+
+            @Override
+            public RowElement next() {
+                if (hasNext()) {
+                    if (inlayIndex < inlays.size() && getExpectedInlayColumn() <= endColumn) {
+                        var inlay = inlays.get(inlayIndex);
+                        var position = getExpectedInlayColumn();
+                        if (lastEndIndex == position) {
+                            inlayIndex++;
+                            element.type = RowElementTypes.INLAY_HINT;
+                            element.inlayHint = inlay;
+                        } else {
+                            // lastEndIndex < position
+                            element.type = RowElementTypes.TEXT;
+                            element.startColumn = lastEndIndex;
+                            element.endColumn = position;
+                            lastEndIndex = position;
+                        }
+                    } else if (lastEndIndex < endColumn) {
+                        element.type = RowElementTypes.TEXT;
+                        element.startColumn = lastEndIndex;
+                        element.endColumn = endColumn;
+                        lastEndIndex = endColumn;
+                    }
+                    return element;
+                }
+                return null;
+            }
+        };
+    }
 
 }

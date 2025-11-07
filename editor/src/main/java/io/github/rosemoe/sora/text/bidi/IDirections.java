@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2025  Rosemoe
@@ -11,7 +11,7 @@
  *     This library is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *     Lesser General Public License for more details.
+ *     Lesser General License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public
  *     License along with this library; if not, write to the Free Software
@@ -20,33 +20,20 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
-
-package io.github.rosemoe.sora.lang.styling.inlayHint
-
-import io.github.rosemoe.sora.lang.styling.util.PointAnchoredObject
-
-/**
- * Choose which side of character to display the inlay hint.
- *
- * No effect if the given character position is at line start or end.
  */
-enum class CharacterSide {
-    LEFT,
-    RIGHT
-}
+package io.github.rosemoe.sora.text.bidi;
 
-open class InlayHint(
-    override var line: Int,
-    override var column: Int,
-    val type: String,
-    val displaySide: CharacterSide = CharacterSide.LEFT
-) : PointAnchoredObject {
 
-    init {
-        if (line < 0 || column < 0) {
-            throw IllegalArgumentException("negative number")
-        }
-    }
+public interface IDirections {
+
+    int getRunCount();
+
+    int getRunStart(int i);
+
+    int getRunEnd(int i);
+
+    int getRunLevel(int i);
+
+    boolean isRunRtl(int i);
 
 }

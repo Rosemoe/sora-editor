@@ -32,37 +32,34 @@ import kotlin.concurrent.withLock
  * Cache for editor rendering, including line-based data and measure
  * cache for recently accessed lines.
  *
+ * This object is expected to be accessed from UI thread.
+ *
  * @author Rosemoe
  */
 class RenderCache {
-
-    private val lock = ReentrantLock()
     private val lines = MutableIntList()
     private val cache = mutableListOf<MeasureCacheItem>()
     private var maxCacheCount = 75
 
     fun getOrCreateMeasureCache(line: Int): MeasureCacheItem {
         return queryMeasureCache(line) ?: run {
-            lock.withLock {
-                MeasureCacheItem(line, null, 0L).also {
-                    cache.add(it)
-                    while (cache.size > maxCacheCount && cache.isNotEmpty()) {
-                        cache.removeAt(0)
-                    }
+            MeasureCacheItem(line, null, 0L).also {
+                cache.add(it)
+                while (cache.size > maxCacheCount && cache.isNotEmpty()) {
+                    cache.removeAt(0)
                 }
             }
         }
     }
 
     fun queryMeasureCache(line: Int) =
-        lock.withLock {
-            cache.firstOrNull { it.line == line }.also {
-                if (it != null) {
-                    cache.remove(it)
-                    cache.add(it)
-                }
+        cache.firstOrNull { it.line == line }.also {
+            if (it != null) {
+                cache.remove(it)
+                cache.add(it)
             }
         }
+
 
     fun getStyleHash(line: Int) = lines[line]
 
@@ -77,25 +74,22 @@ class RenderCache {
             } else {
                 lines.addAll(startLine, IntArray(endLine - startLine))
             }
-            lock.withLock {
-                cache.forEach {
-                    if (it.line > startLine) {
-                        it.line += endLine - startLine
-                    }
+            cache.forEach {
+                if (it.line > startLine) {
+                    it.line += endLine - startLine
                 }
             }
+
         }
     }
 
     fun updateForDeletion(startLine: Int, endLine: Int) {
         if (startLine != endLine) {
             lines.removeRange(startLine, endLine)
-            lock.withLock {
-                cache.removeAll { it.line in startLine..endLine }
-                cache.forEach {
-                    if (it.line > endLine) {
-                        it.line -= endLine - startLine
-                    }
+            cache.removeAll { it.line in startLine..endLine }
+            cache.forEach {
+                if (it.line > endLine) {
+                    it.line -= endLine - startLine
                 }
             }
         }
@@ -110,9 +104,7 @@ class RenderCache {
             }
         }
         lines.indices.forEach { lines[it] = 0 }
-        lock.withLock {
-            cache.clear()
-        }
+        cache.clear()
     }
 
 }

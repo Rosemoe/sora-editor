@@ -1,7 +1,7 @@
 /*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2024  Rosemoe
+ *    Copyright (C) 2020-2025  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -24,42 +24,24 @@
 package io.github.rosemoe.sora.graphics;
 
 
-import android.graphics.Canvas;
-import android.graphics.Paint;
+public class GraphemeBoundsBreaker {
 
-public class BufferedDrawPoints {
-
-    private int pointCount;
-    private float[] points;
-    private float offsetX, offsetY;
-
-    public BufferedDrawPoints() {
-        points = new float[128];
-    }
-
-    public void drawPoint(float cx, float cy) {
-        // Check buffer size and grow
-        if (points.length < (pointCount + 1) * 2) {
-            float[] newBuffer = new float[points.length << 1];
-            System.arraycopy(points, 0, newBuffer, 0, pointCount * 2);
-            points = newBuffer;
+    public static int findGraphemeBreakPoint(float[] advances, int length, int width, int start) {
+        float currentWidth = 0;
+        int next = start;
+        while (next < length) {
+            if (advances[next] == 0) {
+                // Not grapheme bound
+                next++;
+                continue;
+            }
+            if (currentWidth + advances[next] > width) {
+                break;
+            }
+            currentWidth += advances[next];
+            next++;
         }
-        points[pointCount * 2] = cx + offsetX;
-        points[pointCount * 2 + 1] = cy + offsetY;
-        pointCount++;
-    }
-
-    public void setOffsets(float x, float y) {
-        this.offsetX = x;
-        this.offsetY = y;
-    }
-
-    public void commitPoints(Canvas canvas, Paint paint) {
-        if (pointCount == 0) {
-            return;
-        }
-        canvas.drawPoints(points, 0, pointCount * 2, paint);
-        pointCount = 0;
+        return next;
     }
 
 }

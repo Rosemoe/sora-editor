@@ -22,31 +22,10 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lang.styling.inlayHint
+package io.github.rosemoe.sora.graphics.inlayHint
 
-import io.github.rosemoe.sora.lang.styling.util.PointAnchoredObject
+fun interface InlayHintRendererProvider {
 
-/**
- * Choose which side of character to display the inlay hint.
- *
- * No effect if the given character position is at line start or end.
- */
-enum class CharacterSide {
-    LEFT,
-    RIGHT
-}
-
-open class InlayHint(
-    override var line: Int,
-    override var column: Int,
-    val type: String,
-    val displaySide: CharacterSide = CharacterSide.LEFT
-) : PointAnchoredObject {
-
-    init {
-        if (line < 0 || column < 0) {
-            throw IllegalArgumentException("negative number")
-        }
-    }
+    fun getInlayHintRendererForType(type: String): InlayHintRenderer?
 
 }

@@ -24,28 +24,34 @@
 
 package io.github.rosemoe.sora.lang.styling.inlayHint
 
-import io.github.rosemoe.sora.lang.styling.util.PointAnchoredObject
+import androidx.collection.IntSet
+import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange
 
-/**
- * Choose which side of character to display the inlay hint.
- *
- * No effect if the given character position is at line start or end.
- */
-enum class CharacterSide {
-    LEFT,
-    RIGHT
-}
+class IntSetUpdateRange(val lineSet: IntSet) : StyleUpdateRange {
 
-open class InlayHint(
-    override var line: Int,
-    override var column: Int,
-    val type: String,
-    val displaySide: CharacterSide = CharacterSide.LEFT
-) : PointAnchoredObject {
+    val lines = IntArray(lineSet.size)
 
     init {
-        if (line < 0 || column < 0) {
-            throw IllegalArgumentException("negative number")
+        var index = 0
+        lineSet.forEach { element ->
+            lines[index++] = element
+        }
+    }
+
+    override fun isInRange(line: Int): Boolean {
+        return lineSet.contains(line)
+    }
+
+    override fun lineIndexIterator(maxLineIndex: Int): IntIterator {
+        return object : IntIterator() {
+            var index = 0
+
+            override fun nextInt(): Int {
+                return if (index < lines.size) lines[index++].coerceAtMost(maxLineIndex) else maxLineIndex
+            }
+
+            override fun hasNext() = index < lines.size
+
         }
     }
 
