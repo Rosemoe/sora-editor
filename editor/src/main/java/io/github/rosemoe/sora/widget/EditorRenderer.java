@@ -1307,9 +1307,9 @@ public class EditorRenderer {
                 TextRow tr = new TextRow();
                 tr.set(lineBuf, rowInf.startColumn, rowInf.endColumn, reader.getSpansOnLine(line), rowInf.inlayHints, getLineDirections(line), paintGeneral, lineCache, createTextRowParams());
                 canvas.save();
-                canvas.translate(-offsetCopy, editor.getRowTopOfText(row) - editor.getOffsetY());
-                bufferedDrawPoints.setOffsets(-offsetCopy, editor.getRowTopOfText(row) - editor.getOffsetY());
-                float beginOffset = Math.max(0, offsetCopy);
+                canvas.translate(paintingOffset, editor.getRowTopOfText(row) - editor.getOffsetY());
+                bufferedDrawPoints.setOffsets(paintingOffset, editor.getRowTopOfText(row) - editor.getOffsetY());
+                float beginOffset = Math.max(0, paintingOffset);
                 float endOffset = beginOffset + editor.getWidth();
                 final var wsLeadingEnd = leadingWhitespaceEnd;
                 final var wsTrailingStart = trailingWhitespaceStart;
@@ -2087,6 +2087,9 @@ public class EditorRenderer {
 
         patchTextRegions(canvas, textOffset, start, end, (Canvas canvasLocal, char[] text, int index, int count, int contextIndex, int contextCount, boolean isRtl,
                                                           float horizontalOffset, float width, TextRowParams params, Span span) -> {
+            if (span == null) {
+                return;
+            }
             if (backgroundColor != 0) {
                 tmpRect.top = getRowTopForBackground(0);
                 tmpRect.bottom = getRowBottomForBackground(0);

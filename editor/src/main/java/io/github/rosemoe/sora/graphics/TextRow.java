@@ -101,6 +101,11 @@ public class TextRow {
         this.measureCache = measureCache;
     }
 
+    public void setRange(int start, int end) {
+        this.textStart = start;
+        this.textEnd = end;
+    }
+
     private float getSingleRunAdvancesForBreaking(int start, int end, int contextStart, int contextEnd,
                                                   boolean isRtl, float[] advances) {
         var chars = text.getBackingCharArray();
@@ -108,15 +113,16 @@ public class TextRow {
         float tabWidth = params.getTabWidth() * paint.getSpaceWidth();
         float width = 0f;
         for (int i = start; i <= end; i++) {
-            if (chars[i] == '\t' || i == end) {
+            if (i == end || chars[i] == '\t') {
                 // commit [lastEnd, i)
-                width += paint.myGetTextRunAdvances(chars, lastEnd, i - lastEnd, contextStart, contextEnd - contextStart, isRtl, advances, (lastEnd - start));
+                if (i > lastEnd)
+                    width += paint.myGetTextRunAdvances(chars, lastEnd, i - lastEnd, contextStart, contextEnd - contextStart, isRtl, advances, (lastEnd - start));
                 if (i < end) {
                     width += tabWidth;
                     if (advances != null)
                         advances[i - start] = tabWidth;
                 }
-                lastEnd = i;
+                lastEnd = i + 1;
             }
         }
         return width;
@@ -747,7 +753,7 @@ public class TextRow {
                         if (isRtl) {
                             ctx.resultOffset = localOffset + tabWidth - advance;
                         } else {
-                            ctx.resultOffset = localOffset + tabWidth;
+                            ctx.resultOffset = localOffset + advance;
                         }
                         ctx.maxOffset = 0f;
                     }
@@ -757,10 +763,13 @@ public class TextRow {
                     if (ctx.advances != null) {
                         ctx.advances[index] = tabWidth;
                     }
+                    if (ctx.drawTextConsumer != null && index >= ctx.startCharOffset && index < ctx.endCharOffset) {
+                        ctx.drawTextConsumer.drawText(canvas, chars, index, 1, index, 1, isRtl, offset + localOffset, tabWidth, params, null);
+                    }
                     // virtually drawn
                     localOffset += tabWidth;
                 }
-                lastEnd = index;
+                lastEnd = isRtl ? index : index + 1;
             }
             if (offset + localOffset > ctx.maxOffset) {
                 break;
@@ -1082,6 +1091,9 @@ public class TextRow {
 
     public interface DrawTextConsumer {
 
+        /**
+         * @param span may be null, when tab encountered.
+         */
         void drawText(Canvas canvas, char[] text, int index, int count, int contextIndex, int contextCount, boolean isRtl,
                       float horizontalOffset, float width, TextRowParams params, Span span);
 
