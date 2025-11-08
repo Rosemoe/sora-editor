@@ -149,7 +149,7 @@ public class DirectAccessProps implements Serializable {
      * Set it to 0 to send no text to IME.
      */
     @IntRange(from = 0)
-    public int maxIPCTextLength = 500000;
+    public int maxIPCTextLength = 32768;
 
     /**
      * Whether over scroll is permitted.
