@@ -9,13 +9,10 @@ import android.view.View
 import android.widget.ScrollView
 import android.widget.TextView
 import io.github.rosemoe.sora.lsp.R
+import io.github.rosemoe.sora.lsp.editor.curvedTextScale
 import io.github.rosemoe.sora.lsp.editor.text.SimpleMarkdownRenderer
-import io.github.rosemoe.sora.lsp.editor.text.curvedTextScale
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import org.eclipse.lsp4j.Hover
-import org.eclipse.lsp4j.MarkedString
-import org.eclipse.lsp4j.MarkupContent
-import org.eclipse.lsp4j.jsonrpc.messages.Either
 
 class DefaultHoverLayout : HoverLayout {
     private lateinit var window: HoverWindow

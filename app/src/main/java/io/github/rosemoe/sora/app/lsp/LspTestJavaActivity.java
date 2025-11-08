@@ -162,11 +162,12 @@ public class LspTestJavaActivity extends BaseEditorActivity {
         final Object lock = new Object();
 
         runOnUiThread(() -> {
-            lspEditor = lspProject.createEditor("$projectPath/sample.lua");
+            lspEditor = lspProject.createEditor(projectPath + "/sample.lua");
 
             var wrapperLanguage = createTextMateLanguage();
             lspEditor.setWrapperLanguage(wrapperLanguage);
             lspEditor.setEditor(editor);
+            lspEditor.setEnableInlayHint(true);
 
             synchronized (lock) {
                 lock.notify();

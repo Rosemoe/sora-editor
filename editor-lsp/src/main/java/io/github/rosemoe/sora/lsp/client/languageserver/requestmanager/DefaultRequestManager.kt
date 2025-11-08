@@ -68,6 +68,8 @@ import org.eclipse.lsp4j.ImplementationParams
 import org.eclipse.lsp4j.InitializeParams
 import org.eclipse.lsp4j.InitializeResult
 import org.eclipse.lsp4j.InitializedParams
+import org.eclipse.lsp4j.InlayHint
+import org.eclipse.lsp4j.InlayHintParams
 import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.LocationLink
 import org.eclipse.lsp4j.MessageActionItem
@@ -416,6 +418,21 @@ class DefaultRequestManager(
             }
         } else null
     }
+
+
+    override fun inlayHint(params: InlayHintParams?): CompletableFuture<List<InlayHint?>?>? {
+        return if (checkStatus()) {
+            try {
+                if (serverCapabilities.inlayHintProvider?.left == true || serverCapabilities.inlayHintProvider?.right != null) textDocumentService.inlayHint(
+                    params
+                ) else null
+            } catch (e: Exception) {
+                crashed(e)
+                null
+            }
+        } else null
+    }
+
 
     override fun references(params: ReferenceParams): CompletableFuture<List<Location?>>? {
         return if (checkStatus()) {

@@ -28,7 +28,6 @@ import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.Languag
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
 import io.github.rosemoe.sora.lsp.editor.diagnostics.DiagnosticsContainer
 import io.github.rosemoe.sora.lsp.events.EventEmitter
-import io.github.rosemoe.sora.lsp.events.EventListener
 import io.github.rosemoe.sora.lsp.events.code.CodeActionEventEvent
 import io.github.rosemoe.sora.lsp.events.completion.CompletionEvent
 import io.github.rosemoe.sora.lsp.events.diagnostics.PublishDiagnosticsEvent
@@ -41,6 +40,7 @@ import io.github.rosemoe.sora.lsp.events.document.DocumentSaveEvent
 import io.github.rosemoe.sora.lsp.events.format.FullFormattingEvent
 import io.github.rosemoe.sora.lsp.events.format.RangeFormattingEvent
 import io.github.rosemoe.sora.lsp.events.hover.HoverEvent
+import io.github.rosemoe.sora.lsp.events.inlayhint.InlayHintEvent
 import io.github.rosemoe.sora.lsp.events.signature.SignatureHelpEvent
 import io.github.rosemoe.sora.lsp.events.workspace.WorkSpaceApplyEditEvent
 import io.github.rosemoe.sora.lsp.events.workspace.WorkSpaceExecuteCommand
@@ -52,7 +52,6 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancelChildren
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ForkJoinPool
-import kotlin.reflect.KFunction0
 
 class LspProject(
     projectPath: String,
@@ -152,14 +151,15 @@ class LspProject(
     }
 
     private fun initEventEmitter() {
-        val events: List<KFunction0<EventListener>> = listOf(
+        val events = listOf(
             ::SignatureHelpEvent, ::DocumentChangeEvent,
             ::DocumentCloseEvent, ::DocumentSaveEvent,
             ::ApplyEditsEvent, ::CompletionEvent,
             ::PublishDiagnosticsEvent, ::FullFormattingEvent,
             ::RangeFormattingEvent, ::QueryDocumentDiagnosticsEvent,
             ::DocumentOpenEvent, ::HoverEvent, ::CodeActionEventEvent,
-            ::WorkSpaceApplyEditEvent, ::WorkSpaceExecuteCommand
+            ::WorkSpaceApplyEditEvent, ::WorkSpaceExecuteCommand,
+            ::InlayHintEvent
         )
 
         events.forEach {
