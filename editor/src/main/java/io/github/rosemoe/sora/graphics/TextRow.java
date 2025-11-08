@@ -382,6 +382,12 @@ public class TextRow {
         }
         var breaker = new TextBreaker();
         iterateRuns(breaker, false);
+        // The line is empty, but there should be at least one row in the result
+        if (rows.isEmpty() && breaker.currentRow.isEmpty) {
+            breaker.currentRow.isEmpty = false;
+            breaker.currentRow.startColumn = textStart;
+            breaker.currentRow.endColumn = textEnd;
+        }
         breaker.appendTailIfNeeded();
         return rows;
     }
