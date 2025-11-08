@@ -378,7 +378,11 @@ public class WordwrapLayout extends AbstractLayout {
 
     @Override
     public void invalidateLines(StyleUpdateRange range) {
-
+        var itr = range.lineIndexIterator(text.getLineCount() - 1);
+        while (itr.hasNext()) {
+            var line = itr.nextInt();
+            breakLines(line, line);
+        }
     }
 
     @Override
