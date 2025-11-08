@@ -3859,6 +3859,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         touchHandler.reset();
         this.text.addContentListener(this);
         this.text.setUndoEnabled(undoEnabled);
+        this.text.setBidiEnabled(true);
         renderContext.reset(this.text.getLineCount());
         renderer.onEditorFullTextUpdate();
 
