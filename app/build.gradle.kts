@@ -97,6 +97,7 @@ dependencies {
     implementation(projects.languageMonarch)
     implementation(projects.editorLsp)
     implementation(projects.languageTreesitter)
+    implementation(projects.onigurumaNative)
 
     // Tree-sitter languages
     implementation(libs.tree.sitter.java)

@@ -52,7 +52,7 @@ public abstract class OnigString {
 		}
 
 		@Override
-		int getByteIndexOfChar(final int charIndex) {
+		public int getByteIndexOfChar(final int charIndex) {
 			if (charIndex == lastCharIndex + 1) {
 				// One off can happen when finding the end of a regexp (it's the right boundary).
 				return bytesCount;
@@ -94,7 +94,7 @@ public abstract class OnigString {
 		}
 
 		@Override
-		int getCharIndexOfByte(final int byteIndex) {
+		public int getCharIndexOfByte(final int byteIndex) {
 			if (byteIndex == bytesCount) {
 				// One off can happen when finding the end of a regexp (it's the right boundary).
 				return lastCharIndex + 1;
@@ -121,7 +121,7 @@ public abstract class OnigString {
 		}
 
 		@Override
-		int getByteIndexOfChar(final int charIndex) {
+		public int getByteIndexOfChar(final int charIndex) {
 			if (charIndex == bytesCount) {
 				// One off can happen when finding the end of a regexp (it's the right boundary).
 				return charIndex;
@@ -134,7 +134,7 @@ public abstract class OnigString {
 		}
 
 		@Override
-		int getCharIndexOfByte(final int byteIndex) {
+		public int getCharIndexOfByte(final int byteIndex) {
 			if (byteIndex == bytesCount) {
 				// One off can happen when finding the end of a regexp (it's the right boundary).
 				return byteIndex;
@@ -171,9 +171,13 @@ public abstract class OnigString {
 				indexName + " index " + index + " is out of range " + minIndex + ".." + maxIndex + " of " + this);
 	}
 
-	abstract int getByteIndexOfChar(int charIndex);
+	public byte[] getBytesUTF8() {
+		return bytesUTF8;
+	}
 
-	abstract int getCharIndexOfByte(int byteIndex);
+	public abstract int getByteIndexOfChar(int charIndex);
+
+	public abstract int getCharIndexOfByte(int byteIndex);
 
 	@Override
 	public String toString() {

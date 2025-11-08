@@ -18,6 +18,7 @@ package org.eclipse.tm4e.core.internal.rule;
 
 import java.util.List;
 
+import org.eclipse.tm4e.core.internal.oniguruma.Oniguruma;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigScanner;
 
 /**
@@ -34,6 +35,6 @@ public final class CompiledRule {
 	CompiledRule(final List<String> regExps, final RuleId[] rules) {
 		this.debugRegExps = regExps;
 		this.rules = rules;
-		this.scanner = new OnigScanner(regExps);
+        this.scanner = Oniguruma.newScanner(regExps);
 	}
 }

@@ -24,14 +24,14 @@ import org.eclipse.jdt.annotation.Nullable;
  */
 public final class OnigCaptureIndex {
 
-	static final OnigCaptureIndex EMPTY = new OnigCaptureIndex(0, 0);
+	public static final OnigCaptureIndex EMPTY = new OnigCaptureIndex(0, 0);
 
 	public final int start;
 	public final int end;
 
-	OnigCaptureIndex(final int start, final int end) {
-		this.start = start >= 0 ? start : 0;
-		this.end = end >= 0 ? end : 0;
+	public OnigCaptureIndex(final int start, final int end) {
+		this.start = Math.max(start, 0);
+		this.end = Math.max(end, 0);
 	}
 
 	@Override

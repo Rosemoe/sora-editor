@@ -1,0 +1,62 @@
+/*
+ * Copyright (c) 2015-2017 Angelo ZERR.
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ * <p>
+ * SPDX-License-Identifier: EPL-2.0
+ * <p>
+ * Contributors:
+ * Angelo Zerr <angelo.zerr@gmail.com> - initial API and implementation
+ * Sebastian Thomschke (Vegard IT GmbH) - add previousLineText support
+ *
+ */
+package org.eclipse.tm4e.core.internal.oniguruma.impl.joni;
+
+import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
+import org.joni.Region;
+
+/**
+ * @see <a href="https://github.com/atom/node-oniguruma/blob/master/src/onig-result.cc">
+ * github.com/atom/node-oniguruma/blob/master/src/onig-result.cc</a>
+ */
+final class JoniOnigResult implements OnigResult {
+
+    private int indexInScanner;
+    private final Region region;
+
+    JoniOnigResult(final Region region, final int indexInScanner) {
+        this.region = region;
+        this.indexInScanner = indexInScanner;
+    }
+
+    @Override
+    public int getIndex() {
+        return indexInScanner;
+    }
+
+    void setIndex(final int index) {
+        indexInScanner = index;
+    }
+
+    @Override
+    public int locationAt(final int index) {
+        final int bytes = region.getBeg(index);
+        return bytes > 0 ? bytes : 0;
+    }
+
+    public int count() {
+        return region.getNumRegs();
+    }
+
+    @Override
+    public int lengthAt(final int index) {
+        final int bytes = region.getEnd(index) - region.getBeg(index);
+        return bytes > 0 ? bytes : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "OnigResult [indexInScanner=" + indexInScanner + ", region=" + region + "]";
+    }
+}

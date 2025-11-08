@@ -11,13 +11,19 @@
  * Sebastian Thomschke (Vegard IT GmbH) - add previousLineText support
  *
  */
-package org.eclipse.tm4e.core.internal.oniguruma;
+package org.eclipse.tm4e.core.internal.oniguruma.impl.onig;
 
-import org.eclipse.jdt.annotation.Nullable;
+import io.github.rosemoe.oniguruma.OnigNative;
 
-public interface OnigRegExp {
-    @Nullable
-    OnigResult search(OnigString str, int startPosition);
+public class NativeAvailabilityChecker {
 
-    String pattern();
+    public static boolean isAvailable() {
+        try {
+            OnigNative.releaseRegex(0L);
+        } catch (Throwable e) {
+            return false;
+        }
+        return true;
+    }
+
 }

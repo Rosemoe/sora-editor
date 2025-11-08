@@ -1,0 +1,3 @@
+[submodule "oniguruma-native/src/main/cpp/oniguruma"]
+	path = oniguruma-native/src/main/cpp/oniguruma
+	url = git@github.com:kkos/oniguruma.git

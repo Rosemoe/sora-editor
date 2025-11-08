@@ -26,7 +26,6 @@ package io.github.rosemoe.sora.langs.textmate;
 import org.eclipse.tm4e.core.grammar.IStateStack;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MyState {

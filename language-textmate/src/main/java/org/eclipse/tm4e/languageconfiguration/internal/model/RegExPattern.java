@@ -17,6 +17,7 @@ import java.util.regex.PatternSyntaxException;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.TMException;
+import org.eclipse.tm4e.core.internal.oniguruma.Oniguruma;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigRegExp;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
 
@@ -50,7 +51,7 @@ public abstract class RegExPattern {
 		final OnigRegExp regex;
 
 		OnigRegExPattern(final String pattern, final @Nullable String flags) throws PatternSyntaxException {
-			this.regex = new OnigRegExp(pattern, flags != null && flags.contains("i"));
+			this.regex = Oniguruma.newRegex(pattern, flags != null && flags.contains("i"));
 		}
 
 		@Override

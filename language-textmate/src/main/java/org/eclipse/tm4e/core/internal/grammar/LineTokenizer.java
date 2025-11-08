@@ -30,7 +30,6 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigCaptureIndex;
-import org.eclipse.tm4e.core.internal.oniguruma.OnigScannerMatch;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
 import org.eclipse.tm4e.core.internal.rule.BeginEndRule;
 import org.eclipse.tm4e.core.internal.rule.BeginWhileRule;
@@ -315,10 +314,10 @@ final class LineTokenizer {
 		final var rule = stack.getRule(grammar);
 		final var ruleScanner = rule.compileAG(grammar, stack.endRule, isFirstLine, linePos == anchorPosition);
 
-		final OnigScannerMatch r = ruleScanner.scanner.findNextMatch(lineText, linePos);
+		final var r = ruleScanner.scanner.findNextMatch(lineText, linePos);
 
 		if (r != null) {
-			return new MatchResult(ruleScanner.rules[r.index], r.getCaptureIndices());
+			return new MatchResult(ruleScanner.rules[r.getIndex()], r.getCaptureIndices());
 		}
 		return null;
 	}
@@ -394,7 +393,7 @@ final class LineTokenizer {
 
 			bestMatchRating = matchRating;
 			bestMatchCaptureIndices = matchResult.getCaptureIndices();
-			bestMatchRuleId = ruleScanner.rules[matchResult.index];
+			bestMatchRuleId = ruleScanner.rules[matchResult.getIndex()];
 			bestMatchResultPriority = injection.priority;
 
 			if (bestMatchRating == linePos) {
@@ -528,7 +527,7 @@ final class LineTokenizer {
 			}*/
 
 			if (r != null) {
-				final RuleId matchedRuleId = ruleScanner.rules[r.index];
+				final RuleId matchedRuleId = ruleScanner.rules[r.getIndex()];
 				if (RuleId.WHILE_RULE.notEquals(matchedRuleId)) {
 					// we shouldn't end up here
 					stack = castNonNull(whileRule.stack.pop());

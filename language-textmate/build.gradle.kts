@@ -55,6 +55,8 @@ android {
 
 dependencies {
     compileOnly(projects.editor)
+    compileOnly(projects.onigurumaNative)
+
     implementation(libs.gson)
     implementation(libs.jcodings)
     implementation(libs.joni)
