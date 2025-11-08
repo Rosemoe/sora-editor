@@ -25,13 +25,13 @@
 package io.github.rosemoe.sora.lsp.editor
 
 import androidx.annotation.WorkerThread
+import io.github.rosemoe.sora.annotations.Experimental
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.HoverEvent
 import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.graphics.inlayHint.TextInlayHintRenderer
 import io.github.rosemoe.sora.lang.Language
-import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
@@ -63,6 +63,7 @@ import io.github.rosemoe.sora.widget.subscribeEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.future
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.eclipse.lsp4j.CodeAction
@@ -97,7 +98,7 @@ class LspEditor(
 
     private var isClosed = false
 
-    private var cachedInlayHints : List<org.eclipse.lsp4j.InlayHint>? = null
+    private var cachedInlayHints: List<org.eclipse.lsp4j.InlayHint>? = null
 
     private val unsubscribeFunctionRef = AtomicReference<Runnable?>()
 
@@ -145,7 +146,6 @@ class LspEditor(
             if (currentDiagnosticTooltipWindow.layout is DefaultDiagnosticTooltipLayout) {
                 currentDiagnosticTooltipWindow.layout = LspDiagnosticTooltipLayout()
             }
-
 
 
             val subscriptionReceipts =
@@ -244,12 +244,16 @@ class LspEditor(
             }
         }
 
-    var isEnableInlayHint = true
-        get() = field
+    @Experimental
+    var isEnableInlayHint = false
         set(value) {
+            field = value
             val editor = editor ?: return
             if (value) {
                 editor.registerInlayHintRenderer(TextInlayHintRenderer)
+                coroutineScope.launch {
+                    this@LspEditor.requestInlayHint(CharPosition(0, 0))
+                }
             }
         }
 

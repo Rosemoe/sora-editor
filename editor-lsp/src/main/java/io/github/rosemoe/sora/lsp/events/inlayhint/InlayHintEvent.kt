@@ -25,6 +25,7 @@
 package io.github.rosemoe.sora.lsp.events.inlayhint
 
 import android.util.Log
+import io.github.rosemoe.sora.annotations.Experimental
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp.events.EventContext
@@ -35,15 +36,24 @@ import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.createRange
 import io.github.rosemoe.sora.lsp.utils.createTextDocumentIdentifier
 import io.github.rosemoe.sora.text.CharPosition
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.eclipse.lsp4j.InlayHint
 import org.eclipse.lsp4j.InlayHintParams
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.min
 
+@OptIn(FlowPreview::class)
+@Experimental
 class InlayHintEvent : AsyncEventListener() {
     override val eventName: String = EventType.inlayHint
 
@@ -51,64 +61,108 @@ class InlayHintEvent : AsyncEventListener() {
 
     override val isAsync = true
 
-    override suspend fun handleAsync(context: EventContext) = withContext(Dispatchers.IO) {
-        val editor = context.get<LspEditor>("lsp-editor")
-        val position = context.getByClass<CharPosition>() ?: return@withContext
-        val content = editor.editor?.text ?: return@withContext
+    private val requestFlows = ConcurrentHashMap<String, MutableSharedFlow<InlayHintRequest>>()
 
-        val requestManager = editor.requestManager ?: return@withContext
+    data class InlayHintRequest(
+        val editor: LspEditor,
+        val position: CharPosition
+    )
 
-        // Request over 500 lines for current window
-
-        val upperLine = min(0, position.line - 500)
-
-        val lowerLine = min(content.lineCount - 1, position.line + 500)
-
-        val inlayHintParams = InlayHintParams(
-            editor.uri.createTextDocumentIdentifier(),
-            createRange(
-                CharPosition(upperLine, 0),
-                CharPosition(
-                    lowerLine,
-                    content.getColumnCount(
-                        lowerLine
-                    )
-                )
+    private fun getOrCreateFlow(
+        coroutineScope: CoroutineScope,
+        uri: String
+    ): MutableSharedFlow<InlayHintRequest> {
+        return requestFlows.getOrPut(uri) {
+            val flow = MutableSharedFlow<InlayHintRequest>(
+                replay = 0,
+                extraBufferCapacity = 1,
+                onBufferOverflow = BufferOverflow.DROP_OLDEST
             )
-        )
-
-        val future = requestManager.inlayHint(inlayHintParams) ?: return@withContext
-
-        this@InlayHintEvent.future = future.thenAccept { }
 
 
-        try {
-            val inlayHints: List<InlayHint>?
-
-            withTimeout(Timeout[Timeouts.INLAY_HINT].toLong()) {
-                inlayHints =
-                    future.await()
+            coroutineScope.launch(Dispatchers.Main) {
+                flow
+                    .debounce(20)
+                    .collect { request ->
+                        processInlayHintRequest(request)
+                    }
             }
 
-            if (inlayHints == null || inlayHints.isEmpty()) {
-                editor.showInlayHints(null)
-                return@withContext
-            }
-
-            editor.showInlayHints(inlayHints)
-        } catch (exception: Exception) {
-            // throw?
-            exception.printStackTrace()
-            Log.e("LSP client", "show inlay hint timeout", exception)
+            flow
         }
     }
 
+    override suspend fun handleAsync(context: EventContext) {
+        val editor = context.get<LspEditor>("lsp-editor")
+        val position = context.getByClass<CharPosition>() ?: return
+
+        val uri = editor.uri.toString()
+
+        val flow = getOrCreateFlow(editor.coroutineScope, uri)
+        flow.tryEmit(InlayHintRequest(editor, position))
+    }
+
+    private suspend fun processInlayHintRequest(request: InlayHintRequest) =
+        withContext(Dispatchers.IO) {
+            val editor = request.editor
+            val position = request.position
+            val content = editor.editor?.text ?: return@withContext
+
+            val requestManager = editor.requestManager ?: return@withContext
+
+            // Request over 500 lines for current window
+
+            val upperLine = min(0, position.line - 500)
+
+            val lowerLine = min(content.lineCount - 1, position.line + 500)
+
+            val inlayHintParams = InlayHintParams(
+                editor.uri.createTextDocumentIdentifier(),
+                createRange(
+                    CharPosition(upperLine, 0),
+                    CharPosition(
+                        lowerLine,
+                        content.getColumnCount(
+                            lowerLine
+                        )
+                    )
+                )
+            )
+
+            val future = requestManager.inlayHint(inlayHintParams) ?: return@withContext
+
+            this@InlayHintEvent.future = future.thenAccept { }
+
+
+            try {
+                val inlayHints: List<InlayHint>?
+
+                withTimeout(Timeout[Timeouts.INLAY_HINT].toLong()) {
+                    inlayHints =
+                        future.await()
+                }
+
+                if (inlayHints == null || inlayHints.isEmpty()) {
+                    editor.showInlayHints(null)
+                    return@withContext
+                }
+
+                editor.showInlayHints(inlayHints)
+            } catch (exception: Exception) {
+                // throw?
+                exception.printStackTrace()
+                Log.e("LSP client", "show inlay hint timeout", exception)
+            }
+        }
+
     override fun dispose() {
-        future?.cancel(true);
-        future = null;
+        future?.cancel(true)
+        future = null
+        requestFlows.clear()
     }
 
 }
 
+@get:Experimental
 val EventType.inlayHint: String
     get() = "textDocument/inlayHint"

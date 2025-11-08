@@ -30,42 +30,26 @@ import io.github.rosemoe.sora.event.Unsubscribe
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.requestInlayHint
 import io.github.rosemoe.sora.text.CharPosition
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 
 @OptIn(FlowPreview::class)
 class LspEditorScrollEvent(private val editor: LspEditor) :
     EventReceiver<ScrollEvent> {
 
-    private val scrollEventFlow = MutableSharedFlow<Int>(
-        replay = 0,
-        extraBufferCapacity = 1,
-        onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
-    )
-
-    init {
-        editor.coroutineScope.launch(Dispatchers.Main) {
-            scrollEventFlow
-                .debounce(50) // Debounce for 50ms to drop rapid events
-                .collect { firstVisibleLine ->
-                    // request inlay hint
-                    editor.requestInlayHint(
-                        CharPosition(firstVisibleLine, 0)
-                    )
-                }
-        }
-    }
-
     override fun onReceive(event: ScrollEvent, unsubscribe: Unsubscribe) {
-        if (!editor.isConnected) {
+        if (!editor.isConnected || editor.isEnableInlayHint) {
             return
         }
 
         val firstVisibleLine = event.editor.firstVisibleLine
-        // Older events will be dropped if buffer is full
-        scrollEventFlow.tryEmit(firstVisibleLine)
+
+        editor.coroutineScope.launch {
+            // request inlay hint
+            editor.requestInlayHint(
+                CharPosition(firstVisibleLine, 0)
+            )
+        }
+
     }
 }

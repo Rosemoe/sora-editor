@@ -36,15 +36,11 @@ import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspProject
 import io.github.rosemoe.sora.lsp.requests.Timeout
 import io.github.rosemoe.sora.lsp.requests.Timeouts
-import io.github.rosemoe.sora.lsp.utils.FileUri
 import io.github.rosemoe.sora.lsp.utils.LSPException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.ClientCapabilities
 import org.eclipse.lsp4j.CodeActionCapabilities
-import org.eclipse.lsp4j.CodeActionKind
 import org.eclipse.lsp4j.CodeActionKindCapabilities
 import org.eclipse.lsp4j.CodeActionLiteralSupportCapabilities
 import org.eclipse.lsp4j.CompletionCapabilities
@@ -58,7 +54,6 @@ import org.eclipse.lsp4j.InitializeParams
 import org.eclipse.lsp4j.InitializeResult
 import org.eclipse.lsp4j.InitializedParams
 import org.eclipse.lsp4j.InlayHintCapabilities
-import org.eclipse.lsp4j.MarkupKind
 import org.eclipse.lsp4j.OnTypeFormattingCapabilities
 import org.eclipse.lsp4j.PublishDiagnosticsCapabilities
 import org.eclipse.lsp4j.RangeFormattingCapabilities
@@ -66,7 +61,6 @@ import org.eclipse.lsp4j.ReferencesCapabilities
 import org.eclipse.lsp4j.RenameCapabilities
 import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.SignatureHelpCapabilities
-import org.eclipse.lsp4j.SignatureInformationCapabilities
 import org.eclipse.lsp4j.SymbolCapabilities
 import org.eclipse.lsp4j.SynchronizationCapabilities
 import org.eclipse.lsp4j.TextDocumentClientCapabilities
@@ -83,11 +77,10 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.lang.ref.WeakReference
 import java.net.URI
+import java.util.Collections
+import java.util.WeakHashMap
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.Executors
-import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -97,7 +90,7 @@ class LanguageServerWrapper(
 ) {
     private val TAG = "LanguageServerWrapper"
 
-    private val connectedEditors = HashSet<LspEditor>()
+    private val connectedEditors = Collections.newSetFromMap(WeakHashMap<LspEditor, Boolean>());
 
     private var languageServer: LanguageServer? = null
 
@@ -121,7 +114,7 @@ class LanguageServerWrapper(
     var status = ServerStatus.STOPPED
         private set
 
-    private val readyToConnect = HashSet<LspEditor>()
+    private val readyToConnect =  Collections.newSetFromMap(WeakHashMap<LspEditor, Boolean>());
 
     private val commonCoroutineScope = project.coroutineScope
 
@@ -325,11 +318,7 @@ class LanguageServerWrapper(
             return
         }
 
-        uriToLanguageServerWrapper.remove(
-            editor.uri.path + "-" + editor.project.projectUri.path
-        )
         connectedEditors.remove(editor)
-        editor.dispose()
         if (connectedEditors.isEmpty()) {
             stop(false)
         }
@@ -368,9 +357,9 @@ class LanguageServerWrapper(
             definition = DefinitionCapabilities()
             documentHighlight =
                 null // The feature is not currently supported in the sora-editor
-            inlayHint  = InlayHintCapabilities()
+            inlayHint = InlayHintCapabilities()
             formatting = FormattingCapabilities()
-            hover = HoverCapabilities( true)
+            hover = HoverCapabilities(true)
             onTypeFormatting = OnTypeFormattingCapabilities()
             rangeFormatting = RangeFormattingCapabilities()
             references = ReferencesCapabilities()
@@ -423,13 +412,9 @@ class LanguageServerWrapper(
      */
     @WorkerThread
     fun connect(editor: LspEditor) {
-        val uri = editor.uri
-
         if (connectedEditors.contains(editor)) {
             return
         }
-
-        uriToLanguageServerWrapper[uri.path + "-" + editor.project.projectUri.path] = this
 
         start()
 
@@ -446,7 +431,6 @@ class LanguageServerWrapper(
             )
             return
         }
-
 
         if (connectedEditors.contains(editor)) {
             return
@@ -509,19 +493,6 @@ class LanguageServerWrapper(
 
 
     /**
-     * Checks if the wrapper is already connected to the document at the given path.
-     *
-     * @param location file location
-     * @return True if the given file is connected.
-     */
-    fun isConnectedTo(location: String): Boolean {
-        val fileUri = FileUri(location)
-        return connectedEditors.any {
-            it.uri == fileUri
-        }
-    }
-
-    /**
      * @return the LanguageServer
      */
     fun getServer(): LanguageServer? {
@@ -571,29 +542,4 @@ class LanguageServerWrapper(
         }
     }
 
-
-    companion object {
-
-        private val uriToLanguageServerWrapper =
-            ConcurrentHashMap<String, LanguageServerWrapper>()
-
-        /**
-         * @param uri             A file uri
-         * @param projectRootPath The related project path
-         * @return The wrapper for the given uri, or None
-         */
-        fun forUri(uri: FileUri, projectRootPath: FileUri): LanguageServerWrapper? {
-            return uriToLanguageServerWrapper["${uri.path}-${projectRootPath.path}"]
-        }
-
-        /**
-         * @param editor An editor
-         * @return The wrapper for the given editor, or None
-         */
-        fun forEditor(editor: LspEditor): LanguageServerWrapper? {
-            return uriToLanguageServerWrapper["${editor.uri.path}-${editor.project.projectUri.path}"]
-        }
-
-
-    }
 }
