@@ -28,7 +28,6 @@ import android.util.SparseArray;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +35,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.graphics.SingleCharacterWidths;
-import io.github.rosemoe.sora.graphics.TextRow;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
 import io.github.rosemoe.sora.text.Content;
@@ -96,7 +94,6 @@ public class LineBreakLayout extends AbstractLayout {
             protected Void compute() {
                 widthMaintainer.lock.lock();
                 try {
-                    editor.setLayoutBusy(true);
                     text.runReadActionsOnLines(0, text.getLineCount() - 1, (int index, ContentLine line, Content.ContentLineConsumer2.AbortFlag abortFlag) -> {
                         var width = (int) measurerLocal.measureText(line, 0, line.length(), shadowPaint);
                         var inlineElementsWidth = measureInlayHints(getInlayHints(index), shadowPaint);
@@ -118,6 +115,7 @@ public class LineBreakLayout extends AbstractLayout {
                 return super.shouldRun() && reuseCount.get() == reuseCountLocal;
             }
         };
+        editor.setLayoutBusy(true);
         submitTask(task);
     }
 
@@ -231,6 +229,7 @@ public class LineBreakLayout extends AbstractLayout {
     public void destroyLayout() {
         super.destroyLayout();
         widthMaintainer = null;
+        inlineElementsWidths = null;
     }
 
     @Override

@@ -125,6 +125,7 @@ public class WordwrapLayout extends AbstractLayout {
                 });
             }
         });
+        editor.setLayoutBusy(true);
         for (int i = 0; i < taskCount; i++) {
             var start = sizeEachTask * i;
             var end = i + 1 == taskCount ? (text.getLineCount() - 1) : (sizeEachTask * (i + 1) - 1);
@@ -592,7 +593,6 @@ public class WordwrapLayout extends AbstractLayout {
 
         @Override
         protected WordwrapResult compute() {
-            editor.setLayoutBusy(true);
             var list = new ArrayList<RowRegion>();
             text.runReadActionsOnLines(start, end, (int index, ContentLine line, Content.ContentLineConsumer2.AbortFlag abortFlag) -> {
                 list.addAll(breakLine(index, line, paint));
