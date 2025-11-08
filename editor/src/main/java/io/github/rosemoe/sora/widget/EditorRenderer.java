@@ -2216,7 +2216,6 @@ public class EditorRenderer {
                         paintGeneral.getLetterSpacing(), paintGeneral.getFontFeatureSettings(), paintGeneral.getTypeface().hashCode());
                 if (context.getCache().getStyleHash(startLine) != hash || forced) {
                     context.getCache().setStyleHash(startLine, hash);
-
                     // Build cache here
                     var beginRowIndex = editor.layout.getRowIndexForPosition(text.getCharIndex(startLine, 0));
                     var itr = editor.layout.obtainRowIterator(beginRowIndex);
@@ -2237,9 +2236,10 @@ public class EditorRenderer {
                         tr.set(lineText, row.startColumn, row.endColumn, spans, row.inlayHints, directions, paintGeneral, null, createTextRowParams());
                         tr.buildMeasureCacheStep(widths);
                     }
+                    tr.setRange(0, lineText.length());
                     tr.buildMeasureCacheTailor(widths);
+                    cache.setUpdateTimestamp(timestamp);
                 }
-                cache.setUpdateTimestamp(timestamp);
             }
             startLine++;
         }

@@ -79,7 +79,6 @@ class RenderCache {
                     it.line += endLine - startLine
                 }
             }
-
         }
     }
 
