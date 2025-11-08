@@ -74,9 +74,11 @@ import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import org.eclipse.lsp4j.jsonrpc.messages.Either
+import java.lang.RuntimeException
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.reflect.KClass
 
 class LspEditor(
     val project: LspProject,
@@ -96,11 +98,14 @@ class LspEditor(
         WeakReference(null)
     private var currentLanguage: LspLanguage? = null
 
+    @Volatile
     private var isClosed = false
 
     private var cachedInlayHints: List<org.eclipse.lsp4j.InlayHint>? = null
 
     private val unsubscribeFunctionRef = AtomicReference<Runnable?>()
+
+    private val disposeLock = Any()
 
     val eventManager = LspEventManager(project, this)
 
@@ -365,6 +370,7 @@ class LspEditor(
      * disconnect to the language server
      */
     @WorkerThread
+    @Throws(RuntimeException::class)
     fun disconnect() {
         runCatching {
             coroutineScope.future {
@@ -378,6 +384,11 @@ class LspEditor(
             isConnected = false
         }.onFailure {
             isConnected = false
+
+            languageServerWrapper.disconnect(
+                this@LspEditor
+            )
+
             throw it
         }
     }
@@ -497,21 +508,23 @@ class LspEditor(
 
     @WorkerThread
     fun dispose() {
-        if (isClosed) {
-            return
-            // throw IllegalStateException("Editor is already closed")
+        synchronized(disposeLock) {
+            if (isClosed) {
+                return
+                // throw IllegalStateException("Editor is already closed")
+            }
+            disconnect()
+            clearSubscriptions()
+            _currentEditor.clear()
+            signatureHelpWindowWeakReference.clear()
+            hoverWindowWeakReference.clear()
+            codeActionWindowWeakReference.clear()
+            clearVersions {
+                it == this.uri
+            }
+            project.removeEditor(this)
+            isClosed = true
         }
-        disconnect()
-        clearSubscriptions()
-        _currentEditor.clear()
-        signatureHelpWindowWeakReference.clear()
-        hoverWindowWeakReference.clear()
-        codeActionWindowWeakReference.clear()
-        clearVersions {
-            it == this.uri
-        }
-        project.removeEditor(this)
-        isClosed = true
     }
 
     suspend fun disposeAsync() = withContext(Dispatchers.IO) {
