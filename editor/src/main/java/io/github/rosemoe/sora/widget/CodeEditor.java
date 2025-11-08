@@ -5138,6 +5138,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     @Override
     public void beforeModification(@NonNull Content content) {
+        if (props.checkModificationThread && isAttachedToWindow()) {
+            var handler = getHandler();
+            if (handler != null) {
+                if (handler.getLooper().getThread() != Thread.currentThread()) {
+                    throw new RuntimeException("text is changed in wrong thread");
+                }
+            }
+        }
         cursorAnimator.markStartPos();
         lastAnchorIsSelLeft = cursor.left().equals(selectionAnchor);
     }

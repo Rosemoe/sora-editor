@@ -33,6 +33,7 @@ import androidx.annotation.NonNull;
 
 import java.io.Serializable;
 
+import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.annotations.InvalidateRequired;
 
 /**
@@ -505,5 +506,14 @@ public class DirectAccessProps implements Serializable {
      * instead of physical lines.
      */
     public boolean rowBasedHomeEnd = true;
+
+    /**
+     * Check thread when the text in editor is changed. Note that the text should be modified from
+     * UI thread only, because the editor need to update itself in UI thread.
+     * <p>
+     * You may set it to {@code true} for debugging purpose to detect possible violations
+     */
+    @Experimental
+    public boolean checkModificationThread = false;
 
 }
