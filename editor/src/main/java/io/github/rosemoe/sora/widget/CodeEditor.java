@@ -98,6 +98,7 @@ import io.github.rosemoe.sora.event.Event;
 import io.github.rosemoe.sora.event.EventManager;
 import io.github.rosemoe.sora.event.EventReceiver;
 import io.github.rosemoe.sora.event.HoverEvent;
+import io.github.rosemoe.sora.event.LayoutStateChangeEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.SubscriptionReceipt;
@@ -3142,9 +3143,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             this.layoutBusy = false;
             restartInput();
             postInvalidate();
+            dispatchEvent(new LayoutStateChangeEvent(this, false));
             return;
         }
         this.layoutBusy = busy;
+        if (layoutBusy != busy) {
+            dispatchEvent(new LayoutStateChangeEvent(this, busy));
+        }
     }
 
     /**

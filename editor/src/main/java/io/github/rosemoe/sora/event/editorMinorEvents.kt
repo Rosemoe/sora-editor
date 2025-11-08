@@ -155,3 +155,8 @@ class PublishSearchResultEvent(editor: CodeEditor) : Event(editor) {
     fun getSearcher() = editor.searcher
 
 }
+
+/**
+ * Triggered when the initial layout async task starts/stops
+ */
+class LayoutStateChangeEvent(editor: CodeEditor, val isLayoutBusy: Boolean) : Event(editor)
