@@ -175,6 +175,7 @@ class LspTestActivity : BaseEditorActivity() {
             val wrapperLanguage = createTextMateLanguage()
             lspEditor.wrapperLanguage = wrapperLanguage
             lspEditor.editor = editor
+            lspEditor.isEnableInlayHint = true
             LspEditorTextActionWindow(lspEditor).setOnMoreButtonClickListener { window, lspEditor ->
                 lspEditor.coroutineScope.launch {
                     lspEditor.eventManager.emitAsync(EventType.codeAction) {

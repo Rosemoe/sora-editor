@@ -36,6 +36,7 @@ enum class Timeouts(val defaultTimeout: Int) {
     EXECUTE_COMMAND(2000),
     FORMATTING(5000),
     HOVER(2000),
+    INLAY_HINT(2000),
     INIT(10000),
     REFERENCES(2000),
     SIGNATURE(5000),
