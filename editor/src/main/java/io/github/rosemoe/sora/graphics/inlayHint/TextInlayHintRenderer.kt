@@ -61,6 +61,8 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
  */
 object TextInlayHintRenderer : InlayHintRenderer() {
 
+    private val localPaint = Paint(false).also { it.isAntiAlias = true }
+
     override val typeName: String
         get() = "text"
 
@@ -71,11 +73,11 @@ object TextInlayHintRenderer : InlayHintRenderer() {
         lineHeight: Int,
         baseline: Float
     ): Float {
-        val margin = paint.spaceWidth * 0.8f
-        val textSize = paint.textSize
-        paint.setTextSizeWrapped(textSize * 0.75f)
-        val width = paint.measureText((inlayHint as? TextInlayHint)?.text ?: "") + margin * 3
-        paint.setTextSizeWrapped(textSize)
+        localPaint.typeface = paint.typeface
+        localPaint.textSize = paint.textSize * 0.75f
+
+        val margin = localPaint.measureText(" ")
+        val width = localPaint.measureText((inlayHint as? TextInlayHint)?.text ?: "") + margin * 2f
         return width
     }
 
@@ -89,31 +91,23 @@ object TextInlayHintRenderer : InlayHintRenderer() {
         baseline: Float,
         measuredWidth: Float
     ) {
-        val margin = paint.spaceWidth * 0.8f
-        val textSize = paint.textSize
-        paint.setTextSizeWrapped(textSize * 0.75f)
-        val backupSkew = paint.textSkewX
-        paint.textSkewX = 0f
-        val backupBold = paint.isFakeBoldText
-        paint.isFakeBoldText = false
+        localPaint.typeface = paint.typeface
+        localPaint.textSize = paint.textSize * 0.75f
 
-        val myLineHeight = paint.descent() - paint.ascent()
-        paint.color = colorScheme.getColor(EditorColorScheme.TEXT_INLAY_HINT_BACKGROUND)
+        val margin = localPaint.measureText(" ")
+        val myLineHeight = localPaint.descent() - localPaint.ascent()
+        localPaint.color = colorScheme.getColor(EditorColorScheme.TEXT_INLAY_HINT_BACKGROUND)
         canvas.drawRoundRect(
-            margin,
+            margin * 0.5f,
             lineHeight / 2f - myLineHeight / 2f,
-            measuredWidth - margin,
+            measuredWidth - margin * 0.5f,
             lineHeight / 2f + myLineHeight / 2f,
             lineHeight * 0.15f, lineHeight * 0.15f,
-            paint
+            localPaint
         )
-        paint.color = colorScheme.getColor(EditorColorScheme.TEXT_INLAY_HINT_FOREGROUND)
-        val myBaseline = lineHeight / 2f + (myLineHeight / 2f - paint.descent())
-        canvas.drawText((inlayHint as? TextInlayHint)?.text ?: "", margin * 1.5f, myBaseline, paint)
-
-        paint.setTextSizeWrapped(textSize)
-        paint.textSkewX = backupSkew
-        paint.isFakeBoldText = backupBold
+        localPaint.color = colorScheme.getColor(EditorColorScheme.TEXT_INLAY_HINT_FOREGROUND)
+        val myBaseline = lineHeight / 2f + (myLineHeight / 2f - localPaint.descent())
+        canvas.drawText((inlayHint as? TextInlayHint)?.text ?: "", margin, myBaseline, localPaint)
     }
 
 }
