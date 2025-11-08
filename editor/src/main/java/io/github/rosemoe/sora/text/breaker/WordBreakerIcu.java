@@ -23,23 +23,20 @@
  */
 package io.github.rosemoe.sora.text.breaker;
 
-import android.icu.text.BreakIterator;
-import android.os.Build;
-
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
+
+import java.text.BreakIterator;
 
 import io.github.rosemoe.sora.text.CharSequenceIterator;
 import io.github.rosemoe.sora.text.ContentLine;
 
-public class WordBreakerApiN implements WordBreaker {
+public class WordBreakerIcu implements WordBreaker {
 
     private final BreakIterator wrappingIterator;
 
     private final char[] chars;
 
-    @RequiresApi(Build.VERSION_CODES.N)
-    public WordBreakerApiN(@NonNull ContentLine text) {
+    public WordBreakerIcu(@NonNull ContentLine text) {
         this.chars = text.getBackingCharArray();
         var textIterator = new CharSequenceIterator(text);
         wrappingIterator = BreakIterator.getLineInstance();

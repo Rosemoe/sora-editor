@@ -25,6 +25,7 @@ package io.github.rosemoe.sora.widget.layout;
 
 import androidx.annotation.NonNull;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -79,7 +80,7 @@ public class Row {
             final RowElement element = new RowElement();
 
             {
-                inlays.sort((a, b) -> {
+                Collections.sort(inlays, (a, b) -> {
                     int res = PointAnchoredContainer.Companion.getComparator().compare(a, b);
                     if (res == 0) {
                         return Integer.compare(a.getDisplaySide().ordinal(), b.getDisplaySide().ordinal());

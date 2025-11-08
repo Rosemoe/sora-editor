@@ -23,49 +23,55 @@
  */
 package io.github.rosemoe.sora.text.bidi;
 
-import android.icu.text.Bidi;
 
 import androidx.annotation.NonNull;
 
+
+import java.text.Bidi;
 
 import io.github.rosemoe.sora.util.IntPair;
 
 public class VisualDirections implements IDirections {
 
-    private final long[] ranges;
-    private final int[] levels;
+    private final RunInfo[] runs;
+
+    private static class RunInfo {
+        long range;
+        int level;
+
+        public RunInfo(long range, int level) {
+            this.range = range;
+            this.level = level;
+        }
+    }
+
 
     public VisualDirections(@NonNull Directions dirs) {
         int runCount = dirs.getRunCount();
-        ranges = new long[runCount];
-        levels = new int[runCount];
+        runs = new RunInfo[runCount];
         var paramLevels = new byte[runCount];
         for (int i = 0; i < runCount; i++) {
             paramLevels[i] = (byte) dirs.getRunLevel(i);
+            runs[i] = new RunInfo(IntPair.pack(dirs.getRunStart(i), dirs.getRunEnd(i)), dirs.getRunLevel(i));
         }
-        int[] indices = Bidi.reorderVisual(paramLevels);
-        for (int i = 0; i < runCount; i++) {
-            int j = indices[i];
-            ranges[i] = IntPair.pack(dirs.getRunStart(j), dirs.getRunEnd(j));
-            levels[i] = dirs.getRunLevel(j);
-        }
+        Bidi.reorderVisually(paramLevels, 0, runs, 0, runCount);
     }
 
 
     public int getRunCount() {
-        return ranges.length;
+        return runs.length;
     }
 
     public int getRunStart(int i) {
-        return IntPair.getFirst(ranges[i]);
+        return IntPair.getFirst(runs[i].range);
     }
 
     public int getRunEnd(int i) {
-        return IntPair.getSecond(ranges[i]);
+        return IntPair.getSecond(runs[i].range);
     }
 
     public int getRunLevel(int i) {
-        return levels[i];
+        return runs[i].level;
     }
 
     public boolean isRunRtl(int i) {

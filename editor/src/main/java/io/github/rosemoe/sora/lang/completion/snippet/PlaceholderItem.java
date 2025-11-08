@@ -35,7 +35,7 @@ public class PlaceholderItem extends SnippetItem {
         this.definition = definition;
     }
 
-    private PlaceholderItem(@NonNull PlaceholderDefinition definition, int start, int end) {
+    private PlaceholderItem(@NonNull PlaceholderDefinition definition, String text, int start, int end) {
         setIndex(start, end);
         this.text = text;
         this.definition = definition;
@@ -52,6 +52,6 @@ public class PlaceholderItem extends SnippetItem {
     @NonNull
     @Override
     public PlaceholderItem clone() {
-        return new PlaceholderItem(definition, getStartIndex(), getEndIndex());
+        return new PlaceholderItem(definition, text, getStartIndex(), getEndIndex());
     }
 }

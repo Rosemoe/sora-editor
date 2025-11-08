@@ -120,8 +120,8 @@ public class Paint extends android.graphics.Paint {
     /**
      * Get the advance of text with the context positions related to shaping the characters
      */
-    public float measureTextRunAdvance(char[] text, int start, int end, int contextStart, int contextEnd, boolean fast) {
-        return myGetTextRunAdvances(text, start, end - start, contextStart, contextEnd - contextStart, false, null, 0);
+    public float measureTextRunAdvance(char[] text, int start, int end, int contextStart, int contextEnd, boolean isRtl) {
+        return myGetTextRunAdvances(text, start, end - start, contextStart, contextEnd - contextStart, isRtl, null, 0);
     }
 
     /**

@@ -57,6 +57,7 @@ import io.github.rosemoe.sora.R;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.graphics.BubbleHelper;
 import io.github.rosemoe.sora.graphics.BufferedDrawPoints;
+import io.github.rosemoe.sora.graphics.GraphicsCompat;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.graphics.TextRow;
 import io.github.rosemoe.sora.graphics.TextRowParams;
@@ -2102,7 +2103,7 @@ public class EditorRenderer {
             if (color != 0) {
                 paintGeneral.setTextSkewX(TextStyle.isItalics(style) ? RenderingConstants.TEXT_SKEW_X : 0f);
                 paintGeneral.setStrikeThruText(TextStyle.isStrikeThrough(style));
-                canvas.drawTextRun(text, index, count, contextIndex, contextCount, horizontalOffset, params.getTextBaseline(), isRtl, paintGeneral);
+                GraphicsCompat.drawTextRun(canvas, text, index, count, contextIndex, contextCount, horizontalOffset, params.getTextBaseline(), isRtl, paintGeneral);
             }
             if (underlineColor != 0) {
                 paintOther.setColor(underlineColor);

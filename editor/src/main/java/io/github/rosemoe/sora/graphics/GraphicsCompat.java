@@ -1,0 +1,53 @@
+/*
+ *    sora-editor - the awesome code editor for Android
+ *    https://github.com/Rosemoe/sora-editor
+ *    Copyright (C) 2020-2025  Rosemoe
+ *
+ *     This library is free software; you can redistribute it and/or
+ *     modify it under the terms of the GNU Lesser General Public
+ *     License as published by the Free Software Foundation; either
+ *     version 2.1 of the License, or (at your option) any later version.
+ *
+ *     This library is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *     Lesser General Public License for more details.
+ *
+ *     You should have received a copy of the GNU Lesser General Public
+ *     License along with this library; if not, write to the Free Software
+ *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *     USA
+ *
+ *     Please contact Rosemoe by email 2073412493@qq.com if you need
+ *     additional information or have any questions
+ */
+package io.github.rosemoe.sora.graphics;
+
+import android.annotation.SuppressLint;
+import android.graphics.Canvas;
+import android.os.Build;
+
+import androidx.annotation.NonNull;
+
+public class GraphicsCompat {
+
+    /**
+     * {@link Canvas#drawTextRun(char[], int, int, int, int, float, float, boolean, android.graphics.Paint)} is also available on API 21 & 22,
+     * but with hidden access. As there is no hidden list checks in those API platforms, it's safe here to call the "New API".
+     */
+    @SuppressLint("NewApi")
+    public static void drawTextRun(Canvas canvas, @NonNull char[] text, int index, int count, int contextIndex,
+                                   int contextCount, float x, float y, boolean isRtl, @NonNull android.graphics.Paint paint) {
+        canvas.drawTextRun(text, index, count, contextIndex, contextCount, x, y, isRtl, paint);
+    }
+
+    public static float getRunAdvance(Paint paint, char[] text, int start, int end, int contextStart, int contextEnd,
+                                      boolean isRtl, int offset) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return paint.getRunAdvance(text, start, end, contextStart, contextEnd, isRtl, offset);
+        } else {
+            return paint.measureTextRunAdvance(text, start, end, contextStart, contextEnd, isRtl);
+        }
+    }
+
+}

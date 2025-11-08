@@ -37,10 +37,7 @@ public interface WordBreaker {
 
         @NonNull
         public static WordBreaker newInstance(@NonNull ContentLine text) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                return new WordBreakerApiN(text);
-            }
-            return new WordBreakerFallback(text);
+            return new WordBreakerIcu(text);
         }
 
     }

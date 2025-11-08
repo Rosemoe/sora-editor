@@ -478,11 +478,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     @NonNull
     public List<InlayHintRenderer> getInlayHintRenderers() {
-        return inlayHintRendererMap.values().stream().toList();
+        return new ArrayList<>(inlayHintRendererMap.values());
     }
 
     @Nullable
-    public InlayHintRenderer getInlayHintRendererForType(String type) {
+    public InlayHintRenderer getInlayHintRendererForType(@Nullable String type) {
         return inlayHintRendererMap.get(type);
     }
 

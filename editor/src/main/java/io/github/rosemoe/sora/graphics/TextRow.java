@@ -64,7 +64,12 @@ public class TextRow {
     // Visual Orders [Split by Tab&FunChar] + Spans + Inlay Hints -> Visual Segments
 
     private final static String LOG_TAG = "TextRow";
-    private final static Comparator<Span> SPAN_COMPARATOR = Comparator.comparingInt(Span::getColumn);
+    private final static Comparator<Span> SPAN_COMPARATOR = (a, b) -> {
+        if (a == null && b == null) return 0;
+        if (a == null) return -1;
+        if (b == null) return 1;
+        return Integer.compare(a.getColumn(), b.getColumn());
+    };
     private final RectF tmpRect = new RectF();
     private final Span tmpSpan = Span.obtain(0, 0);
     private ContentLine text;
@@ -134,7 +139,7 @@ public class TextRow {
         if (measureCache != null) {
             return measureCache[offset] - measureCache[start];
         }
-        return paint.getRunAdvance(text.getBackingCharArray(), start, end, contextStart, contextEnd, isRtl, offset);
+        return GraphicsCompat.getRunAdvance(paint, text.getBackingCharArray(), start, end, contextStart, contextEnd, isRtl, offset);
     }
 
     private int findOffsetByAdvanceCacheable(int start, int end, int contextStart, int contextEnd, boolean isRtl, float advance) {
@@ -393,8 +398,6 @@ public class TextRow {
     }
 
     private static class IteratingContext {
-        /* for painting */
-        public Canvas canvas;
         public long lastStyle = -1;
         /* for horizontal offset limiting */
         public float minOffset = 0f;
@@ -600,7 +603,7 @@ public class TextRow {
                         if (isRtl) {
                             paint.setTextAlign(android.graphics.Paint.Align.RIGHT);
                         }
-                        canvas.drawTextRun(chars, lastEnd, i - lastEnd, paintStart, paintEnd - paintStart, drawOffset, params.getTextBaseline(), isRtl, paint);
+                        GraphicsCompat.drawTextRun(canvas, chars, lastEnd, i - lastEnd, paintStart, paintEnd - paintStart, drawOffset, params.getTextBaseline(), isRtl, paint);
                         if (isRtl) {
                             paint.setTextAlign(android.graphics.Paint.Align.LEFT);
                         }
@@ -617,7 +620,7 @@ public class TextRow {
                 }
             }
         } else {
-            canvas.drawTextRun(text.getBackingCharArray(), paintStart, paintEnd - paintStart, paintStart, paintEnd - paintStart, offset, params.getTextBaseline(), isRtl, paintGeneral);
+            GraphicsCompat.drawTextRun(canvas, text.getBackingCharArray(), paintStart, paintEnd - paintStart, paintStart, paintEnd - paintStart, offset, params.getTextBaseline(), isRtl, paintGeneral);
         }
 
         // Draw strikethrough
