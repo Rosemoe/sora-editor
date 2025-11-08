@@ -144,7 +144,7 @@ open class PointAnchoredContainer<T : PointAnchoredObject> {
             index++
         }
         if (deleteEnd != -1) {
-            objects.subList(start, index + 1).clear()
+            objects.subList(start, deleteEnd + 1).clear()
         }
     }
 
