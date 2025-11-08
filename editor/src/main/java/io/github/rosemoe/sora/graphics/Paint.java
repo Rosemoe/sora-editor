@@ -38,7 +38,6 @@ public class Paint extends android.graphics.Paint {
     private float spaceWidth;
     private float tabWidth;
     private boolean renderFunctionCharacters;
-    private SingleCharacterWidths widths;
 
     public Paint(boolean renderFunctionCharacters) {
         super();
@@ -49,26 +48,15 @@ public class Paint extends android.graphics.Paint {
 
     public void setRenderFunctionCharacters(boolean renderFunctionCharacters) {
         this.renderFunctionCharacters = renderFunctionCharacters;
-        if (widths != null) {
-            widths.clearCache();
-        }
     }
 
     public boolean isRenderFunctionCharacters() {
         return renderFunctionCharacters;
     }
 
-    private void ensureCacheObject() {
-        if (widths == null) {
-            widths = new SingleCharacterWidths(1);
-        }
-    }
-
     public void onAttributeUpdate() {
         spaceWidth = measureText(" ");
         tabWidth = measureText("\t");
-        if (widths != null)
-            widths.clearCache();
     }
 
     public float getSpaceWidth() {
