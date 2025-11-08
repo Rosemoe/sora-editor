@@ -153,7 +153,7 @@ fun Position.getIndex(editor: CodeEditor): Int {
     )
 }
 
-fun List<Diagnostic>.transformToEditorDiagnostics(editor: CodeEditor): List<DiagnosticRegion> {
+internal fun List<Diagnostic>.transformToEditorDiagnostics(editor: CodeEditor): List<DiagnosticRegion> {
     val result = ArrayList<DiagnosticRegion>()
     var id = 0L
     for (diagnosticSource in this) {

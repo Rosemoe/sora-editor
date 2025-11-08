@@ -27,15 +27,19 @@ package io.github.rosemoe.sora.lsp.editor
 import androidx.annotation.WorkerThread
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.HoverEvent
+import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
+import io.github.rosemoe.sora.graphics.inlayHint.TextInlayHintRenderer
 import io.github.rosemoe.sora.lang.Language
-import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
 import io.github.rosemoe.sora.lsp.editor.codeaction.CodeActionWindow
 import io.github.rosemoe.sora.lsp.editor.diagnostics.LspDiagnosticTooltipLayout
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEvent
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorHoverEvent
+import io.github.rosemoe.sora.lsp.editor.event.LspEditorScrollEvent
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorSelectionChangeEvent
 import io.github.rosemoe.sora.lsp.editor.format.LspFormatter
 import io.github.rosemoe.sora.lsp.editor.hover.HoverWindow
@@ -49,6 +53,7 @@ import io.github.rosemoe.sora.lsp.requests.Timeout
 import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.FileUri
 import io.github.rosemoe.sora.lsp.utils.clearVersions
+import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.component.DefaultDiagnosticTooltipLayout
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
@@ -66,8 +71,8 @@ import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.SignatureHelp
-import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.TextDocumentSyncKind
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicReference
@@ -91,6 +96,8 @@ class LspEditor(
     private var currentLanguage: LspLanguage? = null
 
     private var isClosed = false
+
+    private var cachedInlayHints : List<org.eclipse.lsp4j.InlayHint>? = null
 
     private val unsubscribeFunctionRef = AtomicReference<Runnable?>()
 
@@ -119,8 +126,17 @@ class LspEditor(
             clearSubscriptions()
 
             currentEditor.setEditorLanguage(currentLanguage)
-            signatureHelpWindowWeakReference = WeakReference(SignatureHelpWindow(currentEditor))
-            hoverWindowWeakReference = WeakReference(HoverWindow(currentEditor))
+
+            if (isEnableSignatureHelp) {
+                signatureHelpWindowWeakReference = WeakReference(SignatureHelpWindow(currentEditor))
+            }
+            if (isEnableHover) {
+                hoverWindowWeakReference = WeakReference(HoverWindow(currentEditor))
+            }
+            if (isEnableInlayHint) {
+                currentEditor.registerInlayHintRenderer(TextInlayHintRenderer)
+            }
+
             codeActionWindowWeakReference = WeakReference(CodeActionWindow(this, currentEditor))
 
             val currentDiagnosticTooltipWindow =
@@ -130,21 +146,21 @@ class LspEditor(
                 currentDiagnosticTooltipWindow.layout = LspDiagnosticTooltipLayout()
             }
 
-            val editorContentChangeEventReceiver = LspEditorContentChangeEvent(this)
-            val editorSelectionChangeEventReceiver = LspEditorSelectionChangeEvent(this)
 
-            val editorHoverEvent = LspEditorHoverEvent(this)
 
             val subscriptionReceipts =
                 mutableListOf(
                     currentEditor.subscribeEvent<ContentChangeEvent>(
-                        editorContentChangeEventReceiver
+                        LspEditorContentChangeEvent(this)
                     ),
                     currentEditor.subscribeEvent<SelectionChangeEvent>(
-                        editorSelectionChangeEventReceiver
+                        LspEditorSelectionChangeEvent(this)
                     ),
                     currentEditor.subscribeEvent<HoverEvent>(
-                        editorHoverEvent
+                        LspEditorHoverEvent(this)
+                    ),
+                    currentEditor.subscribeEvent<ScrollEvent>(
+                        LspEditorScrollEvent(this)
                     )
                 )
 
@@ -195,7 +211,6 @@ class LspEditor(
     val isShowSignatureHelp
         get() = signatureHelpWindowWeakReference.get()?.isShowing ?: false
 
-
     val isShowHover
         get() = hoverWindowWeakReference.get()?.isShowing ?: false
 
@@ -226,6 +241,15 @@ class LspEditor(
             } else {
                 signatureHelpWindow?.setEnabled(false)
                 signatureHelpWindowWeakReference.clear()
+            }
+        }
+
+    var isEnableInlayHint = true
+        get() = field
+        set(value) {
+            val editor = editor ?: return
+            if (value) {
+                editor.registerInlayHintRenderer(TextInlayHintRenderer)
             }
         }
 
@@ -270,9 +294,13 @@ class LspEditor(
             languageServerWrapper.connect(this@LspEditor)
 
             currentLanguage?.let { language ->
-                if (capabilities.documentFormattingProvider != null) {
+                if (capabilities.documentFormattingProvider?.left != false || capabilities.documentFormattingProvider?.right != null) {
                     language.formatter = LspFormatter(language)
                 }
+            }
+
+            if (capabilities.inlayHintProvider?.left != false || capabilities.inlayHintProvider?.right != null) {
+                requestInlayHint(CharPosition(0, 0))
             }
 
             isConnected = true
@@ -420,6 +448,25 @@ class LspEditor(
         }
 
         originEditor.post { window.show(range, actions) }
+    }
+
+    internal fun showInlayHints(inlayHints: List<org.eclipse.lsp4j.InlayHint>?) {
+        val editor = editor ?: return
+        if (inlayHints == null) {
+            editor.inlayHints = null
+            return
+        }
+
+        // No check for equality here. We assume users won't modify the inlayHints container directly.
+        if (cachedInlayHints == inlayHints && editor.inlayHints != null) {
+            return
+        }
+
+        val inlayHintsContainer = InlayHintsContainer()
+
+        inlayHints.toEditorDisplay().forEach(inlayHintsContainer::add)
+
+        editor.inlayHints = inlayHintsContainer
     }
 
     fun hitReTrigger(eventText: CharSequence): Boolean {

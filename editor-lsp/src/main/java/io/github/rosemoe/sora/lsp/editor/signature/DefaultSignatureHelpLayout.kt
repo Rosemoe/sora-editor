@@ -16,8 +16,8 @@ import android.widget.ImageView
 import android.widget.ScrollView
 import android.widget.TextView
 import io.github.rosemoe.sora.lsp.R
+import io.github.rosemoe.sora.lsp.editor.curvedTextScale
 import io.github.rosemoe.sora.lsp.editor.text.SimpleMarkdownRenderer
-import io.github.rosemoe.sora.lsp.editor.text.curvedTextScale
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import org.eclipse.lsp4j.SignatureInformation
 import org.eclipse.lsp4j.SignatureHelp

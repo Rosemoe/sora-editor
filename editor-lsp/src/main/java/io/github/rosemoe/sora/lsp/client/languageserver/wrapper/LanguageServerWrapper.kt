@@ -57,6 +57,7 @@ import org.eclipse.lsp4j.HoverCapabilities
 import org.eclipse.lsp4j.InitializeParams
 import org.eclipse.lsp4j.InitializeResult
 import org.eclipse.lsp4j.InitializedParams
+import org.eclipse.lsp4j.InlayHintCapabilities
 import org.eclipse.lsp4j.MarkupKind
 import org.eclipse.lsp4j.OnTypeFormattingCapabilities
 import org.eclipse.lsp4j.PublishDiagnosticsCapabilities
@@ -367,6 +368,7 @@ class LanguageServerWrapper(
             definition = DefinitionCapabilities()
             documentHighlight =
                 null // The feature is not currently supported in the sora-editor
+            inlayHint  = InlayHintCapabilities()
             formatting = FormattingCapabilities()
             hover = HoverCapabilities( true)
             onTypeFormatting = OnTypeFormattingCapabilities()
