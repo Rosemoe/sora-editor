@@ -134,9 +134,17 @@ public class LineBreakLayout extends AbstractLayout {
     }
 
     private int measureLineAndUpdateInlineWidths(int lineIndex) {
+        return measureLineAndUpdateInlineWidths(lineIndex, false);
+    }
+
+    private int measureLineAndUpdateInlineWidths(int lineIndex, boolean useAdd) {
         ContentLine line = text.getLine(lineIndex);
         var inlayHintsWidth = measureInlayHints(getInlayHints(lineIndex), editor.getTextPaint());
-        inlineElementsWidths.set(lineIndex, inlayHintsWidth);
+        if (useAdd) {
+            inlineElementsWidths.add(lineIndex, inlayHintsWidth);
+        } else {
+            inlineElementsWidths.set(lineIndex, inlayHintsWidth);
+        }
         return (int) measurer.measureText(line, 0, line.length(), editor.getTextPaint()) + inlayHintsWidth;
     }
 
@@ -184,7 +192,7 @@ public class LineBreakLayout extends AbstractLayout {
                     widthMaintainer.set(i, measureLineAndUpdateInlineWidths(i));
                 }
             } else {
-                widthMaintainer.add(i, measureLineAndUpdateInlineWidths(i));
+                widthMaintainer.add(i, measureLineAndUpdateInlineWidths(i, true));
             }
         }
     }
