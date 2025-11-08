@@ -23,20 +23,16 @@
  */
 package io.github.rosemoe.sora.widget.layout;
 
-import android.icu.text.BreakIterator;
-import android.os.Build;
 import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import io.github.rosemoe.sora.graphics.GraphemeBoundsBreaker;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.graphics.TextRow;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
@@ -44,14 +40,9 @@ import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.SpanFactory;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
-import io.github.rosemoe.sora.text.CharSequenceIterator;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
-import io.github.rosemoe.sora.text.breaker.WordBreaker;
-import io.github.rosemoe.sora.text.breaker.WordBreakerEmpty;
 import io.github.rosemoe.sora.util.IntPair;
-import io.github.rosemoe.sora.util.MyCharacter;
-import io.github.rosemoe.sora.util.TemporaryFloatBuffer;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
@@ -263,7 +254,7 @@ public class WordwrapLayout extends AbstractLayout {
     @Override
     public Row getRowAt(int rowIndex) {
         if (rowTable.isEmpty()) {
-            var r = new Row(this);
+            var r = new Row();
             r.startColumn = 0;
             r.endColumn = text.getColumnCount(rowIndex);
             r.isLeadingRow = true;
@@ -271,7 +262,7 @@ public class WordwrapLayout extends AbstractLayout {
             r.inlayHints = getInlayHints(rowIndex);
             return r;
         }
-        return rowTable.get(rowIndex).toRow(this);
+        return rowTable.get(rowIndex).toRow();
     }
 
     @Override
@@ -501,8 +492,8 @@ public class WordwrapLayout extends AbstractLayout {
             this.inlayHints = inlayHints;
         }
 
-        public Row toRow(AbstractLayout layout) {
-            var row = new Row(layout);
+        public Row toRow() {
+            var row = new Row();
             row.isLeadingRow = startColumn == 0;
             row.startColumn = startColumn;
             row.endColumn = endColumn;
@@ -546,7 +537,7 @@ public class WordwrapLayout extends AbstractLayout {
 
         WordwrapLayoutRowItr(int initialRow) {
             initRow = currentRow = initialRow;
-            result = new Row(WordwrapLayout.this);
+            result = new Row();
         }
 
         @NonNull

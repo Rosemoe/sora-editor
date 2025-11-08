@@ -23,7 +23,6 @@
  */
 package io.github.rosemoe.sora.text.bidi;
 
-
 public interface IDirections {
 
     int getRunCount();

@@ -33,7 +33,8 @@ public class GraphicsCompat {
 
     /**
      * {@link Canvas#drawTextRun(char[], int, int, int, int, float, float, boolean, android.graphics.Paint)} is also available on API 21 & 22,
-     * but with hidden access. As there is no hidden list checks in those API platforms, it's safe here to call the "New API".
+     * but with hidden access.
+     * As there is no hidden list checks in those API platforms, it's safe here to call the "New API".
      */
     @SuppressLint("NewApi")
     public static void drawTextRun(Canvas canvas, @NonNull char[] text, int index, int count, int contextIndex,

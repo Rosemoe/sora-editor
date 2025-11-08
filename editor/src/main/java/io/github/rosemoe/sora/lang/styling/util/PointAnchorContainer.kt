@@ -24,6 +24,13 @@
 
 package io.github.rosemoe.sora.lang.styling.util
 
+/**
+ * Container text position based objects. The total amount of objects held by the container
+ * is expected to be not very large.
+ *
+ * @see PointAnchoredObject
+ * @author Rosemoe
+ */
 open class PointAnchoredContainer<T : PointAnchoredObject> {
     companion object {
         val comparator = object : Comparator<PointAnchoredObject> {

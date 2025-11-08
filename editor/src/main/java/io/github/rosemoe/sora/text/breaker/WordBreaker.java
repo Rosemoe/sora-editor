@@ -23,12 +23,13 @@
  */
 package io.github.rosemoe.sora.text.breaker;
 
-import android.os.Build;
-
 import androidx.annotation.NonNull;
 
 import io.github.rosemoe.sora.text.ContentLine;
 
+/**
+ * Breakpoint optimizer used when breaking text to visual rows
+ */
 public interface WordBreaker {
 
     int getOptimizedBreakPoint(int start, int end);

@@ -100,12 +100,10 @@ abstract class InlayHintRenderer() {
      * Measure the width of this inlay hint so that editor can properly place all the elements.
      * Be careful that the given objects should not be modified, especially [paint] and [textMetrics]. They
      * are currently used by editor instance to measure and render.
+     *
      * [lineHeight] and [baseline] are given y offsets (considering y offset of target line top is 0). Because the
      * baseline can be different from the one computed directly from the given [textMetrics] when line spacing is set.
-     * The method is called when editor measures text, for example when the text size or font is changed. So make sure do
-     * that this method is fast enough to achieve good performance. If your width changes because other reasons, remember to
-     * notify the editor in time.
-     * [InlayHintRenderer] is only allowed to be place at span start or end. Illegal hints will be ignored.
+     *
      * @param paint the text paint currently used by editor
      * @param textMetrics the [FontMetricsInt] instance of the paint cached by editor
      * @param lineHeight the general line height, with line spacing considered
@@ -124,7 +122,8 @@ abstract class InlayHintRenderer() {
      * Render the inlay hint on the given canvas. The [Canvas.translate] is called in advance so you do
      * not need to consider the exact line index. The left of the given canvas is where you should start render
      * your content and the top of the given canvas is the top of target line.
-     * Your measure width previously generated is passed to you. You are expected to make your content
+     *
+     * Your measured width previously generated is passed to you. You are expected to make your content
      * in range, according to the [measuredWidth] and [lineHeight].
      *
      * @param canvas the canvas to render your content

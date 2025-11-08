@@ -33,6 +33,11 @@ import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.util.IntPair;
 
+/**
+ * Companion for {@link Content} to manage line directions
+ *
+ * @author Rosemoe
+ */
 public class ContentBidi implements ContentListener {
 
     public final static int MAX_BIDI_CACHE_ENTRY_COUNT = 64;

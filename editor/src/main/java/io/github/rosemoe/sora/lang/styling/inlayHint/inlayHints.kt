@@ -24,6 +24,12 @@
 
 package io.github.rosemoe.sora.lang.styling.inlayHint
 
+/**
+ * A simple text inlay hint
+ *
+ * @see io.github.rosemoe.sora.graphics.inlayHint.TextInlayHintRenderer
+ * @author Rosemoe
+ */
 class TextInlayHint(
     line: Int,
     column: Int,

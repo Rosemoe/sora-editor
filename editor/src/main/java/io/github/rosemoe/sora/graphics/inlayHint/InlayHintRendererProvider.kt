@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.graphics.inlayHint
 
+
 fun interface InlayHintRendererProvider {
 
     fun getInlayHintRendererForType(type: String): InlayHintRenderer?

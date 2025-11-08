@@ -219,7 +219,7 @@ public class LineBreakLayout extends AbstractLayout {
     @NonNull
     @Override
     public Row getRowAt(int rowIndex) {
-        var row = new Row(this);
+        var row = new Row();
         row.lineIndex = rowIndex;
         row.startColumn = 0;
         row.isLeadingRow = true;
@@ -336,7 +336,7 @@ public class LineBreakLayout extends AbstractLayout {
 
         LineBreakLayoutRowItr(AbstractLayout layout, @NonNull Content text, int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
             initRow = currentRow = initialRow;
-            result = new Row(layout);
+            result = new Row();
             this.text = text;
             this.layout = layout;
             result.isLeadingRow = true;

@@ -160,6 +160,9 @@ public interface Layout extends ContentListener {
      */
     int getRowIndexForPosition(int index);
 
+    /**
+     * Notify the layout that the given lines have external changes and their layout should be re-calculated.
+     */
     void invalidateLines(StyleUpdateRange range);
 
 }

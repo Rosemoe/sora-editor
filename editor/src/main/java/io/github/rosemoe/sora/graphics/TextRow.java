@@ -58,10 +58,21 @@ import io.github.rosemoe.sora.widget.layout.RowElementTypes;
 import io.github.rosemoe.sora.widget.rendering.RenderingConstants;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
+/**
+ * {@link TextRow} is a helper class for a single text row to shape, measure and draw.
+ * <p>
+ * Each row is firstly reordered according to the logical line directions analysis. Then
+ * each run is processed from visually left to right. Elements in a run maybe a segment of text,
+ * or an inlay hint (inline element).
+ * <p>
+ * A special case is text breaking, which happens in wordwrap mode. When breaking text, the runs are
+ * processed logically because a single row must represent a logically continuous text segment.
+ * <p>
+ * The indices are mostly unchecked in this class, so caller have to duty to offer valid indices.
+ *
+ * @author Rosemoe
+ */
 public class TextRow {
-
-    // Directions -> Visual Orders
-    // Visual Orders [Split by Tab&FunChar] + Spans + Inlay Hints -> Visual Segments
 
     private final static String LOG_TAG = "TextRow";
     private final static Comparator<Span> SPAN_COMPARATOR = (a, b) -> {
@@ -101,11 +112,17 @@ public class TextRow {
         this.measureCache = measureCache;
     }
 
+    /**
+     * Update the range of text
+     */
     public void setRange(int start, int end) {
         this.textStart = start;
         this.textEnd = end;
     }
 
+    /**
+     * Get character advances for text breaking, in a single run
+     */
     private float getSingleRunAdvancesForBreaking(int start, int end, int contextStart, int contextEnd,
                                                   boolean isRtl, float[] advances) {
         var chars = text.getBackingCharArray();
@@ -128,6 +145,9 @@ public class TextRow {
         return width;
     }
 
+    /**
+     * Get the character advances and horizontal advance in a single text run
+     */
     private float getTextRunAdvancesCacheable(int index, int count, int contextIndex, int contextCount, boolean isRtl, @Nullable float[] advances, int advancesIndex) {
         if (measureCache != null) {
             if (advances != null) {
@@ -140,6 +160,9 @@ public class TextRow {
         return paint.myGetTextRunAdvances(text.getBackingCharArray(), index, count, contextIndex, contextCount, isRtl, advances, advancesIndex);
     }
 
+    /**
+     * Get the cursor horizontal advance in a single text run
+     */
     private float getRunAdvanceCacheable(int offset, int start, int end,
                                          int contextStart, int contextEnd, boolean isRtl) {
         if (measureCache != null) {
@@ -148,6 +171,9 @@ public class TextRow {
         return GraphicsCompat.getRunAdvance(paint, text.getBackingCharArray(), start, end, contextStart, contextEnd, isRtl, offset);
     }
 
+    /**
+     * Find the character index from cursor horizontal offset
+     */
     private int findOffsetByAdvanceCacheable(int start, int end, int contextStart, int contextEnd, boolean isRtl, float advance) {
         if (measureCache != null) {
             var cache = measureCache;
@@ -178,6 +204,11 @@ public class TextRow {
         return paint.findOffsetByRunAdvance(text, start, end, contextStart, contextEnd, isRtl, advance);
     }
 
+    /**
+     * Iterate the runs in the row
+     *
+     * @param reorderVisually {@code true} to reorder the elements visually. Otherwise, runs are consumed logically.
+     */
     private void iterateRuns(RunElementsConsumer consumer, boolean reorderVisually) {
         ListPointers pointers = null;
         // Generally, reordering is not required
@@ -187,6 +218,7 @@ public class TextRow {
             int runStart = dirs.getRunStart(i);
             int segmentStart = Math.max(runStart, textStart);
             int segmentEnd = Math.min(runEnd, textEnd);
+            // We can not stop here because in multi-run text, directions are reordered and may not be logically continuous
             if (segmentStart >= segmentEnd) {
                 continue;
             }
@@ -214,6 +246,9 @@ public class TextRow {
         }
     }
 
+    /**
+     * Get the expected column position to render after.
+     */
     private int getExpectedInlayHintColumn(InlayHint inlayHint) {
         int position = inlayHint.getColumn();
         if (inlayHint.getDisplaySide() == CharacterSide.RIGHT) {
@@ -223,6 +258,9 @@ public class TextRow {
         return position;
     }
 
+    /**
+     * Seek the start indices for {@code spans} and {@code inlineElements}
+     */
     private ListPointers seekStartIndices(int segmentStart) {
         tmpSpan.setColumn(segmentStart);
         int spanIndex = Collections.binarySearch(spans, tmpSpan, SPAN_COMPARATOR);
@@ -243,6 +281,9 @@ public class TextRow {
         return new ListPointers(spanIndex, inlineIndex);
     }
 
+    /**
+     * Generate elements in a unidirectional run, and consume them.
+     */
     private boolean generateAndConsumeSingleRun(int segmentStart, int segmentEnd, boolean isRtl, ListPointers pointers, RunElementsConsumer consumer) {
         List<RowElement> runElements = new ArrayList<>();
         int lastEndIndex = segmentStart;
@@ -285,11 +326,22 @@ public class TextRow {
         return result;
     }
 
+    /**
+     * Break the logical line into rows
+     * @param width Max width of a row
+     * @return At least one row is returned, even when the line is empty.
+     */
     public List<WordwrapRow> breakText(int width, boolean antiWordBreaking) {
         List<WordwrapRow> rows = new ArrayList<>();
         var optimizer = antiWordBreaking ? WordBreaker.Factory.newInstance(text) : WordBreakerEmpty.INSTANCE;
         class TextBreaker implements RunElementsConsumer {
+            /**
+             * Current row to append elements. Maybe empty.
+             */
             WordwrapRow currentRow = new WordwrapRow();
+            /**
+             * Width of current row
+             */
             float currentWidth = 0f;
 
             @Override
@@ -351,10 +403,12 @@ public class TextRow {
                     if (currentRow.isEmpty) {
                         currentRow.setInitialRange(e.startColumn + offset, e.startColumn + next);
                     } else {
+                        // It's okay the directly set the end, because text elements are yielded in logical order
                         currentRow.setEndColumn(e.startColumn + next);
                     }
                     currentWidth += advance;
                     if (beforeOptimization != next) {
+                        // The row end is optimized, switch to new row
                         commitRow();
                     }
                     offset = next;
@@ -403,7 +457,11 @@ public class TextRow {
         return rows;
     }
 
+    /**
+     * The context for iterating in run elements.
+     */
     private static class IteratingContext {
+        /* for paint style update (avoid redundant style update native calls) */
         public long lastStyle = -1;
         /* for horizontal offset limiting */
         public float minOffset = 0f;
@@ -417,6 +475,7 @@ public class TextRow {
         /* for background region iterating / text patching */
         public int startCharOffset;
         public int endCharOffset;
+        /* for background region iterating */
         public RegionBuffer regionBuffer;
         /* for text patching */
         public boolean autoClip;
@@ -425,10 +484,16 @@ public class TextRow {
         public float[] advances;
     }
 
+    /**
+     * Check if cursor at given offset should be displayed in the text segment
+     */
     private boolean checkCursorOffsetInSegment(int offset, int start, int end) {
         return (offset >= start && (offset < end || (offset == end && end == textEnd)));
     }
 
+    /**
+     * Clip text region to patch certain regions
+     */
     private void clipRegionForPatchDrawing(float textOffset, float width, boolean italics, Canvas canvas) {
         if (!italics) {
             canvas.clipRect(textOffset, 0, textOffset + width, params.getRowHeight());
@@ -444,6 +509,9 @@ public class TextRow {
         canvas.clipPath(path);
     }
 
+    /**
+     * Draw a single function character
+     */
     protected void drawFunctionCharacter(Canvas canvas, float offsetX, float width, char ch) {
         var paintGraph = params.getGraphPaint();
         var metricsGraph = params.getGraphMetrics();
@@ -469,6 +537,9 @@ public class TextRow {
         paint.setColor(color);
     }
 
+    /**
+     * Terminal handler for text element.
+     */
     private float handleSingleStyledText(int paintStart, int paintEnd, boolean isRtl, Span span,
                                          Canvas canvas, float offset, IteratingContext ctx) {
         var paintGeneral = paint;
@@ -663,6 +734,9 @@ public class TextRow {
         return width;
     }
 
+    /**
+     * Split text in an unidirectional run with span boundaries
+     */
     private float handleMultiStyledText(int start, int end, boolean isRtl, ListPointers pointers,
                                         Canvas canvas, float offset, IteratingContext ctx) {
         int spanIndex = pointers.spanIndex;
@@ -730,6 +804,10 @@ public class TextRow {
         return localOffset;
     }
 
+    /**
+     * Split text in an unidirectional run with tab.
+     * Tab character is consumed as terminal text segment here.
+     */
     private float handleSingleTextElement(RowElement e, ListPointers pointers,
                                           Canvas canvas, float offset, IteratingContext ctx) {
         var chars = text.getBackingCharArray();
@@ -778,6 +856,9 @@ public class TextRow {
         return localOffset;
     }
 
+    /**
+     * Handle a single inline element in an unidirectional run
+     */
     private float handleSingleInlineElement(RowElement e,
                                             Canvas canvas, float offset, IteratingContext ctx) {
         var inlay = e.inlayHint;
@@ -808,6 +889,9 @@ public class TextRow {
         return w;
     }
 
+    /**
+     * Handle elements in a unidirectional run
+     */
     private float handleMultiElementRun(List<RowElement> e, boolean isRtl, ListPointers pointers,
                                         Canvas canvas, float offset, IteratingContext ctx) {
         var visualElements = isRtl ? new ReversedListView<>(e) : e;
@@ -825,6 +909,14 @@ public class TextRow {
         return localOffset;
     }
 
+    /**
+     * Draw text into the given canvas. Text metrics information is provided by previously set params.
+     * Text is rendered from horizontal offset 0 from left to right.
+     * @param canvas A pre-translated canvas to draw text
+     * @param minHorizontalOffset Min visible horizontal offset in text
+     * @param maxHorizontalOffset Max visible horizontal offset in text
+     * @return packed integer and float. The first value represents if the row end is drawn; the second represents the final horizontal offset.
+     */
     public long draw(@NonNull Canvas canvas, float minHorizontalOffset, float maxHorizontalOffset) {
         var ctx = new IteratingContext();
         ctx.minOffset = minHorizontalOffset;
@@ -848,6 +940,9 @@ public class TextRow {
         return IntPair.packIntFloat(handler.lastResult ? 1 : 0, handler.horizontalOffset);
     }
 
+    /**
+     * Get the horizontal offset of cursor at the given index
+     */
     public float getCursorOffsetForIndex(int index) {
         var ctx = new IteratingContext();
         ctx.targetCharOffset = index;
@@ -868,6 +963,9 @@ public class TextRow {
         return ctx.resultOffset;
     }
 
+    /**
+     * Get text index from the given cursor horizontal offset
+     */
     public int getIndexForCursorOffset(float offset) {
         var ctx = new IteratingContext();
         ctx.targetHorizontalOffset = offset;
@@ -876,7 +974,15 @@ public class TextRow {
         return ctx.resultCharOffset == -1 ? textStart : ctx.resultCharOffset;
     }
 
-    public void iterateBackgroundRegions(int start, int end, boolean allowLeadingBackground, boolean allowTrailingBackground, BackgroundRegionConsumer handler) {
+    /**
+     * Iterate over background regions. Visually consequent regions are merged into a single region.
+     *
+     * @param start                   Start of target background segment
+     * @param end                     End of target background segment
+     * @param allowLeadingBackground  Allow leading inline elements to be included
+     * @param allowTrailingBackground Allow trailing inline elements to be included
+     */
+    public void iterateBackgroundRegions(int start, int end, boolean allowLeadingBackground, boolean allowTrailingBackground, @NonNull BackgroundRegionConsumer handler) {
         var ctx = new IteratingContext();
         ctx.startCharOffset = start;
         ctx.endCharOffset = end;
@@ -885,9 +991,18 @@ public class TextRow {
         ctx.regionBuffer.commitCurrentIfPresent();
     }
 
+    /**
+     * Iterate over terminal drawTextRun calls
+     * @param start Start of target text segment
+     * @param end End of target text segment
+     * @param canvas A pre-translated canvas to clip
+     * @param minHorizontalOffset Min visible horizontal offset in text
+     * @param maxHorizontalOffset Max visible horizontal offset in text
+     * @param autoClip Clip region outside the desired text segment
+     */
     public void iterateDrawTextRegions(int start, int end, Canvas canvas,
                                        float minHorizontalOffset, float maxHorizontalOffset,
-                                       boolean autoClip, DrawTextConsumer consumer) {
+                                       boolean autoClip, @NonNull DrawTextConsumer consumer) {
         var ctx = new IteratingContext();
         ctx.startCharOffset = start;
         ctx.endCharOffset = end;
@@ -898,6 +1013,9 @@ public class TextRow {
         iterateRuns(new MaxOffsetIterationConsumer(ctx, canvas), true);
     }
 
+    /**
+     * Compute row width
+     */
     public float computeRowWidth() {
         var ctx = new IteratingContext();
         var handler = new MaxOffsetIterationConsumer(ctx);
@@ -905,17 +1023,32 @@ public class TextRow {
         return handler.horizontalOffset;
     }
 
+    /**
+     * Measure text advance in unidirectional run
+     */
     public float measureAdvanceInRun(int offset, int start, int end,
                                      int contextStart, int contextEnd, boolean isRtl) {
         return getRunAdvanceCacheable(offset, start, end, contextStart, contextEnd, isRtl);
     }
 
+    /**
+     * Build measure of logical line for currently-set text range. A logical line maybe split into
+     * multiple rows, so each time only one row is measured.
+     * {@link #buildMeasureCacheTailor(float[])} should always be called for each line.
+     * @see #buildMeasureCacheTailor(float[])
+     * @param cache size must be bigger than text end
+     */
     public void buildMeasureCacheStep(@NonNull float[] cache) {
         var ctx = new IteratingContext();
         ctx.advances = cache;
         iterateRuns(new MaxOffsetIterationConsumer(ctx), true);
     }
 
+    /**
+     * Finish the logical line measure cache building.
+     * @see #buildMeasureCacheStep(float[])
+     * @param cache size must be bigger than text end
+     */
     public void buildMeasureCacheTailor(@NonNull float[] cache) {
         var pending = cache[0];
         cache[0] = 0f;
@@ -926,6 +1059,9 @@ public class TextRow {
         }
     }
 
+    /**
+     * Iteration consumer that stops when the horizontal offset exceeds the desired max offset
+     */
     private class MaxOffsetIterationConsumer implements RunElementsConsumer {
 
         float horizontalOffset = 0f;
@@ -949,10 +1085,22 @@ public class TextRow {
 
     }
 
+    /**
+     * Result of {@link #breakText(int, boolean)}
+     */
     public static class WordwrapRow {
         boolean isEmpty = true;
+        /**
+         * Start column (inclusive)
+         */
         public int startColumn;
+        /**
+         * End column (exclusive)
+         */
         public int endColumn;
+        /**
+         * Inlay hints on the row, maybe null or empty
+         */
         public List<InlayHint> inlayHints;
 
         void setInitialRange(int start, int end) {

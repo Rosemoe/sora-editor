@@ -23,9 +23,16 @@
  */
 package io.github.rosemoe.sora.graphics;
 
-
+/**
+ * Utility for breaking text by grapheme bounds
+ *
+ * @author Rosemoe
+ */
 public class GraphemeBoundsBreaker {
 
+    /**
+     * Find next grapheme break point before the given width
+     */
     public static int findGraphemeBreakPoint(float[] advances, int length, int width, int start) {
         float currentWidth = 0;
         int next = start;

@@ -31,6 +31,11 @@ import java.text.Bidi;
 
 import io.github.rosemoe.sora.util.IntPair;
 
+/**
+ * Helper class for reordering logical text runs to visual runs.
+ *
+ * @author Rosemoe
+ */
 public class VisualDirections implements IDirections {
 
     private final RunInfo[] runs;

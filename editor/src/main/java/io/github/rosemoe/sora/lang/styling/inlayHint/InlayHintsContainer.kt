@@ -26,4 +26,7 @@ package io.github.rosemoe.sora.lang.styling.inlayHint
 
 import io.github.rosemoe.sora.lang.styling.util.PointAnchoredContainer
 
+/**
+ * Container for inlay hints
+ */
 class InlayHintsContainer : PointAnchoredContainer<InlayHint>()

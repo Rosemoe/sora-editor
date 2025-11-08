@@ -29,7 +29,7 @@ import io.github.rosemoe.sora.lang.styling.util.PointAnchoredObject
 /**
  * Choose which side of character to display the inlay hint.
  *
- * No effect if the given character position is at line start or end.
+ * No effect if the given character position is at line end.
  */
 enum class CharacterSide {
     LEFT,

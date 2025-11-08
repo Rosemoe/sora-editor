@@ -57,6 +57,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 /**
  * A general inlay hint of text. The hint text will be displayed in a round colored rect.
  *
+ * @see TextInlayHint
  * @author Rosemoe
  */
 object TextInlayHintRenderer : InlayHintRenderer() {

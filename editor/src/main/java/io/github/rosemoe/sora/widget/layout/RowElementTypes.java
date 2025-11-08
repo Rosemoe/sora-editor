@@ -23,7 +23,18 @@
  */
 package io.github.rosemoe.sora.widget.layout;
 
+/**
+ * Type constants for {@link RowElement}
+ *
+ * @author Rosemoe
+ */
 public interface RowElementTypes {
+    /**
+     * Unidirectional text segment
+     */
     int TEXT = 0;
+    /**
+     * Inlay hint
+     */
     int INLAY_HINT = 1;
 }
