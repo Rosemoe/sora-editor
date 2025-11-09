@@ -219,12 +219,10 @@ class LspEditor(
     val isShowHover
         get() = hoverWindowWeakReference.get()?.isShowing ?: false
 
-
     val isShowCodeActions
         get() = codeActionWindowWeakReference.get()?.isShowing ?: false
 
     var isEnableHover = true
-        get() = hoverWindow?.isEnabled() ?: false
         set(value) {
             field = value
             if (value) {
@@ -236,7 +234,6 @@ class LspEditor(
         }
 
     var isEnableSignatureHelp = true
-        get() = signatureHelpWindow?.isEnabled() ?: false
         set(value) {
             field = value
             if (value) {
