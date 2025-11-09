@@ -106,8 +106,6 @@ public class CachedIndexer implements Indexer, ContentListener {
         if (nearestCharPosition != startPosition && nearestCharPosition != endPosition) {
             Collections.swap(cachedPositions, targetIndex, cachedPositions.size() - 1);
         }
-        if (minDistance > 5000)
-            android.util.Log.d("CachedIndexer", "best distance: " + minDistance);
         return nearestCharPosition;
     }
 
