@@ -541,10 +541,12 @@ class MainActivity : AppCompatActivity() {
                 updatePositionText()
                 updateBtnState()
 
-                binding.editor.inlayHints = InlayHintsContainer().also {
-                    it.add(TextInlayHint(28, 0, "unit:"))
-                    it.add(TextInlayHint(28, 7, "open"))
-                    it.add(TextInlayHint(28, 22, "^class"))
+                if ("big_sample" !in name) {
+                    binding.editor.inlayHints = InlayHintsContainer().also {
+                        it.add(TextInlayHint(28, 0, "unit:"))
+                        it.add(TextInlayHint(28, 7, "open"))
+                        it.add(TextInlayHint(28, 22, "^class"))
+                    }
                 }
             }
         }
