@@ -3872,6 +3872,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             editorLanguage.getAnalyzeManager().reset(new ContentReference(this.text), this.extraArguments);
             editorLanguage.getFormatter().cancel();
         }
+        inlayHints = null;
 
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_SET_NEW_TEXT, new CharPosition(), this.text.getIndexer().getCharPosition(getLineCount() - 1, this.text.getColumnCount(getLineCount() - 1)), this.text, false));
         createLayout();
