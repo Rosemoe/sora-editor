@@ -227,7 +227,7 @@ class MonarchAnalyzer(
                     lineTokens.tokens[2 * index], surrogate
                 )
             if (index == 0 && startIndex != 0) {
-                tokens.add(SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL.toLong()))
+                tokens.add(SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL.toLong()))
             }
             val metadata = lineTokens.tokens[2 * index + 1]
             val foreground = TokenMetadata.getForeground(metadata)
@@ -265,7 +265,7 @@ class MonarchAnalyzer(
                 }
             }
 
-            val span = SpanFactory.obtain(
+            val span = SpanFactory.obtainNoExt(
                 startIndex, TextStyle.makeStyle(
                     foreground + 255,
                     0,

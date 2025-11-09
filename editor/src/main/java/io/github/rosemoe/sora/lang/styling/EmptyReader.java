@@ -36,7 +36,7 @@ public class EmptyReader implements Spans.Reader {
 
     public EmptyReader() {
         spans = new ArrayList<>(1);
-        spans.add(SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL));
+        spans.add(SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL));
     }
 
     public static EmptyReader getInstance() {

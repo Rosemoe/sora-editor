@@ -129,6 +129,7 @@ public interface Span {
     /**
      * @see #setExtra(Object)
      */
+    @Nullable
     Object getExtra();
 
     /**

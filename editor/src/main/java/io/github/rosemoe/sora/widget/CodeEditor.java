@@ -37,7 +37,6 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Looper;
 import android.os.TransactionTooLargeException;
 import android.text.InputType;
 import android.util.AttributeSet;
@@ -1587,7 +1586,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public List<Span> getSpansForLine(int line) {
         var spanMap = textStyles == null ? null : textStyles.spans;
         if (defaultSpans.isEmpty()) {
-            defaultSpans.add(SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL));
+            defaultSpans.add(SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL));
         }
         try {
             if (spanMap != null) {

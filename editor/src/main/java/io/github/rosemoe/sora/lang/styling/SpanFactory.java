@@ -27,6 +27,7 @@ import androidx.annotation.NonNull;
 
 import java.util.Collection;
 
+import io.github.rosemoe.sora.lang.styling.span.internal.NoExtSpanImpl;
 import io.github.rosemoe.sora.lang.styling.span.internal.SpanImpl;
 
 /**
@@ -45,6 +46,16 @@ public class SpanFactory {
     @NonNull
     public static Span obtain(int column, long style) {
         return SpanImpl.obtain(column, style);
+    }
+
+    /**
+     * Get an available {@link Span} object from either cache or new instance.
+     * The result object will be initialized with the given arguments.
+     * <p>
+     * Note that the span can not have additional fields beside
+     */
+    public static Span obtainNoExt(int column, long style) {
+        return NoExtSpanImpl.obtain(column, style);
     }
 
     /**

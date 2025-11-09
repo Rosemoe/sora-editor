@@ -65,7 +65,7 @@ public class WordwrapLayout extends AbstractLayout {
     private final static List<Span> sSpansForWordwrap = new ArrayList<>();
 
     static {
-        sSpansForWordwrap.add(SpanFactory.obtain(0, TextStyle.makeStyle(0, 0, true, true, false)));
+        sSpansForWordwrap.add(SpanFactory.obtainNoExt(0, TextStyle.makeStyle(0, 0, true, true, false)));
     }
 
     private final int width;

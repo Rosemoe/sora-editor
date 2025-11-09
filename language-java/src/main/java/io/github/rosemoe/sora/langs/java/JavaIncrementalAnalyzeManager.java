@@ -300,14 +300,14 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
             switch (token) {
                 case WHITESPACE:
                 case NEWLINE:
-                    span = SpanFactory.obtain(offset, TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL));
+                    span = SpanFactory.obtainNoExt(offset, TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL));
                     break;
                 case CHARACTER_LITERAL:
                 case FLOATING_POINT_LITERAL:
                 case INTEGER_LITERAL:
                 case STRING:
                     classNamePrevious = false;
-                    span = SpanFactory.obtain(offset, TextStyle.makeStyle(EditorColorScheme.LITERAL, true));
+                    span = SpanFactory.obtainNoExt(offset, TextStyle.makeStyle(EditorColorScheme.LITERAL, true));
                     break;
                 case INT:
                 case LONG:
@@ -320,7 +320,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                 case VOID:
                 case VAR:
                     classNamePrevious = true;
-                    span = SpanFactory.obtain(offset, TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false));
+                    span = SpanFactory.obtainNoExt(offset, TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false));
                     break;
                 case ABSTRACT:
                 case ASSERT:
@@ -369,12 +369,12 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                 case SEALED:
                 case PERMITS:
                     classNamePrevious = false;
-                    span = SpanFactory.obtain(offset, TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false));
+                    span = SpanFactory.obtainNoExt(offset, TextStyle.makeStyle(EditorColorScheme.KEYWORD, 0, true, false, false));
                     break;
                 case LINE_COMMENT:
                 case LONG_COMMENT_COMPLETE:
                 case LONG_COMMENT_INCOMPLETE:
-                    span = SpanFactory.obtain(offset, TextStyle.makeStyle(EditorColorScheme.COMMENT, 0, false, true, false, true));
+                    span = SpanFactory.obtainNoExt(offset, TextStyle.makeStyle(EditorColorScheme.COMMENT, 0, false, true, false, true));
                     break;
                 case IDENTIFIER: {
                     int type = EditorColorScheme.IDENTIFIER_NAME;
@@ -410,16 +410,16 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                             }
                         }
                     }
-                    span = SpanFactory.obtain(offset, TextStyle.makeStyle(type));
+                    span = SpanFactory.obtainNoExt(offset, TextStyle.makeStyle(type));
                     break;
                 }
                 default:
                     if (token == Tokens.LBRACK || (token == Tokens.RBRACK && previous == Tokens.LBRACK)) {
-                        span = SpanFactory.obtain(offset, EditorColorScheme.OPERATOR);
+                        span = SpanFactory.obtainNoExt(offset, EditorColorScheme.OPERATOR);
                         break;
                     }
                     classNamePrevious = false;
-                    span = SpanFactory.obtain(offset, EditorColorScheme.OPERATOR);
+                    span = SpanFactory.obtainNoExt(offset, EditorColorScheme.OPERATOR);
             }
             switch (token) {
                 case LINE_COMMENT:
@@ -432,6 +432,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
                     previous = token;
             }
             if (tokenRecord.url != null) {
+                span = SpanFactory.obtain(span.getColumn(), span.getStyle());
                 span.setSpanExt(SpanExtAttrs.EXT_INTERACTION_INFO, new SpanClickableUrl(tokenRecord.url));
                 span.setUnderlineColor(new EditorColor(span.getForegroundColorId()));
             }

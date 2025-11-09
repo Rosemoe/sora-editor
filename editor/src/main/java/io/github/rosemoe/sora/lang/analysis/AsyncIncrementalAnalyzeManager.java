@@ -284,7 +284,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
 
             @Override
             public Span getSpanAt(int index) {
-                return line == null ? SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL) : line.spans.get(index);
+                return line == null ? SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL) : line.spans.get(index);
             }
 
             @Override
@@ -329,7 +329,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                 try {
                     while (lines.size() <= line) {
                         var list = new ArrayList<Span>();
-                        list.add(SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL));
+                        list.add(SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL));
                         lines.add(new Line(list));
                     }
                     var obj = lines.get(line);

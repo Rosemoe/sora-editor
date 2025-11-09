@@ -120,7 +120,7 @@ public class MappedSpans implements Spans {
             if (last != null && last.getStyle() == style) {
                 return;
             }
-            add(spanLine, SpanFactory.obtain(column, style));
+            add(spanLine, SpanFactory.obtainNoExt(column, style));
         }
 
         /**
@@ -140,7 +140,7 @@ public class MappedSpans implements Spans {
             } else if (spanLine > mapLine) {
                 Span extendedSpan = last;
                 if (extendedSpan == null) {
-                    extendedSpan = SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL);
+                    extendedSpan = SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL);
                 }
                 while (mapLine < spanLine) {
                     List<Span> lineSpans = new ArrayList<>();
@@ -169,7 +169,7 @@ public class MappedSpans implements Spans {
             int mapLine = spans.size() - 1;
             var extendedSpan = last;
             if (extendedSpan == null) {
-                extendedSpan = SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL);
+                extendedSpan = SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL);
             }
             while (mapLine < line) {
                 List<Span> lineSpans = new ArrayList<>();
@@ -185,7 +185,7 @@ public class MappedSpans implements Spans {
         public void addNormalIfNull() {
             if (spans.isEmpty()) {
                 List<Span> spanList = new ArrayList<>();
-                spanList.add(SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL));
+                spanList.add(SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL));
                 spans.add(spanList);
             }
         }

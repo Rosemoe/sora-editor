@@ -99,7 +99,7 @@ public class MappedSpanUpdater {
         }
         // Ensure there is span
         if (spanList.isEmpty() || spanList.get(0).getColumn() != 0) {
-            spanList.add(0, SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL));
+            spanList.add(0, SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL));
         }
         // Remove spans with length 0
         for (int i = 0; i + 1 < spanList.size(); i++) {
@@ -131,7 +131,7 @@ public class MappedSpanUpdater {
             if (first.getColumn() == EditorColorScheme.TEXT_NORMAL && first.hasSpanExt(SpanExtAttrs.EXT_UNDERLINE_COLOR)) {
                 first.setColumn(0);
             } else {
-                spanList.add(0, SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL));
+                spanList.add(0, SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL));
             }
         }
     }
@@ -148,7 +148,7 @@ public class MappedSpanUpdater {
         }
         Span extendedSpan;
         if (extendedSpanIndex < 0 || extendedSpanIndex >= startLineSpans.size()) {
-            extendedSpan = SpanFactory.obtain(0, EditorColorScheme.TEXT_NORMAL);
+            extendedSpan = SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL);
         } else {
             extendedSpan = startLineSpans.get(extendedSpanIndex);
         }
