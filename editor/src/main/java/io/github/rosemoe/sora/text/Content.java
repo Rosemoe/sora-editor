@@ -255,6 +255,10 @@ public class Content implements CharSequence {
         }
     }
 
+    ContentLine getLineUnsafe(int line) {
+        return lines.get(line);
+    }
+
     /**
      * Get how many lines there are
      *

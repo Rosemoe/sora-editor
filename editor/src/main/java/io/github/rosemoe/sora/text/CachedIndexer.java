@@ -85,14 +85,14 @@ public class CachedIndexer implements Indexer, ContentListener {
      */
     @NonNull
     private synchronized CharPosition findNearestByIndex(int index) {
-        int min = index, dis = index;
+        int minDistance = index;
         CharPosition nearestCharPosition = startPosition;
         int targetIndex = 0;
         for (int i = 0; i < cachedPositions.size(); i++) {
             CharPosition pos = cachedPositions.get(i);
-            dis = Math.abs(pos.index - index);
-            if (dis < min) {
-                min = dis;
+            int dis = Math.abs(pos.index - index);
+            if (dis < minDistance) {
+                minDistance = dis;
                 nearestCharPosition = pos;
                 targetIndex = i;
             }
@@ -100,12 +100,14 @@ public class CachedIndexer implements Indexer, ContentListener {
                 break;
             }
         }
-        if (Math.abs(endPosition.index - index) < dis) {
+        if (Math.abs(endPosition.index - index) < minDistance) {
             nearestCharPosition = endPosition;
         }
         if (nearestCharPosition != startPosition && nearestCharPosition != endPosition) {
-            Collections.swap(cachedPositions, targetIndex, 0);
+            Collections.swap(cachedPositions, targetIndex, cachedPositions.size() - 1);
         }
+        if (minDistance > 5000)
+            android.util.Log.d("CachedIndexer", "best distance: " + minDistance);
         return nearestCharPosition;
     }
 
@@ -117,26 +119,26 @@ public class CachedIndexer implements Indexer, ContentListener {
      */
     @NonNull
     private synchronized CharPosition findNearestByLine(int line) {
-        int min = line, dis = line;
+        int minDistance = line;
         CharPosition nearestCharPosition = startPosition;
         int targetIndex = 0;
         for (int i = 0; i < cachedPositions.size(); i++) {
             CharPosition pos = cachedPositions.get(i);
-            dis = Math.abs(pos.line - line);
-            if (dis < min) {
-                min = dis;
+            int dis = Math.abs(pos.line - line);
+            if (dis < minDistance) {
+                minDistance = dis;
                 nearestCharPosition = pos;
                 targetIndex = i;
             }
-            if (min <= thresholdLine) {
+            if (minDistance <= thresholdLine) {
                 break;
             }
         }
-        if (Math.abs(endPosition.line - line) < dis) {
+        if (Math.abs(endPosition.line - line) < minDistance) {
             nearestCharPosition = endPosition;
         }
         if (nearestCharPosition != startPosition && nearestCharPosition != endPosition) {
-            Collections.swap(cachedPositions, 0, targetIndex);
+            Collections.swap(cachedPositions, targetIndex, cachedPositions.size() - 1);
         }
         return nearestCharPosition;
     }
@@ -164,8 +166,9 @@ public class CachedIndexer implements Indexer, ContentListener {
         }
         while (workIndex < index) {
             workLine++;
-            var addition = Math.max(content.getLineSeparatorUnsafe(workLine).getLength() - 1, 0);
-            workColumn = content.getColumnCountUnsafe(workLine) + addition;
+            var line = content.getLineUnsafe(workLine);
+            var addition = Math.max(line.getLineSeparator().getLength() - 1, 0);
+            workColumn = line.length() + addition;
             workIndex += workColumn + 1;
         }
         if (workIndex > index) {
@@ -194,8 +197,9 @@ public class CachedIndexer implements Indexer, ContentListener {
             workIndex -= workColumn + 1;
             workLine--;
             if (workLine != -1) {
-                var addition = Math.max(content.getLineSeparatorUnsafe(workLine).getLength() - 1, 0);
-                workColumn = content.getColumnCountUnsafe(workLine) + addition;
+                var line = content.getLineUnsafe(workLine);
+                var addition = Math.max(line.getLineSeparator().getLength() - 1, 0);
+                workColumn = line.length() + addition;
             } else {
                 // Reached the start of text,we have to use findIndexForward() as this method can not handle it
                 findIndexForward(startPosition, index, dest);
@@ -231,7 +235,8 @@ public class CachedIndexer implements Indexer, ContentListener {
             workIndex = workIndex - start.column;
         }
         while (workLine < line) {
-            workIndex += content.getColumnCountUnsafe(workLine) + content.getLineSeparatorUnsafe(workLine).getLength();
+            var lineObj = content.getLineUnsafe(workLine);
+            workIndex += lineObj.length() + lineObj.getLineSeparator().getLength();
             workLine++;
         }
         dest.column = 0;
@@ -259,7 +264,8 @@ public class CachedIndexer implements Indexer, ContentListener {
             workIndex = workIndex - start.column;
         }
         while (workLine > line) {
-            workIndex -= content.getColumnCountUnsafe(workLine - 1) + content.getLineSeparatorUnsafe(workLine - 1).getLength();
+            var lineObj = content.getLineUnsafe(workLine - 1);
+            workIndex -= lineObj.length() + lineObj.getLineSeparator().getLength();
             workLine--;
         }
         dest.column = 0;
