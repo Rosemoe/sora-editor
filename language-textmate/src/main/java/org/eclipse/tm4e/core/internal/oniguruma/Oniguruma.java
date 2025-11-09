@@ -15,15 +15,20 @@ package org.eclipse.tm4e.core.internal.oniguruma;
 
 import org.eclipse.tm4e.core.internal.oniguruma.impl.joni.JoniOnigRegExp;
 import org.eclipse.tm4e.core.internal.oniguruma.impl.joni.JoniOnigScanner;
-import org.eclipse.tm4e.core.internal.oniguruma.impl.onig.NativeAvailabilityChecker;
+import org.eclipse.tm4e.core.internal.oniguruma.impl.onig.NativeOnigConfig;
 import org.eclipse.tm4e.core.internal.oniguruma.impl.onig.NativeOnigRegExp;
 import org.eclipse.tm4e.core.internal.oniguruma.impl.onig.NativeOnigScanner;
 
 import java.util.List;
 
+/**
+ * Oniguruma regexp & scanner factory.
+ *
+ * @author Rosemoe
+ */
 public class Oniguruma {
 
-    private final static boolean nativeAvailable = NativeAvailabilityChecker.isAvailable();
+    private final static boolean nativeAvailable = NativeOnigConfig.isAvailable();
 
     private static boolean useJoni = !nativeAvailable;
 

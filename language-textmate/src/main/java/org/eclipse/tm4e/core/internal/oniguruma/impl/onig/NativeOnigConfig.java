@@ -15,8 +15,13 @@ package org.eclipse.tm4e.core.internal.oniguruma.impl.onig;
 
 import io.github.rosemoe.oniguruma.OnigNative;
 
-public class NativeAvailabilityChecker {
+public class NativeOnigConfig {
 
+    private static boolean searchInBatch = true;
+
+    /**
+     * Check if the native oniguruma library is available
+     */
     public static boolean isAvailable() {
         try {
             OnigNative.releaseRegex(0L);
@@ -26,4 +31,17 @@ public class NativeAvailabilityChecker {
         return true;
     }
 
+    /**
+     * Allow the searcher to commit batch regexps to native matching
+     */
+    public static void setSearchInBatch(boolean searchInBatch) {
+        NativeOnigConfig.searchInBatch = searchInBatch;
+    }
+
+    /**
+     * @see #setSearchInBatch(boolean)
+     */
+    public static boolean isSearchInBatch() {
+        return searchInBatch;
+    }
 }

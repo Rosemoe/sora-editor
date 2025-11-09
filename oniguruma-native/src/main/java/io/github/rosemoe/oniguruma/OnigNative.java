@@ -25,6 +25,12 @@ package io.github.rosemoe.oniguruma;
 
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Oniguruma native function bridge.
+ * Use with carefulness. Dirty pointer may cause a direct crash of your app.
+ *
+ * @author Rosemoe
+ */
 public class OnigNative {
 
 
@@ -63,12 +69,27 @@ public class OnigNative {
      * Search using the given OnigRegex.
      *
      * @param nativePtr OnigRegex pointer from {@link #newRegex}
+     * @param cacheKey  The cache key for the source string
      * @param str       String to be search in
      * @param start     Start position in the string (inclusive)
      * @param end       End position in the string (exclusive)
      * @return Ranges if the match is successful. Each range is represented as two integer start and end.
      * Null if the match failed.
      */
-    public static native int[] regexSearch(long nativePtr, byte[] str, int start, int end);
+    public static native int[] regexSearch(long nativePtr, long cacheKey, byte[] str, int start, int end);
+
+
+    /**
+     * Search using the given OnigRegex list
+     *
+     * @param nativePtrs OnigRegex pointers from {@link #newRegex}
+     * @param cacheKey   The cache key for the source string
+     * @param str        String to be search in
+     * @param start      Start position in the string (inclusive)
+     * @param end        End position in the string (exclusive)
+     * @return Ranges if the match is successful. Each range is represented as two integer start and end.
+     * Null if the match failed.
+     */
+    public static native int[] regexSearchBatch(long[] nativePtrs, long cacheKey, byte[] str, int start, int end);
 
 }

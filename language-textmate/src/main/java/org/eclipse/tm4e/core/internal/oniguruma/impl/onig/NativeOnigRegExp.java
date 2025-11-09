@@ -23,18 +23,8 @@ import io.github.rosemoe.oniguruma.OnigNative;
 
 public class NativeOnigRegExp implements OnigRegExp {
 
-    @Nullable
-    private OnigString lastSearchString;
-
-    private int lastSearchPosition = -1;
-
-    @Nullable
-    private NativeOnigResult lastSearchResult;
-
     private final String pattern;
     private long nativePtr;
-
-    private final boolean hasGAnchor;
 
     /**
      * @throws TMException if parsing fails
@@ -48,7 +38,6 @@ public class NativeOnigRegExp implements OnigRegExp {
      */
     public NativeOnigRegExp(final String pattern, final boolean ignoreCase) {
         this.pattern = pattern;
-        hasGAnchor = pattern.contains("\\G");
         nativePtr = OnigNative.newRegex(pattern, ignoreCase);
         if (nativePtr == 0L) {
             throw new TMException("Parsing regex pattern \"" + pattern + "\" failed");
@@ -60,33 +49,7 @@ public class NativeOnigRegExp implements OnigRegExp {
      */
     @Override
     public @Nullable NativeOnigResult search(final OnigString str, final int startPosition) {
-        if (hasGAnchor) {
-            // Should not use caching, because the regular expression
-            // targets the current search position (\G)
-            return search(str.getBytesUTF8(), startPosition, str.bytesCount);
-        }
-
-        synchronized (this) {
-            final var lastSearchResult0 = this.lastSearchResult;
-            if (lastSearchString == str
-                    && lastSearchPosition <= startPosition
-                    && (lastSearchResult0 == null || lastSearchResult0.locationAt(0) >= startPosition)) {
-                return lastSearchResult0;
-            }
-        }
-
-        var result = search(str.getBytesUTF8(), startPosition, str.bytesCount);
-        synchronized (this) {
-            lastSearchString = str;
-            lastSearchPosition = startPosition;
-            lastSearchResult = result;
-        }
-        return lastSearchResult;
-    }
-
-    @Nullable
-    private NativeOnigResult search(final byte[] data, final int startPosition, final int end) {
-        var result = OnigNative.regexSearch(nativePtr, data, startPosition, end);
+        var result = OnigNative.regexSearch(nativePtr, str.getCacheKey(), str.getUtf8Bytes(), startPosition, str.bytesCount);
         if (result != null) {
             return new NativeOnigResult(result);
         }
@@ -103,6 +66,10 @@ public class NativeOnigRegExp implements OnigRegExp {
         return StringUtils.toString(this, sb -> {
             sb.append("pattern=").append(pattern);
         });
+    }
+
+    long getNativePtr() {
+        return nativePtr;
     }
 
     @Override

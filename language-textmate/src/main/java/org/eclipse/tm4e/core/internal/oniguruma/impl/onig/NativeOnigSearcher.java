@@ -20,12 +20,16 @@ import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class NativeOnigSearcher {
+import io.github.rosemoe.oniguruma.OnigNative;
+
+class NativeOnigSearcher {
 
     private final List<NativeOnigRegExp> regExps;
+    private final long[] pointers;
 
     public NativeOnigSearcher(final List<String> regExps) {
         this.regExps = regExps.stream().map(NativeOnigSearcher::createRegExp).collect(Collectors.toList());
+        this.pointers = this.regExps.stream().mapToLong(NativeOnigRegExp::getNativePtr).toArray();
     }
 
     private static NativeOnigRegExp createRegExp(String exp) {
@@ -46,6 +50,11 @@ public class NativeOnigSearcher {
     @Nullable
     public NativeOnigResult search(final OnigString source, final int charOffset) {
         final int byteOffset = source.getByteIndexOfChar(charOffset);
+
+        if (NativeOnigConfig.isSearchInBatch()) {
+            var result = OnigNative.regexSearchBatch(pointers, source.getCacheKey(), source.getUtf8Bytes(), byteOffset, source.bytesCount);
+            return result == null ? null : new NativeOnigResult(result, true);
+        }
 
         int bestLocation = 0;
         NativeOnigResult bestResult = null;

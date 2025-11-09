@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2015-2017 Angelo ZERR.
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
@@ -6,10 +6,15 @@
  * <p>
  * SPDX-License-Identifier: EPL-2.0
  * <p>
+ * Initial code from https://github.com/atom/node-oniguruma
+ * Initial copyright Copyright (c) 2013 GitHub Inc.
+ * Initial license: MIT
+ * <p>
  * Contributors:
- * Angelo Zerr <angelo.zerr@gmail.com> - initial API and implementation
- * Sebastian Thomschke (Vegard IT GmbH) - add previousLineText support
- *
+ * - GitHub Inc.: Initial code, written in JavaScript, licensed under MIT license
+ * - Angelo Zerr <angelo.zerr@gmail.com> - translation and adaptation to Java
+ * - Fabio Zadrozny <fabiofz@gmail.com> - Convert uniqueId to Object (for identity compare)
+ * - Fabio Zadrozny <fabiofz@gmail.com> - Fix recursion error on creation of OnigRegExp with unicode chars
  */
 package org.eclipse.tm4e.core.internal.oniguruma.impl.joni;
 
@@ -82,7 +87,7 @@ public final class JoniOnigRegExp implements OnigRegExp {
         if (hasGAnchor) {
             // Should not use caching, because the regular expression
             // targets the current search position (\G)
-            return search(str.getBytesUTF8(), startPosition, str.bytesCount);
+            return search(str.getUtf8Bytes(), startPosition, str.bytesCount);
         }
 
         synchronized (this) {
@@ -94,7 +99,7 @@ public final class JoniOnigRegExp implements OnigRegExp {
             }
         }
 
-        var result = search(str.getBytesUTF8(), startPosition, str.bytesCount);
+        var result = search(str.getUtf8Bytes(), startPosition, str.bytesCount);
         synchronized (this) {
             lastSearchString = str;
             lastSearchPosition = startPosition;

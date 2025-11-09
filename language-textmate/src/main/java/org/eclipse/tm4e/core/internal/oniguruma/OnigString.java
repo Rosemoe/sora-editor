@@ -20,6 +20,8 @@ package org.eclipse.tm4e.core.internal.oniguruma;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.jcodings.specific.UTF8Encoding;
@@ -156,9 +158,11 @@ public abstract class OnigString {
 	}
 
 	public final String content;
+    private final static AtomicLong cacheKeyAlloc = new AtomicLong();
 
 	public final int bytesCount;
 	final byte[] bytesUTF8;
+    private final long cacheKey = cacheKeyAlloc.incrementAndGet();
 
 	private OnigString(final String content, final byte[] bytesUTF8) {
 		this.content = content;
@@ -171,7 +175,11 @@ public abstract class OnigString {
 				indexName + " index " + index + " is out of range " + minIndex + ".." + maxIndex + " of " + this);
 	}
 
-	public byte[] getBytesUTF8() {
+    public long getCacheKey() {
+        return cacheKey;
+    }
+
+    public byte[] getUtf8Bytes() {
 		return bytesUTF8;
 	}
 

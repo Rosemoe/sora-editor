@@ -19,9 +19,15 @@ class NativeOnigResult implements OnigResult {
 
     private final int[] ranges;
     int index = -1;
-
     public NativeOnigResult(int[] ranges) {
+        this(ranges, false);
+    }
+
+    public NativeOnigResult(int[] ranges, boolean batchResult) {
         this.ranges = ranges;
+        if (batchResult) {
+            index = ranges[ranges.length - 1];
+        }
     }
 
     @Override
