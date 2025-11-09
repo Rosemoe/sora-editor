@@ -283,10 +283,12 @@ public class EditorColorScheme {
                 break;
             case STATIC_SPAN_BACKGROUND:
             case WHOLE_BACKGROUND:
-            case LINE_NUMBER_PANEL_TEXT:
             case COMPLETION_WND_BACKGROUND:
             case COMPLETION_WND_CORNER:
                 color = isDark() ? BACKGROUND_COLOR_DARK : 0xffffffff;
+                break;
+            case LINE_NUMBER_PANEL_TEXT:
+                color = 0xffffffff;
                 break;
             case OPERATOR:
                 color = 0xFF0066D6;
