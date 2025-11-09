@@ -59,6 +59,7 @@ import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.TextReference;
+import io.github.rosemoe.sora.util.KeyboardUtils;
 import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
@@ -378,6 +379,11 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
                 super.show();
             }
         }, 70);
+        // If connected to a hard keyboard and no selection is made,
+        // we will choose the first option by default.
+        if (KeyboardUtils.INSTANCE.isHardKeyboardConnected(getContext()) && currentSelection == -1) {
+            moveDown();
+        }
     }
 
     /**
