@@ -48,6 +48,8 @@ import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomL
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspProject
+import io.github.rosemoe.sora.lsp.editor.text.MarkdownCodeHighlighterRegistry
+import io.github.rosemoe.sora.lsp.editor.text.withEditorHighlighter
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.code.codeAction
 import io.github.rosemoe.sora.lsp.utils.asLspRange
@@ -148,7 +150,8 @@ class LspTestActivity : BaseEditorActivity() {
         )
 
         val luaServerDefinition =
-            object : CustomLanguageServerDefinition("lua",
+            object : CustomLanguageServerDefinition(
+                "lua",
                 ServerConnectProvider {
                     LocalSocketStreamConnectionProvider("lua-lsp")
                 }
@@ -169,6 +172,8 @@ class LspTestActivity : BaseEditorActivity() {
         lspProject = LspProject(projectPath)
 
         lspProject.addServerDefinition(luaServerDefinition)
+
+
 
         withContext(Dispatchers.Main) {
             lspEditor = lspProject.createEditor("$projectPath/sample.lua")
@@ -236,6 +241,16 @@ class LspTestActivity : BaseEditorActivity() {
                 }
             }
         )
+
+        MarkdownCodeHighlighterRegistry.global.withEditorHighlighter { languageName ->
+            if (languageName == "lua") {
+                Pair(
+                    TextMateLanguage.create("source.lua", false),
+                    TextMateColorScheme.create(ThemeRegistry.getInstance()).apply {
+                    }
+                )
+            } else null
+        }
 
         return TextMateLanguage.create(
             "source.lua", false

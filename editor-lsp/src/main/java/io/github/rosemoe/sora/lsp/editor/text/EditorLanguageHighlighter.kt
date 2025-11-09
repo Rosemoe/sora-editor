@@ -118,7 +118,7 @@ class EditorMarkdownCodeHighlighter(val editorLanguage: Language, val editorSche
         val foregroundColorId = TextStyle.getForegroundColorId(style)
 
         val foregroundColor = colorScheme.getColor(foregroundColorId)
-        println("$span ${foregroundColor.toString(16)} $colorScheme")
+
         builder.setSpan(
             ForegroundColorSpan(foregroundColor),
             start,
