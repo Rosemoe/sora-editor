@@ -16,12 +16,14 @@ import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
 import io.github.rosemoe.sora.widget.component.EditorTextActionWindow
 import io.github.rosemoe.sora.widget.getComponent
+import kotlinx.coroutines.CoroutineScope
 import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.MarkupContent
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 
 open class HoverWindow(
     editor: CodeEditor,
+    internal val coroutineScope: CoroutineScope
 ) : EditorPopupWindow(
     editor,
     FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SCROLL_AS_CONTENT

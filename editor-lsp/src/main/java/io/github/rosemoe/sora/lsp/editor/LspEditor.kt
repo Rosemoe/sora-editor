@@ -74,11 +74,9 @@ import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import org.eclipse.lsp4j.jsonrpc.messages.Either
-import java.lang.RuntimeException
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.reflect.KClass
 
 class LspEditor(
     val project: LspProject,
@@ -134,10 +132,11 @@ class LspEditor(
             currentEditor.setEditorLanguage(currentLanguage)
 
             if (isEnableSignatureHelp) {
-                signatureHelpWindowWeakReference = WeakReference(SignatureHelpWindow(currentEditor))
+                signatureHelpWindowWeakReference =
+                    WeakReference(SignatureHelpWindow(currentEditor, coroutineScope))
             }
             if (isEnableHover) {
-                hoverWindowWeakReference = WeakReference(HoverWindow(currentEditor))
+                hoverWindowWeakReference = WeakReference(HoverWindow(currentEditor, coroutineScope))
             }
             if (isEnableInlayHint) {
                 currentEditor.registerInlayHintRenderer(TextInlayHintRenderer)
@@ -226,7 +225,9 @@ class LspEditor(
         set(value) {
             field = value
             if (value) {
-                editor?.let { hoverWindowWeakReference = WeakReference(HoverWindow(it)) }
+                editor?.let {
+                    hoverWindowWeakReference = WeakReference(HoverWindow(it, coroutineScope))
+                }
             } else {
                 hoverWindow?.setEnabled(false)
                 hoverWindowWeakReference.clear()
@@ -238,7 +239,12 @@ class LspEditor(
             field = value
             if (value) {
                 editor?.let {
-                    signatureHelpWindowWeakReference = WeakReference(SignatureHelpWindow(it))
+                    signatureHelpWindowWeakReference = WeakReference(
+                        SignatureHelpWindow(
+                            it,
+                            coroutineScope
+                        )
+                    )
                 }
             } else {
                 signatureHelpWindow?.setEnabled(false)
