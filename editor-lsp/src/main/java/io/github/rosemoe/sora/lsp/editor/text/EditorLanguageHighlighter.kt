@@ -7,7 +7,6 @@ import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
-import android.util.Log
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver
@@ -19,6 +18,8 @@ import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.suspendCoroutine
 
 class EditorMarkdownCodeHighlighterProvider(
@@ -30,44 +31,51 @@ class EditorMarkdownCodeHighlighterProvider(
     }
 }
 
-fun MarkdownCodeHighlighterRegistry.withEditorHighlighter(editorContextProvider: (languageName: LanguageName) -> Pair<Language, EditorColorScheme>?)  {
+fun MarkdownCodeHighlighterRegistry.withEditorHighlighter(editorContextProvider: (languageName: LanguageName) -> Pair<Language, EditorColorScheme>?) {
     withProvider(EditorMarkdownCodeHighlighterProvider(editorContextProvider))
 }
 
-class EditorMarkdownCodeHighlighter(val editorLanguage: Language, val editorSchema: EditorColorScheme) :
+class EditorMarkdownCodeHighlighter(
+    val editorLanguage: Language,
+    val editorSchema: EditorColorScheme
+) :
     AsyncMarkdownCodeHighlighter() {
+
+    private val mutex = Mutex()
 
     override suspend fun highlightAsync(
         code: String,
         language: String?,
         codeTypeface: Typeface
-    ) = suspendCoroutine { continuation ->
+    ): Spanned = mutex.withLock {
 
         val content = Content(code)
         val analyzeManager = editorLanguage.analyzeManager
 
-        analyzeManager.setReceiver(object : EmptyStyleReceiver() {
-            override fun setStyles(sourceManager: AnalyzeManager, styles: Styles?) {
-                if (styles == null) {
-                    return
-                }
-                runCatching {
-                    continuation.resumeWith(
-                        Result.success(
-                            styles.toSpanned(
-                                content,
-                                editorSchema,
-                                codeTypeface
+        suspendCoroutine { continuation ->
+            analyzeManager.setReceiver(object : EmptyStyleReceiver() {
+                override fun setStyles(sourceManager: AnalyzeManager, styles: Styles?) {
+                    if (styles == null) {
+                        return
+                    }
+                    runCatching {
+                        continuation.resumeWith(
+                            Result.success(
+                                styles.toSpanned(
+                                    content,
+                                    editorSchema,
+                                    codeTypeface
+                                )
                             )
                         )
-                    )
-                }.onFailure {
-                    continuation.resumeWith(Result.failure(it))
+                    }.onFailure {
+                        continuation.resumeWith(Result.failure(it))
+                    }
                 }
-            }
-        })
+            })
 
-        analyzeManager.reset(ContentReference(content), Bundle())
+            analyzeManager.reset(ContentReference(content), Bundle())
+        }
     }
 
     private fun Styles.toSpanned(
