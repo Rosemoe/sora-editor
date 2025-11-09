@@ -307,10 +307,8 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
                     try {
                         color = theme.getColor(type - 255);
                     } catch (IndexOutOfBoundsException e) {
-                        e.printStackTrace();
                         return super.getColor(TEXT_NORMAL);
                     }
-                    System.out.println("color " + color);
                     var newColor = (color != null && !"@default".equalsIgnoreCase(color)) ?
                             ColorUtils.parseRGBAToARGB(color) : super.getColor(TEXT_NORMAL);
                     super.colors.put(type, newColor);
