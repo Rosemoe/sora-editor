@@ -1457,8 +1457,8 @@ public class EditorRenderer {
         }
         var lineDirections = getLineDirections(line);
         int count = lineDirections.getRunCount();
-        if (count == 1 && lineDirections.getRunLevel(0) == 0) {
-            // Simple LTR Run
+        if (count == 1) {
+            // Simple LTR/RTL Run
             return IntPair.pack(0, 0);
         }
         for (int i = 0; i < count; i++) {
