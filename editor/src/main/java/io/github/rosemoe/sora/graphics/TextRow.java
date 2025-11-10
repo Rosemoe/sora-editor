@@ -1185,6 +1185,7 @@ public class TextRow {
                 return;
             }
             commitCurrentIfPresent();
+            isEmpty = false;
             currentLeft = regionLeft;
             currentRight = regionRight;
         }
