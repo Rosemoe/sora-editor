@@ -471,7 +471,6 @@ public class EditorRenderer {
         prepareLines(editor.getFirstVisibleLine(), editor.getLastVisibleLine());
         buildMeasureCacheForLines(editor.getFirstVisibleLine(), editor.getLastVisibleLine(), displayTimestamp, true);
         var stuckLines = getStuckCodeBlocks();
-        int stuckLineCount = stuckLines == null ? 0 : stuckLines.size();
 
         if (cursor.isSelected()) {
             editor.getInsertHandleDescriptor().setEmpty();
@@ -490,7 +489,8 @@ public class EditorRenderer {
         MutableInt firstLn = editor.isFirstLineNumberAlwaysVisible() && editor.isWordwrap() ? new MutableInt(-1) : null;
 
         canvas.save();
-        canvas.clipRect(0, stuckLineCount * editor.getRowHeight(), editor.getWidth(), editor.getHeight());
+        float stuckLineBottom = getStuckLineBottom(stuckLines);
+        canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
         drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor, postDrawCurrentLines, firstLn);
         patchHighlightedDelimiters(canvas, textOffset);
         drawDiagnosticIndicators(canvas, offsetX);
@@ -513,7 +513,7 @@ public class EditorRenderer {
             }
 
             canvas.save();
-            canvas.clipRect(0, stuckLineCount * editor.getRowHeight(), editor.getWidth(), editor.getHeight());
+            canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
             for (int i = 0; i < postDrawCurrentLines.count(); i++) {
                 drawRowBackground(canvas, currentLineBgColor, postDrawCurrentLines.get(i), (int) (textOffset - editor.getDividerMarginRight()));
             }
@@ -525,7 +525,7 @@ public class EditorRenderer {
             drawDivider(canvas, offsetX + lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_DIVIDER));
 
             canvas.save();
-            canvas.clipRect(0, stuckLineCount * editor.getRowHeight(), editor.getWidth(), editor.getHeight());
+            canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
             if (firstLn != null && firstLn.value != -1) {
                 int bottom = editor.getRowBottom(0);
                 float y;
@@ -559,7 +559,7 @@ public class EditorRenderer {
 
         if (editor.isBlockLineEnabled()) {
             canvas.save();
-            canvas.clipRect(0, stuckLineCount * editor.getRowHeight(), editor.getWidth(), editor.getHeight());
+            canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
             if (editor.isWordwrap()) {
                 drawSideBlockLine(canvas);
             } else {
@@ -582,7 +582,7 @@ public class EditorRenderer {
             drawLineNumberBackground(canvas, 0, lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
 
             canvas.save();
-            canvas.clipRect(0, stuckLineCount * editor.getRowHeight(), editor.getWidth(), editor.getHeight());
+            canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
             int lineNumberColor = editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = editor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE);
             if (editor.getCursorAnimator().isRunning() && editor.isHighlightCurrentLine() && editor.isEditable()) {
@@ -602,7 +602,7 @@ public class EditorRenderer {
             drawDivider(canvas, lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_DIVIDER));
 
             canvas.save();
-            canvas.clipRect(0, stuckLineCount * editor.getRowHeight(), editor.getWidth(), editor.getHeight());
+            canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
                 drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), 0, lineNumberWidth, IntPair.getFirst(packed) == currentLineNumber ? color.getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
@@ -644,9 +644,18 @@ public class EditorRenderer {
         var offsetY = editor.getOffsetY();
         canvas.translate(0, offsetY);
         for (int i = 0; i < candidates.size(); i++) {
-            var line = candidates.get(i).startLine;
+            var block = candidates.get(i);
+            var line = block.startLine;
             var bg = getUserGutterBackgroundForLine(line);
             var color = bg != null ? bg.resolve(editor.getColorScheme()) : 0;
+            var bottomOffset = editor.getRowBottom(i);
+            var endLineTop = editor.getRowTop(block.endLine) - editor.getOffsetY();
+            var shouldTranslate = endLineTop < bottomOffset && endLineTop >= bottomOffset - editor.getRowHeight();
+            if (shouldTranslate) {
+                canvas.save();
+                canvas.clipRect(0, editor.getRowTop(i) - offsetY, editor.getWidth(), editor.getHeight());
+                canvas.translate(0, endLineTop - bottomOffset);
+            }
             if (currentLine == line || color != 0) {
                 tmpRect.top = editor.getRowTop(i) - offsetY;
                 tmpRect.bottom = editor.getRowBottom(i) - offsetY - editor.getDpUnit();
@@ -660,8 +669,34 @@ public class EditorRenderer {
             drawLineNumber(canvas, line, i,
                     editor.isLineNumberPinned() ? 0 : offset, lineNumberWidth,
                     currentLine == line ? editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
+            if (shouldTranslate) {
+                canvas.restore();
+            }
         }
         canvas.restore();
+    }
+
+    protected float getStuckLineBottom(List<CodeBlock> candidates) {
+        if (candidates == null || candidates.isEmpty()) {
+            return 0f;
+        }
+        float bottomOffset = 0f;
+        var offsetLine = 0;
+        var previousLine = -1;
+        for (int i = 0; i < candidates.size(); i++) {
+            var block = candidates.get(i);
+            if (block.startLine > previousLine) {
+                bottomOffset = editor.getRowBottom(offsetLine);
+                var endLineTop = editor.getRowTop(block.endLine) - editor.getOffsetY();
+                var shouldTranslate = endLineTop < bottomOffset && endLineTop >= bottomOffset - editor.getRowHeight();
+                if (shouldTranslate) {
+                    bottomOffset += endLineTop - bottomOffset;
+                }
+                previousLine = block.startLine;
+                offsetLine++;
+            }
+        }
+        return bottomOffset;
     }
 
     protected void drawStuckLines(Canvas canvas, List<CodeBlock> candidates, float offset) {
@@ -675,13 +710,22 @@ public class EditorRenderer {
         var offsetLine = 0;
         var cursor = editor.getCursor();
         var currentLine = cursor.isSelected() ? -1 : cursor.getLeftLine();
+        float bottomOffset = 0f;
         for (int i = 0; i < candidates.size(); i++) {
             var block = candidates.get(i);
             if (block.startLine > previousLine) {
                 tmpRect.top = editor.getRowTop(offsetLine);
-                tmpRect.bottom = editor.getRowBottom(offsetLine);
+                bottomOffset = tmpRect.bottom = editor.getRowBottom(offsetLine);
                 tmpRect.left = offset;
                 tmpRect.right = editor.getWidth();
+                var endLineTop = editor.getRowTop(block.endLine) - editor.getOffsetY();
+                var shouldTranslate = endLineTop < tmpRect.bottom && endLineTop >= tmpRect.top;
+                if (shouldTranslate) {
+                    canvas.save();
+                    canvas.clipRect(0, tmpRect.top, editor.getWidth(), editor.getHeight());
+                    canvas.translate(0, endLineTop - tmpRect.bottom);
+                    bottomOffset += endLineTop - tmpRect.bottom;
+                }
                 var colorId = EditorColorScheme.WHOLE_BACKGROUND;
                 if (block.startLine == currentLine && editor.isHighlightCurrentLine()) {
                     colorId = EditorColorScheme.CURRENT_LINE;
@@ -699,11 +743,14 @@ public class EditorRenderer {
                 }
                 previousLine = block.startLine;
                 offsetLine++;
+                if (shouldTranslate) {
+                    canvas.restore();
+                }
             }
         }
-        if (offsetLine > 0) {
-            tmpRect.top = editor.getRowTop(offsetLine) - editor.getDpUnit();
-            tmpRect.bottom = editor.getRowTop(offsetLine);
+        if (bottomOffset > 0f) {
+            tmpRect.top = bottomOffset - editor.getDpUnit();
+            tmpRect.bottom = bottomOffset;
             tmpRect.left = 0;
             tmpRect.right = editor.getWidth();
             var shadow = (editor.getProps().stickyLineIndicator & DirectAccessProps.STICKY_LINE_INDICATOR_SHADOW) != 0;
