@@ -138,6 +138,7 @@ public class SpanImpl implements Span {
     public void reset() {
         setColumn(0);
         setStyle(0L);
+        extra = null;
         removeAllSpanExt();
     }
 

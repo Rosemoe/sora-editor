@@ -26,6 +26,8 @@ package io.github.rosemoe.sora.lang.styling.span.internal;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.Objects;
+
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.SpanPool;
 import io.github.rosemoe.sora.lang.styling.color.ResolvableColor;
@@ -124,6 +126,7 @@ public class NoExtSpanImpl implements Span {
     public void reset() {
         setColumn(0);
         setStyle(0L);
+        extra = null;
     }
 
     @NonNull
@@ -134,6 +137,28 @@ public class NoExtSpanImpl implements Span {
 
     @Override
     public boolean recycle() {
+        reset();
         return pool.offer(this);
+    }
+
+    @Override
+    public String toString() {
+        return "NoExtSpanImpl{" +
+                "column=" + column +
+                ", style=" + style +
+                ", extra=" + extra +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        NoExtSpanImpl noExtSpan = (NoExtSpanImpl) o;
+        return column == noExtSpan.column && style == noExtSpan.style && Objects.equals(extra, noExtSpan.extra);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(column, style, extra);
     }
 }
