@@ -706,7 +706,18 @@ public class EditorRenderer {
             tmpRect.bottom = editor.getRowTop(offsetLine);
             tmpRect.left = 0;
             tmpRect.right = editor.getWidth();
-            drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.STICKY_SCROLL_DIVIDER), tmpRect);
+            var shadow = editor.getProps().useShadowAsStickyLineDivider;
+            if (shadow) {
+                canvas.save();
+                canvas.clipRect(0, tmpRect.bottom, editor.getWidth(), editor.getHeight());
+                paintGeneral.setShadowLayer(editor.getDpUnit() * RenderingConstants.DIVIDER_SHADOW_MAX_RADIUS_DIP, 0, 0, Color.BLACK);
+            }
+            var color = shadow ? Color.BLACK : editor.getColorScheme().getColor(EditorColorScheme.STICKY_SCROLL_DIVIDER);
+            drawColor(canvas, color, tmpRect);
+            if (shadow) {
+                paintGeneral.setShadowLayer(0, 0, 0, Color.BLACK);
+                canvas.restore();
+            }
         }
     }
 

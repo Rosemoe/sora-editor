@@ -522,4 +522,11 @@ public class DirectAccessProps implements Serializable {
     @InvalidateRequired
     public boolean showBidiDirectionIndicator = true;
 
+
+    /**
+     * Use shadow as divider for sticky lines instead of a divider line
+     */
+    @InvalidateRequired
+    public boolean useShadowAsStickyLineDivider = true;
+
 }
