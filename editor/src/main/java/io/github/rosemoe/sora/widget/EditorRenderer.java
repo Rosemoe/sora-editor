@@ -1072,7 +1072,7 @@ public class EditorRenderer {
         // Step 1 - Draw background of rows
 
         // Pre-draw animated current line background
-        if (editor.getCursorAnimator().isRunning() && editor.isHighlightCurrentLine()
+        if (editor.getCursorAnimator().isRunning() && editor.isHighlightCurrentLine() && editor.isEditable()
                 && (editor.getProps().cursorLineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_CURSOR || editor.getProps().cursorLineBgOverlapBehavior == CURSOR_LINE_BG_OVERLAP_MIXED)) {
             drawAnimatedCurrentLineBackground(canvas, currentLineBgColor);
         }
