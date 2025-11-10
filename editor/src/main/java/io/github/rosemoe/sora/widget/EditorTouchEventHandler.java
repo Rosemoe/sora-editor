@@ -895,6 +895,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
 
     @Override
     public void onLongPress(@NonNull MotionEvent e) {
+        scroller.forceFinished(true);
+        editor.releaseEdgeEffects();
         if (editor.isFormatting()) {
             return;
         }

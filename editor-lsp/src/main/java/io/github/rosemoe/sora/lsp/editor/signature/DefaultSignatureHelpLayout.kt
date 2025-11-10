@@ -19,6 +19,8 @@ import io.github.rosemoe.sora.lsp.R
 import io.github.rosemoe.sora.lsp.editor.curvedTextScale
 import io.github.rosemoe.sora.lsp.editor.text.SimpleMarkdownRenderer
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.SignatureInformation
 import org.eclipse.lsp4j.SignatureHelp
 
@@ -40,7 +42,6 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
     private var baselineDocumentationTextSize: Float? = null
     private var baselineCounterTextSize: Float? = null
     private var latestEditorTextSize: Float? = null
-    private val markdownRenderer = SimpleMarkdownRenderer()
 
     private var signatureHelp: SignatureHelp? = null
     private var currentIndex = 0
@@ -154,21 +155,28 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
             else -> documentation.right?.value ?: ""
         }
 
-        val renderedDocumentation = if (documentationText.isNotEmpty()) {
-            markdownRenderer.render(
+        if (documentationText.isNotEmpty()) {
+            documentationTextView.text = SimpleMarkdownRenderer.render(
                 markdown = documentationText,
                 boldColor = highlightColor,
                 inlineCodeColor = highlightColor,
-                blockCodeColor = textColor,
                 codeTypeface = codeTypeface,
                 linkColor = highlightColor
             )
+            documentationTextView.visibility = View.VISIBLE
+            window.coroutineScope.launch(Dispatchers.Main) {
+                documentationTextView.text = SimpleMarkdownRenderer.renderAsync(
+                    markdown = documentationText,
+                    boldColor = highlightColor,
+                    inlineCodeColor = highlightColor,
+                    codeTypeface = codeTypeface,
+                    linkColor = highlightColor
+                )
+            }
         } else {
-            ""
+            documentationTextView.text = ""
+            documentationTextView.visibility = View.GONE
         }
-
-        documentationTextView.text = renderedDocumentation
-        documentationTextView.visibility = if (documentationText.isEmpty()) View.GONE else View.VISIBLE
 
         counterView.text = "${currentIndex + 1}/${signatures.size}"
         container.post { container.smoothScrollTo(0, 0) }

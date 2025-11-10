@@ -12,29 +12,59 @@ import android.text.style.StyleSpan
 import android.text.style.URLSpan
 import java.util.Locale
 
-class SimpleMarkdownRenderer {
+object SimpleMarkdownRenderer {
     fun render(
         markdown: String,
         boldColor: Int,
         inlineCodeColor: Int,
-        blockCodeColor: Int,
         codeTypeface: Typeface,
         linkColor: Int? = null,
-        headingScale: FloatArray = DEFAULT_HEADING_SCALE
+        headingScale: FloatArray = DEFAULT_HEADING_SCALE,
+        highlighterRegistry: MarkdownCodeHighlighterRegistry = MarkdownCodeHighlighterRegistry.global
     ): Spanned {
         val normalized = normalize(markdown)
         val blocks = parseBlocks(normalized)
-        return build(blocks, boldColor, inlineCodeColor, blockCodeColor, codeTypeface, linkColor, headingScale)
+        return build(
+            blocks,
+            boldColor,
+            inlineCodeColor,
+            codeTypeface,
+            linkColor,
+            headingScale,
+            highlighterRegistry
+        )
+    }
+
+    suspend fun renderAsync(
+        markdown: String,
+        boldColor: Int,
+        inlineCodeColor: Int,
+        codeTypeface: Typeface,
+        linkColor: Int? = null,
+        headingScale: FloatArray = DEFAULT_HEADING_SCALE,
+        highlighterRegistry: MarkdownCodeHighlighterRegistry = MarkdownCodeHighlighterRegistry.global
+    ): Spanned {
+        val normalized = normalize(markdown)
+        val blocks = parseBlocks(normalized)
+        return buildAsync(
+            blocks,
+            boldColor,
+            inlineCodeColor,
+            codeTypeface,
+            linkColor,
+            headingScale,
+            highlighterRegistry
+        )
     }
 
     private fun build(
         blocks: List<Block>,
         boldColor: Int,
         inlineCodeColor: Int,
-        blockCodeColor: Int,
         codeTypeface: Typeface,
         linkColor: Int?,
-        headingScale: FloatArray
+        headingScale: FloatArray,
+        highlighterRegistry: MarkdownCodeHighlighterRegistry
     ): Spanned {
         val builder = SpannableStringBuilder()
         var firstBlock = true
@@ -47,24 +77,47 @@ class SimpleMarkdownRenderer {
             when (block) {
                 is Block.Heading -> {
                     val start = builder.length
-                    appendInlines(builder, block.inlines, boldColor, inlineCodeColor, codeTypeface, linkColor)
+                    appendInlines(
+                        builder,
+                        block.inlines,
+                        boldColor,
+                        inlineCodeColor,
+                        codeTypeface,
+                        linkColor
+                    )
                     val end = builder.length
                     builder.setSpan(StyleSpan(Typeface.BOLD), start, end, SPAN_MODE)
                     val scaleIndex = (block.level - 1).coerceIn(0, headingScale.lastIndex)
-                    builder.setSpan(RelativeSizeSpan(headingScale[scaleIndex]), start, end, SPAN_MODE)
+                    builder.setSpan(
+                        RelativeSizeSpan(headingScale[scaleIndex]),
+                        start,
+                        end,
+                        SPAN_MODE
+                    )
                 }
+
                 is Block.Paragraph -> {
-                    appendInlines(builder, block.inlines, boldColor, inlineCodeColor, codeTypeface, linkColor)
+                    appendInlines(
+                        builder,
+                        block.inlines,
+                        boldColor,
+                        inlineCodeColor,
+                        codeTypeface,
+                        linkColor
+                    )
                 }
+
                 is Block.CodeBlock -> {
                     val start = builder.length
-                    builder.append(block.content)
+                    val result =
+                        highlighterRegistry.highlight(block.content, block.language, codeTypeface)
+                    builder.append(result.content)
                     val end = builder.length
                     if (end > start) {
                         builder.setSpan(TypefaceSpanCompat(codeTypeface), start, end, SPAN_MODE)
-                        builder.setSpan(ForegroundColorSpan(blockCodeColor), start, end, SPAN_MODE)
                     }
                 }
+
                 is Block.ListBlock -> {
                     var number = block.startIndex
                     for (item in block.items) {
@@ -82,24 +135,193 @@ class SimpleMarkdownRenderer {
                         builder.append(label)
                         val prefixEnd = builder.length
                         val itemStart = builder.length
-                        appendInlines(builder, item, boldColor, inlineCodeColor, codeTypeface, linkColor)
+                        appendInlines(
+                            builder,
+                            item,
+                            boldColor,
+                            inlineCodeColor,
+                            codeTypeface,
+                            linkColor
+                        )
                         val itemEnd = builder.length
-                        builder.setSpan(LeadingMarginSpan.Standard(leadingMargin, leadingMargin + indentMargin), prefixStart, itemEnd, SPAN_MODE)
+                        builder.setSpan(
+                            LeadingMarginSpan.Standard(
+                                leadingMargin,
+                                leadingMargin + indentMargin
+                            ), prefixStart, itemEnd, SPAN_MODE
+                        )
                         if (!block.ordered) {
-                            builder.setSpan(StyleSpan(Typeface.BOLD), prefixStart, prefixEnd, SPAN_MODE)
+                            builder.setSpan(
+                                StyleSpan(Typeface.BOLD),
+                                prefixStart,
+                                prefixEnd,
+                                SPAN_MODE
+                            )
                         }
                     }
                 }
+
                 is Block.Quote -> {
                     val start = builder.length
                     builder.append('│')
                     builder.append(' ')
                     val contentStart = builder.length
-                    appendInlines(builder, block.inlines, boldColor, inlineCodeColor, codeTypeface, linkColor)
+                    appendInlines(
+                        builder,
+                        block.inlines,
+                        boldColor,
+                        inlineCodeColor,
+                        codeTypeface,
+                        linkColor
+                    )
                     val end = builder.length
                     builder.setSpan(StyleSpan(Typeface.ITALIC), contentStart, end, SPAN_MODE)
-                    builder.setSpan(LeadingMarginSpan.Standard(leadingMargin, leadingMargin + indentMargin), start, end, SPAN_MODE)
+                    builder.setSpan(
+                        LeadingMarginSpan.Standard(
+                            leadingMargin,
+                            leadingMargin + indentMargin
+                        ), start, end, SPAN_MODE
+                    )
                 }
+
+                is Block.HorizontalRule -> {
+                    builder.append(lineSeparator)
+                }
+            }
+            firstBlock = false
+        }
+        return builder
+    }
+
+    private suspend fun buildAsync(
+        blocks: List<Block>,
+        boldColor: Int,
+        inlineCodeColor: Int,
+        codeTypeface: Typeface,
+        linkColor: Int?,
+        headingScale: FloatArray,
+        highlighterRegistry: MarkdownCodeHighlighterRegistry
+    ): Spanned {
+        val builder = SpannableStringBuilder()
+        var firstBlock = true
+        for (block in blocks) {
+            if (builder.isNotEmpty()) {
+                if (!firstBlock) {
+                    builder.append("\n\n")
+                }
+            }
+            when (block) {
+                is Block.Heading -> {
+                    val start = builder.length
+                    appendInlines(
+                        builder,
+                        block.inlines,
+                        boldColor,
+                        inlineCodeColor,
+                        codeTypeface,
+                        linkColor
+                    )
+                    val end = builder.length
+                    builder.setSpan(StyleSpan(Typeface.BOLD), start, end, SPAN_MODE)
+                    val scaleIndex = (block.level - 1).coerceIn(0, headingScale.lastIndex)
+                    builder.setSpan(
+                        RelativeSizeSpan(headingScale[scaleIndex]),
+                        start,
+                        end,
+                        SPAN_MODE
+                    )
+                }
+
+                is Block.Paragraph -> {
+                    appendInlines(
+                        builder,
+                        block.inlines,
+                        boldColor,
+                        inlineCodeColor,
+                        codeTypeface,
+                        linkColor
+                    )
+                }
+
+                is Block.CodeBlock -> {
+                    val start = builder.length
+                    val highlighted = highlighterRegistry.highlightAsync(
+                        block.content,
+                        block.language,
+                        codeTypeface
+                    )
+                    builder.append(highlighted)
+                    val end = builder.length
+                    if (end > start) {
+                        builder.setSpan(TypefaceSpanCompat(codeTypeface), start, end, SPAN_MODE)
+                    }
+                }
+
+                is Block.ListBlock -> {
+                    var number = block.startIndex
+                    for (item in block.items) {
+                        if (builder.isNotEmpty() && builder.last() != '\n') {
+                            builder.append('\n')
+                        }
+                        val prefixStart = builder.length
+                        val label = if (block.ordered) {
+                            val value = String.format(Locale.getDefault(), "%d. ", number)
+                            number++
+                            value
+                        } else {
+                            "• "
+                        }
+                        builder.append(label)
+                        val prefixEnd = builder.length
+                        appendInlines(
+                            builder,
+                            item,
+                            boldColor,
+                            inlineCodeColor,
+                            codeTypeface,
+                            linkColor
+                        )
+                        val itemEnd = builder.length
+                        builder.setSpan(
+                            LeadingMarginSpan.Standard(
+                                leadingMargin,
+                                leadingMargin + indentMargin
+                            ), prefixStart, itemEnd, SPAN_MODE
+                        )
+                        if (!block.ordered) {
+                            builder.setSpan(
+                                StyleSpan(Typeface.BOLD),
+                                prefixStart,
+                                prefixEnd,
+                                SPAN_MODE
+                            )
+                        }
+                    }
+                }
+
+                is Block.Quote -> {
+                    val start = builder.length
+                    builder.append('│')
+                    builder.append(' ')
+                    val contentStart = builder.length
+                    appendInlines(
+                        builder,
+                        block.inlines,
+                        boldColor,
+                        inlineCodeColor,
+                        codeTypeface,
+                        linkColor
+                    )
+                    val end = builder.length
+                    builder.setSpan(StyleSpan(Typeface.ITALIC), contentStart, end, SPAN_MODE)
+                    builder.setSpan(
+                        LeadingMarginSpan.Standard(
+                            leadingMargin,
+                            leadingMargin + indentMargin
+                        ), start, end, SPAN_MODE
+                    )
+                }
+
                 is Block.HorizontalRule -> {
                     builder.append(lineSeparator)
                 }
@@ -122,17 +344,33 @@ class SimpleMarkdownRenderer {
                 is Inline.Text -> builder.append(inline.value)
                 is Inline.Bold -> {
                     val start = builder.length
-                    appendInlines(builder, inline.children, boldColor, inlineCodeColor, codeTypeface, linkColor)
+                    appendInlines(
+                        builder,
+                        inline.children,
+                        boldColor,
+                        inlineCodeColor,
+                        codeTypeface,
+                        linkColor
+                    )
                     val end = builder.length
                     builder.setSpan(StyleSpan(Typeface.BOLD), start, end, SPAN_MODE)
                     builder.setSpan(ForegroundColorSpan(boldColor), start, end, SPAN_MODE)
                 }
+
                 is Inline.Italic -> {
                     val start = builder.length
-                    appendInlines(builder, inline.children, boldColor, inlineCodeColor, codeTypeface, linkColor)
+                    appendInlines(
+                        builder,
+                        inline.children,
+                        boldColor,
+                        inlineCodeColor,
+                        codeTypeface,
+                        linkColor
+                    )
                     val end = builder.length
                     builder.setSpan(StyleSpan(Typeface.ITALIC), start, end, SPAN_MODE)
                 }
+
                 is Inline.Code -> {
                     val start = builder.length
                     builder.append(inline.value)
@@ -140,9 +378,17 @@ class SimpleMarkdownRenderer {
                     builder.setSpan(TypefaceSpanCompat(codeTypeface), start, end, SPAN_MODE)
                     builder.setSpan(ForegroundColorSpan(inlineCodeColor), start, end, SPAN_MODE)
                 }
+
                 is Inline.Link -> {
                     val start = builder.length
-                    appendInlines(builder, inline.label, boldColor, inlineCodeColor, codeTypeface, linkColor)
+                    appendInlines(
+                        builder,
+                        inline.label,
+                        boldColor,
+                        inlineCodeColor,
+                        codeTypeface,
+                        linkColor
+                    )
                     val end = builder.length
                     builder.setSpan(URLSpan(inline.url), start, end, SPAN_MODE)
                     if (linkColor != null) {
@@ -201,6 +447,8 @@ class SimpleMarkdownRenderer {
     }
 
     private fun parseCodeBlock(lines: List<String>, startIndex: Int): Pair<Block.CodeBlock, Int> {
+        val firstLine = lines[startIndex].trim()
+        val language = if (firstLine.length > 3) firstLine.substring(3).trim() else null
         val builder = StringBuilder()
         var index = startIndex + 1
         while (index < lines.size) {
@@ -215,7 +463,7 @@ class SimpleMarkdownRenderer {
             builder.append(line)
             index++
         }
-        return Pair(Block.CodeBlock(builder.toString()), index)
+        return Pair(Block.CodeBlock(builder.toString(), language), index)
     }
 
     private fun parseHeading(line: String): Block.Heading {
@@ -547,25 +795,14 @@ class SimpleMarkdownRenderer {
         return text.trim()
     }
 
-    private class TypefaceSpanCompat(private val typeface: Typeface) : MetricAffectingSpan() {
-        override fun updateDrawState(tp: TextPaint) {
-            apply(tp)
-        }
-
-        override fun updateMeasureState(tp: TextPaint) {
-            apply(tp)
-        }
-
-        private fun apply(paint: TextPaint) {
-            paint.typeface = typeface
-        }
-    }
 
     private sealed interface Block {
         class Heading(val level: Int, val inlines: List<Inline>) : Block
         class Paragraph(val inlines: List<Inline>) : Block
-        class CodeBlock(val content: String) : Block
-        class ListBlock(val ordered: Boolean, val items: List<List<Inline>>, val startIndex: Int) : Block
+        class CodeBlock(val content: String, val language: String?) : Block
+        class ListBlock(val ordered: Boolean, val items: List<List<Inline>>, val startIndex: Int) :
+            Block
+
         class Quote(val inlines: List<Inline>) : Block
         data object HorizontalRule : Block
     }
@@ -578,28 +815,42 @@ class SimpleMarkdownRenderer {
         class Link(val label: List<Inline>, val url: String) : Inline
     }
 
-    companion object {
-        private const val SPAN_MODE = Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-        private val unorderedPattern = Regex("^[\\*\\-+]\\s+.+")
-        private val orderedPattern = Regex("^(\\d+)\\.\\s+.+")
-        private val markerPattern = Regex("^(?:\\d+\\.|[\\*\\-+])\\s+")
-        private val brRegex = Regex("(?i)<br\\s*/?>")
-        private val headingRegex = Regex("(?is)<h([1-6])[^>]*>(.*?)</h\\1>")
-        private val blockquoteRegex = Regex("(?is)<blockquote[^>]*>(.*?)</blockquote>")
-        private val strongRegex = Regex("(?is)<strong[^>]*>(.*?)</strong>")
-        private val emRegex = Regex("(?is)<em[^>]*>(.*?)</em>")
-        private val codeRegex = Regex("(?is)<code[^>]*>(.*?)</code>")
-        private val preRegex = Regex("(?is)<pre[^>]*>(.*?)</pre>")
-        private val liRegex = Regex("(?is)<li[^>]*>(.*?)</li>")
-        private val linkRegex = Regex("(?is)<a[^>]+href\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>(.*?)</a>")
-        private val ulRegex = Regex("(?is)</?ul[^>]*>")
-        private val olRegex = Regex("(?is)</?ol[^>]*>")
-        private val pOpenRegex = Regex("(?is)<p[^>]*>")
-        private val pCloseRegex = Regex("(?is)</p>")
-        private val multiNewlineRegex = Regex("\n{3,}")
-        private const val leadingMargin = 24
-        private const val indentMargin = 24
-        private const val lineSeparator = "──────────"
-        private val DEFAULT_HEADING_SCALE = floatArrayOf(1.6f, 1.4f, 1.25f, 1.1f, 1.05f, 1.0f)
+
+    private const val SPAN_MODE = Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+    private val unorderedPattern = Regex("^[\\*\\-+]\\s+.+")
+    private val orderedPattern = Regex("^(\\d+)\\.\\s+.+")
+    private val markerPattern = Regex("^(?:\\d+\\.|[\\*\\-+])\\s+")
+    private val brRegex = Regex("(?i)<br\\s*/?>")
+    private val headingRegex = Regex("(?is)<h([1-6])[^>]*>(.*?)</h\\1>")
+    private val blockquoteRegex = Regex("(?is)<blockquote[^>]*>(.*?)</blockquote>")
+    private val strongRegex = Regex("(?is)<strong[^>]*>(.*?)</strong>")
+    private val emRegex = Regex("(?is)<em[^>]*>(.*?)</em>")
+    private val codeRegex = Regex("(?is)<code[^>]*>(.*?)</code>")
+    private val preRegex = Regex("(?is)<pre[^>]*>(.*?)</pre>")
+    private val liRegex = Regex("(?is)<li[^>]*>(.*?)</li>")
+    private val linkRegex = Regex("(?is)<a[^>]+href\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>(.*?)</a>")
+    private val ulRegex = Regex("(?is)</?ul[^>]*>")
+    private val olRegex = Regex("(?is)</?ol[^>]*>")
+    private val pOpenRegex = Regex("(?is)<p[^>]*>")
+    private val pCloseRegex = Regex("(?is)</p>")
+    private val multiNewlineRegex = Regex("\n{3,}")
+    private const val leadingMargin = 24
+    private const val indentMargin = 24
+    private const val lineSeparator = "──────────"
+    private val DEFAULT_HEADING_SCALE = floatArrayOf(1.6f, 1.4f, 1.25f, 1.1f, 1.05f, 1.0f)
+
+}
+
+class TypefaceSpanCompat(private val typeface: Typeface) : MetricAffectingSpan() {
+    override fun updateDrawState(tp: TextPaint) {
+        apply(tp)
+    }
+
+    override fun updateMeasureState(tp: TextPaint) {
+        apply(tp)
+    }
+
+    private fun apply(paint: TextPaint) {
+        paint.typeface = typeface
     }
 }

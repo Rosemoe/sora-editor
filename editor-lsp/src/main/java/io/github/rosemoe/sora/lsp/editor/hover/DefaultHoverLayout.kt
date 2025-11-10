@@ -12,6 +12,8 @@ import io.github.rosemoe.sora.lsp.R
 import io.github.rosemoe.sora.lsp.editor.curvedTextScale
 import io.github.rosemoe.sora.lsp.editor.text.SimpleMarkdownRenderer
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.Hover
 
 class DefaultHoverLayout : HoverLayout {
@@ -25,7 +27,6 @@ class DefaultHoverLayout : HoverLayout {
     private var baselineEditorTextSize: Float? = null
     private var baselineHoverTextSize: Float? = null
     private var latestEditorTextSize: Float? = null
-    private val markdownRenderer = SimpleMarkdownRenderer()
 
     override fun attach(window: HoverWindow) {
         this.window = window
@@ -58,8 +59,24 @@ class DefaultHoverLayout : HoverLayout {
     }
 
     override fun renderHover(hover: Hover) {
-        hoverTextView.text = buildHoverText(hover)
+        val hoverText = buildHoverText(hover)
+        hoverTextView.text = SimpleMarkdownRenderer.render(
+            markdown = hoverText,
+            boldColor = highlightColor,
+            inlineCodeColor = highlightColor,
+            codeTypeface = codeTypeface,
+            linkColor = highlightColor
+        )
         container.post { container.smoothScrollTo(0, 0) }
+        window.coroutineScope.launch(Dispatchers.Main) {
+            hoverTextView.text = SimpleMarkdownRenderer.renderAsync(
+                markdown = hoverText,
+                boldColor = highlightColor,
+                inlineCodeColor = highlightColor,
+                codeTypeface = codeTypeface,
+                linkColor = highlightColor
+            )
+        }
     }
 
     override fun onTextSizeChanged(oldSize: Float, newSize: Float) {
@@ -91,24 +108,16 @@ class DefaultHoverLayout : HoverLayout {
         hoverTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, textBaseline * curvedScale)
     }
 
-    private fun buildHoverText(hover: Hover): CharSequence {
+
+    private fun buildHoverText(hover: Hover): String {
         val hoverContents = hover.contents ?: return ""
-        val rawText = if (hoverContents.isLeft) {
+        return if (hoverContents.isLeft) {
             val items = hoverContents.left.orEmpty()
-            items.joinToString("\n\n") { either -> formatMarkedStringEither(either) ?: ""}
+            items.joinToString("\n\n") { either -> formatMarkedStringEither(either) ?: "" }
         } else {
             val markup = hoverContents.right
             formatMarkupContent(markup) ?: ""
         }
-
-        return markdownRenderer.render(
-            markdown = rawText,
-            boldColor = highlightColor,
-            inlineCodeColor = highlightColor,
-            blockCodeColor = textColor,
-            codeTypeface = codeTypeface,
-            linkColor = highlightColor
-        )
     }
 
 }
