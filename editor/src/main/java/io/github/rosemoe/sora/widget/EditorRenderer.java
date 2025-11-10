@@ -706,16 +706,22 @@ public class EditorRenderer {
             tmpRect.bottom = editor.getRowTop(offsetLine);
             tmpRect.left = 0;
             tmpRect.right = editor.getWidth();
-            var shadow = editor.getProps().useShadowAsStickyLineDivider;
+            var shadow = (editor.getProps().stickyLineIndicator & DirectAccessProps.STICKY_LINE_INDICATOR_SHADOW) != 0;
+            var showLine = (editor.getProps().stickyLineIndicator & DirectAccessProps.STICKY_LINE_INDICATOR_LINE) != 0;
+            if (!shadow && !showLine) {
+                return;
+            }
+            var lineColor = editor.getColorScheme().getColor(EditorColorScheme.STICKY_SCROLL_DIVIDER);
+            showLine = lineColor != 0;
             if (shadow) {
                 canvas.save();
-                canvas.clipRect(0, tmpRect.bottom, editor.getWidth(), editor.getHeight());
+                canvas.clipRect(0, showLine ? tmpRect.top : tmpRect.bottom, editor.getWidth(), editor.getHeight());
                 paintGeneral.setShadowLayer(editor.getDpUnit() * RenderingConstants.DIVIDER_SHADOW_MAX_RADIUS_DIP, 0, 0, Color.BLACK);
             }
-            var color = shadow ? Color.BLACK : editor.getColorScheme().getColor(EditorColorScheme.STICKY_SCROLL_DIVIDER);
+            var color = !showLine && shadow ? Color.BLACK : lineColor;
             drawColor(canvas, color, tmpRect);
             if (shadow) {
-                paintGeneral.setShadowLayer(0, 0, 0, Color.BLACK);
+                paintGeneral.setShadowLayer(0, 0, 0, 0);
                 canvas.restore();
             }
         }

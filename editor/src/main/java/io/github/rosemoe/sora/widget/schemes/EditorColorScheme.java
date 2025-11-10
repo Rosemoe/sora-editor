@@ -405,7 +405,7 @@ public class EditorColorScheme {
                 color = isDark() ? 0xffeeeeee : 0xff000000;
                 break;
             case STICKY_SCROLL_DIVIDER:
-                color = isDark() ? 0x99eeeeee : 0x99000000;
+                color = 0x99eeeeee;
                 break;
             case TEXT_INLAY_HINT_BACKGROUND:
                 color = isDark() ? 0x1deeeeee : 0x1D000000;
