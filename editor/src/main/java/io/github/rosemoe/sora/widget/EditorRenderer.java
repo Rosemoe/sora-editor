@@ -406,7 +406,13 @@ public class EditorRenderer {
         if (canvas != null) {
             canvas.save();
             canvas.translate(offsetX, editor.getRowTopOfText(0) + offsetY);
-            tr.draw(canvas, 0f, visibleOnly ? editor.getWidth() : Float.MAX_VALUE);
+            if (visibleOnly) {
+                float visibleStart = Math.max(0f, -offsetX);
+                float visibleEnd = Math.max(visibleStart, -offsetX + editor.getWidth());
+                tr.draw(canvas, visibleStart, visibleEnd);
+            } else {
+                tr.draw(canvas, 0f, Float.MAX_VALUE);
+            }
             canvas.restore();
         }
         return canvas == null ? tr.computeRowWidth() : 0f;
