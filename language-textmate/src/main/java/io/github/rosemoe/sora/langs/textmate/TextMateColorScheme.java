@@ -24,18 +24,15 @@
 package io.github.rosemoe.sora.langs.textmate;
 
 import android.graphics.Color;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 import org.eclipse.tm4e.core.internal.theme.Theme;
 import org.eclipse.tm4e.core.internal.theme.raw.IRawTheme;
 import org.eclipse.tm4e.core.internal.theme.raw.RawTheme;
 import org.eclipse.tm4e.core.registry.IThemeSource;
+
+import java.util.List;
 
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
@@ -56,29 +53,28 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
 
     private final ThemeRegistry themeRegistry;
 
-    public TextMateColorScheme(ThemeRegistry themeRegistry, ThemeModel themeModel) throws Exception {
+    public TextMateColorScheme(ThemeRegistry themeRegistry, ThemeModel themeModel) {
         this.themeRegistry = themeRegistry;
-
         currentTheme = themeModel;
+        setTheme(themeModel);
     }
 
     @Deprecated
-    public static TextMateColorScheme create(IThemeSource themeSource) throws Exception {
+    public static TextMateColorScheme create(IThemeSource themeSource) {
         return create(new ThemeModel(themeSource));
     }
 
-    public static TextMateColorScheme create(ThemeModel themeModel) throws Exception {
+    public static TextMateColorScheme create(ThemeModel themeModel) {
         return create(ThemeRegistry.getInstance(), themeModel);
     }
 
-    public static TextMateColorScheme create(ThemeRegistry themeRegistry) throws Exception {
+    public static TextMateColorScheme create(ThemeRegistry themeRegistry) {
         return create(ThemeRegistry.getInstance(), themeRegistry.getCurrentThemeModel());
     }
 
-    public static TextMateColorScheme create(ThemeRegistry themeRegistry, ThemeModel themeModel) throws Exception {
+    public static TextMateColorScheme create(ThemeRegistry themeRegistry, ThemeModel themeModel) {
         return new TextMateColorScheme(themeRegistry, themeModel);
     }
-
 
     public void setTheme(ThemeModel themeModel) {
         currentTheme = themeModel;

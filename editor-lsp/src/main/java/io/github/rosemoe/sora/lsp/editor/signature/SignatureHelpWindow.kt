@@ -37,10 +37,12 @@ import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
 import io.github.rosemoe.sora.widget.getComponent
+import kotlinx.coroutines.CoroutineScope
 import org.eclipse.lsp4j.SignatureHelp
 
 open class SignatureHelpWindow(
     editor: CodeEditor,
+    val coroutineScope: CoroutineScope,
 ) : EditorPopupWindow(
     editor,
     FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SCROLL_AS_CONTENT
