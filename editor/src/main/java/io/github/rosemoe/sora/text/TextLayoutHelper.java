@@ -60,7 +60,7 @@ public class TextLayoutHelper {
                 @SuppressLint({"DiscouragedPrivateApi", "SoonBlockedPrivateApi"})
                 var field = Layout.class.getDeclaredField("mTextDir");
                 field.setAccessible(true);
-                field.set(layout, TextDirectionHeuristics.LTR);
+                field.set(layout, TextDirectionHeuristics.FIRSTSTRONG_LTR);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -68,7 +68,7 @@ public class TextLayoutHelper {
             layout = DynamicLayout.Builder.obtain(text, new TextPaint(), Integer.MAX_VALUE / 2)
                     .setIncludePad(true)
                     .setLineSpacing(0, 0)
-                    .setTextDirection(TextDirectionHeuristics.LTR)
+                    .setTextDirection(TextDirectionHeuristics.FIRSTSTRONG_LTR)
                     .setAlignment(Layout.Alignment.ALIGN_NORMAL)
                     .build();
         }
