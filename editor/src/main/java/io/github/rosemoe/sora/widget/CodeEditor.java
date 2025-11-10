@@ -987,6 +987,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
         renderContext.invalidateRenderNodes();
         invalidate();
+
+        // reset inlay hints (partially re-layout required)
+        if (this.inlayHints != null) {
+            setInlayHints(null);
+        }
     }
 
     /**
