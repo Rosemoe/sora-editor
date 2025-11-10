@@ -712,8 +712,8 @@ public class TextRow {
         var underlineColor = span.getUnderlineColor();
         int underlineColorInt;
         if (underlineColor != null && (underlineColorInt = underlineColor.resolve(params.getColorScheme())) != 0) {
-            tmpRect.bottom = params.getRowBottom();
-            tmpRect.top = tmpRect.bottom - params.getRowHeight() * RenderingConstants.TEXT_UNDERLINE_WIDTH_FACTOR;
+            tmpRect.bottom = params.getTextBottom();
+            tmpRect.top = tmpRect.bottom - params.getTextHeight() * RenderingConstants.TEXT_UNDERLINE_WIDTH_FACTOR;
             tmpRect.left = offset;
             tmpRect.right = offset + width;
             paintGeneral.setColor(underlineColorInt);
