@@ -80,7 +80,6 @@ import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.Cursor;
-import io.github.rosemoe.sora.text.FunctionCharacters;
 import io.github.rosemoe.sora.text.bidi.Directions;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.LongArrayList;
@@ -1435,20 +1434,39 @@ public class EditorRenderer {
         bufferedDrawPoints.commitPoints(canvas, paintOther);
     }
 
-    private void applyBidiIndicatorAttrs(DrawCursorTask task, int line, int column) {
+    private long getBidiIndicatorAttrs(int line, int column) {
+        if (!editor.getProps().showBidiDirectionIndicator) {
+            return IntPair.pack(0, 0);
+        }
         var lineDirections = getLineDirections(line);
         int count = lineDirections.getRunCount();
         if (count == 1 && lineDirections.getRunLevel(0) == 0) {
             // Simple LTR Run
-            return;
+            return IntPair.pack(0, 0);
         }
-        task.setBidiIndicatorRequired(true);
         for (int i = 0; i < count; i++) {
             if (i + 1 == count || lineDirections.getRunStart(i) <= column && column < lineDirections.getRunEnd(i)) {
-                task.setRightToLeft(lineDirections.isRunRtl(i));
-                break;
+                return IntPair.pack(1, lineDirections.isRunRtl(i) ? 1 : 0);
             }
         }
+        return IntPair.pack(0, 0);
+    }
+
+    private void applyBidiIndicatorAttrs(DrawCursorTask task, int line, int column) {
+        var bidiAttrs = getBidiIndicatorAttrs(line, column);
+        task.setBidiIndicatorRequired(IntPair.getFirst(bidiAttrs) == 1);
+        task.setRightToLeft(IntPair.getSecond(bidiAttrs) == 1);
+    }
+
+    private void drawBidiSelectionIndicator(Canvas canvas, float x, float topY, float selectionHeight, boolean isRtl) {
+        float height = selectionHeight * 0.2f;
+        float deltaX = height * 0.866f; // sqrt(3)/ 2
+        tmpPath.reset();
+        tmpPath.moveTo(x, topY);
+        tmpPath.lineTo(x + (isRtl ? -deltaX : deltaX), topY + height / 2f);
+        tmpPath.lineTo(x, topY + height);
+        tmpPath.close();
+        canvas.drawPath(tmpPath, paintGeneral);
     }
 
     protected void drawDiagnosticIndicator(Canvas canvas, DiagnosticIndicatorStyle style, int i, float startX, float endX) {
@@ -2188,6 +2206,10 @@ public class EditorRenderer {
         tmpRect.left = centerX - editor.getInsertSelectionWidth() / 2;
         tmpRect.right = centerX + editor.getInsertSelectionWidth() / 2;
         drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.SELECTION_INSERT), tmpRect);
+        var bidiAttrs = getBidiIndicatorAttrs(cursor.getLeftLine(), cursor.getLeftColumn());
+        if (IntPair.getFirst(bidiAttrs) == 1) {
+            drawBidiSelectionIndicator(canvas, centerX, tmpRect.top, tmpRect.height(), IntPair.getSecond(bidiAttrs) == 1);
+        }
         if (editor.getEventHandler().shouldDrawInsertHandle() && !editor.isInMouseMode()) {
             editor.getHandleStyle().draw(canvas, SelectionHandleStyle.HANDLE_TYPE_INSERT, centerX, tmpRect.bottom, editor.getRowHeight(), editor.getColorScheme().getColor(EditorColorScheme.SELECTION_HANDLE), editor.getInsertHandleDescriptor());
         }
@@ -2301,14 +2323,12 @@ public class EditorRenderer {
             this.descriptor = descriptor;
         }
 
-        public DrawCursorTask setBidiIndicatorRequired(boolean bidiIndicatorRequired) {
+        public void setBidiIndicatorRequired(boolean bidiIndicatorRequired) {
             isBidiIndicatorRequired = bidiIndicatorRequired;
-            return this;
         }
 
-        public DrawCursorTask setRightToLeft(boolean rightToLeft) {
+        public void setRightToLeft(boolean rightToLeft) {
             isRightToLeft = rightToLeft;
-            return this;
         }
 
         private boolean drawSelForLeftRight() {
@@ -2361,16 +2381,10 @@ public class EditorRenderer {
                 canvas.drawLine(x, startY, x, stopY, paintGeneral);
                 paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
                 paintGeneral.setPathEffect(null);
-                if (drawSelForInsert() && isBidiIndicatorRequired && editor.getProps().showBidiDirectionIndicator) {
+                if (drawSelForInsert() && isBidiIndicatorRequired) {
                     // Draw a flag for LTR/RTL mixed row
-                    float height = (stopY - startY) * 0.2f;
-                    float deltaX = height * 0.866f; // sqrt(3)/ 2
-                    tmpPath.reset();
-                    tmpPath.moveTo(x, startY);
-                    tmpPath.lineTo(x + (isRightToLeft ? -deltaX : deltaX), startY + height / 2f);
-                    tmpPath.lineTo(x, startY + height);
-                    tmpPath.close();
-                    canvas.drawPath(tmpPath, paintGeneral);
+                    float height = (stopY - startY);
+                    drawBidiSelectionIndicator(canvas, x, startY, height, isRightToLeft);
                 }
             }
             var handleType = this.handleType;
