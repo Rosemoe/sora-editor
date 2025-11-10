@@ -1384,28 +1384,38 @@ public class EditorRenderer {
                 if (cursor.getLeftLine() == line && isInside(cursor.getLeftColumn(), rowInf.startColumn, rowInf.endColumn, line)) {
                     float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(cursor.getLeftLine(), cursor.getLeftColumn())[1] - editor.getOffsetX();
                     var type = content.isRtlAt(cursor.getLeftLine(), cursor.getLeftColumn()) ? SelectionHandleStyle.HANDLE_TYPE_RIGHT : SelectionHandleStyle.HANDLE_TYPE_LEFT;
-                    postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), type, editor.getLeftHandleDescriptor()));
+                    var task = new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), type, editor.getLeftHandleDescriptor());
+                    postDrawCursor.add(task);
+                    applyBidiIndicatorAttrs(task, cursor.getLeftLine(), cursor.getLeftColumn());
                 }
                 if (cursor.getRightLine() == line && isInside(cursor.getRightColumn(), rowInf.startColumn, rowInf.endColumn, line)) {
                     float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(cursor.getRightLine(), cursor.getRightColumn())[1] - editor.getOffsetX();
                     var type = content.isRtlAt(cursor.getRightLine(), cursor.getRightColumn()) ? SelectionHandleStyle.HANDLE_TYPE_LEFT : SelectionHandleStyle.HANDLE_TYPE_RIGHT;
-                    postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), type, editor.getRightHandleDescriptor()));
+                    var task = new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), type, editor.getRightHandleDescriptor());
+                    postDrawCursor.add(task);
+                    applyBidiIndicatorAttrs(task, cursor.getRightLine(), cursor.getRightColumn());
                 }
             } else if (cursor.getLeftLine() == line && isInside(cursor.getLeftColumn(), rowInf.startColumn, rowInf.endColumn, line)) {
                 float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(cursor.getLeftLine(), cursor.getLeftColumn())[1] - editor.getOffsetX();
-                postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_INSERT, editor.getInsertHandleDescriptor()));
+                var task = new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_INSERT, editor.getInsertHandleDescriptor());
+                postDrawCursor.add(task);
+                applyBidiIndicatorAttrs(task, cursor.getLeftLine(), cursor.getLeftColumn());
             }
             // Draw dragging selection or selecting target
             if (draggingSelection != null) {
                 if (draggingSelection.line == line && isInside(draggingSelection.column, rowInf.startColumn, rowInf.endColumn, line)) {
                     float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(draggingSelection.line, draggingSelection.column)[1] - editor.getOffsetX();
-                    postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, null));
+                    var task = new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, null);
+                    postDrawCursor.add(task);
+                    applyBidiIndicatorAttrs(task, draggingSelection.line, draggingSelection.column);
                 }
             } else if (editor.isInMouseMode() && editor.isTextSelected()) {
                 var target = editor.getSelectingTarget();
                 if (target != null && target.line == line && isInside(target.column, rowInf.startColumn, rowInf.endColumn, line)) {
                     float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(target.line, target.column)[1] - editor.getOffsetX();
-                    postDrawCursor.add(new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, null));
+                    var task = new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, null);
+                    postDrawCursor.add(task);
+                    applyBidiIndicatorAttrs(task, target.line, target.column);
                 }
             }
         }
@@ -1423,6 +1433,22 @@ public class EditorRenderer {
         paintGeneral.setTextSkewX(0);
         paintOther.setStrokeWidth(circleRadius * 2);
         bufferedDrawPoints.commitPoints(canvas, paintOther);
+    }
+
+    private void applyBidiIndicatorAttrs(DrawCursorTask task, int line, int column) {
+        var lineDirections = getLineDirections(line);
+        int count = lineDirections.getRunCount();
+        if (count == 1 && lineDirections.getRunLevel(0) == 0) {
+            // Simple LTR Run
+            return;
+        }
+        task.setBidiIndicatorRequired(true);
+        for (int i = 0; i < count; i++) {
+            if (i + 1 == count || lineDirections.getRunStart(i) <= column && column < lineDirections.getRunEnd(i)) {
+                task.setRightToLeft(lineDirections.isRunRtl(i));
+                break;
+            }
+        }
     }
 
     protected void drawDiagnosticIndicator(Canvas canvas, DiagnosticIndicatorStyle style, int i, float startX, float endX) {
@@ -2258,17 +2284,31 @@ public class EditorRenderer {
 
     protected class DrawCursorTask {
 
+        private final static SelectionHandleStyle.HandleDescriptor TMP_DESC = new SelectionHandleStyle.HandleDescriptor();
+
         protected float x;
         protected float y;
         protected int handleType;
         protected SelectionHandleStyle.HandleDescriptor descriptor;
-        private final static SelectionHandleStyle.HandleDescriptor TMP_DESC = new SelectionHandleStyle.HandleDescriptor();
+        protected boolean isBidiIndicatorRequired;
+        protected boolean isRightToLeft;
+
 
         public DrawCursorTask(float x, float y, int handleType, SelectionHandleStyle.HandleDescriptor descriptor) {
             this.x = x;
             this.y = y;
             this.handleType = handleType;
             this.descriptor = descriptor;
+        }
+
+        public DrawCursorTask setBidiIndicatorRequired(boolean bidiIndicatorRequired) {
+            isBidiIndicatorRequired = bidiIndicatorRequired;
+            return this;
+        }
+
+        public DrawCursorTask setRightToLeft(boolean rightToLeft) {
+            isRightToLeft = rightToLeft;
+            return this;
         }
 
         private boolean drawSelForLeftRight() {
@@ -2321,6 +2361,17 @@ public class EditorRenderer {
                 canvas.drawLine(x, startY, x, stopY, paintGeneral);
                 paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
                 paintGeneral.setPathEffect(null);
+                if (drawSelForInsert() && isBidiIndicatorRequired && editor.getProps().showBidiDirectionIndicator) {
+                    // Draw a flag for LTR/RTL mixed row
+                    float height = (stopY - startY) * 0.2f;
+                    float deltaX = height * 0.866f; // sqrt(3)/ 2
+                    tmpPath.reset();
+                    tmpPath.moveTo(x, startY);
+                    tmpPath.lineTo(x + (isRightToLeft ? -deltaX : deltaX), startY + height / 2f);
+                    tmpPath.lineTo(x, startY + height);
+                    tmpPath.close();
+                    canvas.drawPath(tmpPath, paintGeneral);
+                }
             }
             var handleType = this.handleType;
             // Hide insert handle conditionally

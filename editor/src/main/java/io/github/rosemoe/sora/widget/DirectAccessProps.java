@@ -516,4 +516,10 @@ public class DirectAccessProps implements Serializable {
     @Experimental
     public boolean checkModificationThread = false;
 
+    /**
+     * Show direction indicator on selection for bidirectional text.
+     */
+    @InvalidateRequired
+    public boolean showBidiDirectionIndicator = true;
+
 }
