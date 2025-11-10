@@ -215,7 +215,7 @@ class MainActivity : AppCompatActivity() {
 
         // Configure editor
         binding.editor.apply {
-            registerInlayHintRenderer(TextInlayHintRenderer)
+            registerInlayHintRenderer(TextInlayHintRenderer.DefaultInstance)
             typefaceText = typeface
             props.stickyScroll = true
             setLineSpacing(2f, 1.1f)

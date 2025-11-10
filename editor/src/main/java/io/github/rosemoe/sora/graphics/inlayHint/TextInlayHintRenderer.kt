@@ -60,9 +60,13 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
  * @see TextInlayHint
  * @author Rosemoe
  */
-object TextInlayHintRenderer : InlayHintRenderer() {
+open class TextInlayHintRenderer : InlayHintRenderer() {
 
-    private val localPaint = Paint(false).also { it.isAntiAlias = true }
+    companion object {
+        val DefaultInstance = TextInlayHintRenderer()
+    }
+
+    protected val localPaint = Paint(false).also { it.isAntiAlias = true }
 
     override val typeName: String
         get() = "text"

@@ -139,7 +139,7 @@ class LspEditor(
                 hoverWindowWeakReference = WeakReference(HoverWindow(currentEditor, coroutineScope))
             }
             if (isEnableInlayHint) {
-                currentEditor.registerInlayHintRenderer(TextInlayHintRenderer)
+                currentEditor.registerInlayHintRenderer(TextInlayHintRenderer.DefaultInstance)
             }
 
             codeActionWindowWeakReference = WeakReference(CodeActionWindow(this, currentEditor))
@@ -258,7 +258,7 @@ class LspEditor(
             field = value
             val editor = editor ?: return
             if (value) {
-                editor.registerInlayHintRenderer(TextInlayHintRenderer)
+                editor.registerInlayHintRenderer(TextInlayHintRenderer.DefaultInstance)
                 coroutineScope.launch {
                     this@LspEditor.requestInlayHint(CharPosition(0, 0))
                 }
