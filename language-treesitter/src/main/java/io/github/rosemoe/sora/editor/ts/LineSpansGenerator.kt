@@ -207,7 +207,7 @@ class LineSpansGenerator(
         private var spans = mutableListOf<Span>()
 
         override fun moveToLine(line: Int) {
-            if (line < 0 || line >= lineCount) {
+            if (line !in 0..<lineCount) {
                 spans = mutableListOf()
                 return
             }
@@ -229,11 +229,13 @@ class LineSpansGenerator(
         override fun getSpansOnLine(line: Int): MutableList<Span> {
             val cached = queryCache(line)
             if (cached != null) {
-                return ArrayList(cached)
+                return cached.toMutableList()
             }
             val start = content.indexer.getCharPosition(line, 0).index
             val end = start + content.getColumnCount(line)
-            return captureRegion(start, end)
+            val captured = captureRegion(start, end)
+            pushCache(line, captured)
+            return captured.toMutableList()
         }
 
     }
