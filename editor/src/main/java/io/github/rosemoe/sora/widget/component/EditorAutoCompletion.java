@@ -59,6 +59,7 @@ import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.TextReference;
+import io.github.rosemoe.sora.util.KeyboardUtils;
 import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
@@ -565,6 +566,11 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
                 lastAttachedItems = new WeakReference<>(items);
             } else {
                 adapter.notifyDataSetChanged();
+            }
+            if (editor.getProps().moveSelectionToFirstForKeyboard &&
+                    KeyboardUtils.INSTANCE.isHardKeyboardConnected(getContext()) &&
+                    currentSelection == -1) {
+                moveDown();
             }
             float newHeight = adapter.getItemHeight() * adapter.getCount();
             if (newHeight == 0) {
