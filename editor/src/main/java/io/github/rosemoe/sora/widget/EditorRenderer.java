@@ -731,14 +731,20 @@ public class EditorRenderer {
                     colorId = EditorColorScheme.CURRENT_LINE;
                 }
                 drawColor(canvas, editor.getColorScheme().getColor(colorId), tmpRect);
-                try {
-                    if (spanReader != null) {
-                        spanReader.moveToLine(block.startLine);
-                    }
-                    drawSingleTextLine(canvas, block.startLine, offset, offsetLine * editor.getRowHeight(), spanReader, true);
-                } finally {
-                    if (spanReader != null) {
-                        spanReader.moveToLine(-1);
+                if (canvas.isHardwareAccelerated() && editor.isHardwareAcceleratedDrawAllowed()
+                        && editor.getRenderContext().getRenderNodeHolder() != null && !editor.getEventHandler().isScaling &&
+                        (editor.getProps().cacheRenderNodeForLongLines || getLine(block.startLine).length() < 128)) {
+                    editor.getRenderContext().getRenderNodeHolder().drawLineHardwareAccelerated(canvas, block.startLine, offset, offsetLine * editor.getRowHeight());
+                } else {
+                    try {
+                        if (spanReader != null) {
+                            spanReader.moveToLine(block.startLine);
+                        }
+                        drawSingleTextLine(canvas, block.startLine, offset, offsetLine * editor.getRowHeight(), spanReader, true);
+                    } finally {
+                        if (spanReader != null) {
+                            spanReader.moveToLine(-1);
+                        }
                     }
                 }
                 previousLine = block.startLine;
@@ -1004,9 +1010,12 @@ public class EditorRenderer {
         int size = codeBlocks.size();
         List<CodeBlock> candidates = new ArrayList<>();
         var limit = editor.getProps().stickyScrollIterationLimit;
+        var maxLine = content.getLineCount();
         for (int i = 0; i < size && i < limit; i++) {
             var block = codeBlocks.get(i);
-            if (block == null) {
+            if (block == null || block.startLine > block.endLine ||
+                    block.startLine > maxLine || block.endLine > maxLine ||
+                    block.startLine < 0) {
                 continue;
             }
             if (block.startLine > startLine) {
@@ -2194,7 +2203,7 @@ public class EditorRenderer {
     protected void patchTextRegionWithColor(Canvas canvas, float textOffset, int start, int end, int color, int backgroundColor, int underlineColor) {
         paintGeneral.setColor(color);
         paintOther.setStrokeWidth(editor.getRowHeightOfText() * RenderingConstants.MATCHING_DELIMITERS_UNDERLINE_WIDTH_FACTOR);
-        
+
         var useBoldStyle = editor.getProps().boldMatchingDelimiters;
         paintGeneral.setStyle(useBoldStyle ? Paint.Style.FILL_AND_STROKE : Paint.Style.FILL);
         paintGeneral.setFakeBoldText(useBoldStyle);
