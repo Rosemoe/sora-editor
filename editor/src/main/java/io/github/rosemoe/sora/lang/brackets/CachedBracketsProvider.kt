@@ -56,13 +56,20 @@ abstract class CachedBracketsProvider : BracketsProvider {
         leftRange: Long,
         rightRange: Long
     ): List<PairedBracket>? {
-        val leftIndex = IntPair.getFirst(leftRange)
-        val rightIndex = IntPair.getFirst(rightRange)
+        val indexer = text.indexer
+        val leftLine = IntPair.getFirst(leftRange)
+        val leftColumn = IntPair.getSecond(leftRange)
+        val rightLine = IntPair.getFirst(rightRange)
+        val rightColumn = IntPair.getSecond(rightRange)
+        val leftIndex = indexer.getCharIndex(leftLine, leftColumn)
+        val rightIndex = indexer.getCharIndex(rightLine, rightColumn)
 
         val cachedResults = getRangeFromCache(leftIndex, rightIndex)
         if (cachedResults.isNotEmpty()) {
             return cachedResults
         }
+
+        println(cachedResults)
 
         val computed = computePairedBracketsForRange(text, leftRange, rightRange) ?: return null
         computed.forEach { cache.put(it.leftIndex, it) }

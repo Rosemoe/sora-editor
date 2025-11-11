@@ -109,6 +109,8 @@ internal class BracketMatcherAST(
         val leftPos = Position.of(leftLine, leftCol)
         val rightPos = Position.of(rightLine, rightCol)
 
+        println("$leftPos $rightPos")
+
         collectPairsInRangeRec(
             getRootNode(),
             Position.ZERO,

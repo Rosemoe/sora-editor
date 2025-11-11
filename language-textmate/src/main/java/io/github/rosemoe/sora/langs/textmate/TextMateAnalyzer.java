@@ -291,7 +291,6 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
         if (spans == null || shadowed == null) {
             return;
         }
-
         var provider = new TextMateBracketsProvider(shadowed, spans, configuration);
         if (!provider.isSupported()) {
             provider.clear();

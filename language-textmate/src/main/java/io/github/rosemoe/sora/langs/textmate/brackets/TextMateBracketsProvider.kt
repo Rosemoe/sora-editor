@@ -27,17 +27,15 @@ import io.github.rosemoe.sora.lang.brackets.BracketsProvider
 import io.github.rosemoe.sora.lang.brackets.CachedBracketsProvider
 import io.github.rosemoe.sora.lang.brackets.PairedBracket
 import io.github.rosemoe.sora.lang.styling.Spans
+import io.github.rosemoe.sora.langs.textmate.brackets.ast.BracketASTManager
 import io.github.rosemoe.sora.langs.textmate.brackets.ast.BracketMatcherAST
 import io.github.rosemoe.sora.langs.textmate.brackets.ast.BracketTokenizer
-import io.github.rosemoe.sora.langs.textmate.brackets.ast.BracketASTManager
 import io.github.rosemoe.sora.langs.textmate.brackets.ast.EditCombiner
 import io.github.rosemoe.sora.langs.textmate.brackets.ast.EditInfo
 import io.github.rosemoe.sora.text.Content
 import org.eclipse.tm4e.languageconfiguration.internal.model.CharacterPair
 import org.eclipse.tm4e.languageconfiguration.internal.model.LanguageConfiguration
 import kotlin.math.max
-import kotlin.time.measureTime
-import kotlin.time.measureTimedValue
 
 /**
  * TextMate implementation of [BracketsProvider] backed by the lexer/index/matcher stack.
@@ -64,7 +62,6 @@ class TextMateBracketsProvider(
     // Edit tracking
     private val editTracker = EditTracker()
 
-
     /**
      * Whether this provider has usable bracket data.
      */
@@ -80,15 +77,13 @@ class TextMateBracketsProvider(
     /**
      * Performs a full lex/update pass. Must be called on the analyzer thread once spans are ready.
      */
-    fun initialize() = measureTime {
-        if (!hasBrackets) return@measureTime
+    fun initialize() {
+        if (!hasBrackets) return
         snapshot.rebuildAll()
         val tokenizer = BracketTokenizer(lexer, 0, BracketToken.MAX_LINE_INDEX)
         astManager.rebuildTokenAST(tokenizer)
         matcher.invalidateCache()
-        clear()
-    }.let {
-        println("TextMateBracketsProvider initialize: $it")
+        super.clear()
     }
 
     /**
@@ -96,8 +91,8 @@ class TextMateBracketsProvider(
      *
      * Updates the Token AST with accurate bracket information now that tokens are available.
      */
-    fun notifySpansChanged(startLine: Int, endLine: Int) = measureTime {
-        if (!hasBrackets) return@measureTime
+    fun notifySpansChanged(startLine: Int, endLine: Int) {
+        if (!hasBrackets) return
         snapshot.updateRange(startLine, endLine)
 
         if (editTracker.hasPendingTokenEdits()) {
@@ -105,7 +100,7 @@ class TextMateBracketsProvider(
                 val edits = editTracker.consumeTokenEdits()
                 // Guard against empty edit lists (e.g., all edits collapsed to no-ops)
                 if (edits.isEmpty()) {
-                    return@measureTime
+                    return
                 }
                 val tokenizer = BracketTokenizer(lexer, 0, BracketToken.MAX_LINE_INDEX)
                 astManager.updateTokenASTWithEdits(edits, tokenizer)
@@ -120,9 +115,7 @@ class TextMateBracketsProvider(
             val tokenizer = BracketTokenizer(lexer, 0, BracketToken.MAX_LINE_INDEX)
             astManager.rebuildTokenAST(tokenizer)
         }
-        clear()
-    }.let {
-        println("TextMateBracketsProvider notifySpansChanged: $it")
+        super.clear()
     }
 
     /**
@@ -155,7 +148,7 @@ class TextMateBracketsProvider(
 
         // Update snapshot with immediate mapping after recording the old-coordinate edit
         snapshot.adjustOnInsert(startLine, startColumn, endLine, endColumn)
-        clear()
+        super.clear()
     }
 
     /**
@@ -198,7 +191,7 @@ class TextMateBracketsProvider(
 
         // Update snapshot after enqueuing the edit so coordinates stay anchored to the pre-edit state
         snapshot.adjustOnDelete(startLine, startColumn, endLine, endColumn)
-        clear()
+        super.clear()
     }
 
     /**
@@ -218,20 +211,16 @@ class TextMateBracketsProvider(
 
         val position = text.indexer.getCharPosition(safeIndex)
 
-        return measureTimedValue {
-            // Use the optimized matchBracket method
-            val matched = matcher.matchBracket(position.line, position.column)
-                ?: return@measureTimedValue null
+        // Use the optimized matchBracket method
+        val matched = matcher.matchBracket(position.line, position.column)
+            ?: return null
 
-            try {
-                toPairedBracket(text, matched)
-            } finally {
-                BracketPair.recycle(matched)
-            }
-        }.let {
-          //  println("TextMateBracketsProvider getPairedBracketAt: $it")
-            it.value
+        try {
+            return toPairedBracket(text, matched)
+        } finally {
+            BracketPair.recycle(matched)
         }
+
     }
 
     override fun computePairedBracketsForRange(
@@ -241,33 +230,24 @@ class TextMateBracketsProvider(
     ): List<PairedBracket>? {
         if (!canQuery()) return null
 
-        // Check cache first
-        return run {
-            measureTimedValue {
-                val scratchPairs = ArrayList<BracketPair>(32)
-                matcher.collectPairsInRange(leftRange, rightRange, scratchPairs)
-                if (scratchPairs.isEmpty()) {
-                    return@measureTimedValue null
+        val scratchPairs = ArrayList<BracketPair>(32)
+        matcher.collectPairsInRange(leftRange, rightRange, scratchPairs)
+        if (scratchPairs.isEmpty()) {
+            return null
+        }
+        val result = ArrayList<PairedBracket>(scratchPairs.size)
+        for (pair in scratchPairs) {
+            try {
+                val converted = toPairedBracket(text, pair)
+                if (converted != null) {
+                    result.add(converted)
                 }
-                val result = ArrayList<PairedBracket>(scratchPairs.size)
-                for (pair in scratchPairs) {
-                    try {
-                        val converted = toPairedBracket(text, pair)
-                        if (converted != null) {
-                            result.add(converted)
-                        }
-                    } finally {
-                        BracketPair.recycle(pair)
-                    }
-                }
-                scratchPairs.clear()
-                if (result.isEmpty()) emptyList() else result
-
-            }.let {
-                println("TextMateBracketsProvider queryPairedBracketsForRange: ${it.duration}")
-                it.value
+            } finally {
+                BracketPair.recycle(pair)
             }
         }
+        scratchPairs.clear()
+        return if (result.isEmpty()) emptyList() else result
     }
 
     private fun canQuery(): Boolean {
