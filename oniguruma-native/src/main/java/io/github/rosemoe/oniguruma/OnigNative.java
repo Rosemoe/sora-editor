@@ -47,6 +47,7 @@ public class OnigNative {
      * @return The pointer of newly created regex, or null if it fails
      */
     public static long newRegex(String pattern, boolean ignoreCase) {
+        Objects.requireNonNull(pattern, "pattern can not be null");
         return newRegex(pattern.getBytes(StandardCharsets.UTF_8), ignoreCase);
     }
 
