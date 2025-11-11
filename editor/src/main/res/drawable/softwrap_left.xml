@@ -29,19 +29,19 @@
     android:viewportHeight="80">
 
     <path
-        android:pathData="M25,25 A10,10 0 1,0 7.93,32.07 L42,66.14"
+        android:pathData="M25,31 A10,10 0 1,0 7.93,38.07 L42,72.14"
         android:strokeWidth="6"
         android:fillColor="#00000000"
         android:strokeColor="#000000" />
 
     <path
-        android:pathData="M42,66.14 m0,-0.88 l-20,0"
+        android:pathData="M42,72.14 m0,-0.88 l-20,0"
         android:strokeWidth="6"
         android:fillColor="#00000000"
         android:strokeColor="#000000" />
 
     <path
-        android:pathData="M42,66.14 m-0.88,0 m0,2.12 l0,-2.12 l0,-20"
+        android:pathData="M42,72.14 m-0.88,0 m0,2.12 l0,-2.12 l0,-20"
         android:strokeWidth="6"
         android:fillColor="#00000000"
         android:strokeColor="#000000" />

@@ -305,7 +305,7 @@ public class DirectAccessProps implements Serializable {
      */
     @InvalidateRequired
     @FloatRange(from = 0.0f, to = 1.0f)
-    public final float miniMarkerSizeFactor = 0.45f;
+    public final float miniMarkerSizeFactor = 0.5f;
 
 
     /**

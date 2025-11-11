@@ -1724,7 +1724,7 @@ public class EditorRenderer {
      * Draw small characters as graph
      */
     protected void drawMiniGraph(Canvas canvas, float offset, int row, Drawable graph) {
-        float baseline = row == -1 ? (editor.getRowBottom(0) - metricsGraph.descent) : (editor.getRowBottom(row) - editor.getOffsetY() - metricsGraph.descent);
+        float graphBottom = row == -1 ? (editor.getRowBottomOfText(0)) : (editor.getRowBottomOfText(row) - editor.getOffsetY());
         float height = editor.getRowHeightOfText() * editor.getProps().miniMarkerSizeFactor;
         if (height <= 0 || graph == null) {
             return;
@@ -1735,7 +1735,7 @@ public class EditorRenderer {
         }
         float width = height * ((float) w / h);
         graph.setColorFilter(editor.getColorScheme().getColor(EditorColorScheme.NON_PRINTABLE_CHAR), PorterDuff.Mode.SRC_ATOP);
-        graph.setBounds((int) offset, (int) (baseline - height), (int) (offset + width), (int) baseline);
+        graph.setBounds((int) offset, (int) (graphBottom - height), (int) (offset + width), (int) graphBottom);
         graph.draw(canvas);
     }
 
