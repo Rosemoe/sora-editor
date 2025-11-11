@@ -499,7 +499,6 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                         break;
                     case MSG_MOD:
                         int updateStart = 0, updateEnd = 0;
-                        long spansStartTime = System.nanoTime();
                         if (!abort && !isInterrupted()) {
                             var mod = (TextModification) msg.obj;
                             int startLine = IntPair.getFirst(mod.start);
@@ -578,26 +577,18 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                                 updateEnd = line;
                             }
                         }
-                        long spansEndTime = System.nanoTime();
-                        Log.d("AsyncAnalysis", "Spans processing time: " + ((spansEndTime - spansStartTime) / 1000000.0) + " ms");
 
                         // Do not update incomplete code blocks
-                        long codeBlockStartTime = System.nanoTime();
                         var blocks = computeBlocks(shadowed, delegate);
                         if (delegate.isNotCancelled()) {
                             styles.blocks = blocks;
                             styles.finishBuilding();
                             styles.setSuppressSwitch(delegate.suppressSwitch);
                         }
-                        long codeBlockEndTime = System.nanoTime();
-                        Log.d("AsyncAnalysis", "CodeBlock processing time: " + ((codeBlockEndTime - codeBlockStartTime) / 1000000.0) + " ms");
 
                         if (!abort) {
-                            long updateStartTime = System.nanoTime();
                             AsyncIncrementalAnalyzeManager.this.onSpansChanged(updateStart, updateEnd);
                             sendUpdate(styles, updateStart, updateEnd);
-                            long updateEndTime = System.nanoTime();
-                            Log.d("AsyncAnalysis", "Update notification time: " + ((updateEndTime - updateStartTime) / 1000000.0) + " ms");
                         }
                         break;
                 }

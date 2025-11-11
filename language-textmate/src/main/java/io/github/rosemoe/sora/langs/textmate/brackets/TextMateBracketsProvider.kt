@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.langs.textmate.brackets
 
 import io.github.rosemoe.sora.lang.brackets.BracketsProvider
+import io.github.rosemoe.sora.lang.brackets.CachedBracketsProvider
 import io.github.rosemoe.sora.lang.brackets.PairedBracket
 import io.github.rosemoe.sora.lang.styling.Spans
 import io.github.rosemoe.sora.langs.textmate.brackets.ast.BracketMatcherAST
@@ -46,10 +47,10 @@ import kotlin.time.measureTimedValue
  * - Token AST: Updated after tokenization (accurate, uses fresh snapshot)
  */
 class TextMateBracketsProvider(
-    private val content: Content,
-    private val spans: Spans,
+    content: Content,
+    spans: Spans,
     configuration: LanguageConfiguration?
-) : BracketsProvider {
+) : CachedBracketsProvider() {
 
     private val bracketPairs: List<CharacterPair> = extractBracketPairs(configuration)
     private val hasBrackets = bracketPairs.isNotEmpty()
@@ -63,8 +64,6 @@ class TextMateBracketsProvider(
     // Edit tracking
     private val editTracker = EditTracker()
 
-    // Query cache
-    private val queryCache = QueryCache()
 
     /**
      * Whether this provider has usable bracket data.
@@ -87,7 +86,7 @@ class TextMateBracketsProvider(
         val tokenizer = BracketTokenizer(lexer, 0, BracketToken.MAX_LINE_INDEX)
         astManager.rebuildTokenAST(tokenizer)
         matcher.invalidateCache()
-        queryCache.clear()
+        clear()
     }.let {
         println("TextMateBracketsProvider initialize: $it")
     }
@@ -121,8 +120,7 @@ class TextMateBracketsProvider(
             val tokenizer = BracketTokenizer(lexer, 0, BracketToken.MAX_LINE_INDEX)
             astManager.rebuildTokenAST(tokenizer)
         }
-
-        queryCache.clear()
+        clear()
     }.let {
         println("TextMateBracketsProvider notifySpansChanged: $it")
     }
@@ -157,7 +155,7 @@ class TextMateBracketsProvider(
 
         // Update snapshot with immediate mapping after recording the old-coordinate edit
         snapshot.adjustOnInsert(startLine, startColumn, endLine, endColumn)
-        queryCache.clear()
+        clear()
     }
 
     /**
@@ -200,21 +198,21 @@ class TextMateBracketsProvider(
 
         // Update snapshot after enqueuing the edit so coordinates stay anchored to the pre-edit state
         snapshot.adjustOnDelete(startLine, startColumn, endLine, endColumn)
-        queryCache.clear()
+        clear()
     }
 
     /**
      * Clears all indexed data. Safe to call when TextMate analyzer tears down.
      */
-    fun clear() {
+    override fun clear() {
+        super.clear()
         astManager.clear()
         snapshot.clear()
         matcher.invalidateCache()
-        queryCache.clear()
     }
 
 
-    override fun getPairedBracketAt(text: Content, index: Int): PairedBracket? {
+    override fun computePairedBracketAt(text: Content, index: Int): PairedBracket? {
         if (!canQuery()) return null
         val safeIndex = index.coerceIn(0, max(0, text.length))
 
@@ -236,7 +234,7 @@ class TextMateBracketsProvider(
         }
     }
 
-    override fun queryPairedBracketsForRange(
+    override fun computePairedBracketsForRange(
         text: Content,
         leftRange: Long,
         rightRange: Long
@@ -244,7 +242,7 @@ class TextMateBracketsProvider(
         if (!canQuery()) return null
 
         // Check cache first
-        return queryCache.get(leftRange, rightRange) ?: run {
+        return run {
             measureTimedValue {
                 val scratchPairs = ArrayList<BracketPair>(32)
                 matcher.collectPairsInRange(leftRange, rightRange, scratchPairs)
@@ -267,7 +265,6 @@ class TextMateBracketsProvider(
 
             }.let {
                 println("TextMateBracketsProvider queryPairedBracketsForRange: ${it.duration}")
-                queryCache.put(leftRange, rightRange, it.value)
                 it.value
             }
         }
@@ -358,35 +355,6 @@ class TextMateBracketsProvider(
             val edits = pendingTokenEdits
             pendingTokenEdits = emptyList()
             return edits
-        }
-    }
-
-    /**
-     * Cache for bracket range queries.
-     */
-    private class QueryCache {
-        private var cachedLeftRange: Long = -1L
-        private var cachedRightRange: Long = -1L
-        private var cachedResult: List<PairedBracket>? = null
-
-        fun get(leftRange: Long, rightRange: Long): List<PairedBracket>? {
-            return if (cachedLeftRange == leftRange && cachedRightRange == rightRange) {
-                cachedResult
-            } else {
-                null
-            }
-        }
-
-        fun put(leftRange: Long, rightRange: Long, result: List<PairedBracket>?) {
-            cachedLeftRange = leftRange
-            cachedRightRange = rightRange
-            cachedResult = result
-        }
-
-        fun clear() {
-            cachedLeftRange = -1L
-            cachedRightRange = -1L
-            cachedResult = null
         }
     }
 }
