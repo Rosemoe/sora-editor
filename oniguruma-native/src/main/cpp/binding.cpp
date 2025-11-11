@@ -58,7 +58,8 @@ searchCached(OnigCachedRegex *regex, jlong cacheKey, const unsigned char *data, 
             }
             // Suitable non-empty last match
             if (lastResult.region->num_regs > 0 &&
-                std::max(0, lastResult.region->beg[0]) >= start) {
+                    std::max(0, lastResult.region->beg[0]) >= start &&
+                    std::max(0, lastResult.region->end[0]) <= end) {
                 onig_region_copy(outRegion, lastResult.region);
                 return true;
             }
@@ -84,7 +85,8 @@ searchCached(OnigCachedRegex *regex, jlong cacheKey, const unsigned char *data, 
 
 extern "C"
 JNIEXPORT jlong JNICALL
-Java_io_github_rosemoe_oniguruma_OnigNative_newRegex(JNIEnv *env, jclass clazz, jbyteArray pattern,
+Java_io_github_rosemoe_oniguruma_OnigNative_nCreateRegex(JNIEnv *env, jclass clazz,
+                                                         jbyteArray pattern,
                                                      jboolean ignore_case) {
     auto size = env->GetArrayLength(pattern);
     auto content = env->GetByteArrayElements(pattern, nullptr);
@@ -112,7 +114,8 @@ Java_io_github_rosemoe_oniguruma_OnigNative_newRegex(JNIEnv *env, jclass clazz, 
 
 extern "C"
 JNIEXPORT jintArray JNICALL
-Java_io_github_rosemoe_oniguruma_OnigNative_regexSearch(JNIEnv *env, jclass clazz, jlong native_ptr,
+Java_io_github_rosemoe_oniguruma_OnigNative_nRegexSearch(JNIEnv *env, jclass clazz,
+                                                         jlong native_ptr,
                                                         jlong cache_key, jbyteArray str, jint start,
                                                         jint end) {
     auto regex = reinterpret_cast<OnigCachedRegex *>(native_ptr);
@@ -159,7 +162,7 @@ Java_io_github_rosemoe_oniguruma_OnigNative_releaseRegex(JNIEnv *env, jclass cla
 
 extern "C"
 JNIEXPORT jintArray JNICALL
-Java_io_github_rosemoe_oniguruma_OnigNative_regexSearchBatch(JNIEnv *env, jclass clazz,
+Java_io_github_rosemoe_oniguruma_OnigNative_nRegexSearchBatch(JNIEnv *env, jclass clazz,
                                                              jlongArray native_ptrs,
                                                              jlong cache_key, jbyteArray str,
                                                              jint start, jint end) {

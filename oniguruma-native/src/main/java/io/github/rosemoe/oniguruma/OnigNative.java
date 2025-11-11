@@ -24,6 +24,7 @@
 package io.github.rosemoe.oniguruma;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 /**
  * Oniguruma native function bridge.
@@ -56,7 +57,10 @@ public class OnigNative {
      * @param ignoreCase Ignore case when matching
      * @return The pointer of newly created regex, or null if it fails
      */
-    public static native long newRegex(byte[] pattern, boolean ignoreCase);
+    public static long newRegex(byte[] pattern, boolean ignoreCase) {
+        Objects.requireNonNull(pattern, "pattern can not be null");
+        return nCreateRegex(pattern, ignoreCase);
+    }
 
     /**
      * Release a OnigRegex previously created by {@link #newRegex}
@@ -68,7 +72,7 @@ public class OnigNative {
     /**
      * Search using the given OnigRegex.
      *
-     * @param nativePtr OnigRegex pointer from {@link #newRegex}
+     * @param nativePointer OnigRegex pointer from {@link #newRegex}
      * @param cacheKey  The cache key for the source string
      * @param str       String to be search in
      * @param start     Start position in the string (inclusive)
@@ -76,13 +80,19 @@ public class OnigNative {
      * @return Ranges if the match is successful. Each range is represented as two integer start and end.
      * Null if the match failed.
      */
-    public static native int[] regexSearch(long nativePtr, long cacheKey, byte[] str, int start, int end);
+    public static int[] regexSearch(long nativePointer, long cacheKey, byte[] str, int start, int end) {
+        Objects.requireNonNull(str, "string can not be null");
+        if (start > end || start < 0 || end > str.length) {
+            throw new IndexOutOfBoundsException("start:" + start + " end:" + end + " str.length:" + str.length);
+        }
+        return nRegexSearch(nativePointer, cacheKey, str, start, end);
+    }
 
 
     /**
      * Search using the given OnigRegex list
      *
-     * @param nativePtrs OnigRegex pointers from {@link #newRegex}
+     * @param nativePointers OnigRegex pointers from {@link #newRegex}
      * @param cacheKey   The cache key for the source string
      * @param str        String to be search in
      * @param start      Start position in the string (inclusive)
@@ -90,6 +100,20 @@ public class OnigNative {
      * @return Ranges if the match is successful. Each range is represented as two integer start and end.
      * Null if the match failed.
      */
-    public static native int[] regexSearchBatch(long[] nativePtrs, long cacheKey, byte[] str, int start, int end);
+    public static int[] regexSearchBatch(long[] nativePointers, long cacheKey, byte[] str, int start, int end) {
+        if (nativePointers == null || str == null) {
+            throw new NullPointerException("pointers or string is null");
+        }
+        if (start > end || start < 0 || end > str.length) {
+            throw new IndexOutOfBoundsException("start:" + start + " end:" + end + " str.length:" + str.length);
+        }
+        return nRegexSearchBatch(nativePointers, cacheKey, str, start, end);
+    }
+
+    private static native long nCreateRegex(byte[] pattern, boolean ignoreCase);
+
+    private static native int[] nRegexSearch(long nativePtr, long cacheKey, byte[] str, int start, int end);
+
+    private static native int[] nRegexSearchBatch(long[] nativePtrs, long cacheKey, byte[] str, int start, int end);
 
 }
