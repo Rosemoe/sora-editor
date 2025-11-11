@@ -79,6 +79,7 @@ class LineSpansGenerator(
         val captures = mutableListOf<TSQueryCapture>()
 
         TSQueryCursor.create().use { cursor ->
+            cursor.isAllowChangedNodes = true
             cursor.setByteRange(startIndex * 2, endIndex * 2)
 
             safeTree.accessTree { tree ->
