@@ -56,6 +56,16 @@ public class PairedBracket {
      * @param rightIndex  Index of right bracket in text
      * @param rightLength Text length of right bracket
      */
+    public PairedBracket(int leftIndex, int leftLength, int rightIndex, int rightLength) {
+        this(leftIndex, leftLength, rightIndex, rightLength, 0);
+    }
+
+    /**
+     * @param leftIndex   Index of left bracket in text
+     * @param leftLength  Text length of left bracket
+     * @param rightIndex  Index of right bracket in text
+     * @param rightLength Text length of right bracket
+     */
     public PairedBracket(int leftIndex, int leftLength, int rightIndex, int rightLength, int level) {
         this.leftIndex = leftIndex;
         this.leftLength = leftLength;

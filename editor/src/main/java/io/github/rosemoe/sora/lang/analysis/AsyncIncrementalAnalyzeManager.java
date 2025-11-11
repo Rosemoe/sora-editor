@@ -80,6 +80,17 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
         }
     }
 
+    /**
+     * Called on the analyzer thread every time a contiguous line range of spans is updated.
+     * {@code startLine} and {@code endLine} are inclusive.
+     */
+    protected void onSpansChanged(int startLine, int endLine) {
+    }
+
+    protected void onSpansInit(Styles styles) {
+    }
+
+
     @Override
     public void insert(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence insertedText) {
         if (thread != null) {
@@ -183,6 +194,14 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
             throw new IllegalThreadStateException();
         }
         return ((AsyncIncrementalAnalyzeManager<?, ?>.LooperThread) thread).styles;
+    }
+
+    public Content getManagedContent() {
+        var thread = Thread.currentThread();
+        if (thread.getClass() != AsyncIncrementalAnalyzeManager.LooperThread.class) {
+            throw new IllegalThreadStateException();
+        }
+        return ((AsyncIncrementalAnalyzeManager<?, ?>.LooperThread) thread).shadowed;
     }
 
     private static class LockedSpans implements Spans {
@@ -461,8 +480,10 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
             styles.setSuppressSwitch(delegate.suppressSwitch);
             styles.finishBuilding();
 
-            if (!abort)
+            if (!abort) {
+                AsyncIncrementalAnalyzeManager.this.onSpansInit(styles);
                 sendNewStyles(styles);
+            }
         }
 
         public boolean handleMessage(@NonNull Message msg) {
@@ -478,11 +499,11 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                         break;
                     case MSG_MOD:
                         int updateStart = 0, updateEnd = 0;
+                        long spansStartTime = System.nanoTime();
                         if (!abort && !isInterrupted()) {
                             var mod = (TextModification) msg.obj;
                             int startLine = IntPair.getFirst(mod.start);
                             int endLine = IntPair.getFirst(mod.end);
-
                             updateStart = startLine;
                             if (mod.changedText == null) {
                                 shadowed.delete(IntPair.getFirst(mod.start), IntPair.getSecond(mod.start),
@@ -557,15 +578,26 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                                 updateEnd = line;
                             }
                         }
+                        long spansEndTime = System.nanoTime();
+                        Log.d("AsyncAnalysis", "Spans processing time: " + ((spansEndTime - spansStartTime) / 1000000.0) + " ms");
+
                         // Do not update incomplete code blocks
+                        long codeBlockStartTime = System.nanoTime();
                         var blocks = computeBlocks(shadowed, delegate);
                         if (delegate.isNotCancelled()) {
                             styles.blocks = blocks;
                             styles.finishBuilding();
                             styles.setSuppressSwitch(delegate.suppressSwitch);
                         }
+                        long codeBlockEndTime = System.nanoTime();
+                        Log.d("AsyncAnalysis", "CodeBlock processing time: " + ((codeBlockEndTime - codeBlockStartTime) / 1000000.0) + " ms");
+
                         if (!abort) {
+                            long updateStartTime = System.nanoTime();
+                            AsyncIncrementalAnalyzeManager.this.onSpansChanged(updateStart, updateEnd);
                             sendUpdate(styles, updateStart, updateEnd);
+                            long updateEndTime = System.nanoTime();
+                            Log.d("AsyncAnalysis", "Update notification time: " + ((updateEndTime - updateStartTime) / 1000000.0) + " ms");
                         }
                         break;
                 }

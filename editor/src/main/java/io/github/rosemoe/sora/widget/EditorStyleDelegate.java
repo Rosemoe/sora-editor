@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
@@ -38,6 +39,7 @@ import io.github.rosemoe.sora.lang.brackets.BracketsProvider;
 import io.github.rosemoe.sora.lang.brackets.PairedBracket;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.styling.Styles;
+import io.github.rosemoe.sora.text.Content;
 
 public class EditorStyleDelegate implements StyleReceiver {
 
@@ -73,7 +75,23 @@ public class EditorStyleDelegate implements StyleReceiver {
 
     @Nullable
     public PairedBracket getFoundBracketPair() {
-        return foundPair;
+        final var editor = editorRef.get();
+        final var provider = bracketsProvider;
+        if (provider == null) {
+            return null;
+        }
+        return foundPair = provider.getPairedBracketAt(editor.getText(), editor.getCursor().getLeft());
+    }
+
+    @Nullable
+    public List<PairedBracket> queryPairedBracketsForRange(@NonNull Content text, long leftRange, long rightRange) {
+        final var provider = bracketsProvider;
+
+        if (provider == null) {
+            return null;
+        }
+
+        return provider.queryPairedBracketsForRange(text, leftRange, rightRange);
     }
 
     void reset() {
