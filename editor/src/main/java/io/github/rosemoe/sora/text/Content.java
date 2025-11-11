@@ -219,7 +219,7 @@ public class Content implements CharSequence {
         try {
             var s = getIndexer().getCharPosition(start);
             var e = getIndexer().getCharPosition(end);
-            return subContentInternal(s.getLine(), s.getColumn(), e.getLine(), e.getColumn());
+            return subContentInternal(s.getLine(), s.getColumn(), e.getLine(), e.getColumn(), true);
         } finally {
             unlock(false);
         }
@@ -779,16 +779,31 @@ public class Content implements CharSequence {
      * @return sub-sequence of this Content
      */
     public Content subContent(int startLine, int startColumn, int endLine, int endColumn) {
+        return subContent(startLine, startColumn, endLine, endColumn, true);
+    }
+
+
+    /**
+     * Quick method to get sub string of this object
+     *
+     * @param startLine            The start line position
+     * @param startColumn          The start column position
+     * @param endLine              The end line position
+     * @param endColumn            The end column position
+     * @param newContentThreadSafe Should the returned instance be thread-safe
+     * @return sub-sequence of this Content
+     */
+    public Content subContent(int startLine, int startColumn, int endLine, int endColumn, boolean newContentThreadSafe) {
         lock(false);
         try {
-            return subContentInternal(startLine, startColumn, endLine, endColumn);
+            return subContentInternal(startLine, startColumn, endLine, endColumn, newContentThreadSafe);
         } finally {
             unlock(false);
         }
     }
 
-    private Content subContentInternal(int startLine, int startColumn, int endLine, int endColumn) {
-        var c = new Content();
+    private Content subContentInternal(int startLine, int startColumn, int endLine, int endColumn, boolean threadSafe) {
+        var c = new Content(null, threadSafe);
         c.setUndoEnabled(false);
         if (startLine == endLine) {
             var line = lines.get(startLine);

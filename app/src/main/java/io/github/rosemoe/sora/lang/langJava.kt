@@ -111,7 +111,8 @@ class TsJavaSpanFactory(
             return super.createSpans(capture, column, spanStyle)
         }
 
-        val text = content.subContent(start.line, start.column, end.line, end.column)
+        val text =
+            content.subContent(start.line, start.column, end.line, end.column, false).toString()
         val results = HEX_REGEX.findAll(text)
 
         val spans = mutableListOf<Span>()
