@@ -15,15 +15,16 @@ package org.eclipse.tm4e.core.internal.oniguruma.impl.onig;
 
 import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
 
-class NativeOnigResult implements OnigResult {
+public class NativeOnigResult implements OnigResult {
 
     private final int[] ranges;
     int index = -1;
-    public NativeOnigResult(int[] ranges) {
+
+    NativeOnigResult(int[] ranges) {
         this(ranges, false);
     }
 
-    public NativeOnigResult(int[] ranges, boolean batchResult) {
+    NativeOnigResult(int[] ranges, boolean batchResult) {
         this.ranges = ranges;
         if (batchResult) {
             index = ranges[ranges.length - 1];
@@ -31,7 +32,7 @@ class NativeOnigResult implements OnigResult {
     }
 
     @Override
-    public int getIndex() {
+    public int getIndexOfRegex() {
         return index;
     }
 

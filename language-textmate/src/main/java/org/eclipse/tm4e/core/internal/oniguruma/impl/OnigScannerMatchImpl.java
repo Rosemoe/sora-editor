@@ -34,7 +34,7 @@ public final class OnigScannerMatchImpl implements OnigScannerMatch {
     private final OnigCaptureIndex[] captureIndices;
 
     public OnigScannerMatchImpl(final OnigResult result, final OnigString source) {
-        this.index = result.getIndex();
+        this.index = result.getIndexOfRegex();
         this.captureIndices = captureIndicesOfMatch(result, source);
     }
 

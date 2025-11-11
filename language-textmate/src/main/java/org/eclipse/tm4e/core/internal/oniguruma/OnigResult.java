@@ -14,7 +14,7 @@
 package org.eclipse.tm4e.core.internal.oniguruma;
 
 public interface OnigResult {
-    int getIndex();
+    int getIndexOfRegex();
 
     int locationAt(int index);
 
