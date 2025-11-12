@@ -47,6 +47,7 @@ import org.eclipse.lsp4j.CompletionCapabilities
 import org.eclipse.lsp4j.CompletionItemCapabilities
 import org.eclipse.lsp4j.DefinitionCapabilities
 import org.eclipse.lsp4j.DidChangeWatchedFilesCapabilities
+import org.eclipse.lsp4j.DocumentHighlightCapabilities
 import org.eclipse.lsp4j.ExecuteCommandCapabilities
 import org.eclipse.lsp4j.FormattingCapabilities
 import org.eclipse.lsp4j.HoverCapabilities
@@ -355,8 +356,7 @@ class LanguageServerWrapper(
             completion =
                 CompletionCapabilities(CompletionItemCapabilities(true))
             definition = DefinitionCapabilities()
-            documentHighlight =
-                null // The feature is not currently supported in the sora-editor
+            documentHighlight = DocumentHighlightCapabilities()
             inlayHint = InlayHintCapabilities()
             formatting = FormattingCapabilities()
             hover = HoverCapabilities(true)

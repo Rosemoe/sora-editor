@@ -39,6 +39,7 @@ import io.github.rosemoe.sora.lsp.events.document.DocumentOpenEvent
 import io.github.rosemoe.sora.lsp.events.document.DocumentSaveEvent
 import io.github.rosemoe.sora.lsp.events.format.FullFormattingEvent
 import io.github.rosemoe.sora.lsp.events.format.RangeFormattingEvent
+import io.github.rosemoe.sora.lsp.events.highlight.DocumentHighlightEvent
 import io.github.rosemoe.sora.lsp.events.hover.HoverEvent
 import io.github.rosemoe.sora.lsp.events.inlayhint.InlayHintEvent
 import io.github.rosemoe.sora.lsp.events.signature.SignatureHelpEvent
@@ -159,7 +160,7 @@ class LspProject(
             ::RangeFormattingEvent, ::QueryDocumentDiagnosticsEvent,
             ::DocumentOpenEvent, ::HoverEvent, ::CodeActionEventEvent,
             ::WorkSpaceApplyEditEvent, ::WorkSpaceExecuteCommand,
-            ::InlayHintEvent
+            ::InlayHintEvent, ::DocumentHighlightEvent
         )
 
         events.forEach {

@@ -29,6 +29,8 @@ import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.Unsubscribe
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.EventType
+import io.github.rosemoe.sora.lsp.events.highlight.DocumentHighlightEvent
+import io.github.rosemoe.sora.lsp.events.highlight.documentHighlight
 import io.github.rosemoe.sora.lsp.events.hover.hover
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.getComponent
@@ -44,6 +46,17 @@ class LspEditorSelectionChangeEvent(private val editor: LspEditor) :
 
         editor.showSignatureHelp(null)
         editor.showHover(null)
+
+        editor.coroutineScope.launch(Dispatchers.IO) {
+            editor.eventManager.emitAsync(EventType.documentHighlight) {
+                put(
+                    DocumentHighlightEvent.DocumentHighlightRequest(
+                        event.left.fromThis(),
+                        event.right.fromThis()
+                    )
+                )
+            }
+        }
 
         val originEditor = editor.editor ?: return
 

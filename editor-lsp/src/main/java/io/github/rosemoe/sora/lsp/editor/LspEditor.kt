@@ -69,6 +69,7 @@ import kotlinx.coroutines.withContext
 import org.eclipse.lsp4j.CodeAction
 import org.eclipse.lsp4j.Command
 import org.eclipse.lsp4j.Diagnostic
+import org.eclipse.lsp4j.DocumentHighlight
 import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.SignatureHelp
@@ -466,6 +467,11 @@ class LspEditor(
         }
 
         originEditor.post { window.show(range, actions) }
+    }
+
+    fun showDocumentHighlight(highlights: List<DocumentHighlight>?) {
+        // no-op for now
+        println(highlights)
     }
 
     internal fun showInlayHints(inlayHints: List<org.eclipse.lsp4j.InlayHint>?) {
