@@ -57,12 +57,15 @@ import io.github.rosemoe.sora.event.PublishSearchResultEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.SideIconClickEvent
 import io.github.rosemoe.sora.event.TextSizeChangeEvent
+import io.github.rosemoe.sora.graphics.inlayHint.ColorInlayHintRenderer
 import io.github.rosemoe.sora.graphics.inlayHint.TextInlayHintRenderer
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.JavaLanguageSpec
 import io.github.rosemoe.sora.lang.TsLanguageJava
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
+import io.github.rosemoe.sora.lang.styling.color.ConstColor
+import io.github.rosemoe.sora.lang.styling.inlayHint.ColorInlayHint
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer
 import io.github.rosemoe.sora.lang.styling.inlayHint.TextInlayHint
 import io.github.rosemoe.sora.langs.java.JavaLanguage
@@ -215,7 +218,10 @@ class MainActivity : AppCompatActivity() {
 
         // Configure editor
         binding.editor.apply {
-            registerInlayHintRenderer(TextInlayHintRenderer.DefaultInstance)
+            registerInlayHintRenderers(
+                TextInlayHintRenderer.DefaultInstance,
+                ColorInlayHintRenderer.DefaultInstance
+            )
             typefaceText = typeface
             props.stickyScroll = true
             setLineSpacing(2f, 1.1f)
@@ -546,6 +552,7 @@ class MainActivity : AppCompatActivity() {
                         it.add(TextInlayHint(28, 0, "unit:"))
                         it.add(TextInlayHint(28, 7, "open"))
                         it.add(TextInlayHint(28, 22, "^class"))
+                        it.add(ColorInlayHint(30, 30, ConstColor("#f44336")))
                     }
                 }
             }

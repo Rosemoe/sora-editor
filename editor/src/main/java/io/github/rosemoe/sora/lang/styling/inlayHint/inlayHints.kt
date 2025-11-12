@@ -24,6 +24,8 @@
 
 package io.github.rosemoe.sora.lang.styling.inlayHint
 
+import io.github.rosemoe.sora.lang.styling.color.ResolvableColor
+
 /**
  * A simple text inlay hint
  *
@@ -38,6 +40,18 @@ class TextInlayHint(
 
     companion object {
         const val TYPE_NAME = "text"
+    }
+
+}
+
+class ColorInlayHint(
+    line: Int,
+    column: Int,
+    val color: ResolvableColor
+) : InlayHint(line, column, TYPE_NAME) {
+
+    companion object {
+        const val TYPE_NAME = "color"
     }
 
 }

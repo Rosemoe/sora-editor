@@ -39,6 +39,10 @@ public class Paint extends android.graphics.Paint {
     private float tabWidth;
     private boolean renderFunctionCharacters;
 
+    public Paint() {
+        this(false);
+    }
+
     public Paint(boolean renderFunctionCharacters) {
         super();
         this.renderFunctionCharacters = renderFunctionCharacters;

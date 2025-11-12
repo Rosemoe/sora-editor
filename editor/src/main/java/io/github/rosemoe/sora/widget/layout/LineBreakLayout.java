@@ -126,8 +126,7 @@ public class LineBreakLayout extends AbstractLayout {
             if (renderer == null) {
                 continue;
             }
-            var w = renderer.measure(inlayHint, paint, editor.getRenderer().getTextMetrics(),
-                    editor.getRowHeightOfText(), editor.getRowBaseline(0));
+            var w = renderer.measure(inlayHint, paint, editor.getRenderer().createTextRowParams().toInlayHintRenderParams());
             width += w;
         }
         return (int) width;

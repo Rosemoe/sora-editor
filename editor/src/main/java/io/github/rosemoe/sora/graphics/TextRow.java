@@ -91,6 +91,7 @@ public class TextRow {
     private List<Span> spans;
     private List<InlayHint> inlineElements;
     private TextRowParams params;
+    private InlayHintRenderParams inlayHintRenderParams;
     private Paint paint;
     private float[] measureCache;
 
@@ -111,6 +112,7 @@ public class TextRow {
         this.paint = paint;
         this.params = params;
         this.measureCache = measureCache;
+        this.inlayHintRenderParams = params.toInlayHintRenderParams();
     }
 
     /**
@@ -422,7 +424,7 @@ public class TextRow {
                 var renderer = params.getInlayHintRendererProvider().getInlayHintRendererForType(inlay.getType());
                 float w = 0f;
                 if (renderer != null) {
-                    w = renderer.measure(inlay, paint, params.getTextMetrics(), params.getTextHeight(), params.getTextBaseline());
+                    w = renderer.measure(inlay, paint, inlayHintRenderParams);
                     w = Math.max(0f, w);
                 }
                 if (currentRow.isEmpty || currentWidth + w > width) {
@@ -866,7 +868,7 @@ public class TextRow {
         var renderer = params.getInlayHintRendererProvider().getInlayHintRendererForType(inlay.getType());
         float w = 0f;
         if (renderer != null) {
-            w = renderer.measure(inlay, paint, params.getTextMetrics(), params.getTextHeight(), params.getTextBaseline());
+            w = renderer.measure(inlay, paint, inlayHintRenderParams);
             w = Math.max(0f, w);
         }
         if (ctx.regionBuffer != null) {
@@ -881,9 +883,8 @@ public class TextRow {
         var sharedEnd = Math.min(regionRight, ctx.maxOffset);
         if (renderer != null && sharedStart < sharedEnd) {
             int saveCount = canvas.save();
-            canvas.translate(offset, params.getTextTop());
-            renderer.render(inlay, canvas, paint, params.getTextMetrics(),
-                    params.getColorScheme(), params.getTextHeight(), params.getTextBaseline(), w);
+            canvas.translate(offset, params.getRowTop());
+            renderer.render(inlay, canvas, paint, inlayHintRenderParams, params.getColorScheme(), w);
             canvas.restoreToCount(saveCount);
             ctx.lastStyle = -1;
         }

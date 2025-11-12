@@ -49,6 +49,7 @@
 package io.github.rosemoe.sora.graphics.inlayHint
 
 import android.graphics.Canvas
+import io.github.rosemoe.sora.graphics.InlayHintRenderParams
 import io.github.rosemoe.sora.graphics.Paint
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint
 import io.github.rosemoe.sora.lang.styling.inlayHint.TextInlayHint
@@ -66,7 +67,7 @@ open class TextInlayHintRenderer : InlayHintRenderer() {
         val DefaultInstance = TextInlayHintRenderer()
     }
 
-    protected val localPaint = Paint(false).also { it.isAntiAlias = true }
+    protected val localPaint = Paint().also { it.isAntiAlias = true }
 
     override val typeName: String
         get() = "text"
@@ -74,9 +75,7 @@ open class TextInlayHintRenderer : InlayHintRenderer() {
     override fun onMeasure(
         inlayHint: InlayHint,
         paint: Paint,
-        textMetrics: android.graphics.Paint.FontMetricsInt,
-        lineHeight: Int,
-        baseline: Float
+        params: InlayHintRenderParams
     ): Float {
         localPaint.typeface = paint.typeface
         localPaint.textSize = paint.textSize * 0.75f
@@ -90,12 +89,11 @@ open class TextInlayHintRenderer : InlayHintRenderer() {
         inlayHint: InlayHint,
         canvas: Canvas,
         paint: Paint,
-        textMetrics: android.graphics.Paint.FontMetricsInt,
+        params: InlayHintRenderParams,
         colorScheme: EditorColorScheme,
-        lineHeight: Int,
-        baseline: Float,
         measuredWidth: Float
     ) {
+        val centerY = (params.textTop + params.textBottom) / 2f
         localPaint.typeface = paint.typeface
         localPaint.textSize = paint.textSize * 0.75f
 
@@ -104,14 +102,14 @@ open class TextInlayHintRenderer : InlayHintRenderer() {
         localPaint.color = colorScheme.getColor(EditorColorScheme.TEXT_INLAY_HINT_BACKGROUND)
         canvas.drawRoundRect(
             margin * 0.5f,
-            lineHeight / 2f - myLineHeight / 2f,
+            centerY - myLineHeight / 2f,
             measuredWidth - margin * 0.5f,
-            lineHeight / 2f + myLineHeight / 2f,
-            lineHeight * 0.15f, lineHeight * 0.15f,
+            centerY + myLineHeight / 2f,
+            params.textHeight * 0.15f, params.textHeight * 0.15f,
             localPaint
         )
         localPaint.color = colorScheme.getColor(EditorColorScheme.TEXT_INLAY_HINT_FOREGROUND)
-        val myBaseline = lineHeight / 2f + (myLineHeight / 2f - localPaint.descent())
+        val myBaseline = centerY + (myLineHeight / 2f - localPaint.descent())
         canvas.drawText((inlayHint as? TextInlayHint)?.text ?: "", margin, myBaseline, localPaint)
     }
 

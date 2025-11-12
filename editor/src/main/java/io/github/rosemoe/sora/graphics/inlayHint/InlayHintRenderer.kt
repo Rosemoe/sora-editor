@@ -49,7 +49,7 @@
 package io.github.rosemoe.sora.graphics.inlayHint
 
 import android.graphics.Canvas
-import android.graphics.Paint.FontMetricsInt
+import io.github.rosemoe.sora.graphics.InlayHintRenderParams
 import io.github.rosemoe.sora.graphics.Paint
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
@@ -69,53 +69,38 @@ abstract class InlayHintRenderer() {
     fun measure(
         inlayHint: InlayHint,
         paint: Paint,
-        textMetrics: FontMetricsInt,
-        lineHeight: Int,
-        baseline: Float
-    ): Float {
-        return onMeasure(inlayHint, paint, textMetrics, lineHeight, baseline)
-    }
+        params: InlayHintRenderParams
+    ): Float = onMeasure(inlayHint, paint, params)
 
     fun render(
         inlayHint: InlayHint,
         canvas: Canvas,
         paint: Paint,
-        textMetrics: FontMetricsInt,
+        params: InlayHintRenderParams,
         colorScheme: EditorColorScheme,
-        lineHeight: Int,
-        baseline: Float,
         measuredWidth: Float
     ) = onRender(
         inlayHint,
         canvas,
         paint,
-        textMetrics,
+        params,
         colorScheme,
-        lineHeight,
-        baseline,
         measuredWidth
     )
 
     /**
      * Measure the width of this inlay hint so that editor can properly place all the elements.
-     * Be careful that the given objects should not be modified, especially [paint] and [textMetrics]. They
+     * Be careful that the given objects should not be modified, especially [paint] and [params]. They
      * are currently used by editor instance to measure and render.
      *
-     * [lineHeight] and [baseline] are given y offsets (considering y offset of target line top is 0). Because the
-     * baseline can be different from the one computed directly from the given [textMetrics] when line spacing is set.
-     *
+     * @param inlayHint the inlay hint to be measured
      * @param paint the text paint currently used by editor
-     * @param textMetrics the [FontMetricsInt] instance of the paint cached by editor
-     * @param lineHeight the general line height, with line spacing considered
-     * @param baseline the general baseline, with line spacing considered
      * @return the width of this inlay hint
      */
     abstract fun onMeasure(
         inlayHint: InlayHint,
         paint: Paint,
-        textMetrics: FontMetricsInt,
-        lineHeight: Int,
-        baseline: Float
+        params: InlayHintRenderParams
     ): Float
 
     /**
@@ -124,24 +109,20 @@ abstract class InlayHintRenderer() {
      * your content and the top of the given canvas is the top of target line.
      *
      * Your measured width previously generated is passed to you. You are expected to make your content
-     * in range, according to the [measuredWidth] and [lineHeight].
+     * in range, according to the [measuredWidth] and given line height in [params].
      *
+     * @param inlayHint the inlay hint to be rendered
      * @param canvas the canvas to render your content
      * @param paint the text paint currently used by editor
-     * @param textMetrics the [FontMetricsInt] instance of the paint cached by editor
      * @param colorScheme the [EditorColorScheme] of editor
-     * @param lineHeight the general line height, with line spacing considered
-     * @param baseline the general baseline, with line spacing considered
      * @param measuredWidth the width previously measured
      */
     abstract fun onRender(
         inlayHint: InlayHint,
         canvas: Canvas,
         paint: Paint,
-        textMetrics: FontMetricsInt,
+        params: InlayHintRenderParams,
         colorScheme: EditorColorScheme,
-        lineHeight: Int,
-        baseline: Float,
         measuredWidth: Float
     )
 
