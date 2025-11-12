@@ -29,6 +29,7 @@ import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWr
 import io.github.rosemoe.sora.lsp.editor.diagnostics.DiagnosticsContainer
 import io.github.rosemoe.sora.lsp.events.EventEmitter
 import io.github.rosemoe.sora.lsp.events.code.CodeActionEventEvent
+import io.github.rosemoe.sora.lsp.events.color.DocumentColorEvent
 import io.github.rosemoe.sora.lsp.events.completion.CompletionEvent
 import io.github.rosemoe.sora.lsp.events.diagnostics.PublishDiagnosticsEvent
 import io.github.rosemoe.sora.lsp.events.diagnostics.QueryDocumentDiagnosticsEvent
@@ -159,7 +160,7 @@ class LspProject(
             ::RangeFormattingEvent, ::QueryDocumentDiagnosticsEvent,
             ::DocumentOpenEvent, ::HoverEvent, ::CodeActionEventEvent,
             ::WorkSpaceApplyEditEvent, ::WorkSpaceExecuteCommand,
-            ::InlayHintEvent
+            ::InlayHintEvent, ::DocumentColorEvent
         )
 
         events.forEach {

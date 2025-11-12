@@ -24,18 +24,29 @@
 
 package io.github.rosemoe.sora.lsp.editor
 
+import android.graphics.Color
+import io.github.rosemoe.sora.lang.styling.color.ConstColor
+import io.github.rosemoe.sora.lang.styling.inlayHint.ColorInlayHint
 import io.github.rosemoe.sora.lsp.events.EventType
+import io.github.rosemoe.sora.lsp.events.color.documentColor
 import io.github.rosemoe.sora.lsp.events.inlayhint.inlayHint
 import io.github.rosemoe.sora.text.CharPosition
+import org.eclipse.lsp4j.ColorInformation
 import org.eclipse.lsp4j.InlayHint
 import kotlin.math.pow
 
-internal suspend fun LspEditor.requestInlayHint(position: CharPosition) {
+suspend fun LspEditor.requestInlayHint(position: CharPosition) {
     if (!isEnableInlayHint) return
 
     eventManager.emitAsync(EventType.inlayHint) {
         put(position)
     }
+}
+
+suspend fun LspEditor.requestDocumentColor() {
+    if (!isEnableInlayHint) return
+
+    eventManager.emitAsync(EventType.documentColor)
 }
 
 internal fun curvedTextScale(rawScale: Float): Float {
@@ -56,7 +67,7 @@ internal fun curvedTextScale(rawScale: Float): Float {
     }
 }
 
-fun List<InlayHint>.toEditorDisplay() = map {
+fun List<InlayHint>.inlayHintToDisplay() = map {
     val text = if (it.label.isLeft) it.label.left else {
         it.label.right[0].value
     }
@@ -66,3 +77,21 @@ fun List<InlayHint>.toEditorDisplay() = map {
         text
     )
 }
+
+fun List<ColorInformation>.colorInfoToDisplay() = map {
+    // Always show on start
+    // May we should use style patch to set background?
+    ColorInlayHint(
+        it.range.start.line, it.range.start.character,
+        ConstColor(
+            Color.argb(
+                it.color.alpha.toFloat(),
+                it.color.red.toFloat(),
+                it.color.green.toFloat(),
+                it.color.blue.toFloat()
+            )
+        )
+    )
+}
+
+
