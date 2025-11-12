@@ -673,7 +673,6 @@ class DefaultRequestManager(
 
     override fun documentColor(params: DocumentColorParams): CompletableFuture<List<ColorInformation>>? {
         return if (checkStatus()) {
-            println(serverCapabilities)
             try {
                 if (serverCapabilities.colorProvider?.left == true || serverCapabilities.colorProvider?.right != null) textDocumentService.documentColor(
                     params

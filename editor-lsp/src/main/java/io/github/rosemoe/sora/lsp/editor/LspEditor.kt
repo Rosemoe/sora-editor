@@ -512,7 +512,6 @@ class LspEditor(
         }
 
         val inlayHintsContainer = InlayHintsContainer()
-        println(cachedDocumentColors)
         cachedInlayHints?.inlayHintToDisplay()?.forEach(inlayHintsContainer::add)
         cachedDocumentColors?.colorInfoToDisplay()?.forEach(inlayHintsContainer::add)
 

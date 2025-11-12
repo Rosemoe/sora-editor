@@ -148,7 +148,6 @@ class CodeActionWindow(
                 label = action.title
                 this.edit = edit
             }
-            println(params)
             lspEditor.eventManager.emit(EventType.workSpaceApplyEdit, params)
         }
         val nestedCommand = action.command
