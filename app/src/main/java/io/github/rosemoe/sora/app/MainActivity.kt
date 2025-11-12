@@ -276,7 +276,9 @@ class MainActivity : AppCompatActivity() {
         val editor = binding.editor
         val language = TextMateLanguage.create(
             "source.java", true
-        )
+        ).apply {
+            isBracketPairColorization = true
+        }
         editor.setEditorLanguage(language)
 
         // Open assets file
@@ -912,7 +914,9 @@ class MainActivity : AppCompatActivity() {
                                 editorLanguage.updateLanguage(info.first)
                                 editorLanguage
                             } else {
-                                TextMateLanguage.create(info.second, true)
+                                TextMateLanguage.create(info.second, true).apply {
+                                    isBracketPairColorization = true
+                                }
                             }
                             editor.setEditorLanguage(language)
                         } catch (e: Exception) {
@@ -958,7 +962,9 @@ class MainActivity : AppCompatActivity() {
                                             localsScmSource = assets.open("tree-sitter-queries/java/locals.scm")
                                                 .reader().readText()
                                         )
-                                    )
+                                    ).apply {
+                                        bracketPairColorization = true
+                                    }
                                 )
                             }
                         }

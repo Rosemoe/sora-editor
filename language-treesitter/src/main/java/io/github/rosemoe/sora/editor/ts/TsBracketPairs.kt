@@ -41,10 +41,6 @@ class TsBracketPairs(
 
     private val cachedBracketPairs = mutableListOf<BracketPair>()
 
-    init {
-        computeBracketPairs()
-    }
-
     companion object {
         const val OPEN_NAME = "editor.brackets.open"
         const val CLOSE_NAME = "editor.brackets.close"
@@ -172,7 +168,7 @@ class TsBracketPairs(
         return if (result.isEmpty()) emptyList() else result
     }
 
-    private fun computeBracketPairs() = safeTree.accessTree { tree ->
+    internal fun computeBracketPairs() = safeTree.accessTree { tree ->
         if (tree.closed) {
             return@accessTree
         }

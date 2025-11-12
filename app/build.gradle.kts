@@ -112,7 +112,7 @@ dependencies {
     implementation(fileTree("dir" to "libs", "includes" to listOf("*.jar")))
     implementation(libs.lsp4j)
 
-    // debugImplementation(libs.leakcanary)
+    debugImplementation(libs.leakcanary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.androidx.test.espresso)

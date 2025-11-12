@@ -28,14 +28,15 @@ import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import org.eclipse.tm4e.core.grammar.IGrammar;
 import org.eclipse.tm4e.core.internal.grammar.tokenattrs.EncodedTokenAttributes;
 import org.eclipse.tm4e.core.internal.grammar.tokenattrs.StandardTokenType;
-import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
-import org.eclipse.tm4e.core.internal.oniguruma.Oniguruma;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigRegExp;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
+import org.eclipse.tm4e.core.internal.oniguruma.Oniguruma;
 import org.eclipse.tm4e.core.internal.theme.FontStyle;
 import org.eclipse.tm4e.core.internal.theme.Theme;
 import org.eclipse.tm4e.languageconfiguration.internal.model.LanguageConfiguration;
@@ -46,6 +47,7 @@ import java.util.List;
 import java.util.Objects;
 
 import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager;
+import io.github.rosemoe.sora.lang.analysis.StyleReceiver;
 import io.github.rosemoe.sora.lang.brackets.BracketsProvider;
 import io.github.rosemoe.sora.lang.brackets.OnlineBracketsMatcher;
 import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
@@ -84,6 +86,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     private final boolean supportsTextMateBrackets;
     private BracketsProvider bracketsProvider;
     private TextMateBracketsProvider textMateBracketsProvider;
+    private boolean bracketPairColorizationEnabled;
     final IdentifierAutoComplete.SyncIdentifiers syncIdentifiers = new IdentifierAutoComplete.SyncIdentifiers();
 
 
@@ -105,13 +108,14 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
         if (languageConfiguration != null) {
             configuration = languageConfiguration;
             supportsTextMateBrackets = hasBracketMetadata(languageConfiguration);
-            if (!supportsTextMateBrackets) {
-                bracketsProvider = buildLegacyBracketsProvider(languageConfiguration);
-            }
+            publishBracketProvider(buildLegacyBracketsProvider(languageConfiguration));
         } else {
             configuration = null;
             supportsTextMateBrackets = false;
+            publishBracketProvider(null);
         }
+
+        bracketPairColorizationEnabled = language.isBracketPairColorization();
 
         createFoldingExp();
     }
@@ -157,7 +161,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
         var list = new ArrayList<CodeBlock>();
         analyzeCodeBlocks(text, list, delegate);
         if (delegate.isNotCancelled()) {
-            withReceiver(r -> r.updateBracketProvider(this, bracketsProvider));
+            publishBracketProvider(bracketsProvider);
         }
         return list;
     }
@@ -280,29 +284,6 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
         themeRegistry.removeListener(this);
     }
 
-
-    @Override
-    protected void onSpansInit(Styles styles) {
-        if (!supportsTextMateBrackets || configuration == null) {
-            return;
-        }
-        var spans = getManagedStyles().getSpans();
-        var shadowed = getManagedContent();
-        if (spans == null || shadowed == null) {
-            return;
-        }
-        var provider = new TextMateBracketsProvider(shadowed, spans, configuration);
-        if (!provider.isSupported()) {
-            provider.clear();
-            return;
-        }
-        textMateBracketsProvider = provider;
-
-        textMateBracketsProvider.initialize();
-        bracketsProvider = textMateBracketsProvider;
-        withReceiver(r -> r.updateBracketProvider(this, bracketsProvider));
-    }
-
     @Override
     public void insert(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence insertedText) {
         if (textMateBracketsProvider != null) {
@@ -320,11 +301,17 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     }
 
     @Override
-    protected void onSpansChanged(int startLine, int endLine) {
-        super.onSpansChanged(startLine, endLine);
+    protected void onSpansChanged(Styles styles, int startLine, int endLine) {
+        super.onSpansChanged(styles, startLine, endLine);
+        ensureTextMateBracketsProviderInitialized();
         if (textMateBracketsProvider != null && endLine >= startLine) {
             textMateBracketsProvider.notifySpansChanged(startLine, endLine);
         }
+    }
+
+    @Override
+    protected void onSpansInit(Styles styles) {
+        ensureTextMateBracketsProviderInitialized();
     }
 
     private void tearDownTextMateBracketsProvider() {
@@ -335,8 +322,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
         activeProvider.clear();
         textMateBracketsProvider = null;
         if (bracketsProvider == activeProvider) {
-            bracketsProvider = null;
-            withReceiver(r -> r.updateBracketProvider(this, null));
+            publishBracketProvider(buildLegacyBracketsProvider(this.configuration));
         }
     }
 
@@ -353,6 +339,9 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     }
 
     private static BracketsProvider buildLegacyBracketsProvider(LanguageConfiguration configuration) {
+        if (configuration == null) {
+            return null;
+        }
         var pairs = configuration.getBrackets();
         if (pairs == null || pairs.isEmpty()) {
             return null;
@@ -387,5 +376,63 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     @Override
     public void onChangeTheme(ThemeModel newTheme) {
         this.theme = newTheme.getTheme();
+    }
+
+    public synchronized void setBracketPairColorization(boolean bracketPairColorization) {
+        if (this.bracketPairColorizationEnabled == bracketPairColorization) {
+            return;
+        }
+        this.bracketPairColorizationEnabled = bracketPairColorization;
+        if (!bracketPairColorization || !supportsTextMateBrackets) {
+            tearDownTextMateBracketsProvider();
+            publishBracketProvider(buildLegacyBracketsProvider(configuration));
+            return;
+        }
+        tearDownTextMateBracketsProvider();
+        rerun();
+    }
+
+    @Override
+    public void setReceiver(@Nullable StyleReceiver receiver) {
+        super.setReceiver(receiver);
+        if (receiver != null) {
+            receiver.updateBracketProvider(this, bracketsProvider);
+        }
+    }
+
+    private boolean shouldUseTextMateBrackets() {
+        return bracketPairColorizationEnabled && supportsTextMateBrackets && configuration != null;
+    }
+
+    private void ensureTextMateBracketsProviderInitialized() {
+        if (!shouldUseTextMateBrackets() || textMateBracketsProvider != null) {
+            return;
+        }
+        var styles = getManagedStyles();
+        if (styles == null) {
+            return;
+        }
+        var spans = styles.getSpans();
+        var shadowed = getManagedContent();
+        if (spans == null || shadowed == null) {
+            return;
+        }
+        var provider = new TextMateBracketsProvider(shadowed, spans, configuration);
+        if (!provider.isSupported()) {
+            provider.clear();
+            publishBracketProvider(buildLegacyBracketsProvider(configuration));
+            return;
+        }
+        textMateBracketsProvider = provider;
+        textMateBracketsProvider.initialize();
+        publishBracketProvider(textMateBracketsProvider);
+    }
+
+    private void publishBracketProvider(@Nullable BracketsProvider provider) {
+        if (bracketsProvider == provider) {
+            return;
+        }
+        bracketsProvider = provider;
+        withReceiver(r -> r.updateBracketProvider(this, provider));
     }
 }

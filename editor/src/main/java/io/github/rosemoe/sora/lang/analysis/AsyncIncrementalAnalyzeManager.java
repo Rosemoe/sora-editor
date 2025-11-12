@@ -84,9 +84,13 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
      * Called on the analyzer thread every time a contiguous line range of spans is updated.
      * {@code startLine} and {@code endLine} are inclusive.
      */
-    protected void onSpansChanged(int startLine, int endLine) {
+    protected void onSpansChanged(Styles styles, int startLine, int endLine) {
     }
 
+    /**
+     * Called on the analyzer thread when the analyzer is initialized.
+     * @param styles The styles to be used
+     */
     protected void onSpansInit(Styles styles) {
     }
 
@@ -587,7 +591,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                         }
 
                         if (!abort) {
-                            AsyncIncrementalAnalyzeManager.this.onSpansChanged(updateStart, updateEnd);
+                            AsyncIncrementalAnalyzeManager.this.onSpansChanged(styles, updateStart, updateEnd);
                             sendUpdate(styles, updateStart, updateEnd);
                         }
                         break;

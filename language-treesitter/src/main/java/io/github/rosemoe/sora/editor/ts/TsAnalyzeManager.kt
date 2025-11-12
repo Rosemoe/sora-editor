@@ -53,6 +53,8 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     var thread: TsLooperThread? = null
     var spanFactory: TsSpanFactory = DefaultSpanFactory()
 
+    internal var bracketPairColorization = false
+
     open var styles = Styles()
 
     fun updateTheme(theme: TsTheme) {
@@ -187,7 +189,11 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                 )
                 currentReceiver?.updateBracketProvider(
                     this@TsAnalyzeManager,
-                    TsBracketPairs(newTree, localText, languageSpec)
+                    TsBracketPairs(newTree, localText, languageSpec).apply {
+                        if (bracketPairColorization) {
+                            computeBracketPairs()
+                        }
+                    }
                 )
                 val oldBlocks = styles.blocks
                 updateCodeBlocks()
