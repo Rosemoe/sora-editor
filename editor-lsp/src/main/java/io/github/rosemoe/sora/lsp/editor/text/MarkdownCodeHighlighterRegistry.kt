@@ -44,7 +44,6 @@ class MarkdownCodeHighlighterRegistry {
     }
 
     fun highlight(code: String, language: LanguageName?, codeTypeface: Typeface): HighlightResult {
-        println("$code $language")
         if (language == null) return HighlightResult(code, false)
         val resolved = aliases[language.lowercase()] ?: language.lowercase()
         val highlighter = highlighters[resolved] ?: providers.firstNotNullOfOrNull { it.provide(resolved) }

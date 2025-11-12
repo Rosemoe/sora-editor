@@ -26,22 +26,29 @@ package io.github.rosemoe.sora.editor.ts
 
 import com.itsaky.androidide.treesitter.TSNode
 import com.itsaky.androidide.treesitter.TSQueryCursor
+import com.itsaky.androidide.treesitter.string.UTF16String
 import io.github.rosemoe.sora.lang.brackets.CachedBracketsProvider
 import io.github.rosemoe.sora.lang.brackets.PairedBracket
 import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.util.IntPair
 import kotlin.math.max
-import kotlin.math.min
 
 class TsBracketPairs(
     private val safeTree: SafeTsTree,
+    private val localString: UTF16String,
     private val languageSpec: TsLanguageSpec
 ) : CachedBracketsProvider() {
+
+    private val cachedBracketPairs = mutableListOf<BracketPair>()
+
+    init {
+        computeBracketPairs()
+    }
 
     companion object {
         const val OPEN_NAME = "editor.brackets.open"
         const val CLOSE_NAME = "editor.brackets.close"
-        const val BRACKET_PAIR_COLORIZATION_LIMIT = 4000 * 300
+        const val BRACKET_PAIR_COLORIZATION_LIMIT = 6000 * 300
     }
 
     override fun computePairedBracketAt(text: Content, index: Int): PairedBracket? {
@@ -127,98 +134,95 @@ class TsBracketPairs(
             )
         )
 
-        return safeTree.accessTree { tree ->
-            if (tree.closed) {
-                return@accessTree null
+        if (cachedBracketPairs.isEmpty()) {
+            return emptyList()
+        }
+
+        val bracketEnds = ArrayDeque<Int>()
+        val result = mutableListOf<PairedBracket>()
+
+        for (pair in cachedBracketPairs) {
+            // Remove brackets that close before this one opens
+            while (bracketEnds.isNotEmpty() && bracketEnds.last() <= pair.openStart) {
+                bracketEnds.removeLast()
             }
-            val rootNode = tree.rootNode
-            if (!rootNode.canAccess() || rootNode.hasChanges()) {
-                return@accessTree null
+
+            val depth = bracketEnds.size
+            bracketEnds.addLast(pair.closeEnd)
+
+            val openIndex = pair.openStart / 2
+            val closeIndex = pair.closeStart / 2
+            val openLength = (pair.openEnd - pair.openStart) / 2
+            val closeLength = (pair.closeEnd - pair.closeStart) / 2
+
+            // Only include brackets visible in the range
+            if (closeIndex + closeLength > leftIndex && openIndex < rightIndex) {
+                result.add(
+                    PairedBracket(
+                        openIndex,
+                        openLength,
+                        closeIndex,
+                        closeLength,
+                        depth
+                    )
+                )
             }
+        }
 
+        return if (result.isEmpty()) emptyList() else result
+    }
 
+    private fun computeBracketPairs() = safeTree.accessTree { tree ->
+        if (tree.closed) {
+            return@accessTree
+        }
+        val rootNode = tree.rootNode
+        if (!rootNode.canAccess() || rootNode.hasChanges()) {
+            return@accessTree
+        }
+        val query = languageSpec.bracketsQuery
+        if (!query.canAccess() || query.patternCount == 0) {
+            return@accessTree
+        }
 
-            val bracketPairs = mutableListOf<BracketPair>()
+        TSQueryCursor.create().use { cursor ->
+            cursor.exec(query, rootNode)
 
-            TSQueryCursor.create().use { cursor ->
-                val leftIndexBytes = min(text.length, leftIndex) * 2
-                val rightBoundBytes = min(text.length, rightIndex) * 2
-                cursor.setByteRange(leftIndexBytes, rightBoundBytes)
-                cursor.exec(query, rootNode)
+            var match = cursor.nextMatch()
+            while (match != null) {
+                if (languageSpec.bracketsPredicator.doPredicate(
+                        languageSpec.predicates,
+                        localString,
+                        match
+                    )
+                ) {
+                    var openNode: TSNode? = null
+                    var closeNode: TSNode? = null
 
-                var match = cursor.nextMatch()
-                while (match != null) {
-                    if (languageSpec.bracketsPredicator.doPredicate(
-                            languageSpec.predicates,
-                            text,
-                            match
-                        )
-                    ) {
-                        var openNode: TSNode? = null
-                        var closeNode: TSNode? = null
-
-                        for (capture in match.captures) {
-                            val captureName = query.getCaptureNameForId(capture.index)
-                            when (captureName) {
-                                OPEN_NAME -> openNode = capture.node
-                                CLOSE_NAME -> closeNode = capture.node
-                            }
-                        }
-
-                        if (openNode != null && closeNode != null) {
-                            bracketPairs.add(
-                                BracketPair(
-                                    openNode.startByte,
-                                    openNode.endByte,
-                                    closeNode.startByte,
-                                    closeNode.endByte
-                                )
-                            )
+                    for (capture in match.captures) {
+                        val captureName = query.getCaptureNameForId(capture.index)
+                        when (captureName) {
+                            OPEN_NAME -> openNode = capture.node
+                            CLOSE_NAME -> closeNode = capture.node
                         }
                     }
-                    match = cursor.nextMatch()
-                }
-            }
 
-            if (bracketPairs.isEmpty()) {
-                return@accessTree emptyList()
-            }
-
-            bracketPairs.sortBy { it.openStart }
-
-            val bracketEnds = ArrayDeque<Int>()
-            val result = mutableListOf<PairedBracket>()
-
-            for (pair in bracketPairs) {
-                // Remove brackets that close before this one opens
-                while (bracketEnds.isNotEmpty() && bracketEnds.last() <= pair.openStart) {
-                    bracketEnds.removeLast()
-                }
-
-                val depth = bracketEnds.size
-                bracketEnds.addLast(pair.closeEnd)
-
-                val openIndex = pair.openStart / 2
-                val closeIndex = pair.closeStart / 2
-                val openLength = (pair.openEnd - pair.openStart) / 2
-                val closeLength = (pair.closeEnd - pair.closeStart) / 2
-
-                // Only include brackets visible in the range
-                if (closeIndex + closeLength > leftIndex && openIndex < rightIndex) {
-                    result.add(
-                        PairedBracket(
-                            openIndex,
-                            openLength,
-                            closeIndex,
-                            closeLength,
-                            depth
+                    if (openNode != null && closeNode != null) {
+                        cachedBracketPairs.add(
+                            BracketPair(
+                                openNode.startByte,
+                                openNode.endByte,
+                                closeNode.startByte,
+                                closeNode.endByte
+                            )
                         )
-                    )
+                    }
                 }
+                match = cursor.nextMatch()
             }
-
-            if (result.isEmpty()) emptyList() else result
         }
+
+        cachedBracketPairs.sortBy { it.openStart }
     }
 
     private fun Content.safeCharIndex(line: Int, column: Int): Int {

@@ -53,6 +53,7 @@ abstract class CachedBracketsProvider : BracketsProvider {
 
         val result = computePairedBracketAt(text, index) ?: return null
         cache.put(result.leftIndex, result)
+        cache.put(result.rightIndex, result)
         return result
     }
 
@@ -79,7 +80,10 @@ abstract class CachedBracketsProvider : BracketsProvider {
         if (computed.isEmpty()) {
             return null
         }
-        computed.forEach { cache.put(it.leftIndex, it) }
+        computed.forEach {
+            cache.put(it.leftIndex, it)
+            cache.put(it.rightIndex, it)
+        }
         return computed
     }
 
