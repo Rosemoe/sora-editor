@@ -405,7 +405,7 @@ public class EditorRenderer {
         tr.set(lineBuf, 0, columnCount, spans.getSpansOnLine(line), lineInlays, getLineDirections(line), paintGeneral, widths, createTextRowParams());
         if (canvas != null) {
             canvas.save();
-            canvas.translate(offsetX, editor.getRowTopOfText(0) + offsetY);
+            canvas.translate(offsetX, editor.getRowTop(0) + offsetY);
             if (visibleOnly) {
                 float visibleStart = Math.max(0f, -offsetX);
                 float visibleEnd = Math.max(visibleStart, -offsetX + editor.getWidth());
@@ -731,7 +731,7 @@ public class EditorRenderer {
                     colorId = EditorColorScheme.CURRENT_LINE;
                 }
                 drawColor(canvas, editor.getColorScheme().getColor(colorId), tmpRect);
-                if (canvas.isHardwareAccelerated() && editor.isHardwareAcceleratedDrawAllowed()
+                if (canvas.isHardwareAccelerated() && editor.isHardwareAcceleratedDrawAllowed() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
                         && editor.getRenderContext().getRenderNodeHolder() != null && !editor.getEventHandler().isScaling &&
                         (editor.getProps().cacheRenderNodeForLongLines || getLine(block.startLine).length() < 128)) {
                     editor.getRenderContext().getRenderNodeHolder().drawLineHardwareAccelerated(canvas, block.startLine, offset, offsetLine * editor.getRowHeight());
@@ -1349,7 +1349,7 @@ public class EditorRenderer {
                 TextRow tr = new TextRow();
                 tr.set(lineBuf, rowInf.startColumn, rowInf.endColumn, reader.getSpansOnLine(line), rowInf.inlayHints, getLineDirections(line), paintGeneral, lineCache, createTextRowParams());
                 canvas.save();
-                canvas.translate(-offsetCopy, editor.getRowTopOfText(row) - editor.getOffsetY());
+                canvas.translate(-offsetCopy, editor.getRowTop(row) - editor.getOffsetY());
                 // visible editor window: [offsetX, offsetX+editorWidth]
                 // current row window region: [textRegionOffsetW+leftMiniGraphWidth, textRegionOffsetX+leftMiniGraphX+rowWidth]
                 // shifted start at offsetX-(textRegionOffsetX+leftMiniGraphWidth)
@@ -1370,7 +1370,7 @@ public class EditorRenderer {
                     drawMiniGraph(canvas, paintingOffset, row, softwrapRightGraph);
                 }
             } else {
-                paintingOffset = offset + editor.getRenderContext().getRenderNodeHolder().drawLineHardwareAccelerated(canvas, line, offset, editor.getRowTop(line) - editor.getOffsetY());
+                paintingOffset = offset + editor.getRenderContext().getRenderNodeHolder().drawLineHardwareAccelerated(canvas, line, offset, editor.getRowTop(row) - editor.getOffsetY());
                 // Draw hard wrap
                 if (rowInf.endColumn == columnCount && (nonPrintableFlags & CodeEditor.FLAG_DRAW_LINE_SEPARATOR) != 0) {
                     drawMiniGraph(canvas, paintingOffset, row, lineBreakGraph);
