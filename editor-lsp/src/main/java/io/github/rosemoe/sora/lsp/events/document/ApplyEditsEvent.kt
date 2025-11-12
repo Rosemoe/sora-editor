@@ -42,10 +42,27 @@ class ApplyEditsEvent : EventListener {
         val editList: List<TextEdit> = context.get("edits")
         val content = context.getByClass<Content>() ?: return
 
+        if (editList.isEmpty()) {
+            return
+        }
+
+        val sortedEdits = editList
+            .withIndex()
+            .sortedWith { a, b ->
+                // Apply from the end so earlier replacements don't shift later ranges
+                compareBy<IndexedValue<TextEdit>> { it.value.range.end.line }
+                    .thenBy { it.value.range.end.character }
+                    .thenBy { it.value.range.start.line }
+                    .thenBy { it.value.range.start.character }
+                    .thenBy { it.index }
+                    .compare(b, a)
+            }
+
         content.batchEdit {
-            editList.forEach { textEdit ->
-                val (startIndex, endIndex) = calculateIndices(it, textEdit.range)
-                it.replace(startIndex, endIndex, textEdit.newText)
+            sortedEdits.forEach { indexedEdit ->
+                val range = indexedEdit.value.range
+                val (startIndex, endIndex) = calculateIndices(it, range)
+                it.replace(startIndex, endIndex, indexedEdit.value.newText)
             }
         }
     }
