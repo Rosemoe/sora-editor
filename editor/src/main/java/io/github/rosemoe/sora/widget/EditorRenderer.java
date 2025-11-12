@@ -42,7 +42,6 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.SparseArray;
-import android.util.SparseIntArray;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -119,7 +118,6 @@ public class EditorRenderer {
     private final SparseArray<Directions> preloadedDirections = new SparseArray<>();
     private final CodeEditor editor;
     private final List<DiagnosticRegion> collectedDiagnostics = new ArrayList<>();
-    private final SparseIntArray collectedBracketPairColors = new SparseIntArray();
     protected List<CodeBlock> lastStuckLines;
     Paint.FontMetricsInt metricsText;
     @Nullable
@@ -2188,25 +2186,10 @@ public class EditorRenderer {
             return;
         }
 
-        Row firstVisibleRow;
-        Row lastVisibleRow;
-
-        try {
-            firstVisibleRow = editor.layout.getRowAt(editor.getFirstVisibleRow());
-        } catch (IndexOutOfBoundsException e) {
-            firstVisibleRow = editor.layout.getRowAt(0);
-        }
-
-        try {
-            lastVisibleRow = editor.layout.getRowAt(editor.getLastVisibleRow());
-        } catch (IndexOutOfBoundsException e) {
-            lastVisibleRow = editor.layout.getRowAt(0);
-        }
-
         var brackets = editor.styleDelegate.queryPairedBracketsForRange(
                 editor.getText(),
-                IntPair.pack(firstVisibleRow.lineIndex, firstVisibleRow.startColumn),
-                IntPair.pack(lastVisibleRow.lineIndex, lastVisibleRow.endColumn)
+                IntPair.pack(editor.getFirstVisibleLine(), 0),
+                IntPair.pack(Math.min(editor.getText().getLineCount() - 1, editor.getLastVisibleLine() + 1), 0)
         );
 
         if (brackets == null) {
@@ -2250,7 +2233,7 @@ public class EditorRenderer {
 
     protected void patchTextRegionWithColor(Canvas canvas, float textOffset, int start, int end, int color, int backgroundColor, int underlineColor, boolean withBold) {
         paintGeneral.setColor(color);
-        paintOther.setStrokeWidth(editor.getRowHeightOfText() * (withBold ? RenderingConstants.MATCHING_DELIMITERS_UNDERLINE_WIDTH_FACTOR : 1));
+        paintOther.setStrokeWidth(withBold ? editor.getRowHeightOfText() * RenderingConstants.MATCHING_DELIMITERS_UNDERLINE_WIDTH_FACTOR : editor.getRowHeightOfText());
 
         var useBoldStyle = editor.getProps().boldMatchingDelimiters && withBold;
         paintGeneral.setStyle(useBoldStyle ? Paint.Style.FILL_AND_STROKE : Paint.Style.FILL);
@@ -2426,10 +2409,6 @@ public class EditorRenderer {
 
     protected float getRowWidth(int row) {
         return createTextRow(row).computeRowWidth();
-    }
-
-    public SparseIntArray getCollectedBracketPairColors() {
-        return collectedBracketPairColors;
     }
 
     // END Measure---------------------------------------

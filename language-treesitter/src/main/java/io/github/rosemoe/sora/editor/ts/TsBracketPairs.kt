@@ -24,25 +24,27 @@
 
 package io.github.rosemoe.sora.editor.ts
 
+import com.itsaky.androidide.treesitter.TSNode
 import com.itsaky.androidide.treesitter.TSQueryCursor
-import io.github.rosemoe.sora.lang.brackets.BracketsProvider
+import io.github.rosemoe.sora.lang.brackets.CachedBracketsProvider
 import io.github.rosemoe.sora.lang.brackets.PairedBracket
 import io.github.rosemoe.sora.text.Content
-import java.lang.Math.max
+import io.github.rosemoe.sora.util.IntPair
+import kotlin.math.max
+import kotlin.math.min
 
 class TsBracketPairs(
     private val safeTree: SafeTsTree,
     private val languageSpec: TsLanguageSpec
-) : BracketsProvider {
+) : CachedBracketsProvider() {
 
     companion object {
-
-        val OPEN_NAME = "editor.brackets.open"
-        val CLOSE_NAME = "editor.brackets.close"
-
+        const val OPEN_NAME = "editor.brackets.open"
+        const val CLOSE_NAME = "editor.brackets.close"
+        const val BRACKET_PAIR_COLORIZATION_LIMIT = 4000 * 300
     }
 
-    override fun getPairedBracketAt(text: Content, index: Int): PairedBracket? {
+    override fun computePairedBracketAt(text: Content, index: Int): PairedBracket? {
         if (languageSpec.bracketsQuery.canAccess() && languageSpec.bracketsQuery.patternCount > 0) {
             TSQueryCursor.create().use { cursor ->
                 cursor.setByteRange(max(0, index - 1) * 2, index * 2 + 1)
@@ -100,4 +102,151 @@ class TsBracketPairs(
         return null
     }
 
+    override fun computePairedBracketsForRange(
+        text: Content,
+        leftRange: Long,
+        rightRange: Long
+    ): List<PairedBracket>? {
+
+        if (text.length > BRACKET_PAIR_COLORIZATION_LIMIT) {
+            return emptyList()
+        }
+
+        val query = languageSpec.bracketsQuery
+        if (!query.canAccess() || query.patternCount == 0) {
+            return null
+        }
+        val leftIndex = text.safeCharIndex(
+            IntPair.getFirst(leftRange),
+            IntPair.getSecond(leftRange)
+        )
+        val rightIndex = leftIndex.coerceAtLeast(
+            text.safeCharIndex(
+                IntPair.getFirst(rightRange),
+                IntPair.getSecond(rightRange)
+            )
+        )
+
+        return safeTree.accessTree { tree ->
+            if (tree.closed) {
+                return@accessTree null
+            }
+            val rootNode = tree.rootNode
+            if (!rootNode.canAccess() || rootNode.hasChanges()) {
+                return@accessTree null
+            }
+
+
+
+            val bracketPairs = mutableListOf<BracketPair>()
+
+            TSQueryCursor.create().use { cursor ->
+                val leftIndexBytes = min(text.length, leftIndex) * 2
+                val rightBoundBytes = min(text.length, rightIndex) * 2
+                cursor.setByteRange(leftIndexBytes, rightBoundBytes)
+                cursor.exec(query, rootNode)
+
+                var match = cursor.nextMatch()
+                while (match != null) {
+                    if (languageSpec.bracketsPredicator.doPredicate(
+                            languageSpec.predicates,
+                            text,
+                            match
+                        )
+                    ) {
+                        var openNode: TSNode? = null
+                        var closeNode: TSNode? = null
+
+                        for (capture in match.captures) {
+                            val captureName = query.getCaptureNameForId(capture.index)
+                            when (captureName) {
+                                OPEN_NAME -> openNode = capture.node
+                                CLOSE_NAME -> closeNode = capture.node
+                            }
+                        }
+
+                        if (openNode != null && closeNode != null) {
+                            bracketPairs.add(
+                                BracketPair(
+                                    openNode.startByte,
+                                    openNode.endByte,
+                                    closeNode.startByte,
+                                    closeNode.endByte
+                                )
+                            )
+                        }
+                    }
+                    match = cursor.nextMatch()
+                }
+            }
+
+            if (bracketPairs.isEmpty()) {
+                return@accessTree emptyList()
+            }
+
+            bracketPairs.sortBy { it.openStart }
+
+            val bracketEnds = ArrayDeque<Int>()
+            val result = mutableListOf<PairedBracket>()
+
+            for (pair in bracketPairs) {
+                // Remove brackets that close before this one opens
+                while (bracketEnds.isNotEmpty() && bracketEnds.last() <= pair.openStart) {
+                    bracketEnds.removeLast()
+                }
+
+                val depth = bracketEnds.size
+                bracketEnds.addLast(pair.closeEnd)
+
+                val openIndex = pair.openStart / 2
+                val closeIndex = pair.closeStart / 2
+                val openLength = (pair.openEnd - pair.openStart) / 2
+                val closeLength = (pair.closeEnd - pair.closeStart) / 2
+
+                // Only include brackets visible in the range
+                if (closeIndex + closeLength > leftIndex && openIndex < rightIndex) {
+                    result.add(
+                        PairedBracket(
+                            openIndex,
+                            openLength,
+                            closeIndex,
+                            closeLength,
+                            depth
+                        )
+                    )
+                }
+            }
+
+            if (result.isEmpty()) emptyList() else result
+        }
+    }
+
+    private fun Content.safeCharIndex(line: Int, column: Int): Int {
+        val lineCount = this.lineCount
+        if (line < 0) {
+            return 0
+        }
+        if (line >= lineCount) {
+            return length
+        }
+        val safeColumn = when {
+            column < 0 -> 0
+            column > this.getColumnCount(line) -> this.getColumnCount(line)
+            else -> column
+        }
+        return try {
+            indexer.getCharIndex(line, safeColumn)
+        } catch (_: IndexOutOfBoundsException) {
+            length
+        }
+    }
+
+
+    // Collect all bracket pairs
+    data class BracketPair(
+        val openStart: Int,
+        val openEnd: Int,
+        val closeStart: Int,
+        val closeEnd: Int
+    )
 }

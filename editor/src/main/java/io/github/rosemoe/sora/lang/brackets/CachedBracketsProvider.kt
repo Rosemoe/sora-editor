@@ -27,6 +27,8 @@ import android.util.SparseArray
 import androidx.annotation.UiThread
 import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.util.IntPair
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Brackets provider that caches computed pairs keyed by left index.
@@ -37,6 +39,10 @@ abstract class CachedBracketsProvider : BracketsProvider {
 
     /** Cache keyed by left bracket index. */
     private val cache = SparseArray<PairedBracket>(1024)
+
+    private var queriedLeftIndex = 0
+    private var queriedRightIndex = 0
+
 
     @UiThread
     override fun getPairedBracketAt(text: Content, index: Int): PairedBracket? {
@@ -69,9 +75,10 @@ abstract class CachedBracketsProvider : BracketsProvider {
             return cachedResults
         }
 
-        println(cachedResults)
-
         val computed = computePairedBracketsForRange(text, leftRange, rightRange) ?: return null
+        if (computed.isEmpty()) {
+            return null
+        }
         computed.forEach { cache.put(it.leftIndex, it) }
         return computed
     }
@@ -80,6 +87,10 @@ abstract class CachedBracketsProvider : BracketsProvider {
      * Returns cached pairs whose left indexes are within [leftIndex, rightIndex].
      */
     private fun getRangeFromCache(leftIndex: Int, rightIndex: Int): List<PairedBracket> {
+        if (leftIndex > queriedLeftIndex || rightIndex < queriedRightIndex) {
+            return emptyList()
+        }
+
         val result = mutableListOf<PairedBracket>()
 
         var start = 0
@@ -107,6 +118,9 @@ abstract class CachedBracketsProvider : BracketsProvider {
             result.add(cache.valueAt(i))
         }
 
+        queriedLeftIndex = min(queriedLeftIndex, leftIndex)
+        queriedRightIndex = max(queriedRightIndex, rightIndex)
+
         return result
     }
 
@@ -126,11 +140,11 @@ abstract class CachedBracketsProvider : BracketsProvider {
      * Computes all bracket pairs in [leftRange, rightRange] when they are not cached.
      */
     @UiThread
-    protected abstract fun computePairedBracketsForRange(
+    protected open fun computePairedBracketsForRange(
         text: Content,
         leftRange: Long,
         rightRange: Long
-    ): List<PairedBracket>?
+    ): List<PairedBracket>? = null
 
 
 }
