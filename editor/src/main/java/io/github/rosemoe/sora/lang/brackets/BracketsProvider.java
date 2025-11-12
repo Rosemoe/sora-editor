@@ -52,6 +52,14 @@ public interface BracketsProvider {
 
     @Nullable
     @UiThread
+    /**
+     * Query paired brackets for the given interval.
+     *
+     * @param text       Text content to inspect
+     * @param leftRange  Packed position (line/column) for the left boundary
+     * @param rightRange Packed position (line/column) for the right boundary
+     * @return Paired bracket list or {@code null} if not supported / no match
+     */
     default List<PairedBracket> queryPairedBracketsForRange(@NonNull Content text, long leftRange, long rightRange) {
         return null;
     }
