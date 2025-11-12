@@ -47,7 +47,7 @@ public class GraphicsCompat {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return paint.getRunAdvance(text, start, end, contextStart, contextEnd, isRtl, offset);
         } else {
-            return paint.measureTextRunAdvance(text, start, end, contextStart, contextEnd, isRtl);
+            return paint.measureTextRunAdvance(text, start, offset, contextStart, contextEnd, isRtl);
         }
     }
 
