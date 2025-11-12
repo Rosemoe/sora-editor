@@ -4688,7 +4688,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public PointerIcon onResolvePointerIcon(MotionEvent event, int pointerIndex) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
-                if (isFormatting()) {
+                if (isFormatting() || layoutBusy) {
                     return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_WAIT);
                 }
                 if (touchHandler.hasAnyHeldHandle()) {
@@ -4705,6 +4705,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 if (region == RegionResolverKt.REGION_TEXT && inbound) {
                     if (touchHandler.mouseCanMoveText && !touchHandler.mouseClick) {
                         return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_GRABBING);
+                    }
+                    if (renderer.lastStuckLines != null) {
+                        var stickyLineCount = renderer.lastStuckLines.size();
+                        if (stickyLineCount > 0 && event.getY() < getRowBottom(stickyLineCount - 1)) {
+                            return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_HAND);
+                        }
                     }
                     return PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_TEXT);
                 } else if (region == RegionResolverKt.REGION_LINE_NUMBER) {
