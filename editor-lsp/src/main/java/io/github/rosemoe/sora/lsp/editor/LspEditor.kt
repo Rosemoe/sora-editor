@@ -32,8 +32,11 @@ import io.github.rosemoe.sora.event.HoverEvent
 import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.SubscriptionReceipt
+import io.github.rosemoe.sora.graphics.inlayHint.ColorInlayHintRenderer
 import io.github.rosemoe.sora.graphics.inlayHint.TextInlayHintRenderer
 import io.github.rosemoe.sora.lang.Language
+import io.github.rosemoe.sora.lang.styling.HighlightTextContainer
+import io.github.rosemoe.sora.lang.styling.color.EditorColor
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
@@ -61,6 +64,7 @@ import io.github.rosemoe.sora.widget.component.DefaultDiagnosticTooltipLayout
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
 import io.github.rosemoe.sora.widget.getComponent
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.subscribeEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -69,8 +73,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.eclipse.lsp4j.CodeAction
+import org.eclipse.lsp4j.ColorInformation
 import org.eclipse.lsp4j.Command
 import org.eclipse.lsp4j.Diagnostic
+import org.eclipse.lsp4j.DocumentHighlight
+import org.eclipse.lsp4j.DocumentHighlightKind
 import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.SignatureHelp
@@ -103,6 +110,10 @@ class LspEditor(
     private var isClosed = false
 
     private var cachedInlayHints: List<org.eclipse.lsp4j.InlayHint>? = null
+
+    private var cachedDocumentColors: List<ColorInformation>? = null
+
+    private val unsubscribeFunctionRef = AtomicReference<Runnable?>()
 
     private val disposeLock = Any()
 
@@ -247,11 +258,15 @@ class LspEditor(
     var isEnableInlayHint = false
         set(value) {
             field = value
-            val editor = editor ?: return
+            val editorInstance = editor ?: return
             if (value) {
-                editor.registerInlayHintRenderer(TextInlayHintRenderer.DefaultInstance)
+                editorInstance.registerInlayHintRenderers(
+                    TextInlayHintRenderer.DefaultInstance,
+                    ColorInlayHintRenderer.DefaultInstance
+                )
                 coroutineScope.launch {
                     this@LspEditor.requestInlayHint(CharPosition(0, 0))
+                    this@LspEditor.requestDocumentColor()
                 }
             }
         }
@@ -459,24 +474,79 @@ class LspEditor(
         originEditor.post { window.show(range, actions) }
     }
 
-    internal fun showInlayHints(inlayHints: List<org.eclipse.lsp4j.InlayHint>?) {
+    fun showDocumentHighlight(highlights: List<DocumentHighlight>?) {
         val editor = editor ?: return
-        if (inlayHints == null) {
-            editor.inlayHints = null
+
+        if (highlights == null || highlights.isEmpty()) {
+            editor.highlightTexts = null
             return
         }
 
-        // No check for equality here. We assume users won't modify the inlayHints container directly.
-        if (cachedInlayHints == inlayHints && editor.inlayHints != null) {
+        val container = HighlightTextContainer()
+
+        val colors = mapOf(
+            DocumentHighlightKind.Write to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_STRONG_BACKGROUND),
+            DocumentHighlightKind.Read to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_BACKGROUND),
+            DocumentHighlightKind.Text to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_BACKGROUND)
+        )
+
+        highlights.forEach {
+            container.add(
+                HighlightTextContainer.HighlightText(
+                    it.range.start.line,
+                    it.range.start.character,
+                    it.range.end.line,
+                    it.range.end.character,
+                    colors.getValue(it.kind ?: DocumentHighlightKind.Text)
+                )
+            )
+        }
+
+        editor.highlightTexts = container
+    }
+
+    internal fun showInlayHints(inlayHints: List<org.eclipse.lsp4j.InlayHint>?) {
+        val normalized = inlayHints.normalize()
+        if (cachedInlayHints == normalized) {
+            return
+        }
+        cachedInlayHints = normalized
+        updateInlinePresentations()
+    }
+
+    internal fun showDocumentColors(documentColors: List<ColorInformation>?) {
+        val normalized = documentColors.normalize()
+        if (cachedDocumentColors == normalized) {
+            return
+        }
+        cachedDocumentColors = normalized
+        updateInlinePresentations()
+    }
+
+    private fun <T> List<T>?.normalize(): List<T>? {
+        return if (this.isNullOrEmpty()) null else this
+    }
+
+    private fun updateInlinePresentations() {
+        val editorInstance = editor ?: return
+
+        val hasInlayHints = !cachedInlayHints.isNullOrEmpty()
+        val hasDocumentColors = !cachedDocumentColors.isNullOrEmpty()
+
+        if (!hasInlayHints && !hasDocumentColors) {
+            if (editorInstance.inlayHints != null) {
+                editorInstance.inlayHints = null
+            }
             return
         }
 
         val inlayHintsContainer = InlayHintsContainer()
+        cachedInlayHints?.inlayHintToDisplay()?.forEach(inlayHintsContainer::add)
+        cachedDocumentColors?.colorInfoToDisplay()?.forEach(inlayHintsContainer::add)
 
-        inlayHints.toEditorDisplay().forEach(inlayHintsContainer::add)
-
-        editor.inlayHints = inlayHintsContainer
+        editorInstance.inlayHints = inlayHintsContainer
     }
+
 
     fun hitReTrigger(eventText: CharSequence): Boolean {
         for (trigger in signatureHelpReTriggers) {

@@ -29,6 +29,7 @@ import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWr
 import io.github.rosemoe.sora.lsp.editor.diagnostics.DiagnosticsContainer
 import io.github.rosemoe.sora.lsp.events.EventEmitter
 import io.github.rosemoe.sora.lsp.events.code.CodeActionEventEvent
+import io.github.rosemoe.sora.lsp.events.color.DocumentColorEvent
 import io.github.rosemoe.sora.lsp.events.completion.CompletionEvent
 import io.github.rosemoe.sora.lsp.events.diagnostics.PublishDiagnosticsEvent
 import io.github.rosemoe.sora.lsp.events.diagnostics.QueryDocumentDiagnosticsEvent
@@ -39,6 +40,7 @@ import io.github.rosemoe.sora.lsp.events.document.DocumentOpenEvent
 import io.github.rosemoe.sora.lsp.events.document.DocumentSaveEvent
 import io.github.rosemoe.sora.lsp.events.format.FullFormattingEvent
 import io.github.rosemoe.sora.lsp.events.format.RangeFormattingEvent
+import io.github.rosemoe.sora.lsp.events.highlight.DocumentHighlightEvent
 import io.github.rosemoe.sora.lsp.events.hover.HoverEvent
 import io.github.rosemoe.sora.lsp.events.inlayhint.InlayHintEvent
 import io.github.rosemoe.sora.lsp.events.signature.SignatureHelpEvent
@@ -159,7 +161,8 @@ class LspProject(
             ::RangeFormattingEvent, ::QueryDocumentDiagnosticsEvent,
             ::DocumentOpenEvent, ::HoverEvent, ::CodeActionEventEvent,
             ::WorkSpaceApplyEditEvent, ::WorkSpaceExecuteCommand,
-            ::InlayHintEvent
+            ::InlayHintEvent, ::DocumentHighlightEvent,
+            ::DocumentColorEvent
         )
 
         events.forEach {

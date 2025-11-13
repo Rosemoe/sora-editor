@@ -47,6 +47,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.collection.MutableIntList;
+import androidx.collection.MutableLongObjectMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -114,6 +115,7 @@ public class EditorRenderer {
     private final LongArrayList postDrawLineNumbers = new LongArrayList();
     private final MutableIntList postDrawCurrentLines = new MutableIntList();
     private final LongArrayList matchedPositions = new LongArrayList();
+    private final MutableLongObjectMap<ResolvableColor> highlightPositions = new MutableLongObjectMap();
     private final SparseArray<ContentLine> preloadedLines = new SparseArray<>();
     private final SparseArray<Directions> preloadedDirections = new SparseArray<>();
     private final CodeEditor editor;
@@ -1127,7 +1129,9 @@ public class EditorRenderer {
         RowIterator rowIterator = editor.getLayout().obtainRowIterator(firstVis, preloadedLines);
         Spans spans = editor.getStyles() == null ? null : editor.getStyles().spans;
         var matchedPositions = this.matchedPositions;
+        var highlightPositions = this.highlightPositions;
         matchedPositions.clear();
+        highlightPositions.clear();
         int currentLine = cursor.isSelected() ? -1 : cursor.getLeftLine();
         int currentLineBgColor = editor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE);
         int lastPreparedLine = -1;
@@ -1218,6 +1222,7 @@ public class EditorRenderer {
             int columnCount = getColumnCount(line);
             if (lastPreparedLine != line) {
                 editor.computeMatchedPositions(line, matchedPositions);
+                editor.computeHighlightPositions(line, highlightPositions);
                 prepareLine(line);
                 lastPreparedLine = line;
             }
@@ -1233,6 +1238,17 @@ public class EditorRenderer {
                     var end = IntPair.getSecond(position);
                     drawRowRegionBackground(canvas, row, start, end, rowInf.startColumn, rowInf.endColumn, editor.getColorScheme().getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND));
                 }
+            }
+
+            // Draw highlight text background
+            if (highlightPositions._size > 0) {
+                int finalRow = row;
+                highlightPositions.forEach((position, resolvableColor) -> {
+                    var start = IntPair.getFirst(position);
+                    var end = IntPair.getSecond(position);
+                    drawRowRegionBackground(canvas, finalRow, start, end, rowInf.startColumn, rowInf.endColumn, resolvableColor.resolve(editor.getColorScheme()));
+                    return null;
+                });
             }
 
             // Draw selected text background

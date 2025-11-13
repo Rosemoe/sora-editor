@@ -28,10 +28,14 @@ import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EventReceiver
 import io.github.rosemoe.sora.event.Unsubscribe
 import io.github.rosemoe.sora.lsp.editor.LspEditor
+import io.github.rosemoe.sora.lsp.editor.requestDocumentColor
 import io.github.rosemoe.sora.lsp.editor.requestInlayHint
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.diagnostics.queryDocumentDiagnostics
 import io.github.rosemoe.sora.lsp.events.document.documentChange
+import io.github.rosemoe.sora.lsp.events.highlight.DocumentHighlightEvent
+import io.github.rosemoe.sora.lsp.events.highlight.documentHighlight
+import io.github.rosemoe.sora.lsp.events.hover.hover
 import io.github.rosemoe.sora.lsp.events.inlayhint.inlayHint
 import io.github.rosemoe.sora.lsp.events.signature.signatureHelp
 import kotlinx.coroutines.Dispatchers
@@ -46,7 +50,6 @@ class LspEditorContentChangeEvent(private val editor: LspEditor) :
             return
         }
 
-        editor.showHover(null)
 
         editor.coroutineScope.launch(Dispatchers.IO) {
             // send to server
@@ -58,8 +61,17 @@ class LspEditorContentChangeEvent(private val editor: LspEditor) :
                 editor.eventManager.emitAsync(EventType.signatureHelp, event.changeStart)
             }
 
+            editor.eventManager.emitAsync(EventType.hover, event.changeStart)
+
+            editor.eventManager.emitAsync(EventType.documentHighlight) {
+                put(
+                    DocumentHighlightEvent.DocumentHighlightRequest(event.changeStart)
+                )
+            }
+
             // request inlay hint
             editor.requestInlayHint(event.changeStart)
+            editor.requestDocumentColor()
 
             val diagnostics =
                 editor.eventManager.emitAsync(EventType.queryDocumentDiagnostics)
