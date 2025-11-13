@@ -24,12 +24,15 @@
 package io.github.rosemoe.sora.widget;
 
 import android.os.Looper;
+import android.util.SparseIntArray;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.lang.ref.WeakReference;
+import java.util.List;
 
+import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver;
@@ -38,6 +41,8 @@ import io.github.rosemoe.sora.lang.brackets.BracketsProvider;
 import io.github.rosemoe.sora.lang.brackets.PairedBracket;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.styling.Styles;
+import io.github.rosemoe.sora.text.Content;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 public class EditorStyleDelegate implements StyleReceiver {
 
@@ -45,12 +50,19 @@ public class EditorStyleDelegate implements StyleReceiver {
     private PairedBracket foundPair;
     private BracketsProvider bracketsProvider;
 
+    // Maybe add can add to editor color scheme?
+    private final SparseIntArray collectedBracketPairColors = new SparseIntArray();
+
     EditorStyleDelegate(@NonNull CodeEditor editor) {
         editorRef = new WeakReference<>(editor);
         editor.subscribeEvent(SelectionChangeEvent.class, (event, __) -> {
             if (!event.isSelected()) {
                 postUpdateBracketPair();
             }
+        });
+        editor.subscribeEvent(ColorSchemeUpdateEvent.class, (event, __) -> {
+            computedBracketPairColors();
+            editor.invalidate();
         });
     }
 
@@ -73,12 +85,56 @@ public class EditorStyleDelegate implements StyleReceiver {
 
     @Nullable
     public PairedBracket getFoundBracketPair() {
+        final var provider = bracketsProvider;
+        if (provider == null) {
+            return null;
+        }
         return foundPair;
+    }
+
+    @Nullable
+    public List<PairedBracket> queryPairedBracketsForRange(@NonNull Content text, long leftRange, long rightRange) {
+        final var provider = bracketsProvider;
+
+        if (provider == null) {
+            return null;
+        }
+
+        return provider.queryPairedBracketsForRange(text, leftRange, rightRange);
+    }
+
+    public SparseIntArray getCollectedBracketPairColors() {
+        return collectedBracketPairColors;
     }
 
     void reset() {
         foundPair = null;
         bracketsProvider = null;
+    }
+
+    private void computedBracketPairColors() {
+        final var editor = editorRef.get();
+
+        if (editor == null) {
+            return;
+        }
+
+        var availableColors = new SparseIntArray();
+
+        for (var index = EditorColorScheme.BRACKET_HIGHLIGHTING_FOREGROUND_1; index <= EditorColorScheme.BRACKET_HIGHLIGHTING_FOREGROUND_6; index++) {
+            var color = editor.getColorScheme().getColor(index);
+
+            if (color == 0) continue;
+            availableColors.append(availableColors.size(), color);
+        }
+
+        if (availableColors.size() < 1) {
+            return;
+        }
+
+        for (var index = 0; index <= 30; index++) {
+            collectedBracketPairColors.put(index, availableColors.get(index % availableColors.size()));
+        }
     }
 
     private void runOnUiThread(Runnable operation) {

@@ -27,7 +27,6 @@ package io.github.rosemoe.sora.editor.ts
 import android.os.Bundle
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
-import io.github.rosemoe.sora.lang.QuickQuoteHandler
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher
 import io.github.rosemoe.sora.lang.format.Formatter
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler
@@ -61,8 +60,16 @@ open class TsLanguage(
 
     protected var tsTheme = TsThemeBuilder(languageSpec.tsQuery).apply { themeDescription() }.theme
 
+    var bracketPairColorization = false
+        set(value) {
+            field = value
+            analyzer.bracketPairColorization = value
+        }
+
     open val analyzer by lazy {
-        TsAnalyzeManager(languageSpec, tsTheme)
+        TsAnalyzeManager(languageSpec, tsTheme).apply {
+            bracketPairColorization
+        }
     }
 
     /**

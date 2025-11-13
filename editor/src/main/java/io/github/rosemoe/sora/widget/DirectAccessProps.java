@@ -261,6 +261,15 @@ public class DirectAccessProps implements Serializable {
     public boolean boldMatchingDelimiters = true;
 
     /**
+     * Enable bracket pair colorization (rainbow brackets).
+     * When enabled, nested bracket pairs are rendered with different colors
+     * to help distinguish matching pairs visually. This requires language support.
+     */
+    @InvalidateRequired
+    @Experimental
+    public boolean bracketPairColorization = false;
+
+    /**
      * Whether the editor will use round rectangle for text background
      */
     @InvalidateRequired

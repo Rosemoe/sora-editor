@@ -64,7 +64,10 @@ dependencies {
     implementation(libs.snakeyaml.engine)
     implementation(libs.jdt.annotation)
 
+    testImplementation(libs.kotlinx.coroutines)
+    testImplementation(projects.editor)
     testImplementation(libs.junit)
+    testImplementation(libs.tests.robolectric)
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.androidx.test.espresso)
 }

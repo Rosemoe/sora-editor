@@ -168,6 +168,16 @@ public class EditorColorScheme {
     public static final int TEXT_ACTION_WINDOW_ICON_COLOR = 66;
 
     /**
+     * Rainbow bracket highlighting colors
+     */
+    public static final int BRACKET_HIGHLIGHTING_FOREGROUND_1 = 73;
+    public static final int BRACKET_HIGHLIGHTING_FOREGROUND_2 = 74;
+    public static final int BRACKET_HIGHLIGHTING_FOREGROUND_3 = 75;
+    public static final int BRACKET_HIGHLIGHTING_FOREGROUND_4 = 76;
+    public static final int BRACKET_HIGHLIGHTING_FOREGROUND_5 = 77;
+    public static final int BRACKET_HIGHLIGHTING_FOREGROUND_6 = 78;
+
+    /**
      * Min pre-defined color id
      */
     protected static final int START_COLOR_ID = 1;
@@ -175,8 +185,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 72;
-
+    protected static final int END_COLOR_ID = 78;
 
     /**
      * Real color saver
@@ -434,6 +443,20 @@ public class EditorColorScheme {
                 break;
             case DIAGNOSTIC_TOOLTIP_ACTION:
                 color = 0xff42A5F5;
+                break;
+            case BRACKET_HIGHLIGHTING_FOREGROUND_1:
+                color = isDark() ? 0xffFFD700 : 0xff0431FA;
+                break;
+            case BRACKET_HIGHLIGHTING_FOREGROUND_2:
+                color = isDark() ? 0xffDA70D6 : 0xff319331;
+                break;
+            case BRACKET_HIGHLIGHTING_FOREGROUND_3:
+                color = isDark() ? 0xff179FFF : 0xff7B3814;
+                break;
+            case BRACKET_HIGHLIGHTING_FOREGROUND_4:
+            case BRACKET_HIGHLIGHTING_FOREGROUND_5:
+            case BRACKET_HIGHLIGHTING_FOREGROUND_6:
+                color = 0; // Unset
         }
         setColor(type, color);
     }

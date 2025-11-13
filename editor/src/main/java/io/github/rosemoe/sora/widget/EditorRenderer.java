@@ -61,6 +61,7 @@ import io.github.rosemoe.sora.graphics.GraphicsCompat;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.graphics.TextRow;
 import io.github.rosemoe.sora.graphics.TextRowParams;
+import io.github.rosemoe.sora.lang.brackets.PairedBracket;
 import io.github.rosemoe.sora.lang.completion.snippet.SnippetItem;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
@@ -390,6 +391,30 @@ public class EditorRenderer {
         return tr;
     }
 
+    protected TextRow drawSingleTextLineWithStuck(Canvas canvas, int line, float offsetX, float offsetY, Spans.Reader spans) {
+        prepareLine(line);
+        int columnCount = getColumnCount(line);
+        if (spans == null || spans.getSpanCount() <= 0) {
+            spans = EmptyReader.getInstance();
+        }
+        TextRow tr = new TextRow();
+        var inlayHints = editor.getInlayHints();
+        List<InlayHint> lineInlays = inlayHints == null ? Collections.emptyList() : inlayHints.getForLine(line);
+        var cache = editor.getRenderContext().getCache().queryMeasureCache(line);
+        var widths = cache != null && cache.getUpdateTimestamp() >= displayTimestamp ? cache.getWidths() : null;
+        widths = widths != null && widths.length > lineBuf.length() ? widths : null;
+        tr.set(lineBuf, 0, columnCount, spans.getSpansOnLine(line), lineInlays, getLineDirections(line), paintGeneral, widths, createTextRowParams());
+        if (canvas != null) {
+            canvas.save();
+            canvas.translate(offsetX, editor.getRowTop(0) + offsetY);
+            float visibleStart = Math.max(0f, -offsetX);
+            float visibleEnd = Math.max(visibleStart, -offsetX + editor.getWidth());
+            tr.draw(canvas, visibleStart, visibleEnd);
+            canvas.restore();
+        }
+        return tr;
+    }
+
     protected float drawSingleTextLine(Canvas canvas, int line, float offsetX, float offsetY, Spans.Reader spans, boolean visibleOnly) {
         prepareLine(line);
         int columnCount = getColumnCount(line);
@@ -492,7 +517,12 @@ public class EditorRenderer {
         float stuckLineBottom = getStuckLineBottom(stuckLines);
         canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
         drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor, postDrawCurrentLines, firstLn);
+
+        // TODO: style patch??
+        patchBracketPairColorization(canvas, textOffset);
+
         patchHighlightedDelimiters(canvas, textOffset);
+
         drawDiagnosticIndicators(canvas, offsetX);
         canvas.restore();
 
@@ -577,6 +607,7 @@ public class EditorRenderer {
         }
 
         drawStuckLines(canvas, stuckLines, textOffset);
+
 
         if (editor.isLineNumberEnabled() && !lineNumberNotPinned) {
             drawLineNumberBackground(canvas, 0, lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
@@ -730,17 +761,25 @@ public class EditorRenderer {
                 if (block.startLine == currentLine && editor.isHighlightCurrentLine()) {
                     colorId = EditorColorScheme.CURRENT_LINE;
                 }
+                var brackets = editor.getProps().bracketPairColorization ? editor.styleDelegate.queryPairedBracketsForRange(
+                        editor.getText(),
+                        IntPair.pack(block.startLine, 0),
+                        IntPair.pack(block.startLine + 1, 0)
+                ) : null;
+
                 drawColor(canvas, editor.getColorScheme().getColor(colorId), tmpRect);
                 if (canvas.isHardwareAccelerated() && editor.isHardwareAcceleratedDrawAllowed() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
                         && editor.getRenderContext().getRenderNodeHolder() != null && !editor.getEventHandler().isScaling &&
-                        (editor.getProps().cacheRenderNodeForLongLines || getLine(block.startLine).length() < 128)) {
+                        (editor.getProps().cacheRenderNodeForLongLines || getLine(block.startLine).length() < 128) && brackets == null) {
                     editor.getRenderContext().getRenderNodeHolder().drawLineHardwareAccelerated(canvas, block.startLine, offset, offsetLine * editor.getRowHeight());
                 } else {
                     try {
                         if (spanReader != null) {
                             spanReader.moveToLine(block.startLine);
                         }
-                        drawSingleTextLine(canvas, block.startLine, offset, offsetLine * editor.getRowHeight(), spanReader, true);
+                        var tr = drawSingleTextLineWithStuck(canvas, block.startLine, offset, offsetLine * editor.getRowHeight(), spanReader);
+                        // TODO: style patch
+                        patchBracketPairColorizationForStuckLine(canvas, tr, brackets, block.startLine, offset, offsetLine * editor.getRowHeight());
                     } finally {
                         if (spanReader != null) {
                             spanReader.moveToLine(-1);
@@ -2166,15 +2205,94 @@ public class EditorRenderer {
         if (controller.isInSnippet()) {
             var editing = controller.getEditingTabStop();
             if (editing != null) {
-                patchTextRegionWithColor(canvas, textOffset, editing.getStartIndex(), editing.getEndIndex(), 0, editor.getColorScheme().getColor(EditorColorScheme.SNIPPET_BACKGROUND_EDITING), 0);
+                patchTextRegionWithColor(canvas, textOffset, editing.getStartIndex(), editing.getEndIndex(), 0, editor.getColorScheme().getColor(EditorColorScheme.SNIPPET_BACKGROUND_EDITING), 0, true);
             }
             for (SnippetItem snippetItem : controller.getEditingRelatedTabStops()) {
-                patchTextRegionWithColor(canvas, textOffset, snippetItem.getStartIndex(), snippetItem.getEndIndex(), 0, editor.getColorScheme().getColor(EditorColorScheme.SNIPPET_BACKGROUND_RELATED), 0);
+                patchTextRegionWithColor(canvas, textOffset, snippetItem.getStartIndex(), snippetItem.getEndIndex(), 0, editor.getColorScheme().getColor(EditorColorScheme.SNIPPET_BACKGROUND_RELATED), 0, true);
             }
             for (SnippetItem snippetItem : controller.getInactiveTabStops()) {
-                patchTextRegionWithColor(canvas, textOffset, snippetItem.getStartIndex(), snippetItem.getEndIndex(), 0, editor.getColorScheme().getColor(EditorColorScheme.SNIPPET_BACKGROUND_INACTIVE), 0);
+                patchTextRegionWithColor(canvas, textOffset, snippetItem.getStartIndex(), snippetItem.getEndIndex(), 0, editor.getColorScheme().getColor(EditorColorScheme.SNIPPET_BACKGROUND_INACTIVE), 0, true);
             }
         }
+    }
+
+    private void patchBracketPairColorization(Canvas canvas, float textOffset) {
+        if (!editor.getProps().bracketPairColorization) {
+            return;
+        }
+        var brackets = editor.styleDelegate.queryPairedBracketsForRange(
+                editor.getText(),
+                IntPair.pack(editor.getFirstVisibleLine(), 0),
+                IntPair.pack(Math.min(editor.getText().getLineCount() - 1, editor.getLastVisibleLine() + 1), 0)
+        );
+
+        if (brackets == null) {
+            return;
+        }
+
+        var collectedBracketPairColors = editor.styleDelegate.getCollectedBracketPairColors();
+
+        for (var paired : brackets) {
+            if (!isInvalidTextBounds(paired.leftIndex, paired.leftLength)) {
+                patchTextRegionWithColor(canvas, textOffset, paired.leftIndex, paired.leftIndex + paired.leftLength, collectedBracketPairColors.get(paired.level % 30), 0, 0, false);
+            }
+            if (!isInvalidTextBounds(paired.rightIndex, paired.rightLength)) {
+                patchTextRegionWithColor(canvas, textOffset, paired.rightIndex, paired.rightIndex + paired.rightLength, collectedBracketPairColors.get(paired.level % 30), 0, 0, false);
+            }
+        }
+    }
+
+    private void patchBracketPairColorizationForStuckLine(Canvas canvas, TextRow row, @Nullable List<PairedBracket> brackets, int line, float offsetX, float offsetY) {
+        if (brackets == null) {
+            return;
+        }
+        var collectedBracketPairColors = editor.styleDelegate.getCollectedBracketPairColors();
+
+        for (var paired : brackets) {
+            var leftPos = editor.getText().getIndexer().getCharPosition(paired.leftIndex);
+            var rightPos = editor.getText().getIndexer().getCharPosition(paired.rightIndex);
+
+            if (leftPos.line == line) {
+                patchStuckLineTextRegions(canvas, offsetX, offsetY, row, leftPos.column, leftPos.column + paired.leftLength, collectedBracketPairColors.get(paired.level % 30));
+            }
+
+            if (rightPos.line == line) {
+                patchStuckLineTextRegions(canvas, offsetX, offsetY, row, rightPos.column, rightPos.column + paired.rightLength, collectedBracketPairColors.get(paired.level % 30));
+            }
+        }
+    }
+
+    protected void patchStuckLineTextRegions(Canvas canvas, float offsetX, float offsetY, TextRow row, int start, int end, int color) {
+        paintGeneral.setColor(color);
+        paintOther.setStrokeWidth(editor.getRowHeightOfText());
+
+        paintGeneral.setStyle(Paint.Style.FILL);
+
+        @NonNull TextRow.DrawTextConsumer patch = (Canvas canvasLocal, char[] text, int index, int count, int contextIndex, int contextCount, boolean isRtl,
+                                                   float horizontalOffset, float width, TextRowParams params, Span span) -> {
+            if (span == null) {
+                return;
+            }
+
+            long style = span.getStyle();
+            if (color != 0) {
+                paintGeneral.setTextSkewX(TextStyle.isItalics(style) ? RenderingConstants.TEXT_SKEW_X : 0f);
+                paintGeneral.setStrikeThruText(TextStyle.isStrikeThrough(style));
+                GraphicsCompat.drawTextRun(canvas, text, index, count, contextIndex, contextCount, horizontalOffset, params.getTextBaseline(), isRtl, paintGeneral);
+            }
+        };
+
+        float minHorizontalOffset = Math.max(0, -offsetX);
+        float maxHorizontalOffset = minHorizontalOffset + editor.getWidth();
+        canvas.save();
+        canvas.translate(offsetX, editor.getRowTop(0) + offsetY);
+        row.iterateDrawTextRegions(start, end, canvas, minHorizontalOffset, maxHorizontalOffset, true, patch);
+        canvas.restore();
+
+        paintGeneral.setStyle(Paint.Style.FILL);
+        paintGeneral.setFakeBoldText(false);
+        paintGeneral.setTextSkewX(0f);
+        paintGeneral.setStrikeThruText(false);
     }
 
     protected void patchHighlightedDelimiters(Canvas canvas, float textOffset) {
@@ -2191,8 +2309,8 @@ public class EditorRenderer {
                 return;
             }
 
-            patchTextRegionWithColor(canvas, textOffset, paired.leftIndex, paired.leftIndex + paired.leftLength, color, backgroundColor, underlineColor);
-            patchTextRegionWithColor(canvas, textOffset, paired.rightIndex, paired.rightIndex + paired.rightLength, color, backgroundColor, underlineColor);
+            patchTextRegionWithColor(canvas, textOffset, paired.leftIndex, paired.leftIndex + paired.leftLength, color, backgroundColor, underlineColor, true);
+            patchTextRegionWithColor(canvas, textOffset, paired.rightIndex, paired.rightIndex + paired.rightLength, color, backgroundColor, underlineColor, true);
         }
     }
 
@@ -2200,11 +2318,11 @@ public class EditorRenderer {
         return (index < 0 || length < 0 || index + length > content.length());
     }
 
-    protected void patchTextRegionWithColor(Canvas canvas, float textOffset, int start, int end, int color, int backgroundColor, int underlineColor) {
+    protected void patchTextRegionWithColor(Canvas canvas, float textOffset, int start, int end, int color, int backgroundColor, int underlineColor, boolean withBold) {
         paintGeneral.setColor(color);
-        paintOther.setStrokeWidth(editor.getRowHeightOfText() * RenderingConstants.MATCHING_DELIMITERS_UNDERLINE_WIDTH_FACTOR);
+        paintOther.setStrokeWidth(withBold ? editor.getRowHeightOfText() * RenderingConstants.MATCHING_DELIMITERS_UNDERLINE_WIDTH_FACTOR : editor.getRowHeightOfText());
 
-        var useBoldStyle = editor.getProps().boldMatchingDelimiters;
+        var useBoldStyle = editor.getProps().boldMatchingDelimiters && withBold;
         paintGeneral.setStyle(useBoldStyle ? Paint.Style.FILL_AND_STROKE : Paint.Style.FILL);
         paintGeneral.setFakeBoldText(useBoldStyle);
 

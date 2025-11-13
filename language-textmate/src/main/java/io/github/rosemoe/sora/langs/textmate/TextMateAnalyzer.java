@@ -28,14 +28,15 @@ import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import org.eclipse.tm4e.core.grammar.IGrammar;
 import org.eclipse.tm4e.core.internal.grammar.tokenattrs.EncodedTokenAttributes;
 import org.eclipse.tm4e.core.internal.grammar.tokenattrs.StandardTokenType;
-import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
-import org.eclipse.tm4e.core.internal.oniguruma.Oniguruma;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigRegExp;
+import org.eclipse.tm4e.core.internal.oniguruma.OnigResult;
 import org.eclipse.tm4e.core.internal.oniguruma.OnigString;
+import org.eclipse.tm4e.core.internal.oniguruma.Oniguruma;
 import org.eclipse.tm4e.core.internal.theme.FontStyle;
 import org.eclipse.tm4e.core.internal.theme.Theme;
 import org.eclipse.tm4e.languageconfiguration.internal.model.LanguageConfiguration;
@@ -46,18 +47,22 @@ import java.util.List;
 import java.util.Objects;
 
 import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager;
+import io.github.rosemoe.sora.lang.analysis.StyleReceiver;
 import io.github.rosemoe.sora.lang.brackets.BracketsProvider;
 import io.github.rosemoe.sora.lang.brackets.OnlineBracketsMatcher;
 import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.SpanFactory;
+import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
+import io.github.rosemoe.sora.langs.textmate.brackets.TextMateBracketsProvider;
 import io.github.rosemoe.sora.langs.textmate.folding.FoldingHelper;
 import io.github.rosemoe.sora.langs.textmate.folding.IndentRange;
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
 import io.github.rosemoe.sora.langs.textmate.utils.StringUtils;
+import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentReference;
@@ -78,7 +83,10 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
 
     private OnigRegExp cachedRegExp;
     private boolean foldingOffside;
+    private final boolean supportsTextMateBrackets;
     private BracketsProvider bracketsProvider;
+    private TextMateBracketsProvider textMateBracketsProvider;
+    private boolean bracketPairColorizationEnabled;
     final IdentifierAutoComplete.SyncIdentifiers syncIdentifiers = new IdentifierAutoComplete.SyncIdentifiers();
 
 
@@ -99,29 +107,15 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
 
         if (languageConfiguration != null) {
             configuration = languageConfiguration;
-            var pairs = languageConfiguration.getBrackets();
-            if (pairs != null && !pairs.isEmpty()) {
-                int size = pairs.size();
-                for (var pair : pairs) {
-                    if (pair.open.length() != 1 || pair.close.length() != 1) {
-                        size--;
-                    }
-                }
-                var pairArr = new char[size * 2];
-                int i = 0;
-                for (var pair : pairs) {
-                    if (pair.open.length() != 1 || pair.close.length() != 1) {
-                        continue;
-                    }
-                    pairArr[i * 2] = pair.open.charAt(0);
-                    pairArr[i * 2 + 1] = pair.close.charAt(0);
-                    i++;
-                }
-                bracketsProvider = new OnlineBracketsMatcher(pairArr, 100000);
-            }
+            supportsTextMateBrackets = hasBracketMetadata(languageConfiguration);
+            publishBracketProvider(buildLegacyBracketsProvider(languageConfiguration));
         } else {
             configuration = null;
+            supportsTextMateBrackets = false;
+            publishBracketProvider(null);
         }
+
+        bracketPairColorizationEnabled = language.isBracketPairColorization();
 
         createFoldingExp();
     }
@@ -167,7 +161,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
         var list = new ArrayList<CodeBlock>();
         analyzeCodeBlocks(text, list, delegate);
         if (delegate.isNotCancelled()) {
-            withReceiver(r -> r.updateBracketProvider(this, bracketsProvider));
+            publishBracketProvider(bracketsProvider);
         }
         return list;
     }
@@ -278,14 +272,100 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
 
     @Override
     public void reset(@NonNull ContentReference content, @NonNull Bundle extraArguments) {
+        tearDownTextMateBracketsProvider();
         super.reset(content, extraArguments);
         syncIdentifiers.clear();
     }
 
     @Override
     public void destroy() {
+        tearDownTextMateBracketsProvider();
         super.destroy();
         themeRegistry.removeListener(this);
+    }
+
+    @Override
+    public void insert(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence insertedText) {
+        if (textMateBracketsProvider != null) {
+            textMateBracketsProvider.onContentInsert(start.line, start.column, insertedText);
+        }
+        super.insert(start, end, insertedText);
+    }
+
+    @Override
+    public void delete(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence deletedText) {
+        if (textMateBracketsProvider != null) {
+            textMateBracketsProvider.onContentDelete(start.line, start.column, end.line, end.column);
+        }
+        super.delete(start, end, deletedText);
+    }
+
+    @Override
+    protected void onSpansChanged(Styles styles, int startLine, int endLine) {
+        super.onSpansChanged(styles, startLine, endLine);
+        ensureTextMateBracketsProviderInitialized();
+        if (textMateBracketsProvider != null && endLine >= startLine) {
+            textMateBracketsProvider.notifySpansChanged(startLine, endLine);
+        }
+    }
+
+    @Override
+    protected void onSpansInit(Styles styles) {
+        ensureTextMateBracketsProviderInitialized();
+    }
+
+    private void tearDownTextMateBracketsProvider() {
+        var activeProvider = textMateBracketsProvider;
+        if (activeProvider == null) {
+            return;
+        }
+        activeProvider.clear();
+        textMateBracketsProvider = null;
+        if (bracketsProvider == activeProvider) {
+            publishBracketProvider(buildLegacyBracketsProvider(this.configuration));
+        }
+    }
+
+    private static boolean hasBracketMetadata(LanguageConfiguration configuration) {
+        if (configuration == null) {
+            return false;
+        }
+        var colorized = configuration.getColorizedBracketPairs();
+        if (colorized != null) {
+            return true;
+        }
+        var pairs = configuration.getBrackets();
+        return pairs != null && !pairs.isEmpty();
+    }
+
+    private static BracketsProvider buildLegacyBracketsProvider(LanguageConfiguration configuration) {
+        if (configuration == null) {
+            return null;
+        }
+        var pairs = configuration.getBrackets();
+        if (pairs == null || pairs.isEmpty()) {
+            return null;
+        }
+        int size = 0;
+        for (var pair : pairs) {
+            if (pair.open.length() == 1 && pair.close.length() == 1) {
+                size++;
+            }
+        }
+        if (size == 0) {
+            return null;
+        }
+        var pairArr = new char[size * 2];
+        int i = 0;
+        for (var pair : pairs) {
+            if (pair.open.length() != 1 || pair.close.length() != 1) {
+                continue;
+            }
+            pairArr[i * 2] = pair.open.charAt(0);
+            pairArr[i * 2 + 1] = pair.close.charAt(0);
+            i++;
+        }
+        return new OnlineBracketsMatcher(pairArr, 100000);
     }
 
     @Override
@@ -296,5 +376,63 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     @Override
     public void onChangeTheme(ThemeModel newTheme) {
         this.theme = newTheme.getTheme();
+    }
+
+    public synchronized void setBracketPairColorization(boolean bracketPairColorization) {
+        if (this.bracketPairColorizationEnabled == bracketPairColorization) {
+            return;
+        }
+        this.bracketPairColorizationEnabled = bracketPairColorization;
+        if (!bracketPairColorization || !supportsTextMateBrackets) {
+            tearDownTextMateBracketsProvider();
+            publishBracketProvider(buildLegacyBracketsProvider(configuration));
+            return;
+        }
+        tearDownTextMateBracketsProvider();
+        rerun();
+    }
+
+    @Override
+    public void setReceiver(@Nullable StyleReceiver receiver) {
+        super.setReceiver(receiver);
+        if (receiver != null) {
+            receiver.updateBracketProvider(this, bracketsProvider);
+        }
+    }
+
+    private boolean shouldUseTextMateBrackets() {
+        return bracketPairColorizationEnabled && supportsTextMateBrackets && configuration != null;
+    }
+
+    private void ensureTextMateBracketsProviderInitialized() {
+        if (!shouldUseTextMateBrackets() || textMateBracketsProvider != null) {
+            return;
+        }
+        var styles = getManagedStyles();
+        if (styles == null) {
+            return;
+        }
+        var spans = styles.getSpans();
+        var shadowed = getManagedContent();
+        if (spans == null || shadowed == null) {
+            return;
+        }
+        var provider = new TextMateBracketsProvider(shadowed, spans, configuration);
+        if (!provider.isSupported()) {
+            provider.clear();
+            publishBracketProvider(buildLegacyBracketsProvider(configuration));
+            return;
+        }
+        textMateBracketsProvider = provider;
+        textMateBracketsProvider.initialize();
+        publishBracketProvider(textMateBracketsProvider);
+    }
+
+    private void publishBracketProvider(@Nullable BracketsProvider provider) {
+        if (bracketsProvider == provider) {
+            return;
+        }
+        bracketsProvider = provider;
+        withReceiver(r -> r.updateBracketProvider(this, provider));
     }
 }

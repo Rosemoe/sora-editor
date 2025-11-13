@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.editor.ts
 
-import android.os.Bundle
 import android.os.Message
 import android.util.Log
 import com.itsaky.androidide.treesitter.TSInputEdit
@@ -36,7 +35,6 @@ import com.itsaky.androidide.treesitter.string.UTF16StringFactory
 import io.github.rosemoe.sora.data.ObjectAllocator
 import io.github.rosemoe.sora.editor.ts.spans.DefaultSpanFactory
 import io.github.rosemoe.sora.editor.ts.spans.TsSpanFactory
-import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver
 import io.github.rosemoe.sora.lang.styling.CodeBlock
 import io.github.rosemoe.sora.lang.styling.Styles
@@ -53,7 +51,9 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     val reference: ContentReference?
         get() = contentRef
     var thread: TsLooperThread? = null
-    var spanFactory : TsSpanFactory = DefaultSpanFactory()
+    var spanFactory: TsSpanFactory = DefaultSpanFactory()
+
+    internal var bracketPairColorization = false
 
     open var styles = Styles()
 
@@ -187,6 +187,14 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                     scopedVariables,
                     spanFactory
                 )
+                currentReceiver?.updateBracketProvider(
+                    this@TsAnalyzeManager,
+                    TsBracketPairs(newTree, localText, languageSpec).apply {
+                        if (bracketPairColorization) {
+                            computeBracketPairs()
+                        }
+                    }
+                )
                 val oldBlocks = styles.blocks
                 updateCodeBlocks()
                 currentReceiver?.setStyles(this@TsAnalyzeManager, styles) {
@@ -196,10 +204,6 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                         ObjectAllocator.recycleBlockLines(oldBlocks)
                     }
                 }
-                currentReceiver?.updateBracketProvider(
-                    this@TsAnalyzeManager,
-                    TsBracketPairs(newTree, languageSpec)
-                )
             }
         }
 
