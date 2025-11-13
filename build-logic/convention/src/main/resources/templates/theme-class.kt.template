@@ -18,18 +18,6 @@ class %CLASS_NAME% @JvmOverloads constructor(
         private const val THEME_PATH = "%THEME_PATH%"
         private const val IS_DARK = %IS_DARK%
 
-        @Volatile
-        private var cached: %CLASS_NAME%? = null
-
-        @JvmStatic
-        fun getInstance(): %CLASS_NAME% {
-            val reference = cached
-            if (reference != null) {
-                return reference
-            }
-            return %CLASS_NAME%().also { cached = it }
-        }
-
         private fun loadThemeModel(themeRegistry: ThemeRegistry): ThemeModel {
             synchronized(themeRegistry) {
                 val registered = themeRegistry.findThemeByFileName(THEME_NAME)

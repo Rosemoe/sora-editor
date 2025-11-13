@@ -26,19 +26,6 @@ class %CLASS_NAME% @JvmOverloads constructor(
         private val LANGUAGE_CONFIGURATION_PATH: String? = %LANGUAGE_CONFIG_PATH%
         private val EMBEDDED_LANGUAGES: Map<String, String> = %EMBEDDED_LANGUAGES%
 
-        @Volatile
-        private var cached: %CLASS_NAME%? = null
-        private val registrationLock = Any()
-
-        @JvmStatic
-        fun getInstance(): %CLASS_NAME% {
-            val reference = cached
-            if (reference != null) {
-                return reference
-            }
-            return %CLASS_NAME%().also { cached = it }
-        }
-
         private fun ensureRegistered(grammarRegistry: GrammarRegistry) {
             if (grammarRegistry.findGrammar(SCOPE_NAME, false) != null) {
                 return

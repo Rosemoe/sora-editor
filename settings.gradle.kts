@@ -56,3 +56,15 @@ include(
     ":language-treesitter",
     ":oniguruma-native"
 )
+
+val textMatePackProjectsDir = file("language-textmate-packs/projects")
+if (textMatePackProjectsDir.exists()) {
+    textMatePackProjectsDir
+        .listFiles { file -> file.isDirectory }
+        ?.sortedBy { it.name }
+        ?.forEach { dir ->
+            val moduleName = ":textmate-${dir.name}"
+            include(moduleName)
+            project(moduleName).projectDir = dir
+        }
+}
