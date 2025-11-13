@@ -342,7 +342,7 @@ class MainActivity : AppCompatActivity() {
      * Load default textmate themes
      */
     private /*suspend*/ fun loadDefaultTextMateThemes() /*= withContext(Dispatchers.IO)*/ {
-        val themes = arrayOf("darcula", "abyss", "quietlight", "solarized_dark")
+        val themes = arrayOf("darcula", "ayu-dark", "quietlight", "solarized_dark")
         val themeRegistry = ThemeRegistry.getInstance()
         themes.forEach { name ->
             val path = "textmate/$name.json"
@@ -391,7 +391,7 @@ class MainActivity : AppCompatActivity() {
      *
      */
     private /*suspend*/ fun loadDefaultMonarchThemes() /*= withContext(Dispatchers.IO)*/ {
-        val themes = arrayOf("darcula", "abyss", "quietlight", "solarized_dark")
+        val themes = arrayOf("darcula", "ayu-dark", "quietlight", "solarized_dark")
 
         themes.forEach { name ->
             val path = "textmate/$name.json"
@@ -980,7 +980,7 @@ class MainActivity : AppCompatActivity() {
             "NotepadXX",
             "QuietLight for TM(VSCode)",
             "Darcula for TM",
-            "Abyss for TM",
+            "Ayu Dark for VSCode",
             "Solarized(Dark) for TM(VSCode)",
             "TM theme from file"
         )
@@ -1010,7 +1010,7 @@ class MainActivity : AppCompatActivity() {
 
                     8 -> try {
                         ensureTextmateTheme()
-                        ThemeRegistry.getInstance().setTheme("abyss")
+                        ThemeRegistry.getInstance().setTheme("ayu-dark")
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }

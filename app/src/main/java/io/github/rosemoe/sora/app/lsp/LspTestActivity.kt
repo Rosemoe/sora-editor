@@ -272,16 +272,16 @@ class LspTestActivity : BaseEditorActivity() {
 
         val themeRegistry = ThemeRegistry.getInstance()
 
-        val path = "textmate/quietlight.json"
+        val path = "textmate/ayu-dark.json"
         themeRegistry.loadTheme(
             ThemeModel(
                 IThemeSource.fromInputStream(
                     FileProviderRegistry.getInstance().tryGetInputStream(path), path, null
-                ), "quitelight"
+                ), "ayu-dark"
             )
         )
 
-        themeRegistry.setTheme("quietlight")
+        themeRegistry.setTheme("ayu-dark")
 
         editorColorScheme = TextMateColorScheme.create(themeRegistry)
         editor.colorScheme = editorColorScheme

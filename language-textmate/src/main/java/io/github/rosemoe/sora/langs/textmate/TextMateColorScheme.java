@@ -225,6 +225,21 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
         } else {
             setColor(BLOCK_LINE_CURRENT, blockLineColorCur);
         }
+
+        String wordHighlightStrongBackground = (String) RawTheme.get("editor.wordHighlightStrongBackground");
+        if (wordHighlightStrongBackground != null) {
+            setColor(TEXT_HIGHLIGHT_STRONG_BACKGROUND, ColorUtils.parseRGBAToARGB(wordHighlightStrongBackground));
+        }
+
+        String wordHighlightBackground = (String) RawTheme.get("editor.wordHighlightBackground");
+        if (wordHighlightBackground != null) {
+            setColor(TEXT_HIGHLIGHT_BACKGROUND, ColorUtils.parseRGBAToARGB(wordHighlightBackground));
+        }
+
+        String findMatchBackground = (String) RawTheme.get("editor.findMatchBackground");
+        if (findMatchBackground != null) {
+            setColor(MATCHED_TEXT_BACKGROUND, ColorUtils.parseRGBAToARGB(findMatchBackground));
+        }
     }
 
     @Override
