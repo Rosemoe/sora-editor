@@ -1504,7 +1504,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 positions.put(IntPair.pack(startColumn, endColumn), highlight.getColor());
             }
         }
-        System.out.println(positions);
     }
 
     /**

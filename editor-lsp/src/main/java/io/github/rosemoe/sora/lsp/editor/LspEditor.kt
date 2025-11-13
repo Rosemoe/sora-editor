@@ -490,7 +490,6 @@ class LspEditor(
         )
 
         highlights.forEach {
-            println(""+ it.kind+" "+ colors.getValue(it.kind ?: DocumentHighlightKind.Text))
             container.add(
                 HighlightTextContainer.HighlightText(
                     it.range.start.line,
@@ -501,8 +500,6 @@ class LspEditor(
                 )
             )
         }
-
-        println(highlights)
 
         editor.highlightTexts = container
     }
