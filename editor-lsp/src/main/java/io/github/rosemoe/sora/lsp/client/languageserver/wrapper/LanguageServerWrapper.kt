@@ -43,9 +43,11 @@ import org.eclipse.lsp4j.ClientCapabilities
 import org.eclipse.lsp4j.CodeActionCapabilities
 import org.eclipse.lsp4j.CodeActionKindCapabilities
 import org.eclipse.lsp4j.CodeActionLiteralSupportCapabilities
+import org.eclipse.lsp4j.ColorProviderCapabilities
 import org.eclipse.lsp4j.CompletionCapabilities
 import org.eclipse.lsp4j.CompletionItemCapabilities
 import org.eclipse.lsp4j.DefinitionCapabilities
+import org.eclipse.lsp4j.DiagnosticCapabilities
 import org.eclipse.lsp4j.DidChangeWatchedFilesCapabilities
 import org.eclipse.lsp4j.ExecuteCommandCapabilities
 import org.eclipse.lsp4j.FormattingCapabilities
@@ -330,7 +332,7 @@ class LanguageServerWrapper(
         }
 
         val workspaceClientCapabilities = WorkspaceClientCapabilities().apply {
-            applyEdit = false // Not ready to support this feature
+            applyEdit = true
             didChangeWatchedFiles = DidChangeWatchedFilesCapabilities()
             executeCommand = ExecuteCommandCapabilities()
             workspaceEdit = WorkspaceEditCapabilities()
@@ -355,6 +357,7 @@ class LanguageServerWrapper(
             completion =
                 CompletionCapabilities(CompletionItemCapabilities(true))
             definition = DefinitionCapabilities()
+            colorProvider = ColorProviderCapabilities()
             documentHighlight =
                 null // The feature is not currently supported in the sora-editor
             inlayHint = InlayHintCapabilities()

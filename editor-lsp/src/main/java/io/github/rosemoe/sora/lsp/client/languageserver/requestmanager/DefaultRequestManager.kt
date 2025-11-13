@@ -646,15 +646,42 @@ class DefaultRequestManager(
     }
 
     override fun implementation(params: ImplementationParams): CompletableFuture<Either<List<Location>, List<LocationLink>>>? {
-        return null
+        return if (checkStatus()) {
+            try {
+                if (serverCapabilities.implementationProvider?.left == true || serverCapabilities.implementationProvider?.right != null) textDocumentService.implementation(
+                    params
+                ) else null
+            } catch (e: Exception) {
+                crashed(e)
+                null
+            }
+        } else null
     }
 
     override fun typeDefinition(params: TypeDefinitionParams): CompletableFuture<Either<List<Location>, List<LocationLink>>>? {
-        return null
+        return if (checkStatus()) {
+            try {
+                if (serverCapabilities.typeDefinitionProvider?.left == true || serverCapabilities.typeDefinitionProvider?.right != null) textDocumentService.typeDefinition(
+                    params
+                ) else null
+            } catch (e: Exception) {
+                crashed(e)
+                null
+            }
+        } else null
     }
 
     override fun documentColor(params: DocumentColorParams): CompletableFuture<List<ColorInformation>>? {
-        return null
+        return if (checkStatus()) {
+            try {
+                if (serverCapabilities.colorProvider?.left == true || serverCapabilities.colorProvider?.right != null) textDocumentService.documentColor(
+                    params
+                ) else null
+            } catch (e: Exception) {
+                crashed(e)
+                null
+            }
+        } else null
     }
 
     override fun colorPresentation(params: ColorPresentationParams): CompletableFuture<List<ColorPresentation>>? {
