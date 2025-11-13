@@ -96,7 +96,7 @@ public class LspTestJavaActivity extends BaseEditorActivity {
 
         try {
             ensureTextmateTheme();
-            switchThemeIfRequired(this, editor);
+            switchThemeIfRequired(this, editor, false);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -249,7 +249,7 @@ public class LspTestJavaActivity extends BaseEditorActivity {
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
-        switchThemeIfRequired(this, editor);
+        switchThemeIfRequired(this, editor, false);
     }
 
     @Override

@@ -99,8 +99,24 @@ dependencies {
     implementation(projects.languageTreesitter)
     implementation(projects.onigurumaNative)
 
+    // TextMate language packs
+    val languagePacksProjects =
+        listOfNotNull(
+            findProject(":textmate-language-lua"),
+            findProject(":textmate-theme-ayu-dark")
+        )
+
+    if (languagePacksProjects.isEmpty()) {
+        logger.error("Language packs not found. Please re-run gradle sync.")
+    } else {
+        languagePacksProjects.forEach {
+            implementation(it)
+        }
+    }
+
+
     // Tree-sitter languages
-    implementation(libs.tree.sitter.java)
+        implementation(libs.tree.sitter.java)
 
     // Monarch Languages
     implementation(libs.monarch.language.pack)
