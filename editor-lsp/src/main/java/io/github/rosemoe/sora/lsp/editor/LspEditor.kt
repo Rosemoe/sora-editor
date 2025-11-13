@@ -113,8 +113,6 @@ class LspEditor(
 
     private var cachedDocumentColors: List<ColorInformation>? = null
 
-    private val unsubscribeFunctionRef = AtomicReference<Runnable?>()
-
     private val disposeLock = Any()
 
     val eventManager = LspEventManager(project, this)
