@@ -58,13 +58,20 @@ public class EditorPopupWindow {
      */
     public final static int FEATURE_HIDE_WHEN_FAST_SCROLL = 1 << 2;
 
+    /**
+     * Dismiss the window if it covers the current caret.
+     */
+    public final static int FEATURE_DISMISS_WHEN_OBSCURING_CURSOR = 1 << 3;
+
     private final PopupWindow window;
     private final CodeEditor editor;
     private final int features;
     private final int[] locationBuffer = new int[2];
     private final EventReceiver<ScrollEvent> scrollListener;
+    private final View.OnLayoutChangeListener editorLayoutChangeListener;
     private boolean registerFlag;
     private boolean registered;
+    private boolean layoutChangeListenerRegistered;
     private View parentView;
     private int offsetX, offsetY, windowX, windowY, width, height;
 
@@ -75,6 +82,7 @@ public class EditorPopupWindow {
      * @see #FEATURE_SCROLL_AS_CONTENT
      * @see #FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED
      * @see #FEATURE_HIDE_WHEN_FAST_SCROLL
+     * @see #FEATURE_DISMISS_WHEN_OBSCURING_CURSOR
      */
     public EditorPopupWindow(@NonNull CodeEditor editor, int features) {
         this.editor = Objects.requireNonNull(editor);
@@ -82,6 +90,11 @@ public class EditorPopupWindow {
         parentView = editor;
         window = new PopupWindow();
         window.setElevation(editor.getDpUnit() * 8);
+        editorLayoutChangeListener = (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+            if (isShowing()) {
+                applyWindowAttributes(false);
+            }
+        };
         scrollListener = ((event, unsubscribe) -> {
             if (!registerFlag) {
                 unsubscribe.unsubscribe();
@@ -124,6 +137,7 @@ public class EditorPopupWindow {
      * @see #FEATURE_SCROLL_AS_CONTENT
      * @see #FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED
      * @see #FEATURE_HIDE_WHEN_FAST_SCROLL
+     * @see #FEATURE_DISMISS_WHEN_OBSCURING_CURSOR
      */
     public boolean isFeatureEnabled(int feature) {
         if (Integer.bitCount(feature) != 1) {
@@ -141,6 +155,11 @@ public class EditorPopupWindow {
     public void register() {
         if (!registered) {
             editor.subscribeEvent(ScrollEvent.class, scrollListener);
+            registered = true;
+        }
+        if (isFeatureEnabled(FEATURE_DISMISS_WHEN_OBSCURING_CURSOR) && !layoutChangeListenerRegistered) {
+            editor.addOnLayoutChangeListener(editorLayoutChangeListener);
+            layoutChangeListenerRegistered = true;
         }
         registerFlag = true;
     }
@@ -150,6 +169,10 @@ public class EditorPopupWindow {
      */
     public void unregister() {
         registerFlag = false;
+        if (layoutChangeListenerRegistered) {
+            editor.removeOnLayoutChangeListener(editorLayoutChangeListener);
+            layoutChangeListenerRegistered = false;
+        }
     }
 
     public boolean isShowing() {
@@ -201,6 +224,10 @@ public class EditorPopupWindow {
                 dismiss();
                 return;
             }
+        }
+        if (isCursorObscured(left, top, right, bottom)) {
+            dismiss();
+            return;
         }
         // Show/update if needed
         editor.getLocationInWindow(locationBuffer);
@@ -262,6 +289,30 @@ public class EditorPopupWindow {
      */
     public void setLocationAbsolutely(int x, int y) {
         setLocation(x + editor.getOffsetX(), y + editor.getOffsetY());
+    }
+
+    private boolean isCursorObscured(int left, int top, int right, int bottom) {
+        if (!isFeatureEnabled(FEATURE_DISMISS_WHEN_OBSCURING_CURSOR)) {
+            return false;
+        }
+        try {
+            var cursor = editor.getCursor();
+            if (cursor == null) {
+                return false;
+            }
+            int line = cursor.getLeftLine();
+            int column = cursor.getLeftColumn();
+            float cursorLeft = editor.getCharOffsetX(line, column);
+            float cursorTop = editor.getCharOffsetY(line, column);
+            if (Float.isNaN(cursorLeft) || Float.isNaN(cursorTop)) {
+                return false;
+            }
+            float cursorRight = cursorLeft + Math.max(1f, editor.getInsertSelectionWidth());
+            float cursorBottom = cursorTop + editor.getRowHeight();
+            return cursorLeft < right && cursorRight > left && cursorTop < bottom && cursorBottom > top;
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     /**

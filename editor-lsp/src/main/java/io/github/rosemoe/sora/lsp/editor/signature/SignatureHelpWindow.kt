@@ -50,7 +50,7 @@ open class SignatureHelpWindow(
     val coroutineScope: CoroutineScope,
 ) : EditorPopupWindow(
     editor,
-    FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SCROLL_AS_CONTENT
+    FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SCROLL_AS_CONTENT or FEATURE_DISMISS_WHEN_OBSCURING_CURSOR
 ) {
 
     private lateinit var rootView: View
