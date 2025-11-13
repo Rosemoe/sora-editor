@@ -161,7 +161,7 @@ class LspProject(
             ::RangeFormattingEvent, ::QueryDocumentDiagnosticsEvent,
             ::DocumentOpenEvent, ::HoverEvent, ::CodeActionEventEvent,
             ::WorkSpaceApplyEditEvent, ::WorkSpaceExecuteCommand,
-            ::InlayHintEvent, ::DocumentHighlightEvent
+            ::InlayHintEvent, ::DocumentHighlightEvent,
             ::DocumentColorEvent
         )
 
