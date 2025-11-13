@@ -78,7 +78,6 @@ class DocumentHighlightEvent : AsyncEventListener() {
                 documentHighlights = future.await()
             }
 
-            val selectionRange = createRange(request.selectionStart, request.selectionEnd)
             editor.showDocumentHighlight(documentHighlights)
         } catch (exception: Exception) {
             exception.printStackTrace()
