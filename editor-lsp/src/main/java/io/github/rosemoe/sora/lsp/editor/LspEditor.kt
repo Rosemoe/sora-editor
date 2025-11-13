@@ -33,6 +33,8 @@ import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.graphics.inlayHint.ColorInlayHintRenderer
 import io.github.rosemoe.sora.graphics.inlayHint.TextInlayHintRenderer
 import io.github.rosemoe.sora.lang.Language
+import io.github.rosemoe.sora.lang.styling.HighlightTextContainer
+import io.github.rosemoe.sora.lang.styling.color.EditorColor
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
@@ -60,6 +62,7 @@ import io.github.rosemoe.sora.widget.component.DefaultDiagnosticTooltipLayout
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
 import io.github.rosemoe.sora.widget.getComponent
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.subscribeEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -71,6 +74,8 @@ import org.eclipse.lsp4j.CodeAction
 import org.eclipse.lsp4j.ColorInformation
 import org.eclipse.lsp4j.Command
 import org.eclipse.lsp4j.Diagnostic
+import org.eclipse.lsp4j.DocumentHighlight
+import org.eclipse.lsp4j.DocumentHighlightKind
 import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.SignatureHelp
@@ -474,6 +479,37 @@ class LspEditor(
         }
 
         originEditor.post { window.show(range, actions) }
+    }
+
+    fun showDocumentHighlight(highlights: List<DocumentHighlight>?) {
+        val editor = editor ?: return
+
+        if (highlights == null || highlights.isEmpty()) {
+            editor.highlightTexts = null
+            return
+        }
+
+        val container = HighlightTextContainer()
+
+        val colors = mapOf(
+            DocumentHighlightKind.Write to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_STRONG_BACKGROUND),
+            DocumentHighlightKind.Read to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_BACKGROUND),
+            DocumentHighlightKind.Text to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_BACKGROUND)
+        )
+
+        highlights.forEach {
+            container.add(
+                HighlightTextContainer.HighlightText(
+                    it.range.start.line,
+                    it.range.start.character,
+                    it.range.end.line,
+                    it.range.end.character,
+                    colors.getValue(it.kind ?: DocumentHighlightKind.Text)
+                )
+            )
+        }
+
+        editor.highlightTexts = container
     }
 
     internal fun showInlayHints(inlayHints: List<org.eclipse.lsp4j.InlayHint>?) {
