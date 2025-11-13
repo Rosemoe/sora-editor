@@ -43,9 +43,11 @@ import org.eclipse.lsp4j.ClientCapabilities
 import org.eclipse.lsp4j.CodeActionCapabilities
 import org.eclipse.lsp4j.CodeActionKindCapabilities
 import org.eclipse.lsp4j.CodeActionLiteralSupportCapabilities
+import org.eclipse.lsp4j.ColorProviderCapabilities
 import org.eclipse.lsp4j.CompletionCapabilities
 import org.eclipse.lsp4j.CompletionItemCapabilities
 import org.eclipse.lsp4j.DefinitionCapabilities
+import org.eclipse.lsp4j.DiagnosticCapabilities
 import org.eclipse.lsp4j.DidChangeWatchedFilesCapabilities
 import org.eclipse.lsp4j.DocumentHighlightCapabilities
 import org.eclipse.lsp4j.ExecuteCommandCapabilities
@@ -331,7 +333,7 @@ class LanguageServerWrapper(
         }
 
         val workspaceClientCapabilities = WorkspaceClientCapabilities().apply {
-            applyEdit = false // Not ready to support this feature
+            applyEdit = true
             didChangeWatchedFiles = DidChangeWatchedFilesCapabilities()
             executeCommand = ExecuteCommandCapabilities()
             workspaceEdit = WorkspaceEditCapabilities()
@@ -357,6 +359,7 @@ class LanguageServerWrapper(
                 CompletionCapabilities(CompletionItemCapabilities(true))
             definition = DefinitionCapabilities()
             documentHighlight = DocumentHighlightCapabilities()
+            colorProvider = ColorProviderCapabilities()   
             inlayHint = InlayHintCapabilities()
             formatting = FormattingCapabilities()
             hover = HoverCapabilities(true)
