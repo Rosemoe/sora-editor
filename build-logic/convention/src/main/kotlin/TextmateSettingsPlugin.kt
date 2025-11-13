@@ -22,30 +22,32 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-plugins {
-    `kotlin-dsl`
-}
+import org.gradle.api.Plugin
+import org.gradle.api.initialization.Settings
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
+import java.io.File
 
-repositories {
-    google()
-    gradlePluginPortal()
-    mavenCentral()
-}
+class TextmateSettingsPlugin : Plugin<Settings> {
 
-java {
-    targetCompatibility = JavaVersion.VERSION_17
-    sourceCompatibility = JavaVersion.VERSION_17
-}
+    private val logger: Logger = Logging.getLogger(TextmateSettingsPlugin::class.java)
 
-kotlin {
-    jvmToolchain(17)
-}
+    override fun apply(settings: Settings) {
+        val rootDir = settings.rootDir
+        val grammarsDir = File(rootDir, "language-textmate-packs/grammars")
+        val grammarsJson = File(grammarsDir, "grammars.json")
+        val themesDir = File(rootDir, "language-textmate-packs/themes")
+        val projectsDir = File(rootDir, "language-textmate-packs/projects")
 
-gradlePlugin {
-    plugins {
-        register("textmateSettingsPlugin") {
-            id = "build-logic.textmate-settings"
-            implementationClass = "TextmateSettingsPlugin"
-        }
+        val generator = LanguageTextmatePackProjectGenerator(
+            rootDir = rootDir,
+            grammarsJson = grammarsJson,
+            grammarsDir = grammarsDir,
+            themesDir = themesDir,
+            projectsDir = projectsDir,
+            logger = logger
+        )
+
+        generator.generate()
     }
 }

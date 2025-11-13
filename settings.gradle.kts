@@ -34,6 +34,10 @@ pluginManagement {
     }
 }
 
+plugins {
+    id("build-logic.textmate-settings")
+}
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {

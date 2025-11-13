@@ -30,10 +30,6 @@ require(project == rootProject) {
 applyTextMateLanguagePacks()
 
 fun applyTextMateLanguagePacks() {
-    if (CI.isCiBuild) {
-        // Don't generate packs for ci build
-        return
-    }
     val grammarsJson = layout.projectDirectory.file("language-textmate-packs/grammars/grammars.json")
     val textmateGrammarsDir = layout.projectDirectory.dir("language-textmate-packs/grammars")
     val textmateThemesDir = layout.projectDirectory.dir("language-textmate-packs/themes")
@@ -46,17 +42,6 @@ fun applyTextMateLanguagePacks() {
         projectsDir.set(packsProjectsDir)
         rootDirProperty.set(rootDir.absolutePath)
     }
-
-    val eagerGenerator = LanguageTextmatePackProjectGenerator(
-        rootDir = rootDir,
-        grammarsJson = grammarsJson.asFile,
-        grammarsDir = textmateGrammarsDir.asFile,
-        themesDir = textmateThemesDir.asFile,
-        projectsDir = packsProjectsDir.asFile,
-        logger = logger
-    )
-
-    eagerGenerator.generate()
 
     tasks.matching { it.name == "prepareKotlinBuildScriptModel" }.configureEach {
         dependsOn(generateLanguageTextmatePacks)
