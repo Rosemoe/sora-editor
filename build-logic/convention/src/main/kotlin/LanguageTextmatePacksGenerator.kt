@@ -135,7 +135,7 @@ class LanguageTextmatePackProjectGenerator(
                     "Unable to resolve bundle id from grammar path '${entry.grammar}'"
                 } }
             val packageName = buildPackageName("io.github.rosemoe.sora.langs.textmate", slug)
-            val moduleName = "language-$slug"
+            val moduleName = "language-textmate-$slug"
             val moduleDir = File(projectsDir, moduleName)
 
             moduleDir.mkdirs()
@@ -169,7 +169,7 @@ class LanguageTextmatePackProjectGenerator(
             val slug = entry.slug
             val className = toPascalCase(slug) + "ColorScheme"
             val packageName = buildPackageName("io.github.rosemoe.sora.langs.textmate.theme", slug)
-            val moduleName = "theme-$slug"
+            val moduleName = "theme-textmate-$slug"
             val moduleDir = File(projectsDir, moduleName)
 
             moduleDir.mkdirs()
@@ -227,7 +227,7 @@ class LanguageTextmatePackProjectGenerator(
         val layout = prepareModuleLayout(moduleDir, packageName, moduleName)
 
         val kotlinFile = File(layout.packageDir, "$className.kt")
-        writeFileIfChanged(kotlinFile, buildKotlinLanguageContent(entry, packageName, className))
+        writeFileIfChanged(kotlinFile, buildKotlinLanguageContent(entry, className))
 
         val sourceBundleDir = File(grammarsDir, bundleId)
         require(sourceBundleDir.exists()) {
@@ -256,7 +256,7 @@ class LanguageTextmatePackProjectGenerator(
         val kotlinFile = File(layout.packageDir, "$className.kt")
         writeFileIfChanged(
             kotlinFile,
-            buildKotlinThemeContent(entry, packageName, className, assetPath)
+            buildKotlinThemeContent(entry, className, assetPath)
         )
     }
 
@@ -309,7 +309,6 @@ class LanguageTextmatePackProjectGenerator(
 
     private fun buildKotlinLanguageContent(
         entry: TextMateLanguageEntry,
-        packageName: String,
         className: String
     ): String {
         val embeddedLanguagesLiteral = if (entry.embeddedLanguages.isEmpty()) {
@@ -335,7 +334,6 @@ class LanguageTextmatePackProjectGenerator(
 
     private fun buildKotlinThemeContent(
         entry: TextMateThemeEntry,
-        packageName: String,
         className: String,
         assetPath: String
     ): String {

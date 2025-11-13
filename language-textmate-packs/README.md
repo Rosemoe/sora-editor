@@ -30,8 +30,8 @@ repositories {
 dependencies {
     implementation(platform("io.github.rosemoe:editor-bom:0.23.7"))
     implementation("io.github.rosemoe:language-textmate")    // TextMate engine
-    implementation("io.github.rosemoe.sora.langs.textmate.lua")         // Lua language pack
-    implementation("io.github.rosemoe.sora.langs.textmate.theme.ayu-dark")       // Ayu Dark theme pack
+    implementation("io.github.rosemoe:language-textmate-lua")         // Lua language pack
+    implementation("io.github.rosemoe:theme-textmate-ayu-dark")       // Ayu Dark theme pack
 }
 ```
 
@@ -43,8 +43,8 @@ repositories {
 dependencies {
     implementation(platform("io.github.rosemoe:editor-bom:0.23.7"))
     implementation 'io.github.rosemoe:language-textmate'    // TextMate engine
-    implementation 'io.github.rosemoe.sora.langs.textmate.lua'         // Lua language pack
-    implementation 'io.github.rosemoe.sora.langs.textmate.theme.ayu-dark'       // Ayu Dark theme pack
+    implementation 'io.github.rosemoe:language-textmate-lua'         // Lua language pack
+    implementation 'io.github.rosemoe:theme-textmate-ayu-dark'       // Ayu Dark theme pack
 }
 ```
 
@@ -206,52 +206,52 @@ The following language packs are currently available:
 
 | Language     | Module Name                                            | Scope Name         |
 |--------------|--------------------------------------------------------|--------------------|
-| Assembly     | `io.github.rosemoe.sora.langs.textmate.assembly`       | source.asm         |
-| Batch        | `io.github.rosemoe.sora.langs.textmate.bat`            | source.batchfile   |
-| C            | `io.github.rosemoe.sora.langs.textmate.c`              | source.c           |
-| C#           | `io.github.rosemoe.sora.langs.textmate.c-sharp`        | source.cs          |
-| C++          | `io.github.rosemoe.sora.langs.textmate.cpp`            | source.cpp         |
-| Coq          | `io.github.rosemoe.sora.langs.textmate.coq`            | source.coq         |
-| CSS          | `io.github.rosemoe.sora.langs.textmate.css`            | source.css         |
-| Dart         | `io.github.rosemoe.sora.langs.textmate.dart`           | source.dart        |
-| Go           | `io.github.rosemoe.sora.langs.textmate.go`             | source.go          |
-| Groovy       | `io.github.rosemoe.sora.langs.textmate.groovy`         | source.groovy      |
-| HTML         | `io.github.rosemoe.sora.langs.textmate.html`           | text.html.basic    |
-| HTMX         | `io.github.rosemoe.sora.langs.textmate.htmx`           | text.html.htmx     |
-| Ignore Files | `io.github.rosemoe.sora.langs.textmate.ignore`         | source.gitignore   |
-| INI          | `io.github.rosemoe.sora.langs.textmate.ini`            | source.ini         |
-| Java         | `io.github.rosemoe.sora.langs.textmate.java`           | source.java        |
-| JavaScript   | `io.github.rosemoe.sora.langs.textmate.javascript`     | source.js          |
-| JSON         | `io.github.rosemoe.sora.langs.textmate.json`           | source.json        |
-| JSX          | `io.github.rosemoe.sora.langs.textmate.jsx`            | source.js.jsx      |
-| Kotlin       | `io.github.rosemoe.sora.langs.textmate.kotlin`         | source.kotlin      |
-| LaTeX        | `io.github.rosemoe.sora.langs.textmate.latex`          | text.tex.latex     |
-| Less         | `io.github.rosemoe.sora.langs.textmate.less`           | source.css.less    |
-| Lisp         | `io.github.rosemoe.sora.langs.textmate.lisp`           | source.lisp        |
-| Log Files    | `io.github.rosemoe.sora.langs.textmate.log`            | text.log           |
-| Lua          | `io.github.rosemoe.sora.langs.textmate.lua`            | source.lua         |
-| Markdown     | `io.github.rosemoe.sora.langs.textmate.markdown`       | text.html.markdown |
-| Nim          | `io.github.rosemoe.sora.langs.textmate.nim`            | source.nim         |
-| Pascal       | `io.github.rosemoe.sora.langs.textmate.pascal`         | source.pascal      |
-| PHP          | `io.github.rosemoe.sora.langs.textmate.php`            | source.php         |
-| PHP (Source) | `io.github.rosemoe.sora.langs.textmate.php-source-php` | text.html.php      |
-| PowerShell   | `io.github.rosemoe.sora.langs.textmate.powershell`     | source.powershell  |
-| Properties   | `io.github.rosemoe.sora.langs.textmate.properties`     | source.properties  |
-| Python       | `io.github.rosemoe.sora.langs.textmate.python`         | source.python      |
-| Ruby         | `io.github.rosemoe.sora.langs.textmate.ruby`           | source.ruby        |
-| Rust         | `io.github.rosemoe.sora.langs.textmate.rust`           | source.rust        |
-| SCSS         | `io.github.rosemoe.sora.langs.textmate.scss`           | source.css.scss    |
-| Shell Script | `io.github.rosemoe.sora.langs.textmate.shellscript`    | source.shell       |
-| Smali        | `io.github.rosemoe.sora.langs.textmate.smali`          | source.smali       |
-| SQL          | `io.github.rosemoe.sora.langs.textmate.sql`            | source.sql         |
-| Swift        | `io.github.rosemoe.sora.langs.textmate.swift`          | source.swift       |
-| Plain Text   | `io.github.rosemoe.sora.langs.textmate.text`           | text.plain         |
-| TOML         | `io.github.rosemoe.sora.langs.textmate.toml`           | source.toml        |
-| TSX          | `io.github.rosemoe.sora.langs.textmate.tsx`            | source.tsx         |
-| TypeScript   | `io.github.rosemoe.sora.langs.textmate.typescript`     | source.ts          |
-| XML          | `io.github.rosemoe.sora.langs.textmate.xml`            | text.xml           |
-| YAML         | `io.github.rosemoe.sora.langs.textmate.yaml`           | source.yaml        |
-| Zig          | `io.github.rosemoe.sora.langs.textmate.zig`            | source.zig         |
+| Assembly     | `io.github.rosemoe:language-textmate-assembly`       | source.asm         |
+| Batch        | `io.github.rosemoe:language-textmate-bat`            | source.batchfile   |
+| C            | `io.github.rosemoe:language-textmate-c`              | source.c           |
+| C#           | `io.github.rosemoe:language-textmate-c-sharp`        | source.cs          |
+| C++          | `io.github.rosemoe:language-textmate-cpp`            | source.cpp         |
+| Coq          | `io.github.rosemoe:language-textmate-coq`            | source.coq         |
+| CSS          | `io.github.rosemoe:language-textmate-css`            | source.css         |
+| Dart         | `io.github.rosemoe:language-textmate-dart`           | source.dart        |
+| Go           | `io.github.rosemoe:language-textmate-go`             | source.go          |
+| Groovy       | `io.github.rosemoe:language-textmate-groovy`         | source.groovy      |
+| HTML         | `io.github.rosemoe:language-textmate-html`           | text.html.basic    |
+| HTMX         | `io.github.rosemoe:language-textmate-htmx`           | text.html.htmx     |
+| Ignore Files | `io.github.rosemoe:language-textmate-ignore`         | source.gitignore   |
+| INI          | `io.github.rosemoe:language-textmate-ini`            | source.ini         |
+| Java         | `io.github.rosemoe:language-textmate-java`           | source.java        |
+| JavaScript   | `io.github.rosemoe:language-textmate-javascript`     | source.js          |
+| JSON         | `io.github.rosemoe:language-textmate-json`           | source.json        |
+| JSX          | `io.github.rosemoe:language-textmate-jsx`            | source.js.jsx      |
+| Kotlin       | `io.github.rosemoe:language-textmate-kotlin`         | source.kotlin      |
+| LaTeX        | `io.github.rosemoe:language-textmate-latex`          | text.tex.latex     |
+| Less         | `io.github.rosemoe:language-textmate-less`           | source.css.less    |
+| Lisp         | `io.github.rosemoe:language-textmate-lisp`           | source.lisp        |
+| Log Files    | `io.github.rosemoe:language-textmate-log`            | text.log           |
+| Lua          | `io.github.rosemoe:language-textmate-lua`            | source.lua         |
+| Markdown     | `io.github.rosemoe:language-textmate-markdown`       | text.html.markdown |
+| Nim          | `io.github.rosemoe:language-textmate-nim`            | source.nim         |
+| Pascal       | `io.github.rosemoe:language-textmate-pascal`         | source.pascal      |
+| PHP          | `io.github.rosemoe:language-textmate-php`            | source.php         |
+| PHP (Source) | `io.github.rosemoe:language-textmate-php-source-php` | text.html.php      |
+| PowerShell   | `io.github.rosemoe:language-textmate-powershell`     | source.powershell  |
+| Properties   | `io.github.rosemoe:language-textmate-properties`     | source.properties  |
+| Python       | `io.github.rosemoe:language-textmate-python`         | source.python      |
+| Ruby         | `io.github.rosemoe:language-textmate-ruby`           | source.ruby        |
+| Rust         | `io.github.rosemoe:language-textmate-rust`           | source.rust        |
+| SCSS         | `io.github.rosemoe:language-textmate-scss`           | source.css.scss    |
+| Shell Script | `io.github.rosemoe:language-textmate-shellscript`    | source.shell       |
+| Smali        | `io.github.rosemoe:language-textmate-smali`          | source.smali       |
+| SQL          | `io.github.rosemoe:language-textmate-sql`            | source.sql         |
+| Swift        | `io.github.rosemoe:language-textmate-swift`          | source.swift       |
+| Plain Text   | `io.github.rosemoe:language-textmate-text`           | text.plain         |
+| TOML         | `io.github.rosemoe:language-textmate-toml`           | source.toml        |
+| TSX          | `io.github.rosemoe:language-textmate-tsx`            | source.tsx         |
+| TypeScript   | `io.github.rosemoe:language-textmate-typescript`     | source.ts          |
+| XML          | `io.github.rosemoe:language-textmate-xml`            | text.xml           |
+| YAML         | `io.github.rosemoe:language-textmate-yaml`           | source.yaml        |
+| Zig          | `io.github.rosemoe:language-textmate-zig`            | source.zig         |
 
 ## Contributing
 

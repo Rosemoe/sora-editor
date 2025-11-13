@@ -102,8 +102,8 @@ dependencies {
     // TextMate language packs
     val languagePacksProjects =
         listOfNotNull(
-            findProject(":textmate-language-lua"),
-            findProject(":textmate-theme-ayu-dark")
+            findProject(":language-textmate-lua"),
+            findProject(":theme-textmate-ayu-dark")
         )
 
     if (languagePacksProjects.isEmpty()) {

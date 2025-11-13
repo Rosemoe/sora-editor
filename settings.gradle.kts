@@ -63,8 +63,8 @@ if (textMatePackProjectsDir.exists()) {
         .listFiles { file -> file.isDirectory }
         ?.sortedBy { it.name }
         ?.forEach { dir ->
-            val moduleName = ":textmate-${dir.name}"
+            val moduleName = dir.name
             include(moduleName)
-            project(moduleName).projectDir = dir
+            project(":$moduleName").projectDir = dir
         }
 }

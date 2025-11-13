@@ -30,27 +30,22 @@ class %CLASS_NAME% @JvmOverloads constructor(
             if (grammarRegistry.findGrammar(SCOPE_NAME, false) != null) {
                 return
             }
-            synchronized(registrationLock) {
-                if (grammarRegistry.findGrammar(SCOPE_NAME, false) != null) {
-                    return
-                }
-                grammarRegistry.loadGrammars(
-                    languages {
-                        language(LANGUAGE_NAME) {
-                            grammar = GRAMMAR_PATH
-                            scopeName = SCOPE_NAME
-                            LANGUAGE_CONFIGURATION_PATH?.let { languageConfiguration = it }
-                            if (EMBEDDED_LANGUAGES.isNotEmpty()) {
-                                embeddedLanguages {
-                                    EMBEDDED_LANGUAGES.forEach { (scope, languageName) ->
-                                        scope to languageName
-                                    }
+            grammarRegistry.loadGrammars(
+                languages {
+                    language(LANGUAGE_NAME) {
+                        grammar = GRAMMAR_PATH
+                        scopeName = SCOPE_NAME
+                        LANGUAGE_CONFIGURATION_PATH?.let { languageConfiguration = it }
+                        if (EMBEDDED_LANGUAGES.isNotEmpty()) {
+                            embeddedLanguages {
+                                EMBEDDED_LANGUAGES.forEach { (scope, languageName) ->
+                                    scope to languageName
                                 }
                             }
                         }
                     }
-                )
-            }
+                }
+            )
         }
 
         private fun loadGrammar(grammarRegistry: GrammarRegistry): IGrammar {
