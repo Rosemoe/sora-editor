@@ -18,9 +18,10 @@ import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.coroutines.suspendCoroutine
 
 class EditorMarkdownCodeHighlighterProvider(
     val editorContextProvider: (languageName: LanguageName) -> Pair<Language, EditorColorScheme>?
@@ -48,33 +49,40 @@ class EditorMarkdownCodeHighlighter(
         language: String?,
         codeTypeface: Typeface
     ): Spanned = mutex.withLock {
-
         val content = Content(code)
         val analyzeManager = editorLanguage.analyzeManager
-
-        suspendCoroutine { continuation ->
-            analyzeManager.setReceiver(object : EmptyStyleReceiver() {
-                override fun setStyles(sourceManager: AnalyzeManager, styles: Styles?) {
-                    if (styles == null) {
-                        return
-                    }
-                    runCatching {
-                        continuation.resumeWith(
-                            Result.success(
-                                styles.toSpanned(
-                                    content,
-                                    editorSchema,
-                                    codeTypeface
-                                )
+        try {
+            suspendCancellableCoroutine { continuation ->
+                val resumed = AtomicBoolean(false)
+                val receiver = object : EmptyStyleReceiver() {
+                    override fun setStyles(sourceManager: AnalyzeManager, styles: Styles?) {
+                        if (styles == null || !resumed.compareAndSet(false, true)) {
+                            return
+                        }
+                        val result = runCatching {
+                            styles.toSpanned(
+                                content,
+                                editorSchema,
+                                codeTypeface
                             )
-                        )
-                    }.onFailure {
-                        continuation.resumeWith(Result.failure(it))
+                        }
+                        continuation.resumeWith(result)
                     }
                 }
-            })
-
-            analyzeManager.reset(ContentReference(content), Bundle())
+                continuation.invokeOnCancellation {
+                    analyzeManager.setReceiver(null)
+                }
+                analyzeManager.setReceiver(receiver)
+                runCatching {
+                    analyzeManager.reset(ContentReference(content), Bundle())
+                }.onFailure { error ->
+                    if (resumed.compareAndSet(false, true)) {
+                        continuation.resumeWith(Result.failure(error))
+                    }
+                }
+            }
+        } finally {
+            analyzeManager.setReceiver(null)
         }
     }
 

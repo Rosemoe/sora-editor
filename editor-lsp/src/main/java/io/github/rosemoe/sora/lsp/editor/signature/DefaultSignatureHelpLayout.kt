@@ -19,8 +19,7 @@ import io.github.rosemoe.sora.lsp.R
 import io.github.rosemoe.sora.lsp.editor.curvedTextScale
 import io.github.rosemoe.sora.lsp.editor.text.SimpleMarkdownRenderer
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 import org.eclipse.lsp4j.SignatureInformation
 import org.eclipse.lsp4j.SignatureHelp
 
@@ -42,6 +41,7 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
     private var baselineDocumentationTextSize: Float? = null
     private var baselineCounterTextSize: Float? = null
     private var latestEditorTextSize: Float? = null
+    private var documentationJob: Job? = null
 
     private var signatureHelp: SignatureHelp? = null
     private var currentIndex = 0
@@ -164,7 +164,8 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
                 linkColor = highlightColor
             )
             documentationTextView.visibility = View.VISIBLE
-            window.coroutineScope.launch(Dispatchers.Main) {
+            documentationJob?.cancel()
+            documentationJob = window.launchRender {
                 documentationTextView.text = SimpleMarkdownRenderer.renderAsync(
                     markdown = documentationText,
                     boldColor = highlightColor,
@@ -172,8 +173,16 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
                     codeTypeface = codeTypeface,
                     linkColor = highlightColor
                 )
+            }.also { job ->
+                job.invokeOnCompletion {
+                    if (documentationJob === job) {
+                        documentationJob = null
+                    }
+                }
             }
         } else {
+            documentationJob?.cancel()
+            documentationJob = null
             documentationTextView.text = ""
             documentationTextView.visibility = View.GONE
         }

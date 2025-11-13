@@ -52,7 +52,7 @@ interface ClientContext {
      */
     val projectPath: FileUri
 
-    val project: LspProject
+    val project: LspProject?
 
     /**
      * Returns the [RequestManager] associated with the Language Server Connection.

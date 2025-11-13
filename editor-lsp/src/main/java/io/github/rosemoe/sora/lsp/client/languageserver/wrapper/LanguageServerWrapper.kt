@@ -202,9 +202,10 @@ class LanguageServerWrapper(
             // using for lsp
             val executorService = Executors.newCachedThreadPool()
 
+            val wrapperRef = WeakReference(this@LanguageServerWrapper)
             eventHandler = EventHandler(
                 serverDefinition.eventListener
-            ) { status != ServerStatus.STOPPED }
+            ) { wrapperRef.get()?.status != ServerStatus.STOPPED }
 
             client =
                 DefaultLanguageClient(ServerWrapperBaseClientContext(this@LanguageServerWrapper))
