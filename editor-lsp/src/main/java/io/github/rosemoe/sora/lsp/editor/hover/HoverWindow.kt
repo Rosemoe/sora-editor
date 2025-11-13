@@ -9,7 +9,6 @@ import io.github.rosemoe.sora.event.EditorReleaseEvent
 import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.TextSizeChangeEvent
 import io.github.rosemoe.sora.event.subscribeEvent
-import io.github.rosemoe.sora.util.ViewUtils
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
@@ -17,6 +16,11 @@ import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
 import io.github.rosemoe.sora.widget.component.EditorTextActionWindow
 import io.github.rosemoe.sora.widget.getComponent
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.MarkupContent
 import org.eclipse.lsp4j.jsonrpc.messages.Either
@@ -45,6 +49,9 @@ open class HoverWindow(
     }
 
     private var layoutImpl: HoverLayout = DefaultHoverLayout()
+    private val renderJob = SupervisorJob(coroutineScope.coroutineContext[Job])
+    private val renderScope =
+        CoroutineScope(coroutineScope.coroutineContext + renderJob + Dispatchers.Main.immediate)
 
     var alwaysShowOnTouchHover = true
 
@@ -56,6 +63,7 @@ open class HoverWindow(
             if (::rootView.isInitialized && layoutImpl === value) {
                 return
             }
+            cancelRenderJobs()
             layoutImpl = value
             layoutImpl.attach(this)
             rootView = layoutImpl.createView(LayoutInflater.from(editor.context))
@@ -110,7 +118,7 @@ open class HoverWindow(
     open fun show(hover: Hover) {
         editor.removeCallbacks(showRunnable)
         pendingHover = null
-        super.dismiss()
+        dismiss()
         pendingHover = hover
         editor.postDelayedInLifecycle(showRunnable, HOVER_TOOLTIP_SHOW_TIMEOUT)
     }
@@ -118,6 +126,7 @@ open class HoverWindow(
     override fun dismiss() {
         editor.removeCallbacks(showRunnable)
         pendingHover = null
+        cancelRenderJobs()
         super.dismiss()
     }
 
@@ -161,6 +170,14 @@ open class HoverWindow(
     private fun renderHover() {
         val data = hover ?: return
         layout.renderHover(data)
+    }
+
+    internal fun launchRender(block: suspend CoroutineScope.() -> Unit): Job {
+        return renderScope.launch(block = block)
+    }
+
+    private fun cancelRenderJobs() {
+        renderJob.cancelChildren()
     }
 
     private fun applyColorScheme() {

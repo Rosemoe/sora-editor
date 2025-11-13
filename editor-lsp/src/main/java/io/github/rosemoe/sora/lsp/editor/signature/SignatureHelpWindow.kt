@@ -38,6 +38,11 @@ import io.github.rosemoe.sora.widget.base.EditorPopupWindow
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
 import io.github.rosemoe.sora.widget.getComponent
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.SignatureHelp
 
 open class SignatureHelpWindow(
@@ -56,6 +61,9 @@ open class SignatureHelpWindow(
     private var signatureHelp: SignatureHelp? = null
 
     private var layoutImpl: SignatureHelpLayout = DefaultSignatureHelpLayout()
+    private val renderJob = SupervisorJob(coroutineScope.coroutineContext[Job])
+    private val renderScope =
+        CoroutineScope(coroutineScope.coroutineContext + renderJob + Dispatchers.Main.immediate)
 
     var layout: SignatureHelpLayout
         get() = layoutImpl
@@ -63,6 +71,7 @@ open class SignatureHelpWindow(
             if (::rootView.isInitialized && layoutImpl === value) {
                 return
             }
+            cancelRenderJobs()
             layoutImpl = value
             layoutImpl.attach(this)
             rootView = layoutImpl.createView(LayoutInflater.from(editor.context))
@@ -138,6 +147,11 @@ open class SignatureHelpWindow(
         show()
     }
 
+    override fun dismiss() {
+        cancelRenderJobs()
+        super.dismiss()
+    }
+
     protected fun isSelectionVisible(): Boolean {
         val selection = editor.cursor.left()
         editor.layout.getCharLayoutOffset(selection.line, selection.column, buffer)
@@ -178,6 +192,14 @@ open class SignatureHelpWindow(
     private fun renderSignatureHelp() {
         val data = signatureHelp ?: return
         layout.renderSignatures(data)
+    }
+
+    internal fun launchRender(block: suspend CoroutineScope.() -> Unit): Job {
+        return renderScope.launch(block = block)
+    }
+
+    private fun cancelRenderJobs() {
+        renderJob.cancelChildren()
     }
 
 

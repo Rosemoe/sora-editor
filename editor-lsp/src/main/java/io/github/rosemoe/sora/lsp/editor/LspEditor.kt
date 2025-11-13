@@ -27,9 +27,11 @@ package io.github.rosemoe.sora.lsp.editor
 import androidx.annotation.WorkerThread
 import io.github.rosemoe.sora.annotations.Experimental
 import io.github.rosemoe.sora.event.ContentChangeEvent
+import io.github.rosemoe.sora.event.Event
 import io.github.rosemoe.sora.event.HoverEvent
 import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
+import io.github.rosemoe.sora.event.SubscriptionReceipt
 import io.github.rosemoe.sora.graphics.inlayHint.TextInlayHintRenderer
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer
@@ -76,7 +78,6 @@ import org.eclipse.lsp4j.TextDocumentSyncKind
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeoutException
-import java.util.concurrent.atomic.AtomicReference
 
 class LspEditor(
     val project: LspProject,
@@ -96,12 +97,12 @@ class LspEditor(
         WeakReference(null)
     private var currentLanguage: LspLanguage? = null
 
+    private var subscriptionReceipts: MutableList<SubscriptionReceipt<out Event>> = mutableListOf()
+
     @Volatile
     private var isClosed = false
 
     private var cachedInlayHints: List<org.eclipse.lsp4j.InlayHint>? = null
-
-    private val unsubscribeFunctionRef = AtomicReference<Runnable?>()
 
     private val disposeLock = Any()
 
@@ -150,9 +151,8 @@ class LspEditor(
             if (currentDiagnosticTooltipWindow.layout is DefaultDiagnosticTooltipLayout) {
                 currentDiagnosticTooltipWindow.layout = LspDiagnosticTooltipLayout()
             }
-
-
-            val subscriptionReceipts =
+            clearSubscriptions()
+            subscriptionReceipts =
                 mutableListOf(
                     currentEditor.subscribeEvent<ContentChangeEvent>(
                         LspEditorContentChangeEvent(this)
@@ -167,15 +167,6 @@ class LspEditor(
                         LspEditorScrollEvent(this)
                     )
                 )
-
-            val unsubscribeRunnable =
-                Runnable {
-                    subscriptionReceipts.forEach {
-                        it.unsubscribe()
-                    }
-                    subscriptionReceipts.clear()
-                }
-            unsubscribeFunctionRef.set(unsubscribeRunnable)
         }
         get() {
             return _currentEditor.get()
@@ -506,18 +497,23 @@ class LspEditor(
     }
 
     private fun clearSubscriptions() {
-        unsubscribeFunctionRef.getAndSet(null)?.run()
+        val iterator = subscriptionReceipts.iterator()
+
+        while (iterator.hasNext()) {
+            iterator.next().unsubscribe()
+            iterator.remove()
+        }
     }
 
     @WorkerThread
     fun dispose() {
+        clearSubscriptions()
         synchronized(disposeLock) {
             if (isClosed) {
                 return
                 // throw IllegalStateException("Editor is already closed")
             }
             disconnect()
-            clearSubscriptions()
             _currentEditor.clear()
             signatureHelpWindowWeakReference.clear()
             hoverWindowWeakReference.clear()

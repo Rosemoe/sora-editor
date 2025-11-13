@@ -12,8 +12,7 @@ import io.github.rosemoe.sora.lsp.R
 import io.github.rosemoe.sora.lsp.editor.curvedTextScale
 import io.github.rosemoe.sora.lsp.editor.text.SimpleMarkdownRenderer
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 import org.eclipse.lsp4j.Hover
 
 class DefaultHoverLayout : HoverLayout {
@@ -27,6 +26,7 @@ class DefaultHoverLayout : HoverLayout {
     private var baselineEditorTextSize: Float? = null
     private var baselineHoverTextSize: Float? = null
     private var latestEditorTextSize: Float? = null
+    private var asyncRenderJob: Job? = null
 
     override fun attach(window: HoverWindow) {
         this.window = window
@@ -68,7 +68,8 @@ class DefaultHoverLayout : HoverLayout {
             linkColor = highlightColor
         )
         container.post { container.smoothScrollTo(0, 0) }
-        window.coroutineScope.launch(Dispatchers.Main) {
+        asyncRenderJob?.cancel()
+        asyncRenderJob = window.launchRender {
             hoverTextView.text = SimpleMarkdownRenderer.renderAsync(
                 markdown = hoverText,
                 boldColor = highlightColor,
@@ -76,6 +77,12 @@ class DefaultHoverLayout : HoverLayout {
                 codeTypeface = codeTypeface,
                 linkColor = highlightColor
             )
+        }.also { job ->
+            job.invokeOnCompletion {
+                if (asyncRenderJob === job) {
+                    asyncRenderJob = null
+                }
+            }
         }
     }
 

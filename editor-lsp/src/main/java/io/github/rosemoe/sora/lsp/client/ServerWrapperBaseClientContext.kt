@@ -24,20 +24,30 @@
 
 package io.github.rosemoe.sora.lsp.client
 
+import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
 import io.github.rosemoe.sora.lsp.editor.LspEditor
+import io.github.rosemoe.sora.lsp.editor.LspProject
 import io.github.rosemoe.sora.lsp.utils.FileUri
+import java.lang.ref.WeakReference
 
 
-class ServerWrapperBaseClientContext(private val wrapper: LanguageServerWrapper) :
+class ServerWrapperBaseClientContext(wrapper: LanguageServerWrapper) :
     ClientContext {
     override fun getEditor(documentUri: FileUri): LspEditor? {
-        return wrapper.project.getEditor(documentUri)
+        return project?.getEditor(documentUri)
     }
 
+    private val projectRef = WeakReference(wrapper.project)
+    private val requestManagerRef = WeakReference(wrapper.requestManager)
+
     override val projectPath = wrapper.project.projectUri
-    override val project = wrapper.project
-    override val requestManager = wrapper.requestManager
+    override val project: LspProject?
+        get() = projectRef.get()
+
+    override val requestManager: RequestManager?
+        get() = requestManagerRef.get()
+
     override val eventListener = wrapper.serverDefinition.eventListener
 
 }

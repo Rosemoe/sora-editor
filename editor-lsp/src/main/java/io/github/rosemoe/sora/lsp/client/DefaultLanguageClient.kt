@@ -50,13 +50,14 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
     LanguageClient {
 
     override fun applyEdit(params: ApplyWorkspaceEditParams): CompletableFuture<ApplyWorkspaceEditResponse> {
+        val project = context.project ?: return CompletableFuture.completedFuture(null)
         val eventContext = EventContext().apply {
             put("arg-0", params.edit)
             put("lsp-project", context.project)
         }
 
         try {
-            context.project.eventEmitter.emit(EventType.workSpaceApplyEdit, eventContext, true)
+            project.eventEmitter.emit(EventType.workSpaceApplyEdit, eventContext, true)
 
             return CompletableFuture.completedFuture(
                 ApplyWorkspaceEditResponse(true)
@@ -99,7 +100,8 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
     }
 
     override fun publishDiagnostics(publishDiagnosticsParams: PublishDiagnosticsParams) {
-        val diagnosticsContainer = context.project.diagnosticsContainer
+        val project = context.project ?: return
+        val diagnosticsContainer = project.diagnosticsContainer
         val uri = URI(publishDiagnosticsParams.uri).toFileUri()
 
         diagnosticsContainer.clearDiagnostics(uri)
