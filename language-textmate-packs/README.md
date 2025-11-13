@@ -10,7 +10,7 @@ The pack generator in [LanguageTextmatePacksGenerator.kt](../build-logic/convent
 
 Templates located in [build-logic/convention/src/main/resources/templates](../build-logic/convention/src/main/resources/templates) define how each Android module is generated, including Gradle configuration, Kotlin/Java wrappers, and Maven publishing settings.
 
-After the generator runs, each folder under `projects` is automatically registered as `:textmate-<dir-name>` in [settings.gradle.kts](../settings.gradle.kts), ensuring the packs integrate seamlessly with Gradle's dependency resolution just like hand-written modules.
+After the generator runs, each folder under `projects` is automatically registered as `:<dir-name>` in [settings.gradle.kts](../settings.gradle.kts), ensuring the packs integrate seamlessly with Gradle's dependency resolution just like hand-written modules.
 
 ## Getting Started
 
@@ -50,7 +50,7 @@ dependencies {
 
 > [!NOTE]
 > Replace `0.23.7` with the current editor version. You can find the newest version from the badge above, or visit the GitHub [Releases](https://github.com/Rosemoe/sora-editor/releases) page.
-> For local development, you can depend on `project(":textmate-language-lua")` instead of using Maven coordinates.
+> For local development, you can depend on `project(":language-textmate-lua")` instead of using Maven coordinates.
 
 ### Register File Provider
 
@@ -79,10 +79,10 @@ Theme packs provide pre-packaged TextMate color schemes. Each theme pack include
 
 | Theme Name  | Module Name        | Dark Mode |
 |-------------|--------------------|-----------|
-| Ayu Dark    | theme-ayu-dark     | Yes       |
-| Ayu Light   | theme-ayu-light    | No        |
-| Darcula     | theme-darcula      | Yes       |
-| Quiet Light | theme-quietlight   | No        |
+| Ayu Dark    | `io.github.rosemoe:theme-textmate-ayu-dark`  | Yes       |
+| Ayu Light   | `io.github.rosemoe:theme-textmate-ayu-light`   | No        |
+| Darcula     | `io.github.rosemoe:theme-textmate-darcula`    | Yes       |
+| Quiet Light | `io.github.rosemoe:theme-textmate-quite-light`   | No        |
 
 ### Apply Theme Pack
 
@@ -198,7 +198,7 @@ Each language pack provides:
 
 * Token-based highlighting using TextMate grammar rules
 * Identifier-based auto-completion (when enabled)
-* Auto-pairing brackets, comment toggling, and indentation rules
+* Auto-pairing brackets, indentation rules
 
 ## Supported Languages
 
