@@ -124,26 +124,31 @@ class HighlightTextContainer {
             if (!highlight.hasLength()) {
                 continue
             }
-            val newStart = shiftForInsertion(
-                highlight.startLine,
-                highlight.startColumn,
-                startLine,
-                startColumn,
-                endLine,
-                endColumn
-            )
-            highlight.startLine = newStart.first
-            highlight.startColumn = newStart.second
-            val newEnd = shiftForInsertion(
-                highlight.endLine,
-                highlight.endColumn,
-                startLine,
-                startColumn,
-                endLine,
-                endColumn
-            )
-            highlight.endLine = newEnd.first
-            highlight.endColumn = newEnd.second
+            if (comparePositions(startLine, startColumn, highlight.startLine, highlight.startColumn) < 0) {
+                val newStart = shiftForInsertion(
+                    highlight.startLine,
+                    highlight.startColumn,
+                    startLine,
+                    startColumn,
+                    endLine,
+                    endColumn
+                )
+                highlight.startLine = newStart.first
+                highlight.startColumn = newStart.second
+            }
+
+            if (comparePositions(startLine, startColumn, highlight.endLine, highlight.endColumn) < 0) {
+                val newEnd = shiftForInsertion(
+                    highlight.endLine,
+                    highlight.endColumn,
+                    startLine,
+                    startColumn,
+                    endLine,
+                    endColumn
+                )
+                highlight.endLine = newEnd.first
+                highlight.endColumn = newEnd.second
+            }
         }
         highlights.sortWith(highlightComparator)
     }

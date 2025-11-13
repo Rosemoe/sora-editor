@@ -51,8 +51,7 @@ class LspEditorSelectionChangeEvent(private val editor: LspEditor) :
             editor.eventManager.emitAsync(EventType.documentHighlight) {
                 put(
                     DocumentHighlightEvent.DocumentHighlightRequest(
-                        event.left.fromThis(),
-                        event.right.fromThis()
+                        event.left.fromThis()
                     )
                 )
             }

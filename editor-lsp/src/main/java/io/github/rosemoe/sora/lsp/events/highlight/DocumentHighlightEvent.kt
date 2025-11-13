@@ -53,7 +53,6 @@ class DocumentHighlightEvent : AsyncEventListener() {
 
     data class DocumentHighlightRequest(
         val selectionStart: CharPosition,
-        val selectionEnd: CharPosition
     )
 
     override suspend fun handleAsync(context: EventContext) = withContext(Dispatchers.IO) {
