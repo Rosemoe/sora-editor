@@ -319,7 +319,7 @@ public class Magnifier implements EditorBuiltinComponent {
         }
         var clip = Bitmap.createBitmap(requiredWidth, requiredHeight, Bitmap.Config.ARGB_8888);
         var viewCanvas = new Canvas(clip);
-        viewCanvas.translate(-left, -top);
+        viewCanvas.translate(-left - view.getOffsetX(), -top - view.getOffsetY());
         view.draw(viewCanvas);
         var scaled = Bitmap.createScaledBitmap(clip, popup.getWidth(), popup.getHeight(), true);
         clip.recycle();
