@@ -1,0 +1,33 @@
+plugins {
+    id("com.android.library")
+    id("com.vanniktech.maven.publish.base")
+    kotlin("android")
+}
+
+android {
+    namespace = "%PACKAGE_NAME%"
+
+    defaultConfig {
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
+    }
+
+    buildFeatures {
+        buildConfig = false
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+}
+
+dependencies {
+    compileOnly(projects.languageTextmate)
+    compileOnly(projects.editor)
+}

@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.langs.textmate.registry.model;
 
+import androidx.annotation.NonNull;
+
 import org.eclipse.tm4e.core.internal.theme.Theme;
 import org.eclipse.tm4e.core.internal.theme.raw.IRawTheme;
 import org.eclipse.tm4e.core.internal.theme.raw.RawTheme;
@@ -79,10 +81,14 @@ public class ThemeModel {
     public void load(List<String> colorMap) throws Exception {
         rawTheme = RawThemeReader.readTheme(themeSource);
         theme = Theme.createFromRawTheme(rawTheme, colorMap);
+        var themeType = ((RawTheme) rawTheme).get("type");
+        if (themeType instanceof String) {
+            isDark = "dark".equalsIgnoreCase((String) themeType);
+        }
     }
 
     public boolean isLoaded() {
-        return theme != null;
+        return theme != null && !theme.getColorMap().isEmpty();
     }
 
     @Nullable
@@ -101,5 +107,14 @@ public class ThemeModel {
 
     public String getName() {
         return name;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "ThemeModel{" +
+                ", name='" + name + '\'' +
+                ", isDark=" + isDark +
+                '}';
     }
 }
