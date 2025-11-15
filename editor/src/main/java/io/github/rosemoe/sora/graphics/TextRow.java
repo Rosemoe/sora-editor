@@ -31,6 +31,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -83,6 +84,7 @@ public class TextRow {
         return Integer.compare(a.getColumn(), b.getColumn());
     };
     private final RectF tmpRect = new RectF();
+    private final int[] tmpIndices = new int[4];
     private final Span tmpSpan = SpanFactory.obtainNoExt(0, 0);
     private ContentLine text;
     private Directions directions;
@@ -94,6 +96,8 @@ public class TextRow {
     private InlayHintRenderParams inlayHintRenderParams;
     private Paint paint;
     private float[] measureCache;
+    private int selectedStart = -1;
+    private int selectedEnd = -1;
 
     public TextRow() {
 
@@ -121,6 +125,19 @@ public class TextRow {
     public void setRange(int start, int end) {
         this.textStart = start;
         this.textEnd = end;
+    }
+
+    public int getTextStart() {
+        return textStart;
+    }
+
+    public int getTextEnd() {
+        return textEnd;
+    }
+
+    public void setSelectedRange(int start, int end) {
+        this.selectedStart = start;
+        this.selectedEnd = end;
     }
 
     /**
@@ -540,6 +557,72 @@ public class TextRow {
         paint.setColor(color);
     }
 
+    private void commitTextRun(int paintStart, int paintEnd, int contextStart, int contextEnd, boolean isRtl,
+                               Canvas canvas, float offset, float width) {
+        if (paint.isRenderFunctionCharacters()) {
+            var chars = text.getBackingCharArray();
+            int lastEnd = paintStart;
+            float initOffset = offset + (isRtl ? width : 0f);
+            float drawOffset = initOffset;
+            for (int i = paintStart; i <= paintEnd; i++) {
+                char ch = '\0';
+                if (i == paintEnd || FunctionCharacters.isEditorFunctionChar(ch = chars[i])) {
+                    // commit [lastEnd, i)
+                    if (i - lastEnd > 0) {
+                        if (isRtl) {
+                            paint.setTextAlign(android.graphics.Paint.Align.RIGHT);
+                        }
+                        GraphicsCompat.drawTextRun(canvas, chars, lastEnd, i - lastEnd, contextStart, contextEnd - contextStart, drawOffset, params.getTextBaseline(), isRtl, paint);
+                        if (isRtl) {
+                            paint.setTextAlign(android.graphics.Paint.Align.LEFT);
+                        }
+                    }
+                    if (i == paintEnd) {
+                        break;
+                    }
+                    float chAdvance = paint.measureText(FunctionCharacters.getNameForFunctionCharacter(ch));
+                    float advance = getRunAdvanceCacheable(i, paintStart, paintEnd, paintStart, paintEnd, isRtl);
+                    drawFunctionCharacter(canvas, isRtl ? initOffset - advance - chAdvance : initOffset + advance, chAdvance, ch);
+                    advance += chAdvance;
+                    drawOffset = initOffset + (isRtl ? -advance : advance);
+                    lastEnd = i;
+                }
+            }
+        } else {
+            GraphicsCompat.drawTextRun(canvas, text.getBackingCharArray(), paintStart, paintEnd - paintStart, contextStart, contextEnd - contextStart, offset, params.getTextBaseline(), isRtl, paint);
+        }
+    }
+
+    protected void splitRegionsAndCommit(int paintStart, int paintEnd, boolean isRtl,
+                                         Canvas canvas, float offset, float width, int color) {
+        int selectionStart = Math.max(paintStart, Math.min(paintEnd, selectedStart));
+        int selectionEnd = Math.max(paintStart, Math.min(paintEnd, selectedEnd));
+        tmpIndices[0] = paintStart;
+        tmpIndices[1] = paintEnd;
+        tmpIndices[2] = selectionStart;
+        tmpIndices[3] = selectionEnd;
+        Arrays.sort(tmpIndices);
+        float advance = 0f;
+        for (int i = 0; i + 1 < tmpIndices.length; i++) {
+            int commitStart = tmpIndices[i], commitEnd = tmpIndices[i + 1];
+            if (commitStart == commitEnd) {
+                continue;
+            }
+            if (commitStart >= selectionStart && commitEnd <= selectionEnd) {
+                paint.setColor(params.getColorScheme().getColor(EditorColorScheme.TEXT_SELECTED));
+            } else {
+                paint.setColor(color);
+            }
+            float segmentWidth = getRunAdvanceCacheable(commitEnd, commitStart, commitEnd, paintStart, paintEnd, isRtl);
+            if (isRtl) {
+                commitTextRun(commitStart, commitEnd, paintStart, paintEnd, true, canvas, offset + width - advance - segmentWidth, segmentWidth);
+            } else {
+                commitTextRun(commitStart, commitEnd, paintStart, paintEnd, false, canvas, offset + advance, segmentWidth);
+            }
+            advance += segmentWidth;
+        }
+    }
+
     /**
      * Terminal handler for text element.
      */
@@ -669,38 +752,13 @@ public class TextRow {
 
         // Draw text
         int foregroundColor = RendererUtils.getForegroundColor(span, params.getColorScheme());
-        paintGeneral.setColor(foregroundColor);
-        if (paint.isRenderFunctionCharacters()) {
-            var chars = text.getBackingCharArray();
-            int lastEnd = paintStart;
-            float initOffset = offset + (isRtl ? width : 0f);
-            float drawOffset = initOffset;
-            for (int i = paintStart; i <= paintEnd; i++) {
-                char ch = '\0';
-                if (i == paintEnd || FunctionCharacters.isEditorFunctionChar(ch = chars[i])) {
-                    // commit [lastEnd, i)
-                    if (i - lastEnd > 0) {
-                        if (isRtl) {
-                            paint.setTextAlign(android.graphics.Paint.Align.RIGHT);
-                        }
-                        GraphicsCompat.drawTextRun(canvas, chars, lastEnd, i - lastEnd, paintStart, paintEnd - paintStart, drawOffset, params.getTextBaseline(), isRtl, paint);
-                        if (isRtl) {
-                            paint.setTextAlign(android.graphics.Paint.Align.LEFT);
-                        }
-                    }
-                    if (i == paintEnd) {
-                        break;
-                    }
-                    float chAdvance = paint.measureText(FunctionCharacters.getNameForFunctionCharacter(ch));
-                    float advance = getRunAdvanceCacheable(i, paintStart, paintEnd, paintStart, paintEnd, isRtl);
-                    drawFunctionCharacter(canvas, isRtl ? initOffset - advance - chAdvance : initOffset + advance, chAdvance, ch);
-                    advance += chAdvance;
-                    drawOffset = initOffset + (isRtl ? -advance : advance);
-                    lastEnd = i;
-                }
-            }
+        if (selectedStart >= selectedEnd || selectedStart >= textEnd || selectedEnd <= textStart
+                || params.getColorScheme().getColor(EditorColorScheme.TEXT_SELECTED) == 0) {
+            // Easy case when there is no selected text in region
+            paintGeneral.setColor(foregroundColor);
+            commitTextRun(paintStart, paintEnd, paintStart, paintEnd, isRtl, canvas, offset, width);
         } else {
-            GraphicsCompat.drawTextRun(canvas, text.getBackingCharArray(), paintStart, paintEnd - paintStart, paintStart, paintEnd - paintStart, offset, params.getTextBaseline(), isRtl, paintGeneral);
+            splitRegionsAndCommit(paintStart, paintEnd, isRtl, canvas, offset, width, foregroundColor);
         }
 
         // Draw strikethrough

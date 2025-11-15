@@ -389,7 +389,20 @@ public class EditorRenderer {
         var widths = cache != null && cache.getUpdateTimestamp() >= displayTimestamp ? cache.getWidths() : null;
         widths = widths != null && widths.length > line.length() ? widths : null;
         tr.set(line, row.startColumn, row.endColumn, spanReader.getSpansOnLine(row.lineIndex), row.inlayHints, content.getLineDirections(row.lineIndex), paintGeneral, widths, createTextRowParams());
+        applySelectedTextRange(tr, row.lineIndex);
         return tr;
+    }
+
+    private void applySelectedTextRange(TextRow tr, int lineIndex) {
+        if (cursor.isSelected() && lineIndex >= cursor.getLeftLine() && lineIndex <= cursor.getRightLine()) {
+            int startColInLine = lineIndex == cursor.getLeftLine() ? cursor.getLeftColumn() : 0;
+            int endColInLine = lineIndex == cursor.getRightLine() ? cursor.getRightColumn() : lineBuf.length();
+            startColInLine = Math.max(tr.getTextStart(), startColInLine);
+            endColInLine = Math.min(tr.getTextEnd(), endColInLine);
+            if (startColInLine < endColInLine) {
+                tr.setSelectedRange(startColInLine, endColInLine);
+            }
+        }
     }
 
     protected float drawSingleTextLine(Canvas canvas, int line, float offsetX, float offsetY, Spans.Reader spans, boolean visibleOnly) {
@@ -405,6 +418,7 @@ public class EditorRenderer {
         var widths = cache != null && cache.getUpdateTimestamp() >= displayTimestamp ? cache.getWidths() : null;
         widths = widths != null && widths.length > lineBuf.length() ? widths : null;
         tr.set(lineBuf, 0, columnCount, spans.getSpansOnLine(line), lineInlays, getLineDirections(line), paintGeneral, widths, createTextRowParams());
+        applySelectedTextRange(tr, line);
         if (canvas != null) {
             canvas.save();
             canvas.translate(offsetX, editor.getRowTop(0) + offsetY);
@@ -1364,6 +1378,8 @@ public class EditorRenderer {
                 // Draw without hardware acceleration
                 TextRow tr = new TextRow();
                 tr.set(lineBuf, rowInf.startColumn, rowInf.endColumn, reader.getSpansOnLine(line), rowInf.inlayHints, getLineDirections(line), paintGeneral, lineCache, createTextRowParams());
+                applySelectedTextRange(tr, line);
+
                 canvas.save();
                 canvas.translate(-offsetCopy, editor.getRowTop(row) - editor.getOffsetY());
                 // visible editor window: [offsetX, offsetX+editorWidth]
