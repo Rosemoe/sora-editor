@@ -416,30 +416,25 @@ public class EditorKeyEventHandler {
             if (dead) {
                 var cursor = editor.getCursor();
                 if (event.getRepeatCount() == 0) {
-                    if (cursor.getRightColumn() > 0) {
+                    if (!editorCursor.isSelected()) {
+                        editor.commitText(String.valueOf(Character.toChars(charCode)));
                         var charCount = Character.charCount(Character.codePointBefore(editor.getText().getLine(cursor.getRightLine()), cursor.getRightColumn()));
                         editor.setSelectionRegion(cursor.getRightLine(), cursor.getRightColumn() - charCount, cursor.getRightLine(), cursor.getRightColumn(), SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
                         return true;
-                    } // Otherwise, insert the char directly
-                } else if (event.getRepeatCount() == 1) {
-                    // Try to combine the two characters
-                    if (cursor.isSelected() && cursor.getRightColumn() > 0) {
-                        var base = Character.codePointBefore(editor.getText().getLine(cursor.getRightLine()), cursor.getRightColumn());
-                        var charCount = Character.charCount(base);
-                        if (charCount == cursor.getRight() - cursor.getLeft()) {
-                            var composed = KeyCharacterMap.getDeadChar(charCode, base);
-                            if (composed != base) {
-                                editor.commitText(String.valueOf(Character.toChars(composed)));
-                            } else {
-                                editor.setSelection(cursor.getRightLine(), cursor.getRightColumn());
-                            }
-                            editor.notifyIMEExternalCursorChange();
-                            return true;
-                        }
-                    } // Otherwise, insert the char directly
+                    }
+                    // Otherwise, insert the char directly
                 } else {
                     // Repeated key strokes are ignored
                     return true;
+                }
+            }
+
+            // Dead keys
+            if (editorCursor.getLeft() + 1 == editorCursor.getRight()) {
+                char base = editorText.charAt(editorCursor.getLeft());
+                var composed = KeyCharacterMap.getDeadChar(base, charCode);
+                if (composed != base) {
+                    charCode = composed;
                 }
             }
 
