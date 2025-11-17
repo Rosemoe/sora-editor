@@ -407,35 +407,31 @@ public class EditorKeyEventHandler {
                 // unsupported: character picker dialog and hex input
                 return editor.onSuperKeyDown(keyCode, event);
             }
-            // #547 Dead Chars
+            // #547 Dead Keys
             boolean dead = false;
             if ((charCode & KeyCharacterMap.COMBINING_ACCENT) != 0) {
                 charCode = charCode & KeyCharacterMap.COMBINING_ACCENT_MASK;
                 dead = true;
             }
-            if (dead) {
-                var cursor = editor.getCursor();
-                if (event.getRepeatCount() == 0) {
-                    if (!editorCursor.isSelected()) {
-                        editor.commitText(String.valueOf(Character.toChars(charCode)));
-                        var charCount = Character.charCount(Character.codePointBefore(editor.getText().getLine(cursor.getRightLine()), cursor.getRightColumn()));
-                        editor.setSelectionRegion(cursor.getRightLine(), cursor.getRightColumn() - charCount, cursor.getRightLine(), cursor.getRightColumn(), SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE);
-                        return true;
-                    }
-                    // Otherwise, insert the char directly
-                } else {
-                    // Repeated key strokes are ignored
-                    return true;
-                }
-            }
 
-            // Dead keys
             if (editorCursor.getLeft() + 1 == editorCursor.getRight()) {
                 char base = editorText.charAt(editorCursor.getLeft());
                 var composed = KeyCharacterMap.getDeadChar(base, charCode);
-                if (composed != base) {
+                if (composed != base && event.getRepeatCount() == 0) {
                     charCode = composed;
+                    dead = false;
                 }
+            }
+
+            if (dead) {
+                var cursor = editor.getCursor();
+                if (!editor.isTextSelected() || editorCursor.getLeft() + 1 == editorCursor.getRight() && editorText.charAt(editorCursor.getLeft()) == charCode) {
+                    editor.setSelection(editorCursor.getRightLine(), editorCursor.getRightColumn(), SelectionChangeEvent.CAUSE_DEAD_KEYS);
+                    editor.commitText(String.valueOf(Character.toChars(charCode)));
+                    var charCount = Character.charCount(Character.codePointBefore(editor.getText().getLine(cursor.getRightLine()), cursor.getRightColumn()));
+                    editor.setSelectionRegion(cursor.getRightLine(), cursor.getRightColumn() - charCount, cursor.getRightLine(), cursor.getRightColumn(), SelectionChangeEvent.CAUSE_DEAD_KEYS);
+                }
+                return true;
             }
 
             String text = new String(Character.toChars(charCode));

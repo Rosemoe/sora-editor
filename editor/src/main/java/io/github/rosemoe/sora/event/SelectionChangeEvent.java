@@ -75,6 +75,10 @@ public class SelectionChangeEvent extends Event {
      * From mouse
      */
     public final static int CAUSE_MOUSE_INPUT = 8;
+    /**
+     * Caused by a dead key press
+     */
+    public final static int CAUSE_DEAD_KEYS = 9;
     @Nullable
     private final CharPosition oldLeft;
     @Nullable

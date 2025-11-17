@@ -200,7 +200,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
     }
 
     protected void onSelectionChange(@NonNull SelectionChangeEvent event) {
-        if (handler.hasAnyHeldHandle()) {
+        if (handler.hasAnyHeldHandle() || event.getCause() == SelectionChangeEvent.CAUSE_DEAD_KEYS) {
             return;
         }
         if (handler.isDragSelecting()) {
