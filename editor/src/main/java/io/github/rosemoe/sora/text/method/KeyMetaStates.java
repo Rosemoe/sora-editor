@@ -66,22 +66,22 @@ public class KeyMetaStates extends android.text.method.MetaKeyKeyListener {
     }
 
     public boolean isShiftPressed() {
-        return getMetaState(dest, META_SHIFT_ON) != 0;
+        return getMetaState(dest, META_SHIFT_ON) == 1;
     }
 
     public boolean isAltPressed() {
-        return getMetaState(dest, META_ALT_ON) != 0;
+        return getMetaState(dest, META_ALT_ON) == 1;
     }
 
     public boolean isSymPressed() {
-        return getMetaState(dest, META_SYM_ON) != 0;
+        return getMetaState(dest, META_SYM_ON) == 1;
     }
 
     public boolean isSelecting() {
         return isShiftPressed() && !isAltPressed();
     }
 
-    public void adjust() {
+    public void adjustAfterKeyPress() {
         adjustMetaAfterKeypress(dest);
     }
 

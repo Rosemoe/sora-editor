@@ -145,7 +145,7 @@ public class EditorKeyEventHandler {
             case KeyEvent.KEYCODE_DPAD_RIGHT:
             case KeyEvent.KEYCODE_MOVE_HOME:
             case KeyEvent.KEYCODE_MOVE_END:
-                keyMetaStates.adjust();
+                keyMetaStates.adjustAfterKeyPress();
         }
 
         Boolean result = handleKeyEvent(event, editorKeyEvent, keybindingEvent, keyCode, isShiftPressed, isAltPressed, isCtrlPressed);
@@ -388,7 +388,11 @@ public class EditorKeyEventHandler {
                 }
 
                 if (!event.isCtrlPressed() && !event.isAltPressed()) {
-                    return handlePrintingKey(event, editorKeyEvent, keyCode);
+                    var result = handlePrintingKey(event, editorKeyEvent, keyCode);
+                    if (result) {
+                        keyMetaStates.adjustAfterKeyPress();
+                    }
+                    return result;
                 }
         }
         return null;
@@ -438,7 +442,6 @@ public class EditorKeyEventHandler {
 
             editor.commitText(text);
             editor.notifyIMEExternalCursorChange();
-
         } else {
             return editor.onSuperKeyDown(keyCode, event);
         }
