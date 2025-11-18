@@ -783,6 +783,10 @@ object SimpleMarkdownRenderer {
             val label = matchResult.groupValues[2]
             "[$label]($href)"
         }
+        text = urlRegex.replace(text) { matchResult ->
+            val url = matchResult.value
+            "[$url]($url)"
+        }
         text = text.replace(ulRegex, "")
         text = text.replace(olRegex, "")
         text = text.replace(pCloseRegex, "\n\n")
@@ -794,7 +798,6 @@ object SimpleMarkdownRenderer {
         text = text.replace(multiNewlineRegex, "\n\n")
         return text.trim()
     }
-
 
     private sealed interface Block {
         class Heading(val level: Int, val inlines: List<Inline>) : Block
@@ -815,7 +818,6 @@ object SimpleMarkdownRenderer {
         class Link(val label: List<Inline>, val url: String) : Inline
     }
 
-
     private const val SPAN_MODE = Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
     private val unorderedPattern = Regex("^[\\*\\-+]\\s+.+")
     private val orderedPattern = Regex("^(\\d+)\\.\\s+.+")
@@ -829,6 +831,7 @@ object SimpleMarkdownRenderer {
     private val preRegex = Regex("(?is)<pre[^>]*>(.*?)</pre>")
     private val liRegex = Regex("(?is)<li[^>]*>(.*?)</li>")
     private val linkRegex = Regex("(?is)<a[^>]+href\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>(.*?)</a>")
+    private val urlRegex = Regex("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&/=]*)")
     private val ulRegex = Regex("(?is)</?ul[^>]*>")
     private val olRegex = Regex("(?is)</?ol[^>]*>")
     private val pOpenRegex = Regex("(?is)<p[^>]*>")
@@ -838,7 +841,6 @@ object SimpleMarkdownRenderer {
     private const val indentMargin = 24
     private const val lineSeparator = "──────────"
     private val DEFAULT_HEADING_SCALE = floatArrayOf(1.6f, 1.4f, 1.25f, 1.1f, 1.05f, 1.0f)
-
 }
 
 class TypefaceSpanCompat(private val typeface: Typeface) : MetricAffectingSpan() {
