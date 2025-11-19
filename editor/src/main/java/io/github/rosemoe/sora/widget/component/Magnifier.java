@@ -42,6 +42,7 @@ import android.widget.ImageView;
 import android.widget.PopupWindow;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Px;
 import androidx.annotation.RequiresApi;
 
 import java.util.Objects;
@@ -62,7 +63,7 @@ public class Magnifier implements EditorBuiltinComponent {
     private final PopupWindow popup;
     private final ImageView image;
     private final Paint paint;
-    private final float maxTextSize;
+    private float maxTextSize;
     private int x, y;
     private boolean enabled = true;
     private boolean withinEditorForcibly = false;
@@ -125,6 +126,24 @@ public class Magnifier implements EditorBuiltinComponent {
             throw new IllegalArgumentException("factor can not be under 1.0");
         }
         this.scaleFactor = scaleFactor;
+    }
+
+    /**
+     * Set the max text size to show the magnifier
+     *
+     * @param maxTextSize Text size in px
+     */
+    public void setMaxTextSize(@Px float maxTextSize) {
+        this.maxTextSize = maxTextSize;
+    }
+
+    /**
+     * @return Text size in px
+     * @see #setMaxTextSize(float)
+     */
+    @Px
+    public float getMaxTextSize() {
+        return maxTextSize;
     }
 
     @Override
@@ -221,11 +240,30 @@ public class Magnifier implements EditorBuiltinComponent {
         if (!isShowing()) {
             return;
         }
-        if (!withinEditorForcibly && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && view.getContext() instanceof Activity) {
+        if (!withinEditorForcibly && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isPixelCopyApplicable()) {
             updateDisplayOreo((Activity) view.getContext());
         } else {
             updateDisplayWithinEditor();
         }
+    }
+
+    /**
+     * Check if {@link PixelCopy} is applicable in current view context
+     */
+    private boolean isPixelCopyApplicable() {
+        var ctx = view.getContext();
+        if (!(ctx instanceof Activity)) {
+            return false;
+        }
+        // We must use the same Window to retrieve screenshot
+        // Dialogs have its own Window and can not be obtained from the Context
+        var localWndId = view.getWindowId();
+        var activityWnd = ((Activity) ctx).getWindow();
+        if (activityWnd == null) {
+            return false;
+        }
+        var activityWndId = activityWnd.getDecorView().getWindowId();
+        return localWndId != null && localWndId.equals(activityWndId);
     }
 
     /**
