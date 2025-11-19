@@ -47,7 +47,6 @@ import org.eclipse.lsp4j.ColorProviderCapabilities
 import org.eclipse.lsp4j.CompletionCapabilities
 import org.eclipse.lsp4j.CompletionItemCapabilities
 import org.eclipse.lsp4j.DefinitionCapabilities
-import org.eclipse.lsp4j.DiagnosticCapabilities
 import org.eclipse.lsp4j.DidChangeWatchedFilesCapabilities
 import org.eclipse.lsp4j.DocumentHighlightCapabilities
 import org.eclipse.lsp4j.ExecuteCommandCapabilities
@@ -64,6 +63,7 @@ import org.eclipse.lsp4j.ReferencesCapabilities
 import org.eclipse.lsp4j.RenameCapabilities
 import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.SignatureHelpCapabilities
+import org.eclipse.lsp4j.SignatureInformationCapabilities
 import org.eclipse.lsp4j.SymbolCapabilities
 import org.eclipse.lsp4j.SynchronizationCapabilities
 import org.eclipse.lsp4j.TextDocumentClientCapabilities
@@ -350,7 +350,7 @@ class LanguageServerWrapper(
         // workspaceFolder.setName("");
         initParams.workspaceFolders = listOf(workspaceFolder)
 
-
+        val markupKinds = listOf("markdown", "plaintext")
         val textDocumentClientCapabilities = TextDocumentClientCapabilities().apply {
             codeAction = CodeActionCapabilities()
             codeAction.codeActionLiteralSupport = CodeActionLiteralSupportCapabilities().apply {
@@ -360,15 +360,15 @@ class LanguageServerWrapper(
                 CompletionCapabilities(CompletionItemCapabilities(true))
             definition = DefinitionCapabilities()
             documentHighlight = DocumentHighlightCapabilities()
-            colorProvider = ColorProviderCapabilities()   
+            colorProvider = ColorProviderCapabilities()
             inlayHint = InlayHintCapabilities()
             formatting = FormattingCapabilities()
-            hover = HoverCapabilities(true)
+            hover = HoverCapabilities(markupKinds, true)
             onTypeFormatting = OnTypeFormattingCapabilities()
             rangeFormatting = RangeFormattingCapabilities()
             references = ReferencesCapabilities()
             rename = RenameCapabilities(true, true)
-            signatureHelp = SignatureHelpCapabilities(true)
+            signatureHelp = SignatureHelpCapabilities(SignatureInformationCapabilities(markupKinds), true)
             synchronization =
                 SynchronizationCapabilities(true, true, true)
             publishDiagnostics = PublishDiagnosticsCapabilities(true)
