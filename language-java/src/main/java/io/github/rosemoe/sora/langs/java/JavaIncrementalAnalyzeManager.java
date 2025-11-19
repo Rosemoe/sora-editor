@@ -48,7 +48,7 @@ public class JavaIncrementalAnalyzeManager extends AsyncIncrementalAnalyzeManage
 
     private final static int STATE_NORMAL = 0;
     private final static int STATE_INCOMPLETE_COMMENT = 1;
-    private final static Pattern URL_PATTERN = Pattern.compile("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)");
+    private final static Pattern URL_PATTERN = Pattern.compile("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&/=]*)");
     private final ThreadLocal<JavaTextTokenizer> tokenizerProvider = new ThreadLocal<>();
     protected IdentifierAutoComplete.SyncIdentifiers identifiers = new IdentifierAutoComplete.SyncIdentifiers();
 
