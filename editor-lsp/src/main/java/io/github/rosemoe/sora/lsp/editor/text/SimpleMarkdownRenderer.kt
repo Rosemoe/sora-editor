@@ -783,10 +783,11 @@ object SimpleMarkdownRenderer {
             val label = matchResult.groupValues[2]
             "[$label]($href)"
         }
-        text = urlRegex.replace(text) { matchResult ->
-            val url = matchResult.value
-            "[$url]($url)"
+        text = autoLinkRegex.replace(text) { matchResult ->
+            val url = matchResult.groupValues[1]
+            if (url.matches(urlRegex)) "[$url]($url)" else matchResult.value
         }
+        text = normalizePlainUrl(text)
         text = text.replace(ulRegex, "")
         text = text.replace(olRegex, "")
         text = text.replace(pCloseRegex, "\n\n")
@@ -797,6 +798,32 @@ object SimpleMarkdownRenderer {
         text = text.replace("&amp;", "&")
         text = text.replace(multiNewlineRegex, "\n\n")
         return text.trim()
+    }
+
+    /**
+     * Converts plain URLs in the input text into Markdown links, ignoring URLs
+     * that are already part of existing Markdown links.
+     *
+     * @param text Input string that may contain plain URLs.
+     * @return Text with plain URLs wrapped as Markdown links `[url](url)`.
+     */
+    private fun normalizePlainUrl(text: String): String {
+        val markdownLinks = markdownLinkRegex.findAll(text).map { it.range }.toList()
+        var lastIndex = 0
+
+        return buildString {
+            urlRegex.findAll(text).forEach { match ->
+                val range = match.range
+                append(text.substring(lastIndex, range.first))
+                if (markdownLinks.none { range.first >= it.first && range.last <= it.last }) {
+                    append("[${match.value}](${match.value})")
+                } else {
+                    append(text.substring(range))
+                }
+                lastIndex = range.last + 1
+            }
+            append(text.substring(lastIndex))
+        }
     }
 
     private sealed interface Block {
@@ -831,7 +858,9 @@ object SimpleMarkdownRenderer {
     private val preRegex = Regex("(?is)<pre[^>]*>(.*?)</pre>")
     private val liRegex = Regex("(?is)<li[^>]*>(.*?)</li>")
     private val linkRegex = Regex("(?is)<a[^>]+href\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>(.*?)</a>")
-    private val urlRegex = Regex("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&/=]*)")
+    private val markdownLinkRegex = Regex("(?i)\\[([^\\]]*)\\]\\(([^\\)]*)\\)")
+    private val autoLinkRegex = Regex("(?i)<([^>]+)>")
+    private val urlRegex = Regex("(?i)https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&/=]*)")
     private val ulRegex = Regex("(?is)</?ul[^>]*>")
     private val olRegex = Regex("(?is)</?ol[^>]*>")
     private val pOpenRegex = Regex("(?is)<p[^>]*>")
