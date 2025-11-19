@@ -895,9 +895,7 @@ object SimpleMarkdownRenderer {
 
     /**
      * Create a default image provider that supports:
-     *  - Base64-encoded raster images (PNG, JPEG, WebP)
-     *
-     * Note: SVG images are detected but not yet supported.
+     *  - Base64-encoded raster images
      *
      * @param maxWidth Maximum width for returned Bitmaps. Images wider than this will be scaled down preserving aspect ratio.
      * @return An [ImageProvider] instance that can load a Bitmap from a data URI string, or null if decoding fails or the format is unsupported.
@@ -911,8 +909,6 @@ object SimpleMarkdownRenderer {
     /**
      * Default implementation of [ImageProvider] that decodes Base64 raster images from data URIs.
      *
-     * Note: SVG images are detected but not yet supported.
-     *
      * @param maxWidth Maximum width for returned Bitmaps. Images wider than this will be scaled down preserving aspect ratio.
      */
     class DefaultImageProvider(
@@ -920,12 +916,12 @@ object SimpleMarkdownRenderer {
     ): ImageProvider {
         override fun load(src: String): Drawable? {
             if (src.startsWith("data:")) {
-                if (src.startsWith("data:image/svg")) {
-                    TODO("Not yet implemented")
-                }
-
                 val payload = src.substringAfter("base64,")
-                val imageByteArray = Base64.decode(payload, Base64.DEFAULT)
+                val imageByteArray = try {
+                    Base64.decode(payload, Base64.DEFAULT)
+                } catch (_: Exception) {
+                    return null
+                }
                 val bitmap = BitmapFactory.decodeByteArray(imageByteArray, 0, imageByteArray.size) ?: return null
                 val scaledBitmap = scaleIfNeeded(bitmap, maxWidth)
                 val drawable = BitmapDrawable(scaledBitmap)
