@@ -22,13 +22,14 @@ import androidx.annotation.RequiresApi
 import java.util.Locale
 
 object SimpleMarkdownRenderer {
+    var globalImageProvider: ImageProvider = DefaultImageProvider(maxImageWidth)
+
     fun render(
         markdown: String,
         boldColor: Int,
         inlineCodeColor: Int,
         codeTypeface: Typeface,
         linkColor: Int? = null,
-        imageProvider: ImageProvider = createDefaultImageProvider(),
         headingScale: FloatArray = DEFAULT_HEADING_SCALE,
         highlighterRegistry: MarkdownCodeHighlighterRegistry = MarkdownCodeHighlighterRegistry.global
     ): Spanned {
@@ -40,7 +41,6 @@ object SimpleMarkdownRenderer {
             inlineCodeColor,
             codeTypeface,
             linkColor,
-            imageProvider,
             headingScale,
             highlighterRegistry
         )
@@ -52,7 +52,6 @@ object SimpleMarkdownRenderer {
         inlineCodeColor: Int,
         codeTypeface: Typeface,
         linkColor: Int? = null,
-        imageProvider: ImageProvider = createDefaultImageProvider(),
         headingScale: FloatArray = DEFAULT_HEADING_SCALE,
         highlighterRegistry: MarkdownCodeHighlighterRegistry = MarkdownCodeHighlighterRegistry.global
     ): Spanned {
@@ -64,7 +63,6 @@ object SimpleMarkdownRenderer {
             inlineCodeColor,
             codeTypeface,
             linkColor,
-            imageProvider,
             headingScale,
             highlighterRegistry
         )
@@ -76,7 +74,6 @@ object SimpleMarkdownRenderer {
         inlineCodeColor: Int,
         codeTypeface: Typeface,
         linkColor: Int?,
-        imageProvider: ImageProvider,
         headingScale: FloatArray,
         highlighterRegistry: MarkdownCodeHighlighterRegistry
     ): Spanned {
@@ -97,8 +94,7 @@ object SimpleMarkdownRenderer {
                         boldColor,
                         inlineCodeColor,
                         codeTypeface,
-                        linkColor,
-                        imageProvider
+                        linkColor
                     )
                     val end = builder.length
                     builder.setSpan(StyleSpan(Typeface.BOLD), start, end, SPAN_MODE)
@@ -118,8 +114,7 @@ object SimpleMarkdownRenderer {
                         boldColor,
                         inlineCodeColor,
                         codeTypeface,
-                        linkColor,
-                        imageProvider
+                        linkColor
                     )
                 }
 
@@ -156,8 +151,7 @@ object SimpleMarkdownRenderer {
                             boldColor,
                             inlineCodeColor,
                             codeTypeface,
-                            linkColor,
-                            imageProvider
+                            linkColor
                         )
                         val itemEnd = builder.length
                         builder.setSpan(
@@ -188,8 +182,7 @@ object SimpleMarkdownRenderer {
                         boldColor,
                         inlineCodeColor,
                         codeTypeface,
-                        linkColor,
-                        imageProvider
+                        linkColor
                     )
                     val end = builder.length
                     builder.setSpan(StyleSpan(Typeface.ITALIC), contentStart, end, SPAN_MODE)
@@ -216,7 +209,6 @@ object SimpleMarkdownRenderer {
         inlineCodeColor: Int,
         codeTypeface: Typeface,
         linkColor: Int?,
-        imageProvider: ImageProvider,
         headingScale: FloatArray,
         highlighterRegistry: MarkdownCodeHighlighterRegistry
     ): Spanned {
@@ -237,8 +229,7 @@ object SimpleMarkdownRenderer {
                         boldColor,
                         inlineCodeColor,
                         codeTypeface,
-                        linkColor,
-                        imageProvider
+                        linkColor
                     )
                     val end = builder.length
                     builder.setSpan(StyleSpan(Typeface.BOLD), start, end, SPAN_MODE)
@@ -258,8 +249,7 @@ object SimpleMarkdownRenderer {
                         boldColor,
                         inlineCodeColor,
                         codeTypeface,
-                        linkColor,
-                        imageProvider
+                        linkColor
                     )
                 }
 
@@ -299,8 +289,7 @@ object SimpleMarkdownRenderer {
                             boldColor,
                             inlineCodeColor,
                             codeTypeface,
-                            linkColor,
-                            imageProvider
+                            linkColor
                         )
                         val itemEnd = builder.length
                         builder.setSpan(
@@ -331,8 +320,7 @@ object SimpleMarkdownRenderer {
                         boldColor,
                         inlineCodeColor,
                         codeTypeface,
-                        linkColor,
-                        imageProvider
+                        linkColor
                     )
                     val end = builder.length
                     builder.setSpan(StyleSpan(Typeface.ITALIC), contentStart, end, SPAN_MODE)
@@ -360,7 +348,6 @@ object SimpleMarkdownRenderer {
         inlineCodeColor: Int,
         codeTypeface: Typeface,
         linkColor: Int?,
-        imageProvider: ImageProvider,
     ) {
         for (inline in inlines) {
             when (inline) {
@@ -374,7 +361,6 @@ object SimpleMarkdownRenderer {
                         inlineCodeColor,
                         codeTypeface,
                         linkColor,
-                        imageProvider
                     )
                     val end = builder.length
                     builder.setSpan(StyleSpan(Typeface.BOLD), start, end, SPAN_MODE)
@@ -390,7 +376,6 @@ object SimpleMarkdownRenderer {
                         inlineCodeColor,
                         codeTypeface,
                         linkColor,
-                        imageProvider
                     )
                     val end = builder.length
                     builder.setSpan(StyleSpan(Typeface.ITALIC), start, end, SPAN_MODE)
@@ -412,8 +397,7 @@ object SimpleMarkdownRenderer {
                         boldColor,
                         inlineCodeColor,
                         codeTypeface,
-                        linkColor,
-                        imageProvider
+                        linkColor
                     )
                     val end = builder.length
                     builder.setSpan(URLSpan(inline.url), start, end, SPAN_MODE)
@@ -424,7 +408,7 @@ object SimpleMarkdownRenderer {
 
                 is Inline.Image -> {
                     val start = builder.length
-                    val drawable = imageProvider.load(inline.url)
+                    val drawable = globalImageProvider.load(inline.url)
                     if (drawable != null) {
                         builder.append('\uFFFC') // Object replacement character
                         val end = builder.length
@@ -894,19 +878,6 @@ object SimpleMarkdownRenderer {
     }
 
     /**
-     * Create a default image provider that supports:
-     *  - Base64-encoded raster images
-     *
-     * @param maxWidth Maximum width for returned Bitmaps. Images wider than this will be scaled down preserving aspect ratio.
-     * @return An [ImageProvider] instance that can load a Bitmap from a data URI string, or null if decoding fails or the format is unsupported.
-     */
-    fun createDefaultImageProvider(
-        maxWidth: Int = 800
-    ): ImageProvider {
-        return DefaultImageProvider(maxWidth)
-    }
-
-    /**
      * Default implementation of [ImageProvider] that decodes Base64 raster images from data URIs.
      *
      * @param maxWidth Maximum width for returned Bitmaps. Images wider than this will be scaled down preserving aspect ratio.
@@ -995,6 +966,7 @@ object SimpleMarkdownRenderer {
     private val pOpenRegex = Regex("(?is)<p[^>]*>")
     private val pCloseRegex = Regex("(?is)</p>")
     private val multiNewlineRegex = Regex("\n{3,}")
+    private const val maxImageWidth = 800
     private const val leadingMargin = 24
     private const val indentMargin = 24
     private const val lineSeparator = "──────────"
