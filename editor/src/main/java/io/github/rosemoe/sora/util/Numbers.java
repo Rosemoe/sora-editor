@@ -110,6 +110,11 @@ public class Numbers {
         return (flags & flag) != 0 ? flags ^ flag : flags;
     }
 
+    public static int clearBits(int flags, int bitsToClear) {
+        int mask = ~bitsToClear;
+        return flags & mask;
+    }
+
     public static int coerceIn(int value, int min, int max) {
         return Math.max(min, Math.min(max, value));
     }

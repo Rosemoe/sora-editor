@@ -1381,7 +1381,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * Whether non-printable is to be drawn
      */
     protected boolean shouldInitializeNonPrintable() {
-        return Numbers.clearBit(Numbers.clearBit(nonPrintableOptions, FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE), FLAG_DRAW_TAB_SAME_AS_SPACE) != 0;
+        return Numbers.clearBits(nonPrintableOptions, FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE | FLAG_DRAW_TAB_SAME_AS_SPACE |
+                FLAG_DRAW_LINE_SEPARATOR | FLAG_DRAW_SOFT_WRAP) != 0;
     }
 
     /**
