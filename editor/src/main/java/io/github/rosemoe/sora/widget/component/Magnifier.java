@@ -41,6 +41,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 
+import androidx.annotation.FloatRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Px;
 import androidx.annotation.RequiresApi;
@@ -112,6 +113,7 @@ public class Magnifier implements EditorBuiltinComponent {
      *
      * @see #setScaleFactor(float)
      */
+    @FloatRange(from = 1.0, fromInclusive = false)
     public float getScaleFactor() {
         return scaleFactor;
     }
@@ -121,7 +123,7 @@ public class Magnifier implements EditorBuiltinComponent {
      *
      * @param scaleFactor Scale factor. Must not be under 1.0
      */
-    public void setScaleFactor(float scaleFactor) {
+    public void setScaleFactor(@FloatRange(from = 1.0, fromInclusive = false) float scaleFactor) {
         if (scaleFactor <= 1.0f) {
             throw new IllegalArgumentException("factor can not be under 1.0");
         }

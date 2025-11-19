@@ -1338,7 +1338,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      *
      * @param size Text size in pixel unit
      */
-    protected void setTextSizePxDirect(float size) {
+    protected void setTextSizePxDirect(@Px float size) {
         float oldTextSize = getTextSizePx();
         renderer.setTextSizePxDirect(size);
         dispatchEvent(new TextSizeChangeEvent(this, oldTextSize, size));

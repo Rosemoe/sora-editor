@@ -27,6 +27,7 @@ import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.Size;
 
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.text.ContentLine;
@@ -121,6 +122,7 @@ public interface Layout extends ContentListener {
      * @return An array containing layout offset, first element is the bottom of character and second element is the left of character
      */
     @NonNull
+    @Size(2)
     default float[] getCharLayoutOffset(int line, int column) {
         return getCharLayoutOffset(line, column, new float[2]);
     }
@@ -134,7 +136,7 @@ public interface Layout extends ContentListener {
      * @return An array containing layout offset, first element is the bottom of character and second element is the left of character
      */
     @NonNull
-    float[] getCharLayoutOffset(int line, int column, float[] array);
+    float[] getCharLayoutOffset(int line, int column, @Nullable float[] array);
 
     /**
      * Get how many rows are in the given line
