@@ -30,6 +30,7 @@ import com.itsaky.androidide.treesitter.TSQueryCursor
 import com.itsaky.androidide.treesitter.TSQueryMatch
 import com.itsaky.androidide.treesitter.TSTreeCursor
 import io.github.rosemoe.sora.lang.brackets.BracketsProvider
+import io.github.rosemoe.sora.lang.brackets.CachedBracketsProvider
 import io.github.rosemoe.sora.lang.brackets.PairedBracket
 import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.util.IntPair
@@ -39,7 +40,7 @@ import kotlin.math.min
 class TsBracketPairs(
     private val safeTree: SafeTsTree,
     private val languageSpec: TsLanguageSpec
-) : BracketsProvider {
+) : CachedBracketsProvider() {
 
     companion object {
         const val OPEN_NAME = "editor.brackets.open"
@@ -47,7 +48,7 @@ class TsBracketPairs(
         const val BRACKET_PAIR_COLORIZATION_LIMIT = 60000 * 300
     }
 
-    override fun getPairedBracketAt(text: Content, index: Int): PairedBracket? {
+    override fun computePairedBracketAt(text: Content, index: Int): PairedBracket? {
         if (!languageSpec.bracketsQuery.canAccess() || languageSpec.bracketsQuery.patternCount < 1) {
             return null
         }
@@ -107,7 +108,7 @@ class TsBracketPairs(
         }
     }
 
-    override fun queryPairedBracketsForRange(
+    override fun computePairedBracketsForRange(
         text: Content,
         leftRange: Long,
         rightRange: Long
