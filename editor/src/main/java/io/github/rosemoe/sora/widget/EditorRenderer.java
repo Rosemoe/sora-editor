@@ -115,7 +115,7 @@ public class EditorRenderer {
     private final LongArrayList postDrawLineNumbers = new LongArrayList();
     private final MutableIntList postDrawCurrentLines = new MutableIntList();
     private final LongArrayList matchedPositions = new LongArrayList();
-    private final MutableLongObjectMap<ResolvableColor> highlightPositions = new MutableLongObjectMap();
+    private final MutableLongObjectMap<ResolvableColor> highlightPositions = new MutableLongObjectMap<>();
     private final SparseArray<ContentLine> preloadedLines = new SparseArray<>();
     private final SparseArray<Directions> preloadedDirections = new SparseArray<>();
     private final CodeEditor editor;

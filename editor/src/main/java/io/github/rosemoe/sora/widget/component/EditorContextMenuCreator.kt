@@ -28,6 +28,7 @@ import android.graphics.drawable.Drawable
 import android.view.ContextMenu
 import android.view.Menu
 import android.view.MenuItem
+import io.github.rosemoe.sora.R
 import io.github.rosemoe.sora.event.CreateContextMenuEvent
 import io.github.rosemoe.sora.event.subscribeAlways
 import io.github.rosemoe.sora.widget.CodeEditor
@@ -49,7 +50,17 @@ open class EditorContextMenuCreator(val editor: CodeEditor) : EditorBuiltinCompo
         buildMenu(event.menu) {
 
             item {
+                titleRes = android.R.string.selectAll
+                iconRes = R.drawable.round_select_all_20
+                isEnabled = !editor.text.isEmpty()
+                onClick {
+                    editor.selectAll()
+                }
+            }
+
+            item {
                 titleRes = android.R.string.copy
+                iconRes = R.drawable.round_content_copy_20
                 isEnabled = editor.isTextSelected
                 onClick {
                     editor.copyText()
@@ -58,6 +69,7 @@ open class EditorContextMenuCreator(val editor: CodeEditor) : EditorBuiltinCompo
 
             item {
                 titleRes = android.R.string.cut
+                iconRes = R.drawable.round_content_cut_20
                 isEnabled = editor.isTextSelected
                 onClick {
                     editor.cutText()
@@ -66,6 +78,7 @@ open class EditorContextMenuCreator(val editor: CodeEditor) : EditorBuiltinCompo
 
             item {
                 titleRes = android.R.string.paste
+                iconRes = R.drawable.round_content_paste_20
                 isEnabled = editor.hasClip()
                 onClick {
                     editor.pasteText()
@@ -192,7 +205,7 @@ open class EditorContextMenuCreator(val editor: CodeEditor) : EditorBuiltinCompo
                     if (iconRes != 0) {
                         it.setIcon(iconRes)
                     } else if (icon != null) {
-                        it.setIcon(icon)
+                        it.icon = icon
                     }
                 }
         }
