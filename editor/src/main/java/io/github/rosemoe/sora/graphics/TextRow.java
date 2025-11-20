@@ -985,19 +985,19 @@ public class TextRow {
 
             float horizontalOffset = 0;
 
-            boolean lastResult = false;
+            boolean isExhausted = true;
 
             @Override
             public boolean accept(List<RowElement> e, boolean isRtl, ListPointers pointers) {
                 float runWidth = handleMultiElementRun(e, isRtl, pointers, canvas, horizontalOffset, ctx);
                 horizontalOffset += runWidth;
-                return lastResult = horizontalOffset < maxHorizontalOffset;
+                return isExhausted = horizontalOffset < maxHorizontalOffset;
             }
 
         }
         var handler = new DrawHandler();
         iterateRuns(handler, true);
-        return IntPair.packIntFloat(handler.lastResult ? 1 : 0, handler.horizontalOffset);
+        return IntPair.packIntFloat(handler.isExhausted ? 1 : 0, handler.horizontalOffset);
     }
 
     /**
