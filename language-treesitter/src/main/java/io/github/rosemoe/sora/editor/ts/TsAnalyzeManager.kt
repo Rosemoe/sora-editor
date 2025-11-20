@@ -178,6 +178,10 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
             if (thread == this && messageQueue.isEmpty()) {
                 val oldTree = (styles.spans as LineSpansGenerator?)?.safeTree
                 val newTree = SafeTsTree(tree!!.copy())
+                currentReceiver?.updateBracketProvider(
+                    this@TsAnalyzeManager,
+                    TsBracketPairs(newTree, languageSpec)
+                )
                 val newSpans = LineSpansGenerator(
                     newTree,
                     reference!!.lineCount,
@@ -186,14 +190,6 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                     languageSpec,
                     scopedVariables,
                     spanFactory
-                )
-                currentReceiver?.updateBracketProvider(
-                    this@TsAnalyzeManager,
-                    TsBracketPairs(newTree, localText, languageSpec).apply {
-                        if (bracketPairColorization) {
-                            computeBracketPairs()
-                        }
-                    }
                 )
                 val oldBlocks = styles.blocks
                 updateCodeBlocks()
