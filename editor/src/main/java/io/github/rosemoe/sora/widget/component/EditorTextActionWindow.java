@@ -208,7 +208,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
             return;
         }
         lastCause = event.getCause();
-        if (event.isSelected()) {
+        if (event.isSelected() || event.getCause() == SelectionChangeEvent.CAUSE_LONG_PRESS && editor.getText().length() == 0) {
             // Always post show. See #193
             if (event.getCause() != SelectionChangeEvent.CAUSE_SEARCH) {
                 editor.postInLifecycle(this::displayWindow);
