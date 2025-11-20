@@ -50,6 +50,7 @@ import org.eclipse.lsp4j.InlayHint
 import org.eclipse.lsp4j.InlayHintParams
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.max
 import kotlin.math.min
 
 @OptIn(FlowPreview::class)
@@ -112,8 +113,7 @@ class InlayHintEvent : AsyncEventListener() {
 
             // Request over 500 lines for current window
 
-            val upperLine = min(0, position.line - 500)
-
+            val upperLine = max(0, position.line - 500)
             val lowerLine = min(content.lineCount - 1, position.line + 500)
 
             val inlayHintParams = InlayHintParams(
@@ -138,8 +138,7 @@ class InlayHintEvent : AsyncEventListener() {
                 val inlayHints: List<InlayHint>?
 
                 withTimeout(Timeout[Timeouts.INLAY_HINT].toLong()) {
-                    inlayHints =
-                        future.await()
+                    inlayHints = future.await()
                 }
 
                 if (inlayHints == null || inlayHints.isEmpty()) {
