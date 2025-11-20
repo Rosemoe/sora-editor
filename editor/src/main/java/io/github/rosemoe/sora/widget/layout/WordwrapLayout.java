@@ -258,11 +258,15 @@ public class WordwrapLayout extends AbstractLayout {
             r.startColumn = 0;
             r.endColumn = text.getColumnCount(rowIndex);
             r.isLeadingRow = true;
+            r.isTrailingRow = true;
             r.lineIndex = rowIndex;
             r.inlayHints = getInlayHints(rowIndex);
             return r;
         }
-        return rowTable.get(rowIndex).toRow();
+        var region = rowTable.get(rowIndex);
+        var isLeadingRow = rowIndex <= 0 || rowTable.get(rowIndex - 1).line != region.line;
+        var isTrailingRow = rowIndex + 1 >= rowTable.size() || rowTable.get(rowIndex + 1).line != region.line;
+        return rowTable.get(rowIndex).toRow(isLeadingRow, isTrailingRow);
     }
 
     @Override
@@ -492,9 +496,10 @@ public class WordwrapLayout extends AbstractLayout {
             this.inlayHints = inlayHints;
         }
 
-        public Row toRow() {
+        public Row toRow(boolean isLeadingRow, boolean isTrailingRow) {
             var row = new Row();
-            row.isLeadingRow = startColumn == 0;
+            row.isLeadingRow = isLeadingRow;
+            row.isTrailingRow = isTrailingRow;
             row.startColumn = startColumn;
             row.endColumn = endColumn;
             row.lineIndex = line;
@@ -552,6 +557,7 @@ public class WordwrapLayout extends AbstractLayout {
             result.endColumn = region.endColumn;
             result.inlayHints = region.inlayHints == null ? Collections.emptyList() : region.inlayHints;
             result.isLeadingRow = currentRow <= 0 || rowTable.get(currentRow - 1).line != region.line;
+            result.isTrailingRow = currentRow + 1 >= rowTable.size() || rowTable.get(currentRow + 1).line != region.line;
             currentRow++;
             return result;
         }

@@ -222,6 +222,7 @@ public class LineBreakLayout extends AbstractLayout {
         row.lineIndex = rowIndex;
         row.startColumn = 0;
         row.isLeadingRow = true;
+        row.isTrailingRow = true;
         row.endColumn = text.getColumnCount(rowIndex);
         row.inlayHints = getInlayHints(rowIndex);
         return row;
@@ -339,6 +340,7 @@ public class LineBreakLayout extends AbstractLayout {
             this.text = text;
             this.layout = layout;
             result.isLeadingRow = true;
+            result.isTrailingRow = true;
             result.startColumn = 0;
             this.preloadedLines = preloadedLines;
         }

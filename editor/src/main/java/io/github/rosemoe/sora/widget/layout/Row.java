@@ -48,10 +48,16 @@ public class Row {
     public int lineIndex;
 
     /**
-     * Whether this row is a start of a line
+     * Whether this row is the first one of a line.
      * Editor will draw line number to left of this row to indicate this
      */
     public boolean isLeadingRow;
+
+    /**
+     * Whether this row is the last one of a line.
+     * Editor will draw soft-wrap or line-break indicator according to this
+     */
+    public boolean isTrailingRow;
 
     /**
      * Start index in target line

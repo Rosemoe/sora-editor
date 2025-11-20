@@ -1396,15 +1396,15 @@ public class EditorRenderer {
                 paintingOffset += IntPair.getSecondAsFloat(result);
 
                 // Draw hard wrap & soft wrap
-                if (exhausted && rowInf.endColumn == columnCount && (nonPrintableFlags & CodeEditor.FLAG_DRAW_LINE_SEPARATOR) != 0) {
+                if (exhausted && rowInf.isTrailingRow && (nonPrintableFlags & CodeEditor.FLAG_DRAW_LINE_SEPARATOR) != 0) {
                     drawMiniGraph(canvas, paintingOffset, row, lineBreakGraph);
-                } else if (rowInf.endColumn != columnCount && editor.isWordwrap() && (nonPrintableFlags & CodeEditor.FLAG_DRAW_SOFT_WRAP) != 0) {
+                } else if (!rowInf.isTrailingRow && editor.isWordwrap() && (nonPrintableFlags & CodeEditor.FLAG_DRAW_SOFT_WRAP) != 0) {
                     drawMiniGraph(canvas, paintingOffset, row, softwrapRightGraph);
                 }
             } else {
                 paintingOffset = offset + editor.getRenderContext().getRenderNodeHolder().drawLineHardwareAccelerated(canvas, line, offset, editor.getRowTop(row) - editor.getOffsetY());
                 // Draw hard wrap
-                if (rowInf.endColumn == columnCount && (nonPrintableFlags & CodeEditor.FLAG_DRAW_LINE_SEPARATOR) != 0) {
+                if (rowInf.isTrailingRow && (nonPrintableFlags & CodeEditor.FLAG_DRAW_LINE_SEPARATOR) != 0) {
                     drawMiniGraph(canvas, paintingOffset, row, lineBreakGraph);
                 }
             }
