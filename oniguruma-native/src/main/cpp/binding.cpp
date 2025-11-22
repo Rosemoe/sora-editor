@@ -9,8 +9,7 @@
 
 OnigErrorInfo lastOnigError;
 
-class OnigCachedResult {
-public:
+struct OnigCachedResult {
     jlong cacheKey{};
     int lastSearchPosition{};
     OnigRegion *region{};
