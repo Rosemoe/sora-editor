@@ -1,12 +1,10 @@
 package io.github.rosemoe.sora.lsp.editor.text
 
-import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextPaint
@@ -18,7 +16,6 @@ import android.text.style.RelativeSizeSpan
 import android.text.style.StyleSpan
 import android.text.style.URLSpan
 import android.util.Base64
-import androidx.annotation.RequiresApi
 import java.util.Locale
 
 object SimpleMarkdownRenderer {
@@ -410,10 +407,11 @@ object SimpleMarkdownRenderer {
                     val start = builder.length
                     val drawable = globalImageProvider.load(inline.url)
                     if (drawable != null) {
+                        drawable.setBounds(0, 0, drawable.intrinsicWidth, drawable.intrinsicHeight)
                         builder.append('\uFFFC') // Object replacement character
                         val end = builder.length
                         builder.setSpan(
-                            ImageSpan(drawable, ImageSpan.ALIGN_BOTTOM),
+                            ImageSpan(drawable, ImageSpan.ALIGN_CENTER),
                             start,
                             end,
                             SPAN_MODE
@@ -882,23 +880,36 @@ object SimpleMarkdownRenderer {
      *
      * @param maxWidth Maximum width for returned Bitmaps. Images wider than this will be scaled down preserving aspect ratio.
      */
-    class DefaultImageProvider(
+    open class DefaultImageProvider(
         private val maxWidth: Int = 800
     ): ImageProvider {
         override fun load(src: String): Drawable? {
-            if (src.startsWith("data:")) {
-                val payload = src.substringAfter("base64,")
-                val imageByteArray = try {
-                    Base64.decode(payload, Base64.DEFAULT)
-                } catch (_: Exception) {
-                    return null
-                }
-                val bitmap = BitmapFactory.decodeByteArray(imageByteArray, 0, imageByteArray.size) ?: return null
-                val scaledBitmap = scaleIfNeeded(bitmap, maxWidth)
-                val drawable = BitmapDrawable(scaledBitmap)
-                return drawable
+            if (!src.startsWith("data:")) return null
+
+            val payload = src.substringAfter("base64,", "")
+            if (payload.isEmpty()) return null
+
+            val imageByteArray = try {
+                Base64.decode(payload, Base64.DEFAULT)
+            } catch (_: Exception) {
+                return null
             }
-            return null
+            val bitmap = BitmapFactory.decodeByteArray(imageByteArray, 0, imageByteArray.size) ?: return null
+            val scaledBitmap = scaleIfNeeded(bitmap, maxWidth)
+            return BitmapDrawable(scaledBitmap)
+        }
+
+        /**
+         * Scale down a bitmap to maxWidth preserving aspect ratio. If bitmap width
+         * is already <= maxWidth, the original bitmap is returned.
+         */
+        private fun scaleIfNeeded(bmp: Bitmap, maxWidth: Int): Bitmap {
+            val currentWidth = bmp.width
+            if (currentWidth <= maxWidth) return bmp
+            val ratio = maxWidth.toFloat() / currentWidth.toFloat()
+
+            val newHeight = (bmp.height * ratio).toInt()
+            return Bitmap.createScaledBitmap(bmp, maxWidth, newHeight, true)
         }
     }
 
@@ -909,20 +920,6 @@ object SimpleMarkdownRenderer {
          * @return A [Drawable] if successful, or null if the image cannot be loaded.
          */
         fun load(src: String): Drawable?
-    }
-
-    /**
-     * Scale down a bitmap to maxWidth preserving aspect ratio. If bitmap width
-     * is already <= maxWidth, the original bitmap is returned.
-     */
-    @SuppressLint("UseKtx")
-    private fun scaleIfNeeded(bmp: Bitmap, maxWidth: Int): Bitmap {
-        val currentWidth = bmp.width
-        if (currentWidth <= maxWidth) return bmp
-        val ratio = maxWidth.toFloat() / currentWidth.toFloat()
-
-        val newHeight = (bmp.height * ratio).toInt()
-        return Bitmap.createScaledBitmap(bmp, maxWidth, newHeight, true)
     }
 
     private sealed interface Block {
