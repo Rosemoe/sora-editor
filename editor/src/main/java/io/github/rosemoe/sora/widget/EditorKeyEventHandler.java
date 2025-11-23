@@ -386,20 +386,15 @@ public class EditorKeyEventHandler {
                 if (event.isCtrlPressed() && !event.isAltPressed()) {
                     return handleCtrlKeyBinding(editorKeyEvent, keybindingEvent, keyCode, isShiftPressed);
                 }
-
-                if (!event.isCtrlPressed() && !event.isAltPressed()) {
-                    var result = handlePrintingKey(event, editorKeyEvent, keyCode);
-                    if (result) {
-                        keyMetaStates.adjustAfterKeyPress();
-                    }
-                    return result;
-                }
         }
-        return null;
+        var result = handlePrintingKey(event, editorKeyEvent, keyCode);
+        if (result) {
+            keyMetaStates.adjustAfterKeyPress();
+        }
+        return editorKeyEvent.result(result);
     }
 
-    @NonNull
-    private Boolean handlePrintingKey(
+    private boolean handlePrintingKey(
             KeyEvent event,
             EditorKeyEvent editorKeyEvent,
             int keyCode) {
@@ -442,10 +437,10 @@ public class EditorKeyEventHandler {
 
             editor.commitText(text);
             editor.notifyIMEExternalCursorChange();
+            return true;
         } else {
             return editor.onSuperKeyDown(keyCode, event);
         }
-        return editorKeyEvent.result(true);
     }
 
     @Nullable
