@@ -39,7 +39,7 @@ import java.util.function.Function
  * A language server and client event handler.
  */
 class EventHandler internal constructor(
-    private val listener: EventListener,
+    internal val listener: EventListener,
     private val isRunning: BooleanSupplier
 ) :
     Function<MessageConsumer, MessageConsumer> {
@@ -47,19 +47,11 @@ class EventHandler internal constructor(
     override fun apply(messageConsumer: MessageConsumer): MessageConsumer {
         return MessageConsumer { message: Message ->
             if (isRunning.asBoolean) {
-                handleMessage(message)
                 messageConsumer.consume(message)
             }
         }
     }
 
-    private fun handleMessage(message: Message) {
-        if (message is ResponseMessage) {
-            if (message.result is InitializeResult) {
-                listener.initialize(languageServer, message.result as InitializeResult)
-            }
-        }
-    }
 
     fun setLanguageServer(languageServer: LanguageServer) {
         this.languageServer = languageServer

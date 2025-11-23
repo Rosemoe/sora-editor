@@ -90,6 +90,7 @@ import org.eclipse.lsp4j.TypeDefinitionParams
 import org.eclipse.lsp4j.UnregistrationParams
 import org.eclipse.lsp4j.WillSaveTextDocumentParams
 import org.eclipse.lsp4j.WorkspaceEdit
+import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.jsonrpc.messages.Either3
 import org.eclipse.lsp4j.services.LanguageClient
@@ -109,6 +110,9 @@ import java.util.concurrent.CompletableFuture
  */
 abstract class RequestManager : LanguageClient, TextDocumentService, WorkspaceService,
     LanguageServer {
+
+    abstract val capabilities: ServerCapabilities?
+    abstract val serverName: String
     //------------------------------------- Server2Client ---------------------------------------------------------//
     abstract override fun showMessage(messageParams: MessageParams)
     abstract override fun showMessageRequest(showMessageRequestParams: ShowMessageRequestParams): CompletableFuture<MessageActionItem>
@@ -121,18 +125,6 @@ abstract class RequestManager : LanguageClient, TextDocumentService, WorkspaceSe
 
     abstract override fun applyEdit(params: ApplyWorkspaceEditParams): CompletableFuture<ApplyWorkspaceEditResponse>
     abstract override fun publishDiagnostics(publishDiagnosticsParams: PublishDiagnosticsParams)
-    override fun semanticTokensFull(params: SemanticTokensParams): CompletableFuture<SemanticTokens> {
-        return super.semanticTokensFull(params)
-    }
-
-    override fun semanticTokensFullDelta(params: SemanticTokensDeltaParams): CompletableFuture<Either<SemanticTokens, SemanticTokensDelta>> {
-        return super.semanticTokensFullDelta(params)
-    }
-
-    override fun semanticTokensRange(params: SemanticTokensRangeParams): CompletableFuture<SemanticTokens> {
-        return super.semanticTokensRange(params)
-    }
-
     //--------------------------------------Client2Server-------------------------------------------------------------//
     // General
     abstract override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult>?
@@ -187,5 +179,18 @@ abstract class RequestManager : LanguageClient, TextDocumentService, WorkspaceSe
     abstract override fun documentColor(params: DocumentColorParams): CompletableFuture<List<ColorInformation>>?
     abstract override fun colorPresentation(params: ColorPresentationParams): CompletableFuture<List<ColorPresentation>>?
     abstract override fun foldingRange(params: FoldingRangeRequestParams): CompletableFuture<List<FoldingRange>>?
+
+    // TODO: waiting sora support style patch
+    override fun semanticTokensFull(params: SemanticTokensParams): CompletableFuture<SemanticTokens> {
+        return super.semanticTokensFull(params)
+    }
+
+    override fun semanticTokensFullDelta(params: SemanticTokensDeltaParams): CompletableFuture<Either<SemanticTokens, SemanticTokensDelta>> {
+        return super.semanticTokensFullDelta(params)
+    }
+
+    override fun semanticTokensRange(params: SemanticTokensRangeParams): CompletableFuture<SemanticTokens> {
+        return super.semanticTokensRange(params)
+    }
 }
 

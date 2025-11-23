@@ -1,5 +1,8 @@
 package io.github.rosemoe.sora.lsp.client.languageserver.requestmanager
 
+import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
+import io.github.rosemoe.sora.lsp.requests.Timeout
+import io.github.rosemoe.sora.lsp.requests.Timeouts
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams
 import org.eclipse.lsp4j.ApplyWorkspaceEditResponse
 import org.eclipse.lsp4j.CodeAction
@@ -17,6 +20,7 @@ import org.eclipse.lsp4j.DefinitionParams
 import org.eclipse.lsp4j.DidChangeConfigurationParams
 import org.eclipse.lsp4j.DidChangeTextDocumentParams
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams
+import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams
 import org.eclipse.lsp4j.DidCloseTextDocumentParams
 import org.eclipse.lsp4j.DidOpenTextDocumentParams
 import org.eclipse.lsp4j.DidSaveTextDocumentParams
@@ -26,10 +30,18 @@ import org.eclipse.lsp4j.DocumentHighlight
 import org.eclipse.lsp4j.DocumentHighlightParams
 import org.eclipse.lsp4j.DocumentLink
 import org.eclipse.lsp4j.DocumentLinkParams
+import org.eclipse.lsp4j.DocumentDiagnosticParams
+import org.eclipse.lsp4j.DocumentDiagnosticReport
+import org.eclipse.lsp4j.DocumentDiagnosticReportKind
 import org.eclipse.lsp4j.DocumentOnTypeFormattingParams
 import org.eclipse.lsp4j.DocumentRangeFormattingParams
 import org.eclipse.lsp4j.DocumentSymbol
 import org.eclipse.lsp4j.DocumentSymbolParams
+import org.eclipse.lsp4j.Diagnostic
+import org.eclipse.lsp4j.FullDocumentDiagnosticReport
+import org.eclipse.lsp4j.RelatedFullDocumentDiagnosticReport
+import org.eclipse.lsp4j.RelatedUnchangedDocumentDiagnosticReport
+import org.eclipse.lsp4j.UnchangedDocumentDiagnosticReport
 import org.eclipse.lsp4j.ExecuteCommandParams
 import org.eclipse.lsp4j.FoldingRange
 import org.eclipse.lsp4j.FoldingRangeRequestParams
@@ -39,6 +51,8 @@ import org.eclipse.lsp4j.ImplementationParams
 import org.eclipse.lsp4j.InitializeParams
 import org.eclipse.lsp4j.InitializeResult
 import org.eclipse.lsp4j.InitializedParams
+import org.eclipse.lsp4j.InlayHint
+import org.eclipse.lsp4j.InlayHintParams
 import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.LocationLink
 import org.eclipse.lsp4j.MessageActionItem
@@ -52,6 +66,7 @@ import org.eclipse.lsp4j.ReferenceParams
 import org.eclipse.lsp4j.RegistrationParams
 import org.eclipse.lsp4j.RenameParams
 import org.eclipse.lsp4j.ServerCapabilities
+import org.eclipse.lsp4j.SetTraceParams
 import org.eclipse.lsp4j.ShowMessageRequestParams
 import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.SignatureHelpParams
@@ -62,27 +77,32 @@ import org.eclipse.lsp4j.TypeDefinitionParams
 import org.eclipse.lsp4j.UnregistrationParams
 import org.eclipse.lsp4j.WillSaveTextDocumentParams
 import org.eclipse.lsp4j.WorkspaceEdit
+import org.eclipse.lsp4j.WorkspaceSymbol
+import org.eclipse.lsp4j.WorkspaceSymbolParams
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.jsonrpc.messages.Either3
 import org.eclipse.lsp4j.services.TextDocumentService
 import org.eclipse.lsp4j.services.WorkspaceService
-import java.lang.reflect.Modifier
+import io.github.rosemoe.sora.lsp.utils.merge
+import java.util.LinkedHashMap
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 
 class AggregatedRequestManager(
-    sessions: List<SessionEntry>
+    sessions: Set<LanguageServerWrapper>
 ) : RequestManager() {
 
-    data class SessionEntry(
-        val serverName: String,
-        val requestManagerProvider: () -> RequestManager?,
-        val capabilitiesProvider: () -> ServerCapabilities?
-    )
+    override val serverName = "NO-SERVER"
 
-    private var sessionEntries = sessions.toList()
+    private var sessionEntries = sessions
 
-    fun updateSessions(newSessions: List<SessionEntry>) {
-        sessionEntries = newSessions.toList()
+    var activeManagers: List<RequestManager> = sessionEntries.mapNotNull { it.requestManager }
+        private set
+
+
+    internal fun updateSessions(newSessions: Set<LanguageServerWrapper>) {
+        sessionEntries = newSessions
+        activeManagers = sessionEntries.mapNotNull { it.requestManager }
     }
 
     override val capabilities: ServerCapabilities?
@@ -90,39 +110,24 @@ class AggregatedRequestManager(
 
     /** Combine capabilities from every active session, preferring the first non-null value per field. */
     private fun mergeCapabilities(): ServerCapabilities? {
-        val all = sessionEntries.mapNotNull { it.capabilitiesProvider() }
+        val all = sessionEntries.mapNotNull { it.getServerCapabilities() }
         if (all.isEmpty()) {
             return null
         }
         val merged = ServerCapabilities()
-        ServerCapabilities::class.java.declaredFields.forEach { field ->
-            if (Modifier.isStatic(field.modifiers)) {
-                return@forEach
-            }
-            field.isAccessible = true
-            for (cap in all) {
-                val value = field.get(cap)
-                if (value != null) {
-                    field.set(merged, value)
-                    break
-                }
-            }
+        for (cap in all) {
+            merged.merge(cap)
         }
         return merged
     }
 
-    private val activeManagers: List<RequestManager>
-        get() = sessionEntries.mapNotNull { it.requestManagerProvider() }
-
-    private inline fun fanOut(action: RequestManager.() -> Unit) {
+    private inline fun fanOut(crossinline action: RequestManager.() -> Unit) {
         activeManagers.forEach { it.action() }
     }
 
     private inline fun <T> firstFuture(crossinline call: RequestManager.() -> CompletableFuture<T>?): CompletableFuture<T>? {
-        return activeManagers.asSequence().mapNotNull { it.call() }.firstOrNull()
+        return activeManagers.firstNotNullOfOrNull { it.call() }
     }
-
-    fun getActiveManagers(): List<RequestManager> = activeManagers
 
     private fun <T> collectFutures(futures: List<CompletableFuture<T>>): CompletableFuture<List<T>>? {
         if (futures.isEmpty()) {
@@ -130,12 +135,15 @@ class AggregatedRequestManager(
         }
         return CompletableFuture.allOf(*futures.toTypedArray()).thenApply {
             futures.mapNotNull { future ->
-                runCatching { future.join() }.getOrNull()
+                runCatching { future.join() }
+                    .onFailure {
+                        it.printStackTrace()
+                    }
+                    .getOrNull()
             }
         }
     }
 
-    /** Merge completion lists from multiple servers, deduplicating by label+insertText. */
     private fun aggregateCompletion(futures: List<CompletableFuture<Either<List<CompletionItem>, CompletionList>>>): CompletableFuture<Either<List<CompletionItem>, CompletionList>>? {
         if (futures.isEmpty()) {
             return null
@@ -143,7 +151,7 @@ class AggregatedRequestManager(
         return CompletableFuture.allOf(*futures.toTypedArray()).thenApply {
             val aggregated = mutableListOf<CompletionItem>()
             for (future in futures) {
-                val either = runCatching { future.join() }.getOrNull() ?: continue
+                val either = future.join()  ?: continue
                 val list = when {
                     either.isLeft -> either.left
                     either.isRight -> either.right.items ?: emptyList()
@@ -155,12 +163,77 @@ class AggregatedRequestManager(
         }
     }
 
-    /** Helper to flatten list-based responses such as code actions or highlights. */
     private fun <T> aggregateLists(
         futures: List<CompletableFuture<List<T>>>
     ): CompletableFuture<List<T>>? {
         return collectFutures(futures)?.thenApply { lists ->
             lists.flatMap { it }
+        }
+    }
+
+    private fun aggregateDefinitions(
+        futures: List<CompletableFuture<Either<List<Location>, List<LocationLink>>>>
+    ): CompletableFuture<Either<List<Location>, List<LocationLink>>>? {
+        if (futures.isEmpty()) {
+            return null
+        }
+        return CompletableFuture.allOf(*futures.toTypedArray()).thenApply {
+            val locations = mutableListOf<Location>()
+            val locationLinks = mutableListOf<LocationLink>()
+            for (future in futures) {
+                val either = runCatching { future.join() }.getOrNull() ?: continue
+                if (either.isLeft) {
+                    locations.addAll(either.left)
+                } else if (either.isRight) {
+                    locationLinks.addAll(either.right)
+                }
+            }
+            if (locationLinks.isNotEmpty()) {
+                Either.forRight(locationLinks)
+            } else {
+                Either.forLeft(locations)
+            }
+        }
+    }
+
+    private fun aggregateDocumentDiagnostics(
+        futures: List<CompletableFuture<DocumentDiagnosticReport>>
+    ): CompletableFuture<DocumentDiagnosticReport>? {
+        if (futures.isEmpty()) {
+            return null
+        }
+        return CompletableFuture.allOf(*futures.toTypedArray()).thenApply {
+            val diagnostics = mutableListOf<Diagnostic>()
+            val relatedDocsMap =
+                LinkedHashMap<String, Either<FullDocumentDiagnosticReport, UnchangedDocumentDiagnosticReport>>()
+            var aggregatedResultId: String? = null
+            var fallbackUnchanged: RelatedUnchangedDocumentDiagnosticReport? = null
+            for (future in futures) {
+                val report = runCatching { future.join() }.getOrNull() ?: continue
+                if (report.isRelatedFullDocumentDiagnosticReport) {
+                    val fullReport = report.relatedFullDocumentDiagnosticReport
+                    if (aggregatedResultId == null) {
+                        aggregatedResultId = fullReport.resultId
+                    }
+                    diagnostics.addAll(fullReport.items ?: emptyList())
+                    fullReport.relatedDocuments?.forEach { (uri, either) ->
+                        relatedDocsMap[uri] = either
+                    }
+                } else if (report.isRelatedUnchangedDocumentDiagnosticReport && fallbackUnchanged == null) {
+                    fallbackUnchanged = report.relatedUnchangedDocumentDiagnosticReport
+                }
+            }
+            if (diagnostics.isNotEmpty()) {
+                val aggregatedFull = RelatedFullDocumentDiagnosticReport().apply {
+                    items = diagnostics.toList()
+                    resultId = aggregatedResultId
+                    if (relatedDocsMap.isNotEmpty()) {
+                        relatedDocuments = LinkedHashMap(relatedDocsMap)
+                    }
+                }
+                return@thenApply DocumentDiagnosticReport(aggregatedFull)
+            }
+            fallbackUnchanged?.let { DocumentDiagnosticReport(it) }
         }
     }
 
@@ -224,8 +297,16 @@ class AggregatedRequestManager(
         fanOut { didChangeWatchedFiles(params) }
     }
 
+    override fun didChangeWorkspaceFolders(params: DidChangeWorkspaceFoldersParams) {
+        fanOut { didChangeWorkspaceFolders(params) }
+    }
+
     override fun executeCommand(params: ExecuteCommandParams): CompletableFuture<Any>? {
         return firstFuture { executeCommand(params) }
+    }
+
+    override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<Either<List<SymbolInformation>, List<WorkspaceSymbol?>>>? {
+        return firstFuture { symbol(params) }
     }
 
     override fun didOpen(params: DidOpenTextDocumentParams) {
@@ -278,9 +359,11 @@ class AggregatedRequestManager(
     }
 
     override fun references(params: ReferenceParams): CompletableFuture<List<Location?>>? {
-        return firstFuture { references(params) }
+        val futures = activeManagers.mapNotNull { it.references(params) }
+        return aggregateLists(futures)
     }
 
+    @Deprecated("")
     override fun documentHighlight(params: TextDocumentPositionParams): CompletableFuture<List<DocumentHighlight>>? {
         val futures = activeManagers.mapNotNull { it.documentHighlight(params) }
         return aggregateLists(futures)
@@ -292,7 +375,8 @@ class AggregatedRequestManager(
     }
 
     override fun documentSymbol(params: DocumentSymbolParams): CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>>? {
-        return firstFuture { documentSymbol(params) }
+        val futures = activeManagers.mapNotNull { it.documentSymbol(params) }
+        return aggregateLists(futures)
     }
 
     override fun formatting(params: DocumentFormattingParams): CompletableFuture<List<TextEdit>>? {
@@ -307,12 +391,20 @@ class AggregatedRequestManager(
         return firstFuture { onTypeFormatting(params) }
     }
 
+    override fun diagnostic(params: DocumentDiagnosticParams?): CompletableFuture<DocumentDiagnosticReport>? {
+        val futures = activeManagers.mapNotNull { it.diagnostic(params) }
+        return aggregateDocumentDiagnostics(futures)
+    }
+
+    @Deprecated("")
     override fun definition(params: TextDocumentPositionParams): CompletableFuture<Either<List<Location>, List<LocationLink>>>? {
-        return firstFuture { definition(params) }
+        val futures = activeManagers.mapNotNull { it.definition(params) }
+        return aggregateDefinitions(futures)
     }
 
     override fun definition(params: DefinitionParams): CompletableFuture<Either<List<Location>, List<LocationLink>>>? {
-        return firstFuture { definition(params) }
+        val futures = activeManagers.mapNotNull { it.definition(params) }
+        return aggregateDefinitions(futures)
     }
 
     override fun codeAction(params: CodeActionParams): CompletableFuture<List<Either<Command, CodeAction>>>? {
@@ -329,7 +421,8 @@ class AggregatedRequestManager(
     }
 
     override fun documentLink(params: DocumentLinkParams): CompletableFuture<List<DocumentLink>>? {
-        return firstFuture { documentLink(params) }
+        val futures = activeManagers.mapNotNull { it.documentLink(params) }
+        return aggregateLists(futures)
     }
 
     override fun documentLinkResolve(unresolved: DocumentLink): CompletableFuture<DocumentLink>? {
@@ -364,6 +457,11 @@ class AggregatedRequestManager(
 
     override fun foldingRange(params: FoldingRangeRequestParams): CompletableFuture<List<FoldingRange>>? {
         val futures = activeManagers.mapNotNull { it.foldingRange(params) }
+        return aggregateLists(futures)
+    }
+
+    override fun inlayHint(params: InlayHintParams): CompletableFuture<List<InlayHint>>? {
+        val futures = activeManagers.mapNotNull { it.inlayHint(params) }
         return aggregateLists(futures)
     }
 

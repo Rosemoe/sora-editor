@@ -63,9 +63,12 @@ class LspProject(
 
     val eventEmitter = EventEmitter()
 
-    private val languageServerWrappers = ConcurrentHashMap<String, LanguageServerWrapper>()
+    // Distinguishes server wrappers by extension and optional definition name.
+    private data class ServerKey(val ext: String, val name: String)
 
-    private val serverDefinitions = mutableMapOf<String, LanguageServerDefinition>()
+    private val languageServerWrappers = ConcurrentHashMap<ServerKey, LanguageServerWrapper>()
+
+    private val serverDefinitions = mutableMapOf<String, ConcurrentHashMap<String, LanguageServerDefinition>>()
 
     private val editors = ConcurrentHashMap<FileUri, LspEditor>()
 
@@ -77,15 +80,38 @@ class LspProject(
         CoroutineScope(ForkJoinPool.commonPool().asCoroutineDispatcher() + SupervisorJob())
 
     fun addServerDefinition(definition: LanguageServerDefinition) {
-        serverDefinitions[definition.ext] = definition
+        val definitionsForExt = serverDefinitions.getOrPut(definition.ext) { ConcurrentHashMap() }
+        if (definitionsForExt.containsKey(definition.name)) {
+            throw IllegalArgumentException("Server definition already exists for ext ${definition.ext} with name ${definition.name}")
+        }
+        definitionsForExt[definition.name] = definition
     }
 
-    fun removeServerDefinition(ext: String) {
-        serverDefinitions.remove(ext)
+    fun addServerDefinitions(list: List<LanguageServerDefinition>) {
+        list.forEach {
+            addServerDefinition(it)
+        }
     }
 
-    fun getServerDefinition(ext: String): LanguageServerDefinition? {
-        return serverDefinitions[ext]
+
+    fun removeServerDefinition(ext: String, name: String? = null) {
+        if (name == null) {
+            serverDefinitions.remove(ext)
+        } else {
+            serverDefinitions[ext]?.remove(name)
+            if (serverDefinitions[ext]?.isEmpty() == true) {
+                serverDefinitions.remove(ext)
+            }
+        }
+    }
+
+    fun getServerDefinition(ext: String, name: String? = null): LanguageServerDefinition? {
+        val definitionsForExt = serverDefinitions[ext] ?: return null
+        return definitionsForExt[name ?: ext]
+    }
+
+    fun getServerDefinitions(ext: String): Collection<LanguageServerDefinition> {
+        return serverDefinitions[ext]?.values ?: emptyList()
     }
 
     fun createEditor(path: String): LspEditor {
@@ -119,26 +145,32 @@ class LspProject(
         editors.clear()
     }
 
-    internal fun getLanguageServerWrapper(ext: String): LanguageServerWrapper? {
-        return languageServerWrappers[ext]
+    internal fun getLanguageServerWrapper(ext: String, name: String): LanguageServerWrapper? {
+        return languageServerWrappers[ServerKey(ext, name)]
     }
 
-    internal fun getOrCreateLanguageServerWrapper(ext: String): LanguageServerWrapper {
-        return languageServerWrappers[ext] ?: createLanguageServerWrapper(ext)
+    internal fun getOrCreateLanguageServerWrapper(ext: String, name: String = ext): LanguageServerWrapper {
+        // Reuse an existing wrapper for the (ext,name) combination or build it lazily.
+        val key = ServerKey(ext, name)
+        return languageServerWrappers[key] ?: createLanguageServerWrapper(ext, name)
     }
 
-    internal fun createLanguageServerWrapper(ext: String): LanguageServerWrapper {
-        val definition = serverDefinitions[ext]
-            ?: throw IllegalArgumentException("No server definition for extension $ext")
+    internal fun createLanguageServerWrapper(ext: String, name: String): LanguageServerWrapper {
+        val definition = getServerDefinition(ext, name)
+            ?: throw IllegalArgumentException("No server definition for extension $ext with name $name")
         val wrapper = LanguageServerWrapper(definition, this)
-        languageServerWrappers[ext] = wrapper
+        languageServerWrappers[ServerKey(ext, name)] = wrapper
         return wrapper
+    }
+
+    internal fun getLanguageServerWrappers(ext: String): List<LanguageServerWrapper> {
+        return languageServerWrappers.entries.filter { it.key.ext == ext }.map { it.value }
     }
 
     fun dispose() {
         closeAllEditors()
-        languageServerWrappers.forEach {
-            it.value.stop(true)
+        languageServerWrappers.values.forEach {
+            it.stop(true)
         }
         languageServerWrappers.clear()
         serverDefinitions.clear()

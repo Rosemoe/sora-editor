@@ -31,6 +31,7 @@ import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.utils.createDocumentDiagnosticParams
 import kotlinx.coroutines.future.await
 import org.eclipse.lsp4j.DocumentDiagnosticReport
+import org.eclipse.lsp4j.RelatedFullDocumentDiagnosticReport
 import java.util.concurrent.CompletableFuture
 
 
@@ -42,23 +43,28 @@ class QueryDocumentDiagnosticsEvent : AsyncEventListener() {
     override suspend fun handleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")
 
-        val requestManager = editor.requestManager ?: return
+        val requestManager = editor.requestManager
 
         val future = requestManager
             .diagnostic(
                 editor.uri.createDocumentDiagnosticParams()
+                // break if server don't support this capability
             ) ?: return
 
         this.future = future.thenAccept { }
 
-        val result = future.await() ?: return
+
+        // If return null, create an empty report
+        val result = future.await() ?: DocumentDiagnosticReport(
+            RelatedFullDocumentDiagnosticReport(emptyList())
+        )
 
         context.put("diagnostics", result)
     }
 
     override fun dispose() {
-        future?.cancel(true);
-        future = null;
+        future?.cancel(true)
+        future = null
     }
 
 

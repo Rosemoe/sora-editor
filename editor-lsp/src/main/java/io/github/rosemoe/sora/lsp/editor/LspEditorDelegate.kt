@@ -1,10 +1,10 @@
 package io.github.rosemoe.sora.lsp.editor
 
+import androidx.annotation.WorkerThread
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.AggregatedRequestManager
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
 import org.eclipse.lsp4j.ServerCapabilities
-import java.util.concurrent.TimeoutException
 
 internal class LspEditorDelegate(private val editor: LspEditor) {
 
@@ -15,29 +15,22 @@ internal class LspEditorDelegate(private val editor: LspEditor) {
 
     private val sessionInfos = mutableListOf<SessionInfo>()
 
-    val aggregatedRequestManager = AggregatedRequestManager(emptyList())
+    val aggregatedRequestManager = AggregatedRequestManager(emptySet())
 
-    /** Ensure every definition for the current extension has a wrapper and an aggregated entry. */
     private fun refreshSessions() {
         val definitions = editor.project.getServerDefinitions(editor.fileExt).ifEmpty {
             editor.project.getServerDefinition(editor.fileExt)?.let { listOf(it) } ?: emptyList()
         }
         sessionInfos.clear()
         definitions.forEach { definition ->
-            val wrapper = editor.project.getOrCreateLanguageServerWrapper(definition.ext, definition.name)
+            val wrapper =
+                editor.project.getOrCreateLanguageServerWrapper(definition.ext, definition.name)
             sessionInfos.add(SessionInfo(definition, wrapper))
         }
-        aggregatedRequestManager.updateSessions(
-            sessionInfos.map { info ->
-                AggregatedRequestManager.SessionEntry(
-                    info.definition.name,
-                    { info.wrapper.requestManager },
-                    { info.wrapper.getServerCapabilities() }
-                )
-            }
-        )
     }
 
+
+    @WorkerThread
     fun connectAll(): ServerCapabilities? {
         refreshSessions()
         var lastCapabilities: ServerCapabilities? = null
@@ -47,6 +40,11 @@ internal class LspEditorDelegate(private val editor: LspEditor) {
             capabilities?.let { lastCapabilities = it }
             info.wrapper.connect(editor)
         }
+
+        aggregatedRequestManager.updateSessions(
+            sessionInfos.map { it.wrapper }.toSet()
+        )
+
         return aggregatedRequestManager.capabilities ?: lastCapabilities
     }
 

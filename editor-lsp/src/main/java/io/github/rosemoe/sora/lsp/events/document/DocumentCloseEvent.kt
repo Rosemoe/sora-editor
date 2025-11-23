@@ -43,7 +43,7 @@ class DocumentCloseEvent : AsyncEventListener() {
 
         val params = editor.uri.createDidCloseTextDocumentParams()
 
-        editor.requestManager?.let { requestManager ->
+        editor.requestManager.let { requestManager ->
             future = CompletableFuture.runAsync {
                 requestManager.didClose(
                     params
@@ -55,8 +55,8 @@ class DocumentCloseEvent : AsyncEventListener() {
     }
 
     override fun dispose() {
-        future?.cancel(true);
-        future = null;
+        future?.cancel(true)
+        future = null
     }
 
 

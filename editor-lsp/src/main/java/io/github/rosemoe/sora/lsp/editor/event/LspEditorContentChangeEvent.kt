@@ -42,6 +42,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.DocumentDiagnosticReport
 
+private const val DIAGNOSTIC_QUERY_SOURCE = "sora.lsp.query"
+
 
 class LspEditorContentChangeEvent(private val editor: LspEditor) :
     EventReceiver<ContentChangeEvent> {
@@ -77,6 +79,7 @@ class LspEditorContentChangeEvent(private val editor: LspEditor) :
                 editor.eventManager.emitAsync(EventType.queryDocumentDiagnostics)
                     .getOrNull<DocumentDiagnosticReport>("diagnostics") ?: return@launch
 
+            println(diagnostics)
             if (diagnostics.isRelatedUnchangedDocumentDiagnosticReport) {
                 // no-op
                 return@launch
