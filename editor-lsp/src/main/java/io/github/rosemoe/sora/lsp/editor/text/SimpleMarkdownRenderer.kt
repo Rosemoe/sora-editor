@@ -614,6 +614,13 @@ object SimpleMarkdownRenderer {
         val length = text.length
         while (index < length) {
             val current = text[index]
+            if (current == '\\') {
+                if (index + 1 < length && text[index + 1] in escapeCharacters) {
+                    nodes.add(Inline.Text(text[index + 1].toString()))
+                    index += 2
+                    continue
+                }
+            }
             if (current == '`') {
                 val closing = text.indexOf('`', index + 1)
                 if (closing > index) {
@@ -687,7 +694,7 @@ object SimpleMarkdownRenderer {
         var index = start
         while (index < text.length) {
             val c = text[index]
-            if (c == '`' || c == '*' || c == '_' || c == '[') {
+            if (c == '`' || c == '*' || c == '_' || c == '[' || c == '\\') {
                 break
             }
             index++
@@ -967,6 +974,7 @@ object SimpleMarkdownRenderer {
     private const val leadingMargin = 24
     private const val indentMargin = 24
     private const val lineSeparator = "──────────"
+    private val escapeCharacters = "\\`*_{}[]()#+-.!<>|:".toSet()
     private val DEFAULT_HEADING_SCALE = floatArrayOf(1.6f, 1.4f, 1.25f, 1.1f, 1.05f, 1.0f)
 }
 
