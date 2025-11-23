@@ -387,17 +387,14 @@ public class EditorKeyEventHandler {
                     return handleCtrlKeyBinding(editorKeyEvent, keybindingEvent, keyCode, isShiftPressed);
                 }
         }
-        var result = handlePrintingKey(event, editorKeyEvent, keyCode);
+        var result = handlePrintingKey(event, keyCode);
         if (result) {
             keyMetaStates.adjustAfterKeyPress();
         }
         return editorKeyEvent.result(result);
     }
 
-    private boolean handlePrintingKey(
-            KeyEvent event,
-            EditorKeyEvent editorKeyEvent,
-            int keyCode) {
+    private boolean handlePrintingKey(KeyEvent event, int keyCode) {
         final var editorText = this.editor.getText();
         final var editorCursor = this.editor.getCursor();
         int charCode = event.getUnicodeChar(keyMetaStates.getMetaState(event));
