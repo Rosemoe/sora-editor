@@ -413,7 +413,8 @@ class AggregatedRequestManager(
     }
 
     override fun codeLens(params: CodeLensParams): CompletableFuture<List<CodeLens>>? {
-        return firstFuture { codeLens(params) }
+        val futures = activeManagers.mapNotNull { it.codeLens(params) }
+        return aggregateLists(futures)
     }
 
     override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens>? {
@@ -438,11 +439,13 @@ class AggregatedRequestManager(
     }
 
     override fun implementation(params: ImplementationParams): CompletableFuture<Either<List<Location>, List<LocationLink>>>? {
-        return firstFuture { implementation(params) }
+        val futures = activeManagers.mapNotNull { it.implementation(params) }
+        return aggregateDefinitions(futures)
     }
 
     override fun typeDefinition(params: TypeDefinitionParams): CompletableFuture<Either<List<Location>, List<LocationLink>>>? {
-        return firstFuture { typeDefinition(params) }
+        val futures = activeManagers.mapNotNull { it.typeDefinition(params) }
+        return aggregateDefinitions(futures)
     }
 
     override fun documentColor(params: DocumentColorParams): CompletableFuture<List<ColorInformation>>? {
@@ -463,6 +466,10 @@ class AggregatedRequestManager(
     override fun inlayHint(params: InlayHintParams): CompletableFuture<List<InlayHint>>? {
         val futures = activeManagers.mapNotNull { it.inlayHint(params) }
         return aggregateLists(futures)
+    }
+
+    override fun resolveCodeAction(unresolved: CodeAction): CompletableFuture<CodeAction>? {
+        return firstFuture { resolveCodeAction(unresolved) }
     }
 
     override fun getTextDocumentService(): TextDocumentService? {
