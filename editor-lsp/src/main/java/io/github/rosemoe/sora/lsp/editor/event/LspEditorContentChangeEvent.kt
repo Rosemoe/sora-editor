@@ -78,7 +78,7 @@ class LspEditorContentChangeEvent(private val editor: LspEditor) :
             val diagnostics =
                 editor.eventManager.emitAsync(EventType.queryDocumentDiagnostics)
                     .getOrNull<DocumentDiagnosticReport>("diagnostics") ?: return@launch
-            
+
             if (diagnostics.isRelatedUnchangedDocumentDiagnosticReport) {
                 // no-op
                 return@launch

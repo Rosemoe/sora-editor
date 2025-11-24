@@ -1,6 +1,7 @@
 package io.github.rosemoe.sora.lsp.editor
 
 import androidx.annotation.WorkerThread
+import io.github.rosemoe.sora.lsp.client.languageserver.ServerStatus
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.AggregatedRequestManager
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
@@ -21,11 +22,20 @@ internal class LspEditorDelegate(private val editor: LspEditor) {
         val definitions = editor.project.getServerDefinitions(editor.fileExt).ifEmpty {
             editor.project.getServerDefinition(editor.fileExt)?.let { listOf(it) } ?: emptyList()
         }
-        sessionInfos.clear()
+
+        sessionInfos.removeAll { session ->
+            definitions.none { it.name == session.definition.name && it.ext == session.definition.ext }
+        }
+
         definitions.forEach { definition ->
-            val wrapper =
-                editor.project.getOrCreateLanguageServerWrapper(definition.ext, definition.name)
-            sessionInfos.add(SessionInfo(definition, wrapper))
+            val exists = sessionInfos.any {
+                it.definition.name == definition.name && it.definition.ext == definition.ext
+            }
+            if (!exists) {
+                val wrapper =
+                    editor.project.getOrCreateLanguageServerWrapper(definition.ext, definition.name)
+                sessionInfos.add(SessionInfo(definition, wrapper))
+            }
         }
     }
 
@@ -34,22 +44,41 @@ internal class LspEditorDelegate(private val editor: LspEditor) {
     fun connectAll(): ServerCapabilities? {
         refreshSessions()
         var lastCapabilities: ServerCapabilities? = null
+
+
         for (info in sessionInfos) {
-            info.wrapper.start()
-            val capabilities = info.wrapper.getServerCapabilities()
-            capabilities?.let { lastCapabilities = it }
-            info.wrapper.connect(editor)
+            if (info.wrapper.status == ServerStatus.INITIALIZED) {
+                continue
+            }
+
+            runCatching {
+                info.wrapper.start()
+                val capabilities = info.wrapper.getServerCapabilities()
+
+                if (capabilities != null) {
+                    info.wrapper.connect(editor)
+                    lastCapabilities = capabilities
+                }
+            }.onFailure { e ->
+                info.wrapper.crashed(e as? Exception ?: RuntimeException(e))
+                android.util.Log.w("LspEditorDelegate",
+                    "Failed to connect to ${info.definition.name}: ${e.message}", e)
+            }
         }
 
-        aggregatedRequestManager.updateSessions(
-            sessionInfos.map { it.wrapper }.toSet()
-        )
+        val initializedWrappers = sessionInfos
+            .filter { it.wrapper.status == ServerStatus.INITIALIZED }
+            .map { it.wrapper }
+            .toSet()
+
+        aggregatedRequestManager.updateSessions(initializedWrappers)
 
         return aggregatedRequestManager.capabilities ?: lastCapabilities
     }
 
     fun disconnectAll() {
         sessionInfos.forEach { it.wrapper.disconnect(editor) }
+        sessionInfos.clear()
     }
 
     fun getPrimaryWrapper(): LanguageServerWrapper? {
