@@ -38,7 +38,8 @@ open class CustomLanguageServerDefinition @JvmOverloads constructor(
     ext: String,
     serverConnectProvider: ServerConnectProvider,
     override val name: String = ext,
-    private val expectedCapabilitiesOverride: ServerCapabilities? = null
+    private val expectedCapabilitiesOverride: ServerCapabilities? = null,
+    private val extensionsOverride: List<String>? = null
 ) : LanguageServerDefinition() {
 
     protected var serverConnectProvider: ServerConnectProvider
@@ -47,6 +48,9 @@ open class CustomLanguageServerDefinition @JvmOverloads constructor(
         this.ext = ext
         this.serverConnectProvider = serverConnectProvider
     }
+
+    override val exts: List<String>
+        get() = extensionsOverride ?: super.exts
 
     override fun expectedCapabilities(): ServerCapabilities? {
         return expectedCapabilitiesOverride

@@ -62,6 +62,7 @@ inline fun languageServerDefinition(
 @LanguageServerDefinitionDslMarker
 class LanguageServerDefinitionDsl {
     private var extension: String? = null
+    private var extensions: MutableList<String>? = null
     private var serverName: String? = null
     private var expectedCapabilities: ServerCapabilities? = null
     private var connectProvider: CustomLanguageServerDefinition.ServerConnectProvider? = null
@@ -79,6 +80,21 @@ class LanguageServerDefinitionDsl {
      * Alias for [extension].
      */
     fun ext(value: String) = extension(value)
+
+    /**
+     * Sets multiple file extensions for the server. Includes the primary extension.
+     */
+    fun extensions(vararg values: String) {
+        if (extensions == null) {
+            extensions = mutableListOf()
+        }
+        extensions!!.addAll(values)
+    }
+
+    /**
+     * Alias for [extensions].
+     */
+    fun exts(vararg values: String) = extensions(*values)
 
     /**
      * Overrides the user-facing name of the server definition.
@@ -121,11 +137,17 @@ class LanguageServerDefinitionDsl {
             ?: throw IllegalStateException("Extension must be provided when building a server definition")
         val connection = connectProvider
             ?: throw IllegalStateException("Connection must be provided when building a server definition")
+
+        val allExtensions = if (extensions != null) {
+            mutableListOf(actualExtension).apply { addAll(extensions!!) }
+        } else null
+
         return object : CustomLanguageServerDefinition(
             actualExtension,
             connection,
             name = serverName ?: actualExtension,
-            expectedCapabilitiesOverride = expectedCapabilities
+            expectedCapabilitiesOverride = expectedCapabilities,
+            extensionsOverride = allExtensions
         ) {
             override fun getInitializationOptions(uri: URI?): Any? {
                 return initializationOptionsProvider?.invoke(uri) ?: super.getInitializationOptions(

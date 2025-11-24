@@ -43,6 +43,9 @@ import java.util.concurrent.ConcurrentHashMap
 abstract class LanguageServerDefinition {
     var ext = "unknown"
 
+    open val exts: List<String>
+        get() = listOf(ext)
+
     open val name: String
         get() = ext
 

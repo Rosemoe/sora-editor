@@ -157,8 +157,9 @@ class LspTestActivity : BaseEditorActivity() {
             Intent(this@LspTestActivity, LspLanguageServerService::class.java)
         )
 
-        val luaServerDefinition = languageServerDefinition("lua") {
+        val luaServerDefinition = languageServerDefinition {
             name("lua-lsp")
+            ext("lua")
             connection {
                 local("lua-lsp")
             }

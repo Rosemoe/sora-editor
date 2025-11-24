@@ -168,7 +168,7 @@ class LspEditor(
 
     var isConnected = false
         private set
-
+    
     val languageServerWrapper: LanguageServerWrapper
         get() = delegate.getPrimaryWrapper()
             ?: throw IllegalStateException("No language server wrapper for extension $fileExt")
