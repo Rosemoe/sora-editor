@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.util;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.Lock;

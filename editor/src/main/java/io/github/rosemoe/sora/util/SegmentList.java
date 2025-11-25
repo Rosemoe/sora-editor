@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.util;
 import androidx.annotation.NonNull;
 
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -149,8 +150,9 @@ public class SegmentList<T> extends AbstractList<T> {
         if (result.segment.size() >= segmentCapacity) {
             var divPoint = segmentCapacity / 2;
             var seg = new Segment<T>(segmentCapacity);
-            seg.addAll(result.segment.subList(divPoint, result.segment.size()));
-            result.segment.removeRange(divPoint, result.segment.size());
+            var sub = result.segment.subList(divPoint, result.segment.size());
+            seg.addAll(sub);
+            sub.clear();
             segments.add(result.blockIndex + 1, seg);
         }
     }

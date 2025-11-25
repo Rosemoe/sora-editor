@@ -31,6 +31,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,7 +51,6 @@ import io.github.rosemoe.sora.text.bidi.IDirections;
 import io.github.rosemoe.sora.text.bidi.VisualDirections;
 import io.github.rosemoe.sora.text.breaker.WordBreaker;
 import io.github.rosemoe.sora.text.breaker.WordBreakerEmpty;
-import io.github.rosemoe.sora.util.ArrayList;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.RendererUtils;
 import io.github.rosemoe.sora.util.ReversedListView;

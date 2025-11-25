@@ -25,7 +25,6 @@
 package io.github.rosemoe.sora.lsp.utils
 
 import android.graphics.Color
-import android.util.Log
 import androidx.annotation.ColorInt
 import androidx.annotation.FloatRange
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
@@ -33,7 +32,6 @@ import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.TextRange
-import io.github.rosemoe.sora.util.ArrayList
 import io.github.rosemoe.sora.widget.CodeEditor
 import org.eclipse.lsp4j.CompletionContext
 import org.eclipse.lsp4j.CompletionParams
