@@ -83,6 +83,16 @@ public class TextRow {
         if (b == null) return 1;
         return Integer.compare(a.getColumn(), b.getColumn());
     };
+
+    /**
+     * The minimum character count of a span to be auto-truncated.
+     */
+    private final static int MIN_AUTO_TRUNCATE_LENGTH = 64;
+    /**
+     * Max context length when text run is truncated
+     */
+    private final static int MAX_CONTEXT_LENGTH = 256;
+
     private final RectF tmpRect = new RectF();
     private final int[] tmpIndices = new int[4];
     private final Span tmpSpan = SpanFactory.obtainNoExt(0, 0);
@@ -557,8 +567,8 @@ public class TextRow {
         paint.setColor(color);
     }
 
-    private void commitTextRun(int paintStart, int paintEnd, int contextStart, int contextEnd, boolean isRtl,
-                               Canvas canvas, float offset, float width) {
+    private void commitTextRunToCanvas(int paintStart, int paintEnd, int contextStart, int contextEnd, boolean isRtl,
+                                       Canvas canvas, float offset, float width) {
         if (paint.isRenderFunctionCharacters()) {
             var chars = text.getBackingCharArray();
             int lastEnd = paintStart;
@@ -593,8 +603,75 @@ public class TextRow {
         }
     }
 
-    protected void splitRegionsAndCommit(int paintStart, int paintEnd, boolean isRtl,
-                                         Canvas canvas, float offset, float width, int color) {
+    private void commitTextRunAutoTruncated(int paintStart, int paintEnd, int contextStart, int contextEnd, boolean isRtl,
+                                            Canvas canvas, float offset, float width, IteratingContext ctx) {
+        if (paintEnd - paintStart < MIN_AUTO_TRUNCATE_LENGTH || measureCache == null) {
+            commitTextRunToCanvas(paintStart, paintEnd, contextStart, contextEnd, isRtl, canvas, offset, width);
+        } else {
+            int commitStart = paintStart, commitEnd = paintEnd;
+            float commitLeft = offset, commitRight = offset + width;
+            while (commitLeft < ctx.minOffset && commitStart < commitEnd) {
+                if (isRtl) {
+                    int nextEnd = commitEnd - 1;
+                    float advance = width - measureAdvanceInRun(nextEnd, paintStart, paintEnd, contextStart, contextEnd, isRtl);
+                    if (offset + advance < ctx.minOffset) {
+                        commitEnd = nextEnd;
+                        commitLeft = offset + advance;
+                    } else {
+                        break;
+                    }
+                } else {
+                    int nextStart = commitStart + 1;
+                    float advance = measureAdvanceInRun(nextStart, paintStart, paintEnd, contextStart, contextEnd, isRtl);
+                    if (offset + advance < ctx.minOffset) {
+                        commitStart = nextStart;
+                        commitLeft = offset + advance;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            while (commitRight > ctx.maxOffset && commitStart < commitEnd) {
+                if (isRtl) {
+                    int nextStart = commitStart + 1;
+                    float advance = width - measureAdvanceInRun(nextStart, paintStart, paintEnd, contextStart, contextEnd, isRtl);
+                    if (offset + advance > ctx.maxOffset) {
+                        commitStart = nextStart;
+                        commitRight = offset + advance;
+                    } else {
+                        break;
+                    }
+                } else {
+                    int nextEnd = commitEnd - 1;
+                    float advance = measureAdvanceInRun(nextEnd, paintStart, paintEnd, contextStart, contextEnd, isRtl);
+                    if (offset + advance > ctx.maxOffset) {
+                        commitEnd = nextEnd;
+                        commitRight = offset + advance;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            if (commitStart < commitEnd) {
+                int commitContextStart = commitStart, commitContextEnd = commitEnd;
+                var chars = text.getBackingCharArray();
+                while (commitContextStart - 1 >= contextStart && chars[commitContextStart - 1] != ' '
+                        && (commitContextEnd - commitContextStart) < MAX_CONTEXT_LENGTH) {
+                    commitContextStart--;
+                }
+                while (commitContextEnd + 1 < contextEnd && chars[commitContextEnd] != ' '
+                        && (commitContextEnd - commitContextStart) < MAX_CONTEXT_LENGTH) {
+                    commitContextEnd++;
+                }
+                commitTextRunToCanvas(commitStart, commitEnd, contextStart, contextEnd, isRtl, canvas, commitLeft, commitRight - commitLeft);
+            }
+        }
+    }
+
+    private void splitRegionsAndCommit(int paintStart, int paintEnd, boolean isRtl,
+                                       Canvas canvas, float offset, float width, int color, IteratingContext ctx) {
         int selectionStart = Math.max(paintStart, Math.min(paintEnd, selectedStart));
         int selectionEnd = Math.max(paintStart, Math.min(paintEnd, selectedEnd));
         tmpIndices[0] = paintStart;
@@ -615,9 +692,9 @@ public class TextRow {
             }
             float segmentWidth = getRunAdvanceCacheable(commitEnd, commitStart, commitEnd, paintStart, paintEnd, isRtl);
             if (isRtl) {
-                commitTextRun(commitStart, commitEnd, paintStart, paintEnd, true, canvas, offset + width - advance - segmentWidth, segmentWidth);
+                commitTextRunAutoTruncated(commitStart, commitEnd, paintStart, paintEnd, true, canvas, offset + width - advance - segmentWidth, segmentWidth, ctx);
             } else {
-                commitTextRun(commitStart, commitEnd, paintStart, paintEnd, false, canvas, offset + advance, segmentWidth);
+                commitTextRunAutoTruncated(commitStart, commitEnd, paintStart, paintEnd, false, canvas, offset + advance, segmentWidth, ctx);
             }
             advance += segmentWidth;
         }
@@ -756,9 +833,9 @@ public class TextRow {
                 || params.getColorScheme().getColor(EditorColorScheme.TEXT_SELECTED) == 0) {
             // Easy case when there is no selected text in region
             paintGeneral.setColor(foregroundColor);
-            commitTextRun(paintStart, paintEnd, paintStart, paintEnd, isRtl, canvas, offset, width);
+            commitTextRunAutoTruncated(paintStart, paintEnd, paintStart, paintEnd, isRtl, canvas, offset, width, ctx);
         } else {
-            splitRegionsAndCommit(paintStart, paintEnd, isRtl, canvas, offset, width, foregroundColor);
+            splitRegionsAndCommit(paintStart, paintEnd, isRtl, canvas, offset, width, foregroundColor, ctx);
         }
 
         // Draw strikethrough
