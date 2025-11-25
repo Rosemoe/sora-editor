@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.lang.styling.color
 
 import android.graphics.Color
+import androidx.annotation.ColorInt
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
@@ -37,7 +38,7 @@ class ConstColor : ResolvableColor {
     /**
      * @param color Color int
      */
-    constructor(color: Int) {
+    constructor(@ColorInt color: Int) {
         this.color = color
     }
 
