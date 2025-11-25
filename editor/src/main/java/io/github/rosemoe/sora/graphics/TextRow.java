@@ -417,7 +417,7 @@ public class TextRow {
                     int beforeOptimization = next;
                     next = optimizer.getOptimizedBreakPoint(e.startColumn + offset, e.startColumn + next) - e.startColumn;
                     float advance = 0f;
-                    for (int j = 0; j < next; j++) {
+                    for (int j = offset; j < next; j++) {
                         advance += advances[j];
                     }
                     if (currentRow.isEmpty) {
