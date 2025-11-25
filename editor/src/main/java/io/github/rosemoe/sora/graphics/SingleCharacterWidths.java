@@ -31,6 +31,11 @@ import io.github.rosemoe.sora.text.FunctionCharacters;
 
 public class SingleCharacterWidths {
 
+    /**
+     * Floating-point precision steps.
+     * Introduced to avoid accumulated floating-point errors.
+     */
+    private final static long PRECISION = 1000L;
     public final float[] widths;
     public final SparseArray<Float> codePointWidths;
     public final char[] buffer;
@@ -104,7 +109,7 @@ public class SingleCharacterWidths {
      * Measure text
      */
     public float measureText(char[] chars, int start, int end, Paint p) {
-        float width = 0f;
+        long width = 0;
         for (int i = start; i < end; i++) {
             char ch = chars[i];
             if (isEmoji(ch)) {
@@ -112,7 +117,7 @@ public class SingleCharacterWidths {
                     p.getTextWidths(chars, i, 4, widths);
                     if (widths[0] > 0 && widths[1] == 0 && widths[2] == 0 && widths[3] == 0) {
                         i += 3;
-                        width += widths[0];
+                        width += (long) Math.ceil(widths[0] * PRECISION);
                         continue;
                     }
                 }
@@ -121,18 +126,18 @@ public class SingleCharacterWidths {
                 if (len >= 0) {
                     System.arraycopy(chars, i, buffer, 0, len);
                 }
-                width += p.measureText(buffer, 0, len);
+                width += (long) Math.ceil(p.measureText(buffer, 0, len) * PRECISION);
                 i += len - 1;
             } else if(isHandleFunctionCharacters() && FunctionCharacters.isEditorFunctionChar(ch)) {
                 var name = FunctionCharacters.getNameForFunctionCharacter(ch);
                 for (int j = 0;j < name.length();j++) {
-                    width += measureChar(name.charAt(j), p);
+                    width += (long) Math.ceil(measureChar(name.charAt(j), p) * PRECISION);
                 }
             } else {
-                width += measureChar(ch, p);
+                width += (long) Math.ceil(measureChar(ch, p) * PRECISION);
             }
         }
-        return width;
+        return (float) width / (float) PRECISION;
     }
 
     public float measureText(CharSequence str, Paint p) {
@@ -143,15 +148,15 @@ public class SingleCharacterWidths {
      * Measure text
      */
     public float measureText(CharSequence str, int start, int end, Paint p) {
-        float width = 0f;
+        long width = 0;
         for (int i = start; i < end; i++) {
             char ch = str.charAt(i);
             if (isEmoji(ch)) {
                 if (i + 4 <= end) {
-                    p.getTextWidths(str, i, i + 4, widths);
+                    p.getTextWidths(str, i, 4, widths);
                     if (widths[0] > 0 && widths[1] == 0 && widths[2] == 0 && widths[3] == 0) {
                         i += 3;
-                        width += widths[0];
+                        width += (long) Math.ceil(widths[0] * PRECISION);
                         continue;
                     }
                 }
@@ -160,18 +165,18 @@ public class SingleCharacterWidths {
                 for (int j = 0; j < len; j++) {
                     buffer[j] = str.charAt(i + j);
                 }
-                width += p.measureText(buffer, 0, len);
+                width += (long) Math.ceil(p.measureText(buffer, 0, len) * PRECISION);
                 i += len - 1;
             } else if(isHandleFunctionCharacters() && FunctionCharacters.isEditorFunctionChar(ch)) {
                 var name = FunctionCharacters.getNameForFunctionCharacter(ch);
                 for (int j = 0;j < name.length();j++) {
-                    width += measureChar(name.charAt(j), p);
+                    width += (long) Math.ceil(measureChar(name.charAt(j), p) * PRECISION);
                 }
             } else {
-                width += measureChar(ch, p);
+                width += (long) Math.ceil(measureChar(ch, p) * PRECISION);
             }
         }
-        return width;
+        return (float) width / (float) PRECISION;
     }
 
 }
