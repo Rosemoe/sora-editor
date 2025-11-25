@@ -90,6 +90,7 @@ import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 import io.github.rosemoe.sora.widget.layout.Row;
 import io.github.rosemoe.sora.widget.layout.RowIterator;
 import io.github.rosemoe.sora.widget.rendering.RenderingConstants;
+import io.github.rosemoe.sora.widget.rendering.TextAdvancesCache;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition;
@@ -387,7 +388,7 @@ public class EditorRenderer {
         TextRow tr = new TextRow();
         var cache = editor.getRenderContext().getCache().queryMeasureCache(row.lineIndex);
         var widths = cache != null && cache.getUpdateTimestamp() >= displayTimestamp ? cache.getWidths() : null;
-        widths = widths != null && widths.length > line.length() ? widths : null;
+        widths = widths != null && widths.getSize() > line.length() ? widths : null;
         tr.set(line, row.startColumn, row.endColumn, spanReader.getSpansOnLine(row.lineIndex), row.inlayHints, content.getLineDirections(row.lineIndex), paintGeneral, widths, createTextRowParams());
         applySelectedTextRange(tr, row.lineIndex);
         return tr;
@@ -416,7 +417,7 @@ public class EditorRenderer {
         List<InlayHint> lineInlays = inlayHints == null ? Collections.emptyList() : inlayHints.getForLine(line);
         var cache = editor.getRenderContext().getCache().queryMeasureCache(line);
         var widths = cache != null && cache.getUpdateTimestamp() >= displayTimestamp ? cache.getWidths() : null;
-        widths = widths != null && widths.length > lineBuf.length() ? widths : null;
+        widths = widths != null && widths.getSize() > lineBuf.length() ? widths : null;
         tr.set(lineBuf, 0, columnCount, spans.getSpansOnLine(line), lineInlays, getLineDirections(line), paintGeneral, widths, createTextRowParams());
         applySelectedTextRange(tr, line);
         if (canvas != null) {
@@ -1302,7 +1303,7 @@ public class EditorRenderer {
         // Step 2 - Draw text and text decorations
         Spans.Reader reader = null;
         lastPreparedLine = -1;
-        float[] lineCache = null;
+        TextAdvancesCache lineCache = null;
         for (int row = firstVis; row <= editor.getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
             int line = rowInf.lineIndex;
@@ -1318,7 +1319,7 @@ public class EditorRenderer {
             if (lastPreparedLine != line) {
                 lastPreparedLine = line;
                 var cache = editor.getRenderContext().getCache().queryMeasureCache(line);
-                if (cache != null && cache.getUpdateTimestamp() == displayTimestamp && cache.getWidths() != null && cache.getWidths().length > columnCount) {
+                if (cache != null && cache.getUpdateTimestamp() == displayTimestamp && cache.getWidths() != null && cache.getWidths().getSize() > columnCount) {
                     lineCache = cache.getWidths();
                 } else {
                     lineCache = null;
@@ -2365,8 +2366,8 @@ public class EditorRenderer {
             var cache = editor.getRenderContext().getCache().getOrCreateMeasureCache(startLine);
             if (cache.getUpdateTimestamp() < timestamp) {
                 var forced = false;
-                if (cache.getWidths() == null || cache.getWidths().length < line.length()) {
-                    cache.setWidths(new float[Math.max(line.length() + 8, 90)]);
+                if (cache.getWidths() == null || cache.getWidths().getSize() < line.length()) {
+                    cache.setWidths(new TextAdvancesCache(Math.max(line.length() + 8, 90)));
                     forced = true;
                 }
                 var spans = editor.getSpansForLine(startLine);
@@ -2382,9 +2383,9 @@ public class EditorRenderer {
                     var lineText = text.getLine(startLine);
                     var directions = text.getLineDirections(startLine);
                     int requiredSize = lineText.length() + 10;
-                    float[] widths = cache.getWidths();
-                    if (widths == null || widths.length < requiredSize) {
-                        widths = new float[requiredSize];
+                    var widths = cache.getWidths();
+                    if (widths == null || widths.getSize() < requiredSize) {
+                        widths = new TextAdvancesCache(requiredSize);
                         cache.setWidths(widths);
                     }
                     while (itr.hasNext()) {

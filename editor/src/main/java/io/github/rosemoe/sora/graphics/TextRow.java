@@ -58,6 +58,7 @@ import io.github.rosemoe.sora.util.TemporaryFloatBuffer;
 import io.github.rosemoe.sora.widget.layout.RowElement;
 import io.github.rosemoe.sora.widget.layout.RowElementTypes;
 import io.github.rosemoe.sora.widget.rendering.RenderingConstants;
+import io.github.rosemoe.sora.widget.rendering.TextAdvancesCache;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
@@ -105,7 +106,7 @@ public class TextRow {
     private TextRowParams params;
     private InlayHintRenderParams inlayHintRenderParams;
     private Paint paint;
-    private float[] measureCache;
+    private TextAdvancesCache measureCache;
     private int selectedStart = -1;
     private int selectedEnd = -1;
 
@@ -116,7 +117,7 @@ public class TextRow {
     public void set(@NonNull ContentLine text,
                     int start, int end, @Nullable List<Span> spans, @Nullable List<InlayHint> inlineElements,
                     @NonNull Directions directions, @NonNull Paint paint,
-                    @Nullable float[] measureCache, @NonNull TextRowParams params) {
+                    @Nullable TextAdvancesCache measureCache, @NonNull TextRowParams params) {
         this.text = text;
         textStart = start;
         textEnd = end;
@@ -182,10 +183,10 @@ public class TextRow {
         if (measureCache != null) {
             if (advances != null) {
                 for (int i = 0; i < count; i++) {
-                    advances[advancesIndex + i] = measureCache[index + i + 1] - measureCache[index + i];
+                    advances[advancesIndex + i] = measureCache.getAdvanceAt(index + i);
                 }
             }
-            return measureCache[index + count] - measureCache[index];
+            return measureCache.getAdvancesSum(index, index + count);
         }
         return paint.myGetTextRunAdvances(text.getBackingCharArray(), index, count, contextIndex, contextCount, isRtl, advances, advancesIndex);
     }
@@ -196,7 +197,7 @@ public class TextRow {
     private float getRunAdvanceCacheable(int offset, int start, int end,
                                          int contextStart, int contextEnd, boolean isRtl) {
         if (measureCache != null) {
-            return measureCache[offset] - measureCache[start];
+            return measureCache.getAdvancesSum(start, offset);
         }
         return GraphicsCompat.getRunAdvance(paint, text.getBackingCharArray(), start, end, contextStart, contextEnd, isRtl, offset);
     }
@@ -208,14 +209,14 @@ public class TextRow {
         if (measureCache != null) {
             var cache = measureCache;
             int left = start, right = end;
-            var base = cache[start];
+            var base = cache.getAdvancesSum(0, start);
             while (left <= right) {
                 var mid = (left + right) / 2;
                 if (mid < start || mid >= end) {
                     left = mid;
                     break;
                 }
-                var value = cache[mid] - base;
+                var value = cache.getAdvancesSum(0, mid) - base;
                 if (value > advance) {
                     right = mid - 1;
                 } else if (value < advance) {
@@ -225,7 +226,7 @@ public class TextRow {
                     break;
                 }
             }
-            if (cache[left] - base > advance) {
+            if (cache.getAdvancesSum(0, left) - base > advance) {
                 left--;
             }
             left = Math.max(start, Math.min(end, left));
@@ -511,7 +512,7 @@ public class TextRow {
         public boolean autoClip;
         public DrawTextConsumer drawTextConsumer;
         /* for measure cache */
-        public float[] advances;
+        public TextAdvancesCache advances;
     }
 
     /**
@@ -608,51 +609,12 @@ public class TextRow {
         if (paintEnd - paintStart < MIN_AUTO_TRUNCATE_LENGTH || measureCache == null) {
             commitTextRunToCanvas(paintStart, paintEnd, contextStart, contextEnd, isRtl, canvas, offset, width);
         } else {
-            int commitStart = paintStart, commitEnd = paintEnd;
-            float commitLeft = offset, commitRight = offset + width;
-            while (commitLeft < ctx.minOffset && commitStart < commitEnd) {
-                if (isRtl) {
-                    int nextEnd = commitEnd - 1;
-                    float advance = width - measureAdvanceInRun(nextEnd, paintStart, paintEnd, contextStart, contextEnd, isRtl);
-                    if (offset + advance < ctx.minOffset) {
-                        commitEnd = nextEnd;
-                        commitLeft = offset + advance;
-                    } else {
-                        break;
-                    }
-                } else {
-                    int nextStart = commitStart + 1;
-                    float advance = measureAdvanceInRun(nextStart, paintStart, paintEnd, contextStart, contextEnd, isRtl);
-                    if (offset + advance < ctx.minOffset) {
-                        commitStart = nextStart;
-                        commitLeft = offset + advance;
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            while (commitRight > ctx.maxOffset && commitStart < commitEnd) {
-                if (isRtl) {
-                    int nextStart = commitStart + 1;
-                    float advance = width - measureAdvanceInRun(nextStart, paintStart, paintEnd, contextStart, contextEnd, isRtl);
-                    if (offset + advance > ctx.maxOffset) {
-                        commitStart = nextStart;
-                        commitRight = offset + advance;
-                    } else {
-                        break;
-                    }
-                } else {
-                    int nextEnd = commitEnd - 1;
-                    float advance = measureAdvanceInRun(nextEnd, paintStart, paintEnd, contextStart, contextEnd, isRtl);
-                    if (offset + advance > ctx.maxOffset) {
-                        commitEnd = nextEnd;
-                        commitRight = offset + advance;
-                    } else {
-                        break;
-                    }
-                }
-            }
+            float runAdvanceLeft = Math.max(0, ctx.minOffset - offset) - paint.getSpaceWidth();
+            float runAdvanceRight = Math.min(width, ctx.maxOffset - offset) + paint.getSpaceWidth();
+            int boundForLeft = findOffsetByAdvanceCacheable(paintStart, paintEnd, contextStart, contextEnd, isRtl, runAdvanceLeft);
+            int boundForRight = findOffsetByAdvanceCacheable(paintStart, paintEnd, contextStart, contextEnd, isRtl, runAdvanceRight);
+            int commitStart = Math.min(boundForLeft, boundForRight);
+            int commitEnd = Math.max(boundForLeft, boundForRight);
 
             if (commitStart < commitEnd) {
                 int commitContextStart = commitStart, commitContextEnd = commitEnd;
@@ -665,7 +627,12 @@ public class TextRow {
                         && (commitContextEnd - commitContextStart) < MAX_CONTEXT_LENGTH) {
                     commitContextEnd++;
                 }
-                commitTextRunToCanvas(commitStart, commitEnd, contextStart, contextEnd, isRtl, canvas, commitLeft, commitRight - commitLeft);
+
+                float advanceStart = measureAdvanceInRun(commitStart, paintStart, paintEnd, contextStart, contextEnd, isRtl);
+                float advanceEnd = measureAdvanceInRun(commitEnd, paintStart, paintEnd, contextStart, contextEnd, isRtl);
+                float newWidth = Math.abs(advanceStart - advanceEnd);
+                float commitOffset = isRtl ? offset + width - advanceEnd : offset + advanceStart;
+                commitTextRunToCanvas(commitStart, commitEnd, contextStart, contextEnd, isRtl, canvas, commitOffset, newWidth);
             }
         }
     }
@@ -721,9 +688,19 @@ public class TextRow {
             }
         }
 
+        float[] advances = null;
+        if (ctx.advances != null) {
+            advances = TemporaryFloatBuffer.obtain(paintEnd - paintStart);
+        }
         float width = getTextRunAdvancesCacheable(paintStart, paintEnd - paintStart,
                 paintStart, paintEnd - paintStart, isRtl,
-                ctx.advances, ctx.advances != null ? paintStart : 0);
+                advances, 0);
+        if (ctx.advances != null && advances != null) {
+            for (int i = paintStart; i < paintEnd; i++) {
+                ctx.advances.setAdvanceAt(i, advances[i - paintStart]);
+            }
+            TemporaryFloatBuffer.recycle(advances);
+        }
         if (checkCursorOffsetInSegment(ctx.targetCharOffset, paintStart, paintEnd)) {
             // Immediately stop the iteration
             ctx.maxOffset = 0f;
@@ -977,7 +954,7 @@ public class TextRow {
                         ctx.regionBuffer.commitRegion(offset + localOffset, offset + localOffset + tabWidth);
                     }
                     if (ctx.advances != null) {
-                        ctx.advances[index] = tabWidth;
+                        ctx.advances.setAdvanceAt(index, tabWidth);
                     }
                     if (ctx.drawTextConsumer != null && index >= ctx.startCharOffset && index < ctx.endCharOffset) {
                         ctx.drawTextConsumer.drawText(canvas, chars, index, 1, index, 1, isRtl, offset + localOffset, tabWidth, params, null);
@@ -1171,11 +1148,11 @@ public class TextRow {
     /**
      * Build measure of logical line for currently-set text range. A logical line maybe split into
      * multiple rows, so each time only one row is measured.
-     * {@link #buildMeasureCacheTailor(float[])} should always be called for each line.
-     * @see #buildMeasureCacheTailor(float[])
+     * {@link #buildMeasureCacheTailor(TextAdvancesCache)} should always be called for each line.
+     * @see #buildMeasureCacheTailor(TextAdvancesCache)
      * @param cache size must be bigger than text end
      */
-    public void buildMeasureCacheStep(@NonNull float[] cache) {
+    public void buildMeasureCacheStep(@NonNull TextAdvancesCache cache) {
         var ctx = new IteratingContext();
         ctx.advances = cache;
         iterateRuns(new MaxOffsetIterationConsumer(ctx), true);
@@ -1183,17 +1160,11 @@ public class TextRow {
 
     /**
      * Finish the logical line measure cache building.
-     * @see #buildMeasureCacheStep(float[])
+     * @see #buildMeasureCacheStep(TextAdvancesCache)
      * @param cache size must be bigger than text end
      */
-    public void buildMeasureCacheTailor(@NonNull float[] cache) {
-        var pending = cache[0];
-        cache[0] = 0f;
-        for (int i = 1; i <= textEnd; i++) {
-            var tmp = cache[i];
-            cache[i] = cache[i - 1] + pending;
-            pending = tmp;
-        }
+    public void buildMeasureCacheTailor(@NonNull TextAdvancesCache cache) {
+        cache.finishBuilding();
     }
 
     /**
