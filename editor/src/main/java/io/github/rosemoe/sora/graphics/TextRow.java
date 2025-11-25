@@ -568,6 +568,10 @@ public class TextRow {
         paint.setColor(color);
     }
 
+    /**
+     * Terminal function for a single-styled text run. Commit the given text region to Canvas.
+     * This function also handles function characters rendering.
+     */
     private void commitTextRunToCanvas(int paintStart, int paintEnd, int contextStart, int contextEnd, boolean isRtl,
                                        Canvas canvas, float offset, float width) {
         if (paint.isRenderFunctionCharacters()) {
@@ -604,6 +608,9 @@ public class TextRow {
         }
     }
 
+    /**
+     * Truncate the text run to be committed, try to limit the committed part to be in the visible region
+     */
     private void commitTextRunAutoTruncated(int paintStart, int paintEnd, int contextStart, int contextEnd, boolean isRtl,
                                             Canvas canvas, float offset, float width, IteratingContext ctx) {
         if (paintEnd - paintStart < MIN_AUTO_TRUNCATE_LENGTH || measureCache == null) {
@@ -637,6 +644,10 @@ public class TextRow {
         }
     }
 
+    /**
+     * Split the region with breakpoints from selection, and commit them separately to achieve
+     * different text color in selected region
+     */
     private void splitRegionsAndCommit(int paintStart, int paintEnd, boolean isRtl,
                                        Canvas canvas, float offset, float width, int color, IteratingContext ctx) {
         int selectionStart = Math.max(paintStart, Math.min(paintEnd, selectedStart));

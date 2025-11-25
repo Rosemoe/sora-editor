@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.widget.rendering;
 
+import androidx.annotation.IntRange;
+
 /**
  * This class is introduced in order to avoid accumulated floating-point error for extreme long lines
  *
@@ -30,12 +32,15 @@ package io.github.rosemoe.sora.widget.rendering;
  */
 public class TextAdvancesCache {
 
+    /**
+     * Divide the prefix sum by this block size
+     */
     private final static int BLOCK_SIZE = 1 << 18;
 
     private final float[][] cache;
     private final int size;
 
-    public TextAdvancesCache(int size) {
+    public TextAdvancesCache(@IntRange(from = 0) int size) {
         if (size < 0) {
             throw new IllegalArgumentException("invalid size: " + size);
         }
@@ -48,16 +53,25 @@ public class TextAdvancesCache {
         }
     }
 
+    /**
+     * Get the size of this cache object
+     */
     public int getSize() {
         return size;
     }
 
+    /**
+     * Set advance at the given index
+     */
     public void setAdvanceAt(int index, float advance) {
         int i = index / BLOCK_SIZE;
         int j = index % BLOCK_SIZE;
         cache[i][j] = advance;
     }
 
+    /**
+     * Compute the prefix sum cache
+     */
     public void finishBuilding() {
         for (float[] arr : cache) {
             var pending = arr[0];
@@ -70,12 +84,21 @@ public class TextAdvancesCache {
         }
     }
 
+    /**
+     * Get advance for character at the given index
+     */
     public float getAdvanceAt(int index) {
         int i = index / BLOCK_SIZE;
         int j = index % BLOCK_SIZE;
         return cache[i][j + 1] - cache[i][j];
     }
 
+    /**
+     * Get the sum of character advances of the given text region
+     *
+     * @param start inclusive start
+     * @param end   exclusive end
+     */
     public float getAdvancesSum(int start, int end) {
         if (cache.length == 1) {
             // Normal case
