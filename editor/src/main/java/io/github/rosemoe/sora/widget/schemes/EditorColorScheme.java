@@ -134,6 +134,7 @@ public class EditorColorScheme {
     public static final int HIGHLIGHTED_DELIMITERS_BACKGROUND = 41;
     public static final int HIGHLIGHTED_DELIMITERS_UNDERLINE = 40;
     public static final int HIGHLIGHTED_DELIMITERS_FOREGROUND = 39;
+    public static final int HIGHLIGHTED_DELIMITERS_BORDER = 75;
     public static final int LINE_NUMBER_PANEL_TEXT = 17;
     public static final int LINE_NUMBER_PANEL = 16;
     public static final int BLOCK_LINE_CURRENT = 15;
@@ -177,7 +178,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 74;
+    protected static final int END_COLOR_ID = 75;
 
 
     /**
@@ -377,13 +378,14 @@ public class EditorColorScheme {
                 color = 0x6600ff11;
                 break;
             case HIGHLIGHTED_DELIMITERS_FOREGROUND:
-                color = 0xdd000000;
-                break;
             case HIGHLIGHTED_DELIMITERS_UNDERLINE:
-                color = 0xff3f51b5;
+                color = 0;
                 break;
             case HIGHLIGHTED_DELIMITERS_BACKGROUND:
                 color = 0x1D000000;
+                break;
+            case HIGHLIGHTED_DELIMITERS_BORDER:
+                color = 0xff3f51b5;
                 break;
             case COMPLETION_WND_TEXT_PRIMARY:
             case COMPLETION_WND_TEXT_SECONDARY:

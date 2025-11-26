@@ -2219,13 +2219,22 @@ public class EditorRenderer {
             var color = editor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_FOREGROUND);
             var backgroundColor = editor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_BACKGROUND);
             var underlineColor = editor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_UNDERLINE);
+            var borderColor = editor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_BORDER);
+            var borderWidth = editor.getHighlightedDelimiterBorderWidth();
             if (isInvalidTextBounds(paired.leftIndex, paired.leftLength) || isInvalidTextBounds(paired.rightIndex, paired.rightLength)) {
                 // Index out of bounds
                 return;
             }
 
-            patchTextRegionWithColor(canvas, textOffset, paired.leftIndex, paired.leftIndex + paired.leftLength, color, backgroundColor, underlineColor);
-            patchTextRegionWithColor(canvas, textOffset, paired.rightIndex, paired.rightIndex + paired.rightLength, color, backgroundColor, underlineColor);
+            if (color != 0 || underlineColor != 0) {
+                patchTextRegionWithColor(canvas, textOffset, paired.leftIndex, paired.leftIndex + paired.leftLength, color, backgroundColor, underlineColor);
+                patchTextRegionWithColor(canvas, textOffset, paired.rightIndex, paired.rightIndex + paired.rightLength, color, backgroundColor, underlineColor);
+                backgroundColor = 0;
+            }
+            if (backgroundColor != 0 || (borderColor != 0 && borderWidth > 0)) {
+                patchTextBackgroundRegions(canvas, textOffset, paired.leftIndex, paired.leftIndex + paired.leftLength, backgroundColor, borderWidth, borderColor);
+                patchTextBackgroundRegions(canvas, textOffset, paired.rightIndex, paired.rightIndex + paired.rightLength, backgroundColor, borderWidth, borderColor);
+            }
         }
     }
 
@@ -2269,15 +2278,55 @@ public class EditorRenderer {
                 var bottom = params.getTextBottom() - params.getTextHeight() * 0.05f;
                 canvas.drawLine(horizontalOffset, bottom, horizontalOffset + width, bottom, paintOther);
             }
-        });
+        }, null);
         paintGeneral.setStyle(Paint.Style.FILL);
         paintGeneral.setFakeBoldText(false);
         paintGeneral.setTextSkewX(0f);
         paintGeneral.setStrikeThruText(false);
     }
 
+    protected void patchTextBackgroundRegions(Canvas canvas, float textOffset, int start, int end, int backgroundColor, float borderWidth, int borderColor) {
+        if (backgroundColor == 0 && (borderWidth <= 0 || borderColor == 0)) {
+            return;
+        }
+        patchTextRegions(canvas, textOffset, start, end, null, (float left, float right) -> {
+            if (textOffset + left < 0) {
+                return true;
+            }
+            tmpRect.top = getRowTopForBackground(0);
+            tmpRect.bottom = getRowBottomForBackground(0);
+            tmpRect.left = left;
+            tmpRect.right = right;
+            if (backgroundColor != 0) {
+                paintOther.setColor(backgroundColor);
+                if (editor.getProps().enableRoundTextBackground) {
+                    canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintOther);
+                } else {
+                    canvas.drawRect(tmpRect, paintOther);
+                }
+            }
+            if (borderWidth > 0 && borderColor != 0) {
+                paintOther.setStyle(android.graphics.Paint.Style.STROKE);
+                paintOther.setColor(borderColor);
+                paintOther.setStrokeWidth(borderWidth);
+                if (editor.getProps().enableRoundTextBackground) {
+                    canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintOther);
+                } else {
+                    canvas.drawRect(tmpRect, paintOther);
+                }
+                paintOther.setStyle(android.graphics.Paint.Style.FILL);
+            }
+            return textOffset + right > editor.getWidth();
+        });
+    }
 
-    protected void patchTextRegions(Canvas canvas, float textOffset, int start, int end, @NonNull TextRow.DrawTextConsumer patch) {
+
+    protected void patchTextRegions(Canvas canvas, float textOffset, int start, int end,
+                                    @Nullable TextRow.DrawTextConsumer patch,
+                                    @Nullable TextRow.BackgroundRegionConsumer bgPatch) {
+        if (patch == null && bgPatch == null) {
+            return;
+        }
         var firstVisRow = editor.getFirstVisibleRow();
         var lastVisRow = editor.getLastVisibleRow();
 
@@ -2303,7 +2352,12 @@ public class EditorRenderer {
             float maxHorizontalOffset = minHorizontalOffset + editor.getWidth();
             canvas.save();
             canvas.translate(horizontalOffset, editor.getRowTop(i) - editor.getOffsetY());
-            tr.iterateDrawTextRegions(startOnRow, endOnRow, canvas, minHorizontalOffset, maxHorizontalOffset, true, patch);
+            if (bgPatch != null) {
+                tr.iterateBackgroundRegions(startOnRow, endOnRow, false, false, bgPatch);
+            }
+            if (patch != null) {
+                tr.iterateDrawTextRegions(startOnRow, endOnRow, canvas, minHorizontalOffset, maxHorizontalOffset, true, patch);
+            }
             canvas.restore();
         }
     }

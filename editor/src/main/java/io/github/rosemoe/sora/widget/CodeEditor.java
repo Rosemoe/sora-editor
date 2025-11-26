@@ -286,6 +286,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private float dividerMarginRight;
     private float insertSelectionWidth;
     private float blockLineWidth;
+    private float highlightedDelimiterBorderWidth;
     private float verticalScrollFactor;
     private float lineInfoTextSize;
     private float lineSpacingMultiplier = 1f;
@@ -591,6 +592,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         dpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10f;
         dividerWidth = dpUnit;
         insertSelectionWidth = dpUnit;
+        highlightedDelimiterBorderWidth = dpUnit;
         dividerMarginLeft = dividerMarginRight = dpUnit * 2;
 
         matrix = new Matrix();
@@ -2769,6 +2771,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return Margin left of divider line
      * @see CodeEditor#setDividerMargin(float, float)
      */
+    @Px
     public float getDividerMarginLeft() {
         return dividerMarginLeft;
     }
@@ -2777,6 +2780,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return Margin right of divider line
      * @see CodeEditor#setDividerMargin(float, float)
      */
+    @Px
     public float getDividerMarginRight() {
         return dividerMarginRight;
     }
@@ -2818,6 +2822,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * @see #setLineNumberMarginLeft(float)
      */
+    @Px
     public float getLineNumberMarginLeft() {
         return lineNumberMarginLeft;
     }
@@ -2826,6 +2831,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return Width of divider line
      * @see CodeEditor#setDividerWidth(float)
      */
+    @Px
     public float getDividerWidth() {
         return dividerWidth;
     }
@@ -2835,7 +2841,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      *
      * @param dividerWidth Width of divider line
      */
-    public void setDividerWidth(float dividerWidth) {
+    public void setDividerWidth(@Px float dividerWidth) {
         if (dividerWidth < 0) {
             throw new IllegalArgumentException("width can not be under zero");
         }
@@ -2941,7 +2947,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      *
      * @param width Cursor width
      */
-    public void setCursorWidth(float width) {
+    public void setCursorWidth(@Px float width) {
         if (width < 0) {
             throw new IllegalArgumentException("width can not be under zero");
         }
@@ -2949,8 +2955,25 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         invalidate();
     }
 
+    @Px
     public float getInsertSelectionWidth() {
         return insertSelectionWidth;
+    }
+
+    /**
+     * Border width for highlight delimiter
+     */
+    public void setHighlightedDelimiterBorderWidth(@Px float width) {
+        if (width < 0) {
+            throw new IllegalArgumentException("width can not be under zero");
+        }
+        this.highlightedDelimiterBorderWidth = width;
+        invalidate();
+    }
+
+    @Px
+    public float getHighlightedDelimiterBorderWidth() {
+        return highlightedDelimiterBorderWidth;
     }
 
     /**
