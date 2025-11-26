@@ -591,7 +591,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         props = new DirectAccessProps();
         dpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10f;
         dividerWidth = dpUnit;
-        insertSelectionWidth = dpUnit;
+        insertSelectionWidth = dpUnit * 1.5f;
         highlightedDelimiterBorderWidth = dpUnit;
         dividerMarginLeft = dividerMarginRight = dpUnit * 2;
 
