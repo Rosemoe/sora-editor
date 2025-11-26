@@ -511,6 +511,7 @@ public class TextRow {
         /* for text patching */
         public boolean autoClip;
         public DrawTextConsumer drawTextConsumer;
+        public Span currentSpan;
         /* for measure cache */
         public TextAdvancesCache advances;
     }
@@ -608,13 +609,22 @@ public class TextRow {
         }
     }
 
+    private void commitTextRunToConsumer(int paintStart, int paintEnd, int contextStart, int contextEnd, boolean isRtl,
+                                         Canvas canvas, float offset, float width, IteratingContext ctx) {
+        ctx.drawTextConsumer.drawText(canvas, text.getBackingCharArray(), paintStart, paintEnd - paintStart, contextStart, contextEnd - contextStart, isRtl, offset, width, params, ctx.currentSpan);
+    }
+
     /**
      * Truncate the text run to be committed, try to limit the committed part to be in the visible region
      */
     private void commitTextRunAutoTruncated(int paintStart, int paintEnd, int contextStart, int contextEnd, boolean isRtl,
                                             Canvas canvas, float offset, float width, IteratingContext ctx) {
         if (paintEnd - paintStart < MIN_AUTO_TRUNCATE_LENGTH || measureCache == null) {
-            commitTextRunToCanvas(paintStart, paintEnd, contextStart, contextEnd, isRtl, canvas, offset, width);
+            if (ctx.drawTextConsumer != null) {
+                commitTextRunToConsumer(paintStart, paintEnd, contextStart, contextEnd, isRtl, canvas, offset, width, ctx);
+            } else {
+                commitTextRunToCanvas(paintStart, paintEnd, contextStart, contextEnd, isRtl, canvas, offset, width);
+            }
         } else {
             float runAdvanceLeft = Math.max(0, ctx.minOffset - offset) - paint.getSpaceWidth();
             float runAdvanceRight = Math.min(width, ctx.maxOffset - offset) + paint.getSpaceWidth();
@@ -639,7 +649,11 @@ public class TextRow {
                 float advanceEnd = measureAdvanceInRun(commitEnd, paintStart, paintEnd, contextStart, contextEnd, isRtl);
                 float newWidth = Math.abs(advanceStart - advanceEnd);
                 float commitOffset = isRtl ? offset + width - advanceEnd : offset + advanceStart;
-                commitTextRunToCanvas(commitStart, commitEnd, contextStart, contextEnd, isRtl, canvas, commitOffset, newWidth);
+                if (ctx.drawTextConsumer != null) {
+                    commitTextRunToConsumer(commitStart, commitEnd, contextStart, contextEnd, isRtl, canvas, commitOffset, newWidth, ctx);
+                } else {
+                    commitTextRunToCanvas(commitStart, commitEnd, contextStart, contextEnd, isRtl, canvas, commitOffset, newWidth);
+                }
             }
         }
     }
@@ -782,7 +796,9 @@ public class TextRow {
                 canvas.save();
                 clipRegionForPatchDrawing(regionLeft, regionRight - regionLeft, TextStyle.isItalics(span.getStyleBits()), canvas);
             }
-            ctx.drawTextConsumer.drawText(canvas, text.getBackingCharArray(), paintStart, paintEnd - paintStart, paintStart, paintEnd - paintStart, isRtl, offset, width, params, span);
+            ctx.currentSpan = span;
+            commitTextRunAutoTruncated(paintStart, paintEnd, paintStart, paintEnd, isRtl, canvas, offset, width, ctx);
+            ctx.currentSpan = null;
             ctx.lastStyle = -1;
             if (ctx.autoClip) {
                 canvas.restore();
