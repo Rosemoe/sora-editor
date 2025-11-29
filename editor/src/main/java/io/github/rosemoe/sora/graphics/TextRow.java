@@ -388,6 +388,7 @@ public class TextRow {
             }
 
             void commitRow() {
+                currentRow.rowWidth = currentWidth;
                 rows.add(currentRow);
                 currentWidth = 0f;
                 currentRow = new WordwrapRow();
@@ -990,9 +991,9 @@ public class TextRow {
                     localOffset += tabWidth;
                 }
                 lastEnd = isRtl ? index : index + 1;
-            }
-            if (offset + localOffset > ctx.maxOffset) {
-                break;
+                if (offset + localOffset > ctx.maxOffset) {
+                    break;
+                }
             }
         }
         return localOffset;
@@ -1237,6 +1238,7 @@ public class TextRow {
          * Inlay hints on the row, maybe null or empty
          */
         public List<InlayHint> inlayHints;
+        public float rowWidth;
 
         void setInitialRange(int start, int end) {
             isEmpty = false;

@@ -1233,6 +1233,8 @@ public class EditorRenderer {
         // Other system line background are drawn last
         for (int row = firstVis; row <= editor.getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
+            canvas.save();
+            canvas.translate(rowInf.renderTranslateX, 0f);
             int line = rowInf.lineIndex;
             int columnCount = getColumnCount(line);
             if (lastPreparedLine != line) {
@@ -1291,6 +1293,7 @@ public class EditorRenderer {
                     drawRowRegionBackground(canvas, row, selectionStart, selectionEnd, rowInf.startColumn, rowInf.endColumn, editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
                 }
             }
+            canvas.restore();
         }
         rowIterator.reset();
 
@@ -1359,6 +1362,10 @@ public class EditorRenderer {
             // Get visible region on the line
             float paintingOffset = -offset2;
             float offsetCopy = offset2;
+
+            paintingOffset += rowInf.renderTranslateX;
+            offsetCopy -= rowInf.renderTranslateX;
+
             if (!rowInf.isLeadingRow) {
                 if ((editor.getNonPrintablePaintingFlags() & CodeEditor.FLAG_DRAW_SOFT_WRAP) != 0) {
                     drawMiniGraph(canvas, offset, row, softwrapLeftGraph);
@@ -1547,18 +1554,15 @@ public class EditorRenderer {
     }
 
     private long getBidiIndicatorAttrs(int line, int column) {
-        if (!editor.getProps().showBidiDirectionIndicator) {
-            return IntPair.pack(0, 0);
-        }
         var lineDirections = getLineDirections(line);
         int count = lineDirections.getRunCount();
         if (count == 1) {
             // Simple LTR/RTL Run
-            return IntPair.pack(0, 0);
+            return IntPair.pack(0, lineDirections.isRunRtl(0) ? 1 : 0);
         }
         for (int i = 0; i < count; i++) {
             if (i + 1 == count || lineDirections.getRunStart(i) <= column && column < lineDirections.getRunEnd(i)) {
-                return IntPair.pack(1, lineDirections.isRunRtl(i) ? 1 : 0);
+                return IntPair.pack(editor.getProps().showBidiDirectionIndicator ? 1 : 0, lineDirections.isRunRtl(i) ? 1 : 0);
             }
         }
         return IntPair.pack(0, 0);
@@ -1664,9 +1668,9 @@ public class EditorRenderer {
                     int endColumn = i == endRow ? end.column : row.endColumn;
                     float finalOffset;
                     if (editor.isWordwrap() && !row.isLeadingRow && (editor.getNonPrintablePaintingFlags() & CodeEditor.FLAG_DRAW_SOFT_WRAP) != 0) {
-                        finalOffset = offset + getMiniGraphWidth();
+                        finalOffset = offset + row.renderTranslateX + getMiniGraphWidth();
                     } else {
-                        finalOffset = offset;
+                        finalOffset = offset + row.renderTranslateX;
                     }
                     if (startColumn == endColumn) {
                         // Make it always visible
@@ -2360,7 +2364,7 @@ public class EditorRenderer {
             float minHorizontalOffset = Math.max(0, -horizontalOffset);
             float maxHorizontalOffset = minHorizontalOffset + editor.getWidth();
             canvas.save();
-            canvas.translate(horizontalOffset, editor.getRowTop(i) - editor.getOffsetY());
+            canvas.translate(horizontalOffset + row.renderTranslateX, editor.getRowTop(i) - editor.getOffsetY());
             if (bgPatch != null) {
                 tr.iterateBackgroundRegions(startOnRow, endOnRow, false, false, bgPatch);
             }
@@ -2506,6 +2510,16 @@ public class EditorRenderer {
             isRightToLeft = rightToLeft;
         }
 
+        private int getActualHandleType() {
+            if (isRightToLeft && handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT) {
+                return SelectionHandleStyle.HANDLE_TYPE_RIGHT;
+            }
+            if (isRightToLeft && handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT) {
+                return SelectionHandleStyle.HANDLE_TYPE_LEFT;
+            }
+            return handleType;
+        }
+
         private boolean drawSelForLeftRight() {
             return ((handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT)
                     && editor.getProps().showSelectionWhenSelected && !editor.isInMouseMode());
@@ -2535,7 +2549,7 @@ public class EditorRenderer {
             // Follow the thumb or stick to text row
             if (!descriptor.position.isEmpty()) {
                 if (!editor.isStickyTextSelection()) {
-                    if (editor.getEventHandler().getTouchedHandleType() == handleType
+                    if (editor.getEventHandler().getTouchedHandleType() == getActualHandleType()
                             && handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED && editor.getEventHandler().isHandleMoving()) {
                         x = editor.getEventHandler().motionX + (descriptor.alignment != SelectionHandleStyle.ALIGN_CENTER ? descriptor.position.width() : 0) * (descriptor.alignment == SelectionHandleStyle.ALIGN_LEFT ? 1 : -1);
                         y = editor.getEventHandler().motionY - descriptor.position.height() * 2 / 3f;
