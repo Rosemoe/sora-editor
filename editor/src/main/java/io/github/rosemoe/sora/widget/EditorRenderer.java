@@ -1499,21 +1499,21 @@ public class EditorRenderer {
             final var layout = editor.getLayout();
             // Draw cursors
             if (cursor.isSelected()) {
-                if (cursor.getLeftLine() == line && isInside(cursor.getLeftColumn(), rowInf.startColumn, rowInf.endColumn, line)) {
+                if (cursor.getLeftLine() == line && isInside(cursor.getLeftColumn(), rowInf.startColumn, rowInf.endColumn, rowInf.isTrailingRow)) {
                     float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(cursor.getLeftLine(), cursor.getLeftColumn())[1] - editor.getOffsetX();
                     var type = content.isRtlAt(cursor.getLeftLine(), cursor.getLeftColumn()) ? SelectionHandleStyle.HANDLE_TYPE_RIGHT : SelectionHandleStyle.HANDLE_TYPE_LEFT;
                     var task = new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), type, editor.getLeftHandleDescriptor());
                     postDrawCursor.add(task);
                     applyBidiIndicatorAttrs(task, cursor.getLeftLine(), cursor.getLeftColumn());
                 }
-                if (cursor.getRightLine() == line && isInside(cursor.getRightColumn(), rowInf.startColumn, rowInf.endColumn, line)) {
+                if (cursor.getRightLine() == line && isInside(cursor.getRightColumn(), rowInf.startColumn, rowInf.endColumn, rowInf.isTrailingRow)) {
                     float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(cursor.getRightLine(), cursor.getRightColumn())[1] - editor.getOffsetX();
                     var type = content.isRtlAt(cursor.getRightLine(), cursor.getRightColumn()) ? SelectionHandleStyle.HANDLE_TYPE_LEFT : SelectionHandleStyle.HANDLE_TYPE_RIGHT;
                     var task = new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), type, editor.getRightHandleDescriptor());
                     postDrawCursor.add(task);
                     applyBidiIndicatorAttrs(task, cursor.getRightLine(), cursor.getRightColumn());
                 }
-            } else if (cursor.getLeftLine() == line && isInside(cursor.getLeftColumn(), rowInf.startColumn, rowInf.endColumn, line)) {
+            } else if (cursor.getLeftLine() == line && isInside(cursor.getLeftColumn(), rowInf.startColumn, rowInf.endColumn, rowInf.isTrailingRow)) {
                 float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(cursor.getLeftLine(), cursor.getLeftColumn())[1] - editor.getOffsetX();
                 var task = new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_INSERT, editor.getInsertHandleDescriptor());
                 postDrawCursor.add(task);
@@ -1521,7 +1521,7 @@ public class EditorRenderer {
             }
             // Draw dragging selection or selecting target
             if (draggingSelection != null) {
-                if (draggingSelection.line == line && isInside(draggingSelection.column, rowInf.startColumn, rowInf.endColumn, line)) {
+                if (draggingSelection.line == line && isInside(draggingSelection.column, rowInf.startColumn, rowInf.endColumn, rowInf.isTrailingRow)) {
                     float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(draggingSelection.line, draggingSelection.column)[1] - editor.getOffsetX();
                     var task = new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, null);
                     postDrawCursor.add(task);
@@ -1529,7 +1529,7 @@ public class EditorRenderer {
                 }
             } else if (editor.isInMouseMode() && editor.isTextSelected()) {
                 var target = editor.getSelectingTarget();
-                if (target != null && target.line == line && isInside(target.column, rowInf.startColumn, rowInf.endColumn, line)) {
+                if (target != null && target.line == line && isInside(target.column, rowInf.startColumn, rowInf.endColumn, rowInf.isTrailingRow)) {
                     float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(target.line, target.column)[1] - editor.getOffsetX();
                     var task = new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_UNDEFINED, null);
                     postDrawCursor.add(task);
@@ -1841,12 +1841,11 @@ public class EditorRenderer {
      * @param index Index to test
      * @param start Start of region
      * @param end   End of region
-     * @param line  Checking line
      * @return true if cursor should be drawn in this row
      */
-    private boolean isInside(int index, int start, int end, int line) {
+    private boolean isInside(int index, int start, int end, boolean isLastRow) {
         // Due not to draw duplicate cursors for a single one
-        if (index == end && content.getLine(line).length() != end) {
+        if (index == end && !isLastRow) {
             return false;
         }
         return index >= start && index <= end;
