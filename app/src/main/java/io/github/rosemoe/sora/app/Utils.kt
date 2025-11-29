@@ -40,10 +40,13 @@ import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.schemes.SchemeDarcula
 
-fun switchThemeIfRequired(context: Context, editor: CodeEditor) {
+fun switchThemeIfRequired(context: Context, editor: CodeEditor, useAyuDark: Boolean = false) {
     if ((context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES) {
         if (editor.colorScheme is TextMateColorScheme) {
-            ThemeRegistry.getInstance().setTheme("darcula")
+            val theme = ThemeRegistry.getInstance().run {
+                if (useAyuDark) findThemeByThemeName("ayu-dark") else findThemeByThemeName("darcula")
+            }
+            ThemeRegistry.getInstance().setTheme(theme)
         } else if (editor.colorScheme is MonarchColorScheme) {
             io.github.rosemoe.sora.langs.monarch.registry.ThemeRegistry.setTheme("darcula")
         } else {

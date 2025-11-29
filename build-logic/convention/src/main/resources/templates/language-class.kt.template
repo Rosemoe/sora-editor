@@ -1,0 +1,63 @@
+package io.github.rosemoe.sora.langs.textmate
+
+import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
+import io.github.rosemoe.sora.langs.textmate.registry.GrammarRegistry
+import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
+import io.github.rosemoe.sora.langs.textmate.registry.dsl.languages
+import org.eclipse.tm4e.core.grammar.IGrammar
+import org.eclipse.tm4e.languageconfiguration.internal.model.LanguageConfiguration
+
+class %CLASS_NAME% @JvmOverloads constructor(
+    createIdentifiers: Boolean = true,
+    grammarRegistry: GrammarRegistry = GrammarRegistry.getInstance(),
+    themeRegistry: ThemeRegistry = ThemeRegistry.getInstance()
+) : TextMateLanguage(
+    loadGrammar(grammarRegistry),
+    loadLanguageConfiguration(grammarRegistry),
+    grammarRegistry,
+    themeRegistry,
+    createIdentifiers
+) {
+
+    companion object {
+        private const val LANGUAGE_NAME = "%LANGUAGE_NAME%"
+        private const val SCOPE_NAME = "%SCOPE_NAME%"
+        private const val GRAMMAR_PATH = "%GRAMMAR_PATH%"
+        private val LANGUAGE_CONFIGURATION_PATH: String? = %LANGUAGE_CONFIG_PATH%
+        private val EMBEDDED_LANGUAGES: Map<String, String> = %EMBEDDED_LANGUAGES%
+
+        private fun ensureRegistered(grammarRegistry: GrammarRegistry) {
+            if (grammarRegistry.findGrammar(SCOPE_NAME, false) != null) {
+                return
+            }
+            grammarRegistry.loadGrammars(
+                languages {
+                    language(LANGUAGE_NAME) {
+                        grammar = GRAMMAR_PATH
+                        scopeName = SCOPE_NAME
+                        LANGUAGE_CONFIGURATION_PATH?.let { languageConfiguration = it }
+                        if (EMBEDDED_LANGUAGES.isNotEmpty()) {
+                            embeddedLanguages {
+                                EMBEDDED_LANGUAGES.forEach { (scope, languageName) ->
+                                    scope to languageName
+                                }
+                            }
+                        }
+                    }
+                }
+            )
+        }
+
+        private fun loadGrammar(grammarRegistry: GrammarRegistry): IGrammar {
+            ensureRegistered(grammarRegistry)
+            return grammarRegistry.findGrammar(SCOPE_NAME)
+                ?: error("%MISSING_GRAMMAR_MESSAGE%")
+        }
+
+        private fun loadLanguageConfiguration(grammarRegistry: GrammarRegistry): LanguageConfiguration {
+            ensureRegistered(grammarRegistry)
+            return grammarRegistry.findLanguageConfiguration(SCOPE_NAME)
+                ?: LanguageConfiguration()
+        }
+    }
+}

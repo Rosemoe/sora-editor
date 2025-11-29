@@ -162,10 +162,25 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
             setColor(TEXT_NORMAL, ColorUtils.parseRGBAToARGB(foreground));
         }
 
+        String highlightedDelimitersBackground =
+                (String) RawTheme.get("editorBracketMatch.background");
+        if (highlightedDelimitersBackground != null) {
+            setColor(HIGHLIGHTED_DELIMITERS_BACKGROUND, ColorUtils.parseRGBAToARGB(highlightedDelimitersBackground));
+        }
+
+        String highlightedDelimitersBorder =
+                (String) RawTheme.get("editorBracketMatch.border");
+        if (highlightedDelimitersBorder != null) {
+            setColor(HIGHLIGHTED_DELIMITERS_UNDERLINE, ColorUtils.parseRGBAToARGB(highlightedDelimitersBorder));
+        }
+
         String highlightedDelimitersForeground =
                 (String) RawTheme.get("highlightedDelimitersForeground");
         if (highlightedDelimitersForeground != null) {
             setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, ColorUtils.parseRGBAToARGB(highlightedDelimitersForeground));
+        } else {
+            // reset
+            setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, 0);
         }
 
         String tooltipBackground = (String) RawTheme.get("tooltipBackground");
