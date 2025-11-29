@@ -37,7 +37,7 @@ import io.github.rosemoe.sora.lsp.editor.LspProject
 import io.github.rosemoe.sora.lsp.requests.Timeout
 import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.LSPException
-import kotlinx.coroutines.future.future
+import io.github.rosemoe.sora.lsp.utils.override
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.ClientCapabilities
 import org.eclipse.lsp4j.CodeActionCapabilities
@@ -92,6 +92,7 @@ class LanguageServerWrapper(
     val serverDefinition: LanguageServerDefinition, val project: LspProject
 ) {
     private val TAG = "LanguageServerWrapper"
+    val serverName = serverDefinition.name
 
     private val connectedEditors = Collections.newSetFromMap(WeakHashMap<LspEditor, Boolean>());
 
@@ -100,6 +101,8 @@ class LanguageServerWrapper(
     private var client: LanguageClient? = null
     var requestManager: RequestManager? = null
         private set
+
+    private var effectiveCapabilities: ServerCapabilities? = null
 
     private var initializeResult: InitializeResult? = null
     private var launcherFuture: Future<*>? = null
@@ -117,7 +120,7 @@ class LanguageServerWrapper(
     var status = ServerStatus.STOPPED
         private set
 
-    private val readyToConnect =  Collections.newSetFromMap(WeakHashMap<LspEditor, Boolean>());
+    private val readyToConnect = Collections.newSetFromMap(WeakHashMap<LspEditor, Boolean>());
 
     private val commonCoroutineScope = project.coroutineScope
 
@@ -130,6 +133,10 @@ class LanguageServerWrapper(
      */
     @WorkerThread
     fun getServerCapabilities(): ServerCapabilities? {
+        effectiveCapabilities?.let {
+            return it
+        }
+
         if (initializeResult != null) {
             return initializeResult?.capabilities
         }
@@ -167,7 +174,7 @@ class LanguageServerWrapper(
             capabilitiesAlreadyRequested = true
         }
 
-        return initializeResult?.capabilities
+        return effectiveCapabilities ?: initializeResult?.capabilities
     }
 
 
@@ -233,11 +240,22 @@ class LanguageServerWrapper(
                             "Got initializeResult for $serverDefinition ; $projectRootPath"
                         )
 
+                        val fallbackCapabilities = serverDefinition.expectedCapabilities()
+                        val mergedCapabilities =
+                            mergeCapabilities(res.capabilities, fallbackCapabilities)
+                        effectiveCapabilities = mergedCapabilities
+                        res.capabilities = mergedCapabilities
+
                         requestManager = DefaultRequestManager(
                             this@LanguageServerWrapper,
                             requireNotNull(languageServer),
                             requireNotNull(client),
-                            res.capabilities
+                            mergedCapabilities
+                        )
+
+                        eventHandler?.listener?.initialize(
+                            connectedLanguageServer,
+                            InitializeResult(mergedCapabilities)
                         )
 
                         status = ServerStatus.STARTED
@@ -368,7 +386,8 @@ class LanguageServerWrapper(
             rangeFormatting = RangeFormattingCapabilities()
             references = ReferencesCapabilities()
             rename = RenameCapabilities(true, true)
-            signatureHelp = SignatureHelpCapabilities(SignatureInformationCapabilities(markupKinds), true)
+            signatureHelp =
+                SignatureHelpCapabilities(SignatureInformationCapabilities(markupKinds), true)
             synchronization =
                 SynchronizationCapabilities(true, true, true)
             publishDiagnostics = PublishDiagnosticsCapabilities(true)
@@ -461,7 +480,9 @@ class LanguageServerWrapper(
             textDocumentSyncKind =
                 textDocumentSyncKind ?: TextDocumentSyncKind.Full
 
-            editor.textDocumentSyncKind = textDocumentSyncKind
+            editor.textDocumentSyncKind =
+                if (textDocumentSyncKind != TextDocumentSyncKind.Incremental || editor.textDocumentSyncKind != TextDocumentSyncKind.Incremental)
+                    TextDocumentSyncKind.Full else textDocumentSyncKind
 
             val completionTriggers = capabilities.completionProvider
                 ?.triggerCharacters ?: emptyList()
@@ -471,15 +492,10 @@ class LanguageServerWrapper(
             val signatureHelpReTriggers = capabilities.signatureHelpProvider
                 ?.retriggerCharacters ?: emptyList()
 
-            editor.signatureHelpTriggers = signatureHelpTriggers
-            editor.signatureHelpReTriggers = signatureHelpReTriggers
-            editor.completionTriggers = completionTriggers.toMutableSet().apply {
-                addAll(arrayOf("[", "{", "(", "<", ".", ","))
-            }.toList()
-
-            commonCoroutineScope.future {
-                editor.openDocument()
-            }.get()
+            editor.signatureHelpTriggers.addAll(signatureHelpTriggers)
+            editor.signatureHelpReTriggers.addAll(signatureHelpReTriggers)
+            editor.completionTriggers.addAll(completionTriggers)
+            editor.completionTriggers.addAll(arrayOf("[", "{", "(", "<", ".", ","))
 
             for (ed in readyToConnect) {
                 connect(ed)
@@ -540,10 +556,17 @@ class LanguageServerWrapper(
         start()
     }
 
-    fun getConnectedFiles(): List<String> {
-        return connectedEditors.map {
-            it.uri.path
+    private fun mergeCapabilities(
+        primary: ServerCapabilities,
+        fallback: ServerCapabilities?
+    ): ServerCapabilities {
+        if (fallback == null) {
+            return primary
         }
+        val merged = ServerCapabilities()
+        merged.override(primary)
+        merged.override(fallback)
+        return merged
     }
 
 }

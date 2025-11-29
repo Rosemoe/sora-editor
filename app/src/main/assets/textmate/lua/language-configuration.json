@@ -73,5 +73,12 @@
   "indentationRules": {
     "increaseIndentPattern": "^((?!(\\-\\-)).)*((\\b(else|function|then|do|repeat)\\b((?!\\b(end|until)\\b).)*)|(\\{\\s*))$",
     "decreaseIndentPattern": "^\\s*((\\b(elseif|else|end|until)\\b)|(\\})|(\\)))"
+  },
+  "folding": {
+    "offSide": false,
+    "markers": {
+      "start": "^((?!(\\-\\-)).)*((\\b(else|function|then|do|repeat)\\b((?!\\b(end|until)\\b).)*)|(\\{\\s*))$#region",
+      "end": "^\\s*((\\b(elseif|else|end|until)\\b)|(\\})|(\\)))#endregion"
+    }
   }
 }

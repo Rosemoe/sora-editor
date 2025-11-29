@@ -76,7 +76,11 @@ class EventEmitter {
         return context
     }
 
-    suspend fun emitAsync(event: String, context: EventContext, throwError: Boolean = false): EventContext {
+    suspend fun emitAsync(
+        event: String,
+        context: EventContext,
+        throwError: Boolean = false
+    ): EventContext {
         try {
             listeners[event]?.forEach {
                 it.handleAsync(context)

@@ -59,4 +59,5 @@ interface ClientContext {
      */
     val requestManager: RequestManager?
     val eventListener: EventHandler.EventListener
+    val serverName: String
 }

@@ -28,6 +28,8 @@ import android.util.Log
 import io.github.rosemoe.sora.lsp.client.connection.StreamConnectionProvider
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 
+import org.eclipse.lsp4j.ServerCapabilities
+
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -39,9 +41,13 @@ import java.util.concurrent.ConcurrentHashMap
 * A trait representing a ServerDefinition
 */
 abstract class LanguageServerDefinition {
-
     var ext = "unknown"
-    protected var languageIds = emptyMap<String, String>()
+
+    open val exts: List<String>
+        get() = listOf(ext)
+
+    open val name: String
+        get() = ext
 
     private val streamConnectionProviders: MutableMap<String, StreamConnectionProvider> =
         ConcurrentHashMap()
@@ -92,8 +98,12 @@ abstract class LanguageServerDefinition {
         return null
     }
 
+    open fun expectedCapabilities(): ServerCapabilities? {
+        return null
+    }
+
     override fun toString(): String {
-        return "ServerDefinition for $ext"
+        return "ServerDefinition(name=$name, ext=$ext)"
     }
 
     /**
@@ -109,15 +119,4 @@ abstract class LanguageServerDefinition {
     open val eventListener: EventHandler.EventListener
         get() = EventHandler.EventListener.DEFAULT
 
-    /**
-     * Return language id for the given extension. if there is no language ids registered then the
-     * return value will be the value of `extension`.
-     */
-    fun languageIdFor(extension: String): String {
-        return languageIds[extension] ?: extension
-    }
-
-    companion object {
-        const val SPLIT_CHAR = ","
-    }
 }
