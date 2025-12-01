@@ -23,7 +23,6 @@
  */
 package io.github.rosemoe.sora.widget.layout;
 
-import android.util.Log;
 import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
