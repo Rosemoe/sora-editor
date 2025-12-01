@@ -25,15 +25,15 @@
 package io.github.rosemoe.sora.lsp.events.signature
 
 import android.util.Log
-import io.github.rosemoe.sora.lsp.requests.Timeout
-import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp.events.EventContext
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.getByClass
-import io.github.rosemoe.sora.lsp.utils.createTextDocumentIdentifier
+import io.github.rosemoe.sora.lsp.requests.Timeout
+import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.asLspPosition
+import io.github.rosemoe.sora.lsp.utils.createTextDocumentIdentifier
 import io.github.rosemoe.sora.text.CharPosition
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
@@ -83,8 +83,8 @@ class SignatureHelpEvent : AsyncEventListener() {
     }
 
     override fun dispose() {
-        future?.cancel(true);
-        future = null;
+        future?.cancel(true)
+        future = null
     }
 
 }

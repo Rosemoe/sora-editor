@@ -48,6 +48,8 @@ class ServerWrapperBaseClientContext(wrapper: LanguageServerWrapper) :
     override val requestManager: RequestManager?
         get() = requestManagerRef.get()
 
+    override val serverName = wrapper.serverName
+
     override val eventListener = wrapper.serverDefinition.eventListener
 
 }
