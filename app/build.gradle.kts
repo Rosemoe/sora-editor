@@ -99,6 +99,10 @@ dependencies {
     implementation(projects.languageTreesitter)
     implementation(projects.onigurumaNative)
 
+    // TextMate language packs
+    implementation(projects.languageTextmateLua)
+    implementation(projects.themeTextmateAyuDark)
+
     // Tree-sitter languages
     implementation(libs.tree.sitter.java)
 

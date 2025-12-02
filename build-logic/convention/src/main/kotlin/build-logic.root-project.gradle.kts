@@ -26,3 +26,24 @@
 require(project == rootProject) {
     "This script must be apply to the root project."
 }
+
+applyTextMateLanguagePacks()
+
+fun applyTextMateLanguagePacks() {
+    val grammarsJson = layout.projectDirectory.file("language-textmate-packs/grammars/grammars.json")
+    val textmateGrammarsDir = layout.projectDirectory.dir("language-textmate-packs/grammars")
+    val textmateThemesDir = layout.projectDirectory.dir("language-textmate-packs/themes")
+    val packsProjectsDir = layout.projectDirectory.dir("language-textmate-packs/projects")
+
+    val generateLanguageTextmatePacks = tasks.register<GenerateLanguageTextmatePacksTask>("generateLanguageTextmatePacks") {
+        grammarsFile.set(grammarsJson)
+        grammarsDir.set(textmateGrammarsDir)
+        themesDir.set(textmateThemesDir)
+        projectsDir.set(packsProjectsDir)
+        rootDirProperty.set(rootDir.absolutePath)
+    }
+
+    tasks.matching { it.name == "prepareKotlinBuildScriptModel" }.configureEach {
+        dependsOn(generateLanguageTextmatePacks)
+    }
+}
