@@ -378,7 +378,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private TextRange lastInsertion;
     private TextRange lastSelectedTextRange;
     private SnippetController snippetController;
-    private final Map<String, InlayHintRenderer> inlayHintRendererMap = new HashMap<>();
     private final Map<String, InlineElementRenderer<? extends InlineElement>> inlineElementRendererMap = new HashMap<>();
     private InlineCompletionProvider inlineCompletionProvider;
 
