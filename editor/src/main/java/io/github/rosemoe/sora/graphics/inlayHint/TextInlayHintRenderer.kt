@@ -26,7 +26,7 @@ package io.github.rosemoe.sora.graphics.inlayHint
 
 import android.graphics.Canvas
 import io.github.rosemoe.sora.graphics.Paint
-import io.github.rosemoe.sora.lang.styling.inline.InlineElementParams
+import io.github.rosemoe.sora.lang.styling.inline.InlineElementRenderParams
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint
 import io.github.rosemoe.sora.lang.styling.inlayHint.TextInlayHint
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
@@ -51,7 +51,7 @@ open class TextInlayHintRenderer : InlayHintRenderer() {
     override fun onMeasure(
         element: InlayHint,
         paint: Paint,
-        params: InlineElementParams
+        params: InlineElementRenderParams
     ): Float {
         localPaint.typeface = paint.typeface
         localPaint.textSize = paint.textSize * 0.75f
@@ -65,7 +65,7 @@ open class TextInlayHintRenderer : InlayHintRenderer() {
         element: InlayHint,
         canvas: Canvas,
         paint: Paint,
-        params: InlineElementParams,
+        params: InlineElementRenderParams,
         colorScheme: EditorColorScheme,
         measuredWidth: Float
     ) {

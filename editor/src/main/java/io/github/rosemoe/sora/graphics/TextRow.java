@@ -40,11 +40,10 @@ import java.util.List;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.SpanFactory;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
-import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
 import io.github.rosemoe.sora.lang.styling.inline.CharacterSide;
 import io.github.rosemoe.sora.lang.styling.inline.InlineElement;
-import io.github.rosemoe.sora.lang.styling.inline.InlineElementParams;
-import io.github.rosemoe.sora.lang.styling.inline.InlineElementParamsKt;
+import io.github.rosemoe.sora.lang.styling.inline.InlineElementRenderParams;
+import io.github.rosemoe.sora.lang.styling.inline.InlineElementRenderParamsKt;
 import io.github.rosemoe.sora.lang.styling.span.SpanExtAttrs;
 import io.github.rosemoe.sora.lang.styling.span.SpanExternalRenderer;
 import io.github.rosemoe.sora.text.ContentLine;
@@ -107,7 +106,7 @@ public class TextRow {
     private List<Span> spans;
     private List<InlineElement> inlineElements;
     private TextRowParams params;
-    private InlineElementParams inlineElementParams;
+    private InlineElementRenderParams inlineElementRenderParams;
     private Paint paint;
     private TextAdvancesCache measureCache;
     private int selectedStart = -1;
@@ -130,7 +129,7 @@ public class TextRow {
         this.paint = paint;
         this.params = params;
         this.measureCache = measureCache;
-        this.inlineElementParams = InlineElementParamsKt.createInlineElementParamsFromTextRowParams(params);
+        this.inlineElementRenderParams = InlineElementRenderParamsKt.createInlineElementParamsFromTextRowParams(params);
     }
 
     /**
@@ -459,7 +458,7 @@ public class TextRow {
                 var renderer = (InlineElementRenderer<InlineElement>) params.getInlineElementRendererProvider().getInlineElementRendererForName(element.getName());
                 float w = 0f;
                 if (renderer != null) {
-                    w = renderer.measure(element, paint, inlineElementParams);
+                    w = renderer.measure(element, paint, inlineElementRenderParams);
                     w = Math.max(0f, w);
                 }
                 if (currentRow.isEmpty || currentWidth + w > width) {
@@ -1016,7 +1015,7 @@ public class TextRow {
         var renderer = (InlineElementRenderer<InlineElement>) params.getInlineElementRendererProvider().getInlineElementRendererForName(element.getName());
         float w = 0f;
         if (renderer != null) {
-            w = renderer.measure(element, paint, inlineElementParams);
+            w = renderer.measure(element, paint, inlineElementRenderParams);
             w = Math.max(0f, w);
         }
         if (ctx.regionBuffer != null) {
@@ -1032,7 +1031,7 @@ public class TextRow {
         if (renderer != null && sharedStart < sharedEnd) {
             int saveCount = canvas.save();
             canvas.translate(offset, params.getRowTop());
-            renderer.render(element, canvas, paint, inlineElementParams, params.getColorScheme(), w);
+            renderer.render(element, canvas, paint, inlineElementRenderParams, params.getColorScheme(), w);
             canvas.restoreToCount(saveCount);
             ctx.lastStyle = -1;
         }

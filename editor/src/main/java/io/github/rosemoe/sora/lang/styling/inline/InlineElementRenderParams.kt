@@ -27,7 +27,7 @@ package io.github.rosemoe.sora.lang.styling.inline
 import android.graphics.Paint
 import io.github.rosemoe.sora.graphics.TextRowParams
 
-data class InlineElementParams(
+data class InlineElementRenderParams(
     val tabWidth: Int,
     val textMetrics: Paint.FontMetricsInt,
     val textTop: Int,
@@ -41,7 +41,7 @@ data class InlineElementParams(
 )
 
 @JvmName("createInlineElementParamsFromTextRowParams")
-fun TextRowParams.toInlineElementParams() = InlineElementParams(
+fun TextRowParams.toInlineElementParams() = InlineElementRenderParams(
     tabWidth = tabWidth,
     textMetrics = textMetrics,
     textTop = textTop,

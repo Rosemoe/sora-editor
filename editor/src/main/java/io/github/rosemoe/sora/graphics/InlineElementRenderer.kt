@@ -26,7 +26,7 @@ package io.github.rosemoe.sora.graphics
 
 import android.graphics.Canvas
 import io.github.rosemoe.sora.lang.styling.inline.InlineElement
-import io.github.rosemoe.sora.lang.styling.inline.InlineElementParams
+import io.github.rosemoe.sora.lang.styling.inline.InlineElementRenderParams
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
@@ -46,7 +46,7 @@ abstract class InlineElementRenderer<E : InlineElement> {
     internal fun measure(
         element: E,
         paint: Paint,
-        params: InlineElementParams
+        params: InlineElementRenderParams
     ): Float = onMeasure(element, paint, params)
 
     @JvmName("render")
@@ -54,7 +54,7 @@ abstract class InlineElementRenderer<E : InlineElement> {
         element: E,
         canvas: Canvas,
         paint: Paint,
-        params: InlineElementParams,
+        params: InlineElementRenderParams,
         colorScheme: EditorColorScheme,
         measuredWidth: Float
     ) = onRender(element, canvas, paint, params, colorScheme, measuredWidth)
@@ -68,7 +68,7 @@ abstract class InlineElementRenderer<E : InlineElement> {
      * @param paint the text paint currently used by editor
      * @return the width of this inline element
      */
-    abstract fun onMeasure(element: E, paint: Paint, params: InlineElementParams): Float
+    abstract fun onMeasure(element: E, paint: Paint, params: InlineElementRenderParams): Float
 
     /**
      * Render the inline element on the given canvas. The [Canvas.translate] is called in advance so you do
@@ -88,7 +88,7 @@ abstract class InlineElementRenderer<E : InlineElement> {
         element: E,
         canvas: Canvas,
         paint: Paint,
-        params: InlineElementParams,
+        params: InlineElementRenderParams,
         colorScheme: EditorColorScheme,
         measuredWidth: Float
     )

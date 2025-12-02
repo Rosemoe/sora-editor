@@ -12,7 +12,7 @@ import io.github.rosemoe.sora.lang.completion.inline.InlineCompletionRequest
 import io.github.rosemoe.sora.lang.completion.inline.TriggerKind
 import io.github.rosemoe.sora.lang.styling.inline.GhostText
 import io.github.rosemoe.sora.lang.styling.inline.InlineElementContainer
-import io.github.rosemoe.sora.lang.styling.inline.InlineElementParams
+import io.github.rosemoe.sora.lang.styling.inline.InlineElementRenderParams
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.subscribeAlways
@@ -160,14 +160,14 @@ internal class GhostTextRenderer private constructor(
     override fun onMeasure(
         element: GhostText,
         paint: Paint,
-        params: InlineElementParams
+        params: InlineElementRenderParams
     ) = paint.measureText(element.text)
 
     override fun onRender(
         element: GhostText,
         canvas: Canvas,
         paint: Paint,
-        params: InlineElementParams,
+        params: InlineElementRenderParams,
         colorScheme: EditorColorScheme,
         measuredWidth: Float
     ) {

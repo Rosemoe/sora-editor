@@ -38,7 +38,7 @@ import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.graphics.SingleCharacterWidths;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.lang.styling.inline.InlineElement;
-import io.github.rosemoe.sora.lang.styling.inline.InlineElementParamsKt;
+import io.github.rosemoe.sora.lang.styling.inline.InlineElementRenderParamsKt;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.BlockIntList;
@@ -130,7 +130,7 @@ public class LineBreakLayout extends AbstractLayout {
                 continue;
             }
             var w = renderer.measure(element, paint,
-                    InlineElementParamsKt.createInlineElementParamsFromTextRowParams(editor.getRenderer().createTextRowParams()));
+                    InlineElementRenderParamsKt.createInlineElementParamsFromTextRowParams(editor.getRenderer().createTextRowParams()));
             width += w;
         }
         return (int) width;
