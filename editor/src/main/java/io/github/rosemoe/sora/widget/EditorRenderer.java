@@ -72,6 +72,8 @@ import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.lang.styling.color.ResolvableColor;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
+import io.github.rosemoe.sora.lang.styling.inline.InlineElement;
+import io.github.rosemoe.sora.lang.styling.inline.InlineElementContainer;
 import io.github.rosemoe.sora.lang.styling.line.LineAnchorStyle;
 import io.github.rosemoe.sora.lang.styling.line.LineBackground;
 import io.github.rosemoe.sora.lang.styling.line.LineGutterBackground;
@@ -389,7 +391,7 @@ public class EditorRenderer {
         var cache = editor.getRenderContext().getCache().queryMeasureCache(row.lineIndex);
         var widths = cache != null && cache.getUpdateTimestamp() >= displayTimestamp ? cache.getWidths() : null;
         widths = widths != null && widths.getSize() > line.length() ? widths : null;
-        tr.set(line, row.startColumn, row.endColumn, spanReader.getSpansOnLine(row.lineIndex), row.inlayHints, content.getLineDirections(row.lineIndex), paintGeneral, widths, createTextRowParams());
+        tr.set(line, row.startColumn, row.endColumn, spanReader.getSpansOnLine(row.lineIndex), row.inlineElements, content.getLineDirections(row.lineIndex), paintGeneral, widths, createTextRowParams());
         applySelectedTextRange(tr, row.lineIndex);
         return tr;
     }
@@ -413,12 +415,12 @@ public class EditorRenderer {
             spans = EmptyReader.getInstance();
         }
         TextRow tr = new TextRow();
-        var inlayHints = editor.getInlayHints();
-        List<InlayHint> lineInlays = inlayHints == null ? Collections.emptyList() : inlayHints.getForLine(line);
+        var inlineElements = editor.getInlineElements();
+        List<InlineElement> elements = inlineElements == null ? Collections.emptyList() : inlineElements.getForLine(line);
         var cache = editor.getRenderContext().getCache().queryMeasureCache(line);
         var widths = cache != null && cache.getUpdateTimestamp() >= displayTimestamp ? cache.getWidths() : null;
         widths = widths != null && widths.getSize() > lineBuf.length() ? widths : null;
-        tr.set(lineBuf, 0, columnCount, spans.getSpansOnLine(line), lineInlays, getLineDirections(line), paintGeneral, widths, createTextRowParams());
+        tr.set(lineBuf, 0, columnCount, spans.getSpansOnLine(line), elements, getLineDirections(line), paintGeneral, widths, createTextRowParams());
         applySelectedTextRange(tr, line);
         if (canvas != null) {
             canvas.save();
@@ -1385,7 +1387,7 @@ public class EditorRenderer {
                     || (rowInf.endColumn - rowInf.startColumn > 128 && !editor.getProps().cacheRenderNodeForLongLines) /* Save memory */) {
                 // Draw without hardware acceleration
                 TextRow tr = new TextRow();
-                tr.set(lineBuf, rowInf.startColumn, rowInf.endColumn, reader.getSpansOnLine(line), rowInf.inlayHints, getLineDirections(line), paintGeneral, lineCache, createTextRowParams());
+                tr.set(lineBuf, rowInf.startColumn, rowInf.endColumn, reader.getSpansOnLine(line), rowInf.inlineElements, getLineDirections(line), paintGeneral, lineCache, createTextRowParams());
                 applySelectedTextRange(tr, line);
 
                 canvas.save();
@@ -1423,7 +1425,7 @@ public class EditorRenderer {
             // Draw non-printable characters
             if (circleRadius != 0f && (leadingWhitespaceEnd != columnCount || (nonPrintableFlags & CodeEditor.FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE) != 0)) {
                 TextRow tr = new TextRow();
-                tr.set(lineBuf, rowInf.startColumn, rowInf.endColumn, reader.getSpansOnLine(line), rowInf.inlayHints, getLineDirections(line), paintGeneral, lineCache, createTextRowParams());
+                tr.set(lineBuf, rowInf.startColumn, rowInf.endColumn, reader.getSpansOnLine(line), rowInf.inlineElements, getLineDirections(line), paintGeneral, lineCache, createTextRowParams());
                 canvas.save();
                 canvas.translate(paintingOffset, editor.getRowTopOfText(row) - editor.getOffsetY());
                 bufferedDrawPoints.setOffsets(paintingOffset, editor.getRowTopOfText(row) - editor.getOffsetY());
@@ -1482,7 +1484,7 @@ public class EditorRenderer {
 
                 if (paintStart < paintEnd) {
                     TextRow tr = new TextRow();
-                    tr.set(lineBuf, rowInf.startColumn, rowInf.endColumn, reader.getSpansOnLine(line), rowInf.inlayHints, content.getLineDirections(line), paintGeneral, lineCache, createTextRowParams());
+                    tr.set(lineBuf, rowInf.startColumn, rowInf.endColumn, reader.getSpansOnLine(line), rowInf.inlineElements, content.getLineDirections(line), paintGeneral, lineCache, createTextRowParams());
                     tmpRect.top = editor.getRowBottom(row) - editor.getOffsetY();
                     tmpRect.bottom = tmpRect.top + editor.getRowHeight() * 0.06f;
                     var finalOffset = paintingOffset;
@@ -2459,7 +2461,7 @@ public class EditorRenderer {
                         if (row.lineIndex != startLine) {
                             break;
                         }
-                        tr.set(lineText, row.startColumn, row.endColumn, spans, row.inlayHints, directions, paintGeneral, null, createTextRowParams());
+                        tr.set(lineText, row.startColumn, row.endColumn, spans, row.inlineElements, directions, paintGeneral, null, createTextRowParams());
                         tr.buildMeasureCacheStep(widths);
                     }
                     tr.setRange(0, lineText.length());

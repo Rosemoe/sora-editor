@@ -40,8 +40,11 @@ import java.util.List;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.SpanFactory;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
-import io.github.rosemoe.sora.lang.styling.inlayHint.CharacterSide;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
+import io.github.rosemoe.sora.lang.styling.inline.CharacterSide;
+import io.github.rosemoe.sora.lang.styling.inline.InlineElement;
+import io.github.rosemoe.sora.lang.styling.inline.InlineElementParams;
+import io.github.rosemoe.sora.lang.styling.inline.InlineElementParamsKt;
 import io.github.rosemoe.sora.lang.styling.span.SpanExtAttrs;
 import io.github.rosemoe.sora.lang.styling.span.SpanExternalRenderer;
 import io.github.rosemoe.sora.text.ContentLine;
@@ -102,9 +105,9 @@ public class TextRow {
     private int textStart;
     private int textEnd;
     private List<Span> spans;
-    private List<InlayHint> inlineElements;
+    private List<InlineElement> inlineElements;
     private TextRowParams params;
-    private InlayHintRenderParams inlayHintRenderParams;
+    private InlineElementParams inlineElementParams;
     private Paint paint;
     private TextAdvancesCache measureCache;
     private int selectedStart = -1;
@@ -115,7 +118,7 @@ public class TextRow {
     }
 
     public void set(@NonNull ContentLine text,
-                    int start, int end, @Nullable List<Span> spans, @Nullable List<InlayHint> inlineElements,
+                    int start, int end, @Nullable List<Span> spans, @Nullable List<InlineElement> inlineElements,
                     @NonNull Directions directions, @NonNull Paint paint,
                     @Nullable TextAdvancesCache measureCache, @NonNull TextRowParams params) {
         this.text = text;
@@ -127,7 +130,7 @@ public class TextRow {
         this.paint = paint;
         this.params = params;
         this.measureCache = measureCache;
-        this.inlayHintRenderParams = params.toInlayHintRenderParams();
+        this.inlineElementParams = InlineElementParamsKt.createInlineElementParamsFromTextRowParams(params);
     }
 
     /**
@@ -261,11 +264,11 @@ public class TextRow {
         // handle trailing inline elements
         int currInlineIndex = pointers == null ? 0 : pointers.inlineElementIndex;
         List<RowElement> trailingInlineRun = new ArrayList<>();
-        while (currInlineIndex < inlineElements.size() && getExpectedInlayHintColumn(inlineElements.get(currInlineIndex)) == textEnd) {
+        while (currInlineIndex < inlineElements.size() && getExpectedInlineElementColumn(inlineElements.get(currInlineIndex)) == textEnd) {
             var e = new RowElement();
-            e.type = RowElementTypes.INLAY_HINT;
+            e.type = RowElementTypes.INLINE_ELEMENT;
             e.displayColumnPosition = textEnd;
-            e.inlayHint = inlineElements.get(currInlineIndex++);
+            e.inlineElement = inlineElements.get(currInlineIndex++);
             trailingInlineRun.add(e);
         }
         if (!trailingInlineRun.isEmpty()) {
@@ -280,9 +283,9 @@ public class TextRow {
     /**
      * Get the expected column position to render after.
      */
-    private int getExpectedInlayHintColumn(InlayHint inlayHint) {
-        int position = inlayHint.getColumn();
-        if (inlayHint.getDisplaySide() == CharacterSide.RIGHT) {
+    private int getExpectedInlineElementColumn(InlineElement element) {
+        int position = element.getColumn();
+        if (element.getDisplaySide() == CharacterSide.Right) {
             position++;
         }
         position = Math.min(position, textEnd);
@@ -320,13 +323,13 @@ public class TextRow {
         int lastEndIndex = segmentStart;
         while (true) {
             if (pointers.inlineElementIndex < inlineElements.size() && inlineElements.get(pointers.inlineElementIndex).getColumn() < segmentEnd) {
-                var inlay = inlineElements.get(pointers.inlineElementIndex);
-                var position = getExpectedInlayHintColumn(inlay);
+                var inlineElement = inlineElements.get(pointers.inlineElementIndex);
+                var position = getExpectedInlineElementColumn(inlineElement);
                 var element = new RowElement();
                 if (lastEndIndex == position) {
                     pointers.inlineElementIndex++;
-                    element.type = RowElementTypes.INLAY_HINT;
-                    element.inlayHint = inlay;
+                    element.type = RowElementTypes.INLINE_ELEMENT;
+                    element.inlineElement = inlineElement;
                     element.displayColumnPosition = position;
                 } else {
                     // lastEndIndex < position
@@ -359,6 +362,7 @@ public class TextRow {
 
     /**
      * Break the logical line into rows
+     *
      * @param width Max width of a row
      * @return At least one row is returned, even when the line is empty.
      */
@@ -380,7 +384,7 @@ public class TextRow {
                 for (var element : elements) {
                     if (element.type == RowElementTypes.TEXT) {
                         handleText(element);
-                    } else if (element.type == RowElementTypes.INLAY_HINT) {
+                    } else if (element.type == RowElementTypes.INLINE_ELEMENT) {
                         handleInlineElement(element);
                     }
                 }
@@ -449,11 +453,13 @@ public class TextRow {
             }
 
             void handleInlineElement(RowElement e) {
-                var inlay = e.inlayHint;
-                var renderer = params.getInlayHintRendererProvider().getInlayHintRendererForType(inlay.getType());
+                var element = e.inlineElement;
+
+                @SuppressWarnings("unchecked")
+                var renderer = (InlineElementRenderer<InlineElement>) params.getInlineElementRendererProvider().getInlineElementRendererForName(element.getName());
                 float w = 0f;
                 if (renderer != null) {
-                    w = renderer.measure(inlay, paint, inlayHintRenderParams);
+                    w = renderer.measure(element, paint, inlineElementParams);
                     w = Math.max(0f, w);
                 }
                 if (currentRow.isEmpty || currentWidth + w > width) {
@@ -463,10 +469,10 @@ public class TextRow {
                     // we don't care if the new row can actually display the whole inlay hint
                     // because inlay hint can not split
                     currentRow.setInitialRange(e.displayColumnPosition, e.displayColumnPosition);
-                    currentRow.addInlayHint(inlay);
+                    currentRow.addInlineElement(element);
                     currentWidth = w;
                 } else {
-                    currentRow.addInlayHint(inlay);
+                    currentRow.addInlineElement(element);
                     currentWidth += w;
                 }
             }
@@ -1004,11 +1010,13 @@ public class TextRow {
      */
     private float handleSingleInlineElement(RowElement e,
                                             Canvas canvas, float offset, IteratingContext ctx) {
-        var inlay = e.inlayHint;
-        var renderer = params.getInlayHintRendererProvider().getInlayHintRendererForType(inlay.getType());
+        var element = e.inlineElement;
+
+        @SuppressWarnings("unchecked")
+        var renderer = (InlineElementRenderer<InlineElement>) params.getInlineElementRendererProvider().getInlineElementRendererForName(element.getName());
         float w = 0f;
         if (renderer != null) {
-            w = renderer.measure(inlay, paint, inlayHintRenderParams);
+            w = renderer.measure(element, paint, inlineElementParams);
             w = Math.max(0f, w);
         }
         if (ctx.regionBuffer != null) {
@@ -1024,7 +1032,7 @@ public class TextRow {
         if (renderer != null && sharedStart < sharedEnd) {
             int saveCount = canvas.save();
             canvas.translate(offset, params.getRowTop());
-            renderer.render(inlay, canvas, paint, inlayHintRenderParams, params.getColorScheme(), w);
+            renderer.render(element, canvas, paint, inlineElementParams, params.getColorScheme(), w);
             canvas.restoreToCount(saveCount);
             ctx.lastStyle = -1;
         }
@@ -1041,7 +1049,7 @@ public class TextRow {
         for (var element : visualElements) {
             if (element.type == RowElementTypes.TEXT) {
                 localOffset += handleSingleTextElement(element, pointers, canvas, offset + localOffset, ctx);
-            } else if (element.type == RowElementTypes.INLAY_HINT) {
+            } else if (element.type == RowElementTypes.INLINE_ELEMENT) {
                 localOffset += handleSingleInlineElement(element, canvas, offset + localOffset, ctx);
             }
             if (offset + localOffset > ctx.maxOffset) {
@@ -1054,7 +1062,8 @@ public class TextRow {
     /**
      * Draw text into the given canvas. Text metrics information is provided by previously set params.
      * Text is rendered from horizontal offset 0 from left to right.
-     * @param canvas A pre-translated canvas to draw text
+     *
+     * @param canvas              A pre-translated canvas to draw text
      * @param minHorizontalOffset Min visible horizontal offset in text
      * @param maxHorizontalOffset Max visible horizontal offset in text
      * @return packed integer and float. The first value represents if the row end is drawn; the second represents the final horizontal offset.
@@ -1135,12 +1144,13 @@ public class TextRow {
 
     /**
      * Iterate over terminal drawTextRun calls
-     * @param start Start of target text segment
-     * @param end End of target text segment
-     * @param canvas A pre-translated canvas to clip
+     *
+     * @param start               Start of target text segment
+     * @param end                 End of target text segment
+     * @param canvas              A pre-translated canvas to clip
      * @param minHorizontalOffset Min visible horizontal offset in text
      * @param maxHorizontalOffset Max visible horizontal offset in text
-     * @param autoClip Clip region outside the desired text segment
+     * @param autoClip            Clip region outside the desired text segment
      */
     public void iterateDrawTextRegions(int start, int end, Canvas canvas,
                                        float minHorizontalOffset, float maxHorizontalOffset,
@@ -1177,8 +1187,9 @@ public class TextRow {
      * Build measure of logical line for currently-set text range. A logical line maybe split into
      * multiple rows, so each time only one row is measured.
      * {@link #buildMeasureCacheTailor(TextAdvancesCache)} should always be called for each line.
-     * @see #buildMeasureCacheTailor(TextAdvancesCache)
+     *
      * @param cache size must be bigger than text end
+     * @see #buildMeasureCacheTailor(TextAdvancesCache)
      */
     public void buildMeasureCacheStep(@NonNull TextAdvancesCache cache) {
         var ctx = new IteratingContext();
@@ -1188,8 +1199,9 @@ public class TextRow {
 
     /**
      * Finish the logical line measure cache building.
-     * @see #buildMeasureCacheStep(TextAdvancesCache)
+     *
      * @param cache size must be bigger than text end
+     * @see #buildMeasureCacheStep(TextAdvancesCache)
      */
     public void buildMeasureCacheTailor(@NonNull TextAdvancesCache cache) {
         cache.finishBuilding();
@@ -1235,9 +1247,9 @@ public class TextRow {
          */
         public int endColumn;
         /**
-         * Inlay hints on the row, maybe null or empty
+         * Inline elements on the row, maybe null or empty
          */
-        public List<InlayHint> inlayHints;
+        public List<InlineElement> inlineElements;
         public float rowWidth;
 
         void setInitialRange(int start, int end) {
@@ -1253,14 +1265,14 @@ public class TextRow {
             this.endColumn = column;
         }
 
-        void addInlayHint(InlayHint inlayHint) {
+        void addInlineElement(InlineElement element) {
             if (isEmpty) {
                 throw new IllegalStateException();
             }
-            if (inlayHints == null) {
-                inlayHints = new ArrayList<>();
+            if (element == null) {
+                inlineElements = new ArrayList<>();
             }
-            inlayHints.add(inlayHint);
+            inlineElements.add(element);
         }
     }
 

@@ -40,8 +40,8 @@ import io.github.rosemoe.sora.widget.CodeEditor;
 /**
  * This class manages the colors of editor.
  * You can use color IDs that are not in pre-defined id pool for custom languages. We recommend
- *  adding a base offset for your custom color IDs. For example, first custom color ID is 256. This
- *   leaves enough space for editor's future built-in colors.
+ * adding a base offset for your custom color IDs. For example, first custom color ID is 256. This
+ * leaves enough space for editor's future built-in colors.
  * <p>
  * This is also the default color scheme of editor.
  * Be careful to change this class, because this can cause its
@@ -169,6 +169,7 @@ public class EditorColorScheme {
 
     public static final int TEXT_ACTION_WINDOW_BACKGROUND = 65;
     public static final int TEXT_ACTION_WINDOW_ICON_COLOR = 66;
+    public static final int GHOST_TEXT_FOREGROUND = 76;
 
     /**
      * Min pre-defined color id
@@ -178,7 +179,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 75;
+    protected static final int END_COLOR_ID = 76;
 
 
     /**
@@ -444,6 +445,9 @@ public class EditorColorScheme {
                 break;
             case TEXT_HIGHLIGHT_BACKGROUND:
                 color = isDark() ? 0xB8575757 : 0x40575757;
+                break;
+            case GHOST_TEXT_FOREGROUND:
+                color = isDark() ? 0x885A6370 : 0x889AA0A6;
         }
         setColor(type, color);
     }

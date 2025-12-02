@@ -103,12 +103,15 @@ import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.SubscriptionReceipt;
 import io.github.rosemoe.sora.event.TextSizeChangeEvent;
+import io.github.rosemoe.sora.graphics.InlineElementRenderer;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.graphics.inlayHint.InlayHintRenderer;
-import io.github.rosemoe.sora.graphics.inlayHint.InlayHintRendererProvider;
+import io.github.rosemoe.sora.graphics.inline.GhostTextRenderer;
+import io.github.rosemoe.sora.graphics.inline.InlineElementRendererProvider;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
+import io.github.rosemoe.sora.lang.completion.inline.InlineCompletionProvider;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
@@ -119,6 +122,9 @@ import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.lang.styling.color.ResolvableColor;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer;
 import io.github.rosemoe.sora.lang.styling.inlayHint.IntSetUpdateRange;
+import io.github.rosemoe.sora.lang.styling.inline.GhostText;
+import io.github.rosemoe.sora.lang.styling.inline.InlineElement;
+import io.github.rosemoe.sora.lang.styling.inline.InlineElementContainer;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
@@ -180,7 +186,7 @@ import kotlin.text.StringsKt;
  * @author Rosemoe
  */
 @SuppressWarnings("unused")
-public class CodeEditor extends View implements ContentListener, Formatter.FormatResultReceiver, InlayHintRendererProvider {
+public class CodeEditor extends View implements ContentListener, Formatter.FormatResultReceiver, InlineElementRendererProvider {
 
     /**
      * The default text size when creating the editor object. Unit is sp.
@@ -359,7 +365,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private Bundle extraArguments;
     private Styles textStyles;
     private DiagnosticsContainer diagnostics;
-    private InlayHintsContainer inlayHints;
+    private InlineElementContainer inlineElements;
     private HighlightTextContainer highlightTextContainer;
     private RenderContext renderContext;
     private EditorRenderer renderer;
@@ -373,6 +379,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private TextRange lastSelectedTextRange;
     private SnippetController snippetController;
     private final Map<String, InlayHintRenderer> inlayHintRendererMap = new HashMap<>();
+    private final Map<String, InlineElementRenderer<? extends InlineElement>> inlineElementRendererMap = new HashMap<>();
+    private InlineCompletionProvider inlineCompletionProvider;
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -457,9 +465,24 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     public void registerInlayHintRenderers(InlayHintRenderer... renderers) {
+        registerInlineElementRenderers(renderers);
+    }
+
+    public void registerInlayHintRenderer(@NonNull InlayHintRenderer renderer) {
+        registerInlineElementRenderer(renderer);
+    }
+
+    public void registerInlineElementRenderer(@NonNull InlineElementRenderer<?> renderer) {
+        var oldValue = inlineElementRendererMap.put(renderer.getName(), renderer);
+        if (oldValue != renderer) {
+            createLayout();
+        }
+    }
+
+    public void registerInlineElementRenderers(InlineElementRenderer<?>... renderers) {
         var needLayout = false;
         for (var renderer : renderers) {
-            var oldValue = inlayHintRendererMap.put(renderer.getTypeName(), renderer);
+            var oldValue = inlineElementRendererMap.put(renderer.getName(), renderer);
             needLayout |= oldValue != renderer;
         }
         if (needLayout) {
@@ -467,29 +490,53 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         }
     }
 
-    public void registerInlayHintRenderer(@NonNull InlayHintRenderer renderer) {
-        var oldValue = inlayHintRendererMap.put(renderer.getTypeName(), renderer);
-        if (oldValue != renderer) {
+    public void removeInlineElementRenderer(@NonNull InlineElementRenderer<?> renderer) {
+        var oldValue = inlineElementRendererMap.remove(renderer.getName());
+        if (oldValue == renderer) {
             createLayout();
         }
     }
 
     public void removeInlayHintRenderer(@NonNull InlayHintRenderer renderer) {
-        var oldValue = inlayHintRendererMap.get(renderer.getTypeName());
-        if (oldValue == renderer) {
-            inlayHintRendererMap.remove(renderer.getTypeName());
-            createLayout();
-        }
+        removeInlineElementRenderer(renderer);
     }
 
     @NonNull
     public List<InlayHintRenderer> getInlayHintRenderers() {
-        return new ArrayList<>(inlayHintRendererMap.values());
+        List<InlayHintRenderer> list = new ArrayList<>();
+        for (InlineElementRenderer<?> renderer : inlineElementRendererMap.values()) {
+            if (renderer instanceof InlayHintRenderer) {
+                list.add((InlayHintRenderer) renderer);
+            }
+        }
+        return list;
+    }
+
+    @NonNull
+    public List<InlineElementRenderer<?>> getInlineElementRenderers() {
+        return new ArrayList<>(inlineElementRendererMap.values());
     }
 
     @Nullable
-    public InlayHintRenderer getInlayHintRendererForType(@Nullable String type) {
-        return inlayHintRendererMap.get(type);
+    public InlineElementRenderer<? extends InlineElement> getInlineElementRendererForName(@NonNull String name) {
+        return inlineElementRendererMap.get(name);
+    }
+
+    public void setInlineCompletionProvider(@Nullable InlineCompletionProvider provider) {
+        if (provider == null) {
+            var old = inlineElementRendererMap.remove(GhostText.NAME);
+            if (old != null) {
+                createLayout();
+            }
+        } else {
+            registerInlineElementRenderer(GhostTextRenderer.getInstance(this));
+        }
+        inlineCompletionProvider = provider;
+    }
+
+    @Nullable
+    public InlineCompletionProvider getInlineCompletionProvider() {
+        return inlineCompletionProvider;
     }
 
     /**
@@ -995,8 +1042,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         renderContext.invalidateRenderNodes();
         invalidate();
 
-        // reset inlay hints (partially re-layout required)
-        if (this.inlayHints != null) {
+        // reset inline elements (partially re-layout required)
+        if (this.inlineElements != null) {
             setInlayHints(null);
         }
         if (this.highlightTextContainer != null) {
@@ -2010,8 +2057,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Commit text with given options
      *
-     * @param text Text commit by InputConnection
-     * @param applyAutoIndent Apply automatic indentation
+     * @param text                  Text commit by InputConnection
+     * @param applyAutoIndent       Apply automatic indentation
      * @param applySymbolCompletion Apply symbol surroundings and completions
      */
     public void commitText(@NonNull CharSequence text, boolean applyAutoIndent, boolean applySymbolCompletion) {
@@ -3887,7 +3934,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return The text displaying.
      * <strong>Changes to this object are expected to be done in main thread
      * due to editor limitations, while the object can be read concurrently.</strong>
-     *
      * @see CodeEditor#setText(CharSequence)
      * @see CodeEditor#setText(CharSequence, Bundle)
      */
@@ -3967,7 +4013,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             editorLanguage.getAnalyzeManager().reset(new ContentReference(this.text), this.extraArguments);
             editorLanguage.getFormatter().cancel();
         }
-        inlayHints = null;
+        inlineElements = null;
 
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_SET_NEW_TEXT, new CharPosition(), this.text.getIndexer().getCharPosition(getLineCount() - 1, this.text.getColumnCount(getLineCount() - 1)), this.text, false));
         createLayout();
@@ -4242,15 +4288,36 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     public void setInlayHints(@Nullable InlayHintsContainer inlayHints) {
+        setInlineElements(inlayHints);
+    }
+
+    @Nullable
+    public InlayHintsContainer getInlayHints() {
+        return (InlayHintsContainer) getInlineElements();
+    }
+
+    public void addInlineElement(@NonNull InlineElement element) {
+        var container = inlineElements == null ? new InlineElementContainer() : inlineElements;
+        container.add(element);
+        setInlineElements(container);
+    }
+
+    public void removeInlineElement(@NonNull InlineElement element) {
+        if (inlineElements == null) return;
+        inlineElements.remove(element);
+        setInlineElements(inlineElements);
+    }
+
+    public void setInlineElements(@Nullable InlineElementContainer inlineElements) {
         var affectedLines = new MutableIntSet();
-        var oldInlayHints = this.inlayHints;
+        var oldInlayHints = this.inlineElements;
         if (oldInlayHints != null) {
             affectedLines.addAll(oldInlayHints.getLineNumbers());
         }
-        if (inlayHints != null) {
-            affectedLines.addAll(inlayHints.getLineNumbers());
+        if (inlineElements != null) {
+            affectedLines.addAll(inlineElements.getLineNumbers());
         }
-        this.inlayHints = inlayHints;
+        this.inlineElements = inlineElements;
         var range = new IntSetUpdateRange(affectedLines);
         if (!layoutBusy) {
             layout.invalidateLines(range);
@@ -4261,8 +4328,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Nullable
-    public InlayHintsContainer getInlayHints() {
-        return inlayHints;
+    public InlineElementContainer getInlineElements() {
+        return inlineElements;
     }
 
     @UiThread
@@ -5205,8 +5272,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             if (diagnostics != null) {
                 diagnostics.shiftOnInsert(start.index, end.index);
             }
-            if (inlayHints != null) {
-                inlayHints.updateOnInsertion(startLine, startColumn, endLine, endColumn);
+            if (inlineElements != null) {
+                inlineElements.updateOnInsertion(startLine, startColumn, endLine, endColumn);
             }
             if (highlightTextContainer != null) {
                 highlightTextContainer.updateOnInsertion(startLine, startColumn, endLine, endColumn);
@@ -5257,8 +5324,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             if (diagnostics != null) {
                 diagnostics.shiftOnDelete(start.index, end.index);
             }
-            if (inlayHints != null) {
-                inlayHints.updateOnDeletion(startLine, startColumn, endLine, endColumn);
+            if (inlineElements != null) {
+                inlineElements.updateOnDeletion(startLine, startColumn, endLine, endColumn);
             }
             if (highlightTextContainer != null) {
                 highlightTextContainer.updateOnDeletion(startLine, startColumn, endLine, endColumn);

@@ -33,10 +33,12 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.github.rosemoe.sora.graphics.InlineElementRenderer;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.graphics.SingleCharacterWidths;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
-import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
+import io.github.rosemoe.sora.lang.styling.inline.InlineElement;
+import io.github.rosemoe.sora.lang.styling.inline.InlineElementParamsKt;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.BlockIntList;
@@ -96,7 +98,7 @@ public class LineBreakLayout extends AbstractLayout {
                 try {
                     text.runReadActionsOnLines(0, text.getLineCount() - 1, (int index, ContentLine line, Content.ContentLineConsumer2.AbortFlag abortFlag) -> {
                         var width = (int) measurerLocal.measureText(line, 0, line.length(), shadowPaint);
-                        var inlineElementsWidth = measureInlayHints(getInlayHints(index), shadowPaint);
+                        var inlineElementsWidth = measureInlineElements(getInlineElements(index), shadowPaint);
                         if (shouldRun()) {
                             widthMaintainer.add(width + inlineElementsWidth);
                             inlineElementsWidths.add(inlineElementsWidth);
@@ -119,14 +121,16 @@ public class LineBreakLayout extends AbstractLayout {
         submitTask(task);
     }
 
-    private int measureInlayHints(List<InlayHint> inlayHints, Paint paint) {
+    private int measureInlineElements(List<InlineElement> elements, Paint paint) {
         var width = 0f;
-        for (var inlayHint : inlayHints) {
-            var renderer = editor.getInlayHintRendererForType(inlayHint.getType());
+        for (var element : elements) {
+            @SuppressWarnings("unchecked")
+            var renderer = (InlineElementRenderer<InlineElement>) editor.getInlineElementRendererForName(element.getName());
             if (renderer == null) {
                 continue;
             }
-            var w = renderer.measure(inlayHint, paint, editor.getRenderer().createTextRowParams().toInlayHintRenderParams());
+            var w = renderer.measure(element, paint,
+                    InlineElementParamsKt.createInlineElementParamsFromTextRowParams(editor.getRenderer().createTextRowParams()));
             width += w;
         }
         return (int) width;
@@ -138,7 +142,7 @@ public class LineBreakLayout extends AbstractLayout {
 
     private int measureLineAndUpdateInlineWidths(int lineIndex, boolean useAdd) {
         ContentLine line = text.getLine(lineIndex);
-        var inlayHintsWidth = measureInlayHints(getInlayHints(lineIndex), editor.getTextPaint());
+        var inlayHintsWidth = measureInlineElements(getInlineElements(lineIndex), editor.getTextPaint());
         if (useAdd) {
             inlineElementsWidths.add(lineIndex, inlayHintsWidth);
         } else {
@@ -184,7 +188,7 @@ public class LineBreakLayout extends AbstractLayout {
             if (i == startLine) {
                 if (endLine == startLine) {
                     var oldInlayWidths = inlineElementsWidths.get(i);
-                    var newInlayWidths = measureInlayHints(getInlayHints(i), editor.getTextPaint());
+                    var newInlayWidths = measureInlineElements(getInlineElements(i), editor.getTextPaint());
                     inlineElementsWidths.set(i, newInlayWidths);
                     widthMaintainer.set(i, widthMaintainer.get(i) + measureTextRegion(i, startColumn, endColumn) + (newInlayWidths - oldInlayWidths));
                 } else {
@@ -205,7 +209,7 @@ public class LineBreakLayout extends AbstractLayout {
         }
         if (startLine == endLine) {
             var oldInlayWidths = inlineElementsWidths.get(startLine);
-            var newInlayWidths = measureInlayHints(getInlayHints(startLine), editor.getTextPaint());
+            var newInlayWidths = measureInlineElements(getInlineElements(startLine), editor.getTextPaint());
             inlineElementsWidths.set(startLine, newInlayWidths);
             widthMaintainer.set(startLine, widthMaintainer.get(startLine)
                     - (int) measurer.measureText(deletedContent, 0, endColumn - startColumn, editor.getTextPaint())
@@ -224,7 +228,7 @@ public class LineBreakLayout extends AbstractLayout {
         row.isLeadingRow = true;
         row.isTrailingRow = true;
         row.endColumn = text.getColumnCount(rowIndex);
-        row.inlayHints = getInlayHints(rowIndex);
+        row.inlineElements = getInlineElements(rowIndex);
         return row;
     }
 
@@ -357,7 +361,7 @@ public class LineBreakLayout extends AbstractLayout {
                 line = text.getLine(currentRow);
             }
             result.endColumn = line.length();
-            result.inlayHints = layout.getInlayHints(result.lineIndex);
+            result.inlineElements = layout.getInlineElements(result.lineIndex);
             currentRow++;
             return result;
         }

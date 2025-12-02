@@ -32,6 +32,8 @@ import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
+import io.github.rosemoe.sora.lang.completion.inline.InlineCompletionRequest;
+import io.github.rosemoe.sora.lang.completion.inline.InlineCompletionResult;
 import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -117,6 +119,11 @@ public interface Language {
     void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position,
                              @NonNull CompletionPublisher publisher,
                              @NonNull Bundle extraArguments) throws CompletionCancelledException;
+
+    @Nullable
+    default InlineCompletionResult requireInlineCompletion(@NonNull InlineCompletionRequest request) {
+        return null;
+    }
 
     /**
      * Get delta indent spaces count.

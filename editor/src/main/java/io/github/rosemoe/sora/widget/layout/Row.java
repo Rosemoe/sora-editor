@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.widget.layout;
 import java.util.List;
 
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
+import io.github.rosemoe.sora.lang.styling.inline.InlineElement;
 
 /**
  * This class represents a 'row' in editor.
@@ -64,9 +65,9 @@ public class Row {
     public int endColumn;
 
     /**
-     * Inlay hints on the row
+     * Inline elements on the row
      */
-    public List<InlayHint> inlayHints;
+    public List<InlineElement> inlineElements;
 
     /**
      * Extra translation when rendering

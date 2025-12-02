@@ -62,12 +62,15 @@ import io.github.rosemoe.sora.graphics.inlayHint.TextInlayHintRenderer
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.JavaLanguageSpec
 import io.github.rosemoe.sora.lang.TsLanguageJava
+import io.github.rosemoe.sora.lang.completion.inline.InlineCompletionItem
+import io.github.rosemoe.sora.lang.completion.inline.InlineCompletionResult
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.lang.styling.color.ConstColor
 import io.github.rosemoe.sora.lang.styling.inlayHint.ColorInlayHint
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer
 import io.github.rosemoe.sora.lang.styling.inlayHint.TextInlayHint
+import io.github.rosemoe.sora.lang.styling.inline.GhostText
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.monarch.MonarchColorScheme
 import io.github.rosemoe.sora.langs.monarch.MonarchLanguage
@@ -260,6 +263,47 @@ class MainActivity : AppCompatActivity() {
             EditorSpanInteractionHandler(this)
             getComponent<EditorAutoCompletion>()
                 .setEnabledAnimation(true)
+
+            setInlineCompletionProvider { request ->
+                val lastWord = request.line.takeLastWhile { it.isLetterOrDigit() }
+
+                val items = when {
+                    lastWord.startsWith("Sys") -> listOf(
+                        InlineCompletionItem("System.out.println()"),
+                        InlineCompletionItem("System.err.println()"),
+                        InlineCompletionItem("System.currentTimeMillis()"),
+                        InlineCompletionItem("System.gc()")
+                    )
+
+                    lastWord.startsWith("if") ->
+                        listOf(
+                            InlineCompletionItem("if (condition) {}", filterText = "if")
+                        )
+
+                    lastWord.startsWith("else") ->
+                        listOf(
+                            InlineCompletionItem("else {}", filterText = "else")
+                        )
+
+                    lastWord.startsWith("for") -> listOf(
+                        InlineCompletionItem(
+                            "for (int i = 0; i < ; i++) {}",
+                            filterText = "for"
+                        ), InlineCompletionItem("for (String s : collection) {}", filterText = "for")
+                    )
+
+                    lastWord.startsWith("whi") || lastWord == "while" -> listOf(
+                        InlineCompletionItem(
+                            "while (condition) {}",
+                            filterText = lastWord.toString()
+                        )
+                    )
+
+                    lastWord.startsWith("try") -> listOf(InlineCompletionItem("try {\n\n} catch (Exception e) {\n\n}"))
+                    else -> emptyList()
+                }
+                InlineCompletionResult(items)
+            }
         }
 
         // Load textmate themes and grammars
