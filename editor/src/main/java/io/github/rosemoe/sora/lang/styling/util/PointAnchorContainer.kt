@@ -50,6 +50,8 @@ open class PointAnchoredContainer<T : PointAnchoredObject> {
 
     private val objects = mutableListOf<T>()
 
+    fun toList() = objects.toList()
+
     private fun getInsertionPoint(e: PointAnchoredObject): Int {
         val result = objects.binarySearch(e, comparator)
         val insertionPoint = if (result < 0) {

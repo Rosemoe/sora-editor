@@ -40,6 +40,7 @@ import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.SpanFactory;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
+import io.github.rosemoe.sora.lang.styling.inline.InlineElement;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.IntPair;
@@ -196,7 +197,7 @@ public class WordwrapLayout extends AbstractLayout {
         }
         var tr = new TextRow();
         var directions = text.getLineDirections(line);
-        tr.set(sequence, 0, sequence.length(), sSpansForWordwrap, getInlayHints(line), directions, p, null, editor.getRenderer().createTextRowParams());
+        tr.set(sequence, 0, sequence.length(), sSpansForWordwrap, getInlineElements(line), directions, p, null, editor.getRenderer().createTextRowParams());
 
         boolean isRtlBased = false;
         if (supportRtlRow && sequence.mayNeedBidi()) {
@@ -212,7 +213,7 @@ public class WordwrapLayout extends AbstractLayout {
         var rows = tr.breakText(width, antiWordBreaking);
         var results = new ArrayList<RowRegion>();
         for (var row : rows) {
-            results.add(new RowRegion(line, row.startColumn, row.endColumn, row.inlayHints, row.rowWidth, isRtlBased));
+            results.add(new RowRegion(line, row.startColumn, row.endColumn, row.inlineElements, row.rowWidth, isRtlBased));
         }
         return results;
     }
@@ -275,7 +276,7 @@ public class WordwrapLayout extends AbstractLayout {
             r.isLeadingRow = true;
             r.isTrailingRow = true;
             r.lineIndex = rowIndex;
-            r.inlayHints = getInlayHints(rowIndex);
+            r.inlineElements = getInlineElements(rowIndex);
             return r;
         }
         var region = rowTable.get(rowIndex);
@@ -503,16 +504,16 @@ public class WordwrapLayout extends AbstractLayout {
 
         final int startColumn;
         final int endColumn;
-        List<InlayHint> inlayHints;
+        List<InlineElement> inlineElements;
         int line;
         float rowWidth;
         boolean displayFromRight;
 
-        RowRegion(int line, int start, int end, List<InlayHint> inlayHints, float rowWidth, boolean displayFromRight) {
+        RowRegion(int line, int start, int end, List<InlineElement> inlineElements, float rowWidth, boolean displayFromRight) {
             this.line = line;
             startColumn = start;
             endColumn = end;
-            this.inlayHints = inlayHints;
+            this.inlineElements = inlineElements;
             this.rowWidth = rowWidth;
             this.displayFromRight = displayFromRight;
         }
@@ -524,7 +525,7 @@ public class WordwrapLayout extends AbstractLayout {
             row.startColumn = startColumn;
             row.endColumn = endColumn;
             row.lineIndex = line;
-            row.inlayHints = inlayHints == null ? Collections.emptyList() : inlayHints;
+            row.inlineElements = inlineElements == null ? Collections.emptyList() : inlineElements;
             row.renderTranslateX = getRenderTranslateX(layoutWidth);
             return row;
         }
@@ -581,7 +582,7 @@ public class WordwrapLayout extends AbstractLayout {
             result.lineIndex = region.line;
             result.startColumn = region.startColumn;
             result.endColumn = region.endColumn;
-            result.inlayHints = region.inlayHints == null ? Collections.emptyList() : region.inlayHints;
+            result.inlineElements = region.inlineElements == null ? Collections.emptyList() : region.inlineElements;
             result.isLeadingRow = currentRow <= 0 || rowTable.get(currentRow - 1).line != region.line;
             result.isTrailingRow = currentRow + 1 >= rowTable.size() || rowTable.get(currentRow + 1).line != region.line;
             result.renderTranslateX = region.getRenderTranslateX(width);

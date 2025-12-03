@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2025  Rosemoe
@@ -20,51 +20,12 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- */
-package io.github.rosemoe.sora.widget.layout;
+ ******************************************************************************/
 
-import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
-import io.github.rosemoe.sora.lang.styling.inline.InlineElement;
+package io.github.rosemoe.sora.lang.completion.inline
 
-/**
- * Element on a row
- *
- * @author Rosemoe
- */
-public class RowElement {
+data class InlineCompletionResult(
+    val items: List<InlineCompletionItem>,
+    val isIncomplete: Boolean = false
+)
 
-    /**
-     * Type of element.
-     *
-     * @see RowElementTypes
-     */
-    public int type;
-
-    /* Fields for type TEXT */
-
-    /**
-     * Start column of text
-     */
-    public int startColumn;
-    /**
-     * End column of text
-     */
-    public int endColumn;
-    /**
-     * Direction of the text run
-     */
-    public boolean isRtlText;
-
-    /* Fields for type INLAY_HINT */
-
-    /**
-     * The inline element to display
-     */
-    public InlineElement inlineElement;
-
-    /**
-     * The expected column position to display after
-     */
-    public int displayColumnPosition;
-
-}

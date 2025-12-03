@@ -34,7 +34,7 @@ public interface RowElementTypes {
      */
     int TEXT = 0;
     /**
-     * Inlay hint
+     * Inline element, such as inlay hint
      */
-    int INLAY_HINT = 1;
+    int INLINE_ELEMENT = 1;
 }

@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2025  Rosemoe
@@ -20,51 +20,33 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- */
-package io.github.rosemoe.sora.widget.layout;
+ ******************************************************************************/
 
-import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
-import io.github.rosemoe.sora.lang.styling.inline.InlineElement;
+package io.github.rosemoe.sora.lang.styling.inline
+
+import io.github.rosemoe.sora.graphics.InlineElementRenderer
+import io.github.rosemoe.sora.lang.styling.util.PointAnchoredObject
 
 /**
- * Element on a row
+ * Choose which side of character to display the inlay hint.
  *
- * @author Rosemoe
+ * No effect if the given character position is at line end.
  */
-public class RowElement {
+enum class CharacterSide {
+    Left,
+    Right
+}
 
+interface InlineElement : PointAnchoredObject {
     /**
-     * Type of element.
+     * The name of this inline element.
      *
-     * @see RowElementTypes
+     * It must match the name provided in [InlineElementRenderer.name]
+     * otherwise you will see unexpected behavior.
+     *
+     * @return the name of this inline element
      */
-    public int type;
+    val name: String
 
-    /* Fields for type TEXT */
-
-    /**
-     * Start column of text
-     */
-    public int startColumn;
-    /**
-     * End column of text
-     */
-    public int endColumn;
-    /**
-     * Direction of the text run
-     */
-    public boolean isRtlText;
-
-    /* Fields for type INLAY_HINT */
-
-    /**
-     * The inline element to display
-     */
-    public InlineElement inlineElement;
-
-    /**
-     * The expected column position to display after
-     */
-    public int displayColumnPosition;
-
+    val displaySide: CharacterSide get() = CharacterSide.Left
 }

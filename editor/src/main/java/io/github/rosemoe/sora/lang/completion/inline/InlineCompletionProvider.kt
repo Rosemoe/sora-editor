@@ -22,22 +22,28 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lang.styling.inlayHint
+package io.github.rosemoe.sora.lang.completion.inline
 
-import io.github.rosemoe.sora.lang.styling.inline.InlineElement
+import androidx.annotation.WorkerThread
 
-open class InlayHint(
-    override var line: Int,
-    override var column: Int,
-    val type: String,
-) : InlineElement {
+/**
+ * Interface for providing inline code completions (ghost text).
+ *
+ * Implementations of this interface are responsible for generating inline completion suggestions based on the current
+ * editing context provided in the [InlineCompletionRequest]. These suggestions are typically displayed as "ghost text"
+ * appearing directly after the cursor, similar to features found in IDEs like Copilot or IntelliCode.
+ *
+ * @see InlineCompletionRequest
+ * @see InlineCompletionResult
+ */
+fun interface InlineCompletionProvider {
 
-    override val name: String = type
-
-    init {
-        if (line < 0 || column < 0) {
-            throw IllegalArgumentException("negative number")
-        }
-    }
-
+    /**
+     * Provide inline completion result for the current request.
+     *
+     * @param request The request containing context information for completion
+     * @return The completion result, or null if no completion is available
+     */
+    @WorkerThread
+    fun provideInlineCompletions(request: InlineCompletionRequest): InlineCompletionResult?
 }
