@@ -16,18 +16,8 @@ import io.github.rosemoe.sora.lang.styling.inline.InlineElementRenderParams
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.subscribeAlways
-import java.util.concurrent.ConcurrentHashMap
 
-internal class GhostTextRenderer private constructor(
-    private val editor: CodeEditor
-) : InlineElementRenderer<GhostText>() {
-
-    companion object {
-        private val cache = ConcurrentHashMap<CodeEditor, GhostTextRenderer>()
-
-        @JvmStatic
-        fun getInstance(editor: CodeEditor): GhostTextRenderer = cache.getOrPut(editor) { GhostTextRenderer(editor) }
-    }
+internal class GhostTextRenderer(private val editor: CodeEditor) : InlineElementRenderer<GhostText>() {
 
     private val localPaint = Paint().also { it.isAntiAlias = true }
 
@@ -35,13 +25,19 @@ internal class GhostTextRenderer private constructor(
 
     init {
         editor.subscribeAlways<EditorKeyEvent> { event ->
-            if (event.action == KeyEvent.ACTION_DOWN && event.keyCode == KeyEvent.KEYCODE_TAB) {
-                if (editor.acceptGhostText()) {
-                    val cursor = editor.cursor
-                    editor.postDelayed({
-                        // remove inserted tab (idk what is the best way to do this)
-                        editor.text.delete(cursor.right - editor.tabWidth, cursor.right)
-                    }, 5)
+            if (event.action == KeyEvent.ACTION_DOWN) {
+                when (event.keyCode) {
+                    KeyEvent.KEYCODE_TAB -> {
+                        if (editor.acceptGhostText()) {
+                            val cursor = editor.cursor
+                            editor.postDelayed({
+                                // remove inserted tab (idk what is the best way to do this)
+                                editor.text.delete(cursor.right - editor.tabWidth, cursor.right)
+                            }, 5)
+                        }
+                    }
+
+                    KeyEvent.KEYCODE_ESCAPE -> editor.removeGhostText()
                 }
             }
         }

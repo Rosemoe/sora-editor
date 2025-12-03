@@ -528,7 +528,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 createLayout();
             }
         } else {
-            registerInlineElementRenderer(GhostTextRenderer.getInstance(this));
+            registerInlineElementRenderer(new GhostTextRenderer(this));
         }
         inlineCompletionProvider = provider;
     }
