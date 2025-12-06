@@ -47,6 +47,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.collection.MutableIntList;
+import androidx.collection.MutableLongLongMap;
 import androidx.collection.MutableLongObjectMap;
 
 import java.util.ArrayList;
@@ -116,7 +117,7 @@ public class EditorRenderer {
     private final LongArrayList postDrawLineNumbers = new LongArrayList();
     private final MutableIntList postDrawCurrentLines = new MutableIntList();
     private final LongArrayList matchedPositions = new LongArrayList();
-    private final MutableLongObjectMap<ResolvableColor> highlightPositions = new MutableLongObjectMap<>();
+    private final MutableLongLongMap highlightPositions = new MutableLongLongMap();
     private final SparseArray<ContentLine> preloadedLines = new SparseArray<>();
     private final SparseArray<Directions> preloadedDirections = new SparseArray<>();
     private final CodeEditor editor;
@@ -1253,17 +1254,20 @@ public class EditorRenderer {
                     var position = matchedPositions.get(i);
                     var start = IntPair.getFirst(position);
                     var end = IntPair.getSecond(position);
-                    drawRowRegionBackground(canvas, row, start, end, rowInf.startColumn, rowInf.endColumn, editor.getColorScheme().getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND));
+                    drawRowRegionBackground(canvas, row, start, end, rowInf.startColumn,
+                            rowInf.endColumn, editor.getColorScheme().getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND),
+                            editor.getColorScheme().getColor(EditorColorScheme.MATCHED_TEXT_BORDER));
                 }
             }
 
             // Draw highlight text background
-            if (highlightPositions._size > 0) {
+            if (highlightPositions.getSize() > 0) {
                 int finalRow = row;
-                highlightPositions.forEach((position, resolvableColor) -> {
+                highlightPositions.forEach((position, colorPair) -> {
                     var start = IntPair.getFirst(position);
                     var end = IntPair.getSecond(position);
-                    drawRowRegionBackground(canvas, finalRow, start, end, rowInf.startColumn, rowInf.endColumn, resolvableColor.resolve(editor.getColorScheme()));
+                    drawRowRegionBackground(canvas, finalRow, start, end, rowInf.startColumn,
+                            rowInf.endColumn, IntPair.getFirst(colorPair), IntPair.getSecond(colorPair));
                     return null;
                 });
             }
@@ -1283,14 +1287,13 @@ public class EditorRenderer {
                     tmpRect.bottom = editor.getRowBottom(row) - editor.getOffsetY();
                     tmpRect.left = paintingOffset;
                     tmpRect.right = tmpRect.left + paintGeneral.getSpaceWidth() * 2;
-                    paintGeneral.setColor(editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
-                    if (editor.getProps().enableRoundTextBackground) {
-                        canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintGeneral);
-                    } else {
-                        canvas.drawRect(tmpRect, paintGeneral);
-                    }
+                    drawRowBackgroundRectWithBorder(canvas, tmpRect,
+                            editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND),
+                            editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BORDER));
                 } else if (selectionStart < selectionEnd) {
-                    drawRowRegionBackground(canvas, row, selectionStart, selectionEnd, rowInf.startColumn, rowInf.endColumn, editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND));
+                    drawRowRegionBackground(canvas, row, selectionStart, selectionEnd, rowInf.startColumn, rowInf.endColumn,
+                            editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND),
+                            editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BORDER));
                 }
             }
             canvas.restore();
@@ -1801,13 +1804,12 @@ public class EditorRenderer {
      * @param highlightEnd   Region end
      * @param color          Color of background
      */
-    protected void drawRowRegionBackground(Canvas canvas, int row, int highlightStart, int highlightEnd, int rowStart, int rowEnd, int color) {
+    protected void drawRowRegionBackground(Canvas canvas, int row, int highlightStart, int highlightEnd, int rowStart, int rowEnd, int color, int borderColor) {
         highlightStart = Math.max(highlightStart, rowStart);
         highlightEnd = Math.min(highlightEnd, rowEnd);
         if (highlightStart < highlightEnd) {
             tmpRect.top = getRowTopForBackground(row) - editor.getOffsetY();
             tmpRect.bottom = getRowBottomForBackground(row) - editor.getOffsetY();
-            paintGeneral.setColor(color);
             float offset = editor.measureTextRegionOffset() - editor.getOffsetX();
             if (editor.isWordwrap() && !editor.getLayout().getRowAt(row).isLeadingRow && (editor.getNonPrintablePaintingFlags() & CodeEditor.FLAG_DRAW_SOFT_WRAP) != 0) {
                 offset += getMiniGraphWidth();
@@ -1821,17 +1823,34 @@ public class EditorRenderer {
                 if (tmpRect.right < 0 || tmpRect.left > width) {
                     return false;
                 }
-                drawRowBackgroundRect(canvas, tmpRect);
+                drawRowBackgroundRectWithBorder(canvas, tmpRect, color, borderColor);
                 return true;
             });
         }
     }
 
+    protected void drawRowBackgroundRectWithBorder(Canvas canvas, RectF rect, int backgroundColor, int borderColor) {
+        paintGeneral.setColor(backgroundColor);
+        drawRowBackgroundRect(canvas, rect);
+        if (borderColor == 0) {
+            return;
+        }
+        paintGeneral.setColor(borderColor);
+        paintGeneral.setStyle(android.graphics.Paint.Style.STROKE);
+        paintGeneral.setStrokeWidth(editor.getTextBorderWidth());
+        drawRowBackgroundRect(canvas, rect);
+        paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
+    }
+
     protected void drawRowBackgroundRect(Canvas canvas, RectF rect) {
+        drawRowBackgroundRect(canvas, rect, paintGeneral);
+    }
+
+    protected void drawRowBackgroundRect(Canvas canvas, RectF rect, Paint p) {
         if (editor.getProps().enableRoundTextBackground) {
-            canvas.drawRoundRect(rect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintGeneral);
+            canvas.drawRoundRect(rect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, p);
         } else {
-            canvas.drawRect(rect, paintGeneral);
+            canvas.drawRect(rect, p);
         }
     }
 
@@ -2223,7 +2242,7 @@ public class EditorRenderer {
             var backgroundColor = editor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_BACKGROUND);
             var underlineColor = editor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_UNDERLINE);
             var borderColor = editor.getColorScheme().getColor(EditorColorScheme.HIGHLIGHTED_DELIMITERS_BORDER);
-            var borderWidth = editor.getHighlightedDelimiterBorderWidth();
+            var borderWidth = editor.getTextBorderWidth();
             if (isInvalidTextBounds(paired.leftIndex, paired.leftLength) || isInvalidTextBounds(paired.rightIndex, paired.rightLength)) {
                 // Index out of bounds
                 return;
@@ -2273,11 +2292,7 @@ public class EditorRenderer {
                 tmpRect.left = horizontalOffset;
                 tmpRect.right = horizontalOffset + width;
                 paintOther.setColor(backgroundColor);
-                if (editor.getProps().enableRoundTextBackground) {
-                    canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintOther);
-                } else {
-                    canvas.drawRect(tmpRect, paintOther);
-                }
+                drawRowBackgroundRect(canvas, tmpRect, paintOther);
             }
             long style = span.getStyle();
             if (color != 0) {
@@ -2311,21 +2326,13 @@ public class EditorRenderer {
             tmpRect.right = right;
             if (backgroundColor != 0) {
                 paintOther.setColor(backgroundColor);
-                if (editor.getProps().enableRoundTextBackground) {
-                    canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintOther);
-                } else {
-                    canvas.drawRect(tmpRect, paintOther);
-                }
+                drawRowBackgroundRect(canvas, tmpRect, paintOther);
             }
             if (borderWidth > 0 && borderColor != 0) {
                 paintOther.setStyle(android.graphics.Paint.Style.STROKE);
                 paintOther.setColor(borderColor);
                 paintOther.setStrokeWidth(borderWidth);
-                if (editor.getProps().enableRoundTextBackground) {
-                    canvas.drawRoundRect(tmpRect, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, editor.getRowHeight() * editor.getProps().roundTextBackgroundFactor, paintOther);
-                } else {
-                    canvas.drawRect(tmpRect, paintOther);
-                }
+                drawRowBackgroundRect(canvas, tmpRect, paintOther);
                 paintOther.setStyle(android.graphics.Paint.Style.FILL);
             }
             return textOffset + right > editor.getWidth();

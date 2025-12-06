@@ -488,6 +488,12 @@ class LspEditor(
             DocumentHighlightKind.Text to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_BACKGROUND)
         )
 
+        val borderColors = mapOf(
+            DocumentHighlightKind.Write to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_STRONG_BORDER),
+            DocumentHighlightKind.Read to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_BORDER),
+            DocumentHighlightKind.Text to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_BORDER)
+        )
+
         highlights.forEach {
             container.add(
                 HighlightTextContainer.HighlightText(
@@ -495,7 +501,8 @@ class LspEditor(
                     it.range.start.character,
                     it.range.end.line,
                     it.range.end.character,
-                    colors.getValue(it.kind ?: DocumentHighlightKind.Text)
+                    colors.getValue(it.kind ?: DocumentHighlightKind.Text),
+                    borderColors.getValue(it.kind ?: DocumentHighlightKind.Text)
                 )
             )
         }

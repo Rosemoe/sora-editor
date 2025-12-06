@@ -117,6 +117,7 @@ public class EditorColorScheme {
      */
     public static final int TEXT_SELECTED = 30;
     public static final int MATCHED_TEXT_BACKGROUND = 29;
+    public static final int MATCHED_TEXT_BORDER = 78;
     public static final int COMPLETION_WND_CORNER = 20;
     public static final int COMPLETION_WND_BACKGROUND = 19;
     public static final int COMPLETION_WND_TEXT_MATCHED = 67;
@@ -130,7 +131,9 @@ public class EditorColorScheme {
     public static final int LINE_BLOCK_LABEL = 18;
 
     public static final int TEXT_HIGHLIGHT_STRONG_BACKGROUND = 73;
+    public static final int TEXT_HIGHLIGHT_STRONG_BORDER = 76;
     public static final int TEXT_HIGHLIGHT_BACKGROUND = 74;
+    public static final int TEXT_HIGHLIGHT_BORDER = 77;
     public static final int HIGHLIGHTED_DELIMITERS_BACKGROUND = 41;
     public static final int HIGHLIGHTED_DELIMITERS_UNDERLINE = 40;
     public static final int HIGHLIGHTED_DELIMITERS_FOREGROUND = 39;
@@ -147,6 +150,7 @@ public class EditorColorScheme {
     public static final int SELECTION_HANDLE = 8;
     public static final int SELECTION_INSERT = 7;
     public static final int SELECTED_TEXT_BACKGROUND = 6;
+    public static final int SELECTED_TEXT_BORDER = 79;
     public static final int TEXT_NORMAL = 5;
     public static final int WHOLE_BACKGROUND = 4;
     public static final int LINE_NUMBER_BACKGROUND = 3;
@@ -178,7 +182,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 75;
+    protected static final int END_COLOR_ID = 79;
 
 
     /**

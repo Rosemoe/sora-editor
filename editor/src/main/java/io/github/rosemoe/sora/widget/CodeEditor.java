@@ -75,7 +75,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.Px;
 import androidx.annotation.UiThread;
 import androidx.collection.MutableIntSet;
-import androidx.collection.MutableLongObjectMap;
+import androidx.collection.MutableLongLongMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -116,7 +116,6 @@ import io.github.rosemoe.sora.lang.styling.HighlightTextContainer;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.SpanFactory;
 import io.github.rosemoe.sora.lang.styling.Styles;
-import io.github.rosemoe.sora.lang.styling.color.ResolvableColor;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer;
 import io.github.rosemoe.sora.lang.styling.inlayHint.IntSetUpdateRange;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -286,7 +285,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private float dividerMarginRight;
     private float insertSelectionWidth;
     private float blockLineWidth;
-    private float highlightedDelimiterBorderWidth;
+    private float textBorderWidth;
     private float verticalScrollFactor;
     private float lineInfoTextSize;
     private float lineSpacingMultiplier = 1f;
@@ -593,7 +592,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         dpUnit = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, Resources.getSystem().getDisplayMetrics()) / 10f;
         dividerWidth = dpUnit;
         insertSelectionWidth = dpUnit * 1.5f;
-        highlightedDelimiterBorderWidth = dpUnit;
+        textBorderWidth = dpUnit;
         dividerMarginLeft = dividerMarginRight = dpUnit * 2;
 
         matrix = new Matrix();
@@ -1495,7 +1494,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
 
-    protected void computeHighlightPositions(int line, MutableLongObjectMap<ResolvableColor> positions) {
+    protected void computeHighlightPositions(int line, MutableLongLongMap positions) {
         positions.clear();
         if (highlightTextContainer == null) {
             return;
@@ -1526,7 +1525,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 continue;
             }
             if (startColumn < endColumn) {
-                positions.put(IntPair.pack(startColumn, endColumn), highlight.getColor());
+                int backgroundColor = highlight.getColor().resolve(colorScheme);
+                int borderColor = highlight.getBorderColor().resolve(colorScheme);
+                positions.put(IntPair.pack(startColumn, endColumn), IntPair.pack(backgroundColor, borderColor));
             }
         }
     }
@@ -2983,24 +2984,29 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
-     * Border width for highlight delimiter
+     * Border width for text border
      */
-    public void setHighlightedDelimiterBorderWidth(@Px float width) {
+    public void setTextBorderWidth(@Px float width) {
         if (width < 0) {
             throw new IllegalArgumentException("width can not be under zero");
         }
-        this.highlightedDelimiterBorderWidth = width;
+        textBorderWidth = width;
         invalidate();
     }
 
+    /**
+     * @see #setTextBorderWidth(float)
+     */
     @Px
-    public float getHighlightedDelimiterBorderWidth() {
-        return highlightedDelimiterBorderWidth;
+    public float getTextBorderWidth() {
+        return textBorderWidth;
     }
 
     /**
-     * Get Cursor
-     * Internal method!
+     * Get text cursor.
+     * <p>
+     * Always set selection position by {@link #setSelection} or {@link #setSelectionRegion}.
+     * Do not modify the object returned.
      *
      * @return Cursor of text
      */
