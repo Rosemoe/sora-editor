@@ -147,6 +147,7 @@ public class EditorColorScheme {
     public static final int SCROLL_BAR_THUMB = 11;
     public static final int UNDERLINE = 10;
     public static final int CURRENT_LINE = 9;
+    public static final int CURRENT_ROW_BORDER = 80;
     public static final int SELECTION_HANDLE = 8;
     public static final int SELECTION_INSERT = 7;
     public static final int SELECTED_TEXT_BACKGROUND = 6;
@@ -182,7 +183,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 79;
+    protected static final int END_COLOR_ID = 80;
 
 
     /**

@@ -1150,6 +1150,8 @@ public class EditorRenderer {
         highlightPositions.clear();
         int currentLine = cursor.isSelected() ? -1 : cursor.getLeftLine();
         int currentLineBgColor = editor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE);
+        int currentRow = cursor.isSelected() ? -1 : editor.getLayout().getRowIndexForPosition(cursor.getLeft());
+        int currentRowBorder = editor.getColorScheme().getColor(EditorColorScheme.CURRENT_ROW_BORDER);
         int lastPreparedLine = -1;
         int leadingWhitespaceEnd = 0;
         int trailingWhitespaceStart = 0;
@@ -1297,6 +1299,19 @@ public class EditorRenderer {
                 }
             }
             canvas.restore();
+
+            // Draw current row border
+            if (row == currentRow && currentRowBorder != 0) {
+                tmpRect.top = editor.getRowTop(row) - editor.getOffsetY();
+                tmpRect.bottom = editor.getRowBottom(row) - editor.getOffsetY();
+                tmpRect.left = Math.max(0, -offset2);
+                tmpRect.right = editor.getWidth();
+                paintGeneral.setColor(currentRowBorder);
+                paintGeneral.setStyle(android.graphics.Paint.Style.STROKE);
+                paintGeneral.setStrokeWidth(editor.getDpUnit());
+                canvas.drawRect(tmpRect, paintGeneral);
+                paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
+            }
         }
         rowIterator.reset();
 
