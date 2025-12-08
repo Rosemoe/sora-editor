@@ -1283,8 +1283,8 @@ public class EditorRenderer {
                     selectionEnd = cursor.getRightColumn();
                 }
                 if (getColumnCount(line) == 0 && line != cursor.getRightLine()) {
-                    tmpRect.top = editor.getRowTop(row) - editor.getOffsetY();
-                    tmpRect.bottom = editor.getRowBottom(row) - editor.getOffsetY();
+                    tmpRect.top = getRowTopForBackground(row) - editor.getOffsetY();
+                    tmpRect.bottom = getRowBottomForBackground(row) - editor.getOffsetY();
                     tmpRect.left = paintingOffset;
                     tmpRect.right = tmpRect.left + paintGeneral.getSpaceWidth() * 2;
                     drawRowBackgroundRectWithBorder(canvas, tmpRect,
