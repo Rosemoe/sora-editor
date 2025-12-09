@@ -343,13 +343,17 @@ public class BlockIntList {
             this.size = divPoint;
             this.next = newNext;
             newNext.next = oldNext;
+
+            compute();
+            newNext.compute();
         }
 
         private void compute() {
-            max = 0;
+            int m = 0;
             for (int i = 0; i < size; i++) {
-                max = Math.max(max, data[i]);
+                m = Math.max(m, data[i]);
             }
+            max = m;
         }
     }
 

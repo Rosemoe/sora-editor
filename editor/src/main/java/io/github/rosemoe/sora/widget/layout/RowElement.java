@@ -55,7 +55,7 @@ public class RowElement {
      */
     public boolean isRtlText;
 
-    /* Fields for type INLAY_HINT */
+    /* Fields for type INLINE_ELEMENT */
 
     /**
      * The inline element to display
