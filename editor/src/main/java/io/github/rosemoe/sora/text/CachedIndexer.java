@@ -33,8 +33,15 @@ import java.util.List;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 
 /**
- * Indexer Impl for Content
- * With cache
+ * Indexer Impl for Content with cache.
+ * <p>
+ * Range Space of line:
+ * [0, columnCount)                            -> Text Content on Line
+ * [columnCount, columnCount + lineSepLength)  -> Line Separator for Line
+ * <p>
+ * Merged Range: [0, columnCount + lineSepLength)
+ * <p>
+ * Specially, the text end position is valid but not actually readable.
  *
  * @author Rose
  */
@@ -345,7 +352,7 @@ public class CachedIndexer implements Indexer, ContentListener {
 
     @Override
     public void getCharPosition(int index, @NonNull CharPosition dest) {
-        content.checkIndex(index);
+        content.checkIndex(index, Content.CHECK_TYPE_INDEX);
         content.lock(false);
         try {
             CharPosition pos = findNearestByIndex(index);
@@ -374,7 +381,7 @@ public class CachedIndexer implements Indexer, ContentListener {
 
     @Override
     public void getCharPosition(int line, int column, @NonNull CharPosition dest) {
-        content.checkLineAndColumn(line, column);
+        content.checkLineAndColumn(line, column, Content.CHECK_TYPE_INDEX);
         content.lock(false);
         try {
             CharPosition pos = findNearestByLine(line);
