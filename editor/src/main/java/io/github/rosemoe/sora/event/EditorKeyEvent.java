@@ -119,8 +119,13 @@ public class EditorKeyEvent extends ResultedEvent<Boolean> {
         return (src.getMetaState() & KeyEvent.META_CTRL_ON) != 0;
     }
 
+    public void markAsConsumed() {
+        interceptAndSetResult(true);
+    }
+
     public final boolean result(boolean editorResult) {
-        var userResult = isResultSet() ? getResult() : false;
+        var res = getResult();
+        var userResult = res != null && res;
         if (isIntercepted()) {
             return userResult;
         } else {

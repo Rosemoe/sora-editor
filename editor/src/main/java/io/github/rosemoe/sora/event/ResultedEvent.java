@@ -50,6 +50,11 @@ public abstract class ResultedEvent<T> extends Event {
         this.result = result;
     }
 
+    public void interceptAndSetResult(@Nullable T result) {
+        setResult(result);
+        intercept();
+    }
+
     public boolean isResultSet() {
         return result != null;
     }

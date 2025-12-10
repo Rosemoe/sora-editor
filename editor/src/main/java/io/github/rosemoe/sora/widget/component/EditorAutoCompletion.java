@@ -219,19 +219,27 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
             switch (event.getKeyCode()) {
                 case KeyEvent.KEYCODE_DPAD_UP -> {
                     moveUp();
-                    event.setResult(true);
-                    event.intercept();
+                    event.markAsConsumed();
                 }
                 case KeyEvent.KEYCODE_DPAD_DOWN -> {
                     moveDown();
-                    event.setResult(true);
-                    event.intercept();
+                    event.markAsConsumed();
                 }
                 case KeyEvent.KEYCODE_PAGE_DOWN, KeyEvent.KEYCODE_PAGE_UP -> hide();
-                case KeyEvent.KEYCODE_TAB, KeyEvent.KEYCODE_ENTER -> {
+                case KeyEvent.KEYCODE_TAB -> {
+                    if (currentSelection == -1) {
+                        moveDown();
+                    }
                     if (select()) {
-                        event.setResult(true);
-                        event.intercept();
+                        event.markAsConsumed();
+                    }
+                }
+                case KeyEvent.KEYCODE_ENTER -> {
+                    if (currentSelection == -1 && editor.getProps().selectCompletionItemOnEnterForSoftKbd) {
+                        moveDown();
+                    }
+                    if (select()) {
+                        event.markAsConsumed();
                     }
                 }
             }
