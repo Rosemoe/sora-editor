@@ -36,7 +36,7 @@ public class WordBreakerProgram extends WordBreakerIcu {
     @Override
     public int getOptimizedBreakPoint(int start, int end) {
         int icuResult = super.getOptimizedBreakPoint(start, end);
-        if (icuResult != end) {
+        if (icuResult != end || end <= start || /* end > start */ Character.isWhitespace(chars[end - 1])) {
             return icuResult;
         }
         // Add extra opportunities for dots
