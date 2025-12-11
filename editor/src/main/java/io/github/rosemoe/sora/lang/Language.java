@@ -24,16 +24,16 @@
 package io.github.rosemoe.sora.lang;
 
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.annotation.WorkerThread;
+
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher;
-import io.github.rosemoe.sora.lang.completion.inline.InlineCompletionRequest;
-import io.github.rosemoe.sora.lang.completion.inline.InlineCompletionResult;
 import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -120,11 +120,6 @@ public interface Language {
                              @NonNull CompletionPublisher publisher,
                              @NonNull Bundle extraArguments) throws CompletionCancelledException;
 
-    @Nullable
-    default InlineCompletionResult requireInlineCompletion(@NonNull InlineCompletionRequest request) {
-        return null;
-    }
-
     /**
      * Get delta indent spaces count.
      *
@@ -148,11 +143,11 @@ public interface Language {
      */
     @UiThread
     default int getIndentAdvance(
-      @NonNull ContentReference content,
-      int line,
-      int column,
-      int spaceCountOnLine,
-      int tabCountOnLine
+            @NonNull ContentReference content,
+            int line,
+            int column,
+            int spaceCountOnLine,
+            int tabCountOnLine
     ) {
         return getIndentAdvance(content, line, column);
     }

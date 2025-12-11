@@ -106,12 +106,10 @@ import io.github.rosemoe.sora.event.TextSizeChangeEvent;
 import io.github.rosemoe.sora.graphics.InlineElementRenderer;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.graphics.inlayHint.InlayHintRenderer;
-import io.github.rosemoe.sora.graphics.inline.GhostTextRenderer;
 import io.github.rosemoe.sora.graphics.inline.InlineElementRendererProvider;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
-import io.github.rosemoe.sora.lang.completion.inline.InlineCompletionProvider;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
@@ -121,7 +119,6 @@ import io.github.rosemoe.sora.lang.styling.SpanFactory;
 import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer;
 import io.github.rosemoe.sora.lang.styling.inlayHint.IntSetUpdateRange;
-import io.github.rosemoe.sora.lang.styling.inline.GhostText;
 import io.github.rosemoe.sora.lang.styling.inline.InlineElement;
 import io.github.rosemoe.sora.lang.styling.inline.InlineElementContainer;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -378,7 +375,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private TextRange lastSelectedTextRange;
     private SnippetController snippetController;
     private final Map<String, InlineElementRenderer<? extends InlineElement>> inlineElementRendererMap = new HashMap<>();
-    private InlineCompletionProvider inlineCompletionProvider;
 
     public CodeEditor(Context context) {
         this(context, null);
@@ -518,23 +514,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @Nullable
     public InlineElementRenderer<? extends InlineElement> getInlineElementRendererForName(@NonNull String name) {
         return inlineElementRendererMap.get(name);
-    }
-
-    public void setInlineCompletionProvider(@Nullable InlineCompletionProvider provider) {
-        if (provider == null) {
-            var old = inlineElementRendererMap.remove(GhostText.NAME);
-            if (old != null) {
-                createLayout();
-            }
-        } else {
-            registerInlineElementRenderer(new GhostTextRenderer(this));
-        }
-        inlineCompletionProvider = provider;
-    }
-
-    @Nullable
-    public InlineCompletionProvider getInlineCompletionProvider() {
-        return inlineCompletionProvider;
     }
 
     /**
