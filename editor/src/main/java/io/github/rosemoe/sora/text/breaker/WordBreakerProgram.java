@@ -25,37 +25,29 @@ package io.github.rosemoe.sora.text.breaker;
 
 import androidx.annotation.NonNull;
 
-import java.text.BreakIterator;
-
-import io.github.rosemoe.sora.text.CharSequenceIterator;
 import io.github.rosemoe.sora.text.ContentLine;
 
-public class WordBreakerIcu implements WordBreaker {
+public class WordBreakerProgram extends WordBreakerIcu {
 
-    protected final BreakIterator wrappingIterator;
-
-    protected final char[] chars;
-
-    public WordBreakerIcu(@NonNull ContentLine text) {
-        this.chars = text.getBackingCharArray();
-        var textIterator = new CharSequenceIterator(text);
-        wrappingIterator = BreakIterator.getLineInstance();
-        wrappingIterator.setText(textIterator);
+    public WordBreakerProgram(@NonNull ContentLine text) {
+        super(text);
     }
 
+    @Override
     public int getOptimizedBreakPoint(int start, int end) {
-        // Merging trailing whitespaces is not supported by editor, so force to break here
-        if (end > 0 && !Character.isWhitespace(chars[end - 1]) && !wrappingIterator.isBoundary(end)) {
-            // Break text at last boundary
-            int lastBoundary = wrappingIterator.preceding(end);
-            if (lastBoundary != BreakIterator.DONE) {
-                int suggestedNext = Math.max(start, Math.min(end, lastBoundary));
-                if (suggestedNext > start) {
-                    end = suggestedNext;
-                }
+        int icuResult = super.getOptimizedBreakPoint(start, end);
+        if (icuResult != end || end <= start || /* end > start */ Character.isWhitespace(chars[end - 1])) {
+            return icuResult;
+        }
+        // Add extra opportunities for dots
+        int index = end - 1;
+        while (index > start) {
+            if (chars[index] == '.' && index - 1 >= start && !Character.isDigit(chars[index - 1])) {
+                // Break after this dot
+                return index + 1;
             }
+            index--;
         }
         return end;
     }
-
 }

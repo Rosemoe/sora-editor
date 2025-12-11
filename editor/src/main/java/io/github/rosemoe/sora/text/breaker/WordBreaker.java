@@ -38,7 +38,7 @@ public interface WordBreaker {
 
         @NonNull
         public static WordBreaker newInstance(@NonNull ContentLine text) {
-            return new WordBreakerIcu(text);
+            return new WordBreakerProgram(text);
         }
 
     }

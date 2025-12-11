@@ -103,7 +103,7 @@ public class OnlineBracketsMatcher implements BracketsProvider {
         if (index > 0) {
             pairedBracket = tryComputePaired(text, index - 1);
         }
-        if (pairedBracket == null) {
+        if (pairedBracket == null && index < text.length()) {
             pairedBracket = tryComputePaired(text, index);
         }
         return pairedBracket;

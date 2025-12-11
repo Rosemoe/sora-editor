@@ -49,6 +49,10 @@ public class Content implements CharSequence {
     public final static int DEFAULT_MAX_UNDO_STACK_SIZE = 500;
     public final static int DEFAULT_LIST_CAPACITY = 1000;
 
+    public final static int CHECK_TYPE_READ = 0;
+    public final static int CHECK_TYPE_CURSOR = 1;
+    public final static int CHECK_TYPE_INDEX = 2;
+
     private static int sInitialListCapacity;
 
     static {
@@ -177,7 +181,7 @@ public class Content implements CharSequence {
 
     @Override
     public char charAt(int index) {
-        checkIndex(index);
+        checkIndex(index, CHECK_TYPE_READ);
         lock(false);
         try {
             var p = getIndexer().getCharPosition(index);
@@ -197,7 +201,7 @@ public class Content implements CharSequence {
     public char charAt(int line, int column) {
         lock(false);
         try {
-            checkLineAndColumn(line, column);
+            checkLineAndColumn(line, column, CHECK_TYPE_READ);
             return lines.get(line).charAt(column);
         } finally {
             unlock(false);
@@ -378,7 +382,7 @@ public class Content implements CharSequence {
     }
 
     private void insertInternal(int line, int column, CharSequence text) {
-        checkLineAndColumn(line, column);
+        checkLineAndColumn(line, column, CHECK_TYPE_CURSOR);
         if (text == null) {
             throw new IllegalArgumentException("text can not be null");
         }
@@ -443,8 +447,8 @@ public class Content implements CharSequence {
      */
     public void delete(int start, int end) {
         lock(true);
-        checkIndex(start);
-        checkIndex(end);
+        checkIndex(start, CHECK_TYPE_CURSOR);
+        checkIndex(end, CHECK_TYPE_CURSOR);
         documentVersion.getAndIncrement();
         try {
             CharPosition startPos = getIndexer().getCharPosition(start);
@@ -476,8 +480,8 @@ public class Content implements CharSequence {
     }
 
     private void deleteInternal(int startLine, int columnOnStartLine, int endLine, int columnOnEndLine) {
-        checkLineAndColumn(endLine, columnOnEndLine);
-        checkLineAndColumn(startLine, columnOnStartLine);
+        checkLineAndColumn(endLine, columnOnEndLine, CHECK_TYPE_CURSOR);
+        checkLineAndColumn(startLine, columnOnStartLine, CHECK_TYPE_CURSOR);
         if (startLine == endLine && columnOnStartLine == columnOnEndLine) {
             return;
         }
@@ -1091,8 +1095,8 @@ public class Content implements CharSequence {
      *
      * @param index Index to check
      */
-    protected void checkIndex(int index) {
-        if (index > length() || index < 0) {
+    protected void checkIndex(int index, int checkType) {
+        if ((checkType == CHECK_TYPE_READ ? index >= length() : index > length()) || index < 0) {
             throw new StringIndexOutOfBoundsException("Index " + index + " out of bounds. length:" + length());
         }
     }
@@ -1114,13 +1118,43 @@ public class Content implements CharSequence {
      * @param line   The line to check
      * @param column The column to check
      */
-    protected void checkLineAndColumn(int line, int column) {
+    protected void checkLineAndColumn(int line, int column, int checkType) {
         checkLine(line);
         var text = lines.get(line);
-        int len = text.length() + text.getLineSeparator().getLength();
-        if (column > len || column < 0) {
-            throw new StringIndexOutOfBoundsException(
-                    "Column " + column + " out of bounds. line: " + line + " , column count (line separator included):" + len);
+        // Clarify valid line positions here
+        // Check Type   Valid Range
+        // READ         [0, columnCount+lineSepLength)
+        // INSERT       [0, columnCount]
+        // INDEX        See CachedIndexer
+        switch (checkType) {
+            case CHECK_TYPE_READ -> {
+                int len = text.length() + text.getLineSeparator().getLength();
+                if (column >= len || column < 0) {
+                    throw new StringIndexOutOfBoundsException(
+                            "Column " + column + " out of bounds for READ. line: " + line + ", valid range: [0, " + len + ")");
+                }
+            }
+            case CHECK_TYPE_CURSOR -> {
+                int len = text.length();
+                if (column > len || column < 0) {
+                    throw new StringIndexOutOfBoundsException(
+                            "Column " + column + " out of bounds for CURSOR. line: " + line + ", valid range: [0, " + len + "]");
+                }
+            }
+            case CHECK_TYPE_INDEX -> {
+                int len = text.length() + text.getLineSeparator().getLength();
+                if (line == getLineCount() - 1) {
+                    if (column > len || column < 0) {
+                        throw new StringIndexOutOfBoundsException(
+                                "Column " + column + " out of bounds for INDEX. line: " + line + ", valid range: [0, " + len + "]");
+                    }
+                } else {
+                    if (column >= len || column < 0) {
+                        throw new StringIndexOutOfBoundsException(
+                                "Column " + column + " out of bounds for INDEX. line: " + line + ", valid range: [0, " + len + ")");
+                    }
+                }
+            }
         }
     }
 
