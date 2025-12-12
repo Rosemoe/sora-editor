@@ -29,7 +29,6 @@ import org.eclipse.tm4e.core.registry.IThemeSource;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
 
@@ -102,7 +101,7 @@ public class ThemeRegistry {
                 continue;
             }
 
-            if (name.equals(rawTheme.getName())) {
+            if (name.equals(rawTheme.getName()) || name.equals(themeModel.getName())) {
                 return themeModel;
             }
         }
