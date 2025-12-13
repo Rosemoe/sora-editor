@@ -24,11 +24,11 @@
 package io.github.rosemoe.sora.util;
 
 /**
- * Pack two int into a long
- * Also unpack it
- * This is convenient while passing data
+ * Pack two int numbers into a long number, and unpack it.
+ * <p>
+ * This is effective for passing two primitive 32-bit numbers without creating a new object.
  *
- * @author Rose
+ * @author Rosemoe
  */
 public class IntPair {
 
@@ -40,7 +40,7 @@ public class IntPair {
     }
 
     /**
-     * Pack two int into a long
+     * Pack two int number into a long number
      *
      * @param first  First of pair
      * @param second Second of pair
@@ -70,10 +70,24 @@ public class IntPair {
         return (int) (packedValue >> 32L);
     }
 
+    /**
+     * Pack an int number and a floating-number into a long number
+     *
+     * @param first  First of pair
+     * @param second Second of pair (float)
+     * @return Packed value
+     */
     public static long packIntFloat(int first, float second) {
         return pack(first, Float.floatToRawIntBits(second));
     }
 
+    /**
+     * Get second of pair, but as a floating number
+     *
+     * @param packedValue Packed value
+     * @return Second of pair
+     * @see #packIntFloat(int, float)
+     */
     public static float getSecondAsFloat(long packedValue) {
         return Float.intBitsToFloat(getSecond(packedValue));
     }
