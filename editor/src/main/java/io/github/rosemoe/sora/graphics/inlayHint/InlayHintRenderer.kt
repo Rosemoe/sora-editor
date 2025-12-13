@@ -48,82 +48,21 @@
 
 package io.github.rosemoe.sora.graphics.inlayHint
 
-import android.graphics.Canvas
-import io.github.rosemoe.sora.graphics.InlayHintRenderParams
-import io.github.rosemoe.sora.graphics.Paint
+import io.github.rosemoe.sora.graphics.InlineElementRenderer
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint
-import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
  * Base class for all inlay hint renderers.
  *
  * @author Rosemoe
  */
-abstract class InlayHintRenderer() {
+abstract class InlayHintRenderer : InlineElementRenderer<InlayHint>() {
 
     /**
      * The type name of inlay hint
      */
     abstract val typeName: String
 
-    fun measure(
-        inlayHint: InlayHint,
-        paint: Paint,
-        params: InlayHintRenderParams
-    ): Float = onMeasure(inlayHint, paint, params)
-
-    fun render(
-        inlayHint: InlayHint,
-        canvas: Canvas,
-        paint: Paint,
-        params: InlayHintRenderParams,
-        colorScheme: EditorColorScheme,
-        measuredWidth: Float
-    ) = onRender(
-        inlayHint,
-        canvas,
-        paint,
-        params,
-        colorScheme,
-        measuredWidth
-    )
-
-    /**
-     * Measure the width of this inlay hint so that editor can properly place all the elements.
-     * Be careful that the given objects should not be modified, especially [paint] and [params]. They
-     * are currently used by editor instance to measure and render.
-     *
-     * @param inlayHint the inlay hint to be measured
-     * @param paint the text paint currently used by editor
-     * @return the width of this inlay hint
-     */
-    abstract fun onMeasure(
-        inlayHint: InlayHint,
-        paint: Paint,
-        params: InlayHintRenderParams
-    ): Float
-
-    /**
-     * Render the inlay hint on the given canvas. The [Canvas.translate] is called in advance so you do
-     * not need to consider the exact line index. The left of the given canvas is where you should start render
-     * your content and the top of the given canvas is the top of target line.
-     *
-     * Your measured width previously generated is passed to you. You are expected to make your content
-     * in range, according to the [measuredWidth] and given line height in [params].
-     *
-     * @param inlayHint the inlay hint to be rendered
-     * @param canvas the canvas to render your content
-     * @param paint the text paint currently used by editor
-     * @param colorScheme the [EditorColorScheme] of editor
-     * @param measuredWidth the width previously measured
-     */
-    abstract fun onRender(
-        inlayHint: InlayHint,
-        canvas: Canvas,
-        paint: Paint,
-        params: InlayHintRenderParams,
-        colorScheme: EditorColorScheme,
-        measuredWidth: Float
-    )
-
+    override val name: String
+        get() = typeName
 }
