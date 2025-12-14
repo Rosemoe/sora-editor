@@ -23,6 +23,7 @@
  */
 package io.github.rosemoe.sora.util;
 
+import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 
 import java.util.AbstractList;
@@ -30,12 +31,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class SegmentList<T> extends AbstractList<T> {
+public class SegmentList<T> extends AbstractList<T> implements AutoCloseable {
 
-    public final static int DEFAULT_SEGMENT_CAPACITY = 8192;
+    public final static int DEFAULT_SEGMENT_CAPACITY = 4096;
 
-    private final List<Segment<T>> segments;
-
+    protected final List<Segment<T>> segments;
     private final int segmentCapacity;
 
     private int length;
@@ -52,27 +52,27 @@ public class SegmentList<T> extends AbstractList<T> {
         segments = new ArrayList<>();
     }
 
-    private void checkInsertIndex(int index) {
+    protected Segment<T> onCreateSegment(int capacity) {
+        return new Segment<>(capacity);
+    }
+
+    protected void checkInsertIndex(int index) {
         if (index < 0 || index > length) {
             throw new IndexOutOfBoundsException("index " + index + " out of bounds. length = " + length);
         }
     }
 
-    private void checkAccessIndex(int index) {
+    protected void checkAccessIndex(int index) {
         if (index < 0 || index >= length) {
             throw new IndexOutOfBoundsException("index " + index + " out of bounds. length = " + length);
         }
     }
 
-    private static class FindResult<T> {
+    protected static class FindResult<T> {
 
-        Segment<T> segment;
-        int offset;
-        int blockIndex;
-
-        public FindResult() {
-
-        }
+        public Segment<T> segment;
+        public int offset;
+        public int blockIndex;
 
         public FindResult(Segment<T> segment, int offset, int segIndex) {
             this.segment = segment;
@@ -81,31 +81,26 @@ public class SegmentList<T> extends AbstractList<T> {
         }
     }
 
-    private FindResult<T> result = new FindResult<>();
-
     private FindResult<T> makeResult(Segment<T> segment, int offset, int segIndex) {
-        result.blockIndex = segIndex;
-        result.segment = segment;
-        result.offset = offset;
-        return result;
+        return new FindResult<>(segment, offset, segIndex);
     }
 
-    private FindResult<T> getSegment(int index) {
+    protected FindResult<T> getSegment(int elementIndex) {
         if (segments.isEmpty()) {
-            segments.add(new Segment<>(segmentCapacity));
+            segments.add(onCreateSegment(segmentCapacity));
         }
         int offset = 0;
         var backBlock = segments.get(segments.size() - 1);
         int backOffset = size() - backBlock.size();
         for (int i = 0, j = segments.size() - 1; i <= j; i++, j--) {
             var block = segments.get(i);
-            if ((index >= offset && index < offset + block.size()) || i + 1 == segments.size()) {
+            if ((elementIndex >= offset && elementIndex < offset + block.size()) || i + 1 == segments.size()) {
                 return makeResult(block, offset, i);
             }
             offset += block.size();
 
             block = backBlock;
-            if ((index >= backOffset && index < backOffset + block.size()) || (j == segments.size() - 1 && index == length)) {
+            if ((elementIndex >= backOffset && elementIndex < backOffset + block.size()) || (j == segments.size() - 1 && elementIndex == length)) {
                 return makeResult(block, backOffset, j);
             }
             if (j > 0) {
@@ -116,8 +111,8 @@ public class SegmentList<T> extends AbstractList<T> {
         throw new IllegalStateException("unreachable");
     }
 
-    private FindResult<T> getSegmentMut(int index) {
-        var res = getSegment(index);
+    private FindResult<T> getSegmentMut(int elementIndex) {
+        var res = getSegment(elementIndex);
         res.segment = ensureMutable(res.blockIndex);
         return res;
     }
@@ -137,37 +132,45 @@ public class SegmentList<T> extends AbstractList<T> {
     public T set(int index, T element) {
         checkAccessIndex(index);
         var result = getSegmentMut(index);
-        return result.segment.set(index - result.offset, element);
+        var x = result.segment.setElementAt(index - result.offset, element);
+        modCount++;
+        return x;
     }
 
     @Override
     public void add(int index, T element) {
         checkInsertIndex(index);
         var result = getSegmentMut(index);
-        result.segment.add(index - result.offset, element);
+        result.segment.addElementAt(index - result.offset, element);
         length++;
         adjustElements(result.blockIndex, result.segment);
         if (result.segment.size() >= segmentCapacity) {
             var divPoint = segmentCapacity / 2;
-            var seg = new Segment<T>(segmentCapacity);
+            var seg = onCreateSegment(segmentCapacity);
             var sub = result.segment.subList(divPoint, result.segment.size());
             seg.addAll(sub);
             sub.clear();
             segments.add(result.blockIndex + 1, seg);
+            seg.onSegmentBatchUpdated();
+            result.segment.onSegmentBatchUpdated();
         }
+        modCount++;
     }
 
+    @NonNull
     @Override
     public T remove(int index) {
         checkAccessIndex(index);
         var result = getSegmentMut(index);
-        var res = result.segment.remove(index - result.offset);
+        var res = result.segment.removeElementAt(index - result.offset);
         length--;
         mergeSegment(index - 1, index);
         mergeSegment(index, index + 1);
+        modCount++;
         return res;
     }
 
+    @NonNull
     @Override
     public T get(int index) {
         checkAccessIndex(index);
@@ -197,6 +200,7 @@ public class SegmentList<T> extends AbstractList<T> {
                 seg = segments.get(index);
                 var sub = seg.subList(Math.max(fromIndex - offset, 0), Math.min(toIndex - offset, segLength));
                 sub.clear();
+                seg.onSegmentBatchUpdated();
                 index++;
             }
             offset += segLength;
@@ -205,6 +209,7 @@ public class SegmentList<T> extends AbstractList<T> {
         }
         mergeSegment(index - 1, index);
         length -= toIndex - fromIndex;
+        modCount++;
     }
 
     @Override
@@ -221,8 +226,13 @@ public class SegmentList<T> extends AbstractList<T> {
         length = 0;
     }
 
+    @Override
+    public void close() {
+        clear();
+    }
+
     public SegmentList<T> shallowCopy() {
-        var list = new SegmentList<T>(segmentCapacity);
+        var list = onCreateShallowCopyInstance();
         list.segments.clear();
         for (var seg : segments) {
             seg.retain();
@@ -230,6 +240,14 @@ public class SegmentList<T> extends AbstractList<T> {
         list.segments.addAll(segments);
         list.length = length;
         return list;
+    }
+
+    protected SegmentList<T> onCreateShallowCopyInstance() {
+        return new SegmentList<>(getSegmentCapacity());
+    }
+
+    public int getSegmentCapacity() {
+        return segmentCapacity;
     }
 
     private void mergeSegment(int seg1, int seg2) {
@@ -245,6 +263,8 @@ public class SegmentList<T> extends AbstractList<T> {
             ensureMutable(seg1);
             pre = segments.get(seg1);
             pre.addAll(aft);
+            pre.onSegmentBatchUpdated();
+
             segments.remove(seg2);
             aft.release();
         }
@@ -257,28 +277,14 @@ public class SegmentList<T> extends AbstractList<T> {
                 var sub = mutCur.subList(0, segmentCapacity * 4 / 5 - pre.size());
                 pre.addAll(sub);
                 sub.clear();
+
+                pre.onSegmentBatchUpdated();
+                mutCur.onSegmentBatchUpdated();
             }
         }
     }
 
-    public void forEachCompat(@NonNull ConsumerCompat<T> consumer) {
-        for (int i = 0; i < segments.size(); i++) {
-            var seg = segments.get(i);
-            for (int i1 = 0; i1 < seg.size(); i1++) {
-                consumer.accept(seg.get(i1));
-            }
-        }
-    }
-
-    public interface ConsumerCompat<T> {
-        void accept(T obj);
-    }
-
-    private static class Segment<T> extends ArrayList<T> implements ShareableData<Segment<T>> {
-
-        public Segment() {
-
-        }
+    protected static class Segment<T> extends ArrayList<T> implements ShareableData<Segment<T>> {
 
         public Segment(int initialCapacity) {
             super(initialCapacity);
@@ -312,10 +318,35 @@ public class SegmentList<T> extends AbstractList<T> {
             }
         }
 
+        @CallSuper
         public Segment<T> copy() {
-            var res = new Segment<T>(this.size());
+            var res = onCreateCopyInstance();
             res.addAll(this);
             return res;
+        }
+
+        protected Segment<T> onCreateCopyInstance() {
+            return new Segment<>(this.size());
+        }
+
+        @CallSuper
+        protected T setElementAt(int index, T e) {
+            return set(index, e);
+        }
+
+        @CallSuper
+        protected void addElementAt(int index, T e) {
+            add(index, e);
+        }
+
+        @CallSuper
+        protected T removeElementAt(int index) {
+            return remove(index);
+        }
+
+        @CallSuper
+        protected void onSegmentBatchUpdated() {
+
         }
     }
 
