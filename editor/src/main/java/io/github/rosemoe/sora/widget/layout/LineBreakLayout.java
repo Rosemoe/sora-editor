@@ -316,6 +316,7 @@ public class LineBreakLayout extends AbstractLayout {
             if (widthMaintainer.lock.tryLock(5, TimeUnit.MILLISECONDS)) {
                 widthMaintainer.lock.unlock();
                 widthMaintainer.clear();
+                inlineElementsWidths.clear();
                 measureAllLines(widthMaintainer, inlineElementsWidths);
             } else {
                 measureAllLines(widthMaintainer = new BlockIntList(), inlineElementsWidths = new BlockIntList());

@@ -130,7 +130,7 @@ public class SingleCharacterWidths {
             char ch = str.charAt(i);
             if (isEmoji(ch)) {
                 if (i + 4 <= end) {
-                    p.getTextWidths(str, i, 4, widths);
+                    p.getTextWidths(str, i, i + 4, widths);
                     if (widths[0] > 0 && widths[1] == 0 && widths[2] == 0 && widths[3] == 0) {
                         i += 3;
                         width += (long) Math.ceil(widths[0] * PRECISION);
