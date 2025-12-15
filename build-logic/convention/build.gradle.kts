@@ -40,3 +40,12 @@ java {
 kotlin {
     jvmToolchain(17)
 }
+
+gradlePlugin {
+    plugins {
+        register("textmateSettingsPlugin") {
+            id = "build-logic.textmate-settings"
+            implementationClass = "TextmateSettingsPlugin"
+        }
+    }
+}

@@ -34,6 +34,10 @@ pluginManagement {
     }
 }
 
+plugins {
+    id("build-logic.textmate-settings")
+}
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -56,3 +60,15 @@ include(
     ":language-treesitter",
     ":oniguruma-native"
 )
+
+val textMatePackProjectsDir = file("language-textmate-packs/projects")
+if (textMatePackProjectsDir.exists()) {
+    textMatePackProjectsDir
+        .listFiles { file -> file.isDirectory }
+        ?.sortedBy { it.name }
+        ?.forEach { dir ->
+            val moduleName = dir.name
+            include(moduleName)
+            project(":$moduleName").projectDir = dir
+        }
+}

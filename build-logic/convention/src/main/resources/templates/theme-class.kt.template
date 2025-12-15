@@ -1,0 +1,51 @@
+package io.github.rosemoe.sora.langs.textmate
+
+import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
+import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry
+import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
+import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
+import org.eclipse.tm4e.core.registry.IThemeSource
+
+class %CLASS_NAME% @JvmOverloads constructor(
+    themeRegistry: ThemeRegistry = ThemeRegistry.getInstance()
+) : TextMateColorScheme(
+    themeRegistry,
+    loadThemeModel(themeRegistry)
+) {
+
+    companion object {
+        private const val THEME_NAME = "%THEME_NAME%"
+        private const val THEME_PATH = "%THEME_PATH%"
+        private const val IS_DARK = %IS_DARK%
+
+        private fun loadThemeModel(themeRegistry: ThemeRegistry): ThemeModel {
+            val registered = themeRegistry.findThemeByFileName(THEME_NAME)
+                ?: themeRegistry.findThemeByThemeName(THEME_NAME)
+            if (registered != null) {
+                if (!registered.isLoaded()) {
+                    try {
+                        registered.load()
+                    } catch (error: Exception) {
+                        throw RuntimeException("Failed to load theme " + THEME_NAME, error)
+                    }
+                }
+                return registered
+            }
+
+            val stream = FileProviderRegistry.getInstance().tryGetInputStream(THEME_PATH)
+                ?: error("%MISSING_THEME_MESSAGE%")
+            val themeModel = ThemeModel(
+                IThemeSource.fromInputStream(stream, THEME_PATH, null),
+                THEME_NAME
+            ).apply {
+                setDark(IS_DARK)
+            }
+            try {
+                themeRegistry.loadTheme(themeModel, false)
+            } catch (error: Exception) {
+                throw RuntimeException("Failed to register theme " + THEME_NAME, error)
+            }
+            return themeModel
+        }
+    }
+}
