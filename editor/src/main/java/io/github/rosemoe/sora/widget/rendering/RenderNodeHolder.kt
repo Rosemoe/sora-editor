@@ -29,11 +29,9 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange
 import io.github.rosemoe.sora.lang.styling.EmptyReader
-import io.github.rosemoe.sora.util.ArrayList
 import io.github.rosemoe.sora.widget.CodeEditor
 import java.util.Collections
 import java.util.Stack
-import java.util.function.Consumer
 
 /**
  * Hardware accelerated text render, which manages [RenderNode]

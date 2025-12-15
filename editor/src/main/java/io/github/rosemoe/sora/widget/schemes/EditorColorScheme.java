@@ -117,6 +117,7 @@ public class EditorColorScheme {
      */
     public static final int TEXT_SELECTED = 30;
     public static final int MATCHED_TEXT_BACKGROUND = 29;
+    public static final int MATCHED_TEXT_BORDER = 78;
     public static final int COMPLETION_WND_CORNER = 20;
     public static final int COMPLETION_WND_BACKGROUND = 19;
     public static final int COMPLETION_WND_TEXT_MATCHED = 67;
@@ -130,10 +131,13 @@ public class EditorColorScheme {
     public static final int LINE_BLOCK_LABEL = 18;
 
     public static final int TEXT_HIGHLIGHT_STRONG_BACKGROUND = 73;
+    public static final int TEXT_HIGHLIGHT_STRONG_BORDER = 76;
     public static final int TEXT_HIGHLIGHT_BACKGROUND = 74;
+    public static final int TEXT_HIGHLIGHT_BORDER = 77;
     public static final int HIGHLIGHTED_DELIMITERS_BACKGROUND = 41;
     public static final int HIGHLIGHTED_DELIMITERS_UNDERLINE = 40;
     public static final int HIGHLIGHTED_DELIMITERS_FOREGROUND = 39;
+    public static final int HIGHLIGHTED_DELIMITERS_BORDER = 75;
     public static final int LINE_NUMBER_PANEL_TEXT = 17;
     public static final int LINE_NUMBER_PANEL = 16;
     public static final int BLOCK_LINE_CURRENT = 15;
@@ -143,9 +147,11 @@ public class EditorColorScheme {
     public static final int SCROLL_BAR_THUMB = 11;
     public static final int UNDERLINE = 10;
     public static final int CURRENT_LINE = 9;
+    public static final int CURRENT_ROW_BORDER = 80;
     public static final int SELECTION_HANDLE = 8;
     public static final int SELECTION_INSERT = 7;
     public static final int SELECTED_TEXT_BACKGROUND = 6;
+    public static final int SELECTED_TEXT_BORDER = 79;
     public static final int TEXT_NORMAL = 5;
     public static final int WHOLE_BACKGROUND = 4;
     public static final int LINE_NUMBER_BACKGROUND = 3;
@@ -177,7 +183,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 74;
+    protected static final int END_COLOR_ID = 80;
 
 
     /**
@@ -377,13 +383,14 @@ public class EditorColorScheme {
                 color = 0x6600ff11;
                 break;
             case HIGHLIGHTED_DELIMITERS_FOREGROUND:
-                color = 0xdd000000;
-                break;
             case HIGHLIGHTED_DELIMITERS_UNDERLINE:
-                color = 0xff3f51b5;
+                color = 0;
                 break;
             case HIGHLIGHTED_DELIMITERS_BACKGROUND:
                 color = 0x1D000000;
+                break;
+            case HIGHLIGHTED_DELIMITERS_BORDER:
+                color = 0xff3f51b5;
                 break;
             case COMPLETION_WND_TEXT_PRIMARY:
             case COMPLETION_WND_TEXT_SECONDARY:

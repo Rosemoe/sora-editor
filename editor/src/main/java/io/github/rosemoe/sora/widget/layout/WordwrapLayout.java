@@ -71,11 +71,13 @@ public class WordwrapLayout extends AbstractLayout {
     private final int width;
     private final float miniGraphWidth;
     private final boolean antiWordBreaking;
+    private final boolean supportRtlRow;
     private List<RowRegion> rowTable;
 
-    public WordwrapLayout(@NonNull CodeEditor editor, @NonNull Content text, boolean antiWordBreaking, @Nullable WordwrapLayout oldLayout, boolean clearCache) {
+    public WordwrapLayout(@NonNull CodeEditor editor, @NonNull Content text, boolean antiWordBreaking, boolean supportRtlRow, @Nullable WordwrapLayout oldLayout, boolean clearCache) {
         super(editor, text);
         this.antiWordBreaking = antiWordBreaking;
+        this.supportRtlRow = supportRtlRow;
         rowTable = oldLayout != null ? oldLayout.rowTable : new ArrayList<>();
         if (clearCache) {
             rowTable.clear();
@@ -193,11 +195,24 @@ public class WordwrapLayout extends AbstractLayout {
             p.set(editor.getTextPaint());
         }
         var tr = new TextRow();
-        tr.set(sequence, 0, sequence.length(), sSpansForWordwrap, getInlayHints(line), text.getLineDirections(line), p, null, editor.getRenderer().createTextRowParams());
+        var directions = text.getLineDirections(line);
+        tr.set(sequence, 0, sequence.length(), sSpansForWordwrap, getInlayHints(line), directions, p, null, editor.getRenderer().createTextRowParams());
+
+        boolean isRtlBased = false;
+        if (supportRtlRow && sequence.mayNeedBidi()) {
+            int minRunLevel = Integer.MAX_VALUE;
+            for (int i = 0; i < directions.getRunCount(); i++) {
+                minRunLevel = Math.min(minRunLevel, directions.getRunLevel(i));
+            }
+            if ((minRunLevel & 1) != 0) {
+                isRtlBased = true;
+            }
+        }
+
         var rows = tr.breakText(width, antiWordBreaking);
         var results = new ArrayList<RowRegion>();
         for (var row : rows) {
-            results.add(new RowRegion(line, row.startColumn, row.endColumn, row.inlayHints));
+            results.add(new RowRegion(line, row.startColumn, row.endColumn, row.inlayHints, row.rowWidth, isRtlBased));
         }
         return results;
     }
@@ -266,7 +281,7 @@ public class WordwrapLayout extends AbstractLayout {
         var region = rowTable.get(rowIndex);
         var isLeadingRow = rowIndex <= 0 || rowTable.get(rowIndex - 1).line != region.line;
         var isTrailingRow = rowIndex + 1 >= rowTable.size() || rowTable.get(rowIndex + 1).line != region.line;
-        return rowTable.get(rowIndex).toRow(isLeadingRow, isTrailingRow);
+        return rowTable.get(rowIndex).toRow(isLeadingRow, isTrailingRow, width);
     }
 
     @Override
@@ -396,6 +411,7 @@ public class WordwrapLayout extends AbstractLayout {
         if (region.startColumn != 0) {
             xOffset -= miniGraphWidth;
         }
+        xOffset -= region.getRenderTranslateX(width);
         var tr = editor.getRenderer().createTextRow(row);
         int column = tr.getIndexForCursorOffset(xOffset);
         return IntPair.pack(region.line, column);
@@ -435,6 +451,7 @@ public class WordwrapLayout extends AbstractLayout {
             if (region.startColumn != 0) {
                 dest[1] += miniGraphWidth;
             }
+            dest[1] += region.getRenderTranslateX(width);
         } else {
             dest[0] = dest[1] = 0;
         }
@@ -488,15 +505,19 @@ public class WordwrapLayout extends AbstractLayout {
         final int endColumn;
         List<InlayHint> inlayHints;
         int line;
+        float rowWidth;
+        boolean displayFromRight;
 
-        RowRegion(int line, int start, int end, List<InlayHint> inlayHints) {
+        RowRegion(int line, int start, int end, List<InlayHint> inlayHints, float rowWidth, boolean displayFromRight) {
             this.line = line;
             startColumn = start;
             endColumn = end;
             this.inlayHints = inlayHints;
+            this.rowWidth = rowWidth;
+            this.displayFromRight = displayFromRight;
         }
 
-        public Row toRow(boolean isLeadingRow, boolean isTrailingRow) {
+        public Row toRow(boolean isLeadingRow, boolean isTrailingRow, float layoutWidth) {
             var row = new Row();
             row.isLeadingRow = isLeadingRow;
             row.isTrailingRow = isTrailingRow;
@@ -504,7 +525,12 @@ public class WordwrapLayout extends AbstractLayout {
             row.endColumn = endColumn;
             row.lineIndex = line;
             row.inlayHints = inlayHints == null ? Collections.emptyList() : inlayHints;
+            row.renderTranslateX = getRenderTranslateX(layoutWidth);
             return row;
+        }
+
+        public float getRenderTranslateX(float layoutWidth) {
+            return displayFromRight && layoutWidth > rowWidth ? layoutWidth - rowWidth : 0f;
         }
 
         @NonNull
@@ -558,6 +584,7 @@ public class WordwrapLayout extends AbstractLayout {
             result.inlayHints = region.inlayHints == null ? Collections.emptyList() : region.inlayHints;
             result.isLeadingRow = currentRow <= 0 || rowTable.get(currentRow - 1).line != region.line;
             result.isTrailingRow = currentRow + 1 >= rowTable.size() || rowTable.get(currentRow + 1).line != region.line;
+            result.renderTranslateX = region.getRenderTranslateX(width);
             currentRow++;
             return result;
         }

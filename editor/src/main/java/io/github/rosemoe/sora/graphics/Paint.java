@@ -36,7 +36,6 @@ import io.github.rosemoe.sora.text.FunctionCharacters;
 public class Paint extends android.graphics.Paint {
 
     private float spaceWidth;
-    private float tabWidth;
     private boolean renderFunctionCharacters;
 
     public Paint() {
@@ -47,7 +46,6 @@ public class Paint extends android.graphics.Paint {
         super();
         this.renderFunctionCharacters = renderFunctionCharacters;
         spaceWidth = measureText(" ");
-        tabWidth = measureText("\t");
     }
 
     public void setRenderFunctionCharacters(boolean renderFunctionCharacters) {
@@ -60,7 +58,6 @@ public class Paint extends android.graphics.Paint {
 
     public void onAttributeUpdate() {
         spaceWidth = measureText(" ");
-        tabWidth = measureText("\t");
     }
 
     public float getSpaceWidth() {

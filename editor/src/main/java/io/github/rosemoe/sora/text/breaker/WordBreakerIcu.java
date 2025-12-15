@@ -32,9 +32,9 @@ import io.github.rosemoe.sora.text.ContentLine;
 
 public class WordBreakerIcu implements WordBreaker {
 
-    private final BreakIterator wrappingIterator;
+    protected final BreakIterator wrappingIterator;
 
-    private final char[] chars;
+    protected final char[] chars;
 
     public WordBreakerIcu(@NonNull ContentLine text) {
         this.chars = text.getBackingCharArray();

@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.editor.ts
 
-import android.os.Bundle
 import android.os.Message
 import android.util.Log
 import com.itsaky.androidide.treesitter.TSInputEdit
@@ -33,10 +32,8 @@ import com.itsaky.androidide.treesitter.TSQueryCursor
 import com.itsaky.androidide.treesitter.TSTree
 import com.itsaky.androidide.treesitter.string.UTF16String
 import com.itsaky.androidide.treesitter.string.UTF16StringFactory
-import io.github.rosemoe.sora.data.ObjectAllocator
 import io.github.rosemoe.sora.editor.ts.spans.DefaultSpanFactory
 import io.github.rosemoe.sora.editor.ts.spans.TsSpanFactory
-import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver
 import io.github.rosemoe.sora.lang.styling.CodeBlock
 import io.github.rosemoe.sora.lang.styling.Styles
@@ -192,9 +189,6 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                 currentReceiver?.setStyles(this@TsAnalyzeManager, styles) {
                     styles.spans = newSpans
                     oldTree?.close()
-                    if (oldBlocks != null) {
-                        ObjectAllocator.recycleBlockLines(oldBlocks)
-                    }
                 }
                 currentReceiver?.updateBracketProvider(
                     this@TsAnalyzeManager,
@@ -219,7 +213,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                         )
                     ) {
                         match.captures.forEach {
-                            val block = ObjectAllocator.obtainBlockLine().also { block ->
+                            val block = CodeBlock().also { block ->
                                 var node = it.node
                                 val start = node.startPoint
                                 block.startLine = start.row

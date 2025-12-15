@@ -1,7 +1,7 @@
 /*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2024  Rosemoe
+ *    Copyright (C) 2020-2025  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -21,40 +21,33 @@
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  */
-package io.github.rosemoe.sora.graphics;
+package io.github.rosemoe.sora.text.breaker;
 
-import io.github.rosemoe.sora.util.IntPair;
+import androidx.annotation.NonNull;
 
-/**
- * Utility for character position description, which is a packed (textOffset,pixelWidthOrOffset) value.
- *
- * @author Rosemoe
- */
-public class CharPosDesc {
+import io.github.rosemoe.sora.text.ContentLine;
 
-    private CharPosDesc() {
+public class WordBreakerProgram extends WordBreakerIcu {
 
+    public WordBreakerProgram(@NonNull ContentLine text) {
+        super(text);
     }
 
-    /**
-     * Make a new character position description
-     */
-    public static long make(int textOffset, float pixelWidthOrOffset) {
-        return IntPair.pack(textOffset, Float.floatToRawIntBits(pixelWidthOrOffset));
+    @Override
+    public int getOptimizedBreakPoint(int start, int end) {
+        int icuResult = super.getOptimizedBreakPoint(start, end);
+        if (icuResult != end || end <= start || /* end > start */ Character.isWhitespace(chars[end - 1])) {
+            return icuResult;
+        }
+        // Add extra opportunities for dots
+        int index = end - 1;
+        while (index > start) {
+            if (chars[index] == '.' && index - 1 >= start && !Character.isDigit(chars[index - 1])) {
+                // Break after this dot
+                return index + 1;
+            }
+            index--;
+        }
+        return end;
     }
-
-    /**
-     * Get character offset in text
-     */
-    public static int getTextOffset(long packedValue) {
-        return IntPair.getFirst(packedValue);
-    }
-
-    /**
-     * Get character width or offset in pixel
-     */
-    public static float getPixelWidthOrOffset(long packedValue) {
-        return Float.intBitsToFloat(IntPair.getSecond(packedValue));
-    }
-
 }

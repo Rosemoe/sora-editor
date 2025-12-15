@@ -552,4 +552,9 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean moveSelectionToFirstForKeyboard = true;
 
+    /**
+     * Select the first completion item on enter for software keyboard
+     */
+    public boolean selectCompletionItemOnEnterForSoftKbd = true;
+
 }

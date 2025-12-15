@@ -23,15 +23,9 @@
  */
 package io.github.rosemoe.sora.widget.layout;
 
-import androidx.annotation.NonNull;
-
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
-import io.github.rosemoe.sora.lang.styling.inlayHint.CharacterSide;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
-import io.github.rosemoe.sora.lang.styling.util.PointAnchoredContainer;
 
 /**
  * This class represents a 'row' in editor.
@@ -73,5 +67,10 @@ public class Row {
      * Inlay hints on the row
      */
     public List<InlayHint> inlayHints;
+
+    /**
+     * Extra translation when rendering
+     */
+    public float renderTranslateX;
 
 }

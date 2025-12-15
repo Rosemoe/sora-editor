@@ -25,12 +25,21 @@ package io.github.rosemoe.sora.graphics;
 
 import android.util.SparseArray;
 
+import androidx.annotation.NonNull;
+
 import java.util.Arrays;
 
+import io.github.rosemoe.sora.text.CharArrayWrapper;
 import io.github.rosemoe.sora.text.FunctionCharacters;
 
 public class SingleCharacterWidths {
 
+    /**
+     * Floating-point precision steps.
+     * <p>
+     * Introduced to avoid accumulated floating-point errors.
+     */
+    private final static long PRECISION = 1000L;
     public final float[] widths;
     public final SparseArray<Float> codePointWidths;
     public final char[] buffer;
@@ -69,7 +78,7 @@ public class SingleCharacterWidths {
     /**
      * Measure a single character
      */
-    public float measureChar(char ch, Paint p) {
+    public float measureChar(char ch, @NonNull Paint p) {
         var rate = 1;
         if (ch == '\t') {
             ch = ' ';
@@ -86,8 +95,9 @@ public class SingleCharacterWidths {
 
     /**
      * Measure a single character
+     * @param cp Code Point
      */
-    public float measureCodePoint(int cp, Paint p) {
+    public float measureCodePoint(int cp, @NonNull Paint p) {
         if (cp <= 65535) {
             return measureChar((char) cp, p);
         }
@@ -103,47 +113,19 @@ public class SingleCharacterWidths {
     /*
      * Measure text
      */
-    public float measureText(char[] chars, int start, int end, Paint p) {
-        float width = 0f;
-        for (int i = start; i < end; i++) {
-            char ch = chars[i];
-            if (isEmoji(ch)) {
-                if (i + 4 <= end) {
-                    p.getTextWidths(chars, i, 4, widths);
-                    if (widths[0] > 0 && widths[1] == 0 && widths[2] == 0 && widths[3] == 0) {
-                        i += 3;
-                        width += widths[0];
-                        continue;
-                    }
-                }
-                int commitEnd = Math.min(end, i + 2);
-                int len = commitEnd - i;
-                if (len >= 0) {
-                    System.arraycopy(chars, i, buffer, 0, len);
-                }
-                width += p.measureText(buffer, 0, len);
-                i += len - 1;
-            } else if(isHandleFunctionCharacters() && FunctionCharacters.isEditorFunctionChar(ch)) {
-                var name = FunctionCharacters.getNameForFunctionCharacter(ch);
-                for (int j = 0;j < name.length();j++) {
-                    width += measureChar(name.charAt(j), p);
-                }
-            } else {
-                width += measureChar(ch, p);
-            }
-        }
-        return width;
+    public float measureText(char[] chars, int start, int end, @NonNull Paint p) {
+        return measureText(new CharArrayWrapper(chars, chars.length), start, end, p);
     }
 
-    public float measureText(CharSequence str, Paint p) {
+    public float measureText(@NonNull CharSequence str, @NonNull Paint p) {
         return measureText(str, 0, str.length(), p);
     }
 
     /**
      * Measure text
      */
-    public float measureText(CharSequence str, int start, int end, Paint p) {
-        float width = 0f;
+    public float measureText(@NonNull CharSequence str, int start, int end, @NonNull Paint p) {
+        long width = 0;
         for (int i = start; i < end; i++) {
             char ch = str.charAt(i);
             if (isEmoji(ch)) {
@@ -151,7 +133,7 @@ public class SingleCharacterWidths {
                     p.getTextWidths(str, i, i + 4, widths);
                     if (widths[0] > 0 && widths[1] == 0 && widths[2] == 0 && widths[3] == 0) {
                         i += 3;
-                        width += widths[0];
+                        width += (long) Math.ceil(widths[0] * PRECISION);
                         continue;
                     }
                 }
@@ -160,18 +142,18 @@ public class SingleCharacterWidths {
                 for (int j = 0; j < len; j++) {
                     buffer[j] = str.charAt(i + j);
                 }
-                width += p.measureText(buffer, 0, len);
+                width += (long) Math.ceil(p.measureText(buffer, 0, len) * PRECISION);
                 i += len - 1;
             } else if(isHandleFunctionCharacters() && FunctionCharacters.isEditorFunctionChar(ch)) {
                 var name = FunctionCharacters.getNameForFunctionCharacter(ch);
                 for (int j = 0;j < name.length();j++) {
-                    width += measureChar(name.charAt(j), p);
+                    width += (long) Math.ceil(measureChar(name.charAt(j), p) * PRECISION);
                 }
             } else {
-                width += measureChar(ch, p);
+                width += (long) Math.ceil(measureChar(ch, p) * PRECISION);
             }
         }
-        return width;
+        return (float) width / PRECISION;
     }
 
 }

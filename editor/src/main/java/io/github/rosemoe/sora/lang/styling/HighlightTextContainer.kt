@@ -39,7 +39,8 @@ class HighlightTextContainer {
         var startColumn: Int,
         var endLine: Int,
         var endColumn: Int,
-        val color: ResolvableColor = EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_BACKGROUND)
+        val color: ResolvableColor = EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_BACKGROUND),
+        val borderColor: ResolvableColor = EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_BORDER)
     ) {
         internal fun hasLength(): Boolean {
             return startLine < endLine || (startLine == endLine && startColumn < endColumn)

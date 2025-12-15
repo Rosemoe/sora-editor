@@ -24,8 +24,8 @@
 @SuppressWarnings("unused")
 object Versions {
     // Project versions
-    private const val version = "0.24.1"
-    const val versionCode = 90
+    private const val version = "0.24.3"
+    const val versionCode = 92
 
     val versionName by lazy {
         if (CI.isCiBuild) {

@@ -32,4 +32,4 @@ package io.github.rosemoe.sora.widget.rendering
  * @property updateTimestamp Last updated timestamp of this cache
  * @author Rosemoe
  */
-class MeasureCacheItem(var line: Int, var widths: FloatArray?, var updateTimestamp: Long)
+class MeasureCacheItem(var line: Int, var widths: TextAdvancesCache?, var updateTimestamp: Long)

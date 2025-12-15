@@ -49,9 +49,12 @@ import androidx.annotation.RequiresApi;
 import java.util.Objects;
 
 import io.github.rosemoe.sora.R;
+import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
+import io.github.rosemoe.sora.event.EventManager;
 import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.EditorRenderer;
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
  * Magnifier specially designed for CodeEditor
@@ -61,6 +64,7 @@ import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
 public class Magnifier implements EditorBuiltinComponent {
 
     private final CodeEditor view;
+    private final EventManager eventManager;
     private final PopupWindow popup;
     private final ImageView image;
     private final Paint paint;
@@ -77,6 +81,7 @@ public class Magnifier implements EditorBuiltinComponent {
 
     public Magnifier(@NonNull CodeEditor editor) {
         view = editor;
+        eventManager = editor.createSubEventManager();
         parentView = editor;
         popup = new PopupWindow();
         popup.setElevation(view.getDpUnit() * 4);
@@ -89,6 +94,17 @@ public class Magnifier implements EditorBuiltinComponent {
         maxTextSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 28, view.getResources().getDisplayMetrics());
         scaleFactor = 1.25f;
         paint = new Paint();
+        applyBackgroundTint();
+        eventManager.subscribeAlways(ColorSchemeUpdateEvent.class, (event) -> {
+            applyBackgroundTint();
+        });
+    }
+
+    private void applyBackgroundTint() {
+        var background = popup.getContentView().getBackground();
+        if (background != null) {
+            background.setTint(view.getColorScheme().getColor(EditorColorScheme.WHOLE_BACKGROUND));
+        }
     }
 
     /**

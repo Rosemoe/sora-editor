@@ -64,7 +64,6 @@ public class SchemeVS2019 extends EditorColorScheme {
         setColor(BLOCK_LINE_CURRENT, 0);
         setColor(NON_PRINTABLE_CHAR, 0xffdddddd);
         setColor(TEXT_SELECTED, 0xffffffff);
-        setColor(HIGHLIGHTED_DELIMITERS_FOREGROUND, 0xffffffff);
     }
 
 }

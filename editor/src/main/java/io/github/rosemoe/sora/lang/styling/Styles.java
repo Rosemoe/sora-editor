@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.github.rosemoe.sora.data.ObjectAllocator;
 import io.github.rosemoe.sora.lang.styling.line.LineAnchorStyle;
 import io.github.rosemoe.sora.lang.styling.line.LineStyles;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -90,16 +89,6 @@ public class Styles {
     @Nullable
     public Spans getSpans() {
         return spans;
-    }
-
-    /**
-     * Get a new BlockLine object
-     *
-     * @return An idle BlockLine
-     */
-    @NonNull
-    public CodeBlock obtainNewBlock() {
-        return ObjectAllocator.obtainBlockLine();
     }
 
     /**

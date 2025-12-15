@@ -527,19 +527,13 @@ public class EditorSearcher {
                     // fall-through
                 case SearchOptions.TYPE_REGULAR_EXPRESSION:
                     var regex = Pattern.compile(pattern, (ignoreCase ? Pattern.CASE_INSENSITIVE : 0) | Pattern.MULTILINE);
-                    int lastEnd = 0;
-                    // Matcher will call toString() on input several times
                     var string = text.toString();
                     var matcher = regex.matcher(string);
-                    while (lastEnd < textLength && matcher.find(lastEnd) && checkNotCancelled()) {
-                        lastEnd = matcher.end();
-                        var start = matcher.start();
-                        if (start == lastEnd) {
-                            // Do not match empty text
-                            lastEnd ++;
-                            continue;
+                    while (matcher.find() && checkNotCancelled()) {
+                        results.add(IntPair.pack(matcher.start(), matcher.end()));
+                        if (matcher.end() == string.length()) {
+                            break;
                         }
-                        results.add(IntPair.pack(matcher.start(), lastEnd));
                     }
             }
             if (checkNotCancelled()) {
