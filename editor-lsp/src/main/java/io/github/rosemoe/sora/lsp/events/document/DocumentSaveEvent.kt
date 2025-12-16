@@ -55,8 +55,8 @@ class DocumentSaveEvent : AsyncEventListener() {
     }
 
     override fun dispose() {
-        future?.cancel(true);
-        future = null;
+        future?.cancel(true)
+        future = null
     }
 
 }

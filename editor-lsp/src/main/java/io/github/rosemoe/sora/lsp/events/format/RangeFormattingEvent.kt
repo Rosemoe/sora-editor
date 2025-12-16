@@ -33,8 +33,8 @@ import io.github.rosemoe.sora.lsp.events.document.applyEdits
 import io.github.rosemoe.sora.lsp.requests.Timeout
 import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.LSPException
-import io.github.rosemoe.sora.lsp.utils.createTextDocumentIdentifier
 import io.github.rosemoe.sora.lsp.utils.asLspRange
+import io.github.rosemoe.sora.lsp.utils.createTextDocumentIdentifier
 import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.text.TextRange
 import kotlinx.coroutines.Dispatchers

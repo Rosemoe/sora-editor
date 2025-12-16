@@ -109,9 +109,16 @@ import java.util.concurrent.CompletableFuture
  * Default implementation for LSP requests/notifications handling.
  */
 class DefaultRequestManager(
-    val wrapper: LanguageServerWrapper, val server: LanguageServer, val client: LanguageClient,
-    val serverCapabilities: ServerCapabilities
+    val wrapper: LanguageServerWrapper,
+    val server: LanguageServer,
+    val client: LanguageClient,
+    private val serverCapabilities: ServerCapabilities
 ) : RequestManager() {
+
+    override val serverName = wrapper.serverName
+
+    override val capabilities: ServerCapabilities
+        get() = serverCapabilities
 
     private val textDocumentOptions: TextDocumentSyncOptions? =
         if (serverCapabilities.textDocumentSync.isRight) serverCapabilities.textDocumentSync.right else TextDocumentSyncOptions().apply {

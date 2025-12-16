@@ -32,23 +32,15 @@ import io.github.rosemoe.sora.event.HoverEvent
 import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.SubscriptionReceipt
-import io.github.rosemoe.sora.graphics.inlayHint.ColorInlayHintRenderer
-import io.github.rosemoe.sora.graphics.inlayHint.TextInlayHintRenderer
 import io.github.rosemoe.sora.lang.Language
-import io.github.rosemoe.sora.lang.styling.HighlightTextContainer
-import io.github.rosemoe.sora.lang.styling.color.EditorColor
-import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer
+import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
-import io.github.rosemoe.sora.lsp.editor.codeaction.CodeActionWindow
-import io.github.rosemoe.sora.lsp.editor.diagnostics.LspDiagnosticTooltipLayout
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEvent
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorHoverEvent
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorScrollEvent
 import io.github.rosemoe.sora.lsp.editor.event.LspEditorSelectionChangeEvent
 import io.github.rosemoe.sora.lsp.editor.format.LspFormatter
-import io.github.rosemoe.sora.lsp.editor.hover.HoverWindow
-import io.github.rosemoe.sora.lsp.editor.signature.SignatureHelpWindow
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.diagnostics.publishDiagnostics
 import io.github.rosemoe.sora.lsp.events.document.documentClose
@@ -60,11 +52,6 @@ import io.github.rosemoe.sora.lsp.utils.FileUri
 import io.github.rosemoe.sora.lsp.utils.clearVersions
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.widget.CodeEditor
-import io.github.rosemoe.sora.widget.component.DefaultDiagnosticTooltipLayout
-import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
-import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
-import io.github.rosemoe.sora.widget.getComponent
-import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.subscribeEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -93,15 +80,11 @@ class LspEditor(
 
     private val serverDefinition: LanguageServerDefinition
 
+    private val delegate = LspEditorDelegate(this)
+    private val uiDelegate = LspEditorUIDelegate(this)
+
     private var _currentEditor: WeakReference<CodeEditor?> = WeakReference(null)
 
-    private var signatureHelpWindowWeakReference: WeakReference<SignatureHelpWindow?> =
-        WeakReference(null)
-
-    private var hoverWindowWeakReference: WeakReference<HoverWindow?> =
-        WeakReference(null)
-    private var codeActionWindowWeakReference: WeakReference<CodeActionWindow?> =
-        WeakReference(null)
     private var currentLanguage: LspLanguage? = null
 
     private var subscriptionReceipts: MutableList<SubscriptionReceipt<out Event>> = mutableListOf()
@@ -109,23 +92,19 @@ class LspEditor(
     @Volatile
     private var isClosed = false
 
-    private var cachedInlayHints: List<org.eclipse.lsp4j.InlayHint>? = null
-
-    private var cachedDocumentColors: List<ColorInformation>? = null
-
     private val disposeLock = Any()
 
     val eventManager = LspEventManager(project, this)
 
     val fileExt = uri.path.substringAfterLast('.')
 
-    var textDocumentSyncKind = TextDocumentSyncKind.Full
+    var textDocumentSyncKind = TextDocumentSyncKind.Incremental
 
-    var completionTriggers = emptyList<String>()
+    var completionTriggers = mutableSetOf<String>()
 
-    var signatureHelpTriggers = emptyList<String>()
+    var signatureHelpTriggers = mutableSetOf<String>()
 
-    var signatureHelpReTriggers = emptyList<String>()
+    var signatureHelpReTriggers = mutableSetOf<String>()
 
     val coroutineScope = project.coroutineScope
 
@@ -135,31 +114,21 @@ class LspEditor(
                 throw IllegalArgumentException("Editor cannot be null")
             }
 
+            uiDelegate.detachEditor()
             _currentEditor = WeakReference(currentEditor)
 
             clearSubscriptions()
 
             currentEditor.setEditorLanguage(currentLanguage)
+            uiDelegate.attachEditor(currentEditor)
 
-            if (isEnableSignatureHelp) {
-                signatureHelpWindowWeakReference =
-                    WeakReference(SignatureHelpWindow(currentEditor, coroutineScope))
-            }
-            if (isEnableHover) {
-                hoverWindowWeakReference = WeakReference(HoverWindow(currentEditor, coroutineScope))
-            }
             if (isEnableInlayHint) {
-                currentEditor.registerInlayHintRenderer(TextInlayHintRenderer.DefaultInstance)
+                coroutineScope.launch {
+                    this@LspEditor.requestInlayHint(CharPosition(0, 0))
+                    this@LspEditor.requestDocumentColor()
+                }
             }
 
-            codeActionWindowWeakReference = WeakReference(CodeActionWindow(this, currentEditor))
-
-            val currentDiagnosticTooltipWindow =
-                currentEditor.getComponent<EditorDiagnosticTooltipWindow>()
-
-            if (currentDiagnosticTooltipWindow.layout is DefaultDiagnosticTooltipLayout) {
-                currentDiagnosticTooltipWindow.layout = LspDiagnosticTooltipLayout()
-            }
             clearSubscriptions()
             subscriptionReceipts =
                 mutableListOf(
@@ -199,9 +168,10 @@ class LspEditor(
 
     var isConnected = false
         private set
-
+    
     val languageServerWrapper: LanguageServerWrapper
-        get() = project.getOrCreateLanguageServerWrapper(fileExt)
+        get() = delegate.getPrimaryWrapper()
+            ?: throw IllegalStateException("No language server wrapper for extension $fileExt")
 
     var diagnostics
         get() = project.diagnosticsContainer.getDiagnostics(uri)
@@ -213,55 +183,33 @@ class LspEditor(
         get() = project.diagnosticsContainer
 
     val isShowSignatureHelp
-        get() = signatureHelpWindowWeakReference.get()?.isShowing ?: false
+        get() = uiDelegate.isShowSignatureHelp
 
     val isShowHover
-        get() = hoverWindowWeakReference.get()?.isShowing ?: false
+        get() = uiDelegate.isShowHover
 
     val isShowCodeActions
-        get() = codeActionWindowWeakReference.get()?.isShowing ?: false
+        get() = uiDelegate.isShowCodeActions
 
-    var isEnableHover = true
+    var isEnableHover: Boolean
+        get() = uiDelegate.isEnableHover
         set(value) {
-            field = value
-            if (value) {
-                editor?.let {
-                    hoverWindowWeakReference = WeakReference(HoverWindow(it, coroutineScope))
-                }
-            } else {
-                hoverWindow?.setEnabled(false)
-                hoverWindowWeakReference.clear()
-            }
+            uiDelegate.isEnableHover = value
         }
 
-    var isEnableSignatureHelp = true
+    var isEnableSignatureHelp: Boolean
+        get() = uiDelegate.isEnableSignatureHelp
         set(value) {
-            field = value
-            if (value) {
-                editor?.let {
-                    signatureHelpWindowWeakReference = WeakReference(
-                        SignatureHelpWindow(
-                            it,
-                            coroutineScope
-                        )
-                    )
-                }
-            } else {
-                signatureHelpWindow?.setEnabled(false)
-                signatureHelpWindowWeakReference.clear()
-            }
+            uiDelegate.isEnableSignatureHelp = value
         }
 
-    @Experimental
-    var isEnableInlayHint = false
+    @get:Experimental
+    @set:Experimental
+    var isEnableInlayHint: Boolean
+        get() = uiDelegate.isEnableInlayHint
         set(value) {
-            field = value
-            val editorInstance = editor ?: return
+            uiDelegate.isEnableInlayHint = value
             if (value) {
-                editorInstance.registerInlayHintRenderers(
-                    TextInlayHintRenderer.DefaultInstance,
-                    ColorInlayHintRenderer.DefaultInstance
-                )
                 coroutineScope.launch {
                     this@LspEditor.requestInlayHint(CharPosition(0, 0))
                     this@LspEditor.requestDocumentColor()
@@ -270,21 +218,24 @@ class LspEditor(
         }
 
     val hoverWindow
-        get() = hoverWindowWeakReference.get()
+        get() = uiDelegate.hoverWindow
 
     val codeActionWindow
-        get() = codeActionWindowWeakReference.get()
+        get() = uiDelegate.codeActionWindow
 
     val signatureHelpWindow
-        get() = signatureHelpWindowWeakReference.get()
+        get() = uiDelegate.signatureHelpWindow
 
     val requestManager
-        get() = languageServerWrapper.requestManager
+        get() = delegate.aggregatedRequestManager
+
+    val requestManagers: List<RequestManager>
+        get() = delegate.aggregatedRequestManager.activeManagers
 
     init {
         serverDefinition = project.getServerDefinition(fileExt)
+            ?: project.getServerDefinitions(fileExt).firstOrNull()
             ?: throw Exception("No server definition for extension $fileExt")
-
         currentLanguage = LspLanguage(this)
     }
 
@@ -301,13 +252,11 @@ class LspEditor(
     suspend fun connect(throwException: Boolean = true): Boolean = withContext(Dispatchers.IO) {
         eventManager.init()
         runCatching {
-            languageServerWrapper.start()
-
-            //wait for language server start
-            val capabilities = languageServerWrapper.getServerCapabilities()
+            // Delegate handles multi-server coordination and returns merged capabilities.
+            val capabilities = delegate.connectAll()
                 ?: throw TimeoutException("Unable to connect language server")
 
-            languageServerWrapper.connect(this@LspEditor)
+            openDocument()
 
             currentLanguage?.let { language ->
                 if (capabilities.documentFormattingProvider?.left != false || capabilities.documentFormattingProvider?.right != null) {
@@ -384,18 +333,12 @@ class LspEditor(
                 eventManager.emitAsync(EventType.documentClose)
             }.get()
 
-            languageServerWrapper.disconnect(
-                this@LspEditor
-            )
+            delegate.disconnectAll()
 
             isConnected = false
         }.onFailure {
             isConnected = false
-
-            languageServerWrapper.disconnect(
-                this@LspEditor
-            )
-
+            delegate.disconnectAll()
             throw it
         }
     }
@@ -435,121 +378,27 @@ class LspEditor(
     }
 
     fun showSignatureHelp(signatureHelp: SignatureHelp?) {
-        val signatureHelpWindow = signatureHelpWindowWeakReference.get() ?: return
-
-        if (signatureHelp == null) {
-            editor?.post { signatureHelpWindow.dismiss() }
-            return
-        }
-        editor?.post { signatureHelpWindow.show(signatureHelp) }
+        uiDelegate.showSignatureHelp(signatureHelp)
     }
 
     fun showHover(hover: Hover?) {
-        val hoverWindow = hoverWindowWeakReference.get() ?: return
-
-        val isInSignatureHelp = isShowSignatureHelp
-
-        if (hover == null || isInSignatureHelp) {
-            editor?.post { hoverWindow.dismiss() }
-            return
-        }
-
-        editor?.post { hoverWindow.show(hover) }
+        uiDelegate.showHover(hover)
     }
 
     fun showCodeActions(range: Range?, actions: List<Either<Command, CodeAction>>?) {
-        val window = codeActionWindowWeakReference.get() ?: return
-        val originEditor = editor ?: return
-
-        val isInCompletion = originEditor.getComponent<EditorAutoCompletion>().isShowing
-        val isInSignatureHelp = isShowSignatureHelp
-
-        if (range == null || actions.isNullOrEmpty() || isInCompletion || isInSignatureHelp) {
-            originEditor.post { window.dismiss() }
-            return
-        }
-
-        originEditor.post { window.show(range, actions) }
+        uiDelegate.showCodeActions(range, actions)
     }
 
     fun showDocumentHighlight(highlights: List<DocumentHighlight>?) {
-        val editor = editor ?: return
-
-        if (highlights == null || highlights.isEmpty()) {
-            editor.highlightTexts = null
-            return
-        }
-
-        val container = HighlightTextContainer()
-
-        val colors = mapOf(
-            DocumentHighlightKind.Write to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_STRONG_BACKGROUND),
-            DocumentHighlightKind.Read to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_BACKGROUND),
-            DocumentHighlightKind.Text to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_BACKGROUND)
-        )
-
-        val borderColors = mapOf(
-            DocumentHighlightKind.Write to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_STRONG_BORDER),
-            DocumentHighlightKind.Read to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_BORDER),
-            DocumentHighlightKind.Text to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_BORDER)
-        )
-
-        highlights.forEach {
-            container.add(
-                HighlightTextContainer.HighlightText(
-                    it.range.start.line,
-                    it.range.start.character,
-                    it.range.end.line,
-                    it.range.end.character,
-                    colors.getValue(it.kind ?: DocumentHighlightKind.Text),
-                    borderColors.getValue(it.kind ?: DocumentHighlightKind.Text)
-                )
-            )
-        }
-
-        editor.highlightTexts = container
+        uiDelegate.showDocumentHighlight(highlights)
     }
 
     internal fun showInlayHints(inlayHints: List<org.eclipse.lsp4j.InlayHint>?) {
-        val normalized = inlayHints.normalize()
-        if (cachedInlayHints == normalized) {
-            return
-        }
-        cachedInlayHints = normalized
-        updateInlinePresentations()
+        uiDelegate.showInlayHints(inlayHints)
     }
 
     internal fun showDocumentColors(documentColors: List<ColorInformation>?) {
-        val normalized = documentColors.normalize()
-        if (cachedDocumentColors == normalized) {
-            return
-        }
-        cachedDocumentColors = normalized
-        updateInlinePresentations()
-    }
-
-    private fun <T> List<T>?.normalize(): List<T>? {
-        return if (this.isNullOrEmpty()) null else this
-    }
-
-    private fun updateInlinePresentations() {
-        val editorInstance = editor ?: return
-
-        val hasInlayHints = !cachedInlayHints.isNullOrEmpty()
-        val hasDocumentColors = !cachedDocumentColors.isNullOrEmpty()
-
-        if (!hasInlayHints && !hasDocumentColors) {
-            if (editorInstance.inlayHints != null) {
-                editorInstance.inlayHints = null
-            }
-            return
-        }
-
-        val inlayHintsContainer = InlayHintsContainer()
-        cachedInlayHints?.inlayHintToDisplay()?.forEach(inlayHintsContainer::add)
-        cachedDocumentColors?.colorInfoToDisplay()?.forEach(inlayHintsContainer::add)
-
-        editorInstance.inlayHints = inlayHintsContainer
+        uiDelegate.showDocumentColors(documentColors)
     }
 
 
@@ -589,10 +438,8 @@ class LspEditor(
                 // throw IllegalStateException("Editor is already closed")
             }
             disconnect()
+            uiDelegate.detachEditor()
             _currentEditor.clear()
-            signatureHelpWindowWeakReference.clear()
-            hoverWindowWeakReference.clear()
-            codeActionWindowWeakReference.clear()
             clearVersions {
                 it == this.uri
             }

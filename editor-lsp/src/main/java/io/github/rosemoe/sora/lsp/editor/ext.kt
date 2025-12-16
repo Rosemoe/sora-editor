@@ -33,6 +33,8 @@ import io.github.rosemoe.sora.lsp.events.inlayhint.inlayHint
 import io.github.rosemoe.sora.text.CharPosition
 import org.eclipse.lsp4j.ColorInformation
 import org.eclipse.lsp4j.InlayHint
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 import kotlin.math.pow
 
 suspend fun LspEditor.requestInlayHint(position: CharPosition) {
@@ -94,4 +96,11 @@ fun List<ColorInformation>.colorInfoToDisplay() = map {
     )
 }
 
+@OptIn(ExperimentalContracts::class)
+inline fun <T> List<T>?.normalizeList(): List<T>? {
+    contract {
+        returnsNotNull() implies (this@normalizeList != null)
+    }
+    return if (this.isNullOrEmpty()) null else this
+}
 
