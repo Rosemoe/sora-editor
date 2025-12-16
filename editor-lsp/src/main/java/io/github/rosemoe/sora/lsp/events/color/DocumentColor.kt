@@ -30,13 +30,10 @@ import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp.events.EventContext
 import io.github.rosemoe.sora.lsp.events.EventType
-import io.github.rosemoe.sora.lsp.events.getByClass
 import io.github.rosemoe.sora.lsp.requests.Timeout
 import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.FileUri
-import io.github.rosemoe.sora.lsp.utils.createRange
 import io.github.rosemoe.sora.lsp.utils.createTextDocumentIdentifier
-import io.github.rosemoe.sora.text.CharPosition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -49,11 +46,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.eclipse.lsp4j.ColorInformation
 import org.eclipse.lsp4j.DocumentColorParams
-import org.eclipse.lsp4j.InlayHint
-import org.eclipse.lsp4j.InlayHintParams
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.math.min
 
 @OptIn(FlowPreview::class)
 @Experimental
@@ -109,7 +103,9 @@ class DocumentColorEvent : AsyncEventListener() {
 
             val requestManager = editor.requestManager ?: return@withContext
 
-            val future = requestManager.documentColor(DocumentColorParams(request.uri.createTextDocumentIdentifier())) ?: return@withContext
+            val future =
+                requestManager.documentColor(DocumentColorParams(request.uri.createTextDocumentIdentifier()))
+                    ?: return@withContext
 
             this@DocumentColorEvent.future = future.thenAccept { }
 

@@ -45,9 +45,11 @@ import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
 import io.github.rosemoe.sora.lsp.client.connection.LocalSocketStreamConnectionProvider
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
+import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.languageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspProject
+import io.github.rosemoe.sora.lsp.editor.diagnostics.DiagnosticsContainer
 import io.github.rosemoe.sora.lsp.editor.text.MarkdownCodeHighlighterRegistry
 import io.github.rosemoe.sora.lsp.editor.text.withEditorHighlighter
 import io.github.rosemoe.sora.lsp.events.EventType
@@ -60,11 +62,16 @@ import io.github.rosemoe.sora.widget.getComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.eclipse.lsp4j.DiagnosticCapabilities
+import org.eclipse.lsp4j.DiagnosticRegistrationOptions
 import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams
 import org.eclipse.lsp4j.InitializeResult
+import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.WorkspaceFolder
 import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageServer
+import org.eclipse.tm4e.core.internal.theme.Theme
 import org.eclipse.tm4e.core.registry.IThemeSource
 import java.io.FileOutputStream
 import java.lang.ref.WeakReference
@@ -77,6 +84,7 @@ class LspTestActivity : BaseEditorActivity() {
 
     private lateinit var rootMenu: Menu
 
+    private val ref = WeakReference(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -149,31 +157,23 @@ class LspTestActivity : BaseEditorActivity() {
             Intent(this@LspTestActivity, LspLanguageServerService::class.java)
         )
 
-        val luaServerDefinition =
-            object : CustomLanguageServerDefinition(
-                "lua",
-                ServerConnectProvider {
-                    LocalSocketStreamConnectionProvider("lua-lsp")
-                }
-            ) {
-                /* override fun getInitializationOptions(uri: URI?): Any {
-                     return InitializationOption(
-                         stdFolder = "file:/$projectPath/std/Lua53",
-                     )
-                 }*/
-
-                private val _eventListener = EventListener(this@LspTestActivity)
-
-                override val eventListener: EventHandler.EventListener
-                    get() = _eventListener
-
+        val luaServerDefinition = languageServerDefinition {
+            name("lua-lsp")
+            ext("lua")
+            connection {
+                local("lua-lsp")
             }
+            eventListener(EventListener(this@LspTestActivity.ref))
+            val expectedCapabilities = ServerCapabilities().apply {
+                documentFormattingProvider = Either.forLeft(true)
+                diagnosticProvider = DiagnosticRegistrationOptions(true, false)
+            }
+            expectedCapabilities(expectedCapabilities)
+        }
 
         lspProject = LspProject(projectPath)
 
         lspProject.addServerDefinition(luaServerDefinition)
-
-
 
         withContext(Dispatchers.Main) {
             lspEditor = lspProject.createEditor("$projectPath/sample.lua")
@@ -310,6 +310,7 @@ class LspTestActivity : BaseEditorActivity() {
     override fun onDestroy() {
         super.onDestroy()
 
+        ref.clear()
         editor.release()
         lifecycleScope.launch {
             lspEditor.dispose()
@@ -320,9 +321,8 @@ class LspTestActivity : BaseEditorActivity() {
 
 
     class EventListener(
-        activity: LspTestActivity
+        private val activityRef: WeakReference<LspTestActivity>
     ) : EventHandler.EventListener {
-        private val activityRef = WeakReference(activity)
         override fun initialize(server: LanguageServer?, result: InitializeResult) {
             activityRef.get()?.apply {
                 runOnUiThread {
@@ -332,7 +332,6 @@ class LspTestActivity : BaseEditorActivity() {
             }
         }
     }
-
 
 }
 

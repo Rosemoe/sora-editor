@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.lsp.events.completion
 
-import android.util.Log
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp.events.EventContext
@@ -34,7 +33,6 @@ import io.github.rosemoe.sora.lsp.utils.asLspPosition
 import io.github.rosemoe.sora.lsp.utils.createCompletionParams
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.util.Logger
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.future.await
 import org.eclipse.lsp4j.CompletionContext
@@ -51,7 +49,7 @@ class CompletionEvent : AsyncEventListener() {
         val editor = context.get<LspEditor>("lsp-editor")
         val position = context.getByClass<CharPosition>() ?: return
 
-        val requestManager = editor.requestManager ?: return
+        val requestManager = editor.requestManager
 
         val future = requestManager
             .completion(

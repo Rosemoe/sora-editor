@@ -34,7 +34,6 @@ import io.github.rosemoe.sora.lang.completion.CompletionItem
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher
 import io.github.rosemoe.sora.lang.completion.createCompletionItemComparator
 import io.github.rosemoe.sora.lang.completion.filterCompletionItems
-import io.github.rosemoe.sora.lang.completion.highlightMatchLabel
 import io.github.rosemoe.sora.lang.format.Formatter
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler
 import io.github.rosemoe.sora.lsp.editor.completion.CompletionItemProvider
@@ -49,10 +48,9 @@ import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.util.MyCharacter
 import io.github.rosemoe.sora.widget.SymbolPairMatch
-import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import kotlinx.coroutines.future.future
-import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
+import kotlin.math.min
 
 
 class LspLanguage(var editor: LspEditor) : Language {
@@ -153,7 +151,9 @@ class LspLanguage(var editor: LspEditor) : Language {
     }
 
     private fun computePrefix(text: ContentReference, position: CharPosition): String {
-        val triggers = editor.completionTriggers
+        val triggers = editor.completionTriggers.filterNot { trigger ->
+            trigger.length == 1 && trigger[0].isLetterOrDigit()
+        }
         if (triggers.isEmpty()) {
             return CompletionHelper.computePrefix(text, position) { key: Char ->
                 MyCharacter.isJavaIdentifierPart(key)
@@ -167,7 +167,7 @@ class LspLanguage(var editor: LspEditor) : Language {
         val s = StringBuilder()
 
         val line = text.getLine(position.line)
-        for (i in position.column - 1 downTo 0) {
+        for (i in min(line.lastIndex, position.column - 1) downTo 0) {
             val char = line[i]
             if (delimiters.contains(char.toString())) {
                 return s.reverse().toString()

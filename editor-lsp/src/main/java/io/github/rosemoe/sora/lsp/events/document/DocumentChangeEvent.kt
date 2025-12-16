@@ -34,7 +34,6 @@ import io.github.rosemoe.sora.lsp.utils.createDidChangeTextDocumentParams
 import io.github.rosemoe.sora.lsp.utils.createRange
 import io.github.rosemoe.sora.lsp.utils.createTextDocumentContentChangeEvent
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withContext
 import org.eclipse.lsp4j.DidChangeTextDocumentParams
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent
@@ -52,7 +51,7 @@ class DocumentChangeEvent : AsyncEventListener() {
 
         val params = createDidChangeTextDocumentParams(editor, event)
 
-        editor.requestManager?.let { requestManager ->
+        editor.requestManager.let { requestManager ->
             future = CompletableFuture.runAsync {
                 requestManager.didChange(
                     params
@@ -67,8 +66,8 @@ class DocumentChangeEvent : AsyncEventListener() {
     }
 
     override fun dispose() {
-        future?.cancel(true);
-        future = null;
+        future?.cancel(true)
+        future = null
     }
 
     private fun createFullTextDocumentContentChangeEvent(editor: LspEditor): List<TextDocumentContentChangeEvent> {
