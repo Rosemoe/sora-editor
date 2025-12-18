@@ -1252,11 +1252,12 @@ public class EditorRenderer {
 
             // Draw matched text background
             if (matchedPositions.size() > 0) {
+                var tr = createTextRow(row);
                 for (int i = 0; i < matchedPositions.size(); i++) {
                     var position = matchedPositions.get(i);
                     var start = IntPair.getFirst(position);
                     var end = IntPair.getSecond(position);
-                    drawRowRegionBackground(canvas, row, start, end, rowInf.startColumn,
+                    drawRowRegionBackground(canvas, row, tr, start, end, rowInf.startColumn,
                             rowInf.endColumn, editor.getColorScheme().getColor(EditorColorScheme.MATCHED_TEXT_BACKGROUND),
                             editor.getColorScheme().getColor(EditorColorScheme.MATCHED_TEXT_BORDER));
                 }
@@ -1265,10 +1266,11 @@ public class EditorRenderer {
             // Draw highlight text background
             if (highlightPositions.getSize() > 0) {
                 int finalRow = row;
+                var tr = createTextRow(row);
                 highlightPositions.forEach((position, colorPair) -> {
                     var start = IntPair.getFirst(position);
                     var end = IntPair.getSecond(position);
-                    drawRowRegionBackground(canvas, finalRow, start, end, rowInf.startColumn,
+                    drawRowRegionBackground(canvas, finalRow, tr, start, end, rowInf.startColumn,
                             rowInf.endColumn, IntPair.getFirst(colorPair), IntPair.getSecond(colorPair));
                     return null;
                 });
@@ -1293,7 +1295,7 @@ public class EditorRenderer {
                             editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND),
                             editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BORDER));
                 } else if (selectionStart < selectionEnd) {
-                    drawRowRegionBackground(canvas, row, selectionStart, selectionEnd, rowInf.startColumn, rowInf.endColumn,
+                    drawRowRegionBackground(canvas, row, null, selectionStart, selectionEnd, rowInf.startColumn, rowInf.endColumn,
                             editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND),
                             editor.getColorScheme().getColor(EditorColorScheme.SELECTED_TEXT_BORDER));
                 }
@@ -1819,7 +1821,7 @@ public class EditorRenderer {
      * @param highlightEnd   Region end
      * @param color          Color of background
      */
-    protected void drawRowRegionBackground(Canvas canvas, int row, int highlightStart, int highlightEnd, int rowStart, int rowEnd, int color, int borderColor) {
+    protected void drawRowRegionBackground(@NonNull Canvas canvas, int row, @Nullable TextRow tr, int highlightStart, int highlightEnd, int rowStart, int rowEnd, int color, int borderColor) {
         highlightStart = Math.max(highlightStart, rowStart);
         highlightEnd = Math.min(highlightEnd, rowEnd);
         if (highlightStart < highlightEnd) {
@@ -1830,7 +1832,9 @@ public class EditorRenderer {
                 offset += getMiniGraphWidth();
             }
             float finalOffset = offset;
-            var tr = createTextRow(row);
+            if (tr == null) {
+                tr = createTextRow(row);
+            }
             var width = editor.getWidth();
             tr.iterateBackgroundRegions(highlightStart, highlightEnd, false, false, (left, right) -> {
                 tmpRect.left = finalOffset + left;
