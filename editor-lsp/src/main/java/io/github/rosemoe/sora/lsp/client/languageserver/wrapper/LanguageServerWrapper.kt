@@ -94,7 +94,7 @@ class LanguageServerWrapper(
     private val TAG = "LanguageServerWrapper"
     val serverName = serverDefinition.name
 
-    private val connectedEditors = Collections.newSetFromMap(WeakHashMap<LspEditor, Boolean>());
+    private val connectedEditors = Collections.newSetFromMap(WeakHashMap<LspEditor, Boolean>())
 
     private var languageServer: LanguageServer? = null
 
@@ -118,9 +118,13 @@ class LanguageServerWrapper(
 
     @Volatile
     var status = ServerStatus.STOPPED
-        private set
+        private set(value) {
+            if (field == value) return
+            serverDefinition.eventListener.onStatusChange(value, field)
+            field = value
+        }
 
-    private val readyToConnect = Collections.newSetFromMap(WeakHashMap<LspEditor, Boolean>());
+    private val readyToConnect = Collections.newSetFromMap(WeakHashMap<LspEditor, Boolean>())
 
     private val commonCoroutineScope = project.coroutineScope
 
@@ -142,7 +146,7 @@ class LanguageServerWrapper(
         }
 
         try {
-            start(true);
+            start(true)
 
             initializeFuture?.get(
                 if (capabilitiesAlreadyRequested) 0L else Timeout[Timeouts.INIT].toLong(),
@@ -163,11 +167,11 @@ class LanguageServerWrapper(
             stop(false)
             return null
         } catch (e: Exception) {
-            Log.w(TAG, "Error while waiting for initialization", e);
+            Log.w(TAG, "Error while waiting for initialization", e)
             serverDefinition.eventListener
-                .onHandlerException(LSPException("Error while waiting for initialization", e));
-            stop(false);
-            return null;
+                .onHandlerException(LSPException("Error while waiting for initialization", e))
+            stop(false)
+            return null
         }
 
         if (initializeResult != null) {
@@ -365,7 +369,7 @@ class LanguageServerWrapper(
             name = File(URI.create(uri)).name
         }
         // Maybe the user should be allowed to customize the WorkspaceFolder?
-        // workspaceFolder.setName("");
+        // workspaceFolder.setName("")
         initParams.workspaceFolders = listOf(workspaceFolder)
 
         val markupKinds = listOf("markdown", "plaintext")
