@@ -24,10 +24,12 @@
 package io.github.rosemoe.sora.lang;
 
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.annotation.WorkerThread;
+
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.completion.CompletionCancelledException;
 import io.github.rosemoe.sora.lang.completion.CompletionHelper;
@@ -141,11 +143,11 @@ public interface Language {
      */
     @UiThread
     default int getIndentAdvance(
-      @NonNull ContentReference content,
-      int line,
-      int column,
-      int spaceCountOnLine,
-      int tabCountOnLine
+            @NonNull ContentReference content,
+            int line,
+            int column,
+            int spaceCountOnLine,
+            int tabCountOnLine
     ) {
         return getIndentAdvance(content, line, column);
     }

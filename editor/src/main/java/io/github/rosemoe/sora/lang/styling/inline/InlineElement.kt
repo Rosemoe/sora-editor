@@ -22,22 +22,31 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lang.styling.inlayHint
+package io.github.rosemoe.sora.lang.styling.inline
 
-import io.github.rosemoe.sora.lang.styling.inline.InlineElement
+import io.github.rosemoe.sora.graphics.InlineElementRenderer
+import io.github.rosemoe.sora.lang.styling.util.PointAnchoredObject
 
-open class InlayHint(
-    override var line: Int,
-    override var column: Int,
-    val type: String,
-) : InlineElement {
+/**
+ * Choose which side of character to display the inlay hint.
+ *
+ * No effect if the given character position is at line end.
+ */
+enum class CharacterSide {
+    Left,
+    Right
+}
 
-    override val name: String = type
+interface InlineElement : PointAnchoredObject {
+    /**
+     * The name of this inline element.
+     *
+     * It must match the name provided in [InlineElementRenderer.name]
+     * otherwise you will see unexpected behavior.
+     *
+     * @return the name of this inline element
+     */
+    val name: String
 
-    init {
-        if (line < 0 || column < 0) {
-            throw IllegalArgumentException("negative number")
-        }
-    }
-
+    val displaySide: CharacterSide get() = CharacterSide.Left
 }

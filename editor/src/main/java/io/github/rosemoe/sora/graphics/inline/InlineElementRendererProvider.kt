@@ -22,22 +22,12 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lang.styling.inlayHint
+package io.github.rosemoe.sora.graphics.inline
 
+import io.github.rosemoe.sora.graphics.InlineElementRenderer
 import io.github.rosemoe.sora.lang.styling.inline.InlineElement
 
-open class InlayHint(
-    override var line: Int,
-    override var column: Int,
-    val type: String,
-) : InlineElement {
+fun interface InlineElementRendererProvider {
 
-    override val name: String = type
-
-    init {
-        if (line < 0 || column < 0) {
-            throw IllegalArgumentException("negative number")
-        }
-    }
-
+    fun getInlineElementRendererForName(name: String): InlineElementRenderer<out InlineElement>?
 }
