@@ -29,6 +29,8 @@ import android.view.ContextMenu
 import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
 import io.github.rosemoe.sora.lang.Language
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.styling.Span
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.TextRange
@@ -160,3 +162,12 @@ class PublishSearchResultEvent(editor: CodeEditor) : Event(editor) {
  * Triggered when the initial layout async task starts/stops
  */
 class LayoutStateChangeEvent(editor: CodeEditor, val isLayoutBusy: Boolean) : Event(editor)
+
+/**
+ * Trigger when the editor diagnostics changed
+ */
+class PublishDiagnosticsEvent(
+    editor: CodeEditor,
+    val oldDiagnostics: List<DiagnosticRegion>,
+    val newDiagnosticsEvent: List<DiagnosticRegion>
+): Event(editor)
