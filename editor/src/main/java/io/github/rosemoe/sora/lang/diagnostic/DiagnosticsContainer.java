@@ -23,9 +23,16 @@
  */
 package io.github.rosemoe.sora.lang.diagnostic;
 
+import androidx.annotation.NonNull;
+
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
+import io.github.rosemoe.sora.event.PublishDiagnosticsEvent;
+import io.github.rosemoe.sora.widget.CodeEditor;
 
 /**
  * A thread-safe class for containing diagnostics
@@ -36,6 +43,7 @@ public class DiagnosticsContainer {
 
     private final List<DiagnosticRegion> regions = new ArrayList<>();
     private final boolean shiftEnabled;
+    private WeakReference<CodeEditor> editorRef = new WeakReference<>(null);
 
     /**
      * Create a new DiagnosticsContainer, with auto-shifting enabled
@@ -53,18 +61,29 @@ public class DiagnosticsContainer {
         this.shiftEnabled = shiftEnabled;
     }
 
+
+    private synchronized void modifyAndDispatch(Runnable modification) {
+        var editor = editorRef.get();
+        var oldRegions = new ArrayList<>(this.regions);
+        modification.run();
+        var newRegions = new ArrayList<>(this.regions);
+        if (editor != null) {
+            editor.dispatchEvent(new PublishDiagnosticsEvent(editor, oldRegions, newRegions));
+        }
+    }
+
     /**
      * Add multiple diagnostics
      */
-    public synchronized void addDiagnostics(Collection<DiagnosticRegion> regions) {
-        this.regions.addAll(regions);
+    public void addDiagnostics(Collection<DiagnosticRegion> regions) {
+        modifyAndDispatch(() -> this.regions.addAll(regions));
     }
 
     /**
      * Add single diagnostic item
      */
-    public synchronized void addDiagnostic(DiagnosticRegion diagnostic) {
-        regions.add(diagnostic);
+    public void addDiagnostic(DiagnosticRegion diagnostic) {
+        modifyAndDispatch(() -> this.regions.add(diagnostic));
     }
 
     /**
@@ -137,11 +156,21 @@ public class DiagnosticsContainer {
         regions.removeAll(garbage);
     }
 
+    @UnsupportedUserUsage
+    public void attachEditor(@NonNull CodeEditor editor) {
+        this.editorRef = new WeakReference<>(editor);
+    }
+
+    @UnsupportedUserUsage
+    public void detachEditor() {
+        this.editorRef.clear();
+    }
+
     /**
      * Remove all items
      */
-    public synchronized void reset() {
-        regions.clear();
+    public void reset() {
+        modifyAndDispatch(regions::clear);
     }
 
 }
