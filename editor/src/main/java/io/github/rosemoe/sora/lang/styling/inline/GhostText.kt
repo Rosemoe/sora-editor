@@ -22,22 +22,16 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lang.styling.inlayHint
+package io.github.rosemoe.sora.lang.styling.inline
 
-import io.github.rosemoe.sora.lang.styling.inline.InlineElement
-
-open class InlayHint(
+data class GhostText(
     override var line: Int,
     override var column: Int,
-    val type: String,
+    val text: String
 ) : InlineElement {
+    override val name: String = NAME
 
-    override val name: String = type
-
-    init {
-        if (line < 0 || column < 0) {
-            throw IllegalArgumentException("negative number")
-        }
+    companion object {
+        const val NAME = "ghost"
     }
-
 }

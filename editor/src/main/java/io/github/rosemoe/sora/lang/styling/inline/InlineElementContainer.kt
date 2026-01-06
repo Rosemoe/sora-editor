@@ -22,11 +22,11 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.graphics.inlayHint
+package io.github.rosemoe.sora.lang.styling.inline
 
+import io.github.rosemoe.sora.lang.styling.util.PointAnchoredContainer
 
-fun interface InlayHintRendererProvider {
-
-    fun getInlayHintRendererForType(type: String): InlayHintRenderer?
-
-}
+/**
+ * Container for inline elements
+ */
+open class InlineElementContainer : PointAnchoredContainer<InlineElement>()

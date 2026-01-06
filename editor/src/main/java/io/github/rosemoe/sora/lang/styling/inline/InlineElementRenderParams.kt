@@ -22,22 +22,34 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lang.styling.inlayHint
+package io.github.rosemoe.sora.lang.styling.inline
 
-import io.github.rosemoe.sora.lang.styling.inline.InlineElement
+import android.graphics.Paint
+import io.github.rosemoe.sora.graphics.TextRowParams
 
-open class InlayHint(
-    override var line: Int,
-    override var column: Int,
-    val type: String,
-) : InlineElement {
+data class InlineElementRenderParams(
+    val tabWidth: Int,
+    val textMetrics: Paint.FontMetricsInt,
+    val textTop: Int,
+    val textBottom: Int,
+    val textHeight: Int,
+    val textBaseline: Int,
+    val rowTop: Int,
+    val rowBottom: Int,
+    val rowHeight: Int,
+    val roundTextBackgroundFactor: Float,
+)
 
-    override val name: String = type
-
-    init {
-        if (line < 0 || column < 0) {
-            throw IllegalArgumentException("negative number")
-        }
-    }
-
-}
+@JvmName("createInlineElementParamsFromTextRowParams")
+fun TextRowParams.toInlineElementParams() = InlineElementRenderParams(
+    tabWidth = tabWidth,
+    textMetrics = textMetrics,
+    textTop = textTop,
+    textBottom = textBottom,
+    textHeight = textHeight,
+    textBaseline = textBaseline,
+    rowTop = rowTop,
+    rowBottom = rowBottom,
+    rowHeight = rowHeight,
+    roundTextBackgroundFactor = roundTextBackgroundFactor
+)

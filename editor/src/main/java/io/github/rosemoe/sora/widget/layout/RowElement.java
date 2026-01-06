@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.widget.layout;
 
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
+import io.github.rosemoe.sora.lang.styling.inline.InlineElement;
 
 /**
  * Element on a row
@@ -54,12 +55,12 @@ public class RowElement {
      */
     public boolean isRtlText;
 
-    /* Fields for type INLAY_HINT */
+    /* Fields for type INLINE_ELEMENT */
 
     /**
-     * The inlay hint
+     * The inline element to display
      */
-    public InlayHint inlayHint;
+    public InlineElement inlineElement;
 
     /**
      * The expected column position to display after
