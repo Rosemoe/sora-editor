@@ -1846,6 +1846,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     protected void commitTab() {
         if (inputConnection != null && isEditable()) {
+            if (inputConnection.composingText.isComposing()) {
+                // This external change will damage the composing text (#784)
+                restartInput();
+            }
             inputConnection.commitTextInternal(createTabString(), true);
         }
     }
