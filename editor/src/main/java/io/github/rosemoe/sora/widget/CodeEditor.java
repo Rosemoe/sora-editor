@@ -1913,6 +1913,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             matrix.postTranslate(b[0], b[1]);
             builder.setMatrix(matrix);
             builder.setSelectionRange(cursor.getLeft(), cursor.getRight());
+
+            var composingText = inputConnection.composingText;
+            if (composingText.isComposing()) {
+                builder.setComposingText(composingText.startIndex, text.substring(composingText.startIndex, composingText.endIndex));
+            }
             builder.setInsertionMarkerLocation(x, getRowTop(l) - getOffsetY(), getRowBaseline(l) - getOffsetY(), getRowBottom(l) - getOffsetY(), visible ? CursorAnchorInfo.FLAG_HAS_VISIBLE_REGION : CursorAnchorInfo.FLAG_HAS_INVISIBLE_REGION);
             inputMethodManager.updateCursorAnchorInfo(this, builder.build());
         }
