@@ -1769,14 +1769,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             final var requiredSpaces = tabWidth - (spaces % tabWidth);
             if (spaceCount > 0 && tabCount > 0) {
                 // indentation contains spaces as well as tabs
-                // replace the leading indentation with appropriate indendation (according to language.useTabs())
+                // replace the leading indentation with appropriate indentation (according to language.useTabs())
                 // this should be done while incrementing the indentation
                 final var finalSpaceCount = ((requiredSpaces == 0 ? tabWidth : requiredSpaces) + spaces) / tabWidth;
                 text.replace(i, 0, i, endColumn, StringsKt.repeat(tabString, finalSpaceCount));
                 continue;
             }
 
-            if (requiredSpaces == 0) {
+            if (requiredSpaces == tabWidth) {
                 // line is evenly indented
                 // increase the indentation by \t or tabWidthSpaces
                 text.insert(i, endColumn, tabString);
@@ -1818,7 +1818,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             final var extraSpaces = spaces % tabWidth;
             if (spaceCount > 0 && tabCount > 0) {
                 // indentation contains spaces as well as tabs
-                // replace the leading indentation with appropriate indendation (according to language.useTabs())
+                // replace the leading indentation with appropriate indentation (according to language.useTabs())
                 // this should be done while decrementing the indentation
                 final var finalSpaceCount = Math.abs(spaces - (extraSpaces == 0 ? tabWidth : extraSpaces)) / tabWidth;
                 text.replace(i, 0, i, endColumn, StringsKt.repeat(tabString, finalSpaceCount));
