@@ -978,6 +978,17 @@ public class TextRow {
                         }
                         ctx.maxOffset = 0f;
                     }
+                    if (ctx.targetHorizontalOffset != -1f) {
+                        float runOffset = ctx.targetHorizontalOffset - offset - localOffset;
+                        if (isRtl) {
+                            runOffset = tabWidth - runOffset;
+                        }
+                        if (runOffset > tabWidth / 2f) {
+                            ctx.resultCharOffset = index + 1;
+                        } else {
+                            ctx.resultCharOffset = index;
+                        }
+                    }
                     if (ctx.regionBuffer != null && index >= ctx.startCharOffset && index < ctx.endCharOffset) {
                         ctx.regionBuffer.commitRegion(offset + localOffset, offset + localOffset + tabWidth);
                     }
