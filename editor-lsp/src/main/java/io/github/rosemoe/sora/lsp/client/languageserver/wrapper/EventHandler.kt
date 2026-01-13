@@ -25,6 +25,7 @@
 package io.github.rosemoe.sora.lsp.client.languageserver.wrapper
 
 import io.github.rosemoe.sora.lsp.client.languageserver.ServerInitializeListener
+import io.github.rosemoe.sora.lsp.client.languageserver.ServerStatus
 import org.eclipse.lsp4j.InitializeResult
 import org.eclipse.lsp4j.MessageParams
 import org.eclipse.lsp4j.jsonrpc.MessageConsumer
@@ -62,6 +63,7 @@ class EventHandler internal constructor(
            // do nothing
         }
 
+        fun onStatusChange(newStatus: ServerStatus, oldStatus: ServerStatus) {}
         fun onHandlerException(exception: Exception) {}
         fun onShowMessage(messageParams: MessageParams?) {}
         fun onLogMessage(messageParams: MessageParams?) {}
