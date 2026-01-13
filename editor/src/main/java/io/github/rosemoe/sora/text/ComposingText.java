@@ -42,12 +42,11 @@ public class ComposingText {
 
     public void reset() {
         this.startIndex = this.endIndex = -1;
+        preSetComposing = false;
     }
 
     public boolean isComposing() {
-        var r = preSetComposing || startIndex >= 0 && endIndex >= 0;
-        preSetComposing = false;
-        return r;
+        return preSetComposing || startIndex >= 0 && endIndex >= 0;
     }
 
     public void shiftOnInsert(int insertStart, int insertEnd) {

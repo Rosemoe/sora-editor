@@ -1908,6 +1908,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             visible = false;
             x = 0;
         }
+        var composingText = inputConnection.composingText;
+        if (composingText.preSetComposing) {
+            return x;
+        }
         if (props.reportCursorAnchor) {
             CursorAnchorInfo.Builder builder = anchorInfoBuilder;
             builder.reset();
@@ -1918,7 +1922,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             builder.setMatrix(matrix);
             builder.setSelectionRange(cursor.getLeft(), cursor.getRight());
 
-            var composingText = inputConnection.composingText;
             if (composingText.isComposing()) {
                 builder.setComposingText(composingText.startIndex, text.substring(composingText.startIndex, composingText.endIndex));
             }
@@ -4439,6 +4442,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             inputMethodManager.updateSelection(this, index, index, -1, -1);
             return;
         }
+        if (inputConnection.composingText.preSetComposing) {
+            return;
+        }
         int candidatesStart = -1, candidatesEnd = -1;
         if (inputConnection.composingText.isComposing()) {
             try {
@@ -5234,13 +5240,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         renderer.buildMeasureCacheForLines(startLine, endLine);
         checkForRelayout();
 
-        // Notify input method
-        updateCursor();
-        waitForNextChange = false;
-
-        updateCursorAnchor();
-        ensureSelectionVisible();
-
         editorLanguage.getAnalyzeManager().insert(start, end, insertedContent);
         touchHandler.hideInsertHandle();
         if (editable && !cursor.isSelected() && !inputConnection.composingText.isComposing() && acceptsComposingText()) {
@@ -5251,6 +5250,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_INSERT, start, end, insertedContent, text.isUndoManagerWorking()));
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
         lastInsertion = new TextRange(start.fromThis(), end.fromThis());
+        waitForNextChange = false;
+        ensureSelectionVisible();
+
+        // Notify input method
+        updateCursor();
     }
 
     @Override
@@ -5286,8 +5290,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         renderer.buildMeasureCacheForLines(startLine, startLine + 1);
         checkForRelayout();
 
-        updateCursor();
-
         if (!waitForNextChange) {
             updateCursorAnchor();
             ensureSelectionVisible();
@@ -5301,6 +5303,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         selectionAnchor = lastAnchorIsSelLeft ? cursor.left() : cursor.right();
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_DELETE, start, end, deletedContent, text.isUndoManagerWorking()));
         onSelectionChanged(SelectionChangeEvent.CAUSE_TEXT_MODIFICATION);
+
+        updateCursor();
     }
 
     @Override

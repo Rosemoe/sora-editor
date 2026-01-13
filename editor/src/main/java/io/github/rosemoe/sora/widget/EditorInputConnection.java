@@ -434,11 +434,13 @@ class EditorInputConnection extends BaseInputConnection {
         }
         if (!composingText.isComposing()) {
             // Create composing info
+            composingText.preSetComposing = true;
             deleteSelected();
             beginBatchEdit();
-            composingText.preSetComposing = true;
             editor.commitText(text);
+            composingText.preSetComposing = false;
             composingText.set(getCursor().getLeft() - text.length(), getCursor().getLeft());
+            editor.updateCursor();
         } else {
             // Already have composing text
             if (composingText.isComposing()) {
