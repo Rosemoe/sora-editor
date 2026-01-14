@@ -1509,7 +1509,7 @@ public class EditorRenderer {
                     tr.iterateBackgroundRegions(paintStart, paintEnd, false, false, (left, right) -> {
                         tmpRect.left = finalOffset + left;
                         tmpRect.right = finalOffset + right;
-                        if (tmpRect.left > 0f)
+                        if (tmpRect.right > 0f && tmpRect.left < editor.getWidth())
                             drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.UNDERLINE), tmpRect);
                         return tmpRect.right < editor.getWidth();
                     });
