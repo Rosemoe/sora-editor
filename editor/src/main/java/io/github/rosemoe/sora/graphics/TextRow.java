@@ -966,6 +966,9 @@ public class TextRow {
                 int regionStart = isRtl ? index + 1 : lastEnd;
                 int regionEnd = isRtl ? lastEnd : index;
                 localOffset += handleMultiStyledText(regionStart, regionEnd, isRtl, pointers, canvas, offset + localOffset, ctx);
+                if (offset + localOffset > ctx.maxOffset) {
+                    break;
+                }
                 if (index != terminalIndex) {
                     // tab consumed here
                     // [index, index+1)
