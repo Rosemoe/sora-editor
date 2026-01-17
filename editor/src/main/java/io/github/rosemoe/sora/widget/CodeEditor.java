@@ -968,6 +968,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         styleDelegate.reset();
         this.editorLanguage = lang;
         this.textStyles = null;
+
+        if (this.diagnostics != null) {
+            this.diagnostics.detachEditor();
+        }
+
         this.diagnostics = null;
 
         // Setup new one
@@ -4255,7 +4260,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     @UiThread
     public void setDiagnostics(@Nullable DiagnosticsContainer diagnostics) {
+        if (this.diagnostics != null) {
+            this.diagnostics.detachEditor();
+        }
+
         this.diagnostics = diagnostics;
+
+        if (this.diagnostics != null) {
+            this.diagnostics.attachEditor(this);
+        }
         invalidate();
     }
 
