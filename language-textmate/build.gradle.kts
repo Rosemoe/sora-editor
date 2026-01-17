@@ -25,7 +25,6 @@
 plugins {
     id("com.android.library")
     id("com.vanniktech.maven.publish.base")
-    kotlin("android")
 }
 
 android {
