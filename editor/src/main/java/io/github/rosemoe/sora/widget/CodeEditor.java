@@ -2387,6 +2387,23 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return getPointPosition(x + getOffsetX(), y + getOffsetY());
     }
 
+    public Layout.VisualLocation getPointVisualPosition(float xOffset, float yOffset) {
+        return layout.getVisualPositionForLayoutOffset(xOffset - measureTextRegionOffset(), yOffset);
+    }
+
+    public Layout.VisualLocation getPointVisualPositionOnScreen(float x, float y) {
+        y = Math.max(0, y);
+        var stuckLines = renderer.lastStuckLines;
+        if (stuckLines != null) {
+            // position Y maybe negative
+            var index = (int) Math.max(0, (y / getRowHeight()));
+            if (y < stuckLines.size() * getRowHeight() && index < stuckLines.size()) {
+                return getPointVisualPosition(x, layout.getCharLayoutOffset(stuckLines.get(index).startLine, 0)[0] - getRowHeight() / 2f);
+            }
+        }
+        return getPointVisualPosition(x + getOffsetX(), y + getOffsetY());
+    }
+
     /**
      * Get max scroll y
      *

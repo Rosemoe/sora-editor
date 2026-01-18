@@ -32,6 +32,7 @@ import androidx.annotation.Size;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentListener;
+import io.github.rosemoe.sora.util.IntPair;
 
 /**
  * Layout is a manager class for editor to display text
@@ -107,12 +108,18 @@ public interface Layout extends ContentListener {
     /**
      * Get character line and column for offsets in layout
      *
-     * @param xOffset Horizontal offset on layout
-     * @param yOffset Vertical offset on layout
+     * @param offsetX Horizontal offset on layout
+     * @param offsetY Vertical offset on layout
      * @return Packed IntPair, first is line and second is column
      * @see io.github.rosemoe.sora.util.IntPair
      */
-    long getCharPositionForLayoutOffset(float xOffset, float yOffset);
+    default long getCharPositionForLayoutOffset(float offsetX, float offsetY) {
+        var pos = getVisualPositionForLayoutOffset(offsetX, offsetY);
+        return IntPair.pack(pos.line, pos.column);
+    }
+
+    @NonNull
+    VisualLocation getVisualPositionForLayoutOffset(float offsetX, float offsetY);
 
     /**
      * Get layout offset of a position in text
@@ -166,5 +173,24 @@ public interface Layout extends ContentListener {
      * Notify the layout that the given lines have external changes and their layout should be re-calculated.
      */
     void invalidateLines(StyleUpdateRange range);
+
+    class VisualLocation {
+
+        public final int line;
+
+        public final int column;
+
+        @Nullable
+        public final RowElement element;
+
+        public boolean isInElementBounds;
+
+        public VisualLocation(int line, int column, @Nullable RowElement element, boolean isInElementBounds) {
+            this.line = line;
+            this.column = column;
+            this.element = element;
+            this.isInElementBounds = isInElementBounds;
+        }
+    }
 
 }

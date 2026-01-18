@@ -89,6 +89,7 @@
     <string name="hide_soft_kbd_if_hard_kbd_available">物理键盘连接时隐藏软键盘</string>
     <string name="deleting_log_success">日志已删除。</string>
     <string name="tip_side_icon">点击了侧边按钮</string>
+    <string name="tip_inlay_hint">点击了嵌入提示</string>
     <string name="dialog_lsp_entry_title">选择LSP活动</string>
     <string name="dialog_lsp_entry_msg">是否要打开以Kotlin编写的LSP界面？</string>
     <string name="choice_yes">是</string>

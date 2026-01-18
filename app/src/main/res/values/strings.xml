@@ -89,6 +89,7 @@
     <string name="hide_soft_kbd_if_hard_kbd_available">Hide soft kbd if hard kbd available</string>
     <string name="deleting_log_success">Log removed.</string>
     <string name="tip_side_icon">Side icon clicked.</string>
+    <string name="tip_inlay_hint">Inlay hint clicked.</string>
     <string name="dialog_lsp_entry_title">Select LSP Activity</string>
     <string name="dialog_lsp_entry_msg">Do you want to open LspActivity written in Kotlin?</string>
     <string name="choice_yes">Yes</string>

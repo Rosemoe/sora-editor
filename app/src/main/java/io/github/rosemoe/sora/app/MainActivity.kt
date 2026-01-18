@@ -52,6 +52,7 @@ import io.github.rosemoe.sora.app.lsp.LspTestJavaActivity
 import io.github.rosemoe.sora.app.tests.TestActivity
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EditorKeyEvent
+import io.github.rosemoe.sora.event.InlayHintClickEvent
 import io.github.rosemoe.sora.event.KeyBindingEvent
 import io.github.rosemoe.sora.event.PublishSearchResultEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
@@ -239,6 +240,9 @@ class MainActivity : AppCompatActivity() {
             }
             subscribeAlways<SideIconClickEvent> {
                 toast(R.string.tip_side_icon)
+            }
+            subscribeAlways<InlayHintClickEvent> {
+                toast(R.string.tip_inlay_hint)
             }
             subscribeAlways<TextSizeChangeEvent> { event ->
                 Log.d(

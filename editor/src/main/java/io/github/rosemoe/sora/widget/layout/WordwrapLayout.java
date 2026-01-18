@@ -396,25 +396,26 @@ public class WordwrapLayout extends AbstractLayout {
         }
     }
 
+    @NonNull
     @Override
-    public long getCharPositionForLayoutOffset(float xOffset, float yOffset) {
+    public VisualLocation getVisualPositionForLayoutOffset(float offsetX, float offsetY) {
         if (rowTable.isEmpty()) {
             int lineCount = text.getLineCount();
-            int line = Math.min(lineCount - 1, Math.max((int) (yOffset / editor.getRowHeight()), 0));
+            int line = Math.min(lineCount - 1, Math.max((int) (offsetY / editor.getRowHeight()), 0));
             var tr = editor.getRenderer().createTextRow(line);
-            int res = tr.getIndexForCursorOffset(xOffset);
-            return IntPair.pack(line, res);
+            var pos = tr.getElementPositionForCursorOffset(offsetX);
+            return new VisualLocation(line, pos.textOffset, pos.element, pos.isInElementBounds);
         }
-        int row = (int) (yOffset / editor.getRowHeight());
+        int row = (int) (offsetY / editor.getRowHeight());
         row = Math.max(0, Math.min(row, rowTable.size() - 1));
         RowRegion region = rowTable.get(row);
         if (region.startColumn != 0) {
-            xOffset -= miniGraphWidth;
+            offsetX -= miniGraphWidth;
         }
-        xOffset -= region.getRenderTranslateX(width);
+        offsetX -= region.getRenderTranslateX(width);
         var tr = editor.getRenderer().createTextRow(row);
-        int column = tr.getIndexForCursorOffset(xOffset);
-        return IntPair.pack(region.line, column);
+        var pos = tr.getElementPositionForCursorOffset(offsetX);
+        return new VisualLocation(region.line, pos.textOffset, pos.element, pos.isInElementBounds);
     }
 
     @NonNull

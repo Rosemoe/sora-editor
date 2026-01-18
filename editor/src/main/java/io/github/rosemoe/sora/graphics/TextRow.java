@@ -504,6 +504,8 @@ public class TextRow {
         /* for horizontal char offset seeking */
         public float targetHorizontalOffset = -1f;
         public int resultCharOffset = -1;
+        public RowElement resultElement;
+        public boolean isInElementBounds = false;
         /* for background region iterating / text patching */
         public int startCharOffset;
         public int endCharOffset;
@@ -1053,11 +1055,18 @@ public class TextRow {
         var visualElements = isRtl ? new ReversedListView<>(e) : e;
         float localOffset = 0f;
         for (var element : visualElements) {
+            float offsetAdvance = 0f;
             if (element.type == RowElementTypes.TEXT) {
-                localOffset += handleSingleTextElement(element, pointers, canvas, offset + localOffset, ctx);
+                offsetAdvance = handleSingleTextElement(element, pointers, canvas, offset + localOffset, ctx);
             } else if (element.type == RowElementTypes.INLAY_HINT) {
-                localOffset += handleSingleInlineElement(element, canvas, offset + localOffset, ctx);
+                offsetAdvance = handleSingleInlineElement(element, canvas, offset + localOffset, ctx);
             }
+            if (ctx.targetHorizontalOffset != -1) {
+                ctx.resultElement = element;
+                float leftOffset = offset + localOffset;
+                ctx.isInElementBounds = leftOffset <= ctx.targetHorizontalOffset && ctx.targetHorizontalOffset <= leftOffset + offsetAdvance;
+            }
+            localOffset += offsetAdvance;
             if (offset + localOffset > ctx.maxOffset) {
                 break;
             }
@@ -1120,14 +1129,16 @@ public class TextRow {
     }
 
     /**
-     * Get text index from the given cursor horizontal offset
+     * Get text index and element (inline elements considered) from the given cursor horizontal offset
      */
-    public int getIndexForCursorOffset(float offset) {
+    @NonNull
+    public ElementPosition getElementPositionForCursorOffset(float offset) {
         var ctx = new IteratingContext();
         ctx.targetHorizontalOffset = offset;
         ctx.maxOffset = offset;
         iterateRuns(new MaxOffsetIterationConsumer(ctx), true);
-        return ctx.resultCharOffset == -1 ? textStart : ctx.resultCharOffset;
+        var charOffset = ctx.resultCharOffset == -1 ? textStart : ctx.resultCharOffset;
+        return new ElementPosition(ctx.resultElement, ctx.isInElementBounds, charOffset);
     }
 
     /**
@@ -1396,6 +1407,34 @@ public class TextRow {
          */
         void drawText(Canvas canvas, char[] text, int index, int count, int contextIndex, int contextCount, boolean isRtl,
                       float horizontalOffset, float width, TextRowParams params, Span span);
+
+    }
+
+    public static class ElementPosition {
+
+        /**
+         * The row element where the horizontal offset is in
+         */
+        @Nullable
+        public RowElement element;
+
+        /**
+         * Whether the requested offset is in the horizontal bounds of the element.
+         * <p>
+         * Meaningless if element is null.
+         */
+        public boolean isInElementBounds;
+
+        /**
+         * Text offset in line text
+         */
+        public int textOffset;
+
+        public ElementPosition(@Nullable RowElement element, boolean isInElementBounds, int textOffset) {
+            this.element = element;
+            this.isInElementBounds = isInElementBounds;
+            this.textOffset = textOffset;
+        }
 
     }
 }

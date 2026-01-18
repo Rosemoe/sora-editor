@@ -45,6 +45,7 @@ import io.github.rosemoe.sora.event.DoubleClickEvent;
 import io.github.rosemoe.sora.event.DragSelectStopEvent;
 import io.github.rosemoe.sora.event.EditorMotionEvent;
 import io.github.rosemoe.sora.event.HandleStateChangeEvent;
+import io.github.rosemoe.sora.event.InlayHintClickEvent;
 import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.LongPressEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
@@ -59,6 +60,7 @@ import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.Numbers;
 import io.github.rosemoe.sora.widget.component.Magnifier;
+import io.github.rosemoe.sora.widget.layout.RowElementTypes;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 import kotlin.jvm.functions.Function5;
 import kotlin.jvm.functions.Function7;
@@ -845,9 +847,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         var resolved = RegionResolverKt.resolveTouchRegion(editor, e);
         var region = IntPair.getFirst(resolved);
         var regionBound = IntPair.getSecond(resolved);
-        long res = editor.getPointPositionOnScreen(e.getX(), e.getY());
-        int line = IntPair.getFirst(res);
-        int column = IntPair.getSecond(res);
+        var visualPosition = editor.getPointVisualPositionOnScreen(e.getX(), e.getY());
+        int line = visualPosition.line;
+        int column = visualPosition.column;
         editor.performClick();
         if (region == RegionResolverKt.REGION_SIDE_ICON) {
             int row = (int) (e.getY() + editor.getOffsetX()) / editor.getRowHeight();
@@ -863,6 +865,12 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             }
         }
         var position = editor.getText().getIndexer().getCharPosition(line, column);
+        if (visualPosition.element != null && visualPosition.element.type == RowElementTypes.INLAY_HINT
+                && visualPosition.element.inlayHint != null && visualPosition.isInElementBounds) {
+            if ((editor.dispatchEvent(new InlayHintClickEvent(editor, visualPosition.element.inlayHint, position)) & InterceptTarget.TARGET_EDITOR) != 0) {
+                return true;
+            }
+        }
         if ((dispatchEditorMotionEvent(ClickEvent::new, position, e, region, regionBound) & InterceptTarget.TARGET_EDITOR) != 0) {
             return true;
         }

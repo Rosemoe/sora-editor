@@ -255,13 +255,14 @@ public class LineBreakLayout extends AbstractLayout {
         return text.getLineCount() * editor.getRowHeight();
     }
 
+    @NonNull
     @Override
-    public long getCharPositionForLayoutOffset(float xOffset, float yOffset) {
+    public VisualLocation getVisualPositionForLayoutOffset(float offsetX, float offsetY) {
         int lineCount = text.getLineCount();
-        int line = Math.min(lineCount - 1, Math.max((int) (yOffset / editor.getRowHeight()), 0));
+        int line = Math.min(lineCount - 1, Math.max((int) (offsetY / editor.getRowHeight()), 0));
         var tr = editor.getRenderer().createTextRow(line);
-        int res = tr.getIndexForCursorOffset(xOffset);
-        return IntPair.pack(line, res);
+        var pos = tr.getElementPositionForCursorOffset(offsetX);
+        return new VisualLocation(line, pos.textOffset, pos.element, pos.isInElementBounds);
     }
 
     @NonNull
