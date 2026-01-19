@@ -92,6 +92,7 @@ import io.github.rosemoe.sora.utils.codePointStringAt
 import io.github.rosemoe.sora.utils.escapeCodePointIfNecessary
 import io.github.rosemoe.sora.utils.toast
 import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.EditorSearcher
 import io.github.rosemoe.sora.widget.EditorSearcher.SearchOptions
 import io.github.rosemoe.sora.widget.SelectionMovement
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
@@ -260,6 +261,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+            searcher.replaceOptions = EditorSearcher.ReplaceOptions(true)
             // Handle span interactions
             EditorSpanInteractionHandler(this)
             getComponent<EditorAutoCompletion>()
@@ -289,6 +291,7 @@ class MainActivity : AppCompatActivity() {
         updateBtnState()
 
         switchThemeIfRequired(this, binding.editor)
+        computeSearchOptions()
     }
 
     /**
