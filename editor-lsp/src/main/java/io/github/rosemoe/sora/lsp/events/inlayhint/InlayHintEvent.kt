@@ -142,11 +142,15 @@ class InlayHintEvent : AsyncEventListener() {
                 }
 
                 if (inlayHints == null || inlayHints.isEmpty()) {
-                    editor.showInlayHints(null)
+                    withContext(Dispatchers.Main) {
+                        editor.showInlayHints(null)
+                    }
                     return@withContext
                 }
 
-                editor.showInlayHints(inlayHints)
+                withContext(Dispatchers.Main) {
+                    editor.showInlayHints(inlayHints)
+                }
             } catch (exception: Exception) {
                 // throw?
                 exception.printStackTrace()
