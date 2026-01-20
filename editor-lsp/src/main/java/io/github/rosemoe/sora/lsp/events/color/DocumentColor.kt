@@ -118,11 +118,15 @@ class DocumentColorEvent : AsyncEventListener() {
                 }
 
                 if (documentColors == null || documentColors.isEmpty()) {
-                    editor.showDocumentColors(null)
+                    withContext(Dispatchers.Main) {
+                        editor.showDocumentColors(null)
+                    }
                     return@withContext
                 }
 
-                editor.showDocumentColors(documentColors)
+                withContext(Dispatchers.Main) {
+                    editor.showDocumentColors(documentColors)
+                }
             } catch (exception: Exception) {
                 // throw?
                 exception.printStackTrace()
