@@ -76,9 +76,7 @@ class DocumentHighlightEvent : AsyncEventListener() {
                 documentHighlights = future.await()
             }
 
-            withContext(Dispatchers.Main) {
-                editor.showDocumentHighlight(documentHighlights)
-            }
+            editor.showDocumentHighlight(documentHighlights)
         } catch (exception: Exception) {
             exception.printStackTrace()
             Log.e("LSP client", "show document highlight timeout", exception)
