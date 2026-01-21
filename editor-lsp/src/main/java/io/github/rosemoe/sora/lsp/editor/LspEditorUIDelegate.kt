@@ -228,7 +228,7 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
             )
         }
 
-        editorInstance.highlightTexts = container
+        editorInstance.post { editorInstance.highlightTexts = container }
     }
 
     fun showInlayHints(inlayHints: List<InlayHint>?) {
@@ -264,7 +264,7 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
         cachedInlayHints?.inlayHintToDisplay()?.forEach(container::add)
         cachedDocumentColors?.colorInfoToDisplay()?.forEach(container::add)
 
-        editorInstance.inlayHints = container
+        editorInstance.post { editorInstance.inlayHints = container }
     }
 
     private fun resetInlinePresentations() {
