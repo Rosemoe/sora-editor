@@ -197,7 +197,7 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
         val editorInstance = currentEditorRef.get() ?: return
 
         if (highlights.isNullOrEmpty()) {
-            editorInstance.highlightTexts = null
+            editorInstance.post { editorInstance.highlightTexts = null }
             return
         }
 
@@ -256,7 +256,7 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
         val hasDocumentColors = !cachedDocumentColors.isNullOrEmpty()
 
         if (!hasInlayHints && !hasDocumentColors) {
-            editorInstance.inlayHints = null
+            editorInstance.post { editorInstance.inlayHints = null }
             return
         }
 
@@ -272,7 +272,7 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
         cachedDocumentColors = null
         currentEditorRef.get()?.let {
             if (it.inlayHints != null) {
-                it.inlayHints = null
+                it.post { it.inlayHints = null }
             }
         }
     }
