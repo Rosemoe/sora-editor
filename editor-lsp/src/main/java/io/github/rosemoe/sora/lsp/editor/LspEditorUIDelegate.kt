@@ -197,7 +197,7 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
         val editorInstance = currentEditorRef.get() ?: return
 
         if (highlights.isNullOrEmpty()) {
-            editorInstance.highlightTexts = null
+            editorInstance.post { editorInstance.highlightTexts = null }
             return
         }
 
@@ -228,7 +228,7 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
             )
         }
 
-        editorInstance.highlightTexts = container
+        editorInstance.post { editorInstance.highlightTexts = container }
     }
 
     fun showInlayHints(inlayHints: List<InlayHint>?) {
@@ -256,7 +256,7 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
         val hasDocumentColors = !cachedDocumentColors.isNullOrEmpty()
 
         if (!hasInlayHints && !hasDocumentColors) {
-            editorInstance.inlayHints = null
+            editorInstance.post { editorInstance.inlayHints = null }
             return
         }
 
@@ -264,7 +264,7 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
         cachedInlayHints?.inlayHintToDisplay()?.forEach(container::add)
         cachedDocumentColors?.colorInfoToDisplay()?.forEach(container::add)
 
-        editorInstance.inlayHints = container
+        editorInstance.post { editorInstance.inlayHints = container }
     }
 
     private fun resetInlinePresentations() {
@@ -272,7 +272,7 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
         cachedDocumentColors = null
         currentEditorRef.get()?.let {
             if (it.inlayHints != null) {
-                it.inlayHints = null
+                it.post { it.inlayHints = null }
             }
         }
     }
