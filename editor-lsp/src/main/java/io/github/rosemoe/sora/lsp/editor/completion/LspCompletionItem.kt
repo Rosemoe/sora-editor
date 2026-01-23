@@ -38,6 +38,7 @@ import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.util.Logger
 import io.github.rosemoe.sora.widget.CodeEditor
 import org.eclipse.lsp4j.CompletionItem
+import org.eclipse.lsp4j.CompletionItemTag
 import org.eclipse.lsp4j.InsertTextFormat
 import org.eclipse.lsp4j.TextEdit
 
@@ -60,8 +61,15 @@ class LspCompletionItem(
         sortText = completionItem.sortText
         filterText = completionItem.filterText
         val labelDetails = completionItem.labelDetails
-        if (labelDetails != null && labelDetails.description?.isNotEmpty() == true) {
-            desc = labelDetails.description
+        if (labelDetails != null) {
+            if (labelDetails.description?.isNotEmpty() == true) {
+                desc = labelDetails.description
+            }
+            detail = labelDetails.detail
+        }
+        val tags = completionItem.tags
+        if (tags != null) {
+            deprecated = tags.contains(CompletionItemTag.Deprecated)
         }
         icon = draw(kind ?: CompletionItemKind.Text)
     }
@@ -84,7 +92,10 @@ class LspCompletionItem(
         if (completionItem.textEdit != null && completionItem.textEdit.isLeft) {
             textEdit = completionItem.textEdit.left
         } else if (completionItem.textEdit?.isRight == true) {
-            textEdit = TextEdit(completionItem.textEdit.right.insert, completionItem.textEdit.right.newText)
+            textEdit = TextEdit(
+                completionItem.textEdit.right.insert,
+                completionItem.textEdit.right.newText
+            )
         }
 
         if (textEdit.newText == null && completionItem.label != null) {
