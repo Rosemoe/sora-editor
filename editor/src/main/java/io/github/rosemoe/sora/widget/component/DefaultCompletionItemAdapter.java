@@ -31,6 +31,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import io.github.rosemoe.sora.R;
+import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
@@ -39,7 +40,6 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
  * @author Rose
  */
 public final class DefaultCompletionItemAdapter extends EditorCompletionAdapter {
-
     @Override
     public int getItemHeight() {
         // 45 dp
@@ -56,10 +56,27 @@ public final class DefaultCompletionItemAdapter extends EditorCompletionAdapter 
         TextView tv = view.findViewById(R.id.result_item_label);
         tv.setText(item.label);
         tv.setTextColor(getThemeColor(EditorColorScheme.COMPLETION_WND_TEXT_PRIMARY));
+        tv.setSelected(isCurrentCursorPosition);
+        if (item.deprecated) {
+            tv.setPaintFlags(tv.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+        } else {
+            tv.setPaintFlags(tv.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+        }
+
+        tv = view.findViewById(R.id.result_item_detail);
+        tv.setText(item.detail);
+        tv.setTextColor(getThemeColor(EditorColorScheme.COMPLETION_WND_TEXT_SECONDARY));
+        tv.setSelected(isCurrentCursorPosition);
+        if (item.deprecated) {
+            tv.setPaintFlags(tv.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+        } else {
+            tv.setPaintFlags(tv.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+        }
 
         tv = view.findViewById(R.id.result_item_desc);
         tv.setText(item.desc);
         tv.setTextColor(getThemeColor(EditorColorScheme.COMPLETION_WND_TEXT_SECONDARY));
+        tv.setSelected(isCurrentCursorPosition);
 
         view.setTag(pos);
         if (isCurrentCursorPosition) {
@@ -71,5 +88,4 @@ public final class DefaultCompletionItemAdapter extends EditorCompletionAdapter 
         iv.setImageDrawable(item.icon);
         return view;
     }
-
 }
