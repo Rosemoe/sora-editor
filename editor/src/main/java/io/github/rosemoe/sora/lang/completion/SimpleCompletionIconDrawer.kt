@@ -31,14 +31,29 @@ import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
 
+interface FileIconProvider {
+    /**
+     * Attempts to load a file/folder icon from the given source string.
+     * @param src Source string (e.g., absolute or relative path)
+     * @return A [Drawable] if successful, or null if no icon can be loaded.
+     */
+    fun load(src: String): Drawable?
+}
+
 object SimpleCompletionIconDrawer {
+    var globalFileIconProvider: FileIconProvider? = null
+
     @JvmStatic
     @JvmOverloads
     fun draw(kind: CompletionItemKind, circle: Boolean = true): Drawable {
         return CircleDrawable(kind, circle)
     }
 
-    fun draw(colorSpan: Int): Drawable {
+    fun drawFileFolder(src: String): Drawable? {
+        return globalFileIconProvider?.load(src)
+    }
+
+    fun drawColorSpan(colorSpan: Int): Drawable {
         return ColorSpanDrawable(colorSpan)
     }
 }

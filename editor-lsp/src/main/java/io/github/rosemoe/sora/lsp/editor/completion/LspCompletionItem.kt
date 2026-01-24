@@ -27,6 +27,8 @@ package io.github.rosemoe.sora.lsp.editor.completion
 import android.graphics.Color
 import io.github.rosemoe.sora.lang.completion.CompletionItemKind
 import io.github.rosemoe.sora.lang.completion.SimpleCompletionIconDrawer.draw
+import io.github.rosemoe.sora.lang.completion.SimpleCompletionIconDrawer.drawColorSpan
+import io.github.rosemoe.sora.lang.completion.SimpleCompletionIconDrawer.drawFileFolder
 import io.github.rosemoe.sora.lang.completion.snippet.parser.CodeSnippetParser
 import io.github.rosemoe.sora.lsp.editor.LspEventManager
 import io.github.rosemoe.sora.lsp.events.EventType
@@ -43,7 +45,6 @@ import org.eclipse.lsp4j.CompletionItemTag
 import org.eclipse.lsp4j.InsertTextFormat
 import org.eclipse.lsp4j.TextEdit
 
-
 class LspCompletionItem(
     private val completionItem: CompletionItem,
     private val eventManager: LspEventManager,
@@ -52,7 +53,6 @@ class LspCompletionItem(
     completionItem.label,
     completionItem.detail
 ) {
-
     init {
         this.prefixLength = prefixLength
         kind =
@@ -72,24 +72,27 @@ class LspCompletionItem(
         if (tags != null) {
             deprecated = tags.contains(CompletionItemTag.Deprecated)
         }
-        if (kind == CompletionItemKind.File) {
 
+        val fileIcon = when {
+            kind == CompletionItemKind.File || kind == CompletionItemKind.Folder -> {
+                drawFileFolder(label.toString()) ?: drawFileFolder(desc.toString())
+            }
+            else -> null
         }
 
-        if (kind == CompletionItemKind.Folder) {
-
-        }
-        val colorSpan = extractColor()
-        icon = if (colorSpan != null) {
-            draw(colorSpan)
-        } else {
-            draw(kind ?: CompletionItemKind.Text)
+        icon = fileIcon ?: run {
+            val colorValue = extractColor()
+            if (kind == CompletionItemKind.Color && colorValue != null) {
+                drawColorSpan(colorValue)
+            } else {
+                draw(kind ?: CompletionItemKind.Text)
+            }
         }
     }
 
     fun extractColor(): Int? {
         val labelColor = runCatching { Color.parseColor(label.toString()) }.getOrNull()
-        val detailColor = runCatching { Color.parseColor(detail.toString()) }.getOrNull()
+        val detailColor = runCatching { Color.parseColor(desc.toString()) }.getOrNull()
         val documentationColor = runCatching {
             val value = if (completionItem.documentation.isLeft) {
                 completionItem.documentation.left
