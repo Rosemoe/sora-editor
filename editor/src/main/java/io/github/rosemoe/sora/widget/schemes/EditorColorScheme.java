@@ -397,7 +397,7 @@ public class EditorColorScheme {
                 color = isDark() ? 0xffffffff : 0xff000000;
                 break;
             case COMPLETION_WND_TEXT_SECONDARY:
-                color = isDark() ? 0xffaaaaaa : 0xff333333;
+                color = isDark() ? 0xffaaaaaa : 0xff545454;
                 break;
             case COMPLETION_WND_ITEM_CURRENT:
                 color = 0xffeeeeee;
