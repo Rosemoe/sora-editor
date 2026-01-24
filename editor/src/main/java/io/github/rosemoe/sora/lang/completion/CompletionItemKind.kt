@@ -64,4 +64,6 @@ enum class CompletionItemKind(
     private val displayString = name[0].toString()
 
     fun getDisplayChar(): String = displayString
+
+    var path: String = ""
 }

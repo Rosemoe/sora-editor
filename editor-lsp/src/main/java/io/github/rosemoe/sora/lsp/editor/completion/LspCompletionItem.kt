@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.lsp.editor.completion
 
+import android.graphics.Color
 import io.github.rosemoe.sora.lang.completion.CompletionItemKind
 import io.github.rosemoe.sora.lang.completion.SimpleCompletionIconDrawer.draw
 import io.github.rosemoe.sora.lang.completion.snippet.parser.CodeSnippetParser
@@ -71,7 +72,34 @@ class LspCompletionItem(
         if (tags != null) {
             deprecated = tags.contains(CompletionItemTag.Deprecated)
         }
-        icon = draw(kind ?: CompletionItemKind.Text)
+        if (kind == CompletionItemKind.File) {
+
+        }
+
+        if (kind == CompletionItemKind.Folder) {
+
+        }
+        val colorSpan = extractColor()
+        icon = if (colorSpan != null) {
+            draw(colorSpan)
+        } else {
+            draw(kind ?: CompletionItemKind.Text)
+        }
+    }
+
+    fun extractColor(): Int? {
+        val labelColor = runCatching { Color.parseColor(label.toString()) }.getOrNull()
+        val detailColor = runCatching { Color.parseColor(detail.toString()) }.getOrNull()
+        val documentationColor = runCatching {
+            val value = if (completionItem.documentation.isLeft) {
+                completionItem.documentation.left
+            } else {
+                completionItem.documentation.right.value
+            }
+            Color.parseColor(value)
+        }.getOrNull()
+
+        return labelColor ?: detailColor ?: documentationColor
     }
 
     override fun performCompletion(editor: CodeEditor, text: Content, position: CharPosition) {
