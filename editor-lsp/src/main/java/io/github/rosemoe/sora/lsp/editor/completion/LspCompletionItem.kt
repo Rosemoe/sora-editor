@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.lsp.editor.completion
 
-import android.graphics.Color
 import io.github.rosemoe.sora.lang.completion.CompletionItemKind
 import io.github.rosemoe.sora.lang.completion.SimpleCompletionIconDrawer.draw
 import io.github.rosemoe.sora.lang.completion.SimpleCompletionIconDrawer.drawColorSpan
@@ -33,6 +32,7 @@ import io.github.rosemoe.sora.lang.completion.snippet.parser.CodeSnippetParser
 import io.github.rosemoe.sora.lsp.editor.LspEventManager
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.document.applyEdits
+import io.github.rosemoe.sora.lsp.utils.ColorUtils
 import io.github.rosemoe.sora.lsp.utils.asLspPosition
 import io.github.rosemoe.sora.lsp.utils.createPosition
 import io.github.rosemoe.sora.lsp.utils.createRange
@@ -75,7 +75,7 @@ class LspCompletionItem(
 
         val fileIcon = when {
             kind == CompletionItemKind.File || kind == CompletionItemKind.Folder -> {
-                drawFileFolder(label.toString()) ?: drawFileFolder(desc.toString())
+                label?.let { drawFileFolder(it.toString()) } ?: desc?.let { drawFileFolder(it.toString()) }
             }
             else -> null
         }
@@ -91,16 +91,17 @@ class LspCompletionItem(
     }
 
     fun extractColor(): Int? {
-        val labelColor = runCatching { Color.parseColor(label.toString()) }.getOrNull()
-        val detailColor = runCatching { Color.parseColor(desc.toString()) }.getOrNull()
-        val documentationColor = runCatching {
-            val value = if (completionItem.documentation.isLeft) {
-                completionItem.documentation.left
-            } else {
-                completionItem.documentation.right.value
-            }
-            Color.parseColor(value)
-        }.getOrNull()
+        val labelColor = label?.let { ColorUtils.parseColor(it.toString()) }
+        val detailColor = desc?.let { ColorUtils.parseColor(it.toString()) }
+
+        val documentation = completionItem.documentation?.let {
+            if (it.isLeft) it.left else it.right.value
+        }
+        val documentationColor = documentation?.let { ColorUtils.parseColor(it) }
+
+        if (documentationColor != null && detailColor == null && labelColor == null && desc == null) {
+            desc = documentation
+        }
 
         return labelColor ?: detailColor ?: documentationColor
     }
@@ -206,5 +207,3 @@ class LspCompletionItem(
         // do nothing
     }
 }
-
-
