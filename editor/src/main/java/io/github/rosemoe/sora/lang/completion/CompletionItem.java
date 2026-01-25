@@ -59,9 +59,20 @@ public abstract class CompletionItem {
     public CharSequence label;
 
     /**
+     * Text to display less prominently directly after label, without any spacing.
+     */
+    public CharSequence detail;
+
+    /**
      * Text to display as description in adapter
      */
     public CharSequence desc;
+
+    /**
+     * Indicates whether this completion item is deprecated.
+     * When true, the item is typically rendered using strike-through text.
+     */
+    public boolean deprecated;
 
     /**
      * The kind of this completion item. Based on the kind
