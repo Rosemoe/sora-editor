@@ -35,9 +35,10 @@ interface FileIconProvider {
     /**
      * Attempts to load a file/folder icon from the given source string.
      * @param src Source string (e.g., absolute or relative path)
+     * @param isFolder True if the source is a folder, false if it's a file
      * @return A [Drawable] if successful, or null if no icon can be loaded.
      */
-    fun load(src: String): Drawable?
+    fun load(src: String, isFolder: Boolean): Drawable?
 }
 
 object SimpleCompletionIconDrawer {
@@ -49,8 +50,8 @@ object SimpleCompletionIconDrawer {
         return CircleDrawable(kind, circle)
     }
 
-    fun drawFileFolder(src: String): Drawable? {
-        return globalFileIconProvider?.load(src)
+    fun drawFileFolder(src: String, isFolder: Boolean): Drawable? {
+        return globalFileIconProvider?.load(src, isFolder)
     }
 
     fun drawColorSpan(colorSpan: Int): Drawable {

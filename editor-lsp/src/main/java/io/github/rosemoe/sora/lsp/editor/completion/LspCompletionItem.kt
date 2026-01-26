@@ -73,10 +73,14 @@ class LspCompletionItem(
             deprecated = tags.contains(CompletionItemTag.Deprecated)
         }
 
+        val isFile = kind == CompletionItemKind.File
+        val isFolder = kind == CompletionItemKind.Folder
         val fileIcon = when {
-            kind == CompletionItemKind.File || kind == CompletionItemKind.Folder -> {
-                label?.let { drawFileFolder(it.toString()) } ?: desc?.let { drawFileFolder(it.toString()) }
+            isFile || isFolder -> {
+                label?.let { drawFileFolder(it.toString(), isFolder) }
+                    ?: desc?.let { drawFileFolder(it.toString(), isFolder) }
             }
+
             else -> null
         }
 
