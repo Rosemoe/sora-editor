@@ -36,7 +36,7 @@ regex-onig = { module = "io.github.dingyi222666.regex-lib:regex-lib-oniguruma", 
 regex-re2j = { module = "io.github.dingyi222666.regex-lib:regex-lib-re2j", version = "1.0.2" }
 
 tests-google-truth = { module = "com.google.truth:truth", version = "1.4.5" }
-tests-robolectric = { module = "org.robolectric:robolectric", version = "4.16" }
+tests-robolectric = { module = "org.robolectric:robolectric", version = "4.16.1" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
