@@ -28,6 +28,7 @@ import android.content.Context;
 import android.graphics.Outline;
 import android.graphics.drawable.GradientDrawable;
 import android.os.SystemClock;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
@@ -43,6 +44,15 @@ import androidx.annotation.NonNull;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 public class DefaultCompletionLayout implements CompletionLayout {
+
+    private static final String TAG = "DefaultCompletionLayout";
+    
+    /**
+     * Maximum iterations for scroll operations to prevent infinite loops and ANR.
+     * This safety limit ensures that even if the scroll state becomes inconsistent,
+     * the UI thread won't be blocked indefinitely.
+     */
+    private static final int MAX_SCROLL_ITERATIONS = 100;
 
     private ListView listView;
     private ProgressBar progressBar;
@@ -194,11 +204,30 @@ public class DefaultCompletionLayout implements CompletionLayout {
                 listView.setSelectionFromTop(0, 0);
                 return;
             }
-            while (listView.getFirstVisiblePosition() + 1 > position && listView.canScrollList(-1)) {
+            
+            // a FIX: Add iteration counters to prevent infinite loops that can cause ANR!!!
+            int upScrollIterations = 0;
+            while (listView.getFirstVisiblePosition() + 1 > position && 
+                   listView.canScrollList(-1) && 
+                   upScrollIterations < MAX_SCROLL_ITERATIONS) {
                 performScrollList(increment / 2);
+                upScrollIterations++;
             }
-            while (listView.getLastVisiblePosition() - 1 < position && listView.canScrollList(1)) {
+            
+            int downScrollIterations = 0;
+            while (listView.getLastVisiblePosition() - 1 < position && 
+                   listView.canScrollList(1) && 
+                   downScrollIterations < MAX_SCROLL_ITERATIONS) {
                 performScrollList(-increment / 2);
+                downScrollIterations++;
+            }
+            
+            // Log warning if we hit the iteration limit (indicates potential issue)
+            if (upScrollIterations >= MAX_SCROLL_ITERATIONS || downScrollIterations >= MAX_SCROLL_ITERATIONS) {
+                Log.w(TAG, "ensureListPositionVisible hit iteration limit: " +
+                        "position=" + position + 
+                        ", upScrolls=" + upScrollIterations + 
+                        ", downScrolls=" + downScrollIterations);
             }
         });
     }
