@@ -70,7 +70,7 @@ open class TextInlayHintRenderer : InlayHintRenderer() {
     protected val localPaint = Paint().also { it.isAntiAlias = true }
 
     override val typeName: String
-        get() = "text"
+        get() = TextInlayHint.TYPE_NAME
 
     override fun onMeasure(
         inlayHint: InlayHint,

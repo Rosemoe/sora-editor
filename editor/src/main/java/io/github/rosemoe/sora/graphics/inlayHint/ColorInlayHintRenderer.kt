@@ -43,7 +43,7 @@ open class ColorInlayHintRenderer(
     }
 
     override val typeName: String
-        get() = "color"
+        get() = ColorInlayHint.TYPE_NAME
 
     protected val localPaint = Paint().also {
         it.isAntiAlias = true
