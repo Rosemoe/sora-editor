@@ -98,7 +98,7 @@ class SnippetController(private val editor: CodeEditor) {
     private var currentTabStopIndex = -1
     private var inSequenceEdits = false
 
-    private val variableResolver = CompositeSnippetVariableResolver().also {
+    val variableResolver = CompositeSnippetVariableResolver().also {
         it.addResolver(ClipboardBasedSnippetVariableResolver(editor.clipboardManager))
         it.addResolver(EditorBasedSnippetVariableResolver(editor))
         it.addResolver(RandomBasedSnippetVariableResolver())
