@@ -69,7 +69,9 @@ public class SymbolInputView extends LinearLayout {
     }
 
     private void init() {
-        setBackgroundColor(getContext().getResources().getColor(R.color.defaultSymbolInputBackgroundColor));
+        if (getBackground() == null) {
+            setBackgroundColor(getContext().getResources().getColor(R.color.defaultSymbolInputBackgroundColor));
+        }
         setOrientation(HORIZONTAL);
         setTextColor(getContext().getResources().getColor(R.color.defaultSymbolInputTextColor));
     }
