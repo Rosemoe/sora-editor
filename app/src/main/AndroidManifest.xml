@@ -37,6 +37,7 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:name=".EditorApplication"
         android:theme="@style/AppTheme">
         <service
             android:name=".lsp.LspLanguageServerService"
@@ -50,22 +51,22 @@
 
         <activity
             android:name=".tests.TestActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|uiMode|keyboard|navigation"
+            android:configChanges="orientation|keyboardHidden|screenSize|keyboard|navigation"
             android:exported="false"
             android:windowSoftInputMode="adjustResize"/>
         <activity
             android:name=".lsp.LspTestActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|uiMode|keyboard|navigation"
+            android:configChanges="orientation|keyboardHidden|screenSize|keyboard|navigation"
             android:exported="false"
             android:windowSoftInputMode="adjustResize"/>
         <activity
             android:name=".lsp.LspTestJavaActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|uiMode|keyboard|navigation"
+            android:configChanges="orientation|keyboardHidden|screenSize|keyboard|navigation"
             android:exported="false"
             android:windowSoftInputMode="adjustResize"/>
         <activity
             android:name=".MainActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|uiMode|keyboard|navigation"
+            android:configChanges="orientation|keyboardHidden|screenSize|keyboard|navigation"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>

@@ -23,13 +23,13 @@
  ******************************************************************************/
 package io.github.rosemoe.sora.app
 
-import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.res.Configuration
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -41,7 +41,10 @@ import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.savedstate.write
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.github.dingyi222666.monarch.languages.JavaLanguage
 import io.github.dingyi222666.monarch.languages.KotlinLanguage
 import io.github.dingyi222666.monarch.languages.PythonLanguage
@@ -165,7 +168,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setSupportActionBar(binding.activityToolbar)
-        applyEdgeToEdgeForViews(binding.toolbarContainer, binding.root)
+        applyEdgeToEdge(this, binding.toolbarContainer, binding.root)
 
         val typeface = Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf")
 
@@ -284,8 +287,37 @@ class MainActivity : AppCompatActivity() {
         )
         editor.setEditorLanguage(language)
 
-        // Open assets file
-        openAssetsFile("samples/sample.txt")
+        val savedText = savedInstanceState?.getString("text")
+        if (savedText != null) {
+            val textSize = savedInstanceState.getFloat("font.size")
+            if (textSize > 0f) {
+                editor.textSizePx = textSize
+            }
+            editor.setText(savedText)
+            val left = savedInstanceState.getInt("position.left").coerceIn(0, editor.text.length)
+            val right = savedInstanceState.getInt("position.right").coerceIn(0, editor.text.length)
+            val leftPos = editor.text.indexer.getCharPosition(left.coerceAtMost(right))
+            val rightPos = editor.text.indexer.getCharPosition(right.coerceAtLeast(left))
+            editor.setSelectionRegion(
+                leftPos.line,
+                leftPos.column,
+                rightPos.line,
+                rightPos.column,
+                false
+            )
+            editor.scroller.startScroll(
+                savedInstanceState.getInt("scroll.x"),
+                savedInstanceState.getInt("scroll.y"),
+                0,
+                0,
+                0
+            )
+            editor.scroller.abortAnimation()
+            editor.postInvalidate()
+        } else {
+            // Open assets file
+            openAssetsFile("samples/sample.txt")
+        }
 
         updatePositionText()
         updateBtnState()
@@ -623,9 +655,16 @@ class MainActivity : AppCompatActivity() {
         binding.positionDisplay.text = text
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        switchThemeIfRequired(this, binding.editor)
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.write {
+            putString("text", binding.editor.text.toString())
+            putFloat("font.size", binding.editor.textSizePx)
+            putInt("position.left", binding.editor.cursor.left)
+            putInt("position.right", binding.editor.cursor.right)
+            putInt("scroll.x", binding.editor.offsetX)
+            putInt("scroll.y", binding.editor.offsetY)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -647,13 +686,13 @@ class MainActivity : AppCompatActivity() {
             R.id.open_test_activity -> startActivity<TestActivity>()
             R.id.open_lsp_activity -> {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                    AlertDialog.Builder(this)
+                    MaterialAlertDialogBuilder(this)
                         .setTitle(getString(R.string.not_supported))
                         .setMessage(getString(R.string.dialog_api_warning_msg))
                         .setPositiveButton(android.R.string.ok, null)
                         .show()
                 } else {
-                    AlertDialog.Builder(this)
+                    MaterialAlertDialogBuilder(this)
                         .setTitle(R.string.dialog_lsp_entry_title)
                         .setMessage(R.string.dialog_lsp_entry_msg)
                         .setPositiveButton(R.string.choice_yes) { _, _ ->
@@ -698,7 +737,7 @@ class MainActivity : AppCompatActivity() {
                     getString(R.string.center),
                     getString(R.string.bottom)
                 )
-                AlertDialog.Builder(this)
+                MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.fixed)
                     .setSingleChoiceItems(themes, -1) { dialog: DialogInterface, which: Int ->
                         editor.lnPanelPositionMode = LineInfoPanelPositionMode.FOLLOW
@@ -781,7 +820,7 @@ class MainActivity : AppCompatActivity() {
             "Ubuntu-Regular.ttf",
             "Roboto-Regular.ttf"
         )
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(android.R.string.dialog_alert_title)
             .setSingleChoiceItems(fonts, -1) { dialog: DialogInterface, which: Int ->
                 if (which in assetsPaths.indices) {
@@ -807,7 +846,7 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.bottom_left),
             getString(R.string.bottom_right)
         )
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(R.string.fixed)
             .setSingleChoiceItems(themes, -1) { dialog: DialogInterface, which: Int ->
                 editor.lnPanelPositionMode = LineInfoPanelPositionMode.FIXED
@@ -905,7 +944,7 @@ class MainActivity : AppCompatActivity() {
             "Monarch TypeScript" to "source.typescript"
         )
 
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(R.string.switch_language)
             .setSingleChoiceItems(languageOptions, -1) { dialog: DialogInterface, which: Int ->
                 when (val selected = languageOptions[which]) {
@@ -991,7 +1030,7 @@ class MainActivity : AppCompatActivity() {
             "Solarized(Dark) for TM(VSCode)",
             "TM theme from file"
         )
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(R.string.color_scheme)
             .setSingleChoiceItems(themes, -1) { dialog: DialogInterface, which: Int ->
                 when (which) {

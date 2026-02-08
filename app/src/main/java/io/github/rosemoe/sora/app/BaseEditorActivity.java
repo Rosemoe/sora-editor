@@ -47,7 +47,7 @@ public class BaseEditorActivity extends AppCompatActivity {
 
         setContentView(binding.getRoot());
         setSupportActionBar(binding.activityToolbar);
-        UtilsKt.applyEdgeToEdgeForViews(binding.toolbarContainer, binding.getRoot());
+        UtilsKt.applyEdgeToEdge(this, binding.toolbarContainer, binding.getRoot());
 
         var supportActionBar = getSupportActionBar();
         if (supportActionBar != null) {

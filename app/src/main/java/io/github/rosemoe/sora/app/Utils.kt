@@ -28,11 +28,12 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
-import android.os.Build
-import android.os.Build.VERSION.SDK_INT
 import android.view.View
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import io.github.rosemoe.sora.langs.monarch.MonarchColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
@@ -40,8 +41,11 @@ import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.schemes.SchemeDarcula
 
+fun Context.isNightMode(): Boolean =
+    (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+
 fun switchThemeIfRequired(context: Context, editor: CodeEditor) {
-    if ((context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES) {
+    if (context.isNightMode()) {
         if (editor.colorScheme is TextMateColorScheme) {
             ThemeRegistry.getInstance().setTheme("darcula")
         } else if (editor.colorScheme is MonarchColorScheme) {
@@ -66,16 +70,16 @@ inline fun <reified T : Activity> Context.startActivity() {
 }
 
 /**
- * Adjust the top padding of view to the height of status bar due to edge-to-edge since API 35
+ * Enable edge-to-edge and apply paddings
  */
-fun applyEdgeToEdgeForViews(paddingView: View, rootView: View) {
-    if (SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-        ViewCompat.setOnApplyWindowInsetsListener(paddingView) { v, insets ->
-            val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars())
-            v.setPadding(0, statusBar.top, 0, 0)
-            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
-            rootView.setPadding(0, 0, 0, ime.bottom)
-            insets
-        }
+fun applyEdgeToEdge(activity: AppCompatActivity, topPaddingView: View, rootView: View) {
+    activity.enableEdgeToEdge()
+    ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, insets ->
+        val systemWindowInsets = insets.getInsets(
+            WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime()
+        )
+        topPaddingView.updatePadding(top = systemWindowInsets.top)
+        rootView.updatePadding(bottom = systemWindowInsets.bottom)
+        insets
     }
 }
