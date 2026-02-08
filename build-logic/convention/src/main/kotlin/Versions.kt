@@ -27,7 +27,13 @@ object Versions {
     private const val version = "0.24.4"
     const val versionCode = 93
 
-    val versionName by lazy {
+    val appVersionName by lazy {
+        if (CI.isCiBuild) {
+            "$version-${CI.commitHash}"
+        } else "$version-${System.currentTimeMillis()}"
+    }
+
+    val artifactVersion by lazy {
         if (CI.isCiBuild) {
             "$version-SNAPSHOT"
         } else version

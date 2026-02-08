@@ -91,3 +91,7 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
+
+# Local Signing Config
+signing.properties
+signing.keystore

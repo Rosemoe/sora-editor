@@ -27,43 +27,53 @@ plugins {
 }
 
 android {
+    namespace = "io.github.rosemoe.sora.app"
+
     defaultConfig {
         applicationId = "io.github.rosemoe.sora.app"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        versionCode = Versions.versionCode
-        versionName = Versions.versionName + "-" + System.currentTimeMillis()
     }
+
     signingConfigs {
-        create("general") {
-            storeFile = file("../debug.jks")
-            storePassword = "114514"
-            keyAlias = "debug"
-            keyPassword = "114514"
-            enableV1Signing = true
-            enableV2Signing = true
-        }
+        AppSigning.getAppSigningConfigOptional(project)
+            .onSuccess {
+                create("general") {
+                    storeFile = it.storeFile
+                    storePassword = it.storePassword
+                    keyAlias = it.keyAlias
+                    keyPassword = it.keyPassword
+
+                    enableV1Signing = true
+                    enableV2Signing = true
+                }
+
+                buildTypes.forEach { buildType ->
+                    buildType.signingConfig = signingConfigs.getByName("general")
+                }
+            }.onFailure {
+                logger.error("Failed to get signing config. Signing configuration is left as is.")
+            }
     }
-    buildTypes {
-        release {
+
+    for (buildType in buildTypes) {
+        buildType.apply {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("general")
             proguardFiles("proguard-rules.pro")
         }
-        debug {
-            isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("general")
-            proguardFiles("proguard-rules.pro")
-        }
     }
+
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
     }
+
     androidResources {
         additionalParameters.add("--warn-manifest-validation")
     }
+
     buildFeatures {
         viewBinding = true
     }
+
     packaging {
         resources.pickFirsts.addAll(
             arrayOf(
@@ -75,7 +85,6 @@ android {
             )
         )
     }
-    namespace = "io.github.rosemoe.sora.app"
 }
 
 dependencies {
