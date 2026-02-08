@@ -4720,16 +4720,20 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public AccessibilityNodeInfo createAccessibilityNodeInfo() {
         var info = super.createAccessibilityNodeInfo();
         if (isEnabled()) {
-            info.setEditable(isEditable());
-            info.setTextSelection(cursor.getLeft(), cursor.getRight());
-            info.setInputType(InputType.TYPE_CLASS_TEXT);
-            info.setMultiLine(true);
-            info.setText(getText().toStringBuilder());
+            var maxTextLength = props.maxAccessibilityTextLength;
+            if (maxTextLength > 0) {
+                info.setEditable(isEditable());
+                info.setTextSelection(cursor.getLeft(), cursor.getRight());
+                info.setInputType(InputType.TYPE_CLASS_TEXT);
+                info.setMultiLine(true);
+                info.setText(TextUtils.trimToSize(getText(), maxTextLength).toString());
+                info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_COPY);
+                info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CUT);
+                info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_PASTE);
+                info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_TEXT);
+            }
+
             info.setLongClickable(true);
-            info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_COPY);
-            info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CUT);
-            info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_PASTE);
-            info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_TEXT);
             final int scrollRange = getScrollMaxY();
             if (scrollRange > 0) {
                 info.setScrollable(true);

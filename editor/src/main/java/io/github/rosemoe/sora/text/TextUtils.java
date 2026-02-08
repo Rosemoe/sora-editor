@@ -23,7 +23,9 @@
  */
 package io.github.rosemoe.sora.text;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
@@ -191,5 +193,15 @@ public class TextUtils {
             }
         }
         return IntPair.pack(leading, trailing);
+    }
+
+    public static CharSequence trimToSize(@Nullable CharSequence text, @IntRange(from = 1) int size) {
+        if (size <= 0) throw new IllegalArgumentException("size must be bigger than 0");
+        if (text == null || text.length() <= size) return text;
+        if (Character.isHighSurrogate(text.charAt(size - 1))
+                && Character.isLowSurrogate(text.charAt(size))) {
+            size = size - 1;
+        }
+        return text.subSequence(0, size);
     }
 }

@@ -153,6 +153,17 @@ public class DirectAccessProps implements Serializable {
     public int maxIPCTextLength = 32768;
 
     /**
+     * Max text length for accessibility node info. The text is packed into an
+     * {@link android.os.Parcel} and transferred to accessibility services.
+     * <p>
+     * By default, we use the PARCEL_SAFE_TEXT_LENGTH value (100K) in {@link android.text.TextUtils}.
+     * <p>
+     * If set to {@code 0}, the editor will not send any text related information to accessibility services.
+     */
+    @IntRange(from = 0)
+    public int maxAccessibilityTextLength = 100000;
+
+    /**
      * Whether over scroll is permitted.
      * When over scroll is enabled, the user will be able to scroll out of displaying
      * bounds if the user scroll fast enough.
