@@ -588,10 +588,9 @@ class MainActivity : AppCompatActivity() {
 
                 if ("big_sample" !in name) {
                     binding.editor.inlayHints = InlayHintsContainer().also {
-                        it.add(TextInlayHint(28, 0, "unit:"))
-                        it.add(TextInlayHint(28, 7, "open"))
-                        it.add(TextInlayHint(28, 22, "^class"))
-                        it.add(ColorInlayHint(30, 30, ConstColor("#f44336")))
+                        it.add(ColorInlayHint(10, 30, ConstColor("#f44336")))
+                        it.add(TextInlayHint(29, 7, "^DigitTens"))
+                        it.add(TextInlayHint(100, 1, "^Numbers"))
                     }
                 }
             }
