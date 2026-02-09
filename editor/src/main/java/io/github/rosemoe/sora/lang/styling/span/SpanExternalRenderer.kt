@@ -64,7 +64,7 @@ interface SpanExternalRenderer : SpanExt {
      * @param canvas      The canvas to draw
      * @param paint       Paint for measuring
      * @param colorScheme Current color scheme
-     * @param preOrPost   True for preDraw, False for postDraw
+     * @param preOrPost   `true` for preDraw, `false` for postDraw
      */
-    fun draw(canvas: Canvas?, paint: Paint?, colorScheme: EditorColorScheme?, preOrPost: Boolean)
+    fun draw(canvas: Canvas, paint: Paint, colorScheme: EditorColorScheme, preOrPost: Boolean)
 }
