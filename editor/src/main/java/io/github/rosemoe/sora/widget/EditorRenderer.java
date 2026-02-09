@@ -2134,6 +2134,8 @@ public class EditorRenderer {
         int position = editor.getLnPanelPosition();
         String text = editor.getLineNumberTipTextProvider().getCurrentText(editor);
         float backupSize = paintGeneral.getTextSize();
+        paintGeneral.setTextSkewX(0f);
+        paintGeneral.setFakeBoldText(false);
         paintGeneral.setTextSize(editor.getLineInfoTextSize());
         Paint.FontMetricsInt backupMetrics = metricsText;
         metricsText = paintGeneral.getFontMetricsInt();
