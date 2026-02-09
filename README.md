@@ -54,7 +54,7 @@ visit [Documentation Site](https://project-sora.github.io/sora-editor-docs/).
 
 <div style="overflow: hidden">
 <img src="/images/general.jpg" alt="GeneralAppearance" width="40%" align="bottom" />
-<img src="/images/problem_indicators.jpg" alt="ProblemIndicator" width="40%" align="bottom" />
+<img src="/images/auto_completion.jpg" alt="AutoCompletion" width="40%" align="bottom" />
 </div>
 
 ## Discuss
