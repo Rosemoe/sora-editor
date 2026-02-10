@@ -319,7 +319,7 @@ class LanguageServerWrapper(
         } finally {
             launcherFuture?.cancel(true)
             serverDefinition.stop(project.projectUri.path)
-            for (ed in connectedEditors) {
+            for (ed in connectedEditors.toList()) {
                 disconnect(ed)
             }
             launcherFuture = null
@@ -533,7 +533,7 @@ class LanguageServerWrapper(
     private fun reconnect() {
         // Need to copy by value since connected editors gets cleared during 'stop()' invocation.
         stop(false)
-        for (editor in connectedEditors) {
+        for (editor in connectedEditors.toList()) {
             connect(editor)
         }
     }

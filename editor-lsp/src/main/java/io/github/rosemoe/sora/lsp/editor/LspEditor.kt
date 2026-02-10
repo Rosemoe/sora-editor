@@ -77,9 +77,6 @@ class LspEditor(
     val project: LspProject,
     val uri: FileUri,
 ) {
-
-    private val serverDefinition: LanguageServerDefinition
-
     private val delegate = LspEditorDelegate(this)
     private val uiDelegate = LspEditorUIDelegate(this)
 
@@ -233,9 +230,6 @@ class LspEditor(
         get() = delegate.aggregatedRequestManager.activeManagers
 
     init {
-        serverDefinition = project.getServerDefinition(fileExt)
-            ?: project.getServerDefinitions(fileExt).firstOrNull()
-            ?: throw Exception("No server definition for extension $fileExt")
         currentLanguage = LspLanguage(this)
     }
 

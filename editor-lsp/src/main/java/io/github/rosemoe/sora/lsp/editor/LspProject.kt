@@ -142,7 +142,7 @@ class LspProject(
         editors.clear()
     }
 
-    internal fun getLanguageServerWrapper(ext: String, name: String): LanguageServerWrapper? {
+    fun getLanguageServerWrapper(ext: String, name: String): LanguageServerWrapper? {
         return wrappers[ServerKey(ext, name)]
     }
 
@@ -159,7 +159,7 @@ class LspProject(
         return wrapper
     }
 
-    internal fun getLanguageServerWrappers(ext: String): List<LanguageServerWrapper> {
+    fun getLanguageServerWrappers(ext: String): List<LanguageServerWrapper> {
         return wrappers.entries.filter { it.key.ext == ext }.map { it.value }
     }
 
