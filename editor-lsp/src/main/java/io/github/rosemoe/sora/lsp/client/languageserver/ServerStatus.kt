@@ -27,10 +27,19 @@ package io.github.rosemoe.sora.lsp.client.languageserver
 /**
  * An enum representing a server status
  */
-enum class ServerStatus {
-    STOPPED,
-    STARTING,
-    STARTED,
-    INITIALIZED,
-    STOPPING
+sealed interface ServerStatus {
+    object IDLE: ServerStatus
+    object STARTING : ServerStatus
+    object STARTED : ServerStatus
+    object INITIALIZED : ServerStatus
+    data class STOPPING(val reason: ShutdownReason) : ServerStatus
+    data class STOPPED(val reason: ShutdownReason) : ServerStatus
+}
+
+enum class ShutdownReason {
+    MANUAL,
+    RESTART,
+    CRASH,
+    TIMEOUT,
+    UNUSED
 }

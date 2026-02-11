@@ -54,7 +54,7 @@ class SignatureHelpEvent : AsyncEventListener() {
         val editor = context.get<LspEditor>("lsp-editor")
         val position = context.getByClass<CharPosition>() ?: return@withContext
 
-        val requestManager = editor.requestManager ?: return@withContext
+        val requestManager = editor.requestManager
 
         val signatureHelpParams = SignatureHelpParams(
             editor.uri.createTextDocumentIdentifier(),
@@ -78,6 +78,9 @@ class SignatureHelpEvent : AsyncEventListener() {
         } catch (exception: Exception) {
             // throw?
             exception.printStackTrace()
+            editor.requestManager.getSessions().forEach {
+                it.reportEventException(this@SignatureHelpEvent, exception)
+            }
             Log.e("LSP client", "show signatureHelp timeout", exception)
         }
     }

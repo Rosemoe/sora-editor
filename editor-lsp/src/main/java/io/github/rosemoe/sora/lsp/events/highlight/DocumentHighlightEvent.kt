@@ -58,7 +58,7 @@ class DocumentHighlightEvent : AsyncEventListener() {
         val editor = context.get<LspEditor>("lsp-editor")
         val request = context.getByClass<DocumentHighlightRequest>() ?: return@withContext
 
-        val requestManager = editor.requestManager ?: return@withContext
+        val requestManager = editor.requestManager
 
         val params = DocumentHighlightParams(
             editor.uri.createTextDocumentIdentifier(),
@@ -79,6 +79,9 @@ class DocumentHighlightEvent : AsyncEventListener() {
             editor.showDocumentHighlight(documentHighlights)
         } catch (exception: Exception) {
             exception.printStackTrace()
+            editor.requestManager.getSessions().forEach {
+                it.reportEventException(this@DocumentHighlightEvent, exception)
+            }
             Log.e("LSP client", "show document highlight timeout", exception)
         }
     }

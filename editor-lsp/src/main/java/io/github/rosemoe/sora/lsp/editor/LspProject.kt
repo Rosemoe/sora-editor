@@ -24,11 +24,12 @@
 
 package io.github.rosemoe.sora.lsp.editor
 
+import io.github.rosemoe.sora.lsp.client.languageserver.ShutdownReason
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
 import io.github.rosemoe.sora.lsp.editor.diagnostics.DiagnosticsContainer
 import io.github.rosemoe.sora.lsp.events.EventEmitter
-import io.github.rosemoe.sora.lsp.events.code.CodeActionEventEvent
+import io.github.rosemoe.sora.lsp.events.code.CodeActionEvent
 import io.github.rosemoe.sora.lsp.events.color.DocumentColorEvent
 import io.github.rosemoe.sora.lsp.events.completion.CompletionEvent
 import io.github.rosemoe.sora.lsp.events.diagnostics.PublishDiagnosticsEvent
@@ -148,7 +149,11 @@ class LspProject(
 
     internal fun getOrCreateLanguageServerWrapper(ext: String, name: String = ext): LanguageServerWrapper {
         val key = ServerKey(ext, name)
-        return wrappers[key] ?: createLanguageServerWrapper(ext, name)
+        return wrappers.computeIfAbsent(key) {
+            val definition = getServerDefinition(ext, name)
+                ?: throw IllegalArgumentException("No server definition for extension $ext with name $name")
+            LanguageServerWrapper(definition, this)
+        }
     }
 
     internal fun createLanguageServerWrapper(ext: String, name: String): LanguageServerWrapper {
@@ -166,7 +171,7 @@ class LspProject(
     fun dispose() {
         closeAllEditors()
         wrappers.values.forEach {
-            it.stop(true)
+            it.stop(true, ShutdownReason.UNUSED)
         }
         wrappers.clear()
         definitions.clear()
@@ -187,7 +192,7 @@ class LspProject(
             ::ApplyEditsEvent, ::CompletionEvent,
             ::PublishDiagnosticsEvent, ::FullFormattingEvent,
             ::RangeFormattingEvent, ::QueryDocumentDiagnosticsEvent,
-            ::DocumentOpenEvent, ::HoverEvent, ::CodeActionEventEvent,
+            ::DocumentOpenEvent, ::HoverEvent, ::CodeActionEvent,
             ::WorkSpaceApplyEditEvent, ::WorkSpaceExecuteCommand,
             ::InlayHintEvent, ::DocumentHighlightEvent,
             ::DocumentColorEvent

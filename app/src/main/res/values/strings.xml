@@ -94,4 +94,5 @@
     <string name="dialog_lsp_entry_msg">Do you want to open LspActivity written in Kotlin?</string>
     <string name="choice_yes">Yes</string>
     <string name="choice_no">No</string>
+    <string name="restart_server">Restart server</string>
 </resources>

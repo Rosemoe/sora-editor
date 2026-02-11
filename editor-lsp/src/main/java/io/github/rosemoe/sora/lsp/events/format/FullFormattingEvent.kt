@@ -53,7 +53,7 @@ class FullFormattingEvent : AsyncEventListener() {
 
         val content = context.getByClass<Content>() ?: return
 
-        val requestManager = editor.requestManager ?: return
+        val requestManager = editor.requestManager
 
         val formattingParams = DocumentFormattingParams()
 
@@ -79,6 +79,9 @@ class FullFormattingEvent : AsyncEventListener() {
             }
 
         } catch (exception: Exception) {
+            editor.requestManager.getSessions().forEach {
+                it.reportEventException(this@FullFormattingEvent, exception)
+            }
             throw LSPException("Formatting code timeout", exception)
         }
     }

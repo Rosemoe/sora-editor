@@ -82,6 +82,9 @@ class CompletionEvent : AsyncEventListener() {
                     .e("Request completion failed", e)
                 throw e
             }
+            editor.requestManager.getSessions().forEach {
+                it.reportEventException(this@CompletionEvent, e)
+            }
         }
     }
 

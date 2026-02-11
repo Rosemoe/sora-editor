@@ -39,30 +39,22 @@ internal class LspEditorDelegate(private val editor: LspEditor) {
         }
     }
 
-
     @WorkerThread
     fun connectAll(): ServerCapabilities? {
         refreshSessions()
         var lastCapabilities: ServerCapabilities? = null
-
 
         for (info in sessionInfos) {
             if (info.wrapper.status == ServerStatus.INITIALIZED) {
                 continue
             }
 
-            runCatching {
-                info.wrapper.start()
-                val capabilities = info.wrapper.getServerCapabilities()
+            info.wrapper.start()
+            val capabilities = info.wrapper.getServerCapabilities()
 
-                if (capabilities != null) {
-                    info.wrapper.connect(editor)
-                    lastCapabilities = capabilities
-                }
-            }.onFailure { e ->
-                info.wrapper.crashed(e as? Exception ?: RuntimeException(e))
-                android.util.Log.w("LspEditorDelegate",
-                    "Failed to connect to ${info.definition.name}: ${e.message}", e)
+            if (capabilities != null) {
+                info.wrapper.connect(editor)
+                lastCapabilities = capabilities
             }
         }
 

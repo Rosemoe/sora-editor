@@ -49,7 +49,7 @@ class WorkSpaceExecuteCommand : AsyncEventListener() {
         val args = context.get<List<Any>>("args")
 
         val editor = context.get<LspEditor>("lsp-editor")
-        val requestManager = editor.requestManager ?: return
+        val requestManager = editor.requestManager
         val executeCommandParams = ExecuteCommandParams(command, args)
         val future = requestManager.executeCommand(executeCommandParams)
 
@@ -68,6 +68,9 @@ class WorkSpaceExecuteCommand : AsyncEventListener() {
         } catch (exception: Exception) {
             // throw?
             exception.printStackTrace()
+            editor.requestManager.getSessions().forEach {
+                it.reportEventException(this@WorkSpaceExecuteCommand, exception)
+            }
             Log.e("LSP client", "workspace execute command timeout", exception)
         }
     }

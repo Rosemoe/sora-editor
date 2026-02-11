@@ -109,7 +109,7 @@ class InlayHintEvent : AsyncEventListener() {
             val position = request.position
             val content = editor.editor?.text ?: return@withContext
 
-            val requestManager = editor.requestManager ?: return@withContext
+            val requestManager = editor.requestManager
 
             // Request over 500 lines for current window
 
@@ -150,6 +150,9 @@ class InlayHintEvent : AsyncEventListener() {
             } catch (exception: Exception) {
                 // throw?
                 exception.printStackTrace()
+                editor.requestManager.getSessions().forEach {
+                    it.reportEventException(this@InlayHintEvent, exception)
+                }
                 Log.e("LSP client", "show inlay hint timeout", exception)
             }
         }

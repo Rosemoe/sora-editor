@@ -28,6 +28,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Typeface
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
@@ -43,13 +44,11 @@ import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
 import io.github.rosemoe.sora.langs.textmate.registry.dsl.languages
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
-import io.github.rosemoe.sora.lsp.client.connection.LocalSocketStreamConnectionProvider
-import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition
+import io.github.rosemoe.sora.lsp.client.languageserver.ServerStatus
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.languageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspProject
-import io.github.rosemoe.sora.lsp.editor.diagnostics.DiagnosticsContainer
 import io.github.rosemoe.sora.lsp.editor.text.MarkdownCodeHighlighterRegistry
 import io.github.rosemoe.sora.lsp.editor.text.withEditorHighlighter
 import io.github.rosemoe.sora.lsp.events.EventType
@@ -62,7 +61,6 @@ import io.github.rosemoe.sora.widget.getComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.eclipse.lsp4j.DiagnosticCapabilities
 import org.eclipse.lsp4j.DiagnosticRegistrationOptions
 import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams
 import org.eclipse.lsp4j.InitializeResult
@@ -71,7 +69,6 @@ import org.eclipse.lsp4j.WorkspaceFolder
 import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageServer
-import org.eclipse.tm4e.core.internal.theme.Theme
 import org.eclipse.tm4e.core.registry.IThemeSource
 import java.io.FileOutputStream
 import java.lang.ref.WeakReference
@@ -303,6 +300,11 @@ class LspTestActivity : BaseEditorActivity() {
             } else {
                 editor.formatCodeAsync()
             }
+        } else if (id == R.id.restart_server) {
+            lifecycleScope.launch {
+                val languageServerWrapper = lspProject.getLanguageServerWrapper("lua", "lua-lsp")
+                languageServerWrapper?.restartAndReconnect()
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -321,7 +323,7 @@ class LspTestActivity : BaseEditorActivity() {
 
 
     class EventListener(
-        private val activityRef: WeakReference<LspTestActivity>
+        private val activityRef: WeakReference<LspTestActivity>,
     ) : EventHandler.EventListener {
         override fun initialize(server: LanguageServer?, result: InitializeResult) {
             activityRef.get()?.apply {
@@ -331,7 +333,10 @@ class LspTestActivity : BaseEditorActivity() {
                 }
             }
         }
-    }
 
+        override fun onStatusChange(newStatus: ServerStatus, oldStatus: ServerStatus) {
+            Log.d("LSP_TEST_ACTIVITY", "New status: $newStatus; Old status: $oldStatus")
+        }
+    }
 }
 
