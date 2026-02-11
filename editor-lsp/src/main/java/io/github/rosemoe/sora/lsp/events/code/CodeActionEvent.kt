@@ -45,7 +45,7 @@ import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import java.util.concurrent.CompletableFuture
 
-class CodeActionEventEvent : AsyncEventListener() {
+class CodeActionEvent : AsyncEventListener() {
     override val eventName: String = EventType.codeAction
 
     var future: CompletableFuture<Void>? = null
@@ -56,7 +56,7 @@ class CodeActionEventEvent : AsyncEventListener() {
         val editor = context.get<LspEditor>("lsp-editor")
         val range = context.getByClass<Range>() ?: return@withContext
 
-        val requestManager = editor.requestManager ?: return@withContext
+        val requestManager = editor.requestManager
 
         val diagnostics = editor.diagnosticsContainer.findDiagnostics(editor.uri, range)
 
@@ -68,7 +68,7 @@ class CodeActionEventEvent : AsyncEventListener() {
 
         val future = requestManager.codeAction(codeActionParams) ?: return@withContext
 
-        this@CodeActionEventEvent.future = future.thenAccept { }
+        this@CodeActionEvent.future = future.thenAccept { }
 
         try {
             var codeActions: List<Either<Command, CodeAction>>? = null
@@ -82,6 +82,9 @@ class CodeActionEventEvent : AsyncEventListener() {
         } catch (exception: Exception) {
             // throw?
             exception.printStackTrace()
+            editor.requestManager.getSessions().forEach {
+                it.reportEventException(this@CodeActionEvent, exception)
+            }
             Log.e("LSP client", "show code action timeout", exception)
         }
     }

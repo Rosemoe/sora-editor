@@ -55,7 +55,7 @@ class RangeFormattingEvent : AsyncEventListener() {
         val textRange = context.get<TextRange>("range")
         val content = context.get<Content>("text")
 
-        val requestManager = editor.requestManager ?: return
+        val requestManager = editor.requestManager
 
         val formattingParams = DocumentRangeFormattingParams()
 
@@ -84,6 +84,9 @@ class RangeFormattingEvent : AsyncEventListener() {
             }
 
         } catch (exception: Exception) {
+            editor.requestManager.getSessions().forEach {
+                it.reportEventException(this@RangeFormattingEvent, exception)
+            }
             throw LSPException("Formatting code timeout", exception)
         }
     }

@@ -62,8 +62,6 @@ class PublishDiagnosticsEvent : EventListener {
             originEditor.diagnostics = diagnosticsContainer
         }
     }
-
-
 }
 
 val EventType.publishDiagnostics: String

@@ -70,6 +70,7 @@ import io.github.rosemoe.sora.langs.textmate.registry.dsl.LanguageDefinitionList
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver;
 import io.github.rosemoe.sora.lsp.client.connection.LocalSocketStreamConnectionProvider;
+import io.github.rosemoe.sora.lsp.client.languageserver.ServerStatus;
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition;
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
@@ -362,8 +363,6 @@ public class LspTestJavaActivity extends BaseEditorActivity {
 
         @Override
         public void initialize(@Nullable LanguageServer server, @NonNull InitializeResult result) {
-
-
             var activity = ref.get();
 
             if (activity == null) {
@@ -378,6 +377,10 @@ public class LspTestJavaActivity extends BaseEditorActivity {
 
                 item.setEnabled(isEnabled);
             });
+        }
+
+        @Override
+        public void onStatusChange(@NonNull ServerStatus newStatus, @NonNull ServerStatus oldStatus) {
 
         }
 

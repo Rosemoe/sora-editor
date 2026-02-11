@@ -101,7 +101,7 @@ class DocumentColorEvent : AsyncEventListener() {
         withContext(Dispatchers.IO) {
             val editor = request.editor
 
-            val requestManager = editor.requestManager ?: return@withContext
+            val requestManager = editor.requestManager
 
             val future =
                 requestManager.documentColor(DocumentColorParams(request.uri.createTextDocumentIdentifier()))
@@ -126,6 +126,9 @@ class DocumentColorEvent : AsyncEventListener() {
             } catch (exception: Exception) {
                 // throw?
                 exception.printStackTrace()
+                editor.requestManager.getSessions().forEach {
+                    it.reportEventException(this@DocumentColorEvent, exception)
+                }
                 Log.e("LSP client", "show document color timeout", exception)
             }
         }

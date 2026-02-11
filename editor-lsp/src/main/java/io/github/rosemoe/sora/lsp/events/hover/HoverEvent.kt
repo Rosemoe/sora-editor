@@ -54,7 +54,7 @@ class HoverEvent : AsyncEventListener() {
         val editor = context.get<LspEditor>("lsp-editor")
         val position = context.getByClass<CharPosition>() ?: return@withContext
 
-        val requestManager = editor.requestManager ?: return@withContext
+        val requestManager = editor.requestManager
 
         val hoverParams = HoverParams(
             editor.uri.createTextDocumentIdentifier(),
@@ -65,19 +65,20 @@ class HoverEvent : AsyncEventListener() {
 
         this@HoverEvent.future = future.thenAccept { }
 
-
         try {
             val hover: Hover?
 
             withTimeout(Timeout[Timeouts.HOVER].toLong()) {
-                hover =
-                    future.await()
+                hover = future.await()
             }
 
             editor.showHover(hover)
         } catch (exception: Exception) {
             // throw?
             exception.printStackTrace()
+            editor.requestManager.getSessions().forEach {
+                it.reportEventException(this@HoverEvent, exception)
+            }
             Log.e("LSP client", "show hover timeout", exception)
         }
     }
@@ -86,7 +87,6 @@ class HoverEvent : AsyncEventListener() {
         future?.cancel(true)
         future = null
     }
-
 }
 
 val EventType.hover: String

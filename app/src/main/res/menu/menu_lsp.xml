@@ -27,4 +27,8 @@
         android:id="@+id/code_format"
         android:title="@string/format"
         android:visible="true"/>
+    <item
+        android:id="@+id/restart_server"
+        android:title="@string/restart_server"
+        android:visible="true" />
 </menu>
