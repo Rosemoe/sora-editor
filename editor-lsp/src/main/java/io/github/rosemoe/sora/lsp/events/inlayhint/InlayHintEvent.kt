@@ -80,7 +80,6 @@ class InlayHintEvent : AsyncEventListener() {
                 onBufferOverflow = BufferOverflow.DROP_OLDEST
             )
 
-
             coroutineScope.launch(Dispatchers.Main) {
                 flow
                     .debounce(50)
@@ -141,7 +140,7 @@ class InlayHintEvent : AsyncEventListener() {
                     inlayHints = future.await()
                 }
 
-                if (inlayHints == null || inlayHints.isEmpty()) {
+                if (inlayHints.isNullOrEmpty()) {
                     editor.showInlayHints(null)
                     return@withContext
                 }

@@ -470,12 +470,11 @@ class AggregatedRequestManager(
         return firstFuture { resolveCodeAction(unresolved) }
     }
 
-    override fun getTextDocumentService(): TextDocumentService? {
-        // Don't support text document service.
-        return null
+    override fun getTextDocumentService(): TextDocumentService {
+        return this
     }
 
-    override fun getWorkspaceService(): WorkspaceService? {
-        return null
+    override fun getWorkspaceService(): WorkspaceService {
+        return this
     }
 }

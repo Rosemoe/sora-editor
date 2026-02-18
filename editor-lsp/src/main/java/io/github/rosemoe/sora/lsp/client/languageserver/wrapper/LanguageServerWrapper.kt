@@ -133,7 +133,7 @@ class LanguageServerWrapper(
     }
 
     /**
-     * Warning: this is a long running operation
+     * Warning: this is a long-running operation
      *
      * @return the languageServer capabilities, or null if initialization job didn't complete
      */
@@ -309,7 +309,7 @@ class LanguageServerWrapper(
                 launcherFuture?.cancel(true)
                 serverDefinition.stop(project.projectUri.path)
                 for (ed in connectedEditors.toList()) {
-                    disconnect(ed)
+                    ed.disconnect()
                 }
                 launcherFuture = null
                 capabilitiesAlreadyRequested = false
@@ -514,16 +514,18 @@ class LanguageServerWrapper(
     /**
      * Reset language server wrapper state so it can be started again if it was failed earlier.
      */
+    @WorkerThread
     fun restart() {
         stop(false, ShutdownReason.RESTART)
         start()
     }
 
+    @WorkerThread
     fun restartAndReconnect() {
         val editorsSnapshot = connectedEditors.toList()
         restart()
         for (editor in editorsSnapshot) {
-            connect(editor)
+            editor.connectWithTimeoutBlocking()
         }
     }
 

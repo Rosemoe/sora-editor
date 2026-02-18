@@ -62,10 +62,10 @@ abstract class LanguageServerDefinition {
     @Throws(IOException::class)
     fun start(workingDir: String): Pair<InputStream, OutputStream> {
         var streamConnectionProvider = streamConnectionProviders[workingDir]
-        return if (streamConnectionProvider != null) {
+        return if (streamConnectionProvider != null && !streamConnectionProvider.isClosed) {
             streamConnectionProvider.inputStream to streamConnectionProvider.outputStream
         } else {
-            streamConnectionProvider = createConnectionProvider(workingDir)
+            streamConnectionProvider = streamConnectionProvider ?: createConnectionProvider(workingDir)
             streamConnectionProvider.start()
             streamConnectionProviders[workingDir] = streamConnectionProvider
             streamConnectionProvider.inputStream to streamConnectionProvider.outputStream
@@ -73,7 +73,7 @@ abstract class LanguageServerDefinition {
     }
 
     open fun callExitForLanguageServer(): Boolean {
-        return false
+        return true
     }
 
     /**
