@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.lsp.events.inlayhint
 
-import android.util.Log
 import io.github.rosemoe.sora.annotations.Experimental
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
@@ -92,7 +91,7 @@ class InlayHintEvent : AsyncEventListener() {
         }
     }
 
-    override suspend fun handleAsync(context: EventContext) {
+    override suspend fun doHandleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")
         val position = context.getByClass<CharPosition>() ?: return
 
@@ -132,28 +131,18 @@ class InlayHintEvent : AsyncEventListener() {
 
             this@InlayHintEvent.future = future.thenAccept { }
 
+            val inlayHints: List<InlayHint>?
 
-            try {
-                val inlayHints: List<InlayHint>?
-
-                withTimeout(Timeout[Timeouts.INLAY_HINT].toLong()) {
-                    inlayHints = future.await()
-                }
-
-                if (inlayHints.isNullOrEmpty()) {
-                    editor.showInlayHints(null)
-                    return@withContext
-                }
-
-                editor.showInlayHints(inlayHints)
-            } catch (exception: Exception) {
-                // throw?
-                exception.printStackTrace()
-                editor.requestManager.getSessions().forEach {
-                    it.reportEventException(this@InlayHintEvent, exception)
-                }
-                Log.e("LSP client", "show inlay hint timeout", exception)
+            withTimeout(Timeout[Timeouts.INLAY_HINT].toLong()) {
+                inlayHints = future.await()
             }
+
+            if (inlayHints.isNullOrEmpty()) {
+                editor.showInlayHints(null)
+                return@withContext
+            }
+
+            editor.showInlayHints(inlayHints)
         }
 
     override fun dispose() {

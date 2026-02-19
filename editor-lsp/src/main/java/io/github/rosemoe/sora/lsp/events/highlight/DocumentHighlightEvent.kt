@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.lsp.events.highlight
 
-import android.util.Log
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp.events.EventContext
@@ -54,7 +53,7 @@ class DocumentHighlightEvent : AsyncEventListener() {
         val selectionStart: CharPosition,
     )
 
-    override suspend fun handleAsync(context: EventContext) = withContext(Dispatchers.IO) {
+    override suspend fun doHandleAsync(context: EventContext) = withContext(Dispatchers.IO) {
         val editor = context.get<LspEditor>("lsp-editor")
         val request = context.getByClass<DocumentHighlightRequest>() ?: return@withContext
 
@@ -69,21 +68,13 @@ class DocumentHighlightEvent : AsyncEventListener() {
 
         this@DocumentHighlightEvent.future = future.thenAccept { }
 
-        try {
-            val documentHighlights: List<DocumentHighlight>?
+        val documentHighlights: List<DocumentHighlight>?
 
-            withTimeout(Timeout[Timeouts.DOC_HIGHLIGHT].toLong()) {
-                documentHighlights = future.await()
-            }
-
-            editor.showDocumentHighlight(documentHighlights)
-        } catch (exception: Exception) {
-            exception.printStackTrace()
-            editor.requestManager.getSessions().forEach {
-                it.reportEventException(this@DocumentHighlightEvent, exception)
-            }
-            Log.e("LSP client", "show document highlight timeout", exception)
+        withTimeout(Timeout[Timeouts.DOC_HIGHLIGHT].toLong()) {
+            documentHighlights = future.await()
         }
+
+        editor.showDocumentHighlight(documentHighlights)
     }
 
     override fun dispose() {

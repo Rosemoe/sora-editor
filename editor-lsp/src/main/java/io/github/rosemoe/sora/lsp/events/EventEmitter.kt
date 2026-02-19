@@ -24,7 +24,9 @@
 
 package io.github.rosemoe.sora.lsp.events
 
+import android.util.Log
 import androidx.annotation.WorkerThread
+import io.github.rosemoe.sora.lsp.editor.LspEditor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -169,8 +171,23 @@ abstract class AsyncEventListener : EventListener {
         throw IllegalStateException("This listener is async, please use handleAsync instead")
     }
 
+    protected abstract suspend fun doHandleAsync(context: EventContext)
+
     override suspend fun handleAsync(context: EventContext) {
-        super.handleAsync(context)
+        try {
+            doHandleAsync(context)
+        } catch(e: Exception) {
+            onException(context, e)
+        }
+    }
+
+    protected open fun onException(context: EventContext, exception: Exception) {
+        exception.printStackTrace()
+        Log.e("LSP client", "Event $eventName failed", exception)
+        val editor = context.getOrNull<LspEditor>("lsp-editor") ?: return
+        editor.requestManager.getSessions().forEach {
+            it.reportEventException(this, exception)
+        }
     }
 }
 

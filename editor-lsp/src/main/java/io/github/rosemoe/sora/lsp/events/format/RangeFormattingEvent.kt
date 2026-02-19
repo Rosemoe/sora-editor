@@ -45,11 +45,10 @@ import org.eclipse.lsp4j.DocumentRangeFormattingParams
 import org.eclipse.lsp4j.FormattingOptions
 import org.eclipse.lsp4j.TextEdit
 
-
 class RangeFormattingEvent : AsyncEventListener() {
     override val eventName = EventType.rangeFormatting
 
-    override suspend fun handleAsync(context: EventContext) {
+    override suspend fun doHandleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")
 
         val textRange = context.get<TextRange>("range")
@@ -69,28 +68,27 @@ class RangeFormattingEvent : AsyncEventListener() {
 
         val formattingFuture = requestManager.rangeFormatting(formattingParams) ?: return
 
-        try {
-            val textEditList: List<TextEdit>
+        val textEditList: List<TextEdit>
 
-            withTimeout(Timeout[Timeouts.FORMATTING].toLong()) {
-                textEditList = formattingFuture.await() ?: listOf()
-            }
+        withTimeout(Timeout[Timeouts.FORMATTING].toLong()) {
+            textEditList = formattingFuture.await() ?: listOf()
+        }
 
-            withContext(Dispatchers.Main) {
-                editor.eventManager.emit(EventType.applyEdits) {
-                    put("edits", textEditList)
-                    put("content", content)
-                }
+        withContext(Dispatchers.Main) {
+            editor.eventManager.emit(EventType.applyEdits) {
+                put("edits", textEditList)
+                put("content", content)
             }
-
-        } catch (exception: Exception) {
-            editor.requestManager.getSessions().forEach {
-                it.reportEventException(this@RangeFormattingEvent, exception)
-            }
-            throw LSPException("Formatting code timeout", exception)
         }
     }
 
+    override fun onException(context: EventContext, exception: Exception) {
+        val editor = context.getOrNull<LspEditor>("lsp-editor")
+        editor?.requestManager?.getSessions()?.forEach {
+            it.reportEventException(this, exception)
+        }
+        throw LSPException("Formatting code timeout", exception)
+    }
 }
 
 val EventType.rangeFormatting: String

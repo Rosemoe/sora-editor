@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.lsp.events.code
 
-import android.util.Log
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp.events.EventContext
@@ -52,7 +51,7 @@ class CodeActionEvent : AsyncEventListener() {
 
     override val isAsync = true
 
-    override suspend fun handleAsync(context: EventContext) = withContext(Dispatchers.IO) {
+    override suspend fun doHandleAsync(context: EventContext) = withContext(Dispatchers.IO) {
         val editor = context.get<LspEditor>("lsp-editor")
         val range = context.getByClass<Range>() ?: return@withContext
 
@@ -70,30 +69,20 @@ class CodeActionEvent : AsyncEventListener() {
 
         this@CodeActionEvent.future = future.thenAccept { }
 
-        try {
-            var codeActions: List<Either<Command, CodeAction>>? = null
+        var codeActions: List<Either<Command, CodeAction>>? = null
 
-            withTimeout(Timeout[Timeouts.CODEACTION].toLong()) {
-                codeActions =
-                    future.await() ?: emptyList()
-            }
-
-            editor.showCodeActions(range, codeActions)
-        } catch (exception: Exception) {
-            // throw?
-            exception.printStackTrace()
-            editor.requestManager.getSessions().forEach {
-                it.reportEventException(this@CodeActionEvent, exception)
-            }
-            Log.e("LSP client", "show code action timeout", exception)
+        withTimeout(Timeout[Timeouts.CODEACTION].toLong()) {
+            codeActions =
+                future.await() ?: emptyList()
         }
+
+        editor.showCodeActions(range, codeActions)
     }
 
     override fun dispose() {
         future?.cancel(true)
         future = null
     }
-
 }
 
 val EventType.codeAction: String

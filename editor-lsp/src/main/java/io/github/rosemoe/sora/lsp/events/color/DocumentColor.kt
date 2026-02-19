@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.lsp.events.color
 
-import android.util.Log
 import io.github.rosemoe.sora.annotations.Experimental
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
@@ -76,7 +75,6 @@ class DocumentColorEvent : AsyncEventListener() {
                 onBufferOverflow = BufferOverflow.DROP_OLDEST
             )
 
-
             coroutineScope.launch(Dispatchers.Main) {
                 flow
                     .debounce(50)
@@ -89,7 +87,7 @@ class DocumentColorEvent : AsyncEventListener() {
         }
     }
 
-    override suspend fun handleAsync(context: EventContext) {
+    override suspend fun doHandleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")
         val uri = editor.uri
 
@@ -109,28 +107,19 @@ class DocumentColorEvent : AsyncEventListener() {
 
             this@DocumentColorEvent.future = future.thenAccept { }
 
-            try {
-                val documentColors: List<ColorInformation>?
+            val documentColors: List<ColorInformation>?
 
-                withTimeout(Timeout[Timeouts.DOC_HIGHLIGHT].toLong()) {
-                    documentColors =
-                        future.await()
-                }
-
-                if (documentColors == null || documentColors.isEmpty()) {
-                    editor.showDocumentColors(null)
-                    return@withContext
-                }
-
-                editor.showDocumentColors(documentColors)
-            } catch (exception: Exception) {
-                // throw?
-                exception.printStackTrace()
-                editor.requestManager.getSessions().forEach {
-                    it.reportEventException(this@DocumentColorEvent, exception)
-                }
-                Log.e("LSP client", "show document color timeout", exception)
+            withTimeout(Timeout[Timeouts.DOC_HIGHLIGHT].toLong()) {
+                documentColors =
+                    future.await()
             }
+
+            if (documentColors.isNullOrEmpty()) {
+                editor.showDocumentColors(null)
+                return@withContext
+            }
+
+            editor.showDocumentColors(documentColors)
         }
 
     override fun dispose() {

@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.lsp.events.hover
 
-import android.util.Log
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp.events.EventContext
@@ -50,7 +49,7 @@ class HoverEvent : AsyncEventListener() {
 
     override val isAsync = true
 
-    override suspend fun handleAsync(context: EventContext) = withContext(Dispatchers.IO) {
+    override suspend fun doHandleAsync(context: EventContext) = withContext(Dispatchers.IO) {
         val editor = context.get<LspEditor>("lsp-editor")
         val position = context.getByClass<CharPosition>() ?: return@withContext
 
@@ -65,22 +64,13 @@ class HoverEvent : AsyncEventListener() {
 
         this@HoverEvent.future = future.thenAccept { }
 
-        try {
-            val hover: Hover?
+        val hover: Hover?
 
-            withTimeout(Timeout[Timeouts.HOVER].toLong()) {
-                hover = future.await()
-            }
-
-            editor.showHover(hover)
-        } catch (exception: Exception) {
-            // throw?
-            exception.printStackTrace()
-            editor.requestManager.getSessions().forEach {
-                it.reportEventException(this@HoverEvent, exception)
-            }
-            Log.e("LSP client", "show hover timeout", exception)
+        withTimeout(Timeout[Timeouts.HOVER].toLong()) {
+            hover = future.await()
         }
+
+        editor.showHover(hover)
     }
 
     override fun dispose() {

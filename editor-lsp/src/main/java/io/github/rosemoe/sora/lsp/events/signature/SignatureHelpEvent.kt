@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.lsp.events.signature
 
-import android.util.Log
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp.events.EventContext
@@ -50,7 +49,7 @@ class SignatureHelpEvent : AsyncEventListener() {
 
     override val isAsync = true
 
-    override suspend fun handleAsync(context: EventContext) = withContext(Dispatchers.IO) {
+    override suspend fun doHandleAsync(context: EventContext) = withContext(Dispatchers.IO) {
         val editor = context.get<LspEditor>("lsp-editor")
         val position = context.getByClass<CharPosition>() ?: return@withContext
 
@@ -65,24 +64,14 @@ class SignatureHelpEvent : AsyncEventListener() {
 
         this@SignatureHelpEvent.future = future.thenAccept { }
 
-        try {
-            val signatureHelp: SignatureHelp?
+        val signatureHelp: SignatureHelp?
 
-            withTimeout(Timeout[Timeouts.SIGNATURE].toLong()) {
-                signatureHelp =
-                    future.await()
-            }
-
-            editor.showSignatureHelp(signatureHelp)
-
-        } catch (exception: Exception) {
-            // throw?
-            exception.printStackTrace()
-            editor.requestManager.getSessions().forEach {
-                it.reportEventException(this@SignatureHelpEvent, exception)
-            }
-            Log.e("LSP client", "show signatureHelp timeout", exception)
+        withTimeout(Timeout[Timeouts.SIGNATURE].toLong()) {
+            signatureHelp =
+                future.await()
         }
+
+        editor.showSignatureHelp(signatureHelp)
     }
 
     override fun dispose() {
