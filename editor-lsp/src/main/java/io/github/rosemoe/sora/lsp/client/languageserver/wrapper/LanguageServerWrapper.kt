@@ -309,7 +309,8 @@ class LanguageServerWrapper(
                 launcherFuture?.cancel(true)
                 serverDefinition.stop(project.projectUri.path)
                 for (ed in connectedEditors.toList()) {
-                    ed.disconnect()
+                    disconnect(ed)
+                    ed.onWrapperStopped(this)
                 }
                 launcherFuture = null
                 capabilitiesAlreadyRequested = false

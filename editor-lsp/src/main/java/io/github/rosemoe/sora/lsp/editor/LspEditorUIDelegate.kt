@@ -175,7 +175,13 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
                 LspEditorScrollEvent(editor)
             )
         )
-        
+    }
+
+    fun clearWrapperState() {
+        hoverWindow?.dismiss()
+        signatureHelpWindow?.dismiss()
+        codeActionWindow?.dismiss()
+        resetInlinePresentations()
     }
 
     fun detachEditor() {

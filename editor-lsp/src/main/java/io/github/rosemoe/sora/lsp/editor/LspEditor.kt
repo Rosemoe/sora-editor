@@ -302,6 +302,11 @@ class LspEditor(
         }
     }
 
+    internal fun onWrapperStopped(wrapper: LanguageServerWrapper) {
+        uiDelegate.clearWrapperState()
+        delegate.onWrapperDisconnected(wrapper)
+    }
+
     /**
      * Notify the language server to open the document
      */

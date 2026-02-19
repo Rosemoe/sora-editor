@@ -39,6 +39,15 @@ internal class LspEditorDelegate(private val editor: LspEditor) {
         }
     }
 
+    fun onWrapperDisconnected(wrapper: LanguageServerWrapper) {
+        sessionInfos.removeAll { it.wrapper === wrapper }
+        val remaining = sessionInfos
+            .filter { it.wrapper.status == ServerStatus.INITIALIZED }
+            .map { it.wrapper }
+            .toSet()
+        aggregatedRequestManager.updateSessions(remaining)
+    }
+
     @WorkerThread
     fun connectAll(): ServerCapabilities? {
         refreshSessions()

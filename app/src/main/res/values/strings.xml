@@ -64,7 +64,7 @@
     <string name="use_icu_library">Use ICU library</string>
     <string name="open_new_activity">Open new activity</string>
     <string name="open_completion_window_animation">Completion Window Animation</string>
-    <string name="open_lsp_activity">Open lsp activity</string>
+    <string name="open_lsp_activity">Open LSP activity</string>
     <string name="not_supported">Not supported</string>
     <string name="dialog_api_warning_msg">LSP works only on Android O or above</string>
     <string name="line_info_panel_position">Line Info Panel Position</string>
