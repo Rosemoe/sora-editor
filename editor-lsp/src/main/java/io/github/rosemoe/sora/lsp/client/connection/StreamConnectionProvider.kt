@@ -50,6 +50,11 @@ interface StreamConnectionProvider : Closeable {
     val outputStream: OutputStream
 
     /**
+     * Whether this provider has been closed.
+     */
+    val isClosed: Boolean
+
+    /**
      * Close the connection.
      */
     override fun close()

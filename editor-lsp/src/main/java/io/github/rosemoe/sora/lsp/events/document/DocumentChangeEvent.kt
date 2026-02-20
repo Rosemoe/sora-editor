@@ -45,7 +45,7 @@ class DocumentChangeEvent : AsyncEventListener() {
 
     var future: CompletableFuture<Void>? = null
 
-    override suspend fun handleAsync(context: EventContext) {
+    override suspend fun doHandleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")
         val event = context.getByClass<ContentChangeEvent>() ?: return
 

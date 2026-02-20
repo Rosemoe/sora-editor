@@ -1,7 +1,7 @@
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2024  Rosemoe
+ *    Copyright (C) 2020-2026  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -22,44 +22,15 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lsp.client.connection
-
-
-import android.net.LocalSocket
-import android.net.LocalSocketAddress
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-
+package io.github.rosemoe.sora.lsp.editor
 
 /**
- * LocalSocket-based language server connection. Recommend for local connections.
+ * Listener for [LspEditor] status changes.
  */
-class LocalSocketStreamConnectionProvider(
-    private val name: String
-) : StreamConnectionProvider {
-    private lateinit var socket: LocalSocket
+fun interface LspEditorEventListener {
+    fun onStatusChanged(editor: LspEditor, newStatus: LspEditorStatus, oldStatus: LspEditorStatus)
 
-    @Throws(IOException::class)
-    override fun start() {
-        socket = LocalSocket()
-        socket.connect(LocalSocketAddress(name,LocalSocketAddress.Namespace.ABSTRACT))
-    }
-
-    override val inputStream: InputStream
-        get() = socket.getInputStream()
-
-    override val outputStream: OutputStream
-        get() = socket.getOutputStream()
-
-    override val isClosed: Boolean
-        get() = !::socket.isInitialized || socket.isClosed
-
-    override fun close() {
-        try {
-            socket.shutdownOutput()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+    companion object {
+        val DEFAULT: LspEditorEventListener = LspEditorEventListener { _, _, _ -> }
     }
 }

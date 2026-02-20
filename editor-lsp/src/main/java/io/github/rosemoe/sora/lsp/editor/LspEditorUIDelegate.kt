@@ -1,5 +1,11 @@
 package io.github.rosemoe.sora.lsp.editor
 
+import io.github.rosemoe.sora.event.ContentChangeEvent
+import io.github.rosemoe.sora.event.Event
+import io.github.rosemoe.sora.event.HoverEvent
+import io.github.rosemoe.sora.event.ScrollEvent
+import io.github.rosemoe.sora.event.SelectionChangeEvent
+import io.github.rosemoe.sora.event.SubscriptionReceipt
 import io.github.rosemoe.sora.graphics.inlayHint.ColorInlayHintRenderer
 import io.github.rosemoe.sora.graphics.inlayHint.TextInlayHintRenderer
 import io.github.rosemoe.sora.lang.styling.HighlightTextContainer
@@ -7,14 +13,21 @@ import io.github.rosemoe.sora.lang.styling.color.EditorColor
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer
 import io.github.rosemoe.sora.lsp.editor.codeaction.CodeActionWindow
 import io.github.rosemoe.sora.lsp.editor.diagnostics.LspDiagnosticTooltipLayout
+import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEvent
+import io.github.rosemoe.sora.lsp.editor.event.LspEditorHoverEvent
+import io.github.rosemoe.sora.lsp.editor.event.LspEditorScrollEvent
+import io.github.rosemoe.sora.lsp.editor.event.LspEditorSelectionChangeEvent
 import io.github.rosemoe.sora.lsp.editor.hover.HoverWindow
 import io.github.rosemoe.sora.lsp.editor.signature.SignatureHelpWindow
+import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.component.DefaultDiagnosticTooltipLayout
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
 import io.github.rosemoe.sora.widget.getComponent
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+import io.github.rosemoe.sora.widget.subscribeEvent
+import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.ColorInformation
 import org.eclipse.lsp4j.CodeAction
 import org.eclipse.lsp4j.Command
@@ -32,6 +45,7 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
     private var currentEditorRef: WeakReference<CodeEditor?> = WeakReference(null as CodeEditor?)
     private var hoverWindowRef: WeakReference<HoverWindow?> = WeakReference(null as HoverWindow?)
     private var signatureHelpWindowRef: WeakReference<SignatureHelpWindow?> = WeakReference(null as SignatureHelpWindow?)
+    private var subscriptionReceipts: MutableList<SubscriptionReceipt<out Event>> = mutableListOf()
     private var codeActionWindowRef: WeakReference<CodeActionWindow?> = WeakReference(null as CodeActionWindow?)
 
     private var cachedInlayHints: List<InlayHint>? = null
@@ -83,6 +97,10 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
                         TextInlayHintRenderer.DefaultInstance,
                         ColorInlayHintRenderer.DefaultInstance
                     )
+                    editor.coroutineScope.launch {
+                        editor.requestInlayHint(CharPosition(0, 0))
+                        editor.requestDocumentColor()
+                    }
                 } else {
                     resetInlinePresentations()
                 }
@@ -108,6 +126,8 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
         get() = codeActionWindowRef.get()
 
     fun attachEditor(codeEditor: CodeEditor) {
+        clearSubscriptions()
+
         currentEditorRef.clear()
         hoverWindowRef.clear()
         signatureHelpWindowRef.clear()
@@ -128,6 +148,10 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
                 TextInlayHintRenderer.DefaultInstance,
                 ColorInlayHintRenderer.DefaultInstance
             )
+            editor.coroutineScope.launch {
+                editor.requestInlayHint(CharPosition(0, 0))
+                editor.requestDocumentColor()
+            }
         }
 
         codeActionWindowRef = WeakReference(CodeActionWindow(editor, codeEditor))
@@ -136,9 +160,33 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
         if (diagnosticWindow.layout is DefaultDiagnosticTooltipLayout) {
             diagnosticWindow.layout = LspDiagnosticTooltipLayout()
         }
+
+        subscriptionReceipts = mutableListOf(
+            codeEditor.subscribeEvent<ContentChangeEvent>(
+                LspEditorContentChangeEvent(editor)
+            ),
+            codeEditor.subscribeEvent<SelectionChangeEvent>(
+                LspEditorSelectionChangeEvent(editor)
+            ),
+            codeEditor.subscribeEvent<HoverEvent>(
+                LspEditorHoverEvent(editor)
+            ),
+            codeEditor.subscribeEvent<ScrollEvent>(
+                LspEditorScrollEvent(editor)
+            )
+        )
+    }
+
+    fun clearWrapperState() {
+        hoverWindow?.dismiss()
+        signatureHelpWindow?.dismiss()
+        codeActionWindow?.dismiss()
+        resetInlinePresentations()
     }
 
     fun detachEditor() {
+        clearSubscriptions()
+
         hoverWindow?.setEnabled(false)
         hoverWindowRef.clear()
 
@@ -151,6 +199,14 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
 
         resetInlinePresentations()
         currentEditorRef.clear()
+    }
+
+    fun clearSubscriptions() {
+        val iterator = subscriptionReceipts.iterator()
+        while (iterator.hasNext()) {
+            iterator.next().unsubscribe()
+            iterator.remove()
+        }
     }
 
     fun showSignatureHelp(signatureHelp: SignatureHelp?) {
@@ -273,6 +329,9 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
         currentEditorRef.get()?.let {
             if (it.inlayHints != null) {
                 it.post { it.inlayHints = null }
+            }
+            if (it.highlightTexts != null) {
+                it.post { it.highlightTexts = null }
             }
         }
     }

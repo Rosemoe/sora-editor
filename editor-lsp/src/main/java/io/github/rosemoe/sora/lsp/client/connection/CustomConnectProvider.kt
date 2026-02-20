@@ -37,11 +37,13 @@ import java.io.OutputStream
 class CustomConnectProvider(private val streamProvider: StreamProvider) : StreamConnectionProvider {
     private lateinit var _inputStream: InputStream
     private lateinit var _outputStream: OutputStream
+    private var closed = true
 
     override fun start() {
         val streams = streamProvider.getStreams()
         _inputStream = streams.first
         _outputStream = streams.second
+        closed = false
     }
 
     override val inputStream: InputStream
@@ -50,12 +52,17 @@ class CustomConnectProvider(private val streamProvider: StreamProvider) : Stream
     override val outputStream: OutputStream
         get() = _outputStream
 
+    override val isClosed: Boolean
+        get() = closed
+
     override fun close() {
         try {
             inputStream.close()
             outputStream.close()
         } catch (e: IOException) {
             // ignore
+        } finally {
+            closed = true
         }
     }
 

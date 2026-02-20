@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.lsp.events.code
 
-import android.util.Log
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp.events.EventContext
@@ -45,18 +44,18 @@ import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import java.util.concurrent.CompletableFuture
 
-class CodeActionEventEvent : AsyncEventListener() {
+class CodeActionEvent : AsyncEventListener() {
     override val eventName: String = EventType.codeAction
 
     var future: CompletableFuture<Void>? = null
 
     override val isAsync = true
 
-    override suspend fun handleAsync(context: EventContext) = withContext(Dispatchers.IO) {
+    override suspend fun doHandleAsync(context: EventContext) = withContext(Dispatchers.IO) {
         val editor = context.get<LspEditor>("lsp-editor")
         val range = context.getByClass<Range>() ?: return@withContext
 
-        val requestManager = editor.requestManager ?: return@withContext
+        val requestManager = editor.requestManager
 
         val diagnostics = editor.diagnosticsContainer.findDiagnostics(editor.uri, range)
 
@@ -68,29 +67,22 @@ class CodeActionEventEvent : AsyncEventListener() {
 
         val future = requestManager.codeAction(codeActionParams) ?: return@withContext
 
-        this@CodeActionEventEvent.future = future.thenAccept { }
+        this@CodeActionEvent.future = future.thenAccept { }
 
-        try {
-            var codeActions: List<Either<Command, CodeAction>>? = null
+        var codeActions: List<Either<Command, CodeAction>>? = null
 
-            withTimeout(Timeout[Timeouts.CODEACTION].toLong()) {
-                codeActions =
-                    future.await() ?: emptyList()
-            }
-
-            editor.showCodeActions(range, codeActions)
-        } catch (exception: Exception) {
-            // throw?
-            exception.printStackTrace()
-            Log.e("LSP client", "show code action timeout", exception)
+        withTimeout(Timeout[Timeouts.CODEACTION].toLong()) {
+            codeActions =
+                future.await() ?: emptyList()
         }
+
+        editor.showCodeActions(range, codeActions)
     }
 
     override fun dispose() {
         future?.cancel(true)
         future = null
     }
-
 }
 
 val EventType.codeAction: String

@@ -1,8 +1,6 @@
 package io.github.rosemoe.sora.lsp.client.languageserver.requestmanager
 
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
-import io.github.rosemoe.sora.lsp.requests.Timeout
-import io.github.rosemoe.sora.lsp.requests.Timeouts
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams
 import org.eclipse.lsp4j.ApplyWorkspaceEditResponse
 import org.eclipse.lsp4j.CodeAction
@@ -32,7 +30,6 @@ import org.eclipse.lsp4j.DocumentLink
 import org.eclipse.lsp4j.DocumentLinkParams
 import org.eclipse.lsp4j.DocumentDiagnosticParams
 import org.eclipse.lsp4j.DocumentDiagnosticReport
-import org.eclipse.lsp4j.DocumentDiagnosticReportKind
 import org.eclipse.lsp4j.DocumentOnTypeFormattingParams
 import org.eclipse.lsp4j.DocumentRangeFormattingParams
 import org.eclipse.lsp4j.DocumentSymbol
@@ -66,7 +63,6 @@ import org.eclipse.lsp4j.ReferenceParams
 import org.eclipse.lsp4j.RegistrationParams
 import org.eclipse.lsp4j.RenameParams
 import org.eclipse.lsp4j.ServerCapabilities
-import org.eclipse.lsp4j.SetTraceParams
 import org.eclipse.lsp4j.ShowMessageRequestParams
 import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.SignatureHelpParams
@@ -86,7 +82,6 @@ import org.eclipse.lsp4j.services.WorkspaceService
 import io.github.rosemoe.sora.lsp.utils.merge
 import java.util.LinkedHashMap
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.TimeUnit
 
 class AggregatedRequestManager(
     sessions: Set<LanguageServerWrapper>
@@ -99,10 +94,13 @@ class AggregatedRequestManager(
     var activeManagers: List<RequestManager> = sessionEntries.mapNotNull { it.requestManager }
         private set
 
-
     internal fun updateSessions(newSessions: Set<LanguageServerWrapper>) {
         sessionEntries = newSessions
         activeManagers = sessionEntries.mapNotNull { it.requestManager }
+    }
+
+    fun getSessions(): Set<LanguageServerWrapper> {
+        return sessionEntries
     }
 
     override val capabilities: ServerCapabilities?
@@ -472,12 +470,11 @@ class AggregatedRequestManager(
         return firstFuture { resolveCodeAction(unresolved) }
     }
 
-    override fun getTextDocumentService(): TextDocumentService? {
-        // Don't support text document service.
-        return null
+    override fun getTextDocumentService(): TextDocumentService {
+        return this
     }
 
-    override fun getWorkspaceService(): WorkspaceService? {
-        return null
+    override fun getWorkspaceService(): WorkspaceService {
+        return this
     }
 }

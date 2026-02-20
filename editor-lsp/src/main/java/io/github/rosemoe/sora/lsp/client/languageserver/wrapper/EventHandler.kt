@@ -26,15 +26,14 @@ package io.github.rosemoe.sora.lsp.client.languageserver.wrapper
 
 import io.github.rosemoe.sora.lsp.client.languageserver.ServerInitializeListener
 import io.github.rosemoe.sora.lsp.client.languageserver.ServerStatus
+import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import org.eclipse.lsp4j.InitializeResult
 import org.eclipse.lsp4j.MessageParams
 import org.eclipse.lsp4j.jsonrpc.MessageConsumer
 import org.eclipse.lsp4j.jsonrpc.messages.Message
-import org.eclipse.lsp4j.jsonrpc.messages.ResponseMessage
 import org.eclipse.lsp4j.services.LanguageServer
 import java.util.function.BooleanSupplier
 import java.util.function.Function
-
 
 /**
  * A language server and client event handler.
@@ -53,18 +52,15 @@ class EventHandler internal constructor(
         }
     }
 
-
     fun setLanguageServer(languageServer: LanguageServer) {
         this.languageServer = languageServer
     }
 
     interface EventListener : ServerInitializeListener {
-        override fun initialize(server: LanguageServer?, result: InitializeResult) {
-           // do nothing
-        }
-
+        override fun initialize(server: LanguageServer?, result: InitializeResult) {}
         fun onStatusChange(newStatus: ServerStatus, oldStatus: ServerStatus) {}
         fun onHandlerException(exception: Exception) {}
+        fun onEventException(eventListener: AsyncEventListener, exception: Exception) {}
         fun onShowMessage(messageParams: MessageParams?) {}
         fun onLogMessage(messageParams: MessageParams?) {}
 

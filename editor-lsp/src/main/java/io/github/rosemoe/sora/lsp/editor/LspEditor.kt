@@ -26,20 +26,9 @@ package io.github.rosemoe.sora.lsp.editor
 
 import androidx.annotation.WorkerThread
 import io.github.rosemoe.sora.annotations.Experimental
-import io.github.rosemoe.sora.event.ContentChangeEvent
-import io.github.rosemoe.sora.event.Event
-import io.github.rosemoe.sora.event.HoverEvent
-import io.github.rosemoe.sora.event.ScrollEvent
-import io.github.rosemoe.sora.event.SelectionChangeEvent
-import io.github.rosemoe.sora.event.SubscriptionReceipt
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager
-import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
-import io.github.rosemoe.sora.lsp.editor.event.LspEditorContentChangeEvent
-import io.github.rosemoe.sora.lsp.editor.event.LspEditorHoverEvent
-import io.github.rosemoe.sora.lsp.editor.event.LspEditorScrollEvent
-import io.github.rosemoe.sora.lsp.editor.event.LspEditorSelectionChangeEvent
 import io.github.rosemoe.sora.lsp.editor.format.LspFormatter
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.diagnostics.publishDiagnostics
@@ -52,11 +41,9 @@ import io.github.rosemoe.sora.lsp.utils.FileUri
 import io.github.rosemoe.sora.lsp.utils.clearVersions
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.widget.CodeEditor
-import io.github.rosemoe.sora.widget.subscribeEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.future
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.eclipse.lsp4j.CodeAction
@@ -64,7 +51,6 @@ import org.eclipse.lsp4j.ColorInformation
 import org.eclipse.lsp4j.Command
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.DocumentHighlight
-import org.eclipse.lsp4j.DocumentHighlightKind
 import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.SignatureHelp
@@ -77,17 +63,12 @@ class LspEditor(
     val project: LspProject,
     val uri: FileUri,
 ) {
-
-    private val serverDefinition: LanguageServerDefinition
-
     private val delegate = LspEditorDelegate(this)
     private val uiDelegate = LspEditorUIDelegate(this)
 
     private var _currentEditor: WeakReference<CodeEditor?> = WeakReference(null)
 
     private var currentLanguage: LspLanguage? = null
-
-    private var subscriptionReceipts: MutableList<SubscriptionReceipt<out Event>> = mutableListOf()
 
     @Volatile
     private var isClosed = false
@@ -117,34 +98,8 @@ class LspEditor(
             uiDelegate.detachEditor()
             _currentEditor = WeakReference(currentEditor)
 
-            clearSubscriptions()
-
             currentEditor.setEditorLanguage(currentLanguage)
             uiDelegate.attachEditor(currentEditor)
-
-            if (isEnableInlayHint) {
-                coroutineScope.launch {
-                    this@LspEditor.requestInlayHint(CharPosition(0, 0))
-                    this@LspEditor.requestDocumentColor()
-                }
-            }
-
-            clearSubscriptions()
-            subscriptionReceipts =
-                mutableListOf(
-                    currentEditor.subscribeEvent<ContentChangeEvent>(
-                        LspEditorContentChangeEvent(this)
-                    ),
-                    currentEditor.subscribeEvent<SelectionChangeEvent>(
-                        LspEditorSelectionChangeEvent(this)
-                    ),
-                    currentEditor.subscribeEvent<HoverEvent>(
-                        LspEditorHoverEvent(this)
-                    ),
-                    currentEditor.subscribeEvent<ScrollEvent>(
-                        LspEditorScrollEvent(this)
-                    )
-                )
         }
         get() {
             return _currentEditor.get()
@@ -166,9 +121,19 @@ class LspEditor(
             }
         }
 
-    var isConnected = false
-        private set
-    
+    var eventListener: LspEditorEventListener = LspEditorEventListener.DEFAULT
+
+    var status: LspEditorStatus = LspEditorStatus.IDLE
+        private set(value) {
+            if (field == value) return
+            val old = field
+            field = value
+            eventListener.onStatusChanged(this, value, old)
+        }
+
+    val isConnected: Boolean
+        get() = status == LspEditorStatus.CONNECTED
+
     val languageServerWrapper: LanguageServerWrapper
         get() = delegate.getPrimaryWrapper()
             ?: throw IllegalStateException("No language server wrapper for extension $fileExt")
@@ -209,12 +174,6 @@ class LspEditor(
         get() = uiDelegate.isEnableInlayHint
         set(value) {
             uiDelegate.isEnableInlayHint = value
-            if (value) {
-                coroutineScope.launch {
-                    this@LspEditor.requestInlayHint(CharPosition(0, 0))
-                    this@LspEditor.requestDocumentColor()
-                }
-            }
         }
 
     val hoverWindow
@@ -233,9 +192,6 @@ class LspEditor(
         get() = delegate.aggregatedRequestManager.activeManagers
 
     init {
-        serverDefinition = project.getServerDefinition(fileExt)
-            ?: project.getServerDefinitions(fileExt).firstOrNull()
-            ?: throw Exception("No server definition for extension $fileExt")
         currentLanguage = LspLanguage(this)
     }
 
@@ -250,13 +206,16 @@ class LspEditor(
 
     @Throws(TimeoutException::class)
     suspend fun connect(throwException: Boolean = true): Boolean = withContext(Dispatchers.IO) {
+        status = LspEditorStatus.CONNECTING
         eventManager.init()
         runCatching {
-            // Delegate handles multi-server coordination and returns merged capabilities.
+            // Delegate handles multiserver coordination and returns merged capabilities.
             val capabilities = delegate.connectAll()
                 ?: throw TimeoutException("Unable to connect language server")
 
             openDocument()
+
+            editor?.let { uiDelegate.attachEditor(it) }
 
             currentLanguage?.let { language ->
                 if (capabilities.documentFormattingProvider?.left != false || capabilities.documentFormattingProvider?.right != null) {
@@ -268,12 +227,13 @@ class LspEditor(
                 requestInlayHint(CharPosition(0, 0))
             }
 
-            isConnected = true
+            status = LspEditorStatus.CONNECTED
         }.onFailure {
             if (throwException) {
+                status = LspEditorStatus.DISCONNECTED
                 throw it
             }
-            isConnected = false
+            status = LspEditorStatus.DISCONNECTED
         }.isSuccess
     }
 
@@ -328,19 +288,23 @@ class LspEditor(
     @WorkerThread
     @Throws(RuntimeException::class)
     fun disconnect() {
+        uiDelegate.detachEditor()
         runCatching {
             coroutineScope.future {
                 eventManager.emitAsync(EventType.documentClose)
             }.get()
-
             delegate.disconnectAll()
-
-            isConnected = false
+            status = LspEditorStatus.DISCONNECTED
         }.onFailure {
-            isConnected = false
+            status = LspEditorStatus.DISCONNECTED
             delegate.disconnectAll()
             throw it
         }
+    }
+
+    internal fun onWrapperStopped(wrapper: LanguageServerWrapper) {
+        uiDelegate.clearWrapperState()
+        delegate.onWrapperDisconnected(wrapper)
     }
 
     /**
@@ -420,25 +384,14 @@ class LspEditor(
         return false
     }
 
-    private fun clearSubscriptions() {
-        val iterator = subscriptionReceipts.iterator()
-
-        while (iterator.hasNext()) {
-            iterator.next().unsubscribe()
-            iterator.remove()
-        }
-    }
-
     @WorkerThread
     fun dispose() {
-        clearSubscriptions()
         synchronized(disposeLock) {
             if (isClosed) {
                 return
                 // throw IllegalStateException("Editor is already closed")
             }
             disconnect()
-            uiDelegate.detachEditor()
             _currentEditor.clear()
             clearVersions {
                 it == this.uri

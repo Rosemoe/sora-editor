@@ -24,7 +24,6 @@
 
 package io.github.rosemoe.sora.lsp.events.workspace
 
-import android.util.Log
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp.events.EventContext
@@ -36,7 +35,6 @@ import kotlinx.coroutines.withTimeout
 import org.eclipse.lsp4j.ExecuteCommandParams
 import java.util.concurrent.CompletableFuture
 
-
 class WorkSpaceExecuteCommand : AsyncEventListener() {
     override val eventName: String = EventType.workSpaceExecuteCommand
 
@@ -44,32 +42,25 @@ class WorkSpaceExecuteCommand : AsyncEventListener() {
 
     var future: CompletableFuture<Void>? = null
 
-    override suspend fun handleAsync(context: EventContext) {
+    override suspend fun doHandleAsync(context: EventContext) {
         val command = context.get<String>("command")
         val args = context.get<List<Any>>("args")
 
         val editor = context.get<LspEditor>("lsp-editor")
-        val requestManager = editor.requestManager ?: return
+        val requestManager = editor.requestManager
         val executeCommandParams = ExecuteCommandParams(command, args)
         val future = requestManager.executeCommand(executeCommandParams)
 
         this@WorkSpaceExecuteCommand.future = future?.thenAccept { }
 
-        try {
-            val result: Any?
+        val result: Any?
 
-            withTimeout(Timeout[Timeouts.EXECUTE_COMMAND].toLong()) {
-                result =
-                    future?.await()
-            }
-
-            context.put("result", result)
-
-        } catch (exception: Exception) {
-            // throw?
-            exception.printStackTrace()
-            Log.e("LSP client", "workspace execute command timeout", exception)
+        withTimeout(Timeout[Timeouts.EXECUTE_COMMAND].toLong()) {
+            result =
+                future?.await()
         }
+
+        context.put("result", result)
     }
 
     override fun dispose() {
