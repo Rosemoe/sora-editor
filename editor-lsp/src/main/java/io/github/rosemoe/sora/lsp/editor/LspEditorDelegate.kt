@@ -54,17 +54,11 @@ internal class LspEditorDelegate(private val editor: LspEditor) {
         var lastCapabilities: ServerCapabilities? = null
 
         for (info in sessionInfos) {
-            if (info.wrapper.status == ServerStatus.INITIALIZED) {
-                continue
-            }
-
             info.wrapper.start()
             val capabilities = info.wrapper.getServerCapabilities()
 
-            if (capabilities != null) {
-                info.wrapper.connect(editor)
-                lastCapabilities = capabilities
-            }
+            info.wrapper.connect(editor)
+            lastCapabilities = capabilities ?: lastCapabilities
         }
 
         val initializedWrappers = sessionInfos

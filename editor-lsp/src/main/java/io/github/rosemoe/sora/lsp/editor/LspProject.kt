@@ -123,6 +123,10 @@ class LspProject(
         editors.remove(path.toFileUri())
     }
 
+    fun getEditors(): List<LspEditor> {
+        return editors.values.toList()
+    }
+
     fun getEditor(path: String): LspEditor? {
         return editors[path.toFileUri()]
     }
@@ -136,7 +140,7 @@ class LspProject(
     }
 
     fun closeAllEditors() {
-        val editorsSnapshot = editors.values.toList()
+        val editorsSnapshot = getEditors()
         editorsSnapshot.forEach {
             it.dispose()
         }
