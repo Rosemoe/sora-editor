@@ -252,7 +252,8 @@ class LanguageServerWrapper(
                                 this@LanguageServerWrapper,
                                 requireNotNull(languageServer),
                                 requireNotNull(client),
-                                mergedCapabilities
+                                mergedCapabilities,
+                                serverDefinition.disabledFeatures
                             )
 
                             eventHandler?.listener?.initialize(
