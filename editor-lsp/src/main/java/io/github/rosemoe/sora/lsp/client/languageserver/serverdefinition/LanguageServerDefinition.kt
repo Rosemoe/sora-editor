@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition
 
 import android.util.Log
 import io.github.rosemoe.sora.lsp.client.connection.StreamConnectionProvider
+import io.github.rosemoe.sora.lsp.client.languageserver.LspFeature
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 
 import org.eclipse.lsp4j.ServerCapabilities
@@ -51,6 +52,8 @@ abstract class LanguageServerDefinition {
 
     private val streamConnectionProviders: MutableMap<String, StreamConnectionProvider> =
         ConcurrentHashMap()
+
+    open val disabledFeatures: Set<LspFeature> = emptySet()
 
     /**
      * Starts a Language server for the given directory and returns a tuple (InputStream, OutputStream)
