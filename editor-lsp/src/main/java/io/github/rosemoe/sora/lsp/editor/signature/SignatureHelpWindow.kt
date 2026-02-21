@@ -50,9 +50,8 @@ open class SignatureHelpWindow(
     val coroutineScope: CoroutineScope,
 ) : EditorPopupWindow(
     editor,
-    FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SCROLL_AS_CONTENT or FEATURE_DISMISS_WHEN_OBSCURING_CURSOR
+    FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SCROLL_AS_CONTENT
 ) {
-
     private lateinit var rootView: View
     private val maxWidth = (editor.width * 0.727).toInt()
     private val maxHeight = (editor.dpUnit * 355).toInt()

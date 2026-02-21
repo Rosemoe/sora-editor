@@ -13,7 +13,6 @@ import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
-import io.github.rosemoe.sora.widget.component.EditorTextActionWindow
 import io.github.rosemoe.sora.widget.getComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,17 +21,14 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.Hover
-import org.eclipse.lsp4j.MarkupContent
-import org.eclipse.lsp4j.jsonrpc.messages.Either
 
 open class HoverWindow(
     editor: CodeEditor,
     internal val coroutineScope: CoroutineScope
 ) : EditorPopupWindow(
     editor,
-    FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SCROLL_AS_CONTENT or FEATURE_DISMISS_WHEN_OBSCURING_CURSOR
+    FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SCROLL_AS_CONTENT
 ) {
-
     private lateinit var rootView: View
     private val maxWidth = (editor.width * 0.8).toInt()
     private val maxHeight = (editor.dpUnit * 280).toInt()
