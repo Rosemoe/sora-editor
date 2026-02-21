@@ -425,14 +425,7 @@ class LanguageServerWrapper(
 
         val capabilities = getServerCapabilities()
         if (capabilities == null) {
-            Log.w(
-                TAG,
-                "Capabilities are null for $serverDefinition"
-            )
-            return
-        }
-
-        if (connectedEditors.contains(editor)) {
+            Log.w(TAG, "Capabilities are null for $serverDefinition")
             return
         }
 
