@@ -36,6 +36,12 @@ plugins {
     alias(libs.plugins.publish) apply false
 }
 
+buildscript {
+    dependencies {
+        classpath(libs.kotlin.plugin)
+    }
+}
+
 val highApiProjects = arrayOf("editor-lsp")
 
 fun Project.configureAndroidAndKotlin() {
@@ -67,7 +73,7 @@ fun Project.configureAndroidAndKotlin() {
 
     extensions.findByType<KotlinAndroidExtension>()?.apply {
         compilerOptions {
-            languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
+            languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_3
             jvmTarget = JvmTarget.JVM_17
         }
     }

@@ -1,6 +1,6 @@
 [versions]
 agp = "9.0.1"
-kotlin = "2.2.21"
+kotlin = "2.3.10"
 tsBinding = "4.3.2"
 lsp4j = "0.24.0"
 androidxAnnotation = "1.9.1"
@@ -37,6 +37,8 @@ regex-re2j = { module = "io.github.dingyi222666.regex-lib:regex-lib-re2j", versi
 
 tests-google-truth = { module = "com.google.truth:truth", version = "1.4.5" }
 tests-robolectric = { module = "org.robolectric:robolectric", version = "4.16.1" }
+
+kotlin-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
