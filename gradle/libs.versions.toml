@@ -1,6 +1,6 @@
 [versions]
 agp = "9.0.1"
-kotlin = "2.2.21"
+kotlin = "2.3.10"
 tsBinding = "4.3.2"
 lsp4j = "0.24.0"
 androidxAnnotation = "1.9.1"
