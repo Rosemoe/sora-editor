@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition
 
 import io.github.rosemoe.sora.lsp.client.connection.ConnectionDefinitionDsl
 import io.github.rosemoe.sora.lsp.client.connection.connectionDefinition
+import io.github.rosemoe.sora.lsp.client.languageserver.LspFeature
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 import org.eclipse.lsp4j.ServerCapabilities
 import java.net.URI
@@ -68,6 +69,7 @@ class LanguageServerDefinitionDsl {
     private var connectProvider: CustomLanguageServerDefinition.ServerConnectProvider? = null
     private var initializationOptionsProvider: ((URI?) -> Any?)? = null
     private var eventListenerOverride: EventHandler.EventListener? = null
+    private var disabledFeatures: MutableSet<LspFeature> = mutableSetOf()
 
     /**
      * Sets the extension under which the server should be registered.
@@ -118,6 +120,10 @@ class LanguageServerDefinitionDsl {
         eventListenerOverride = listener
     }
 
+    fun disabledFeatures(vararg features: LspFeature) {
+        disabledFeatures.addAll(features)
+    }
+
     /**
      * Supplies the connection configuration using the connection DSL.
      */
@@ -149,6 +155,9 @@ class LanguageServerDefinitionDsl {
             expectedCapabilitiesOverride = expectedCapabilities,
             extensionsOverride = allExtensions
         ) {
+            override val disabledFeatures: Set<LspFeature>
+                get() = this@LanguageServerDefinitionDsl.disabledFeatures
+
             override fun getInitializationOptions(uri: URI?): Any? {
                 return initializationOptionsProvider?.invoke(uri) ?: super.getInitializationOptions(
                     uri
