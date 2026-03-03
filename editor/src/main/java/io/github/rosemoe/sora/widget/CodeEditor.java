@@ -1440,16 +1440,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param line The line to search
      */
     protected long findLeadingAndTrailingWhitespacePos(ContentLine line) {
-        var buffer = line.getBackingCharArray();
         int column = line.length();
         int leading = 0;
         int trailing = column;
-        while (leading < column && isWhitespace(buffer[leading])) {
+        while (leading < column && isWhitespace(line.charAt(leading))) {
             leading++;
         }
         // Only when this action is needed
         if (leading != column && (nonPrintableOptions & (FLAG_DRAW_WHITESPACE_INNER | FLAG_DRAW_WHITESPACE_TRAILING)) != 0) {
-            while (trailing > 0 && isWhitespace(buffer[trailing - 1])) {
+            while (trailing > 0 && isWhitespace(line.charAt(trailing - 1))) {
                 trailing--;
             }
         }
@@ -1948,10 +1947,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             int line = cur.getLeftLine();
             if (props.deleteEmptyLineFast || (props.deleteMultiSpaces != 1 && col > 0 && text.charAt(line, col - 1) == ' ')) {
                 // Check whether selection is in leading spaces
-                var text = this.text.getLine(cur.getLeftLine()).getBackingCharArray();
+                var text = this.text.getLine(cur.getLeftLine());
                 var inLeading = true;
                 for (int i = col - 1; i >= 0; i--) {
-                    char ch = text[i];
+                    char ch = text.charAt(i);
                     if (ch != ' ' && ch != '\t') {
                         inLeading = false;
                         break;
@@ -1963,7 +1962,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     var emptyLine = true;
                     var max = this.text.getColumnCount(line);
                     for (int i = col; i < max; i++) {
-                        char ch = text[i];
+                        char ch = text.charAt(i);
                         if (ch != ' ' && ch != '\t') {
                             emptyLine = false;
                             break;

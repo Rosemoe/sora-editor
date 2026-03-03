@@ -42,12 +42,12 @@ public class IndentRange {
     // Change String to char[] and int
     // END sora-editor note
 
-    public static int computeStartColumn(char[] line, int len, int tabSize) {
+    public static int computeStartColumn(CharSequence line, int len, int tabSize) {
         int column = 0;
         int i = 0;
 
         while (i < len) {
-            char chCode = line[i];
+            char chCode = line.charAt(i);
             if (chCode == ' ') {
                 column++;
             } else if (chCode == '\t') {
@@ -71,12 +71,12 @@ public class IndentRange {
      * - -1 => the line consists of whitespace
      * - otherwise => the indent level is returned value
      */
-    public static int computeIndentLevel(char[] line, int len, int tabSize) {
+    public static int computeIndentLevel(CharSequence line, int len, int tabSize) {
         int indent = 0;
         int i = 0;
 
         while (i < len) {
-            char chCode = line[i];
+            char chCode = line.charAt(i);
             if (chCode == ' ') {
                 indent++;
             } else if (chCode == '\t') {

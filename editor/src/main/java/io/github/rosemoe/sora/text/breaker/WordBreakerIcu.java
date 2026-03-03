@@ -34,10 +34,10 @@ public class WordBreakerIcu implements WordBreaker {
 
     protected final BreakIterator wrappingIterator;
 
-    protected final char[] chars;
+    protected final ContentLine text;
 
     public WordBreakerIcu(@NonNull ContentLine text) {
-        this.chars = text.getBackingCharArray();
+        this.text = text;
         var textIterator = new CharSequenceIterator(text);
         wrappingIterator = BreakIterator.getLineInstance();
         wrappingIterator.setText(textIterator);
@@ -45,7 +45,7 @@ public class WordBreakerIcu implements WordBreaker {
 
     public int getOptimizedBreakPoint(int start, int end) {
         // Merging trailing whitespaces is not supported by editor, so force to break here
-        if (end > 0 && !Character.isWhitespace(chars[end - 1]) && !wrappingIterator.isBoundary(end)) {
+        if (end > 0 && !Character.isWhitespace(text.charAt(end - 1)) && !wrappingIterator.isBoundary(end)) {
             // Break text at last boundary
             int lastBoundary = wrappingIterator.preceding(end);
             if (lastBoundary != BreakIterator.DONE) {

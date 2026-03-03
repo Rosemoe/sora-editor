@@ -33,16 +33,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.text.bidi.BidiRequirementChecker;
 import io.github.rosemoe.sora.text.bidi.TextBidi;
+import io.github.rosemoe.sora.text.string.StringLatin1;
+import io.github.rosemoe.sora.text.string.StringUTF16;
 import io.github.rosemoe.sora.util.ShareableData;
 
 public class ContentLine implements CharSequence, GetChars, BidiRequirementChecker, ShareableData<ContentLine> {
 
-    private char[] value;
+    private static final byte LATIN1 = 0;
+    private static final byte UTF16 = 1;
+
+    private byte[] value;
+    private byte coder;
     private int length;
 
     private int rtlAffectingCount;
     private LineSeparator lineSeparator;
-    private AtomicInteger refCount;
+    private transient AtomicInteger refCount;
 
     public ContentLine() {
         this(true);
@@ -54,22 +60,29 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
     }
 
     public ContentLine(@NonNull ContentLine src) {
-        this(src.length + 16);
         length = src.length;
+        coder = src.coder;
+        value = coder == LATIN1 ? new byte[src.length + 16] : new byte[StringUTF16.bytesForChars(src.length + 16)];
         rtlAffectingCount = src.rtlAffectingCount;
         lineSeparator = src.lineSeparator;
-        System.arraycopy(src.value, 0, value, 0, length);
+        if (coder == LATIN1) {
+            StringLatin1.copyChars(src.value, 0, value, 0, length);
+        } else {
+            StringUTF16.copyChars(src.value, 0, value, 0, length);
+        }
     }
 
     public ContentLine(int size) {
         length = 0;
-        value = new char[size];
+        coder = LATIN1;
+        value = new byte[size];
     }
 
     private ContentLine(boolean initialize) {
         if (initialize) {
             length = 0;
-            value = new char[32];
+            coder = LATIN1;
+            value = new byte[32];
         }
     }
 
@@ -80,11 +93,58 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
     }
 
     private void ensureCapacity(int capacity) {
-        if (value.length < capacity) {
-            int newLength = value.length * 2 < capacity ? capacity + 2 : value.length * 2;
-            char[] newValue = new char[newLength];
-            System.arraycopy(value, 0, newValue, 0, length);
+        if (charCapacity() < capacity) {
+            int oldCapacity = charCapacity();
+            int newLength = oldCapacity * 2 < capacity ? capacity + 2 : oldCapacity * 2;
+            byte[] newValue = coder == LATIN1 ? new byte[newLength] : new byte[StringUTF16.bytesForChars(newLength)];
+            if (coder == LATIN1) {
+                StringLatin1.copyChars(value, 0, newValue, 0, length);
+            } else {
+                StringUTF16.copyChars(value, 0, newValue, 0, length);
+            }
             value = newValue;
+        }
+    }
+
+    private int charCapacity() {
+        return coder == LATIN1 ? value.length : value.length >> 1;
+    }
+
+    private char charAtInternal(int index) {
+        return coder == LATIN1 ? StringLatin1.getChar(value, index) : StringUTF16.getChar(value, index);
+    }
+
+    private void putCharInternal(int index, char c) {
+        if (coder == LATIN1) {
+            StringLatin1.putChar(value, index, c);
+        } else {
+            StringUTF16.putChar(value, index, c);
+        }
+    }
+
+    private void copyCharsInternal(byte[] src, int srcBegin, byte[] dst, int dstBegin, int len) {
+        if (coder == LATIN1) {
+            StringLatin1.copyChars(src, srcBegin, dst, dstBegin, len);
+        } else {
+            StringUTF16.copyChars(src, srcBegin, dst, dstBegin, len);
+        }
+    }
+
+    private static boolean requiresUTF16(@NonNull CharSequence s, int start, int end) {
+        for (int i = start; i < end; i++) {
+            if (!StringLatin1.canEncode(s.charAt(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void toUTF16IfNeeded(int capacity) {
+        if (coder == LATIN1) {
+            int oldCapacity = charCapacity();
+            int newCapacity = oldCapacity * 2 < capacity ? capacity + 2 : oldCapacity * 2;
+            value = StringLatin1.inflateToUTF16(value, length, newCapacity);
+            coder = UTF16;
         }
     }
 
@@ -172,12 +232,14 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
                     "start " + start + ", end " + end + ", s.length() "
                             + s.length());
         int len = end - start;
+        if (coder == LATIN1 && requiresUTF16(s, start, end)) {
+            toUTF16IfNeeded(length + len);
+        }
         ensureCapacity(length + len);
-        System.arraycopy(value, dstOffset, value, dstOffset + len,
-                length - dstOffset);
+        copyCharsInternal(value, dstOffset, value, dstOffset + len, length - dstOffset);
         for (int i = start; i < end; i++) {
             var ch = s.charAt(i);
-            value[dstOffset++] = ch;
+            putCharInternal(dstOffset++, ch);
             if (TextBidi.couldAffectRtl(ch)) {
                 rtlAffectingCount++;
             }
@@ -188,14 +250,17 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
 
     @NonNull
     public ContentLine insert(int offset, char c) {
+        if (coder == LATIN1 && !StringLatin1.canEncode(c)) {
+            toUTF16IfNeeded(length + 1);
+        }
         ensureCapacity(length + 1);
         if (offset < length) {
-            System.arraycopy(value, offset, value, offset + 1, length - offset);
+            copyCharsInternal(value, offset, value, offset + 1, length - offset);
         }
         if (TextBidi.couldAffectRtl(c)) {
             rtlAffectingCount++;
         }
-        value[offset] = c;
+        putCharInternal(offset, c);
         length += 1;
         return this;
     }
@@ -225,11 +290,11 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
         int len = end - start;
         if (len > 0) {
             for (int i = start; i < end; i++) {
-                if (TextBidi.couldAffectRtl(value[i])) {
+                if (TextBidi.couldAffectRtl(charAtInternal(i))) {
                     rtlAffectingCount--;
                 }
             }
-            System.arraycopy(value, start + len, value, start, length - end);
+            copyCharsInternal(value, start + len, value, start, length - end);
             length -= len;
         }
         return this;
@@ -269,7 +334,7 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
             var separator = getLineSeparator();
             return separator.getLength() > 0 ? getLineSeparator().getContent().charAt(index - length) : '\n';
         }
-        return value[index];
+        return charAtInternal(index);
     }
 
     @Override
@@ -280,16 +345,21 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
         if (end < start) {
             throw new StringIndexOutOfBoundsException("start is greater than end");
         }
-        char[] newValue = new char[end - start + 16];
-        System.arraycopy(value, start, newValue, 0, end - start);
         var res = new ContentLine(false);
-        res.value = newValue;
+        res.coder = coder;
+        if (res.coder == LATIN1) {
+            res.value = new byte[end - start + 16];
+            StringLatin1.copyChars(value, start, res.value, 0, end - start);
+        } else {
+            res.value = new byte[StringUTF16.bytesForChars(end - start + 16)];
+            StringUTF16.copyChars(value, start, res.value, 0, end - start);
+        }
         res.length = end - start;
 
         // Compute new value when required
         if (rtlAffectingCount > 0) {
             for (int i = 0; i < res.length; i++) {
-                if (TextBidi.couldAffectRtl(newValue[i])) {
+                if (TextBidi.couldAffectRtl(res.charAt(i))) {
                     res.rtlAffectingCount++;
                 }
             }
@@ -301,13 +371,17 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
      * A convenient method to append text to a StringBuilder
      */
     public void appendTo(@NonNull StringBuilder sb) {
-        sb.append(value, 0, length);
+        if (coder == LATIN1) {
+            StringLatin1.appendTo(value, length, sb);
+        } else {
+            StringUTF16.appendTo(value, length, sb);
+        }
     }
 
     @Override
     @NonNull
     public String toString() {
-        return new String(value, 0, length);
+        return coder == LATIN1 ? StringLatin1.newString(value, length) : StringUTF16.newString(value, length);
     }
 
     /**
@@ -316,22 +390,14 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
      */
     @NonNull
     public String toStringWithNewline() {
-        if (value.length == length) {
+        if (charCapacity() == length) {
             ensureCapacity(length + 1);
         }
-        value[length] = '\n';
-        return new String(value, 0, length + 1);
+        putCharInternal(length, '\n');
+        return coder == LATIN1 ? StringLatin1.newString(value, length + 1) : StringUTF16.newString(value, length + 1);
     }
 
-    /**
-     * Get the backing char array of this object.
-     * The result array should not be modified.
-     */
-    @NonNull
-    public char[] getBackingCharArray() {
-        return value;
-    }
-
+    @Override
     public void getChars(int srcBegin, int srcEnd, @NonNull char[] dst, int dstBegin) {
         if (srcBegin < 0)
             throw new StringIndexOutOfBoundsException(srcBegin);
@@ -339,7 +405,11 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
             throw new StringIndexOutOfBoundsException(srcEnd);
         if (srcBegin > srcEnd)
             throw new StringIndexOutOfBoundsException("srcBegin > srcEnd");
-        System.arraycopy(value, srcBegin, dst, dstBegin, srcEnd - srcBegin);
+        if (coder == LATIN1) {
+            StringLatin1.getChars(value, srcBegin, srcEnd, dst, dstBegin);
+        } else {
+            StringUTF16.getChars(value, srcBegin, srcEnd, dst, dstBegin);
+        }
     }
 
     public void setLineSeparator(@Nullable LineSeparator separator) {
@@ -362,8 +432,9 @@ public class ContentLine implements CharSequence, GetChars, BidiRequirementCheck
     public ContentLine copy() {
         var clone = new ContentLine(false);
         clone.length = length;
-        clone.value = new char[value.length];
-        System.arraycopy(value, 0, clone.value, 0, length);
+        clone.coder = coder;
+        clone.value = new byte[value.length];
+        System.arraycopy(value, 0, clone.value, 0, value.length);
         clone.rtlAffectingCount = rtlAffectingCount;
         clone.lineSeparator = lineSeparator;
         return clone;

@@ -26,12 +26,13 @@ package io.github.rosemoe.sora.graphics;
 import android.annotation.SuppressLint;
 import android.graphics.Typeface;
 import android.os.Build;
+import android.text.GetChars;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.FunctionCharacters;
+import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 
 public class Paint extends android.graphics.Paint {
 
@@ -86,11 +87,13 @@ public class Paint extends android.graphics.Paint {
     }
 
     @SuppressLint("NewApi")
-    public float myGetTextRunAdvances(@NonNull char[] chars, int index, int count, int contextIndex, int contextCount, boolean isRtl, @Nullable float[] advances, int advancesIndex) {
-        float advance = getTextRunAdvances(chars, index, count, contextIndex, contextCount, isRtl, advances, advancesIndex);
+    public float myGetTextRunAdvances(@NonNull GetChars chars, int index, int count, int contextIndex, int contextCount, boolean isRtl, @Nullable float[] advances, int advancesIndex) {
+        var buffer = TemporaryCharBuffer.obtain(contextCount);
+        chars.getChars(contextIndex, contextIndex + contextCount, buffer, 0);
+        float advance = getTextRunAdvances(buffer, index - contextIndex, count, 0, contextCount, isRtl, advances, advancesIndex);
         if (renderFunctionCharacters) {
             for (int i = 0; i < count; i++) {
-                char ch = chars[index + i];
+                char ch = chars.charAt(index + i);
                 if (FunctionCharacters.isEditorFunctionChar(ch)) {
                     float width = measureText(FunctionCharacters.getNameForFunctionCharacter(ch));
                     if (advances != null) {
@@ -103,34 +106,34 @@ public class Paint extends android.graphics.Paint {
                 }
             }
         }
+        TemporaryCharBuffer.recycle(buffer);
         return advance;
     }
 
     /**
      * Get the advance of text with the context positions related to shaping the characters
      */
-    public float measureTextRunAdvance(char[] text, int start, int end, int contextStart, int contextEnd, boolean isRtl) {
+    public float measureTextRunAdvance(GetChars text, int start, int end, int contextStart, int contextEnd, boolean isRtl) {
         return myGetTextRunAdvances(text, start, end - start, contextStart, contextEnd - contextStart, isRtl, null, 0);
     }
 
     /**
-     * Find offset for a certain advance returned by {@link #measureTextRunAdvance(char[], int, int, int, int, boolean)}
+     * Find offset for a certain advance returned by {@link #measureTextRunAdvance(GetChars, int, int, int, int, boolean)}
      */
-    public int findOffsetByRunAdvance(ContentLine text, int start, int end,
+    public int findOffsetByRunAdvance(GetChars text, int start, int end,
                                       int contextStart, int contextEnd, boolean isRtl,
                                       float advance) {
         if (renderFunctionCharacters) {
             int lastEnd = start;
             float current = 0f;
-            var textChars = text.getBackingCharArray();
             for (int i = start;i < end;i++) {
-                char ch = textChars[i];
+                char ch = text.charAt(i);
                 if (FunctionCharacters.isEditorFunctionChar(ch)) {
                     int result = lastEnd == i ? i : breakTextImpl(text, lastEnd, i, contextStart, contextEnd, isRtl, advance - current);
                     if (result < i) {
                         return result;
                     }
-                    current += measureTextRunAdvance(textChars, lastEnd, i, contextStart, contextEnd, isRtl);
+                    current += measureTextRunAdvance(text, lastEnd, i, contextStart, contextEnd, isRtl);
                     current += measureText(FunctionCharacters.getNameForFunctionCharacter(ch));
                     if (current >= advance) {
                         return i;
@@ -147,11 +150,17 @@ public class Paint extends android.graphics.Paint {
         }
     }
 
-    private int breakTextImpl(ContentLine text, int start, int end, int contextStart, int contextEnd, boolean isRtl, float advance) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return getOffsetForAdvance(text.getBackingCharArray(), start, end, contextStart, contextEnd, isRtl, advance);
-        } else {
-            return start + breakText(text.getBackingCharArray(), start, end - start, advance, null);
+    private int breakTextImpl(GetChars text, int start, int end, int contextStart, int contextEnd, boolean isRtl, float advance) {
+        var buffer = TemporaryCharBuffer.obtain(contextEnd - contextStart);
+        text.getChars(contextStart, contextEnd, buffer, 0);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                return contextStart + getOffsetForAdvance(buffer, start - contextStart, end - contextStart, 0, contextEnd - contextStart, isRtl, advance);
+            } else {
+                return start + breakText(buffer, start - contextStart, end - start, advance, null);
+            }
+        } finally {
+            TemporaryCharBuffer.recycle(buffer);
         }
     }
 

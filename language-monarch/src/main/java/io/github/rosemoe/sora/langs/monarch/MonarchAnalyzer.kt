@@ -184,7 +184,7 @@ class MonarchAnalyzer(
 
                 // It's safe here to use raw data because the Content is only held by this thread
                 val length = model.getColumnCount(foldingStartLine)
-                val chars = model.getLine(foldingStartLine).backingCharArray
+                val chars = model.getLine(foldingStartLine)
 
                 codeBlock.startColumn =
                     IndentRange.computeStartColumn(
@@ -294,7 +294,7 @@ class MonarchAnalyzer(
                     line, 0
                 ),
                 IndentRange.computeIndentLevel(
-                    (lineC as ContentLine).backingCharArray, line.length - 1, language.tabSize
+                    lineC, line.length - 1, language.tabSize
                 ),
                 identifiers
             ), null, tokens

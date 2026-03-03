@@ -168,7 +168,7 @@ public class TextUtils {
      *
      * @param line The line to search
      */
-    public static long findLeadingAndTrailingWhitespacePos(ContentLine line) {
+    public static long findLeadingAndTrailingWhitespacePos(CharSequence line) {
         return findLeadingAndTrailingWhitespacePos(line, 0, line.length());
     }
 
@@ -179,16 +179,15 @@ public class TextUtils {
      * @param start Range start (inclusive)
      * @param end   Range end (exclusive)
      */
-    public static long findLeadingAndTrailingWhitespacePos(ContentLine line, int start, int end) {
-        var buffer = line.getBackingCharArray();
+    public static long findLeadingAndTrailingWhitespacePos(CharSequence line, int start, int end) {
         int leading = start;
         int trailing = end;
-        while (leading < end && isWhitespace(buffer[leading])) {
+        while (leading < end && isWhitespace(line.charAt(leading))) {
             leading++;
         }
         // Skip for space-filled line
         if (leading != end) {
-            while (trailing > 0 && isWhitespace(buffer[trailing - 1])) {
+            while (trailing > 0 && isWhitespace(line.charAt(trailing - 1))) {
                 trailing--;
             }
         }

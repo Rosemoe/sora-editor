@@ -35,7 +35,7 @@ object IndentRange {
     // START sora-editor note
     // Change String to char[] and int
     // END sora-editor note
-    fun computeStartColumn(line: CharArray, len: Int, tabSize: Int): Int {
+    fun computeStartColumn(line: CharSequence, len: Int, tabSize: Int): Int {
         var column = 0
         var i = 0
 
@@ -64,7 +64,7 @@ object IndentRange {
      * - -1 => the line consists of whitespace
      * - otherwise => the indent level is returned value
      */
-    fun computeIndentLevel(line: CharArray, len: Int, tabSize: Int): Int {
+    fun computeIndentLevel(line: CharSequence, len: Int, tabSize: Int): Int {
         var indent = 0
         var i = 0
 

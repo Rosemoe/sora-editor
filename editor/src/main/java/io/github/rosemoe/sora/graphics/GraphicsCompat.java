@@ -26,8 +26,11 @@ package io.github.rosemoe.sora.graphics;
 import android.annotation.SuppressLint;
 import android.graphics.Canvas;
 import android.os.Build;
+import android.text.GetChars;
 
 import androidx.annotation.NonNull;
+
+import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 
 public class GraphicsCompat {
 
@@ -37,12 +40,15 @@ public class GraphicsCompat {
      * As there is no hidden list checks in those API platforms, it's safe here to call the "New API".
      */
     @SuppressLint("NewApi")
-    public static void drawTextRun(Canvas canvas, @NonNull char[] text, int index, int count, int contextIndex,
+    public static void drawTextRun(Canvas canvas, @NonNull GetChars text, int index, int count, int contextIndex,
                                    int contextCount, float x, float y, boolean isRtl, @NonNull android.graphics.Paint paint) {
-        canvas.drawTextRun(text, index, count, contextIndex, contextCount, x, y, isRtl, paint);
+        var buffer = TemporaryCharBuffer.obtain(contextCount);
+        text.getChars(contextIndex, contextIndex + contextCount, buffer, 0);
+        canvas.drawTextRun(buffer, index - contextIndex, count, 0, contextCount, x, y, isRtl, paint);
+        TemporaryCharBuffer.recycle(buffer);
     }
 
-    public static float getRunAdvance(Paint paint, char[] text, int start, int end, int contextStart, int contextEnd,
+    public static float getRunAdvance(Paint paint, GetChars text, int start, int end, int contextStart, int contextEnd,
                                       boolean isRtl, int offset) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return paint.getRunAdvance(text, start, end, contextStart, contextEnd, isRtl, offset);

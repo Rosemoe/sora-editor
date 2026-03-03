@@ -37,7 +37,7 @@ import java.nio.charset.Charset;
 
 /**
  * Helper class for creating or saving {@link Content} objects, with minimal extra memory usage when
- *  processing.
+ * processing.
  *
  * @author Rosemoe
  */
@@ -45,9 +45,12 @@ public class ContentIO {
 
     private final static int BUFFER_SIZE = 16384;
 
+    final static int CHAR_BUFFER_SIZE = 1024;
+
     /**
      * Create a {@link Content} from stream.
      * The stream will get closed if the operation is successfully done.
+     *
      * @param stream Source stream
      */
     @NonNull
@@ -58,7 +61,8 @@ public class ContentIO {
     /**
      * Create a {@link Content} from stream.
      * The stream will get closed if the operation is successfully done.
-     * @param stream Source stream
+     *
+     * @param stream  Source stream
      * @param charset Charset for decoding the content
      */
     @NonNull
@@ -111,8 +115,8 @@ public class ContentIO {
     /**
      * Write the text to the given stream with default charset. Close the stream if {@code closeOnSucceed} is true.
      *
-     * @param text Text to be written
-     * @param stream Output stream
+     * @param text           Text to be written
+     * @param stream         Output stream
      * @param closeOnSucceed If true, the stream will be closed when operation is successfully
      */
     public static void writeTo(@NonNull Content text, @NonNull OutputStream stream, boolean closeOnSucceed) throws IOException {
@@ -122,9 +126,9 @@ public class ContentIO {
     /**
      * Write the text to the given stream with given charset. Close the stream if {@code closeOnSucceed} is true.
      *
-     * @param text Text to be written
-     * @param stream Output stream
-     * @param charset Charset of output bytes
+     * @param text           Text to be written
+     * @param stream         Output stream
+     * @param charset        Charset of output bytes
      * @param closeOnSucceed If true, the stream will be closed when operation is successfully
      */
     public static void writeTo(@NonNull Content text, @NonNull OutputStream stream, @NonNull Charset charset, boolean closeOnSucceed) throws IOException {
@@ -136,18 +140,24 @@ public class ContentIO {
      * <p>
      * If you use {@link BufferedWriter}, make sure you set an appropriate buffer size. We recommend using the default size (8192) or larger.
      *
-     * @param text Text to be written
-     * @param writer Output writer
-     * @param closeOnSucceed If true, the stream will be closed when operation is successfully
+     * @param text           Text to be written
+     * @param writer         Output writer
+     * @param closeOnSucceed If true, the stream will be closed when operation is successful
      */
     public static void writeTo(@NonNull Content text, @NonNull Writer writer, boolean closeOnSucceed) throws IOException {
         // Use buffered writer to avoid frequently IO when there are a lot of short lines
-        final var buffered = (writer instanceof BufferedWriter) ? (BufferedWriter)writer : new BufferedWriter(writer, BUFFER_SIZE);
+        final var buffered = (writer instanceof BufferedWriter) ? (BufferedWriter) writer : new BufferedWriter(writer, BUFFER_SIZE);
+        char[] buf = new char[CHAR_BUFFER_SIZE];
         try {
             text.runReadActionsOnLines(0, text.getLineCount() - 1, (Content.ContentLineConsumer2) (index, line, flag) -> {
                 try {
                     // Write line content
-                    buffered.write(line.getBackingCharArray(), 0, line.length());
+                    for (int i = 0; i < line.length(); ) {
+                        int end = Math.min(i + buf.length, line.length());
+                        line.getChars(i, end, buf, 0);
+                        buffered.write(buf, 0, end - i);
+                        i = end;
+                    }
                     // Write line feed (the last line has empty line feed)
                     buffered.write(line.getLineSeparator().getChars());
                 } catch (IOException e) {

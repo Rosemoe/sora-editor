@@ -40,6 +40,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.SystemClock;
+import android.text.GetChars;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -48,7 +49,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.collection.MutableIntList;
 import androidx.collection.MutableLongLongMap;
-import androidx.collection.MutableLongObjectMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1454,7 +1454,7 @@ public class EditorRenderer {
 
                 paintOther.setColor(editor.getColorScheme().getColor(EditorColorScheme.NON_PRINTABLE_CHAR));
                 tr.iterateDrawTextRegions(rowInf.startColumn, rowInf.endColumn, canvas, beginOffset, endOffset, false,
-                        (Canvas _canvas, char[] text, int index, int count, int contextIndex, int contextCount, boolean isRtl,
+                        (Canvas _canvas, GetChars text, int index, int count, int contextIndex, int contextCount, boolean isRtl,
                          float horizontalOffset, float width, TextRowParams params, Span span) -> {
                             if ((nonPrintableFlags & CodeEditor.FLAG_DRAW_WHITESPACE_LEADING) != 0) {
                                 drawWhitespaces(_canvas, tr, text, index, count, contextIndex, contextCount, isRtl, horizontalOffset, width, 0, wsLeadingEnd);
@@ -1714,7 +1714,7 @@ public class EditorRenderer {
     /**
      * Draw non-printable characters
      */
-    private void drawWhitespaces(Canvas canvas, TextRow tr, char[] chars, int index, int count, int contextIndex, int contextCount, boolean isRtl, float horizontalOffset, float width, int min, int max) {
+    private void drawWhitespaces(Canvas canvas, TextRow tr, GetChars chars, int index, int count, int contextIndex, int contextCount, boolean isRtl, float horizontalOffset, float width, int min, int max) {
         int paintStart = Math.max(index, Math.min(index + count, min));
         int paintEnd = Math.max(index, Math.min(index + count, max));
 
@@ -1723,7 +1723,7 @@ public class EditorRenderer {
             float rowCenter = (editor.getRowHeightOfText() / 2f + editor.getRowTopOfText(0));
             float offset = isRtl ? horizontalOffset + width : horizontalOffset;
             while (paintStart < paintEnd) {
-                char ch = chars[paintStart];
+                char ch = chars.charAt(paintStart);
                 int paintCount = 0;
                 boolean paintLine = false;
                 if (ch == ' ' || ch == '\t') {
@@ -2302,7 +2302,7 @@ public class EditorRenderer {
         paintGeneral.setStyle(useBoldStyle ? Paint.Style.FILL_AND_STROKE : Paint.Style.FILL);
         paintGeneral.setFakeBoldText(useBoldStyle);
 
-        patchTextRegions(canvas, textOffset, start, end, (Canvas canvasLocal, char[] text, int index, int count, int contextIndex, int contextCount, boolean isRtl,
+        patchTextRegions(canvas, textOffset, start, end, (Canvas canvasLocal, GetChars text, int index, int count, int contextIndex, int contextCount, boolean isRtl,
                                                           float horizontalOffset, float width, TextRowParams params, Span span) -> {
             if (span == null) {
                 return;
