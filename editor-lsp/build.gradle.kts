@@ -45,4 +45,9 @@ dependencies {
     compileOnly(projects.editor)
     implementation(libs.lsp4j)
     implementation(libs.kotlinx.coroutines)
+    testImplementation(libs.junit)
+    testImplementation(libs.tests.google.truth)
+    testImplementation(libs.tests.robolectric)
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.espresso)
 }
