@@ -45,9 +45,9 @@ fun defaultComparator(a: CompletionItem, b: CompletionItem): Int {
 
     // if score biggest, it better similar to input text
     if (p1Score < p2Score) {
-        return 1;
+        return 1
     } else if (p1Score > p2Score) {
-        return -1;
+        return -1
     }
 
     var p1 = a.sortText.asString()
@@ -56,9 +56,9 @@ fun defaultComparator(a: CompletionItem, b: CompletionItem): Int {
     // check with 'sortText'
 
     if (p1 < p2) {
-        return -1;
+        return -1
     } else if (p1 > p2) {
-        return 1;
+        return 1
     }
 
     p1 = a.label.asString()
@@ -66,9 +66,9 @@ fun defaultComparator(a: CompletionItem, b: CompletionItem): Int {
 
     // check with 'label'
     if (p1 < p2) {
-        return -1;
+        return -1
     } else if (p1 > p2) {
-        return 1;
+        return 1
     }
 
     // check with 'kind'
@@ -81,12 +81,12 @@ fun defaultComparator(a: CompletionItem, b: CompletionItem): Int {
 fun snippetUpComparator(a: CompletionItem, b: CompletionItem): Int {
     if (a.kind != b.kind) {
         if (a.kind == CompletionItemKind.Snippet) {
-            return 1;
+            return 1
         } else if (b.kind == CompletionItemKind.Snippet) {
-            return -1;
+            return -1
         }
     }
-    return defaultComparator(a, b);
+    return defaultComparator(a, b)
 }
 
 
@@ -107,7 +107,6 @@ fun filterCompletionItems(
     // picks a score function based on the number of
     // items that we have to score/filter and based on the
     // user-configuration
-
     val scoreFn = FuzzyScorer { pattern,
                                 lowPattern,
                                 patternPos,
@@ -128,7 +127,6 @@ fun filterCompletionItems(
                 options
             )
         }
-
     }
 
     for (originItem in completionItemList) {
@@ -162,13 +160,13 @@ fun filterCompletionItems(
         } else {
             // skip word characters that are whitespace until
             // we have hit the replace range (overwriteBefore)
-            var wordPos = 0;
+            var wordPos = 0
             while (wordPos < overwriteBefore) {
                 val ch = word[wordPos].code
                 if (ch == CharCode.Space || ch == CharCode.Tab) {
-                    wordPos += 1;
+                    wordPos += 1
                 } else {
-                    break;
+                    break
                 }
             }
 
@@ -177,14 +175,14 @@ fun filterCompletionItems(
             if (wordPos >= overwriteBefore) {
                 // the wordPos at which scoring starts is the whole word
                 // and therefore the same rules as not having a word apply
-                item.score = FuzzyScore.default;
+                item.score = FuzzyScore.default
             } else if (filterText?.isNotEmpty() == true) {
                 // when there is a `filterText` it must match the `word`.
                 // if it matches we check with the label to compute highlights
                 // and if that doesn't yield a result we have no highlights,
                 // despite having the match
                 // by default match `word` against the `label`
-                val match = scoreFn.calculateScore(
+                val filterTextMatch = scoreFn.calculateScore(
                     word,
                     wordLow,
                     wordPos,
@@ -192,12 +190,12 @@ fun filterCompletionItems(
                     filterText.asString().lowercase(),
                     0,
                     FuzzyScoreOptions.default
-                ) ?: continue; // NO match
+                ) ?: continue // NO match
 
                 // compareIgnoreCase(item.completion.filterText, item.textLabel) === 0
                 if (filterText.equals(originItem.label.toString(), ignoreCase = true)) {
                     // filterText and label are actually the same -> use good highlights
-                    item.score = match;
+                    item.score = filterTextMatch
                 } else {
                     // re-run the scorer on the label in the hope of a result BUT use the rank
                     // of the filterText-match
@@ -210,9 +208,8 @@ fun filterCompletionItems(
                         0
                     )
                     item.score = labelMatch
-                    labelMatch.matches[0] = match.matches[0] // use score from filterText
+                    labelMatch.score = filterTextMatch.score // use score from filterText
                 }
-
             } else {
                 // by default match `word` against the `label`
                 val match = scoreFn.calculateScore(
@@ -223,13 +220,12 @@ fun filterCompletionItems(
                     originItem.label.asString().lowercase(),
                     0,
                     FuzzyScoreOptions.default
-                ) ?: continue; // NO match
+                ) ?: continue // NO match
 
-                item.score = match;
+                item.score = match
             }
 
             originItem.extra = item
-
         }
 
         result.add(originItem)
