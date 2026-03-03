@@ -1447,7 +1447,7 @@ public class EditorRenderer {
                 canvas.save();
                 canvas.translate(paintingOffset, editor.getRowTopOfText(row) - editor.getOffsetY());
                 bufferedDrawPoints.setOffsets(paintingOffset, editor.getRowTopOfText(row) - editor.getOffsetY());
-                float beginOffset = Math.max(0, paintingOffset);
+                float beginOffset = Math.max(0, offsetCopy);
                 float endOffset = beginOffset + editor.getWidth();
                 final var wsLeadingEnd = leadingWhitespaceEnd;
                 final var wsTrailingStart = trailingWhitespaceStart;
