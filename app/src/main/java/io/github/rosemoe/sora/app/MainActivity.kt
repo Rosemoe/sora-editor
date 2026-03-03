@@ -24,12 +24,10 @@
 package io.github.rosemoe.sora.app
 
 import android.content.DialogInterface
-import android.content.res.Configuration
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -41,7 +39,6 @@ import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.savedstate.write
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -66,6 +63,7 @@ import io.github.rosemoe.sora.graphics.inlayHint.TextInlayHintRenderer
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.JavaLanguageSpec
 import io.github.rosemoe.sora.lang.TsLanguageJava
+import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.lang.styling.color.ConstColor
@@ -128,6 +126,7 @@ class MainActivity : AppCompatActivity() {
             // Load tree-sitter libraries
             System.loadLibrary("android-tree-sitter")
             System.loadLibrary("tree-sitter-java")
+            AsyncIncrementalAnalyzeManager.setUseShallowCopyByDefault(true)
         }
 
         private const val TAG = "MainActivity"

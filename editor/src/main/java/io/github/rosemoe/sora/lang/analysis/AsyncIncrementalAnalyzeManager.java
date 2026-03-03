@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.SpanFactory;
@@ -64,6 +65,36 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
     private static int sThreadId = 0;
     private LooperThread thread;
     private volatile long runCount;
+    private final boolean useShallowCopy;
+
+    private static boolean useShallowCopyByDefault = false;
+
+    /**
+     * Use shallow copy for initial text copying. Memory usage will be much lower than full copy at the beginning.
+     * <p>
+     * As the text is modified, the memory usage will finally go up to the same usage of full copy when all lines are edited.
+     * <p>
+     * This function is experimental, and is disabled by default.
+     */
+    @Experimental
+    public static void setUseShallowCopyByDefault(boolean useShallowCopy) {
+        useShallowCopyByDefault = useShallowCopy;
+    }
+
+    /**
+     * @see #setUseShallowCopyByDefault(boolean)
+     */
+    public static boolean isUseShallowCopyByDefault() {
+        return useShallowCopyByDefault;
+    }
+
+    public AsyncIncrementalAnalyzeManager() {
+        this(isUseShallowCopyByDefault());
+    }
+
+    public AsyncIncrementalAnalyzeManager(boolean useShallowCopy) {
+        this.useShallowCopy = useShallowCopy;
+    }
 
     private synchronized static int nextThreadId() {
         sThreadId++;
@@ -107,7 +138,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
         }
         var ref = getContentRef();
         if (ref != null) {
-            final var text = ref.getReference().copyText(false);
+            final var text = ref.getReference().copyText(false, useShallowCopy);
             text.setUndoEnabled(false);
             thread = new LooperThread();
             thread.setName("AsyncAnalyzer-" + nextThreadId());
@@ -588,6 +619,10 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                 }
             } catch (InterruptedException e) {
                 // ignored
+            } finally {
+                if (useShallowCopy && shadowed != null) {
+                    shadowed.release();
+                }
             }
         }
     }
