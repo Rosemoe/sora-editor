@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.text.string;
 
+import java.nio.charset.StandardCharsets;
+
 public final class StringLatin1 {
 
     private StringLatin1() {
@@ -57,9 +59,7 @@ public final class StringLatin1 {
     }
 
     public static String newString(byte[] value, int length) {
-        var chars = new char[length];
-        getChars(value, 0, length, chars, 0);
-        return new String(chars);
+        return new String(value, 0, length, StandardCharsets.ISO_8859_1);
     }
 
     public static byte[] inflateToUTF16(byte[] value, int length, int newCapacity) {
