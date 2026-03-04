@@ -50,6 +50,11 @@
             tools:targetApi="q" />
 
         <activity
+            android:name=".tests.paged.PagedEditActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize|keyboard|navigation"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".tests.TestActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|keyboard|navigation"
             android:exported="false"

@@ -122,6 +122,7 @@ dependencies {
 
     debugImplementation(libs.leakcanary)
     testImplementation(libs.junit)
+    testImplementation(libs.tests.google.truth)
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.androidx.test.espresso)
 }

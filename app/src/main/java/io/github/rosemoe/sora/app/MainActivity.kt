@@ -50,6 +50,7 @@ import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
 import io.github.rosemoe.sora.app.lsp.LspTestActivity
 import io.github.rosemoe.sora.app.lsp.LspTestJavaActivity
 import io.github.rosemoe.sora.app.tests.TestActivity
+import io.github.rosemoe.sora.app.tests.paged.PagedEditActivity
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EditorKeyEvent
 import io.github.rosemoe.sora.event.InlayHintClickEvent
@@ -682,6 +683,7 @@ class MainActivity : AppCompatActivity() {
         val editor = binding.editor
         when (id) {
             R.id.open_test_activity -> startActivity<TestActivity>()
+            R.id.open_paged_edit -> startActivity<PagedEditActivity>()
             R.id.open_lsp_activity -> {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                     MaterialAlertDialogBuilder(this)
