@@ -2,8 +2,8 @@
 
 ![Banner](/images/editor_banner.jpg)
 ----
-[![CI](https://github.com/Rosemoe/CodeEditor/actions/workflows/gradle.yml/badge.svg?event=push)](https://github.com/Rosemoe/CodeEditor/actions/workflows/gradle.yml)
-[![GitHub license](https://img.shields.io/github/license/Rosemoe/CodeEditor)](https://github.com/Rosemoe/CodeEditor/blob/main/LICENSE)
+[![CI](https://github.com/Rosemoe/sora-editor/actions/workflows/gradle.yml/badge.svg?event=push)](https://github.com/Rosemoe/sora-editor/actions/workflows/gradle.yml)
+![GitHub License](https://img.shields.io/github/license/Rosemoe/sora-editor?link=https%3A%2F%2Fgithub.com%2FRosemoe%2Fsora-editor%2Fblob%2Fmain%2FLICENSE&link=https%3A%2F%2Fgithub.com%2FRosemoe%2Fsora-editor%2Fblob%2Fmain%2FLICENSE)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.rosemoe/editor.svg?label=Maven%20Central)]((https://search.maven.org/search?q=io.github.rosemoe%20editor))   
 [![Telegram](https://img.shields.io/badge/Join-Telegram-blue)](https://t.me/rosemoe_code_editor)
 [![QQ](https://img.shields.io/badge/Join-QQ_Group-ff69b4)](https://jq.qq.com/?_wv=1027&k=n68uxQws)
